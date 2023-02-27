@@ -8,7 +8,7 @@
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibMain/Main.h>
 #include <inttypes.h>
 #include <stdlib.h>
@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_inode_info, "Show inode information as well", "inodes", 'i');
     args_parser.parse(arguments);
 
-    auto file = TRY(Core::Stream::File::open("/sys/kernel/df"sv, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open("/sys/kernel/df"sv, Core::File::OpenMode::Read));
 
     Vector<StringView> headers;
     TRY(headers.try_append(flag_human_readable ? "Size"sv : "Blocks"sv));

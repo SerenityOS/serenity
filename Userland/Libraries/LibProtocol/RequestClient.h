@@ -30,7 +30,7 @@ public:
     bool set_certificate(Badge<Request>, Request&, DeprecatedString, DeprecatedString);
 
 private:
-    RequestClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    RequestClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual void request_progress(i32, Optional<u32> const&, u32) override;
     virtual void request_finished(i32, bool, u32) override;

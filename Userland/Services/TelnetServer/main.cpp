@@ -9,8 +9,9 @@
 #include <AK/HashMap.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
+#include <LibCore/Socket.h>
 #include <LibCore/TCPServer.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>

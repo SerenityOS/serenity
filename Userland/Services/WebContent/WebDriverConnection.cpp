@@ -3,13 +3,14 @@
  * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Value.h>
@@ -54,7 +55,7 @@ static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
     serialized_cookie.set("domain"sv, cookie.domain);
     serialized_cookie.set("secure"sv, cookie.secure);
     serialized_cookie.set("httpOnly"sv, cookie.http_only);
-    serialized_cookie.set("expiry"sv, cookie.expiry_time.timestamp());
+    serialized_cookie.set("expiry"sv, cookie.expiry_time.to_seconds());
     serialized_cookie.set("sameSite"sv, Web::Cookie::same_site_to_string(cookie.same_site));
 
     return serialized_cookie;
@@ -314,20 +315,20 @@ static bool fire_an_event(DeprecatedString name, Optional<Web::DOM::Element&> ta
     if (!target.has_value())
         return false;
 
-    auto event = T::create(target->realm(), name);
-    return target->dispatch_event(*event);
+    auto event = T::create(target->realm(), name).release_value_but_fixme_should_propagate_errors();
+    return target->dispatch_event(event);
 }
 
 ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::PageClient& page_client, DeprecatedString const& webdriver_ipc_path)
 {
     dbgln_if(WEBDRIVER_DEBUG, "Trying to connect to {}", webdriver_ipc_path);
-    auto socket = TRY(Core::Stream::LocalSocket::connect(webdriver_ipc_path));
+    auto socket = TRY(Core::LocalSocket::connect(webdriver_ipc_path));
 
     dbgln_if(WEBDRIVER_DEBUG, "Connected to WebDriver");
     return adopt_nonnull_ref_or_enomem(new (nothrow) WebDriverConnection(move(socket), page_client));
 }
 
-WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::Stream::LocalSocket> socket, Web::PageClient& page_client)
+WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::LocalSocket> socket, Web::PageClient& page_client)
     : IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket))
     , m_page_client(page_client)
     , m_current_window_handle("main"sv)
@@ -1258,6 +1259,25 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
     return ""sv;
 }
 
+// 12.4.10 Get Computed Label, https://w3c.github.io/webdriver/#get-computed-label
+Messages::WebDriverClient::GetComputedLabelResponse WebDriverConnection::get_computed_label(DeprecatedString const& element_id)
+{
+    // 1. If the current browsing context is no longer open, return error with error code no such window.
+    TRY(ensure_open_top_level_browsing_context());
+
+    // 2. Handle any user prompts and return its value if it is an error.
+    TRY(handle_any_user_prompts());
+
+    // 3. Let element be the result of trying to get a known element with url variable element id.
+    auto* element = TRY(get_known_connected_element(element_id));
+
+    // 4. Let label be the result of a Accessible Name and Description Computation for the Accessible Name of the element.
+    auto label = element->accessible_name(element->document()).release_value_but_fixme_should_propagate_errors();
+
+    // 5. Return success with data label.
+    return label.to_deprecated_string();
+}
+
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
 Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_click(DeprecatedString const& element_id)
 {
@@ -1574,7 +1594,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     if (data.has("expiry"sv)) {
         // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
         auto expiry = TRY(get_property<u32>(data, "expiry"sv));
-        cookie.expiry_time_from_expires_attribute = Core::DateTime::from_timestamp(expiry);
+        cookie.expiry_time_from_expires_attribute = Time::from_seconds(expiry);
     }
 
     // Cookie same site
@@ -1966,7 +1986,7 @@ void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
         // -> name is equal to cookie name
         if (!name.has_value() || name.value() == cookie.name) {
             // Set the cookie expiry time to a Unix timestamp in the past.
-            cookie.expiry_time = Core::DateTime::from_timestamp(0);
+            cookie.expiry_time = Time::from_seconds(0);
             m_page_client.page_did_update_cookie(move(cookie));
         }
         // -> Otherwise

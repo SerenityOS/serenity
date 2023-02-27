@@ -7,7 +7,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/File.h>
 #include <LibCore/Group.h>
 #include <LibCore/System.h>
 #include <LibCore/UmaskScope.h>
@@ -75,7 +74,7 @@ ErrorOr<void> Group::add_group(Group& group)
         return Error::from_string_literal("Group name can not be empty.");
 
     // A quick sanity check on group name
-    if (strpbrk(group.name().characters(), "\\/!@#$%^&*()~+=`:\n"))
+    if (group.name().find_any_of("\\/!@#$%^&*()~+=`:\n"sv, DeprecatedString::SearchDirection::Forward).has_value())
         return Error::from_string_literal("Group name has invalid characters.");
 
     // Disallow names starting with '_', '-' or other non-alpha characters.

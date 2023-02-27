@@ -12,13 +12,12 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/URL.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibManual/Path.h>
 
 namespace Manual {
 
-ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 2> const& query_parameters)
+ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<StringView, 2> const& query_parameters)
 {
     if (query_parameters.size() > 2)
         return Error::from_string_literal("Queries longer than 2 strings are not supported yet");
@@ -49,7 +48,7 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
         Optional<NonnullRefPtr<PageNode>> maybe_page;
         for (auto const& section : sections) {
             auto const page = TRY(try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(first_query_parameter))));
-            if (Core::File::exists(TRY(page->path()))) {
+            if (Core::DeprecatedFile::exists(TRY(page->path()))) {
                 maybe_page = page;
                 break;
             }
@@ -62,12 +61,12 @@ ErrorOr<NonnullRefPtr<PageNode>> Node::try_create_from_query(Vector<StringView, 
     auto second_query_parameter = *query_parameter_iterator;
     auto section = TRY(SectionNode::try_create_from_number(first_query_parameter));
     auto const page = TRY(try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(second_query_parameter))));
-    if (Core::File::exists(TRY(page->path())))
+    if (Core::DeprecatedFile::exists(TRY(page->path())))
         return page;
     return Error::from_string_literal("Page doesn't exist in section");
 }
 
-ErrorOr<NonnullRefPtr<Node>> Node::try_find_from_help_url(URL const& url)
+ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
 {
     if (url.host() != "man")
         return Error::from_string_view("Bad help operation"sv);
@@ -83,7 +82,7 @@ ErrorOr<NonnullRefPtr<Node>> Node::try_find_from_help_url(URL const& url)
     if (section_number > number_of_sections)
         return Error::from_string_view("Section number out of bounds"sv);
 
-    NonnullRefPtr<Node> current_node = sections[section_number - 1];
+    NonnullRefPtr<Node const> current_node = sections[section_number - 1];
 
     while (!paths.is_empty()) {
         auto next_path_segment = TRY(String::from_deprecated_string(paths.take_first()));

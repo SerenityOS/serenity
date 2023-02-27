@@ -16,7 +16,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -49,7 +49,7 @@ Sheet::Sheet(Workbook& workbook)
 
     // Sadly, these have to be evaluated once per sheet.
     constexpr auto runtime_file_path = "/res/js/Spreadsheet/runtime.js"sv;
-    auto file_or_error = Core::File::open(runtime_file_path, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::DeprecatedFile::open(runtime_file_path, Core::OpenMode::ReadOnly);
     if (!file_or_error.is_error()) {
         auto buffer = file_or_error.value()->read_all();
         auto script_or_error = JS::Script::parse(buffer, interpreter().realm(), runtime_file_path);
@@ -64,7 +64,7 @@ Sheet::Sheet(Workbook& workbook)
             if (result.is_error()) {
                 warnln("Spreadsheet: Failed to run runtime code:");
                 auto thrown_value = *result.throw_completion().value();
-                warn("Threw: {}", thrown_value.to_string_without_side_effects());
+                warn("Threw: {}", MUST(thrown_value.to_string_without_side_effects()));
                 if (thrown_value.is_object() && is<JS::Error>(thrown_value.as_object())) {
                     auto& error = static_cast<JS::Error const&>(thrown_value.as_object());
                     warnln(" with message '{}'", error.get_without_side_effects(interpreter().vm().names.message));
@@ -98,6 +98,9 @@ static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, 
 
     VERIFY(base >= 2 && base <= map.length());
 
+    if (str.is_empty())
+        return {};
+
     size_t value = 0;
     auto const len = str.length();
     for (auto i = 0u; i < len; i++) {
@@ -105,13 +108,10 @@ static Optional<size_t> convert_from_string(StringView str, unsigned base = 26, 
         if (!maybe_index.has_value())
             return {};
         size_t digit_value = maybe_index.value();
-        // NOTE: Refer to the note in `String::bijective_base_from()'.
-        if (i == 0 && len > 1)
-            ++digit_value;
-        value += digit_value * AK::pow<float>(base, len - 1 - i);
+        value += (digit_value + 1) * AK::pow<float>(base, len - 1 - i);
     }
 
-    return value;
+    return value - 1;
 }
 
 DeprecatedString Sheet::add_column()
@@ -172,7 +172,7 @@ JS::ThrowCompletionOr<JS::Value> Sheet::evaluate(StringView source, Cell* on_beh
         name);
 
     if (script_or_error.is_error())
-        return interpreter().vm().throw_completion<JS::SyntaxError>(script_or_error.error().first().to_deprecated_string());
+        return interpreter().vm().throw_completion<JS::SyntaxError>(TRY_OR_THROW_OOM(interpreter().vm(), script_or_error.error().first().to_string()));
 
     return interpreter().run(script_or_error.value());
 }
@@ -562,7 +562,7 @@ JsonObject Sheet::to_json() const
             auto json = interpreter().realm().global_object().get_without_side_effects("JSON");
             auto stringified_or_error = JS::call(vm, json.as_object().get_without_side_effects("stringify").as_function(), json, it.value->evaluated_data());
             VERIFY(!stringified_or_error.is_error());
-            data.set("value", stringified_or_error.release_value().to_string_without_side_effects());
+            data.set("value", stringified_or_error.release_value().to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
         } else {
             data.set("value", it.value->data());
         }
@@ -693,7 +693,7 @@ JsonObject Sheet::gather_documentation() const
         if (!doc.is_string())
             return;
 
-        JsonParser parser(doc.to_string_without_side_effects());
+        JsonParser parser(doc.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
         auto doc_object = parser.parse();
 
         if (!doc_object.is_error())

@@ -30,8 +30,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     auto main_widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->set_fill_with_background_color(true);
 
-    auto& layout = main_widget->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(4);
+    main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
     auto& name_label = main_widget->add<GUI::Label>("Name:");
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -111,12 +110,12 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
 
     auto& set_defaults_checkbox = main_widget->add<GUI::CheckBox>();
-    set_defaults_checkbox.set_text("Use these settings as default");
+    set_defaults_checkbox.set_text("Use these settings as default"_string.release_value_but_fixme_should_propagate_errors());
 
     auto& button_container = main_widget->add<GUI::Widget>();
     button_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& ok_button = button_container.add<GUI::Button>("OK");
+    auto& ok_button = button_container.add<GUI::Button>("OK"_short_string);
     ok_button.on_click = [&](auto) {
         if (set_defaults_checkbox.is_checked()) {
             Config::write_string("PixelPaint"sv, "NewImage"sv, "Name"sv, m_image_name);
@@ -129,7 +128,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     };
     ok_button.set_default(true);
 
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };

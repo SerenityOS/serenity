@@ -43,15 +43,12 @@ ClockWidget::ClockWidget()
 
     auto root_container = m_calendar_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
     root_container->set_fill_with_background_color(true);
-    root_container->set_layout<GUI::VerticalBoxLayout>();
-    root_container->layout()->set_margins({ 2, 0 });
-    root_container->layout()->set_spacing(0);
+    root_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 2, 0 }, 0);
     root_container->set_frame_shape(Gfx::FrameShape::Window);
 
     auto& navigation_container = root_container->add<GUI::Widget>();
     navigation_container.set_fixed_height(24);
-    navigation_container.set_layout<GUI::HorizontalBoxLayout>();
-    navigation_container.layout()->set_margins({ 2 });
+    navigation_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2 });
 
     m_prev_date = navigation_container.add<GUI::Button>();
     m_prev_date->set_button_style(Gfx::ButtonStyle::Coolbar);
@@ -71,9 +68,9 @@ ClockWidget::ClockWidget()
         }
         m_calendar->update_tiles(view_year, view_month);
         if (m_calendar->mode() == GUI::Calendar::Year)
-            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly));
+            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
         else
-            m_selected_calendar_button->set_text(m_calendar->formatted_date());
+            m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
     };
 
     m_selected_calendar_button = navigation_container.add<GUI::Button>();
@@ -82,9 +79,9 @@ ClockWidget::ClockWidget()
     m_selected_calendar_button->on_click = [&](auto) {
         m_calendar->toggle_mode();
         if (m_calendar->mode() == GUI::Calendar::Year)
-            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly));
+            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
         else
-            m_selected_calendar_button->set_text(m_calendar->formatted_date());
+            m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
     };
 
     m_next_date = navigation_container.add<GUI::Button>();
@@ -105,27 +102,26 @@ ClockWidget::ClockWidget()
         }
         m_calendar->update_tiles(view_year, view_month);
         if (m_calendar->mode() == GUI::Calendar::Year)
-            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly));
+            m_selected_calendar_button->set_text(m_calendar->formatted_date(GUI::Calendar::YearOnly).release_value_but_fixme_should_propagate_errors());
         else
-            m_selected_calendar_button->set_text(m_calendar->formatted_date());
+            m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
     };
 
     auto& separator1 = root_container->add<GUI::HorizontalSeparator>();
     separator1.set_fixed_height(2);
 
     auto& calendar_container = root_container->add<GUI::Widget>();
-    calendar_container.set_layout<GUI::HorizontalBoxLayout>();
-    calendar_container.layout()->set_margins({ 2 });
+    calendar_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2 });
 
     m_calendar = calendar_container.add<GUI::Calendar>();
-    m_selected_calendar_button->set_text(m_calendar->formatted_date());
+    m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
 
     m_calendar->on_tile_click = [&] {
-        m_selected_calendar_button->set_text(m_calendar->formatted_date());
+        m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
     };
 
     m_calendar->on_month_click = [&] {
-        m_selected_calendar_button->set_text(m_calendar->formatted_date());
+        m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
     };
 
     auto& separator2 = root_container->add<GUI::HorizontalSeparator>();
@@ -133,9 +129,8 @@ ClockWidget::ClockWidget()
 
     auto& settings_container = root_container->add<GUI::Widget>();
     settings_container.set_fixed_height(24);
-    settings_container.set_layout<GUI::HorizontalBoxLayout>();
-    settings_container.layout()->set_margins({ 2 });
-    settings_container.layout()->add_spacer();
+    settings_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2 });
+    settings_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     m_jump_to_button = settings_container.add<GUI::Button>();
     m_jump_to_button->set_button_style(Gfx::ButtonStyle::Coolbar);
@@ -238,7 +233,7 @@ void ClockWidget::jump_to_current_date()
         m_calendar->toggle_mode();
     m_calendar->set_selected_date(Core::DateTime::now());
     m_calendar->update_tiles(Core::DateTime::now().year(), Core::DateTime::now().month());
-    m_selected_calendar_button->set_text(m_calendar->formatted_date());
+    m_selected_calendar_button->set_text(m_calendar->formatted_date().release_value_but_fixme_should_propagate_errors());
 }
 
 }

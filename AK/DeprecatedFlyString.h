@@ -29,7 +29,7 @@ public:
     {
     }
 
-    static DeprecatedFlyString from_fly_impl(NonnullRefPtr<StringImpl> impl)
+    static DeprecatedFlyString from_fly_impl(NonnullRefPtr<StringImpl const> impl)
     {
         VERIFY(impl->is_fly());
         DeprecatedFlyString string;
@@ -91,7 +91,7 @@ public:
     }
 
 private:
-    RefPtr<StringImpl> m_impl;
+    RefPtr<StringImpl const> m_impl;
 };
 
 template<>

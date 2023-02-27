@@ -56,12 +56,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-MouseEvent* MouseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
 {
-    return realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init));
 }
 
-MouseEvent* MouseEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = static_cast<double>(offset.x().value());

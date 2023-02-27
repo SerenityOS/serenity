@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/Shell
 
 # $1: Project name, filesystem safe
 # $2: Project full path

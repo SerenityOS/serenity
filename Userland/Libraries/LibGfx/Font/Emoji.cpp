@@ -5,12 +5,16 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Span.h>
+#include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
+#include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Emoji.h>
 
 namespace Gfx {
 
@@ -18,7 +22,7 @@ namespace Gfx {
 // https://unicode.org/emoji/charts/emoji-list.html
 // https://unicode.org/emoji/charts/emoji-zwj-sequences.html
 
-static HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> s_emojis;
+static HashMap<StringView, RefPtr<Gfx::Bitmap>> s_emojis;
 
 Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 {
@@ -27,29 +31,31 @@ Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 
 Bitmap const* Emoji::emoji_for_code_points(ReadonlySpan<u32> const& code_points)
 {
-    // FIXME: This function is definitely not fast.
-    auto basename = DeprecatedString::join('_', code_points, "U+{:X}"sv);
+    auto emoji = Unicode::find_emoji_for_code_points(code_points);
+    if (!emoji.has_value() || !emoji->image_path.has_value())
+        return nullptr;
 
-    auto it = s_emojis.find(basename);
-    if (it != s_emojis.end())
-        return (*it).value.ptr();
+    auto emoji_path = emoji->image_path.value();
+    if (auto it = s_emojis.find(emoji_path); it != s_emojis.end())
+        return it->value.ptr();
 
-    auto bitmap_or_error = Bitmap::load_from_file(DeprecatedString::formatted("/res/emoji/{}.png", basename));
+    auto bitmap_or_error = Bitmap::load_from_file(emoji_path);
     if (bitmap_or_error.is_error()) {
-        s_emojis.set(basename, nullptr);
+        dbgln_if(EMOJI_DEBUG, "Generated emoji data has path {}, but could not load image: {}", emoji_path, bitmap_or_error.error());
+        s_emojis.set(emoji_path, nullptr);
         return nullptr;
     }
+
     auto bitmap = bitmap_or_error.release_value();
-    s_emojis.set(basename, bitmap);
+    s_emojis.set(emoji_path, bitmap);
     return bitmap.ptr();
 }
 
-Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
+template<typename CodePointIterator>
+static Bitmap const* emoji_for_code_point_iterator_impl(CodePointIterator& it)
 {
-    // NOTE: I'm sure this could be more efficient, e.g. by checking if each code point falls
-    // into a certain range in the loop below (emojis, modifiers, variation selectors, ZWJ),
-    // and bailing out early if not. Current worst case is 10 file lookups for any sequence of
-    // code points (if the first glyph isn't part of the font in regular text rendering).
+    if (!Unicode::could_be_start_of_emoji_sequence(it))
+        return nullptr;
 
     constexpr size_t max_emoji_code_point_sequence_length = 10;
 
@@ -105,7 +111,7 @@ Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
         } else {
             code_points.append(*code_point);
         }
-        if (auto const* emoji = emoji_for_code_points(code_points)) {
+        if (auto const* emoji = Emoji::emoji_for_code_points(code_points)) {
             u8 real_codepoint_length = i + 1;
             possible_emojis.empend(emoji, code_points, real_codepoint_length);
             last_codepoint_sequence_found = true;
@@ -128,6 +134,16 @@ Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
         ++it;
 
     return emoji;
+}
+
+Bitmap const* Emoji::emoji_for_code_point_iterator(Utf8CodePointIterator& it)
+{
+    return emoji_for_code_point_iterator_impl(it);
+}
+
+Bitmap const* Emoji::emoji_for_code_point_iterator(Utf32CodePointIterator& it)
+{
+    return emoji_for_code_point_iterator_impl(it);
 }
 
 }

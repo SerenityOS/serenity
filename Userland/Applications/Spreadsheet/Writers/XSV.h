@@ -9,10 +9,10 @@
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/OwnPtr.h>
+#include <AK/Stream.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
 
 namespace Writer {
 
@@ -42,7 +42,7 @@ constexpr WriterBehavior default_behaviors()
 template<typename ContainerType, typename HeaderType = Vector<StringView>>
 class XSV {
 public:
-    static ErrorOr<void> generate(AK::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
+    static ErrorOr<void> generate(Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
     {
         auto writer = XSV(output, data, traits, headers, behaviors);
         auto with_headers = has_flag(writer.m_behaviors, WriterBehavior::WriteHeaders);
@@ -63,7 +63,7 @@ public:
         return {};
     }
 
-    static ErrorOr<void> generate_preview(AK::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
+    static ErrorOr<void> generate_preview(Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
     {
         auto writer = XSV(output, data, traits, headers, behaviors);
         auto lines_written = 0;
@@ -93,7 +93,7 @@ public:
     }
 
 private:
-    XSV(AK::Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
+    XSV(Stream& output, ContainerType const& data, WriterTraits traits, HeaderType headers = {}, WriterBehavior behaviors = default_behaviors())
         : m_data(data)
         , m_traits(move(traits))
         , m_behaviors(behaviors)
@@ -170,7 +170,7 @@ private:
     WriterTraits m_traits;
     WriterBehavior m_behaviors;
     HeaderType m_names;
-    AK::Stream& m_output;
+    Stream& m_output;
 };
 
 }

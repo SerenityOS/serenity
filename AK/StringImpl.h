@@ -24,15 +24,15 @@ size_t allocation_size_for_stringimpl(size_t length);
 
 class StringImpl : public RefCounted<StringImpl> {
 public:
-    static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
-    static RefPtr<StringImpl> create(char const* cstring, ShouldChomp = NoChomp);
-    static RefPtr<StringImpl> create(char const* cstring, size_t length, ShouldChomp = NoChomp);
-    static RefPtr<StringImpl> create(ReadonlyBytes, ShouldChomp = NoChomp);
-    static RefPtr<StringImpl> create_lowercased(char const* cstring, size_t length);
-    static RefPtr<StringImpl> create_uppercased(char const* cstring, size_t length);
+    static NonnullRefPtr<StringImpl const> create_uninitialized(size_t length, char*& buffer);
+    static RefPtr<StringImpl const> create(char const* cstring, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl const> create(char const* cstring, size_t length, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl const> create(ReadonlyBytes, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl const> create_lowercased(char const* cstring, size_t length);
+    static RefPtr<StringImpl const> create_uppercased(char const* cstring, size_t length);
 
-    NonnullRefPtr<StringImpl> to_lowercase() const;
-    NonnullRefPtr<StringImpl> to_uppercase() const;
+    NonnullRefPtr<StringImpl const> to_lowercase() const;
+    NonnullRefPtr<StringImpl const> to_uppercase() const;
 
     void operator delete(void* ptr)
     {

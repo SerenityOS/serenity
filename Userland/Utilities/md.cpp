@@ -6,7 +6,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto file = TRY(Core::Stream::File::open_file_or_standard_stream(filename, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio"));
 

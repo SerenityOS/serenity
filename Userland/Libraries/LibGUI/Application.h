@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,7 +41,7 @@ public:
     void show_tooltip(DeprecatedString, Widget const* tooltip_source_widget);
     void show_tooltip_immediately(DeprecatedString, Widget const* tooltip_source_widget);
     void hide_tooltip();
-    Widget* tooltip_source_widget() { return m_tooltip_source_widget; };
+    Widget const* tooltip_source_widget() { return m_tooltip_source_widget; };
 
     bool quit_when_last_window_deleted() const { return m_quit_when_last_window_deleted; }
     void set_quit_when_last_window_deleted(bool b) { m_quit_when_last_window_deleted = b; }
@@ -53,7 +53,7 @@ public:
     Vector<DeprecatedString> const& args() const { return m_args; }
 
     Gfx::Palette palette() const;
-    void set_palette(Gfx::Palette const&);
+    void set_palette(Gfx::Palette&);
 
     void set_system_palette(Core::AnonymousBuffer&);
 
@@ -110,7 +110,7 @@ private:
     RefPtr<Core::Timer> m_tooltip_show_timer;
     RefPtr<Core::Timer> m_tooltip_hide_timer;
     RefPtr<TooltipWindow> m_tooltip_window;
-    RefPtr<Widget> m_tooltip_source_widget;
+    RefPtr<Widget const> m_tooltip_source_widget;
     WeakPtr<Window> m_active_window;
     bool m_quit_when_last_window_deleted { true };
     bool m_focus_debugging_enabled { false };

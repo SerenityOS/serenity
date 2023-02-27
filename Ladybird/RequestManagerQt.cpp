@@ -64,6 +64,12 @@ ErrorOr<NonnullRefPtr<RequestManagerQt::Request>> RequestManagerQt::Request::cre
         reply = qnam.get(request);
     } else if (method.equals_ignoring_case("post"sv)) {
         reply = qnam.post(request, QByteArray((char const*)request_body.data(), request_body.size()));
+    } else if (method.equals_ignoring_case("put"sv)) {
+        reply = qnam.put(request, QByteArray((char const*)request_body.data(), request_body.size()));
+    } else if (method.equals_ignoring_case("delete"sv)) {
+        reply = qnam.deleteResource(request);
+    } else {
+        reply = qnam.sendCustomRequest(request, QByteArray(method.characters()), QByteArray((char const*)request_body.data(), request_body.size()));
     }
 
     return adopt_ref(*new Request(*reply));
@@ -78,7 +84,6 @@ RequestManagerQt::Request::~Request() = default;
 
 void RequestManagerQt::Request::did_finish()
 {
-    bool success = m_reply.error() == QNetworkReply::NetworkError::NoError;
     auto buffer = m_reply.readAll();
     auto http_status_code = m_reply.attribute(QNetworkRequest::Attribute::HttpStatusCodeAttribute).toInt();
     HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
@@ -100,5 +105,6 @@ void RequestManagerQt::Request::did_finish()
     if (!set_cookie_headers.is_empty()) {
         response_headers.set("set-cookie"sv, JsonArray { set_cookie_headers }.to_deprecated_string());
     }
+    bool success = http_status_code != 0;
     on_buffered_request_finish(success, buffer.length(), response_headers, http_status_code, ReadonlyBytes { buffer.data(), (size_t)buffer.size() });
 }

@@ -22,8 +22,8 @@ public:
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual void on_mousemove(Layer*, MouseEvent&) override;
     virtual void on_mouseup(Layer*, MouseEvent&) override;
-    virtual GUI::Widget* get_properties_widget() override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override
     {
         if (m_editor && m_editor->scale() != m_scale_last_created_cursor)
             refresh_editor_cursor();
@@ -59,7 +59,7 @@ private:
     bool m_was_drawing { false };
     bool m_has_clicked { false };
     Gfx::IntPoint m_last_position;
-    NonnullRefPtr<Gfx::Bitmap> m_cursor = build_cursor();
+    NonnullRefPtr<Gfx::Bitmap const> m_cursor = build_cursor();
 };
 
 }

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <LibCore/Stream.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/ImageDecoder.h>
 
@@ -32,14 +31,14 @@ struct QOILoadingContext {
         Error,
     };
     State state { State::NotDecoded };
-    OwnPtr<AK::Stream> stream {};
+    OwnPtr<Stream> stream {};
     QOIHeader header {};
     RefPtr<Bitmap> bitmap;
 };
 
 class QOIImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     virtual ~QOIImageDecoderPlugin() override = default;
@@ -55,10 +54,10 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    ErrorOr<void> decode_header_and_update_context(AK::Stream&);
-    ErrorOr<void> decode_image_and_update_context(AK::Stream&);
+    ErrorOr<void> decode_header_and_update_context(Stream&);
+    ErrorOr<void> decode_image_and_update_context(Stream&);
 
-    QOIImageDecoderPlugin(NonnullOwnPtr<AK::Stream>);
+    QOIImageDecoderPlugin(NonnullOwnPtr<Stream>);
 
     OwnPtr<QOILoadingContext> m_context;
 };

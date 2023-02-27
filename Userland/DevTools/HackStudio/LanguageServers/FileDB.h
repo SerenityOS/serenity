@@ -10,7 +10,6 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <LibCodeComprehension/FileDB.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/TextDocument.h>
 
 namespace LanguageServers {
@@ -34,7 +33,7 @@ public:
 private:
     ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_filesystem(DeprecatedString const& filename) const;
     ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_fd(int fd) const;
-    ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_file(NonnullOwnPtr<Core::Stream::File>) const;
+    ErrorOr<NonnullRefPtr<GUI::TextDocument>> create_from_file(NonnullOwnPtr<Core::File>) const;
     static RefPtr<GUI::TextDocument> create_with_content(DeprecatedString const&);
 
 private:

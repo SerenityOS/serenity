@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -82,7 +83,7 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
 
         SubmitEventInit event_init {};
         event_init.submitter = submitter_button;
-        auto submit_event = SubmitEvent::create(realm(), EventNames::submit, event_init);
+        auto submit_event = SubmitEvent::create(realm(), EventNames::submit, event_init).release_value_but_fixme_should_propagate_errors();
         submit_event->set_bubbles(true);
         submit_event->set_cancelable(true);
         bool continue_ = dispatch_event(*submit_event);
@@ -148,11 +149,11 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
 void HTMLFormElement::reset_form()
 {
     // 1. Let reset be the result of firing an event named reset at form, with the bubbles and cancelable attributes initialized to true.
-    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset);
+    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset).release_value_but_fixme_should_propagate_errors();
     reset_event->set_bubbles(true);
     reset_event->set_cancelable(true);
 
-    bool reset = dispatch_event(*reset_event);
+    bool reset = dispatch_event(reset_event);
 
     // 2. If reset is true, then invoke the reset algorithm of each resettable element whose form owner is form.
     if (reset) {
@@ -235,7 +236,7 @@ JS::NonnullGCPtr<DOM::HTMLCollection> HTMLFormElement::elements() const
     if (!m_elements) {
         m_elements = DOM::HTMLCollection::create(const_cast<HTMLFormElement&>(*this), [](Element const& element) {
             return is_form_control(element);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
     }
     return *m_elements;
 }
@@ -245,6 +246,32 @@ unsigned HTMLFormElement::length() const
 {
     // The length IDL attribute must return the number of nodes represented by the elements collection.
     return elements()->length();
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#category-submit
+ErrorOr<Vector<JS::NonnullGCPtr<DOM::Element>>> HTMLFormElement::get_submittable_elements()
+{
+    Vector<JS::NonnullGCPtr<DOM::Element>> submittable_elements = {};
+    for (size_t i = 0; i < elements()->length(); i++) {
+        auto* element = elements()->item(i);
+        TRY(populate_vector_with_submittable_elements_in_tree_order(*element, submittable_elements));
+    }
+    return submittable_elements;
+}
+
+ErrorOr<void> HTMLFormElement::populate_vector_with_submittable_elements_in_tree_order(JS::NonnullGCPtr<DOM::Element> element, Vector<JS::NonnullGCPtr<DOM::Element>>& elements)
+{
+    if (auto* form_associated_element = dynamic_cast<HTML::FormAssociatedElement*>(element.ptr())) {
+        if (form_associated_element->is_submittable())
+            TRY(elements.try_append(element));
+    }
+
+    for (size_t i = 0; i < element->children()->length(); i++) {
+        auto* child = element->children()->item(i);
+        TRY(populate_vector_with_submittable_elements_in_tree_order(*child, elements));
+    }
+
+    return {};
 }
 
 }

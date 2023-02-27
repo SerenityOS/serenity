@@ -15,10 +15,10 @@
 
 namespace GUI {
 
-ProcessChooser::ProcessChooser(StringView window_title, StringView button_label, Gfx::Bitmap const* window_icon, GUI::Window* parent_window)
+ProcessChooser::ProcessChooser(StringView window_title, String button_label, Gfx::Bitmap const* window_icon, GUI::Window* parent_window)
     : Dialog(parent_window)
     , m_window_title(window_title)
-    , m_button_label(button_label)
+    , m_button_label(move(button_label))
     , m_window_icon(window_icon)
 {
     set_title(m_window_title);
@@ -48,9 +48,8 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
 
     auto& button_container = widget->add<GUI::Widget>();
     button_container.set_fixed_height(30);
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.layout()->set_margins({ 0, 4, 0 });
-    button_container.layout()->add_spacer();
+    button_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 0, 4, 0 });
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& select_button = button_container.add<GUI::Button>(m_button_label);
     select_button.set_fixed_width(80);
@@ -62,7 +61,7 @@ ProcessChooser::ProcessChooser(StringView window_title, StringView button_label,
         auto index = m_table_view->selection().first();
         set_pid_from_index_and_close(index);
     };
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
     cancel_button.set_fixed_width(80);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

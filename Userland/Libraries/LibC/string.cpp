@@ -136,29 +136,26 @@ void* memcpy(void* dest_ptr, void const* src_ptr, size_t n)
         "rep movsb"
         : "+D"(dest_ptr), "+S"(src_ptr), "+c"(n)::"memory");
     return original_dest;
-#elif ARCH(AARCH64)
-    (void)dest_ptr;
-    (void)src_ptr;
-    (void)n;
-    TODO_AARCH64();
 #else
-#    error Unknown architecture
+    u8* pd = (u8*)dest_ptr;
+    u8 const* ps = (u8 const*)src_ptr;
+    for (; n--;)
+        *pd++ = *ps++;
+    return dest_ptr;
 #endif
 }
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memset.html
 // For x86-64, an optimized ASM implementation is found in ./arch/x86_64/memset.S
-#if ARCH(AARCH64)
+#if ARCH(X86_64)
+#else
 void* memset(void* dest_ptr, int c, size_t n)
 {
-    (void)dest_ptr;
-    (void)c;
-    (void)n;
-    TODO_AARCH64();
+    u8* pd = (u8*)dest_ptr;
+    for (; n--;)
+        *pd++ = c;
+    return dest_ptr;
 }
-#elif ARCH(X86_64)
-#else
-#    error Unknown architecture
 #endif
 
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/memmove.html

@@ -68,7 +68,7 @@ JS::VM& main_thread_vm()
         vm->host_ensure_can_add_private_element = [](JS::Object const& object) -> JS::ThrowCompletionOr<void> {
             // 1. If O is a WindowProxy object, or implements Location, then return Completion { [[Type]]: throw, [[Value]]: a new TypeError }.
             if (is<HTML::WindowProxy>(object) || is<HTML::Location>(object))
-                return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object");
+                return vm->throw_completion<JS::TypeError>("Cannot add private elements to window or location object"sv);
 
             // 2. Return NormalCompletion(unused).
             return {};
@@ -138,8 +138,8 @@ JS::VM& main_thread_vm()
                         /* .promise = */ promise,
                         /* .reason = */ promise.result(),
                     };
-                    auto promise_rejection_event = HTML::PromiseRejectionEvent::create(HTML::relevant_realm(global), HTML::EventNames::rejectionhandled, event_init);
-                    window.dispatch_event(*promise_rejection_event);
+                    auto promise_rejection_event = HTML::PromiseRejectionEvent::create(HTML::relevant_realm(global), HTML::EventNames::rejectionhandled, event_init).release_value_but_fixme_should_propagate_errors();
+                    window.dispatch_event(promise_rejection_event);
                 });
                 break;
             }

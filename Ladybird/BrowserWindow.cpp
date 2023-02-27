@@ -22,6 +22,7 @@
 #include <QGuiApplication>
 #include <QInputDialog>
 #include <QPlainTextEdit>
+#include <QTabBar>
 
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
@@ -31,6 +32,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     , m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     m_tabs_container = new QTabWidget(this);
+    m_tabs_container->installEventFilter(this);
     m_tabs_container->setElideMode(Qt::TextElideMode::ElideRight);
     m_tabs_container->setMovable(true);
     m_tabs_container->setTabsClosable(true);
@@ -503,4 +505,20 @@ void BrowserWindow::copy_selected_text()
         auto* clipboard = QGuiApplication::clipboard();
         clipboard->setText(qstring_from_ak_deprecated_string(text));
     }
+}
+
+bool BrowserWindow::eventFilter(QObject* obj, QEvent* event)
+{
+    if (event->type() == QEvent::MouseButtonRelease) {
+        auto const* const mouse_event = static_cast<QMouseEvent*>(event);
+        if (mouse_event->button() == Qt::MouseButton::MiddleButton) {
+            if (obj == m_tabs_container) {
+                auto const tab_index = m_tabs_container->tabBar()->tabAt(mouse_event->pos());
+                close_tab(tab_index);
+                return true;
+            }
+        }
+    }
+
+    return QMainWindow::eventFilter(obj, event);
 }

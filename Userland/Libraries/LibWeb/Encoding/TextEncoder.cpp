@@ -8,12 +8,13 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Encoding/TextEncoder.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Encoding {
 
-JS::NonnullGCPtr<TextEncoder> TextEncoder::construct_impl(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TextEncoder>> TextEncoder::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<TextEncoder>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<TextEncoder>(realm, realm));
 }
 
 TextEncoder::TextEncoder(JS::Realm& realm)

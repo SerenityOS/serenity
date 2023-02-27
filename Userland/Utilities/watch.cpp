@@ -10,7 +10,7 @@
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -163,7 +163,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto file_watcher = Core::BlockingFileWatcher();
         for (auto const& file : files_to_watch) {
-            if (!Core::File::exists(file)) {
+            if (!Core::DeprecatedFile::exists(file)) {
                 warnln("Cannot watch '{}', it does not exist.", file);
                 return 1;
             }

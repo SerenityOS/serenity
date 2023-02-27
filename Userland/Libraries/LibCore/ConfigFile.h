@@ -11,10 +11,11 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 
 namespace Core {
 
@@ -30,7 +31,7 @@ public:
     static ErrorOr<NonnullRefPtr<ConfigFile>> open_for_system(DeprecatedString const& app_name, AllowWriting = AllowWriting::No);
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, AllowWriting = AllowWriting::No);
     static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, int fd);
-    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, NonnullOwnPtr<Core::Stream::File>);
+    static ErrorOr<NonnullRefPtr<ConfigFile>> open(DeprecatedString const& filename, NonnullOwnPtr<Core::File>);
     ~ConfigFile();
 
     bool has_group(DeprecatedString const&) const;
@@ -78,12 +79,12 @@ public:
     DeprecatedString const& filename() const { return m_filename; }
 
 private:
-    ConfigFile(DeprecatedString const& filename, OwnPtr<Stream::BufferedFile> open_file);
+    ConfigFile(DeprecatedString const& filename, OwnPtr<BufferedFile> open_file);
 
     ErrorOr<void> reparse();
 
     DeprecatedString m_filename;
-    OwnPtr<Stream::BufferedFile> m_file;
+    OwnPtr<BufferedFile> m_file;
     HashMap<DeprecatedString, HashMap<DeprecatedString, DeprecatedString>> m_groups;
     bool m_dirty { false };
 };

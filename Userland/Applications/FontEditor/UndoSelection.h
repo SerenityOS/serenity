@@ -13,7 +13,7 @@
 
 class UndoSelection : public RefCounted<UndoSelection> {
 public:
-    explicit UndoSelection(int const start, int const size, u32 const active_glyph, Gfx::BitmapFont const& font, NonnullRefPtr<GUI::GlyphMapWidget> glyph_map_widget)
+    explicit UndoSelection(int const start, int const size, u32 const active_glyph, Gfx::BitmapFont& font, NonnullRefPtr<GUI::GlyphMapWidget> glyph_map_widget)
         : m_start(start)
         , m_size(size)
         , m_active_glyph(active_glyph)

@@ -47,13 +47,13 @@ void NodeIterator::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createnodeiterator
-JS::NonnullGCPtr<NodeIterator> NodeIterator::create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeIterator>> NodeIterator::create(Node& root, unsigned what_to_show, JS::GCPtr<NodeFilter> filter)
 {
     // 1. Let iterator be a new NodeIterator object.
     // 2. Set iterator’s root and iterator’s reference to root.
     // 3. Set iterator’s pointer before reference to true.
     auto& realm = root.realm();
-    auto iterator = realm.heap().allocate<NodeIterator>(realm, root).release_allocated_value_but_fixme_should_propagate_errors();
+    auto iterator = MUST_OR_THROW_OOM(realm.heap().allocate<NodeIterator>(realm, root));
 
     // 4. Set iterator’s whatToShow to whatToShow.
     iterator->m_what_to_show = what_to_show;

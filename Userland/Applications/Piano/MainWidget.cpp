@@ -8,15 +8,16 @@
 
 #include "MainWidget.h"
 #include "KeysWidget.h"
-#include "KnobsWidget.h"
 #include "PlayerWidget.h"
 #include "RollWidget.h"
 #include "SamplerWidget.h"
+#include "TrackControlsWidget.h"
 #include "TrackManager.h"
 #include "WaveWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Menu.h>
+#include <LibGUI/Slider.h>
 #include <LibGUI/TabWidget.h>
 
 ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::try_create(TrackManager& manager, AudioPlayerLoop& loop)
@@ -34,9 +35,7 @@ MainWidget::MainWidget(TrackManager& track_manager, AudioPlayerLoop& loop)
 
 ErrorOr<void> MainWidget::initialize()
 {
-    (void)TRY(try_set_layout<GUI::VerticalBoxLayout>());
-    layout()->set_spacing(2);
-    layout()->set_margins(2);
+    TRY(try_set_layout<GUI::VerticalBoxLayout>(2, 2));
     set_fill_with_background_color(true);
 
     m_wave_widget = TRY(try_add<WaveWidget>(m_track_manager));
@@ -51,14 +50,35 @@ ErrorOr<void> MainWidget::initialize()
     m_player_widget = TRY(try_add<PlayerWidget>(m_track_manager, m_audio_loop));
 
     m_keys_and_knobs_container = TRY(try_add<GUI::Widget>());
-    (void)TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>());
-    m_keys_and_knobs_container->layout()->set_spacing(2);
+    TRY(m_keys_and_knobs_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 2));
     m_keys_and_knobs_container->set_fixed_height(130);
     m_keys_and_knobs_container->set_fill_with_background_color(true);
 
     m_keys_widget = TRY(m_keys_and_knobs_container->try_add<KeysWidget>(m_track_manager.keyboard()));
 
-    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<KnobsWidget>(m_track_manager, *this));
+    m_octave_container = TRY(m_keys_and_knobs_container->try_add<GUI::Widget>());
+    m_octave_container->set_preferred_width(GUI::SpecialDimension::Fit);
+    TRY(m_octave_container->try_set_layout<GUI::VerticalBoxLayout>());
+    auto octave_label = TRY(m_octave_container->try_add<GUI::Label>("Octave"));
+    octave_label->set_preferred_width(GUI::SpecialDimension::Fit);
+    m_octave_value = TRY(m_octave_container->try_add<GUI::Label>(DeprecatedString::number(m_track_manager.keyboard()->virtual_keyboard_octave())));
+    m_octave_value->set_preferred_width(GUI::SpecialDimension::Fit);
+
+    // FIXME: Implement vertical flipping in GUI::Slider, not here.
+    m_octave_knob = TRY(m_octave_container->try_add<GUI::VerticalSlider>());
+    m_octave_knob->set_preferred_width(GUI::SpecialDimension::Fit);
+    m_octave_knob->set_tooltip("Z: octave down, X: octave up");
+    m_octave_knob->set_range(octave_min - 1, octave_max - 1);
+    m_octave_knob->set_value((octave_max - 1) - (m_track_manager.keyboard()->virtual_keyboard_octave() - 1));
+    m_octave_knob->set_step(1);
+    m_octave_knob->on_change = [this](int value) {
+        int new_octave = octave_max - value;
+        set_octave_via_slider(new_octave);
+        VERIFY(new_octave == m_track_manager.keyboard()->virtual_keyboard_octave());
+        m_octave_value->set_text(DeprecatedString::number(new_octave));
+    };
+
+    m_knobs_widget = TRY(m_keys_and_knobs_container->try_add<TrackControlsWidget>(m_track_manager, *this));
 
     m_roll_widget->set_keys_widget(m_keys_widget);
 
@@ -75,8 +95,6 @@ ErrorOr<void> MainWidget::add_track_actions(GUI::Menu& menu)
         turn_off_pressed_keys();
         m_player_widget->next_track();
         turn_on_pressed_keys();
-
-        m_knobs_widget->update_knobs();
     })));
 
     return {};
@@ -97,8 +115,7 @@ void MainWidget::keydown_event(GUI::KeyEvent& event)
         // This is to stop held-down keys from creating multiple events.
         if (m_keys_pressed[event.key()])
             return;
-        else
-            m_keys_pressed[event.key()] = true;
+        m_keys_pressed[event.key()] = true;
 
         bool event_was_accepted = false;
         if (note_key_action(event.key(), DSP::Keyboard::Switch::On))
@@ -135,10 +152,10 @@ bool MainWidget::special_key_action(int key_code)
 {
     switch (key_code) {
     case Key_Z:
-        set_octave_and_ensure_note_change(DSP::Keyboard::Direction::Down);
+        change_octave_via_keys(DSP::Keyboard::Direction::Down);
         return true;
     case Key_X:
-        set_octave_and_ensure_note_change(DSP::Keyboard::Direction::Up);
+        change_octave_via_keys(DSP::Keyboard::Direction::Up);
         return true;
     case Key_Space:
         m_player_widget->toggle_paused();
@@ -168,22 +185,21 @@ void MainWidget::turn_on_pressed_keys()
     }
 }
 
-void MainWidget::set_octave_and_ensure_note_change(int octave)
+void MainWidget::set_octave_via_slider(int octave)
 {
     turn_off_pressed_keys();
     MUST(m_track_manager.keyboard()->set_virtual_keyboard_octave(octave));
     turn_on_pressed_keys();
 
-    m_knobs_widget->update_knobs();
     m_keys_widget->update();
 }
 
-void MainWidget::set_octave_and_ensure_note_change(DSP::Keyboard::Direction direction)
+void MainWidget::change_octave_via_keys(DSP::Keyboard::Direction direction)
 {
     turn_off_pressed_keys();
     m_track_manager.keyboard()->change_virtual_keyboard_octave(direction);
     turn_on_pressed_keys();
 
-    m_knobs_widget->update_knobs();
+    m_octave_knob->set_value(octave_max - m_track_manager.keyboard()->virtual_keyboard_octave());
     m_keys_widget->update();
 }

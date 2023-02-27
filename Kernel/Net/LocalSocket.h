@@ -28,6 +28,7 @@ public:
 
     ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullLockRefPtr<OpenFileDescription> passing_description);
     ErrorOr<NonnullLockRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
+    ErrorOr<NonnullLockRefPtrVector<OpenFileDescription>> recvfds(OpenFileDescription const& socket_description, int n);
 
     static void for_each(Function<void(LocalSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(LocalSocket const&)>);
@@ -73,7 +74,7 @@ private:
     ErrorOr<void> try_set_path(StringView);
 
     // The inode this socket is bound to.
-    LockWeakPtr<Inode> m_inode;
+    LockRefPtr<Inode> m_inode;
 
     UserID m_prebind_uid { 0 };
     GroupID m_prebind_gid { 0 };

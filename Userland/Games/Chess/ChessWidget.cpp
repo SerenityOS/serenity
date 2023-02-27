@@ -10,7 +10,7 @@
 #include <AK/Random.h>
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -421,7 +421,7 @@ Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
     }
 }
 
-RefPtr<Gfx::Bitmap> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
+RefPtr<Gfx::Bitmap const> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
 {
     return m_pieces.get(piece).value();
 }
@@ -532,7 +532,7 @@ DeprecatedString ChessWidget::get_fen() const
     return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
 }
 
-ErrorOr<void> ChessWidget::import_pgn(Core::Stream::File& file)
+ErrorOr<void> ChessWidget::import_pgn(Core::File& file)
 {
     m_board = Chess::Board();
 
@@ -629,7 +629,7 @@ ErrorOr<void> ChessWidget::import_pgn(Core::Stream::File& file)
     return {};
 }
 
-ErrorOr<void> ChessWidget::export_pgn(Core::Stream::File& file) const
+ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
 {
     // Tag Pair Section
     TRY(file.write("[Event \"Casual Game\"]\n"sv.bytes()));

@@ -207,41 +207,35 @@ void ColorPicker::set_color_has_alpha_channel(bool has_alpha)
 void ColorPicker::build_ui()
 {
     auto root_container = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
-    root_container->set_layout<VerticalBoxLayout>();
-    root_container->layout()->set_margins(4);
+    root_container->set_layout<VerticalBoxLayout>(4);
     root_container->set_fill_with_background_color(true);
 
     auto& tab_widget = root_container->add<GUI::TabWidget>();
 
     auto& tab_palette = tab_widget.add_tab<Widget>("Palette");
-    tab_palette.set_layout<VerticalBoxLayout>();
-    tab_palette.layout()->set_margins(4);
-    tab_palette.layout()->set_spacing(4);
+    tab_palette.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_palette(tab_palette);
 
     auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color");
-    tab_custom_color.set_layout<VerticalBoxLayout>();
-    tab_custom_color.layout()->set_margins(4);
-    tab_custom_color.layout()->set_spacing(4);
+    tab_custom_color.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_custom(tab_custom_color);
 
     auto& button_container = root_container->add<Widget>();
     button_container.set_preferred_height(GUI::SpecialDimension::Fit);
-    button_container.set_layout<HorizontalBoxLayout>();
-    button_container.layout()->set_spacing(4);
-    button_container.layout()->add_spacer();
+    button_container.set_layout<HorizontalBoxLayout>(4);
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& ok_button = button_container.add<DialogButton>();
-    ok_button.set_text("OK");
+    ok_button.set_text("OK"_short_string);
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
 
     auto& cancel_button = button_container.add<DialogButton>();
-    cancel_button.set_text("Cancel");
+    cancel_button.set_text("Cancel"_short_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };
@@ -315,14 +309,11 @@ void ColorPicker::build_ui_custom(Widget& root_container)
 
     // Right Side
     auto& vertical_container = horizontal_container.add<Widget>();
-    vertical_container.set_layout<VerticalBoxLayout>();
-    vertical_container.layout()->set_margins({ 0, 0, 0, 8 });
+    vertical_container.set_layout<VerticalBoxLayout>(GUI::Margins { 0, 0, 0, 8 });
     vertical_container.set_min_width(120);
 
     auto& preview_container = vertical_container.add<Frame>();
-    preview_container.set_layout<VerticalBoxLayout>();
-    preview_container.layout()->set_margins(2);
-    preview_container.layout()->set_spacing(0);
+    preview_container.set_layout<VerticalBoxLayout>(2, 0);
     preview_container.set_fixed_height(100);
 
     // Current color
@@ -331,7 +322,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     // Preview selected color
     m_preview_widget = preview_container.add<ColorPreview>(m_color);
 
-    vertical_container.layout()->add_spacer();
+    vertical_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     // HTML
     auto& html_container = vertical_container.add<GUI::Widget>();
@@ -416,7 +407,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     make_spinbox(Blue, m_color.blue());
     make_spinbox(Alpha, m_color.alpha());
 
-    m_selector_button = vertical_container.add<GUI::Button>("Select on screen");
+    m_selector_button = vertical_container.add<GUI::Button>("Select on screen"_string.release_value_but_fixme_should_propagate_errors());
     m_selector_button->on_click = [this](auto) {
         auto selector = ColorSelectOverlay::construct();
         auto original_color = m_color;

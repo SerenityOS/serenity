@@ -17,7 +17,7 @@ class MediaQueryList final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(MediaQueryList, DOM::EventTarget);
 
 public:
-    static JS::NonnullGCPtr<MediaQueryList> create(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryList>> create(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
 
     virtual ~MediaQueryList() override = default;
 

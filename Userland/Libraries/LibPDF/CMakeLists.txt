@@ -9,6 +9,7 @@ set(SOURCES
     Fonts/CFF.cpp
     Fonts/PDFFont.cpp
     Fonts/PS1FontProgram.cpp
+    Fonts/SimpleFont.cpp
     Fonts/TrueTypeFont.cpp
     Fonts/Type0Font.cpp
     Fonts/Type1Font.cpp

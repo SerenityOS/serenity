@@ -143,7 +143,7 @@ ErrorOr<void> Inode::set_shared_vmobject(Memory::SharedInodeVMObject& vmobject)
 
 LockRefPtr<LocalSocket> Inode::bound_socket() const
 {
-    return m_bound_socket;
+    return m_bound_socket.strong_ref();
 }
 
 bool Inode::bind_socket(LocalSocket& socket)

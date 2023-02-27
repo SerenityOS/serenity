@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Error.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Heap/Cell.h>
@@ -21,7 +23,9 @@ public:
     virtual ~BigInt() override = default;
 
     Crypto::SignedBigInteger const& big_integer() const { return m_big_integer; }
-    const DeprecatedString to_deprecated_string() const { return DeprecatedString::formatted("{}n", m_big_integer.to_base_deprecated(10)); }
+
+    ErrorOr<String> to_string() const;
+    DeprecatedString to_deprecated_string() const { return DeprecatedString::formatted("{}n", m_big_integer.to_base_deprecated(10)); }
 
 private:
     explicit BigInt(Crypto::SignedBigInteger);

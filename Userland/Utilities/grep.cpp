@@ -11,9 +11,9 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
@@ -215,8 +215,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
         auto handle_file = [&matches, binary_mode, count_lines, quiet_mode,
                                user_specified_multiple_files, &matched_line_count, &did_match_something](StringView filename, bool print_filename) -> ErrorOr<void> {
-            auto file = TRY(Core::Stream::File::open(filename, Core::Stream::OpenMode::Read));
-            auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+            auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
+            auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
 
             for (size_t line_number = 1; TRY(buffered_file->can_read_line()); ++line_number) {
                 Array<u8, PAGE_SIZE> buffer;
@@ -245,7 +245,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
             while (it.has_next()) {
                 auto path = it.next_full_path();
-                if (!Core::File::is_directory(path)) {
+                if (!Core::DeprecatedFile::is_directory(path)) {
                     auto key = user_has_specified_files ? path.view() : path.substring_view(base.length() + 1, path.length() - base.length() - 1);
                     if (auto result = handle_file(key, true); result.is_error() && !suppress_errors)
                         warnln("Failed with file {}: {}", key, result.release_error());

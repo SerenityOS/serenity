@@ -16,9 +16,9 @@ Node const* PageNode::parent() const
     return m_section.ptr();
 }
 
-ErrorOr<Span<NonnullRefPtr<Node>>> PageNode::children() const
+ErrorOr<Span<NonnullRefPtr<Node const>>> PageNode::children() const
 {
-    static NonnullRefPtrVector<Node> empty_vector;
+    static NonnullRefPtrVector<Node const> empty_vector;
     return empty_vector.span();
 }
 
@@ -29,7 +29,7 @@ ErrorOr<String> PageNode::path() const
 
 ErrorOr<NonnullRefPtr<PageNode>> PageNode::help_index_page()
 {
-    static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], TRY(String::from_utf8("Help-index"sv))));
+    static NonnullRefPtr<PageNode> const help_index_page = TRY(try_make_ref_counted<PageNode>(sections[7 - 1], TRY("Help-index"_string)));
     return help_index_page;
 }
 

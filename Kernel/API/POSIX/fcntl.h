@@ -21,6 +21,7 @@ extern "C" {
 #define F_GETLK 6
 #define F_SETLK 7
 #define F_SETLKW 8
+#define F_DUPFD_CLOEXEC 9
 
 #define FD_CLOEXEC 1
 

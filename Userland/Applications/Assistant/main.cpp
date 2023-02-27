@@ -36,7 +36,7 @@ namespace Assistant {
 
 struct AppState {
     Optional<size_t> selected_index;
-    NonnullRefPtrVector<Result> results;
+    NonnullRefPtrVector<Result const> results;
     size_t visible_result_count { 0 };
 
     Threading::Mutex lock;
@@ -57,7 +57,7 @@ class ResultRow final : public GUI::Button {
             if (!m_context_menu) {
                 m_context_menu = GUI::Menu::construct();
 
-                if (LexicalPath path { text() }; path.is_absolute()) {
+                if (LexicalPath path { text().to_deprecated_string() }; path.is_absolute()) {
                     m_context_menu->add_action(GUI::Action::create("&Show in File Manager", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [=](auto&) {
                         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
                     }));
@@ -84,7 +84,7 @@ public:
     {
     }
 
-    Function<void(NonnullRefPtrVector<Result>)> on_new_results;
+    Function<void(NonnullRefPtrVector<Result const>)> on_new_results;
 
     void search(DeprecatedString const& query)
     {
@@ -121,7 +121,7 @@ private:
         // NonnullRefPtrVector will provide dual_pivot_quick_sort references rather than pointers,
         // and dual_pivot_quick_sort requires being able to construct the underlying type on the
         // stack. Assistant::Result is pure virtual, thus cannot be constructed on the stack.
-        Vector<NonnullRefPtr<Result>> all_results;
+        Vector<NonnullRefPtr<Result const>> all_results;
         for (auto const& results_for_provider : new_results->value) {
             if (results_for_provider == nullptr)
                 continue;
@@ -182,12 +182,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto container = TRY(window->set_main_widget<GUI::Frame>());
     container->set_fill_with_background_color(true);
     container->set_frame_shape(Gfx::FrameShape::Window);
-    auto& layout = container->set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins({ 8 });
+    container->set_layout<GUI::VerticalBoxLayout>(8);
 
     auto& text_box = container->add<GUI::TextBox>();
     auto& results_container = container->add<GUI::Widget>();
-    auto& results_layout = results_container.set_layout<GUI::VerticalBoxLayout>();
+    results_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto mark_selected_item = [&]() {
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
@@ -250,13 +249,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto update_ui_timer = TRY(Core::Timer::create_single_shot(10, [&] {
         results_container.remove_all_children();
-        results_layout.set_margins(app_state.visible_result_count ? GUI::Margins { 4, 0, 0, 0 } : GUI::Margins { 0 });
+        results_container.layout()->set_margins(app_state.visible_result_count ? GUI::Margins { 4, 0, 0, 0 } : GUI::Margins { 0 });
 
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
             auto& result = app_state.results[i];
             auto& match = results_container.add<Assistant::ResultRow>();
             match.set_icon(result.bitmap());
-            match.set_text(move(result.title()));
+            match.set_text(String::from_deprecated_string(result.title()).release_value_but_fixme_should_propagate_errors());
             match.set_tooltip(move(result.tooltip()));
             match.on_click = [&result](auto) {
                 result.activate();

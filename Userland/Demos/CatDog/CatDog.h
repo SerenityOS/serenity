@@ -12,8 +12,6 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MouseTracker.h>
 #include <LibGUI/Widget.h>
@@ -75,7 +73,7 @@ private:
     Gfx::IntPoint m_mouse_offset {};
     Core::ElapsedTimer m_idle_sleep_timer;
 
-    NonnullOwnPtr<Core::Stream::File> m_proc_all;
+    NonnullOwnPtr<Core::File> m_proc_all;
 
     State m_state { State::Roaming };
     State m_frame { State::Frame1 };

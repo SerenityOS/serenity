@@ -8,6 +8,7 @@
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
 #include <AK/FixedArray.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -21,7 +22,7 @@ MP3LoaderPlugin::MP3LoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<MP3LoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -41,7 +42,7 @@ Result<NonnullOwnPtr<MP3LoaderPlugin>, LoaderError> MP3LoaderPlugin::create(Byte
 
 MaybeLoaderError MP3LoaderPlugin::initialize()
 {
-    m_bitstream = LOADER_TRY(try_make<BigEndianInputBitStream>(MaybeOwned<AK::Stream>(*m_stream)));
+    m_bitstream = LOADER_TRY(try_make<BigEndianInputBitStream>(MaybeOwned<Stream>(*m_stream)));
 
     TRY(synchronize());
 
@@ -242,7 +243,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     TRY(m_bit_reservoir.discard(old_reservoir_size - frame.main_data_begin));
 
-    BigEndianInputBitStream reservoir_stream { MaybeOwned<AK::Stream>(m_bit_reservoir) };
+    BigEndianInputBitStream reservoir_stream { MaybeOwned<Stream>(m_bit_reservoir) };
 
     for (size_t granule_index = 0; granule_index < 2; granule_index++) {
         for (size_t channel_index = 0; channel_index < header.channel_count(); channel_index++) {

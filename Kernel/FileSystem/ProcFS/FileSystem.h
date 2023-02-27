@@ -16,6 +16,7 @@ namespace Kernel {
 class ProcFSInode;
 class ProcFS final : public FileSystem {
     friend class ProcFSInode;
+    friend class Process;
 
 public:
     virtual ~ProcFS() override;
@@ -28,6 +29,8 @@ public:
 
 private:
     ProcFS();
+
+    ErrorOr<NonnullLockRefPtr<Inode>> get_inode(InodeIdentifier) const;
 
     LockRefPtr<ProcFSInode> m_root_inode;
 };

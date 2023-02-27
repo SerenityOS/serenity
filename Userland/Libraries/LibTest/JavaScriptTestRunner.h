@@ -18,7 +18,6 @@
 #include <AK/Tuple.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
@@ -218,7 +217,7 @@ inline JS::ThrowCompletionOr<void> TestRunnerGlobalObject::initialize(JS::Realm&
 inline ByteBuffer load_entire_file(StringView path)
 {
     auto try_load_entire_file = [](StringView const& path) -> ErrorOr<ByteBuffer> {
-        auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
         auto file_size = TRY(file->size());
         auto content = TRY(ByteBuffer::create_uninitialized(file_size));
         TRY(file->read(content.bytes()));
@@ -410,7 +409,7 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
     auto& arr = user_output.as_array();
     for (auto& entry : arr.indexed_properties()) {
         auto message = MUST(arr.get(entry.index()));
-        file_result.logged_messages.append(message.to_string_without_side_effects());
+        file_result.logged_messages.append(message.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     }
 
     test_json.value().as_object().for_each_member([&](DeprecatedString const& suite_name, JsonValue const& suite_value) {
@@ -476,22 +475,22 @@ inline JSFileResult TestRunner::run_file_test(DeprecatedString const& test_path)
             auto message = error_object.get_without_side_effects(g_vm->names.message).value_or(JS::js_undefined());
 
             if (name.is_accessor() || message.is_accessor()) {
-                detail_builder.append(error.to_string_without_side_effects());
+                detail_builder.append(error.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
             } else {
-                detail_builder.append(name.to_string_without_side_effects());
+                detail_builder.append(name.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
                 detail_builder.append(": "sv);
-                detail_builder.append(message.to_string_without_side_effects());
+                detail_builder.append(message.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors());
             }
 
             if (is<JS::Error>(error_object)) {
                 auto& error_as_error = static_cast<JS::Error&>(error_object);
                 detail_builder.append('\n');
-                detail_builder.append(error_as_error.stack_string());
+                detail_builder.append(error_as_error.stack_string(*g_vm).release_allocated_value_but_fixme_should_propagate_errors());
             }
 
             test_case.details = detail_builder.to_deprecated_string();
         } else {
-            test_case.details = error.to_string_without_side_effects();
+            test_case.details = error.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
         }
 
         suite.tests.append(move(test_case));

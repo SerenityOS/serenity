@@ -39,14 +39,11 @@ private:
     static constexpr u8 lfn_entry_character_termination = 0x00;
     static constexpr u8 lfn_entry_unused_byte = 0xFF;
 
-    static constexpr u16 first_fat_year = 1980;
-
     static constexpr u8 normal_filename_length = 8;
     static constexpr u8 normal_extension_length = 3;
 
     static ErrorOr<NonnullOwnPtr<KString>> compute_filename(FATEntry&, Vector<FATLongFileNameEntry> const& = {});
     static StringView byte_terminated_string(StringView, u8);
-    static Time fat_date_time(FATPackedDate, FATPackedTime);
 
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();

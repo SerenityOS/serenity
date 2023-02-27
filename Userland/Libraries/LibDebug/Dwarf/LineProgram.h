@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/Vector.h>
-#include <LibCore/Stream.h>
 #include <LibDebug/Dwarf/DwarfTypes.h>
 
 namespace Debug::Dwarf {
@@ -66,7 +65,7 @@ struct [[gnu::packed]] LineProgramUnitHeader32 {
     u8 line_range() const { return (common.version <= 4) ? v4.line_range : v5.line_range; }
     u8 opcode_base() const { return (common.version <= 4) ? v4.opcode_base : v5.opcode_base; }
 
-    static ErrorOr<LineProgramUnitHeader32> read_from_stream(AK::Stream& stream)
+    static ErrorOr<LineProgramUnitHeader32> read_from_stream(Stream& stream)
     {
         LineProgramUnitHeader32 header;
         TRY(stream.read_entire_buffer(Bytes { &header.common, sizeof(header.common) }));

@@ -23,7 +23,7 @@ class DOMTokenList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(DOMTokenList, Bindings::LegacyPlatformObject);
 
 public:
-    static DOMTokenList* create(Element const& associated_element, DeprecatedFlyString associated_attribute);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMTokenList>> create(Element const& associated_element, DeprecatedFlyString associated_attribute);
     ~DOMTokenList() = default;
 
     void associated_attribute_changed(StringView value);

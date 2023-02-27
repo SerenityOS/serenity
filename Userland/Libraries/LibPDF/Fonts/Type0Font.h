@@ -19,19 +19,15 @@ struct CIDSystemInfo {
 
 class Type0Font : public PDFFont {
 public:
-    static PDFErrorOr<NonnullRefPtr<Type0Font>> create(Document*, NonnullRefPtr<DictObject>);
-
-    Type0Font(CIDSystemInfo const&, HashMap<u16, u16> const& widths, u16 missing_width);
-    ~Type0Font() override = default;
-
-    float get_char_width(u16 char_code) const override;
-
-    void draw_glyph(Gfx::Painter&, Gfx::FloatPoint, float, u32, Color) override {};
-
+    PDFErrorOr<Gfx::FloatPoint> draw_string(Gfx::Painter&, Gfx::FloatPoint pos, DeprecatedString const&, Color const&, float, float, float) override;
     Type type() const override { return PDFFont::Type::Type0; }
-    DeprecatedFlyString base_font_name() const override { return ""; }
+
+protected:
+    PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float) override;
 
 private:
+    float get_char_width(u16 char_code) const;
+
     CIDSystemInfo m_system_info;
     HashMap<u16, u16> m_widths;
     u16 m_missing_width;

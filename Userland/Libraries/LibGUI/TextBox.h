@@ -72,8 +72,11 @@ public:
 private:
     UrlBox();
 
+    void highlight_url();
+
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void focusout_event(GUI::FocusEvent&) override;
+    virtual void focusin_event(GUI::FocusEvent&) override;
 
     bool m_focus_transition { true };
 };

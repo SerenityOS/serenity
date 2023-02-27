@@ -6,14 +6,15 @@
 
 #include "AST.h"
 #include "Formatter.h"
+#include "PosixParser.h"
 #include "Shell.h"
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Statistics.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -32,10 +33,17 @@ int Shell::builtin_noop(int, char const**)
 
 int Shell::builtin_dump(int argc, char const** argv)
 {
-    if (argc != 2)
+    bool posix = false;
+    StringView source;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(source, "Shell code to parse and dump", "source");
+    parser.add_option(posix, "Use the POSIX parser", "posix", 'p');
+
+    if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    Parser { StringView { argv[1], strlen(argv[1]) } }.parse()->dump(0);
+    (posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0);
     return 0;
 }
 
@@ -61,7 +69,7 @@ static Vector<DeprecatedString> find_matching_executables_in_path(StringView fil
         auto file = DeprecatedString::formatted("{}/{}", directory, filename);
 
         if (follow_symlinks == FollowSymlinks::Yes) {
-            auto path_or_error = Core::File::read_link(file);
+            auto path_or_error = Core::DeprecatedFile::read_link(file);
             if (!path_or_error.is_error())
                 file = path_or_error.release_value();
         }
@@ -332,7 +340,7 @@ int Shell::builtin_type(int argc, char const** argv)
         }
 
         // check if its an executable in PATH
-        auto fullpath = Core::File::resolve_executable_from_environment(command);
+        auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment(command);
         if (fullpath.has_value()) {
             printf("%s is %s\n", command.characters(), escape_token(fullpath.release_value()).characters());
             continue;
@@ -372,7 +380,7 @@ int Shell::builtin_cd(int argc, char const** argv)
         }
     }
 
-    auto real_path = Core::File::real_path_for(new_path);
+    auto real_path = Core::DeprecatedFile::real_path_for(new_path);
     if (real_path.is_empty()) {
         warnln("Invalid path '{}'", new_path);
         return 1;
@@ -546,7 +554,7 @@ int Shell::builtin_export(int argc, char const** argv)
         if (parts.size() == 1) {
             auto value = lookup_local_variable(parts[0]);
             if (value) {
-                auto values = value->resolve_as_list(*this);
+                auto values = const_cast<AST::Value&>(*value).resolve_as_list(*this);
                 StringBuilder builder;
                 builder.join(' ', values);
                 parts.append(builder.to_deprecated_string());
@@ -938,9 +946,9 @@ int Shell::builtin_shift(int argc, char const** argv)
     }
 
     if (!argv_->is_list())
-        argv_ = adopt_ref(*new AST::ListValue({ argv_.release_nonnull() }));
+        argv_ = adopt_ref(*new AST::ListValue({ const_cast<AST::Value&>(*argv_) }));
 
-    auto& values = static_cast<AST::ListValue*>(argv_.ptr())->values();
+    auto& values = const_cast<AST::ListValue*>(static_cast<AST::ListValue const*>(argv_.ptr()))->values();
     if ((size_t)count > values.size()) {
         warnln("shift: shift count must not be greater than {}", values.size());
         return 1;
@@ -967,7 +975,7 @@ int Shell::builtin_source(int argc, char const** argv)
     auto previous_argv = lookup_local_variable("ARGV"sv);
     ScopeGuard guard { [&] {
         if (!args.is_empty())
-            set_local_variable("ARGV", move(previous_argv));
+            set_local_variable("ARGV", const_cast<AST::Value&>(*previous_argv));
     } };
 
     if (!args.is_empty())
@@ -1175,7 +1183,7 @@ int Shell::builtin_kill(int argc, char const** argv)
 {
     // Simply translate the arguments and pass them to `kill'
     Vector<DeprecatedString> replaced_values;
-    auto kill_path = Core::File::resolve_executable_from_environment("kill"sv);
+    auto kill_path = Core::DeprecatedFile::resolve_executable_from_environment("kill"sv);
     if (!kill_path.has_value()) {
         warnln("kill: `kill' not found in PATH");
         return 126;
@@ -1329,7 +1337,7 @@ int Shell::builtin_argsparser_parse(int argc, char const** argv)
     auto enlist = [&](auto name, auto value) -> NonnullRefPtr<AST::Value> {
         auto variable = lookup_local_variable(name);
         if (variable) {
-            auto list = variable->resolve_as_list(*this);
+            auto list = const_cast<AST::Value&>(*variable).resolve_as_list(*this);
             auto new_value = value->resolve_as_string(*this);
             list.append(move(new_value));
             return make_ref_counted<AST::ListValue>(move(list));

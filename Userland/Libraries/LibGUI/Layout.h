@@ -58,11 +58,12 @@ public:
     Margins const& margins() const { return m_margins; }
     void set_margins(Margins const&);
 
+    static constexpr int default_spacing = 3;
     int spacing() const { return m_spacing; }
     void set_spacing(int);
 
 protected:
-    Layout();
+    Layout(Margins, int spacing);
 
     struct Entry {
         enum class Type {
@@ -83,7 +84,7 @@ protected:
     Vector<Entry> m_entries;
 
     Margins m_margins;
-    int m_spacing { 3 };
+    int m_spacing { default_spacing };
 };
 
 }

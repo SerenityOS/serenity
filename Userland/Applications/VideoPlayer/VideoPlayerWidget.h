@@ -49,6 +49,8 @@ private:
 
     void cycle_sizing_modes();
 
+    void toggle_fullscreen();
+
     void event(Core::Event&) override;
 
     DeprecatedString m_path;
@@ -65,6 +67,8 @@ private:
     RefPtr<GUI::HorizontalSlider> m_volume_slider;
 
     RefPtr<GUI::Action> m_use_fast_seeking;
+
+    RefPtr<GUI::Action> m_toggle_fullscreen_action;
 
     OwnPtr<Video::PlaybackManager> m_playback_manager;
 

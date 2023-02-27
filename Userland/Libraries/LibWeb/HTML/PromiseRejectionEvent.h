@@ -23,8 +23,8 @@ class PromiseRejectionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PromiseRejectionEvent, DOM::Event);
 
 public:
-    static PromiseRejectionEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
-    static PromiseRejectionEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PromiseRejectionEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PromiseRejectionEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, PromiseRejectionEventInit const& event_init);
 
     virtual ~PromiseRejectionEvent() override;
 

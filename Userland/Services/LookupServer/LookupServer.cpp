@@ -12,9 +12,8 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/LocalServer.h>
-#include <LibCore/Stream.h>
 #include <LibDNS/Packet.h>
 #include <limits.h>
 #include <stdio.h>
@@ -83,7 +82,7 @@ void LookupServer::load_etc_hosts()
         m_etc_hosts.ensure(name).empend(name, record_type, RecordClass::IN, s_static_ttl, move(data), false);
     };
 
-    auto file = Core::File::construct("/etc/hosts");
+    auto file = Core::DeprecatedFile::construct("/etc/hosts");
     if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to open '/etc/hosts'");
         return;
@@ -237,7 +236,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
 
     auto buffer = TRY(request.to_byte_buffer());
 
-    auto udp_socket = TRY(Core::Stream::UDPSocket::connect(nameserver, 53, Time::from_seconds(1)));
+    auto udp_socket = TRY(Core::UDPSocket::connect(nameserver, 53, Time::from_seconds(1)));
     TRY(udp_socket->set_blocking(true));
 
     TRY(udp_socket->write(buffer));

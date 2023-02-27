@@ -17,10 +17,10 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<DOMImplementation> DOMImplementation::create(Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMImplementation>> DOMImplementation::create(Document& document)
 {
     auto& realm = document.realm();
-    return realm.heap().allocate<DOMImplementation>(realm, document).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMImplementation>(realm, document));
 }
 
 DOMImplementation::DOMImplementation(Document& document)
@@ -49,7 +49,7 @@ void DOMImplementation::visit_edges(Cell::Visitor& visitor)
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_document(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, JS::GCPtr<DocumentType> doctype) const
 {
     // FIXME: This should specifically be an XML document.
-    auto xml_document = Document::create(realm());
+    auto xml_document = TRY(Document::create(realm()));
 
     xml_document->set_ready_for_post_load_tasks(true);
 
@@ -79,7 +79,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
 // https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
 JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedString const& title) const
 {
-    auto html_document = Document::create(realm());
+    auto html_document = Document::create(realm()).release_value_but_fixme_should_propagate_errors();
 
     html_document->set_content_type("text/html");
     html_document->set_ready_for_post_load_tasks(true);
@@ -88,21 +88,21 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedStr
     doctype->set_name("html");
     MUST(html_document->append_child(*doctype));
 
-    auto html_element = create_element(html_document, HTML::TagNames::html, Namespace::HTML);
+    auto html_element = create_element(html_document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_document->append_child(html_element));
 
-    auto head_element = create_element(html_document, HTML::TagNames::head, Namespace::HTML);
+    auto head_element = create_element(html_document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
 
     if (!title.is_null()) {
-        auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML);
+        auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
         MUST(head_element->append_child(title_element));
 
         auto text_node = heap().allocate<Text>(realm(), html_document, title).release_allocated_value_but_fixme_should_propagate_errors();
         MUST(title_element->append_child(*text_node));
     }
 
-    auto body_element = create_element(html_document, HTML::TagNames::body, Namespace::HTML);
+    auto body_element = create_element(html_document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
     html_document->set_origin(document().origin());
@@ -114,7 +114,7 @@ JS::NonnullGCPtr<Document> DOMImplementation::create_html_document(DeprecatedStr
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DOMImplementation::create_document_type(DeprecatedString const& qualified_name, DeprecatedString const& public_id, DeprecatedString const& system_id)
 {
     TRY(Document::validate_qualified_name(realm(), qualified_name));
-    auto document_type = DocumentType::create(document());
+    auto document_type = TRY(DocumentType::create(document()));
     document_type->set_name(qualified_name);
     document_type->set_public_id(public_id);
     document_type->set_system_id(system_id);

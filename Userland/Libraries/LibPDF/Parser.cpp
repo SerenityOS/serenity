@@ -267,7 +267,7 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
     if (unencrypted_string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
         // The string is encoded in UTF16-BE
-        string_object->set_string(TextCodec::decoder_for("utf-16be")->to_utf8(unencrypted_string));
+        string_object->set_string(TextCodec::decoder_for("utf-16be"sv)->to_utf8(unencrypted_string).release_value_but_fixme_should_propagate_errors().to_deprecated_string());
     } else if (unencrypted_string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
         // The string is encoded in UTF-8. This is the default anyways, but if these bytes
         // are explicitly included, we have to trim them
@@ -495,8 +495,10 @@ PDFErrorOr<NonnullRefPtr<StreamObject>> Parser::parse_stream(NonnullRefPtr<DictO
             if (decode_parms_object->is<ArrayObject>()) {
                 auto decode_parms_array = decode_parms_object->cast<ArrayObject>();
                 for (size_t i = 0; i < decode_parms_array->size(); ++i) {
-                    // FIXME: This entry may be the null object instead
-                    RefPtr<DictObject> decode_parms = decode_parms_array->at(i).get<NonnullRefPtr<Object>>()->cast<DictObject>();
+                    RefPtr<DictObject> decode_parms;
+                    auto entry = decode_parms_array->at(i);
+                    if (entry.has<NonnullRefPtr<Object>>())
+                        decode_parms = entry.get<NonnullRefPtr<Object>>()->cast<DictObject>();
                     decode_parms_vector.append(decode_parms);
                 }
             } else {

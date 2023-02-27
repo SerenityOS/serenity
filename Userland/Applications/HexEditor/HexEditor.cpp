@@ -63,7 +63,7 @@ ErrorOr<void> HexEditor::open_new_file(size_t size)
     return {};
 }
 
-void HexEditor::open_file(NonnullOwnPtr<Core::Stream::File> file)
+void HexEditor::open_file(NonnullOwnPtr<Core::File> file)
 {
     m_document = HexDocumentFile::create(move(file)).release_value_but_fixme_should_propagate_errors();
     set_content_length(m_document->size());
@@ -136,7 +136,7 @@ void HexEditor::set_selection(size_t position, size_t length)
     update_status();
 }
 
-ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::Stream::File> new_file)
+ErrorOr<void> HexEditor::save_as(NonnullOwnPtr<Core::File> new_file)
 {
     if (m_document->type() == HexDocument::Type::File) {
         auto& file_document = static_cast<HexDocumentFile&>(*m_document);
@@ -243,6 +243,18 @@ Optional<u8> HexEditor::get_byte(size_t position)
         return m_document->get(position).value;
 
     return {};
+}
+
+ByteBuffer HexEditor::get_selected_bytes()
+{
+    auto num_selected_bytes = m_selection_end - m_selection_start;
+    ByteBuffer data;
+    data.ensure_capacity(num_selected_bytes);
+
+    for (size_t i = m_selection_start; i < m_selection_end; i++)
+        data.append(m_document->get(i).value);
+
+    return data;
 }
 
 void HexEditor::mousedown_event(GUI::MouseEvent& event)

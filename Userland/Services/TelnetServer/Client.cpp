@@ -14,10 +14,11 @@
 #include <AK/Types.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Socket.h>
 #include <stdio.h>
 #include <unistd.h>
 
-Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd)
+Client::Client(int id, NonnullOwnPtr<Core::TCPSocket> socket, int ptm_fd)
     : m_id(id)
     , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)
@@ -51,7 +52,7 @@ Client::Client(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd
     m_parser.on_error = [this]() { handle_error(); };
 }
 
-ErrorOr<NonnullRefPtr<Client>> Client::create(int id, NonnullOwnPtr<Core::Stream::TCPSocket> socket, int ptm_fd)
+ErrorOr<NonnullRefPtr<Client>> Client::create(int id, NonnullOwnPtr<Core::TCPSocket> socket, int ptm_fd)
 {
     auto client = adopt_ref(*new Client(id, move(socket), ptm_fd));
 

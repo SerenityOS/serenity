@@ -73,8 +73,7 @@ private:
 
 ThreadStackWidget::ThreadStackWidget()
 {
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins(4);
+    set_layout<GUI::VerticalBoxLayout>(4);
     m_stack_table = add<GUI::TableView>();
     m_stack_table->set_model(adopt_ref(*new ThreadStackModel()));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,7 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
-#include <LibCore/DateTime.h>
+#include <AK/Time.h>
 #include <LibIPC/Forward.h>
 #include <LibWeb/Cookie/Cookie.h>
 
@@ -18,8 +18,8 @@ struct ParsedCookie {
     DeprecatedString name;
     DeprecatedString value;
     SameSite same_site_attribute { SameSite::Default };
-    Optional<Core::DateTime> expiry_time_from_expires_attribute {};
-    Optional<Core::DateTime> expiry_time_from_max_age_attribute {};
+    Optional<Time> expiry_time_from_expires_attribute {};
+    Optional<Time> expiry_time_from_max_age_attribute {};
     Optional<DeprecatedString> domain {};
     Optional<DeprecatedString> path {};
     bool secure_attribute_present { false };

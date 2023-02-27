@@ -174,24 +174,16 @@ public:
         LeaveVariableEnvironment,
     };
     template<typename OpType>
-    void perform_needed_unwinds(bool is_break_node = false)
-    requires(OpType::IsTerminator)
+    void perform_needed_unwinds()
+    requires(OpType::IsTerminator && !IsSame<OpType, Op::Jump>)
     {
-        Optional<BlockBoundaryType> boundary_to_stop_at;
-        if constexpr (IsSame<OpType, Bytecode::Op::Return> || IsSame<OpType, Bytecode::Op::Yield>)
-            VERIFY(!is_break_node);
-        else if constexpr (IsSame<OpType, Bytecode::Op::Throw>)
-            boundary_to_stop_at = BlockBoundaryType::Unwind;
-        else
-            boundary_to_stop_at = is_break_node ? BlockBoundaryType::Break : BlockBoundaryType::Continue;
-
         for (size_t i = m_boundaries.size(); i > 0; --i) {
             auto boundary = m_boundaries[i - 1];
-            if (boundary_to_stop_at.has_value() && boundary == *boundary_to_stop_at)
-                break;
             using enum BlockBoundaryType;
             switch (boundary) {
             case Unwind:
+                if constexpr (IsSame<OpType, Bytecode::Op::Throw>)
+                    return;
                 emit<Bytecode::Op::LeaveUnwindContext>();
                 break;
             case LeaveLexicalEnvironment:
@@ -204,17 +196,16 @@ public:
             case Continue:
                 break;
             case ReturnToFinally:
-                // FIXME: In the case of breaks/continues we need to tell the `finally` to break/continue
-                //        For now let's ignore the finally to avoid a crash
-                if (IsSame<OpType, Bytecode::Op::Jump>)
-                    break;
                 return;
             };
         }
     }
 
-    Label perform_needed_unwinds_for_labelled_break_and_return_target_block(DeprecatedFlyString const& break_label);
-    Label perform_needed_unwinds_for_labelled_continue_and_return_target_block(DeprecatedFlyString const& continue_label);
+    void generate_break();
+    void generate_break(DeprecatedFlyString const& break_label);
+
+    void generate_continue();
+    void generate_continue(DeprecatedFlyString const& continue_label);
 
     void start_boundary(BlockBoundaryType type) { m_boundaries.append(type); }
     void end_boundary(BlockBoundaryType type)

@@ -17,7 +17,6 @@
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
@@ -34,6 +33,7 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
+#include <LibTextCodec/Decoder.h>
 #include <string.h>
 
 REGISTER_WIDGET(HexEditor, HexEditor);
@@ -121,7 +121,7 @@ HexEditorWidget::HexEditorWidget()
         if (!request_close())
             return;
 
-        auto response = FileSystemAccessClient::Client::the().open_file(window(), {}, Core::StandardPaths::home_directory(), Core::Stream::OpenMode::ReadWrite);
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), {}, Core::StandardPaths::home_directory(), Core::File::OpenMode::ReadWrite);
         if (response.is_error())
             return;
 
@@ -142,7 +142,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, m_extension, Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), m_name, m_extension, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
         if (response.is_error())
             return;
         auto file = response.release_value();
@@ -377,7 +377,25 @@ void HexEditorWidget::update_inspector_values(size_t position)
         value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16, "");
     }
 
+    auto selected_bytes = m_editor->get_selected_bytes();
+
+    auto ascii_string = DeprecatedString { ReadonlyBytes { selected_bytes } };
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::ASCIIString, ascii_string);
+
+    Utf8View utf8_string_view { ReadonlyBytes { selected_bytes } };
+    utf8_string_view.validate(valid_bytes);
+    if (valid_bytes == 0)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, "");
+    else
+        // FIXME: replace control chars with something else - we don't want line breaks here ;)
+        value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF8String, utf8_string_view.as_string());
+
     // FIXME: Parse as other values like Timestamp etc
+
+    auto decoder = TextCodec::decoder_for(m_value_inspector_little_endian ? "utf-16le"sv : "utf-16be"sv);
+    DeprecatedString utf16_string = decoder->to_utf8(StringView(selected_bytes.span())).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+
+    value_inspector_model->set_parsed_value(ValueInspectorModel::ValueType::UTF16String, utf16_string);
 
     m_value_inspector->set_model(value_inspector_model);
     m_value_inspector->update();
@@ -525,7 +543,7 @@ void HexEditorWidget::update_title()
     window()->set_title(builder.to_deprecated_string());
 }
 
-void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+void HexEditorWidget::open_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     window()->set_modified(false);
     m_editor->open_file(move(file));
@@ -586,7 +604,7 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
         open_file(response.value().filename(), response.value().release_stream());

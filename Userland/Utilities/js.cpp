@@ -9,7 +9,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
@@ -82,7 +81,7 @@ static String s_history_path = String {};
 static int s_repl_line_level = 0;
 static bool s_fail_repl = false;
 
-static ErrorOr<void> print(JS::Value value, AK::Stream& stream)
+static ErrorOr<void> print(JS::Value value, Stream& stream)
 {
     JS::PrintContext print_context { .vm = *g_vm, .stream = stream, .strip_ansi = s_strip_ansi };
     return JS::print(value, print_context);
@@ -95,7 +94,7 @@ enum class PrintTarget {
 
 static ErrorOr<void> print(JS::Value value, PrintTarget target = PrintTarget::StandardOutput)
 {
-    auto stream = TRY(target == PrintTarget::StandardError ? Core::Stream::File::standard_error() : Core::Stream::File::standard_output());
+    auto stream = TRY(target == PrintTarget::StandardError ? Core::File::standard_error() : Core::File::standard_output());
     return print(value, *stream);
 }
 
@@ -185,7 +184,7 @@ static ErrorOr<String> read_next_piece()
 
 static ErrorOr<void> write_to_file(String const& path)
 {
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Write, 0666));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Write, 0666));
     for (size_t i = 0; i < g_repl_statements.size(); i++) {
         auto line = g_repl_statements[i].bytes();
         if (line.size() > 0 && i != g_repl_statements.size() - 1) {
@@ -208,14 +207,14 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
 
     JS::ThrowCompletionOr<JS::Value> result { JS::js_undefined() };
 
-    auto run_script_or_module = [&](auto& script_or_module) {
+    auto run_script_or_module = [&](auto& script_or_module) -> ErrorOr<ReturnEarly> {
         if (s_dump_ast)
             script_or_module->parse_node().dump(0);
 
         if (JS::Bytecode::g_dump_bytecode || s_run_bytecode) {
             auto executable_result = JS::Bytecode::Generator::generate(script_or_module->parse_node());
             if (executable_result.is_error()) {
-                result = g_vm->throw_completion<JS::InternalError>(executable_result.error().to_deprecated_string());
+                result = g_vm->throw_completion<JS::InternalError>(TRY(executable_result.error().to_string()));
                 return ReturnEarly::No;
             }
 
@@ -254,10 +253,12 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln("{}", error.to_deprecated_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
+
+            auto error_string = TRY(error.to_string());
+            outln("{}", error_string);
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
         } else {
-            auto return_early = run_script_or_module(script_or_error.value());
+            auto return_early = TRY(run_script_or_module(script_or_error.value()));
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -268,10 +269,12 @@ static ErrorOr<bool> parse_and_run(JS::Interpreter& interpreter, StringView sour
             auto hint = error.source_location_hint(source);
             if (!hint.is_empty())
                 outln("{}", hint);
-            outln(error.to_deprecated_string());
-            result = interpreter.vm().throw_completion<JS::SyntaxError>(error.to_deprecated_string());
+
+            auto error_string = TRY(error.to_string());
+            outln("{}", error_string);
+            result = interpreter.vm().throw_completion<JS::SyntaxError>(move(error_string));
         } else {
-            auto return_early = run_script_or_module(module_or_error.value());
+            auto return_early = TRY(run_script_or_module(module_or_error.value()));
             if (return_early == ReturnEarly::Yes)
                 return true;
         }
@@ -334,9 +337,9 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
     auto& realm = *vm.current_realm();
 
     auto filename = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+        return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to open '{}': {}", filename, file_or_error.error())));
 
     auto config_file = MUST(Core::ConfigFile::open(filename, file_or_error.release_value()));
     auto object = JS::Object::create(realm, realm.intrinsics().object_prototype());
@@ -354,13 +357,13 @@ static JS::ThrowCompletionOr<JS::Value> load_ini_impl(JS::VM& vm)
 static JS::ThrowCompletionOr<JS::Value> load_json_impl(JS::VM& vm)
 {
     auto filename = TRY(vm.argument(0).to_string(vm));
-    auto file_or_error = Core::Stream::File::open(filename, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
     if (file_or_error.is_error())
-        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to open '{}': {}", filename, file_or_error.error()));
+        return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to open '{}': {}", filename, file_or_error.error())));
 
     auto file_contents_or_error = file_or_error.value()->read_until_eof();
     if (file_contents_or_error.is_error())
-        return vm.throw_completion<JS::Error>(DeprecatedString::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error()));
+        return vm.throw_completion<JS::Error>(TRY_OR_THROW_OOM(vm, String::formatted("Failed to read '{}': {}", filename, file_contents_or_error.error())));
 
     auto json = JsonValue::from_string(file_contents_or_error.value());
     if (json.is_error())
@@ -418,6 +421,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::exit_interpreter)
 {
+    s_editor->save_history(s_history_path.to_deprecated_string());
     if (!vm.argument_count())
         exit(0);
     exit(TRY(vm.argument(0).to_number(vm)).as_double());
@@ -449,7 +453,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(TRY_OR_THROW_OOM(*g_vm, String::formatted("Failed to print value: {}", result.error())));
 
     outln();
 
@@ -483,7 +487,7 @@ JS_DEFINE_NATIVE_FUNCTION(ScriptObject::print)
 {
     auto result = ::print(vm.argument(0));
     if (result.is_error())
-        return g_vm->throw_completion<JS::InternalError>(DeprecatedString::formatted("Failed to print value: {}", result.error()));
+        return g_vm->throw_completion<JS::InternalError>(TRY_OR_THROW_OOM(*g_vm, String::formatted("Failed to print value: {}", result.error())));
 
     outln();
 
@@ -554,7 +558,7 @@ public:
             return JS::js_undefined();
         }
 
-        auto output = TRY_OR_THROW_OOM(*g_vm, String::join(' ', arguments.get<JS::MarkedVector<JS::Value>>()));
+        auto output = TRY(generically_format_values(arguments.get<JS::MarkedVector<JS::Value>>()));
 #ifdef AK_OS_SERENITY
         m_console.output_debug_message(log_level, output);
 #endif
@@ -871,17 +875,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 warnln("Warning: Multiple files supplied, this will concatenate the sources and resolve modules as if it was the first file");
 
             for (auto& path : script_paths) {
-                auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+                auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
                 auto file_contents = TRY(file->read_until_eof());
                 auto source = StringView { file_contents };
 
                 if (Utf8View { file_contents }.validate()) {
                     builder.append(source);
                 } else {
-                    auto* decoder = TextCodec::decoder_for("windows-1252");
-                    VERIFY(decoder);
+                    auto decoder = TextCodec::decoder_for("windows-1252"sv);
+                    VERIFY(decoder.has_value());
 
-                    auto utf8_source = TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, source);
+                    auto utf8_source = TRY(TextCodec::convert_input_to_utf8_using_given_decoder_unless_there_is_a_byte_order_mark(*decoder, source));
                     builder.append(utf8_source);
                 }
             }

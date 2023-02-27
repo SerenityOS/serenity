@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ExecutionContext.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/SourceRange.h>
 
 namespace JS {
@@ -19,13 +20,18 @@ NonnullGCPtr<Error> Error::create(Realm& realm)
     return realm.heap().allocate<Error>(realm, *realm.intrinsics().error_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
-NonnullGCPtr<Error> Error::create(Realm& realm, DeprecatedString const& message)
+NonnullGCPtr<Error> Error::create(Realm& realm, String message)
 {
     auto& vm = realm.vm();
     auto error = Error::create(realm);
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);
+    error->define_direct_property(vm.names.message, PrimitiveString::create(vm, move(message)), attr);
     return error;
+}
+
+ThrowCompletionOr<NonnullGCPtr<Error>> Error::create(Realm& realm, StringView message)
+{
+    return create(realm, TRY_OR_THROW_OOM(realm.vm(), String::from_utf8(message)));
 }
 
 Error::Error(Object& prototype)
@@ -73,9 +79,10 @@ void Error::populate_stack()
     }
 }
 
-DeprecatedString Error::stack_string() const
+ThrowCompletionOr<String> Error::stack_string(VM& vm) const
 {
-    StringBuilder stack_string_builder;
+    ThrowableStringBuilder stack_string_builder(vm);
+
     // Note: We roughly follow V8's formatting
     // Note: The error's name and message get prepended by ErrorPrototype::stack
     // Note: We don't want to capture the global execution context, so we omit the last frame
@@ -87,15 +94,15 @@ DeprecatedString Error::stack_string() const
         if (!frame.source_range.filename().is_empty() || frame.source_range.start.offset != 0 || frame.source_range.end.offset != 0) {
 
             if (function_name == "<unknown>"sv)
-                stack_string_builder.appendff("    at {}:{}:{}\n", frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column);
+                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}:{}:{}\n", frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column));
             else
-                stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column);
+                MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {} ({}:{}:{})\n", function_name, frame.source_range.filename(), frame.source_range.start.line, frame.source_range.start.column));
         } else {
-            stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view());
+            MUST_OR_THROW_OOM(stack_string_builder.appendff("    at {}\n", function_name.is_empty() ? "<unknown>"sv : function_name.view()));
         }
     }
 
-    return stack_string_builder.to_deprecated_string();
+    return stack_string_builder.to_string();
 }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                                                          \
@@ -104,13 +111,18 @@ DeprecatedString Error::stack_string() const
         return realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype()).release_allocated_value_but_fixme_should_propagate_errors(); \
     }                                                                                                                                                             \
                                                                                                                                                                   \
-    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, DeprecatedString const& message)                                                                      \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, String message)                                                                                       \
     {                                                                                                                                                             \
         auto& vm = realm.vm();                                                                                                                                    \
         auto error = ClassName::create(realm);                                                                                                                    \
         u8 attr = Attribute::Writable | Attribute::Configurable;                                                                                                  \
-        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, message), attr);                                                              \
+        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, move(message)), attr);                                                        \
         return error;                                                                                                                                             \
+    }                                                                                                                                                             \
+                                                                                                                                                                  \
+    ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, StringView message)                                                                \
+    {                                                                                                                                                             \
+        return create(realm, TRY_OR_THROW_OOM(realm.vm(), String::from_utf8(message)));                                                                           \
     }                                                                                                                                                             \
                                                                                                                                                                   \
     ClassName::ClassName(Object& prototype)                                                                                                                       \

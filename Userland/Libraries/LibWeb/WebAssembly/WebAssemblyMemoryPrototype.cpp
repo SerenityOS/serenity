@@ -34,7 +34,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
 
     auto previous_size = memory->size() / Wasm::Constants::page_size;
     if (!memory->grow(page_count * Wasm::Constants::page_size))
-        return vm.throw_completion<JS::TypeError>("Memory.grow() grows past the stated limit of the memory instance");
+        return vm.throw_completion<JS::TypeError>("Memory.grow() grows past the stated limit of the memory instance"sv);
 
     return JS::Value(static_cast<u32>(previous_size));
 }

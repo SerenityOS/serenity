@@ -29,8 +29,7 @@ WizardDialog::WizardDialog(Window* parent_window)
 
     auto main_widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
     main_widget->set_fill_with_background_color(true);
-    main_widget->set_layout<VerticalBoxLayout>();
-    main_widget->layout()->set_spacing(0);
+    main_widget->set_layout<VerticalBoxLayout>(GUI::Margins {}, 0);
 
     m_page_container_widget = main_widget->add<Widget>();
     m_page_container_widget->set_fixed_size(500, 315);
@@ -40,18 +39,16 @@ WizardDialog::WizardDialog(Window* parent_window)
     separator.set_fixed_height(2);
 
     auto& nav_container_widget = main_widget->add<Widget>();
-    nav_container_widget.set_layout<HorizontalBoxLayout>();
+    nav_container_widget.set_layout<HorizontalBoxLayout>(GUI::Margins { 0, 10 }, 0);
     nav_container_widget.set_fixed_height(42);
-    nav_container_widget.layout()->set_margins({ 0, 10 });
-    nav_container_widget.layout()->set_spacing(0);
-    nav_container_widget.layout()->add_spacer();
+    nav_container_widget.add_spacer().release_value_but_fixme_should_propagate_errors();
 
-    m_back_button = nav_container_widget.add<DialogButton>("< Back");
+    m_back_button = nav_container_widget.add<DialogButton>("< Back"_short_string);
     m_back_button->on_click = [&](auto) {
         pop_page();
     };
 
-    m_next_button = nav_container_widget.add<DialogButton>("Next >");
+    m_next_button = nav_container_widget.add<DialogButton>("Next >"_short_string);
     m_next_button->on_click = [&](auto) {
         VERIFY(has_pages());
 
@@ -68,7 +65,7 @@ WizardDialog::WizardDialog(Window* parent_window)
     auto& button_spacer = nav_container_widget.add<Widget>();
     button_spacer.set_fixed_width(10);
 
-    m_cancel_button = nav_container_widget.add<DialogButton>("Cancel");
+    m_cancel_button = nav_container_widget.add<DialogButton>("Cancel"_short_string);
     m_cancel_button->on_click = [&](auto) {
         handle_cancel();
     };
@@ -122,9 +119,12 @@ void WizardDialog::update_navigation()
     m_back_button->set_enabled(m_page_stack.size() > 1);
     if (has_pages()) {
         m_next_button->set_enabled(current_page().is_final_page() || current_page().can_go_next());
-        m_next_button->set_text(current_page().is_final_page() ? "Finish" : "Next >");
+        if (current_page().is_final_page())
+            m_next_button->set_text("Finish"_short_string);
+        else
+            m_next_button->set_text("Next >"_short_string);
     } else {
-        m_next_button->set_text("Next >");
+        m_next_button->set_text("Next >"_short_string);
         m_next_button->set_enabled(false);
     }
 }

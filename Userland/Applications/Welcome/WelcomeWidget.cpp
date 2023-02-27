@@ -10,7 +10,6 @@
 #include <Applications/Welcome/WelcomeWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -95,8 +94,8 @@ ErrorOr<void> WelcomeWidget::create_widgets()
 ErrorOr<void> WelcomeWidget::open_and_parse_tips_file()
 {
     auto path = TRY(String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory()));
-    auto file = TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
-    auto buffered_file = TRY(Core::Stream::BufferedFile::create(move(file)));
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
     Array<u8, PAGE_SIZE> buffer;
 
     while (TRY(buffered_file->can_read_line())) {

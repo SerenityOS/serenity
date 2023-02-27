@@ -10,18 +10,19 @@
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/JPGLoader.h>
+#include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PBMLoader.h>
 #include <LibGfx/PGMLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/PPMLoader.h>
 #include <LibGfx/QOILoader.h>
 #include <LibGfx/TGALoader.h>
+#include <LibGfx/WebPLoader.h>
 
 namespace Gfx {
 
 struct ImagePluginInitializer {
-    ErrorOr<bool> (*sniff)(ReadonlyBytes) = nullptr;
+    bool (*sniff)(ReadonlyBytes) = nullptr;
     ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
 };
 
@@ -33,9 +34,10 @@ static constexpr ImagePluginInitializer s_initializers[] = {
     { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
     { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
     { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
-    { JPGImageDecoderPlugin::sniff, JPGImageDecoderPlugin::create },
+    { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
     { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
     { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
+    { WebPImageDecoderPlugin::sniff, WebPImageDecoderPlugin::create },
 };
 
 struct ImagePluginWithMIMETypeInitializer {
@@ -51,7 +53,7 @@ static constexpr ImagePluginWithMIMETypeInitializer s_initializers_with_mime_typ
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
 {
     for (auto& plugin : s_initializers) {
-        auto sniff_result = plugin.sniff(bytes).release_value_but_fixme_should_propagate_errors();
+        auto sniff_result = plugin.sniff(bytes);
         if (!sniff_result)
             continue;
         auto plugin_decoder = plugin.create(bytes).release_value_but_fixme_should_propagate_errors();

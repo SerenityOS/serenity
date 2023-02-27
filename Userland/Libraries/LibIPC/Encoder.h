@@ -119,6 +119,9 @@ template<>
 ErrorOr<void> encode(Encoder&, JsonValue const&);
 
 template<>
+ErrorOr<void> encode(Encoder&, Time const&);
+
+template<>
 ErrorOr<void> encode(Encoder&, URL const&);
 
 template<>

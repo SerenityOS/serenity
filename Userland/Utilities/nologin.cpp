@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringView.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
@@ -13,7 +13,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"sv));
 
-    auto file_or_error = Core::Stream::File::open("/etc/nologin"sv, Core::Stream::OpenMode::Read);
+    auto file_or_error = Core::File::open("/etc/nologin"sv, Core::File::OpenMode::Read);
     if (file_or_error.is_error()) {
         outln("This account is currently not available.");
     } else {

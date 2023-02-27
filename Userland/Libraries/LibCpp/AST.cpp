@@ -55,9 +55,9 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
     }
 }
 
-NonnullRefPtrVector<Declaration> FunctionDeclaration::declarations() const
+NonnullRefPtrVector<Declaration const> FunctionDeclaration::declarations() const
 {
-    NonnullRefPtrVector<Declaration> declarations;
+    NonnullRefPtrVector<Declaration const> declarations;
     for (auto& arg : m_parameters) {
         declarations.append(arg);
     }
@@ -162,9 +162,9 @@ void FunctionDefinition::dump(FILE* output, size_t indent) const
     outln(output, "}}");
 }
 
-NonnullRefPtrVector<Declaration> FunctionDefinition::declarations() const
+NonnullRefPtrVector<Declaration const> FunctionDefinition::declarations() const
 {
-    NonnullRefPtrVector<Declaration> declarations;
+    NonnullRefPtrVector<Declaration const> declarations;
     for (auto& statement : m_statements) {
         declarations.extend(statement.declarations());
     }
@@ -350,9 +350,9 @@ void StructOrClassDeclaration::dump(FILE* output, size_t indent) const
         member.dump(output, indent + 1);
     }
 }
-NonnullRefPtrVector<Declaration> StructOrClassDeclaration::declarations() const
+NonnullRefPtrVector<Declaration const> StructOrClassDeclaration::declarations() const
 {
-    NonnullRefPtrVector<Declaration> declarations;
+    NonnullRefPtrVector<Declaration const> declarations;
     for (auto& member : m_members)
         declarations.append(member);
     return declarations;
@@ -458,10 +458,10 @@ void ForStatement::dump(FILE* output, size_t indent) const
         m_body->dump(output, indent + 1);
 }
 
-NonnullRefPtrVector<Declaration> Statement::declarations() const
+NonnullRefPtrVector<Declaration const> Statement::declarations() const
 {
     if (is_declaration()) {
-        NonnullRefPtrVector<Declaration> vec;
+        NonnullRefPtrVector<Declaration const> vec;
         auto const& decl = static_cast<Declaration const&>(*this);
         vec.empend(const_cast<Declaration&>(decl));
         return vec;
@@ -469,9 +469,9 @@ NonnullRefPtrVector<Declaration> Statement::declarations() const
     return {};
 }
 
-NonnullRefPtrVector<Declaration> ForStatement::declarations() const
+NonnullRefPtrVector<Declaration const> ForStatement::declarations() const
 {
-    NonnullRefPtrVector<Declaration> declarations;
+    NonnullRefPtrVector<Declaration const> declarations;
     if (m_init)
         declarations.extend(m_init->declarations());
     if (m_body)
@@ -479,9 +479,9 @@ NonnullRefPtrVector<Declaration> ForStatement::declarations() const
     return declarations;
 }
 
-NonnullRefPtrVector<Declaration> BlockStatement::declarations() const
+NonnullRefPtrVector<Declaration const> BlockStatement::declarations() const
 {
-    NonnullRefPtrVector<Declaration> declarations;
+    NonnullRefPtrVector<Declaration const> declarations;
     for (auto& statement : m_statements) {
         declarations.extend(statement.declarations());
     }
@@ -508,9 +508,9 @@ void IfStatement::dump(FILE* output, size_t indent) const
     }
 }
 
-NonnullRefPtrVector<Declaration> IfStatement::declarations() const
+NonnullRefPtrVector<Declaration const> IfStatement::declarations() const
 {
-    NonnullRefPtrVector<Declaration> declarations;
+    NonnullRefPtrVector<Declaration const> declarations;
     if (m_predicate)
         declarations.extend(m_predicate->declarations());
     if (m_then)

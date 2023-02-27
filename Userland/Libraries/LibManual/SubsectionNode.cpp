@@ -10,7 +10,7 @@
 
 namespace Manual {
 
-SubsectionNode::SubsectionNode(NonnullRefPtr<SectionNode> parent, StringView name)
+SubsectionNode::SubsectionNode(NonnullRefPtr<SectionNode const> parent, StringView name)
     : SectionNode(name, name)
     , m_parent(move(parent))
 {
@@ -31,7 +31,7 @@ PageNode const* SubsectionNode::document() const
         if (sibling_name.is_error())
             continue;
         if (sibling_name.value() == m_name && is<PageNode>(*sibling))
-            return static_cast<PageNode*>(&*sibling);
+            return static_cast<PageNode const*>(&*sibling);
     }
     return nullptr;
 }

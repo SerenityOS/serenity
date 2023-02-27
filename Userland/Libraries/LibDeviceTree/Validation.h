@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2021-2023, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +15,9 @@ enum class Verbose {
     Yes
 };
 
-bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, u8 const* blob_start, size_t blob_size, Verbose = Verbose::No);
+bool validate_flattened_device_tree(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree, Verbose = Verbose::No);
 
-bool dump(FlattenedDeviceTreeHeader const& header, u8 const* blob_start, size_t blob_size);
+ErrorOr<void> dump(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
+ErrorOr<void> dump_flattened_device_tree_structure(FlattenedDeviceTreeHeader const& header, ReadonlyBytes raw_device_tree);
 
 }

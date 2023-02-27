@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -52,7 +53,7 @@ class CanvasRenderingContext2D
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<CanvasRenderingContext2D> create(JS::Realm&, HTMLCanvasElement&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CanvasRenderingContext2D>> create(JS::Realm&, HTMLCanvasElement&);
     virtual ~CanvasRenderingContext2D() override;
 
     virtual void fill_rect(float x, float y, float width, float height) override;
@@ -90,7 +91,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     struct PreparedTextGlyph {
-        unsigned int c;
+        String glyph;
         Gfx::IntPoint position;
     };
 

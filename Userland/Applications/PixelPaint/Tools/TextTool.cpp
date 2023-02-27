@@ -30,6 +30,12 @@ void TextToolEditor::handle_keyevent(Badge<TextTool>, GUI::KeyEvent& event)
     TextEditor::keydown_event(event);
 }
 
+NonnullRefPtrVector<GUI::Action> TextToolEditor::actions()
+{
+    static NonnullRefPtrVector<GUI::Action> actions = { cut_action(), copy_action(), paste_action(), undo_action(), redo_action(), select_all_action() };
+    return actions;
+}
+
 TextTool::TextTool()
 {
     m_text_editor = TextToolEditor::construct();
@@ -41,11 +47,9 @@ TextTool::TextTool()
     }).release_value_but_fixme_should_propagate_errors();
 }
 
-void TextTool::on_tool_activation()
+void TextTool::on_primary_color_change(Color color)
 {
-    m_editor->on_primary_color_change = [this](auto color) {
-        m_text_color = color;
-    };
+    m_text_color = color;
 }
 
 void TextTool::on_tool_deactivation()
@@ -99,21 +103,21 @@ void TextTool::on_mousedown(Layer*, MouseEvent& event)
     }
 }
 
-GUI::Widget* TextTool::get_properties_widget()
+ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
 {
     if (m_properties_widget)
         return m_properties_widget.ptr();
 
-    m_properties_widget = GUI::Widget::construct();
-    m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+    auto properties_widget = TRY(GUI::Widget::try_create());
+    (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-    auto& font_header = m_properties_widget->add<GUI::Label>("Current Font:");
-    font_header.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto font_header = TRY(properties_widget->try_add<GUI::Label>("Current Font:"));
+    font_header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_font_label = m_properties_widget->add<GUI::Label>(m_selected_font->human_readable_name());
+    m_font_label = TRY(properties_widget->try_add<GUI::Label>(m_selected_font->human_readable_name()));
 
-    auto& change_font_button = m_properties_widget->add<GUI::Button>("Change Font...");
-    change_font_button.on_click = [&](auto) {
+    auto change_font_button = TRY(properties_widget->try_add<GUI::Button>(TRY("Change Font..."_string)));
+    change_font_button->on_click = [this](auto) {
         auto picker = GUI::FontPicker::construct(nullptr, m_selected_font, false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_font_label->set_text(picker->font()->human_readable_name());
@@ -122,6 +126,8 @@ GUI::Widget* TextTool::get_properties_widget()
             m_editor->set_focus(true);
         }
     };
+
+    m_properties_widget = properties_widget;
     return m_properties_widget.ptr();
 }
 
@@ -282,6 +288,15 @@ bool TextTool::on_keydown(GUI::KeyEvent& event)
         return true;
     }
 
+    // Pass key events that would normally be handled by menu shortcuts to our TextEditor subclass.
+    for (auto& action : m_text_editor->actions()) {
+        auto const& shortcut = action.shortcut();
+        if (event.key() == shortcut.key() && event.modifiers() == shortcut.modifiers()) {
+            action.activate(m_text_editor);
+            return true;
+        }
+    }
+
     // Pass the key event off to our TextEditor subclass which handles all text entry features like
     // caret navigation, backspace/delete, etc.
     m_text_editor->handle_keyevent({}, event);
@@ -289,7 +304,7 @@ bool TextTool::on_keydown(GUI::KeyEvent& event)
     return true;
 }
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> TextTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> TextTool::cursor()
 {
     if (m_mouse_is_over_text)
         return Gfx::StandardCursor::Move;

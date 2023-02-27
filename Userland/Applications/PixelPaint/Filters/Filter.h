@@ -19,10 +19,10 @@ class Filter : public RefCounted<Filter> {
     friend class FilterApplicationCommand;
 
 public:
-    virtual void apply() const;
+    void apply();
     virtual void apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const = 0;
 
-    virtual RefPtr<GUI::Widget> get_settings_widget();
+    virtual ErrorOr<RefPtr<GUI::Widget>> get_settings_widget();
 
     virtual StringView filter_name() const = 0;
 

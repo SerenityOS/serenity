@@ -73,14 +73,14 @@ Optional<Infrastructure::Body&> Response::body_impl()
 }
 
 // https://fetch.spec.whatwg.org/#response-create
-JS::NonnullGCPtr<Response> Response::create(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> response, Headers::Guard guard)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::create(JS::Realm& realm, JS::NonnullGCPtr<Infrastructure::Response> response, Headers::Guard guard)
 {
     // 1. Let responseObject be a new Response object with realm.
     // 2. Set responseObject’s response to response.
-    auto response_object = realm.heap().allocate<Response>(realm, realm, response).release_allocated_value_but_fixme_should_propagate_errors();
+    auto response_object = MUST_OR_THROW_OOM(realm.heap().allocate<Response>(realm, realm, response));
 
     // 3. Set responseObject’s headers to a new Headers object with realm, whose headers list is response’s headers list and guard is guard.
-    response_object->m_headers = realm.heap().allocate<Headers>(realm, realm, response->header_list()).release_allocated_value_but_fixme_should_propagate_errors();
+    response_object->m_headers = MUST_OR_THROW_OOM(realm.heap().allocate<Headers>(realm, realm, response->header_list()));
     response_object->m_headers->set_guard(guard);
 
     // 4. Return responseObject.
@@ -164,7 +164,7 @@ JS::NonnullGCPtr<Response> Response::error(JS::VM& vm)
 {
     // The static error() method steps are to return the result of creating a Response object, given a new network error, "immutable", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    return Response::create(*vm.current_realm(), Infrastructure::Response::network_error(vm, "Response created via `Response.error()`"sv), Headers::Guard::Immutable);
+    return Response::create(*vm.current_realm(), Infrastructure::Response::network_error(vm, "Response created via `Response.error()`"sv), Headers::Guard::Immutable).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-redirect
@@ -186,7 +186,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, D
 
     // 4. Let responseObject be the result of creating a Response object, given a new response, "immutable", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    auto response_object = Response::create(realm, Infrastructure::Response::create(vm), Headers::Guard::Immutable);
+    auto response_object = TRY(Response::create(realm, Infrastructure::Response::create(vm), Headers::Guard::Immutable));
 
     // 5. Set responseObject’s response’s status to status.
     response_object->response()->set_status(status);
@@ -215,7 +215,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::json(JS::VM& vm, JS::V
 
     // 3. Let responseObject be the result of creating a Response object, given a new response, "response", and this’s relevant Realm.
     // FIXME: How can we reliably get 'this', i.e. the object the function was called on, in IDL-defined functions?
-    auto response_object = Response::create(realm, Infrastructure::Response::create(vm), Headers::Guard::Response);
+    auto response_object = TRY(Response::create(realm, Infrastructure::Response::create(vm), Headers::Guard::Response));
 
     // 4. Perform initialize a response given responseObject, init, and (body, "application/json").
     auto body_with_type = Infrastructure::BodyWithType {
@@ -292,7 +292,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone() const
     auto cloned_response = TRY(m_response->clone(vm));
 
     // 3. Return the result of creating a Response object, given clonedResponse, this’s headers’s guard, and this’s relevant Realm.
-    return Response::create(HTML::relevant_realm(*this), cloned_response, m_headers->guard());
+    return TRY(Response::create(HTML::relevant_realm(*this), cloned_response, m_headers->guard()));
 }
 
 }

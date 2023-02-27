@@ -23,7 +23,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
-#include <LibCore/Stream.h>
 #include <LibLine/KeyCallbackMachine.h>
 #include <LibLine/Span.h>
 #include <LibLine/StringMetrics.h>
@@ -393,7 +392,7 @@ private:
     }
 
     void recalculate_origin();
-    ErrorOr<void> reposition_cursor(AK::Stream&, bool to_end = false);
+    ErrorOr<void> reposition_cursor(Stream&, bool to_end = false);
 
     struct CodepointRange {
         size_t start { 0 };

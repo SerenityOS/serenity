@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +12,7 @@
 
 namespace JS {
 
-NonnullRefPtr<SourceCode> SourceCode::create(String filename, String code)
+NonnullRefPtr<SourceCode const> SourceCode::create(String filename, String code)
 {
     return adopt_ref(*new SourceCode(move(filename), move(code)));
 }

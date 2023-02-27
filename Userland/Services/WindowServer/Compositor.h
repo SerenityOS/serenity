@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,11 +36,10 @@ struct CompositorScreenData {
     RefPtr<Gfx::Bitmap> m_front_bitmap;
     RefPtr<Gfx::Bitmap> m_back_bitmap;
     RefPtr<Gfx::Bitmap> m_temp_bitmap;
-    RefPtr<Gfx::Bitmap> m_wallpaper_bitmap;
+    RefPtr<Gfx::Bitmap const> m_wallpaper_bitmap;
     OwnPtr<Gfx::Painter> m_back_painter;
     OwnPtr<Gfx::Painter> m_front_painter;
     OwnPtr<Gfx::Painter> m_temp_painter;
-    OwnPtr<Gfx::Painter> m_wallpaper_painter;
     RefPtr<Gfx::Bitmap> m_cursor_back_bitmap;
     OwnPtr<Gfx::Painter> m_cursor_back_painter;
     Gfx::IntRect m_last_cursor_rect;
@@ -62,7 +61,6 @@ struct CompositorScreenData {
     void flip_buffers(Screen&);
     void draw_cursor(Screen&, Gfx::IntRect const&);
     bool restore_cursor_back(Screen&, Gfx::IntRect&);
-    void init_wallpaper_bitmap(Screen&);
     void clear_wallpaper_bitmap();
 
     template<typename F>
@@ -109,8 +107,8 @@ public:
 
     bool set_wallpaper_mode(DeprecatedString const& mode);
 
-    bool set_wallpaper(RefPtr<Gfx::Bitmap>);
-    RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper; }
+    bool set_wallpaper(RefPtr<Gfx::Bitmap const>);
+    RefPtr<Gfx::Bitmap const> wallpaper_bitmap() const { return m_wallpaper; }
 
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
@@ -233,7 +231,7 @@ private:
     Gfx::DisjointIntRectSet m_transparent_wallpaper_rects;
 
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
-    RefPtr<Gfx::Bitmap> m_wallpaper;
+    RefPtr<Gfx::Bitmap const> m_wallpaper;
 
     Cursor const* m_current_cursor { nullptr };
     Screen* m_current_cursor_screen { nullptr };

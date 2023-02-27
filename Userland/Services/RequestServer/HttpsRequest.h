@@ -16,7 +16,7 @@ namespace RequestServer {
 class HttpsRequest final : public Request {
 public:
     virtual ~HttpsRequest() override;
-    static NonnullOwnPtr<HttpsRequest> create_with_job(Badge<HttpsProtocol>&&, ConnectionFromClient&, NonnullRefPtr<HTTP::HttpsJob>, NonnullOwnPtr<Core::Stream::File>&&);
+    static NonnullOwnPtr<HttpsRequest> create_with_job(Badge<HttpsProtocol>&&, ConnectionFromClient&, NonnullRefPtr<HTTP::HttpsJob>, NonnullOwnPtr<Core::File>&&);
 
     HTTP::HttpsJob& job() { return m_job; }
     HTTP::HttpsJob const& job() const { return m_job; }
@@ -24,7 +24,7 @@ public:
     virtual URL url() const override { return m_job->url(); }
 
 private:
-    explicit HttpsRequest(ConnectionFromClient&, NonnullRefPtr<HTTP::HttpsJob>, NonnullOwnPtr<Core::Stream::File>&&);
+    explicit HttpsRequest(ConnectionFromClient&, NonnullRefPtr<HTTP::HttpsJob>, NonnullOwnPtr<Core::File>&&);
 
     virtual void set_certificate(DeprecatedString certificate, DeprecatedString key) override;
 

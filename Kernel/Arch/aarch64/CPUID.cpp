@@ -196,11 +196,11 @@ CPUFeature::Type detect_cpu_features()
         features |= CPUFeature::MTE3;
     if (processor_feature_register_1.MTE >= 0b0010 && processor_feature_register_1.MTEX == 0b0001) {
         features |= CPUFeature::MTE4;
-        features |= CPUFeature::MTE_CANONICAL_TAGS;  // XXX: not really explicit in the spec
-        features |= CPUFeature::MTE_NO_ADDRESS_TAGS; // XXX: not really explicit in the spec
+        features |= CPUFeature::MTE_CANONICAL_TAGS;  // FIXME: not really explicit in the spec
+        features |= CPUFeature::MTE_NO_ADDRESS_TAGS; // FIXME: not really explicit in the spec
     }
     if (processor_feature_register_1.MTE >= 0b0011 && processor_feature_register_1.MTE_frac == 0b0000)
-        features |= CPUFeature::MTE_ASYM_FAULT; // XXX: not really explicit in the spec
+        features |= CPUFeature::MTE_ASYM_FAULT; // FIXME: not really explicit in the spec
     if (processor_feature_register_1.SME == 0b0010)
         features |= CPUFeature::SME2;
     if (processor_feature_register_1.RNDR_trap == 0b0001)
@@ -427,7 +427,7 @@ CPUFeature::Type detect_cpu_features()
         features |= CPUFeature::BRBE;
     if (debug_feature_register_0.BRBE == 0b0010)
         features |= CPUFeature::BRBEv1p1;
-    if (debug_feature_register_0.ExtTrcBuff == 0b0001 && features.has_flag(CPUFeature::TRBE)) // XXX: order-dependent!
+    if (debug_feature_register_0.ExtTrcBuff == 0b0001 && features.has_flag(CPUFeature::TRBE)) // FIXME: order-dependent!
         features |= CPUFeature::TRBE_EXT;
     if (debug_feature_register_0.HPMN0 == 0b0001)
         features |= CPUFeature::HPMN0;

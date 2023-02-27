@@ -88,9 +88,9 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +}
 +
 +#include <AK/JsonArray.h>
-+#include <LibCore/ProcessStatisticsReader.h>
-+#include <LibCore/Stream.h>
++#include <LibCore/DeprecatedFile.h>
 +#include <LibCore/File.h>
++#include <LibCore/ProcessStatisticsReader.h>
 +#include <stdio.h>
 +#include <string.h>
 +
@@ -108,11 +108,11 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +    })
 +
 +
-+static RefPtr<Core::File> proc_all;
++static RefPtr<Core::DeprecatedFile> proc_all;
 +
 +extern "C" {
 +void os_initNative(JNIEnv *env, jclass clazz) {
-+    proc_all = MUST(Core::File::open("/sys/kernel/processes", Core::OpenMode::ReadOnly));
++    proc_all = MUST(Core::DeprecatedFile::open("/sys/kernel/processes", Core::OpenMode::ReadOnly));
 +}
 +
 +jint os_getChildren(JNIEnv *env, jlong jpid, jlongArray jarray,
@@ -189,7 +189,7 @@ index 0000000000000000000000000000000000000000..cc0c08cb85a682d66a00f6b48ad2871f
 +    unix_getUserInfo(env, jinfo, proc.pid);
 +    JNU_CHECK_EXCEPTION(env);
 +
-+    auto cmdline_file = JAVA_TRY(Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::Stream::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
++    auto cmdline_file = JAVA_TRY(Core::File::open(DeprecatedString::formatted("/proc/{}/cmdline", pid), Core::File::OpenMode::Read), "Unable to open /proc/pid/cmdline"sv);
 +    auto contents = JAVA_TRY(cmdline_file->read_until_eof(), "Unable to read /proc/pid/cmdline"sv);
 +    auto cmdline = JAVA_TRY(JsonValue::from_string(contents), "Invalid JSON in /proc/pid/cmdline"sv);
 +

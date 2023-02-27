@@ -80,6 +80,7 @@ public:
     bool check_processor_chain_valid() const override;
     ReadonlySpan<NonnullRefPtr<NoteClip>> notes() const { return m_clips.span(); }
 
+    Optional<RollNote> note_at(u32 time, u8 pitch) const;
     void set_note(RollNote note);
     void remove_note(RollNote note);
 

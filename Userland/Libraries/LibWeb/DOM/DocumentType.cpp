@@ -9,9 +9,9 @@
 
 namespace Web::DOM {
 
-JS::NonnullGCPtr<DocumentType> DocumentType::create(Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentType>> DocumentType::create(Document& document)
 {
-    return document.heap().allocate<DocumentType>(document.realm(), document).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(document.heap().allocate<DocumentType>(document.realm(), document));
 }
 
 DocumentType::DocumentType(Document& document)

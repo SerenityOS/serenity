@@ -102,6 +102,9 @@ public:
     TextPosition next_position_after(TextPosition const&, SearchShouldWrap = SearchShouldWrap::Yes) const;
     TextPosition previous_position_before(TextPosition const&, SearchShouldWrap = SearchShouldWrap::Yes) const;
 
+    size_t get_next_grapheme_cluster_boundary(TextPosition const& cursor) const;
+    size_t get_previous_grapheme_cluster_boundary(TextPosition const& cursor) const;
+
     u32 code_point_at(TextPosition const&) const;
 
     TextRange range_for_entire_line(size_t line_index) const;

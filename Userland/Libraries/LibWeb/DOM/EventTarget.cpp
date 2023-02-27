@@ -561,7 +561,7 @@ void EventTarget::activate_event_handler(DeprecatedFlyString const& name, HTML::
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
     auto listener = realm.heap().allocate_without_realm<DOMEventListener>();
     listener->type = name;
-    listener->callback = IDLEventListener::create(realm, *callback).ptr();
+    listener->callback = IDLEventListener::create(realm, *callback).release_value_but_fixme_should_propagate_errors();
 
     // 6. Add an event listener with eventTarget and listener.
     add_an_event_listener(*listener);

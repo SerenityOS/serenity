@@ -11,12 +11,12 @@ set(SOURCES
     AudioPlayerLoop.cpp
     ExportProgressWindow.cpp
     KeysWidget.cpp
-    KnobsWidget.cpp
     main.cpp
     MainWidget.cpp
     PlayerWidget.cpp
     RollWidget.cpp
     SamplerWidget.cpp
+    TrackControlsWidget.cpp
     TrackManager.cpp
     WaveWidget.cpp
     ProcessorParameterWidget/ParameterWidget.cpp

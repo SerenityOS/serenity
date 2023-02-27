@@ -10,7 +10,6 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/API/SyscallString.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>

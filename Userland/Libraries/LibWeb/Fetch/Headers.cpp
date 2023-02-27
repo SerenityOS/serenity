@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -110,6 +110,26 @@ WebIDL::ExceptionOr<DeprecatedString> Headers::get(DeprecatedString const& name_
     auto byte_buffer = TRY_OR_THROW_OOM(vm(), m_header_list->get(name));
     // FIXME: Teach BindingsGenerator about Optional<DeprecatedString>
     return byte_buffer.has_value() ? DeprecatedString { byte_buffer->span() } : DeprecatedString {};
+}
+
+// https://fetch.spec.whatwg.org/#dom-headers-getsetcookie
+WebIDL::ExceptionOr<Vector<DeprecatedString>> Headers::get_set_cookie()
+{
+    // The getSetCookie() method steps are:
+    auto& vm = this->vm();
+    auto values = Vector<DeprecatedString> {};
+
+    // 1. If this’s header list does not contain `Set-Cookie`, then return « ».
+    if (!m_header_list->contains("Set-Cookie"sv.bytes()))
+        return values;
+
+    // 2. Return the values of all headers in this’s header list whose name is a byte-case-insensitive match for
+    //    `Set-Cookie`, in order.
+    for (auto const& header : *m_header_list) {
+        if (StringView { header.name }.equals_ignoring_case("Set-Cookie"sv))
+            TRY_OR_THROW_OOM(vm, values.try_append(DeprecatedString { header.value.bytes() }));
+    }
+    return values;
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-has

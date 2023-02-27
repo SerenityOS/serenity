@@ -8,6 +8,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -35,6 +36,7 @@
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Infra/CharacterTypes.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Layout/InlineNode.h>
@@ -66,7 +68,9 @@ JS::ThrowCompletionOr<void> Element::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::ElementPrototype>(realm, "Element"));
 
-    m_attributes = NamedNodeMap::create(*this);
+    m_attributes = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return NamedNodeMap::create(*this);
+    }));
 
     return {};
 }
@@ -120,7 +124,7 @@ WebIDL::ExceptionOr<void> Element::set_attribute(DeprecatedFlyString const& name
 
     // 4. If attribute is null, create an attribute whose local name is qualifiedName, value is value, and node document is this’s node document, then append this attribute to this, and then return.
     if (!attribute) {
-        auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value);
+        auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, value));
         m_attributes->append_attribute(new_attribute);
 
         attribute = new_attribute.ptr();
@@ -228,7 +232,7 @@ WebIDL::ExceptionOr<bool> Element::toggle_attribute(DeprecatedFlyString const& n
     if (!attribute) {
         // 1. If force is not given or is true, create an attribute whose local name is qualifiedName, value is the empty string, and node document is this’s node document, then append this attribute to this, and then return true.
         if (!force.has_value() || force.value()) {
-            auto new_attribute = Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, "");
+            auto new_attribute = TRY(Attr::create(document(), insert_as_lowercase ? name.to_lowercase() : name, ""));
             m_attributes->append_attribute(new_attribute);
 
             parse_attribute(new_attribute->local_name(), "");
@@ -318,7 +322,7 @@ JS::GCPtr<Layout::Node> Element::create_layout_node_for_display_type(DOM::Docume
             return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
         if (display.is_flex_inside())
             return document.heap().allocate_without_realm<Layout::Box>(document, element, move(style));
-        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", display.to_deprecated_string());
+        dbgln_if(LIBWEB_CSS_DEBUG, "FIXME: Support display: {}", MUST(display.to_string()));
         return document.heap().allocate_without_realm<Layout::InlineNode>(document, element, move(style));
     }
 
@@ -438,7 +442,7 @@ Element::NeedsRelayout Element::recompute_style()
 
 NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 {
-    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this);
+    auto element_computed_style = CSS::ResolvedCSSStyleDeclaration::create(*this).release_value_but_fixme_should_propagate_errors();
     auto properties = CSS::StyleProperties::create();
 
     for (auto i = to_underlying(CSS::first_property_id); i <= to_underlying(CSS::last_property_id); ++i) {
@@ -455,7 +459,7 @@ NonnullRefPtr<CSS::StyleProperties> Element::resolved_css_values()
 DOMTokenList* Element::class_list()
 {
     if (!m_class_list)
-        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_);
+        m_class_list = DOMTokenList::create(*this, HTML::AttributeNames::class_).release_value_but_fixme_should_propagate_errors();
     return m_class_list;
 }
 
@@ -586,7 +590,7 @@ JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedF
                 return false;
         }
         return true;
-    });
+    }).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://dom.spec.whatwg.org/#element-shadow-host
@@ -611,7 +615,7 @@ void Element::set_shadow_root(JS::GCPtr<ShadowRoot> shadow_root)
 CSS::CSSStyleDeclaration* Element::style_for_bindings()
 {
     if (!m_inline_style)
-        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {});
+        m_inline_style = CSS::ElementInlineCSSStyleDeclaration::create(*this, {}, {}).release_value_but_fixme_should_propagate_errors();
     return m_inline_style;
 }
 
@@ -653,12 +657,12 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     // FIXME: Support inline layout nodes as well.
     auto* paint_box = this->paint_box();
     if (!paint_box)
-        return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0);
+        return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
 
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>());
+    return Geometry::DOMRect::create(realm(), paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>()).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -671,7 +675,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     // 1. If the element on which it was invoked does not have an associated layout box return an empty DOMRectList object and stop this algorithm.
     if (!layout_node() || !layout_node()->is_box())
-        return Geometry::DOMRectList::create(realm(), move(rects));
+        return Geometry::DOMRectList::create(realm(), move(rects)).release_value_but_fixme_should_propagate_errors();
 
     // FIXME: 2. If the element has an associated SVG layout box return a DOMRectList object containing a single DOMRect object that describes
     // the bounding box of the element as defined by the SVG specification, applying the transforms that apply to the element and its ancestors.
@@ -685,7 +689,7 @@ JS::NonnullGCPtr<Geometry::DOMRectList> Element::get_client_rects() const
 
     auto bounding_rect = get_bounding_client_rect();
     rects.append(*bounding_rect);
-    return Geometry::DOMRectList::create(realm(), move(rects));
+    return Geometry::DOMRectList::create(realm(), move(rects)).release_value_but_fixme_should_propagate_errors();
 }
 
 int Element::client_top() const
@@ -1118,7 +1122,8 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
     // 1. Use the first matching item from this list:
     // - If position is an ASCII case-insensitive match for the string "beforebegin"
     // - If position is an ASCII case-insensitive match for the string "afterend"
-    if (position.equals_ignoring_case("beforebegin"sv) || position.equals_ignoring_case("afterend"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(position, "beforebegin"sv)
+        || Infra::is_ascii_case_insensitive_match(position, "afterend"sv)) {
         // Let context be the context object's parent.
         context = this->parent();
 
@@ -1128,7 +1133,8 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
     }
     // - If position is an ASCII case-insensitive match for the string "afterbegin"
     // - If position is an ASCII case-insensitive match for the string "beforeend"
-    else if (position.equals_ignoring_case("afterbegin"sv) || position.equals_ignoring_case("beforeend"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "afterbegin"sv)
+        || Infra::is_ascii_case_insensitive_match(position, "beforeend"sv)) {
         // Let context be the context object.
         context = this;
     }
@@ -1159,25 +1165,25 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
     // 4. Use the first matching item from this list:
 
     // - If position is an ASCII case-insensitive match for the string "beforebegin"
-    if (position.equals_ignoring_case("beforebegin"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(position, "beforebegin"sv)) {
         // Insert fragment into the context object's parent before the context object.
         parent()->insert_before(fragment, this);
     }
 
     // - If position is an ASCII case-insensitive match for the string "afterbegin"
-    else if (position.equals_ignoring_case("afterbegin"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "afterbegin"sv)) {
         // Insert fragment into the context object before its first child.
         insert_before(fragment, first_child());
     }
 
     // - If position is an ASCII case-insensitive match for the string "beforeend"
-    else if (position.equals_ignoring_case("beforeend"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "beforeend"sv)) {
         // Append fragment to the context object.
         TRY(append_child(fragment));
     }
 
     // - If position is an ASCII case-insensitive match for the string "afterend"
-    else if (position.equals_ignoring_case("afterend"sv)) {
+    else if (Infra::is_ascii_case_insensitive_match(position, "afterend"sv)) {
         // Insert fragment into the context object's parent before the context object's next sibling.
         parent()->insert_before(fragment, next_sibling());
     }
@@ -1188,7 +1194,7 @@ WebIDL::ExceptionOr<void> Element::insert_adjacent_html(DeprecatedString positio
 WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node)
 {
     // To insert adjacent, given an element element, string where, and a node node, run the steps associated with the first ASCII case-insensitive match for where:
-    if (where.equals_ignoring_case("beforebegin"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "beforebegin"sv)) {
         // -> "beforebegin"
         // If element’s parent is null, return null.
         if (!parent())
@@ -1198,19 +1204,19 @@ WebIDL::ExceptionOr<JS::GCPtr<Node>> Element::insert_adjacent(DeprecatedString c
         return JS::GCPtr<Node> { TRY(parent()->pre_insert(move(node), this)) };
     }
 
-    if (where.equals_ignoring_case("afterbegin"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "afterbegin"sv)) {
         // -> "afterbegin"
         // Return the result of pre-inserting node into element before element’s first child.
         return JS::GCPtr<Node> { TRY(pre_insert(move(node), first_child())) };
     }
 
-    if (where.equals_ignoring_case("beforeend"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "beforeend"sv)) {
         // -> "beforeend"
         // Return the result of pre-inserting node into element before null.
         return JS::GCPtr<Node> { TRY(pre_insert(move(node), nullptr)) };
     }
 
-    if (where.equals_ignoring_case("afterend"sv)) {
+    if (Infra::is_ascii_case_insensitive_match(where, "afterend"sv)) {
         // -> "afterend"
         // If element’s parent is null, return null.
         if (!parent())

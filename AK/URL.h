@@ -88,7 +88,7 @@ public:
 
     bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
-    URL complete_url(DeprecatedString const&) const;
+    URL complete_url(StringView) const;
 
     bool data_payload_is_base64() const { return m_data_payload_is_base64; }
     DeprecatedString const& data_mime_type() const { return m_data_mime_type; }

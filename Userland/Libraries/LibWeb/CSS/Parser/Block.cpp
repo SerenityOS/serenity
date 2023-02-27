@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,15 +17,15 @@ Block::Block(Token token, Vector<ComponentValue>&& values)
 
 Block::~Block() = default;
 
-DeprecatedString Block::to_deprecated_string() const
+ErrorOr<String> Block::to_string() const
 {
     StringBuilder builder;
 
-    builder.append(m_token.bracket_string());
-    builder.join(' ', m_values);
-    builder.append(m_token.bracket_mirror_string());
+    TRY(builder.try_append(m_token.bracket_string()));
+    TRY(builder.try_join(' ', m_values));
+    TRY(builder.try_append(m_token.bracket_mirror_string()));
 
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
 }

@@ -27,8 +27,8 @@ namespace Debug {
 
 class DebugSession : public ProcessInspector {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {});
-    static OwnPtr<DebugSession> attach(pid_t pid, DeprecatedString source_root = {});
+    static OwnPtr<DebugSession> exec_and_attach(DeprecatedString const& command, DeprecatedString source_root = {}, Function<ErrorOr<void>()> setup_child = {}, Function<void(float)> on_initialization_progress = {});
+    static OwnPtr<DebugSession> attach(pid_t pid, DeprecatedString source_root = {}, Function<void(float)> on_initialization_progress = {});
 
     virtual ~DebugSession() override;
 
@@ -100,6 +100,7 @@ public:
         Syscall,
     };
     void continue_debuggee(ContinueType type = ContinueType::FreeRun);
+    void stop_debuggee();
 
     // Returns the wstatus result of waitpid()
     int continue_debuggee_and_wait(ContinueType type = ContinueType::FreeRun);
@@ -131,7 +132,7 @@ public:
     };
 
 private:
-    explicit DebugSession(pid_t, DeprecatedString source_root);
+    explicit DebugSession(pid_t, DeprecatedString source_root, Function<void(float)> on_initialization_progress = {});
 
     // x86 breakpoint instruction "int3"
     static constexpr u8 BREAKPOINT_INSTRUCTION = 0xcc;
@@ -147,6 +148,8 @@ private:
 
     // Maps from library name to LoadedLibrary object
     HashMap<DeprecatedString, NonnullOwnPtr<LoadedLibrary>> m_loaded_libraries;
+
+    Function<void(float)> m_on_initialization_progress;
 };
 
 template<typename Callback>
@@ -167,7 +170,7 @@ void DebugSession::run(DesiredInitialDebugeeState initial_debugee_state, Callbac
 
         // FIXME: This check actually only checks whether the debuggee
         // stopped because it hit a breakpoint/syscall/is in single stepping mode or not
-        if (WSTOPSIG(wstatus) != SIGTRAP) {
+        if (WSTOPSIG(wstatus) != SIGTRAP && WSTOPSIG(wstatus) != SIGSTOP) {
             callback(DebugBreakReason::Exited, Optional<PtraceRegisters>());
             m_is_debuggee_dead = true;
             return true;

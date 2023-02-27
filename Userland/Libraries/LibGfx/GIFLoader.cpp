@@ -89,7 +89,7 @@ enum class GIFFormat {
     GIF89a,
 };
 
-static ErrorOr<GIFFormat> decode_gif_header(AK::Stream& stream)
+static ErrorOr<GIFFormat> decode_gif_header(Stream& stream)
 {
     static auto valid_header_87 = "GIF87a"sv;
     static auto valid_header_89 = "GIF89a"sv;
@@ -569,7 +569,7 @@ bool GIFImageDecoderPlugin::initialize()
     return !decode_gif_header(stream).is_error();
 }
 
-ErrorOr<bool> GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool GIFImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     FixedMemoryStream stream { data };
     return !decode_gif_header(stream).is_error();

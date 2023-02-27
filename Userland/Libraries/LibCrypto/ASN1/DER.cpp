@@ -224,7 +224,7 @@ ErrorOr<void> Decoder::leave()
     return {};
 }
 
-ErrorOr<void> pretty_print(Decoder& decoder, AK::Stream& stream, int indent)
+ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
 {
     while (!decoder.eof()) {
         auto tag = TRY(decoder.peek());

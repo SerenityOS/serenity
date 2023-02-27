@@ -6,6 +6,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
+#include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/TagTypes.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibTextCodec/Decoder.h>
@@ -13,57 +14,6 @@
 namespace Gfx::ICC {
 
 namespace {
-
-// ICC V4, 4.6 s15Fixed16Number
-using s15Fixed16Number = i32;
-
-// ICC V4, 4.7 u16Fixed16Number
-using u16Fixed16Number = u32;
-
-// ICC V4, 4.14 XYZNumber
-struct XYZNumber {
-    BigEndian<s15Fixed16Number> x;
-    BigEndian<s15Fixed16Number> y;
-    BigEndian<s15Fixed16Number> z;
-
-    operator XYZ() const
-    {
-        return XYZ { x / (double)0x1'0000, y / (double)0x1'0000, z / (double)0x1'0000 };
-    }
-};
-
-// Common bits of ICC v4, Table 40 — lut16Type encoding and Table 44 — lut8Type encoding
-struct LUTHeader {
-    u8 number_of_input_channels;
-    u8 number_of_output_channels;
-    u8 number_of_clut_grid_points;
-    u8 reserved_for_padding;
-    BigEndian<s15Fixed16Number> e_parameters[9];
-};
-static_assert(AssertSize<LUTHeader, 40>());
-
-// Common bits of ICC v4, Table 45 — lutAToBType encoding and Table 47 — lutBToAType encoding
-struct AdvancedLUTHeader {
-    u8 number_of_input_channels;
-    u8 number_of_output_channels;
-    BigEndian<u16> reserved_for_padding;
-    BigEndian<u32> offset_to_b_curves;
-    BigEndian<u32> offset_to_matrix;
-    BigEndian<u32> offset_to_m_curves;
-    BigEndian<u32> offset_to_clut;
-    BigEndian<u32> offset_to_a_curves;
-};
-static_assert(AssertSize<AdvancedLUTHeader, 24>());
-
-// ICC v4, Table 46 — lutAToBType CLUT encoding
-// ICC v4, Table 48 — lutBToAType CLUT encoding
-// (They're identical.)
-struct CLUTHeader {
-    u8 number_of_grid_points_in_dimension[16];
-    u8 precision_of_data_elements; // 1 for u8 entries, 2 for u16 entries.
-    u8 reserved_for_padding[3];
-};
-static_assert(AssertSize<CLUTHeader, 20>());
 
 ErrorOr<void> check_reserved(ReadonlyBytes tag_bytes)
 {
@@ -147,7 +97,7 @@ ErrorOr<NonnullRefPtr<ChromaticityTagData>> ChromaticityTagData::from_bytes(Read
 
     // FIXME: Once I find files that have phosphor_or_colorant_type != Unknown, check that the values match the values in Table 31.
 
-    return adopt_ref(*new ChromaticityTagData(offset, size, phosphor_or_colorant_type, move(xy_coordinates)));
+    return try_make_ref_counted<ChromaticityTagData>(offset, size, phosphor_or_colorant_type, move(xy_coordinates));
 }
 
 ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -164,20 +114,28 @@ ErrorOr<NonnullRefPtr<CicpTagData>> CicpTagData::from_bytes(ReadonlyBytes bytes,
     u8 matrix_coefficients = bytes[10];
     u8 video_full_range_flag = bytes[11];
 
-    return adopt_ref(*new CicpTagData(offset, size, color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag));
+    return try_make_ref_counted<CicpTagData>(offset, size, color_primaries, transfer_characteristics, matrix_coefficients, video_full_range_flag);
 }
 
-ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+namespace {
+
+struct CurveData {
+    u32 computed_size;
+    Vector<u16> values;
+};
+
+ErrorOr<CurveData> curve_data_from_bytes(ReadonlyBytes bytes)
 {
     // ICC v4, 10.6 curveType
-    VERIFY(tag_type(bytes) == Type);
+    VERIFY(tag_type(bytes) == CurveTagData::Type);
     TRY(check_reserved(bytes));
 
     if (bytes.size() < 3 * sizeof(u32))
         return Error::from_string_literal("ICC::Profile: curveType has not enough data for count");
     u32 count = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
 
-    if (bytes.size() < 3 * sizeof(u32) + count * sizeof(u16))
+    u32 computed_size = 3 * sizeof(u32) + count * sizeof(u16);
+    if (bytes.size() < computed_size)
         return Error::from_string_literal("ICC::Profile: curveType has not enough data for curve points");
 
     auto* raw_values = bit_cast<BigEndian<u16> const*>(bytes.data() + 12);
@@ -187,7 +145,21 @@ ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes byte
     for (u32 i = 0; i < count; ++i)
         values[i] = raw_values[i];
 
-    return adopt_ref(*new CurveTagData(offset, size, move(values)));
+    return CurveData { computed_size, move(values) };
+}
+
+}
+
+ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset)
+{
+    auto curve_data = TRY(curve_data_from_bytes(bytes));
+    return try_make_ref_counted<CurveTagData>(offset, curve_data.computed_size, move(curve_data.values));
+}
+
+ErrorOr<NonnullRefPtr<CurveTagData>> CurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    auto curve_data = TRY(curve_data_from_bytes(bytes));
+    return try_make_ref_counted<CurveTagData>(offset, size, move(curve_data.values));
 }
 
 ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -245,10 +217,10 @@ ErrorOr<NonnullRefPtr<Lut16TagData>> Lut16TagData::from_bytes(ReadonlyBytes byte
     for (u32 i = 0; i < output_tables_size; ++i)
         output_tables[i] = raw_table_data[input_tables_size + clut_values_size + i];
 
-    return adopt_ref(*new Lut16TagData(offset, size, e,
+    return try_make_ref_counted<Lut16TagData>(offset, size, e,
         header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
         number_of_input_table_entries, number_of_output_table_entries,
-        move(input_tables), move(clut_values), move(output_tables)));
+        move(input_tables), move(clut_values), move(output_tables));
 }
 
 ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -293,10 +265,10 @@ ErrorOr<NonnullRefPtr<Lut8TagData>> Lut8TagData::from_bytes(ReadonlyBytes bytes,
     output_tables.resize(output_tables_size);
     memcpy(output_tables.data(), table_bytes.data() + input_tables_size + clut_values_size, output_tables_size);
 
-    return adopt_ref(*new Lut8TagData(offset, size, e,
+    return try_make_ref_counted<Lut8TagData>(offset, size, e,
         header.number_of_input_channels, header.number_of_output_channels, header.number_of_clut_grid_points,
         number_of_input_table_entries, number_of_output_table_entries,
-        move(input_tables), move(clut_values), move(output_tables)));
+        move(input_tables), move(clut_values), move(output_tables));
 }
 
 static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader const& header)
@@ -358,6 +330,65 @@ static ErrorOr<CLUTData> read_clut_data(ReadonlyBytes bytes, AdvancedLUTHeader c
     return CLUTData { move(number_of_grid_points_in_dimension), move(values) };
 }
 
+static ErrorOr<LutCurveType> read_curve(ReadonlyBytes bytes, u32 offset)
+{
+    // "All tag data elements shall start on a 4-byte boundary (relative to the start of the profile data stream)"
+    if (offset % 4 != 0)
+        return Error::from_string_literal("ICC::Profile: lut curve data not aligned");
+
+    // See read_curves() below.
+    if (offset + sizeof(u32) > bytes.size())
+        return Error::from_string_literal("ICC::Profile: not enough data for lut curve type");
+
+    ReadonlyBytes tag_bytes = bytes.slice(offset);
+    auto type = tag_type(tag_bytes);
+
+    if (type == CurveTagData::Type)
+        return CurveTagData::from_bytes(tag_bytes, offset);
+
+    if (type == ParametricCurveTagData::Type)
+        return ParametricCurveTagData::from_bytes(tag_bytes, offset);
+
+    return Error::from_string_literal("ICC::Profile: invalid tag type for lut curve");
+}
+
+static ErrorOr<Vector<LutCurveType>> read_curves(ReadonlyBytes bytes, u32 offset, u32 count)
+{
+    // Reads "A", "M", or "B" curves from lutAToBType or lutBToAType. They all have the same
+    // description (ICC v4 10.12.2, 10.12.4, 10.12.6, 10.13.2, 10.13.4, 10.13.6):
+    // "The curves are stored sequentially, with 00h bytes used for padding between them if needed.
+    //  Each [type] curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
+    //  is as indicated by the convention of the respective curve type. Note that the entire tag type, including the tag
+    //  type signature and reserved bytes, is included for each curve."
+
+    // Both types also say:
+    // "Curve data elements may be shared. For example, the offsets for A, B and M curves can be identical."
+    // FIXME: Implement sharing curve objects when that happens. (I haven't seen it happen in practice yet.)
+    //        Probably just pass in an offset->curve hashmap and look there first.
+
+    Vector<LutCurveType> curves;
+
+    for (u32 i = 0; i < count; ++i) {
+        // This can't call Profile::read_tag() because that requires tag size to be known in advance.
+        // Some tag types (e.g. textType) depend on this externally stored size.
+        // curveType and parametricCurveType don't.
+        //
+        // Commentary on the ICC spec: It still seems a bit awkward that the way curve tag types are stored here is
+        // different from how tag types are stored in the main container. Maybe that's so that the A, M, B curves
+        // can share data better?
+        // It's also weird that the A curves can't share data for their various curves -- in the main profile,
+        // redTRCTag, greenTRCTag, and blueTRCTag usually share the same curve, but here this isn't possible.
+        // Maybe it wouldn't usually happen for profiles that need lutAToBType or lutBToAType tags?
+        // I would've probably embedded a tag table in this tag and then have the A, M, B offsets store indices
+        // into that local table. Maybe there's a good reason why that wasn't done, and anyways, the spec is what it is.
+        auto curve = TRY(read_curve(bytes, offset));
+        offset += align_up_to(curve->size(), 4);
+        TRY(curves.try_append(move(curve)));
+    }
+
+    return curves;
+}
+
 ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.12 lutAToBType
@@ -371,17 +402,15 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
     if (header.reserved_for_padding != 0)
         return Error::from_string_literal("ICC::Profile: lutAToBType reserved_for_padding not 0");
 
-    // "Curve data elements may be shared. For example, the offsets for A, B and M curves can be identical."
-
     // 10.12.2 “A” curves
     // "There are the same number of “A” curves as there are input channels. The “A” curves may only be used when
     //  the CLUT is used. The curves are stored sequentially, with 00h bytes used for padding between them if needed.
     //  Each “A” curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
     //  is as indicated by the convention of the respective curve type. Note that the entire tag type, including the tag
     //  type signature and reserved bytes, is included for each curve."
-    if (header.offset_to_a_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> a_curves;
+    if (header.offset_to_a_curves)
+        a_curves = TRY(read_curves(bytes, header.offset_to_a_curves, header.number_of_input_channels));
 
     // 10.12.3 CLUT
     Optional<CLUTData> clut_data;
@@ -392,15 +421,19 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
         return Error::from_string_literal("ICC::Profile: lutAToBType no CLUT despite different number of input and output channels");
     }
 
+    // Follows from the "Only the following combinations are permitted" list in 10.12.1.
+    if (a_curves.has_value() != clut_data.has_value())
+        return Error::from_string_literal("ICC::Profile: lutAToBType must have 'A' curves exactly if it has a CLUT");
+
     // 10.12.4 “M” curves
     // "There are the same number of “M” curves as there are output channels. The curves are stored sequentially,
     //  with 00h bytes used for padding between them if needed. Each “M” curve is stored as an embedded curveType
     //  or a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the respective
     //  curve type. Note that the entire tag type, including the tag type signature and reserved bytes, is included for
     //  each curve. The “M” curves may only be used when the matrix is used."
-    if (header.offset_to_m_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> m_curves;
+    if (header.offset_to_m_curves)
+        m_curves = TRY(read_curves(bytes, header.offset_to_m_curves, header.number_of_output_channels));
 
     // 10.12.5 Matrix
     // "The matrix is organized as a 3 x 4 array. The elements appear in order from e1-e12. The matrix elements are
@@ -416,18 +449,22 @@ ErrorOr<NonnullRefPtr<LutAToBTagData>> LutAToBTagData::from_bytes(ReadonlyBytes 
             e->e[i] = S15Fixed16::create_raw(raw_e[i]);
     }
 
+    // Follows from the "Only the following combinations are permitted" list in 10.12.1.
+    if (m_curves.has_value() != e.has_value())
+        return Error::from_string_literal("ICC::Profile: lutAToBType must have 'M' curves exactly if it has a matrix");
+
     // 10.12.6 “B” curves
     // "There are the same number of “B” curves as there are output channels. The curves are stored sequentially, with
     //  00h bytes used for padding between them if needed. Each “B” curve is stored as an embedded curveType or a
     //  parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the respective curve
     //  type. Note that the entire tag type, including the tag type signature and reserved bytes, are included for each
     //  curve."
-    if (header.offset_to_b_curves) {
-        // FIXME
-    }
+    if (!header.offset_to_b_curves)
+        return Error::from_string_literal("ICC::Profile: lutAToBType without B curves");
+    Vector<LutCurveType> b_curves = TRY(read_curves(bytes, header.offset_to_b_curves, header.number_of_output_channels));
 
-    // FIXME: Pass curve data once it's read above.
-    return adopt_ref(*new LutAToBTagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, move(clut_data), e));
+    return try_make_ref_counted<LutAToBTagData>(offset, size, header.number_of_input_channels, header.number_of_output_channels,
+        move(a_curves), move(clut_data), move(m_curves), e, move(b_curves));
 }
 
 ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -443,17 +480,15 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     if (header.reserved_for_padding != 0)
         return Error::from_string_literal("ICC::Profile: lutBToAType reserved_for_padding not 0");
 
-    // "Curve data elements may be shared. For example, the offsets for A, B and M curves may be identical."
-
     // 10.13.2 “B” curves
     // "There are the same number of “B” curves as there are input channels. The curves are stored sequentially, with
     //  00h bytes used for padding between them if needed. Each “B” curve is stored as an embedded curveType tag
     //  or a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the proper curve
     //  type. Note that the entire tag type, including the tag type signature and reserved bytes, is included for each
     //  curve."
-    if (header.offset_to_b_curves) {
-        // FIXME
-    }
+    if (!header.offset_to_b_curves)
+        return Error::from_string_literal("ICC::Profile: lutBToAType without B curves");
+    Vector<LutCurveType> b_curves = TRY(read_curves(bytes, header.offset_to_b_curves, header.number_of_input_channels));
 
     // 10.13.3 Matrix
     // "The matrix is organized as a 3 x 4 array. The elements of the matrix appear in the type in order from e1 to e12.
@@ -475,9 +510,13 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     //  a parametricCurveType (see 10.5 or 10.16). The length is as indicated by the convention of the proper curve
     //  type. Note that the entire tag type, including the tag type signature and reserved bytes, are included for each
     //  curve. The “M” curves may only be used when the matrix is used."
-    if (header.offset_to_m_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> m_curves;
+    if (header.offset_to_m_curves)
+        m_curves = TRY(read_curves(bytes, header.offset_to_m_curves, header.number_of_input_channels));
+
+    // Follows from the "Only the following combinations are permitted" list in 10.13.1.
+    if (e.has_value() != m_curves.has_value())
+        return Error::from_string_literal("ICC::Profile: lutBToAType must have matrix exactly if it has 'M' curves");
 
     // 10.13.5 CLUT
     Optional<CLUTData> clut_data;
@@ -494,12 +533,16 @@ ErrorOr<NonnullRefPtr<LutBToATagData>> LutBToATagData::from_bytes(ReadonlyBytes 
     //  Each “A” curve is stored as an embedded curveType or a parametricCurveType (see 10.5 or 10.16). The length
     //  is as indicated by the convention of the proper curve type. Note that the entire tag type, including the tag type
     //  signature and reserved bytes, is included for each curve."
-    if (header.offset_to_a_curves) {
-        // FIXME
-    }
+    Optional<Vector<LutCurveType>> a_curves;
+    if (header.offset_to_a_curves)
+        a_curves = TRY(read_curves(bytes, header.offset_to_a_curves, header.number_of_output_channels));
 
-    // FIXME: Pass curve data once it's read above.
-    return adopt_ref(*new LutBToATagData(offset, size, header.number_of_input_channels, header.number_of_output_channels, e, move(clut_data)));
+    // Follows from the "Only the following combinations are permitted" list in 10.13.1.
+    if (clut_data.has_value() != a_curves.has_value())
+        return Error::from_string_literal("ICC::Profile: lutBToAType must have A clut exactly if it has 'A' curves");
+
+    return try_make_ref_counted<LutBToATagData>(offset, size, header.number_of_input_channels, header.number_of_output_channels,
+        move(b_curves), e, move(m_curves), move(clut_data), move(a_curves));
 }
 
 ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -507,16 +550,6 @@ ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(Readon
     // ICC v4, 10.14 measurementType
     VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
-
-    // Table 49 — measurementType structure
-    struct MeasurementHeader {
-        BigEndian<StandardObserver> standard_observer;
-        XYZNumber tristimulus_value_for_measurement_backing;
-        BigEndian<MeasurementGeometry> measurement_geometry;
-        BigEndian<u16Fixed16Number> measurement_flare;
-        BigEndian<StandardIlluminant> standard_illuminant;
-    };
-    static_assert(AssertSize<MeasurementHeader, 28>());
 
     if (bytes.size() < 2 * sizeof(u32) + sizeof(MeasurementHeader))
         return Error::from_string_literal("ICC::Profile: measurementTag has not enough data");
@@ -527,8 +560,8 @@ ErrorOr<NonnullRefPtr<MeasurementTagData>> MeasurementTagData::from_bytes(Readon
     TRY(validate_measurement_geometry(header.measurement_geometry));
     TRY(validate_standard_illuminant(header.standard_illuminant));
 
-    return adopt_ref(*new MeasurementTagData(offset, size, header.standard_observer, header.tristimulus_value_for_measurement_backing,
-        header.measurement_geometry, U16Fixed16::create_raw(header.measurement_flare), header.standard_illuminant));
+    return try_make_ref_counted<MeasurementTagData>(offset, size, header.standard_observer, header.tristimulus_value_for_measurement_backing,
+        header.measurement_geometry, U16Fixed16::create_raw(header.measurement_flare), header.standard_illuminant);
 }
 
 ErrorOr<void> MeasurementTagData::validate_standard_observer(StandardObserver standard_observer)
@@ -643,7 +676,7 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     // of each record. Any code that needs to access the nth record should determine the record’s offset by multiplying
     // n by the contents of this size field and adding 16. This minor extra effort allows for future expansion of the record
     // encoding, should the need arise, without having to define a new tag type."
-    if (record_size < 12)
+    if (record_size < sizeof(MultiLocalizedUnicodeRawRecord))
         return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType record size too small");
     if (bytes.size() < 16 + number_of_records * record_size)
         return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType not enough data for records");
@@ -654,19 +687,11 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
     // "For the definition of language codes and country codes, see respectively
     //  ISO 639-1 and ISO 3166-1. The Unicode strings in storage should be encoded as 16-bit big-endian, UTF-16BE,
     //  and should not be NULL terminated."
-    auto& utf_16be_decoder = *TextCodec::decoder_for("utf-16be");
-
-    struct RawRecord {
-        BigEndian<u16> language_code;
-        BigEndian<u16> country_code;
-        BigEndian<u32> string_length_in_bytes;
-        BigEndian<u32> string_offset_in_bytes;
-    };
-    static_assert(AssertSize<RawRecord, 12>());
+    auto& utf_16be_decoder = *TextCodec::decoder_for("utf-16be"sv);
 
     for (u32 i = 0; i < number_of_records; ++i) {
         size_t offset = 16 + i * record_size;
-        RawRecord record = *bit_cast<RawRecord const*>(bytes.data() + offset);
+        auto record = *bit_cast<MultiLocalizedUnicodeRawRecord const*>(bytes.data() + offset);
 
         records[i].iso_639_1_language_code = record.language_code;
         records[i].iso_3166_1_country_code = record.country_code;
@@ -678,10 +703,10 @@ ErrorOr<NonnullRefPtr<MultiLocalizedUnicodeTagData>> MultiLocalizedUnicodeTagDat
             return Error::from_string_literal("ICC::Profile: multiLocalizedUnicodeType string offset out of bounds");
 
         StringView utf_16be_data { bytes.data() + record.string_offset_in_bytes, record.string_length_in_bytes };
-        records[i].text = TRY(String::from_deprecated_string(utf_16be_decoder.to_utf8(utf_16be_data)));
+        records[i].text = TRY(utf_16be_decoder.to_utf8(utf_16be_data));
     }
 
-    return adopt_ref(*new MultiLocalizedUnicodeTagData(offset, size, move(records)));
+    return try_make_ref_counted<MultiLocalizedUnicodeTagData>(offset, size, move(records));
 }
 
 unsigned ParametricCurveTagData::parameter_count(FunctionType function_type)
@@ -706,16 +731,6 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
     // ICC v4, 10.17 namedColor2Type
     VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
-
-    // Table 66 — namedColor2Type encoding
-    struct NamedColorHeader {
-        BigEndian<u32> vendor_specific_flag;
-        BigEndian<u32> count_of_named_colors;
-        BigEndian<u32> number_of_device_coordinates_of_each_named_color;
-        u8 prefix_for_each_color_name[32]; // null-terminated
-        u8 suffix_for_each_color_name[32]; // null-terminated
-    };
-    static_assert(AssertSize<NamedColorHeader, 76>());
 
     if (bytes.size() < 2 * sizeof(u32) + sizeof(NamedColorHeader))
         return Error::from_string_literal("ICC::Profile: namedColor2Type has not enough data");
@@ -757,11 +772,11 @@ ErrorOr<NonnullRefPtr<NamedColor2TagData>> NamedColor2TagData::from_bytes(Readon
             device_coordinates[i * header.number_of_device_coordinates_of_each_named_color + j] = components[3 + j];
     }
 
-    return adopt_ref(*new NamedColor2TagData(offset, size, header.vendor_specific_flag, header.number_of_device_coordinates_of_each_named_color,
-        move(prefix), move(suffix), move(root_names), move(pcs_coordinates), move(device_coordinates)));
+    return try_make_ref_counted<NamedColor2TagData>(offset, size, header.vendor_specific_flag, header.number_of_device_coordinates_of_each_named_color,
+        move(prefix), move(suffix), move(root_names), move(pcs_coordinates), move(device_coordinates));
 }
 
-ErrorOr<String> NamedColor2TagData::color_name(u32 index)
+ErrorOr<String> NamedColor2TagData::color_name(u32 index) const
 {
     StringBuilder builder;
     builder.append(prefix());
@@ -770,10 +785,18 @@ ErrorOr<String> NamedColor2TagData::color_name(u32 index)
     return builder.to_string();
 }
 
-ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+namespace {
+
+struct ParametricCurveData {
+    u32 computed_size;
+    ParametricCurveTagData::FunctionType function_type;
+    Array<S15Fixed16, 7> parameters;
+};
+
+ErrorOr<ParametricCurveData> parametric_curve_data_from_bytes(ReadonlyBytes bytes)
 {
     // ICC v4, 10.18 parametricCurveType
-    VERIFY(tag_type(bytes) == Type);
+    VERIFY(tag_type(bytes) == ParametricCurveTagData::Type);
     TRY(check_reserved(bytes));
 
     // "The parametricCurveType describes a one-dimensional curve by specifying one of a predefined set of functions
@@ -790,10 +813,11 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     if (raw_function_type > 4)
         return Error::from_string_literal("ICC::Profile: parametricCurveType unknown function type");
 
-    FunctionType function_type = (FunctionType)raw_function_type;
-    unsigned count = parameter_count(function_type);
+    auto function_type = (ParametricCurveTagData::FunctionType)raw_function_type;
+    unsigned count = ParametricCurveTagData::parameter_count(function_type);
 
-    if (bytes.size() < 2 * sizeof(u32) + 2 * sizeof(u16) + count * sizeof(s15Fixed16Number))
+    u32 computed_size = 2 * sizeof(u32) + 2 * sizeof(u16) + count * sizeof(s15Fixed16Number);
+    if (bytes.size() < computed_size)
         return Error::from_string_literal("ICC::Profile: parametricCurveType has not enough data for parameters");
 
     auto* raw_parameters = bit_cast<BigEndian<s15Fixed16Number> const*>(bytes.data() + 12);
@@ -802,7 +826,21 @@ ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_byte
     for (size_t i = 0; i < count; ++i)
         parameters[i] = S15Fixed16::create_raw(raw_parameters[i]);
 
-    return adopt_ref(*new ParametricCurveTagData(offset, size, function_type, move(parameters)));
+    return ParametricCurveData { computed_size, function_type, move(parameters) };
+}
+
+}
+
+ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset)
+{
+    auto curve_data = TRY(parametric_curve_data_from_bytes(bytes));
+    return try_make_ref_counted<ParametricCurveTagData>(offset, curve_data.computed_size, curve_data.function_type, move(curve_data.parameters));
+}
+
+ErrorOr<NonnullRefPtr<ParametricCurveTagData>> ParametricCurveTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    auto curve_data = TRY(parametric_curve_data_from_bytes(bytes));
+    return try_make_ref_counted<ParametricCurveTagData>(offset, size, curve_data.function_type, move(curve_data.parameters));
 }
 
 ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -824,142 +862,7 @@ ErrorOr<NonnullRefPtr<S15Fixed16ArrayTagData>> S15Fixed16ArrayTagData::from_byte
     for (size_t i = 0; i < count; ++i)
         values[i] = S15Fixed16::create_raw(raw_values[i]);
 
-    return adopt_ref(*new S15Fixed16ArrayTagData(offset, size, move(values)));
-}
-
-ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
-{
-    // ICC v2, 6.5.17 textDescriptionType
-    // textDescriptionType is no longer in the V4 spec.
-    // In both the V2 and V4 specs, 'desc' is a required tag. In V4, it has type multiLocalizedUnicodeType,
-    // but in V2 it has type textDescriptionType. Since 'desc' is required, this type is present in every
-    // V2 icc file, and there are still many V2 files in use. So textDescriptionType is here to stay for now.
-    // It's a very 90s type, preceding universal adoption of Unicode.
-
-    // "The textDescriptionType is a complex structure that contains three types of text description structures:
-    //  7-bit ASCII, Unicode and ScriptCode. Since no single standard method for specifying localizable character
-    //  sets exists across the major platform vendors, including all three provides access for the major operating
-    //  systems. The 7-bit ASCII description is to be an invariant, nonlocalizable name for consistent reference.
-    //  It is preferred that both the Unicode and ScriptCode structures be properly localized."
-
-    VERIFY(tag_type(bytes) == Type);
-    TRY(check_reserved(bytes));
-
-    // 7-bit ASCII
-
-    // "ASCII: The count is the length of the string in bytes including the null terminator."
-    if (bytes.size() < 3 * sizeof(u32))
-        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII size");
-    u32 ascii_description_length = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
-
-    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length)
-        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII description");
-
-    u8 const* ascii_description_data = bytes.data() + 3 * sizeof(u32);
-    for (u32 i = 0; i < ascii_description_length; ++i) {
-        if (ascii_description_data[i] >= 128)
-            return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description not 7-bit ASCII");
-    }
-
-    if (ascii_description_length == 0)
-        return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description length does not include trailing \\0");
-
-    if (ascii_description_data[ascii_description_length - 1] != '\0')
-        return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description not \\0-terminated");
-
-    StringView ascii_description { ascii_description_data, ascii_description_length - 1 };
-
-    // Unicode
-
-    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32))
-        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode metadata");
-
-    // "Because the Unicode language code and Unicode count immediately follow the ASCII description,
-    //  their alignment is not correct when the ASCII count is not a multiple of four"
-    // So we can't use BigEndian<u32> here.
-    u8 const* cursor = ascii_description_data + ascii_description_length;
-    u32 unicode_language_code = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
-    cursor += 4;
-
-    // "Unicode: The count is the number of characters including a Unicode null where a character is always two bytes."
-    // This implies UCS-2.
-    u32 unicode_description_length = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
-    cursor += 4;
-
-    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32) + 2 * unicode_description_length)
-        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode description");
-
-    u8 const* unicode_description_data = cursor;
-    cursor += 2 * unicode_description_length;
-    for (u32 i = 0; i < unicode_description_length; ++i) {
-        u16 code_point = (u16)(unicode_description_data[2 * i] << 8) | (u16)unicode_description_data[2 * i + 1];
-        if (is_unicode_surrogate(code_point))
-            return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description is not valid UCS-2");
-    }
-
-    // If Unicode is not native on the platform, then the Unicode language code and Unicode count should be
-    // filled in as 0, with no data placed in the Unicode localizable profile description area.
-    Optional<String> unicode_description;
-    if (unicode_description_length > 0) {
-        u32 byte_size_without_nul = 2 * (unicode_description_length - 1);
-        u16 last_code_point = (u16)(unicode_description_data[byte_size_without_nul] << 8) | (u16)unicode_description_data[byte_size_without_nul + 1];
-        if (last_code_point != 0)
-            return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description not \\0-terminated");
-
-        StringView utf_16be_data { unicode_description_data, byte_size_without_nul };
-        unicode_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("utf-16be")->to_utf8(utf_16be_data)));
-    }
-
-    // ScriptCode
-
-    // What is a script code? It's an old, obsolete mac thing. It looks like it's documented in
-    // https://developer.apple.com/library/archive/documentation/mac/pdf/Text.pdf
-    // "Script Codes, Language Codes, and Region Codes 1", PDF page 82.
-    // I haven't found a complete explanation though. PDF page 84 suggests that:
-    // - There are 16 script codes
-    // - 0 is Roman, 1 is Japanese, 2 is Chinese, 3 is Korean, 9 is Devanagari
-    // Roman uses https://en.wikipedia.org/wiki/Mac_OS_Roman as encoding (also on page 89),
-    // and "All non-Roman script systems include Roman as a subscript" (page 87).
-
-    // Aha, "Script Codes 6" on page 676 has the complete list! There are 32 of them.
-    // The document mentions that each script code possibly has its own encoding, but I haven't found
-    // details on the encodings for script codes other than 0 (which uses Mac OS Roman).
-    // http://www.kreativekorp.com/charset/encoding/ has an unofficial list of old Mac OS encodings,
-    // but it's not clear to me which script codes map to which encoding.
-
-    // From here on, quotes are from the ICC spec on textDescriptionType again.
-
-    // "The ScriptCode code is misaligned when the ASCII count is odd."
-    // So don't use BigEndian<u16> here.
-    u16 scriptcode_code = (u16)(cursor[0] << 8) | (u32)cursor[1];
-    cursor += 2;
-
-    // "ScriptCode: The count is the length of the string in bytes including the terminating null."
-    u8 macintosh_description_length = *cursor;
-    cursor += 1;
-
-    if (macintosh_description_length > 67)
-        return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode description too long");
-
-    u8 const* macintosh_description_data = cursor;
-
-    // "If Scriptcode is not native on the platform, then the ScriptCode code and ScriptCode count should be filled
-    // in as 0. The 67-byte localizable Macintosh profile description should be filled with 0’s."
-    Optional<String> macintosh_description;
-    if (macintosh_description_length > 0) {
-        // ScriptCode is old-timey and a complicated to fully support. Lightroom Classic does write the ScriptCode section of textDescriptionType.
-        // But supporting only ASCII MacRoman is good enough for those files, and easy to implement, so let's do only that for now.
-        if (scriptcode_code == 0) { // MacRoman
-            if (macintosh_description_data[macintosh_description_length - 1] != '\0')
-                return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode not \\0-terminated");
-
-            macintosh_description = TRY(String::from_deprecated_string(TextCodec::decoder_for("x-mac-roman")->to_utf8({ macintosh_description_data, (size_t)macintosh_description_length - 1 })));
-        } else {
-            dbgln("TODO: ICCProfile textDescriptionType ScriptCode {}, length {}", scriptcode_code, macintosh_description_length);
-        }
-    }
-
-    return adopt_ref(*new TextDescriptionTagData(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description)));
+    return try_make_ref_counted<S15Fixed16ArrayTagData>(offset, size, move(values));
 }
 
 ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -973,7 +876,7 @@ ErrorOr<NonnullRefPtr<SignatureTagData>> SignatureTagData::from_bytes(ReadonlyBy
 
     u32 signature = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
 
-    return adopt_ref(*new SignatureTagData(offset, size, signature));
+    return try_make_ref_counted<SignatureTagData>(offset, size, signature);
 }
 
 Optional<StringView> SignatureTagData::colorimetric_intent_image_state_signature_name(u32 colorimetric_intent_image_state)
@@ -1096,6 +999,141 @@ Optional<StringView> SignatureTagData::name_for_tag(TagSignature tag)
     return {};
 }
 
+ErrorOr<NonnullRefPtr<TextDescriptionTagData>> TextDescriptionTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
+{
+    // ICC v2, 6.5.17 textDescriptionType
+    // textDescriptionType is no longer in the V4 spec.
+    // In both the V2 and V4 specs, 'desc' is a required tag. In V4, it has type multiLocalizedUnicodeType,
+    // but in V2 it has type textDescriptionType. Since 'desc' is required, this type is present in every
+    // V2 icc file, and there are still many V2 files in use. So textDescriptionType is here to stay for now.
+    // It's a very 90s type, preceding universal adoption of Unicode.
+
+    // "The textDescriptionType is a complex structure that contains three types of text description structures:
+    //  7-bit ASCII, Unicode and ScriptCode. Since no single standard method for specifying localizable character
+    //  sets exists across the major platform vendors, including all three provides access for the major operating
+    //  systems. The 7-bit ASCII description is to be an invariant, nonlocalizable name for consistent reference.
+    //  It is preferred that both the Unicode and ScriptCode structures be properly localized."
+
+    VERIFY(tag_type(bytes) == Type);
+    TRY(check_reserved(bytes));
+
+    // 7-bit ASCII
+
+    // "ASCII: The count is the length of the string in bytes including the null terminator."
+    if (bytes.size() < 3 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII size");
+    u32 ascii_description_length = *bit_cast<BigEndian<u32> const*>(bytes.data() + 8);
+
+    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for ASCII description");
+
+    u8 const* ascii_description_data = bytes.data() + 3 * sizeof(u32);
+    for (u32 i = 0; i < ascii_description_length; ++i) {
+        if (ascii_description_data[i] >= 128)
+            return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description not 7-bit ASCII");
+    }
+
+    if (ascii_description_length == 0)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description length does not include trailing \\0");
+
+    if (ascii_description_data[ascii_description_length - 1] != '\0')
+        return Error::from_string_literal("ICC::Profile: textDescriptionType ASCII description not \\0-terminated");
+
+    StringView ascii_description { ascii_description_data, ascii_description_length - 1 };
+
+    // Unicode
+
+    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32))
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode metadata");
+
+    // "Because the Unicode language code and Unicode count immediately follow the ASCII description,
+    //  their alignment is not correct when the ASCII count is not a multiple of four"
+    // So we can't use BigEndian<u32> here.
+    u8 const* cursor = ascii_description_data + ascii_description_length;
+    u32 unicode_language_code = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
+    cursor += 4;
+
+    // "Unicode: The count is the number of characters including a Unicode null where a character is always two bytes."
+    // This implies UCS-2.
+    u32 unicode_description_length = (u32)(cursor[0] << 24) | (u32)(cursor[1] << 16) | (u32)(cursor[2] << 8) | (u32)cursor[3];
+    cursor += 4;
+
+    if (bytes.size() < 3 * sizeof(u32) + ascii_description_length + 2 * sizeof(u32) + 2 * unicode_description_length)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType has not enough data for Unicode description");
+
+    u8 const* unicode_description_data = cursor;
+    cursor += 2 * unicode_description_length;
+    for (u32 i = 0; i < unicode_description_length; ++i) {
+        u16 code_point = (u16)(unicode_description_data[2 * i] << 8) | (u16)unicode_description_data[2 * i + 1];
+        if (is_unicode_surrogate(code_point))
+            return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description is not valid UCS-2");
+    }
+
+    // If Unicode is not native on the platform, then the Unicode language code and Unicode count should be
+    // filled in as 0, with no data placed in the Unicode localizable profile description area.
+    Optional<String> unicode_description;
+    if (unicode_description_length > 0) {
+        u32 byte_size_without_nul = 2 * (unicode_description_length - 1);
+        u16 last_code_point = (u16)(unicode_description_data[byte_size_without_nul] << 8) | (u16)unicode_description_data[byte_size_without_nul + 1];
+        if (last_code_point != 0)
+            return Error::from_string_literal("ICC::Profile: textDescriptionType Unicode description not \\0-terminated");
+
+        StringView utf_16be_data { unicode_description_data, byte_size_without_nul };
+        unicode_description = TRY(TextCodec::decoder_for("utf-16be"sv)->to_utf8(utf_16be_data));
+    }
+
+    // ScriptCode
+
+    // What is a script code? It's an old, obsolete mac thing. It looks like it's documented in
+    // https://developer.apple.com/library/archive/documentation/mac/pdf/Text.pdf
+    // "Script Codes, Language Codes, and Region Codes 1", PDF page 82.
+    // I haven't found a complete explanation though. PDF page 84 suggests that:
+    // - There are 16 script codes
+    // - 0 is Roman, 1 is Japanese, 2 is Chinese, 3 is Korean, 9 is Devanagari
+    // Roman uses https://en.wikipedia.org/wiki/Mac_OS_Roman as encoding (also on page 89),
+    // and "All non-Roman script systems include Roman as a subscript" (page 87).
+
+    // Aha, "Script Codes 6" on page 676 has the complete list! There are 32 of them.
+    // The document mentions that each script code possibly has its own encoding, but I haven't found
+    // details on the encodings for script codes other than 0 (which uses Mac OS Roman).
+    // http://www.kreativekorp.com/charset/encoding/ has an unofficial list of old Mac OS encodings,
+    // but it's not clear to me which script codes map to which encoding.
+
+    // From here on, quotes are from the ICC spec on textDescriptionType again.
+
+    // "The ScriptCode code is misaligned when the ASCII count is odd."
+    // So don't use BigEndian<u16> here.
+    u16 scriptcode_code = (u16)(cursor[0] << 8) | (u32)cursor[1];
+    cursor += 2;
+
+    // "ScriptCode: The count is the length of the string in bytes including the terminating null."
+    u8 macintosh_description_length = *cursor;
+    cursor += 1;
+
+    if (macintosh_description_length > 67)
+        return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode description too long");
+
+    u8 const* macintosh_description_data = cursor;
+
+    // "If Scriptcode is not native on the platform, then the ScriptCode code and ScriptCode count should be filled
+    // in as 0. The 67-byte localizable Macintosh profile description should be filled with 0’s."
+    Optional<String> macintosh_description;
+    if (macintosh_description_length > 0) {
+        // ScriptCode is old-timey and a complicated to fully support. Lightroom Classic does write the ScriptCode section of textDescriptionType.
+        // But supporting only ASCII MacRoman is good enough for those files, and easy to implement, so let's do only that for now.
+        if (scriptcode_code == 0) { // MacRoman
+            if (macintosh_description_data[macintosh_description_length - 1] != '\0')
+                return Error::from_string_literal("ICC::Profile: textDescriptionType ScriptCode not \\0-terminated");
+
+            macintosh_description = TRY(TextCodec::decoder_for("x-mac-roman"sv)->to_utf8({ macintosh_description_data, (size_t)macintosh_description_length - 1 }));
+        } else {
+            dbgln("TODO: ICCProfile textDescriptionType ScriptCode {}, length {}", scriptcode_code, macintosh_description_length);
+        }
+    }
+
+    return try_make_ref_counted<TextDescriptionTagData>(offset, size, TRY(String::from_utf8(ascii_description)), unicode_language_code, move(unicode_description), move(macintosh_description));
+}
+
 ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
 {
     // ICC v4, 10.24 textType
@@ -1118,7 +1156,7 @@ ErrorOr<NonnullRefPtr<TextTagData>> TextTagData::from_bytes(ReadonlyBytes bytes,
     if (text_data[length - 1] != '\0')
         return Error::from_string_literal("ICC::Profile: textType data not \\0-terminated");
 
-    return adopt_ref(*new TextTagData(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1)))));
+    return try_make_ref_counted<TextTagData>(offset, size, TRY(String::from_utf8(StringView(text_data, length - 1))));
 }
 
 ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -1127,14 +1165,6 @@ ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_
     VERIFY(tag_type(bytes) == Type);
     TRY(check_reserved(bytes));
 
-    // Table 84 — viewingConditionsType encoding
-    struct ViewingConditionsHeader {
-        XYZNumber unnormalized_ciexyz_values_for_illuminant; // "(in which Y is in cd/m2)"
-        XYZNumber unnormalized_ciexyz_values_for_surround;   // "(in which Y is in cd/m2)"
-        BigEndian<MeasurementTagData::StandardIlluminant> illuminant_type;
-    };
-    static_assert(AssertSize<ViewingConditionsHeader, 28>());
-
     if (bytes.size() < 2 * sizeof(u32) + sizeof(ViewingConditionsHeader))
         return Error::from_string_literal("ICC::Profile: viewingConditionsType has not enough data");
 
@@ -1142,8 +1172,8 @@ ErrorOr<NonnullRefPtr<ViewingConditionsTagData>> ViewingConditionsTagData::from_
 
     TRY(MeasurementTagData::validate_standard_illuminant(header.illuminant_type));
 
-    return adopt_ref(*new ViewingConditionsTagData(offset, size, header.unnormalized_ciexyz_values_for_illuminant,
-        header.unnormalized_ciexyz_values_for_surround, header.illuminant_type));
+    return try_make_ref_counted<ViewingConditionsTagData>(offset, size, header.unnormalized_ciexyz_values_for_illuminant,
+        header.unnormalized_ciexyz_values_for_surround, header.illuminant_type);
 }
 
 ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u32 offset, u32 size)
@@ -1165,7 +1195,7 @@ ErrorOr<NonnullRefPtr<XYZTagData>> XYZTagData::from_bytes(ReadonlyBytes bytes, u
     for (size_t i = 0; i < xyz_count; ++i)
         xyzs[i] = (XYZ)raw_xyzs[i];
 
-    return adopt_ref(*new XYZTagData(offset, size, move(xyzs)));
+    return try_make_ref_counted<XYZTagData>(offset, size, move(xyzs));
 }
 
 }

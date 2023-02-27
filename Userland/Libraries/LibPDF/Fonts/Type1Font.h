@@ -7,33 +7,22 @@
 #pragma once
 
 #include <LibGfx/Font/ScaledFont.h>
-#include <LibPDF/Fonts/PDFFont.h>
+#include <LibPDF/Fonts/SimpleFont.h>
 #include <LibPDF/Fonts/Type1FontProgram.h>
 
 namespace PDF {
 
-class Type1Font : public PDFFont {
+class Type1Font : public SimpleFont {
 public:
-    struct Data : PDFFont::CommonData {
-        RefPtr<Type1FontProgram> font_program;
-    };
-
-    static PDFErrorOr<Data> parse_data(Document*, NonnullRefPtr<DictObject> font_dict, float font_size);
-
-    static PDFErrorOr<NonnullRefPtr<Type1Font>> create(Document*, NonnullRefPtr<DictObject>, float font_size);
-
-    Type1Font(Data);
-    ~Type1Font() override = default;
-
-    float get_char_width(u16 char_code) const override;
-
-    void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u32 char_code, Color color) override;
-
+    void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color) override;
     Type type() const override { return PDFFont::Type::Type1; }
-    DeprecatedFlyString base_font_name() const override { return m_data.base_font_name; };
+
+protected:
+    PDFErrorOr<void> initialize(Document*, NonnullRefPtr<DictObject> const&, float font_size) override;
 
 private:
-    Data m_data;
+    RefPtr<Type1FontProgram> m_font_program;
+    RefPtr<Gfx::Font> m_font;
     HashMap<Gfx::GlyphIndexWithSubpixelOffset, RefPtr<Gfx::Bitmap>> m_glyph_cache;
 };
 

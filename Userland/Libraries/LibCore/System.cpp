@@ -12,7 +12,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <limits.h>
@@ -330,7 +330,7 @@ ErrorOr<void> sigaction(int signal, struct sigaction const* action, struct sigac
     return {};
 }
 
-#if defined(AK_OS_MACOS) || defined(AK_OS_OPENBSD) || defined(AK_OS_FREEBSD)
+#if defined(AK_OS_BSD_GENERIC)
 ErrorOr<sig_t> signal(int signal, sig_t handler)
 #else
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler)
@@ -403,7 +403,7 @@ ErrorOr<int> anon_create([[maybe_unused]] size_t size, [[maybe_unused]] int opti
         TRY(close(fd));
         return Error::from_errno(saved_errno);
     }
-#elif defined(AK_OS_MACOS) || defined(AK_OS_EMSCRIPTEN) || defined(AK_OS_OPENBSD)
+#elif defined(AK_OS_MACOS) || defined(AK_OS_EMSCRIPTEN) || defined(AK_OS_OPENBSD) || defined(AK_OS_NETBSD)
     struct timespec time;
     clock_gettime(CLOCK_REALTIME, &time);
     auto name = DeprecatedString::formatted("/shm-{}{}", (unsigned long)time.tv_sec, (unsigned long)time.tv_nsec);
@@ -503,7 +503,7 @@ ErrorOr<struct stat> lstat(StringView path)
     HANDLE_SYSCALL_RETURN_VALUE("lstat", rc, st);
 #else
     DeprecatedString path_string = path;
-    if (::stat(path_string.characters(), &st) < 0)
+    if (::lstat(path_string.characters(), &st) < 0)
         return Error::from_syscall("lstat"sv, -errno);
     return st;
 #endif
@@ -1156,7 +1156,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
     DeprecatedString exec_filename;
 
     if (search_in_path == SearchInPath::Yes) {
-        auto maybe_executable = Core::File::resolve_executable_from_environment(filename);
+        auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename);
 
         if (!maybe_executable.has_value())
             return ENOENT;
@@ -1195,7 +1195,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
             // These BSDs don't support execvpe(), so we'll have to manually search the PATH.
             ScopedValueRollback errno_rollback(errno);
 
-            auto maybe_executable = Core::File::resolve_executable_from_environment(filename_string);
+            auto maybe_executable = Core::DeprecatedFile::resolve_executable_from_environment(filename_string);
 
             if (!maybe_executable.has_value()) {
                 errno_rollback.set_override_rollback_value(ENOENT);

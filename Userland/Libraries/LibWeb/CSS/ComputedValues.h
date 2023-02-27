@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -77,7 +77,7 @@ public:
 };
 
 struct BackgroundLayerData {
-    RefPtr<CSS::AbstractImageStyleValue> background_image { nullptr };
+    RefPtr<CSS::AbstractImageStyleValue const> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
     CSS::BackgroundBox origin { CSS::BackgroundBox::PaddingBox };
     CSS::BackgroundBox clip { CSS::BackgroundBox::BorderBox };
@@ -133,8 +133,8 @@ struct ContentData {
     } type { Type::Normal };
 
     // FIXME: Data is a list of identifiers, strings and image values.
-    DeprecatedString data {};
-    DeprecatedString alt_text {};
+    String data {};
+    String alt_text {};
 };
 
 struct BorderRadiusData {

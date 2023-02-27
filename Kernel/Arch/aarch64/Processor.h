@@ -213,8 +213,6 @@ public:
 
     ALWAYS_INLINE static FPUState const& clean_fpu_state()
     {
-        static FPUState s_clean_fpu_state {};
-        dbgln("FIXME: Processor: Actually return correct FPUState.");
         return s_clean_fpu_state;
     }
 
@@ -281,6 +279,8 @@ public:
 
     static StringView platform_string();
 
+    static void set_thread_specific_data(VirtualAddress thread_specific_data);
+
 private:
     Processor(Processor const&) = delete;
 
@@ -292,6 +292,8 @@ private:
     Thread* m_current_thread;
     Thread* m_idle_thread;
     u32 m_in_critical { 0 };
+
+    static FPUState s_clean_fpu_state;
 
     // FIXME: Once there is code in place to differentiate IRQs from synchronous exceptions (syscalls),
     //        this member should be incremented. Also this member shouldn't be a FlatPtr.

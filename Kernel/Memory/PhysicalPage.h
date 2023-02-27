@@ -25,12 +25,12 @@ class PhysicalPage {
 public:
     PhysicalAddress paddr() const;
 
-    void ref()
+    void ref() const
     {
         m_ref_count.fetch_add(1, AK::memory_order_relaxed);
     }
 
-    void unref()
+    void unref() const
     {
         if (m_ref_count.fetch_sub(1, AK::memory_order_acq_rel) == 1)
             free_this();
@@ -47,9 +47,9 @@ private:
     explicit PhysicalPage(MayReturnToFreeList may_return_to_freelist);
     ~PhysicalPage() = default;
 
-    void free_this();
+    void free_this() const;
 
-    Atomic<u32> m_ref_count { 1 };
+    mutable Atomic<u32> m_ref_count { 1 };
     MayReturnToFreeList m_may_return_to_freelist { MayReturnToFreeList::Yes };
 };
 

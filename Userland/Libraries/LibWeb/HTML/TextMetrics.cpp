@@ -6,12 +6,13 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/TextMetrics.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<TextMetrics> TextMetrics::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TextMetrics>> TextMetrics::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<TextMetrics>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<TextMetrics>(realm, realm));
 }
 
 TextMetrics::TextMetrics(JS::Realm& realm)

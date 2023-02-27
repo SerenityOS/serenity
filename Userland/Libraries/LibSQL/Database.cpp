@@ -170,7 +170,7 @@ ResultOr<NonnullRefPtr<TableDef>> Database::get_table(DeprecatedString const& sc
     return table_def;
 }
 
-ErrorOr<Vector<Row>> Database::select_all(TableDef const& table)
+ErrorOr<Vector<Row>> Database::select_all(TableDef& table)
 {
     VERIFY(m_table_cache.get(table.key().hash()).has_value());
     Vector<Row> ret;
@@ -180,7 +180,7 @@ ErrorOr<Vector<Row>> Database::select_all(TableDef const& table)
     return ret;
 }
 
-ErrorOr<Vector<Row>> Database::match(TableDef const& table, Key const& key)
+ErrorOr<Vector<Row>> Database::match(TableDef& table, Key const& key)
 {
     VERIFY(m_table_cache.get(table.key().hash()).has_value());
     Vector<Row> ret;

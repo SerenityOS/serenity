@@ -64,6 +64,9 @@ public:
     // Creates a new String from a sequence of UTF-8 encoded code points.
     static ErrorOr<String> from_utf8(StringView);
 
+    // Creates a new String by reading byte_count bytes from a UTF-8 encoded Stream.
+    static ErrorOr<String> from_stream(Stream&, size_t byte_count);
+
     // Creates a new String from a short sequence of UTF-8 encoded code points. If the provided string
     // does not fit in the short string storage, a compilation error will be emitted.
     static AK_SHORT_STRING_CONSTEVAL String from_utf8_short_string(StringView string)
@@ -230,7 +233,7 @@ private:
         u8 storage[MAX_SHORT_STRING_BYTE_COUNT] = { 0 };
     };
 
-    explicit String(NonnullRefPtr<Detail::StringData>);
+    explicit String(NonnullRefPtr<Detail::StringData const>);
 
     explicit constexpr String(ShortString short_string)
         : m_short_string(short_string)
@@ -241,7 +244,7 @@ private:
 
     union {
         ShortString m_short_string;
-        Detail::StringData* m_data { nullptr };
+        Detail::StringData const* m_data { nullptr };
     };
 };
 
@@ -255,4 +258,14 @@ struct Formatter<String> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder&, String const&);
 };
 
+}
+
+[[nodiscard]] ALWAYS_INLINE AK::ErrorOr<AK::String> operator""_string(char const* cstring, size_t length)
+{
+    return AK::String::from_utf8(AK::StringView(cstring, length));
+}
+
+[[nodiscard]] ALWAYS_INLINE AK_SHORT_STRING_CONSTEVAL AK::String operator""_short_string(char const* cstring, size_t length)
+{
+    return AK::String::from_utf8_short_string(AK::StringView(cstring, length));
 }

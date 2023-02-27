@@ -12,6 +12,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/Painter.h>
@@ -23,7 +24,7 @@
 
 namespace PixelPaint {
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> GradientTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> GradientTool::cursor()
 {
     if (m_hover_over_drag_handle || m_hover_over_start_handle || m_hover_over_end_handle)
         return Gfx::StandardCursor::Hand;
@@ -163,50 +164,64 @@ void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
     draw_gradient(painter, true, m_editor->content_to_frame_position(Gfx::IntPoint(0, 0)), m_editor->scale(), m_editor->content_rect());
 }
 
+void GradientTool::on_primary_color_change(Color)
+{
+    if (m_gradient_end.has_value())
+        m_editor->update();
+}
+
+void GradientTool::on_secondary_color_change(Color)
+{
+    if (m_gradient_end.has_value())
+        m_editor->update();
+}
+
 void GradientTool::on_tool_activation()
 {
-    m_editor->on_primary_color_change = [this](Color) {
-        if (m_gradient_end.has_value())
-            m_editor->update();
-    };
-
     reset();
 }
 
-GUI::Widget* GradientTool::get_properties_widget()
+ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& size_container = m_properties_widget->add<GUI::Widget>();
-        size_container.set_fixed_height(20);
-        size_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
+        size_container->set_fixed_height(20);
+        (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& size_label = size_container.add<GUI::Label>("Opacity:");
-        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label.set_fixed_size(80, 20);
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Opacity:"));
+        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label->set_fixed_size(80, 20);
 
-        auto& opacity_slider = size_container.add<GUI::HorizontalOpacitySlider>();
-        opacity_slider.set_range(1, 100);
-        opacity_slider.set_value(100);
+        auto opacity_slider = TRY(size_container->try_add<GUI::HorizontalOpacitySlider>());
+        opacity_slider->set_range(1, 100);
+        opacity_slider->set_value(100);
 
-        opacity_slider.on_change = [&](int value) {
+        opacity_slider->on_change = [this](int value) {
             m_opacity = value;
             m_editor->update();
         };
 
-        set_primary_slider(&opacity_slider);
+        set_primary_slider(opacity_slider);
 
-        auto& button_container = m_properties_widget->add<GUI::Widget>();
-        button_container.set_fixed_height(22);
-        auto& button_container_layout = button_container.set_layout<GUI::HorizontalBoxLayout>();
-        button_container_layout.add_spacer();
+        auto use_secondary_color_checkbox = TRY(properties_widget->try_add<GUI::CheckBox>(TRY("Use secondary color"_string)));
+        use_secondary_color_checkbox->on_checked = [this](bool checked) {
+            m_use_secondary_color = checked;
+            m_editor->update();
+        };
 
-        auto& apply_button = button_container.add<GUI::DialogButton>("Apply");
-        apply_button.on_click = [this](auto) {
+        auto button_container = TRY(properties_widget->try_add<GUI::Widget>());
+        button_container->set_fixed_height(22);
+        TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
+        button_container->add_spacer().release_value_but_fixme_should_propagate_errors();
+
+        auto apply_button = TRY(button_container->try_add<GUI::DialogButton>("Apply"_short_string));
+        apply_button->on_click = [this](auto) {
             rasterize_gradient();
         };
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();
@@ -282,17 +297,22 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
         return;
 
     auto gradient_half_width_percentage_offset = (m_gradient_half_length * scale) / overall_gradient_length_in_rect;
-    auto color_to_use = m_editor->color_for(GUI::MouseButton::Primary);
-    int base_opacity = color_to_use.alpha() * m_opacity / 100;
-    color_to_use.set_alpha(base_opacity);
-    auto gradient_start_color = color_to_use;
-    gradient_start_color.set_alpha(0);
+    auto start_color = m_editor->color_for(GUI::MouseButton::Primary);
+    start_color.set_alpha(start_color.alpha() * m_opacity / 100);
+
+    auto end_color = [&] {
+        if (m_use_secondary_color) {
+            auto color = m_editor->color_for(GUI::MouseButton::Secondary);
+            return color.with_alpha(color.alpha() * m_opacity / 100);
+        }
+        return start_color.with_alpha(0);
+    }();
 
     {
         Gfx::PainterStateSaver saver(painter);
         if (gradient_clip.has_value())
             painter.add_clip_rect(*gradient_clip);
-        painter.fill_rect_with_linear_gradient(gradient_rect, Array { Gfx::ColorStop { gradient_start_color, 0.5f - gradient_half_width_percentage_offset }, Gfx::ColorStop { color_to_use, 0.5f + gradient_half_width_percentage_offset } }, rotation_degrees);
+        painter.fill_rect_with_linear_gradient(gradient_rect, Array { Gfx::ColorStop { start_color, 0.5f - gradient_half_width_percentage_offset }, Gfx::ColorStop { end_color, 0.5f + gradient_half_width_percentage_offset } }, rotation_degrees);
     }
 
     if (with_guidelines) {

@@ -90,7 +90,7 @@ JS::Completion ClassicScript::run(RethrowErrors rethrow_errors, JS::GCPtr<JS::En
 
     // 5. If script's error to rethrow is not null, then set evaluationStatus to Completion { [[Type]]: throw, [[Value]]: script's error to rethrow, [[Target]]: empty }.
     if (m_error_to_rethrow.has_value()) {
-        evaluation_status = vm.throw_completion<JS::SyntaxError>(m_error_to_rethrow.value().to_deprecated_string());
+        evaluation_status = vm.throw_completion<JS::SyntaxError>(TRY_OR_THROW_OOM(vm, m_error_to_rethrow.value().to_string()));
     } else {
         auto timer = Core::ElapsedTimer::start_new();
 

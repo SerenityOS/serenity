@@ -23,8 +23,7 @@ ToolbarContainer::ToolbarContainer(Gfx::Orientation orientation)
     set_frame_shape(Gfx::FrameShape::Box);
     set_frame_shadow(Gfx::FrameShadow::Sunken);
 
-    auto& layout = set_layout<VerticalBoxLayout>();
-    layout.set_spacing(2);
+    set_layout<VerticalBoxLayout>(GUI::Margins {}, 2);
     set_shrink_to_fit(true);
 }
 

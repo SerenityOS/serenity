@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -251,7 +250,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
             auto const fd = file_or_error.value();
 
-            auto maybe_file = Core::Stream::File::adopt_fd(fd, Core::Stream::OpenMode::Read);
+            auto maybe_file = Core::File::adopt_fd(fd, Core::File::OpenMode::Read);
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)
@@ -323,7 +322,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                     store_response_cookies(request.page().value(), request.url(), *set_cookie);
             }
 
-            if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599)) {
+            if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599 && payload.is_empty())) {
                 StringBuilder error_builder;
                 if (status_code.has_value())
                     error_builder.appendff("Load failed: {}", *status_code);

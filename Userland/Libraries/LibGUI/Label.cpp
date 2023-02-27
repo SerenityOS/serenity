@@ -111,7 +111,12 @@ void Label::paint_event(PaintEvent& event)
 
 void Label::size_to_fit()
 {
-    set_fixed_width(static_cast<int>(ceilf(font().width(m_text))) + m_autosize_padding * 2);
+    set_fixed_width(text_calculated_preferred_width());
+}
+
+int Label::text_calculated_preferred_width() const
+{
+    return static_cast<int>(ceilf(font().width(m_text))) + m_autosize_padding * 2;
 }
 
 int Label::text_calculated_preferred_height() const
@@ -121,6 +126,7 @@ int Label::text_calculated_preferred_height() const
 
 Optional<UISize> Label::calculated_preferred_size() const
 {
-    return GUI::UISize(SpecialDimension::Grow, text_calculated_preferred_height());
+    return GUI::UISize(text_calculated_preferred_width(), text_calculated_preferred_height());
 }
+
 }

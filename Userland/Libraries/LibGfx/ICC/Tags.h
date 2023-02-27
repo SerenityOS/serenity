@@ -69,6 +69,7 @@ namespace Gfx::ICC {
     TAG(crdInfoTag, 0x63726469 /* 'crdi' */)                        \
     TAG(deviceSettingsTag, 0x64657673 /* 'devs' */)                 \
     TAG(mediaBlackPointTag, 0x626B7074 /* 'bkpt' */)                \
+    TAG(namedColorTag, 0x6E636F6C /* 'ncol' */)                     \
     TAG(ps2CRD0Tag, 0x70736430 /* 'psd0' */)                        \
     TAG(ps2CRD1Tag, 0x70736431 /* 'psd1' */)                        \
     TAG(ps2CRD2Tag, 0x70736432 /* 'psd2' */)                        \

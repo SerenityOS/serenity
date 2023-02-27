@@ -73,15 +73,13 @@ TaskbarWindow::TaskbarWindow()
 ErrorOr<void> TaskbarWindow::populate_taskbar()
 {
     auto main_widget = TRY(set_main_widget<TaskbarWidget>());
-    (void)TRY(main_widget->try_set_layout<GUI::HorizontalBoxLayout>());
-    main_widget->layout()->set_margins({ 2, 3, 0, 3 });
+    TRY(main_widget->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins { 2, 3, 0, 3 }));
 
     m_quick_launch = TRY(Taskbar::QuickLaunchWidget::create());
     TRY(main_widget->try_add_child(*m_quick_launch));
 
     m_task_button_container = TRY(main_widget->try_add<GUI::Widget>());
-    (void)TRY(m_task_button_container->try_set_layout<GUI::HorizontalBoxLayout>());
-    m_task_button_container->layout()->set_spacing(3);
+    TRY(m_task_button_container->try_set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 3));
 
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
@@ -114,7 +112,7 @@ void TaskbarWindow::add_system_menu(NonnullRefPtr<GUI::Menu> system_menu)
 {
     m_system_menu = move(system_menu);
 
-    m_start_button = GUI::Button::construct("Serenity");
+    m_start_button = GUI::Button::construct("Serenity"_string.release_value_but_fixme_should_propagate_errors());
     set_start_button_font(Gfx::FontDatabase::default_font().bold_variant());
     m_start_button->set_icon_spacing(0);
     auto app_icon = GUI::Icon::default_icon("ladyball"sv);
@@ -202,7 +200,7 @@ void TaskbarWindow::update_window_button(::Window& window, bool show_as_active)
     auto* button = window.button();
     if (!button)
         return;
-    button->set_text(window.title());
+    button->set_text(String::from_deprecated_string(window.title()).release_value_but_fixme_should_propagate_errors());
     button->set_tooltip(window.title());
     button->set_checked(show_as_active);
     button->set_visible(is_window_on_current_workspace(window));

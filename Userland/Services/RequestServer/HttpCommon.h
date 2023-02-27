@@ -97,7 +97,7 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& 
         return {};
     request.set_body(allocated_body_result.release_value());
 
-    auto output_stream = MUST(Core::Stream::File::adopt_fd(pipe_result.value().write_fd, Core::Stream::OpenMode::Write));
+    auto output_stream = MUST(Core::File::adopt_fd(pipe_result.value().write_fd, Core::File::OpenMode::Write));
     auto job = TJob::construct(move(request), *output_stream);
     auto protocol_request = TRequest::create_with_job(forward<TBadgedProtocol>(protocol), client, (TJob&)*job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);

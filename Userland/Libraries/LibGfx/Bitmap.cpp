@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Timothy Slater <tslater2006@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -15,6 +15,7 @@
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/System.h>
@@ -115,9 +116,9 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
             TRY(highdpi_icon_path.try_appendff("{}/{}-{}x.{}", lexical_path.dirname(), lexical_path.title(), scale_factor, lexical_path.extension()));
 
             auto highdpi_icon_string = highdpi_icon_path.string_view();
-            auto fd = TRY(Core::System::open(highdpi_icon_string, O_RDONLY));
+            auto file = TRY(Core::File::open(highdpi_icon_string, Core::File::OpenMode::Read));
 
-            auto bitmap = TRY(load_from_fd_and_close(fd, highdpi_icon_string));
+            auto bitmap = TRY(load_from_file(move(file), highdpi_icon_string));
             if (bitmap->width() % scale_factor != 0 || bitmap->height() % scale_factor != 0)
                 return Error::from_string_literal("Bitmap::load_from_file: HighDPI image size should be divisible by scale factor");
             bitmap->m_size.set_width(bitmap->width() / scale_factor);
@@ -137,21 +138,21 @@ ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(StringView path, int scale
         }
     }
 
-    auto fd = TRY(Core::System::open(path, O_RDONLY));
-    return load_from_fd_and_close(fd, path);
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    return load_from_file(move(file), path);
 }
 
-ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_fd_and_close(int fd, StringView path)
+ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::load_from_file(NonnullOwnPtr<Core::File> file, StringView path)
 {
-    auto file = TRY(Core::MappedFile::map_from_fd_and_close(fd, path));
+    auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(file->bytes(), mime_type)) {
+    if (auto decoder = ImageDecoder::try_create_for_raw_bytes(mapped_file->bytes(), mime_type)) {
         auto frame = TRY(decoder->frame(0));
         if (auto& bitmap = frame.image)
             return bitmap.release_nonnull();
     }
 
-    return Error::from_string_literal("Gfx::Bitmap unable to load from fd");
+    return Error::from_string_literal("Gfx::Bitmap unable to load from file");
 }
 
 Bitmap::Bitmap(BitmapFormat format, IntSize size, int scale_factor, size_t pitch, void* data)
@@ -342,7 +343,7 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::scaled(int sx, int sy) const
 {
     VERIFY(sx >= 0 && sy >= 0);
     if (sx == 1 && sy == 1)
-        return NonnullRefPtr { *this };
+        return clone();
 
     auto new_bitmap = TRY(Gfx::Bitmap::create(format(), { width() * sx, height() * sy }, scale()));
 
@@ -467,20 +468,24 @@ ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::cropped(Gfx::IntRect crop, Optional<
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
 {
-    if (m_buffer.is_valid())
-        return NonnullRefPtr { *this };
+    if (m_buffer.is_valid()) {
+        // FIXME: The const_cast here is awkward.
+        return NonnullRefPtr { const_cast<Bitmap&>(*this) };
+    }
     auto buffer = TRY(Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE)));
     auto bitmap = TRY(Bitmap::create_with_anonymous_buffer(m_format, move(buffer), size(), scale(), palette_to_vector()));
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
     return bitmap;
 }
 
-void Bitmap::invert()
+ErrorOr<NonnullRefPtr<Gfx::Bitmap>> Bitmap::inverted() const
 {
+    auto inverted_bitmap = TRY(clone());
     for (auto y = 0; y < height(); y++) {
         for (auto x = 0; x < width(); x++)
-            set_pixel(x, y, get_pixel(x, y).inverted());
+            inverted_bitmap->set_pixel(x, y, get_pixel(x, y).inverted());
     }
+    return inverted_bitmap;
 }
 
 Bitmap::~Bitmap()

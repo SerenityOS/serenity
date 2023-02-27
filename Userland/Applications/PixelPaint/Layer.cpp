@@ -41,6 +41,10 @@ ErrorOr<NonnullRefPtr<Layer>> Layer::create_snapshot(Image& image, Layer const& 
 {
     auto bitmap = TRY(layer.content_bitmap().clone());
     auto snapshot = TRY(create_with_bitmap(image, move(bitmap), layer.name()));
+    if (layer.is_masked()) {
+        snapshot->m_mask_bitmap = TRY(layer.mask_bitmap()->clone());
+        snapshot->m_edit_mode = layer.m_edit_mode;
+    }
 
     /*
         We set these properties directly because calling the setters might
@@ -305,11 +309,27 @@ void Layer::update_cached_bitmap()
     }
 }
 
-void Layer::create_mask()
+ErrorOr<void> Layer::create_mask()
 {
-    m_mask_bitmap = MUST(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size()));
+    m_mask_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size()));
     m_mask_bitmap->fill(Gfx::Color::White);
     update_cached_bitmap();
+    return {};
+}
+
+void Layer::delete_mask()
+{
+    m_mask_bitmap = nullptr;
+    set_edit_mode(EditMode::Content);
+    update_cached_bitmap();
+}
+
+void Layer::apply_mask()
+{
+    m_content_bitmap->fill(Color::Transparent);
+    Gfx::Painter painter(m_content_bitmap);
+    painter.blit({}, m_cached_display_bitmap, m_cached_display_bitmap->rect());
+    delete_mask();
 }
 
 Gfx::Bitmap& Layer::currently_edited_bitmap()

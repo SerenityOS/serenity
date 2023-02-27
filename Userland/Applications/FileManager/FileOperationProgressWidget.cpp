@@ -8,7 +8,6 @@
 #include "FileOperationProgressWidget.h"
 #include "FileUtils.h"
 #include <Applications/FileManager/FileOperationProgressGML.h>
-#include <LibCore/File.h>
 #include <LibCore/Notifier.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>
@@ -19,7 +18,7 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::Stream::BufferedFile> helper_pipe, int helper_pipe_fd)
+FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::BufferedFile> helper_pipe, int helper_pipe_fd)
     : m_operation(operation)
     , m_helper_pipe(move(helper_pipe))
 {

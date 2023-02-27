@@ -237,15 +237,32 @@ public:
 #endif
     }
 
-    Color mixed_with(Color other, float weight) const;
-
-    Color interpolate(Color other, float weight) const noexcept
+    ALWAYS_INLINE Color mixed_with(Color other, float weight) const
     {
-        u8 r = red() + round_to<u8>(static_cast<float>(other.red() - red()) * weight);
-        u8 g = green() + round_to<u8>(static_cast<float>(other.green() - green()) * weight);
-        u8 b = blue() + round_to<u8>(static_cast<float>(other.blue() - blue()) * weight);
-        u8 a = alpha() + round_to<u8>(static_cast<float>(other.alpha() - alpha()) * weight);
-        return Color(r, g, b, a);
+        if (alpha() == other.alpha() || with_alpha(0) == other.with_alpha(0))
+            return interpolate(other, weight);
+        // Fallback to slower, but more visually pleasing premultiplied alpha mix.
+        // This is needed for linear-gradient()s in LibWeb.
+        auto mixed_alpha = mix<float>(alpha(), other.alpha(), weight);
+        auto premultiplied_mix_channel = [&](float channel, float other_channel, float weight) {
+            return round_to<u8>(mix<float>(channel * alpha(), other_channel * other.alpha(), weight) / mixed_alpha);
+        };
+        return Gfx::Color {
+            premultiplied_mix_channel(red(), other.red(), weight),
+            premultiplied_mix_channel(green(), other.green(), weight),
+            premultiplied_mix_channel(blue(), other.blue(), weight),
+            round_to<u8>(mixed_alpha),
+        };
+    }
+
+    ALWAYS_INLINE Color interpolate(Color other, float weight) const noexcept
+    {
+        return Gfx::Color {
+            round_to<u8>(mix<float>(red(), other.red(), weight)),
+            round_to<u8>(mix<float>(green(), other.green(), weight)),
+            round_to<u8>(mix<float>(blue(), other.blue(), weight)),
+            round_to<u8>(mix<float>(alpha(), other.alpha(), weight)),
+        };
     }
 
     constexpr Color multiply(Color other) const

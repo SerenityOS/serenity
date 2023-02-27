@@ -7,6 +7,10 @@
 #include <AK/Debug.h>
 #include <LibPartition/MBRPartitionTable.h>
 
+#ifndef KERNEL
+#    include <LibCore/DeprecatedFile.h>
+#endif
+
 namespace Partition {
 
 #define MBR_SIGNATURE 0xaa55
@@ -15,11 +19,11 @@ namespace Partition {
 #define EBR_LBA_CONTAINER 0x0F
 
 #ifdef KERNEL
-ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device)
+ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice& device)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device)));
 #else
-ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::File> device_file)
+ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file)
 {
     auto table = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(move(device_file))));
 #endif
@@ -33,11 +37,11 @@ ErrorOr<NonnullOwnPtr<MBRPartitionTable>> MBRPartitionTable::try_to_initialize(N
 }
 
 #ifdef KERNEL
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice const& device, u32 start_lba)
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(Kernel::StorageDevice& device, u32 start_lba)
 {
     auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(device, start_lba)).release_value_but_fixme_should_propagate_errors();
 #else
-OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::File> device_file, u32 start_lba)
+OwnPtr<MBRPartitionTable> MBRPartitionTable::try_to_initialize(NonnullRefPtr<Core::DeprecatedFile> device_file, u32 start_lba)
 {
     auto table = adopt_nonnull_own_or_enomem(new (nothrow) MBRPartitionTable(move(device_file), start_lba)).release_value_but_fixme_should_propagate_errors();
 #endif
@@ -62,10 +66,10 @@ bool MBRPartitionTable::read_boot_record()
 }
 
 #ifdef KERNEL
-MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice const& device, u32 start_lba)
+MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice& device, u32 start_lba)
     : PartitionTable(device)
 #else
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::File> device_file, u32 start_lba)
+MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file, u32 start_lba)
     : PartitionTable(move(device_file))
 #endif
     , m_start_lba(start_lba)
@@ -88,10 +92,10 @@ MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::File> device_file, u32 
 }
 
 #ifdef KERNEL
-MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice const& device)
+MBRPartitionTable::MBRPartitionTable(Kernel::StorageDevice& device)
     : PartitionTable(device)
 #else
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::File> device_file)
+MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file)
     : PartitionTable(move(device_file))
 #endif
     , m_start_lba(0)

@@ -6,6 +6,7 @@
 
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -55,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             output_bytes = TRY(Compress::GzipCompressor::compress_all(input_bytes));
 
-        auto output_stream = write_to_stdout ? TRY(Core::Stream::File::standard_output()) : TRY(Core::Stream::File::open(output_filename, Core::Stream::OpenMode::Write));
+        auto output_stream = write_to_stdout ? TRY(Core::File::standard_output()) : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));
         TRY(output_stream->write_entire_buffer(output_bytes));
 
         if (!keep_input_files) {

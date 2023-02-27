@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,22 +18,22 @@ class File : public Blob {
     WEB_PLATFORM_OBJECT(File, Blob);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create(JS::Realm&, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> construct_impl(JS::Realm&, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> create(JS::Realm&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> construct_impl(JS::Realm&, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options = {});
 
     virtual ~File() override;
 
     // https://w3c.github.io/FileAPI/#dfn-name
-    DeprecatedString const& name() const { return m_name; }
+    String const& name() const { return m_name; }
     // https://w3c.github.io/FileAPI/#dfn-lastModified
     i64 last_modified() const { return m_last_modified; }
 
 private:
-    File(JS::Realm&, ByteBuffer, DeprecatedString file_name, DeprecatedString type, i64 last_modified);
+    File(JS::Realm&, ByteBuffer, String file_name, String type, i64 last_modified);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
-    DeprecatedString m_name;
+    String m_name;
     i64 m_last_modified { 0 };
 };
 

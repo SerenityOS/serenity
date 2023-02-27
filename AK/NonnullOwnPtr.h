@@ -161,6 +161,29 @@ inline NonnullOwnPtr<T> make(Args&&... args)
 
 #endif
 
+// Use like `adopt_nonnull_own_or_enomem(new (nothrow) T(args...))`.
+template<typename T>
+inline ErrorOr<NonnullOwnPtr<T>> adopt_nonnull_own_or_enomem(T* object)
+{
+    if (!object)
+        return Error::from_errno(ENOMEM);
+    return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *object);
+}
+
+template<typename T, class... Args>
+requires(IsConstructible<T, Args...>) inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) T(forward<Args>(args)...));
+}
+
+// FIXME: Remove once P0960R3 is available in Clang.
+template<typename T, class... Args>
+inline ErrorOr<NonnullOwnPtr<T>> try_make(Args&&... args)
+
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) T { forward<Args>(args)... });
+}
+
 template<typename T>
 struct Traits<NonnullOwnPtr<T>> : public GenericTraits<NonnullOwnPtr<T>> {
     using PeekType = T*;
@@ -190,5 +213,7 @@ struct Formatter<NonnullOwnPtr<T>> : Formatter<T const*> {
 using AK::adopt_own;
 using AK::make;
 #    endif
+using AK::adopt_nonnull_own_or_enomem;
 using AK::NonnullOwnPtr;
+using AK::try_make;
 #endif

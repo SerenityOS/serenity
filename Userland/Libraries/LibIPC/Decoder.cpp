@@ -10,6 +10,7 @@
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/Proxy.h>
+#include <LibCore/Socket.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
@@ -59,6 +60,13 @@ ErrorOr<JsonValue> decode(Decoder& decoder)
 {
     auto json = TRY(decoder.decode<DeprecatedString>());
     return JsonValue::from_string(json);
+}
+
+template<>
+ErrorOr<Time> decode(Decoder& decoder)
+{
+    auto nanoseconds = TRY(decoder.decode<i64>());
+    return AK::Time::from_nanoseconds(nanoseconds);
 }
 
 template<>

@@ -8,7 +8,9 @@
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ImageDecoder.h>
@@ -30,12 +32,77 @@ static void out_optional(char const* label, Optional<T> const& optional)
         outln("(not set)");
 }
 
+static void out_curve(Gfx::ICC::CurveTagData const& curve, int indent_amount)
+{
+    auto indent = MUST(String::repeated(' ', indent_amount));
+    if (curve.values().is_empty()) {
+        outln("{}identity curve", indent);
+    } else if (curve.values().size() == 1) {
+        outln("{}gamma: {}", indent, FixedPoint<8, u16>::create_raw(curve.values()[0]));
+    } else {
+        // FIXME: Maybe print the actual points if -v is passed?
+        outln("{}curve with {} points", indent, curve.values().size());
+    }
+}
+
+static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& parametric_curve, int indent_amount)
+{
+    auto indent = MUST(String::repeated(' ', indent_amount));
+    switch (parametric_curve.function_type()) {
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
+        outln("{}Y = X**{}", indent, parametric_curve.g());
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
+        outln("{}Y = ({}*X + {})**{}   if X >= -{}/{}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
+        outln("{}Y = 0                                else", indent);
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
+        outln("{}Y = ({}*X + {})**{} + {}   if X >= -{}/{}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
+        outln("{}Y =  {}                                    else", indent, parametric_curve.c());
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
+        outln("{}Y = ({}*X + {})**{}   if X >= {}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
+        outln("{}Y =  {}*X                         else", indent, parametric_curve.c());
+        break;
+    case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
+        outln("{}Y = ({}*X + {})**{} + {}   if X >= {}", indent,
+            parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
+        outln("{}Y =  {}*X + {}                             else", indent, parametric_curve.c(), parametric_curve.f());
+        break;
+    }
+}
+
+static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
+{
+    for (auto const& curve : curves) {
+        VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
+        outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
+        if (curve->type() == Gfx::ICC::CurveTagData::Type)
+            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*curve), /*indent=*/12);
+        if (curve->type() == Gfx::ICC::ParametricCurveTagData::Type)
+            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*curve), /*indent=*/12);
+    }
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
 
-    static StringView path;
+    StringView path;
     args_parser.add_positional_argument(path, "Path to ICC profile or to image containing ICC profile", "FILE");
+
+    StringView dump_out_path;
+    args_parser.add_option(dump_out_path, "Dump unmodified ICC profile bytes to this path", "dump-to", 0, "FILE");
+
+    StringView reencode_out_path;
+    args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE");
+
+    bool force_print = false;
+    args_parser.add_option(force_print, "Print profile even when writing ICC files", "print", 0);
+
     args_parser.parse(arguments);
 
     auto file = TRY(Core::MappedFile::map(path));
@@ -53,7 +120,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         icc_bytes = file->bytes();
     }
 
+    if (!dump_out_path.is_empty()) {
+        auto output_stream = TRY(Core::File::open(dump_out_path, Core::File::OpenMode::Write));
+        TRY(output_stream->write_entire_buffer(icc_bytes));
+    }
+
     auto profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes));
+
+    if (!reencode_out_path.is_empty()) {
+        auto reencoded_bytes = TRY(Gfx::ICC::encode(profile));
+        auto output_stream = TRY(Core::File::open(reencode_out_path, Core::File::OpenMode::Write));
+        TRY(output_stream->write_entire_buffer(reencoded_bytes));
+    }
+
+    bool do_print = (dump_out_path.is_empty() && reencode_out_path.is_empty()) || force_print;
+    if (!do_print)
+        return 0;
 
     outln("                  size: {} bytes", profile->on_disk_size());
     out_optional("    preferred CMM type", profile->preferred_cmm_type());
@@ -110,7 +192,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     outln("tags:");
     HashMap<Gfx::ICC::TagData*, Gfx::ICC::TagSignature> tag_data_to_first_signature;
-    profile->for_each_tag([&tag_data_to_first_signature](auto tag_signature, auto tag_data) {
+    TRY(profile->try_for_each_tag([&tag_data_to_first_signature](auto tag_signature, auto tag_data) -> ErrorOr<void> {
         if (auto name = tag_signature_spec_name(tag_signature); name.has_value())
             out("{} ({}): ", *name, tag_signature);
         else
@@ -122,7 +204,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto it = tag_data_to_first_signature.find(tag_data);
         if (it != tag_data_to_first_signature.end()) {
             outln("    (see {} above)", it->value);
-            return;
+            return {};
         }
         tag_data_to_first_signature.set(tag_data, tag_signature);
 
@@ -142,15 +224,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    video full range flag: {} - {}", cicp.video_full_range_flag(),
                 Video::video_full_range_flag_to_string((Video::VideoFullRangeFlag)cicp.video_full_range_flag()));
         } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
-            auto& curve = static_cast<Gfx::ICC::CurveTagData&>(*tag_data);
-            if (curve.values().is_empty()) {
-                outln("    identity curve");
-            } else if (curve.values().size() == 1) {
-                outln("    gamma: {}", FixedPoint<8, u16>::create_raw(curve.values()[0]));
-            } else {
-                // FIXME: Maybe print the actual points if -v is passed?
-                outln("    curve with {} points", curve.values().size());
-            }
+            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*tag_data), /*indent=*/4);
         } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
             auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
             outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
@@ -175,15 +249,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto& a_to_b = static_cast<Gfx::ICC::LutAToBTagData&>(*tag_data);
             outln("    {} input channels, {} output channels", a_to_b.number_of_input_channels(), a_to_b.number_of_output_channels());
 
+            if (auto const& optional_a_curves = a_to_b.a_curves(); optional_a_curves.has_value()) {
+                outln("    a curves: {} curves", optional_a_curves->size());
+                out_curves(optional_a_curves.value());
+            } else {
+                outln("    a curves: (not set)");
+            }
+
             if (auto const& optional_clut = a_to_b.clut(); optional_clut.has_value()) {
                 auto const& clut = optional_clut.value();
                 outln("    color lookup table: {} grid points, {}",
-                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
-                    MUST(clut.values.visit(
+                    TRY(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    TRY(clut.values.visit(
                         [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
                         [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
             } else {
                 outln("    color lookup table: (not set)");
+            }
+
+            if (auto const& optional_m_curves = a_to_b.m_curves(); optional_m_curves.has_value()) {
+                outln("    m curves: {} curves", optional_m_curves->size());
+                out_curves(optional_m_curves.value());
+            } else {
+                outln("    m curves: (not set)");
             }
 
             if (auto const& optional_e = a_to_b.e_matrix(); optional_e.has_value()) {
@@ -194,9 +282,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 outln("    e = (not set)");
             }
+
+            outln("    b curves: {} curves", a_to_b.b_curves().size());
+            out_curves(a_to_b.b_curves());
         } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
             auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
             outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
+
+            outln("    b curves: {} curves", b_to_a.b_curves().size());
+            out_curves(b_to_a.b_curves());
 
             if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
                 auto const& e = optional_e.value();
@@ -207,15 +301,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln("    e = (not set)");
             }
 
+            if (auto const& optional_m_curves = b_to_a.m_curves(); optional_m_curves.has_value()) {
+                outln("    m curves: {} curves", optional_m_curves->size());
+                out_curves(optional_m_curves.value());
+            } else {
+                outln("    m curves: (not set)");
+            }
+
             if (auto const& optional_clut = b_to_a.clut(); optional_clut.has_value()) {
                 auto const& clut = optional_clut.value();
                 outln("    color lookup table: {} grid points, {}",
-                    MUST(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
-                    MUST(clut.values.visit(
+                    TRY(String::join(" x "sv, clut.number_of_grid_points_in_dimension)),
+                    TRY(clut.values.visit(
                         [](Vector<u8> const& v) { return String::formatted("{} u8 entries", v.size()); },
                         [](Vector<u16> const& v) { return String::formatted("{} u16 entries", v.size()); })));
             } else {
                 outln("    color lookup table: (not set)");
+            }
+
+            if (auto const& optional_a_curves = b_to_a.a_curves(); optional_a_curves.has_value()) {
+                outln("    a curves: {} curves", optional_a_curves->size());
+                out_curves(optional_a_curves.value());
+            } else {
+                outln("    a curves: (not set)");
             }
         } else if (tag_data->type() == Gfx::ICC::MeasurementTagData::Type) {
             auto& measurement = static_cast<Gfx::ICC::MeasurementTagData&>(*tag_data);
@@ -242,7 +350,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 const auto& pcs = named_colors.pcs_coordinates(i);
 
                 // FIXME: Display decoded values? (See ICC v4 6.3.4.2 and 10.8.)
-                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", MUST(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
+                out("        \"{}\", PCS coordinates: 0x{:04x} 0x{:04x} 0x{:04x}", TRY(named_colors.color_name(i)), pcs.xyz.x, pcs.xyz.y, pcs.xyz.z);
                 if (auto number_of_device_coordinates = named_colors.number_of_device_coordinates(); number_of_device_coordinates > 0) {
                     out(", device coordinates:");
                     for (size_t j = 0; j < number_of_device_coordinates; ++j)
@@ -253,32 +361,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (named_colors.size() > 5u)
                 outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
-            auto& parametric_curve = static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data);
-            switch (parametric_curve.function_type()) {
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
-                outln("    Y = X**{}", parametric_curve.g());
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
-                outln("    Y = ({}*X + {})**{}   if X >= -{}/{}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
-                outln("    Y = 0                                else");
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
-                outln("    Y = ({}*X + {})**{} + {}   if X >= -{}/{}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
-                outln("    Y =  {}                                    else", parametric_curve.c());
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
-                outln("    Y = ({}*X + {})**{}   if X >= {}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
-                outln("    Y =  {}*X                         else", parametric_curve.c());
-                break;
-            case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
-                outln("    Y = ({}*X + {})**{} + {}   if X >= {}",
-                    parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
-                outln("    Y =  {}*X + {}                             else", parametric_curve.c(), parametric_curve.f());
-                break;
-            }
+            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data), /*indent=*/4);
         } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
             // This tag can contain arbitrarily many fixed-point numbers, but in practice it's
             // exclusively used for the 'chad' tag, where it always contains 9 values that
@@ -311,9 +394,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else if (tag_data->type() == Gfx::ICC::TextDescriptionTagData::Type) {
             auto& text_description = static_cast<Gfx::ICC::TextDescriptionTagData&>(*tag_data);
             outln("    ascii: \"{}\"", text_description.ascii_description());
-            out_optional("    unicode", MUST(text_description.unicode_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
+            out_optional("    unicode", TRY(text_description.unicode_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
             outln("    unicode language code: 0x{}", text_description.unicode_language_code());
-            out_optional("    macintosh", MUST(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
+            out_optional("    macintosh", TRY(text_description.macintosh_description().map([](auto description) { return String::formatted("\"{}\"", description); })));
         } else if (tag_data->type() == Gfx::ICC::TextTagData::Type) {
             outln("    text: \"{}\"", static_cast<Gfx::ICC::TextTagData&>(*tag_data).text());
         } else if (tag_data->type() == Gfx::ICC::ViewingConditionsTagData::Type) {
@@ -325,7 +408,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             for (auto& xyz : static_cast<Gfx::ICC::XYZTagData&>(*tag_data).xyzs())
                 outln("    {}", xyz);
         }
-    });
+        return {};
+    }));
 
     return 0;
 }

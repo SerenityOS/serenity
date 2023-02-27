@@ -30,6 +30,9 @@ public:
         ASCII,
         UTF8,
         UTF16,
+        ASCIIString,
+        UTF8String,
+        UTF16String,
         __Count
     };
 
@@ -100,6 +103,12 @@ public:
             return "UTF-8";
         case UTF16:
             return "UTF-16";
+        case ASCIIString:
+            return "ASCII String";
+        case UTF8String:
+            return "UTF-8 String";
+        case UTF16String:
+            return "UTF-16 String";
         default:
             return "";
         }

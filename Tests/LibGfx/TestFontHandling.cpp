@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Utf8View.h>
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibTest/TestCase.h>
@@ -125,7 +126,10 @@ TEST_CASE(test_glyph_or_emoji_width)
     u8 glyph_width = 1;
     auto font = Gfx::BitmapFont::create(glyph_height, glyph_width, true, 256);
 
-    EXPECT(font->glyph_or_emoji_width(0));
+    Utf8View view { " "sv };
+    auto it = view.begin();
+
+    EXPECT(font->glyph_or_emoji_width(it));
 }
 
 TEST_CASE(test_load_from_file)

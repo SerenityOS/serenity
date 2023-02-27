@@ -89,10 +89,10 @@ ErrorOr<LexicalPath> Directory::path() const
     return m_path.value();
 }
 
-ErrorOr<NonnullOwnPtr<Stream::File>> Directory::open(StringView filename, Stream::OpenMode mode) const
+ErrorOr<NonnullOwnPtr<File>> Directory::open(StringView filename, File::OpenMode mode) const
 {
-    auto fd = TRY(System::openat(m_directory_fd, filename, Stream::File::open_mode_to_options(mode)));
-    return Stream::File::adopt_fd(fd, mode);
+    auto fd = TRY(System::openat(m_directory_fd, filename, File::open_mode_to_options(mode)));
+    return File::adopt_fd(fd, mode);
 }
 
 ErrorOr<struct stat> Directory::stat() const

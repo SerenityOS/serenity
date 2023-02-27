@@ -16,7 +16,7 @@ class ConnectionFromClient final : public LanguageServers::ConnectionFromClient 
     C_OBJECT(ConnectionFromClient);
 
 private:
-    ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+    ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> socket)
         : LanguageServers::ConnectionFromClient(move(socket))
     {
         m_autocomplete_engine = make<CodeComprehension::Shell::ShellComprehensionEngine>(m_filedb);

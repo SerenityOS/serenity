@@ -19,8 +19,8 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
@@ -249,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("Reading and parsing Markdown files ...");
     HashMap<DeprecatedString, MarkdownLinkage> files;
     for (auto path : file_paths) {
-        auto file_or_error = Core::Stream::File::open(path, Core::Stream::OpenMode::Read);
+        auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Failed to open {}: {}", path, file_or_error.error());
             // Since this should never happen anyway, fail early.
@@ -272,7 +272,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             // Since this should never happen anyway, fail early.
             return 1;
         }
-        files.set(Core::File::real_path_for(path), MarkdownLinkage::analyze(*document));
+        files.set(Core::DeprecatedFile::real_path_for(path), MarkdownLinkage::analyze(*document));
     }
 
     outln("Checking links ...");
@@ -293,7 +293,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
             }
-            if (!Core::File::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
+            if (!Core::DeprecatedFile::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
                     file_item.key, file_link.file_path, file_link.label, pointee_file);
                 any_problems = true;

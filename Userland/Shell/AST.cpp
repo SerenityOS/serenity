@@ -12,8 +12,8 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -260,7 +260,7 @@ void Node::clear_syntax_error()
     m_syntax_error_node->clear_syntax_error();
 }
 
-void Node::set_is_syntax_error(SyntaxError const& error_node)
+void Node::set_is_syntax_error(SyntaxError& error_node)
 {
     if (!m_syntax_error_node) {
         m_syntax_error_node = error_node;
@@ -331,14 +331,14 @@ Node::Node(Position position)
 {
 }
 
-Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (matching_node) {
         auto kind = matching_node->kind();
         StringLiteral::EnclosureType enclosure_type = StringLiteral::EnclosureType::None;
         if (kind == Kind::StringLiteral)
-            enclosure_type = static_cast<StringLiteral*>(matching_node.ptr())->enclosure_type();
+            enclosure_type = static_cast<StringLiteral const*>(matching_node.ptr())->enclosure_type();
 
         auto set_results_trivia = [enclosure_type](Vector<Line::CompletionSuggestion>&& suggestions) {
             if (enclosure_type != StringLiteral::EnclosureType::None) {
@@ -352,12 +352,12 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
             StringView text;
             size_t corrected_offset;
             if (kind == Kind::BarewordLiteral) {
-                auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+                auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
                 text = node->text();
                 escape_mode = Shell::EscapeMode::Bareword;
                 corrected_offset = find_offset_into_node(text, offset - matching_node->position().start_offset, escape_mode);
             } else {
-                auto* node = static_cast<StringLiteral*>(matching_node.ptr());
+                auto* node = static_cast<StringLiteral const*>(matching_node.ptr());
                 text = node->text();
                 escape_mode = enclosure_type == StringLiteral::EnclosureType::SingleQuotes ? Shell::EscapeMode::SingleQuotedString : Shell::EscapeMode::DoubleQuotedString;
                 corrected_offset = find_offset_into_node(text, offset - matching_node->position().start_offset + 1, escape_mode);
@@ -382,9 +382,9 @@ Vector<Line::CompletionSuggestion> Node::complete_for_editor(Shell& shell, size_
 
             DeprecatedString program_name;
             if (program_name_node->is_bareword())
-                program_name = static_cast<BarewordLiteral*>(program_name_node.ptr())->text();
+                program_name = static_cast<BarewordLiteral const*>(program_name_node.ptr())->text();
             else
-                program_name = static_cast<StringLiteral*>(program_name_node.ptr())->text();
+                program_name = static_cast<StringLiteral const*>(program_name_node.ptr())->text();
 
             return set_results_trivia(shell.complete_option(program_name, text, corrected_offset, hit_test_result.closest_command_node.ptr(), hit_test_result.matching_node));
         }
@@ -553,7 +553,7 @@ HitTestResult ListConcatenate::hit_test_position(size_t offset) const
     return {};
 }
 
-RefPtr<Node> ListConcatenate::leftmost_trivial_literal() const
+RefPtr<Node const> ListConcatenate::leftmost_trivial_literal() const
 {
     if (m_list.is_empty())
         return nullptr;
@@ -658,7 +658,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         }
     }
-    if (Core::File::exists(m_text)) {
+    if (Core::DeprecatedFile::exists(m_text)) {
         auto realpath = shell.resolve_path(m_text);
         auto url = URL::create_with_file_scheme(realpath);
         url.set_host(shell.hostname);
@@ -764,14 +764,14 @@ HitTestResult CastToCommand::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || !matching_node->is_bareword())
         return {};
 
     auto corrected_offset = offset - matching_node->position().start_offset;
-    auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+    auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
 
     if (corrected_offset > node->text().length())
         return {};
@@ -779,7 +779,7 @@ Vector<Line::CompletionSuggestion> CastToCommand::complete_for_editor(Shell& she
     return shell.complete_program_name(node->text(), corrected_offset);
 }
 
-RefPtr<Node> CastToCommand::leftmost_trivial_literal() const
+RefPtr<Node const> CastToCommand::leftmost_trivial_literal() const
 {
     return m_inner->leftmost_trivial_literal();
 }
@@ -841,7 +841,7 @@ HitTestResult CastToList::hit_test_position(size_t offset) const
     return m_inner->hit_test_position(offset);
 }
 
-RefPtr<Node> CastToList::leftmost_trivial_literal() const
+RefPtr<Node const> CastToList::leftmost_trivial_literal() const
 {
     return m_inner->leftmost_trivial_literal();
 }
@@ -1124,7 +1124,7 @@ HitTestResult FunctionDeclaration::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
@@ -1134,7 +1134,7 @@ Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shel
         return matching_node->complete_for_editor(shell, offset, hit_test_result);
 
     auto corrected_offset = offset - matching_node->position().start_offset - 1; // Skip the first '$'
-    auto* node = static_cast<SimpleVariable*>(matching_node.ptr());
+    auto* node = static_cast<SimpleVariable const*>(matching_node.ptr());
 
     auto name = node->name().substring_view(0, corrected_offset);
 
@@ -1366,6 +1366,10 @@ void Heredoc::dump(int level) const
     print_indented(m_end, level + 2);
     print_indented("(Allows Interpolation)"sv, level + 1);
     print_indented(DeprecatedString::formatted("{}", m_allows_interpolation), level + 2);
+    if (!evaluates_to_string()) {
+        print_indented("(Target FD)"sv, level + 1);
+        print_indented(DeprecatedString::number(*m_target_fd), level + 2);
+    }
     print_indented("(Contents)"sv, level + 1);
     if (m_contents)
         m_contents->dump(level + 2);
@@ -1375,29 +1379,75 @@ void Heredoc::dump(int level) const
 
 RefPtr<Value> Heredoc::run(RefPtr<Shell> shell)
 {
-    if (!m_deindent)
-        return m_contents->run(shell);
-
-    // To deindent, first split to lines...
-    auto value = m_contents->run(shell);
-    if (shell && shell->has_any_error())
-        return make_ref_counted<ListValue>({});
-
-    if (!value)
-        return value;
-    auto list = value->resolve_as_list(shell);
-    // The list better have one entry, otherwise we've put the wrong kind of node inside this heredoc
-    VERIFY(list.size() == 1);
-    auto lines = list.first().split_view('\n');
-
-    // Now just trim each line and put them back in a string
-    StringBuilder builder { list.first().length() };
-    for (auto& line : lines) {
-        builder.append(line.trim_whitespace(TrimMode::Left));
-        builder.append('\n');
+    if (!m_contents) {
+        if (shell)
+            shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Attempt to evaluate an unresolved heredoc"sv, position());
+        return nullptr;
     }
 
-    return make_ref_counted<StringValue>(builder.to_deprecated_string());
+    auto value = [&]() -> RefPtr<Value> {
+        if (!m_deindent)
+            return m_contents->run(shell);
+
+        // To deindent, first split to lines...
+        auto value = m_contents->run(shell);
+        if (shell && shell->has_any_error())
+            return make_ref_counted<ListValue>({});
+
+        if (!value)
+            return value;
+        auto list = value->resolve_as_list(shell);
+        // The list better have one entry, otherwise we've put the wrong kind of node inside this heredoc
+        VERIFY(list.size() == 1);
+        auto lines = list.first().split_view('\n');
+
+        // Now just trim each line and put them back in a string
+        StringBuilder builder { list.first().length() };
+        for (auto& line : lines) {
+            builder.append(line.trim_whitespace(TrimMode::Left));
+            builder.append('\n');
+        }
+
+        return make_ref_counted<StringValue>(builder.to_deprecated_string());
+    }();
+
+    if (evaluates_to_string())
+        return value;
+
+    int fds[2];
+    auto rc = pipe(fds);
+    if (rc != 0) {
+        // pipe() failed for {}
+        if (shell)
+            shell->raise_error(Shell::ShellError::PipeFailure, DeprecatedString::formatted("heredoc: {}", strerror(errno)), position());
+        return nullptr;
+    }
+
+    auto read_end = fds[0];
+    auto write_end = fds[1];
+
+    // Dump all of 'value' into the pipe.
+    auto* file = fdopen(write_end, "wb");
+    if (!file) {
+        if (shell)
+            shell->raise_error(Shell::ShellError::OpenFailure, "heredoc"sv, position());
+        return nullptr;
+    }
+
+    auto text = value->resolve_as_string(shell);
+
+    auto written = fwrite(text.characters(), 1, text.length(), file);
+    fflush(file);
+    if (written != text.length()) {
+        if (shell)
+            shell->raise_error(Shell::ShellError::WriteFailure, "heredoc"sv, position());
+    }
+    fclose(file);
+
+    Command command;
+    command.position = position();
+    command.redirections.append(FdRedirection::create(read_end, *target_fd(), Rewiring::Close::None));
+    return make_ref_counted<CommandValue>(move(command));
 }
 
 void Heredoc::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -1422,11 +1472,12 @@ HitTestResult Heredoc::hit_test_position(size_t offset) const
     return m_contents->hit_test_position(offset);
 }
 
-Heredoc::Heredoc(Position position, DeprecatedString end, bool allow_interpolation, bool deindent)
+Heredoc::Heredoc(Position position, DeprecatedString end, bool allow_interpolation, bool deindent, Optional<int> target_fd)
     : Node(move(position))
     , m_end(move(end))
     , m_allows_interpolation(allow_interpolation)
     , m_deindent(deindent)
+    , m_target_fd(target_fd)
 {
 }
 
@@ -1812,14 +1863,14 @@ HitTestResult Execute::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> Execute::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || !matching_node->is_bareword())
         return {};
 
     auto corrected_offset = offset - matching_node->position().start_offset;
-    auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+    auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
 
     if (corrected_offset > node->text().length())
         return {};
@@ -1992,7 +2043,7 @@ void ImmediateExpression::highlight_in_editor(Line::Editor& editor, Shell& shell
         editor.stylize({ m_closing_brace_position->start_offset, m_closing_brace_position->end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Green) });
 }
 
-Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> ImmediateExpression::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || matching_node != this)
@@ -2084,7 +2135,7 @@ HitTestResult Join::hit_test_position(size_t offset) const
     return m_right->hit_test_position(offset);
 }
 
-RefPtr<Node> Join::leftmost_trivial_literal() const
+RefPtr<Node const> Join::leftmost_trivial_literal() const
 {
     if (auto value = m_left->leftmost_trivial_literal())
         return value;
@@ -2507,14 +2558,14 @@ HitTestResult PathRedirectionNode::hit_test_position(size_t offset) const
     return result;
 }
 
-Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> PathRedirectionNode::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node || !matching_node->is_bareword())
         return {};
 
     auto corrected_offset = offset - matching_node->position().start_offset;
-    auto* node = static_cast<BarewordLiteral*>(matching_node.ptr());
+    auto* node = static_cast<BarewordLiteral const*>(matching_node.ptr());
 
     if (corrected_offset > node->text().length())
         return {};
@@ -2759,7 +2810,7 @@ HitTestResult Sequence::hit_test_position(size_t offset) const
     return {};
 }
 
-RefPtr<Node> Sequence::leftmost_trivial_literal() const
+RefPtr<Node const> Sequence::leftmost_trivial_literal() const
 {
     for (auto& entry : m_entries) {
         if (auto node = entry.leftmost_trivial_literal())
@@ -2848,7 +2899,7 @@ HitTestResult Slice::hit_test_position(size_t offset) const
     return m_selector->hit_test_position(offset);
 }
 
-Vector<Line::CompletionSuggestion> Slice::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> Slice::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     // TODO: Maybe intercept this, and suggest values in range?
     return m_selector->complete_for_editor(shell, offset, hit_test_result);
@@ -2907,7 +2958,7 @@ HitTestResult SimpleVariable::hit_test_position(size_t offset) const
     return { this, this, nullptr };
 }
 
-Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> SimpleVariable::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
@@ -2961,7 +3012,7 @@ void SpecialVariable::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
         m_slice->highlight_in_editor(editor, shell, metadata);
 }
 
-Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, size_t, HitTestResult const&)
+Vector<Line::CompletionSuggestion> SpecialVariable::complete_for_editor(Shell&, size_t, HitTestResult const&) const
 {
     return {};
 }
@@ -3004,6 +3055,24 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
     auto left = left_value->resolve_as_list(shell);
     auto right = right_value->resolve_as_list(shell);
 
+    if (m_mode == Mode::StringExpand) {
+        Vector<DeprecatedString> result;
+        result.ensure_capacity(left.size() + right.size());
+
+        for (auto& left_item : left)
+            result.append(left_item);
+
+        if (!result.is_empty() && !right.is_empty()) {
+            auto& last = result.last();
+            last = DeprecatedString::formatted("{}{}", last, right.first());
+            right.take_first();
+        }
+        for (auto& right_item : right)
+            result.append(right_item);
+
+        return make_ref_counted<ListValue>(move(result));
+    }
+
     if (left_value->is_string() && right_value->is_string()) {
 
         VERIFY(left.size() == 1);
@@ -3016,7 +3085,7 @@ RefPtr<Value> Juxtaposition::run(RefPtr<Shell> shell)
         return make_ref_counted<StringValue>(builder.to_deprecated_string());
     }
 
-    // Otherwise, treat them as lists and create a list product.
+    // Otherwise, treat them as lists and create a list product (or just append).
     if (left.is_empty() || right.is_empty())
         return make_ref_counted<ListValue>({});
 
@@ -3053,7 +3122,7 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
         path_builder.append(bareword_value);
         auto path = path_builder.to_deprecated_string();
 
-        if (Core::File::exists(path)) {
+        if (Core::DeprecatedFile::exists(path)) {
             auto realpath = shell.resolve_path(path);
             auto url = URL::create_with_file_scheme(realpath);
             url.set_host(shell.hostname);
@@ -3065,7 +3134,7 @@ void Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& shell, High
     }
 }
 
-Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> Juxtaposition::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (m_left->would_execute() || m_right->would_execute()) {
@@ -3114,10 +3183,11 @@ HitTestResult Juxtaposition::hit_test_position(size_t offset) const
     return result;
 }
 
-Juxtaposition::Juxtaposition(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right)
+Juxtaposition::Juxtaposition(Position position, NonnullRefPtr<Node> left, NonnullRefPtr<Node> right, Juxtaposition::Mode mode)
     : Node(move(position))
     , m_left(move(left))
     , m_right(move(right))
+    , m_mode(mode)
 {
     if (m_left->is_syntax_error())
         set_is_syntax_error(m_left->syntax_error_node());
@@ -3242,7 +3312,7 @@ SyntaxError::SyntaxError(Position position, DeprecatedString error, bool is_cont
 {
 }
 
-SyntaxError const& SyntaxError::syntax_error_node() const
+SyntaxError& SyntaxError::syntax_error_node()
 {
     return *this;
 }
@@ -3294,7 +3364,7 @@ HitTestResult Tilde::hit_test_position(size_t offset) const
     return { this, this, nullptr };
 }
 
-Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result)
+Vector<Line::CompletionSuggestion> Tilde::complete_for_editor(Shell& shell, size_t offset, HitTestResult const& hit_test_result) const
 {
     auto matching_node = hit_test_result.matching_node;
     if (!matching_node)
@@ -3648,7 +3718,7 @@ NonnullRefPtr<Value> SimpleVariableValue::resolve_without_cast(RefPtr<Shell> she
         if (!m_slices.is_empty())
             result = result->with_slices(m_slices);
 
-        return result;
+        return const_cast<Value&>(*result);
     }
 
     return *this;
@@ -3685,12 +3755,12 @@ Vector<DeprecatedString> SpecialVariableValue::resolve_as_list(RefPtr<Shell> she
         return { resolve_slices(shell, DeprecatedString::number(getpid()), m_slices) };
     case '*':
         if (auto argv = shell->lookup_local_variable("ARGV"sv))
-            return resolve_slices(shell, argv->resolve_as_list(shell), m_slices);
+            return resolve_slices(shell, const_cast<Value&>(*argv).resolve_as_list(shell), m_slices);
         return resolve_slices(shell, Vector<DeprecatedString> {}, m_slices);
     case '#':
         if (auto argv = shell->lookup_local_variable("ARGV"sv)) {
             if (argv->is_list()) {
-                auto list_argv = static_cast<AST::ListValue*>(argv.ptr());
+                auto list_argv = static_cast<AST::ListValue const*>(argv.ptr());
                 return { resolve_slices(shell, DeprecatedString::number(list_argv->values().size()), m_slices) };
             }
             return { resolve_slices(shell, "1", m_slices) };

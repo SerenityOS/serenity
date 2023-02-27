@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
 #include <AK/CharacterTypes.h>
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
@@ -16,6 +18,7 @@
 #include <LibGUI/TextDocument.h>
 #include <LibRegex/Regex.h>
 #include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Segmentation.h>
 
 namespace GUI {
 
@@ -383,6 +386,34 @@ DeprecatedString TextDocument::text_in_range(TextRange const& a_range) const
     return builder.to_deprecated_string();
 }
 
+// This function will return the position of the previous grapheme cluster
+// break, relative to the cursor, for "correct looking" parsing of unicode based
+// on grapheme cluster boundary algorithm.
+size_t TextDocument::get_previous_grapheme_cluster_boundary(TextPosition const& cursor) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto const& line = this->line(cursor.line());
+
+    auto index = Unicode::previous_grapheme_segmentation_boundary(line.view(), cursor.column());
+    return index.value_or(cursor.column() - 1);
+}
+
+// This function will return the position of the next grapheme cluster break,
+// relative to the cursor, for "correct looking" parsing of unicode based on
+// grapheme cluster boundary algorithm.
+size_t TextDocument::get_next_grapheme_cluster_boundary(TextPosition const& cursor) const
+{
+    if (!cursor.is_valid())
+        return 0;
+
+    auto const& line = this->line(cursor.line());
+
+    auto index = Unicode::next_grapheme_segmentation_boundary(line.view(), cursor.column());
+    return index.value_or(cursor.column() + 1);
+}
+
 u32 TextDocument::code_point_at(TextPosition const& position) const
 {
     VERIFY(position.line() < line_count());
@@ -683,6 +714,26 @@ Optional<TextDocumentSpan> TextDocument::first_non_skippable_span_after(TextPosi
     return {};
 }
 
+static bool should_continue_beyond_word(Utf32View const& view)
+{
+    static auto punctuation = Unicode::general_category_from_string("Punctuation"sv);
+    static auto separator = Unicode::general_category_from_string("Separator"sv);
+
+    if (!punctuation.has_value() || !separator.has_value())
+        return false;
+
+    auto has_any_gc = [&](auto code_point, auto&&... categories) {
+        return (Unicode::code_point_has_general_category(code_point, *categories) || ...);
+    };
+
+    for (auto code_point : view) {
+        if (!has_any_gc(code_point, punctuation, separator))
+            return false;
+    }
+
+    return true;
+}
+
 TextPosition TextDocument::first_word_break_before(TextPosition const& position, bool start_at_column_before) const
 {
     if (position.column() == 0) {
@@ -694,20 +745,26 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
     }
 
     auto target = position;
-    auto line = this->line(target.line());
+    auto const& line = this->line(target.line());
+
     auto modifier = start_at_column_before ? 1 : 0;
     if (target.column() == line.length())
         modifier = 1;
 
-    while (target.column() > 0 && is_ascii_blank(line.code_points()[target.column() - modifier]))
-        target.set_column(target.column() - 1);
-    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column() - modifier]);
+    target.set_column(target.column() - modifier);
 
-    while (target.column() > 0) {
-        auto prev_code_point = line.code_points()[target.column() - 1];
-        if ((is_start_alphanumeric && !is_ascii_alphanumeric(prev_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(prev_code_point)))
+    while (target.column() < line.length()) {
+        if (auto index = Unicode::previous_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
+            auto view_between_target_and_index = line.view().substring_view(*index, target.column() - *index);
+
+            if (should_continue_beyond_word(view_between_target_and_index)) {
+                target.set_column(*index - 1);
+                continue;
+            }
+
+            target.set_column(*index);
             break;
-        target.set_column(target.column() - 1);
+        }
     }
 
     return target;
@@ -716,7 +773,7 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
 TextPosition TextDocument::first_word_break_after(TextPosition const& position) const
 {
     auto target = position;
-    auto line = this->line(target.line());
+    auto const& line = this->line(target.line());
 
     if (position.column() >= line.length()) {
         if (position.line() >= this->line_count() - 1) {
@@ -725,15 +782,18 @@ TextPosition TextDocument::first_word_break_after(TextPosition const& position) 
         return TextPosition(position.line() + 1, 0);
     }
 
-    while (target.column() < line.length() && is_ascii_space(line.code_points()[target.column()]))
-        target.set_column(target.column() + 1);
-    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column()]);
-
     while (target.column() < line.length()) {
-        auto next_code_point = line.code_points()[target.column()];
-        if ((is_start_alphanumeric && !is_ascii_alphanumeric(next_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(next_code_point)))
+        if (auto index = Unicode::next_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
+            auto view_between_target_and_index = line.view().substring_view(target.column(), *index - target.column());
+
+            if (should_continue_beyond_word(view_between_target_and_index)) {
+                target.set_column(*index + 1);
+                continue;
+            }
+
+            target.set_column(*index);
             break;
-        target.set_column(target.column() + 1);
+        }
     }
 
     return target;
@@ -1351,7 +1411,27 @@ void TextDocument::merge_span_collections()
     }
 
     m_spans.clear();
+    TextDocumentSpan previous_span { .range = { TextPosition(0, 0), TextPosition(0, 0) }, .attributes = {} };
     for (auto span : merged_spans) {
+        // Validate spans
+        if (!span.span.range.is_valid()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Invalid span {} => ignoring", span.span.range);
+            continue;
+        }
+        if (span.span.range.end() < span.span.range.start()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Span {} has negative length => ignoring", span.span.range);
+            continue;
+        }
+        if (span.span.range.end() < previous_span.range.start()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Spans not sorted (Span {} ends before previous span {}) => ignoring", span.span.range, previous_span.range);
+            continue;
+        }
+        if (span.span.range.start() < previous_span.range.end()) {
+            dbgln_if(TEXTEDITOR_DEBUG, "Span {} overlaps previous span {} => ignoring", span.span.range, previous_span.range);
+            continue;
+        }
+
+        previous_span = span.span;
         m_spans.append(move(span.span));
     }
 }

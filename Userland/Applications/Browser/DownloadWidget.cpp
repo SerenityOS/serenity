@@ -10,7 +10,6 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/Proxy.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -47,7 +46,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     };
 
     {
-        auto file_or_error = Core::Stream::File::open(m_destination_path, Core::Stream::OpenMode::Write);
+        auto file_or_error = Core::File::open(m_destination_path, Core::File::OpenMode::Write);
         if (file_or_error.is_error()) {
             GUI::MessageBox::show(window(), DeprecatedString::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
             window()->close();
@@ -60,16 +59,15 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_download->stream_into(*m_output_file_stream);
 
     set_fill_with_background_color(true);
-    auto& layout = set_layout<GUI::VerticalBoxLayout>();
-    layout.set_margins(4);
+    set_layout<GUI::VerticalBoxLayout>(4);
 
     auto& animation_container = add<GUI::Widget>();
     animation_container.set_fixed_height(32);
-    auto& animation_layout = animation_container.set_layout<GUI::HorizontalBoxLayout>();
+    animation_container.set_layout<GUI::HorizontalBoxLayout>();
 
     m_browser_image = animation_container.add<GUI::ImageWidget>();
     m_browser_image->load_from_file("/res/graphics/download-animation.gif"sv);
-    animation_layout.add_spacer();
+    animation_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& source_label = add<GUI::Label>(DeprecatedString::formatted("From: {}", url));
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -86,7 +84,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     destination_label.set_fixed_height(16);
 
-    m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished");
+    m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished"_string.release_value_but_fixme_should_propagate_errors());
     m_close_on_finish_checkbox->set_checked(close_on_finish);
 
     m_close_on_finish_checkbox->on_checked = [&](bool checked) {
@@ -94,9 +92,9 @@ DownloadWidget::DownloadWidget(const URL& url)
     };
 
     auto& button_container = add<GUI::Widget>();
-    auto& button_container_layout = button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container_layout.add_spacer();
-    m_cancel_button = button_container.add<GUI::Button>("Cancel");
+    button_container.set_layout<GUI::HorizontalBoxLayout>();
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    m_cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
     m_cancel_button->set_fixed_size(100, 22);
     m_cancel_button->on_click = [this](auto) {
         bool success = m_download->stop();
@@ -104,7 +102,7 @@ DownloadWidget::DownloadWidget(const URL& url)
         window()->close();
     };
 
-    m_close_button = button_container.add<GUI::Button>("OK");
+    m_close_button = button_container.add<GUI::Button>("OK"_short_string);
     m_close_button->set_enabled(false);
     m_close_button->set_fixed_size(100, 22);
     m_close_button->on_click = [this](auto) {
@@ -153,7 +151,7 @@ void DownloadWidget::did_finish(bool success)
     m_browser_image->load_from_file("/res/graphics/download-finished.gif"sv);
     window()->set_title("Download finished!");
     m_close_button->set_enabled(true);
-    m_cancel_button->set_text("Open in Folder");
+    m_cancel_button->set_text("Open in Folder"_string.release_value_but_fixme_should_propagate_errors());
     m_cancel_button->on_click = [this](auto) {
         Desktop::Launcher::open(URL::create_with_file_scheme(Core::StandardPaths::downloads_directory(), m_url.basename()));
         window()->close();

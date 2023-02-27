@@ -14,7 +14,7 @@ struct ICOLoadingContext;
 
 class ICOImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    static ErrorOr<bool> sniff(ReadonlyBytes);
+    static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
     virtual ~ICOImageDecoderPlugin() override;

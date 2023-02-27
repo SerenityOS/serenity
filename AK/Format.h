@@ -136,7 +136,7 @@ struct TypeErasedParameter {
             if constexpr (sizeof(T) > sizeof(size_t))
                 VERIFY(value < NumericLimits<size_t>::max());
             if constexpr (IsSigned<T>)
-                VERIFY(value > 0);
+                VERIFY(value >= 0);
             return static_cast<size_t>(value);
         });
     }
@@ -209,6 +209,7 @@ public:
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 
     ErrorOr<void> put_fixed_point(
+        bool is_negative,
         i64 integer_value,
         u64 fraction_value,
         u64 fraction_one,

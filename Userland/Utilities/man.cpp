@@ -10,7 +10,6 @@
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibManual/Node.h>
@@ -85,7 +84,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                     .to_deprecated_string();
     pid_t pager_pid = TRY(pipe_to_pager(pager));
 
-    auto file = TRY(Core::Stream::File::open(TRY(page->path()), Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(TRY(page->path()), Core::File::OpenMode::Read));
 
     TRY(Core::System::pledge("stdio proc"));
 
@@ -93,7 +92,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto buffer = TRY(file->read_until_eof());
     auto source = DeprecatedString::copy(buffer);
 
-    auto const title = TRY(String::from_utf8("SerenityOS manual"sv));
+    auto const title = TRY("SerenityOS manual"_string);
 
     int spaces = max(view_width / 2 - page_name.code_points().length() - section->section_name().code_points().length() - title.code_points().length() / 2 - 4, 0);
     outln("{}({}){}{}", page_name, section->section_name(), DeprecatedString::repeated(' ', spaces), title);

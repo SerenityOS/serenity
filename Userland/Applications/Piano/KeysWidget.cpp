@@ -23,8 +23,7 @@ int KeysWidget::mouse_note() const
 {
     if (m_mouse_down && m_mouse_note + m_keyboard->virtual_keyboard_octave_base() < note_count)
         return m_mouse_note; // Can be -1.
-    else
-        return -1;
+    return -1;
 }
 
 void KeysWidget::set_key(i8 key, DSP::Keyboard::Switch switch_note)

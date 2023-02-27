@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/Forward.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -32,6 +33,7 @@ enum class EmojiGroup : u8 {
 
 struct Emoji {
     StringView name;
+    Optional<StringView> image_path;
     EmojiGroup group { EmojiGroup::Unknown };
     u32 display_order { 0 };
     ReadonlySpan<u32> code_points;
@@ -44,6 +46,9 @@ Optional<Emoji> find_emoji_for_code_points(u32 const (&code_points)[Size])
 {
     return find_emoji_for_code_points(ReadonlySpan<u32> { code_points });
 }
+
+bool could_be_start_of_emoji_sequence(Utf8CodePointIterator const&);
+bool could_be_start_of_emoji_sequence(Utf32CodePointIterator const&);
 
 constexpr StringView emoji_group_to_string(EmojiGroup group)
 {

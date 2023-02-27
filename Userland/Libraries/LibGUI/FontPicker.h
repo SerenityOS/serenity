@@ -19,7 +19,7 @@ class FontPicker final : public GUI::Dialog {
 public:
     virtual ~FontPicker() override = default;
 
-    RefPtr<Gfx::Font> font() const { return m_font; }
+    RefPtr<Gfx::Font const> font() const { return m_font; }
     void set_font(Gfx::Font const*);
 
 private:
@@ -29,7 +29,7 @@ private:
 
     bool const m_fixed_width_only;
 
-    RefPtr<Gfx::Font> m_font;
+    RefPtr<Gfx::Font const> m_font;
 
     RefPtr<ListView> m_family_list_view;
     RefPtr<ListView> m_variant_list_view;

@@ -8,6 +8,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <pwd.h>
 
@@ -90,7 +91,7 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
 
 ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(bool include_usernames)
 {
-    auto proc_all_file = TRY(Core::Stream::File::open("/sys/kernel/processes"sv, Core::Stream::OpenMode::Read));
+    auto proc_all_file = TRY(Core::File::open("/sys/kernel/processes"sv, Core::File::OpenMode::Read));
     return get_all(*proc_all_file, include_usernames);
 }
 

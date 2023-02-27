@@ -13,7 +13,7 @@
 namespace LaunchServer {
 
 static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
-ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket> client_socket, int client_id)
+ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> client_socket, int client_id)
     : IPC::ConnectionFromClient<LaunchClientEndpoint, LaunchServerEndpoint>(*this, move(client_socket), client_id)
 {
     s_connections.set(client_id, *this);

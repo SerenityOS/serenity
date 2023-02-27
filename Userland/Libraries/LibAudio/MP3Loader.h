@@ -11,7 +11,6 @@
 #include <AK/BitStream.h>
 #include <AK/MemoryStream.h>
 #include <AK/Tuple.h>
-#include <LibCore/Stream.h>
 #include <LibDSP/MDCT.h>
 
 namespace Audio {

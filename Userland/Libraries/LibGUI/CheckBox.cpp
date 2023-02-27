@@ -20,7 +20,7 @@ static constexpr int s_box_width = 13;
 static constexpr int s_box_height = 13;
 static constexpr int s_horizontal_padding = 6;
 
-CheckBox::CheckBox(DeprecatedString text)
+CheckBox::CheckBox(String text)
     : AbstractButton(move(text))
 {
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);

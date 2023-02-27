@@ -13,10 +13,10 @@
 #include <Kernel/API/DeviceEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <errno.h>
@@ -72,7 +72,7 @@ static ErrorOr<void> determine_system_mode()
             g_system_mode = "text";
     });
 
-    auto f = Core::File::construct("/sys/kernel/system_mode");
+    auto f = Core::DeprecatedFile::construct("/sys/kernel/constants/system_mode");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read system_mode: {}", f->error_string());
         // Continue and assume "text" mode.
@@ -188,7 +188,7 @@ static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
 
 static ErrorOr<void> populate_devtmpfs_devices_based_on_devctl()
 {
-    auto f = Core::File::construct("/dev/devctl");
+    auto f = Core::DeprecatedFile::construct("/dev/devctl");
     if (!f->open(Core::OpenMode::ReadOnly)) {
         warnln("Failed to open /dev/devctl - {}", f->error_string());
         VERIFY_NOT_REACHED();
@@ -386,6 +386,10 @@ static ErrorOr<void> populate_devtmpfs()
 
 static ErrorOr<void> prepare_synthetic_filesystems()
 {
+    // FIXME: Don't hardcode the fs type as the ext2 filesystem and once there's
+    // more than this filesystem implementation (which is suitable for usage on
+    // physical storage), find a way to detect it.
+    TRY(Core::System::mount(-1, "/"sv, "ext2"sv, MS_REMOUNT | MS_NODEV | MS_NOSUID | MS_RDONLY));
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
     TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));

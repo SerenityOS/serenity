@@ -27,7 +27,7 @@ struct CSVExportDialogPage {
         Preview
     };
 
-    ErrorOr<void> generate(AK::Stream&, GenerationType);
+    ErrorOr<void> generate(Stream&, GenerationType);
 
 protected:
     void update_preview();
@@ -58,7 +58,7 @@ private:
 };
 
 struct ExportDialog {
-    static ErrorOr<void> make_and_run_for(StringView mime, Core::Stream::File&, DeprecatedString filename, Workbook&);
+    static ErrorOr<void> make_and_run_for(StringView mime, Core::File&, DeprecatedString filename, Workbook&);
 };
 
 }

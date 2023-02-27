@@ -20,7 +20,7 @@
 
 namespace Audio {
 
-ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::Stream::LocalSocket> socket)
+ConnectionToServer::ConnectionToServer(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionToServer<AudioClientEndpoint, AudioServerEndpoint>(*this, move(socket))
     , m_buffer(make<AudioQueue>(MUST(AudioQueue::create())))
     , m_user_queue(make<UserSampleQueue>())

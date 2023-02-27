@@ -11,8 +11,8 @@
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
@@ -65,7 +65,7 @@ static bool parse_name(StringView name, OpenFile& file)
 
 static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 {
-    auto file = Core::Stream::File::open(DeprecatedString::formatted("/proc/{}/fds", pid), Core::Stream::OpenMode::Read);
+    auto file = Core::File::open(DeprecatedString::formatted("/proc/{}/fds", pid), Core::File::OpenMode::Read);
     if (file.is_error()) {
         outln("lsof: PID {}: {}", pid, file.error());
         return Vector<OpenFile>();

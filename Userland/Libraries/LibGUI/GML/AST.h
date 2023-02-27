@@ -152,7 +152,7 @@ public:
 class Object : public ValueNode {
 public:
     Object() = default;
-    Object(DeprecatedString name, NonnullRefPtrVector<Node> properties, NonnullRefPtrVector<Node> sub_objects)
+    Object(DeprecatedString name, NonnullRefPtrVector<Node const> properties, NonnullRefPtrVector<Node const> sub_objects)
         : m_properties(move(properties))
         , m_sub_objects(move(sub_objects))
         , m_name(move(name))
@@ -164,13 +164,13 @@ public:
     StringView name() const { return m_name; }
     void set_name(DeprecatedString name) { m_name = move(name); }
 
-    ErrorOr<void> add_sub_object_child(NonnullRefPtr<Node> child)
+    ErrorOr<void> add_sub_object_child(NonnullRefPtr<Node const> child)
     {
         VERIFY(is<Object>(child.ptr()) || is<Comment>(child.ptr()));
         return m_sub_objects.try_append(move(child));
     }
 
-    ErrorOr<void> add_property_child(NonnullRefPtr<Node> child)
+    ErrorOr<void> add_property_child(NonnullRefPtr<Node const> child)
     {
         VERIFY(is<KeyValuePair>(child.ptr()) || is<Comment>(child.ptr()));
         return m_properties.try_append(move(child));
@@ -178,7 +178,7 @@ public:
 
     // Does not return key-value pair `layout: ...`!
     template<typename Callback>
-    void for_each_property(Callback callback)
+    void for_each_property(Callback callback) const
     {
         for (auto const& child : m_properties) {
             if (is<KeyValuePair>(child)) {
@@ -190,52 +190,51 @@ public:
     }
 
     template<typename Callback>
-    void for_each_child_object(Callback callback)
+    void for_each_child_object(Callback callback) const
     {
-        for (NonnullRefPtr<Node> child : m_sub_objects) {
+        for (NonnullRefPtr<Node const> child : m_sub_objects) {
             // doesn't capture layout as intended, as that's behind a kv-pair
             if (is<Object>(child.ptr())) {
-                auto object = static_ptr_cast<Object>(child);
+                auto object = static_ptr_cast<Object const>(child);
                 callback(object);
             }
         }
     }
 
     template<FallibleFunction<NonnullRefPtr<Object>> Callback>
-    ErrorOr<void> try_for_each_child_object(Callback callback)
+    ErrorOr<void> try_for_each_child_object(Callback callback) const
     {
-        for (NonnullRefPtr<Node> child : m_sub_objects) {
+        for (auto const& child : m_sub_objects) {
             // doesn't capture layout as intended, as that's behind a kv-pair
-            if (is<Object>(child.ptr())) {
-                auto object = static_ptr_cast<Object>(child);
-                TRY(callback(object));
+            if (is<Object>(child)) {
+                TRY(callback(static_cast<Object const&>(child)));
             }
         }
 
         return {};
     }
 
-    RefPtr<Object> layout_object() const
+    RefPtr<Object const> layout_object() const
     {
-        for (NonnullRefPtr<Node> child : m_properties) {
-            if (is<KeyValuePair>(child.ptr())) {
-                auto property = static_ptr_cast<KeyValuePair>(child);
-                if (property->key() == "layout") {
-                    VERIFY(is<Object>(property->value().ptr()));
-                    return static_ptr_cast<Object>(property->value());
+        for (auto const& child : m_properties) {
+            if (is<KeyValuePair>(child)) {
+                auto const& property = static_cast<KeyValuePair const&>(child);
+                if (property.key() == "layout") {
+                    VERIFY(is<Object>(property.value().ptr()));
+                    return static_cast<Object const&>(*property.value());
                 }
             }
         }
         return nullptr;
     }
 
-    RefPtr<ValueNode> get_property(StringView property_name)
+    RefPtr<ValueNode const> get_property(StringView property_name) const
     {
-        for (NonnullRefPtr<Node> child : m_properties) {
-            if (is<KeyValuePair>(child.ptr())) {
-                auto property = static_ptr_cast<KeyValuePair>(child);
-                if (property->key() == property_name)
-                    return property->value();
+        for (auto const& child : m_properties) {
+            if (is<KeyValuePair>(child)) {
+                auto const& property = static_cast<KeyValuePair const&>(child);
+                if (property.key() == property_name)
+                    return property.value();
             }
         }
         return nullptr;
@@ -275,9 +274,9 @@ public:
 
 private:
     // Properties and comments
-    NonnullRefPtrVector<Node> m_properties;
+    NonnullRefPtrVector<Node const> m_properties;
     // Sub objects and comments
-    NonnullRefPtrVector<Node> m_sub_objects;
+    NonnullRefPtrVector<Node const> m_sub_objects;
     DeprecatedString m_name {};
 };
 
@@ -285,14 +284,14 @@ class GMLFile : public Node {
 public:
     virtual ~GMLFile() override = default;
 
-    ErrorOr<void> add_child(NonnullRefPtr<Node> child)
+    ErrorOr<void> add_child(NonnullRefPtr<Node const> child)
     {
         if (!has_main_class()) {
             if (is<Comment>(child.ptr())) {
-                return m_leading_comments.try_append(*static_ptr_cast<Comment>(child));
+                return m_leading_comments.try_append(*static_ptr_cast<Comment const>(child));
             }
             if (is<Object>(child.ptr())) {
-                m_main_class = static_ptr_cast<Object>(child);
+                m_main_class = static_ptr_cast<Object const>(child);
                 return {};
             }
             return Error::from_string_literal("Unexpected data before main class");
@@ -300,18 +299,18 @@ public:
         // After the main class, only comments are allowed.
         if (!is<Comment>(child.ptr()))
             return Error::from_string_literal("Data not allowed after main class");
-        return m_trailing_comments.try_append(*static_ptr_cast<Comment>(child));
+        return m_trailing_comments.try_append(*static_ptr_cast<Comment const>(child));
     }
 
     bool has_main_class() const { return m_main_class != nullptr; }
 
-    NonnullRefPtrVector<Comment> leading_comments() const { return m_leading_comments; }
-    Object& main_class()
+    NonnullRefPtrVector<Comment const> leading_comments() const { return m_leading_comments; }
+    Object const& main_class() const
     {
         VERIFY(!m_main_class.is_null());
         return *m_main_class.ptr();
     }
-    NonnullRefPtrVector<Comment> trailing_comments() const { return m_trailing_comments; }
+    NonnullRefPtrVector<Comment const> trailing_comments() const { return m_trailing_comments; }
 
     virtual void format(StringBuilder& builder, size_t indentation, [[maybe_unused]] bool is_inline) const override
     {
@@ -329,9 +328,9 @@ public:
     }
 
 private:
-    NonnullRefPtrVector<Comment> m_leading_comments;
-    RefPtr<Object> m_main_class;
-    NonnullRefPtrVector<Comment> m_trailing_comments;
+    NonnullRefPtrVector<Comment const> m_leading_comments;
+    RefPtr<Object const> m_main_class;
+    NonnullRefPtrVector<Comment const> m_trailing_comments;
 };
 
 }

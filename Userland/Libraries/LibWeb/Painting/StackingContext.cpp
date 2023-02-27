@@ -372,6 +372,8 @@ void StackingContext::paint(PaintContext& context) const
         return;
 
     auto affine_transform = affine_transform_matrix();
+    auto translation = context.rounded_device_point(affine_transform.translation().to_type<CSSPixels>()).to_type<int>().to_type<float>();
+    affine_transform.set_translation(translation);
 
     if (opacity < 1.0f || !affine_transform.is_identity_or_translation()) {
         auto transform_origin = this->transform_origin();

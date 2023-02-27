@@ -10,13 +10,13 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
-#include <LibWeb/WebIDL/DOMException.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Crypto {
 
-JS::NonnullGCPtr<SubtleCrypto> SubtleCrypto::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<SubtleCrypto>> SubtleCrypto::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<SubtleCrypto>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<SubtleCrypto>(realm, realm));
 }
 
 SubtleCrypto::SubtleCrypto(JS::Realm& realm)
@@ -35,7 +35,7 @@ JS::ThrowCompletionOr<void> SubtleCrypto::initialize(JS::Realm& realm)
 }
 
 // https://w3c.github.io/webcrypto/#dfn-SubtleCrypto-method-digest
-JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<JS::Object> const& data)
+JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::Handle<JS::Object> const& data)
 {
     auto& realm = this->realm();
 
@@ -54,13 +54,14 @@ JS::Promise* SubtleCrypto::digest(DeprecatedString const& algorithm, JS::Handle<
     // 3. Let normalizedAlgorithm be the result of normalizing an algorithm, with alg set to algorithm and op set to "digest".
     // FIXME: This is way more generic than it needs to be right now, so we simplify it.
     ::Crypto::Hash::HashKind hash_kind;
-    if (algorithm.equals_ignoring_case("SHA-1"sv)) {
+    auto algorithm_as_string_view = algorithm.bytes_as_string_view();
+    if (algorithm_as_string_view.equals_ignoring_case("SHA-1"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA1;
-    } else if (algorithm.equals_ignoring_case("SHA-256"sv)) {
+    } else if (algorithm_as_string_view.equals_ignoring_case("SHA-256"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA256;
-    } else if (algorithm.equals_ignoring_case("SHA-384"sv)) {
+    } else if (algorithm_as_string_view.equals_ignoring_case("SHA-384"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA384;
-    } else if (algorithm.equals_ignoring_case("SHA-512"sv)) {
+    } else if (algorithm_as_string_view.equals_ignoring_case("SHA-512"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA512;
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.

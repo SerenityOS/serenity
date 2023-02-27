@@ -9,7 +9,7 @@
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Object.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>
@@ -43,9 +43,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
 
     set_fixed_height(110);
 
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 8, 0, 0 });
-    layout()->set_spacing(3);
+    set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 0, 0 }, 3);
 
     auto build_widgets_for_label = [this](DeprecatedString const& description) -> RefPtr<GUI::Label> {
         auto& container = add<GUI::Widget>();
@@ -104,7 +102,7 @@ static inline u64 page_count_to_bytes(size_t count)
 
 void MemoryStatsWidget::refresh()
 {
-    auto proc_memstat = Core::File::construct("/sys/kernel/memstat");
+    auto proc_memstat = Core::DeprecatedFile::construct("/sys/kernel/memstat");
     if (!proc_memstat->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 

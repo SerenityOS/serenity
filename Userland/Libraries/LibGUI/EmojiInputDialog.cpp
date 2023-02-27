@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -46,7 +46,7 @@ static constexpr auto s_emoji_groups = Array {
     EmojiCateogry { Unicode::EmojiGroup::SerenityOS, 0x10CD0B },
 };
 
-static void resize_bitmap_if_needed(RefPtr<Gfx::Bitmap>& bitmap)
+static void resize_bitmap_if_needed(RefPtr<Gfx::Bitmap const>& bitmap)
 {
     constexpr int max_icon_size = 12;
 
@@ -74,7 +74,7 @@ private:
         if (m_first_paint_event) {
             m_first_paint_event = false;
 
-            RefPtr<Gfx::Bitmap> bitmap = Gfx::Emoji::emoji_for_code_points(m_emoji_code_points);
+            RefPtr<Gfx::Bitmap const> bitmap = Gfx::Emoji::emoji_for_code_points(m_emoji_code_points);
             VERIFY(bitmap);
 
             resize_bitmap_if_needed(bitmap);
@@ -113,7 +113,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         auto name = Unicode::emoji_group_to_string(category.group);
         auto tooltip = name.replace("&"sv, "&&"sv, ReplaceMode::FirstOnly);
 
-        RefPtr<Gfx::Bitmap> bitmap = Gfx::Emoji::emoji_for_code_point(category.emoji_code_point);
+        RefPtr<Gfx::Bitmap const> bitmap = Gfx::Emoji::emoji_for_code_point(category.emoji_code_point);
         VERIFY(bitmap);
         resize_bitmap_if_needed(bitmap);
 
@@ -219,9 +219,7 @@ void EmojiInputDialog::update_displayed_emoji()
     for (size_t row = 0; row < rows && index < m_emojis.size(); ++row) {
         auto& horizontal_container = m_emojis_widget->add<Widget>();
         horizontal_container.set_preferred_height(SpecialDimension::Fit);
-
-        auto& horizontal_layout = horizontal_container.set_layout<HorizontalBoxLayout>();
-        horizontal_layout.set_spacing(0);
+        horizontal_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 
         for (size_t column = 0; column < columns; ++column) {
             bool found_match = false;

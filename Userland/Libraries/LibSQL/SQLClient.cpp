@@ -10,11 +10,10 @@
 #include <LibSQL/SQLClient.h>
 
 #if !defined(AK_OS_SERENITY)
+#    include <LibCore/DeprecatedFile.h>
 #    include <LibCore/Directory.h>
-#    include <LibCore/File.h>
 #    include <LibCore/SocketAddress.h>
 #    include <LibCore/StandardPaths.h>
-#    include <LibCore/Stream.h>
 #    include <LibCore/System.h>
 #endif
 
@@ -25,7 +24,7 @@ namespace SQL {
 // This is heavily based on how SystemServer's Service creates its socket.
 static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
 {
-    if (Core::File::exists(socket_path))
+    if (Core::DeprecatedFile::exists(socket_path))
         TRY(Core::System::unlink(socket_path));
 
 #    ifdef SOCK_NONBLOCK
@@ -38,7 +37,7 @@ static ErrorOr<int> create_database_socket(DeprecatedString const& socket_path)
     TRY(Core::System::fcntl(socket_fd, F_SETFD, FD_CLOEXEC));
 #    endif
 
-#    if !defined(AK_OS_MACOS) && !defined(AK_OS_FREEBSD) && !defined(AK_OS_OPENBSD)
+#    if !defined(AK_OS_BSD_GENERIC)
     TRY(Core::System::fchmod(socket_fd, 0600));
 #    endif
 
@@ -67,7 +66,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
         server_pid = TRY(Core::System::fork());
 
         if (server_pid != 0) {
-            auto server_pid_file = TRY(Core::Stream::File::open(pid_path, Core::Stream::OpenMode::Write));
+            auto server_pid_file = TRY(Core::File::open(pid_path, Core::File::OpenMode::Write));
             TRY(server_pid_file->write(DeprecatedString::number(server_pid).bytes()));
 
             TRY(Core::System::kill(getpid(), SIGTERM));
@@ -103,12 +102,12 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
 
 static ErrorOr<bool> should_launch_server(DeprecatedString const& pid_path)
 {
-    if (!Core::File::exists(pid_path))
+    if (!Core::DeprecatedFile::exists(pid_path))
         return true;
 
     Optional<pid_t> pid;
     {
-        auto server_pid_file = Core::Stream::File::open(pid_path, Core::Stream::OpenMode::Read);
+        auto server_pid_file = Core::File::open(pid_path, Core::File::OpenMode::Read);
         if (server_pid_file.is_error()) {
             warnln("Could not open SQLServer PID file '{}': {}", pid_path, server_pid_file.error());
             return server_pid_file.release_error();
@@ -146,7 +145,7 @@ ErrorOr<NonnullRefPtr<SQLClient>> SQLClient::launch_server_and_create_client(Vec
     if (TRY(should_launch_server(pid_path)))
         TRY(launch_server(socket_path, pid_path, move(candidate_server_paths)));
 
-    auto socket = TRY(Core::Stream::LocalSocket::connect(move(socket_path)));
+    auto socket = TRY(Core::LocalSocket::connect(move(socket_path)));
     TRY(socket->set_blocking(true));
 
     return adopt_nonnull_ref_or_enomem(new (nothrow) SQLClient(move(socket)));

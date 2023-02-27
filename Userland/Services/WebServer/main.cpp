@@ -8,8 +8,8 @@
 
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
@@ -22,9 +22,9 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    static auto const default_listen_address = TRY(String::from_utf8("0.0.0.0"sv));
+    static auto const default_listen_address = TRY("0.0.0.0"_string);
     static auto const default_port = 8000;
-    static auto const default_document_root_path = TRY(String::from_utf8("/www"sv));
+    static auto const default_document_root_path = TRY("/www"_string);
 
     DeprecatedString listen_address = default_listen_address.to_deprecated_string();
     int port = default_port;
@@ -56,8 +56,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto real_document_root_path = Core::File::real_path_for(document_root_path);
-    if (!Core::File::exists(real_document_root_path)) {
+    auto real_document_root_path = Core::DeprecatedFile::real_path_for(document_root_path);
+    if (!Core::DeprecatedFile::exists(real_document_root_path)) {
         warnln("Root path does not exist: '{}'", document_root_path);
         return 1;
     }
@@ -81,7 +81,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto maybe_buffered_socket = Core::Stream::BufferedTCPSocket::create(maybe_client_socket.release_value());
+        auto maybe_buffered_socket = Core::BufferedTCPSocket::create(maybe_client_socket.release_value());
         if (maybe_buffered_socket.is_error()) {
             warnln("Could not obtain a buffered socket for the client: {}", maybe_buffered_socket.error());
             return;

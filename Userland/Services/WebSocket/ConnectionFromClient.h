@@ -24,7 +24,7 @@ public:
     virtual void die() override;
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::WebSocketServer::ConnectResponse connect(URL const&, DeprecatedString const&, Vector<DeprecatedString> const&, Vector<DeprecatedString> const&, IPC::Dictionary const&) override;
     virtual Messages::WebSocketServer::ReadyStateResponse ready_state(i32) override;

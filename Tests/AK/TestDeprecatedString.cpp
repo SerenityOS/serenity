@@ -290,7 +290,10 @@ TEST_CASE(bijective_base)
     EXPECT_EQ(DeprecatedString::bijective_base_from(25), "Z");
     EXPECT_EQ(DeprecatedString::bijective_base_from(26), "AA");
     EXPECT_EQ(DeprecatedString::bijective_base_from(52), "BA");
-    EXPECT_EQ(DeprecatedString::bijective_base_from(704), "ABC");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(701), "ZZ");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(702), "AAA");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(730), "ABC");
+    EXPECT_EQ(DeprecatedString::bijective_base_from(18277), "ZZZ");
 }
 
 TEST_CASE(roman_numerals)

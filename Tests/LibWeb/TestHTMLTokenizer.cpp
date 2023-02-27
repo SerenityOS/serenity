@@ -6,7 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
 
 using Tokenizer = Web::HTML::HTMLTokenizer;
@@ -208,7 +208,7 @@ TEST_CASE(regression)
     StringView path = "tokenizer-test.html"sv;
 #endif
 
-    auto file = MUST(Core::Stream::File::open(path, Core::Stream::OpenMode::Read));
+    auto file = MUST(Core::File::open(path, Core::File::OpenMode::Read));
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
     MUST(file->read(content.bytes()));

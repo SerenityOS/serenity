@@ -9,7 +9,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibELF/Image.h>
@@ -205,12 +205,12 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
     for (auto const& icon_section : icon_sections) {
         auto section = image.lookup_section(icon_section.section_name);
 
-        RefPtr<Gfx::Bitmap> bitmap;
+        RefPtr<Gfx::Bitmap const> bitmap;
         if (!section.has_value()) {
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
             // FIXME: Use the ImageDecoder service.
-            if (Gfx::PNGImageDecoderPlugin::sniff({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors()) {
+            if (Gfx::PNGImageDecoderPlugin::sniff({ section->raw_data(), section->size() })) {
                 auto png_decoder = Gfx::PNGImageDecoderPlugin::create({ section->raw_data(), section->size() }).release_value_but_fixme_should_propagate_errors();
                 if (png_decoder->initialize()) {
                     auto frame_or_error = png_decoder->frame(0);
@@ -255,7 +255,7 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
         return s_directory_icon;
     }
     if (S_ISLNK(mode)) {
-        auto raw_symlink_target_or_error = Core::File::read_link(path);
+        auto raw_symlink_target_or_error = Core::DeprecatedFile::read_link(path);
         if (raw_symlink_target_or_error.is_error())
             return s_symlink_icon;
 
@@ -267,7 +267,7 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {
-            target_path = Core::File::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
+            target_path = Core::DeprecatedFile::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
 

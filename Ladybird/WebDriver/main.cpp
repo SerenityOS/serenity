@@ -125,7 +125,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         }
 
-        auto maybe_buffered_socket = Core::Stream::BufferedTCPSocket::create(maybe_client_socket.release_value());
+        auto maybe_buffered_socket = Core::BufferedTCPSocket::create(maybe_client_socket.release_value());
         if (maybe_buffered_socket.is_error()) {
             warnln("Could not obtain a buffered socket for the client: {}", maybe_buffered_socket.error());
             return;

@@ -47,6 +47,8 @@ static ThrowCompletionOr<Optional<PropertyDescriptor>> string_get_own_property(S
 {
     VERIFY(property_key.is_valid());
 
+    auto& vm = string.vm();
+
     // 1. If Type(P) is not String, return undefined.
     // NOTE: The spec only uses string and symbol keys, and later coerces to numbers -
     // this is not the case for PropertyKey, so '!property_key.is_string()' would be wrong.
@@ -54,7 +56,7 @@ static ThrowCompletionOr<Optional<PropertyDescriptor>> string_get_own_property(S
         return Optional<PropertyDescriptor> {};
 
     // 2. Let index be CanonicalNumericIndexString(P).
-    auto index = canonical_numeric_index_string(property_key, CanonicalIndexMode::IgnoreNumericRoundtrip);
+    auto index = MUST_OR_THROW_OOM(canonical_numeric_index_string(vm, property_key, CanonicalIndexMode::IgnoreNumericRoundtrip));
 
     // 3. If index is undefined, return undefined.
     // 4. If IsIntegralNumber(index) is false, return undefined.
@@ -74,7 +76,7 @@ static ThrowCompletionOr<Optional<PropertyDescriptor>> string_get_own_property(S
         return Optional<PropertyDescriptor> {};
 
     // 10. Let resultStr be the String value of length 1, containing one code unit from str, specifically the code unit at index ℝ(index).
-    auto result_str = PrimitiveString::create(string.vm(), TRY(Utf16String::create(string.vm(), str.substring_view(index.as_index(), 1))));
+    auto result_str = PrimitiveString::create(vm, TRY(Utf16String::create(vm, str.substring_view(index.as_index(), 1))));
 
     // 11. Return the PropertyDescriptor { [[Value]]: resultStr, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }.
     return PropertyDescriptor {

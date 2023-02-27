@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 
 namespace PDF {
@@ -27,6 +28,11 @@ public:
     }
 
     Error(Type type, DeprecatedString const& message)
+        : Error(type, String::from_deprecated_string(message).release_value_but_fixme_should_propagate_errors())
+    {
+    }
+
+    Error(Type type, String const& message)
         : m_type(type)
     {
         switch (type) {
@@ -48,9 +54,33 @@ public:
     Type type() const { return m_type; }
     DeprecatedString const& message() const { return m_message; }
 
+#define DEFINE_STATIC_ERROR_FUNCTIONS(name, type)                                                           \
+    static Error name##_error(StringView message)                                                           \
+    {                                                                                                       \
+        return maybe_with_string(Type::type, String::from_utf8(message));                                   \
+    }                                                                                                       \
+                                                                                                            \
+    template<typename... Parameters>                                                                        \
+    static Error name##_error(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters) \
+    {                                                                                                       \
+        return maybe_with_string(Type::type, String::formatted(move(fmtstr), parameters...));               \
+    }
+
+    DEFINE_STATIC_ERROR_FUNCTIONS(parse, Parse)
+    DEFINE_STATIC_ERROR_FUNCTIONS(internal, Internal)
+    DEFINE_STATIC_ERROR_FUNCTIONS(malformed, MalformedPDF)
+    DEFINE_STATIC_ERROR_FUNCTIONS(rendering_unsupported, RenderingUnsupported)
+
 private:
     Type m_type;
     DeprecatedString m_message;
+
+    static Error maybe_with_string(Type type, ErrorOr<String> maybe_string)
+    {
+        if (maybe_string.is_error())
+            return Error { type, String {} };
+        return Error { type, maybe_string.release_value() };
+    }
 };
 
 class Errors {

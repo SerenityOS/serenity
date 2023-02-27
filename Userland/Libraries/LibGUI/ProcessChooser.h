@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/RunningProcessesModel.h>
@@ -22,15 +23,15 @@ public:
     pid_t pid() const { return m_pid; }
 
 private:
-    ProcessChooser(StringView window_title = "Process Chooser"sv, StringView button_label = "Select"sv, Gfx::Bitmap const* window_icon = nullptr, GUI::Window* parent_window = nullptr);
+    ProcessChooser(StringView window_title = "Process Chooser"sv, String button_label = "Select"_short_string, Gfx::Bitmap const* window_icon = nullptr, GUI::Window* parent_window = nullptr);
 
     void set_pid_from_index_and_close(ModelIndex const&);
 
     pid_t m_pid { 0 };
 
     DeprecatedString m_window_title;
-    DeprecatedString m_button_label;
-    RefPtr<Gfx::Bitmap> m_window_icon;
+    String m_button_label;
+    RefPtr<Gfx::Bitmap const> m_window_icon;
     RefPtr<TableView> m_table_view;
     RefPtr<RunningProcessesModel> m_process_model;
 

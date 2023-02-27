@@ -484,7 +484,7 @@ NonnullRefPtr<DynamicObject> DynamicObject::create(DeprecatedString const& filep
 VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
-    VERIFY(relocation.type() == R_X86_64_JUMP_SLOT);
+    VERIFY(relocation.type() == R_X86_64_JUMP_SLOT || relocation.type() == R_AARCH64_JUMP_SLOT);
     auto symbol = relocation.symbol();
     auto relocation_address = (FlatPtr*)relocation.address().as_ptr();
 

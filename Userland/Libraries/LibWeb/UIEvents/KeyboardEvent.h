@@ -28,9 +28,9 @@ class KeyboardEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(KeyboardEvent, UIEvent);
 
 public:
-    static KeyboardEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init = {});
-    static KeyboardEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init);
-    static KeyboardEvent* create_from_platform_event(JS::Realm&, DeprecatedFlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> create_from_platform_event(JS::Realm&, DeprecatedFlyString const& event_name, KeyCode, unsigned modifiers, u32 code_point);
 
     virtual ~KeyboardEvent() override;
 

@@ -14,6 +14,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -28,7 +29,7 @@
 
 namespace WebServer {
 
-Client::Client(NonnullOwnPtr<Core::Stream::BufferedTCPSocket> socket, Core::Object* parent)
+Client::Client(NonnullOwnPtr<Core::BufferedTCPSocket> socket, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(move(socket))
 {
@@ -116,7 +117,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     if (Configuration::the().credentials().has_value()) {
         bool has_authenticated = verify_credentials(request.headers());
         if (!has_authenticated) {
-            auto const basic_auth_header = TRY(String::from_utf8("WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\""sv));
+            auto const basic_auth_header = TRY("WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\""_string);
             Vector<String> headers {};
             TRY(headers.try_append(basic_auth_header));
             TRY(send_error_response(401, request, move(headers)));
@@ -132,7 +133,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     path_builder.append(requested_path);
     auto real_path = TRY(path_builder.to_string());
 
-    if (Core::File::is_directory(real_path.bytes_as_string_view())) {
+    if (Core::DeprecatedFile::is_directory(real_path.bytes_as_string_view())) {
         if (!resource_decoded.ends_with('/')) {
             StringBuilder red;
 
@@ -147,14 +148,14 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         index_html_path_builder.append(real_path);
         index_html_path_builder.append("/index.html"sv);
         auto index_html_path = TRY(index_html_path_builder.to_string());
-        if (!Core::File::exists(index_html_path)) {
+        if (!Core::DeprecatedFile::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
         }
         real_path = index_html_path;
     }
 
-    auto file = Core::File::construct(real_path.bytes_as_string_view());
+    auto file = Core::DeprecatedFile::construct(real_path.bytes_as_string_view());
     if (!file->open(Core::OpenMode::ReadOnly)) {
         TRY(send_error_response(404, request));
         return false;
@@ -165,17 +166,17 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         return false;
     }
 
-    auto stream = TRY(Core::Stream::File::open(real_path.bytes_as_string_view(), Core::Stream::OpenMode::Read));
+    auto stream = TRY(Core::File::open(real_path.bytes_as_string_view(), Core::File::OpenMode::Read));
 
     auto const info = ContentInfo {
-        .type = TRY(String::from_deprecated_string(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
-        .length = TRY(Core::File::size(real_path.bytes_as_string_view()))
+        .type = TRY(String::from_utf8(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
+        .length = TRY(Core::DeprecatedFile::size(real_path.bytes_as_string_view()))
     };
     TRY(send_response(*stream, request, move(info)));
     return true;
 }
 
-ErrorOr<void> Client::send_response(AK::Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
+ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n"sv);
@@ -337,7 +338,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
     auto response = builder.to_deprecated_string();
     FixedMemoryStream stream { response.bytes() };
-    return send_response(stream, request, { .type = TRY(String::from_utf8("text/html"sv)), .length = response.length() });
+    return send_response(stream, request, { .type = TRY("text/html"_string), .length = response.length() });
 }
 
 ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)

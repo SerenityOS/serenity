@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -229,7 +229,7 @@ public:
     Gfx::Bitmap const* bitmap() const { return m_bitmap; }
 
 private:
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    RefPtr<Gfx::Bitmap const> m_bitmap;
 };
 
 class WMWorkspaceChangedEvent : public WMEvent {
@@ -477,7 +477,7 @@ private:
 
 class DropEvent final : public Event {
 public:
-    DropEvent(Gfx::IntPoint, DeprecatedString const& text, NonnullRefPtr<Core::MimeData> mime_data);
+    DropEvent(Gfx::IntPoint, DeprecatedString const& text, NonnullRefPtr<Core::MimeData const> mime_data);
 
     ~DropEvent() = default;
 
@@ -488,7 +488,7 @@ public:
 private:
     Gfx::IntPoint m_position;
     DeprecatedString m_text;
-    NonnullRefPtr<Core::MimeData> m_mime_data;
+    NonnullRefPtr<Core::MimeData const> m_mime_data;
 };
 
 class ThemeChangeEvent final : public Event {

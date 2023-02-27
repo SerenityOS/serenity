@@ -18,7 +18,7 @@ class FocusEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(FocusEvent, UIEvent);
 
 public:
-    static FocusEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const& event_init);
 
     virtual ~FocusEvent() override;
 

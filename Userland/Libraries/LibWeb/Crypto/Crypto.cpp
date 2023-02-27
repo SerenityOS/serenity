@@ -8,15 +8,16 @@
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Crypto/SubtleCrypto.h>
 
 namespace Web::Crypto {
 
-JS::NonnullGCPtr<Crypto> Crypto::create(JS::Realm& realm)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto>> Crypto::create(JS::Realm& realm)
 {
-    return realm.heap().allocate<Crypto>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<Crypto>(realm, realm));
 }
 
 Crypto::Crypto(JS::Realm& realm)
@@ -30,7 +31,9 @@ JS::ThrowCompletionOr<void> Crypto::initialize(JS::Realm& realm)
 {
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::CryptoPrototype>(realm, "Crypto"));
-    m_subtle = SubtleCrypto::create(realm);
+    m_subtle = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return SubtleCrypto::create(realm);
+    }));
 
     return {};
 }
@@ -65,8 +68,10 @@ WebIDL::ExceptionOr<JS::Value> Crypto::get_random_values(JS::Value array) const
 }
 
 // https://w3c.github.io/webcrypto/#dfn-Crypto-method-randomUUID
-DeprecatedString Crypto::random_uuid() const
+WebIDL::ExceptionOr<String> Crypto::random_uuid() const
 {
+    auto& vm = realm().vm();
+
     // 1. Let bytes be a byte sequence of length 16.
     u8 bytes[16];
 
@@ -108,12 +113,12 @@ DeprecatedString Crypto::random_uuid() const
         ».
         */
     StringBuilder builder;
-    builder.appendff("{:02x}{:02x}{:02x}{:02x}-", bytes[0], bytes[1], bytes[2], bytes[3]);
-    builder.appendff("{:02x}{:02x}-", bytes[4], bytes[5]);
-    builder.appendff("{:02x}{:02x}-", bytes[6], bytes[7]);
-    builder.appendff("{:02x}{:02x}-", bytes[8], bytes[9]);
-    builder.appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]);
-    return builder.to_deprecated_string();
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}{:02x}{:02x}-", bytes[0], bytes[1], bytes[2], bytes[3]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[4], bytes[5]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[6], bytes[7]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[8], bytes[9]));
+    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]));
+    return TRY_OR_THROW_OOM(vm, builder.to_string());
 }
 
 void Crypto::visit_edges(Cell::Visitor& visitor)

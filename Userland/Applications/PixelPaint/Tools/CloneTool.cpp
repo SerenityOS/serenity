@@ -52,7 +52,7 @@ void CloneTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint s
     BrushTool::draw_line(bitmap, color, start, end);
 }
 
-Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> CloneTool::cursor()
+Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> CloneTool::cursor()
 {
     if (m_is_selecting_location)
         return Gfx::StandardCursor::Eyedropper;
@@ -133,44 +133,45 @@ void CloneTool::on_keyup(GUI::KeyEvent& event)
     }
 }
 
-GUI::Widget* CloneTool::get_properties_widget()
+ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
 {
     if (!m_properties_widget) {
-        m_properties_widget = GUI::Widget::construct();
-        m_properties_widget->set_layout<GUI::VerticalBoxLayout>();
+        auto properties_widget = TRY(GUI::Widget::try_create());
+        (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-        auto& size_container = m_properties_widget->add<GUI::Widget>();
-        size_container.set_fixed_height(20);
-        size_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto size_container = TRY(properties_widget->try_add<GUI::Widget>());
+        size_container->set_fixed_height(20);
+        (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& size_label = size_container.add<GUI::Label>("Size:");
-        size_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        size_label.set_fixed_size(80, 20);
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"));
+        size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        size_label->set_fixed_size(80, 20);
 
-        auto& size_slider = size_container.add<GUI::ValueSlider>(Orientation::Horizontal, "px");
-        size_slider.set_range(1, 100);
-        size_slider.set_value(size());
+        auto size_slider = TRY(size_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "px"_short_string));
+        size_slider->set_range(1, 100);
+        size_slider->set_value(size());
 
-        size_slider.on_change = [&](int value) {
+        size_slider->on_change = [this](int value) {
             set_size(value);
         };
-        set_primary_slider(&size_slider);
+        set_primary_slider(size_slider);
 
-        auto& hardness_container = m_properties_widget->add<GUI::Widget>();
-        hardness_container.set_fixed_height(20);
-        hardness_container.set_layout<GUI::HorizontalBoxLayout>();
+        auto hardness_container = TRY(properties_widget->try_add<GUI::Widget>());
+        hardness_container->set_fixed_height(20);
+        (void)TRY(hardness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto& hardness_label = hardness_container.add<GUI::Label>("Hardness:");
-        hardness_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        hardness_label.set_fixed_size(80, 20);
+        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"));
+        hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        hardness_label->set_fixed_size(80, 20);
 
-        auto& hardness_slider = hardness_container.add<GUI::ValueSlider>(Orientation::Horizontal, "%");
-        hardness_slider.set_range(1, 100);
-        hardness_slider.on_change = [&](int value) {
+        auto hardness_slider = TRY(hardness_container->try_add<GUI::ValueSlider>(Orientation::Horizontal, "%"_short_string));
+        hardness_slider->set_range(1, 100);
+        hardness_slider->on_change = [&](int value) {
             set_hardness(value);
         };
-        hardness_slider.set_value(100);
-        set_secondary_slider(&hardness_slider);
+        hardness_slider->set_value(100);
+        set_secondary_slider(hardness_slider);
+        m_properties_widget = properties_widget;
     }
 
     return m_properties_widget.ptr();

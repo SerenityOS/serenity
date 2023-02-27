@@ -12,8 +12,8 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
-#include <LibCore/File.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
@@ -150,7 +150,7 @@ Optional<DeprecatedString> NewProjectDialog::get_available_project_name()
             ? chosen_name
             : DeprecatedString::formatted("{}-{}", chosen_name, i);
 
-        if (!Core::File::exists(DeprecatedString::formatted("{}/{}", create_in, candidate)))
+        if (!Core::DeprecatedFile::exists(DeprecatedString::formatted("{}/{}", create_in, candidate)))
             return candidate;
     }
 
@@ -188,7 +188,7 @@ void NewProjectDialog::do_create_project()
     }
 
     auto create_in = m_create_in_input->text();
-    if (!Core::File::exists(create_in) || !Core::File::is_directory(create_in)) {
+    if (!Core::DeprecatedFile::exists(create_in) || !Core::DeprecatedFile::is_directory(create_in)) {
         auto result = GUI::MessageBox::show(this, DeprecatedString::formatted("The directory {} does not exist yet, would you like to create it?", create_in), "New project"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
         if (result != GUI::MessageBox::ExecResult::Yes)
             return;

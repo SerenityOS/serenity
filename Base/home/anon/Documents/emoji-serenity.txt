@@ -116,7 +116,7 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁦󠁲󠁢󠁲󠁥󠁿 - U+1F3F4 U+E0066 U+E0072 U+E0062 U+E0072 U+E0065 U+E007F FR-BRE Bretagne
 🏴󠁦󠁲󠁣󠁯󠁲󠁿 - U+1F3F4 U+E0066 U+E0072 U+E0063 U+E006F U+E0072 U+E007F FR-COR Corse
 🏴󠁦󠁲󠁣󠁶󠁬󠁿 - U+1F3F4 U+E0066 U+E0072 U+E0063 U+E0076 U+E006C U+E007F FR-CVL Centre-Val de Loire
-🏴󠁦󠁲󠁯󠁣󠁣󠁿 - U+1F3F4 U+E0066 U+E0072 U+E006F U+E0063 U+E0063 U+E007F FR-OCC Occitanie 
+🏴󠁦󠁲󠁯󠁣󠁣󠁿 - U+1F3F4 U+E0066 U+E0072 U+E006F U+E0063 U+E0063 U+E007F FR-OCC Occitanie
 🏴󠁦󠁲󠁮󠁡󠁱󠁿 - U+1F3F4 U+E0066 U+E0072 U+E006E U+E0061 U+E0071 U+E007F FR-NAQ Nouvelle-Aquitaine
 🏴󠁦󠁲󠁮󠁯󠁲󠁿 - U+1F3F4 U+E0066 U+E0072 U+E006E U+E006F U+E0072 U+E007F FR-NOR Normandie
 🏴󠁦󠁲󠁰󠁡󠁣󠁿 - U+1F3F4 U+E0066 U+E0072 U+E0070 U+E0061 U+E0063 U+E007F FR-PAC Provence-Alpes-Côte-d’Azur

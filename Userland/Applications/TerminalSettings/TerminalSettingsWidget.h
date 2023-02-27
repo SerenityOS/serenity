@@ -47,13 +47,13 @@ private:
     TerminalSettingsViewWidget();
     void write_back_settings() const;
 
-    RefPtr<Gfx::Font> m_font;
+    RefPtr<Gfx::Font const> m_font;
     float m_opacity;
     DeprecatedString m_color_scheme;
     VT::CursorShape m_cursor_shape { VT::CursorShape::Block };
     bool m_cursor_is_blinking_set { true };
 
-    RefPtr<Gfx::Font> m_original_font;
+    RefPtr<Gfx::Font const> m_original_font;
     float m_original_opacity;
     DeprecatedString m_original_color_scheme;
     VT::CursorShape m_original_cursor_shape;

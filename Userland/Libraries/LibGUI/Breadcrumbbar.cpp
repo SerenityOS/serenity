@@ -60,8 +60,7 @@ private:
 
 Breadcrumbbar::Breadcrumbbar()
 {
-    auto& layout = set_layout<HorizontalBoxLayout>();
-    layout.set_spacing(0);
+    set_layout<HorizontalBoxLayout>(GUI::Margins {}, 0);
 }
 
 void Breadcrumbbar::clear_segments()
@@ -75,7 +74,7 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
 {
     auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::Coolbar);
-    button.set_text(text);
+    button.set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
     button.set_icon(icon);
     button.set_tooltip(move(tooltip));
     button.set_focus_policy(FocusPolicy::TabFocus);
@@ -86,6 +85,10 @@ void Breadcrumbbar::append_segment(DeprecatedString text, Gfx::Bitmap const* ico
             on_segment_click(index);
         if (on_segment_change && m_selected_segment != index)
             on_segment_change(index);
+    };
+    button.on_double_click = [this](auto modifiers) {
+        if (on_doubleclick)
+            on_doubleclick(modifiers);
     };
     button.on_focus_change = [this, index = m_segments.size()](auto has_focus, auto) {
         if (has_focus && on_segment_change && m_selected_segment != index)
@@ -155,7 +158,7 @@ void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
 void Breadcrumbbar::doubleclick_event(MouseEvent& event)
 {
     if (on_doubleclick)
-        on_doubleclick(event);
+        on_doubleclick(event.modifiers());
 }
 
 void Breadcrumbbar::resize_event(ResizeEvent&)

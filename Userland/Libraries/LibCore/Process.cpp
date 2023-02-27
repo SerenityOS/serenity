@@ -111,7 +111,7 @@ ErrorOr<String> Process::get_name()
     return String::from_utf8(StringView { buffer, strlen(buffer) });
 #else
     // FIXME: Implement Process::get_name() for other platforms.
-    return String::from_utf8_short_string("???"sv);
+    return "???"_short_string;
 #endif
 }
 

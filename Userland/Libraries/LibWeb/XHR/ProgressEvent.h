@@ -23,8 +23,8 @@ class ProgressEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(ProgressEvent, DOM::Event);
 
 public:
-    static ProgressEvent* create(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
-    static ProgressEvent* construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ProgressEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ProgressEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, ProgressEventInit const& event_init);
 
     virtual ~ProgressEvent() override;
 

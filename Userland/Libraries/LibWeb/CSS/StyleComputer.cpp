@@ -1,7 +1,7 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -43,7 +43,7 @@ StyleComputer::~StyleComputer() = default;
 
 class StyleComputer::FontLoader : public ResourceClient {
 public:
-    explicit FontLoader(StyleComputer& style_computer, DeprecatedFlyString family_name, AK::URL url)
+    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, AK::URL url)
         : m_style_computer(style_computer)
         , m_family_name(move(family_name))
     {
@@ -105,7 +105,7 @@ private:
     }
 
     StyleComputer& m_style_computer;
-    DeprecatedFlyString m_family_name;
+    FlyString m_family_name;
     RefPtr<Gfx::VectorFont> m_vector_font;
 
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
@@ -115,9 +115,8 @@ static CSSStyleSheet& default_stylesheet()
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern char const default_stylesheet_source[];
-        DeprecatedString css = default_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
+        extern StringView default_stylesheet_source;
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), default_stylesheet_source));
     }
     return *sheet;
 }
@@ -126,9 +125,8 @@ static CSSStyleSheet& quirks_mode_stylesheet()
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
-        extern char const quirks_mode_stylesheet_source[];
-        DeprecatedString css = quirks_mode_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), css));
+        extern StringView quirks_mode_stylesheet_source;
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), quirks_mode_stylesheet_source));
     }
     return *sheet;
 }
@@ -157,14 +155,14 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
                 rules_to_run.extend(it->value);
         } else {
             for (auto const& class_name : element.class_names()) {
-                if (auto it = m_rule_cache->rules_by_class.find(class_name); it != m_rule_cache->rules_by_class.end())
+                if (auto it = m_rule_cache->rules_by_class.find(FlyString::from_utf8(class_name).release_value_but_fixme_should_propagate_errors()); it != m_rule_cache->rules_by_class.end())
                     rules_to_run.extend(it->value);
             }
             if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
-                if (auto it = m_rule_cache->rules_by_id.find(id); it != m_rule_cache->rules_by_id.end())
+                if (auto it = m_rule_cache->rules_by_id.find(FlyString::from_utf8(id).release_value_but_fixme_should_propagate_errors()); it != m_rule_cache->rules_by_id.end())
                     rules_to_run.extend(it->value);
             }
-            if (auto it = m_rule_cache->rules_by_tag_name.find(element.local_name()); it != m_rule_cache->rules_by_tag_name.end())
+            if (auto it = m_rule_cache->rules_by_tag_name.find(FlyString::from_utf8(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != m_rule_cache->rules_by_tag_name.end())
                 rules_to_run.extend(it->value);
             rules_to_run.extend(m_rule_cache->other_rules);
         }
@@ -589,16 +587,16 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-static RefPtr<StyleValue> get_custom_property(DOM::Element const& element, DeprecatedFlyString const& custom_property_name)
+static RefPtr<StyleValue const> get_custom_property(DOM::Element const& element, FlyString const& custom_property_name)
 {
     for (auto const* current_element = &element; current_element; current_element = current_element->parent_element()) {
-        if (auto it = current_element->custom_properties().find(custom_property_name); it != current_element->custom_properties().end())
+        if (auto it = current_element->custom_properties().find(custom_property_name.to_string().to_deprecated_string()); it != current_element->custom_properties().end())
             return it->value.value;
     }
     return nullptr;
 }
 
-bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
+bool StyleComputer::expand_variables(DOM::Element& element, StringView property_name, HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>>& dependencies, Parser::TokenStream<Parser::ComponentValue>& source, Vector<Parser::ComponentValue>& dest) const
 {
     // Arbitrary large value chosen to avoid the billion-laughs attack.
     // https://www.w3.org/TR/css-variables-1/#long-variables
@@ -608,10 +606,10 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
         return false;
     }
 
-    auto get_dependency_node = [&](auto name) -> NonnullRefPtr<PropertyDependencyNode> {
+    auto get_dependency_node = [&](FlyString name) -> NonnullRefPtr<PropertyDependencyNode> {
         if (auto existing = dependencies.get(name); existing.has_value())
             return *existing.value();
-        auto new_node = PropertyDependencyNode::create(name);
+        auto new_node = PropertyDependencyNode::create(name.to_string());
         dependencies.set(name, new_node);
         return new_node;
     };
@@ -628,7 +626,7 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
             Parser::TokenStream source_function_contents { source_function.values() };
             if (!expand_variables(element, property_name, dependencies, source_function_contents, function_values))
                 return false;
-            NonnullRefPtr<Parser::Function> function = Parser::Function::create(source_function.name(), move(function_values));
+            NonnullRefPtr<Parser::Function> function = Parser::Function::create(FlyString::from_utf8(source_function.name()).release_value_but_fixme_should_propagate_errors(), move(function_values));
             dest.empend(function);
             continue;
         }
@@ -650,13 +648,13 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
         // but rebuilding it every time.
         if (custom_property_name == property_name)
             return false;
-        auto parent = get_dependency_node(property_name);
-        auto child = get_dependency_node(custom_property_name);
+        auto parent = get_dependency_node(FlyString::from_utf8(property_name).release_value_but_fixme_should_propagate_errors());
+        auto child = get_dependency_node(FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors());
         parent->add_child(child);
         if (parent->has_cycles())
             return false;
 
-        if (auto custom_property_value = get_custom_property(element, custom_property_name)) {
+        if (auto custom_property_value = get_custom_property(element, FlyString::from_utf8(custom_property_name).release_value_but_fixme_should_propagate_errors())) {
             VERIFY(custom_property_value->is_unresolved());
             Parser::TokenStream custom_property_tokens { custom_property_value->as_unresolved().values() };
             if (!expand_variables(element, custom_property_name, dependencies, custom_property_tokens, dest))
@@ -703,7 +701,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
                 if (!attr_value.is_null()) {
                     // FIXME: attr() should also accept an optional type argument, not just strings.
-                    dest.empend(Parser::Token::of_string(attr_value));
+                    dest.empend(Parser::Token::of_string(FlyString::from_utf8(attr_value).release_value_but_fixme_should_propagate_errors()));
                     continue;
                 }
 
@@ -750,7 +748,8 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
             Parser::TokenStream source_function_contents { source_function.values() };
             if (!expand_unresolved_values(element, property_name, source_function_contents, function_values))
                 return false;
-            NonnullRefPtr<Parser::Function> function = Parser::Function::create(source_function.name(), move(function_values));
+            // FIXME: This would be much nicer if we could access the source_function's FlyString value directly.
+            NonnullRefPtr<Parser::Function> function = Parser::Function::create(FlyString::from_utf8(source_function.name()).release_value_but_fixme_should_propagate_errors(), move(function_values));
             dest.empend(function);
             continue;
         }
@@ -779,7 +778,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     Parser::TokenStream unresolved_values_without_variables_expanded { unresolved.values() };
     Vector<Parser::ComponentValue> values_with_variables_expanded;
 
-    HashMap<DeprecatedFlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
+    HashMap<FlyString, NonnullRefPtr<PropertyDependencyNode>> dependencies;
     if (!expand_variables(element, string_from_property_id(property_id), dependencies, unresolved_values_without_variables_expanded, values_with_variables_expanded))
         return {};
 
@@ -908,7 +907,7 @@ static DOM::Element const* element_to_inherit_style_from(DOM::Element const* ele
     return parent_element;
 }
 
-static NonnullRefPtr<StyleValue> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+static NonnullRefPtr<StyleValue const> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
@@ -1084,7 +1083,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         else
             weight = Gfx::FontWeight::Black;
     } else if (font_weight->is_calculated()) {
-        auto maybe_weight = font_weight->as_calculated().resolve_integer();
+        auto maybe_weight = const_cast<CalculatedStyleValue&>(font_weight->as_calculated()).resolve_integer();
         if (maybe_weight.has_value())
             weight = maybe_weight.value();
     }
@@ -1153,7 +1152,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = font_size->to_length();
 
         } else if (font_size->is_calculated()) {
-            maybe_length = Length::make_calculated(font_size->as_calculated());
+            maybe_length = Length::make_calculated(const_cast<CalculatedStyleValue&>(font_size->as_calculated()));
         }
         if (maybe_length.has_value()) {
             // FIXME: Support font-size: calc(...)
@@ -1188,7 +1187,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     FontSelector font_selector;
     bool monospace = false;
 
-    auto find_font = [&](DeprecatedString const& family) -> RefPtr<Gfx::Font> {
+    auto find_font = [&](String const& family) -> RefPtr<Gfx::Font const> {
         float font_size_in_pt = font_size_in_px * 0.75f;
         font_selector = { family, font_size_in_pt, weight, width, slope };
 
@@ -1201,13 +1200,13 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         if (auto found_font = FontCache::the().get(font_selector))
             return found_font;
 
-        if (auto found_font = Gfx::FontDatabase::the().get(family, font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
+        if (auto found_font = Gfx::FontDatabase::the().get(family.to_deprecated_string(), font_size_in_pt, weight, width, slope, Gfx::Font::AllowInexactSizeMatch::Yes))
             return found_font;
 
         return {};
     };
 
-    auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font> {
+    auto find_generic_font = [&](ValueID font_id) -> RefPtr<Gfx::Font const> {
         Platform::GenericFont generic_font {};
         switch (font_id) {
         case ValueID::Monospace:
@@ -1239,10 +1238,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         default:
             return {};
         }
-        return find_font(Platform::FontPlugin::the().generic_font_name(generic_font));
+        return find_font(String::from_utf8(Platform::FontPlugin::the().generic_font_name(generic_font)).release_value_but_fixme_should_propagate_errors());
     };
 
-    RefPtr<Gfx::Font> found_font;
+    RefPtr<Gfx::Font const> found_font;
 
     auto family_value = style.property(PropertyID::FontFamily);
     if (family_value->is_value_list()) {
@@ -1251,7 +1250,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (family.is_identifier()) {
                 found_font = find_generic_font(family.to_identifier());
             } else if (family.is_string()) {
-                found_font = find_font(family.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+                found_font = find_font(family.to_string().release_value_but_fixme_should_propagate_errors());
             }
             if (found_font)
                 break;
@@ -1259,7 +1258,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     } else if (family_value->is_identifier()) {
         found_font = find_generic_font(family_value->to_identifier());
     } else if (family_value->is_string()) {
-        found_font = find_font(family_value->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+        found_font = find_font(family_value->to_string().release_value_but_fixme_should_propagate_errors());
     }
 
     if (!found_font) {
@@ -1399,7 +1398,7 @@ ErrorOr<NonnullRefPtr<StyleProperties>> StyleComputer::compute_style(DOM::Elemen
     return style;
 }
 
-PropertyDependencyNode::PropertyDependencyNode(DeprecatedString name)
+PropertyDependencyNode::PropertyDependencyNode(String name)
     : m_name(move(name))
 {
 }
@@ -1520,7 +1519,7 @@ CSSPixelRect StyleComputer::viewport_rect() const
     return {};
 }
 
-void StyleComputer::did_load_font([[maybe_unused]] DeprecatedFlyString const& family_name)
+void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
 {
     document().invalidate_layout();
 }
@@ -1562,7 +1561,7 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         LoadRequest request;
         auto url = m_document.parse_url(candidate_url.value().to_deprecated_string());
         auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
-        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family(), move(loader));
+        const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family().to_string(), move(loader));
     }
 }
 

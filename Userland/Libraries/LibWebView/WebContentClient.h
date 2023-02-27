@@ -21,7 +21,7 @@ class WebContentClient final
     IPC_CLIENT_CONNECTION(WebContentClient, "/tmp/session/%sid/portal/webcontent"sv);
 
 public:
-    WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket>, ViewImplementation&);
+    WebContentClient(NonnullOwnPtr<Core::LocalSocket>, ViewImplementation&);
 
     Function<void()> on_web_content_process_crash;
 

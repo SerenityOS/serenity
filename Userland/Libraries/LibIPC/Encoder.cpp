@@ -11,6 +11,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/NumericLimits.h>
+#include <AK/Time.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>
@@ -71,6 +72,12 @@ template<>
 ErrorOr<void> encode(Encoder& encoder, JsonValue const& value)
 {
     return encoder.encode(value.serialized<StringBuilder>());
+}
+
+template<>
+ErrorOr<void> encode(Encoder& encoder, Time const& value)
+{
+    return encoder.encode(value.to_nanoseconds());
 }
 
 template<>

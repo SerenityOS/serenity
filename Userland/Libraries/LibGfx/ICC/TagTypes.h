@@ -137,6 +137,7 @@ class CurveTagData : public TagData {
 public:
     static constexpr TagTypeSignature Type { 0x63757276 }; // 'curv'
 
+    static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset);
     static ErrorOr<NonnullRefPtr<CurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
     CurveTagData(u32 offset, u32 size, Vector<u16> values)
@@ -200,6 +201,11 @@ public:
     {
         VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+
+        VERIFY(number_of_input_table_entries >= 2);
+        VERIFY(number_of_input_table_entries <= 4096);
+        VERIFY(number_of_output_table_entries >= 2);
+        VERIFY(number_of_output_table_entries <= 4096);
     }
 
     EMatrix3x3 const& e_matrix() const { return m_e; }
@@ -254,6 +260,9 @@ public:
     {
         VERIFY(m_input_tables.size() == number_of_input_channels * number_of_input_table_entries);
         VERIFY(m_output_tables.size() == number_of_output_channels * number_of_output_table_entries);
+
+        VERIFY(number_of_input_table_entries == 256);
+        VERIFY(number_of_output_table_entries == 256);
     }
 
     EMatrix3x3 const& e_matrix() const { return m_e; }
@@ -303,6 +312,8 @@ struct CLUTData {
     Variant<Vector<u8>, Vector<u16>> values;
 };
 
+using LutCurveType = NonnullRefPtr<TagData>; // FIXME: Variant<CurveTagData, ParametricCurveTagData> instead?
+
 // ICC v4, 10.12 lutAToBType
 class LutAToBTagData : public TagData {
 public:
@@ -310,32 +321,51 @@ public:
 
     static ErrorOr<NonnullRefPtr<LutAToBTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
-    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<CLUTData> clut, Optional<EMatrix3x4> e)
+    LutAToBTagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels,
+        Optional<Vector<LutCurveType>> a_curves, Optional<CLUTData> clut, Optional<Vector<LutCurveType>> m_curves, Optional<EMatrix3x4> e, Vector<LutCurveType> b_curves)
         : TagData(offset, size, Type)
         , m_number_of_input_channels(number_of_input_channels)
         , m_number_of_output_channels(number_of_output_channels)
+        , m_a_curves(move(a_curves))
         , m_clut(move(clut))
+        , m_m_curves(move(m_curves))
         , m_e(e)
+        , m_b_curves(move(b_curves))
     {
+        VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_input_channels);
+        VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_output_channels);
+        VERIFY(m_b_curves.size() == m_number_of_output_channels);
+
+        VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
+        VERIFY(m_a_curves.has_value() == m_clut.has_value());
+        VERIFY(m_m_curves.has_value() == m_e.has_value());
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
     u8 number_of_output_channels() const { return m_number_of_output_channels; }
 
+    Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
     Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
     Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
 
 private:
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
 
-    // "Only the following combinations are permitted:
+    // "It is possible to use any or all of these processing elements. At least one processing element shall be included.
+    //  Only the following combinations are permitted:
     //  - B;
     //  - M, Matrix, B;
     //  - A, CLUT, B;
     //  - A, CLUT, M, Matrix, B."
+    // This seems to imply that the B curve is not in fact optional.
+    Optional<Vector<LutCurveType>> m_a_curves;
     Optional<CLUTData> m_clut;
+    Optional<Vector<LutCurveType>> m_m_curves;
     Optional<EMatrix3x4> m_e;
+    Vector<LutCurveType> m_b_curves;
 };
 
 // ICC v4, 10.13 lutBToAType
@@ -345,32 +375,51 @@ public:
 
     static ErrorOr<NonnullRefPtr<LutBToATagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
-    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels, Optional<EMatrix3x4> e, Optional<CLUTData> clut)
+    LutBToATagData(u32 offset, u32 size, u8 number_of_input_channels, u8 number_of_output_channels,
+        Vector<LutCurveType> b_curves, Optional<EMatrix3x4> e, Optional<Vector<LutCurveType>> m_curves, Optional<CLUTData> clut, Optional<Vector<LutCurveType>> a_curves)
         : TagData(offset, size, Type)
         , m_number_of_input_channels(number_of_input_channels)
         , m_number_of_output_channels(number_of_output_channels)
+        , m_b_curves(move(b_curves))
         , m_e(e)
+        , m_m_curves(move(m_curves))
         , m_clut(move(clut))
+        , m_a_curves(move(a_curves))
     {
+        VERIFY(m_b_curves.size() == m_number_of_input_channels);
+        VERIFY(!m_m_curves.has_value() || m_m_curves->size() == m_number_of_input_channels);
+        VERIFY(!m_a_curves.has_value() || m_a_curves->size() == m_number_of_output_channels);
+
+        VERIFY(m_e.has_value() == m_m_curves.has_value());
+        VERIFY(m_clut.has_value() == m_a_curves.has_value());
+        VERIFY(number_of_input_channels == number_of_output_channels || m_clut.has_value());
     }
 
     u8 number_of_input_channels() const { return m_number_of_input_channels; }
     u8 number_of_output_channels() const { return m_number_of_output_channels; }
 
+    Vector<LutCurveType> const& b_curves() const { return m_b_curves; }
     Optional<EMatrix3x4> const& e_matrix() const { return m_e; }
+    Optional<Vector<LutCurveType>> const& m_curves() const { return m_m_curves; }
     Optional<CLUTData> const& clut() const { return m_clut; }
+    Optional<Vector<LutCurveType>> const& a_curves() const { return m_a_curves; }
 
 private:
     u8 m_number_of_input_channels;
     u8 m_number_of_output_channels;
 
-    // "Only the following combinations are permitted:
+    // "It is possible to use any or all of these processing elements. At least one processing element shall be included.
+    //  Only the following combinations are permitted:
     //  - B;
     //  - B, Matrix, M;
     //  - B, CLUT, A;
     //  - B, Matrix, M, CLUT, A."
+    // This seems to imply that the B curve is not in fact optional.
+    Vector<LutCurveType> m_b_curves;
     Optional<EMatrix3x4> m_e;
+    Optional<Vector<LutCurveType>> m_m_curves;
     Optional<CLUTData> m_clut;
+    Optional<Vector<LutCurveType>> m_a_curves;
 };
 
 // ICC v4, 10.14 measurementType
@@ -500,6 +549,20 @@ public:
     {
         VERIFY(root_names.size() == pcs_coordinates.size());
         VERIFY(root_names.size() * number_of_device_coordinates == device_coordinates.size());
+
+        for (u8 byte : m_prefix.bytes())
+            VERIFY(byte < 128);
+        VERIFY(m_prefix.bytes().size() < 32);
+
+        for (u8 byte : m_suffix.bytes())
+            VERIFY(byte < 128);
+        VERIFY(m_suffix.bytes().size() < 32);
+
+        for (auto const& root_name : m_root_names) {
+            for (u8 byte : root_name.bytes())
+                VERIFY(byte < 128);
+            VERIFY(root_name.bytes().size() < 32);
+        }
     }
 
     // "(least-significant 16 bits reserved for ICC use)"
@@ -508,7 +571,7 @@ public:
     // "If this field is 0, device coordinates are not provided."
     u32 number_of_device_coordinates() const { return m_number_of_device_coordinates; }
 
-    u32 size() { return m_root_names.size(); }
+    u32 size() const { return m_root_names.size(); }
 
     // "In order to maintain maximum portability, it is strongly recommended that
     //  special characters of the 7-bit ASCII set not be used."
@@ -517,13 +580,13 @@ public:
     String const& root_name(u32 index) const { return m_root_names[index]; } // "7-bit ASCII"
 
     // Returns 7-bit ASCII.
-    ErrorOr<String> color_name(u32 index);
+    ErrorOr<String> color_name(u32 index) const;
 
     // "The PCS representation corresponds to the header’s PCS field."
-    XYZOrLAB const& pcs_coordinates(u32 index) { return m_pcs_coordinates[index]; }
+    XYZOrLAB const& pcs_coordinates(u32 index) const { return m_pcs_coordinates[index]; }
 
     // "The device representation corresponds to the header’s “data colour space” field."
-    u16 const* device_coordinates(u32 index)
+    u16 const* device_coordinates(u32 index) const
     {
         VERIFY((index + 1) * m_number_of_device_coordinates <= m_device_coordinates.size());
         return m_device_coordinates.data() + index * m_number_of_device_coordinates;
@@ -575,6 +638,7 @@ public:
 
     static constexpr TagTypeSignature Type { 0x70617261 }; // 'para'
 
+    static ErrorOr<NonnullRefPtr<ParametricCurveTagData>> from_bytes(ReadonlyBytes, u32 offset);
     static ErrorOr<NonnullRefPtr<ParametricCurveTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
 
     ParametricCurveTagData(u32 offset, u32 size, FunctionType function_type, Array<S15Fixed16, 7> parameters)
@@ -587,6 +651,13 @@ public:
     FunctionType function_type() const { return m_function_type; }
 
     static unsigned parameter_count(FunctionType);
+
+    unsigned parameter_count() const { return parameter_count(function_type()); }
+    S15Fixed16 parameter(size_t i) const
+    {
+        VERIFY(i < parameter_count());
+        return m_parameters[i];
+    }
 
     S15Fixed16 g() const { return m_parameters[0]; }
     S15Fixed16 a() const
@@ -647,39 +718,6 @@ private:
     Vector<S15Fixed16, 9> m_values;
 };
 
-// ICC v2, 6.5.17 textDescriptionType
-class TextDescriptionTagData : public TagData {
-public:
-    static constexpr TagTypeSignature Type { 0x64657363 }; // 'desc'
-
-    static ErrorOr<NonnullRefPtr<TextDescriptionTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
-
-    TextDescriptionTagData(u32 offset, u32 size, String ascii_description, u32 unicode_language_code, Optional<String> unicode_description, Optional<String> macintosh_description)
-        : TagData(offset, size, Type)
-        , m_ascii_description(move(ascii_description))
-        , m_unicode_language_code(unicode_language_code)
-        , m_unicode_description(move(unicode_description))
-        , m_macintosh_description(move(macintosh_description))
-    {
-    }
-
-    // Guaranteed to be 7-bit ASCII.
-    String const& ascii_description() const { return m_ascii_description; }
-
-    u32 unicode_language_code() const { return m_unicode_language_code; }
-    Optional<String> const& unicode_description() const { return m_unicode_description; }
-
-    Optional<String> const& macintosh_description() const { return m_macintosh_description; }
-
-private:
-    String m_ascii_description;
-
-    u32 m_unicode_language_code { 0 };
-    Optional<String> m_unicode_description;
-
-    Optional<String> m_macintosh_description;
-};
-
 // ICC v4, 10.23 signatureType
 class SignatureTagData : public TagData {
 public:
@@ -706,6 +744,41 @@ private:
     u32 m_signature;
 };
 
+// ICC v2, 6.5.17 textDescriptionType
+class TextDescriptionTagData : public TagData {
+public:
+    static constexpr TagTypeSignature Type { 0x64657363 }; // 'desc'
+
+    static ErrorOr<NonnullRefPtr<TextDescriptionTagData>> from_bytes(ReadonlyBytes, u32 offset, u32 size);
+
+    TextDescriptionTagData(u32 offset, u32 size, String ascii_description, u32 unicode_language_code, Optional<String> unicode_description, Optional<String> macintosh_description)
+        : TagData(offset, size, Type)
+        , m_ascii_description(move(ascii_description))
+        , m_unicode_language_code(unicode_language_code)
+        , m_unicode_description(move(unicode_description))
+        , m_macintosh_description(move(macintosh_description))
+    {
+        for (u8 byte : m_ascii_description.bytes())
+            VERIFY(byte < 128);
+    }
+
+    // Guaranteed to be 7-bit ASCII.
+    String const& ascii_description() const { return m_ascii_description; }
+
+    u32 unicode_language_code() const { return m_unicode_language_code; }
+    Optional<String> const& unicode_description() const { return m_unicode_description; }
+
+    Optional<String> const& macintosh_description() const { return m_macintosh_description; }
+
+private:
+    String m_ascii_description;
+
+    u32 m_unicode_language_code { 0 };
+    Optional<String> m_unicode_description;
+
+    Optional<String> m_macintosh_description;
+};
+
 // ICC v4, 10.24 textType
 class TextTagData : public TagData {
 public:
@@ -717,6 +790,8 @@ public:
         : TagData(offset, size, Type)
         , m_text(move(text))
     {
+        for (u8 byte : m_text.bytes())
+            VERIFY(byte < 128);
     }
 
     // Guaranteed to be 7-bit ASCII.

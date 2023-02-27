@@ -9,6 +9,7 @@
 #include <Kernel/FileSystem/DevPtsFS/FileSystem.h>
 #include <Kernel/FileSystem/DevPtsFS/Inode.h>
 #include <Kernel/TTY/SlavePTY.h>
+#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 

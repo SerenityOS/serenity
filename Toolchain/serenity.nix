@@ -12,6 +12,7 @@ stdenv.mkDerivation {
     gmp
     libmpc
     e2fsprogs
+    fuse2fs
     patch
     ccache
     rsync
@@ -27,6 +28,7 @@ stdenv.mkDerivation {
     xlibsWrapper
     qemu
     e2fsprogs
+    fuse2fs
   ];
 
   hardeningDisable = [ "format" "fortify" ];

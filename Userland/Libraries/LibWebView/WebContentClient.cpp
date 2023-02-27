@@ -11,7 +11,7 @@
 
 namespace WebView {
 
-WebContentClient::WebContentClient(NonnullOwnPtr<Core::Stream::LocalSocket> socket, ViewImplementation& view)
+WebContentClient::WebContentClient(NonnullOwnPtr<Core::LocalSocket> socket, ViewImplementation& view)
     : IPC::ConnectionToServer<WebContentClientEndpoint, WebContentServerEndpoint>(*this, move(socket))
     , m_view(view)
 {

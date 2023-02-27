@@ -34,7 +34,7 @@ bool Reader::matches_delimiter() const
 
 bool Reader::matches_regular_character() const
 {
-    return !matches_delimiter() && !matches_whitespace();
+    return !done() && !matches_delimiter() && !matches_whitespace();
 }
 
 bool Reader::consume_eol()

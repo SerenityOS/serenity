@@ -58,11 +58,15 @@ int LineBoxFragment::text_index_at(CSSPixels x) const
 
     CSSPixels width_so_far = 0;
     for (auto it = view.begin(); it != view.end(); ++it) {
-        CSSPixels glyph_width = font.glyph_or_emoji_width(*it);
+        auto previous_it = it;
+        CSSPixels glyph_width = font.glyph_or_emoji_width(it);
+
         if ((width_so_far + (glyph_width + glyph_spacing) / 2) > relative_x)
-            return m_start + view.byte_offset_of(it);
+            return m_start + view.byte_offset_of(previous_it);
+
         width_so_far += glyph_width + glyph_spacing;
     }
+
     return m_start + m_length;
 }
 

@@ -20,7 +20,7 @@ class TextEncoder final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(TextEncoder, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<TextEncoder> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<TextEncoder>> construct_impl(JS::Realm&);
 
     virtual ~TextEncoder() override;
 

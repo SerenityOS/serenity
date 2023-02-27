@@ -8,6 +8,7 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/API/VirGL.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibVirtGPU/CommandBufferBuilder.h>
 #include <LibVirtGPU/Device.h>
@@ -38,14 +39,14 @@ static constexpr auto vert_shader = "VERT\n"
                                     "  4: MOV_SAT OUT[1], IN[1]\n"
                                     "  5: END\n"sv;
 
-Device::Device(NonnullOwnPtr<Core::Stream::File> gpu_file)
+Device::Device(NonnullOwnPtr<Core::File> gpu_file)
     : m_gpu_file { move(gpu_file) }
 {
 }
 
 ErrorOr<NonnullOwnPtr<Device>> Device::create(Gfx::IntSize min_size)
 {
-    auto file = TRY(Core::Stream::File::open("/dev/gpu/render0"sv, Core::Stream::OpenMode::ReadWrite));
+    auto file = TRY(Core::File::open("/dev/gpu/render0"sv, Core::File::OpenMode::ReadWrite));
     auto device = make<Device>(move(file));
     TRY(device->initialize_context(min_size));
     return device;

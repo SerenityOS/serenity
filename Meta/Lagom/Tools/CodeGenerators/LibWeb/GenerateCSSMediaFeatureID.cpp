@@ -10,8 +10,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 
-ErrorOr<void> generate_header_file(JsonObject& media_feature_data, Core::Stream::File& file);
-ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core::Stream::File& file);
+ErrorOr<void> generate_header_file(JsonObject& media_feature_data, Core::File& file);
+ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core::File& file);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -29,8 +29,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(json.is_object());
     auto media_feature_data = json.as_object();
 
-    auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(Core::File::open(generated_implementation_path, Core::File::OpenMode::Write));
 
     TRY(generate_header_file(media_feature_data, *generated_header_file));
     TRY(generate_implementation_file(media_feature_data, *generated_implementation_file));
@@ -38,7 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     return 0;
 }
 
-ErrorOr<void> generate_header_file(JsonObject& media_feature_data, Core::Stream::File& file)
+ErrorOr<void> generate_header_file(JsonObject& media_feature_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -84,11 +84,13 @@ bool media_feature_accepts_identifier(MediaFeatureID, ValueID);
     return {};
 }
 
-ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core::Stream::File& file)
+ErrorOr<void> generate_implementation_file(JsonObject& media_feature_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
-    generator.append(R"~~~(#include <LibWeb/CSS/MediaFeatureID.h>
+    generator.append(R"~~~(
+#include <LibWeb/CSS/MediaFeatureID.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS {
 
@@ -100,7 +102,7 @@ Optional<MediaFeatureID> media_feature_id_from_string(StringView string)
         member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.append(R"~~~(
-    if (string.equals_ignoring_case("@name@"sv))
+    if (Infra::is_ascii_case_insensitive_match(string, "@name@"sv))
         return MediaFeatureID::@name:titlecase@;
 )~~~");
     });

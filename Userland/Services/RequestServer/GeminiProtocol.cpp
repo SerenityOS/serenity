@@ -26,7 +26,7 @@ OwnPtr<Request> GeminiProtocol::start_request(ConnectionFromClient& client, Depr
     if (pipe_result.is_error())
         return {};
 
-    auto output_stream = MUST(Core::Stream::File::adopt_fd(pipe_result.value().write_fd, Core::Stream::OpenMode::Write));
+    auto output_stream = MUST(Core::File::adopt_fd(pipe_result.value().write_fd, Core::File::OpenMode::Write));
     auto job = Gemini::Job::construct(request, *output_stream);
     auto protocol_request = GeminiRequest::create_with_job({}, client, *job, move(output_stream));
     protocol_request->set_request_fd(pipe_result.value().read_fd);

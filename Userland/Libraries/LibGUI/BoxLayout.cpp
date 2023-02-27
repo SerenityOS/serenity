@@ -17,8 +17,9 @@ REGISTER_LAYOUT(GUI, VerticalBoxLayout)
 
 namespace GUI {
 
-BoxLayout::BoxLayout(Orientation orientation)
-    : m_orientation(orientation)
+BoxLayout::BoxLayout(Orientation orientation, Margins margins, int spacing)
+    : Layout(margins, spacing)
+    , m_orientation(orientation)
 {
     register_property(
         "orientation", [this] { return m_orientation == Gfx::Orientation::Vertical ? "Vertical" : "Horizontal"; }, nullptr);

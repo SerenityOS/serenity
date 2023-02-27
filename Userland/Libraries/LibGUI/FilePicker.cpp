@@ -6,7 +6,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -224,7 +224,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     ok_button.set_enabled(m_mode == Mode::OpenFolder || !m_filename_textbox->text().is_empty());
 
     auto& cancel_button = *widget->find_descendant_of_type_named<GUI::Button>("cancel_button");
-    cancel_button.set_text("Cancel");
+    cancel_button.set_text("Cancel"_short_string);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);
     };
@@ -310,7 +310,7 @@ void FilePicker::on_file_return()
         path = LexicalPath::join(m_model->root_path(), path).string();
     }
 
-    bool file_exists = Core::File::exists(path);
+    bool file_exists = Core::DeprecatedFile::exists(path);
 
     if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
         MessageBox::show(this, DeprecatedString::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found"sv, MessageBox::Type::Error, MessageBox::InputType::OK);

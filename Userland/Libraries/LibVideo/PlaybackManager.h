@@ -25,6 +25,8 @@
 namespace Video {
 
 struct FrameQueueItem {
+    static constexpr Time no_timestamp = Time::min();
+
     enum class Type {
         Frame,
         Error,
@@ -35,14 +37,14 @@ struct FrameQueueItem {
         return FrameQueueItem(move(bitmap), timestamp);
     }
 
-    static FrameQueueItem error_marker(DecoderError&& error)
+    static FrameQueueItem error_marker(DecoderError&& error, Time timestamp)
     {
-        return FrameQueueItem(move(error));
+        return FrameQueueItem(move(error), timestamp);
     }
 
-    bool is_frame() const { return m_data.has<FrameData>(); }
-    RefPtr<Gfx::Bitmap> bitmap() const { return m_data.get<FrameData>().bitmap; }
-    Time timestamp() const { return m_data.get<FrameData>().timestamp; }
+    bool is_frame() const { return m_data.has<RefPtr<Gfx::Bitmap>>(); }
+    RefPtr<Gfx::Bitmap> bitmap() const { return m_data.get<RefPtr<Gfx::Bitmap>>(); }
+    Time timestamp() const { return m_timestamp; }
 
     bool is_error() const { return m_data.has<DecoderError>(); }
     DecoderError const& error() const { return m_data.get<DecoderError>(); }
@@ -56,27 +58,26 @@ struct FrameQueueItem {
     DeprecatedString debug_string() const
     {
         if (is_error())
-            return error().string_literal();
+            return DeprecatedString::formatted("{} at {}ms", error().string_literal(), timestamp().to_milliseconds());
         return DeprecatedString::formatted("frame at {}ms", timestamp().to_milliseconds());
     }
 
 private:
-    struct FrameData {
-        RefPtr<Gfx::Bitmap> bitmap;
-        Time timestamp;
-    };
-
     FrameQueueItem(RefPtr<Gfx::Bitmap> bitmap, Time timestamp)
-        : m_data(FrameData { move(bitmap), timestamp })
+        : m_data(move(bitmap))
+        , m_timestamp(timestamp)
     {
+        VERIFY(m_timestamp != no_timestamp);
     }
 
-    FrameQueueItem(DecoderError&& error)
+    FrameQueueItem(DecoderError&& error, Time timestamp)
         : m_data(move(error))
+        , m_timestamp(timestamp)
     {
     }
 
-    Variant<Empty, FrameData, DecoderError> m_data;
+    Variant<Empty, RefPtr<Gfx::Bitmap>, DecoderError> m_data;
+    Time m_timestamp;
 };
 
 static constexpr size_t FRAME_BUFFER_COUNT = 4;
@@ -106,8 +107,6 @@ public:
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
 
-    void on_decoder_error(DecoderError error);
-
     Time current_playback_time();
     Time duration();
 
@@ -115,6 +114,9 @@ public:
 
 private:
     class PlaybackStateHandler;
+    // Abstract class to allow resuming play/pause after the state is completed.
+    class ResumingStateHandler;
+    class StartingStateHandler;
     class PlayingStateHandler;
     class PausedStateHandler;
     class BufferingStateHandler;
@@ -130,6 +132,9 @@ private:
 
     void dispatch_decoder_error(DecoderError error);
     void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
+    // Returns whether we changed playback states. If so, any PlaybackStateHandler processing must cease.
+    [[nodiscard]] bool dispatch_frame_queue_item(FrameQueueItem&&);
+    void dispatch_state_change();
     void dispatch_fatal_error(Error);
 
     Core::Object& m_event_handler;

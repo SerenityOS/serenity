@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -278,6 +279,14 @@ public:
             hash = pair_int_hash(hash, entry_hash);
         }
         return hash;
+    }
+
+    ErrorOr<HashMap<K, V>> clone()
+    {
+        HashMap<K, V> hash_map_clone;
+        for (auto& it : *this)
+            TRY(hash_map_clone.try_set(it.key, it.value));
+        return hash_map_clone;
     }
 
 private:

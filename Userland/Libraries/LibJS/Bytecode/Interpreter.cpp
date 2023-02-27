@@ -44,7 +44,8 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
     TemporaryChange restore_executable { m_current_executable, &executable };
-    VERIFY(m_saved_exception.is_null());
+    TemporaryChange restore_saved_jump { m_scheduled_jump, static_cast<BasicBlock const*>(nullptr) };
+    TemporaryChange restore_saved_exception { m_saved_exception, {} };
 
     bool pushed_execution_context = false;
     ExecutionContext execution_context(vm().heap());
@@ -74,8 +75,10 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         Bytecode::InstructionStreamIterator pc(m_current_block->instruction_stream());
         TemporaryChange temp_change { m_pc, &pc };
 
+        // FIXME: This is getting kinda spaghetti-y
         bool will_jump = false;
         bool will_return = false;
+        bool will_yield = false;
         while (!pc.at_end()) {
             auto& instruction = *pc;
             auto ran_or_error = instruction.execute(*this);
@@ -112,6 +115,12 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
             }
             if (!m_return_value.is_empty()) {
                 will_return = true;
+                // Note: A `yield` statement will not go through a finally statement,
+                //       hence we need to set a flag to not do so,
+                //       but we generate a Yield Operation in the case of returns in
+                //       generators as well, so we need to check if it will actually
+                //       continue or is a `return` in disguise
+                will_yield = instruction.type() == Instruction::Type::Yield && static_cast<Op::Yield const&>(instruction).continuation().has_value();
                 break;
             }
             ++pc;
@@ -120,7 +129,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
         if (will_jump)
             continue;
 
-        if (!unwind_contexts().is_empty()) {
+        if (!unwind_contexts().is_empty() && !will_yield) {
             auto& unwind_context = unwind_contexts().last();
             if (unwind_context.executable == m_current_executable && unwind_context.finalizer) {
                 m_saved_return_value = make_handle(m_return_value);
@@ -145,11 +154,11 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
 
     if constexpr (JS_BYTECODE_DEBUG) {
         for (size_t i = 0; i < registers().size(); ++i) {
-            DeprecatedString value_string;
+            String value_string;
             if (registers()[i].is_empty())
-                value_string = "(empty)";
+                value_string = MUST("(empty)"_string);
             else
-                value_string = registers()[i].to_string_without_side_effects();
+                value_string = MUST(registers()[i].to_string_without_side_effects());
             dbgln("[{:3}] {}", i, value_string);
         }
     }
@@ -160,7 +169,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_return_value.is_empty()) {
         return_value = m_return_value;
         m_return_value = {};
-    } else if (!m_saved_return_value.is_null()) {
+    } else if (!m_saved_return_value.is_null() && m_saved_exception.is_null()) {
         return_value = m_saved_return_value.value();
         m_saved_return_value = {};
     }
@@ -183,6 +192,7 @@ Interpreter::ValueAndFrame Interpreter::run_and_return_frame(Executable const& e
     if (!m_saved_exception.is_null()) {
         Value thrown_value = m_saved_exception.value();
         m_saved_exception = {};
+        m_saved_return_value = {};
         if (auto* register_window = frame.get_pointer<NonnullOwnPtr<RegisterWindow>>())
             return { throw_completion(thrown_value), move(*register_window) };
         return { throw_completion(thrown_value), nullptr };
@@ -217,7 +227,14 @@ ThrowCompletionOr<void> Interpreter::continue_pending_unwind(Label const& resume
         return {};
     }
 
-    jump(resume_label);
+    if (m_scheduled_jump) {
+        // FIXME: If we `break` or `continue` in the finally, we need to clear
+        //        this field
+        jump(Label { *m_scheduled_jump });
+        m_scheduled_jump = nullptr;
+    } else {
+        jump(resume_label);
+    }
     return {};
 }
 

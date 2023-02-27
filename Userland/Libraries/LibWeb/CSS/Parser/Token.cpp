@@ -1,140 +1,139 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <LibWeb/CSS/Parser/Token.h>
 #include <LibWeb/CSS/Serialize.h>
 
 namespace Web::CSS::Parser {
 
-DeprecatedString Token::to_deprecated_string() const
+ErrorOr<String> Token::to_string() const
 {
     StringBuilder builder;
 
     switch (m_type) {
     case Type::EndOfFile:
-        return "";
+        return String {};
     case Type::Ident:
         return serialize_an_identifier(ident());
     case Type::Function:
-        return DeprecatedString::formatted("{}(", serialize_an_identifier(function()));
+        return String::formatted("{}(", TRY(serialize_an_identifier(function())));
     case Type::AtKeyword:
-        return DeprecatedString::formatted("@{}", serialize_an_identifier(at_keyword()));
+        return String::formatted("@{}", TRY(serialize_an_identifier(at_keyword())));
     case Type::Hash: {
         switch (m_hash_type) {
         case HashType::Id:
-            return DeprecatedString::formatted("#{}", serialize_an_identifier(hash_value()));
+            return String::formatted("#{}", TRY(serialize_an_identifier(hash_value())));
         case HashType::Unrestricted:
-            return DeprecatedString::formatted("#{}", hash_value());
+            return String::formatted("#{}", hash_value());
         }
         VERIFY_NOT_REACHED();
     }
     case Type::String:
         return serialize_a_string(string());
     case Type::BadString:
-        return "";
+        return String {};
     case Type::Url:
         return serialize_a_url(url());
     case Type::BadUrl:
-        return "url()";
+        return "url()"_string;
     case Type::Delim:
-        return m_value;
+        return String { m_value };
     case Type::Number:
-        return DeprecatedString::number(m_number_value.value());
+        return String::number(m_number_value.value());
     case Type::Percentage:
-        return DeprecatedString::formatted("{}%", m_number_value.value());
+        return String::formatted("{}%", m_number_value.value());
     case Type::Dimension:
-        return DeprecatedString::formatted("{}{}", m_number_value.value(), dimension_unit());
+        return String::formatted("{}{}", m_number_value.value(), dimension_unit());
     case Type::Whitespace:
-        return " ";
+        return " "_short_string;
     case Type::CDO:
-        return "<!--";
+        return "<!--"_string;
     case Type::CDC:
-        return "-->";
+        return "-->"_short_string;
     case Type::Colon:
-        return ":";
+        return ":"_short_string;
     case Type::Semicolon:
-        return ";";
+        return ";"_short_string;
     case Type::Comma:
-        return ",";
+        return ","_short_string;
     case Type::OpenSquare:
-        return "[";
+        return "["_short_string;
     case Type::CloseSquare:
-        return "]";
+        return "]"_short_string;
     case Type::OpenParen:
-        return "(";
+        return "("_short_string;
     case Type::CloseParen:
-        return ")";
+        return ")"_short_string;
     case Type::OpenCurly:
-        return "{";
+        return "{"_short_string;
     case Type::CloseCurly:
-        return "}";
+        return "}"_short_string;
     case Type::Invalid:
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-DeprecatedString Token::to_debug_string() const
+ErrorOr<String> Token::to_debug_string() const
 {
     switch (m_type) {
     case Type::Invalid:
         VERIFY_NOT_REACHED();
 
     case Type::EndOfFile:
-        return "__EOF__";
+        return "__EOF__"_string;
     case Type::Ident:
-        return DeprecatedString::formatted("Ident: {}", ident());
+        return String::formatted("Ident: {}", ident());
     case Type::Function:
-        return DeprecatedString::formatted("Function: {}", function());
+        return String::formatted("Function: {}", function());
     case Type::AtKeyword:
-        return DeprecatedString::formatted("AtKeyword: {}", at_keyword());
+        return String::formatted("AtKeyword: {}", at_keyword());
     case Type::Hash:
-        return DeprecatedString::formatted("Hash: {} (hash_type: {})", hash_value(), m_hash_type == HashType::Unrestricted ? "Unrestricted" : "Id");
+        return String::formatted("Hash: {} (hash_type: {})", hash_value(), m_hash_type == HashType::Unrestricted ? "Unrestricted" : "Id");
     case Type::String:
-        return DeprecatedString::formatted("String: {}", string());
+        return String::formatted("String: {}", string());
     case Type::BadString:
-        return "BadString";
+        return "BadString"_string;
     case Type::Url:
-        return DeprecatedString::formatted("Url: {}", url());
+        return String::formatted("Url: {}", url());
     case Type::BadUrl:
-        return "BadUrl";
+        return "BadUrl"_string;
     case Type::Delim:
-        return DeprecatedString::formatted("Delim: {}", m_value);
+        return String::formatted("Delim: {}", m_value);
     case Type::Number:
-        return DeprecatedString::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
+        return String::formatted("Number: {}{} (number_type: {})", m_number_value.value() > 0 && m_number_value.is_integer_with_explicit_sign() ? "+" : "", m_number_value.value(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Percentage:
-        return DeprecatedString::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number");
+        return String::formatted("Percentage: {}% (number_type: {})", percentage(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Dimension:
-        return DeprecatedString::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number");
+        return String::formatted("Dimension: {}{} (number_type: {})", dimension_value(), dimension_unit(), m_number_value.is_integer() ? "Integer" : "Number");
     case Type::Whitespace:
-        return "Whitespace";
+        return "Whitespace"_string;
     case Type::CDO:
-        return "CDO";
+        return "CDO"_string;
     case Type::CDC:
-        return "CDC";
+        return "CDC"_string;
     case Type::Colon:
-        return "Colon";
+        return "Colon"_string;
     case Type::Semicolon:
-        return "Semicolon";
+        return "Semicolon"_string;
     case Type::Comma:
-        return "Comma";
+        return "Comma"_string;
     case Type::OpenSquare:
-        return "OpenSquare";
+        return "OpenSquare"_string;
     case Type::CloseSquare:
-        return "CloseSquare";
+        return "CloseSquare"_string;
     case Type::OpenParen:
-        return "OpenParen";
+        return "OpenParen"_string;
     case Type::CloseParen:
-        return "CloseParen";
+        return "CloseParen"_string;
     case Type::OpenCurly:
-        return "OpenCurly";
+        return "OpenCurly"_string;
     case Type::CloseCurly:
-        return "CloseCurly";
+        return "CloseCurly"_string;
     }
     VERIFY_NOT_REACHED();
 }
@@ -156,62 +155,62 @@ Token::Type Token::mirror_variant() const
     return Type::Invalid;
 }
 
-DeprecatedString Token::bracket_string() const
+StringView Token::bracket_string() const
 {
     if (is(Token::Type::OpenCurly)) {
-        return "{";
+        return "{"sv;
     }
 
     if (is(Token::Type::CloseCurly)) {
-        return "}";
+        return "}"sv;
     }
 
     if (is(Token::Type::OpenSquare)) {
-        return "[";
+        return "["sv;
     }
 
     if (is(Token::Type::CloseSquare)) {
-        return "]";
+        return "]"sv;
     }
 
     if (is(Token::Type::OpenParen)) {
-        return "(";
+        return "("sv;
     }
 
     if (is(Token::Type::CloseParen)) {
-        return ")";
+        return ")"sv;
     }
 
-    return "";
+    return ""sv;
 }
 
-DeprecatedString Token::bracket_mirror_string() const
+StringView Token::bracket_mirror_string() const
 {
     if (is(Token::Type::OpenCurly)) {
-        return "}";
+        return "}"sv;
     }
 
     if (is(Token::Type::CloseCurly)) {
-        return "{";
+        return "{"sv;
     }
 
     if (is(Token::Type::OpenSquare)) {
-        return "]";
+        return "]"sv;
     }
 
     if (is(Token::Type::CloseSquare)) {
-        return "[";
+        return "["sv;
     }
 
     if (is(Token::Type::OpenParen)) {
-        return ")";
+        return ")"sv;
     }
 
     if (is(Token::Type::CloseParen)) {
-        return "(";
+        return "("sv;
     }
 
-    return "";
+    return ""sv;
 }
 
 }

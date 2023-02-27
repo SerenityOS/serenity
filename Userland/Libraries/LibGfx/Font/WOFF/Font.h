@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,14 +39,14 @@ public:
     virtual bool is_fixed_width() const override { return m_input_font->is_fixed_width(); }
 
 private:
-    Font(NonnullRefPtr<Gfx::VectorFont> input_font, ByteBuffer input_font_buffer)
+    Font(NonnullRefPtr<Gfx::VectorFont const> input_font, ByteBuffer input_font_buffer)
         : m_input_font_buffer(move(input_font_buffer))
         , m_input_font(move(input_font))
     {
     }
 
     ByteBuffer m_input_font_buffer;
-    NonnullRefPtr<Gfx::VectorFont> m_input_font;
+    NonnullRefPtr<Gfx::VectorFont const> m_input_font;
 };
 
 }

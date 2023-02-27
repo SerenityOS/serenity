@@ -171,7 +171,7 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     pseudo_element_node->set_generated(true);
     // FIXME: Handle images, and multiple values
     if (pseudo_element_content.type == CSS::ContentData::Type::String) {
-        auto text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data).release_allocated_value_but_fixme_should_propagate_errors();
+        auto text = document.heap().allocate<DOM::Text>(document.realm(), document, pseudo_element_content.data.to_deprecated_string()).release_allocated_value_but_fixme_should_propagate_errors();
         auto text_node = document.heap().allocate_without_realm<Layout::TextNode>(document, *text);
         text_node->set_generated(true);
         push_parent(verify_cast<NodeWithStyle>(*pseudo_element_node));

@@ -79,8 +79,6 @@ public:
 
     static PDFErrorOr<Vector<DeprecatedFlyString>> parse_charset(Reader&&, size_t);
     static PDFErrorOr<Vector<u8>> parse_encoding(Reader&&);
-
-    static HashMap<SID, DeprecatedFlyString> builtin_names;
 };
 
 }

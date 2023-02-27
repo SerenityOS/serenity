@@ -5,7 +5,6 @@
  */
 
 #include "GridTrackSize.h"
-#include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
@@ -62,9 +61,9 @@ ErrorOr<String> GridSize::to_string() const
     case Type::FlexibleLength:
         return String::formatted("{}fr", m_flexible_length);
     case Type::MaxContent:
-        return String::from_utf8("max-content"sv);
+        return "max-content"_string;
     case Type::MinContent:
-        return String::from_utf8("min-content"sv);
+        return "min-content"_string;
     }
     VERIFY_NOT_REACHED();
 }

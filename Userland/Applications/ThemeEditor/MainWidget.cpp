@@ -15,6 +15,7 @@
 #include <Applications/ThemeEditor/MetricPropertyGML.h>
 #include <Applications/ThemeEditor/PathPropertyGML.h>
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
@@ -250,12 +251,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.has_value()) {
-            auto result = FileSystemAccessClient::Client::the().request_file(&window, *m_path, Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().request_file(&window, *m_path, Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value().filename(), result.value().release_stream());
         } else {
-            auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+            auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
             if (result.is_error())
                 return;
             save_to_file(result.value().filename(), result.value().release_stream());
@@ -264,7 +265,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_action));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::Stream::OpenMode::ReadWrite | Core::Stream::OpenMode::Truncate);
+        auto result = FileSystemAccessClient::Client::the().save_file(&window, "Theme", "ini", Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate);
         if (result.is_error())
             return;
         save_to_file(result.value().filename(), result.value().release_stream());
@@ -315,7 +316,7 @@ void MainWidget::set_path(DeprecatedString path)
     update_title();
 }
 
-void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     auto theme = Core::ConfigFile::open(filename.to_deprecated_string(), move(file)).release_value_but_fixme_should_propagate_errors();
 
@@ -434,16 +435,12 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
 
     auto properties_list = TRY(GUI::Widget::try_create());
     scrollable_container->set_widget(properties_list);
-    (void)TRY(properties_list->try_set_layout<GUI::VerticalBoxLayout>());
-    properties_list->layout()->set_spacing(12);
-    properties_list->layout()->set_margins({ 8 });
+    TRY(properties_list->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8 }, 12));
 
     for (auto const& group : property_tab.property_groups) {
         NonnullRefPtr<GUI::GroupBox> group_box = TRY(properties_list->try_add<GUI::GroupBox>(group.title));
-        (void)TRY(group_box->try_set_layout<GUI::VerticalBoxLayout>());
-        group_box->layout()->set_spacing(12);
         // 1px less on the left makes the text line up with the group title.
-        group_box->layout()->set_margins({ 8, 8, 8, 7 });
+        TRY(group_box->try_set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 8, 8, 7 }, 12));
         group_box->set_preferred_height(GUI::SpecialDimension::Fit);
 
         for (auto const& property : group.properties) {
@@ -487,7 +484,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     TRY(row_widget->load_from_gml(flag_property_gml));
 
                     auto& checkbox = *row_widget->find_descendant_of_type_named<GUI::CheckBox>("checkbox");
-                    checkbox.set_text(to_string(role));
+                    checkbox.set_text(String::from_deprecated_string(DeprecatedString(to_string(role))).release_value_but_fixme_should_propagate_errors());
                     checkbox.on_checked = [&, role](bool checked) {
                         set_flag(role, checked);
                     };
@@ -589,8 +586,8 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     bool open_folder = path_picker_target == PathPickerTarget::Folder;
     auto window_title = DeprecatedString::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
     auto target_path = path_input.text();
-    if (Core::File::exists(target_path)) {
-        if (!Core::File::is_directory(target_path))
+    if (Core::DeprecatedFile::exists(target_path)) {
+        if (!Core::DeprecatedFile::is_directory(target_path))
             target_path = LexicalPath::dirname(target_path);
     } else {
         target_path = "/res/icons";
@@ -601,7 +598,7 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     path_input.set_text(*result);
 }
 
-ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::Stream::File> file)
+ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
     auto config_file = TRY(Core::ConfigFile::open(filename.to_deprecated_string(), move(file)));
     auto theme = TRY(Gfx::load_system_theme(config_file));
@@ -669,7 +666,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::Stream::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
 

@@ -15,6 +15,7 @@
 
 #ifndef KERNEL
 #    include <AK/DeprecatedString.h>
+#    include <AK/FlyString.h>
 #    include <AK/Utf16View.h>
 #endif
 
@@ -121,6 +122,11 @@ DeprecatedString StringBuilder::to_deprecated_string() const
 ErrorOr<String> StringBuilder::to_string() const
 {
     return String::from_utf8(string_view());
+}
+
+ErrorOr<FlyString> StringBuilder::to_fly_string() const
+{
+    return FlyString::from_utf8(string_view());
 }
 #endif
 

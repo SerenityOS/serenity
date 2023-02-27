@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
 #include <LibWeb/ARIA/Roles.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/IDLEventListener.h>
 #include <LibWeb/DOM/ShadowRoot.h>
@@ -45,7 +46,9 @@ JS::ThrowCompletionOr<void> HTMLElement::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::HTMLElementPrototype>(realm, "HTMLElement"));
 
-    m_dataset = DOMStringMap::create(*this);
+    m_dataset = TRY(Bindings::throw_dom_exception_if_needed(realm.vm(), [&]() {
+        return DOMStringMap::create(*this);
+    }));
 
     return {};
 }
@@ -278,7 +281,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(DeprecatedFlyString const& type
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(realm(), type);
+    auto event = UIEvents::MouseEvent::create(realm(), type).release_value_but_fixme_should_propagate_errors();
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
@@ -300,7 +303,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(DeprecatedFlyString const& type
     // FIXME: 8. event's getModifierState() method is to return values appropriately describing the current state of the key input device.
 
     // 9. Return the result of dispatching event at target.
-    return target.dispatch_event(*event);
+    return target.dispatch_event(event);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-click

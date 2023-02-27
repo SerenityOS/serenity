@@ -26,15 +26,16 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP:
         set_value(value_log);
         set_step((min_log - max_log) / slider_steps);
     }
-    set_tooltip(m_parameter.name());
-    m_value_label->set_text(DeprecatedString::formatted("{:.2f}", static_cast<double>(m_parameter)));
+    set_tooltip(m_parameter.name().to_deprecated_string());
+    if (m_value_label != nullptr)
+        m_value_label->set_text(DeprecatedString::formatted("{:.2f}", static_cast<double>(m_parameter)));
 
-    on_change = [this](auto value) {
+    on_change = [this](auto raw_value) {
         if (m_currently_setting_from_ui)
             return;
         m_currently_setting_from_ui = true;
         DSP::ParameterFixedPoint real_value;
-        real_value.raw() = value;
+        real_value.raw() = raw_value;
         if (is_logarithmic())
             // FIXME: Implement exponential for fixed point
             real_value = exp2(static_cast<double>(real_value));

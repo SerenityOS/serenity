@@ -157,6 +157,8 @@ set(SOURCES
     FileAPI/File.cpp
     FileAPI/FileList.cpp
     FontCache.cpp
+    Geometry/DOMMatrix.cpp
+    Geometry/DOMMatrixReadOnly.cpp
     Geometry/DOMPoint.cpp
     Geometry/DOMPointReadOnly.cpp
     Geometry/DOMRect.cpp
@@ -185,6 +187,8 @@ set(SOURCES
     HTML/EventNames.cpp
     HTML/Focus.cpp
     HTML/FormAssociatedElement.cpp
+    HTML/FormControlInfrastructure.cpp
+    HTML/FormDataEvent.cpp
     HTML/GlobalEventHandlers.cpp
     HTML/History.cpp
     HTML/HTMLAnchorElement.cpp
@@ -466,6 +470,7 @@ set(SOURCES
     WebIDL/Promise.cpp
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
+    XHR/FormData.cpp
     XHR/ProgressEvent.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp

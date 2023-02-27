@@ -23,9 +23,9 @@ void Intrinsics::create_web_prototype_and_constructor<URLSearchParamsIteratorPro
 
 namespace Web::URL {
 
-JS::NonnullGCPtr<URLSearchParamsIterator> URLSearchParamsIterator::create(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParamsIterator>> URLSearchParamsIterator::create(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)
 {
-    return url_search_params.heap().allocate<URLSearchParamsIterator>(url_search_params.realm(), url_search_params, iteration_kind).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(url_search_params.heap().allocate<URLSearchParamsIterator>(url_search_params.realm(), url_search_params, iteration_kind));
 }
 
 URLSearchParamsIterator::URLSearchParamsIterator(URLSearchParams const& url_search_params, JS::Object::PropertyKind iteration_kind)

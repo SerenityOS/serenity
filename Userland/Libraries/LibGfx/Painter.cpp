@@ -33,6 +33,8 @@
 #include <LibGfx/Quad.h>
 #include <LibGfx/TextDirection.h>
 #include <LibGfx/TextLayout.h>
+#include <LibUnicode/CharacterTypes.h>
+#include <LibUnicode/Emoji.h>
 #include <stdio.h>
 
 #if defined(AK_COMPILER_GCC)
@@ -1395,36 +1397,25 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, u32 code_point, Font const& 
 
 void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, Font const& font, Color color)
 {
-    // FIXME: These should live somewhere else.
-    constexpr u32 text_variation_selector = 0xFE0E;
-    constexpr u32 emoji_variation_selector = 0xFE0F;
-    constexpr u32 regional_indicator_symbol_a = 0x1F1E6;
-    constexpr u32 regional_indicator_symbol_z = 0x1F1FF;
-
-    auto initial_it = it;
     u32 code_point = *it;
     auto next_code_point = it.peek(1);
 
-    ScopeGuard consume_variation_selector = [&] {
+    ScopeGuard consume_variation_selector = [&, initial_it = it] {
+        static auto const variation_selector = Unicode::property_from_string("Variation_Selector"sv);
+        if (!variation_selector.has_value())
+            return;
+
         // If we advanced the iterator to consume an emoji sequence, don't look for another variation selector.
         if (initial_it != it)
             return;
+
         // Otherwise, discard one code point if it's a variation selector.
-        auto next_code_point = it.peek(1);
-        if (next_code_point == text_variation_selector || next_code_point == emoji_variation_selector)
+        if (next_code_point.has_value() && Unicode::code_point_has_property(*next_code_point, *variation_selector))
             ++it;
     };
 
-    auto code_point_is_regional_indicator = code_point >= regional_indicator_symbol_a && code_point <= regional_indicator_symbol_z;
     auto font_contains_glyph = font.contains_glyph(code_point);
-
-    auto check_for_emoji = false
-        // Flag emojis consist of two regional indicators.
-        || code_point_is_regional_indicator
-        // U+00A9 (copyright) or U+00AE (registered) are text glyphs by default,
-        // keycap emojis ({#,*,0-9} U+FE0F U+20E3) start with a regular ASCII character.
-        // Both cases are handled by peeking for the variation selector.
-        || next_code_point == emoji_variation_selector;
+    auto check_for_emoji = Unicode::could_be_start_of_emoji_sequence(it);
 
     // If the font contains the glyph, and we know it's not the start of an emoji, draw a text glyph.
     if (font_contains_glyph && !check_for_emoji) {
@@ -1518,7 +1509,9 @@ void draw_text_line(FloatRect const& a_rect, Utf8View const& text, Font const& f
         if (kerning != 0.0f)
             point.translate_by(direction == TextDirection::LTR ? kerning : -kerning, 0);
 
-        FloatSize glyph_size(font.glyph_or_emoji_width(code_point) + font.glyph_spacing(), font.pixel_size());
+        auto it_copy = it; // The callback function will advance the iterator, so create a copy for this lookup.
+        FloatSize glyph_size(font.glyph_or_emoji_width(it_copy) + font.glyph_spacing(), font.pixel_size());
+
         if (direction == TextDirection::RTL)
             point.translate_by(-glyph_size.width(), 0); // If we are drawing right to left, we have to move backwards before drawing the glyph
         draw_glyph({ point, glyph_size }, it);
@@ -2254,9 +2247,9 @@ void Painter::draw_cubic_bezier_curve(IntPoint control_point_0, IntPoint control
 }
 
 // static
-void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>& callback)
+void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>& callback)
 {
-    if (radii.x() <= 0 || radii.y() <= 0)
+    if (radii.width() <= 0 || radii.height() <= 0)
         return;
 
     auto start = p1;
@@ -2270,8 +2263,8 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
 
     auto relative_start = start - center;
 
-    auto a = radii.x();
-    auto b = radii.y();
+    auto a = radii.width();
+    auto b = radii.height();
 
     // The segments are at most 1 long
     auto largest_radius = max(a, b);
@@ -2306,12 +2299,12 @@ void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint 
 }
 
 // static
-void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatPoint const radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&& callback)
+void Painter::for_each_line_segment_on_elliptical_arc(FloatPoint p1, FloatPoint p2, FloatPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(FloatPoint, FloatPoint)>&& callback)
 {
     for_each_line_segment_on_elliptical_arc(p1, p2, center, radii, x_axis_rotation, theta_1, theta_delta, callback);
 }
 
-void Painter::draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
+void Painter::draw_elliptical_arc(IntPoint p1, IntPoint p2, IntPoint center, FloatSize radii, float x_axis_rotation, float theta_1, float theta_delta, Color color, int thickness, LineStyle style)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
@@ -2480,11 +2473,11 @@ void Gfx::Painter::draw_ui_text(Gfx::IntRect const& rect, StringView text, Gfx::
             if (utf8_view.byte_offset_of(it) >= underline_offset.value()) {
                 int y = text_rect.bottom() + 1;
                 int x1 = text_rect.left() + width;
-                int x2 = x1 + font.glyph_or_emoji_width(*it);
+                int x2 = x1 + font.glyph_or_emoji_width(it);
                 draw_line({ x1, y }, { x2, y }, color);
                 break;
             }
-            width += font.glyph_or_emoji_width(*it) + font.glyph_spacing();
+            width += font.glyph_or_emoji_width(it) + font.glyph_spacing();
         }
     }
 }
@@ -2499,7 +2492,7 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
     auto pixel_metrics = font.pixel_metrics();
     float x = baseline_start.x();
     float y = baseline_start.y() - pixel_metrics.ascent;
-    float space_width = font.glyph_or_emoji_width(' ');
+    float space_width = font.glyph_width(' ');
 
     u32 last_code_point = 0;
 
@@ -2514,7 +2507,7 @@ void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, F
         // FIXME: this is probably not the real space taken for complex emojis
         x += font.glyphs_horizontal_kerning(last_code_point, code_point);
         draw_glyph_or_emoji(FloatPoint { x, y }, code_point_iterator, font, color);
-        x += font.glyph_or_emoji_width(code_point) + font.glyph_spacing();
+        x += font.glyph_or_emoji_width(code_point_iterator) + font.glyph_spacing();
         last_code_point = code_point;
     }
 }

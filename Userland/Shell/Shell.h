@@ -61,16 +61,26 @@
     __ENUMERATE_SHELL_OPTION(verbose, false, "Announce every command that is about to be executed")                  \
     __ENUMERATE_SHELL_OPTION(invoke_program_for_autocomplete, false, "Attempt to use the program being completed itself for autocompletion via --complete")
 
-#define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()           \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)  \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length)        \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length_across) \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_suffix) \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_prefix) \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(regex_replace) \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(filter_glob)   \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(split)         \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(join)
+#define ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS()                          \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(concat_lists)                 \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length)                       \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length_across)                \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_suffix)                \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(remove_prefix)                \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(regex_replace)                \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(filter_glob)                  \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(split)                        \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(join)                         \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(value_or_default)             \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(assign_default)               \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(error_if_empty)               \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(null_or_alternative)          \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(defined_value_or_default)     \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(assign_defined_default)       \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(error_if_unset)               \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(null_if_unset_or_alternative) \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length_of_variable)           \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(reexpand)
 
 namespace Shell {
 
@@ -160,8 +170,8 @@ public:
 
     static bool has_history_event(StringView);
 
-    RefPtr<AST::Value> get_argument(size_t) const;
-    RefPtr<AST::Value> lookup_local_variable(StringView) const;
+    RefPtr<AST::Value const> get_argument(size_t) const;
+    RefPtr<AST::Value const> lookup_local_variable(StringView) const;
     DeprecatedString local_variable_or(StringView, DeprecatedString const&) const;
     void set_local_variable(DeprecatedString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);
@@ -280,8 +290,8 @@ public:
     void restore_ios();
 
     u64 find_last_job_id() const;
-    Job const* find_job(u64 id, bool is_pid = false);
-    Job const* current_job() const { return m_current_job; }
+    Job* find_job(u64 id, bool is_pid = false);
+    Job* current_job() const { return m_current_job; }
     void kill_job(Job const*, int sig);
 
     DeprecatedString get_history_path();
@@ -333,6 +343,8 @@ public:
         OpenFailure,
         OutOfMemory,
         LaunchError,
+        PipeFailure,
+        WriteFailure,
     };
 
     void raise_error(ShellError kind, DeprecatedString description, Optional<AST::Position> position = {})
@@ -376,9 +388,11 @@ public:
 #undef __ENUMERATE_SHELL_OPTION
 
 private:
-    Shell(Line::Editor&, bool attempt_interactive);
+    Shell(Line::Editor&, bool attempt_interactive, bool posix_mode = false);
     Shell();
     virtual ~Shell() override;
+
+    RefPtr<AST::Node> parse(StringView, bool interactive = false, bool as_command = true) const;
 
     void timer_event(Core::TimerEvent&) override;
 
@@ -392,7 +406,7 @@ private:
     void add_entry_to_cache(RunnablePath const&);
     void remove_entry_from_cache(StringView);
     void stop_all_jobs();
-    Job const* m_current_job { nullptr };
+    Job* m_current_job { nullptr };
     LocalFrame* find_frame_containing_local_variable(StringView name);
     LocalFrame const* find_frame_containing_local_variable(StringView name) const
     {
@@ -450,6 +464,7 @@ private:
     bool m_is_interactive { true };
     bool m_is_subshell { false };
     bool m_should_reinstall_signal_handlers { true };
+    bool m_in_posix_mode { false };
 
     ShellError m_error { ShellError::None };
     DeprecatedString m_error_description;

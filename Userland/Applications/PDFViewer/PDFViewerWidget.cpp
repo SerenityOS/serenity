@@ -12,7 +12,6 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/Variant.h>
-#include <LibCore/File.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -340,16 +339,16 @@ void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)
     toolbar.add_separator();
 
     m_show_clipping_paths = toolbar.add<GUI::CheckBox>();
-    m_show_clipping_paths->set_text("Show clipping paths");
+    m_show_clipping_paths->set_text("Show clipping paths"_string.release_value_but_fixme_should_propagate_errors());
     m_show_clipping_paths->set_checked(m_viewer->show_clipping_paths(), GUI::AllowCallback::No);
     m_show_clipping_paths->on_checked = [&](auto checked) { m_viewer->set_show_clipping_paths(checked); };
     m_show_images = toolbar.add<GUI::CheckBox>();
-    m_show_images->set_text("Show images");
+    m_show_images->set_text("Show images"_string.release_value_but_fixme_should_propagate_errors());
     m_show_images->set_checked(m_viewer->show_images(), GUI::AllowCallback::No);
     m_show_images->on_checked = [&](auto checked) { m_viewer->set_show_images(checked); };
 }
 
-void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
+void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
     auto maybe_error = try_open_file(path, move(file));
     if (maybe_error.is_error()) {
@@ -360,7 +359,7 @@ void PDFViewerWidget::open_file(StringView path, NonnullOwnPtr<Core::Stream::Fil
     }
 }
 
-PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::Stream::File> file)
+PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
     window()->set_title(DeprecatedString::formatted("{} - PDF Viewer", path));
 

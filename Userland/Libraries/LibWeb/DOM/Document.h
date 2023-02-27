@@ -82,10 +82,10 @@ public:
         HTML
     };
 
-    static JS::NonnullGCPtr<Document> create_and_initialize(Type, DeprecatedString content_type, HTML::NavigationParams);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, DeprecatedString content_type, HTML::NavigationParams);
 
-    static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
-    static JS::NonnullGCPtr<Document> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
     virtual ~Document() override;
 
     // https://w3c.github.io/selection-api/#dom-document-getselection

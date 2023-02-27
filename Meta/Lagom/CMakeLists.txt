@@ -333,6 +333,10 @@ install(TARGETS LibC LibCrypt LibSystem NoCoverage EXPORT LagomTargets)
 add_serenity_subdirectory(AK)
 add_serenity_subdirectory(Userland/Libraries/LibCore)
 target_link_libraries(LibCore PRIVATE Threads::Threads)
+if (${CMAKE_SYSTEM_NAME} MATCHES "NetBSD")
+    # NetBSD has its shm_open and shm_unlink functions in librt so we need to link that
+    target_link_libraries(LibCore PRIVATE librt.so)
+endif()
 target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
@@ -400,6 +404,7 @@ if (BUILD_LAGOM)
         list(APPEND lagom_standard_libraries Web)
 
         # WebView
+        list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/AccessibilityTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/DOMTreeModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/StylePropertiesModel.cpp")
         list(APPEND LIBWEBVIEW_SOURCES "../../Userland/Libraries/LibWebView/ViewImplementation.cpp")
@@ -422,9 +427,7 @@ if (BUILD_LAGOM)
         unset(GENERATED_SOURCES)
     endif()
 
-    # FIXME: Excluding arm64 is a temporary hack to circumvent a build problem
-    #        for Lagom on Apple M1
-    if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
+    if (NOT EMSCRIPTEN)
         # FIXME: Create a LIBELF_SOURCES macro similar to AK
         file(GLOB LIBELF_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibELF/*.cpp")
         # There's no way we can reliably make the dynamic loading classes cross platform
@@ -480,6 +483,12 @@ if (BUILD_LAGOM)
         if (NOT CMAKE_SYSTEM_PROCESSOR MATCHES "arm64" AND NOT EMSCRIPTEN)
             add_executable(disasm ../../Userland/Utilities/disasm.cpp)
             target_link_libraries(disasm LibCore LibELF LibX86 LibMain)
+        endif()
+
+        if (NOT EMSCRIPTEN)
+            # LibELF is part of LibC in SerenityOS builds, but not in Lagom.
+            add_executable(file ../../Userland/Utilities/file.cpp)
+            target_link_libraries(file LibCompress LibCore LibELF LibGfx LibIPC LibMain)
         endif()
 
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
@@ -543,7 +552,7 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(wasm ../../Userland/Utilities/wasm.cpp)
-        target_link_libraries(wasm LibCore LibWasm LibLine LibMain)
+        target_link_libraries(wasm LibCore LibWasm LibLine LibMain LibJS)
 
         add_executable(xml ../../Userland/Utilities/xml.cpp)
         target_link_libraries(xml LibCore LibXML LibMain)
@@ -635,12 +644,14 @@ if (BUILD_LAGOM)
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
         target_link_libraries(test-wasm LibCore LibTest LibWasm LibJS)
-        # FIXME: Don't require passing test-common.js path if you only want to pass a custom Test root path
         add_test(
             NAME WasmParser
-            COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests ${SERENITY_PROJECT_ROOT}/Userland/Libraries/LibJS/Tests/test-common.js
+            COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests
         )
-        set_tests_properties(WasmParser PROPERTIES SKIP_RETURN_CODE 1)
+        set_tests_properties(WasmParser PROPERTIES
+            SKIP_RETURN_CODE 1
+            ENVIRONMENT SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}
+        )
 
         # Tests that are not LibTest based
         # Shell

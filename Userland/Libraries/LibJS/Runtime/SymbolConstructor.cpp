@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +44,7 @@ ThrowCompletionOr<Value> SymbolConstructor::call()
     auto& vm = this->vm();
     if (vm.argument(0).is_undefined())
         return Symbol::create(vm, {}, false);
-    return Symbol::create(vm, TRY(vm.argument(0).to_deprecated_string(vm)), false);
+    return Symbol::create(vm, TRY(vm.argument(0).to_string(vm)), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
@@ -57,7 +57,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> SymbolConstructor::construct(FunctionObj
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     // 1. Let stringKey be ? ToString(key).
-    auto string_key = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto string_key = TRY(vm.argument(0).to_string(vm));
 
     // 2. For each element e of the GlobalSymbolRegistry List, do
     auto result = vm.global_symbol_registry().get(string_key);
@@ -84,11 +84,13 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);
     if (!argument.is_symbol())
-        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, argument.to_string_without_side_effects());
+        return vm.throw_completion<TypeError>(ErrorType::NotASymbol, TRY_OR_THROW_OOM(vm, argument.to_string_without_side_effects()));
 
     auto& symbol = argument.as_symbol();
-    if (symbol.is_global())
-        return PrimitiveString::create(vm, symbol.description());
+    if (symbol.is_global()) {
+        // NOTE: Global symbols should always have a description string
+        return PrimitiveString::create(vm, *symbol.description());
+    }
 
     return js_undefined();
 }

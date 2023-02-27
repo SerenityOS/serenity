@@ -22,4 +22,5 @@ enum class FileOperation {
 void delete_paths(Vector<DeprecatedString> const&, bool should_confirm, GUI::Window*);
 
 ErrorOr<void> run_file_operation(FileOperation, Vector<DeprecatedString> const& sources, DeprecatedString const& destination, GUI::Window*);
+ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& destination, GUI::Window* window);
 }

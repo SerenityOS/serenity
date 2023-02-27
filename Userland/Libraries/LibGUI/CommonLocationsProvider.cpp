@@ -8,9 +8,9 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/Vector.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/Stream.h>
 #include <LibGUI/CommonLocationsProvider.h>
 #include <unistd.h>
 
@@ -25,7 +25,7 @@ static void initialize_if_needed()
         return;
 
     auto user_config = DeprecatedString::formatted("{}/CommonLocations.json", Core::StandardPaths::config_directory());
-    if (Core::File::exists(user_config)) {
+    if (Core::DeprecatedFile::exists(user_config)) {
         auto maybe_error = CommonLocationsProvider::load_from_json(user_config);
         if (!maybe_error.is_error())
             return;
@@ -42,7 +42,7 @@ static void initialize_if_needed()
 
 ErrorOr<void> CommonLocationsProvider::load_from_json(StringView json_path)
 {
-    auto file = TRY(Core::Stream::File::open(json_path, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open(json_path, Core::File::OpenMode::Read));
     auto json = JsonValue::from_string(TRY(file->read_until_eof()));
     if (json.is_error())
         return Error::from_string_literal("File is not a valid JSON");

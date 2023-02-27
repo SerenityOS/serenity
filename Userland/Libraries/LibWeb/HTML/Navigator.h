@@ -22,7 +22,7 @@ class Navigator : public Bindings::PlatformObject
     WEB_PLATFORM_OBJECT(Navigator, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Navigator> create(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> create(JS::Realm&);
 
     // FIXME: Implement NavigatorContentUtilsMixin
 

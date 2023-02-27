@@ -887,6 +887,41 @@ private:
     Optional<Label> m_finalizer_target;
 };
 
+class ScheduleJump final : public Instruction {
+public:
+    // Note: We use this instruction to tell the next `finally` block to
+    //       continue execution with a specific break/continue target;
+    // FIXME: We currently don't clear the interpreter internal flag, when we change
+    //        the control-flow (`break`, `continue`) in a finally-block,
+    // FIXME: .NET on x86_64 uses a call to the finally instead, which could make this
+    //        easier, at the cost of making control-flow changes (`break`, `continue`, `return`)
+    //        in the finally-block more difficult, but as stated above, those
+    //        aren't handled 100% correctly at the moment anyway
+    //        It might be worth investigating a similar mechanism
+    constexpr static bool IsTerminator = true;
+
+    ScheduleJump(Label target)
+        : Instruction(Type::ScheduleJump)
+        , m_target(target)
+    {
+    }
+
+    Label target() const { return m_target; }
+
+    ThrowCompletionOr<void> execute_impl(Bytecode::Interpreter&) const;
+    void replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+    {
+        if (&m_target.block() == &from)
+            m_target = Label { to };
+    }
+    void replace_references_impl(Register, Register) { }
+
+    DeprecatedString to_deprecated_string_impl(Bytecode::Executable const&) const;
+
+private:
+    Label m_target;
+};
+
 class LeaveEnvironment final : public Instruction {
 public:
     LeaveEnvironment(EnvironmentMode mode)

@@ -17,13 +17,13 @@ class PageNode : public Node {
 public:
     virtual ~PageNode() override = default;
 
-    PageNode(NonnullRefPtr<SectionNode> section, String page)
+    PageNode(NonnullRefPtr<SectionNode const> section, String page)
         : m_section(move(section))
         , m_page(move(page))
     {
     }
 
-    virtual ErrorOr<Span<NonnullRefPtr<Node>>> children() const override;
+    virtual ErrorOr<Span<NonnullRefPtr<Node const>>> children() const override;
     virtual Node const* parent() const override;
     virtual ErrorOr<String> name() const override { return m_page; };
     virtual bool is_page() const override { return true; }
@@ -34,7 +34,7 @@ public:
     static ErrorOr<NonnullRefPtr<PageNode>> help_index_page();
 
 private:
-    NonnullRefPtr<SectionNode> m_section;
+    NonnullRefPtr<SectionNode const> m_section;
     String m_page;
 };
 

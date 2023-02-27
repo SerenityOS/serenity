@@ -29,7 +29,7 @@ struct ParseResult {
     Optional<StringView> time_second;
     Optional<StringView> time_fraction;
     Optional<StringView> utc_designator;
-    Optional<StringView> time_zone_bracketed_annotation;
+    Optional<StringView> time_zone_annotation;
     Optional<StringView> time_zone_numeric_utc_offset;
     Optional<StringView> time_zone_utc_offset_sign;
     Optional<StringView> time_zone_utc_offset_hour;
@@ -136,10 +136,7 @@ public:
     [[nodiscard]] bool parse_time_zone_iana_legacy_name();
     [[nodiscard]] bool parse_time_zone_iana_name();
     [[nodiscard]] bool parse_time_zone_identifier();
-    [[nodiscard]] bool parse_time_zone_bracketed_annotation();
-    [[nodiscard]] bool parse_time_zone_offset_required();
-    [[nodiscard]] bool parse_time_zone_name_required();
-    [[nodiscard]] bool parse_time_zone();
+    [[nodiscard]] bool parse_time_zone_annotation();
     [[nodiscard]] bool parse_a_key_leading_char();
     [[nodiscard]] bool parse_a_key_char();
     [[nodiscard]] bool parse_a_val_char();
@@ -151,12 +148,13 @@ public:
     [[nodiscard]] bool parse_annotation();
     [[nodiscard]] bool parse_annotations();
     [[nodiscard]] bool parse_time_spec();
-    [[nodiscard]] bool parse_time_spec_with_optional_time_zone_not_ambiguous();
-    [[nodiscard]] bool parse_time_spec_separator();
+    [[nodiscard]] bool parse_time_spec_with_optional_offset_not_ambiguous();
     [[nodiscard]] bool parse_date_time();
     [[nodiscard]] bool parse_annotated_time();
     [[nodiscard]] bool parse_annotated_date_time();
     [[nodiscard]] bool parse_annotated_date_time_time_required();
+    [[nodiscard]] bool parse_annotated_year_month();
+    [[nodiscard]] bool parse_annotated_month_day();
     [[nodiscard]] bool parse_duration_whole_seconds();
     [[nodiscard]] bool parse_duration_seconds_fraction();
     [[nodiscard]] bool parse_duration_seconds_part();

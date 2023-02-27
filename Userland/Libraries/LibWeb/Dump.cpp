@@ -599,14 +599,14 @@ void dump_font_face_rule(StringBuilder& builder, CSS::CSSFontFaceRule const& rul
     builder.append("sources:\n"sv);
     for (auto const& source : font_face.sources()) {
         indent(builder, indent_levels + 2);
-        builder.appendff("url={}, format={}\n", source.url, source.format.value_or("???"));
+        builder.appendff("url={}, format={}\n", source.url, source.format.value_or("???"_short_string));
     }
 
     indent(builder, indent_levels + 1);
     builder.append("unicode-ranges:\n"sv);
     for (auto const& unicode_range : font_face.unicode_ranges()) {
         indent(builder, indent_levels + 2);
-        builder.appendff("{}\n", unicode_range.to_deprecated_string());
+        builder.appendff("{}\n", unicode_range.to_string().release_value_but_fixme_should_propagate_errors());
     }
 }
 

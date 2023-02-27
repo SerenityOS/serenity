@@ -6,6 +6,7 @@
 
 #define AK_DONT_REPLACE_STD
 
+#include <LibWebView/AccessibilityTreeModel.h>
 #include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/StylePropertiesModel.h>
 
@@ -27,12 +28,21 @@ InspectorWidget::InspectorWidget()
     auto splitter = new QSplitter(this);
     layout()->addWidget(splitter);
     splitter->setOrientation(Qt::Vertical);
-    auto tree_view = new QTreeView;
-    tree_view->setHeaderHidden(true);
-    tree_view->expandToDepth(3);
-    splitter->addWidget(tree_view);
-    tree_view->setModel(&m_dom_model);
-    QObject::connect(tree_view->selectionModel(), &QItemSelectionModel::selectionChanged,
+
+    auto add_tab = [&](auto* tab_widget, auto* widget, auto name) {
+        auto container = new QWidget;
+        container->setLayout(new QVBoxLayout);
+        container->layout()->addWidget(widget);
+        tab_widget->addTab(container, name);
+    };
+
+    auto top_tap_widget = new QTabWidget;
+    splitter->addWidget(top_tap_widget);
+
+    auto dom_tree_view = new QTreeView;
+    dom_tree_view->setHeaderHidden(true);
+    dom_tree_view->setModel(&m_dom_model);
+    QObject::connect(dom_tree_view->selectionModel(), &QItemSelectionModel::selectionChanged,
         [this](QItemSelection const& selected, QItemSelection const&) {
             auto indexes = selected.indexes();
             if (indexes.size()) {
@@ -40,17 +50,20 @@ InspectorWidget::InspectorWidget()
                 set_selection(index);
             }
         });
+    add_tab(top_tap_widget, dom_tree_view, "DOM");
+
+    auto accessibility_tree_view = new QTreeView;
+    accessibility_tree_view->setHeaderHidden(true);
+    accessibility_tree_view->setModel(&m_accessibility_model);
+    add_tab(top_tap_widget, accessibility_tree_view, "Accessibility");
 
     auto add_table_tab = [&](auto* tab_widget, auto& model, auto name) {
-        auto container = new QWidget;
         auto table_view = new QTableView;
         table_view->setModel(&model);
-        container->setLayout(new QVBoxLayout);
-        container->layout()->addWidget(table_view);
         table_view->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
         table_view->verticalHeader()->setVisible(false);
         table_view->horizontalHeader()->setVisible(false);
-        tab_widget->addTab(container, name);
+        add_tab(tab_widget, table_view, name);
     };
 
     auto node_tabs = new QTabWidget;
@@ -65,9 +78,16 @@ void InspectorWidget::set_dom_json(StringView dom_json)
     m_dom_model.set_underlying_model(WebView::DOMTreeModel::create(dom_json));
 }
 
+void InspectorWidget::set_accessibility_json(StringView accessibility_json)
+{
+    m_accessibility_model.set_underlying_model(WebView::AccessibilityTreeModel::create(accessibility_json));
+}
+
 void InspectorWidget::clear_dom_json()
 {
     m_dom_model.set_underlying_model(nullptr);
+    // The accessibility tree is pretty much another form of the DOM tree, so should be cleared at the time time.
+    m_accessibility_model.set_underlying_model(nullptr);
     clear_style_json();
 }
 

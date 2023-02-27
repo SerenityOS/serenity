@@ -11,8 +11,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 
-ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::Stream::File& file);
-ErrorOr<void> generate_implementation_file(JsonObject& transforms_data, Core::Stream::File& file);
+ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::File& file);
+ErrorOr<void> generate_implementation_file(JsonObject& transforms_data, Core::File& file);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -30,8 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     VERIFY(json.is_object());
     auto transforms_data = json.as_object();
 
-    auto generated_header_file = TRY(Core::Stream::File::open(generated_header_path, Core::Stream::OpenMode::Write));
-    auto generated_implementation_file = TRY(Core::Stream::File::open(generated_implementation_path, Core::Stream::OpenMode::Write));
+    auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
+    auto generated_implementation_file = TRY(Core::File::open(generated_implementation_path, Core::File::OpenMode::Write));
 
     TRY(generate_header_file(transforms_data, *generated_header_file));
     TRY(generate_implementation_file(transforms_data, *generated_implementation_file));
@@ -48,7 +48,7 @@ static DeprecatedString title_casify_transform_function(StringView input)
     return builder.to_deprecated_string();
 }
 
-ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::Stream::File& file)
+ErrorOr<void> generate_header_file(JsonObject& transforms_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };
@@ -100,7 +100,7 @@ TransformFunctionMetadata transform_function_metadata(TransformFunction);
     return {};
 }
 
-ErrorOr<void> generate_implementation_file(JsonObject& transforms_data, Core::Stream::File& file)
+ErrorOr<void> generate_implementation_file(JsonObject& transforms_data, Core::File& file)
 {
     StringBuilder builder;
     SourceGenerator generator { builder };

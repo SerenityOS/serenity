@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
+ * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,10 +8,11 @@
 #include <LibJS/Runtime/Completion.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/FileAPI/File.h>
+#include <LibWeb/Infra/Strings.h>
 
 namespace Web::FileAPI {
 
-File::File(JS::Realm& realm, ByteBuffer byte_buffer, DeprecatedString file_name, DeprecatedString type, i64 last_modified)
+File::File(JS::Realm& realm, ByteBuffer byte_buffer, String file_name, String type, i64 last_modified)
     : Blob(realm, move(byte_buffer), move(type))
     , m_name(move(file_name))
     , m_last_modified(last_modified)
@@ -29,8 +30,10 @@ JS::ThrowCompletionOr<void> File::initialize(JS::Realm& realm)
 File::~File() = default;
 
 // https://w3c.github.io/FileAPI/#ref-for-dom-file-file
-WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
+    auto& vm = realm.vm();
+
     // 1. Let bytes be the result of processing blob parts given fileBits and options.
     auto bytes = TRY_OR_THROW_OOM(realm.vm(), process_blob_parts(file_bits, options.has_value() ? static_cast<BlobPropertyBag const&>(*options) : Optional<BlobPropertyBag> {}));
 
@@ -38,7 +41,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
     //    NOTE: Underlying OS filesystems use differing conventions for file name; with constructed files, mandating UTF-16 lessens ambiquity when file names are converted to byte sequences.
     auto name = file_name;
 
-    auto type = DeprecatedString::empty();
+    auto type = String {};
     i64 last_modified = 0;
     // 3. Process FilePropertyBag dictionary argument by running the following substeps:
     if (options.has_value()) {
@@ -52,7 +55,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
 
         // 2. Convert every character in t to ASCII lowercase.
         if (!type.is_empty())
-            type = options->type.to_lowercase();
+            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lower_case(type));
 
         // 3. If the lastModified member is provided, let d be set to the lastModified dictionary member. If it is not provided, set d to the current date and time represented as the number of milliseconds since the Unix Epoch (which is the equivalent of Date.now() [ECMA-262]).
         //    Note: Since ECMA-262 Date objects convert to long long values representing the number of milliseconds since the Unix Epoch, the lastModified member could be a Date object [ECMA-262].
@@ -69,7 +72,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
     return MUST_OR_THROW_OOM(realm.heap().allocate<File>(realm, realm, move(bytes), move(name), move(type), last_modified));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, DeprecatedString const& file_name, Optional<FilePropertyBag> const& options)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::construct_impl(JS::Realm& realm, Vector<BlobPart> const& file_bits, String const& file_name, Optional<FilePropertyBag> const& options)
 {
     return create(realm, file_bits, file_name, options);
 }

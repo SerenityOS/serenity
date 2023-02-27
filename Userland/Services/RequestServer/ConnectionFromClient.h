@@ -29,7 +29,7 @@ public:
     void did_request_certificates(Badge<Request>, Request&);
 
 private:
-    explicit ConnectionFromClient(NonnullOwnPtr<Core::Stream::LocalSocket>);
+    explicit ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket>);
 
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(DeprecatedString const&) override;
     virtual Messages::RequestServer::StartRequestResponse start_request(DeprecatedString const&, URL const&, IPC::Dictionary const&, ByteBuffer const&, Core::ProxyData const&) override;

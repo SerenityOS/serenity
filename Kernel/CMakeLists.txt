@@ -76,6 +76,12 @@ set(KERNEL_SOURCES
     Graphics/Generic/DisplayConnector.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/Intel/Auxiliary/GMBusConnector.cpp
+    Graphics/Intel/Plane/DisplayPlane.cpp
+    Graphics/Intel/Plane/G33DisplayPlane.cpp
+    Graphics/Intel/Transcoder/AnalogDisplayTranscoder.cpp
+    Graphics/Intel/Transcoder/DisplayTranscoder.cpp
+    Graphics/Intel/Transcoder/PLL.cpp
+    Graphics/Intel/DisplayConnectorGroup.cpp
     Graphics/Intel/NativeDisplayConnector.cpp
     Graphics/Intel/NativeGraphicsAdapter.cpp
     Graphics/VMWare/Console.cpp
@@ -135,9 +141,9 @@ set(KERNEL_SOURCES
     FileSystem/Plan9FS/FileSystem.cpp
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp
-    FileSystem/ProcFS/ComponentRegistry.cpp
     FileSystem/ProcFS/FileSystem.cpp
     FileSystem/ProcFS/Inode.cpp
+    FileSystem/ProcFS/ProcessExposed.cpp
     FileSystem/RAMFS/FileSystem.cpp
     FileSystem/RAMFS/Inode.cpp
     FileSystem/SysFS/Component.cpp
@@ -170,7 +176,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/CommandLine.cpp
     FileSystem/SysFS/Subsystems/Kernel/Interrupts.cpp
     FileSystem/SysFS/Subsystems/Kernel/Processes.cpp
     FileSystem/SysFS/Subsystems/Kernel/CPUInfo.cpp
@@ -178,8 +183,6 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Keymap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Profile.cpp
     FileSystem/SysFS/Subsystems/Kernel/Directory.cpp
-    FileSystem/SysFS/Subsystems/Kernel/LoadBase.cpp
-    FileSystem/SysFS/Subsystems/Kernel/SystemMode.cpp
     FileSystem/SysFS/Subsystems/Kernel/DiskUsage.cpp
     FileSystem/SysFS/Subsystems/Kernel/Log.cpp
     FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.cpp
@@ -194,6 +197,8 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Kernel/Network/Route.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/TCP.cpp
     FileSystem/SysFS/Subsystems/Kernel/Network/UDP.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.cpp
+    FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.cpp
     FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.cpp
@@ -250,10 +255,7 @@ set(KERNEL_SOURCES
     Net/UDPSocket.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
-    ProcessExposed.cpp
-    ProcessSpecificExposed.cpp
     ProcessGroup.cpp
-    ProcessProcFSTraits.cpp
     Random.cpp
     Scheduler.cpp
     ScopedCritical.cpp
@@ -481,6 +483,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
 endif()
 
 set(AK_SOURCES
+    ../AK/DOSPackedTime.cpp
     ../AK/GenericLexer.cpp
     ../AK/Hex.cpp
     ../AK/MemoryStream.cpp

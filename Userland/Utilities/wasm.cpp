@@ -19,7 +19,7 @@
 #include <unistd.h>
 
 RefPtr<Line::Editor> g_line_editor;
-static OwnPtr<AK::Stream> g_stdout {};
+static OwnPtr<Stream> g_stdout {};
 static OwnPtr<Wasm::Printer> g_printer {};
 static bool g_continue { false };
 static void (*old_signal)(int);
@@ -206,15 +206,17 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             Wasm::Result result { Wasm::Trap {} };
             {
                 Wasm::BytecodeInterpreter::CallFrameHandle handle { g_interpreter, config };
-                result = config.call(g_interpreter, *address, move(values));
+                result = config.call(g_interpreter, *address, move(values)).assert_wasm_result();
             }
-            if (result.is_trap())
+            if (result.is_trap()) {
                 warnln("Execution trapped: {}", result.trap().reason);
-            if (!result.values().is_empty())
-                warnln("Returned:");
-            for (auto& value : result.values()) {
-                g_stdout->write("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
-                g_printer->print(value);
+            } else {
+                if (!result.values().is_empty())
+                    warnln("Returned:");
+                for (auto& value : result.values()) {
+                    g_stdout->write("  -> "sv.bytes()).release_value_but_fixme_should_propagate_errors();
+                    g_printer->print(value);
+                }
             }
             continue;
         }
@@ -339,7 +341,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!parse_result.has_value())
         return 1;
 
-    g_stdout = TRY(Core::Stream::File::standard_output());
+    g_stdout = TRY(Core::File::standard_output());
     g_printer = TRY(try_make<Wasm::Printer>(*g_stdout));
 
     if (print && !attempt_instantiate) {
@@ -513,7 +515,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 outln();
             }
 
-            auto result = machine.invoke(g_interpreter, run_address.value(), move(values));
+            auto result = machine.invoke(g_interpreter, run_address.value(), move(values)).assert_wasm_result();
 
             if (debug)
                 launch_repl();

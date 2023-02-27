@@ -109,7 +109,7 @@ public:
 
     void notify_selection_changed(Badge<ModelSelection>);
 
-    NonnullRefPtr<Gfx::Font> font_for_index(ModelIndex const&) const;
+    NonnullRefPtr<Gfx::Font const> font_for_index(ModelIndex const&) const;
 
     void set_key_column_and_sort_order(int column, SortOrder);
 

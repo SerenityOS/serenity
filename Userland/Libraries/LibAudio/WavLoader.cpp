@@ -13,6 +13,7 @@
 #include <AK/MemoryStream.h>
 #include <AK/NumericLimits.h>
 #include <AK/Try.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -25,7 +26,7 @@ WavLoaderPlugin::WavLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<WavLoaderPlugin>, LoaderError> WavLoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<WavLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -51,7 +52,7 @@ MaybeLoaderError WavLoaderPlugin::initialize()
 }
 
 template<typename SampleReader>
-MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(AK::Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
+MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(Stream& stream, SampleReader read_sample, FixedArray<Sample>& samples) const
 {
     switch (m_num_channels) {
     case 1:
@@ -72,15 +73,11 @@ MaybeLoaderError WavLoaderPlugin::read_samples_from_stream(AK::Stream& stream, S
 }
 
 // There's no i24 type + we need to do the endianness conversion manually anyways.
-static ErrorOr<double> read_sample_int24(AK::Stream& stream)
+static ErrorOr<double> read_sample_int24(Stream& stream)
 {
-    u8 byte = 0;
-    TRY(stream.read(Bytes { &byte, 1 }));
-    i32 sample1 = byte;
-    TRY(stream.read(Bytes { &byte, 1 }));
-    i32 sample2 = byte;
-    TRY(stream.read(Bytes { &byte, 1 }));
-    i32 sample3 = byte;
+    i32 sample1 = TRY(stream.read_value<u8>());
+    i32 sample2 = TRY(stream.read_value<u8>());
+    i32 sample3 = TRY(stream.read_value<u8>());
 
     i32 value = 0;
     value = sample1;
@@ -93,10 +90,10 @@ static ErrorOr<double> read_sample_int24(AK::Stream& stream)
 }
 
 template<typename T>
-static ErrorOr<double> read_sample(AK::Stream& stream)
+static ErrorOr<double> read_sample(Stream& stream)
 {
     T sample { 0 };
-    TRY(stream.read(Bytes { &sample, sizeof(T) }));
+    TRY(stream.read_entire_buffer(Bytes { &sample, sizeof(T) }));
     // Remap integer samples to normalized floating-point range of -1 to 1.
     if constexpr (IsIntegral<T>) {
         if constexpr (NumericLimits<T>::is_signed()) {
@@ -162,7 +159,7 @@ LoaderSamples WavLoaderPlugin::get_more_samples(size_t max_samples_to_read_from_
         pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
 
     auto sample_data = LOADER_TRY(ByteBuffer::create_zeroed(bytes_to_read));
-    LOADER_TRY(m_stream->read(sample_data.bytes()));
+    LOADER_TRY(m_stream->read_entire_buffer(sample_data.bytes()));
 
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
@@ -190,22 +187,19 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
     size_t bytes_read = 0;
 
     auto read_u8 = [&]() -> ErrorOr<u8, LoaderError> {
-        u8 value;
-        LOADER_TRY(m_stream->read(Bytes { &value, 1 }));
+        u8 value = LOADER_TRY(m_stream->read_value<LittleEndian<u8>>());
         bytes_read += 1;
         return value;
     };
 
     auto read_u16 = [&]() -> ErrorOr<u16, LoaderError> {
-        u16 value;
-        LOADER_TRY(m_stream->read(Bytes { &value, 2 }));
+        u16 value = LOADER_TRY(m_stream->read_value<LittleEndian<u16>>());
         bytes_read += 2;
         return value;
     };
 
     auto read_u32 = [&]() -> ErrorOr<u32, LoaderError> {
-        u32 value;
-        LOADER_TRY(m_stream->read(Bytes { &value, 4 }));
+        u32 value = LOADER_TRY(m_stream->read_value<LittleEndian<u32>>());
         bytes_read += 4;
         return value;
     };

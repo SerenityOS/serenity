@@ -10,9 +10,9 @@
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<History> History::create(JS::Realm& realm, DOM::Document& document)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<History>> History::create(JS::Realm& realm, DOM::Document& document)
 {
-    return realm.heap().allocate<History>(realm, realm, document).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<History>(realm, realm, document));
 }
 
 History::History(JS::Realm& realm, DOM::Document& document)

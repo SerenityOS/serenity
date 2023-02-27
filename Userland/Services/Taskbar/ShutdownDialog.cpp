@@ -44,8 +44,7 @@ ShutdownDialog::ShutdownDialog()
 {
     auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
     widget->set_fill_with_background_color(true);
-    widget->set_layout<GUI::VerticalBoxLayout>();
-    widget->layout()->set_spacing(0);
+    widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 0);
 
     auto& banner_image = widget->add<GUI::ImageWidget>();
     banner_image.load_from_file("/res/graphics/brand-banner.png"sv);
@@ -55,8 +54,7 @@ ShutdownDialog::ShutdownDialog()
 
     auto& left_container = content_container.add<GUI::Widget>();
     left_container.set_fixed_width(60);
-    left_container.set_layout<GUI::VerticalBoxLayout>();
-    left_container.layout()->set_margins({ 12, 0, 0 });
+    left_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 12, 0, 0 });
 
     auto& icon_wrapper = left_container.add<GUI::Widget>();
     icon_wrapper.set_fixed_size(32, 48);
@@ -66,8 +64,7 @@ ShutdownDialog::ShutdownDialog()
     icon_image.set_bitmap(Gfx::Bitmap::load_from_file("/res/icons/32x32/shutdown.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& right_container = content_container.add<GUI::Widget>();
-    right_container.set_layout<GUI::VerticalBoxLayout>();
-    right_container.layout()->set_margins({ 12, 12, 8, 0 });
+    right_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 12, 12, 8, 0 });
 
     auto& label = right_container.add<GUI::Label>("What would you like to do?");
     label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
@@ -78,7 +75,7 @@ ShutdownDialog::ShutdownDialog()
         auto action = options[i];
         auto& radio = right_container.add<GUI::RadioButton>();
         radio.set_enabled(action.enabled);
-        radio.set_text(action.title);
+        radio.set_text(String::from_deprecated_string(action.title).release_value_but_fixme_should_propagate_errors());
 
         radio.on_checked = [this, i](auto) {
             m_selected_option = i;
@@ -90,20 +87,19 @@ ShutdownDialog::ShutdownDialog()
         }
     }
 
-    right_container.layout()->add_spacer();
+    right_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
     auto& button_container = right_container.add<GUI::Widget>();
     button_container.set_fixed_height(23);
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.layout()->set_spacing(5);
-    button_container.layout()->add_spacer();
-    auto& ok_button = button_container.add<GUI::Button>("OK");
+    button_container.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 5);
+    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    auto& ok_button = button_container.add<GUI::Button>("OK"_short_string);
     ok_button.set_fixed_size(80, 23);
     ok_button.on_click = [this](auto) {
         done(ExecResult::OK);
     };
     ok_button.set_default(true);
-    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
     cancel_button.set_fixed_size(80, 23);
     cancel_button.on_click = [this](auto) {
         done(ExecResult::Cancel);

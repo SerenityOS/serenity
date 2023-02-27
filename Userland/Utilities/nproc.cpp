@@ -5,14 +5,14 @@
  */
 
 #include <AK/JsonObject.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
-    auto file = TRY(Core::Stream::File::open("/sys/kernel/cpuinfo"sv, Core::Stream::OpenMode::Read));
+    auto file = TRY(Core::File::open("/sys/kernel/cpuinfo"sv, Core::File::OpenMode::Read));
 
     auto buffer = TRY(file->read_until_eof());
     auto json = TRY(JsonValue::from_string(buffer));

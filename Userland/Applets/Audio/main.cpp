@@ -82,12 +82,10 @@ private:
 
         m_root_container = TRY(m_slider_window->set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);
-        m_root_container->set_layout<GUI::VerticalBoxLayout>();
-        m_root_container->layout()->set_margins({ 4 });
-        m_root_container->layout()->set_spacing(0);
+        m_root_container->set_layout<GUI::VerticalBoxLayout>(4, 0);
         m_root_container->set_frame_shape(Gfx::FrameShape::Window);
 
-        m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9");
+        m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9"_short_string);
         m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");
         m_percent_box->set_checked(m_show_percent);
         m_percent_box->on_checked = [&](bool show_percent) {
@@ -112,7 +110,7 @@ private:
             update();
         };
 
-        m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C");
+        m_mute_box = m_root_container->add<GUI::CheckBox>("\xE2\x9D\x8C"_short_string);
         m_mute_box->set_checked(m_audio_muted);
         m_mute_box->set_tooltip(m_audio_muted ? "Unmute" : "Mute");
         m_mute_box->on_checked = [&](bool is_muted) {

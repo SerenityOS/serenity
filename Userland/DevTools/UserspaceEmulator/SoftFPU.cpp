@@ -437,7 +437,7 @@ void SoftFPU::FCMOVNU(const X86::Instruction& insn)
 // BASIC ARITHMETIC
 void SoftFPU::FADD_RM32(const X86::Instruction& insn)
 {
-    // XXX look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem32 ops
+    // FIXME look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem32 ops
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(insn.modrm().register_index()) + fpu_get(0));
     } else {
@@ -449,7 +449,7 @@ void SoftFPU::FADD_RM32(const X86::Instruction& insn)
 }
 void SoftFPU::FADD_RM64(const X86::Instruction& insn)
 {
-    // XXX look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem64 ops
+    // FIXME look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem64 ops
     if (insn.modrm().is_register()) {
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) + fpu_get(0));
     } else {
@@ -573,7 +573,7 @@ void SoftFPU::FISUBR_RM32(const X86::Instruction& insn)
 
 void SoftFPU::FMUL_RM32(const X86::Instruction& insn)
 {
-    // XXX look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem32 ops
+    // FIXME look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem32 ops
     if (insn.modrm().is_register()) {
         fpu_set(0, fpu_get(0) * fpu_get(insn.modrm().register_index()));
     } else {
@@ -585,7 +585,7 @@ void SoftFPU::FMUL_RM32(const X86::Instruction& insn)
 }
 void SoftFPU::FMUL_RM64(const X86::Instruction& insn)
 {
-    // XXX look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem64 ops
+    // FIXME look at ::INC_foo for how mem/reg stuff is handled, and use that here too to make sure this is only called for mem64 ops
     if (insn.modrm().is_register()) {
         fpu_set(insn.modrm().register_index(), fpu_get(insn.modrm().register_index()) * fpu_get(0));
     } else {

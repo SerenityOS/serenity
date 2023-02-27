@@ -8,6 +8,7 @@
 #include <AK/IPv4Address.h>
 #include <AK/Types.h>
 #include <LibCore/Notifier.h>
+#include <LibCore/Socket.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 
@@ -74,7 +75,7 @@ ErrorOr<void> TCPServer::set_blocking(bool blocking)
     return {};
 }
 
-ErrorOr<NonnullOwnPtr<Stream::TCPSocket>> TCPServer::accept()
+ErrorOr<NonnullOwnPtr<TCPSocket>> TCPServer::accept()
 {
     VERIFY(m_listening);
     sockaddr_in in;
@@ -85,7 +86,7 @@ ErrorOr<NonnullOwnPtr<Stream::TCPSocket>> TCPServer::accept()
     int accepted_fd = TRY(Core::System::accept(m_fd, (sockaddr*)&in, &in_size));
 #endif
 
-    auto socket = TRY(Stream::TCPSocket::adopt_fd(accepted_fd));
+    auto socket = TRY(TCPSocket::adopt_fd(accepted_fd));
 
 #ifdef AK_OS_MACOS
     // FIXME: Ideally, we should let the caller decide whether it wants the

@@ -248,8 +248,47 @@ DeprecatedString RegExpObject::escape_regexp_pattern() const
     // 3. Return S.
     if (m_pattern.is_empty())
         return "(?:)";
+
     // FIXME: Check the 'u' and 'v' flags and escape accordingly
-    return m_pattern.replace("\n"sv, "\\n"sv, ReplaceMode::All).replace("\r"sv, "\\r"sv, ReplaceMode::All).replace(LINE_SEPARATOR_STRING, "\\u2028"sv, ReplaceMode::All).replace(PARAGRAPH_SEPARATOR_STRING, "\\u2029"sv, ReplaceMode::All).replace("/"sv, "\\/"sv, ReplaceMode::All);
+    StringBuilder builder;
+    auto pattern = Utf8View { m_pattern };
+    auto escaped = false;
+    for (auto code_point : pattern) {
+        if (escaped) {
+            escaped = false;
+            builder.append_code_point('\\');
+            builder.append_code_point(code_point);
+            continue;
+        }
+
+        if (code_point == '\\') {
+            escaped = true;
+            continue;
+        }
+
+        switch (code_point) {
+        case '/':
+            builder.append("\\/"sv);
+            break;
+        case '\n':
+            builder.append("\\n"sv);
+            break;
+        case '\r':
+            builder.append("\\r"sv);
+            break;
+        case LINE_SEPARATOR:
+            builder.append("\\u2028"sv);
+            break;
+        case PARAGRAPH_SEPARATOR:
+            builder.append("\\u2029"sv);
+            break;
+        default:
+            builder.append_code_point(code_point);
+            break;
+        }
+    }
+
+    return builder.to_deprecated_string();
 }
 
 // 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate

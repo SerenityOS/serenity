@@ -16,14 +16,14 @@ class Crypto : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(Crypto, Bindings::PlatformObject);
 
 public:
-    static JS::NonnullGCPtr<Crypto> create(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto>> create(JS::Realm&);
 
     virtual ~Crypto() override;
 
     JS::NonnullGCPtr<SubtleCrypto> subtle() const;
 
     WebIDL::ExceptionOr<JS::Value> get_random_values(JS::Value array) const;
-    DeprecatedString random_uuid() const;
+    WebIDL::ExceptionOr<String> random_uuid() const;
 
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;

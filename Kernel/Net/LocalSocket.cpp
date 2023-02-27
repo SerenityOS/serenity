@@ -260,9 +260,8 @@ void LocalSocket::detach(OpenFileDescription& description)
         m_accept_side_fd_open = false;
 
         if (m_bound) {
-            auto inode = m_inode.strong_ref();
-            if (inode)
-                inode->unbind_socket();
+            if (m_inode)
+                m_inode->unbind_socket();
         }
     }
 
@@ -519,6 +518,26 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDesc
         return set_so_error(EAGAIN);
     }
     return queue.take_first();
+}
+
+ErrorOr<NonnullLockRefPtrVector<OpenFileDescription>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
+{
+    MutexLocker locker(mutex());
+    NonnullLockRefPtrVector<OpenFileDescription> fds;
+
+    auto role = this->role(socket_description);
+    if (role != Role::Connected && role != Role::Accepted)
+        return set_so_error(EINVAL);
+    auto& queue = recvfd_queue_for(socket_description);
+
+    for (int i = 0; i < n; ++i) {
+        if (queue.is_empty())
+            break;
+
+        fds.append(queue.take_first());
+    }
+
+    return fds;
 }
 
 ErrorOr<void> LocalSocket::try_set_path(StringView path)

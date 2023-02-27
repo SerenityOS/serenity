@@ -1034,7 +1034,7 @@ bool PNGImageDecoderPlugin::initialize()
     return decode_png_header(*m_context);
 }
 
-ErrorOr<bool> PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
+bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     PNGLoadingContext context;
     context.data = data.data();

@@ -6,7 +6,6 @@
  */
 
 #include <LibCore/ElapsedTimer.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGL/GL/gl.h>
@@ -34,7 +33,7 @@ class GLContextWidget final : public GUI::Frame {
 
 public:
     bool load_path(DeprecatedString const& fname);
-    bool load_file(Core::File& file);
+    bool load_file(String const& filename, NonnullOwnPtr<Core::File> file);
     void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
     void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
     void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
@@ -147,10 +146,10 @@ void GLContextWidget::drop_event(GUI::DropEvent& event)
         if (url.scheme() != "file")
             continue;
 
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), url.path(), Core::OpenMode::ReadOnly);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), url.path());
         if (response.is_error())
             return;
-        load_file(response.value());
+        load_file(response.value().filename(), response.value().release_stream());
     }
 }
 
@@ -291,35 +290,24 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 
 bool GLContextWidget::load_path(DeprecatedString const& filename)
 {
-    auto file = Core::File::construct(filename);
+    auto file = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), filename);
 
-    if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
+    if (file.is_error() && file.error().code() != ENOENT) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
-    return load_file(file);
+    return load_file(file.value().filename(), file.value().release_stream());
 }
 
-bool GLContextWidget::load_file(Core::File& file)
+bool GLContextWidget::load_file(String const& filename, NonnullOwnPtr<Core::File> file)
 {
-    auto const& filename = file.filename();
-    if (!filename.ends_with(".obj"sv)) {
+    if (!filename.bytes_as_string_view().ends_with(".obj"sv)) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: invalid file type", filename), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
     }
 
-    if (file.is_device()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    if (file.is_directory()) {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error"sv, GUI::MessageBox::Type::Error);
-        return false;
-    }
-
-    auto new_mesh = m_mesh_loader->load(file);
+    auto new_mesh = m_mesh_loader->load(filename, move(file));
     if (new_mesh.is_error()) {
         GUI::MessageBox::show(window(), DeprecatedString::formatted("Reading \"{}\" failed: {}", filename, new_mesh.release_error()), "Error"sv, GUI::MessageBox::Type::Error);
         return false;
@@ -327,25 +315,17 @@ bool GLContextWidget::load_file(Core::File& file)
 
     // Determine whether or not a texture for this model resides within the same directory
     StringBuilder builder;
-    builder.append(filename.split('.').at(0));
+    builder.append(filename.bytes_as_string_view().split_view('.').at(0));
     builder.append(".bmp"sv);
-
-    DeprecatedString texture_path = Core::File::absolute_path(builder.string_view());
 
     // Attempt to open the texture file from disk
     RefPtr<Gfx::Bitmap> texture_image;
-    if (Core::File::exists(texture_path)) {
-        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_path);
+    auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), builder.string_view());
+    if (!response.is_error()) {
+        auto texture_file = response.release_value();
+        auto bitmap_or_error = Gfx::Bitmap::load_from_file(texture_file.release_stream(), texture_file.filename());
         if (!bitmap_or_error.is_error())
             texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-    } else {
-        auto response = FileSystemAccessClient::Client::the().try_request_file_deprecated(window(), builder.string_view(), Core::OpenMode::ReadOnly);
-        if (!response.is_error()) {
-            auto texture_file = response.value();
-            auto bitmap_or_error = Gfx::Bitmap::load_from_fd_and_close(texture_file->leak_fd(), texture_file->filename());
-            if (!bitmap_or_error.is_error())
-                texture_image = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-        }
     }
 
     GLuint tex;
@@ -361,6 +341,8 @@ bool GLContextWidget::load_file(Core::File& file)
     m_mesh = new_mesh.release_value();
     dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
 
+    window()->set_title(DeprecatedString::formatted("{} - 3D File Viewer", filename));
+
     return true;
 }
 
@@ -371,7 +353,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio thread recvfd sendfd rpath unix prot_exec"));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
-    TRY(Core::System::unveil("/home/anon/Documents/3D Models", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/usr/lib", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
@@ -397,15 +378,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto& file_menu = window->add_menu("&File");
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        auto response = FileSystemAccessClient::Client::the().try_open_file_deprecated(window);
+        auto response = FileSystemAccessClient::Client::the().open_file(window);
         if (response.is_error())
             return;
 
-        auto file = response.value();
-        if (widget->load_file(*file)) {
-            auto canonical_path = Core::File::absolute_path(file->filename());
-            window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
-        }
+        auto file = response.release_value();
+        widget->load_file(file.filename(), file.release_stream());
     }));
     file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -591,10 +569,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
 
     auto filename = arguments.argc > 1 ? arguments.argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
-    if (widget->load_path(filename)) {
-        auto canonical_path = Core::File::absolute_path(filename);
-        window->set_title(DeprecatedString::formatted("{} - 3D File Viewer", canonical_path));
-    }
+    widget->load_path(filename);
 
     return app->exec();
 }

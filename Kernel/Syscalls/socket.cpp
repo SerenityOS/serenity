@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteBuffer.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
@@ -199,6 +200,24 @@ ErrorOr<FlatPtr> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*
             Thread::current()->send_signal(SIGPIPE, &Process::current());
         return EPIPE;
     }
+
+    if (msg.msg_controllen > 0) {
+        // Handle command messages.
+        auto cmsg_buffer = TRY(ByteBuffer::create_uninitialized(msg.msg_controllen));
+        TRY(copy_from_user(cmsg_buffer.data(), msg.msg_control, msg.msg_controllen));
+        msg.msg_control = cmsg_buffer.data();
+        for (struct cmsghdr* cmsg = CMSG_FIRSTHDR(&msg); cmsg != nullptr; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+            if (socket.is_local() && cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
+                auto& local_socket = static_cast<LocalSocket&>(socket);
+                int* fds = (int*)CMSG_DATA(cmsg);
+                size_t nfds = (cmsg->cmsg_len - CMSG_ALIGN(sizeof(struct cmsghdr))) / sizeof(int);
+                for (size_t i = 0; i < nfds; ++i) {
+                    TRY(local_socket.sendfd(*description, TRY(open_file_description(fds[i]))));
+                }
+            }
+        }
+    }
+
     auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
 
     while (true) {
@@ -267,20 +286,40 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
         msg_flags |= MSG_TRUNC;
     }
 
-    if (socket.wants_timestamp()) {
-        struct {
-            cmsghdr cmsg;
-            timeval timestamp;
-        } cmsg_timestamp;
-        socklen_t control_length = sizeof(cmsg_timestamp);
-        if (msg.msg_controllen < control_length) {
+    socklen_t current_cmsg_len = 0;
+    auto try_add_cmsg = [&](int level, int type, void const* data, socklen_t len) -> ErrorOr<bool> {
+        if (current_cmsg_len + len > msg.msg_controllen) {
             msg_flags |= MSG_CTRUNC;
-        } else {
-            cmsg_timestamp = { { control_length, SOL_SOCKET, SCM_TIMESTAMP }, timestamp.to_timeval() };
-            TRY(copy_to_user(msg.msg_control, &cmsg_timestamp, control_length));
+            return false;
         }
-        TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_controllen, &control_length));
+
+        cmsghdr cmsg = { (socklen_t)CMSG_LEN(len), level, type };
+        cmsghdr* target = (cmsghdr*)(((char*)msg.msg_control) + current_cmsg_len);
+        TRY(copy_to_user(target, &cmsg));
+        TRY(copy_to_user(CMSG_DATA(target), data, len));
+        current_cmsg_len += CMSG_ALIGN(cmsg.cmsg_len);
+        return true;
+    };
+
+    if (socket.wants_timestamp()) {
+        timeval time = timestamp.to_timeval();
+        TRY(try_add_cmsg(SOL_SOCKET, SCM_TIMESTAMP, &time, sizeof(time)));
     }
+
+    int space_for_fds = (msg.msg_controllen - current_cmsg_len - sizeof(struct cmsghdr)) / sizeof(int);
+    if (space_for_fds > 0 && socket.is_local()) {
+        auto& local_socket = static_cast<LocalSocket&>(socket);
+        auto descriptions = TRY(local_socket.recvfds(description, space_for_fds));
+        Vector<int> fdnums;
+        for (auto& description : descriptions) {
+            auto fd_allocation = TRY(m_fds.with_exclusive([](auto& fds) { return fds.allocate(); }));
+            m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(description, 0); });
+            fdnums.append(fd_allocation.fd);
+        }
+        TRY(try_add_cmsg(SOL_SOCKET, SCM_RIGHTS, fdnums.data(), fdnums.size() * sizeof(int)));
+    }
+
+    TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_controllen, &current_cmsg_len));
 
     TRY(copy_to_user(&user_msg.unsafe_userspace_ptr()->msg_flags, &msg_flags));
     return result.value();

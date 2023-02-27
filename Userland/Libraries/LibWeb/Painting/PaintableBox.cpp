@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 #include <AK/GenericShorthands.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/FontCache.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
@@ -313,8 +314,30 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radius_data;
 }
 
-Optional<Gfx::IntRect> PaintableBox::clip_rect() const
+Optional<CSSPixelRect> PaintableBox::clip_rect() const
 {
+    if (!m_clip_rect.has_value()) {
+        // NOTE: stacking context should not be crossed while aggregating rectangle to
+        // clip `overflow: hidden` because intersecting rectangles with different
+        // transforms doesn't make sense
+        // TODO: figure out if there are cases when stacking context should be
+        // crossed to calculate correct clip rect
+        if (!stacking_context() && containing_block() && containing_block()->paint_box()) {
+            m_clip_rect = containing_block()->paint_box()->clip_rect();
+        }
+
+        auto overflow_x = computed_values().overflow_x();
+        auto overflow_y = computed_values().overflow_y();
+
+        if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
+            if (m_clip_rect.has_value()) {
+                m_clip_rect->intersect(absolute_padding_box_rect());
+            } else {
+                m_clip_rect = absolute_padding_box_rect();
+            }
+        }
+    }
+
     return m_clip_rect;
 }
 
@@ -323,36 +346,27 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
     if (!AK::first_is_one_of(phase, PaintPhase::Background, PaintPhase::Border, PaintPhase::Foreground))
         return;
 
-    auto clip_rect = context.painter().clip_rect();
-    if (containing_block() && containing_block()->paint_box()) {
-        if (containing_block()->paint_box()->clip_rect().has_value()) {
-            clip_rect = *containing_block()->paint_box()->clip_rect();
-        }
-    }
-    context.painter().set_clip_rect(clip_rect);
-
+    // FIXME: Support more overflow variations.
+    auto clip_rect = this->clip_rect();
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
     auto clip_overflow = [&] {
         if (!m_clipping_overflow) {
             context.painter().save();
-            context.painter().add_clip_rect(context.rounded_device_rect(absolute_padding_box_rect()).to_type<int>());
+            context.painter().add_clip_rect(context.rounded_device_rect(*clip_rect).to_type<int>());
             m_clipping_overflow = true;
         }
     };
 
-    // FIXME: Support more overflow variations.
-    if (overflow_x == CSS::Overflow::Hidden && overflow_y == CSS::Overflow::Hidden) {
+    if (clip_rect.has_value()) {
         clip_overflow();
     }
-
-    m_clip_rect = context.painter().clip_rect();
 
     if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
-            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(absolute_padding_box_rect()), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
+            auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
             if (corner_clipper.is_error()) {
                 dbgln("Failed to create overflow border-radius corner clipper: {}", corner_clipper.error());
                 return;
@@ -511,14 +525,30 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
 
-        painter.draw_text_run(baseline_start.to_type<int>(), view, fragment.layout_node().font(), text_node.computed_values().color());
+        auto& font = fragment.layout_node().font();
+        auto scaled_font = [&]() -> RefPtr<Gfx::Font const> {
+            auto device_font_pt_size = context.enclosing_device_pixels(font.presentation_size());
+            FontSelector font_selector = { FlyString::from_utf8(font.family()).release_value_but_fixme_should_propagate_errors(), static_cast<float>(device_font_pt_size.value()), font.weight(), font.width(), font.slope() };
+            if (auto cached_font = FontCache::the().get(font_selector)) {
+                return cached_font;
+            }
+
+            if (auto font_with_device_pt_size = font.with_size(static_cast<float>(device_font_pt_size.value()))) {
+                FontCache::the().set(font_selector, *font_with_device_pt_size);
+                return font_with_device_pt_size;
+            }
+
+            return {};
+        }();
+
+        painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font ? *scaled_font : font, text_node.computed_values().color());
 
         auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
         if (!selection_rect.is_empty()) {
             painter.fill_rect(selection_rect, context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(selection_rect);
-            painter.draw_text_run(baseline_start.to_type<int>(), view, fragment.layout_node().font(), context.palette().selection_text());
+            painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font ? *scaled_font : font, context.palette().selection_text());
         }
 
         paint_text_decoration(context, painter, text_node, fragment);

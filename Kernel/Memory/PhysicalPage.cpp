@@ -26,7 +26,7 @@ PhysicalAddress PhysicalPage::paddr() const
     return MM.get_physical_address(*this);
 }
 
-void PhysicalPage::free_this()
+void PhysicalPage::free_this() const
 {
     auto paddr = MM.get_physical_address(*this);
     if (m_may_return_to_freelist == MayReturnToFreeList::Yes) {

@@ -2,7 +2,7 @@
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@cs.toronto.edu>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
@@ -28,7 +28,6 @@
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FileIconProvider.h>
@@ -38,6 +37,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/PathBreadcrumbbar.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
@@ -107,14 +107,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!initial_location.is_empty()) {
         if (!ignore_path_resolution)
-            initial_location = Core::File::real_path_for(initial_location);
+            initial_location = Core::DeprecatedFile::real_path_for(initial_location);
 
-        if (!Core::File::is_directory(initial_location))
+        if (!Core::DeprecatedFile::is_directory(initial_location))
             is_selection_mode = true;
     }
 
     if (initial_location.is_empty())
-        initial_location = Core::File::current_working_directory();
+        initial_location = Core::DeprecatedFile::current_working_directory();
 
     if (initial_location.is_empty())
         initial_location = Core::StandardPaths::home_directory();
@@ -188,7 +188,7 @@ void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Wi
 {
     auto path = selected_file_paths.first();
     auto destination = DeprecatedString::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
-    if (auto result = Core::File::link_file(destination, path); result.is_error()) {
+    if (auto result = Core::DeprecatedFile::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, DeprecatedString::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager"sv,
             GUI::MessageBox::Type::Error);
     }
@@ -290,12 +290,19 @@ void do_unzip_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::
 
 void show_properties(DeprecatedString const& container_dir_path, DeprecatedString const& path, Vector<DeprecatedString> const& selected, GUI::Window* window)
 {
-    RefPtr<PropertiesWindow> properties;
+    ErrorOr<RefPtr<PropertiesWindow>> properties_or_error = nullptr;
     if (selected.is_empty()) {
-        properties = window->add<PropertiesWindow>(path, true);
+        properties_or_error = window->try_add<PropertiesWindow>(path, true);
     } else {
-        properties = window->add<PropertiesWindow>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
+        properties_or_error = window->try_add<PropertiesWindow>(selected.first(), access(container_dir_path.characters(), W_OK) != 0);
     }
+
+    if (properties_or_error.is_error()) {
+        GUI::MessageBox::show(window, "Could not show properties"sv, "Properties Error"sv, GUI::MessageBox::Type::Error);
+        return;
+    }
+
+    auto properties = properties_or_error.release_value();
     properties->on_close = [properties = properties.ptr()] {
         properties->remove_from_parent();
     };
@@ -351,7 +358,7 @@ ErrorOr<int> run_in_desktop_mode()
     window->set_has_alpha_channel(true);
 
     auto desktop_widget = TRY(window->set_main_widget<FileManager::DesktopWidget>());
-    (void)TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
+    TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
     auto directory_view = TRY(desktop_widget->try_add<DirectoryView>(DirectoryView::Mode::Desktop));
     directory_view->set_name("directory_view");
@@ -449,7 +456,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
 
         for (auto& path : paths) {
-            if (Core::File::is_directory(path))
+            if (Core::DeprecatedFile::is_directory(path))
                 Desktop::Launcher::open(URL::create_with_file_scheme(path));
         }
     });
@@ -462,7 +469,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
 
         for (auto& path : paths) {
-            if (Core::File::is_directory(path)) {
+            if (Core::DeprecatedFile::is_directory(path)) {
                 spawn_terminal(path);
             }
         }
@@ -583,14 +590,10 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     auto& toolbar_container = *widget->find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     auto& main_toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("main_toolbar");
-    auto& location_toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("location_toolbar");
-    location_toolbar.layout()->set_margins({ 3, 6 });
-
-    auto& location_textbox = *widget->find_descendant_of_type_named<GUI::TextBox>("location_textbox");
 
     auto& breadcrumb_toolbar = *widget->find_descendant_of_type_named<GUI::Toolbar>("breadcrumb_toolbar");
     breadcrumb_toolbar.layout()->set_margins({ 0, 6 });
-    auto& breadcrumbbar = *widget->find_descendant_of_type_named<GUI::Breadcrumbbar>("breadcrumbbar");
+    auto& breadcrumbbar = *widget->find_descendant_of_type_named<GUI::PathBreadcrumbbar>("breadcrumbbar");
 
     auto& splitter = *widget->find_descendant_of_type_named<GUI::HorizontalSplitter>("splitter");
     auto& tree_view = *widget->find_descendant_of_type_named<GUI::TreeView>("tree_view");
@@ -609,10 +612,6 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     auto directory_view = TRY(splitter.try_add<DirectoryView>(DirectoryView::Mode::Normal));
     directory_view->set_name("directory_view");
-
-    location_textbox.on_escape_pressed = [&] {
-        directory_view->set_focus(true);
-    };
 
     // Open the root directory. FIXME: This is awkward.
     tree_view.toggle_index(directories_model->index(0, 0, {}));
@@ -635,11 +634,6 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     progressbar.set_frame_shape(Gfx::FrameShape::Panel);
     progressbar.set_frame_shadow(Gfx::FrameShadow::Sunken);
     progressbar.set_frame_thickness(1);
-
-    location_textbox.on_return_pressed = [&] {
-        if (directory_view->open(location_textbox.text()))
-            location_textbox.set_focus(false);
-    };
 
     auto refresh_tree_view = [&] {
         directories_model->invalidate();
@@ -675,10 +669,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     });
 
     auto open_child_directory_action = GUI::Action::create("Open &Child Directory", { Mod_Alt, Key_Down }, [&](GUI::Action const&) {
-        auto segment_index = breadcrumbbar.selected_segment();
-        if (!segment_index.has_value() || *segment_index >= breadcrumbbar.segment_count() - 1)
-            return;
-        breadcrumbbar.set_selected_segment(*segment_index + 1);
+        breadcrumbbar.select_child_segment();
     });
 
     RefPtr<GUI::Action> layout_toolbar_action;
@@ -693,7 +684,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
             toolbar_container.set_visible(true);
         } else {
             main_toolbar.set_visible(false);
-            if (!location_toolbar.is_visible() && !breadcrumb_toolbar.is_visible())
+            if (!breadcrumb_toolbar.is_visible())
                 toolbar_container.set_visible(false);
         }
         show_toolbar = action.is_checked();
@@ -706,11 +697,9 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     layout_location_action = GUI::Action::create_checkable("&Location Bar", [&](auto& action) {
         if (action.is_checked()) {
             breadcrumb_toolbar.set_visible(true);
-            location_toolbar.set_visible(false);
             toolbar_container.set_visible(true);
         } else {
             breadcrumb_toolbar.set_visible(false);
-            location_toolbar.set_visible(false);
             if (!main_toolbar.is_visible())
                 toolbar_container.set_visible(false);
         }
@@ -740,13 +729,11 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     layout_folderpane_action->set_checked(show_folderpane);
     tree_view.set_visible(show_folderpane);
 
-    location_textbox.on_focusout = [&] {
+    breadcrumbbar.on_hide_location_box = [&] {
         if (show_location)
             breadcrumb_toolbar.set_visible(true);
         if (!(show_location || show_toolbar))
             toolbar_container.set_visible(false);
-
-        location_toolbar.set_visible(false);
     };
 
     auto view_type_action_group = make<GUI::ActionGroup>();
@@ -807,7 +794,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                     paths = directory_view->selected_file_paths();
 
                 for (auto& path : paths) {
-                    if (Core::File::is_directory(path))
+                    if (Core::DeprecatedFile::is_directory(path))
                         Desktop::Launcher::open(URL::create_with_file_scheme(path));
                 }
             },
@@ -826,7 +813,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                     paths = directory_view->selected_file_paths();
 
                 for (auto& path : paths) {
-                    if (Core::File::is_directory(path)) {
+                    if (Core::DeprecatedFile::is_directory(path)) {
                         spawn_terminal(path);
                     }
                 }
@@ -1033,10 +1020,8 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     auto go_to_location_action = GUI::Action::create("Go to &Location...", { Mod_Ctrl, Key_L }, Key_F6, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv)), [&](auto&) {
         toolbar_container.set_visible(true);
-        location_toolbar.set_visible(true);
-        breadcrumb_toolbar.set_visible(false);
-        location_textbox.select_all();
-        location_textbox.set_focus(true);
+        breadcrumb_toolbar.set_visible(true);
+        breadcrumbbar.show_location_text_box();
     });
 
     auto go_menu = TRY(window->try_add_menu("&Go"));
@@ -1079,17 +1064,12 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     (void)TRY(main_toolbar.try_add_action(directory_view->view_as_table_action()));
     (void)TRY(main_toolbar.try_add_action(directory_view->view_as_columns_action()));
 
-    breadcrumbbar.on_segment_change = [&](auto segment_index) {
-        if (!segment_index.has_value())
-            return;
-        auto selected_path = breadcrumbbar.segment_data(*segment_index);
-        if (Core::File::is_directory(selected_path)) {
+    breadcrumbbar.on_path_change = [&](auto selected_path) {
+        if (Core::DeprecatedFile::is_directory(selected_path)) {
             directory_view->open(selected_path);
         } else {
             dbgln("Breadcrumb path '{}' doesn't exist", selected_path);
-            breadcrumbbar.remove_end_segments(*segment_index);
-            auto existing_path_segment = breadcrumbbar.find_segment_with_data(directory_view->path());
-            breadcrumbbar.set_selected_segment(existing_path_segment.value());
+            breadcrumbbar.set_current_path(directory_view->path());
         }
     };
 
@@ -1097,43 +1077,10 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         auto icon = GUI::FileIconProvider::icon_for_path(new_path);
         auto* bitmap = icon.bitmap_for_size(16);
         window->set_icon(bitmap);
-        location_textbox.set_icon(bitmap);
 
         window->set_title(DeprecatedString::formatted("{} - File Manager", new_path));
-        location_textbox.set_text(new_path);
 
-        {
-            LexicalPath lexical_path(new_path);
-
-            auto segment_index_of_new_path_in_breadcrumbbar = breadcrumbbar.find_segment_with_data(new_path);
-
-            if (segment_index_of_new_path_in_breadcrumbbar.has_value()) {
-                auto new_segment_index = segment_index_of_new_path_in_breadcrumbbar.value();
-                breadcrumbbar.set_selected_segment(new_segment_index);
-
-                // If the path change was because the directory we were in was deleted,
-                // remove the breadcrumbs for it.
-                if ((new_segment_index + 1 < breadcrumbbar.segment_count())
-                    && !Core::File::is_directory(breadcrumbbar.segment_data(new_segment_index + 1))) {
-                    breadcrumbbar.remove_end_segments(new_segment_index + 1);
-                }
-            } else {
-                breadcrumbbar.clear_segments();
-
-                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
-                StringBuilder builder;
-
-                for (auto& part : lexical_path.parts()) {
-                    // NOTE: We rebuild the path as we go, so we have something to pass to GUI::FileIconProvider.
-                    builder.append('/');
-                    builder.append(part);
-
-                    breadcrumbbar.append_segment(part, GUI::FileIconProvider::icon_for_path(builder.string_view()).bitmap_for_size(16), builder.string_view(), builder.string_view());
-                }
-
-                breadcrumbbar.set_selected_segment(breadcrumbbar.segment_count() - 1);
-            }
-        }
+        breadcrumbbar.set_current_path(new_path);
 
         if (!is_reacting_to_tree_view_selection_change) {
             auto new_index = directories_model->index(new_path, GUI::FileSystemModel::Column::Name);
@@ -1148,8 +1095,8 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         paste_action->set_enabled(can_write_in_path && GUI::Clipboard::the().fetch_mime_type() == "text/uri-list");
         go_forward_action->set_enabled(directory_view->path_history_position() < directory_view->path_history_size() - 1);
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
-        open_parent_directory_action->set_enabled(new_path != "/");
-        open_child_directory_action->set_enabled(breadcrumbbar.selected_segment().has_value() && *breadcrumbbar.selected_segment() < breadcrumbbar.segment_count() - 1);
+        open_parent_directory_action->set_enabled(breadcrumbbar.has_parent_segment());
+        open_child_directory_action->set_enabled(breadcrumbbar.has_child_segment());
         directory_view->view_as_table_action().set_enabled(can_read_in_path);
         directory_view->view_as_icons_action().set_enabled(can_read_in_path);
         directory_view->view_as_columns_action().set_enabled(can_read_in_path);
@@ -1301,53 +1248,19 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         }
     };
 
-    auto copy_urls_to_directory = [&](Vector<URL> const& urls, DeprecatedString const& directory) {
-        if (urls.is_empty()) {
-            dbgln("No files to copy");
-            return;
-        }
-        bool had_accepted_copy = false;
-        for (auto& url_to_copy : urls) {
-            if (!url_to_copy.is_valid() || url_to_copy.path() == directory)
-                continue;
-            auto new_path = DeprecatedString::formatted("{}/{}", directory, LexicalPath::basename(url_to_copy.path()));
-            if (url_to_copy.path() == new_path)
-                continue;
-
-            if (auto result = Core::File::copy_file_or_directory(url_to_copy.path(), new_path); result.is_error()) {
-                auto error_message = DeprecatedString::formatted("Could not copy {} into {}:\n {}", url_to_copy.to_deprecated_string(), new_path, static_cast<Error const&>(result.error()));
-                GUI::MessageBox::show(window, error_message, "File Manager"sv, GUI::MessageBox::Type::Error);
-            } else {
-                had_accepted_copy = true;
-            }
-        }
-        if (had_accepted_copy)
+    breadcrumbbar.on_paths_drop = [&](auto path, GUI::DropEvent const& event) {
+        bool const has_accepted_drop = handle_drop(event, path, window).release_value_but_fixme_should_propagate_errors();
+        if (has_accepted_drop)
             refresh_tree_view();
     };
 
-    breadcrumbbar.on_segment_drop = [&](size_t segment_index, GUI::DropEvent const& event) {
-        if (!event.mime_data().has_urls())
-            return;
-        copy_urls_to_directory(event.mime_data().urls(), breadcrumbbar.segment_data(segment_index));
-    };
-
-    breadcrumbbar.on_segment_drag_enter = [&](size_t, GUI::DragEvent& event) {
-        if (event.mime_types().contains_slow("text/uri-list"))
-            event.accept();
-    };
-
-    breadcrumbbar.on_doubleclick = [&](GUI::MouseEvent const&) {
-        go_to_location_action->activate();
-    };
-
     tree_view.on_drop = [&](GUI::ModelIndex const& index, GUI::DropEvent const& event) {
-        if (!event.mime_data().has_urls())
-            return;
-        auto& target_node = directories_model->node(index);
-        if (!target_node.is_directory())
-            return;
-        copy_urls_to_directory(event.mime_data().urls(), target_node.full_path());
-        const_cast<GUI::DropEvent&>(event).accept();
+        auto const& target_node = directories_model->node(index);
+        bool const has_accepted_drop = handle_drop(event, target_node.full_path(), window).release_value_but_fixme_should_propagate_errors();
+        if (has_accepted_drop) {
+            refresh_tree_view();
+            const_cast<GUI::DropEvent&>(event).accept();
+        }
     };
 
     directory_view->open(initial_location);

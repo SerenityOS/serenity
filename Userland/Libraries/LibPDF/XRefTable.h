@@ -35,7 +35,7 @@ public:
     {
         auto this_size = m_entries.size();
         auto other_size = other.m_entries.size();
-        m_entries.ensure_capacity(other_size);
+        TRY(m_entries.try_ensure_capacity(other_size));
 
         for (size_t i = 0; i < other_size; i++) {
             auto other_entry = other.m_entries[i];
@@ -46,12 +46,9 @@ public:
 
             auto this_entry = m_entries[i];
 
-            if (this_entry.byte_offset == invalid_byte_offset) {
+            // Only add values that we don't already have.
+            if (this_entry.byte_offset == invalid_byte_offset)
                 m_entries[i] = other_entry;
-            } else if (other_entry.byte_offset != invalid_byte_offset) {
-                // Both xref tables have an entry for the same object index
-                return Error { Error::Type::Parse, "Conflicting xref entry during merge" };
-            }
         }
 
         return {};
@@ -68,7 +65,11 @@ public:
             m_entries.append(entry);
     }
 
+    void set_trailer(RefPtr<DictObject> trailer) { m_trailer = trailer; }
+
     ALWAYS_INLINE Vector<XRefEntry>& entries() { return m_entries; }
+
+    ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
 
     [[nodiscard]] ALWAYS_INLINE bool has_object(size_t index) const
     {
@@ -113,6 +114,7 @@ private:
     friend struct AK::Formatter<PDF::XRefTable>;
 
     Vector<XRefEntry> m_entries;
+    RefPtr<DictObject> m_trailer;
 };
 
 }

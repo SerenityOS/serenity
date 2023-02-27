@@ -17,10 +17,7 @@ namespace GUI {
 SeparatorWidget::SeparatorWidget(Gfx::Orientation orientation)
     : m_orientation(orientation)
 {
-    if (m_orientation == Gfx::Orientation::Vertical)
-        set_fixed_width(8);
-    else
-        set_fixed_height(8);
+    set_preferred_size(SpecialDimension::Fit);
 }
 
 void SeparatorWidget::paint_event(PaintEvent& event)
@@ -37,6 +34,13 @@ void SeparatorWidget::paint_event(PaintEvent& event)
         painter.draw_line({ 0, 0 }, { rect().right(), 0 }, palette().threed_shadow1());
         painter.draw_line({ 0, 1 }, { rect().right(), 1 }, palette().threed_highlight());
     }
+}
+
+Optional<UISize> SeparatorWidget::calculated_preferred_size() const
+{
+    if (m_orientation == Gfx::Orientation::Vertical)
+        return UISize { 8, SpecialDimension::OpportunisticGrow };
+    return UISize { SpecialDimension::OpportunisticGrow, 8 };
 }
 
 }

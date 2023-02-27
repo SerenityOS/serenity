@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  * Copyright (c) 2021, Marcin Gasperowicz <xnooga@gmail.com>
@@ -603,7 +603,7 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
         // AssignmentExpression : LeftHandSideExpression = AssignmentExpression
         return m_lhs.visit(
             // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
-            [&](NonnullRefPtr<Expression> const& lhs) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](NonnullRefPtr<Expression const> const& lhs) -> Bytecode::CodeGenerationErrorOr<void> {
                 // a. Let lref be the result of evaluating LeftHandSideExpression.
                 // b. ReturnIfAbrupt(lref).
                 Optional<Bytecode::Register> base_object_register;
@@ -675,7 +675,7 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
                 return {};
             },
             // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
-            [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](NonnullRefPtr<BindingPattern const> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
                 // 3. Let rref be the result of evaluating AssignmentExpression.
                 // 4. Let rval be ? GetValue(rref).
                 TRY(m_rhs->generate_bytecode(generator));
@@ -691,8 +691,8 @@ Bytecode::CodeGenerationErrorOr<void> AssignmentExpression::generate_bytecode(By
             });
     }
 
-    VERIFY(m_lhs.has<NonnullRefPtr<Expression>>());
-    auto& lhs = m_lhs.get<NonnullRefPtr<Expression>>();
+    VERIFY(m_lhs.has<NonnullRefPtr<Expression const>>());
+    auto& lhs = m_lhs.get<NonnullRefPtr<Expression const>>();
 
     TRY(generator.emit_load_from_reference(lhs));
 
@@ -1219,11 +1219,11 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
 
     for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
         if (is_rest) {
-            VERIFY(name.has<NonnullRefPtr<Identifier>>());
+            VERIFY(name.has<NonnullRefPtr<Identifier const>>());
             VERIFY(alias.has<Empty>());
             VERIFY(!initializer);
 
-            auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
+            auto identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
             auto interned_identifier = generator.intern_identifier(identifier);
 
             generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
@@ -1234,8 +1234,8 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
 
         Bytecode::StringTableIndex name_index;
 
-        if (name.has<NonnullRefPtr<Identifier>>()) {
-            auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
+        if (name.has<NonnullRefPtr<Identifier const>>()) {
+            auto identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
             name_index = generator.intern_string(identifier);
 
             if (has_rest) {
@@ -1248,7 +1248,7 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
             generator.emit<Bytecode::Op::Load>(value_reg);
             generator.emit<Bytecode::Op::GetById>(generator.intern_identifier(identifier));
         } else {
-            auto expression = name.get<NonnullRefPtr<Expression>>();
+            auto expression = name.get<NonnullRefPtr<Expression const>>();
             TRY(expression->generate_bytecode(generator));
 
             if (has_rest) {
@@ -1277,24 +1277,24 @@ static Bytecode::CodeGenerationErrorOr<void> generate_object_binding_pattern_byt
             generator.switch_to_basic_block(if_not_undefined_block);
         }
 
-        if (alias.has<NonnullRefPtr<BindingPattern>>()) {
-            auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern>>();
+        if (alias.has<NonnullRefPtr<BindingPattern const>>()) {
+            auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern const>>();
             auto nested_value_reg = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(nested_value_reg);
             TRY(generate_binding_pattern_bytecode(generator, binding_pattern, initialization_mode, nested_value_reg));
         } else if (alias.has<Empty>()) {
-            if (name.has<NonnullRefPtr<Expression>>()) {
+            if (name.has<NonnullRefPtr<Expression const>>()) {
                 // This needs some sort of SetVariableByValue opcode, as it's a runtime binding
                 return Bytecode::CodeGenerationError {
-                    name.get<NonnullRefPtr<Expression>>().ptr(),
+                    name.get<NonnullRefPtr<Expression const>>().ptr(),
                     "Unimplemented name/alias pair: Empty/Expression"sv,
                 };
             }
 
-            auto& identifier = name.get<NonnullRefPtr<Identifier>>()->string();
+            auto& identifier = name.get<NonnullRefPtr<Identifier const>>()->string();
             generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier), initialization_mode);
         } else {
-            auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
+            auto& identifier = alias.get<NonnullRefPtr<Identifier const>>()->string();
             generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(identifier), initialization_mode);
         }
     }
@@ -1340,18 +1340,18 @@ static Bytecode::CodeGenerationErrorOr<void> generate_array_binding_pattern_byte
                 // This element is an elision
                 return {};
             },
-            [&](NonnullRefPtr<Identifier> const& identifier) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](NonnullRefPtr<Identifier const> const& identifier) -> Bytecode::CodeGenerationErrorOr<void> {
                 auto interned_index = generator.intern_identifier(identifier->string());
                 generator.emit<Bytecode::Op::SetVariable>(interned_index, initialization_mode);
                 return {};
             },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](NonnullRefPtr<BindingPattern const> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
                 // Store the accumulator value in a permanent register
                 auto target_reg = generator.allocate_register();
                 generator.emit<Bytecode::Op::Store>(target_reg);
                 return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, target_reg);
             },
-            [&](NonnullRefPtr<MemberExpression> const& expr) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](NonnullRefPtr<MemberExpression const> const& expr) -> Bytecode::CodeGenerationErrorOr<void> {
                 return generator.emit_store_to_reference(*expr);
             });
     };
@@ -1487,11 +1487,11 @@ static Bytecode::CodeGenerationErrorOr<void> assign_accumulator_to_variable_decl
     auto environment_mode = declaration.is_lexical_declaration() ? Bytecode::Op::EnvironmentMode::Lexical : Bytecode::Op::EnvironmentMode::Var;
 
     return declarator.target().visit(
-        [&](NonnullRefPtr<Identifier> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
+        [&](NonnullRefPtr<Identifier const> const& id) -> Bytecode::CodeGenerationErrorOr<void> {
             generator.emit<Bytecode::Op::SetVariable>(generator.intern_identifier(id->string()), initialization_mode, environment_mode);
             return {};
         },
-        [&](NonnullRefPtr<BindingPattern> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
+        [&](NonnullRefPtr<BindingPattern const> const& pattern) -> Bytecode::CodeGenerationErrorOr<void> {
             auto value_register = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(value_register);
             return generate_binding_pattern_bytecode(generator, pattern, initialization_mode, value_register);
@@ -1972,17 +1972,11 @@ Bytecode::CodeGenerationErrorOr<void> ContinueStatement::generate_bytecode(Bytec
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
     if (m_target_label.is_null()) {
-        generator.perform_needed_unwinds<Bytecode::Op::Jump>();
-        generator.emit<Bytecode::Op::Jump>().set_targets(
-            generator.nearest_continuable_scope(),
-            {});
+        generator.generate_continue();
         return {};
     }
 
-    auto target_to_jump_to = generator.perform_needed_unwinds_for_labelled_continue_and_return_target_block(m_target_label);
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        target_to_jump_to,
-        {});
+    generator.generate_continue(m_target_label);
     return {};
 }
 
@@ -2168,17 +2162,11 @@ Bytecode::CodeGenerationErrorOr<void> BreakStatement::generate_bytecode(Bytecode
     //        We need to execute the finally block, but tell it to resume
     //        execution at the designated block
     if (m_target_label.is_null()) {
-        generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
-        generator.emit<Bytecode::Op::Jump>().set_targets(
-            generator.nearest_breakable_scope(),
-            {});
+        generator.generate_break();
         return {};
     }
 
-    auto target_to_jump_to = generator.perform_needed_unwinds_for_labelled_break_and_return_target_block(m_target_label);
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        target_to_jump_to,
-        {});
+    generator.generate_break(m_target_label);
     return {};
 }
 
@@ -2192,6 +2180,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
     Bytecode::BasicBlock* next_block { nullptr };
 
     if (m_finalizer) {
+        // FIXME: See notes in Op.h->ScheduleJump
         auto& finalizer_block = generator.make_block();
         generator.switch_to_basic_block(finalizer_block);
         generator.emit<Bytecode::Op::LeaveUnwindContext>();
@@ -2224,7 +2213,7 @@ Bytecode::CodeGenerationErrorOr<void> TryStatement::generate_bytecode(Bytecode::
                 }
                 return {};
             },
-            [&](NonnullRefPtr<BindingPattern> const&) -> Bytecode::CodeGenerationErrorOr<void> {
+            [&](NonnullRefPtr<BindingPattern const> const&) -> Bytecode::CodeGenerationErrorOr<void> {
                 // FIXME: Implement this path when the above DeclarativeEnvironment issue is dealt with.
                 return Bytecode::CodeGenerationError {
                     this,
@@ -2380,12 +2369,49 @@ Bytecode::CodeGenerationErrorOr<void> AwaitExpression::generate_bytecode(Bytecod
 {
     VERIFY(generator.is_in_async_function());
 
-    // Transform `await expr` to `yield expr`
+    // Transform `await expr` to `yield expr`, see AsyncFunctionDriverWrapper
+    // For that we just need to copy most of the code from YieldExpression
+    auto received_completion_register = generator.allocate_register();
+    auto received_completion_type_register = generator.allocate_register();
+    auto received_completion_value_register = generator.allocate_register();
+
+    auto type_identifier = generator.intern_identifier("type");
+    auto value_identifier = generator.intern_identifier("value");
+
     TRY(m_argument->generate_bytecode(generator));
 
     auto& continuation_block = generator.make_block();
     generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
     generator.switch_to_basic_block(continuation_block);
+
+    // The accumulator is set to an object, for example: { "type": 1 (normal), value: 1337 }
+    generator.emit<Bytecode::Op::Store>(received_completion_register);
+
+    generator.emit<Bytecode::Op::GetById>(type_identifier);
+    generator.emit<Bytecode::Op::Store>(received_completion_type_register);
+
+    generator.emit<Bytecode::Op::Load>(received_completion_register);
+    generator.emit<Bytecode::Op::GetById>(value_identifier);
+    generator.emit<Bytecode::Op::Store>(received_completion_value_register);
+
+    auto& normal_completion_continuation_block = generator.make_block();
+    auto& throw_value_block = generator.make_block();
+
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(to_underlying(Completion::Type::Normal)));
+    generator.emit<Bytecode::Op::StrictlyEquals>(received_completion_type_register);
+    generator.emit<Bytecode::Op::JumpConditional>(
+        Bytecode::Label { normal_completion_continuation_block },
+        Bytecode::Label { throw_value_block });
+
+    // Simplification: The only abrupt completion we receive from AsyncFunctionDriverWrapper is Type::Throw
+    //                 So we do not need to account for the Type::Return path
+    generator.switch_to_basic_block(throw_value_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
+    generator.perform_needed_unwinds<Bytecode::Op::Throw>();
+    generator.emit<Bytecode::Op::Throw>();
+
+    generator.switch_to_basic_block(normal_completion_continuation_block);
+    generator.emit<Bytecode::Op::Load>(received_completion_value_register);
     return {};
 }
 
@@ -2422,12 +2448,12 @@ struct ForInOfHeadEvaluationResult {
     bool is_destructuring { false };
     LHSKind lhs_kind { LHSKind::Assignment };
 };
-static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_head_evaluation(Bytecode::Generator& generator, IterationKind iteration_kind, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> const& lhs, NonnullRefPtr<ASTNode> const& rhs)
+static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_head_evaluation(Bytecode::Generator& generator, IterationKind iteration_kind, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> const& lhs, NonnullRefPtr<ASTNode const> const& rhs)
 {
     ForInOfHeadEvaluationResult result {};
 
     bool entered_lexical_scope = false;
-    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>(); ast_ptr && is<VariableDeclaration>(**ast_ptr)) {
+    if (auto* ast_ptr = lhs.get_pointer<NonnullRefPtr<ASTNode const>>(); ast_ptr && is<VariableDeclaration>(**ast_ptr)) {
         // Runtime Semantics: ForInOfLoopEvaluation, for any of:
         //  ForInOfStatement : for ( var ForBinding in Expression ) Statement
         //  ForInOfStatement : for ( ForDeclaration in Expression ) Statement
@@ -2435,7 +2461,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
         //  ForInOfStatement : for ( ForDeclaration of AssignmentExpression ) Statement
 
         auto& variable_declaration = static_cast<VariableDeclaration const&>(**ast_ptr);
-        result.is_destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern>>();
+        result.is_destructuring = variable_declaration.declarations().first().target().has<NonnullRefPtr<BindingPattern const>>();
         result.lhs_kind = variable_declaration.is_lexical_declaration() ? LHSKind::LexicalBinding : LHSKind::VarBinding;
 
         // 1. Let oldEnv be the running execution context's LexicalEnvironment.
@@ -2485,8 +2511,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
 
         // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
         generator.switch_to_basic_block(nullish_block);
-        generator.perform_needed_unwinds<Bytecode::Op::Jump>(true);
-        generator.emit<Bytecode::Op::Jump>().set_targets(generator.nearest_breakable_scope(), {});
+        generator.generate_break();
 
         generator.switch_to_basic_block(continuation_block);
         // b. Let obj be ! ToObject(exprValue).
@@ -2516,7 +2541,7 @@ static Bytecode::CodeGenerationErrorOr<ForInOfHeadEvaluationResult> for_in_of_he
 }
 
 // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
-static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode>, NonnullRefPtr<BindingPattern>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Vector<DeprecatedFlyString> const& label_set, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update)
+static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode::Generator& generator, ASTNode const& node, Variant<NonnullRefPtr<ASTNode const>, NonnullRefPtr<BindingPattern const>> const& lhs, ASTNode const& body, ForInOfHeadEvaluationResult const& head_result, Vector<DeprecatedFlyString> const& label_set, Bytecode::BasicBlock& loop_end, Bytecode::BasicBlock& loop_update)
 {
     auto iterator_register = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(iterator_register);
@@ -2579,14 +2604,14 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
             // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
             // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
             if (head_result.lhs_kind == LHSKind::VarBinding) {
-                auto& declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode>>());
+                auto& declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode const>>());
                 VERIFY(declaration.declarations().size() == 1);
                 TRY(assign_accumulator_to_variable_declarator(generator, declaration.declarations().first(), declaration));
             } else {
-                if (auto ptr = lhs.get_pointer<NonnullRefPtr<ASTNode>>()) {
+                if (auto ptr = lhs.get_pointer<NonnullRefPtr<ASTNode const>>()) {
                     TRY(generator.emit_store_to_reference(**ptr));
                 } else {
-                    auto& binding_pattern = lhs.get<NonnullRefPtr<BindingPattern>>();
+                    auto& binding_pattern = lhs.get<NonnullRefPtr<BindingPattern const>>();
                     auto value_register = generator.allocate_register();
                     generator.emit<Bytecode::Op::Store>(value_register);
                     TRY(generate_binding_pattern_bytecode(generator, *binding_pattern, Bytecode::Op::SetVariable::InitializationMode::Set, value_register));
@@ -2607,7 +2632,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         // 14.7.5.4 Runtime Semantics: ForDeclarationBindingInstantiation, https://tc39.es/ecma262/#sec-runtime-semantics-fordeclarationbindinginstantiation
         // 1. Assert: environment is a declarative Environment Record.
         // NOTE: We just made it.
-        auto& variable_declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode>>());
+        auto& variable_declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode const>>());
         // 2. For each element name of the BoundNames of ForBinding, do
         variable_declaration.for_each_bound_name([&](auto const& name) {
             auto identifier = generator.intern_identifier(name);
@@ -2630,7 +2655,7 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         if (!destructuring) {
             // 1. Assert: lhs binds a single name.
             // 2. Let lhsName be the sole element of BoundNames of lhs.
-            auto lhs_name = variable_declaration.declarations().first().target().get<NonnullRefPtr<Identifier>>()->string();
+            auto lhs_name = variable_declaration.declarations().first().target().get<NonnullRefPtr<Identifier const>>()->string();
             // 3. Let lhsRef be ! ResolveBinding(lhsName).
             // NOTE: We're skipping all the completion stuff that the spec does, as the unwinding mechanism will take case of doing that.
             auto identifier = generator.intern_identifier(lhs_name);
@@ -2660,9 +2685,9 @@ static Bytecode::CodeGenerationErrorOr<void> for_in_of_body_evaluation(Bytecode:
         //      2. Assert: lhs is a ForDeclaration.
         //      3. Let status be Completion(ForDeclarationBindingInitialization of lhs with arguments nextValue and iterationEnv).
         if (head_result.lhs_kind == LHSKind::VarBinding || head_result.lhs_kind == LHSKind::LexicalBinding) {
-            auto& declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode>>());
+            auto& declaration = static_cast<VariableDeclaration const&>(*lhs.get<NonnullRefPtr<ASTNode const>>());
             VERIFY(declaration.declarations().size() == 1);
-            auto& binding_pattern = declaration.declarations().first().target().get<NonnullRefPtr<BindingPattern>>();
+            auto& binding_pattern = declaration.declarations().first().target().get<NonnullRefPtr<BindingPattern const>>();
 
             auto value_register = generator.allocate_register();
             generator.emit<Bytecode::Op::Store>(value_register);

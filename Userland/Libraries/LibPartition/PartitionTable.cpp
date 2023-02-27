@@ -7,19 +7,20 @@
 #include <LibPartition/PartitionTable.h>
 
 #ifndef KERNEL
+#    include <LibCore/DeprecatedFile.h>
 #    include <sys/ioctl.h>
 #endif
 
 namespace Partition {
 
 #ifdef KERNEL
-PartitionTable::PartitionTable(Kernel::StorageDevice const& device)
+PartitionTable::PartitionTable(Kernel::StorageDevice& device)
     : m_device(device)
     , m_block_size(device.block_size())
 {
 }
 #else
-PartitionTable::PartitionTable(NonnullRefPtr<Core::File> device_file)
+PartitionTable::PartitionTable(NonnullRefPtr<Core::DeprecatedFile> device_file)
     : m_device_file(device_file)
 {
     VERIFY(ioctl(m_device_file->leak_fd(), STORAGE_DEVICE_GET_BLOCK_SIZE, &m_block_size) >= 0);

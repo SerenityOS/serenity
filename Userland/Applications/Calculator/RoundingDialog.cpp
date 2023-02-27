@@ -46,14 +46,14 @@ RoundingDialog::RoundingDialog(GUI::Window* parent_window, StringView title)
 
     m_rounding_spinbox = GUI::SpinBox::construct();
     m_buttons_container = GUI::Widget::construct();
-    m_ok_button = GUI::DialogButton::construct("OK");
-    m_cancel_button = GUI::DialogButton::construct("Cancel");
+    m_ok_button = GUI::DialogButton::construct("OK"_short_string);
+    m_cancel_button = GUI::DialogButton::construct("Cancel"_short_string);
 
     main_widget->add_child(*m_rounding_spinbox);
     main_widget->add_child(*m_buttons_container);
 
     m_buttons_container->set_layout<GUI::HorizontalBoxLayout>();
-    m_buttons_container->layout()->add_spacer();
+    m_buttons_container->add_spacer().release_value_but_fixme_should_propagate_errors();
     m_buttons_container->add_child(*m_ok_button);
     m_buttons_container->add_child(*m_cancel_button);
 

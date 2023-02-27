@@ -344,12 +344,12 @@ ThrowCompletionOr<TemporalTimeLikeRecord> to_temporal_time_record(VM& vm, Object
 
     // 2. Let partial be ? PrepareTemporalFields(temporalTimeLike, « "hour", "microsecond", "millisecond", "minute", "nanosecond", "second" », partial).
     auto* partial = TRY(prepare_temporal_fields(vm, temporal_time_like,
-        { TRY_OR_THROW_OOM(vm, String::from_utf8("hour"sv)),
-            TRY_OR_THROW_OOM(vm, String::from_utf8("microsecond"sv)),
-            TRY_OR_THROW_OOM(vm, String::from_utf8("millisecond"sv)),
-            TRY_OR_THROW_OOM(vm, String::from_utf8("minute"sv)),
-            TRY_OR_THROW_OOM(vm, String::from_utf8("nanosecond"sv)),
-            TRY_OR_THROW_OOM(vm, String::from_utf8("second"sv)) },
+        { TRY_OR_THROW_OOM(vm, "hour"_string),
+            TRY_OR_THROW_OOM(vm, "microsecond"_string),
+            TRY_OR_THROW_OOM(vm, "millisecond"_string),
+            TRY_OR_THROW_OOM(vm, "minute"_string),
+            TRY_OR_THROW_OOM(vm, "nanosecond"_string),
+            TRY_OR_THROW_OOM(vm, "second"_string) },
         PrepareTemporalFieldsPartial {}));
 
     TemporalTimeLikeRecord result;

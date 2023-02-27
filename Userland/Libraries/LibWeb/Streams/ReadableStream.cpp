@@ -14,7 +14,7 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#rs-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm)
 {
-    return realm.heap().allocate<ReadableStream>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<ReadableStream>(realm, realm));
 }
 
 ReadableStream::ReadableStream(JS::Realm& realm)

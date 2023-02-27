@@ -75,7 +75,7 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             length = blob->size();
             // If object’s type attribute is not the empty byte sequence, set type to its value.
             if (!blob->type().is_empty())
-                type = blob->type().to_byte_buffer();
+                type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(blob->type().bytes()));
             return {};
         },
         [&](ReadonlyBytes bytes) -> WebIDL::ExceptionOr<void> {

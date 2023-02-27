@@ -17,15 +17,15 @@ public:
     virtual ~BucketTool() override = default;
 
     virtual void on_mousedown(Layer*, MouseEvent&) override;
-    virtual GUI::Widget* get_properties_widget() override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return m_cursor; }
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override { return m_cursor; }
 
 private:
     virtual StringView tool_name() const override { return "Bucket Tool"sv; }
 
     RefPtr<GUI::Widget> m_properties_widget;
     int m_threshold { 0 };
-    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> m_cursor { Gfx::StandardCursor::Crosshair };
+    Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> m_cursor { Gfx::StandardCursor::Crosshair };
 };
 
 }

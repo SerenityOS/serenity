@@ -6,8 +6,8 @@
 
 #include <AK/Base64.h>
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibTLS/TLSv12.h>
 #include <LibTest/TestCase.h>
@@ -27,11 +27,11 @@ DeprecatedString locate_ca_certs_file();
 
 DeprecatedString locate_ca_certs_file()
 {
-    if (Core::File::exists(ca_certs_file)) {
+    if (Core::DeprecatedFile::exists(ca_certs_file)) {
         return ca_certs_file;
     }
     auto on_target_path = DeprecatedString("/etc/ca_certs.ini");
-    if (Core::File::exists(on_target_path)) {
+    if (Core::DeprecatedFile::exists(on_target_path)) {
         return on_target_path;
     }
     return "";

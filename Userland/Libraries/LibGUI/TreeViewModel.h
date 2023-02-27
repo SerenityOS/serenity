@@ -49,7 +49,7 @@ public:
         requires(IsBaseOf<Node, NodeType>)
         {
             auto node = adopt_ref(*new NodeType(move(text), move(icon), this, forward<Args>(args)...));
-            m_child_nodes.append(*static_cast<Node const*>(node.ptr()));
+            m_child_nodes.append(*static_cast<Node*>(node.ptr()));
             return node;
         }
 
@@ -77,7 +77,7 @@ public:
     requires(IsBaseOf<Node, NodeType>)
     {
         auto node = adopt_ref(*new NodeType(move(text), move(icon), nullptr, forward<Args>(args)...));
-        m_nodes.append(*static_cast<Node const*>(node.ptr()));
+        m_nodes.append(*static_cast<Node*>(node.ptr()));
         return node;
     }
 

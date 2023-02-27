@@ -18,8 +18,8 @@ class PenTool final : public BrushTool {
 public:
     PenTool();
     virtual ~PenTool() override = default;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override { return Gfx::StandardCursor::Crosshair; }
-    virtual GUI::Widget* get_properties_widget() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override { return Gfx::StandardCursor::Crosshair; }
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
 
 protected:
     virtual void draw_point(Gfx::Bitmap& bitmap, Gfx::Color color, Gfx::IntPoint point) override;

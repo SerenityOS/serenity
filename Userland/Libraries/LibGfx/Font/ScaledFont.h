@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +34,7 @@ public:
 
     // ^Gfx::Font
     virtual NonnullRefPtr<Font> clone() const override { return MUST(try_clone()); } // FIXME: clone() should not need to be implemented
-    virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return *this; }
+    virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return const_cast<ScaledFont&>(*this); }
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual float pixel_size() const override { return m_point_height * 1.33333333f; }
     virtual Gfx::FontPixelMetrics pixel_metrics() const override;
@@ -45,7 +46,8 @@ public:
     virtual Glyph glyph(u32 code_point, GlyphSubpixelOffset) const override;
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual float glyph_width(u32 code_point) const override;
-    virtual float glyph_or_emoji_width(u32 code_point) const override;
+    virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const override;
+    virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const override;
     virtual float glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const override;
     virtual float preferred_line_height() const override { return metrics().height() + metrics().line_gap; }
     virtual u8 glyph_height() const override { return pixel_size(); }
@@ -66,6 +68,8 @@ public:
     virtual DeprecatedString variant() const override { return m_font->variant(); }
     virtual DeprecatedString qualified_name() const override { return DeprecatedString::formatted("{} {} {} {}", family(), presentation_size(), weight(), slope()); }
     virtual DeprecatedString human_readable_name() const override { return DeprecatedString::formatted("{} {} {}", family(), variant(), presentation_size()); }
+
+    virtual RefPtr<Font> with_size(float point_size) const override;
 
 private:
     NonnullRefPtr<VectorFont> m_font;

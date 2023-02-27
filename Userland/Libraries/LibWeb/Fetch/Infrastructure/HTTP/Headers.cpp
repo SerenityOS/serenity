@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
@@ -257,22 +257,40 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 
     // 2. Let names be the result of convert header names to a sorted-lowercase set with all the names of the headers in list.
     Vector<ReadonlyBytes> names_list;
+    TRY(names_list.try_ensure_capacity(size()));
     for (auto const& header : *this)
-        names_list.append(header.name);
+        names_list.unchecked_append(header.name);
     auto names = TRY(convert_header_names_to_a_sorted_lowercase_set(names_list));
 
     // 3. For each name of names:
     for (auto& name : names) {
-        // 1. Let value be the result of getting name from list.
-        // 2. Assert: value is not null.
-        auto value = TRY(get(name)).value();
+        // 1. If name is `set-cookie`, then:
+        if (name == "set-cookie"sv.bytes()) {
+            // 1. Let values be a list of all values of headers in list whose name is a byte-case-insensitive match for name, in order.
+            // 2. For each value of values:
+            for (auto const& [header_name, value] : *this) {
+                if (StringView { header_name }.equals_ignoring_case(name)) {
+                    // 1. Append (name, value) to headers.
+                    auto header = TRY(Header::from_string_pair(name, value));
+                    TRY(headers.try_append(move(header)));
+                }
+            }
+        }
+        // 2. Otherwise:
+        else {
+            // 1. Let value be the result of getting name from list.
+            auto value = TRY(get(name));
 
-        // 3. Append (name, value) to headers.
-        auto header = Infrastructure::Header {
-            .name = move(name),
-            .value = move(value),
-        };
-        headers.append(move(header));
+            // 2. Assert: value is not null.
+            VERIFY(value.has_value());
+
+            // 3. Append (name, value) to headers.
+            auto header = Header {
+                .name = move(name),
+                .value = value.release_value(),
+            };
+            TRY(headers.try_append(move(header)));
+        }
     }
 
     // 4. Return headers.
@@ -352,7 +370,7 @@ ErrorOr<OrderedHashTable<ByteBuffer>> convert_header_names_to_a_sorted_lowercase
             continue;
         auto bytes = TRY(ByteBuffer::copy(name));
         Infra::byte_lowercase(bytes);
-        header_names_seen.set(bytes);
+        header_names_seen.set(name);
         header_names_set.append(move(bytes));
     }
 
@@ -685,11 +703,11 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_values(Header const& header
 }
 
 // https://fetch.spec.whatwg.org/#extract-header-list-values
-ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
+ErrorOr<Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty>> extract_header_list_values(ReadonlyBytes name, HeaderList const& list)
 {
     // 1. If list does not contain name, then return null.
     if (!list.contains(name))
-        return Optional<Vector<ByteBuffer>> {};
+        return Empty {};
 
     // FIXME: 2. If the ABNF for name allows a single header and list contains more than one, then return failure.
     // NOTE: If different error handling is needed, extract the desired header first.
@@ -706,10 +724,8 @@ ErrorOr<Optional<Vector<ByteBuffer>>> extract_header_list_values(ReadonlyBytes n
         auto extract = TRY(extract_header_values(header));
 
         // 2. If extract is failure, then return failure.
-        // FIXME: Currently we treat the null return above and failure return as the same thing,
-        //        ErrorOr already signals OOM to the caller.
         if (!extract.has_value())
-            return Optional<Vector<ByteBuffer>> {};
+            return ExtractHeaderParseFailure {};
 
         // 3. Append each value in extract, in order, to values.
         values.extend(extract.release_value());

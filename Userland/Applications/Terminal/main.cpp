@@ -10,8 +10,8 @@
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -175,12 +175,10 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_role(ColorRole::Button);
-    (void)TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>());
-    main_widget->layout()->set_margins(4);
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4));
 
     auto find = TRY(main_widget->try_add<GUI::Widget>());
-    (void)TRY(find->try_set_layout<GUI::HorizontalBoxLayout>());
-    find->layout()->set_margins(4);
+    TRY(find->try_set_layout<GUI::HorizontalBoxLayout>(4));
     find->set_fixed_height(30);
 
     auto find_textbox = TRY(find->try_add<GUI::TextBox>());
@@ -203,8 +201,8 @@ static ErrorOr<NonnullRefPtr<GUI::Window>> create_find_window(VT::TerminalWidget
         find_forwards->click();
     };
 
-    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>("Case sensitive"));
-    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>("Wrap around"));
+    auto match_case = TRY(main_widget->try_add<GUI::CheckBox>(TRY("Case sensitive"_string)));
+    auto wrap_around = TRY(main_widget->try_add<GUI::CheckBox>(TRY("Wrap around"_string)));
 
     find_backwards->on_click = [&terminal, find_textbox, match_case, wrap_around](auto) {
         auto needle = find_textbox->text();

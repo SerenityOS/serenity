@@ -22,6 +22,7 @@ class TextToolEditor : public GUI::TextEditor {
 public:
     virtual ~TextToolEditor() override = default;
     virtual void handle_keyevent(Badge<TextTool>, GUI::KeyEvent&);
+    NonnullRefPtrVector<GUI::Action> actions();
 
 protected:
     TextToolEditor();
@@ -37,10 +38,10 @@ public:
     virtual void on_mousedown(Layer*, MouseEvent&) override;
     virtual bool on_keydown(GUI::KeyEvent&) override;
     virtual void on_second_paint(Layer const*, GUI::PaintEvent&) override;
-    virtual void on_tool_activation() override;
+    virtual void on_primary_color_change(Color) override;
     virtual void on_tool_deactivation() override;
-    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap>> cursor() override;
-    virtual GUI::Widget* get_properties_widget() override;
+    virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override;
+    virtual ErrorOr<GUI::Widget*> get_properties_widget() override;
 
 private:
     virtual StringView tool_name() const override { return "Text Tool"sv; }
@@ -52,7 +53,7 @@ private:
     RefPtr<Core::Timer> m_cursor_blink_timer;
     RefPtr<PixelPaint::TextToolEditor> m_text_editor;
     Gfx::IntPoint m_add_text_position { 0, 0 };
-    RefPtr<Gfx::Font> m_selected_font;
+    RefPtr<Gfx::Font const> m_selected_font;
     bool m_text_input_is_active { false };
     bool m_cursor_blink_state { false };
     bool m_mouse_is_over_text { false };

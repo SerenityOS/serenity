@@ -39,7 +39,7 @@ static i64 g_num_quads;
 
 using AK::abs;
 using AK::SIMD::any;
-using AK::SIMD::exp;
+using AK::SIMD::exp_approximate;
 using AK::SIMD::expand4;
 using AK::SIMD::f32x4;
 using AK::SIMD::i32x4;
@@ -1277,21 +1277,20 @@ ALWAYS_INLINE void Device::shade_fragments(PixelQuad& quad)
     // Calculate fog
     // Math from here: https://opengl-notes.readthedocs.io/en/latest/topics/texturing/aliasing.html
 
-    // FIXME: exponential fog is not vectorized, we should add a SIMD exp function that calculates an approximation.
     if (m_options.fog_enabled) {
         f32x4 factor;
         switch (m_options.fog_mode) {
         case GPU::FogMode::Linear:
-            factor = (m_options.fog_end - quad.fog_depth) / (m_options.fog_end - m_options.fog_start);
+            factor = (m_options.fog_end - quad.fog_depth) * m_one_over_fog_depth;
             break;
         case GPU::FogMode::Exp: {
             auto argument = -m_options.fog_density * quad.fog_depth;
-            factor = exp(argument);
+            factor = exp_approximate(argument);
         } break;
         case GPU::FogMode::Exp2: {
             auto argument = m_options.fog_density * quad.fog_depth;
             argument *= -argument;
-            factor = exp(argument);
+            factor = exp_approximate(argument);
         } break;
         default:
             VERIFY_NOT_REACHED();
@@ -1556,6 +1555,8 @@ void Device::draw_statistics_overlay(Gfx::Bitmap& target)
 void Device::set_options(GPU::RasterizerOptions const& options)
 {
     m_options = options;
+    if (m_options.fog_enabled)
+        m_one_over_fog_depth = 1.f / (m_options.fog_end - m_options.fog_start);
 }
 
 void Device::set_light_model_params(GPU::LightModelParameters const& lighting_model)

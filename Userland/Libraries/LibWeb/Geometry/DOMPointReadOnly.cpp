@@ -7,12 +7,13 @@
 
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Geometry/DOMPointReadOnly.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Geometry {
 
-JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMPointReadOnly>> DOMPointReadOnly::construct_impl(JS::Realm& realm, double x, double y, double z, double w)
 {
-    return realm.heap().allocate<DOMPointReadOnly>(realm, realm, x, y, z, w).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<DOMPointReadOnly>(realm, realm, x, y, z, w));
 }
 
 DOMPointReadOnly::DOMPointReadOnly(JS::Realm& realm, double x, double y, double z, double w)
@@ -25,7 +26,7 @@ DOMPointReadOnly::DOMPointReadOnly(JS::Realm& realm, double x, double y, double 
 }
 
 // https://drafts.fxtf.org/geometry/#dom-dompointreadonly-frompoint
-JS::NonnullGCPtr<DOMPointReadOnly> DOMPointReadOnly::from_point(JS::VM& vm, DOMPointInit const& other)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMPointReadOnly>> DOMPointReadOnly::from_point(JS::VM& vm, DOMPointInit const& other)
 {
     // The fromPoint(other) static method on DOMPointReadOnly must create a DOMPointReadOnly from the dictionary other.
     return construct_impl(*vm.current_realm(), other.x, other.y, other.z, other.w);

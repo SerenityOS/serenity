@@ -6,8 +6,8 @@
  */
 
 #include <DevTools/SQLStudio/SQLStudioGML.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -45,7 +45,7 @@ static Vector<DeprecatedString> lookup_database_names()
     static constexpr auto database_extension = ".db"sv;
 
     auto database_path = DeprecatedString::formatted("{}/sql", Core::StandardPaths::data_directory());
-    if (!Core::File::exists(database_path))
+    if (!Core::DeprecatedFile::exists(database_path))
         return {};
 
     Core::DirIterator iterator(move(database_path), Core::DirIterator::SkipParentAndBaseDir);
@@ -227,8 +227,7 @@ MainWidget::MainWidget()
     m_action_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("action_tab_widget"sv);
 
     m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results");
-    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>();
-    m_query_results_widget->layout()->set_margins(6);
+    m_query_results_widget->set_layout<GUI::VerticalBoxLayout>(6);
     m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 
     m_action_tab_widget->on_tab_close_click = [this](auto&) {

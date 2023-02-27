@@ -223,6 +223,8 @@ class File;
 }
 
 namespace Web::Geometry {
+class DOMMatrix;
+class DOMMatrixReadOnly;
 class DOMPoint;
 class DOMPointReadOnly;
 class DOMRect;
@@ -246,6 +248,7 @@ struct EnvironmentSettingsObject;
 class ErrorEvent;
 class EventHandler;
 class EventLoop;
+class FormDataEvent;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;
@@ -480,6 +483,7 @@ class WebGLRenderingContextBase;
 }
 
 namespace Web::XHR {
+class FormData;
 class ProgressEvent;
 class XMLHttpRequest;
 class XMLHttpRequestEventTarget;

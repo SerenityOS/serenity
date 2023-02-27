@@ -9,9 +9,9 @@
 
 namespace Web::SVG {
 
-JS::NonnullGCPtr<SVGAnimatedLength> SVGAnimatedLength::create(JS::Realm& realm, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<SVGAnimatedLength>> SVGAnimatedLength::create(JS::Realm& realm, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)
 {
-    return realm.heap().allocate<SVGAnimatedLength>(realm, realm, move(base_val), move(anim_val)).release_allocated_value_but_fixme_should_propagate_errors();
+    return MUST_OR_THROW_OOM(realm.heap().allocate<SVGAnimatedLength>(realm, realm, move(base_val), move(anim_val)));
 }
 
 SVGAnimatedLength::SVGAnimatedLength(JS::Realm& realm, JS::NonnullGCPtr<SVGLength> base_val, JS::NonnullGCPtr<SVGLength> anim_val)

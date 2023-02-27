@@ -45,7 +45,10 @@ public:
     Gfx::Bitmap const* mask_bitmap() const { return m_mask_bitmap; }
     Gfx::Bitmap* mask_bitmap() { return m_mask_bitmap; }
 
-    void create_mask();
+    ErrorOr<void> create_mask();
+    void delete_mask();
+    void apply_mask();
+
     Gfx::Bitmap& get_scratch_edited_bitmap();
 
     Gfx::IntSize size() const { return content_bitmap().size(); }

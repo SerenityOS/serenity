@@ -14,21 +14,6 @@
         }
 
         @GUI::Toolbar {
-            name: "location_toolbar"
-            visible: false
-
-            @GUI::Label {
-                text: "Location: "
-                autosize: true
-            }
-
-            @GUI::TextBox {
-                name: "location_textbox"
-                fixed_height: 22
-            }
-        }
-
-        @GUI::Toolbar {
             name: "breadcrumb_toolbar"
 
             @GUI::Label {
@@ -36,7 +21,7 @@
                 autosize: true
             }
 
-            @GUI::Breadcrumbbar {
+            @GUI::PathBreadcrumbbar {
                 name: "breadcrumbbar"
             }
         }

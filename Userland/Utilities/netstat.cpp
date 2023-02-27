@@ -11,8 +11,8 @@
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/Stream.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <arpa/inet.h>
@@ -48,7 +48,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/sys/kernel/processes", "r"));
     TRY(Core::System::unveil("/etc/passwd", "r"));
     TRY(Core::System::unveil("/etc/services", "r"));
-    TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+    if (!flag_numeric)
+        TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
+
     TRY(Core::System::unveil(nullptr, nullptr));
 
     bool has_protocol_flag = (flag_tcp || flag_udp);
@@ -152,7 +154,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!has_protocol_flag || flag_tcp) {
-        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/tcp"sv, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open("/sys/kernel/net/tcp"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json_or_error = JsonValue::from_string(file_contents);
         if (json_or_error.is_error()) {
@@ -244,7 +246,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     if (!has_protocol_flag || flag_udp) {
-        auto file = TRY(Core::Stream::File::open("/sys/kernel/net/udp"sv, Core::Stream::OpenMode::Read));
+        auto file = TRY(Core::File::open("/sys/kernel/net/udp"sv, Core::File::OpenMode::Read));
         auto file_contents = TRY(file->read_until_eof());
         auto json = TRY(JsonValue::from_string(file_contents));
 

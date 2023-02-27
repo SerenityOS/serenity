@@ -21,7 +21,7 @@
 #include <LibAudio/FlacTypes.h>
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Resampler.h>
-#include <LibCore/Stream.h>
+#include <LibCore/File.h>
 
 namespace Audio {
 
@@ -32,7 +32,7 @@ FlacLoaderPlugin::FlacLoaderPlugin(NonnullOwnPtr<SeekableStream> stream)
 
 Result<NonnullOwnPtr<FlacLoaderPlugin>, LoaderError> FlacLoaderPlugin::create(StringView path)
 {
-    auto stream = LOADER_TRY(Core::Stream::BufferedFile::create(LOADER_TRY(Core::Stream::File::open(path, Core::Stream::OpenMode::Read))));
+    auto stream = LOADER_TRY(Core::BufferedFile::create(LOADER_TRY(Core::File::open(path, Core::File::OpenMode::Read))));
     auto loader = make<FlacLoaderPlugin>(move(stream));
 
     LOADER_TRY(loader->initialize());
@@ -60,7 +60,7 @@ MaybeLoaderError FlacLoaderPlugin::initialize()
 // 11.5 STREAM
 MaybeLoaderError FlacLoaderPlugin::parse_header()
 {
-    BigEndianInputBitStream bit_input { MaybeOwned<AK::Stream>(*m_stream) };
+    BigEndianInputBitStream bit_input { MaybeOwned<Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
 #define FLAC_VERIFY(check, category, msg)                                                                                                     \
@@ -79,7 +79,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     auto streaminfo = TRY(next_meta_block(bit_input));
     FLAC_VERIFY(streaminfo.type == FlacMetadataBlockType::STREAMINFO, LoaderError::Category::Format, "First block must be STREAMINFO");
     FixedMemoryStream streaminfo_data_memory { streaminfo.data.bytes() };
-    BigEndianInputBitStream streaminfo_data { MaybeOwned<AK::Stream>(streaminfo_data_memory) };
+    BigEndianInputBitStream streaminfo_data { MaybeOwned<Stream>(streaminfo_data_memory) };
 
     // 11.10 METADATA_BLOCK_STREAMINFO
     m_min_block_size = LOADER_TRY(streaminfo_data.read_bits<u16>(16));
@@ -150,7 +150,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 {
     FixedMemoryStream memory_stream { block.data.bytes() };
-    BigEndianInputBitStream picture_block_bytes { MaybeOwned<AK::Stream>(memory_stream) };
+    BigEndianInputBitStream picture_block_bytes { MaybeOwned<Stream>(memory_stream) };
 
     PictureData picture {};
 
@@ -187,7 +187,7 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
 MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
 {
     FixedMemoryStream memory_stream { block.data.bytes() };
-    BigEndianInputBitStream seektable_bytes { MaybeOwned<AK::Stream>(memory_stream) };
+    BigEndianInputBitStream seektable_bytes { MaybeOwned<Stream>(memory_stream) };
     for (size_t i = 0; i < block.length / 18; ++i) {
         // 11.14. SEEKPOINT
         FlacSeekPoint seekpoint {
@@ -333,7 +333,7 @@ MaybeLoaderError FlacLoaderPlugin::next_frame(Span<Sample> target_vector)
         }                                                                                                                                         \
     } while (0)
 
-    BigEndianInputBitStream bit_stream { MaybeOwned<AK::Stream>(*m_stream) };
+    BigEndianInputBitStream bit_stream { MaybeOwned<Stream>(*m_stream) };
 
     // TODO: Check the CRC-16 checksum (and others) by keeping track of read data
 

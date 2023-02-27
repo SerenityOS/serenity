@@ -48,17 +48,17 @@ private:
 
     FilePicker(Window* parent_window, Mode type = Mode::Open, StringView filename = "Untitled"sv, StringView path = Core::StandardPaths::home_directory(), ScreenPosition screen_position = Dialog::ScreenPosition::CenterWithinParent, Optional<Vector<FileTypeFilter>> allowed_file_types = {});
 
-    static DeprecatedString ok_button_name(Mode mode)
+    static String ok_button_name(Mode mode)
     {
         switch (mode) {
         case Mode::Open:
         case Mode::OpenMultiple:
         case Mode::OpenFolder:
-            return "Open";
+            return "Open"_short_string;
         case Mode::Save:
-            return "Save";
+            return "Save"_short_string;
         default:
-            return "OK";
+            return "OK"_short_string;
         }
     }
 

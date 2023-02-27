@@ -8,12 +8,13 @@
 #pragma once
 
 #include <AK/CircularBuffer.h>
+#include <AK/OwnPtr.h>
 #include <AK/Stream.h>
 
 namespace AK {
 
 template<typename T>
-concept StreamLike = IsBaseOf<AK::Stream, T>;
+concept StreamLike = IsBaseOf<Stream, T>;
 template<typename T>
 concept SeekableStreamLike = IsBaseOf<SeekableStream, T>;
 
