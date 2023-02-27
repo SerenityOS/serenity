@@ -376,4 +376,10 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
     return result;
 }
 
+void Path::add_path(Path const& other)
+{
+    m_segments.extend(other.m_segments);
+    invalidate_split_lines();
+}
+
 }
