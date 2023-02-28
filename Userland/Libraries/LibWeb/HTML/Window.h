@@ -275,6 +275,8 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(crypto_getter);
 
+    JS_DECLARE_NATIVE_FUNCTION(navigator_getter);
+
 #define __ENUMERATE(attribute, event_name)          \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
     JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);
