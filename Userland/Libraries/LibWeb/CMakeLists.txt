@@ -479,6 +479,7 @@ set(SOURCES
     XHR/ProgressEvent.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp
+    XHR/XMLHttpRequestUpload.cpp
     XML/XMLDocumentBuilder.cpp
 )
 
