@@ -353,7 +353,7 @@ ErrorOr<String> UTF16LEDecoder::to_utf8(StringView input)
 
 ErrorOr<void> Latin1Decoder::process(StringView input, Function<ErrorOr<void>(u32)> on_code_point)
 {
-    for (auto ch : input) {
+    for (u8 ch : input) {
         // Latin1 is the same as the first 256 Unicode code_points, so no mapping is needed, just utf-8 encoding.
         TRY(on_code_point(ch));
     }
