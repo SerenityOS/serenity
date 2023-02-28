@@ -132,7 +132,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         }
     case PackageDataType::JSON:
         // Return the result of running parse JSON from bytes on bytes.
-        return Infra::parse_json_bytes_to_javascript_value(vm, bytes);
+        return Infra::parse_json_bytes_to_javascript_value(realm, bytes);
     case PackageDataType::Text:
         // Return the result of running UTF-8 decode on bytes.
         return JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(bytes)));

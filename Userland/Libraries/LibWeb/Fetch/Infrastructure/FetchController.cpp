@@ -55,10 +55,8 @@ JS::NonnullGCPtr<FetchTimingInfo> FetchController::extract_full_timing_info() co
 }
 
 // https://fetch.spec.whatwg.org/#fetch-controller-abort
-void FetchController::abort(JS::VM& vm, Optional<JS::Value> error)
+void FetchController::abort(JS::Realm& realm, Optional<JS::Value> error)
 {
-    auto& realm = *vm.current_realm();
-
     // 1. Set controller’s state to "aborted".
     m_state = State::Aborted;
 

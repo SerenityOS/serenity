@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/HostDefined.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -69,20 +70,23 @@ JS::NonnullGCPtr<Promise> create_rejected_promise(JS::Realm& realm, JS::Value re
 }
 
 // https://webidl.spec.whatwg.org/#resolve
-void resolve_promise(JS::VM& vm, Promise const& promise, JS::Value value)
+void resolve_promise(JS::Realm& realm, Promise const& promise, JS::Value value)
 {
+    auto& vm = realm.vm();
+
     // 1. If x is not given, then let it be the undefined value.
     // NOTE: This is done via the default argument.
 
     // 2. Let value be the result of converting x to an ECMAScript value.
-
     // 3. Perform ! Call(p.[[Resolve]], undefined, « value »).
     MUST(JS::call(vm, *promise.resolve(), JS::js_undefined(), value));
 }
 
 // https://webidl.spec.whatwg.org/#reject
-void reject_promise(JS::VM& vm, Promise const& promise, JS::Value reason)
+void reject_promise(JS::Realm& realm, Promise const& promise, JS::Value reason)
 {
+    auto& vm = realm.vm();
+
     // 1. Perform ! Call(p.[[Reject]], undefined, « r »).
     MUST(JS::call(vm, *promise.reject(), JS::js_undefined(), reason));
 }

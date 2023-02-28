@@ -8,6 +8,7 @@
 #include <AK/TypeCasts.h>
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/HostDefined.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Fetch/FetchMethod.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
@@ -36,7 +37,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
     if (exception_or_request_object.is_exception()) {
         // FIXME: We should probably make this a public API?
         auto throw_completion = Bindings::Detail::dom_exception_to_throw_completion(vm, exception_or_request_object.release_error());
-        WebIDL::reject_promise(vm, promise_capability, *throw_completion.value());
+        WebIDL::reject_promise(realm, promise_capability, *throw_completion.value());
         return verify_cast<JS::Promise>(*promise_capability->promise().ptr());
     }
     auto request_object = exception_or_request_object.release_value();
@@ -47,7 +48,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
     // 4. If requestObject’s signal is aborted, then:
     if (request_object->signal()->aborted()) {
         // 1. Abort the fetch() call with p, request, null, and requestObject’s signal’s abort reason.
-        abort_fetch(vm, promise_capability, request, nullptr, request_object->signal()->reason());
+        abort_fetch(realm, promise_capability, request, nullptr, request_object->signal()->reason());
 
         // 2. Return p.
         return verify_cast<JS::Promise>(*promise_capability->promise().ptr());
@@ -79,10 +80,20 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
 
     // 12. Set controller to the result of calling fetch given request and processResponse given response being these
     //     steps:
-    auto process_response = [&vm, locally_aborted, promise_capability, request, response_object_handle, &relevant_realm](JS::NonnullGCPtr<Infrastructure::Response> response) mutable {
+    auto process_response = [locally_aborted, promise_capability, request, response_object_handle, &relevant_realm](JS::NonnullGCPtr<Infrastructure::Response> response) mutable {
         // 1. If locallyAborted is true, then abort these steps.
         if (locally_aborted->value())
             return;
+
+        // NOTE: Not part of the spec, but we need to have an execution context on the stack to call native functions.
+        //       (In this case, Promise functions)
+        auto& environment_settings_object = Bindings::host_defined_environment_settings_object(relevant_realm);
+        environment_settings_object.prepare_to_run_script();
+
+        ScopeGuard guard = [&]() {
+            // See above NOTE.
+            environment_settings_object.clean_up_after_running_script();
+        };
 
         // 2. If response’s aborted flag is set, then:
         if (response->aborted()) {
@@ -91,7 +102,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
             auto deserialized_error = JS::js_undefined();
 
             // 2. Abort the fetch() call with p, request, responseObject, and deserializedError.
-            abort_fetch(vm, promise_capability, request, response_object_handle.cell(), deserialized_error);
+            abort_fetch(relevant_realm, promise_capability, request, response_object_handle.cell(), deserialized_error);
 
             // 3. Abort these steps.
             return;
@@ -100,7 +111,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
         // 3. If response is a network error, then reject p with a TypeError and abort these steps.
         if (response->is_network_error()) {
             auto message = response->network_error_message().value_or("Response is a network error"sv);
-            WebIDL::reject_promise(vm, promise_capability, JS::TypeError::create(relevant_realm, message).release_allocated_value_but_fixme_should_propagate_errors());
+            WebIDL::reject_promise(relevant_realm, promise_capability, JS::TypeError::create(relevant_realm, message).release_allocated_value_but_fixme_should_propagate_errors());
             return;
         }
 
@@ -110,7 +121,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
         response_object_handle = JS::make_handle(response_object);
 
         // 5. Resolve p with responseObject.
-        WebIDL::resolve_promise(vm, promise_capability, response_object);
+        WebIDL::resolve_promise(relevant_realm, promise_capability, response_object);
     };
     controller = MUST(Fetching::fetch(
         realm,
@@ -126,7 +137,7 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
             })));
 
     // 11. Add the following abort steps to requestObject’s signal:
-    request_object->signal()->add_abort_algorithm([&vm, locally_aborted, request, controller, promise_capability_handle = JS::make_handle(*promise_capability), request_object_handle = JS::make_handle(*request_object), response_object_handle] {
+    request_object->signal()->add_abort_algorithm([locally_aborted, request, controller, promise_capability_handle = JS::make_handle(*promise_capability), request_object_handle = JS::make_handle(*request_object), response_object_handle, &relevant_realm] {
         dbgln_if(WEB_FETCH_DEBUG, "Fetch: Request object signal's abort algorithm called");
 
         auto& promise_capability = *promise_capability_handle;
@@ -140,10 +151,10 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
         VERIFY(controller);
 
         // 3. Abort controller with requestObject’s signal’s abort reason.
-        controller->abort(vm, request_object.signal()->reason());
+        controller->abort(relevant_realm, request_object.signal()->reason());
 
         // 4. Abort the fetch() call with p, request, responseObject, and requestObject’s signal’s abort reason.
-        abort_fetch(vm, promise_capability, request, response_object, request_object.signal()->reason());
+        abort_fetch(relevant_realm, promise_capability, request, response_object, request_object.signal()->reason());
     });
 
     // 13. Return p.
@@ -151,13 +162,13 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
 }
 
 // https://fetch.spec.whatwg.org/#abort-fetch
-void abort_fetch(JS::VM& vm, WebIDL::Promise const& promise, JS::NonnullGCPtr<Infrastructure::Request> request, JS::GCPtr<Response> response_object, JS::Value error)
+void abort_fetch(JS::Realm& realm, WebIDL::Promise const& promise, JS::NonnullGCPtr<Infrastructure::Request> request, JS::GCPtr<Response> response_object, JS::Value error)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Aborting fetch with: request @ {}, error = {}", request.ptr(), error);
 
     // 1. Reject promise with error.
     // NOTE: This is a no-op if promise has already fulfilled.
-    WebIDL::reject_promise(vm, promise, error);
+    WebIDL::reject_promise(realm, promise, error);
 
     // 2. If request’s body is non-null and is readable, then cancel request’s body with error.
     if (auto* body = request->body().get_pointer<Infrastructure::Body>(); body != nullptr && body->stream()->is_readable()) {

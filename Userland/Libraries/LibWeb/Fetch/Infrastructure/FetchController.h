@@ -36,7 +36,7 @@ public:
     void report_timing(JS::Object const&) const;
     void process_next_manual_redirect() const;
     [[nodiscard]] JS::NonnullGCPtr<FetchTimingInfo> extract_full_timing_info() const;
-    void abort(JS::VM&, Optional<JS::Value>);
+    void abort(JS::Realm&, Optional<JS::Value>);
     void terminate();
 
 private:

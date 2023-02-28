@@ -286,14 +286,14 @@ JS::NonnullGCPtr<Headers> Response::headers() const
 // https://fetch.spec.whatwg.org/#dom-response-clone
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone() const
 {
-    auto& vm = this->vm();
+    auto& realm = this->realm();
 
     // 1. If this is unusable, then throw a TypeError.
     if (is_unusable())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Response is unusable"sv };
 
     // 2. Let clonedResponse be the result of cloning this’s response.
-    auto cloned_response = TRY(m_response->clone(vm));
+    auto cloned_response = TRY(m_response->clone(realm));
 
     // 3. Return the result of creating a Response object, given clonedResponse, this’s headers’s guard, and this’s relevant Realm.
     return TRY(Response::create(HTML::relevant_realm(*this), cloned_response, m_headers->guard()));

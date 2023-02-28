@@ -31,7 +31,7 @@ public:
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 
-    WebIDL::ExceptionOr<Body> clone() const;
+    WebIDL::ExceptionOr<Body> clone(JS::Realm&) const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> fully_read_as_promise() const;
 
