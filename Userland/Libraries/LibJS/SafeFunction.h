@@ -88,7 +88,7 @@ public:
     requires((AK::IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, Out, In...>))
     {
         clear();
-        init_with_callable(forward<CallableType>(callable));
+        init_with_callable(forward<CallableType>(callable), CallableKind::FunctionObject);
         return *this;
     }
 
@@ -98,7 +98,7 @@ public:
     {
         clear();
         if (f)
-            init_with_callable(move(f));
+            init_with_callable(move(f), CallableKind::FunctionPointer);
         return *this;
     }
 
