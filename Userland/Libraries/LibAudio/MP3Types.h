@@ -12,6 +12,10 @@
 
 namespace Audio::MP3 {
 
+constexpr size_t const frame_size = 1152;
+// 576 samples.
+constexpr size_t const granule_size = frame_size / 2;
+
 enum class Mode {
     Stereo = 0,
     JointStereo = 1,
@@ -61,7 +65,7 @@ struct Header {
 };
 
 struct Granule {
-    Array<float, 576> samples;
+    Array<float, MP3::granule_size> samples;
     Array<Array<float, 18>, 32> filter_bank_input;
     Array<Array<float, 32>, 18> pcm;
     u32 part_2_3_length;
