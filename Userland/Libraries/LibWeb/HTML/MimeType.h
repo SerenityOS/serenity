@@ -23,7 +23,7 @@ public:
     JS::NonnullGCPtr<Plugin> enabled_plugin() const;
 
 private:
-    MimeType(JS::Realm&, String const& type);
+    MimeType(JS::Realm&, String type);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 

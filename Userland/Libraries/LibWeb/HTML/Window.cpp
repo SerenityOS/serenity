@@ -1080,12 +1080,12 @@ Vector<JS::NonnullGCPtr<Plugin>> Window::pdf_viewer_plugin_objects()
         return {};
 
     if (m_pdf_viewer_plugin_objects.is_empty()) {
-        // FIXME: Remove the MUSTs and propagate the errors instead.
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("Chrome PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("Chromium PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("Microsoft Edge PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("WebKit built-in PDF"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        // FIXME: Propagate errors.
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Chrome PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Chromium PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "Microsoft Edge PDF Viewer"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), "WebKit built-in PDF"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
     }
 
     return m_pdf_viewer_plugin_objects;

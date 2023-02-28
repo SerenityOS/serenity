@@ -25,7 +25,7 @@ public:
     JS::GCPtr<MimeType> named_item(String const& name) const;
 
 private:
-    Plugin(JS::Realm&, String const& name);
+    Plugin(JS::Realm&, String name);
 
     // https://html.spec.whatwg.org/multipage/system-state.html#concept-plugin-name
     String m_name;

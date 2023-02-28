@@ -12,9 +12,9 @@
 
 namespace Web::HTML {
 
-Plugin::Plugin(JS::Realm& realm, String const& name)
+Plugin::Plugin(JS::Realm& realm, String name)
     : Bindings::LegacyPlatformObject(realm)
-    , m_name(name)
+    , m_name(move(name))
 {
 }
 

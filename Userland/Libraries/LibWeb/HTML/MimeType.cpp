@@ -11,9 +11,9 @@
 
 namespace Web::HTML {
 
-MimeType::MimeType(JS::Realm& realm, String const& type)
+MimeType::MimeType(JS::Realm& realm, String type)
     : Bindings::PlatformObject(realm)
-    , m_type(type)
+    , m_type(move(type))
 {
 }
 
@@ -38,7 +38,7 @@ String const& MimeType::type() const
 JS::ThrowCompletionOr<String> MimeType::description() const
 {
     // The MimeType interface's description getter steps are to return "Portable Document Format".
-    static String description_string = TRY_OR_THROW_OOM(vm(), String::from_utf8("Portable Document Format"sv));
+    static String description_string = TRY_OR_THROW_OOM(vm(), "Portable Document Format"_string);
     return description_string;
 }
 
@@ -46,7 +46,7 @@ JS::ThrowCompletionOr<String> MimeType::description() const
 String const& MimeType::suffixes() const
 {
     // The MimeType interface's suffixes getter steps are to return "pdf".
-    static String suffixes_string = String::from_utf8_short_string("pdf"sv);
+    static String suffixes_string = "pdf"_short_string;
     return suffixes_string;
 }
 
