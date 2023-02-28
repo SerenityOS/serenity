@@ -649,22 +649,6 @@ void ArgsParser::add_positional_argument(double& value, char const* help_string,
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(Vector<char const*>& values, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        INT_MAX,
-        [&values](StringView s) {
-            VERIFY(s.length() == strlen(s.characters_without_null_termination()));
-            values.append(s.characters_without_null_termination());
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
-}
-
 void ArgsParser::add_positional_argument(Vector<DeprecatedString>& values, char const* help_string, char const* name, Required required)
 {
     Arg arg {
