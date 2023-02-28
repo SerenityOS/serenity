@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app_icon = GUI::Icon::default_icon("filetype-image"sv);
 
-    char const* path = nullptr;
+    StringView path;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The image file to be displayed.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
     auto widget = TRY(root_widget->try_add<ViewWidget>());
-    if (path) {
+    if (!path.is_empty()) {
         widget->set_path(path);
     }
     widget->on_scale_change = [&](float scale) {

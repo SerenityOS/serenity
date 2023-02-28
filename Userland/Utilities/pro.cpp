@@ -151,7 +151,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool save_at_provided_name = false;
     bool should_follow_url = false;
     bool verbose_output = false;
-    char const* data = nullptr;
+    StringView data;
     StringView proxy_spec;
     DeprecatedString method = "GET";
     StringView method_override;
@@ -209,7 +209,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!method_override.is_empty()) {
         method = method_override;
-    } else if (data) {
+    } else if (!data.is_empty()) {
         method = "POST";
         // FIXME: Content-Type?
     }
@@ -399,7 +399,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         request->stream_into(output_stream);
     };
 
-    request = protocol_client->start_request(method, url, request_headers, data ? StringView { data, strlen(data) }.bytes() : ReadonlyBytes {}, proxy_data);
+    request = protocol_client->start_request(method, url, request_headers, data.bytes(), proxy_data);
     setup_request();
 
     dbgln("started request with id {}", request->id());

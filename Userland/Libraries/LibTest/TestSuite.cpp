@@ -65,7 +65,7 @@ int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> argumen
     bool do_tests_only = getenv("TESTS_ONLY") != nullptr;
     bool do_benchmarks_only = false;
     bool do_list_cases = false;
-    char const* search_string = "*";
+    StringView search_string = "*"sv;
 
     args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
     args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);

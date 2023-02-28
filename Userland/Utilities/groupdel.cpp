@@ -20,14 +20,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/etc/", "rwc"));
     TRY(Core::System::unveil("/bin/rm", "x"));
 
-    char const* groupname = nullptr;
+    DeprecatedString groupname;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(groupname, "Group name", "group");
     args_parser.parse(arguments);
 
     setgrent();
-    auto* g = getgrnam(groupname);
+    auto* g = getgrnam(groupname.characters());
 
     // Check if the group exists
     if (!g) {

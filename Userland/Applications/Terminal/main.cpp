@@ -251,7 +251,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("Terminal");
 
-    char const* command_to_execute = nullptr;
+    StringView command_to_execute;
     bool keep_open = false;
 
     Core::ArgsParser args_parser;
@@ -260,7 +260,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     args_parser.parse(arguments);
 
-    if (keep_open && !command_to_execute) {
+    if (keep_open && command_to_execute.is_empty()) {
         warnln("Option -k can only be used in combination with -e.");
         return 1;
     }
@@ -273,7 +273,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
     if (shell_pid == 0) {
         close(ptm_fd);
-        if (command_to_execute)
+        if (!command_to_execute.is_empty())
             TRY(run_command(command_to_execute, keep_open));
         else
             TRY(run_command(Config::read_string("Terminal"sv, "Startup"sv, "Command"sv, ""sv), false));

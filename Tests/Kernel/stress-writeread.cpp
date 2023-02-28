@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     for (auto i = 0; i < argc; ++i)
         arguments.append({ argv[i], strlen(argv[i]) });
 
-    char const* target = nullptr;
+    DeprecatedString target;
     int min_block_offset = 0;
     int block_length = 2048;
     int block_size = 512;
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     }
     auto buffer = buffer_result.release_value();
 
-    int fd = open(target, O_CREAT | O_RDWR, 0666);
+    int fd = open(target.characters(), O_CREAT | O_RDWR, 0666);
     if (fd < 0) {
         perror("Couldn't create target file");
         return EXIT_FAILURE;

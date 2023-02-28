@@ -167,7 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView file_to_read_from = {};
     Vector<StringView> script_args;
     bool skip_rc_files = false;
-    char const* format = nullptr;
+    StringView format;
     bool should_format_live = false;
     bool keep_open = false;
     bool posix_mode = false;
@@ -185,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.set_stop_on_first_non_option(true);
     parser.parse(arguments);
 
-    if (format) {
+    if (!format.is_empty()) {
         auto file = TRY(Core::DeprecatedFile::open(format, Core::OpenMode::ReadOnly));
 
         initialize(posix_mode);

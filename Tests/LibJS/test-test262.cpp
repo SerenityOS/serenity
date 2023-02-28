@@ -305,7 +305,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView per_file_location;
     StringView pass_through_parameters;
     StringView runner_command = "test262-runner"sv;
-    char const* test_directory = nullptr;
+    StringView test_directory;
     bool dont_print_progress = false;
     bool dont_disable_core_dump = false;
 

@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     bool case_insensitive = false;
     bool echo = false;
-    char const* pattern = nullptr;
+    StringView pattern;
     int signal = SIGTERM;
 
     Core::ArgsParser args_parser;

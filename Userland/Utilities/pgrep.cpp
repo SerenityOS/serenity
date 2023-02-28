@@ -21,7 +21,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     bool case_insensitive = false;
     bool invert_match = false;
-    char const* pattern = nullptr;
+    StringView pattern;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');

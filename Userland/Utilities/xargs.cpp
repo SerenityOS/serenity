@@ -44,10 +44,10 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 
     StringView placeholder;
     bool split_with_nulls = false;
-    char const* specified_delimiter = "\n";
+    DeprecatedString specified_delimiter = "\n"sv;
     Vector<DeprecatedString> arguments;
     bool verbose = false;
-    char const* file_to_read = "-";
+    DeprecatedString file_to_read = "-"sv;
     int max_lines_for_one_command = 0;
     int max_bytes_for_one_command = ARG_MAX;
 
@@ -67,12 +67,12 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
     size_t max_bytes = min(ARG_MAX, max_bytes_for_one_command);
     size_t max_lines = max(max_lines_for_one_command, 0);
 
-    if (!split_with_nulls && strlen(specified_delimiter) > 1) {
+    if (!split_with_nulls && specified_delimiter.length() > 1) {
         warnln("xargs: the delimiter must be a single byte");
         return 1;
     }
 
-    char entry_separator = split_with_nulls ? '\0' : *specified_delimiter;
+    char entry_separator = split_with_nulls ? '\0' : specified_delimiter[0];
 
     if (!placeholder.is_empty())
         max_lines = 1;
@@ -87,7 +87,7 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
 
     if ("-"sv != file_to_read) {
         // A file was specified, try to open it.
-        fp = fopen(file_to_read, "re");
+        fp = fopen(file_to_read.characters(), "re");
         if (!fp) {
             perror("fopen");
             return 1;

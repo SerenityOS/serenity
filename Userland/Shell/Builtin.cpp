@@ -350,7 +350,7 @@ ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
 {
-    char const* arg_path = nullptr;
+    StringView arg_path;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
@@ -360,10 +360,10 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
 
     DeprecatedString new_path;
 
-    if (!arg_path) {
+    if (arg_path.is_empty()) {
         new_path = home;
     } else {
-        if (strcmp(arg_path, "-") == 0) {
+        if (arg_path == "-"sv) {
             char* oldpwd = getenv("OLDPWD");
             if (oldpwd == nullptr)
                 return 1;
@@ -1044,7 +1044,7 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_umask(Main::Arguments arguments)
 {
-    char const* mask_text = nullptr;
+    StringView mask_text;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
@@ -1052,16 +1052,29 @@ ErrorOr<int> Shell::builtin_umask(Main::Arguments arguments)
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    if (!mask_text) {
+    if (mask_text.is_empty()) {
         mode_t old_mask = umask(0);
         printf("%#o\n", old_mask);
         umask(old_mask);
         return 0;
     }
 
-    unsigned mask;
-    int matches = sscanf(mask_text, "%o", &mask);
-    if (matches == 1) {
+    unsigned mask = 0;
+    auto matches = true;
+
+    // FIXME: There's currently no way to parse an StringView as an octal integer,
+    //        when that becomes available, replace this code.
+    for (auto byte : mask_text.bytes()) {
+        if (isspace(byte))
+            continue;
+        if (!is_ascii_octal_digit(byte)) {
+            matches = false;
+            break;
+        }
+
+        mask = (mask << 3) + (byte - '0');
+    }
+    if (matches) {
         umask(mask);
         return 0;
     }

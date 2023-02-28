@@ -406,24 +406,6 @@ void ArgsParser::add_option(bool& value, char const* help_string, char const* lo
     add_option(move(option));
 }
 
-void ArgsParser::add_option(char const*& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
-{
-    Option option {
-        OptionArgumentMode::Required,
-        help_string,
-        long_name,
-        short_name,
-        value_name,
-        [&value](StringView s) {
-            VERIFY(s.length() == strlen(s.characters_without_null_termination()));
-            value = s.characters_without_null_termination();
-            return true;
-        },
-        hide_mode,
-    };
-    add_option(move(option));
-}
-
 void ArgsParser::add_option(DeprecatedString& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
     Option option {
@@ -587,22 +569,6 @@ void ArgsParser::add_option(Vector<DeprecatedString>& values, char const* help_s
 void ArgsParser::add_positional_argument(Arg&& arg)
 {
     m_positional_args.append(move(arg));
-}
-
-void ArgsParser::add_positional_argument(char const*& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](StringView s) {
-            VERIFY(s.length() == strlen(s.characters_without_null_termination()));
-            value = s.characters_without_null_termination();
-            return true;
-        }
-    };
-    add_positional_argument(move(arg));
 }
 
 void ArgsParser::add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required)

@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(notify_make_not_available());
     }
 
-    char const* path_argument = nullptr;
+    StringView path_argument;
     bool mode_coredump = false;
     pid_t pid_to_debug = -1;
     Core::ArgsParser args_parser;

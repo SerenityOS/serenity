@@ -315,7 +315,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool print_all_output = false;
     bool run_benchmarks = false;
     bool run_skipped_tests = false;
-    char const* specified_test_root = nullptr;
+    StringView specified_test_root;
     DeprecatedString test_glob;
     DeprecatedString exclude_pattern;
     DeprecatedString config_file;
@@ -360,7 +360,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString test_root;
 
-    if (specified_test_root) {
+    if (!specified_test_root.is_empty()) {
         test_root = DeprecatedString { specified_test_root };
     } else {
         test_root = "/usr/Tests";
