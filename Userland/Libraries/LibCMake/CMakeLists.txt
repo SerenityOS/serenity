@@ -1,5 +1,6 @@
 set(SOURCES
     Lexer.cpp
+    SyntaxHighlighter.cpp
     Token.cpp
 )
 

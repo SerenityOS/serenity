@@ -141,6 +141,8 @@ void Highlighter::register_nested_token_pairs(Vector<MatchingTokenPair> pairs)
 StringView language_to_string(Language language)
 {
     switch (language) {
+    case Language::CMake:
+        return "CMake"sv;
     case Language::Cpp:
         return "C++"sv;
     case Language::CSS:
@@ -168,6 +170,8 @@ StringView language_to_string(Language language)
 StringView common_language_extension(Language language)
 {
     switch (language) {
+    case Language::CMake:
+        return "cmake"sv;
     case Language::Cpp:
         return "cpp"sv;
     case Language::CSS:
