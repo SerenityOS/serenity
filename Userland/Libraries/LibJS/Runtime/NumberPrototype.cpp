@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (negative)
         number *= -1;
 
-    u64 int_part = floor(number);
+    double int_part = floor(number);
     double decimal_part = number - int_part;
 
     int radix = (int)radix_mv;
@@ -469,8 +469,9 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
         backwards_characters.append('0');
     } else {
         while (int_part > 0) {
-            backwards_characters.append(digits[int_part % radix]);
+            backwards_characters.append(digits[floor(fmod(int_part, radix))]);
             int_part /= radix;
+            int_part = floor(int_part);
         }
     }
 
