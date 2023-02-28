@@ -47,8 +47,13 @@ Optional<Emoji> find_emoji_for_code_points(u32 const (&code_points)[Size])
     return find_emoji_for_code_points(ReadonlySpan<u32> { code_points });
 }
 
-bool could_be_start_of_emoji_sequence(Utf8CodePointIterator const&);
-bool could_be_start_of_emoji_sequence(Utf32CodePointIterator const&);
+enum class SequenceType {
+    Any,
+    EmojiPresentation,
+};
+
+bool could_be_start_of_emoji_sequence(Utf8CodePointIterator const&, SequenceType = SequenceType::Any);
+bool could_be_start_of_emoji_sequence(Utf32CodePointIterator const&, SequenceType = SequenceType::Any);
 
 constexpr StringView emoji_group_to_string(EmojiGroup group)
 {
