@@ -1,4 +1,4 @@
-![Help icon](/res/icons/32x32/app-help.png)
+![Help Icon](/res/icons/32x32/app-help.png)
 
 ## Welcome to the SerenityOS on-line help system!
 
@@ -11,6 +11,10 @@ Documentation is divided into traditional Unix-style manual categories. Use the 
 There's also a full-text search option under the **Search** tab.
 
 If you want more information on the structure of the manual system, take a look at [`man(7)`](help://man/7/man).
+
+### Getting Started
+* [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
+* [Tips and Tricks](help://man/7/Tips-and-Tricks)
 
 ---
 
