@@ -11,6 +11,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
+#include <AK/StringUtils.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibRegex/Regex.h>
@@ -295,6 +296,42 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 
     // 4. Return headers.
     return headers;
+}
+
+// https://fetch.spec.whatwg.org/#header-list-extract-a-length
+ErrorOr<HeaderList::ExtractLengthResult> HeaderList::extract_length() const
+{
+    // 1. Let values be the result of getting, decoding, and splitting `Content-Length` from headers.
+    auto values = TRY(get_decode_and_split("Content-Length"sv.bytes()));
+
+    // 2. If values is null, then return null.
+    if (!values.has_value())
+        return Empty {};
+
+    // 3. Let candidateValue be null.
+    Optional<String> candidate_value;
+
+    // 4. For each value of values:
+    for (auto const& value : *values) {
+        // 1. If candidateValue is null, then set candidateValue to value.
+        if (!candidate_value.has_value()) {
+            candidate_value = value;
+        }
+        // 2. Otherwise, if value is not candidateValue, return failure.
+        else if (candidate_value.value() != value) {
+            return ExtractLengthFailure {};
+        }
+    }
+
+    // 5. If candidateValue is the empty string or has a code point that is not an ASCII digit, then return null.
+    // NOTE: to_uint does this for us.
+    // 6. Return candidateValue, interpreted as decimal number.
+    // NOTE: The spec doesn't say anything about trimming here, so we don't trim. If it contains a space, step 5 will cause us to return null.
+    // FIXME: This will return an empty Optional if it cannot fit into a u64, is this correct?
+    auto conversion_result = AK::StringUtils::convert_to_uint<u64>(candidate_value.value(), TrimWhitespace::No);
+    if (!conversion_result.has_value())
+        return Empty {};
+    return ExtractLengthResult { conversion_result.release_value() };
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-extract-mime-type

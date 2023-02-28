@@ -51,6 +51,14 @@ public:
     [[nodiscard]] ErrorOr<void> set(Header);
     [[nodiscard]] ErrorOr<void> combine(Header);
     [[nodiscard]] ErrorOr<Vector<Header>> sort_and_combine() const;
+
+    struct ExtractLengthFailure {
+    };
+
+    using ExtractLengthResult = Variant<u64, ExtractLengthFailure, Empty>;
+
+    [[nodiscard]] ErrorOr<ExtractLengthResult> extract_length() const;
+
     [[nodiscard]] ErrorOr<Optional<MimeSniff::MimeType>> extract_mime_type() const;
 };
 
