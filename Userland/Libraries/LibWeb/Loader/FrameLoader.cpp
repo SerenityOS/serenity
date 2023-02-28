@@ -363,6 +363,34 @@ void FrameLoader::load_favicon(RefPtr<Gfx::Bitmap> bitmap)
 
 void FrameLoader::resource_did_load()
 {
+    // This prevents us setting up the document of a removed browsing context container (BCC, e.g. <iframe>), which will cause a crash
+    // if the document contains a script that inserts another BCC as this will use the stale browsing context it previously set up,
+    // even if it's reinserted.
+    // Example:
+    // index.html:
+    // ```
+    // <body><script>
+    //     var i = document.createElement("iframe");
+    //     i.src = "b.html";
+    //     document.body.append(i);
+    //     i.remove();
+    // </script>
+    // ```
+    // b.html:
+    // ```
+    // <body><script>
+    //     var i = document.createElement("iframe");
+    //     document.body.append(i);
+    // </script>
+    // ```
+    // Required by Prebid.js, which does this by inserting an <iframe> into a <div> in the active document via innerHTML,
+    // then transfers it to the <html> element:
+    // https://github.com/prebid/Prebid.js/blob/7b7389c5abdd05626f71c3df606a93713d1b9f85/src/utils.js#L597
+    // This is done in the spec by removing all tasks and aborting all fetches when a document is destroyed:
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
+    if (browsing_context().has_been_discarded())
+        return;
+
     auto url = resource()->url();
 
     // For 3xx (Redirection) responses, the Location value refers to the preferred target resource for automatically redirecting the request.
@@ -435,6 +463,10 @@ void FrameLoader::resource_did_load()
 
 void FrameLoader::resource_did_fail()
 {
+    // See comment in resource_did_load() about why this is done.
+    if (browsing_context().has_been_discarded())
+        return;
+
     load_error_page(resource()->url(), resource()->error());
 }
 
