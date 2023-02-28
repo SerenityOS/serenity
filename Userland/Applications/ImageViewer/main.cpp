@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("ImageViewer");
 
-    app->set_config_domain(TRY(String::from_utf8("ImageViewer"sv)));
+    app->set_config_domain(TRY("ImageViewer"_string));
 
     TRY(Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer"));
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/ImageViewer.md") }));

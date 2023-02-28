@@ -24,7 +24,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("TextEditor");
 
-    app->set_config_domain(TRY(String::from_utf8("TextEditor"sv)));
+    app->set_config_domain(TRY("TextEditor"_string));
 
     auto preview_mode = "auto"sv;
     char const* file_to_edit = nullptr;

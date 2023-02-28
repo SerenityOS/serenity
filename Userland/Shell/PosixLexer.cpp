@@ -716,7 +716,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_arithmetic_expansion()
         expansion.range.length = m_state.position.end_offset - expansion.range.start - m_state.position.start_offset;
 
         return ReductionResult {
-            .tokens = { Token::continuation(String::from_utf8_short_string("$(("sv)) },
+            .tokens = { Token::continuation("$(("_short_string) },
             .next_reduction = m_state.previous_reduction,
         };
     }
@@ -791,7 +791,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_command_or_arithmetic_substitution
 {
     if (m_lexer.is_eof()) {
         return ReductionResult {
-            .tokens = { Token::continuation(String::from_utf8_short_string("$("sv)) },
+            .tokens = { Token::continuation("$("_short_string) },
             .next_reduction = m_state.previous_reduction,
         };
     }
@@ -835,7 +835,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_extended_parameter_expansion()
 
     if (m_lexer.is_eof()) {
         return ReductionResult {
-            .tokens = { Token::continuation(String::from_utf8_short_string("${"sv)) },
+            .tokens = { Token::continuation("${"_short_string) },
             .next_reduction = m_state.previous_reduction,
         };
     }

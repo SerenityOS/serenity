@@ -152,7 +152,7 @@ VM::VM(OwnPtr<CustomData> custom_data)
     };
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    m_well_known_symbol_##snake_name = Symbol::create(*this, String::from_utf8("Symbol." #SymbolName##sv).release_value_but_fixme_should_propagate_errors(), false);
+    m_well_known_symbol_##snake_name = Symbol::create(*this, "Symbol." #SymbolName##_string.release_value_but_fixme_should_propagate_errors(), false);
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 

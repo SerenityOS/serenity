@@ -39,7 +39,7 @@ String const& Plugin::name() const
 JS::ThrowCompletionOr<String> Plugin::description() const
 {
     // The Plugin interface's description getter steps are to return "Portable Document Format".
-    static String description_string = TRY_OR_THROW_OOM(vm(), String::from_utf8("Portable Document Format"sv));
+    static String description_string = TRY_OR_THROW_OOM(vm(), "Portable Document Format"_string);
     return description_string;
 }
 
@@ -47,7 +47,7 @@ JS::ThrowCompletionOr<String> Plugin::description() const
 JS::ThrowCompletionOr<String> Plugin::filename() const
 {
     // The Plugin interface's filename getter steps are to return "internal-pdf-viewer".
-    static String filename_string = TRY_OR_THROW_OOM(vm(), String::from_utf8("internal-pdf-viewer"sv));
+    static String filename_string = TRY_OR_THROW_OOM(vm(), "internal-pdf-viewer"_string);
     return filename_string;
 }
 
