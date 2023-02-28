@@ -55,6 +55,7 @@ public:
     void set_event_handler_attribute(DeprecatedFlyString const& name, WebIDL::CallbackType*);
 
     bool has_event_listener(DeprecatedFlyString const& type) const;
+    bool has_event_listeners() const;
 
 protected:
     explicit EventTarget(JS::Realm&);

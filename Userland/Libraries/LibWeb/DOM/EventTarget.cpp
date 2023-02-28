@@ -744,4 +744,9 @@ bool EventTarget::has_event_listener(DeprecatedFlyString const& type) const
     return false;
 }
 
+bool EventTarget::has_event_listeners() const
+{
+    return !m_event_listener_list.is_empty();
+}
+
 }
