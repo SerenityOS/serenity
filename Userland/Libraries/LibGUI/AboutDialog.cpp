@@ -19,7 +19,7 @@
 
 namespace GUI {
 
-ErrorOr<NonnullRefPtr<AboutDialog>> AboutDialog::try_create(StringView name, StringView version, Gfx::Bitmap const* icon, Window* parent_window)
+ErrorOr<NonnullRefPtr<AboutDialog>> AboutDialog::try_create(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
 {
     auto dialog = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) AboutDialog(name, version, icon, parent_window)));
     dialog->set_title(DeprecatedString::formatted("About {}", name));
@@ -36,10 +36,10 @@ ErrorOr<NonnullRefPtr<AboutDialog>> AboutDialog::try_create(StringView name, Str
         icon_wrapper->set_visible(false);
     }
 
-    widget->find_descendant_of_type_named<GUI::Label>("name")->set_text(name);
+    widget->find_descendant_of_type_named<GUI::Label>("name")->set_text(name.to_deprecated_string());
     // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
     widget->find_descendant_of_type_named<GUI::Label>("serenity_os")->set_visible(name != "SerenityOS");
-    widget->find_descendant_of_type_named<GUI::Label>("version")->set_text(version);
+    widget->find_descendant_of_type_named<GUI::Label>("version")->set_text(version.to_deprecated_string());
 
     auto ok_button = widget->find_descendant_of_type_named<DialogButton>("ok_button");
     ok_button->on_click = [dialog](auto) {
@@ -49,17 +49,26 @@ ErrorOr<NonnullRefPtr<AboutDialog>> AboutDialog::try_create(StringView name, Str
     return dialog;
 }
 
-AboutDialog::AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon, Window* parent_window)
+AboutDialog::AboutDialog(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window)
     : Dialog(parent_window)
-    , m_name(name)
-    , m_icon(icon)
-    , m_version_string(version)
+    , m_name(move(name))
+    , m_version_string(move(version))
+    , m_icon(move(icon))
 {
     resize(413, 204);
     set_resizable(false);
 
     if (parent_window)
         set_icon(parent_window->icon());
+}
+
+ErrorOr<void> AboutDialog::show(String name, String version, RefPtr<Gfx::Bitmap const> icon, Window* parent_window, RefPtr<Gfx::Bitmap const> window_icon)
+{
+    auto dialog = TRY(AboutDialog::try_create(move(name), move(version), move(icon), parent_window));
+    if (window_icon)
+        dialog->set_icon(window_icon);
+    dialog->exec();
+    return {};
 }
 
 }

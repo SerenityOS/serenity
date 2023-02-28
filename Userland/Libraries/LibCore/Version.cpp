@@ -4,22 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <LibCore/System.h>
 #include <LibCore/Version.h>
 
 namespace Core::Version {
 
-DeprecatedString read_long_version_string()
+ErrorOr<String> read_long_version_string()
 {
-    auto result = Core::System::uname();
-    if (result.is_error())
-        return {};
+    auto uname = TRY(Core::System::uname());
 
-    auto version = result.value().release;
-    auto git_hash = result.value().version;
+    auto const* version = uname.release;
+    auto const* git_hash = uname.version;
 
-    return DeprecatedString::formatted("Version {} revision {}", version, git_hash);
+    return String::formatted("Version {} revision {}", version, git_hash);
 }
 
 }

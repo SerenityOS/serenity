@@ -8,7 +8,7 @@
 #include <AK/Format.h>
 #include <AK/JsonObject.h>
 #include <AK/OptionParser.h>
-#include <AK/StringBuilder.h>
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Version.h>
 #include <limits.h>
@@ -364,7 +364,7 @@ void ArgsParser::print_usage_markdown(FILE* file, StringView argv0)
 
 void ArgsParser::print_version(FILE* file)
 {
-    outln(file, Core::Version::read_long_version_string());
+    outln(file, Core::Version::read_long_version_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void ArgsParser::add_option(Option&& option)

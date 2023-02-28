@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibCore/Version.h>
 #include <LibGUI/Dialog.h>
 
@@ -15,23 +16,16 @@ namespace GUI {
 class AboutDialog final : public Dialog {
     C_OBJECT_ABSTRACT(AboutDialog)
 public:
-    static ErrorOr<NonnullRefPtr<AboutDialog>> try_create(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
+    static ErrorOr<NonnullRefPtr<AboutDialog>> try_create(String name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr);
     virtual ~AboutDialog() override = default;
 
-    static ErrorOr<void> show(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr, Gfx::Bitmap const* window_icon = nullptr)
-    {
-        auto dialog = TRY(AboutDialog::try_create(name, version, icon, parent_window));
-        if (window_icon)
-            dialog->set_icon(window_icon);
-        dialog->exec();
-        return {};
-    }
+    static ErrorOr<void> show(String name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr, RefPtr<Gfx::Bitmap const> window_icon = nullptr);
 
 private:
-    AboutDialog(StringView name, StringView version, Gfx::Bitmap const* icon = nullptr, Window* parent_window = nullptr);
+    AboutDialog(String name, String version, RefPtr<Gfx::Bitmap const> icon = nullptr, Window* parent_window = nullptr);
 
-    DeprecatedString m_name;
+    String m_name;
+    String m_version_string;
     RefPtr<Gfx::Bitmap const> m_icon;
-    DeprecatedString m_version_string;
 };
 }
