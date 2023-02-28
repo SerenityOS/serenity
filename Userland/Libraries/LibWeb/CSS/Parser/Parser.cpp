@@ -40,11 +40,6 @@ static void log_parse_error(SourceLocation const& location = SourceLocation::cur
 
 namespace Web::CSS::Parser {
 
-ParsingContext::ParsingContext()
-    : m_realm(*Bindings::main_thread_vm().current_realm())
-{
-}
-
 ParsingContext::ParsingContext(JS::Realm& realm)
     : m_realm(realm)
 {
@@ -1414,7 +1409,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
         if (auto declaration = consume_a_declaration(block_tokens); declaration.has_value()) {
             transaction.commit();
             return Supports::Feature {
-                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors() }
+                Supports::Declaration { declaration->to_string().release_value_but_fixme_should_propagate_errors(), JS::make_handle(m_context.realm()) }
             };
         }
     }
@@ -1427,7 +1422,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
             builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
         transaction.commit();
         return Supports::Feature {
-            Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors() }
+            Supports::Selector { builder.to_string().release_value_but_fixme_should_propagate_errors(), JS::make_handle(m_context.realm()) }
         };
     }
 
@@ -4075,15 +4070,15 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
     };
 
     auto complete_background_layer = [&]() {
-        background_images.append(background_image ? background_image.release_nonnull() : property_initial_value(PropertyID::BackgroundImage));
-        background_positions.append(background_position ? background_position.release_nonnull() : property_initial_value(PropertyID::BackgroundPosition));
-        background_sizes.append(background_size ? background_size.release_nonnull() : property_initial_value(PropertyID::BackgroundSize));
-        background_repeats.append(background_repeat ? background_repeat.release_nonnull() : property_initial_value(PropertyID::BackgroundRepeat));
-        background_attachments.append(background_attachment ? background_attachment.release_nonnull() : property_initial_value(PropertyID::BackgroundAttachment));
+        background_images.append(background_image ? background_image.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
+        background_positions.append(background_position ? background_position.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
+        background_sizes.append(background_size ? background_size.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
+        background_repeats.append(background_repeat ? background_repeat.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
+        background_attachments.append(background_attachment ? background_attachment.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
 
         if (!background_origin && !background_clip) {
-            background_origin = property_initial_value(PropertyID::BackgroundOrigin);
-            background_clip = property_initial_value(PropertyID::BackgroundClip);
+            background_origin = property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin);
+            background_clip = property_initial_value(m_context.realm(), PropertyID::BackgroundClip);
         } else if (!background_clip) {
             background_clip = background_origin;
         }
@@ -4195,7 +4190,7 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
         complete_background_layer();
 
         if (!background_color)
-            background_color = property_initial_value(PropertyID::BackgroundColor);
+            background_color = property_initial_value(m_context.realm(), PropertyID::BackgroundColor);
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
             StyleValueList::create(move(background_images), StyleValueList::Separator::Comma),
@@ -4208,21 +4203,21 @@ RefPtr<StyleValue> Parser::parse_background_value(Vector<ComponentValue> const& 
     }
 
     if (!background_color)
-        background_color = property_initial_value(PropertyID::BackgroundColor);
+        background_color = property_initial_value(m_context.realm(), PropertyID::BackgroundColor);
     if (!background_image)
-        background_image = property_initial_value(PropertyID::BackgroundImage);
+        background_image = property_initial_value(m_context.realm(), PropertyID::BackgroundImage);
     if (!background_position)
-        background_position = property_initial_value(PropertyID::BackgroundPosition);
+        background_position = property_initial_value(m_context.realm(), PropertyID::BackgroundPosition);
     if (!background_size)
-        background_size = property_initial_value(PropertyID::BackgroundSize);
+        background_size = property_initial_value(m_context.realm(), PropertyID::BackgroundSize);
     if (!background_repeat)
-        background_repeat = property_initial_value(PropertyID::BackgroundRepeat);
+        background_repeat = property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat);
     if (!background_attachment)
-        background_attachment = property_initial_value(PropertyID::BackgroundAttachment);
+        background_attachment = property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment);
 
     if (!background_origin && !background_clip) {
-        background_origin = property_initial_value(PropertyID::BackgroundOrigin);
-        background_clip = property_initial_value(PropertyID::BackgroundClip);
+        background_origin = property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin);
+        background_clip = property_initial_value(m_context.realm(), PropertyID::BackgroundClip);
     } else if (!background_clip) {
         background_clip = background_origin;
     }
@@ -4552,11 +4547,11 @@ RefPtr<StyleValue> Parser::parse_border_value(Vector<ComponentValue> const& comp
     }
 
     if (!border_width)
-        border_width = property_initial_value(PropertyID::BorderWidth);
+        border_width = property_initial_value(m_context.realm(), PropertyID::BorderWidth);
     if (!border_style)
-        border_style = property_initial_value(PropertyID::BorderStyle);
+        border_style = property_initial_value(m_context.realm(), PropertyID::BorderStyle);
     if (!border_color)
-        border_color = property_initial_value(PropertyID::BorderColor);
+        border_color = property_initial_value(m_context.realm(), PropertyID::BorderColor);
 
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
@@ -5080,11 +5075,11 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
     }
 
     if (!flex_grow)
-        flex_grow = property_initial_value(PropertyID::FlexGrow);
+        flex_grow = property_initial_value(m_context.realm(), PropertyID::FlexGrow);
     if (!flex_shrink)
-        flex_shrink = property_initial_value(PropertyID::FlexShrink);
+        flex_shrink = property_initial_value(m_context.realm(), PropertyID::FlexShrink);
     if (!flex_basis)
-        flex_basis = property_initial_value(PropertyID::FlexBasis);
+        flex_basis = property_initial_value(m_context.realm(), PropertyID::FlexBasis);
 
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
@@ -5116,9 +5111,9 @@ RefPtr<StyleValue> Parser::parse_flex_flow_value(Vector<ComponentValue> const& c
     }
 
     if (!flex_direction)
-        flex_direction = property_initial_value(PropertyID::FlexDirection);
+        flex_direction = property_initial_value(m_context.realm(), PropertyID::FlexDirection);
     if (!flex_wrap)
-        flex_wrap = property_initial_value(PropertyID::FlexWrap);
+        flex_wrap = property_initial_value(m_context.realm(), PropertyID::FlexWrap);
 
     return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
 }
@@ -5229,13 +5224,13 @@ RefPtr<StyleValue> Parser::parse_font_value(Vector<ComponentValue> const& compon
         return nullptr;
 
     if (!font_stretch)
-        font_stretch = property_initial_value(PropertyID::FontStretch);
+        font_stretch = property_initial_value(m_context.realm(), PropertyID::FontStretch);
     if (!font_style)
-        font_style = property_initial_value(PropertyID::FontStyle);
+        font_style = property_initial_value(m_context.realm(), PropertyID::FontStyle);
     if (!font_weight)
-        font_weight = property_initial_value(PropertyID::FontWeight);
+        font_weight = property_initial_value(m_context.realm(), PropertyID::FontWeight);
     if (!line_height)
-        line_height = property_initial_value(PropertyID::LineHeight);
+        line_height = property_initial_value(m_context.realm(), PropertyID::LineHeight);
 
     return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
@@ -5559,11 +5554,11 @@ RefPtr<StyleValue> Parser::parse_list_style_value(Vector<ComponentValue> const& 
     }
 
     if (!list_position)
-        list_position = property_initial_value(PropertyID::ListStylePosition);
+        list_position = property_initial_value(m_context.realm(), PropertyID::ListStylePosition);
     if (!list_image)
-        list_image = property_initial_value(PropertyID::ListStyleImage);
+        list_image = property_initial_value(m_context.realm(), PropertyID::ListStyleImage);
     if (!list_type)
-        list_type = property_initial_value(PropertyID::ListStyleType);
+        list_type = property_initial_value(m_context.realm(), PropertyID::ListStyleType);
 
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
@@ -5645,13 +5640,13 @@ RefPtr<StyleValue> Parser::parse_text_decoration_value(Vector<ComponentValue> co
     }
 
     if (!decoration_line)
-        decoration_line = property_initial_value(PropertyID::TextDecorationLine);
+        decoration_line = property_initial_value(m_context.realm(), PropertyID::TextDecorationLine);
     if (!decoration_thickness)
-        decoration_thickness = property_initial_value(PropertyID::TextDecorationThickness);
+        decoration_thickness = property_initial_value(m_context.realm(), PropertyID::TextDecorationThickness);
     if (!decoration_style)
-        decoration_style = property_initial_value(PropertyID::TextDecorationStyle);
+        decoration_style = property_initial_value(m_context.realm(), PropertyID::TextDecorationStyle);
     if (!decoration_color)
-        decoration_color = property_initial_value(PropertyID::TextDecorationColor);
+        decoration_color = property_initial_value(m_context.realm(), PropertyID::TextDecorationColor);
 
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }

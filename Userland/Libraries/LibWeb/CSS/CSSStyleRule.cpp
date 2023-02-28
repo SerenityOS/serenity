@@ -99,7 +99,7 @@ DeprecatedString CSSStyleRule::selector_text() const
 void CSSStyleRule::set_selector_text(StringView selector_text)
 {
     // 1. Run the parse a group of selectors algorithm on the given value.
-    auto parsed_selectors = parse_selector({}, selector_text);
+    auto parsed_selectors = parse_selector(Parser::ParsingContext { realm() }, selector_text);
 
     // 2. If the algorithm returns a non-null value replace the associated group of selectors with the returned value.
     if (parsed_selectors.has_value())

@@ -93,7 +93,7 @@ WebIDL::ExceptionOr<void> PropertyOwningCSSStyleDeclaration::set_property(Proper
         return {};
 
     // 5. Let component value list be the result of parsing value for property property.
-    auto component_value_list = parse_css_value(CSS::Parser::ParsingContext {}, value, property_id);
+    auto component_value_list = parse_css_value(CSS::Parser::ParsingContext { realm() }, value, property_id);
 
     // 6. If component value list is null, then return.
     if (!component_value_list)

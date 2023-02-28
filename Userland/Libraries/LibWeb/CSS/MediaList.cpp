@@ -44,7 +44,7 @@ void MediaList::set_media_text(DeprecatedString const& text)
     m_media.clear();
     if (text.is_empty())
         return;
-    m_media = parse_media_query_list({}, text);
+    m_media = parse_media_query_list(Parser::ParsingContext { realm() }, text);
 }
 
 bool MediaList::is_supported_property_index(u32 index) const
@@ -65,7 +65,7 @@ DeprecatedString MediaList::item(u32 index) const
 void MediaList::append_medium(DeprecatedString medium)
 {
     // 1. Let m be the result of parsing the given value.
-    auto m = parse_media_query({}, medium);
+    auto m = parse_media_query(Parser::ParsingContext { realm() }, medium);
 
     // 2. If m is null, then return.
     if (!m)
@@ -85,7 +85,7 @@ void MediaList::append_medium(DeprecatedString medium)
 // https://www.w3.org/TR/cssom-1/#dom-medialist-deletemedium
 void MediaList::delete_medium(DeprecatedString medium)
 {
-    auto m = parse_media_query({}, medium);
+    auto m = parse_media_query(Parser::ParsingContext { realm() }, medium);
     if (!m)
         return;
     m_media.remove_all_matching([&](auto& existing) -> bool {

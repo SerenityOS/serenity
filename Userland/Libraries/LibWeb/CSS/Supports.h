@@ -23,12 +23,14 @@ class Supports final : public RefCounted<Supports> {
 public:
     struct Declaration {
         String declaration;
+        JS::Handle<JS::Realm> realm;
         bool evaluate() const;
         ErrorOr<String> to_string() const;
     };
 
     struct Selector {
         String selector;
+        JS::Handle<JS::Realm> realm;
         bool evaluate() const;
         ErrorOr<String> to_string() const;
     };

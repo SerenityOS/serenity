@@ -49,6 +49,7 @@ ErrorOr<void> generate_header_file(JsonObject& properties, Core::File& file)
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>
+#include <LibJS/Forward.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::CSS {
@@ -106,7 +107,7 @@ PropertyID property_id_from_camel_case_string(StringView);
 PropertyID property_id_from_string(StringView);
 StringView string_from_property_id(PropertyID);
 bool is_inherited_property(PropertyID);
-NonnullRefPtr<StyleValue> property_initial_value(PropertyID);
+NonnullRefPtr<StyleValue> property_initial_value(JS::Realm&, PropertyID);
 
 bool property_accepts_value(PropertyID, StyleValue&);
 size_t property_maximum_value_count(PropertyID);
@@ -308,13 +309,13 @@ bool property_affects_stacking_context(PropertyID property_id)
     }
 }
 
-NonnullRefPtr<StyleValue> property_initial_value(PropertyID property_id)
+NonnullRefPtr<StyleValue> property_initial_value(JS::Realm& context_realm, PropertyID property_id)
 {
     static Array<RefPtr<StyleValue>, to_underlying(last_property_id) + 1> initial_values;
     static bool initialized = false;
     if (!initialized) {
         initialized = true;
-        Parser::ParsingContext parsing_context;
+        Parser::ParsingContext parsing_context(context_realm);
 )~~~");
 
     // NOTE: Parsing a shorthand property requires that its longhands are already available here.

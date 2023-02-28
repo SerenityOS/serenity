@@ -33,7 +33,6 @@ namespace Web::CSS::Parser {
 
 class ParsingContext {
 public:
-    ParsingContext();
     explicit ParsingContext(JS::Realm&);
     explicit ParsingContext(DOM::Document const&);
     explicit ParsingContext(DOM::Document const&, AK::URL);
