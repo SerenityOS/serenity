@@ -648,11 +648,10 @@ WebIDL::ExceptionOr<void> fetch_response_handover(JS::Realm& realm, Infrastructu
                 process_body({});
             });
         }
-        // FIXME: 4. Otherwise, fully read response’s body given processBody, processBodyError, and fetchParams’s task
-        //        destination.
+        // 4. Otherwise, fully read response’s body given processBody, processBodyError, and fetchParams’s task
+        //    destination.
         else {
-            // NOTE: This branch is not taken for JS fetch(), which supplies no 'process response consume body' function.
-            (void)process_body_error;
+            TRY(response.body()->fully_read(realm, move(process_body), move(process_body_error), fetch_params.task_destination()));
         }
     }
 
