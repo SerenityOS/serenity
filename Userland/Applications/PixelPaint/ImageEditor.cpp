@@ -374,7 +374,7 @@ void ImageEditor::mousedown_event(GUI::MouseEvent& event)
         return;
 
     if (auto* tool = dynamic_cast<MoveTool*>(m_active_tool); tool && tool->layer_selection_mode() == MoveTool::LayerSelectionMode::ForegroundLayer) {
-        if (auto* foreground_layer = layer_at_editor_position(event.position()))
+        if (auto* foreground_layer = layer_at_editor_position(event.position()); foreground_layer && !tool->cursor_is_within_resize_anchor())
             set_active_layer(foreground_layer);
     }
 
