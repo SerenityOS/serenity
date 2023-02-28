@@ -105,7 +105,7 @@ Vector<Endpoint> parse(ByteBuffer const& file_contents)
     auto consume_whitespace = [&lexer] {
         lexer.ignore_while([](char ch) { return isspace(ch); });
         if (lexer.peek() == '/' && lexer.peek(1) == '/')
-            lexer.ignore_until([](char ch) { return ch == '\n'; });
+            lexer.ignore_until('\n');
     };
 
     auto parse_parameter = [&](Vector<Parameter>& storage) {
