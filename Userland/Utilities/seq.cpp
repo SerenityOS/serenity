@@ -27,20 +27,21 @@ static void print_usage(FILE* stream)
     fputs(g_usage, stream);
 }
 
-static double get_double(char const* name, char const* d_string, size_t* number_of_decimals)
+static double get_double(char const* name, StringView d_string, size_t* number_of_decimals)
 {
-    char* end;
-    double d = strtod(d_string, &end);
-    if (d == 0 && end == d_string) {
+    auto d = d_string.to_double();
+    if (!d.has_value()) {
         warnln("{}: invalid argument \"{}\"", name, d_string);
         print_usage(stderr);
         exit(1);
     }
-    if (char const* dot = strchr(d_string, '.'))
-        *number_of_decimals = strlen(dot + 1);
+
+    if (auto dot = d_string.find('.'); dot.has_value())
+        *number_of_decimals = d_string.length() - *dot - 1;
     else
         *number_of_decimals = 0;
-    return d;
+
+    return *d;
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -50,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView separator = "\n"sv;
     StringView terminator = ""sv;
-    Vector<char const*> parameters;
+    Vector<StringView> parameters;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(separator, "Characters to print after each number (default: \\n)", "separator", 's', "separator");

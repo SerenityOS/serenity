@@ -28,7 +28,7 @@ static bool flag_beep_on_fail = false;
 static int volatile exit_code = 0;
 static volatile pid_t child_pid = -1;
 
-static DeprecatedString build_header_string(Vector<char const*> const& command, struct timeval const& interval)
+static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, struct timeval const& interval)
 {
     StringBuilder builder;
     builder.appendff("Every {}.{}s: \x1b[1m", interval.tv_sec, interval.tv_usec / 100000);
@@ -37,7 +37,7 @@ static DeprecatedString build_header_string(Vector<char const*> const& command, 
     return builder.to_deprecated_string();
 }
 
-static DeprecatedString build_header_string(Vector<char const*> const& command, Vector<DeprecatedString> const& filenames)
+static DeprecatedString build_header_string(Vector<DeprecatedString> const& command, Vector<DeprecatedString> const& filenames)
 {
     StringBuilder builder;
     builder.appendff("Every time any of {} changes: \x1b[1m", filenames);
@@ -78,11 +78,15 @@ static void handle_signal(int signal)
     exit(exit_code);
 }
 
-static int run_command(Vector<char const*> const& command)
+static int run_command(Vector<DeprecatedString> const& command)
 {
-    VERIFY(command[command.size() - 1] == nullptr);
+    Vector<char const*> argv;
+    argv.ensure_capacity(command.size() + 1);
+    for (auto& arg : command)
+        argv.unchecked_append(arg.characters());
+    argv.unchecked_append(nullptr);
 
-    if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
+    if ((errno = posix_spawnp(const_cast<pid_t*>(&child_pid), argv[0], nullptr, nullptr, const_cast<char**>(argv.data()), environ))) {
         exit_code = 1;
         perror("posix_spawn");
         return errno;
@@ -113,7 +117,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio proc exec rpath"));
 
     Vector<DeprecatedString> files_to_watch;
-    Vector<char const*> command;
+    Vector<DeprecatedString> command;
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.set_general_help("Execute a command repeatedly, and watch its output over time.");
@@ -134,8 +138,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(move(file_arg));
     args_parser.add_positional_argument(command, "Command to run", "command");
     args_parser.parse(arguments);
-
-    command.append(nullptr);
 
     DeprecatedString header;
 
