@@ -752,8 +752,7 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
         current_scan.successive_approximation_high,
         current_scan.successive_approximation_low);
 
-    // FIXME: Support SOF2 jpegs with current_scan.successive_approximation != 0
-    if (current_scan.spectral_selection_start > 63 || current_scan.spectral_selection_end > 63 || successive_approximation != 0) {
+    if (current_scan.spectral_selection_start > 63 || current_scan.spectral_selection_end > 63 || current_scan.successive_approximation_high > 13 || current_scan.successive_approximation_low > 13) {
         dbgln_if(JPEG_DEBUG, "ERROR! Start of Selection: {}, End of Selection: {}, Successive Approximation High: {}, Successive Approximation Low: {}!",
             current_scan.spectral_selection_start,
             current_scan.spectral_selection_end,
