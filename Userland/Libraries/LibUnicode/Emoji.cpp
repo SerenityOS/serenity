@@ -21,7 +21,7 @@ Optional<Emoji> __attribute__((weak)) find_emoji_for_code_points(ReadonlySpan<u3
 #if ENABLE_UNICODE_DATA
 
 // https://unicode.org/reports/tr51/#def_emoji_core_sequence
-static bool could_be_start_of_emoji_core_sequence(u32 code_point, Optional<u32> const& next_code_point)
+static bool could_be_start_of_emoji_core_sequence(u32 code_point, Optional<u32> const& next_code_point, SequenceType type)
 {
     // emoji_core_sequence := emoji_character | emoji_presentation_sequence | emoji_keycap_sequence | emoji_modifier_sequence | emoji_flag_sequence
 
@@ -38,8 +38,16 @@ static bool could_be_start_of_emoji_core_sequence(u32 code_point, Optional<u32> 
         return false;
 
     // https://unicode.org/reports/tr51/#def_emoji_character
-    if (code_point_has_property(code_point, Property::Emoji))
-        return true;
+    switch (type) {
+    case SequenceType::Any:
+        if (code_point_has_property(code_point, Property::Emoji))
+            return true;
+        break;
+    case SequenceType::EmojiPresentation:
+        if (code_point_has_property(code_point, Property::Emoji_Presentation))
+            return true;
+        break;
+    }
 
     // https://unicode.org/reports/tr51/#def_emoji_presentation_sequence
     // emoji_presentation_sequence := emoji_character emoji_presentation_selector
@@ -71,7 +79,7 @@ static bool could_be_start_of_serenity_emoji(u32 code_point)
 
 // https://unicode.org/reports/tr51/#def_emoji_sequence
 template<typename CodePointIterator>
-static bool could_be_start_of_emoji_sequence_impl(CodePointIterator const& it)
+static bool could_be_start_of_emoji_sequence_impl(CodePointIterator const& it, [[maybe_unused]] SequenceType type)
 {
     // emoji_sequence := emoji_core_sequence | emoji_zwj_sequence | emoji_tag_sequence
 
@@ -92,7 +100,7 @@ static bool could_be_start_of_emoji_sequence_impl(CodePointIterator const& it)
     auto code_point = *it;
     auto next_code_point = it.peek(1);
 
-    if (could_be_start_of_emoji_core_sequence(code_point, next_code_point))
+    if (could_be_start_of_emoji_core_sequence(code_point, next_code_point, type))
         return true;
     if (could_be_start_of_serenity_emoji(code_point))
         return true;
@@ -102,14 +110,14 @@ static bool could_be_start_of_emoji_sequence_impl(CodePointIterator const& it)
 #endif
 }
 
-bool could_be_start_of_emoji_sequence(Utf8CodePointIterator const& it)
+bool could_be_start_of_emoji_sequence(Utf8CodePointIterator const& it, SequenceType type)
 {
-    return could_be_start_of_emoji_sequence_impl(it);
+    return could_be_start_of_emoji_sequence_impl(it, type);
 }
 
-bool could_be_start_of_emoji_sequence(Utf32CodePointIterator const& it)
+bool could_be_start_of_emoji_sequence(Utf32CodePointIterator const& it, SequenceType type)
 {
-    return could_be_start_of_emoji_sequence_impl(it);
+    return could_be_start_of_emoji_sequence_impl(it, type);
 }
 
 }
