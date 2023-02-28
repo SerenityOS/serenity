@@ -428,7 +428,7 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, Gfx::Font con
     item_data.icon_offset_y = -font.glyph_height() - 6;
     item_data.icon_rect.translate_by(0, item_data.icon_offset_y);
 
-    int unwrapped_text_width = font.width(item_data.text);
+    int unwrapped_text_width = static_cast<int>(ceilf(font.width(item_data.text)));
     int available_width = item_rect.width() - 6;
 
     item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, 0, font.glyph_height() };

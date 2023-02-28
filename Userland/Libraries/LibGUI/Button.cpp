@@ -279,8 +279,8 @@ Optional<UISize> Button::calculated_min_size() const
 
     if (!text().is_empty()) {
         auto& font = this->font();
-        horizontal = font.width(text()) + 2;
-        vertical = font.glyph_height() + 4; // FIXME: Use actual maximum total height
+        horizontal = static_cast<int>(ceilf(font.width(text()))) + 2;
+        vertical = static_cast<int>(ceilf(font.pixel_size())) + 4; // FIXME: Use actual maximum total height
     }
 
     if (m_icon) {

@@ -66,7 +66,7 @@ Optional<UISize> RadioButton::calculated_min_size() const
     int horizontal = 2 + 7, vertical = 0;
     auto& font = this->font();
     vertical = max(font.glyph_height(), circle_size().height());
-    horizontal += font.width(text());
+    horizontal += static_cast<int>(ceilf(font.width(text())));
     return UISize(horizontal, vertical);
 }
 
