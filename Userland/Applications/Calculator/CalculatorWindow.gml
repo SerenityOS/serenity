@@ -18,7 +18,9 @@
 
             @GUI::TextBox {
                 name: "entry_textbox"
+                mode: "DisplayOnly"
                 font_type: "FixedWidth"
+                focus_policy: "NoFocus"
             }
 
             @GUI::Widget {
@@ -306,6 +308,7 @@
                     fixed_width: 35
                     fixed_height: 28
                     foreground_role: "SyntaxPreprocessorValue"
+                    focus_policy: "NoFocus"
                 }
             }
         }
