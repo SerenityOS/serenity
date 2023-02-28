@@ -108,6 +108,10 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_navigator);
     for (auto& it : m_timers)
         visitor.visit(it.value.ptr());
+    for (auto& plugin_object : m_pdf_viewer_plugin_objects)
+        visitor.visit(plugin_object);
+    for (auto& mime_type_object : m_pdf_viewer_mime_type_objects)
+        visitor.visit(mime_type_object);
 }
 
 Window::~Window() = default;
@@ -1058,6 +1062,54 @@ HTML::BrowsingContext const* Window::browsing_context() const
 HTML::BrowsingContext* Window::browsing_context()
 {
     return m_associated_document->browsing_context();
+}
+
+// https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-objects
+Vector<JS::NonnullGCPtr<Plugin>> Window::pdf_viewer_plugin_objects()
+{
+    // Each Window object has a PDF viewer plugin objects list. If the user agent's PDF viewer supported is false, then it is the empty list.
+    // Otherwise, it is a list containing five Plugin objects, whose names are, respectively:
+    // 0.   "PDF Viewer"
+    // 1.   "Chrome PDF Viewer"
+    // 2.   "Chromium PDF Viewer"
+    // 3.   "Microsoft Edge PDF Viewer"
+    // 4.   "WebKit built-in PDF"
+    // The values of the above list form the PDF viewer plugin names list. https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-names
+    VERIFY(page());
+    if (!page()->pdf_viewer_supported())
+        return {};
+
+    if (m_pdf_viewer_plugin_objects.is_empty()) {
+        // FIXME: Remove the MUSTs and propagate the errors instead.
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("Chrome PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("Chromium PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("Microsoft Edge PDF Viewer"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_plugin_objects.append(realm().heap().allocate<Plugin>(realm(), realm(), MUST(String::from_utf8("WebKit built-in PDF"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+    }
+
+    return m_pdf_viewer_plugin_objects;
+}
+
+// https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-type-objects
+Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
+{
+    // Each Window object has a PDF viewer mime type objects list. If the user agent's PDF viewer supported is false, then it is the empty list.
+    // Otherwise, it is a list containing two MimeType objects, whose types are, respectively:
+    // 0.   "application/pdf"
+    // 1.   "text/pdf"
+    // The values of the above list form the PDF viewer mime types list. https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-types
+    VERIFY(page());
+    if (!page()->pdf_viewer_supported())
+        return {};
+
+    if (m_pdf_viewer_mime_type_objects.is_empty()) {
+        // FIXME: Remove the MUSTs and propagate the errors instead.
+        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), MUST(String::from_utf8("application/pdf"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), MUST(String::from_utf8("text/pdf"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+    }
+
+    return m_pdf_viewer_mime_type_objects;
 }
 
 void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)

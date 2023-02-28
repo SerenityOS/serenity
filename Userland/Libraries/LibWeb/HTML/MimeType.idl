@@ -1,0 +1,9 @@
+#import <HTML/Plugin.idl>
+
+[Exposed=Window, UseNewAKString]
+interface MimeType {
+    readonly attribute DOMString type;
+    readonly attribute DOMString description;
+    readonly attribute DOMString suffixes;
+    readonly attribute Plugin enabledPlugin;
+};

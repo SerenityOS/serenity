@@ -270,6 +270,8 @@ set(SOURCES
     HTML/MessageChannel.cpp
     HTML/MessageEvent.cpp
     HTML/MessagePort.cpp
+    HTML/MimeType.cpp
+    HTML/MimeTypeArray.cpp
     HTML/Navigator.cpp
     HTML/NavigatorID.cpp
     HTML/PageTransitionEvent.cpp
@@ -281,6 +283,8 @@ set(SOURCES
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
     HTML/Path2D.cpp
+    HTML/Plugin.cpp
+    HTML/PluginArray.cpp
     HTML/PromiseRejectionEvent.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
