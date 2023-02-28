@@ -119,8 +119,12 @@ DeprecatedString DOMStringMap::determine_value_of_named_property(DeprecatedStrin
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(DeprecatedString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(DeprecatedString const& name, JS::Value unconverted_value)
 {
+    // NOTE: Since LegacyPlatformObject does not know the type of value, we must convert it ourselves.
+    //       The type of `value` is `DOMString`.
+    auto value = TRY(unconverted_value.to_deprecated_string(vm()));
+
     AK::StringBuilder builder;
 
     // 3. Insert the string data- at the front of name.
@@ -158,13 +162,13 @@ WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_new_named_property(Deprecat
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-setitem
-WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(DeprecatedString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> DOMStringMap::set_value_of_existing_named_property(DeprecatedString const& name, JS::Value value)
 {
     return set_value_of_new_named_property(name, value);
 }
 
 // https://html.spec.whatwg.org/multipage/dom.html#dom-domstringmap-removeitem
-bool DOMStringMap::delete_existing_named_property(DeprecatedString const& name)
+WebIDL::ExceptionOr<Bindings::LegacyPlatformObject::DidDeletionFail> DOMStringMap::delete_value(DeprecatedString const& name)
 {
     AK::StringBuilder builder;
 
@@ -188,10 +192,10 @@ bool DOMStringMap::delete_existing_named_property(DeprecatedString const& name)
     m_associated_element->remove_attribute(data_name);
 
     // The spec doesn't have the step. This indicates that the deletion was successful.
-    return true;
+    return DidDeletionFail::No;
 }
 
-JS::Value DOMStringMap::named_item_value(DeprecatedFlyString const& name) const
+WebIDL::ExceptionOr<JS::Value> DOMStringMap::named_item_value(DeprecatedFlyString const& name) const
 {
     return JS::PrimitiveString::create(vm(), determine_value_of_named_property(name));
 }
