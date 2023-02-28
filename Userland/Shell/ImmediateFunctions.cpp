@@ -80,7 +80,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_impl(AST::ImmediateExpression
             // ImmediateExpression(length <mode_name> <entry>)
             resulting_nodes.unchecked_append(AST::make_ref_counted<AST::ImmediateExpression>(
                 expr_node->position(),
-                AST::NameWithPosition { TRY(String::from_utf8("length"sv)), invoking_node.function_position() },
+                AST::NameWithPosition { TRY("length"_string), invoking_node.function_position() },
                 NonnullRefPtrVector<AST::Node> { Vector<NonnullRefPtr<AST::Node>> {
                     static_cast<NonnullRefPtr<AST::Node>>(AST::make_ref_counted<AST::BarewordLiteral>(expr_node->position(), TRY(String::from_utf8(mode_name)))),
                     AST::make_ref_counted<AST::SyntheticNode>(expr_node->position(), NonnullRefPtr<AST::Value>(entry)),

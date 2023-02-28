@@ -1104,9 +1104,8 @@ Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
         return {};
 
     if (m_pdf_viewer_mime_type_objects.is_empty()) {
-        // FIXME: Remove the MUSTs and propagate the errors instead.
-        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), MUST(String::from_utf8("application/pdf"sv))).release_allocated_value_but_fixme_should_propagate_errors());
-        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), MUST(String::from_utf8("text/pdf"sv))).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), "application/pdf"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
+        m_pdf_viewer_mime_type_objects.append(realm().heap().allocate<MimeType>(realm(), realm(), "text/pdf"_string.release_value_but_fixme_should_propagate_errors()).release_allocated_value_but_fixme_should_propagate_errors());
     }
 
     return m_pdf_viewer_mime_type_objects;

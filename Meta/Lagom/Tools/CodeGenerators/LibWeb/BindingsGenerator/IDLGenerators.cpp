@@ -2448,11 +2448,11 @@ inline ErrorOr<String> idl_enum_to_string(@enum.type.name@ value) {
                 enum_generator.set("enum.entry", entry.value);
                 enum_generator.set("enum.string", entry.key);
                 enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@: return String::from_utf8("@enum.string@"sv);
+    case @enum.type.name@::@enum.entry@: return "@enum.string@"_string;
 )~~~");
             }
             enum_generator.append(R"~~~(
-    default: return String::from_utf8("<unknown>"sv);
+    default: return "<unknown>"_string;
     };
 }
 )~~~");
