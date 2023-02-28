@@ -1,7 +1,9 @@
+#import <HTML/MimeTypeArray.idl>
 #import <HTML/NavigatorID.idl>
 #import <HTML/NavigatorLanguage.idl>
 #import <HTML/NavigatorOnLine.idl>
 #import <HTML/NavigatorConcurrentHardware.idl>
+#import <HTML/PluginArray.idl>
 
 // https://html.spec.whatwg.org/multipage/system-state.html#navigator
 [Exposed=Window]
@@ -25,8 +27,8 @@ interface mixin NavigatorCookies {
 
 // https://html.spec.whatwg.org/multipage/system-state.html#navigatorplugins
 interface mixin NavigatorPlugins {
-    // FIXME: [SameObject] readonly attribute PluginArray plugins;
-    // FIXME: [SameObject] readonly attribute MimeTypeArray mimeTypes;
+    [SameObject] readonly attribute PluginArray plugins;
+    [SameObject] readonly attribute MimeTypeArray mimeTypes;
     boolean javaEnabled();
     readonly attribute boolean pdfViewerEnabled;
 };

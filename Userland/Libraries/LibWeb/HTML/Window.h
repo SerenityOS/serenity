@@ -20,6 +20,8 @@
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginPropertyDescriptorMap.h>
 #include <LibWeb/HTML/GlobalEventHandlers.h>
+#include <LibWeb/HTML/MimeType.h>
+#include <LibWeb/HTML/Plugin.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 
@@ -137,6 +139,9 @@ public:
 
     void initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>);
 
+    Vector<JS::NonnullGCPtr<Plugin>> pdf_viewer_plugin_objects();
+    Vector<JS::NonnullGCPtr<MimeType>> pdf_viewer_mime_type_objects();
+
 private:
     explicit Window(JS::Realm&);
 
@@ -183,6 +188,12 @@ private:
     NonnullRefPtrVector<IdleCallback> m_runnable_idle_callbacks;
     // https://w3c.github.io/requestidlecallback/#dfn-idle-callback-identifier
     u32 m_idle_callback_identifier = 0;
+
+    // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-plugin-objects
+    Vector<JS::NonnullGCPtr<Plugin>> m_pdf_viewer_plugin_objects;
+
+    // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-type-objects
+    Vector<JS::NonnullGCPtr<MimeType>> m_pdf_viewer_mime_type_objects;
 
 public:
     HTML::Origin origin() const;
