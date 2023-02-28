@@ -12,6 +12,7 @@
 namespace HackStudio {
 enum class Language {
     Unknown,
+    CMake,
     Cpp,
     CSS,
     JavaScript,
