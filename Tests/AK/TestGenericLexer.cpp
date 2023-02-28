@@ -107,7 +107,7 @@ TEST_CASE(should_constexpr_ignore_until)
         sut.ignore_until('d');
         return sut;
     }();
-    static_assert(sut.peek() == 'e');
+    static_assert(sut.peek() == 'd');
 }
 
 TEST_CASE(should_constexpr_ignore_until_cstring)
@@ -117,7 +117,7 @@ TEST_CASE(should_constexpr_ignore_until_cstring)
         sut.ignore_until("cde");
         return sut;
     }();
-    static_assert(sut.peek() == 'f');
+    static_assert(sut.peek() == 'c');
 }
 
 TEST_CASE(should_constexpr_next_is_pred)

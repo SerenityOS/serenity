@@ -142,7 +142,6 @@ public:
         while (!is_eof() && peek() != stop) {
             ++m_index;
         }
-        ignore();
     }
 
     constexpr void ignore_until(char const* stop)
@@ -150,7 +149,6 @@ public:
         while (!is_eof() && !next_is(stop)) {
             ++m_index;
         }
-        ignore(__builtin_strlen(stop));
     }
 
     /*
@@ -205,8 +203,7 @@ public:
             ++m_index;
     }
 
-    // Ignore characters until `pred` return true
-    // We don't skip the stop character as it may not be a unique value
+    // Ignore characters until `pred` returns true
     template<typename TPredicate>
     constexpr void ignore_until(TPredicate pred)
     {

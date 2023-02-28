@@ -139,10 +139,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
             parameter_value = Fetch::Infrastructure::collect_an_http_quoted_string(lexer, Fetch::Infrastructure::HttpQuotedStringExtractValue::Yes);
 
             // 2. Collect a sequence of code points that are not U+003B (;) from input, given position.
-            // NOTE: This uses the predicate version as the ignore_until(char) version will also ignore the ';'.
-            lexer.ignore_until([](char ch) {
-                return ch == ';';
-            });
+            lexer.ignore_until(';');
         }
 
         // 9. Otherwise:
