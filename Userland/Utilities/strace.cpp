@@ -819,8 +819,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> child_argv;
 
     StringView output_filename;
-    char const* exclude_syscalls_option = nullptr;
-    char const* include_syscalls_option = nullptr;
+    StringView exclude_syscalls_option;
+    StringView include_syscalls_option;
     HashTable<StringView> exclude_syscalls;
     HashTable<StringView> include_syscalls;
 
@@ -840,9 +840,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         ? TRY(Core::File::standard_error())
         : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));
 
-    auto parse_syscalls = [](char const* option, auto& hash_table) {
-        if (option != nullptr) {
-            for (auto syscall : StringView { option, strlen(option) }.split_view(','))
+    auto parse_syscalls = [](StringView option, auto& hash_table) {
+        if (!option.is_empty()) {
+            for (auto syscall : option.split_view(','))
                 hash_table.set(syscall);
         }
     };

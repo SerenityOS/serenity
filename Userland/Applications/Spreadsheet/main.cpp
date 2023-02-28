@@ -26,15 +26,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    char const* filename = nullptr;
+    StringView filename;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);
 
     args_parser.parse(arguments);
 
-    if (filename) {
-        if (!Core::DeprecatedFile::exists({ filename, strlen(filename) }) || Core::DeprecatedFile::is_directory(filename)) {
+    if (!filename.is_empty()) {
+        if (!Core::DeprecatedFile::exists(filename) || Core::DeprecatedFile::is_directory(filename)) {
             warnln("File does not exist or is a directory: {}", filename);
             return 1;
         }
@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(640, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto spreadsheet_widget = TRY(window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename == nullptr));
+    auto spreadsheet_widget = TRY(window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, NonnullRefPtrVector<Spreadsheet::Sheet> {}, filename.is_empty()));
 
     spreadsheet_widget->initialize_menubar(*window);
     spreadsheet_widget->update_window_title();
@@ -64,7 +64,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    if (filename) {
+    if (!filename.is_empty()) {
         auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, filename));
         spreadsheet_widget->load_file(file.filename(), file.stream());
     }

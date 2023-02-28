@@ -24,7 +24,7 @@ static int kill_test();
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* test_name = "n";
+    StringView test_name = "n"sv;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
@@ -33,21 +33,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, k = kill, nothing = join race)", "test-name", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    if (*test_name == 'm')
+    if (test_name[0] == 'm')
         return mutex_test();
-    if (*test_name == 'd')
+    if (test_name[0] == 'd')
         return detached_test();
-    if (*test_name == 'p')
+    if (test_name[0] == 'p')
         return priority_test();
-    if (*test_name == 's')
+    if (test_name[0] == 's')
         return stack_size_test();
-    if (*test_name == 't')
+    if (test_name[0] == 't')
         return staying_alive_test();
-    if (*test_name == 'x')
+    if (test_name[0] == 'x')
         return set_stack_test();
-    if (*test_name == 'k')
+    if (test_name[0] == 'k')
         return kill_test();
-    if (*test_name != 'n') {
+    if (test_name[0] != 'n') {
         args_parser.print_usage(stdout, arguments.strings[0]);
         return 1;
     }

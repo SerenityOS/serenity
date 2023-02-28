@@ -30,7 +30,7 @@ static Optional<size_t> count;
 static uint32_t total_ms;
 static int min_ms;
 static int max_ms;
-static char const* host;
+static DeprecatedString host;
 static int payload_size = -1;
 // variable part of header can be 0 to 40 bytes
 // https://datatracker.ietf.org/doc/html/rfc791#section-3.1
@@ -88,7 +88,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
 
-    auto* hostent = gethostbyname(host);
+    auto* hostent = gethostbyname(host.characters());
     if (!hostent) {
         warnln("Lookup failed for '{}'", host);
         return 1;

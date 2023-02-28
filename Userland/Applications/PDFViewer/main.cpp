@@ -18,7 +18,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* file_path = nullptr;
+    StringView file_path;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(file_path, "PDF file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    if (file_path) {
+    if (!file_path.is_empty()) {
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, file_path);
         if (response.is_error())
             return 1;

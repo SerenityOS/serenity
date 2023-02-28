@@ -27,7 +27,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     app->set_config_domain(TRY("TextEditor"_string));
 
     auto preview_mode = "auto"sv;
-    char const* file_to_edit = nullptr;
+    StringView file_to_edit;
     Core::ArgsParser parser;
     parser.add_option(preview_mode, "Preview mode, one of 'none', 'html', 'markdown', 'auto'", "preview-mode", '\0', "mode");
     parser.add_positional_argument(file_to_edit, "File to edit, with optional starting line and column number", "file[:line[:column]]", Core::ArgsParser::Required::No);
@@ -73,8 +73,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    if (file_to_edit) {
-        auto filename = TRY(String::from_utf8(StringView(file_to_edit, strlen(file_to_edit))));
+    if (!file_to_edit.is_empty()) {
+        auto filename = TRY(String::from_utf8(file_to_edit));
         FileArgument parsed_argument(filename);
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, parsed_argument.filename().to_deprecated_string());
 

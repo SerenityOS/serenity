@@ -107,7 +107,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Leap seconds smearing NTP servers:
     // - time.facebook.com , https://engineering.fb.com/production-engineering/ntp-service/ , sine-smears over 18 hours
     // - time.google.com , https://developers.google.com/time/smear , linear-smears over 24 hours
-    char const* host = "time.google.com";
+    DeprecatedString host = "time.google.com"sv;
     Core::ArgsParser args_parser;
     args_parser.add_option(adjust_time, "Gradually adjust system time (requires root)", "adjust", 'a');
     args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's');
@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::pledge("stdio inet unix rpath"));
     }
 
-    auto* hostent = gethostbyname(host);
+    auto* hostent = gethostbyname(host.characters());
     if (!hostent) {
         warnln("Lookup failed for '{}'", host);
         return 1;

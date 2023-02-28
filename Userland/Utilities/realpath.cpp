@@ -14,7 +14,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    char const* path;
+    DeprecatedString path;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help(
@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(path, "Path to resolve", "path");
     args_parser.parse(arguments);
 
-    char* value = realpath(path, nullptr);
+    char* value = realpath(path.characters(), nullptr);
     if (value == nullptr) {
         perror("realpath");
         return 1;

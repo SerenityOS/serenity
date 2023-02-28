@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     for (auto i = 0; i < argc; ++i)
         arguments.append({ argv[i], strlen(argv[i]) });
 
-    char const* target = nullptr;
+    DeprecatedString target;
     int max_file_size = 1024 * 1024;
     int count = 1024;
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(target, "Target file path", "target");
     args_parser.parse(arguments);
 
-    int fd = creat(target, 0666);
+    int fd = creat(target.characters(), 0666);
     if (fd < 0) {
         perror("Couldn't create target file");
         return EXIT_FAILURE;
@@ -38,13 +38,13 @@ int main(int argc, char** argv)
     for (int i = 0; i < count; i++) {
         auto new_file_size = AK::get_random<uint64_t>() % (max_file_size + 1);
         printf("(%d/%d)\tTruncating to %" PRIu64 " bytes...\n", i + 1, count, new_file_size);
-        if (truncate(target, new_file_size) < 0) {
+        if (truncate(target.characters(), new_file_size) < 0) {
             perror("Couldn't truncate target file");
             return EXIT_FAILURE;
         }
     }
 
-    if (unlink(target) < 0) {
+    if (unlink(target.characters()) < 0) {
         perror("Couldn't remove target file");
         return EXIT_FAILURE;
     }

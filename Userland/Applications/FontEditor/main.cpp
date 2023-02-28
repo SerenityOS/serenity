@@ -28,7 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Config::pledge_domain("FontEditor");
     TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
 
-    char const* path = nullptr;
+    StringView path;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto font_editor = TRY(window->set_main_widget<FontEditor::MainWidget>());
     TRY(font_editor->initialize_menubar(*window));
 
-    if (path) {
+    if (!path.is_empty()) {
         TRY(font_editor->open_file(path));
     } else {
         auto mutable_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/KaticaRegular10.font"))->unmasked_character_set());

@@ -26,7 +26,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     Config::pledge_domain("PixelPaint");
 
-    char const* image_file = nullptr;
+    StringView image_file;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -72,7 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     window->show();
 
-    if (image_file) {
+    if (!image_file.is_empty()) {
         auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, image_file);
         if (response.is_error())
             return 1;

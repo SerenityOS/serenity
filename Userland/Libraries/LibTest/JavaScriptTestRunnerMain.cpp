@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 #endif
     bool print_json = false;
     bool per_file = false;
-    char const* specified_test_root = nullptr;
+    StringView specified_test_root;
     DeprecatedString common_path;
     DeprecatedString test_glob;
 
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 
     DeprecatedString test_root;
 
-    if (specified_test_root) {
+    if (!specified_test_root.is_empty()) {
         test_root = DeprecatedString { specified_test_root };
     } else {
 #ifdef AK_OS_SERENITY

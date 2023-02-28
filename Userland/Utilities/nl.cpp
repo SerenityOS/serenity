@@ -22,7 +22,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     NumberStyle number_style = NumberNonEmptyLines;
     int increment = 1;
-    char const* separator = "  ";
+    StringView separator = "  "sv;
     int start_number = 1;
     int number_width = 6;
     Vector<DeprecatedString> files;

@@ -15,7 +15,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    char const* file_to_open = nullptr;
+    StringView file_to_open;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(file_to_open, "Path to SQL script or DB", "file", Core::ArgsParser::Required::No);
@@ -39,7 +39,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    if (file_to_open) {
+    if (!file_to_open.is_empty()) {
         auto path = LexicalPath(file_to_open);
         main_widget->open_script_from_file(path);
     } else {

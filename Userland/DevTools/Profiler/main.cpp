@@ -47,13 +47,13 @@ static bool generate_profile(pid_t& pid);
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int pid = 0;
-    char const* perfcore_file_arg = nullptr;
+    StringView perfcore_file_arg;
     Core::ArgsParser args_parser;
     args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
     args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    if (pid && perfcore_file_arg) {
+    if (pid && !perfcore_file_arg.is_empty()) {
         warnln("-p/--pid option and perfcore-file argument must not be used together!");
         return 1;
     }
@@ -62,7 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-profiler"sv));
 
     DeprecatedString perfcore_file;
-    if (!perfcore_file_arg) {
+    if (perfcore_file_arg.is_empty()) {
         if (!generate_profile(pid))
             return 0;
         perfcore_file = DeprecatedString::formatted("/proc/{}/perf_events", pid);

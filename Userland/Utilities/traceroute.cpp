@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio id inet unix"));
 
-    char const* host_name;
+    DeprecatedString host_name;
     int max_hops = 30;
     int max_retries = 3;
     int echo_timeout = 5;
@@ -45,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return Error::from_string_literal("Invalid maximum retries amount");
     }
 
-    auto* hostent = gethostbyname(host_name);
+    auto* hostent = gethostbyname(host_name.characters());
     if (!hostent) {
         warnln("Lookup failed for '{}'", host_name);
         return 1;

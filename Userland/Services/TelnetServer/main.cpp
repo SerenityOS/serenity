@@ -86,7 +86,7 @@ static void run_command(int ptm_fd, DeprecatedString command)
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     int port = 23;
-    char const* command = "";
+    StringView command = ""sv;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(port, "Port to listen on", nullptr, 'p', "port");

@@ -14,13 +14,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath"));
 
-    char const* filename = nullptr;
+    StringView filename;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(filename, "Name of executable", "executable");
     args_parser.parse(arguments);
 
-    auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment({ filename, strlen(filename) });
+    auto fullpath = Core::DeprecatedFile::resolve_executable_from_environment(filename);
     if (!fullpath.has_value()) {
         warnln("no '{}' in path", filename);
         return 1;

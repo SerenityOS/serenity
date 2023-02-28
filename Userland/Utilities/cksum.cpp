@@ -15,14 +15,14 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Vector<DeprecatedString> paths;
-    char const* opt_algorithm = nullptr;
+    StringView opt_algorithm;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'crc32', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);
     args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    auto algorithm = (opt_algorithm == nullptr) ? "crc32" : DeprecatedString(opt_algorithm).to_lowercase();
+    auto algorithm = opt_algorithm.is_empty() ? "crc32" : DeprecatedString(opt_algorithm).to_lowercase();
 
     auto available_algorithms = Vector<DeprecatedString> { "crc32", "adler32" };
 
