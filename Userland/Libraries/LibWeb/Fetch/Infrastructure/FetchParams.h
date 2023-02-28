@@ -14,6 +14,7 @@
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
 #include <LibWeb/Fetch/Infrastructure/FetchTimingInfo.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
+#include <LibWeb/Fetch/Infrastructure/Task.h>
 
 namespace Web::Fetch::Infrastructure {
 
@@ -22,9 +23,6 @@ class FetchParams : public JS::Cell {
     JS_CELL(FetchParams, JS::Cell);
 
 public:
-    // FIXME: 'or a parallel queue'
-    using TaskDestination = Variant<Empty, JS::NonnullGCPtr<JS::Object>>;
-
     struct PreloadedResponseCandidatePendingTag { };
     using PreloadedResponseCandidate = Variant<Empty, PreloadedResponseCandidatePendingTag, JS::NonnullGCPtr<Response>>;
 

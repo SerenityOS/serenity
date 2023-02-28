@@ -8,6 +8,7 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
+#include <LibWeb/Fetch/Infrastructure/Task.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -36,20 +37,43 @@ WebIDL::ExceptionOr<Body> Body::clone(JS::Realm& realm) const
     return Body { JS::make_handle(out2), m_source, m_length };
 }
 
-// https://fetch.spec.whatwg.org/#fully-reading-body-as-promise
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> Body::fully_read_as_promise() const
+// https://fetch.spec.whatwg.org/#body-fully-read
+WebIDL::ExceptionOr<void> Body::fully_read(JS::Realm& realm, Web::Fetch::Infrastructure::Body::ProcessBodyCallback process_body, Web::Fetch::Infrastructure::Body::ProcessBodyErrorCallback process_body_error, TaskDestination task_destination) const
 {
-    auto& vm = Bindings::main_thread_vm();
-    auto& realm = *vm.current_realm();
+    auto& vm = realm.vm();
 
+    // FIXME: 1. If taskDestination is null, then set taskDestination to the result of starting a new parallel queue.
+    // FIXME: Handle 'parallel queue' task destination
+    VERIFY(!task_destination.has<Empty>());
+    auto task_destination_object = task_destination.get<JS::NonnullGCPtr<JS::Object>>();
+
+    // 2. Let successSteps given a byte sequence bytes be to queue a fetch task to run processBody given bytes, with taskDestination.
+    auto success_steps = [process_body = move(process_body), task_destination_object = JS::make_handle(task_destination_object)](ByteBuffer const& bytes) mutable -> ErrorOr<void> {
+        // Make a copy of the bytes, as the source of the bytes may disappear between the time the task is queued and executed.
+        auto bytes_copy = TRY(ByteBuffer::copy(bytes));
+        queue_fetch_task(*task_destination_object, [process_body = move(process_body), bytes_copy = move(bytes_copy)]() {
+            process_body(move(bytes_copy));
+        });
+        return {};
+    };
+
+    // 3. Let errorSteps be to queue a fetch task to run processBodyError, with taskDestination.
+    auto error_steps = [process_body_error = move(process_body_error), task_destination_object = JS::make_handle(task_destination_object)](JS::Error& error) mutable {
+        queue_fetch_task(*task_destination_object, [process_body_error = move(process_body_error), error = JS::make_handle(error)]() {
+            process_body_error(*error);
+        });
+    };
+
+    // 4. Let reader be the result of getting a reader for body’s stream. If that threw an exception, then run errorSteps with that exception and return.
+    // 5. Read all bytes from reader, given successSteps and errorSteps.
     // FIXME: Implement the streams spec - this is completely made up for now :^)
     if (auto const* byte_buffer = m_source.get_pointer<ByteBuffer>()) {
-        // FIXME: The buffer may or may not be valid UTF-8.
-        auto result = TRY_OR_THROW_OOM(vm, String::from_utf8(*byte_buffer));
-        return WebIDL::create_resolved_promise(realm, JS::PrimitiveString::create(vm, move(result)));
+        TRY_OR_THROW_OOM(vm, success_steps(*byte_buffer));
+    } else {
+        // Empty, Blob, FormData
+        error_steps(TRY(JS::InternalError::create(realm, "Reading from Blob, FormData or null source is not yet implemented"sv)));
     }
-    // Empty, Blob, FormData
-    return WebIDL::create_rejected_promise(realm, JS::InternalError::create(realm, "Reading body isn't fully implemented"sv).release_allocated_value_but_fixme_should_propagate_errors());
+    return {};
 }
 
 // https://fetch.spec.whatwg.org/#byte-sequence-as-a-body
