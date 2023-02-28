@@ -39,6 +39,7 @@ public:
     virtual Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor() override;
     virtual bool is_overriding_alt() override { return true; }
     LayerSelectionMode layer_selection_mode() const { return m_layer_selection_mode; }
+    bool cursor_is_within_resize_anchor() { return m_resize_anchor_location.has_value(); }
 
 private:
     static int resize_anchor_size(Gfx::IntRect layer_rect_in_frame_coordinates);
