@@ -41,6 +41,14 @@ xcode-select --install
 brew install cmake qt ninja
 ```
 
+On OpenIndiana:
+
+Note that OpenIndianas latest GCC port (GCC 11) is too old to build Ladybird, so you need Clang, which is available in the repository.
+
+```
+pfexec pkg install cmake ninja clang-15 libglvnd qt6
+```
+
 On Windows:
 
 WSL2/WSLg are preferred, as they provide a linux environment that matches one of the above distributions.
@@ -109,6 +117,23 @@ To run without ninja rule:
 ```
 export SERENITY_SOURCE_DIR=$(realpath ../)
 ./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
+```
+
+### Building on OpenIndiana
+
+OpenIndiana needs some extra environment variables set to make sure it finds all the executables
+and directories it needs for the build to work. The cmake files are in a non-standard path that
+contains the Qt version (replace 6.2 with the Qt version you have installed) and you need to tell
+it to use clang and clang++, or it will use gcc and g++ from GCC 10 which is currently the default
+to build packages on OpenIndiana.
+
+When running Ladybird, make sure that XDG_RUNTIME_DIR is set, or it will immediately crash as it
+doesn't find a writable directory for its sockets.
+
+```
+CMAKE_PREFIX_PATH=/usr/lib/qt/6.2/lib/amd64/cmake cmake -GNinja -S Ladybird -B Build/ladybird -DCMAKE_C_COMPILER=/usr/bin/clang -DCMAKE_CXX_COMPILER=/usr/bin/clang++
+cmake --build Build/ladybird
+XDG_RUNTIME_DIR=/var/tmp ninja -C Build/ladybird run
 ```
 
 ## Experimental Android Build Steps
