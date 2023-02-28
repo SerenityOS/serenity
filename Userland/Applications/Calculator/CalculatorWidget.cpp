@@ -50,12 +50,12 @@ CalculatorWidget::CalculatorWidget()
     m_clear_button = *find_descendant_of_type_named<GUI::Button>("clear_button");
     m_clear_button->on_click = [this](auto) {
         m_keypad.set_to_0();
-        m_calculator.clear_operation();
+        m_calculator.reset();
         update_display();
     };
 
-    m_clear_error_button = *find_descendant_of_type_named<GUI::Button>("clear_error_button");
-    m_clear_error_button->on_click = [this](auto) {
+    m_clear_entry_button = *find_descendant_of_type_named<GUI::Button>("clear_entry_button");
+    m_clear_entry_button->on_click = [this](auto) {
         m_keypad.set_to_0();
         update_display();
     };

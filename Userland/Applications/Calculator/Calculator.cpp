@@ -167,5 +167,16 @@ void Calculator::clear_operation()
         m_binary_operation_in_progress = Operation::None;
     }
     m_binary_operation_saved_left_side.set_to_0();
+}
+
+void Calculator::reset()
+{
     clear_error();
+    m_current_value.set_to_0();
+
+    m_binary_operation_in_progress = Operation::None;
+    m_previous_binary_operation_right_side.set_to_0();
+
+    m_previous_operation = Operation::None;
+    m_previous_binary_operation_right_side.set_to_0();
 }

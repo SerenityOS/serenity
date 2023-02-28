@@ -51,7 +51,7 @@ private:
     RefPtr<GUI::Button> m_mem_recall_button;
     RefPtr<GUI::Button> m_mem_clear_button;
     RefPtr<GUI::Button> m_clear_button;
-    RefPtr<GUI::Button> m_clear_error_button;
+    RefPtr<GUI::Button> m_clear_entry_button;
     RefPtr<GUI::Button> m_backspace_button;
     RefPtr<GUI::Button> m_decimal_point_button;
     RefPtr<GUI::Button> m_sign_button;

@@ -46,7 +46,7 @@
                 }
 
                 @GUI::Button {
-                    name: "clear_error_button"
+                    name: "clear_entry_button"
                     text: "CE"
                     fixed_width: 56
                     fixed_height: 28

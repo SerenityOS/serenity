@@ -49,6 +49,7 @@ public:
 
     void clear_operation();
     void clear_error() { m_has_error = false; }
+    void reset();
 
 private:
     Crypto::BigFraction m_mem {};
