@@ -111,22 +111,22 @@ private:
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
 
-static CSSStyleSheet& default_stylesheet()
+static CSSStyleSheet& default_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
         extern StringView default_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), default_stylesheet_source));
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), default_stylesheet_source));
     }
     return *sheet;
 }
 
-static CSSStyleSheet& quirks_mode_stylesheet()
+static CSSStyleSheet& quirks_mode_stylesheet(DOM::Document const& document)
 {
     static JS::Handle<CSSStyleSheet> sheet;
     if (!sheet.cell()) {
         extern StringView quirks_mode_stylesheet_source;
-        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(), quirks_mode_stylesheet_source));
+        sheet = JS::make_handle(parse_css_stylesheet(CSS::Parser::ParsingContext(document), quirks_mode_stylesheet_source));
     }
     return *sheet;
 }
@@ -135,9 +135,9 @@ template<typename Callback>
 void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
     if (cascade_origin == CascadeOrigin::UserAgent) {
-        callback(default_stylesheet());
+        callback(default_stylesheet(document()));
         if (document().in_quirks_mode())
-            callback(quirks_mode_stylesheet());
+            callback(quirks_mode_stylesheet(document()));
     }
     if (cascade_origin == CascadeOrigin::Author) {
         for (auto const& sheet : document().style_sheets().sheets()) {
@@ -907,12 +907,12 @@ static DOM::Element const* element_to_inherit_style_from(DOM::Element const* ele
     return parent_element;
 }
 
-static NonnullRefPtr<StyleValue const> get_inherit_value(CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_value_context_realm, CSS::PropertyID property_id, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element)
 {
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
     if (!parent_element || !parent_element->computed_css_values())
-        return property_initial_value(property_id);
+        return property_initial_value(initial_value_context_realm, property_id);
     return parent_element->computed_css_values()->property(property_id);
 };
 
@@ -923,19 +923,19 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     auto& value_slot = style.m_property_values[to_underlying(property_id)];
     if (!value_slot) {
         if (is_inherited_property(property_id))
-            style.m_property_values[to_underlying(property_id)] = get_inherit_value(property_id, element, pseudo_element);
+            style.m_property_values[to_underlying(property_id)] = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         else
-            style.m_property_values[to_underlying(property_id)] = property_initial_value(property_id);
+            style.m_property_values[to_underlying(property_id)] = property_initial_value(document().realm(), property_id);
         return;
     }
 
     if (value_slot->is_initial()) {
-        value_slot = property_initial_value(property_id);
+        value_slot = property_initial_value(document().realm(), property_id);
         return;
     }
 
     if (value_slot->is_inherit()) {
-        value_slot = get_inherit_value(property_id, element, pseudo_element);
+        value_slot = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         return;
     }
 
@@ -944,10 +944,10 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
     if (value_slot->is_unset()) {
         if (is_inherited_property(property_id)) {
             // then if it is an inherited property, this is treated as inherit,
-            value_slot = get_inherit_value(property_id, element, pseudo_element);
+            value_slot = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         } else {
             // and if it is not, this is treated as initial.
-            value_slot = property_initial_value(property_id);
+            value_slot = property_initial_value(document().realm(), property_id);
         }
     }
 }

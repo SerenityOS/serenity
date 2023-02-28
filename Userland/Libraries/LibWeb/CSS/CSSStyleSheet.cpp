@@ -54,7 +54,8 @@ WebIDL::ExceptionOr<unsigned> CSSStyleSheet::insert_rule(StringView rule, unsign
     // FIXME: 2. If the disallow modification flag is set, throw a NotAllowedError DOMException.
 
     // 3. Let parsed rule be the return value of invoking parse a rule with rule.
-    auto parsed_rule = parse_css_rule(CSS::Parser::ParsingContext {}, rule);
+    auto context = m_style_sheet_list ? CSS::Parser::ParsingContext { m_style_sheet_list->document() } : CSS::Parser::ParsingContext { realm() };
+    auto parsed_rule = parse_css_rule(context, rule);
 
     // 4. If parsed rule is a syntax error, return parsed rule.
     if (!parsed_rule)

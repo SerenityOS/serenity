@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Realm.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/Supports.h>
 
@@ -52,13 +53,13 @@ bool Supports::InParens::evaluate() const
 
 bool Supports::Declaration::evaluate() const
 {
-    auto style_property = parse_css_supports_condition({}, declaration);
+    auto style_property = parse_css_supports_condition(Parser::ParsingContext { *realm }, declaration);
     return style_property.has_value();
 }
 
 bool Supports::Selector::evaluate() const
 {
-    auto style_property = parse_selector({}, selector);
+    auto style_property = parse_selector(Parser::ParsingContext { *realm }, selector);
     return style_property.has_value();
 }
 

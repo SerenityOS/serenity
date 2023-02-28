@@ -37,7 +37,7 @@ DeprecatedString CSSSupportsRule::condition_text() const
 
 void CSSSupportsRule::set_condition_text(DeprecatedString text)
 {
-    if (auto new_supports = parse_css_supports({}, text))
+    if (auto new_supports = parse_css_supports(Parser::ParsingContext { realm() }, text))
         m_supports = new_supports.release_nonnull();
 }
 
