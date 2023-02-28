@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 
@@ -45,6 +46,10 @@ public:
     URL(StringView);
     URL(DeprecatedString const& string)
         : URL(string.view())
+    {
+    }
+    URL(String const& string)
+        : URL(string.bytes_as_string_view())
     {
     }
 
