@@ -443,7 +443,8 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
 
                 if (context.current_scan.spectral_selection_start == 0)
                     TRY(add_dc(context, block, scan_component));
-                TRY(add_ac(context, block, scan_component));
+                if (context.current_scan.spectral_selection_end != 0)
+                    TRY(add_ac(context, block, scan_component));
             }
         }
     }
