@@ -12,6 +12,8 @@
 REGISTER_WIDGET(GUI, HorizontalSeparator)
 REGISTER_WIDGET(GUI, VerticalSeparator)
 
+constexpr int minimum_size = 8;
+
 namespace GUI {
 
 SeparatorWidget::SeparatorWidget(Gfx::Orientation orientation)
@@ -39,8 +41,15 @@ void SeparatorWidget::paint_event(PaintEvent& event)
 Optional<UISize> SeparatorWidget::calculated_preferred_size() const
 {
     if (m_orientation == Gfx::Orientation::Vertical)
-        return UISize { 8, SpecialDimension::OpportunisticGrow };
-    return UISize { SpecialDimension::OpportunisticGrow, 8 };
+        return UISize { minimum_size, SpecialDimension::OpportunisticGrow };
+    return UISize { SpecialDimension::OpportunisticGrow, minimum_size };
+}
+
+Optional<UISize> SeparatorWidget::calculated_min_size() const
+{
+    if (m_orientation == Gfx::Orientation::Vertical)
+        return UISize { minimum_size, 0 };
+    return UISize { 0, minimum_size };
 }
 
 }
