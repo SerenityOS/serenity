@@ -133,7 +133,7 @@ void Slider::mousemove_event(MouseEvent& event)
         float scrubbable_range = inner_rect().primary_size_for_orientation(orientation());
         float value_steps_per_scrubbed_pixel = (max() - min()) / scrubbable_range;
         float new_value = m_drag_origin_value + (value_steps_per_scrubbed_pixel * delta);
-        set_value((int)new_value);
+        set_value((int)roundf(new_value));
         return;
     }
     return Widget::mousemove_event(event);
