@@ -1843,9 +1843,9 @@ void HackStudioWidget::update_history_actions()
 
 RefPtr<Gfx::Font const> HackStudioWidget::read_editor_font_from_config()
 {
-    auto font_family = Config::read_string("HackStudio"sv, "EditorFont"sv, "Family"sv, "Csilla"sv);
-    auto font_variant = Config::read_string("HackStudio"sv, "EditorFont"sv, "Variant"sv, "Regular"sv);
-    auto font_size = Config::read_i32("HackStudio"sv, "EditorFont"sv, "Size"sv, 10);
+    auto font_family = Config::read_string("HackStudio"sv, "EditorFont"sv, "Family"sv);
+    auto font_variant = Config::read_string("HackStudio"sv, "EditorFont"sv, "Variant"sv);
+    auto font_size = Config::read_i32("HackStudio"sv, "EditorFont"sv, "Size"sv);
 
     auto font = Gfx::FontDatabase::the().get(font_family, font_variant, font_size);
     if (font.is_null())
