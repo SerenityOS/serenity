@@ -23,8 +23,9 @@
 
 namespace Kernel {
 
-class NVMeController : public PCI::Device
-    , public StorageController {
+class NVMeController
+    : public StorageController
+    , public PCI::Device {
 public:
     static ErrorOr<NonnullLockRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
     ErrorOr<void> initialize(bool is_queue_polled);

@@ -27,8 +27,8 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeController>> NVMeController::try_
 }
 
 UNMAP_AFTER_INIT NVMeController::NVMeController(const PCI::DeviceIdentifier& device_identifier, u32 hardware_relative_controller_id)
-    : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
-    , StorageController(hardware_relative_controller_id)
+    : StorageController(hardware_relative_controller_id)
+    , PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
 {
 }
 
