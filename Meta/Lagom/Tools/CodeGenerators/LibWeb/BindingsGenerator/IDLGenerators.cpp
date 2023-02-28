@@ -1487,11 +1487,19 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
 
     if (type.is_nullable() && !is<UnionType>(type)) {
         if (type.is_string()) {
-            scoped_generator.append(R"~~~(
+            if (!interface.extended_attributes.contains("UseNewAKString")) {
+                scoped_generator.append(R"~~~(
     if (@value@.is_null()) {
         @result_expression@ JS::js_null();
     } else {
 )~~~");
+            } else {
+                scoped_generator.append(R"~~~(
+    if (!@value@.has_value()) {
+        @result_expression@ JS::js_null();
+    } else {
+)~~~");
+            }
         } else if (type.name() == "sequence") {
             scoped_generator.append(R"~~~(
     if (!@value@.has_value()) {
@@ -1508,9 +1516,15 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     }
 
     if (type.is_string()) {
-        scoped_generator.append(R"~~~(
+        if (type.is_nullable() && interface.extended_attributes.contains("UseNewAKString")) {
+            scoped_generator.append(R"~~~(
+    @result_expression@ JS::PrimitiveString::create(vm, @value@.release_value());
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
     @result_expression@ JS::PrimitiveString::create(vm, @value@);
 )~~~");
+        }
     } else if (type.name() == "sequence") {
         // https://webidl.spec.whatwg.org/#es-sequence
         auto& sequence_generic_type = verify_cast<IDL::ParameterizedType>(type);
