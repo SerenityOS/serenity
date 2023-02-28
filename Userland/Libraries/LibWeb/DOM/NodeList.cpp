@@ -25,7 +25,7 @@ JS::ThrowCompletionOr<void> NodeList::initialize(JS::Realm& realm)
     return {};
 }
 
-JS::Value NodeList::item_value(size_t index) const
+WebIDL::ExceptionOr<JS::Value> NodeList::item_value(size_t index) const
 {
     auto* node = item(index);
     if (!node)

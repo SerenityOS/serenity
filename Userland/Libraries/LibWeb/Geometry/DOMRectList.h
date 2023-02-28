@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, DerpyCrabs <derpycrabs@gmail.com>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,12 +26,25 @@ public:
     DOMRect const* item(u32 index) const;
 
     virtual bool is_supported_property_index(u32) const override;
-    virtual JS::Value item_value(size_t index) const override;
+    virtual WebIDL::ExceptionOr<JS::Value> item_value(size_t index) const override;
 
 private:
     DOMRectList(JS::Realm&, Vector<JS::NonnullGCPtr<DOMRect>>);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
+    // ^Bindings::LegacyPlatformObject
+    virtual bool supports_indexed_properties() const override { return true; }
+    virtual bool supports_named_properties() const override { return false; }
+    virtual bool has_indexed_property_setter() const override { return false; }
+    virtual bool has_named_property_setter() const override { return false; }
+    virtual bool has_named_property_deleter() const override { return false; }
+    virtual bool has_legacy_override_built_ins_interface_extended_attribute() const override { return false; }
+    virtual bool has_legacy_unenumerable_named_properties_interface_extended_attribute() const override { return false; }
+    virtual bool has_global_interface_extended_attribute() const override { return false; }
+    virtual bool indexed_property_setter_has_identifier() const override { return false; }
+    virtual bool named_property_setter_has_identifier() const override { return false; }
+    virtual bool named_property_deleter_has_identifier() const override { return false; }
 
     Vector<JS::NonnullGCPtr<DOMRect>> m_rects;
 };

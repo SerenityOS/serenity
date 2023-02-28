@@ -268,7 +268,7 @@ void DOMTokenList::run_update_steps()
     MUST(associated_element->set_attribute(m_associated_attribute, value()));
 }
 
-JS::Value DOMTokenList::item_value(size_t index) const
+WebIDL::ExceptionOr<JS::Value> DOMTokenList::item_value(size_t index) const
 {
     auto const& string = item(index);
     if (string.is_null())

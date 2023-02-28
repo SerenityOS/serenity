@@ -301,7 +301,7 @@ Attr const* NamedNodeMap::remove_attribute_ns(StringView namespace_, StringView 
     return attribute;
 }
 
-JS::Value NamedNodeMap::item_value(size_t index) const
+WebIDL::ExceptionOr<JS::Value> NamedNodeMap::item_value(size_t index) const
 {
     auto const* node = item(index);
     if (!node)
@@ -309,7 +309,7 @@ JS::Value NamedNodeMap::item_value(size_t index) const
     return node;
 }
 
-JS::Value NamedNodeMap::named_item_value(DeprecatedFlyString const& name) const
+WebIDL::ExceptionOr<JS::Value> NamedNodeMap::named_item_value(DeprecatedFlyString const& name) const
 {
     auto const* node = get_named_item(name);
     if (!node)

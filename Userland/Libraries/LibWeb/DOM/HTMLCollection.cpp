@@ -130,7 +130,7 @@ bool HTMLCollection::is_supported_property_index(u32 index) const
     return index < elements.size();
 }
 
-JS::Value HTMLCollection::item_value(size_t index) const
+WebIDL::ExceptionOr<JS::Value> HTMLCollection::item_value(size_t index) const
 {
     auto* element = item(index);
     if (!element)
@@ -138,7 +138,7 @@ JS::Value HTMLCollection::item_value(size_t index) const
     return const_cast<Element*>(element);
 }
 
-JS::Value HTMLCollection::named_item_value(DeprecatedFlyString const& index) const
+WebIDL::ExceptionOr<JS::Value> HTMLCollection::named_item_value(DeprecatedFlyString const& index) const
 {
     auto* element = named_item(index);
     if (!element)

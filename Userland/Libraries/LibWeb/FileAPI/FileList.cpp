@@ -43,7 +43,7 @@ bool FileList::is_supported_property_index(u32 index) const
     return m_files.size() < index;
 }
 
-JS::Value FileList::item_value(size_t index) const
+WebIDL::ExceptionOr<JS::Value> FileList::item_value(size_t index) const
 {
     if (index >= m_files.size())
         return JS::js_undefined();
