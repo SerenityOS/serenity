@@ -5,7 +5,6 @@
     }
 
     @GUI::Widget {
-        shrink_to_fit: true
         layout: @GUI::VerticalBoxLayout {}
 
         @GUI::Label {
