@@ -5,6 +5,7 @@
  */
 
 #include "MP3Loader.h"
+#include "LibAudio/MP3Types.h"
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
 #include <AK/FixedArray.h>
@@ -93,7 +94,7 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> MP3LoaderPlugin::load_chunks(si
     int samples_to_read = samples_to_read_from_input;
     Vector<FixedArray<Sample>> frames;
     while (samples_to_read > 0) {
-        FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(1152));
+        FixedArray<Sample> samples = LOADER_TRY(FixedArray<Sample>::create(MP3::frame_size));
 
         if (!m_current_frame.has_value()) {
             auto maybe_frame = read_next_frame();
@@ -109,16 +110,16 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> MP3LoaderPlugin::load_chunks(si
         }
 
         bool const is_stereo = m_current_frame->header.channel_count() == 2;
-        auto current_frame_read = 0;
-        for (; current_frame_read < 576; current_frame_read++) {
+        size_t current_frame_read = 0;
+        for (; current_frame_read < MP3::granule_size; current_frame_read++) {
             auto const left_sample = m_current_frame->channels[0].granules[0].pcm[current_frame_read / 32][current_frame_read % 32];
             auto const right_sample = is_stereo ? m_current_frame->channels[1].granules[0].pcm[current_frame_read / 32][current_frame_read % 32] : left_sample;
             samples[current_frame_read] = Sample { left_sample, right_sample };
             samples_to_read--;
         }
-        for (; current_frame_read < 1152; current_frame_read++) {
-            auto const left_sample = m_current_frame->channels[0].granules[1].pcm[(current_frame_read - 576) / 32][(current_frame_read - 576) % 32];
-            auto const right_sample = is_stereo ? m_current_frame->channels[1].granules[1].pcm[(current_frame_read - 576) / 32][(current_frame_read - 576) % 32] : left_sample;
+        for (; current_frame_read < MP3::frame_size; current_frame_read++) {
+            auto const left_sample = m_current_frame->channels[0].granules[1].pcm[(current_frame_read - MP3::granule_size) / 32][(current_frame_read - MP3::granule_size) % 32];
+            auto const right_sample = is_stereo ? m_current_frame->channels[1].granules[1].pcm[(current_frame_read - MP3::granule_size) / 32][(current_frame_read - MP3::granule_size) % 32] : left_sample;
             samples[current_frame_read] = Sample { left_sample, right_sample };
             samples_to_read--;
         }
@@ -146,7 +147,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
             continue;
         }
         frame_count++;
-        sample_count += 1152;
+        sample_count += MP3::frame_size;
 
         if (frame_count % 10 == 0)
             m_seek_table.append({ frame_pos, sample_count });
@@ -269,7 +270,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
         for (size_t channel_index = 0; channel_index < header.channel_count(); channel_index++) {
             auto& granule = frame.channels[channel_index].granules[granule_index];
 
-            for (size_t i = 0; i < 576; i += 18) {
+            for (size_t i = 0; i < MP3::granule_size; i += 18) {
                 MP3::BlockType block_type = granule.block_type;
                 if (i < 36 && granule.mixed_block_flag) {
                     // ISO/IEC 11172-3: if mixed_block_flag is set, the lowest two subbands are transformed with normal window.
@@ -357,9 +358,9 @@ MaybeLoaderError MP3LoaderPlugin::read_side_information(MP3::MP3Frame& frame)
 }
 
 // From ISO/IEC 11172-3 (2.4.3.4.7.1)
-Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const& frame, size_t granule_index, size_t channel_index)
+Array<float, MP3::granule_size> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const& frame, size_t granule_index, size_t channel_index)
 {
-    Array<float, 576> exponents;
+    Array<float, MP3::granule_size> exponents;
 
     auto fill_band = [&exponents](float exponent, size_t start, size_t end) {
         for (size_t j = start; j <= end; j++) {
@@ -396,7 +397,7 @@ Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const
         float const gain1 = (gain - 8 * granule.sub_block_gain[1]) / 4.0;
         float const gain2 = (gain - 8 * granule.sub_block_gain[2]) / 4.0;
 
-        while (sample_count < 576 && band_index < scale_factor_bands.size()) {
+        while (sample_count < MP3::granule_size && band_index < scale_factor_bands.size()) {
             float const exponent0 = gain0 - (scale_factor_multiplier * channel.scale_factors[band_index + 0]);
             float const exponent1 = gain1 - (scale_factor_multiplier * channel.scale_factors[band_index + 1]);
             float const exponent2 = gain2 - (scale_factor_multiplier * channel.scale_factors[band_index + 2]);
@@ -411,7 +412,7 @@ Array<float, 576> MP3LoaderPlugin::calculate_frame_exponents(MP3::MP3Frame const
             band_index += 3;
         }
 
-        while (sample_count < 576)
+        while (sample_count < MP3::granule_size)
             exponents[sample_count++] = 0;
     }
     return exponents;
@@ -496,7 +497,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
 
     bool const is_short_granule = granule.window_switching_flag && granule.block_type == MP3::BlockType::Short;
     size_t const region1_start = is_short_granule ? 36 : scale_factor_bands[scale_factor_band_index1].start;
-    size_t const region2_start = is_short_granule ? 576 : scale_factor_bands[scale_factor_band_index2].start;
+    size_t const region2_start = is_short_granule ? MP3::granule_size : scale_factor_bands[scale_factor_band_index2].start;
 
     auto requantize = [](int const sample, float const exponent) -> float {
         int const sign = sample < 0 ? -1 : 1;
@@ -560,7 +561,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
     // until we've exhausted the granule's bits. We know the size of
     // the granule from part2_3_length, which is the number of bits
     // used for scaleactors and huffman data (in the granule).
-    while (granule_bits_read < granule.part_2_3_length && count <= 576 - 4) {
+    while (granule_bits_read < granule.part_2_3_length && count <= MP3::granule_size - 4) {
         auto const entry = MP3::Tables::Huffman::huffman_decode(reservoir, count1table, granule.part_2_3_length - granule_bits_read);
         granule_bits_read += entry.bits_read;
         if (!entry.code.has_value())
@@ -619,7 +620,7 @@ MaybeLoaderError MP3LoaderPlugin::read_huffman_data(MP3::MP3Frame& frame, BigEnd
 
 void MP3LoaderPlugin::reorder_samples(MP3::Granule& granule, u32 sample_rate)
 {
-    float tmp[576] = {};
+    float tmp[MP3::granule_size] = {};
     size_t band_index = 0;
     size_t subband_index = 0;
 
@@ -635,7 +636,7 @@ void MP3LoaderPlugin::reorder_samples(MP3::Granule& granule, u32 sample_rate)
         }
     }
 
-    while (subband_index < 576 && band_index <= 36) {
+    while (subband_index < MP3::granule_size && band_index <= 36) {
         for (size_t frequency_line_index = 0; frequency_line_index < scale_factor_bands[band_index].width; frequency_line_index++) {
             tmp[subband_index++] = granule.samples[scale_factor_bands[band_index + 0].start + frequency_line_index];
             tmp[subband_index++] = granule.samples[scale_factor_bands[band_index + 1].start + frequency_line_index];
@@ -644,7 +645,7 @@ void MP3LoaderPlugin::reorder_samples(MP3::Granule& granule, u32 sample_rate)
         band_index += 3;
     }
 
-    for (size_t i = 0; i < 576; i++)
+    for (size_t i = 0; i < MP3::granule_size; i++)
         granule.samples[i] = tmp[i];
 }
 
@@ -738,7 +739,7 @@ void MP3LoaderPlugin::process_stereo(MP3::MP3Frame& frame, size_t granule_index)
     }
 }
 
-void MP3LoaderPlugin::transform_samples_to_time(Array<float, 576> const& input, size_t input_offset, Array<float, 36>& output, MP3::BlockType block_type)
+void MP3LoaderPlugin::transform_samples_to_time(Array<float, MP3::granule_size> const& input, size_t input_offset, Array<float, 36>& output, MP3::BlockType block_type)
 {
     if (block_type == MP3::BlockType::Short) {
         size_t const N = 12;
