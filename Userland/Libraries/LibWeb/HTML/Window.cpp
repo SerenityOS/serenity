@@ -1132,7 +1132,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "screen", screen_getter, {}, JS::Attribute::Enumerable);
+    define_native_accessor(realm, "screen", screen_getter, screen_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1645,6 +1645,11 @@ JS_DEFINE_NATIVE_FUNCTION(Window::screen_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return &impl->screen();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(Window::screen_setter)
+{
+    REPLACEABLE_PROPERTY_SETTER(Window, screen);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::event_getter)

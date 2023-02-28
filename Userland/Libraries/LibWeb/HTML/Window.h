@@ -224,7 +224,9 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(performance_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(history_getter);
+
     JS_DECLARE_NATIVE_FUNCTION(screen_getter);
+    JS_DECLARE_NATIVE_FUNCTION(screen_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(event_getter);
     JS_DECLARE_NATIVE_FUNCTION(event_setter);
