@@ -114,6 +114,8 @@ public:
     void dismiss_dialog();
     void accept_dialog();
 
+    bool pdf_viewer_supported() const { return m_pdf_viewer_supported; }
+
 private:
     PageClient& m_client;
 
@@ -139,6 +141,12 @@ private:
     Optional<Empty> m_pending_alert_response;
     Optional<bool> m_pending_confirm_response;
     Optional<DeprecatedString> m_pending_prompt_response;
+
+    // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-supported
+    // Each user agent has a PDF viewer supported boolean, whose value is implementation-defined (and might vary according to user preferences).
+    // Spec Note: This value also impacts the navigation processing model.
+    // FIXME: Actually support pdf viewing
+    bool m_pdf_viewer_supported { false };
 };
 
 class PageClient {

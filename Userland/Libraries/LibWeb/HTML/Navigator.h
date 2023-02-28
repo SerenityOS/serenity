@@ -32,12 +32,11 @@ public:
     bool cookie_enabled() const { return true; }
 
     // NavigatorPlugins
-    // FIXME: Actually support pdf viewing
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-javaenabled
     bool java_enabled() const { return false; }
 
     // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-pdfviewerenabled
-    bool pdf_viewer_enabled() const { return false; }
+    bool pdf_viewer_enabled() const;
 
     bool webdriver() const;
 

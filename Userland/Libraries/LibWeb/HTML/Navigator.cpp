@@ -35,6 +35,15 @@ JS::ThrowCompletionOr<void> Navigator::initialize(JS::Realm& realm)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator-pdfviewerenabled
+bool Navigator::pdf_viewer_enabled() const
+{
+    // The NavigatorPlugins mixin's pdfViewerEnabled getter steps are to return the user agent's PDF viewer supported.
+    // NOTE: THe NavigatorPlugins mixin should only be exposed on the Window object.
+    auto const& window = verify_cast<HTML::Window>(HTML::current_global_object());
+    return window.page()->pdf_viewer_supported();
+}
+
 // https://w3c.github.io/webdriver/#dfn-webdriver
 bool Navigator::webdriver() const
 {
