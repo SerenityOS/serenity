@@ -1332,7 +1332,7 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
     // This function handles the "Multi-scan" loop.
 
     Vector<Macroblock> macroblocks;
-    macroblocks.resize(context.mblock_meta.padded_total);
+    TRY(macroblocks.try_resize(context.mblock_meta.padded_total));
 
     Marker marker = TRY(read_marker_at_cursor(*context.stream));
     while (true) {
