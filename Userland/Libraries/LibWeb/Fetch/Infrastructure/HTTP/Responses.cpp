@@ -127,13 +127,14 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-clone
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::VM& vm) const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::Realm& realm) const
 {
     // To clone a response response, run these steps:
+    auto& vm = realm.vm();
 
     // 1. If response is a filtered response, then return a new identical filtered response whose internal response is a clone of response’s internal response.
     if (is<FilteredResponse>(*this)) {
-        auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone(vm));
+        auto internal_response = TRY(static_cast<FilteredResponse const&>(*this).internal_response()->clone(realm));
         if (is<BasicFilteredResponse>(*this))
             return TRY_OR_THROW_OOM(vm, BasicFilteredResponse::create(vm, internal_response));
         if (is<CORSFilteredResponse>(*this))
@@ -164,7 +165,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::VM& vm) cons
 
     // 3. If response’s body is non-null, then set newResponse’s body to the result of cloning response’s body.
     if (m_body.has_value())
-        new_response->set_body(TRY(m_body->clone()));
+        new_response->set_body(TRY(m_body->clone(realm)));
 
     // 4. Return newResponse.
     return new_response;

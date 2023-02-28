@@ -182,7 +182,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
             return JS::js_null();
 
         // 3. Let jsonObject be the result of running parse JSON from bytes on this’s received bytes. If that threw an exception, then return null.
-        auto json_object_result = Infra::parse_json_bytes_to_javascript_value(vm, m_received_bytes);
+        auto json_object_result = Infra::parse_json_bytes_to_javascript_value(realm(), m_received_bytes);
         if (json_object_result.is_error())
             return JS::js_null();
 

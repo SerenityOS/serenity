@@ -106,7 +106,7 @@ public:
     [[nodiscard]] Optional<AK::URL const&> url() const;
     [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<String> const& request_fragment) const;
 
-    [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::VM&) const;
+    [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::Realm&) const;
 
     // Non-standard
     [[nodiscard]] Optional<StringView> network_error_message() const;

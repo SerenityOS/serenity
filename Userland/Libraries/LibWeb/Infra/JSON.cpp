@@ -15,23 +15,25 @@
 namespace Web::Infra {
 
 // https://infra.spec.whatwg.org/#parse-a-json-string-to-a-javascript-value
-WebIDL::ExceptionOr<JS::Value> parse_json_string_to_javascript_value(JS::VM& vm, StringView string)
+WebIDL::ExceptionOr<JS::Value> parse_json_string_to_javascript_value(JS::Realm& realm, StringView string)
 {
-    auto& realm = *vm.current_realm();
+    auto& vm = realm.vm();
 
     // 1. Return ? Call(%JSON.parse%, undefined, « string »).
     return TRY(JS::call(vm, realm.intrinsics().json_parse_function(), JS::js_undefined(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, string))));
 }
 
 // https://infra.spec.whatwg.org/#parse-json-bytes-to-a-javascript-value
-WebIDL::ExceptionOr<JS::Value> parse_json_bytes_to_javascript_value(JS::VM& vm, ReadonlyBytes bytes)
+WebIDL::ExceptionOr<JS::Value> parse_json_bytes_to_javascript_value(JS::Realm& realm, ReadonlyBytes bytes)
 {
+    auto& vm = realm.vm();
+
     // 1. Let string be the result of running UTF-8 decode on bytes.
     TextCodec::UTF8Decoder decoder;
     auto string = TRY_OR_THROW_OOM(vm, decoder.to_utf8(bytes));
 
     // 2. Return the result of parsing a JSON string to an Infra value given string.
-    return parse_json_string_to_javascript_value(vm, string);
+    return parse_json_string_to_javascript_value(realm, string);
 }
 
 // https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-a-json-string

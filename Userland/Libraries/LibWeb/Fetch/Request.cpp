@@ -634,14 +634,14 @@ Bindings::RequestDuplex Request::duplex() const
 // https://fetch.spec.whatwg.org/#dom-request-clone
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::clone() const
 {
-    auto& vm = this->vm();
+    auto& realm = this->realm();
 
     // 1. If this is unusable, then throw a TypeError.
     if (is_unusable())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Request is unusable"sv };
 
     // 2. Let clonedRequest be the result of cloning this’s request.
-    auto cloned_request = TRY(m_request->clone(vm));
+    auto cloned_request = TRY(m_request->clone(realm));
 
     // 3. Let clonedRequestObject be the result of creating a Request object, given clonedRequest, this’s headers’s guard, and this’s relevant Realm.
     auto cloned_request_object = TRY(Request::create(HTML::relevant_realm(*this), cloned_request, m_headers->guard()));
