@@ -1146,8 +1146,8 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     m_location = heap().allocate<HTML::Location>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
 
     m_navigator = heap().allocate<HTML::Navigator>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-    define_direct_property("navigator", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property("clientInformation", m_navigator, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_accessor(realm, "navigator", navigator_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_native_accessor(realm, "clientInformation", navigator_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
     define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);
@@ -1896,6 +1896,12 @@ JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
     auto* impl = TRY(impl_from(vm));
     impl->set_name(TRY(vm.argument(0).to_deprecated_string(vm)));
     return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(Window::navigator_getter)
+{
+    auto* impl = TRY(impl_from(vm));
+    return impl->m_navigator;
 }
 
 #define __ENUMERATE(attribute, event_name)                                      \
