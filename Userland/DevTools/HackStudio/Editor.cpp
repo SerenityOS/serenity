@@ -14,6 +14,7 @@
 #include <AK/Debug.h>
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
+#include <LibCMake/SyntaxHighlighter.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
@@ -636,6 +637,9 @@ void Editor::set_syntax_highlighter_for(CodeDocument const& document)
         } else
             set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
 
+        break;
+    case Language::CMake:
+        set_syntax_highlighter(make<CMake::SyntaxHighlighter>());
         break;
     case Language::CSS:
         set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());

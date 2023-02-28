@@ -5,7 +5,6 @@
  */
 
 #include "Language.h"
-#include <AK/LexicalPath.h>
 
 namespace HackStudio {
 
@@ -19,6 +18,8 @@ Language language_from_file(LexicalPath const& file)
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
         || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
         return Language::Cpp;
+    if (extension == "cmake" || (extension == "txt" && file.title() == "CMakeLists"))
+        return Language::CMake;
     if (extension == "js" || extension == "mjs" || extension == "json")
         return Language::JavaScript;
     if (extension == "html" || extension == "htm")
@@ -61,6 +62,8 @@ DeprecatedString language_name_from_file(LexicalPath const& file)
     if (extension == "c" || extension == "cc" || extension == "cxx" || extension == "cpp" || extension == "c++"
         || extension == "h" || extension == "hh" || extension == "hxx" || extension == "hpp" || extension == "h++")
         return "C++";
+    if (extension == "cmake" || (extension == "txt" && file.title() == "CMakeLists"))
+        return "CMake";
     if (extension == "js" || extension == "mjs" || extension == "json")
         return "JavaScript";
     if (extension == "gml")
