@@ -1314,9 +1314,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 )~~~");
                 } else {
                     if (optional_default_value == "\"\"") {
-                        union_generator.append(R"~~~(
+                        if (!interface.extended_attributes.contains("UseNewAKString")) {
+                            union_generator.append(R"~~~(
     @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? DeprecatedString::empty() : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
 )~~~");
+                        } else {
+                            union_generator.append(R"~~~(
+    @union_type@ @cpp_name@ = @js_name@@js_suffix@.is_undefined() ? String {} : TRY(@js_name@@js_suffix@_to_variant(@js_name@@js_suffix@));
+)~~~");
+                        }
                     } else if (optional_default_value == "{}") {
                         VERIFY(dictionary_type);
                         union_generator.append(R"~~~(
