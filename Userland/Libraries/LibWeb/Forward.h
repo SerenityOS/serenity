@@ -491,6 +491,7 @@ class FormData;
 class ProgressEvent;
 class XMLHttpRequest;
 class XMLHttpRequestEventTarget;
+class XMLHttpRequestUpload;
 }
 
 namespace Web::UIEvents {
