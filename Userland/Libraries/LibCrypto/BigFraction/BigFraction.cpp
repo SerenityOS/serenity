@@ -38,6 +38,9 @@ BigFraction::BigFraction(StringView sv)
     auto fractional_part = SignedBigInteger::from_base(10, fraction_part_view);
     auto fraction_length = UnsignedBigInteger(static_cast<u64>(fraction_part_view.length()));
 
+    if (integer_part.is_negative())
+        fractional_part.negate();
+
     *this = BigFraction(move(integer_part)) + BigFraction(move(fractional_part), NumberTheory::Power("10"_bigint, move(fraction_length)));
 };
 
