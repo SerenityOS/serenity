@@ -90,11 +90,7 @@ public:
                         m_current_byte.clear();
                 }
             } else {
-                auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                // FIXME: This should read the entire span.
-                // FIXME: This should just write into m_current_byte directly.
-                TRY(m_stream->read_some(temp_buffer.bytes()));
-                m_current_byte = temp_buffer[0];
+                m_current_byte = TRY(m_stream->read_value<u8>());
                 m_bit_offset = 0;
             }
         }
@@ -192,13 +188,7 @@ public:
                         m_current_byte.clear();
                 }
             } else {
-                auto temp_buffer = TRY(ByteBuffer::create_uninitialized(1));
-                // FIXME: This should read the entire span.
-                // FIXME: This should just write into m_current_byte directly.
-                auto read_bytes = TRY(m_stream->read_some(temp_buffer.bytes()));
-                if (read_bytes.is_empty())
-                    return Error::from_string_literal("eof");
-                m_current_byte = temp_buffer[0];
+                m_current_byte = TRY(m_stream->read_value<u8>());
                 m_bit_offset = 0;
             }
         }
@@ -259,8 +249,7 @@ public:
             m_bit_offset++;
 
             if (m_bit_offset > 7) {
-                // FIXME: This should write the entire span.
-                TRY(m_stream->write_some({ &m_current_byte, sizeof(m_current_byte) }));
+                TRY(m_stream->write_value(m_current_byte));
                 m_bit_offset = 0;
                 m_current_byte = 0;
             }
@@ -338,8 +327,7 @@ public:
             m_bit_offset++;
 
             if (m_bit_offset > 7) {
-                // FIXME: This should write the entire span.
-                TRY(m_stream->write_some({ &m_current_byte, sizeof(m_current_byte) }));
+                TRY(m_stream->write_value(m_current_byte));
                 m_bit_offset = 0;
                 m_current_byte = 0;
             }
