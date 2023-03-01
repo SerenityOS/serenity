@@ -32,7 +32,7 @@ struct EmojiData {
     Vector<Emoji> emojis;
 };
 
-static void set_image_path_for_emoji(StringView emoji_base_path, StringView emoji_resource_path, EmojiData& emoji_data, Emoji& emoji)
+static void set_image_path_for_emoji(StringView emoji_resource_path, EmojiData& emoji_data, Emoji& emoji)
 {
     StringBuilder builder;
 
@@ -44,12 +44,12 @@ static void set_image_path_for_emoji(StringView emoji_base_path, StringView emoj
         builder.appendff("U+{:X}", code_point);
     }
 
-    auto path = DeprecatedString::formatted("{}/{}.png", emoji_resource_path, builder.to_deprecated_string());
+    auto file = DeprecatedString::formatted("{}.png", builder.to_deprecated_string());
+    auto path = DeprecatedString::formatted("{}/{}", emoji_resource_path, file);
     if (!Core::DeprecatedFile::exists(path))
         return;
 
-    auto installed_image_path = path.replace(emoji_base_path, {}, ReplaceMode::FirstOnly);
-    emoji.image_path = emoji_data.unique_strings.ensure(move(installed_image_path));
+    emoji.image_path = emoji_data.unique_strings.ensure(move(file));
 }
 
 static ErrorOr<void> parse_emoji_test_data(Core::BufferedFile& file, EmojiData& emoji_data)
@@ -335,7 +335,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView generated_installation_path;
     StringView emoji_test_path;
     StringView emoji_serenity_path;
-    StringView emoji_base_path;
     StringView emoji_resource_path;
 
     Core::ArgsParser args_parser;
@@ -344,11 +343,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(generated_installation_path, "Path to the emoji.txt file to generate", "generated-installation-path", 'i', "generated-installation-path");
     args_parser.add_option(emoji_test_path, "Path to emoji-test.txt file", "emoji-test-path", 'e', "emoji-test-path");
     args_parser.add_option(emoji_serenity_path, "Path to emoji-serenity.txt file", "emoji-serenity-path", 's', "emoji-serenity-path");
-    args_parser.add_option(emoji_base_path, "Path to the Base directory", "emoji-base-path", 'b', "emoji-base-path");
     args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path");
     args_parser.parse(arguments);
 
-    VERIFY(!emoji_base_path.is_empty() && Core::DeprecatedFile::exists(emoji_base_path));
     VERIFY(!emoji_resource_path.is_empty() && Core::DeprecatedFile::exists(emoji_resource_path));
 
     auto emoji_test_file = TRY(open_file(emoji_test_path, Core::File::OpenMode::Read));
@@ -366,7 +363,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         emoji.code_point_array_index = code_point_array_index;
         code_point_array_index += emoji.code_points.size();
 
-        set_image_path_for_emoji(emoji_base_path, emoji_resource_path, emoji_data, emoji);
+        set_image_path_for_emoji(emoji_resource_path, emoji_data, emoji);
     }
 
     if (!generated_header_path.is_empty()) {
