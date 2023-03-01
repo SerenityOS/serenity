@@ -173,7 +173,7 @@ ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompre
     TRY(zlib_stream->finish());
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
-    TRY(output_stream->read_entire_buffer(buffer.bytes()));
+    TRY(output_stream->read_until_filled(buffer.bytes()));
 
     return buffer;
 }

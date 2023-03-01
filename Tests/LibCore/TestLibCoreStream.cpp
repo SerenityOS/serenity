@@ -90,17 +90,17 @@ TEST_CASE(file_seeking_around)
 
     EXPECT(!file->seek(500, SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500ul);
-    EXPECT(!file->read_entire_buffer(buffer).is_error());
+    EXPECT(!file->read_until_filled(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
     EXPECT(!file->seek(234, SeekMode::FromCurrentPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 750ul);
-    EXPECT(!file->read_entire_buffer(buffer).is_error());
+    EXPECT(!file->read_until_filled(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents2);
 
     EXPECT(!file->seek(-105, SeekMode::FromEndPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 8597ul);
-    EXPECT(!file->read_entire_buffer(buffer).is_error());
+    EXPECT(!file->read_until_filled(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents3);
 }
 
@@ -123,7 +123,7 @@ TEST_CASE(file_adopt_fd)
 
     EXPECT(!file->seek(500, SeekMode::SetPosition).is_error());
     EXPECT_EQ(file->tell().release_value(), 500ul);
-    EXPECT(!file->read_entire_buffer(buffer).is_error());
+    EXPECT(!file->read_until_filled(buffer).is_error());
     EXPECT_EQ(buffer_contents, expected_seek_contents1);
 
     // A single seek & read test should be fine for now.

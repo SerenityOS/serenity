@@ -140,7 +140,7 @@ ErrorOr<NonnullRefPtr<StringData>> StringData::from_utf8(char const* utf8_data, 
 
 static ErrorOr<void> read_stream_into_buffer(Stream& stream, Bytes buffer)
 {
-    TRY(stream.read_entire_buffer(buffer));
+    TRY(stream.read_until_filled(buffer));
 
     if (!Utf8View { StringView { buffer } }.validate())
         return Error::from_string_literal("String::from_stream: Input was not valid UTF-8");

@@ -329,7 +329,7 @@ ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
     }
 
     auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
-    TRY(output_stream.read_entire_buffer(output_buffer));
+    TRY(output_stream.read_until_filled(output_buffer));
     return output_buffer;
 }
 
@@ -1027,7 +1027,7 @@ ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, Compres
     TRY(deflate_stream->final_flush());
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
-    TRY(output_stream->read_entire_buffer(buffer));
+    TRY(output_stream->read_until_filled(buffer));
 
     return buffer;
 }

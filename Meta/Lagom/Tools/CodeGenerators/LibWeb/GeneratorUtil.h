@@ -59,6 +59,6 @@ ErrorOr<JsonValue> read_entire_file_as_json(StringView filename)
     auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
     auto json_size = TRY(file->size());
     auto json_data = TRY(ByteBuffer::create_uninitialized(json_size));
-    TRY(file->read_entire_buffer(json_data.bytes()));
+    TRY(file->read_until_filled(json_data.bytes()));
     return JsonValue::from_string(json_data);
 }

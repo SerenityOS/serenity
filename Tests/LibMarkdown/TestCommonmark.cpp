@@ -22,7 +22,7 @@ TEST_SETUP
     auto file = file_or_error.release_value();
     auto file_size = MUST(file->size());
     auto content = MUST(ByteBuffer::create_uninitialized(file_size));
-    MUST(file->read_entire_buffer(content.bytes()));
+    MUST(file->read_until_filled(content.bytes()));
     DeprecatedString test_data { content.bytes() };
 
     auto tests = JsonParser(test_data).parse().value().as_array();

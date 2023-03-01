@@ -26,13 +26,13 @@ public:
     virtual ErrorOr<Bytes> read_some(Bytes) = 0;
     /// Tries to fill the entire buffer through reading. Returns whether the
     /// buffer was filled without an error.
-    virtual ErrorOr<void> read_entire_buffer(Bytes);
+    virtual ErrorOr<void> read_until_filled(Bytes);
     /// Reads the stream until EOF, storing the contents into a ByteBuffer which
     /// is returned once EOF is encountered. The block size determines the size
     /// of newly allocated chunks while reading.
     virtual ErrorOr<ByteBuffer> read_until_eof(size_t block_size = 4096);
     /// Discards the given number of bytes from the stream. As this is usually used
-    /// as an efficient version of `read_entire_buffer`, it returns an error
+    /// as an efficient version of `read_until_filled`, it returns an error
     /// if reading failed or if not all bytes could be discarded.
     /// Unless specifically overwritten, this just uses read() to read into an
     /// internal stack-based buffer.
@@ -58,7 +58,7 @@ public:
     ErrorOr<T> read_value()
     {
         alignas(T) u8 buffer[sizeof(T)] = {};
-        TRY(read_entire_buffer({ &buffer, sizeof(buffer) }));
+        TRY(read_until_filled({ &buffer, sizeof(buffer) }));
         return bit_cast<T>(buffer);
     }
 
