@@ -775,8 +775,7 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
     auto encoded = TRY(Gfx::PNGWriter::encode(*bitmap.bitmap()));
 
     auto screenshot_file = TRY(Core::File::open(path.string(), Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(screenshot_file->write_some(encoded));
+    TRY(screenshot_file->write_until_depleted(encoded));
 
     return {};
 }

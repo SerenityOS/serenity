@@ -192,8 +192,7 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
     builder.append("\r\n"sv);
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    // FIXME: This should write the entire span.
-    TRY(m_socket->write_some(builder_contents));
+    TRY(m_socket->write_until_depleted(builder_contents));
     log_response(200, request);
 
     char buffer[PAGE_SIZE];
@@ -235,8 +234,7 @@ ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest 
     builder.append("\r\n"sv);
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    // FIXME: This should write the entire span.
-    TRY(m_socket->write_some(builder_contents));
+    TRY(m_socket->write_until_depleted(builder_contents));
 
     log_response(301, request);
     return {};
@@ -365,9 +363,8 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
     header_builder.append("Content-Type: text/html; charset=UTF-8\r\n"sv);
     header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
     header_builder.append("\r\n"sv);
-    // FIXME: This should write the entire span.
-    TRY(m_socket->write_some(TRY(header_builder.to_byte_buffer())));
-    TRY(m_socket->write_some(TRY(content_builder.to_byte_buffer())));
+    TRY(m_socket->write_until_depleted(TRY(header_builder.to_byte_buffer())));
+    TRY(m_socket->write_until_depleted(TRY(content_builder.to_byte_buffer())));
 
     log_response(code, request);
     return {};

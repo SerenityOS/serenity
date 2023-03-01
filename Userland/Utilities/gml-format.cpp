@@ -28,8 +28,7 @@ static ErrorOr<bool> format_file(StringView path, bool inplace)
             return true;
         TRY(file->seek(0, SeekMode::SetPosition));
         TRY(file->truncate(0));
-        // FIXME: This should write the entire span.
-        TRY(file->write_some(formatted_gml.bytes()));
+        TRY(file->write_until_depleted(formatted_gml.bytes()));
     } else {
         out("{}", formatted_gml);
     }

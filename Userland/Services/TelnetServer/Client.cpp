@@ -161,8 +161,7 @@ ErrorOr<void> Client::send_data(StringView data)
     }
 
     if (fast) {
-        // FIXME: This should write the entire span.
-        TRY(m_socket->write_some({ data.characters_without_null_termination(), data.length() }));
+        TRY(m_socket->write_until_depleted({ data.characters_without_null_termination(), data.length() }));
         return {};
     }
 
@@ -184,8 +183,7 @@ ErrorOr<void> Client::send_data(StringView data)
     }
 
     auto builder_contents = TRY(builder.to_byte_buffer());
-    // FIXME: This should write the entire span.
-    TRY(m_socket->write_some(builder_contents));
+    TRY(m_socket->write_until_depleted(builder_contents));
     return {};
 }
 
@@ -206,8 +204,7 @@ ErrorOr<void> Client::send_commands(Vector<Command> commands)
     }
 
     VERIFY(TRY(stream.tell()) == buffer.size());
-    // FIXME: This should write the entire span.
-    TRY(m_socket->write_some({ buffer.data(), buffer.size() }));
+    TRY(m_socket->write_until_depleted({ buffer.data(), buffer.size() }));
     return {};
 }
 

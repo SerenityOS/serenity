@@ -14,8 +14,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     auto file = TRY(Core::File::open("/sys/kernel/power_state"sv, Core::File::OpenMode::Write));
 
     const DeprecatedString file_contents = "1";
-    // FIXME: This should write the entire span.
-    TRY(file->write_some(file_contents.bytes()));
+    TRY(file->write_until_depleted(file_contents.bytes()));
     file->close();
 
     return 0;

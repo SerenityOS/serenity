@@ -73,8 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             filename = path.basename();
             auto encoded = TRY(dump_bitmap(magnifier->current_bitmap(), path.extension()));
 
-            // FIXME: This should write the entire span.
-            TRY(file->write_some(encoded));
+            TRY(file->write_until_depleted(encoded));
             return {};
         };
 

@@ -113,8 +113,7 @@ ErrorOr<void> ZlibCompressor::write_header(ZlibCompressionMethod compression_met
 
     // FIXME: Support pre-defined dictionaries.
 
-    // FIXME: This should write the entire span.
-    TRY(m_output_stream->write_some(header.as_u16.bytes()));
+    TRY(m_output_stream->write_until_depleted(header.as_u16.bytes()));
 
     return {};
 }
@@ -155,8 +154,7 @@ ErrorOr<void> ZlibCompressor::finish()
         TRY(static_cast<DeflateCompressor*>(m_compressor.ptr())->final_flush());
 
     NetworkOrdered<u32> adler_sum = m_adler32_checksum.digest();
-    // FIXME: This should write the entire span.
-    TRY(m_output_stream->write_some(adler_sum.bytes()));
+    TRY(m_output_stream->write_value(adler_sum));
 
     m_finished = true;
 

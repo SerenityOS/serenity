@@ -680,8 +680,7 @@ ThrowCompletionOr<String> ConsoleClient::generically_format_values(MarkedVector<
     bool first = true;
     for (auto const& value : values) {
         if (!first)
-            // FIXME: This should write the entire span.
-            TRY_OR_THROW_OOM(vm, stream.write_some(" "sv.bytes()));
+            TRY_OR_THROW_OOM(vm, stream.write_until_depleted(" "sv.bytes()));
         TRY_OR_THROW_OOM(vm, JS::print(value, ctx));
         first = false;
     }

@@ -179,11 +179,10 @@ ErrorOr<void> ConfigFile::sync()
     TRY(m_file->seek(0, SeekMode::SetPosition));
 
     for (auto& it : m_groups) {
-        // FIXME: This should write the entire span.
-        TRY(m_file->write_some(DeprecatedString::formatted("[{}]\n", it.key).bytes()));
+        TRY(m_file->write_until_depleted(DeprecatedString::formatted("[{}]\n", it.key).bytes()));
         for (auto& jt : it.value)
-            TRY(m_file->write_some(DeprecatedString::formatted("{}={}\n", jt.key, jt.value).bytes()));
-        TRY(m_file->write_some("\n"sv.bytes()));
+            TRY(m_file->write_until_depleted(DeprecatedString::formatted("{}={}\n", jt.key, jt.value).bytes()));
+        TRY(m_file->write_until_depleted("\n"sv.bytes()));
     }
 
     m_dirty = false;

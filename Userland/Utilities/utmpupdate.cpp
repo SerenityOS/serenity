@@ -72,8 +72,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file->seek(0, SeekMode::SetPosition));
     TRY(file->truncate(0));
-    // FIXME: This should write the entire span.
-    TRY(file->write_some(json.to_deprecated_string().bytes()));
+    TRY(file->write_until_depleted(json.to_deprecated_string().bytes()));
 
     return 0;
 }

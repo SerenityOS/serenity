@@ -98,8 +98,7 @@ TEST_CASE(long_streams)
         u8 bytes[64] = {};
         constexpr auto test_view = "Well, hello friends"sv;
         FixedMemoryStream stream(Bytes { bytes, sizeof(bytes) });
-        // FIXME: This should write the entire span.
-        MUST(stream.write_some(test_view.bytes()));
+        MUST(stream.write_until_depleted(test_view.bytes()));
         MUST(stream.seek(0));
 
         auto string = MUST(String::from_stream(stream, test_view.length()));
@@ -111,8 +110,7 @@ TEST_CASE(long_streams)
 
     {
         AllocatingMemoryStream stream;
-        // FIXME: This should write the entire span.
-        MUST(stream.write_some(("abc"sv).bytes()));
+        MUST(stream.write_until_depleted(("abc"sv).bytes()));
 
         auto string = MUST(String::from_stream(stream, 3u));
 
@@ -123,8 +121,7 @@ TEST_CASE(long_streams)
 
     {
         AllocatingMemoryStream stream;
-        // FIXME: This should write the entire span.
-        MUST(stream.write_some(("0123456789"sv).bytes()));
+        MUST(stream.write_until_depleted(("0123456789"sv).bytes()));
 
         auto string = MUST(String::from_stream(stream, 9u));
 

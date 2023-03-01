@@ -187,8 +187,7 @@ ErrorOr<void> RunWindow::save_history()
 
     // Write the first 25 items of history
     for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)
-        // FIXME: This should write the entire span.
-        TRY(file->write_some(DeprecatedString::formatted("{}\n", m_path_history[i]).bytes()));
+        TRY(file->write_until_depleted(DeprecatedString::formatted("{}\n", m_path_history[i]).bytes()));
 
     return {};
 }
