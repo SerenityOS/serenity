@@ -20,47 +20,47 @@ class URL : public Bindings::PlatformObject {
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> create(JS::Realm&, AK::URL url, JS::NonnullGCPtr<URLSearchParams> query);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, DeprecatedString const& url, DeprecatedString const& base);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, String const& url, Optional<String> const& base = {});
 
     virtual ~URL() override;
 
-    DeprecatedString href() const;
-    WebIDL::ExceptionOr<void> set_href(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> href() const;
+    WebIDL::ExceptionOr<void> set_href(String const&);
 
-    DeprecatedString origin() const;
+    WebIDL::ExceptionOr<String> origin() const;
 
-    DeprecatedString protocol() const;
-    void set_protocol(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> protocol() const;
+    WebIDL::ExceptionOr<void> set_protocol(String const&);
 
-    DeprecatedString username() const;
-    void set_username(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> username() const;
+    void set_username(String const&);
 
-    DeprecatedString password() const;
-    void set_password(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> password() const;
+    void set_password(String const&);
 
-    DeprecatedString host() const;
-    void set_host(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> host() const;
+    void set_host(String const&);
 
-    DeprecatedString hostname() const;
-    void set_hostname(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> hostname() const;
+    void set_hostname(String const&);
 
-    DeprecatedString port() const;
-    void set_port(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> port() const;
+    void set_port(String const&);
 
-    DeprecatedString pathname() const;
-    void set_pathname(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> pathname() const;
+    void set_pathname(String const&);
 
-    DeprecatedString search() const;
-    void set_search(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> search() const;
+    WebIDL::ExceptionOr<void> set_search(String const&);
 
     URLSearchParams const* search_params() const;
 
-    DeprecatedString hash() const;
-    void set_hash(DeprecatedString const&);
+    WebIDL::ExceptionOr<String> hash() const;
+    void set_hash(String const&);
 
-    DeprecatedString to_json() const;
+    WebIDL::ExceptionOr<String> to_json() const;
 
-    void set_query(Badge<URLSearchParams>, DeprecatedString query) { m_url.set_query(move(query)); }
+    void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(query.to_deprecated_string()); }
 
 private:
     URL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);

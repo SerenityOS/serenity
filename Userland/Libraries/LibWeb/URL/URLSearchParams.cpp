@@ -7,6 +7,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/URL/URL.h>
 #include <LibWeb/URL/URLSearchParams.h>
@@ -35,20 +36,20 @@ void URLSearchParams::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_url);
 }
 
-DeprecatedString url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEncodeSet percent_encode_set)
+ErrorOr<String> url_encode(Vector<QueryParam> const& pairs, AK::URL::PercentEncodeSet percent_encode_set)
 {
     StringBuilder builder;
     for (size_t i = 0; i < pairs.size(); ++i) {
-        builder.append(AK::URL::percent_encode(pairs[i].name, percent_encode_set, AK::URL::SpaceAsPlus::Yes));
-        builder.append('=');
-        builder.append(AK::URL::percent_encode(pairs[i].value, percent_encode_set, AK::URL::SpaceAsPlus::Yes));
+        TRY(builder.try_append(AK::URL::percent_encode(pairs[i].name, percent_encode_set, AK::URL::SpaceAsPlus::Yes)));
+        TRY(builder.try_append('='));
+        TRY(builder.try_append(AK::URL::percent_encode(pairs[i].value, percent_encode_set, AK::URL::SpaceAsPlus::Yes)));
         if (i != pairs.size() - 1)
-            builder.append('&');
+            TRY(builder.try_append('&'));
     }
-    return builder.to_deprecated_string();
+    return builder.to_string();
 }
 
-Vector<QueryParam> url_decode(StringView input)
+ErrorOr<Vector<QueryParam>> url_decode(StringView input)
 {
     // 1. Let sequences be the result of splitting input on 0x26 (&).
     auto sequences = input.split_view('&');
@@ -80,10 +81,10 @@ Vector<QueryParam> url_decode(StringView input)
         auto space_decoded_name = name.replace("+"sv, " "sv, ReplaceMode::All);
 
         // 5. Let nameString and valueString be the result of running UTF-8 decode without BOM on the percent-decoding of name and value, respectively.
-        auto name_string = AK::URL::percent_decode(space_decoded_name);
-        auto value_string = AK::URL::percent_decode(value);
+        auto name_string = TRY(String::from_deprecated_string(AK::URL::percent_decode(space_decoded_name)));
+        auto value_string = TRY(String::from_deprecated_string(AK::URL::percent_decode(value)));
 
-        output.empend(move(name_string), move(value_string));
+        TRY(output.try_empend(move(name_string), move(value_string)));
     }
 
     return output;
@@ -96,8 +97,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::create(J
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-urlsearchparams
 // https://url.spec.whatwg.org/#urlsearchparams-initialize
-WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::construct_impl(JS::Realm& realm, Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>, DeprecatedString> const& init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::construct_impl(JS::Realm& realm, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init)
 {
+    auto& vm = realm.vm();
+
     // 1. If init is a string and starts with U+003F (?), then remove the first code point from init.
     // NOTE: We do this when we know that it's a string on step 3 of initialization.
 
@@ -106,8 +109,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::construc
     // URLSearchParams init from this point forward
 
     // 1. If init is a sequence, then for each pair in init:
-    if (init.has<Vector<Vector<DeprecatedString>>>()) {
-        auto const& init_sequence = init.get<Vector<Vector<DeprecatedString>>>();
+    if (init.has<Vector<Vector<String>>>()) {
+        auto const& init_sequence = init.get<Vector<Vector<String>>>();
 
         Vector<QueryParam> list;
         list.ensure_capacity(init_sequence.size());
@@ -125,8 +128,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::construc
     }
 
     // 2. Otherwise, if init is a record, then for each name → value of init, append a new name-value pair whose name is name and value is value, to query’s list.
-    if (init.has<OrderedHashMap<DeprecatedString, DeprecatedString>>()) {
-        auto const& init_record = init.get<OrderedHashMap<DeprecatedString, DeprecatedString>>();
+    if (init.has<OrderedHashMap<String, String>>()) {
+        auto const& init_record = init.get<OrderedHashMap<String, String>>();
 
         Vector<QueryParam> list;
         list.ensure_capacity(init_record.size());
@@ -140,13 +143,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> URLSearchParams::construc
     // 3. Otherwise:
     // a. Assert: init is a string.
     // NOTE: `get` performs `VERIFY(has<T>())`
-    auto const& init_string = init.get<DeprecatedString>();
+    auto const& init_string = init.get<String>();
 
     // See NOTE at the start of this function.
-    StringView stripped_init = init_string.substring_view(init_string.starts_with('?'));
+    auto init_string_view = init_string.bytes_as_string_view();
+    auto stripped_init = init_string_view.substring_view(init_string_view.starts_with('?'));
 
     // b. Set query’s list to the result of parsing init.
-    return URLSearchParams::create(realm, url_decode(stripped_init));
+    return URLSearchParams::create(realm, TRY_OR_THROW_OOM(vm, url_decode(stripped_init)));
 }
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-size
@@ -156,39 +160,47 @@ size_t URLSearchParams::size() const
     return m_list.size();
 }
 
-void URLSearchParams::append(DeprecatedString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> URLSearchParams::append(String const& name, String const& value)
 {
+    auto& vm = realm().vm();
+
     // 1. Append a new name-value pair whose name is name and value is value, to list.
-    m_list.empend(name, value);
+    TRY_OR_THROW_OOM(vm, m_list.try_empend(name, value));
     // 2. Update this.
-    update();
+    TRY(update());
+
+    return {};
 }
 
-void URLSearchParams::update()
+WebIDL::ExceptionOr<void> URLSearchParams::update()
 {
     // 1. If query’s URL object is null, then return.
     if (!m_url)
-        return;
+        return {};
     // 2. Let serializedQuery be the serialization of query’s list.
-    auto serialized_query = to_deprecated_string();
+    auto serialized_query = TRY(to_string());
     // 3. If serializedQuery is the empty string, then set serializedQuery to null.
     if (serialized_query.is_empty())
         serialized_query = {};
     // 4. Set query’s URL object’s URL’s query to serializedQuery.
     m_url->set_query({}, move(serialized_query));
+
+    return {};
 }
 
-void URLSearchParams::delete_(DeprecatedString const& name)
+WebIDL::ExceptionOr<void> URLSearchParams::delete_(String const& name)
 {
     // 1. Remove all name-value pairs whose name is name from list.
     m_list.remove_all_matching([&name](auto& entry) {
         return entry.name == name;
     });
     // 2. Update this.
-    update();
+    TRY(update());
+
+    return {};
 }
 
-DeprecatedString URLSearchParams::get(DeprecatedString const& name)
+Optional<String> URLSearchParams::get(String const& name)
 {
     // return the value of the first name-value pair whose name is name in this’s list, if there is such a pair, and null otherwise.
     auto result = m_list.find_if([&name](auto& entry) {
@@ -200,18 +212,20 @@ DeprecatedString URLSearchParams::get(DeprecatedString const& name)
 }
 
 // https://url.spec.whatwg.org/#dom-urlsearchparams-getall
-Vector<DeprecatedString> URLSearchParams::get_all(DeprecatedString const& name)
+WebIDL::ExceptionOr<Vector<String>> URLSearchParams::get_all(String const& name)
 {
+    auto& vm = realm().vm();
+
     // return the values of all name-value pairs whose name is name, in this’s list, in list order, and the empty sequence otherwise.
-    Vector<DeprecatedString> values;
+    Vector<String> values;
     for (auto& entry : m_list) {
         if (entry.name == name)
-            values.append(entry.value);
+            TRY_OR_THROW_OOM(vm, values.try_append(entry.value));
     }
     return values;
 }
 
-bool URLSearchParams::has(DeprecatedString const& name)
+bool URLSearchParams::has(String const& name)
 {
     // return true if there is a name-value pair whose name is name in this’s list, and false otherwise.
     return !m_list.find_if([&name](auto& entry) {
@@ -220,8 +234,10 @@ bool URLSearchParams::has(DeprecatedString const& name)
                 .is_end();
 }
 
-void URLSearchParams::set(DeprecatedString const& name, DeprecatedString const& value)
+WebIDL::ExceptionOr<void> URLSearchParams::set(String const& name, String const& value)
 {
+    auto& vm = realm().vm();
+
     // 1. If this’s list contains any name-value pairs whose name is name, then set the value of the first such name-value pair to value and remove the others.
     auto existing = m_list.find_if([&name](auto& entry) {
         return entry.name == name;
@@ -234,13 +250,15 @@ void URLSearchParams::set(DeprecatedString const& name, DeprecatedString const& 
     }
     // 2. Otherwise, append a new name-value pair whose name is name and value is value, to this’s list.
     else {
-        m_list.empend(name, value);
+        TRY_OR_THROW_OOM(vm, m_list.try_empend(name, value));
     }
     // 3. Update this.
-    update();
+    TRY(update());
+
+    return {};
 }
 
-void URLSearchParams::sort()
+WebIDL::ExceptionOr<void> URLSearchParams::sort()
 {
     // 1. Sort all name-value pairs, if any, by their names. Sorting must be done by comparison of code units. The relative order between name-value pairs with equal names must be preserved.
     quick_sort(m_list.begin(), m_list.end(), [](auto& a, auto& b) {
@@ -266,13 +284,17 @@ void URLSearchParams::sort()
         VERIFY_NOT_REACHED();
     });
     // 2. Update this.
-    update();
+    TRY(update());
+
+    return {};
 }
 
-DeprecatedString URLSearchParams::to_deprecated_string() const
+WebIDL::ExceptionOr<String> URLSearchParams::to_string() const
 {
+    auto& vm = realm().vm();
+
     // return the serialization of this’s list.
-    return url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded);
+    return TRY_OR_THROW_OOM(vm, url_encode(m_list, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
 }
 
 JS::ThrowCompletionOr<void> URLSearchParams::for_each(ForEachCallback callback)

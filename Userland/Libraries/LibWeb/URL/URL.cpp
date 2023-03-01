@@ -18,14 +18,16 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create(JS::Realm& realm, AK::URL
     return MUST_OR_THROW_OOM(realm.heap().allocate<URL>(realm, realm, move(url), move(query)));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, DeprecatedString const& url, DeprecatedString const& base)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, String const& url, Optional<String> const& base)
 {
+    auto& vm = realm.vm();
+
     // 1. Let parsedBase be null.
     Optional<AK::URL> parsed_base;
     // 2. If base is given, then:
-    if (!base.is_null()) {
+    if (base.has_value()) {
         // 1. Let parsedBase be the result of running the basic URL parser on base.
-        parsed_base = base;
+        parsed_base = base.value();
         // 2. If parsedBase is failure, then throw a TypeError.
         if (!parsed_base->is_valid())
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid base URL"sv };
@@ -40,7 +42,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm,
     if (!parsed_url.is_valid())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL"sv };
     // 5. Let query be parsedURL’s query, if that is non-null, and the empty string otherwise.
-    auto& query = parsed_url.query().is_null() ? DeprecatedString::empty() : parsed_url.query();
+    auto query = parsed_url.query().is_null() ? String {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(parsed_url.query()));
     // 6. Set this’s URL to parsedURL.
     // 7. Set this’s query object to a new URLSearchParams object.
     auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
@@ -75,20 +77,26 @@ void URL::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_query.ptr());
 }
 
-DeprecatedString URL::href() const
+WebIDL::ExceptionOr<String> URL::href() const
 {
+    auto& vm = realm().vm();
+
     // return the serialization of this’s URL.
-    return m_url.serialize();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize()));
 }
 
-DeprecatedString URL::to_json() const
+WebIDL::ExceptionOr<String> URL::to_json() const
 {
+    auto& vm = realm().vm();
+
     // return the serialization of this’s URL.
-    return m_url.serialize();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize()));
 }
 
-WebIDL::ExceptionOr<void> URL::set_href(DeprecatedString const& href)
+WebIDL::ExceptionOr<void> URL::set_href(String const& href)
 {
+    auto& vm = realm().vm();
+
     // 1. Let parsedURL be the result of running the basic URL parser on the given value.
     AK::URL parsed_url = href;
     // 2. If parsedURL is failure, then throw a TypeError.
@@ -102,37 +110,46 @@ WebIDL::ExceptionOr<void> URL::set_href(DeprecatedString const& href)
     auto& query = m_url.query();
     // 6. If query is non-null, then set this’s query object’s list to the result of parsing query.
     if (!query.is_null())
-        m_query->m_list = url_decode(query);
+        m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(query));
     return {};
 }
 
-DeprecatedString URL::origin() const
+WebIDL::ExceptionOr<String> URL::origin() const
 {
+    auto& vm = realm().vm();
+
     // return the serialization of this’s URL’s origin.
-    return m_url.serialize_origin();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize_origin()));
 }
 
-DeprecatedString URL::protocol() const
+WebIDL::ExceptionOr<String> URL::protocol() const
 {
+    auto& vm = realm().vm();
+
     // return this’s URL’s scheme, followed by U+003A (:).
-    return DeprecatedString::formatted("{}:", m_url.scheme());
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}:", m_url.scheme()));
 }
 
-void URL::set_protocol(DeprecatedString const& protocol)
+WebIDL::ExceptionOr<void> URL::set_protocol(String const& protocol)
 {
+    auto& vm = realm().vm();
+
     // basic URL parse the given value, followed by U+003A (:), with this’s URL as url and scheme start state as state override.
-    auto result_url = URLParser::parse(DeprecatedString::formatted("{}:", protocol), nullptr, m_url, URLParser::State::SchemeStart);
+    auto result_url = URLParser::parse(TRY_OR_THROW_OOM(vm, String::formatted("{}:", protocol)), nullptr, m_url, URLParser::State::SchemeStart);
     if (result_url.is_valid())
         m_url = move(result_url);
+    return {};
 }
 
-DeprecatedString URL::username() const
+WebIDL::ExceptionOr<String> URL::username() const
 {
+    auto& vm = realm().vm();
+
     // return this’s URL’s username.
-    return m_url.username();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.username()));
 }
 
-void URL::set_username(DeprecatedString const& username)
+void URL::set_username(String const& username)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -141,13 +158,15 @@ void URL::set_username(DeprecatedString const& username)
     m_url.set_username(AK::URL::percent_encode(username, AK::URL::PercentEncodeSet::Userinfo));
 }
 
-DeprecatedString URL::password() const
+WebIDL::ExceptionOr<String> URL::password() const
 {
+    auto& vm = realm().vm();
+
     // return this’s URL’s password.
-    return m_url.password();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.password()));
 }
 
-void URL::set_password(DeprecatedString const& password)
+void URL::set_password(String const& password)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -156,21 +175,23 @@ void URL::set_password(DeprecatedString const& password)
     m_url.set_password(AK::URL::percent_encode(password, AK::URL::PercentEncodeSet::Userinfo));
 }
 
-DeprecatedString URL::host() const
+WebIDL::ExceptionOr<String> URL::host() const
 {
+    auto& vm = realm().vm();
+
     // 1. Let url be this’s URL.
     auto& url = m_url;
     // 2. If url’s host is null, then return the empty string.
     if (url.host().is_null())
-        return DeprecatedString::empty();
+        return String {};
     // 3. If url’s port is null, return url’s host, serialized.
     if (!url.port().has_value())
-        return url.host();
+        return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.host()));
     // 4. Return url’s host, serialized, followed by U+003A (:) and url’s port, serialized.
-    return DeprecatedString::formatted("{}:{}", url.host(), *url.port());
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", url.host(), *url.port()));
 }
 
-void URL::set_host(DeprecatedString const& host)
+void URL::set_host(String const& host)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
@@ -181,16 +202,18 @@ void URL::set_host(DeprecatedString const& host)
         m_url = move(result_url);
 }
 
-DeprecatedString URL::hostname() const
+WebIDL::ExceptionOr<String> URL::hostname() const
 {
+    auto& vm = realm().vm();
+
     // 1. If this’s URL’s host is null, then return the empty string.
     if (m_url.host().is_null())
-        return DeprecatedString::empty();
+        return String {};
     // 2. Return this’s URL’s host, serialized.
-    return m_url.host();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.host()));
 }
 
-void URL::set_hostname(DeprecatedString const& hostname)
+void URL::set_hostname(String const& hostname)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
@@ -201,17 +224,19 @@ void URL::set_hostname(DeprecatedString const& hostname)
         m_url = move(result_url);
 }
 
-DeprecatedString URL::port() const
+WebIDL::ExceptionOr<String> URL::port() const
 {
+    auto& vm = realm().vm();
+
     // 1. If this’s URL’s port is null, then return the empty string.
     if (!m_url.port().has_value())
-        return {};
+        return String {};
 
     // 2. Return this’s URL’s port, serialized.
-    return DeprecatedString::formatted("{}", *m_url.port());
+    return TRY_OR_THROW_OOM(vm, String::formatted("{}", *m_url.port()));
 }
 
-void URL::set_port(DeprecatedString const& port)
+void URL::set_port(String const& port)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
@@ -229,15 +254,17 @@ void URL::set_port(DeprecatedString const& port)
         m_url = move(result_url);
 }
 
-DeprecatedString URL::pathname() const
+WebIDL::ExceptionOr<String> URL::pathname() const
 {
+    auto& vm = realm().vm();
+
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return this’s URL’s path[0].
     // 2. If this’s URL’s path is empty, then return the empty string.
     // 3. Return U+002F (/), followed by the strings in this’s URL’s path (including empty strings), if any, separated from each other by U+002F (/).
-    return m_url.path();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.path()));
 }
 
-void URL::set_pathname(DeprecatedString const& pathname)
+void URL::set_pathname(String const& pathname)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
@@ -251,27 +278,32 @@ void URL::set_pathname(DeprecatedString const& pathname)
         m_url = move(result_url);
 }
 
-DeprecatedString URL::search() const
+WebIDL::ExceptionOr<String> URL::search() const
 {
+    auto& vm = realm().vm();
+
     // 1. If this’s URL’s query is either null or the empty string, then return the empty string.
     if (m_url.query().is_null() || m_url.query().is_empty())
-        return DeprecatedString::empty();
+        return String {};
     // 2. Return U+003F (?), followed by this’s URL’s query.
-    return DeprecatedString::formatted("?{}", m_url.query());
+    return TRY_OR_THROW_OOM(vm, String::formatted("?{}", m_url.query()));
 }
 
-void URL::set_search(DeprecatedString const& search)
+WebIDL::ExceptionOr<void> URL::set_search(String const& search)
 {
+    auto& vm = realm().vm();
+
     // 1. Let url be this’s URL.
     auto& url = m_url;
     // If the given value is the empty string, set url’s query to null, empty this’s query object’s list, and then return.
     if (search.is_empty()) {
         url.set_query({});
         m_query->m_list.clear();
-        return;
+        return {};
     }
     // 2. Let input be the given value with a single leading U+003F (?) removed, if any.
-    auto input = search.substring_view(search.starts_with('?'));
+    auto search_as_string_view = search.bytes_as_string_view();
+    auto input = search_as_string_view.substring_view(search_as_string_view.starts_with('?'));
     // 3. Set url’s query to the empty string.
     auto url_copy = url; // We copy the URL here to follow other browser's behaviour of reverting the search change if the parse failed.
     url_copy.set_query(DeprecatedString::empty());
@@ -280,8 +312,10 @@ void URL::set_search(DeprecatedString const& search)
     if (result_url.is_valid()) {
         m_url = move(result_url);
         // 5. Set this’s query object’s list to the result of parsing input.
-        m_query->m_list = url_decode(input);
+        m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(input));
     }
+
+    return {};
 }
 
 URLSearchParams const* URL::search_params() const
@@ -289,16 +323,18 @@ URLSearchParams const* URL::search_params() const
     return m_query;
 }
 
-DeprecatedString URL::hash() const
+WebIDL::ExceptionOr<String> URL::hash() const
 {
+    auto& vm = realm().vm();
+
     // 1. If this’s URL’s fragment is either null or the empty string, then return the empty string.
     if (m_url.fragment().is_null() || m_url.fragment().is_empty())
-        return DeprecatedString::empty();
+        return String {};
     // 2. Return U+0023 (#), followed by this’s URL’s fragment.
-    return DeprecatedString::formatted("#{}", m_url.fragment());
+    return TRY_OR_THROW_OOM(vm, String::formatted("#{}", m_url.fragment()));
 }
 
-void URL::set_hash(DeprecatedString const& hash)
+void URL::set_hash(String const& hash)
 {
     // 1. If the given value is the empty string, then set this’s URL’s fragment to null and return.
     if (hash.is_empty()) {
@@ -306,7 +342,8 @@ void URL::set_hash(DeprecatedString const& hash)
         return;
     }
     // 2. Let input be the given value with a single leading U+0023 (#) removed, if any.
-    auto input = hash.substring_view(hash.starts_with('#'));
+    auto hash_as_string_view = hash.bytes_as_string_view();
+    auto input = hash_as_string_view.substring_view(hash_as_string_view.starts_with('#'));
     // 3. Set this’s URL’s fragment to the empty string.
     auto url = m_url; // We copy the URL here to follow other browser's behaviour of reverting the hash change if the parse failed.
     url.set_fragment(DeprecatedString::empty());

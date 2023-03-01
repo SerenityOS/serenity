@@ -35,7 +35,7 @@ HTMLInputElement::HTMLInputElement(DOM::Document& document, DOM::QualifiedName q
         // FIXME: 1. If this element is not mutable and is not in the Checkbox state and is not in the Radio state, then return.
 
         // 2. Run this element's input activation behavior, if any, and do nothing otherwise.
-        run_input_activation_behavior();
+        run_input_activation_behavior().release_value_but_fixme_should_propagate_errors();
     };
 }
 
@@ -217,12 +217,12 @@ WebIDL::ExceptionOr<void> HTMLInputElement::show_picker()
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#input-activation-behavior
-void HTMLInputElement::run_input_activation_behavior()
+ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
 {
     if (type_state() == TypeAttributeState::Checkbox || type_state() == TypeAttributeState::RadioButton) {
         // 1. If the element is not connected, then return.
         if (!is_connected())
-            return;
+            return {};
 
         // 2. Fire an event named input at the element with the bubbles and composed attributes initialized to true.
         auto input_event = DOM::Event::create(realm(), HTML::EventNames::input).release_value_but_fixme_should_propagate_errors();
@@ -238,19 +238,21 @@ void HTMLInputElement::run_input_activation_behavior()
         JS::GCPtr<HTMLFormElement> form;
         // 1. If the element does not have a form owner, then return.
         if (!(form = this->form()))
-            return;
+            return {};
 
         // 2. If the element's node document is not fully active, then return.
         if (!document().is_fully_active())
-            return;
+            return {};
 
         // 3. Submit the form owner from the element.
-        form->submit_form(this);
+        TRY(form->submit_form(this));
     } else if (type_state() == TypeAttributeState::FileUpload) {
         show_the_picker_if_applicable(*this);
     } else {
         dispatch_event(DOM::Event::create(realm(), EventNames::change).release_value_but_fixme_should_propagate_errors());
     }
+
+    return {};
 }
 
 void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
