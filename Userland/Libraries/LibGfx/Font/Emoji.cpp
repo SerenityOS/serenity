@@ -8,9 +8,11 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/LexicalPath.h>
 #include <AK/Span.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <AK/Variant.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
 #include <LibUnicode/CharacterTypes.h>
@@ -23,6 +25,17 @@ namespace Gfx {
 // https://unicode.org/emoji/charts/emoji-zwj-sequences.html
 
 static HashMap<StringView, RefPtr<Gfx::Bitmap>> s_emojis;
+static Variant<String, StringView> s_emoji_lookup_path = "/res/emoji"sv;
+
+static StringView emoji_lookup_path()
+{
+    return s_emoji_lookup_path.visit([](auto const& path) -> StringView { return path; });
+}
+
+void Emoji::set_emoji_lookup_path(String emoji_lookup_path)
+{
+    s_emoji_lookup_path = move(emoji_lookup_path);
+}
 
 Bitmap const* Emoji::emoji_for_code_point(u32 code_point)
 {
@@ -35,19 +48,21 @@ Bitmap const* Emoji::emoji_for_code_points(ReadonlySpan<u32> const& code_points)
     if (!emoji.has_value() || !emoji->image_path.has_value())
         return nullptr;
 
-    auto emoji_path = emoji->image_path.value();
-    if (auto it = s_emojis.find(emoji_path); it != s_emojis.end())
+    auto emoji_file = emoji->image_path.value();
+    if (auto it = s_emojis.find(emoji_file); it != s_emojis.end())
         return it->value.ptr();
 
-    auto bitmap_or_error = Bitmap::load_from_file(emoji_path);
+    auto emoji_path = LexicalPath::join(emoji_lookup_path(), emoji_file);
+    auto bitmap_or_error = Bitmap::load_from_file(emoji_path.string());
+
     if (bitmap_or_error.is_error()) {
-        dbgln_if(EMOJI_DEBUG, "Generated emoji data has path {}, but could not load image: {}", emoji_path, bitmap_or_error.error());
-        s_emojis.set(emoji_path, nullptr);
+        dbgln_if(EMOJI_DEBUG, "Generated emoji data has file {}, but could not load image: {}", emoji_file, bitmap_or_error.error());
+        s_emojis.set(emoji_file, nullptr);
         return nullptr;
     }
 
     auto bitmap = bitmap_or_error.release_value();
-    s_emojis.set(emoji_path, bitmap);
+    s_emojis.set(emoji_file, bitmap);
     return bitmap.ptr();
 }
 
