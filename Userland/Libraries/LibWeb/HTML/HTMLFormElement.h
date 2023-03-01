@@ -22,12 +22,12 @@ public:
     DeprecatedString action() const;
     DeprecatedString method() const { return attribute(HTML::AttributeNames::method); }
 
-    void submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding = false);
+    ErrorOr<void> submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding = false);
 
     void reset_form();
 
     // NOTE: This is for the JS bindings. Use submit_form instead.
-    void submit();
+    WebIDL::ExceptionOr<void> submit();
 
     // NOTE: This is for the JS bindings. Use submit_form instead.
     void reset();

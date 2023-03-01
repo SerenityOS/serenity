@@ -13,34 +13,34 @@
 namespace Web::URL {
 
 struct QueryParam {
-    DeprecatedString name;
-    DeprecatedString value;
+    String name;
+    String value;
 };
-DeprecatedString url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
-Vector<QueryParam> url_decode(StringView);
+ErrorOr<String> url_encode(Vector<QueryParam> const&, AK::URL::PercentEncodeSet);
+ErrorOr<Vector<QueryParam>> url_decode(StringView);
 
 class URLSearchParams : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(URLSearchParams, Bindings::PlatformObject);
 
 public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> create(JS::Realm&, Vector<QueryParam> list);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> construct_impl(JS::Realm&, Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>, DeprecatedString> const& init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<URLSearchParams>> construct_impl(JS::Realm&, Variant<Vector<Vector<String>>, OrderedHashMap<String, String>, String> const& init);
 
     virtual ~URLSearchParams() override;
 
     size_t size() const;
-    void append(DeprecatedString const& name, DeprecatedString const& value);
-    void delete_(DeprecatedString const& name);
-    DeprecatedString get(DeprecatedString const& name);
-    Vector<DeprecatedString> get_all(DeprecatedString const& name);
-    bool has(DeprecatedString const& name);
-    void set(DeprecatedString const& name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> append(String const& name, String const& value);
+    WebIDL::ExceptionOr<void> delete_(String const& name);
+    Optional<String> get(String const& name);
+    WebIDL::ExceptionOr<Vector<String>> get_all(String const& name);
+    bool has(String const& name);
+    WebIDL::ExceptionOr<void> set(String const& name, String const& value);
 
-    void sort();
+    WebIDL::ExceptionOr<void> sort();
 
-    DeprecatedString to_deprecated_string() const;
+    WebIDL::ExceptionOr<String> to_string() const;
 
-    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(DeprecatedString const&, DeprecatedString const&)>;
+    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, String const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
 
 private:
@@ -52,7 +52,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    void update();
+    WebIDL::ExceptionOr<void> update();
 
     Vector<QueryParam> m_list;
     JS::GCPtr<URL> m_url;

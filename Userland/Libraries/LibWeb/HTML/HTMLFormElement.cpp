@@ -47,21 +47,21 @@ void HTMLFormElement::visit_edges(Cell::Visitor& visitor)
         visitor.visit(element.ptr());
 }
 
-void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding)
+ErrorOr<void> HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_submit_binding)
 {
     if (cannot_navigate())
-        return;
+        return {};
 
     if (action().is_null()) {
         dbgln("Unsupported form action ''");
-        return;
+        return {};
     }
 
     auto effective_method = method().to_lowercase();
 
     if (effective_method == "dialog") {
         dbgln("Failed to submit form: Unsupported form method '{}'", method());
-        return;
+        return {};
     }
 
     if (effective_method != "get" && effective_method != "post") {
@@ -70,7 +70,7 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
 
     if (!from_submit_binding) {
         if (m_firing_submission_events)
-            return;
+            return {};
 
         m_firing_submission_events = true;
 
@@ -91,51 +91,56 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
         m_firing_submission_events = false;
 
         if (!continue_)
-            return;
+            return {};
 
         // This is checked again because arbitrary JS may have run when handling submit,
         // which may have changed the result.
         if (cannot_navigate())
-            return;
+            return {};
     }
 
     AK::URL url(document().parse_url(action()));
 
     if (!url.is_valid()) {
         dbgln("Failed to submit form: Invalid URL: {}", action());
-        return;
+        return {};
     }
 
     if (url.scheme() == "file") {
         if (document().url().scheme() != "file") {
             dbgln("Failed to submit form: Security violation: {} may not submit to {}", document().url(), url);
-            return;
+            return {};
         }
         if (effective_method != "get") {
             dbgln("Failed to submit form: Unsupported form method '{}' for URL: {}", method(), url);
-            return;
+            return {};
         }
     } else if (url.scheme() != "http" && url.scheme() != "https") {
         dbgln("Failed to submit form: Unsupported protocol for URL: {}", url);
-        return;
+        return {};
     }
 
     Vector<URL::QueryParam> parameters;
 
     for_each_in_inclusive_subtree_of_type<HTMLInputElement>([&](auto& input) {
-        if (!input.name().is_null() && (input.type() != "submit" || &input == submitter))
-            parameters.append({ input.name(), input.value() });
+        if (!input.name().is_null() && (input.type() != "submit" || &input == submitter)) {
+            auto name = String::from_deprecated_string(input.name()).release_value_but_fixme_should_propagate_errors();
+            auto value = String::from_deprecated_string(input.value()).release_value_but_fixme_should_propagate_errors();
+            parameters.append({ move(name), move(value) });
+        }
         return IterationDecision::Continue;
     });
 
     if (effective_method == "get") {
-        url.set_query(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+        auto url_encoded_parameters = TRY(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded)).to_deprecated_string();
+        url.set_query(move(url_encoded_parameters));
     }
 
     LoadRequest request = LoadRequest::create_for_url_on_page(url, document().page());
 
     if (effective_method == "post") {
-        auto body = url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
+        auto url_encoded_parameters_as_bytes = TRY(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded)).bytes();
+        auto body = TRY(ByteBuffer::copy(url_encoded_parameters_as_bytes));
         request.set_method("POST");
         request.set_header("Content-Type", "application/x-www-form-urlencoded");
         request.set_body(move(body));
@@ -143,6 +148,8 @@ void HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, bool from_su
 
     if (auto* page = document().page())
         page->load(request);
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#resetting-a-form
@@ -166,9 +173,12 @@ void HTMLFormElement::reset_form()
     }
 }
 
-void HTMLFormElement::submit()
+WebIDL::ExceptionOr<void> HTMLFormElement::submit()
 {
-    submit_form(this, true);
+    auto& vm = realm().vm();
+
+    TRY_OR_THROW_OOM(vm, submit_form(this, true));
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/forms.html#dom-form-reset
