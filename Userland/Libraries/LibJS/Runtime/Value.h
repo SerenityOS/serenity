@@ -563,7 +563,7 @@ enum class NumberToStringMode {
 };
 ErrorOr<String> number_to_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
 DeprecatedString number_to_deprecated_string(double, NumberToStringMode = NumberToStringMode::WithExponent);
-Optional<Value> string_to_number(StringView);
+double string_to_number(StringView);
 
 inline bool Value::operator==(Value const& value) const { return same_value(*this, value); }
 

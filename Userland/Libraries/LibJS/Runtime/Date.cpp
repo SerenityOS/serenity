@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -570,7 +570,7 @@ double parse_time_zone_offset_string(StringView offset_string)
     auto parsed_hours = *parse_result->time_zone_utc_offset_hour;
 
     // 10. Let hours be ℝ(StringToNumber(CodePointsToString(parsedHours))).
-    auto hours = string_to_number(parsed_hours)->as_double();
+    auto hours = string_to_number(parsed_hours);
 
     double minutes { 0 };
     double seconds { 0 };
@@ -587,7 +587,7 @@ double parse_time_zone_offset_string(StringView offset_string)
         auto parsed_minutes = *parse_result->time_zone_utc_offset_minute;
 
         // b. Let minutes be ℝ(StringToNumber(CodePointsToString(parsedMinutes))).
-        minutes = string_to_number(parsed_minutes)->as_double();
+        minutes = string_to_number(parsed_minutes);
     }
 
     // 13. If parseResult does not contain two MinuteSecond Parse Nodes, then
@@ -601,7 +601,7 @@ double parse_time_zone_offset_string(StringView offset_string)
         auto parsed_seconds = *parse_result->time_zone_utc_offset_second;
 
         // b. Let seconds be ℝ(StringToNumber(CodePointsToString(parsedSeconds))).
-        seconds = string_to_number(parsed_seconds)->as_double();
+        seconds = string_to_number(parsed_seconds);
     }
 
     // 15. If parseResult does not contain a TemporalDecimalFraction Parse Node, then
@@ -621,7 +621,7 @@ double parse_time_zone_offset_string(StringView offset_string)
         auto nanoseconds_string = fraction.substring_view(1, 9);
 
         // d. Let nanoseconds be ℝ(StringToNumber(nanosecondsString)).
-        nanoseconds = string_to_number(nanoseconds_string)->as_double();
+        nanoseconds = string_to_number(nanoseconds_string);
     }
 
     // 17. Return sign × (((hours × 60 + minutes) × 60 + seconds) × 10^9 + nanoseconds).
