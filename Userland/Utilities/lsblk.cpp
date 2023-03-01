@@ -27,8 +27,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::DirIterator di("/sys/devices/storage/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
-        warnln("Failed to open /sys/devices/storage - {}", di.error());
-        return 1;
+        auto error = di.error();
+        warnln("Failed to open /sys/devices/storage - {}", error);
+        return error;
     }
 
     outln(format_row, "LUN"sv, "Command set"sv, "Block Size"sv, "Last LBA"sv);

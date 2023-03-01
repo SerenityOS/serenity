@@ -583,7 +583,7 @@ ErrorOr<void> DeprecatedFile::remove(StringView path, RecursionMode mode)
     if (S_ISDIR(path_stat.st_mode) && mode == RecursionMode::Allowed) {
         auto di = DirIterator(path, DirIterator::SkipParentAndBaseDir);
         if (di.has_error())
-            return Error::from_errno(di.error());
+            return di.error();
 
         while (di.has_next()) {
             TRY(remove(di.next_full_path(), RecursionMode::Allowed));

@@ -142,8 +142,9 @@ ErrorOr<u64> print_space_usage(DeprecatedString const& path, DuOption const& du_
     if (is_directory) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
-            outln("du: cannot read directory '{}': {}", path, di.error_string());
-            return Error::from_string_literal("An error occurred. See previous error.");
+            auto error = di.error();
+            outln("du: cannot read directory '{}': {}", path, error);
+            return error;
         }
 
         while (di.has_next()) {

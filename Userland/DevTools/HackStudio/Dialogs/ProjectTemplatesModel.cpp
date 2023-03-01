@@ -111,7 +111,7 @@ void ProjectTemplatesModel::rescan_templates()
     // Iterate over template manifest INI files in the templates path
     Core::DirIterator di(ProjectTemplate::templates_path(), Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        warnln("DirIterator: {}", di.error_string());
+        warnln("DirIterator: {}", di.error());
         return;
     }
 

@@ -348,12 +348,8 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(DeprecatedString path, St
         lexical_path = lexical_path.append(subpath);
 
     Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
-    if (iterator.has_error()) {
-        // FIXME: Make Core::DirIterator return a StringView for its error
-        //        string.
-        auto const* error_string_ptr = iterator.error_string();
-        return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
-    }
+    if (iterator.has_error())
+        return iterator.error();
 
     return iterator;
 }
@@ -361,12 +357,8 @@ inline ErrorOr<Core::DirIterator> path_to_dir_iterator(DeprecatedString path, St
 inline ErrorOr<DeprecatedString> next_path_from_dir_iterator(Core::DirIterator& iterator)
 {
     auto next_path = iterator.next_full_path();
-    if (iterator.has_error()) {
-        // FIXME: Make Core::DirIterator return a StringView for its error
-        //        string.
-        auto const* error_string_ptr = iterator.error_string();
-        return Error::from_string_view({ error_string_ptr, strlen(error_string_ptr) });
-    }
+    if (iterator.has_error())
+        return iterator.error();
 
     return next_path;
 }

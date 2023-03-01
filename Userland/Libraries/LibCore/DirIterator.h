@@ -28,9 +28,8 @@ public:
     DirIterator(DirIterator&&);
     DirIterator(DirIterator const&) = delete;
 
-    bool has_error() const { return m_error != 0; }
-    int error() const { return m_error; }
-    char const* error_string() const { return strerror(m_error); }
+    bool has_error() const { return m_error.has_value(); }
+    Error error() const { return Error::copy(m_error.value()); }
     bool has_next();
     Optional<DirectoryEntry> next();
     DeprecatedString next_path();
@@ -39,7 +38,7 @@ public:
 
 private:
     DIR* m_dir = nullptr;
-    int m_error = 0;
+    Optional<Error> m_error;
     Optional<DirectoryEntry> m_next;
     DeprecatedString m_path;
     int m_flags;
