@@ -221,7 +221,7 @@ TEST_CASE(tcp_socket_write)
     auto server_socket = maybe_server_socket.release_value();
     EXPECT(!server_socket->set_blocking(true).is_error());
 
-    EXPECT(!client_socket->write_entire_buffer({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
+    EXPECT(!client_socket->write_until_depleted({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
     client_socket->close();
 
     auto maybe_receive_buffer = ByteBuffer::create_uninitialized(64);
@@ -285,7 +285,7 @@ TEST_CASE(udp_socket_read_write)
     auto client_socket = maybe_client_socket.release_value();
 
     EXPECT(client_socket->is_open());
-    EXPECT(!client_socket->write_entire_buffer({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
+    EXPECT(!client_socket->write_until_depleted({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
 
     // FIXME: UDPServer::receive sadly doesn't give us a way to block on it,
     // currently.
@@ -405,7 +405,7 @@ TEST_CASE(local_socket_write)
             EXPECT(!maybe_client_socket.is_error());
             auto client_socket = maybe_client_socket.release_value();
 
-            EXPECT(!client_socket->write_entire_buffer({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
+            EXPECT(!client_socket->write_until_depleted({ sent_data.characters_without_null_termination(), sent_data.length() }).is_error());
             client_socket->close();
 
             return 0;

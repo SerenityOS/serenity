@@ -259,10 +259,10 @@ ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
 
     auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
-    TRY(stream->write_entire_buffer({ &header, sizeof(header) }));
-    TRY(stream->write_entire_buffer({ m_range_mask, m_range_mask_size }));
-    TRY(stream->write_entire_buffer({ m_rows, m_glyph_count * bytes_per_glyph }));
-    TRY(stream->write_entire_buffer({ m_glyph_widths, m_glyph_count }));
+    TRY(stream->write_until_depleted({ &header, sizeof(header) }));
+    TRY(stream->write_until_depleted({ m_range_mask, m_range_mask_size }));
+    TRY(stream->write_until_depleted({ m_rows, m_glyph_count * bytes_per_glyph }));
+    TRY(stream->write_until_depleted({ m_glyph_widths, m_glyph_count }));
 
     return {};
 }

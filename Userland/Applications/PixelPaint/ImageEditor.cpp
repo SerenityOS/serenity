@@ -793,7 +793,7 @@ ErrorOr<void> ImageEditor::save_project_to_file(NonnullOwnPtr<Core::File> file) 
     TRY(json_guides.finish());
     TRY(json.finish());
 
-    TRY(file->write_entire_buffer(builder.string_view().bytes()));
+    TRY(file->write_until_depleted(builder.string_view().bytes()));
     return {};
 }
 

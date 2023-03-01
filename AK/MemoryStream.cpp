@@ -89,7 +89,7 @@ ErrorOr<size_t> FixedMemoryStream::write_some(ReadonlyBytes bytes)
     return nwritten;
 }
 
-ErrorOr<void> FixedMemoryStream::write_entire_buffer(ReadonlyBytes bytes)
+ErrorOr<void> FixedMemoryStream::write_until_depleted(ReadonlyBytes bytes)
 {
     if (remaining() < bytes.size())
         return Error::from_string_view_or_print_error_and_return_errno("Write of entire buffer ends past the memory area"sv, EINVAL);

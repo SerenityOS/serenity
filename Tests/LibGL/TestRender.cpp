@@ -37,7 +37,7 @@ static void expect_bitmap_equals_reference(Gfx::Bitmap const& bitmap, StringView
         auto target_path = LexicalPath("/home/anon").append(reference_filename);
         auto qoi_buffer = MUST(Gfx::QOIWriter::encode(bitmap));
         auto qoi_output_stream = MUST(Core::File::open(target_path.string(), Core::File::OpenMode::Write));
-        MUST(qoi_output_stream->write_entire_buffer(qoi_buffer));
+        MUST(qoi_output_stream->write_until_depleted(qoi_buffer));
     }
 
     auto reference_image_path = DeprecatedString::formatted(REFERENCE_IMAGE_DIR "/{}", reference_filename);

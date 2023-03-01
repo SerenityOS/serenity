@@ -202,7 +202,7 @@ void Job::on_socket_connected()
         dbgln("{}", DeprecatedString::copy(raw_request));
     }
 
-    bool success = !m_socket->write_entire_buffer(raw_request).is_error();
+    bool success = !m_socket->write_until_depleted(raw_request).is_error();
     if (!success)
         deferred_invoke([this] { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
 

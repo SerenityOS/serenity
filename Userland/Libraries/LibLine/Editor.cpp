@@ -606,7 +606,7 @@ ErrorOr<void> Editor::interrupted()
         TRY(reposition_cursor(*stderr_stream, true));
         if (TRY(m_suggestion_display->cleanup()))
             TRY(reposition_cursor(*stderr_stream, true));
-        TRY(stderr_stream->write_entire_buffer("\n"sv.bytes()));
+        TRY(stderr_stream->write_until_depleted("\n"sv.bytes()));
     }
     m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
@@ -667,7 +667,7 @@ ErrorOr<void> Editor::really_quit_event_loop()
     {
         auto stderr_stream = TRY(Core::File::standard_error());
         TRY(reposition_cursor(*stderr_stream, true));
-        TRY(stderr_stream->write_entire_buffer("\n"sv.bytes()));
+        TRY(stderr_stream->write_until_depleted("\n"sv.bytes()));
     }
     auto string = line();
     m_buffer.clear();
@@ -734,7 +734,7 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
         auto stderr_stream = Core::File::standard_error().release_value_but_fixme_should_propagate_errors();
         auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
         for (size_t i = 0; i < prompt_lines; ++i)
-            stderr_stream->write_entire_buffer("\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
+            stderr_stream->write_until_depleted("\n"sv.bytes()).release_value_but_fixme_should_propagate_errors();
 
         VT::move_relative(-static_cast<int>(prompt_lines), 0, *stderr_stream).release_value_but_fixme_should_propagate_errors();
     }
@@ -1375,13 +1375,13 @@ ErrorOr<void> Editor::refresh_display()
     if (m_origin_row + current_num_lines > m_num_lines) {
         if (current_num_lines > m_num_lines) {
             for (size_t i = 0; i < m_num_lines; ++i)
-                TRY(output_stream.write_entire_buffer("\n"sv.bytes()));
+                TRY(output_stream.write_until_depleted("\n"sv.bytes()));
             m_origin_row = 0;
         } else {
             auto old_origin_row = m_origin_row;
             m_origin_row = m_num_lines - current_num_lines + 1;
             for (size_t i = 0; i < old_origin_row - m_origin_row; ++i)
-                TRY(output_stream.write_entire_buffer("\n"sv.bytes()));
+                TRY(output_stream.write_until_depleted("\n"sv.bytes()));
         }
     }
     // Do not call hook on pure cursor movement.
@@ -1400,7 +1400,7 @@ ErrorOr<void> Editor::refresh_display()
         if (!m_refresh_needed && m_cursor == m_buffer.size()) {
             // Just write the characters out and continue,
             // no need to refresh the entire line.
-            TRY(output_stream.write_entire_buffer(m_pending_chars));
+            TRY(output_stream.write_until_depleted(m_pending_chars));
             m_pending_chars.clear();
             m_drawn_cursor = m_cursor;
             m_drawn_end_of_line_offset = m_buffer.size();
@@ -1481,12 +1481,12 @@ ErrorOr<void> Editor::refresh_display()
                 builder.append(Utf32View { &c, 1 });
 
             if (should_print_masked)
-                TRY(output_stream.write_entire_buffer("\033[7m"sv.bytes()));
+                TRY(output_stream.write_until_depleted("\033[7m"sv.bytes()));
 
-            TRY(output_stream.write_entire_buffer(builder.string_view().bytes()));
+            TRY(output_stream.write_until_depleted(builder.string_view().bytes()));
 
             if (should_print_masked)
-                TRY(output_stream.write_entire_buffer("\033[27m"sv.bytes()));
+                TRY(output_stream.write_until_depleted("\033[27m"sv.bytes()));
 
             return {};
         };
@@ -1544,7 +1544,7 @@ ErrorOr<void> Editor::refresh_display()
     }
     TRY(VT::move_absolute(m_origin_row, m_origin_column, output_stream));
 
-    TRY(output_stream.write_entire_buffer(m_new_prompt.bytes()));
+    TRY(output_stream.write_until_depleted(m_new_prompt.bytes()));
 
     TRY(VT::clear_to_end_of_line(output_stream));
     StringBuilder builder;
@@ -1606,7 +1606,7 @@ ErrorOr<void> Editor::reposition_cursor(Stream& stream, bool to_end)
 
 ErrorOr<void> VT::move_absolute(u32 row, u32 col, Stream& stream)
 {
-    return stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{}H", row, col).bytes());
+    return stream.write_until_depleted(DeprecatedString::formatted("\033[{};{}H", row, col).bytes());
 }
 
 ErrorOr<void> VT::move_relative(int row, int col, Stream& stream)
@@ -1623,9 +1623,9 @@ ErrorOr<void> VT::move_relative(int row, int col, Stream& stream)
         col = -col;
 
     if (row > 0)
-        TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{}{}", row, x_op).bytes()));
+        TRY(stream.write_until_depleted(DeprecatedString::formatted("\033[{}{}", row, x_op).bytes()));
     if (col > 0)
-        TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{}{}", col, y_op).bytes()));
+        TRY(stream.write_until_depleted(DeprecatedString::formatted("\033[{}{}", col, y_op).bytes()));
 
     return {};
 }
@@ -1764,16 +1764,16 @@ DeprecatedString Style::to_deprecated_string() const
 ErrorOr<void> VT::apply_style(Style const& style, Stream& stream, bool is_starting)
 {
     if (is_starting) {
-        TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{};{};{}m{}{}{}",
+        TRY(stream.write_until_depleted(DeprecatedString::formatted("\033[{};{};{}m{}{}{}",
             style.bold() ? 1 : 22,
             style.underline() ? 4 : 24,
             style.italic() ? 3 : 23,
             style.background().to_vt_escape(),
             style.foreground().to_vt_escape(),
             style.hyperlink().to_vt_escape(true))
-                                           .bytes()));
+                                            .bytes()));
     } else {
-        TRY(stream.write_entire_buffer(style.hyperlink().to_vt_escape(false).bytes()));
+        TRY(stream.write_until_depleted(style.hyperlink().to_vt_escape(false).bytes()));
     }
 
     return {};
@@ -1782,16 +1782,16 @@ ErrorOr<void> VT::apply_style(Style const& style, Stream& stream, bool is_starti
 ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, Stream& stream)
 {
     if (count_below + count_above == 0) {
-        TRY(stream.write_entire_buffer("\033[2K"sv.bytes()));
+        TRY(stream.write_until_depleted("\033[2K"sv.bytes()));
     } else {
         // Go down count_below lines.
         if (count_below > 0)
-            TRY(stream.write_entire_buffer(DeprecatedString::formatted("\033[{}B", count_below).bytes()));
+            TRY(stream.write_until_depleted(DeprecatedString::formatted("\033[{}B", count_below).bytes()));
         // Then clear lines going upwards.
         for (size_t i = count_below + count_above; i > 0; --i) {
-            TRY(stream.write_entire_buffer("\033[2K"sv.bytes()));
+            TRY(stream.write_until_depleted("\033[2K"sv.bytes()));
             if (i != 1)
-                TRY(stream.write_entire_buffer("\033[A"sv.bytes()));
+                TRY(stream.write_until_depleted("\033[A"sv.bytes()));
         }
     }
 
@@ -1800,17 +1800,17 @@ ErrorOr<void> VT::clear_lines(size_t count_above, size_t count_below, Stream& st
 
 ErrorOr<void> VT::save_cursor(Stream& stream)
 {
-    return stream.write_entire_buffer("\033[s"sv.bytes());
+    return stream.write_until_depleted("\033[s"sv.bytes());
 }
 
 ErrorOr<void> VT::restore_cursor(Stream& stream)
 {
-    return stream.write_entire_buffer("\033[u"sv.bytes());
+    return stream.write_until_depleted("\033[u"sv.bytes());
 }
 
 ErrorOr<void> VT::clear_to_end_of_line(Stream& stream)
 {
-    return stream.write_entire_buffer("\033[K"sv.bytes());
+    return stream.write_until_depleted("\033[K"sv.bytes());
 }
 
 enum VTState {

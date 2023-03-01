@@ -28,7 +28,7 @@ public:
     virtual ErrorOr<size_t> seek(i64 offset, SeekMode seek_mode = SeekMode::SetPosition) override;
 
     virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override;
-    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes bytes) override;
+    virtual ErrorOr<void> write_until_depleted(ReadonlyBytes bytes) override;
 
     Bytes bytes();
     ReadonlyBytes bytes() const;

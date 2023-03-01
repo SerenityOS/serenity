@@ -796,7 +796,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
         MUST(stream.write_value<u16>(entry.record_length));
         MUST(stream.write_value<u8>(entry.name->length()));
         MUST(stream.write_value<u8>(entry.file_type));
-        MUST(stream.write_entire_buffer(entry.name->bytes()));
+        MUST(stream.write_until_depleted(entry.name->bytes()));
         int padding = entry.record_length - entry.name->length() - 8;
         for (int j = 0; j < padding; ++j)
             MUST(stream.write_value<u8>(0));

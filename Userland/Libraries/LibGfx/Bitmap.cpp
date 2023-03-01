@@ -267,7 +267,7 @@ ErrorOr<ByteBuffer> Bitmap::serialize_to_byte_buffer() const
     }
 
     auto size = size_in_bytes();
-    TRY(stream.write_entire_buffer({ scanline(0), size }));
+    TRY(stream.write_until_depleted({ scanline(0), size }));
 
     VERIFY(TRY(stream.tell()) == TRY(stream.size()));
 

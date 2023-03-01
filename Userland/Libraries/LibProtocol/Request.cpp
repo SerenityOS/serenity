@@ -54,7 +54,7 @@ void Request::stream_into(Stream& stream)
             if (read_bytes.is_empty())
                 break;
             // FIXME: What do we do if this fails?
-            stream.write_entire_buffer(read_bytes).release_value_but_fixme_should_propagate_errors();
+            stream.write_until_depleted(read_bytes).release_value_but_fixme_should_propagate_errors();
             break;
         } while (true);
 
