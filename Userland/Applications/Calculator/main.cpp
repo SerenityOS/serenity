@@ -6,6 +6,7 @@
 
 #include "CalculatorWidget.h"
 #include "RoundingDialog.h"
+#include <AK/CharacterTypes.h>
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibGUI/Action.h>
@@ -50,12 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     edit_menu.add_action(GUI::CommonActions::make_paste_action([&](auto&) {
         auto clipboard = GUI::Clipboard::the().fetch_data_and_type();
-        if (clipboard.mime_type == "text/plain") {
-            if (!clipboard.data.is_empty()) {
-                auto const number = StringView(clipboard.data);
-                widget->set_typed_entry(Crypto::BigFraction(number));
-            }
-        }
+        widget->set_typed_entry_from_clipboard(clipboard);
     }));
 
     auto& constants_menu = window->add_menu("&Constants");

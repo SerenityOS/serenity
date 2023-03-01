@@ -11,6 +11,7 @@
 #include <Applications/Calculator/CalculatorGML.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Font/Font.h>
@@ -146,6 +147,28 @@ void CalculatorWidget::set_typed_entry(Crypto::BigFraction value)
 {
     m_keypad.set_typed_value(move(value));
     update_display();
+}
+
+void CalculatorWidget::set_typed_entry_from_clipboard(GUI::Clipboard::DataAndType& clipboard)
+{
+    if (clipboard.mime_type != "text/plain" || clipboard.data.is_empty())
+        return;
+
+    auto const clipboard_view = StringView(clipboard.data);
+    StringBuilder builder;
+    bool dot_allowed = true;
+    bool minus_allowed = true;
+
+    for (auto& ch : clipboard_view) {
+        if (is_ascii_digit(ch) || (dot_allowed && ch == '.') || (minus_allowed && ch == '-')) {
+            builder.append(ch);
+            if (ch == '.')
+                dot_allowed = false;
+            if (minus_allowed)
+                minus_allowed = false;
+        }
+    }
+    set_typed_entry(Crypto::BigFraction(builder.string_view()));
 }
 
 void CalculatorWidget::update_display()

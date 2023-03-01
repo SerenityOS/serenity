@@ -13,6 +13,7 @@
 #include <AK/Vector.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Widget.h>
 
 class CalculatorWidget final : public GUI::Widget {
@@ -22,6 +23,7 @@ public:
     DeprecatedString get_entry();
     void set_entry(Crypto::BigFraction);
     void set_typed_entry(Crypto::BigFraction);
+    void set_typed_entry_from_clipboard(GUI::Clipboard::DataAndType&);
 
     void shrink(unsigned);
     unsigned rounding_length() const;
