@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -183,7 +183,7 @@ ThrowCompletionOr<Value> ECMAScriptFunctionObject::internal_call(Value this_argu
 
     // 8. If result.[[Type]] is return, return result.[[Value]].
     if (result.type() == Completion::Type::Return)
-        return result.value();
+        return *result.value();
 
     // 9. ReturnIfAbrupt(result).
     if (result.is_abrupt()) {

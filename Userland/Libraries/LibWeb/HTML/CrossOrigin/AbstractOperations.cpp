@@ -186,7 +186,7 @@ JS::ThrowCompletionOr<JS::Value> cross_origin_get(JS::VM& vm, JS::Object const& 
 
     // 3. If IsDataDescriptor(desc) is true, then return desc.[[Value]].
     if (descriptor->is_data_descriptor())
-        return descriptor->value;
+        return *descriptor->value;
 
     // 4. Assert: IsAccessorDescriptor(desc) is true.
     VERIFY(descriptor->is_accessor_descriptor());
