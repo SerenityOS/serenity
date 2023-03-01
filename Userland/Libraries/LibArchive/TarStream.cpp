@@ -92,10 +92,7 @@ ErrorOr<void> TarInputStream::load_next_header()
 {
     size_t number_of_consecutive_zero_blocks = 0;
     while (true) {
-        // FIXME: This should read the entire span.
-        auto header_span = TRY(m_stream->read_some(Bytes(&m_header, sizeof(m_header))));
-        if (header_span.size() != sizeof(m_header))
-            return Error::from_string_literal("Failed to read the entire header");
+        m_header = TRY(m_stream->read_value<TarFileHeader>());
 
         // Discard the rest of the header block.
         TRY(m_stream->discard(block_size - sizeof(TarFileHeader)));
