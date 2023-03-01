@@ -7,7 +7,9 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/Forward.h>
@@ -35,7 +37,7 @@ public:
         return m_node.ptr() == other.m_node.ptr() && m_offset == other.m_offset;
     }
 
-    DeprecatedString to_deprecated_string() const;
+    ErrorOr<String> to_string() const;
 
 private:
     JS::Handle<Node> m_node;
@@ -44,13 +46,10 @@ private:
 
 }
 
-namespace AK {
 template<>
-struct Formatter<Web::DOM::Position> : Formatter<StringView> {
+struct AK::Formatter<Web::DOM::Position> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Web::DOM::Position const& value)
     {
-        return Formatter<StringView>::format(builder, value.to_deprecated_string());
+        return Formatter<StringView>::format(builder, TRY(value.to_string()));
     }
 };
-
-}
