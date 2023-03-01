@@ -12,6 +12,10 @@ $ beep
 
 beep allows the user to beep the PC speaker.
 
+## Options
+
+* `-f|--beep-tone`: Beep tone (frequency in Hz)
+
 ## Notes
 
 If the user disabled the usage of PC speaker in the kernel commandline, the program
@@ -20,7 +24,10 @@ will fail to use the PC speaker.
 ## Examples
 
 ```sh
+# Use beep with default tone
 $ beep
+# Use beep with tone of 1000Hz
+$ beep -f 1000
 ```
 
 ## See also

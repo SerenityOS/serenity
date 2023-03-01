@@ -291,7 +291,7 @@ public:
     ErrorOr<FlatPtr> sys$emuctl();
     ErrorOr<FlatPtr> sys$yield();
     ErrorOr<FlatPtr> sys$sync();
-    ErrorOr<FlatPtr> sys$beep();
+    ErrorOr<FlatPtr> sys$beep(int tone);
     ErrorOr<FlatPtr> sys$get_process_name(Userspace<char*> buffer, size_t buffer_size);
     ErrorOr<FlatPtr> sys$set_process_name(Userspace<char const*> user_name, size_t user_name_length);
     ErrorOr<FlatPtr> sys$create_inode_watcher(u32 flags);

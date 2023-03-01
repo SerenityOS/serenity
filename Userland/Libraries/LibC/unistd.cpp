@@ -924,9 +924,9 @@ int gettid()
     return cached_tid;
 }
 
-int sysbeep()
+int sysbeep(int tone)
 {
-    int rc = syscall(SC_beep);
+    int rc = syscall(SC_beep, tone);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

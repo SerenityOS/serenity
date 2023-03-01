@@ -1067,7 +1067,7 @@ void TerminalWidget::beep()
         return;
     }
     if (m_bell_mode == BellMode::AudibleBeep) {
-        sysbeep();
+        sysbeep(440);
         return;
     }
     m_visual_beep_timer->restart(200);
