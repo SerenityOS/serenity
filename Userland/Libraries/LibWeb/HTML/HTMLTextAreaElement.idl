@@ -6,13 +6,13 @@ interface HTMLTextAreaElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString placeholder;
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString wrap;
+    [CEReactions, Reflect] attribute DOMString placeholder;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString wrap;
     readonly attribute DOMString type;
 
-    [Reflect] attribute boolean disabled;
-    [Reflect=readonly] attribute boolean readOnly;
-    [Reflect] attribute boolean required;
+    [CEReactions, Reflect] attribute boolean disabled;
+    [CEReactions, Reflect=readonly] attribute boolean readOnly;
+    [CEReactions, Reflect] attribute boolean required;
 
 };

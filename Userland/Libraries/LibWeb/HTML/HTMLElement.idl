@@ -8,11 +8,11 @@ interface HTMLElement : Element {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString title;
-    [Reflect] attribute DOMString lang;
-    attribute DOMString dir;
+    [Reflect, CEReactions] attribute DOMString title;
+    [Reflect, CEReactions] attribute DOMString lang;
+    [CEReactions] attribute DOMString dir;
 
-    [Reflect] attribute boolean hidden;
+    [Reflect, CEReactions] attribute boolean hidden;
 
     attribute DOMString contentEditable;
 
@@ -23,7 +23,7 @@ interface HTMLElement : Element {
 
     undefined blur();
 
-    [LegacyNullToEmptyString] attribute DOMString innerText;
+    [LegacyNullToEmptyString, CEReactions] attribute DOMString innerText;
 
     readonly attribute long offsetTop;
     readonly attribute long offsetLeft;

@@ -6,16 +6,16 @@ interface HTMLImageElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString src;
-    [Reflect] attribute DOMString alt;
-    [Reflect] attribute DOMString srcset;
-    [Reflect] attribute DOMString sizes;
-    [Reflect=usemap] attribute DOMString useMap;
-    [Reflect=ismap] attribute boolean isMap;
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString alt;
+    [CEReactions, Reflect] attribute DOMString srcset;
+    [CEReactions, Reflect] attribute DOMString sizes;
+    [CEReactions, Reflect=usemap] attribute DOMString useMap;
+    [CEReactions, Reflect=ismap] attribute boolean isMap;
 
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString align;
-    [LegacyNullToEmptyString, Reflect] attribute DOMString border;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString border;
 
     [CEReactions] attribute unsigned long width;
     [CEReactions] attribute unsigned long height;

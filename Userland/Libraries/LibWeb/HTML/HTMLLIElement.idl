@@ -5,7 +5,8 @@
 interface HTMLLIElement : HTMLElement {
 
     [HTMLConstructor] constructor();
+    // FIXME: [CEReactions] attribute long value;
 
-    [Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString type;
 
 };

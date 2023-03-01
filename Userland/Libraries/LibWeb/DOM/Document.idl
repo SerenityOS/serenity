@@ -74,8 +74,8 @@ interface Document : Node {
     // FIXME: Should return an HTMLAllCollection
     readonly attribute HTMLCollection all;
 
-    Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
-    Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
+    [CEReactions, NewObject] Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
+    [CEReactions, NewObject] Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
     Comment createComment(DOMString data);
@@ -96,13 +96,13 @@ interface Document : Node {
     readonly attribute DocumentType? doctype;
 
     readonly attribute Element? documentElement;
-    attribute HTMLElement? body;
+    [CEReactions] attribute HTMLElement? body;
     readonly attribute HTMLHeadElement? head;
     readonly attribute HTMLScriptElement? currentScript;
 
     readonly attribute DOMString readyState;
 
-    attribute DOMString title;
+    [CEReactions] attribute DOMString title;
 
     boolean queryCommandSupported(DOMString commandId);
     readonly boolean hidden;

@@ -10,12 +10,12 @@ enum CanPlayTypeResult {
 [Exposed=Window]
 interface HTMLMediaElement : HTMLElement {
 
-    [Reflect] attribute DOMString src;
+    [Reflect, CEReactions] attribute DOMString src;
 
-    [Reflect] attribute boolean autoplay;
-    [Reflect] attribute boolean loop;
+    [Reflect, CEReactions] attribute boolean autoplay;
+    [Reflect, CEReactions] attribute boolean loop;
 
-    [Reflect] attribute boolean controls;
+    [Reflect, CEReactions] attribute boolean controls;
 
     CanPlayTypeResult canPlayType(DOMString type);
     undefined load();

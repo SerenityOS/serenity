@@ -6,6 +6,6 @@ interface HTMLSlotElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString name;
 
 };

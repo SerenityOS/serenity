@@ -7,9 +7,9 @@ interface HTMLSelectElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute boolean disabled;
-    [Reflect] attribute boolean multiple;
-    [Reflect] attribute boolean required;
+    [CEReactions, Reflect] attribute boolean disabled;
+    [CEReactions, Reflect] attribute boolean multiple;
+    [CEReactions, Reflect] attribute boolean required;
     [SameObject] readonly attribute HTMLOptionsCollection options;
 
     readonly attribute DOMString type;

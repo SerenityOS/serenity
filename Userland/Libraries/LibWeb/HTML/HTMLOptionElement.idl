@@ -6,8 +6,8 @@ interface HTMLOptionElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute boolean disabled;
-    [Reflect=selected] attribute boolean defaultSelected;
+    [CEReactions, Reflect] attribute boolean disabled;
+    [CEReactions, Reflect=selected] attribute boolean defaultSelected;
     attribute boolean selected;
     [CEReactions] attribute DOMString value;
 

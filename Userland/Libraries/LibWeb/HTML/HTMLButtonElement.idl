@@ -6,10 +6,10 @@ interface HTMLButtonElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect=formnovalidate] attribute boolean formNoValidate;
-    [Reflect=formtarget] attribute DOMString formTarget;
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString value;
+    [CEReactions, Reflect=formnovalidate] attribute boolean formNoValidate;
+    [CEReactions, Reflect=formtarget] attribute DOMString formTarget;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString value;
     [CEReactions] attribute DOMString type;
 
 };

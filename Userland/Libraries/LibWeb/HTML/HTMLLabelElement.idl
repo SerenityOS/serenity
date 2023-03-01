@@ -6,6 +6,6 @@ interface HTMLLabelElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect=for] attribute DOMString htmlFor;
+    [CEReactions, Reflect=for] attribute DOMString htmlFor;
 
 };

@@ -8,22 +8,22 @@ interface HTMLObjectElement : HTMLElement {
     [HTMLConstructor] constructor();
 
     [CEReactions] attribute DOMString data;
-    [Reflect] attribute DOMString type;
-    [Reflect] attribute DOMString name;
-    [Reflect=usemap] attribute DOMString useMap;
-    [Reflect] attribute DOMString width;
-    [Reflect] attribute DOMString height;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect=usemap] attribute DOMString useMap;
+    [CEReactions, Reflect] attribute DOMString width;
+    [CEReactions, Reflect] attribute DOMString height;
 
     readonly attribute Document? contentDocument;
 
-    [Reflect] attribute DOMString align;
-    [Reflect] attribute DOMString archive;
-    [Reflect] attribute DOMString code;
-    [Reflect] attribute boolean declare;
-    [Reflect] attribute DOMString standby;
-    [Reflect=codetype] attribute DOMString codeType;
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect] attribute DOMString archive;
+    [CEReactions, Reflect] attribute DOMString code;
+    [CEReactions, Reflect] attribute boolean declare;
+    [CEReactions, Reflect] attribute DOMString standby;
+    [CEReactions, Reflect=codetype] attribute DOMString codeType;
 
-    [LegacyNullToEmptyString, Reflect] attribute DOMString border;
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString border;
 
     Document? getSVGDocument();
 };
