@@ -108,13 +108,9 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
 
     m_total_samples = LOADER_TRY(streaminfo_data.read_bits<u64>(36));
     FLAC_VERIFY(m_total_samples > 0, LoaderError::Category::Format, "Number of samples is zero");
-    // Parse checksum into a buffer first
-    [[maybe_unused]] u128 md5_checksum;
+
     VERIFY(streaminfo_data.is_aligned_to_byte_boundary());
-    // FIXME: This should read the entire span.
-    auto md5_bytes_read = LOADER_TRY(streaminfo_data.read_some(md5_checksum.bytes()));
-    FLAC_VERIFY(md5_bytes_read.size() == sizeof(md5_checksum), LoaderError::Category::IO, "MD5 Checksum size");
-    md5_checksum.bytes().copy_to({ m_md5_checksum, sizeof(m_md5_checksum) });
+    LOADER_TRY(streaminfo_data.read_until_filled({ m_md5_checksum, sizeof(m_md5_checksum) }));
 
     // Parse other blocks
     [[maybe_unused]] u16 meta_blocks_parsed = 1;
@@ -142,7 +138,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
         ++total_meta_blocks;
     }
 
-    dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<float>(m_total_samples) / static_cast<float>(m_sample_rate), md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
+    dbgln_if(AFLACLOADER_DEBUG, "Parsed FLAC header: blocksize {}-{}{}, framesize {}-{}, {}Hz, {}bit, {} channels, {} samples total ({:.2f}s), MD5 {}, data start at {:x} bytes, {} headers total (skipped {})", m_min_block_size, m_max_block_size, is_fixed_blocksize_stream() ? " (constant)" : "", m_min_frame_size, m_max_frame_size, m_sample_rate, pcm_bits_per_sample(m_sample_format), m_num_channels, m_total_samples, static_cast<float>(m_total_samples) / static_cast<float>(m_sample_rate), m_md5_checksum, m_data_start_location, total_meta_blocks, total_meta_blocks - meta_blocks_parsed);
 
     return {};
 }
@@ -869,11 +865,7 @@ ALWAYS_INLINE ErrorOr<i32> decode_unsigned_exp_golomb(u8 k, BigEndianInputBitStr
 ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
 {
     u64 character;
-    u8 buffer = 0;
-    Bytes buffer_bytes { &buffer, 1 };
-    // FIXME: This should read the entire span.
-    TRY(input.read_some(buffer_bytes));
-    u8 start_byte = buffer_bytes[0];
+    u8 start_byte = TRY(input.read_value<u8>());
     // Signal byte is zero: ASCII character
     if ((start_byte & 0b10000000) == 0) {
         return start_byte;
@@ -888,9 +880,7 @@ ErrorOr<u64> read_utf8_char(BigEndianInputBitStream& input)
     u8 start_byte_bitmask = AK::exp2(bits_from_start_byte) - 1;
     character = start_byte_bitmask & start_byte;
     for (u8 i = length - 1; i > 0; --i) {
-        // FIXME: This should read the entire span.
-        TRY(input.read_some(buffer_bytes));
-        u8 current_byte = buffer_bytes[0];
+        u8 current_byte = TRY(input.read_value<u8>());
         character = (character << 6) | (current_byte & 0b00111111);
     }
     return character;
