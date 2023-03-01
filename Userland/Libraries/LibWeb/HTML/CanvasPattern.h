@@ -21,9 +21,9 @@ public:
         NoRepeat
     };
 
-    static NonnullRefPtr<CanvasPatternPaintStyle> create(Gfx::Bitmap const& bitmap, Repetition repetition)
+    static ErrorOr<NonnullRefPtr<CanvasPatternPaintStyle>> create(Gfx::Bitmap const& bitmap, Repetition repetition)
     {
-        return adopt_ref(*new CanvasPatternPaintStyle(bitmap, repetition));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) CanvasPatternPaintStyle(bitmap, repetition));
     }
 
     virtual void paint(Gfx::IntRect physical_bounding_box, PaintFunction paint) const override;
