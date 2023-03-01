@@ -6,7 +6,7 @@ interface HTMLVideoElement : HTMLMediaElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString poster;
-    [Reflect=playsinline] attribute boolean playsInline;
+    [CEReactions, Reflect] attribute USVString poster;
+    [CEReactions, Reflect=playsinline] attribute boolean playsInline;
 
 };

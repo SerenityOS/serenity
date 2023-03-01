@@ -6,7 +6,7 @@ interface HTMLModElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute USVString cite;
-    [Reflect=datetime] attribute DOMString dateTime;
+    [CEReactions, Reflect] attribute USVString cite;
+    [CEReactions, Reflect=datetime] attribute DOMString dateTime;
 
 };

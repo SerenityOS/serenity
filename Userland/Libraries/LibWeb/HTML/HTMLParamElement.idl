@@ -6,10 +6,10 @@ interface HTMLParamElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString value;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString value;
 
-    [Reflect] attribute DOMString type;
-    [Reflect=valuetype] attribute DOMString valueType;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect=valuetype] attribute DOMString valueType;
 
 };

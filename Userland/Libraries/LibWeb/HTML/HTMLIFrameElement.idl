@@ -7,24 +7,24 @@ interface HTMLIFrameElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString src;
-    [Reflect] attribute DOMString srcdoc;
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString allow;
-    [Reflect] attribute DOMString width;
-    [Reflect] attribute DOMString height;
-    [Reflect=allowfullscreen] attribute boolean allowFullscreen;
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString srcdoc;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString allow;
+    [CEReactions, Reflect] attribute DOMString width;
+    [CEReactions, Reflect] attribute DOMString height;
+    [CEReactions, Reflect=allowfullscreen] attribute boolean allowFullscreen;
 
     readonly attribute Document? contentDocument;
 
     readonly attribute WindowProxy? contentWindow;
 
-    [Reflect] attribute DOMString align;
-    [Reflect] attribute DOMString scrolling;
-    [Reflect=frameborder] attribute DOMString frameBorder;
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect] attribute DOMString scrolling;
+    [CEReactions, Reflect=frameborder] attribute DOMString frameBorder;
 
-    [LegacyNullToEmptyString, Reflect=marginheight] attribute DOMString marginHeight;
-    [LegacyNullToEmptyString, Reflect=marginwidth] attribute DOMString marginWidth;
+    [CEReactions, LegacyNullToEmptyString, Reflect=marginheight] attribute DOMString marginHeight;
+    [CEReactions, LegacyNullToEmptyString, Reflect=marginwidth] attribute DOMString marginWidth;
 
     Document? getSVGDocument();
 };

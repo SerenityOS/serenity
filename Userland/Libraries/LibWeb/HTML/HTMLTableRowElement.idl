@@ -8,12 +8,12 @@ interface HTMLTableRowElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString align;
-    [Reflect=char] attribute DOMString ch;
-    [Reflect=charoff] attribute DOMString chOff;
-    [Reflect=valign] attribute DOMString vAlign;
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect=char] attribute DOMString ch;
+    [CEReactions, Reflect=charoff] attribute DOMString chOff;
+    [CEReactions, Reflect=valign] attribute DOMString vAlign;
 
-    [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+    [CEReactions, LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
 
     readonly attribute long rowIndex;
     readonly attribute long sectionRowIndex;

@@ -6,10 +6,12 @@ interface HTMLSourceElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString src;
-    [Reflect] attribute DOMString type;
-    [Reflect] attribute DOMString srcset;
-    [Reflect] attribute DOMString sizes;
-    [Reflect] attribute DOMString media;
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString srcset;
+    [CEReactions, Reflect] attribute DOMString sizes;
+    [CEReactions, Reflect] attribute DOMString media;
+    // FIXME: [CEReactions, Reflect] attribute unsigned long width;
+    // FIXME: [CEReactions, Reflect] attribute unsigned long height;
 
 };

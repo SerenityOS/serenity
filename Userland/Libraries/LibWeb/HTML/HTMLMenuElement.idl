@@ -6,6 +6,6 @@ interface HTMLMenuElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute boolean compact;
+    [CEReactions, Reflect] attribute boolean compact;
 
 };

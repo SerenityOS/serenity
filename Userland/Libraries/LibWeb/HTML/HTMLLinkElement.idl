@@ -6,18 +6,18 @@ interface HTMLLinkElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString href;
-    [Reflect] attribute DOMString hreflang;
-    [Reflect] attribute DOMString integrity;
-    [Reflect] attribute DOMString media;
-    [Reflect] attribute DOMString rel;
-    [Reflect] attribute DOMString type;
-    [Reflect=imagesrcset] attribute DOMString imageSrcset;
-    [Reflect=imagesizes] attribute DOMString imageSizes;
-    [Reflect] attribute boolean disabled;
+    [CEReactions, Reflect] attribute DOMString href;
+    [CEReactions, Reflect] attribute DOMString hreflang;
+    [CEReactions, Reflect] attribute DOMString integrity;
+    [CEReactions, Reflect] attribute DOMString media;
+    [CEReactions, Reflect] attribute DOMString rel;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect=imagesrcset] attribute DOMString imageSrcset;
+    [CEReactions, Reflect=imagesizes] attribute DOMString imageSizes;
+    [CEReactions, Reflect] attribute boolean disabled;
 
-    [Reflect] attribute DOMString charset;
-    [Reflect] attribute DOMString rev;
-    [Reflect] attribute DOMString target;
+    [CEReactions, Reflect] attribute DOMString charset;
+    [CEReactions, Reflect] attribute DOMString rev;
+    [CEReactions, Reflect] attribute DOMString target;
 
 };

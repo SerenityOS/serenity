@@ -6,6 +6,6 @@ interface HTMLLegendElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString align;
+    [CEReactions, Reflect] attribute DOMString align;
 
 };

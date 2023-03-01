@@ -6,8 +6,8 @@ interface HTMLFontElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [LegacyNullToEmptyString, Reflect] attribute DOMString color;
-    [Reflect] attribute DOMString face;
-    [Reflect] attribute DOMString size;
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString color;
+    [CEReactions, Reflect] attribute DOMString face;
+    [CEReactions, Reflect] attribute DOMString size;
 
 };

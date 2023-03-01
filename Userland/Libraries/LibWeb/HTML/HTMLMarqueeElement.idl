@@ -6,10 +6,10 @@ interface HTMLMarqueeElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString behavior;
-    [Reflect=bgcolor] attribute DOMString bgColor;
-    [Reflect] attribute DOMString direction;
-    [Reflect] attribute DOMString height;
-    [Reflect] attribute DOMString width;
+    [CEReactions, Reflect] attribute DOMString behavior;
+    [CEReactions, Reflect=bgcolor] attribute DOMString bgColor;
+    [CEReactions, Reflect] attribute DOMString direction;
+    [CEReactions, Reflect] attribute DOMString height;
+    [CEReactions, Reflect] attribute DOMString width;
 
 };

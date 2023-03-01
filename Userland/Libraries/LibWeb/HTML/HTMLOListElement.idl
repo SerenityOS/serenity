@@ -6,9 +6,10 @@ interface HTMLOListElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute boolean reversed;
-    [Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute boolean reversed;
+    // FIXME: [CEReactions] attribute long start;
+    [CEReactions, Reflect] attribute DOMString type;
 
-    [Reflect] attribute boolean compact;
+    [CEReactions, Reflect] attribute boolean compact;
 
 };

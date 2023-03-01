@@ -7,12 +7,12 @@ interface HTMLBodyElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [LegacyNullToEmptyString, Reflect] attribute DOMString text;
-    [LegacyNullToEmptyString, Reflect] attribute DOMString link;
-    [LegacyNullToEmptyString, Reflect=vlink] attribute DOMString vLink;
-    [LegacyNullToEmptyString, Reflect=alink] attribute DOMString aLink;
-    [LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
-    [Reflect] attribute DOMString background;
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString text;
+    [CEReactions, LegacyNullToEmptyString, Reflect] attribute DOMString link;
+    [CEReactions, LegacyNullToEmptyString, Reflect=vlink] attribute DOMString vLink;
+    [CEReactions, LegacyNullToEmptyString, Reflect=alink] attribute DOMString aLink;
+    [CEReactions, LegacyNullToEmptyString, Reflect=bgcolor] attribute DOMString bgColor;
+    [CEReactions, Reflect] attribute DOMString background;
 
 };
 

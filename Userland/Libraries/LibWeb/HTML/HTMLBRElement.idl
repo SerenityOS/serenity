@@ -6,6 +6,6 @@ interface HTMLBRElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString clear;
+    [CEReactions, Reflect] attribute DOMString clear;
 
 };

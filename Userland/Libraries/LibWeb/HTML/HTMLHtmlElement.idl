@@ -6,6 +6,6 @@ interface HTMLHtmlElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString version;
+    [CEReactions, Reflect] attribute DOMString version;
 
 };

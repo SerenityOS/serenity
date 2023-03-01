@@ -6,6 +6,6 @@ interface HTMLDetailsElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute boolean open;
+    [CEReactions, Reflect] attribute boolean open;
 
 };

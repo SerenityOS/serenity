@@ -7,10 +7,10 @@ interface HTMLFormElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString rel;
-    [Reflect=accept-charset] attribute DOMString acceptCharset;
-    [Reflect=novalidate] attribute boolean noValidate;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString rel;
+    [CEReactions, Reflect=accept-charset] attribute DOMString acceptCharset;
+    [CEReactions, Reflect=novalidate] attribute boolean noValidate;
 
     undefined submit();
     [CEReactions] undefined reset();

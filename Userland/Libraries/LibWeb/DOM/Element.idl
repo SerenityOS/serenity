@@ -27,12 +27,12 @@ interface Element : Node {
     readonly attribute DOMString tagName;
 
     DOMString? getAttribute(DOMString qualifiedName);
-    undefined setAttribute(DOMString qualifiedName, DOMString value);
+    [CEReactions] undefined setAttribute(DOMString qualifiedName, DOMString value);
     [CEReactions] undefined setAttributeNS(DOMString? namespace , DOMString qualifiedName , DOMString value);
     [CEReactions] Attr? setAttributeNode(Attr attr);
     [CEReactions] Attr? setAttributeNodeNS(Attr attr);
 
-    undefined removeAttribute(DOMString qualifiedName);
+    [CEReactions] undefined removeAttribute(DOMString qualifiedName);
     [CEReactions] boolean toggleAttribute(DOMString qualifiedName, optional boolean force);
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
@@ -45,8 +45,8 @@ interface Element : Node {
     HTMLCollection getElementsByTagNameNS(DOMString? namespace, DOMString localName);
     HTMLCollection getElementsByClassName(DOMString className);
 
-    [Reflect] attribute DOMString id;
-    [Reflect=class] attribute DOMString className;
+    [Reflect, CEReactions] attribute DOMString id;
+    [Reflect=class, CEReactions] attribute DOMString className;
     [SameObject, PutForwards=value] readonly attribute DOMTokenList classList;
 
     ShadowRoot attachShadow(ShadowRootInit init);

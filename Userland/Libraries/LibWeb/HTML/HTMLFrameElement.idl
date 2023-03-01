@@ -6,10 +6,10 @@ interface HTMLFrameElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString scrolling;
-    [Reflect] attribute DOMString src;
-    [Reflect=frameborder] attribute DOMString frameBorder;
-    [Reflect=longdesc] attribute DOMString longDesc;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString scrolling;
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect=frameborder] attribute DOMString frameBorder;
+    [CEReactions, Reflect=longdesc] attribute DOMString longDesc;
 
 };

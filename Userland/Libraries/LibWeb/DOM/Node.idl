@@ -27,13 +27,13 @@ interface Node : EventTarget {
     // FIXME: [LegacyNullToEmptyString] is not allowed on nullable types as per the Web IDL spec.
     //        However, we only apply it to setters, so this works as a stop gap.
     //        Replace this with something like a special cased [LegacyNullToEmptyString].
-    [LegacyNullToEmptyString] attribute DOMString? textContent;
+    [LegacyNullToEmptyString, CEReactions] attribute DOMString? textContent;
 
-    Node appendChild(Node node);
-    [ImplementedAs=pre_insert] Node insertBefore(Node node, Node? child);
-    Node replaceChild(Node node, Node child);
-    [ImplementedAs=pre_remove] Node removeChild(Node child);
-    [ImplementedAs=clone_node_binding] Node cloneNode(optional boolean deep = false);
+    [CEReactions] Node appendChild(Node node);
+    [ImplementedAs=pre_insert, CEReactions] Node insertBefore(Node node, Node? child);
+    [CEReactions] Node replaceChild(Node node, Node child);
+    [ImplementedAs=pre_remove, CEReactions] Node removeChild(Node child);
+    [ImplementedAs=clone_node_binding, CEReactions] Node cloneNode(optional boolean deep = false);
     boolean contains(Node? other);
     boolean isEqualNode(Node? otherNode);
     boolean isSameNode(Node? otherNode);

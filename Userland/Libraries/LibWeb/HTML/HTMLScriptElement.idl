@@ -6,16 +6,16 @@ interface HTMLScriptElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString src;
-    [Reflect] attribute DOMString type;
-    [Reflect=nomodule] attribute boolean noModule;
-    [Reflect] attribute boolean defer;
-    [Reflect] attribute DOMString integrity;
+    [CEReactions, Reflect] attribute DOMString src;
+    [CEReactions, Reflect] attribute DOMString type;
+    [CEReactions, Reflect=nomodule] attribute boolean noModule;
+    [CEReactions, Reflect] attribute boolean defer;
+    [CEReactions, Reflect] attribute DOMString integrity;
 
     static boolean supports(DOMString type);
 
-    [Reflect] attribute DOMString charset;
-    [Reflect] attribute DOMString event;
-    [Reflect=for] attribute DOMString htmlFor;
+    [CEReactions, Reflect] attribute DOMString charset;
+    [CEReactions, Reflect] attribute DOMString event;
+    [CEReactions, Reflect=for] attribute DOMString htmlFor;
 
 };

@@ -6,10 +6,10 @@ interface HTMLMetaElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString content;
-    [Reflect=http-equiv] attribute DOMString httpEquiv;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString content;
+    [CEReactions, Reflect=http-equiv] attribute DOMString httpEquiv;
 
-    [Reflect] attribute DOMString scheme;
+    [CEReactions, Reflect] attribute DOMString scheme;
 
 };
