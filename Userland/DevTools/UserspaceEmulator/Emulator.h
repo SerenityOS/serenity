@@ -225,7 +225,6 @@ private:
     int virt$scheduler_set_parameters(FlatPtr);
     int virt$sendfd(int, int);
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);
-    int virt$set_coredump_metadata(FlatPtr address);
     int virt$set_mmap_name(FlatPtr);
     int virt$set_process_name(FlatPtr buffer, int size);
     int virt$set_thread_name(pid_t, FlatPtr, size_t);
