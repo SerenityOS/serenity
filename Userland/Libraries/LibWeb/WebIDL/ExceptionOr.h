@@ -37,17 +37,17 @@ class [[nodiscard]] ExceptionOr {
 public:
     ExceptionOr()
     requires(IsSame<ValueType, Empty>)
-        : m_result(Empty {})
+        : m_result_or_exception(Empty {})
     {
     }
 
     ExceptionOr(ValueType const& result)
-        : m_result(result)
+        : m_result_or_exception(result)
     {
     }
 
     ExceptionOr(ValueType&& result)
-        : m_result(move(result))
+        : m_result_or_exception(move(result))
     {
     }
 
@@ -57,31 +57,31 @@ public:
     template<typename WrappedValueType>
     ExceptionOr(WrappedValueType result)
     requires(!IsPOD<ValueType>)
-        : m_result(move(result))
+        : m_result_or_exception(ValueType { move(result) })
     {
     }
 
     ExceptionOr(JS::NonnullGCPtr<DOMException> exception)
-        : m_exception(move(exception))
+        : m_result_or_exception(exception)
     {
     }
 
     ExceptionOr(SimpleException exception)
-        : m_exception(move(exception))
+        : m_result_or_exception(move(exception))
     {
     }
 
     ExceptionOr(JS::Completion exception)
-        : m_exception(move(exception))
+        : m_result_or_exception(move(exception))
     {
-        auto const& completion = m_exception.get<JS::Completion>();
+        auto const& completion = m_result_or_exception.template get<JS::Completion>();
         VERIFY(completion.is_error());
     }
 
     ExceptionOr(Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> exception)
-        : m_exception(move(exception).template downcast<Empty, SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion>())
+        : m_result_or_exception(move(exception))
     {
-        if (auto* completion = m_exception.template get_pointer<JS::Completion>())
+        if (auto* completion = m_result_or_exception.template get_pointer<JS::Completion>())
             VERIFY(completion->is_error());
     }
 
@@ -92,22 +92,22 @@ public:
     ValueType& value()
     requires(!IsSame<ValueType, Empty>)
     {
-        return m_result.value();
+        return m_result_or_exception.template get<ValueType>();
     }
 
     ValueType release_value()
     {
-        return m_result.release_value();
+        return move(m_result_or_exception.template get<ValueType>());
     }
 
     Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> exception() const
     {
-        return m_exception.template downcast<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion>();
+        return m_result_or_exception.template downcast<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion>();
     }
 
     bool is_exception() const
     {
-        return !m_exception.template has<Empty>();
+        return !m_result_or_exception.template has<ValueType>();
     }
 
     ValueType release_value_but_fixme_should_propagate_errors()
@@ -121,10 +121,8 @@ public:
     Variant<SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> release_error() { return exception(); }
 
 private:
-    Optional<ValueType> m_result;
-
     // https://webidl.spec.whatwg.org/#idl-exceptions
-    Variant<Empty, SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> m_exception {};
+    Variant<ValueType, SimpleException, JS::NonnullGCPtr<DOMException>, JS::Completion> m_result_or_exception;
 };
 
 template<>
