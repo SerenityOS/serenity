@@ -439,7 +439,6 @@ public:
     ErrorOr<FlatPtr> sys$disown(ProcessID);
     ErrorOr<FlatPtr> sys$allocate_tls(Userspace<char const*> initial_data, size_t);
     ErrorOr<FlatPtr> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
-    ErrorOr<FlatPtr> sys$set_coredump_metadata(Userspace<Syscall::SC_set_coredump_metadata_params const*>);
     ErrorOr<FlatPtr> sys$anon_create(size_t, int options);
     ErrorOr<FlatPtr> sys$statvfs(Userspace<Syscall::SC_statvfs_params const*> user_params);
     ErrorOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);

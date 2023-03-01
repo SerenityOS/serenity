@@ -25,7 +25,7 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] F
             return address_space().with([&](auto& space) -> ErrorOr<FlatPtr> {
                 return space->enforces_syscall_regions();
             });
-        case PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS:
+        case PR_SET_NO_NEW_SYSCALL_REGION_ANNOTATIONS: {
             if (arg1 != 0 && arg1 != 1)
                 return EINVAL;
             bool prohibit_new_annotated_syscall_regions = (arg1 == 1);
@@ -38,6 +38,19 @@ ErrorOr<FlatPtr> Process::sys$prctl(int option, FlatPtr arg1, [[maybe_unused]] F
             });
             return 0;
         }
+        case PR_SET_COREDUMP_METADATA_VALUE: {
+            auto params = TRY(copy_typed_from_user<Syscall::SC_set_coredump_metadata_params>(arg1));
+            if (params.key.length == 0 || params.key.length > 16 * KiB)
+                return EINVAL;
+            if (params.value.length > 16 * KiB)
+                return EINVAL;
+            auto key = TRY(try_copy_kstring_from_user(params.key));
+            auto value = TRY(try_copy_kstring_from_user(params.value));
+            TRY(set_coredump_property(move(key), move(value)));
+            return 0;
+        }
+        }
+
         return EINVAL;
     });
 }

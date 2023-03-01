@@ -52,19 +52,4 @@ ErrorOr<FlatPtr> Process::sys$set_process_name(Userspace<char const*> user_name,
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$set_coredump_metadata(Userspace<Syscall::SC_set_coredump_metadata_params const*> user_params)
-{
-    VERIFY_NO_PROCESS_BIG_LOCK(this);
-    auto params = TRY(copy_typed_from_user(user_params));
-
-    if (params.key.length == 0 || params.key.length > 16 * KiB)
-        return EINVAL;
-    if (params.value.length > 16 * KiB)
-        return EINVAL;
-    auto key = TRY(try_copy_kstring_from_user(params.key));
-    auto value = TRY(try_copy_kstring_from_user(params.value));
-    TRY(set_coredump_property(move(key), move(value)));
-    return 0;
-}
-
 }
