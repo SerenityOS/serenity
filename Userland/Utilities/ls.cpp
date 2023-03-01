@@ -170,7 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (di.has_error()) {
                 status = 1;
-                fprintf(stderr, "%s: %s\n", path.characters(), di.error_string());
+                fprintf(stderr, "%s: %s\n", path.characters(), strerror(di.error().code()));
             }
 
             while (di.has_next()) {
@@ -396,7 +396,8 @@ static int do_file_system_object_long(char const* path)
     Core::DirIterator di(path, flags);
 
     if (di.has_error()) {
-        if (di.error() == ENOTDIR) {
+        auto error = di.error();
+        if (error.code() == ENOTDIR) {
             struct stat stat {
             };
             int rc = lstat(path, &stat);
@@ -406,7 +407,7 @@ static int do_file_system_object_long(char const* path)
                 return 0;
             return 2;
         }
-        fprintf(stderr, "%s: %s\n", path, di.error_string());
+        fprintf(stderr, "%s: %s\n", path, strerror(di.error().code()));
         return 1;
     }
 
@@ -510,7 +511,8 @@ int do_file_system_object_short(char const* path)
 
     Core::DirIterator di(path, flags);
     if (di.has_error()) {
-        if (di.error() == ENOTDIR) {
+        auto error = di.error();
+        if (error.code() == ENOTDIR) {
             size_t nprinted = 0;
             bool status = print_filesystem_object_short(path, path, &nprinted);
             printf("\n");
@@ -518,7 +520,7 @@ int do_file_system_object_short(char const* path)
                 return 0;
             return 2;
         }
-        fprintf(stderr, "%s: %s\n", path, di.error_string());
+        fprintf(stderr, "%s: %s\n", path, strerror(di.error().code()));
         return 1;
     }
 

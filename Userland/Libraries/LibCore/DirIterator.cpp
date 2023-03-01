@@ -17,7 +17,7 @@ DirIterator::DirIterator(DeprecatedString path, Flags flags)
 {
     m_dir = opendir(m_path.characters());
     if (!m_dir) {
-        m_error = errno;
+        m_error = Error::from_errno(errno);
     }
 }
 
@@ -31,7 +31,7 @@ DirIterator::~DirIterator()
 
 DirIterator::DirIterator(DirIterator&& other)
     : m_dir(other.m_dir)
-    , m_error(other.m_error)
+    , m_error(move(other.m_error))
     , m_next(move(other.m_next))
     , m_path(move(other.m_path))
     , m_flags(other.m_flags)
@@ -48,7 +48,7 @@ bool DirIterator::advance_next()
         errno = 0;
         auto* de = readdir(m_dir);
         if (!de) {
-            m_error = errno;
+            m_error = Error::from_errno(errno);
             m_next.clear();
             return false;
         }

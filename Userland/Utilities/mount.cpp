@@ -129,8 +129,8 @@ static ErrorOr<void> mount_all()
 
     auto fstab_directory_iterator = Core::DirIterator("/etc/fstab.d", Core::DirIterator::SkipDots);
 
-    if (fstab_directory_iterator.has_error() && fstab_directory_iterator.error() != ENOENT) {
-        dbgln("Failed to open /etc/fstab.d: {}", fstab_directory_iterator.error_string());
+    if (fstab_directory_iterator.has_error() && fstab_directory_iterator.error().code() != ENOENT) {
+        dbgln("Failed to open /etc/fstab.d: {}", fstab_directory_iterator.error());
     } else if (!fstab_directory_iterator.has_error()) {
         while (fstab_directory_iterator.has_next()) {
             auto path = fstab_directory_iterator.next_full_path();

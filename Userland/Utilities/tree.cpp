@@ -48,7 +48,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
 
     Core::DirIterator di(root_path, flag_show_hidden_files ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        warnln("{}: {}", root_path, di.error_string());
+        warnln("{}: {}", root_path, di.error());
         return;
     }
 
@@ -56,7 +56,7 @@ static void print_directory_tree(DeprecatedString const& root_path, int depth, D
     while (di.has_next()) {
         DeprecatedString name = di.next_path();
         if (di.has_error()) {
-            warnln("{}: {}", root_path, di.error_string());
+            warnln("{}: {}", root_path, di.error());
             continue;
         }
         names.append(name);

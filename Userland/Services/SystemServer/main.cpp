@@ -158,8 +158,9 @@ static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
 {
     Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
-        warnln("Failed to open /sys/dev/char - {}", di.error());
-        return Error::from_errno(di.error());
+        auto error = di.error();
+        warnln("Failed to open /sys/dev/char - {}", error);
+        return error;
     }
     while (di.has_next()) {
         auto entry_name = di.next_path().split(':');

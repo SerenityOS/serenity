@@ -70,8 +70,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::DirIterator di("/sys/bus/pci/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {
-        warnln("Failed to open /sys/bus/pci - {}", di.error());
-        return 1;
+        auto error = di.error();
+        warnln("Failed to open /sys/bus/pci - {}", error);
+        return error;
     }
 
     TRY(Core::System::pledge("stdio rpath"));

@@ -61,7 +61,7 @@ private:
 
         Core::DirIterator iterator("/res/keymaps/", Core::DirIterator::Flags::SkipDots);
         if (iterator.has_error()) {
-            GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Error on reading mapping file list: {}", iterator.error_string()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Error on reading mapping file list: {}", iterator.error()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
             GUI::Application::the()->quit(-1);
         }
 

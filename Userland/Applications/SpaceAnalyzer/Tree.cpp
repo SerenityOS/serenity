@@ -13,7 +13,6 @@
 
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 static constexpr size_t FILES_ENCOUNTERED_UPDATE_STEP_SIZE = 25;
 
@@ -93,8 +92,9 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
 
         Core::DirIterator dir_iterator(builder.to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
         if (dir_iterator.has_error()) {
-            int error_sum = error_accumulator.get(dir_iterator.error()).value_or(0);
-            error_accumulator.set(dir_iterator.error(), error_sum + 1);
+            auto error_code = dir_iterator.error().code();
+            int error_sum = error_accumulator.get(error_code).value_or(0);
+            error_accumulator.set(error_code, error_sum + 1);
         } else {
             queue_entry.node->m_children = make<Vector<TreeNode>>();
             while (dir_iterator.has_next()) {
