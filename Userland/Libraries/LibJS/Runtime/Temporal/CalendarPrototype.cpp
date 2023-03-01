@@ -558,7 +558,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<TypeError>(ErrorType::TemporalInvalidCalendarFieldValue, TRY_OR_THROW_OOM(vm, next_value.to_string_without_side_effects()));
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY(iterator_close(vm, iterator_record, move(completion)));
+            return *TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         auto next_value_string = TRY(next_value.as_string().utf8_string());
@@ -569,7 +569,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalDuplicateCalendarField, next_value_string);
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY(iterator_close(vm, iterator_record, move(completion)));
+            return *TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // iv. If nextValue is not one of "year", "month", "monthCode", "day", "hour", "minute", "second", "millisecond", "microsecond", "nanosecond", then
@@ -578,7 +578,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
             auto completion = vm.throw_completion<RangeError>(ErrorType::TemporalInvalidCalendarFieldName, next_value_string);
 
             // 2. Return ? IteratorClose(iteratorRecord, completion).
-            return TRY(iterator_close(vm, iterator_record, move(completion)));
+            return *TRY(iterator_close(vm, iterator_record, move(completion)));
         }
 
         // v. Append nextValue to the end of the List fieldNames.

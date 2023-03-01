@@ -274,23 +274,23 @@ class [[nodiscard]] ThrowCompletionOr {
 public:
     ThrowCompletionOr()
     requires(IsSame<ValueType, Empty>)
-        : m_value(Empty {})
+        : m_value_or_throw_completion(Empty {})
     {
     }
 
     // Not `explicit` on purpose so that `return vm.throw_completion<Error>(...);` is possible.
     ThrowCompletionOr(Completion throw_completion)
-        : m_throw_completion(move(throw_completion))
+        : m_value_or_throw_completion(move(throw_completion))
     {
-        VERIFY(m_throw_completion->is_error());
+        VERIFY(m_value_or_throw_completion.template get<Completion>().is_error());
     }
 
     // Not `explicit` on purpose so that `return value;` is possible.
     ThrowCompletionOr(ValueType value)
-        : m_value(move(value))
+        : m_value_or_throw_completion(move(value))
     {
         if constexpr (IsSame<ValueType, Value>)
-            VERIFY(!m_value->is_empty());
+            VERIFY(!m_value_or_throw_completion.template get<ValueType>().is_empty());
     }
 
     ThrowCompletionOr(ThrowCompletionOr const&) = default;
@@ -299,7 +299,7 @@ public:
     ThrowCompletionOr& operator=(ThrowCompletionOr&&) = default;
 
     ThrowCompletionOr(OptionalNone value)
-        : m_value(ValueType { value })
+        : m_value_or_throw_completion(ValueType { value })
     {
     }
 
@@ -309,28 +309,28 @@ public:
     template<typename WrappedValueType>
     ThrowCompletionOr(WrappedValueType const& value)
     requires(!IsPOD<ValueType>)
-        : m_value(value)
+        : m_value_or_throw_completion(ValueType { value })
     {
     }
 
-    [[nodiscard]] bool is_throw_completion() const { return m_throw_completion.has_value(); }
-    Completion const& throw_completion() const { return *m_throw_completion; }
+    [[nodiscard]] bool is_throw_completion() const { return m_value_or_throw_completion.template has<Completion>(); }
+    Completion const& throw_completion() const { return m_value_or_throw_completion.template get<Completion>(); }
 
     [[nodiscard]] bool has_value() const
     requires(!IsSame<ValueType, Empty>)
     {
-        return m_value.has_value();
+        return m_value_or_throw_completion.template has<ValueType>();
     }
     [[nodiscard]] ValueType const& value() const
     requires(!IsSame<ValueType, Empty>)
     {
-        return *m_value;
+        return m_value_or_throw_completion.template get<ValueType>();
     }
 
     // These are for compatibility with the TRY() macro in AK.
-    [[nodiscard]] bool is_error() const { return m_throw_completion.has_value(); }
-    [[nodiscard]] ValueType release_value() { return m_value.release_value(); }
-    Completion release_error() { return m_throw_completion.release_value(); }
+    [[nodiscard]] bool is_error() const { return m_value_or_throw_completion.template has<Completion>(); }
+    [[nodiscard]] ValueType release_value() { return move(m_value_or_throw_completion.template get<ValueType>()); }
+    Completion release_error() { return move(m_value_or_throw_completion.template get<Completion>()); }
 
     ValueType release_allocated_value_but_fixme_should_propagate_errors()
     {
@@ -339,8 +339,7 @@ public:
     }
 
 private:
-    Optional<Completion> m_throw_completion;
-    Optional<ValueType> m_value;
+    Variant<ValueType, Completion> m_value_or_throw_completion;
 };
 
 template<>
