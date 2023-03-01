@@ -61,16 +61,17 @@ private:
 
 class GradientPaintStyle : public PaintStyle {
 public:
-    void add_color_stop(float position, Color color, Optional<float> transition_hint = {})
+    ErrorOr<void> add_color_stop(float position, Color color, Optional<float> transition_hint = {})
     {
-        add_color_stop(ColorStop { color, position, transition_hint });
+        return add_color_stop(ColorStop { color, position, transition_hint });
     }
 
-    void add_color_stop(ColorStop stop, bool sort = true)
+    ErrorOr<void> add_color_stop(ColorStop stop, bool sort = true)
     {
-        m_color_stops.append(stop);
+        TRY(m_color_stops.try_append(stop));
         if (sort)
             quick_sort(m_color_stops, [](auto& a, auto& b) { return a.position < b.position; });
+        return {};
     }
 
     void set_repeat_length(float repeat_length)
