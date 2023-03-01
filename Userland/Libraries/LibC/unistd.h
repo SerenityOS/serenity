@@ -35,7 +35,7 @@ int get_process_name(char* buffer, int buffer_size);
 int set_process_name(char const* name, size_t name_length);
 void dump_backtrace(void);
 int fsync(int fd);
-int sysbeep(void);
+int sysbeep(int tone);
 int gettid(void);
 int getpagesize(void);
 pid_t fork(void);

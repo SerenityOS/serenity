@@ -132,9 +132,9 @@ namespace Core::System {
 
 #ifdef AK_OS_SERENITY
 
-ErrorOr<void> beep()
+ErrorOr<void> beep(Optional<size_t> tone)
 {
-    auto rc = ::sysbeep();
+    auto rc = ::sysbeep(tone.value_or(440));
     if (rc < 0)
         return Error::from_syscall("beep"sv, -errno);
     return {};

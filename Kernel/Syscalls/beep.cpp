@@ -12,13 +12,15 @@
 
 namespace Kernel {
 
-ErrorOr<FlatPtr> Process::sys$beep()
+ErrorOr<FlatPtr> Process::sys$beep(int tone)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (!kernel_command_line().is_pc_speaker_enabled())
         return ENODEV;
+    if (tone < 20 || tone > 20000)
+        return EINVAL;
 #if ARCH(X86_64)
-    PCSpeaker::tone_on(440);
+    PCSpeaker::tone_on(tone);
     auto result = Thread::current()->sleep(Time::from_nanoseconds(200'000'000));
     PCSpeaker::tone_off();
     if (result.was_interrupted())
