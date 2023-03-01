@@ -125,7 +125,7 @@ WebIDL::ExceptionOr<JS::GCPtr<CanvasPattern>> CanvasPattern::create(JS::Realm& r
     auto const& bitmap = *image.visit([](auto const& source) -> Gfx::Bitmap const* { return source->bitmap(); });
 
     // 6. Let pattern be a new CanvasPattern object with the image image and the repetition behavior given by repetition.
-    auto pattern = CanvasPatternPaintStyle::create(bitmap, *repetition_value);
+    auto pattern = TRY_OR_THROW_OOM(realm.vm(), CanvasPatternPaintStyle::create(bitmap, *repetition_value));
 
     // FIXME: 7. If image is not origin-clean, then mark pattern as not origin-clean.
 

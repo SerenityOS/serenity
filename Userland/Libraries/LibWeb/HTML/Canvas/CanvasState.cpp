@@ -45,7 +45,7 @@ NonnullRefPtr<Gfx::PaintStyle> CanvasState::FillOrStrokeStyle::to_gfx_paint_styl
     return m_fill_or_stroke_style.visit(
         [&](Gfx::Color color) -> NonnullRefPtr<Gfx::PaintStyle> {
             if (!m_color_paint_style)
-                m_color_paint_style = Gfx::SolidColorPaintStyle::create(color);
+                m_color_paint_style = Gfx::SolidColorPaintStyle::create(color).release_value_but_fixme_should_propagate_errors();
             return m_color_paint_style.release_nonnull();
         },
         [&](auto handle) {
