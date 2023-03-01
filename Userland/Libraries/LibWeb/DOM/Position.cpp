@@ -18,11 +18,11 @@ Position::Position(Node& node, unsigned offset)
 {
 }
 
-DeprecatedString Position::to_deprecated_string() const
+ErrorOr<String> Position::to_string() const
 {
     if (!node())
-        return DeprecatedString::formatted("DOM::Position(nullptr, {})", offset());
-    return DeprecatedString::formatted("DOM::Position({} ({})), {})", node()->node_name(), node(), offset());
+        return String::formatted("DOM::Position(nullptr, {})", offset());
+    return String::formatted("DOM::Position({} ({})), {})", node()->node_name(), node(), offset());
 }
 
 bool Position::increment_offset()
