@@ -1346,7 +1346,7 @@ ErrorOr<void> Editor::refresh_display()
                 return;
 
             auto buffer = ByteBuffer::create_uninitialized(output_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
-            output_stream.read_entire_buffer(buffer).release_value_but_fixme_should_propagate_errors();
+            output_stream.read_until_filled(buffer).release_value_but_fixme_should_propagate_errors();
             fwrite(buffer.data(), sizeof(char), buffer.size(), stderr);
         }
     };

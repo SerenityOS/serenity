@@ -72,7 +72,7 @@ ErrorOr<ByteBuffer> Packet::to_byte_buffer() const
     }
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
-    TRY(stream.read_entire_buffer(buffer));
+    TRY(stream.read_until_filled(buffer));
     return buffer;
 }
 

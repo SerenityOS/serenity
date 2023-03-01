@@ -94,7 +94,7 @@ static ErrorOr<GIFFormat> decode_gif_header(Stream& stream)
     static auto valid_header_89 = "GIF89a"sv;
 
     Array<u8, 6> header;
-    TRY(stream.read_entire_buffer(header));
+    TRY(stream.read_until_filled(header));
 
     if (header.span() == valid_header_87.bytes())
         return GIFFormat::GIF87a;
@@ -424,7 +424,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
                     break;
 
                 TRY(sub_block.try_resize(sub_block.size() + sub_block_length));
-                TRY(stream.read_entire_buffer(sub_block.span().slice_from_end(sub_block_length)));
+                TRY(stream.read_until_filled(sub_block.span().slice_from_end(sub_block_length)));
             }
 
             if (extension_type == 0xF9) {
@@ -501,7 +501,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
                     break;
 
                 Array<u8, 256> buffer;
-                TRY(stream.read_entire_buffer(buffer.span().trim(lzw_encoded_bytes_expected)));
+                TRY(stream.read_until_filled(buffer.span().trim(lzw_encoded_bytes_expected)));
 
                 for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
                     image->lzw_encoded_bytes.append(buffer[i]);

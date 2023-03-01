@@ -93,7 +93,7 @@ template<typename T>
 static ErrorOr<double> read_sample(Stream& stream)
 {
     T sample { 0 };
-    TRY(stream.read_entire_buffer(Bytes { &sample, sizeof(T) }));
+    TRY(stream.read_until_filled(Bytes { &sample, sizeof(T) }));
     // Remap integer samples to normalized floating-point range of -1 to 1.
     if constexpr (IsIntegral<T>) {
         if constexpr (NumericLimits<T>::is_signed()) {
@@ -157,7 +157,7 @@ ErrorOr<Vector<FixedArray<Sample>>, LoaderError> WavLoaderPlugin::load_chunks(si
         pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
 
     auto sample_data = LOADER_TRY(ByteBuffer::create_zeroed(bytes_to_read));
-    LOADER_TRY(m_stream->read_entire_buffer(sample_data.bytes()));
+    LOADER_TRY(m_stream->read_until_filled(sample_data.bytes()));
 
     // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;

@@ -410,7 +410,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                             else
                                 argument_builder.append(", "sv);
                             auto buffer = ByteBuffer::create_uninitialized(stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
-                            stream.read_entire_buffer(buffer).release_value_but_fixme_should_propagate_errors();
+                            stream.read_until_filled(buffer).release_value_but_fixme_should_propagate_errors();
                             argument_builder.append(StringView(buffer).trim_whitespace());
                         }
                         dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_deprecated_string());

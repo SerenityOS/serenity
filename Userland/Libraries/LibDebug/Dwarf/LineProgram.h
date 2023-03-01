@@ -68,12 +68,12 @@ struct [[gnu::packed]] LineProgramUnitHeader32 {
     static ErrorOr<LineProgramUnitHeader32> read_from_stream(Stream& stream)
     {
         LineProgramUnitHeader32 header;
-        TRY(stream.read_entire_buffer(Bytes { &header.common, sizeof(header.common) }));
+        TRY(stream.read_until_filled(Bytes { &header.common, sizeof(header.common) }));
         if (header.common.version <= 4)
-            TRY(stream.read_entire_buffer(Bytes { &header.v4, sizeof(header.v4) }));
+            TRY(stream.read_until_filled(Bytes { &header.v4, sizeof(header.v4) }));
         else
-            TRY(stream.read_entire_buffer(Bytes { &header.v5, sizeof(header.v5) }));
-        TRY(stream.read_entire_buffer(Bytes { &header.std_opcode_lengths, min(sizeof(header.std_opcode_lengths), (header.opcode_base() - 1) * sizeof(header.std_opcode_lengths[0])) }));
+            TRY(stream.read_until_filled(Bytes { &header.v5, sizeof(header.v5) }));
+        TRY(stream.read_until_filled(Bytes { &header.std_opcode_lengths, min(sizeof(header.std_opcode_lengths), (header.opcode_base() - 1) * sizeof(header.std_opcode_lengths[0])) }));
         return header;
     }
 };

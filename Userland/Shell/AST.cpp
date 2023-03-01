@@ -1772,7 +1772,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
                         return Break;
                     }
                     auto entry = entry_result.release_value();
-                    TRY(stream.read_entire_buffer(entry));
+                    TRY(stream.read_until_filled(entry));
 
                     auto str = TRY(String::from_utf8(StringView(entry.data(), entry.size() - ifs.length())));
                     if (TRY(callback(make_ref_counted<StringValue>(move(str)))) == IterationDecision::Break) {
@@ -1862,7 +1862,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
                     return {};
                 }
                 auto entry = entry_result.release_value();
-                TRY(stream.read_entire_buffer(entry));
+                TRY(stream.read_until_filled(entry));
                 TRY(callback(make_ref_counted<StringValue>(TRY(String::from_utf8(entry)))));
             }
         }

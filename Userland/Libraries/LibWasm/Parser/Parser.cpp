@@ -64,7 +64,7 @@ static auto parse_vector(Stream& stream)
                 if (count > Constants::max_allowed_vector_size)
                     return ParseResult<Vector<T>> { ParseError::HugeAllocationRequested };
                 entries.resize(count);
-                if (stream.read_entire_buffer({ entries.data(), entries.size() }).is_error())
+                if (stream.read_until_filled({ entries.data(), entries.size() }).is_error())
                     return ParseResult<Vector<T>> { with_eof_check(stream, ParseError::InvalidInput) };
                 break; // Note: We read this all in one go!
             }
@@ -486,7 +486,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         case Instructions::f32_const.value(): {
             // op literal
             LittleEndian<u32> value;
-            if (stream.read_entire_buffer(value.bytes()).is_error())
+            if (stream.read_until_filled(value.bytes()).is_error())
                 return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
 
             auto floating = bit_cast<float>(static_cast<u32>(value));
@@ -496,7 +496,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         case Instructions::f64_const.value(): {
             // op literal
             LittleEndian<u64> value;
-            if (stream.read_entire_buffer(value.bytes()).is_error())
+            if (stream.read_until_filled(value.bytes()).is_error())
                 return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
 
             auto floating = bit_cast<double>(static_cast<u64>(value));
@@ -1276,12 +1276,12 @@ ParseResult<Module> Module::parse(Stream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Module"sv);
     u8 buf[4];
-    if (stream.read_entire_buffer({ buf, 4 }).is_error())
+    if (stream.read_until_filled({ buf, 4 }).is_error())
         return with_eof_check(stream, ParseError::InvalidInput);
     if (Bytes { buf, 4 } != wasm_magic.span())
         return with_eof_check(stream, ParseError::InvalidModuleMagic);
 
-    if (stream.read_entire_buffer({ buf, 4 }).is_error())
+    if (stream.read_until_filled({ buf, 4 }).is_error())
         return with_eof_check(stream, ParseError::InvalidInput);
     if (Bytes { buf, 4 } != wasm_version.span())
         return with_eof_check(stream, ParseError::InvalidModuleVersion);

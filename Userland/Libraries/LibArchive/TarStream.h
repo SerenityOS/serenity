@@ -81,7 +81,7 @@ inline ErrorOr<void> TarInputStream::for_each_extended_header(F func)
 
     auto header_size = TRY(header().size());
     ByteBuffer file_contents_buffer = TRY(ByteBuffer::create_zeroed(header_size));
-    TRY(file_stream.read_entire_buffer(file_contents_buffer));
+    TRY(file_stream.read_until_filled(file_contents_buffer));
 
     StringView file_contents { file_contents_buffer };
 

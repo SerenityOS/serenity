@@ -35,7 +35,7 @@ static ErrorOr<Color> decode_qoi_op_rgb(Stream& stream, u8 first_byte, Color pix
 {
     VERIFY(first_byte == QOI_OP_RGB);
     u8 bytes[3];
-    TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
+    TRY(stream.read_until_filled({ &bytes, array_size(bytes) }));
 
     // The alpha value remains unchanged from the previous pixel.
     return Color { bytes[0], bytes[1], bytes[2], pixel.alpha() };
@@ -45,7 +45,7 @@ static ErrorOr<Color> decode_qoi_op_rgba(Stream& stream, u8 first_byte)
 {
     VERIFY(first_byte == QOI_OP_RGBA);
     u8 bytes[4];
-    TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
+    TRY(stream.read_until_filled({ &bytes, array_size(bytes) }));
     return Color { bytes[0], bytes[1], bytes[2], bytes[3] };
 }
 
@@ -110,7 +110,7 @@ static ErrorOr<u8> decode_qoi_op_run(Stream&, u8 first_byte)
 static ErrorOr<void> decode_qoi_end_marker(Stream& stream)
 {
     u8 bytes[array_size(END_MARKER)];
-    TRY(stream.read_entire_buffer({ &bytes, array_size(bytes) }));
+    TRY(stream.read_until_filled({ &bytes, array_size(bytes) }));
     if (!stream.is_eof())
         return Error::from_string_literal("Invalid QOI image: expected end of stream but more bytes are available");
     if (memcmp(&END_MARKER, &bytes, array_size(bytes)) != 0)

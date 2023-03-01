@@ -490,7 +490,7 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     auto search_engines_file = TRY(Core::File::open(Browser::search_engines_file_path(), Core::File::OpenMode::Read));
     auto file_size = TRY(search_engines_file->size());
     auto buffer = TRY(ByteBuffer::create_uninitialized(file_size));
-    if (!search_engines_file->read_entire_buffer(buffer).is_error()) {
+    if (!search_engines_file->read_until_filled(buffer).is_error()) {
         StringView buffer_contents { buffer.bytes() };
         if (auto json = TRY(JsonValue::from_string(buffer_contents)); json.is_array()) {
             auto json_array = json.as_array();

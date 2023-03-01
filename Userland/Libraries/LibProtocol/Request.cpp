@@ -90,7 +90,7 @@ void Request::set_should_buffer_all_input(bool value)
 
     on_finish = [this](auto success, u32 total_size) {
         auto output_buffer = ByteBuffer::create_uninitialized(m_internal_buffered_data->payload_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
-        m_internal_buffered_data->payload_stream.read_entire_buffer(output_buffer).release_value_but_fixme_should_propagate_errors();
+        m_internal_buffered_data->payload_stream.read_until_filled(output_buffer).release_value_but_fixme_should_propagate_errors();
         on_buffered_request_finish(
             success,
             total_size,

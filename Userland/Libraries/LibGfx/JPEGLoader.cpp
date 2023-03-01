@@ -769,7 +769,7 @@ static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPEGLoadingContext
         return Error::from_string_literal("Duplicate ICC chunk at sequence number");
 
     chunk_state->chunks[index] = TRY(ByteBuffer::create_zeroed(bytes_to_read));
-    TRY(stream.read_entire_buffer(chunk_state->chunks[index]));
+    TRY(stream.read_until_filled(chunk_state->chunks[index]));
 
     chunk_state->seen_number_of_icc_chunks++;
 

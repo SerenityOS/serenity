@@ -171,7 +171,7 @@ ErrorOr<Reply> send_connect_request_message(Core::Socket& socket, Core::SOCKSPro
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send connect request trailer");
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
-    TRY(stream.read_entire_buffer(buffer.bytes()));
+    TRY(stream.read_until_filled(buffer.bytes()));
 
     // FIXME: This should write the entire span.
     size = TRY(socket.write_some({ buffer.data(), buffer.size() }));
@@ -263,7 +263,7 @@ ErrorOr<u8> send_username_password_authentication_message(Core::Socket& socket, 
         return Error::from_string_literal("SOCKS negotiation failed: Failed to send username/password authentication message");
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(stream.used_buffer_size()));
-    TRY(stream.read_entire_buffer(buffer.bytes()));
+    TRY(stream.read_until_filled(buffer.bytes()));
 
     // FIXME: This should write the entire span.
     size = TRY(socket.write_some(buffer));

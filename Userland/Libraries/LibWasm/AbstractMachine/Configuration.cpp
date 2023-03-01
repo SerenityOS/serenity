@@ -89,7 +89,7 @@ void Configuration::dump_stack()
         AllocatingMemoryStream memory_stream;
         Printer { memory_stream }.print(vs...);
         auto buffer = ByteBuffer::create_uninitialized(memory_stream.used_buffer_size()).release_value_but_fixme_should_propagate_errors();
-        memory_stream.read_entire_buffer(buffer).release_value_but_fixme_should_propagate_errors();
+        memory_stream.read_until_filled(buffer).release_value_but_fixme_should_propagate_errors();
         dbgln(format.view(), StringView(buffer).trim_whitespace());
     };
     for (auto const& entry : stack().entries()) {

@@ -11,7 +11,7 @@
 
 namespace AK {
 
-ErrorOr<void> Stream::read_entire_buffer(Bytes buffer)
+ErrorOr<void> Stream::read_until_filled(Bytes buffer)
 {
     size_t nread = 0;
     while (nread < buffer.size()) {

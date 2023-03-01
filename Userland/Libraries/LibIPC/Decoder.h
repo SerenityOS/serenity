@@ -52,7 +52,7 @@ public:
 
     ErrorOr<void> decode_into(Bytes bytes)
     {
-        TRY(m_stream.read_entire_buffer(bytes));
+        TRY(m_stream.read_until_filled(bytes));
         return {};
     }
 
