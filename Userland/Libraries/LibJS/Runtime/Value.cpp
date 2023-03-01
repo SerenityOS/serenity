@@ -664,36 +664,36 @@ static Optional<NumberParseResult> parse_number_text(StringView text)
 }
 
 // 7.1.4.1.1 StringToNumber ( str ), https://tc39.es/ecma262/#sec-stringtonumber
-Optional<Value> string_to_number(StringView string)
+double string_to_number(StringView string)
 {
     // 1. Let text be StringToCodePoints(str).
     DeprecatedString text = Utf8View(string).trim(whitespace_characters, AK::TrimMode::Both).as_string();
 
     // 2. Let literal be ParseText(text, StringNumericLiteral).
     if (text.is_empty())
-        return Value(0);
+        return 0;
     if (text == "Infinity" || text == "+Infinity")
-        return js_infinity();
+        return INFINITY;
     if (text == "-Infinity")
-        return js_negative_infinity();
+        return -INFINITY;
 
     auto result = parse_number_text(text);
 
     // 3. If literal is a List of errors, return NaN.
     if (!result.has_value())
-        return js_nan();
+        return NAN;
 
     // 4. Return StringNumericValue of literal.
     if (result->base != 10) {
         auto bigint = Crypto::UnsignedBigInteger::from_base(result->base, result->literal);
-        return Value(bigint.to_double());
+        return bigint.to_double();
     }
 
     auto maybe_double = text.to_double(AK::TrimWhitespace::No);
     if (!maybe_double.has_value())
-        return js_nan();
+        return NAN;
 
-    return Value(*maybe_double);
+    return *maybe_double;
 }
 
 // 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
