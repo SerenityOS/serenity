@@ -412,7 +412,9 @@ PDFErrorOr<Vector<CFF::Glyph>> CFF::parse_charstrings(Reader&& reader, Vector<By
 PDFErrorOr<Vector<u8>> CFF::parse_encoding(Reader&& reader)
 {
     Vector<u8> encoding_codes;
-    auto format = TRY(reader.try_read<Card8>());
+    auto format_raw = TRY(reader.try_read<Card8>());
+    // TODO: support encoding supplements when highest bit is set
+    auto format = format_raw & 0x7f;
     if (format == 0) {
         auto n_codes = TRY(reader.try_read<Card8>());
         for (u8 i = 0; i < n_codes; i++) {
