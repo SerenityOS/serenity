@@ -11,6 +11,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/String.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <QFont>
 #include <QFontInfo>
@@ -30,6 +31,8 @@ FontPluginQt::FontPluginQt()
 
     Gfx::FontDatabase::set_default_font_query("Katica 10 400 0");
     Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400 0");
+
+    Gfx::Emoji::set_emoji_lookup_path(String::formatted("{}/res/emoji", s_serenity_resource_root).release_value_but_fixme_should_propagate_errors());
 
     update_generic_fonts();
 
