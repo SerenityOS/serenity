@@ -520,10 +520,19 @@ TEST_CASE(dmt_frequency)
 {
     auto* dmt = EDID::DMT::find_timing_by_dmt_id(0x4);
     EXPECT(dmt);
-    static constexpr FixedPoint<16, u32> expected_vertical_frequency(59.940);
-    EXPECT(dmt->vertical_frequency_hz() == expected_vertical_frequency);
-    static constexpr FixedPoint<16, u32> expected_horizontal_frequency(31.469);
-    EXPECT(dmt->horizontal_frequency_khz() == expected_horizontal_frequency);
+
+    // FIXME: Use the FixedPoint(double) ctor like `expected_vertical_frequency(59.940)` instead of
+    //        dividing by 1000 in the next line once FixedPoint::operator/ rounds.
+    //        1. DMT.cpp is built as part of the kernel (despite being in Userland/)
+    //        2. The Kernel can't use floating point
+    //        3. So it has to use FixedPoint(59940) / 1000
+    //        4. The FixedPoint(double) ctor rounds, but FixedPoint::operator/ currently doesn't,
+    //           so FixedPoint(59.940) has a different lowest bit than
+    //           FixedPoint(59940) / 1000. So the test can't use the FixedPoint(double) ctor at the moment.
+    static FixedPoint<16, u32> const expected_vertical_frequency(59940);
+    EXPECT(dmt->vertical_frequency_hz() == expected_vertical_frequency / 1000);
+    static FixedPoint<16, u32> const expected_horizontal_frequency(31469);
+    EXPECT(dmt->horizontal_frequency_khz() == expected_horizontal_frequency / 1000);
 }
 
 TEST_CASE(vic)

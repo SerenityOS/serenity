@@ -36,11 +36,13 @@ public:
     {
     }
 
+#ifndef KERNEL
     template<FloatingPoint F>
-    constexpr FixedPoint(F value)
-        : m_value(static_cast<Underlying>(value * (static_cast<Underlying>(1) << precision)))
+    FixedPoint(F value)
+        : m_value(round_to<Underlying>(value * (static_cast<Underlying>(1) << precision)))
     {
     }
+#endif
 
     template<size_t P, typename U>
     explicit constexpr FixedPoint(FixedPoint<P, U> const& other)
