@@ -105,8 +105,7 @@ class @legacy_constructor_class@;)~~~");
 
     auto generated_forward_path = LexicalPath(output_path).append("Forward.h"sv).string();
     auto generated_forward_file = TRY(Core::File::open(generated_forward_path, Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(generated_forward_file->write_some(generator.as_string_view().bytes()));
+    TRY(generated_forward_file->write_until_depleted(generator.as_string_view().bytes()));
 
     return {};
 }
@@ -209,8 +208,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 
     auto generated_intrinsics_path = LexicalPath(output_path).append("IntrinsicDefinitions.cpp"sv).string();
     auto generated_intrinsics_file = TRY(Core::File::open(generated_intrinsics_path, Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(generated_intrinsics_file->write_some(generator.as_string_view().bytes()));
+    TRY(generated_intrinsics_file->write_until_depleted(generator.as_string_view().bytes()));
 
     return {};
 }
@@ -236,8 +234,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object&);
 
     auto generated_header_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.h", class_name)).string();
     auto generated_header_file = TRY(Core::File::open(generated_header_path, Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(generated_header_file->write_some(generator.as_string_view().bytes()));
+    TRY(generated_header_file->write_until_depleted(generator.as_string_view().bytes()));
 
     return {};
 }
@@ -306,8 +303,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
 
     auto generated_implementation_path = LexicalPath(output_path).append(DeprecatedString::formatted("{}ExposedInterfaces.cpp", class_name)).string();
     auto generated_implementation_file = TRY(Core::File::open(generated_implementation_path, Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(generated_implementation_file->write_some(generator.as_string_view().bytes()));
+    TRY(generated_implementation_file->write_until_depleted(generator.as_string_view().bytes()));
 
     return {};
 }

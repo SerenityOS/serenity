@@ -866,8 +866,7 @@ ReadonlySpan<CaseFolding const*> case_folding_mapping(u32 code_point);
 }
 )~~~");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -1355,8 +1354,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 }
 )~~~");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 

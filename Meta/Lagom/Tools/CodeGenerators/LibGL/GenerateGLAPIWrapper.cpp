@@ -405,8 +405,7 @@ ErrorOr<void> generate_header_file(JsonObject& api_data, Core::File& file)
     generator.appendln("}");
     generator.appendln("#endif");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -530,8 +529,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& api_data, Core::File& fil
         }
     });
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 
