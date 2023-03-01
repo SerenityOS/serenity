@@ -72,6 +72,16 @@ TEST_CASE(rounding)
     EXPECT_EQ(Type(-1.5).lfloor(), -2);
     EXPECT_EQ(Type(-1.5).lceil(), -1);
     EXPECT_EQ(Type(-1.5).ltrunk(), -1);
+
+    // Check that sRGB TRC curve parameters match the s15fixed16 values stored in Gimp's built-in profile.
+    // (This only requires that the FixedPoint<> constructor rounds before truncating to the fixed-point value,
+    // as it should anyways.)
+    using S15Fixed16 = FixedPoint<16, i32>;
+    EXPECT_EQ(S15Fixed16(2.4).raw(), 0x26666);
+    EXPECT_EQ(S15Fixed16(1 / 1.055).raw(), 0xf2a7);
+    EXPECT_EQ(S15Fixed16(0.055 / 1.055).raw(), 0xd59);
+    EXPECT_EQ(S15Fixed16(1 / 12.92).raw(), 0x13d0);
+    EXPECT_EQ(S15Fixed16(0.04045).raw(), 0xa5b);
 }
 
 TEST_CASE(logarithm)
@@ -115,7 +125,7 @@ TEST_CASE(cast)
 {
     FixedPoint<16, u32> downcast_value1(FixedPoint<32, u64>(123.4567));
     EXPECT((double)downcast_value1 >= 123.4566 && (double)downcast_value1 <= 123.4568);
-    static constexpr FixedPoint<32, u64> value1(321.7654);
+    static FixedPoint<32, u64> const value1(321.7654);
     downcast_value1 = value1;
     EXPECT((double)downcast_value1 >= 321.7653 && (double)downcast_value1 <= 321.7655);
     FixedPoint<6, u32> downcast_value2(FixedPoint<32, u64>(4567.123456));
@@ -150,12 +160,12 @@ TEST_CASE(formatter)
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<4>(123.456)), "123.4375"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<4>(-123.456)), "-123.4375"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16> {}), "0"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.1)), "0.09999"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.02)), "0.019989"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.003)), "0.00299"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.1)), "0.100006"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.02)), "0.020004"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.003)), "0.003005"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.0004)), "0.000396"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(0.0000000005)), "0"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.1)), "-0.099991"sv);
-    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.02)), "-0.01999"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.1)), "-0.100007"sv);
+    EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.02)), "-0.020005"sv);
     EXPECT_EQ(DeprecatedString::formatted("{}", FixedPoint<16>(-0.0000000005)), "0"sv);
 }
