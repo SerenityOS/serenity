@@ -20,7 +20,7 @@ public:
 
     virtual ~EditEventHandler() = default;
 
-    virtual void handle_delete_character_after(const DOM::Position&);
+    virtual void handle_delete_character_after(DOM::Position const&);
     virtual void handle_delete(DOM::Range&);
     virtual void handle_insert(DOM::Position, u32 code_point);
 
