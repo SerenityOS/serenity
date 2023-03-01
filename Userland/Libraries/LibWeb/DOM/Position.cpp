@@ -6,6 +6,7 @@
  */
 
 #include <AK/Utf8View.h>
+#include <LibUnicode/Segmentation.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/DOM/Text.h>
@@ -33,38 +34,30 @@ bool Position::increment_offset()
     auto& node = verify_cast<DOM::Text>(*m_node);
     auto text = Utf8View(node.data());
 
-    for (auto iterator = text.begin(); !iterator.done(); ++iterator) {
-        if (text.byte_offset_of(iterator) >= m_offset) {
-            // NOTE: If the current offset is inside a multi-byte code point, it will be moved to the start of the next code point.
-            m_offset = text.byte_offset_of(++iterator);
-            return true;
-        }
+    if (auto offset = Unicode::next_grapheme_segmentation_boundary(text, m_offset); offset.has_value()) {
+        m_offset = *offset;
+        return true;
     }
+
     // NOTE: Already at end of current node.
     return false;
 }
 
 bool Position::decrement_offset()
 {
-    if (m_offset == 0 || !is<DOM::Text>(*m_node))
+    if (!is<DOM::Text>(*m_node))
         return false;
 
     auto& node = verify_cast<DOM::Text>(*m_node);
     auto text = Utf8View(node.data());
 
-    size_t last_smaller_offset = 0;
-
-    for (auto iterator = text.begin(); !iterator.done(); ++iterator) {
-        auto byte_offset = text.byte_offset_of(iterator);
-        if (byte_offset >= m_offset) {
-            break;
-        }
-        last_smaller_offset = text.byte_offset_of(iterator);
+    if (auto offset = Unicode::previous_grapheme_segmentation_boundary(text, m_offset); offset.has_value()) {
+        m_offset = *offset;
+        return true;
     }
 
-    // NOTE: If the current offset is inside a multi-byte code point, it will be moved to the start of that code point.
-    m_offset = last_smaller_offset;
-    return true;
+    // NOTE: Already at beginning of current node.
+    return false;
 }
 
 bool Position::offset_is_at_end_of_node() const
