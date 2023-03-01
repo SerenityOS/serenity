@@ -1807,7 +1807,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_config
                 return maybe_error.release_error();
 
             auto file = TRY(Core::File::open(absolute_config_file_path, Core::File::OpenMode::Write));
-            TRY(file->write_entire_buffer(
+            TRY(file->write_until_depleted(
                 "{\n"
                 "    \"build_command\": \"your build command here\",\n"
                 "    \"run_command\": \"your run command here\"\n"

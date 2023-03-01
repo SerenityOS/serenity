@@ -96,17 +96,17 @@ TEST_CASE(test_TLS_hello_handshake)
         loop.quit(0);
     };
 
-    if (tls->write_entire_buffer("GET / HTTP/1.1\r\nHost: "_b).is_error()) {
+    if (tls->write_until_depleted("GET / HTTP/1.1\r\nHost: "_b).is_error()) {
         FAIL("write(0) failed");
         return;
     }
 
     auto the_server = DEFAULT_SERVER;
-    if (tls->write_entire_buffer(the_server.bytes()).is_error()) {
+    if (tls->write_until_depleted(the_server.bytes()).is_error()) {
         FAIL("write(1) failed");
         return;
     }
-    if (tls->write_entire_buffer("\r\nConnection : close\r\n\r\n"_b).is_error()) {
+    if (tls->write_until_depleted("\r\nConnection : close\r\n\r\n"_b).is_error()) {
         FAIL("write(2) failed");
         return;
     }

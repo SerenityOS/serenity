@@ -145,7 +145,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (!dump_out_path.is_empty()) {
             auto output_stream = TRY(Core::File::open(dump_out_path, Core::File::OpenMode::Write));
-            TRY(output_stream->write_entire_buffer(icc_bytes));
+            TRY(output_stream->write_until_depleted(icc_bytes));
         }
         return Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_bytes);
     }());
@@ -153,7 +153,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!reencode_out_path.is_empty()) {
         auto reencoded_bytes = TRY(Gfx::ICC::encode(profile));
         auto output_stream = TRY(Core::File::open(reencode_out_path, Core::File::OpenMode::Write));
-        TRY(output_stream->write_entire_buffer(reencoded_bytes));
+        TRY(output_stream->write_until_depleted(reencoded_bytes));
     }
 
     bool do_print = (dump_out_path.is_empty() && reencode_out_path.is_empty()) || force_print;

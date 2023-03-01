@@ -18,7 +18,7 @@ static ErrorOr<void> decompress_file(NonnullOwnPtr<Core::File> input_stream, Str
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!gzip_stream.is_eof()) {
         auto span = TRY(gzip_stream.read_some(buffer));
-        TRY(output_stream.write_entire_buffer(span));
+        TRY(output_stream.write_until_depleted(span));
     }
 
     return {};

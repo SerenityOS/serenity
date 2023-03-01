@@ -238,7 +238,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
             TRY(decoder.enter());
 
             builder.append('\n');
-            TRY(stream.write_entire_buffer(builder.string_view().bytes()));
+            TRY(stream.write_until_depleted(builder.string_view().bytes()));
 
             TRY(pretty_print(decoder, stream, indent + 2));
 
@@ -314,7 +314,7 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
         }
 
         builder.append('\n');
-        TRY(stream.write_entire_buffer(builder.string_view().bytes()));
+        TRY(stream.write_until_depleted(builder.string_view().bytes()));
     }
 
     return {};

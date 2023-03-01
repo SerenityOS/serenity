@@ -135,7 +135,7 @@ ErrorOr<void> ProjectBuilder::initialize_build_directory()
         MUST(Core::DeprecatedFile::remove(cmake_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
 
     auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Write));
-    TRY(cmake_file->write_entire_buffer(generate_cmake_file_content().bytes()));
+    TRY(cmake_file->write_until_depleted(generate_cmake_file_content().bytes()));
 
     TRY(m_terminal->run_command(DeprecatedString::formatted("cmake -S {} -DHACKSTUDIO_BUILD=ON -DHACKSTUDIO_BUILD_CMAKE_FILE={}"
                                                             " -DENABLE_UNICODE_DATABASE_DOWNLOAD=OFF",

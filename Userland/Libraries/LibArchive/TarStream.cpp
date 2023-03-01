@@ -154,9 +154,9 @@ ErrorOr<void> TarOutputStream::add_directory(StringView path, mode_t mode)
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     TRY(header.calculate_checksum());
-    TRY(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
+    TRY(m_stream->write_until_depleted(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
-    TRY(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
+    TRY(m_stream->write_until_depleted(Bytes { &padding, block_size - sizeof(header) }));
     return {};
 }
 
@@ -171,14 +171,14 @@ ErrorOr<void> TarOutputStream::add_file(StringView path, mode_t mode, ReadonlyBy
     header.set_magic(gnu_magic);
     header.set_version(gnu_version);
     TRY(header.calculate_checksum());
-    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &header, sizeof(header) }));
+    TRY(m_stream->write_until_depleted(ReadonlyBytes { &header, sizeof(header) }));
     constexpr Array<u8, block_size> padding { 0 };
-    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - sizeof(header) }));
+    TRY(m_stream->write_until_depleted(ReadonlyBytes { &padding, block_size - sizeof(header) }));
     size_t n_written = 0;
     while (n_written < bytes.size()) {
         n_written += MUST(m_stream->write_some(bytes.slice(n_written, min(bytes.size() - n_written, block_size))));
     }
-    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
+    TRY(m_stream->write_until_depleted(ReadonlyBytes { &padding, block_size - (n_written % block_size) }));
     return {};
 }
 
@@ -194,9 +194,9 @@ ErrorOr<void> TarOutputStream::add_link(StringView path, mode_t mode, StringView
     header.set_version(gnu_version);
     header.set_link_name(link_name);
     TRY(header.calculate_checksum());
-    TRY(m_stream->write_entire_buffer(Bytes { &header, sizeof(header) }));
+    TRY(m_stream->write_until_depleted(Bytes { &header, sizeof(header) }));
     u8 padding[block_size] = { 0 };
-    TRY(m_stream->write_entire_buffer(Bytes { &padding, block_size - sizeof(header) }));
+    TRY(m_stream->write_until_depleted(Bytes { &padding, block_size - sizeof(header) }));
     return {};
 }
 
@@ -205,8 +205,8 @@ ErrorOr<void> TarOutputStream::finish()
     VERIFY(!m_finished);
     constexpr Array<u8, block_size> padding { 0 };
     // 2 empty records that are used to signify the end of the archive.
-    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
-    TRY(m_stream->write_entire_buffer(ReadonlyBytes { &padding, block_size }));
+    TRY(m_stream->write_until_depleted(ReadonlyBytes { &padding, block_size }));
+    TRY(m_stream->write_until_depleted(ReadonlyBytes { &padding, block_size }));
     m_finished = true;
     return {};
 }

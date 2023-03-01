@@ -1823,7 +1823,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
                     break;
 
                 should_enable_notifier = true;
-                stream.write_entire_buffer({ buffer, (size_t)read_size }).release_value_but_fixme_should_propagate_errors();
+                stream.write_until_depleted({ buffer, (size_t)read_size }).release_value_but_fixme_should_propagate_errors();
             }
 
             loop.quit(NothingLeft);

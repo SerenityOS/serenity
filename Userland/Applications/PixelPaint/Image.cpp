@@ -177,7 +177,7 @@ ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Stream> stream, bool prese
     auto bitmap = TRY(compose_bitmap(bitmap_format));
 
     auto encoded_data = TRY(Gfx::BMPWriter::encode(*bitmap));
-    TRY(stream->write_entire_buffer(encoded_data));
+    TRY(stream->write_until_depleted(encoded_data));
     return {};
 }
 
@@ -187,7 +187,7 @@ ErrorOr<void> Image::export_png_to_file(NonnullOwnPtr<Stream> stream, bool prese
     auto bitmap = TRY(compose_bitmap(bitmap_format));
 
     auto encoded_data = TRY(Gfx::PNGWriter::encode(*bitmap));
-    TRY(stream->write_entire_buffer(encoded_data));
+    TRY(stream->write_until_depleted(encoded_data));
     return {};
 }
 
@@ -196,7 +196,7 @@ ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Stream> stream) const
     auto bitmap = TRY(compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
     auto encoded_data = TRY(Gfx::QOIWriter::encode(bitmap));
-    TRY(stream->write_entire_buffer(encoded_data));
+    TRY(stream->write_until_depleted(encoded_data));
     return {};
 }
 

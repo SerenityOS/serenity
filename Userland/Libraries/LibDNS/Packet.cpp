@@ -67,7 +67,7 @@ ErrorOr<ByteBuffer> Packet::to_byte_buffer() const
             TRY(stream.write_value(name));
         } else {
             TRY(stream.write_value(htons(answer.record_data().length())));
-            TRY(stream.write_entire_buffer(answer.record_data().bytes()));
+            TRY(stream.write_until_depleted(answer.record_data().bytes()));
         }
     }
 

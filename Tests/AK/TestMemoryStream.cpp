@@ -29,7 +29,7 @@ TEST_CASE(allocating_memory_stream_empty)
 TEST_CASE(allocating_memory_stream_offset_of)
 {
     AllocatingMemoryStream stream;
-    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
+    MUST(stream.write_until_depleted("Well Hello Friends! :^)"sv.bytes()));
 
     {
         auto offset = MUST(stream.offset_of(" "sv.bytes()));
@@ -79,12 +79,12 @@ TEST_CASE(allocating_memory_stream_offset_of_oob)
 
     // First, fill exactly one chunk.
     for (size_t i = 0; i < 256; ++i)
-        MUST(stream.write_entire_buffer("AAAAAAAAAAAAAAAA"sv.bytes()));
+        MUST(stream.write_until_depleted("AAAAAAAAAAAAAAAA"sv.bytes()));
 
     // Then discard it all.
     MUST(stream.discard(4096));
     // Now we can write into this chunk again, knowing that it's initialized to all 'A's.
-    MUST(stream.write_entire_buffer("Well Hello Friends! :^)"sv.bytes()));
+    MUST(stream.write_until_depleted("Well Hello Friends! :^)"sv.bytes()));
 
     {
         auto offset = MUST(stream.offset_of("A"sv.bytes()));

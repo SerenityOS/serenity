@@ -42,7 +42,7 @@ static ErrorOr<void> save_text_to_file(StringView filename, DeprecatedString tex
     auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Write));
 
     if (!text.is_empty())
-        TRY(file->write_entire_buffer(text.bytes()));
+        TRY(file->write_until_depleted(text.bytes()));
 
     return {};
 }

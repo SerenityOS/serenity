@@ -175,7 +175,7 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!gzip_stream->is_eof()) {
         auto const data = TRY(gzip_stream->read_some(buffer));
-        TRY(output_stream.write_entire_buffer(data));
+        TRY(output_stream.write_until_depleted(data));
     }
 
     auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
@@ -210,16 +210,16 @@ ErrorOr<size_t> GzipCompressor::write_some(ReadonlyBytes bytes)
     header.modification_time = 0;
     header.extra_flags = 3;      // DEFLATE sets 2 for maximum compression and 4 for minimum compression
     header.operating_system = 3; // unix
-    TRY(m_output_stream->write_entire_buffer({ &header, sizeof(header) }));
+    TRY(m_output_stream->write_until_depleted({ &header, sizeof(header) }));
     auto compressed_stream = TRY(DeflateCompressor::construct(MaybeOwned(*m_output_stream)));
-    TRY(compressed_stream->write_entire_buffer(bytes));
+    TRY(compressed_stream->write_until_depleted(bytes));
     TRY(compressed_stream->final_flush());
     Crypto::Checksum::CRC32 crc32;
     crc32.update(bytes);
     LittleEndian<u32> digest = crc32.digest();
     LittleEndian<u32> size = bytes.size();
-    TRY(m_output_stream->write_entire_buffer(digest.bytes()));
-    TRY(m_output_stream->write_entire_buffer(size.bytes()));
+    TRY(m_output_stream->write_until_depleted(digest.bytes()));
+    TRY(m_output_stream->write_until_depleted(size.bytes()));
     return bytes.size();
 }
 
@@ -242,7 +242,7 @@ ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
     auto output_stream = TRY(try_make<AllocatingMemoryStream>());
     GzipCompressor gzip_stream { MaybeOwned<Stream>(*output_stream) };
 
-    TRY(gzip_stream.write_entire_buffer(bytes));
+    TRY(gzip_stream.write_until_depleted(bytes));
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
     TRY(output_stream->read_until_filled(buffer.bytes()));

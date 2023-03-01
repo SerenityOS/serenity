@@ -44,7 +44,7 @@ public:
     virtual ErrorOr<size_t> write_some(ReadonlyBytes) = 0;
     /// Same as write, but does not return until either the entire buffer
     /// contents are written or an error occurs.
-    virtual ErrorOr<void> write_entire_buffer(ReadonlyBytes);
+    virtual ErrorOr<void> write_until_depleted(ReadonlyBytes);
 
     template<typename T>
     requires(requires(Stream& stream) { { T::read_from_stream(stream) } -> SameAs<ErrorOr<T>>; })
@@ -73,7 +73,7 @@ public:
     requires(Traits<T>::is_trivially_serializable())
     ErrorOr<void> write_value(T const& value)
     {
-        return write_entire_buffer({ &value, sizeof(value) });
+        return write_until_depleted({ &value, sizeof(value) });
     }
 
     /// Returns whether the stream has reached the end of file. For sockets,

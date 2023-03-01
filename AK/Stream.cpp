@@ -78,7 +78,7 @@ ErrorOr<void> Stream::discard(size_t discarded_bytes)
     return {};
 }
 
-ErrorOr<void> Stream::write_entire_buffer(ReadonlyBytes buffer)
+ErrorOr<void> Stream::write_until_depleted(ReadonlyBytes buffer)
 {
     size_t nwritten = 0;
     while (nwritten < buffer.size()) {

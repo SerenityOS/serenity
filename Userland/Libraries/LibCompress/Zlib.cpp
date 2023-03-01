@@ -168,7 +168,7 @@ ErrorOr<ByteBuffer> ZlibCompressor::compress_all(ReadonlyBytes bytes, ZlibCompre
     auto output_stream = TRY(try_make<AllocatingMemoryStream>());
     auto zlib_stream = TRY(ZlibCompressor::construct(MaybeOwned<Stream>(*output_stream), compression_level));
 
-    TRY(zlib_stream->write_entire_buffer(bytes));
+    TRY(zlib_stream->write_until_depleted(bytes));
 
     TRY(zlib_stream->finish());
 

@@ -249,7 +249,7 @@ ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_
         MUST(stream.write_value<u64>(entry.inode.index().value()));
         MUST(stream.write_value(m_inode->fs().internal_file_type_to_directory_entry_type(entry)));
         MUST(stream.write_value<u32>(entry.name.length()));
-        MUST(stream.write_entire_buffer(entry.name.bytes()));
+        MUST(stream.write_until_depleted(entry.name.bytes()));
         return {};
     });
 

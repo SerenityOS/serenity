@@ -325,7 +325,7 @@ ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (!deflate_stream->is_eof()) {
         auto const slice = TRY(deflate_stream->read_some(buffer));
-        TRY(output_stream.write_entire_buffer(slice));
+        TRY(output_stream.write_until_depleted(slice));
     }
 
     auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
@@ -929,10 +929,10 @@ ErrorOr<void> DeflateCompressor::flush()
         TRY(m_output_stream->write_bits(0b00u, 2)); // no compression
         TRY(m_output_stream->align_to_byte_boundary());
         LittleEndian<u16> len = m_pending_block_size;
-        TRY(m_output_stream->write_entire_buffer(len.bytes()));
+        TRY(m_output_stream->write_until_depleted(len.bytes()));
         LittleEndian<u16> nlen = ~m_pending_block_size;
-        TRY(m_output_stream->write_entire_buffer(nlen.bytes()));
-        TRY(m_output_stream->write_entire_buffer(pending_block().slice(0, m_pending_block_size)));
+        TRY(m_output_stream->write_until_depleted(nlen.bytes()));
+        TRY(m_output_stream->write_until_depleted(pending_block().slice(0, m_pending_block_size)));
         return {};
     };
 
@@ -1023,7 +1023,7 @@ ErrorOr<ByteBuffer> DeflateCompressor::compress_all(ReadonlyBytes bytes, Compres
     auto output_stream = TRY(try_make<AllocatingMemoryStream>());
     auto deflate_stream = TRY(DeflateCompressor::construct(MaybeOwned<Stream>(*output_stream), compression_level));
 
-    TRY(deflate_stream->write_entire_buffer(bytes));
+    TRY(deflate_stream->write_until_depleted(bytes));
     TRY(deflate_stream->final_flush());
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));

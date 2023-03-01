@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             output_bytes = TRY(Compress::GzipCompressor::compress_all(input_bytes));
 
         auto output_stream = write_to_stdout ? TRY(Core::File::standard_output()) : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));
-        TRY(output_stream->write_entire_buffer(output_bytes));
+        TRY(output_stream->write_until_depleted(output_bytes));
 
         if (!keep_input_files) {
             TRY(Core::System::unlink(input_filename));

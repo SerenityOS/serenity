@@ -60,10 +60,10 @@ struct [[gnu::packed]] EndOfCentralDirectory {
     ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
-            return stream.write_entire_buffer({ &value, sizeof(value) });
+            return stream.write_until_depleted({ &value, sizeof(value) });
         };
 
-        TRY(stream.write_entire_buffer(signature));
+        TRY(stream.write_until_depleted(signature));
         TRY(write_value(disk_number));
         TRY(write_value(central_directory_start_disk));
         TRY(write_value(disk_records_count));
@@ -72,7 +72,7 @@ struct [[gnu::packed]] EndOfCentralDirectory {
         TRY(write_value(central_directory_offset));
         TRY(write_value(comment_length));
         if (comment_length > 0)
-            TRY(stream.write_entire_buffer({ comment, comment_length }));
+            TRY(stream.write_until_depleted({ comment, comment_length }));
         return {};
     }
 };
@@ -146,10 +146,10 @@ struct [[gnu::packed]] CentralDirectoryRecord {
     ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
-            return stream.write_entire_buffer({ &value, sizeof(value) });
+            return stream.write_until_depleted({ &value, sizeof(value) });
         };
 
-        TRY(stream.write_entire_buffer(signature));
+        TRY(stream.write_until_depleted(signature));
         TRY(write_value(made_by_version));
         TRY(write_value(minimum_version));
         TRY(write_value(general_purpose_flags.flags));
@@ -167,11 +167,11 @@ struct [[gnu::packed]] CentralDirectoryRecord {
         TRY(write_value(external_attributes));
         TRY(write_value(local_file_header_offset));
         if (name_length > 0)
-            TRY(stream.write_entire_buffer({ name, name_length }));
+            TRY(stream.write_until_depleted({ name, name_length }));
         if (extra_data_length > 0)
-            TRY(stream.write_entire_buffer({ extra_data, extra_data_length }));
+            TRY(stream.write_until_depleted({ extra_data, extra_data_length }));
         if (comment_length > 0)
-            TRY(stream.write_entire_buffer({ comment, comment_length }));
+            TRY(stream.write_until_depleted({ comment, comment_length }));
         return {};
     }
 
@@ -215,10 +215,10 @@ struct [[gnu::packed]] LocalFileHeader {
     ErrorOr<void> write(Stream& stream) const
     {
         auto write_value = [&stream](auto value) {
-            return stream.write_entire_buffer({ &value, sizeof(value) });
+            return stream.write_until_depleted({ &value, sizeof(value) });
         };
 
-        TRY(stream.write_entire_buffer(signature));
+        TRY(stream.write_until_depleted(signature));
         TRY(write_value(minimum_version));
         TRY(write_value(general_purpose_flags.flags));
         TRY(write_value(compression_method));
@@ -230,11 +230,11 @@ struct [[gnu::packed]] LocalFileHeader {
         TRY(write_value(name_length));
         TRY(write_value(extra_data_length));
         if (name_length > 0)
-            TRY(stream.write_entire_buffer({ name, name_length }));
+            TRY(stream.write_until_depleted({ name, name_length }));
         if (extra_data_length > 0)
-            TRY(stream.write_entire_buffer({ extra_data, extra_data_length }));
+            TRY(stream.write_until_depleted({ extra_data, extra_data_length }));
         if (compressed_size > 0)
-            TRY(stream.write_entire_buffer({ compressed_data, compressed_size }));
+            TRY(stream.write_until_depleted({ compressed_data, compressed_size }));
         return {};
     }
 };

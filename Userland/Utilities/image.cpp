@@ -56,7 +56,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
-    TRY(output_stream->write_entire_buffer(bytes));
+    TRY(output_stream->write_until_depleted(bytes));
 
     return 0;
 }

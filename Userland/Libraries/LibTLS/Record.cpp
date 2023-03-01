@@ -146,9 +146,9 @@ void TLSv12::update_packet(ByteBuffer& packet)
                         u64 seq_no = AK::convert_between_host_and_network_endian(m_context.local_sequence_number);
                         u16 len = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
 
-                        MUST(aad_stream.write_value(seq_no));                             // sequence number
-                        MUST(aad_stream.write_entire_buffer(packet.bytes().slice(0, 3))); // content-type + version
-                        MUST(aad_stream.write_value(len));                                // length
+                        MUST(aad_stream.write_value(seq_no));                              // sequence number
+                        MUST(aad_stream.write_until_depleted(packet.bytes().slice(0, 3))); // content-type + version
+                        MUST(aad_stream.write_value(len));                                 // length
                         VERIFY(MUST(aad_stream.tell()) == MUST(aad_stream.size()));
 
                         // AEAD IV (12)
@@ -387,9 +387,9 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 u64 seq_no = AK::convert_between_host_and_network_endian(m_context.remote_sequence_number);
                 u16 len = AK::convert_between_host_and_network_endian((u16)packet_length);
 
-                MUST(aad_stream.write_value(seq_no));                                   // sequence number
-                MUST(aad_stream.write_entire_buffer(buffer.slice(0, header_size - 2))); // content-type + version
-                MUST(aad_stream.write_value(len));                                      // length
+                MUST(aad_stream.write_value(seq_no));                                    // sequence number
+                MUST(aad_stream.write_until_depleted(buffer.slice(0, header_size - 2))); // content-type + version
+                MUST(aad_stream.write_value(len));                                       // length
                 VERIFY(MUST(aad_stream.tell()) == MUST(aad_stream.size()));
 
                 auto nonce = payload.slice(0, iv_length());

@@ -509,7 +509,7 @@ void Emulator::emit_profile_sample(Stream& output)
     builder.appendff(R"~(, {{"type": "sample", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [)~", getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000);
     builder.join(',', raw_backtrace());
     builder.append("]}\n"sv);
-    output.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
+    output.write_until_depleted(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
 void Emulator::emit_profile_event(Stream& output, StringView event_name, DeprecatedString const& contents)
@@ -519,7 +519,7 @@ void Emulator::emit_profile_event(Stream& output, StringView event_name, Depreca
     gettimeofday(&tv, nullptr);
     builder.appendff(R"~(, {{"type": "{}", "pid": {}, "tid": {}, "timestamp": {}, "lost_samples": 0, "stack": [], {}}})~", event_name, getpid(), gettid(), tv.tv_sec * 1000 + tv.tv_usec / 1000, contents);
     builder.append('\n');
-    output.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
+    output.write_until_depleted(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
 }
 
 DeprecatedString Emulator::create_instruction_line(FlatPtr address, X86::Instruction const& insn)

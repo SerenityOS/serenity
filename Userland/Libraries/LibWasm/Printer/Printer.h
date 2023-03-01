@@ -68,7 +68,7 @@ private:
     {
         StringBuilder builder;
         builder.appendff(fmt.view(), forward<Args>(args)...);
-        m_stream.write_entire_buffer(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
+        m_stream.write_until_depleted(builder.string_view().bytes()).release_value_but_fixme_should_propagate_errors();
     }
 
     Stream& m_stream;
