@@ -225,10 +225,8 @@ ErrorOr<Bytes> DeflateDecompressor::read_some(Bytes bytes)
             if (block_type == 0b00) {
                 m_input_stream->align_to_byte_boundary();
 
-                // FIXME: This should read the entire span.
-                LittleEndian<u16> length, negated_length;
-                TRY(m_input_stream->read_some(length.bytes()));
-                TRY(m_input_stream->read_some(negated_length.bytes()));
+                u16 length = TRY(m_input_stream->read_value<LittleEndian<u16>>());
+                u16 negated_length = TRY(m_input_stream->read_value<LittleEndian<u16>>());
 
                 if ((length ^ 0xffff) != negated_length)
                     return Error::from_string_literal("Calculated negated length does not equal stored negated length");

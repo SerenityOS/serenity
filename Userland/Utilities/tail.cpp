@@ -34,10 +34,8 @@ static ErrorOr<off_t> find_seek_pos(Core::File& file, int wanted_lines)
 
         if (file.is_eof())
             break;
-        Array<u8, 1> buffer;
-        // FIXME: This should read the entire span.
-        auto ch = TRY(file.read_some(buffer));
-        if (*ch.data() == '\n' && (end - pos) > 1) {
+        auto ch = TRY(file.read_value<u8>());
+        if (ch == '\n' && (end - pos) > 1) {
             lines++;
             if (lines == wanted_lines)
                 break;

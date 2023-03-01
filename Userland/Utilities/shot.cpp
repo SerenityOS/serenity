@@ -167,8 +167,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto& file = *file_or_error.value();
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(encoded_bitmap.bytes()));
+    TRY(file.write_until_depleted(encoded_bitmap.bytes()));
 
     if (edit_image)
         TRY(Core::Process::spawn("/bin/PixelPaint"sv, Array { output_path }));

@@ -40,8 +40,7 @@ ErrorOr<void> Client::drain_socket()
             break;
         }
 
-        // FIXME: This should write the entire span.
-        TRY(m_socket->write_some(bytes_read));
+        TRY(m_socket->write_until_depleted(bytes_read));
     }
 
     return {};

@@ -188,8 +188,7 @@ static ErrorOr<void> write_to_file(String const& path)
     for (size_t i = 0; i < g_repl_statements.size(); i++) {
         auto line = g_repl_statements[i].bytes();
         if (line.size() > 0 && i != g_repl_statements.size() - 1) {
-            // FIXME: This should write the entire span.
-            TRY(file->write_some(line));
+            TRY(file->write_until_depleted(line));
         }
         if (i != g_repl_statements.size() - 1) {
             TRY(file->write_value('\n'));

@@ -191,8 +191,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
     // Write to file.
     DeprecatedString file_content = map_json.to_deprecated_string();
     auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(file->write_some(file_content.bytes()));
+    TRY(file->write_until_depleted(file_content.bytes()));
     file->close();
 
     window()->set_modified(false);

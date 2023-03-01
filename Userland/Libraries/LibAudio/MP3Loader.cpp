@@ -233,9 +233,7 @@ ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_frame_data(MP3::Header
 
     size_t old_reservoir_size = m_bit_reservoir.used_buffer_size();
     LOADER_TRY(m_bitstream->read_until_filled(buffer));
-    // FIXME: This should write the entire span.
-    if (LOADER_TRY(m_bit_reservoir.write_some(buffer)) != header.slot_count)
-        return LoaderError { LoaderError::Category::IO, m_loaded_samples, "Could not write frame into bit reservoir." };
+    LOADER_TRY(m_bit_reservoir.write_until_depleted(buffer));
 
     // If we don't have enough data in the reservoir to process this frame, skip it (but keep the data).
     if (old_reservoir_size < static_cast<size_t>(frame.main_data_begin))

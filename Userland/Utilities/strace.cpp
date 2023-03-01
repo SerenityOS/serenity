@@ -932,7 +932,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         FormattedSyscallBuilder builder(syscall_name);
         TRY(format_syscall(builder, syscall_function, arg1, arg2, arg3, res));
 
-        // FIXME: This should write the entire span.
-        TRY(trace_file->write_some(builder.string_view().bytes()));
+        TRY(trace_file->write_until_depleted(builder.string_view().bytes()));
     }
 }

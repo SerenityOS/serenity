@@ -50,8 +50,7 @@ ErrorOr<void> DomainListModel::save()
         TRY(builder.try_appendff("{}\n", domain));
 
     auto file = TRY(Core::File::open(filter_list_file_path(), Core::File::OpenMode::Write));
-    // FIXME: This should write the entire span.
-    TRY(file->write_some(TRY(builder.to_byte_buffer()).bytes()));
+    TRY(file->write_until_depleted(TRY(builder.to_byte_buffer()).bytes()));
     return {};
 }
 

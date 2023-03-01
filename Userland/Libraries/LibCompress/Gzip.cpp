@@ -75,10 +75,8 @@ ErrorOr<Bytes> GzipDecompressor::read_some(Bytes bytes)
             current_member().m_nread += current_slice.size();
 
             if (current_slice.size() < slice.size()) {
-                // FIXME: This should read the entire span.
-                LittleEndian<u32> crc32, input_size;
-                TRY(m_input_stream->read_some(crc32.bytes()));
-                TRY(m_input_stream->read_some(input_size.bytes()));
+                u32 crc32 = TRY(m_input_stream->read_value<LittleEndian<u32>>());
+                u32 input_size = TRY(m_input_stream->read_value<LittleEndian<u32>>());
 
                 if (crc32 != current_member().m_checksum.digest())
                     return Error::from_string_literal("Stored CRC32 does not match the calculated CRC32 of the current member");
@@ -116,18 +114,16 @@ ErrorOr<Bytes> GzipDecompressor::read_some(Bytes bytes)
                 return Error::from_string_literal("Header is not supported by implementation");
 
             if (header.flags & Flags::FEXTRA) {
-                // FIXME: This should read the entire span.
-                LittleEndian<u16> subfield_id, length;
-                TRY(m_input_stream->read_some(subfield_id.bytes()));
-                TRY(m_input_stream->read_some(length.bytes()));
+                u16 subfield_id = TRY(m_input_stream->read_value<LittleEndian<u16>>());
+                u16 length = TRY(m_input_stream->read_value<LittleEndian<u16>>());
                 TRY(m_input_stream->discard(length));
+                (void)subfield_id;
             }
 
             auto discard_string = [&]() -> ErrorOr<void> {
                 char next_char;
                 do {
-                    // FIXME: This should read the entire span.
-                    TRY(m_input_stream->read_some({ &next_char, sizeof(next_char) }));
+                    next_char = TRY(m_input_stream->read_value<char>());
                 } while (next_char);
 
                 return {};
@@ -140,10 +136,9 @@ ErrorOr<Bytes> GzipDecompressor::read_some(Bytes bytes)
                 TRY(discard_string());
 
             if (header.flags & Flags::FHCRC) {
-                // FIXME: This should read the entire span.
-                LittleEndian<u16> crc16;
-                TRY(m_input_stream->read_some(crc16.bytes()));
+                u16 crc = TRY(m_input_stream->read_value<LittleEndian<u16>>());
                 // FIXME: we should probably verify this instead of just assuming it matches
+                (void)crc;
             }
 
             m_current_member = TRY(Member::construct(header, *m_input_stream));

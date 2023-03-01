@@ -26,9 +26,8 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::LocalSocke
     MUST(m_socket->set_blocking(true));
 
     m_socket->on_ready_to_read = [this] {
-        char c;
-        // FIXME: This should read the entire span.
-        [[maybe_unused]] auto buffer = m_socket->read_some({ &c, 1 });
+        [[maybe_unused]] auto c = m_socket->read_value<char>().release_value_but_fixme_should_propagate_errors();
+
         if (m_socket->is_eof()) {
             Core::deferred_invoke([pid = this->m_pid] { g_processes.remove(pid); });
             return;
@@ -44,14 +43,7 @@ DeprecatedString InspectableProcess::wait_for_response()
         return {};
     }
 
-    u32 length {};
-    // FIXME: This should read the entire span.
-    auto length_bytes_read = m_socket->read_some({ (u8*)&length, sizeof(length) }).release_value_but_fixme_should_propagate_errors();
-    if (length_bytes_read.size() != sizeof(length)) {
-        dbgln("InspectableProcess got malformed data: PID {}", m_pid);
-        m_socket->close();
-        return {};
-    }
+    auto length = m_socket->read_value<u32>().release_value_but_fixme_should_propagate_errors();
 
     auto data_buffer = ByteBuffer::create_uninitialized(length).release_value_but_fixme_should_propagate_errors();
     auto remaining_data_buffer = data_buffer.bytes();
@@ -82,9 +74,8 @@ void InspectableProcess::send_request(JsonObject const& request)
     u32 length = serialized.length();
 
     // FIXME: Propagate errors
-    // FIXME: This should write the entire span.
-    MUST(m_socket->write_some({ (u8 const*)&length, sizeof(length) }));
-    MUST(m_socket->write_some(serialized.bytes()));
+    MUST(m_socket->write_value(length));
+    MUST(m_socket->write_until_depleted(serialized.bytes()));
 }
 
 }

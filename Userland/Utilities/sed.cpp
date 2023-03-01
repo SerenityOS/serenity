@@ -141,9 +141,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
             if (maybe_output_file.has_value()) {
                 auto const& output_file = maybe_output_file.value();
-                // FIXME: This should write the entire span.
-                TRY(output_file->write_some(result.bytes()));
-                TRY(output_file->write_some("\n"sv.bytes()));
+                TRY(output_file->write_until_depleted(result.bytes()));
+                TRY(output_file->write_until_depleted("\n"sv.bytes()));
             }
         }
     }

@@ -221,9 +221,7 @@ public:
         auto bytes_to_send = serialized.bytes();
         u32 length = bytes_to_send.size();
         // FIXME: Propagate errors
-        // FIXME: This should write the entire span.
-        auto sent = MUST(m_socket->write_some({ (u8 const*)&length, sizeof(length) }));
-        VERIFY(sent == sizeof(length));
+        MUST(m_socket->write_value(length));
         while (!bytes_to_send.is_empty()) {
             size_t bytes_sent = MUST(m_socket->write_some(bytes_to_send));
             bytes_to_send = bytes_to_send.slice(bytes_sent);

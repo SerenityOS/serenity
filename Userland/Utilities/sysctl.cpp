@@ -48,8 +48,7 @@ static bool write_variable(StringView name, StringView value)
         warnln("Failed to open {}: {}", path, file.error());
         return false;
     }
-    // FIXME: This should write the entire span.
-    if (auto result = file.value()->write_some(value.bytes()); result.is_error()) {
+    if (auto result = file.value()->write_until_depleted(value.bytes()); result.is_error()) {
         warnln("Failed to write {}: {}", path, result.error());
         return false;
     }

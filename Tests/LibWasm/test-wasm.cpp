@@ -32,8 +32,7 @@ TESTJS_GLOBAL_FUNCTION(read_binary_wasm_file, readBinaryWasmFile)
 
     auto array = TRY(JS::Uint8Array::create(realm, file_size.value()));
 
-    // FIXME: This should read the entire span.
-    auto read = file.value()->read_some(array->data());
+    auto read = file.value()->read_until_filled(array->data());
     if (read.is_error())
         return vm.throw_completion<JS::TypeError>(error_code_to_string(read.error().code()));
 

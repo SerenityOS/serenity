@@ -67,8 +67,7 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
 
         if (server_pid != 0) {
             auto server_pid_file = TRY(Core::File::open(pid_path, Core::File::OpenMode::Write));
-            // FIXME: This should write the entire span.
-            TRY(server_pid_file->write_some(DeprecatedString::number(server_pid).bytes()));
+            TRY(server_pid_file->write_until_depleted(DeprecatedString::number(server_pid).bytes()));
 
             TRY(Core::System::kill(getpid(), SIGTERM));
         }

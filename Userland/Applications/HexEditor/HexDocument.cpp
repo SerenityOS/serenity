@@ -62,12 +62,10 @@ void HexDocumentMemory::clear_changes()
 ErrorOr<void> HexDocumentMemory::write_to_file(Core::File& file)
 {
     TRY(file.seek(0, SeekMode::SetPosition));
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(m_buffer));
+    TRY(file.write_until_depleted(m_buffer));
     for (auto& change : m_changes) {
         TRY(file.seek(change.key, SeekMode::SetPosition));
-        // FIXME: This should write the entire span.
-        TRY(file.write_some({ &change.value, 1 }));
+        TRY(file.write_until_depleted({ &change.value, 1 }));
     }
     return {};
 }
@@ -89,8 +87,7 @@ ErrorOr<void> HexDocumentFile::write_to_file()
 {
     for (auto& change : m_changes) {
         TRY(m_file->seek(change.key, SeekMode::SetPosition));
-        // FIXME: This should write the entire span.
-        TRY(m_file->write_some({ &change.value, 1 }));
+        TRY(m_file->write_until_depleted({ &change.value, 1 }));
     }
     clear_changes();
     // make sure the next get operation triggers a read
@@ -110,14 +107,12 @@ ErrorOr<void> HexDocumentFile::write_to_file(Core::File& file)
         auto copy_buffer = TRY(m_file->read_some(buffer));
         if (copy_buffer.size() == 0)
             break;
-       // FIXME: This should write the entire span.
-        TRY(file.write_some(copy_buffer));
+        TRY(file.write_until_depleted(copy_buffer));
     }
 
     for (auto& change : m_changes) {
         TRY(file.seek(change.key, SeekMode::SetPosition));
-        // FIXME: This should write the entire span.
-        TRY(file.write_some({ &change.value, 1 }));
+        TRY(file.write_until_depleted({ &change.value, 1 }));
     }
 
     return {};
