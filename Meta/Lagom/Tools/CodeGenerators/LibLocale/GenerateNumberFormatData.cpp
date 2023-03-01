@@ -763,8 +763,7 @@ namespace Locale {
 }
 )~~~");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -1108,8 +1107,7 @@ ErrorOr<Vector<NumberFormat>> get_unit_formats(StringView locale, StringView uni
 }
 )~~~");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 

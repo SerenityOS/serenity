@@ -1047,8 +1047,7 @@ namespace Locale {
 }
 )~~~");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 
@@ -1748,8 +1747,7 @@ ErrorOr<Optional<String>> resolve_most_likely_territory(LanguageID const& langua
 }
 )~~~");
 
-    // FIXME: This should write the entire span.
-    TRY(file.write_some(generator.as_string_view().bytes()));
+    TRY(file.write_until_depleted(generator.as_string_view().bytes()));
     return {};
 }
 
