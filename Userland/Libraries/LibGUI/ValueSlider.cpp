@@ -139,11 +139,14 @@ Gfx::IntRect ValueSlider::knob_rect() const
 
 int ValueSlider::value_at(Gfx::IntPoint position) const
 {
-    if (position.x() < bar_rect().left())
+    int knob_thickness = knob_length();
+    float leftmost_knob_center = (float)bar_rect().left() + (float)knob_thickness / 2;
+    if (position.x() < leftmost_knob_center)
         return min();
-    if (position.x() > bar_rect().right())
+    float rightmost_knob_center = (float)bar_rect().right() - (float)knob_thickness / 2;
+    if (position.x() > rightmost_knob_center)
         return max();
-    float relative_offset = (float)(position.x() - bar_rect().left()) / (float)bar_rect().width();
+    float relative_offset = (float)(position.x() - leftmost_knob_center) / (rightmost_knob_center - leftmost_knob_center);
 
     int range = max() - min();
     return min() + (int)roundf(relative_offset * (float)range);
