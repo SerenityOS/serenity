@@ -186,7 +186,7 @@ static char const* object_symbol_binding_to_string(ElfW(Word) type)
 static char const* object_relocation_type_to_string(ElfW(Word) type)
 {
     switch (type) {
-#if ARCH(x86_64)
+#if ARCH(X86_64)
     case R_X86_64_NONE:
         return "R_X86_64_NONE";
     case R_X86_64_64:
