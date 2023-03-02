@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sarah Taube <metalflakecobaltpaint@gmail.com>
  * Copyright (c) 2021, Filiph Sandström <filiph.sandstrom@filfatstudios.com>
  * Copyright (c) 2022, Cameron Youell <cameronyouell@gmail.com>
@@ -563,7 +563,8 @@ void ClassicStylePainter::paint_check_box(Painter& painter, IntRect const& rect,
     }
 
     if (is_checked) {
-        painter.draw_bitmap(rect.shrunken(4, 4).location(), s_checked_bitmap, is_enabled ? palette.base_text() : palette.threed_shadow1());
+        auto check_rect = Gfx::IntRect({}, s_checked_bitmap.size()).centered_within(rect);
+        painter.draw_bitmap(check_rect.location(), s_checked_bitmap, is_enabled ? palette.base_text() : palette.threed_shadow1());
     }
 }
 
