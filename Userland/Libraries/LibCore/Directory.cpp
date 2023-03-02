@@ -12,7 +12,7 @@
 namespace Core {
 
 // We assume that the fd is a valid directory.
-Directory::Directory(int fd, Optional<LexicalPath> path)
+Directory::Directory(int fd, LexicalPath path)
     : m_path(move(path))
     , m_directory_fd(fd)
 {
@@ -45,7 +45,7 @@ ErrorOr<bool> Directory::is_valid_directory(int fd)
     return stat.st_mode & S_IFDIR;
 }
 
-ErrorOr<Directory> Directory::adopt_fd(int fd, Optional<LexicalPath> path)
+ErrorOr<Directory> Directory::adopt_fd(int fd, LexicalPath path)
 {
     // This will also fail if the fd is invalid in the first place.
     if (!TRY(Directory::is_valid_directory(fd)))
@@ -82,13 +82,6 @@ ErrorOr<void> Directory::ensure_directory(LexicalPath const& path, mode_t creati
     return {};
 }
 
-ErrorOr<LexicalPath> Directory::path() const
-{
-    if (!m_path.has_value())
-        return Error::from_string_literal("Directory wasn't created with a path");
-    return m_path.value();
-}
-
 ErrorOr<NonnullOwnPtr<File>> Directory::open(StringView filename, File::OpenMode mode) const
 {
     auto fd = TRY(System::openat(m_directory_fd, filename, File::open_mode_to_options(mode)));
@@ -102,7 +95,7 @@ ErrorOr<struct stat> Directory::stat() const
 
 ErrorOr<DirIterator> Directory::create_iterator() const
 {
-    return DirIterator { TRY(path()).string() };
+    return DirIterator { path().string() };
 }
 
 }

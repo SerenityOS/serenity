@@ -35,23 +35,23 @@ public:
 
     static ErrorOr<Directory> create(LexicalPath path, CreateDirectories, mode_t creation_mode = 0755);
     static ErrorOr<Directory> create(DeprecatedString path, CreateDirectories, mode_t creation_mode = 0755);
-    static ErrorOr<Directory> adopt_fd(int fd, Optional<LexicalPath> path = {});
+    static ErrorOr<Directory> adopt_fd(int fd, LexicalPath path);
 
     ErrorOr<NonnullOwnPtr<File>> open(StringView filename, File::OpenMode mode) const;
     ErrorOr<struct stat> stat() const;
     ErrorOr<DirIterator> create_iterator() const;
 
-    ErrorOr<LexicalPath> path() const;
+    LexicalPath const& path() const { return m_path; }
 
     ErrorOr<void> chown(uid_t, gid_t);
 
     static ErrorOr<bool> is_valid_directory(int fd);
 
 private:
-    Directory(int directory_fd, Optional<LexicalPath> path);
+    Directory(int directory_fd, LexicalPath path);
     static ErrorOr<void> ensure_directory(LexicalPath const& path, mode_t creation_mode = 0755);
 
-    Optional<LexicalPath> m_path;
+    LexicalPath m_path;
     int m_directory_fd;
 };
 
@@ -62,10 +62,7 @@ template<>
 struct Formatter<Core::Directory> : Formatter<StringView> {
     ErrorOr<void> format(FormatBuilder& builder, Core::Directory const& directory)
     {
-        auto path = directory.path();
-        if (path.is_error())
-            TRY(builder.put_string("<unknown>"sv));
-        TRY(builder.put_string(path.release_value().string()));
+        TRY(builder.put_string(directory.path().string()));
         return {};
     }
 };
