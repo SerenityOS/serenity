@@ -650,6 +650,16 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         last_read.clear();
     }
 
+    if constexpr (JPEG_DEBUG) {
+        StringBuilder builder;
+        TRY(builder.try_append("Components in scan: "sv));
+        for (auto const& scan_component : current_scan.components) {
+            TRY(builder.try_append(TRY(String::number(scan_component.component.id))));
+            TRY(builder.try_append(' '));
+        }
+        dbgln(builder.string_view());
+    }
+
     current_scan.spectral_selection_start = TRY(stream.read_value<u8>());
     current_scan.spectral_selection_end = TRY(stream.read_value<u8>());
     current_scan.successive_approximation = TRY(stream.read_value<u8>());
