@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,16 +9,18 @@
 
 #include <AK/Error.h>
 #include <AK/Format.h>
+#include <AK/Function.h>
+#include <AK/IterationDecision.h>
 #include <AK/LexicalPath.h>
 #include <AK/Noncopyable.h>
 #include <AK/Optional.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/DirectoryEntry.h>
 #include <LibCore/File.h>
 #include <dirent.h>
 #include <sys/stat.h>
 
 namespace Core {
-
-class DirIterator;
 
 // Deal with real system directories. Any Directory instance always refers to a valid existing directory.
 class Directory {
@@ -42,6 +45,10 @@ public:
     int fd() const { return m_directory_fd; }
 
     LexicalPath const& path() const { return m_path; }
+
+    using ForEachEntryCallback = Function<ErrorOr<IterationDecision>(DirectoryEntry const&, Directory const& parent)>;
+    static ErrorOr<void> for_each_entry(StringView path, DirIterator::Flags, ForEachEntryCallback);
+    ErrorOr<void> for_each_entry(DirIterator::Flags, ForEachEntryCallback);
 
     ErrorOr<void> chown(uid_t, gid_t);
 

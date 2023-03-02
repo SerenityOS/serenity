@@ -93,4 +93,32 @@ ErrorOr<struct stat> Directory::stat() const
     return System::fstat(m_directory_fd);
 }
 
+ErrorOr<void> Directory::for_each_entry(DirIterator::Flags flags, Core::Directory::ForEachEntryCallback callback)
+{
+    DirIterator iterator { path().string(), flags };
+    if (iterator.has_error())
+        return iterator.error();
+
+    while (iterator.has_next()) {
+        if (iterator.has_error())
+            return iterator.error();
+
+        auto entry = iterator.next();
+        if (!entry.has_value())
+            break;
+
+        auto decision = TRY(callback(entry.value(), *this));
+        if (decision == IterationDecision::Break)
+            break;
+    }
+
+    return {};
+}
+
+ErrorOr<void> Directory::for_each_entry(AK::StringView path, DirIterator::Flags flags, Core::Directory::ForEachEntryCallback callback)
+{
+    auto directory = TRY(Directory::create(path, CreateDirectories::No));
+    return directory.for_each_entry(flags, move(callback));
+}
+
 }
