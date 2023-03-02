@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
- * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -13,7 +13,7 @@
 #include <Applications/KeyboardSettings/KeymapDialogGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Dialog.h>
@@ -59,19 +59,18 @@ private:
 
         set_icon(parent_window->icon());
 
-        Core::DirIterator iterator("/res/keymaps/", Core::DirIterator::Flags::SkipDots);
-        if (iterator.has_error()) {
-            GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Error on reading mapping file list: {}", iterator.error()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
+        auto iterator_result = Core::Directory::for_each_entry("/res/keymaps/"sv, Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
+            auto basename = entry.name.replace(".json"sv, ""sv, ReplaceMode::FirstOnly);
+            if (selected_keymaps.find(basename).is_end())
+                m_character_map_files.append(basename);
+            return IterationDecision::Continue;
+        });
+
+        if (iterator_result.is_error()) {
+            GUI::MessageBox::show(nullptr, DeprecatedString::formatted("Error on reading mapping file list: {}", iterator_result.error()), "Keyboard settings"sv, GUI::MessageBox::Type::Error);
             GUI::Application::the()->quit(-1);
         }
 
-        while (iterator.has_next()) {
-            auto name = iterator.next_path();
-            auto basename = name.replace(".json"sv, ""sv, ReplaceMode::FirstOnly);
-            if (!selected_keymaps.find(basename).is_end())
-                continue;
-            m_character_map_files.append(basename);
-        }
         quick_sort(m_character_map_files);
 
         m_selected_keymap = m_character_map_files.first();
