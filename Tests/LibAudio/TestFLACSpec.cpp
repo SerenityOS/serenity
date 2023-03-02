@@ -5,9 +5,8 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/Types.h>
 #include <LibAudio/FlacLoader.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibTest/TestCase.h>
 
 struct FlacTest : Test::TestCase {
@@ -46,14 +45,12 @@ struct DiscoverFLACTestsHack {
     DiscoverFLACTestsHack()
     {
         // FIXME: Also run (our own) tests in this directory.
-        auto test_iterator = Core::DirIterator { "./SpecTests", Core::DirIterator::Flags::SkipParentAndBaseDir };
-
-        while (test_iterator.has_next()) {
-            auto file = LexicalPath { test_iterator.next_full_path() };
-            if (file.extension() == "flac"sv) {
-                Test::add_test_case_to_suite(make_ref_counted<FlacTest>(move(file)));
-            }
-        }
+        (void)Core::Directory::for_each_entry("./SpecTests"sv, Core::DirIterator::Flags::SkipParentAndBaseDir, [](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
+            auto path = LexicalPath::join(directory.path().string(), entry.name);
+            if (path.extension() == "flac"sv)
+                Test::add_test_case_to_suite(make_ref_counted<FlacTest>(path));
+            return IterationDecision::Continue;
+        });
     }
 };
 // Hack taken from TEST_CASE; the above constructor will run as part of global initialization before the tests are actually executed
