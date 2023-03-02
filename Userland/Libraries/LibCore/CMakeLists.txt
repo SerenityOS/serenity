@@ -6,6 +6,7 @@ set(SOURCES
     DateTime.cpp
     DeprecatedFile.cpp
     Directory.cpp
+    DirectoryEntry.cpp
     DirIterator.cpp
     ElapsedTimer.cpp
     Event.cpp

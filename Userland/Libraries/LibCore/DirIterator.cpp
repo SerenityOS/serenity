@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,7 +8,6 @@
 #include <AK/Vector.h>
 #include <LibCore/DirIterator.h>
 #include <errno.h>
-#include <unistd.h>
 
 namespace Core {
 
@@ -49,40 +49,49 @@ bool DirIterator::advance_next()
         auto* de = readdir(m_dir);
         if (!de) {
             m_error = errno;
-            m_next = DeprecatedString();
+            m_next.clear();
             return false;
         }
 
-        m_next = de->d_name;
-        if (m_next.is_null())
+        m_next = DirectoryEntry::from_dirent(*de);
+
+        if (m_next->name.is_empty())
             return false;
 
-        if (m_flags & Flags::SkipDots && m_next.starts_with('.'))
+        if (m_flags & Flags::SkipDots && m_next->name.starts_with('.'))
             continue;
 
-        if (m_flags & Flags::SkipParentAndBaseDir && (m_next == "." || m_next == ".."))
+        if (m_flags & Flags::SkipParentAndBaseDir && (m_next->name == "." || m_next->name == ".."))
             continue;
 
-        return !m_next.is_empty();
+        return !m_next->name.is_empty();
     }
 }
 
 bool DirIterator::has_next()
 {
-    if (!m_next.is_null())
+    if (m_next.has_value())
         return true;
 
     return advance_next();
 }
 
-DeprecatedString DirIterator::next_path()
+Optional<DirectoryEntry> DirIterator::next()
 {
-    if (m_next.is_null())
+    if (!m_next.has_value())
         advance_next();
 
-    auto tmp = m_next;
-    m_next = DeprecatedString();
-    return tmp;
+    auto result = m_next;
+    m_next.clear();
+    return result;
+}
+
+DeprecatedString DirIterator::next_path()
+{
+    auto entry = next();
+    if (entry.has_value())
+        return entry->name;
+    return "";
 }
 
 DeprecatedString DirIterator::next_full_path()

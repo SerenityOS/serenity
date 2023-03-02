@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <LibCore/DirectoryEntry.h>
 #include <dirent.h>
 #include <string.h>
 
@@ -30,6 +32,7 @@ public:
     int error() const { return m_error; }
     char const* error_string() const { return strerror(m_error); }
     bool has_next();
+    Optional<DirectoryEntry> next();
     DeprecatedString next_path();
     DeprecatedString next_full_path();
     int fd() const;
@@ -37,7 +40,7 @@ public:
 private:
     DIR* m_dir = nullptr;
     int m_error = 0;
-    DeprecatedString m_next;
+    Optional<DirectoryEntry> m_next;
     DeprecatedString m_path;
     int m_flags;
 
