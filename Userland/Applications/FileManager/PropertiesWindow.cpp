@@ -11,7 +11,7 @@
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -295,20 +295,18 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
             auto timer = Core::ElapsedTimer();
             while (!m_work_queue.is_empty()) {
                 auto base_directory = m_work_queue.dequeue();
-                Core::DirIterator di(base_directory, Core::DirIterator::SkipParentAndBaseDir);
-                while (di.has_next()) {
+                auto result = Core::Directory::for_each_entry(base_directory, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
                     if (task.is_cancelled())
-                        return ECANCELED;
+                        return Error::from_errno(ECANCELED);
 
-                    auto path = di.next_path();
                     struct stat st = {};
-                    if (fstatat(di.fd(), path.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
+                    if (fstatat(directory.fd(), entry.name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
                         perror("fstatat");
-                        continue;
+                        return IterationDecision::Continue;
                     }
 
                     if (S_ISDIR(st.st_mode)) {
-                        auto full_path = LexicalPath::join("/"sv, base_directory, path).string();
+                        auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
                         m_directory_count++;
                         m_work_queue.enqueue(full_path);
                     } else if (S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)) {
@@ -321,7 +319,11 @@ void PropertiesWindow::DirectoryStatisticsCalculator::start()
                         timer.start();
                         on_update(m_total_size_in_bytes, m_file_count, m_directory_count);
                     }
-                }
+
+                    return IterationDecision::Continue;
+                });
+                if (result.is_error() && result.error().code() == ECANCELED)
+                    return ECANCELED;
             }
             return ESUCCESS;
         },
