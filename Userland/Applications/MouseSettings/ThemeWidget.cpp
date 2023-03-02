@@ -8,7 +8,7 @@
 
 #include <AK/LexicalPath.h>
 #include <Applications/MouseSettings/ThemeWidgetGML.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -50,18 +50,17 @@ void MouseCursorModel::invalidate()
         return;
 
     m_cursors.clear();
-    Core::DirIterator iterator(DeprecatedString::formatted("/res/cursor-themes/{}", m_theme_name), Core::DirIterator::Flags::SkipDots);
-
-    while (iterator.has_next()) {
-        auto path = iterator.next_full_path();
-        if (path.ends_with(".ini"sv))
-            continue;
-        if (path.contains("2x"sv))
-            continue;
+    // FIXME: Propagate errors.
+    (void)Core::Directory::for_each_entry(DeprecatedString::formatted("/res/cursor-themes/{}", m_theme_name), Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
+        auto path = LexicalPath::join(directory.path().string(), entry.name);
+        if (path.has_extension(".ini"sv))
+            return IterationDecision::Continue;
+        if (path.title().contains("2x"sv))
+            return IterationDecision::Continue;
 
         Cursor cursor;
-        cursor.path = move(path);
-        cursor.name = LexicalPath::basename(cursor.path);
+        cursor.path = path.string();
+        cursor.name = path.basename();
 
         // FIXME: Animated cursor bitmaps
         auto cursor_bitmap = Gfx::Bitmap::load_from_file(cursor.path).release_value_but_fixme_should_propagate_errors();
@@ -70,7 +69,9 @@ void MouseCursorModel::invalidate()
         cursor.bitmap = cursor_bitmap->cropped(Gfx::IntRect(Gfx::FloatRect(cursor_bitmap_rect).scaled(1.0 / cursor.params.frames(), 1.0))).release_value_but_fixme_should_propagate_errors();
 
         m_cursors.append(move(cursor));
-    }
+        return IterationDecision::Continue;
+    });
+
     Model::invalidate();
 }
 
@@ -86,13 +87,13 @@ void ThemeModel::invalidate()
 {
     m_themes.clear();
 
-    Core::DirIterator iterator("/res/cursor-themes", Core::DirIterator::Flags::SkipDots);
+    // FIXME: Propagate errors.
+    (void)Core::Directory::for_each_entry("/res/cursor-themes"sv, Core::DirIterator::Flags::SkipDots, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
+        if (access(DeprecatedString::formatted("/res/cursor-themes/{}/Config.ini", entry.name).characters(), R_OK) == 0)
+            m_themes.append(entry.name);
+        return IterationDecision::Continue;
+    });
 
-    while (iterator.has_next()) {
-        auto path = iterator.next_path();
-        if (access(DeprecatedString::formatted("/res/cursor-themes/{}/Config.ini", path).characters(), R_OK) == 0)
-            m_themes.append(path);
-    }
     Model::invalidate();
 }
 
