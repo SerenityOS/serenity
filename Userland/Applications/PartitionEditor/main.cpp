@@ -7,7 +7,7 @@
 #include <Applications/PartitionEditor/PartitionEditorWindowGML.h>
 #include <Applications/PartitionEditor/PartitionModel.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ComboBox.h>
@@ -20,12 +20,13 @@
 static Vector<DeprecatedString> get_device_paths()
 {
     auto device_paths = Vector<DeprecatedString>();
-    Core::DirIterator iterator("/dev", Core::DirIterator::SkipParentAndBaseDir);
-    while (iterator.has_next()) {
-        auto path = iterator.next_full_path();
-        if (Core::DeprecatedFile::is_block_device(path))
-            device_paths.append(path);
-    }
+    // FIXME: Propagate errors.
+    (void)Core::Directory::for_each_entry("/dev"sv, Core::DirIterator::Flags::SkipParentAndBaseDir, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
+        auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
+        if (Core::DeprecatedFile::is_block_device(full_path))
+            device_paths.append(full_path);
+        return IterationDecision::Continue;
+    });
     return device_paths;
 }
 
