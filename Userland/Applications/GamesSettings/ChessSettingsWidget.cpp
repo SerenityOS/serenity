@@ -5,11 +5,10 @@
  */
 
 #include "ChessSettingsWidget.h"
-#include "AK/String.h"
 #include <Applications/GamesSettings/ChessSettingsWidgetGML.h>
 #include <LibChess/Chess.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Frame.h>
@@ -244,9 +243,10 @@ ErrorOr<void> ChessSettingsWidget::initialize()
     m_preview = find_descendant_of_type_named<ChessGamePreview>("chess_preview");
 
     m_piece_set_combobox = find_descendant_of_type_named<GUI::ComboBox>("piece_set");
-    Core::DirIterator piece_set_iterator { "/res/icons/chess/sets/", Core::DirIterator::SkipParentAndBaseDir };
-    while (piece_set_iterator.has_next())
-        m_piece_sets.append(piece_set_iterator.next_path());
+    TRY(Core::Directory::for_each_entry("/res/icons/chess/sets/"sv, Core::DirIterator::SkipParentAndBaseDir, [&](auto const& entry, auto&) -> ErrorOr<IterationDecision> {
+        TRY(m_piece_sets.try_append(entry.name));
+        return IterationDecision::Continue;
+    }));
     auto piece_set_model = GUI::ItemListModel<DeprecatedString>::create(m_piece_sets);
     m_piece_set_combobox->set_model(piece_set_model);
     m_piece_set_combobox->set_text(piece_set_name, GUI::AllowCallback::No);
