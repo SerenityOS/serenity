@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Kenneth Myhra <kennethmyhra@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -96,10 +96,10 @@ WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm& realm,
             type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("application/x-www-form-urlencoded;charset=UTF-8"sv.bytes()));
             return {};
         },
-        [&](DeprecatedString const& scalar_value_string) -> WebIDL::ExceptionOr<void> {
-            // NOTE: AK::DeprecatedString is always UTF-8.
+        [&](String const& scalar_value_string) -> WebIDL::ExceptionOr<void> {
+            // NOTE: AK::String is always UTF-8.
             // Set source to the UTF-8 encoding of object.
-            source = scalar_value_string.to_byte_buffer();
+            source = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(scalar_value_string.bytes()));
             // Set type to `text/plain;charset=UTF-8`.
             type = TRY_OR_THROW_OOM(vm, ByteBuffer::copy("text/plain;charset=UTF-8"sv.bytes()));
             return {};

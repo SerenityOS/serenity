@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,20 +19,20 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#requestinfo
-using RequestInfo = Variant<JS::Handle<Request>, DeprecatedString>;
+using RequestInfo = Variant<JS::Handle<Request>, String>;
 
 // https://fetch.spec.whatwg.org/#requestinit
 struct RequestInit {
-    Optional<DeprecatedString> method;
+    Optional<String> method;
     Optional<HeadersInit> headers;
     Optional<Optional<BodyInit>> body;
-    Optional<DeprecatedString> referrer;
+    Optional<String> referrer;
     Optional<Bindings::ReferrerPolicy> referrer_policy;
     Optional<Bindings::RequestMode> mode;
     Optional<Bindings::RequestCredentials> credentials;
     Optional<Bindings::RequestCache> cache;
     Optional<Bindings::RequestRedirect> redirect;
-    Optional<DeprecatedString> integrity;
+    Optional<String> integrity;
     Optional<bool> keepalive;
     Optional<JS::GCPtr<DOM::AbortSignal>> signal;
     Optional<Bindings::RequestDuplex> duplex;
@@ -78,17 +78,17 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<Infrastructure::Request> request() const { return m_request; }
 
     // JS API functions
-    [[nodiscard]] DeprecatedString method() const;
-    [[nodiscard]] DeprecatedString url() const;
+    [[nodiscard]] WebIDL::ExceptionOr<String> method() const;
+    [[nodiscard]] WebIDL::ExceptionOr<String> url() const;
     [[nodiscard]] JS::NonnullGCPtr<Headers> headers() const;
     [[nodiscard]] Bindings::RequestDestination destination() const;
-    [[nodiscard]] DeprecatedString referrer() const;
+    [[nodiscard]] WebIDL::ExceptionOr<String> referrer() const;
     [[nodiscard]] Bindings::ReferrerPolicy referrer_policy() const;
     [[nodiscard]] Bindings::RequestMode mode() const;
     [[nodiscard]] Bindings::RequestCredentials credentials() const;
     [[nodiscard]] Bindings::RequestCache cache() const;
     [[nodiscard]] Bindings::RequestRedirect redirect() const;
-    [[nodiscard]] DeprecatedString integrity() const;
+    [[nodiscard]] WebIDL::ExceptionOr<String> integrity() const;
     [[nodiscard]] bool keepalive() const;
     [[nodiscard]] bool is_reload_navigation() const;
     [[nodiscard]] bool is_history_navigation() const;

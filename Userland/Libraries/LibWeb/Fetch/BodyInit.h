@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,9 +14,9 @@
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#bodyinit
-using BodyInit = Variant<JS::Handle<Streams::ReadableStream>, JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, DeprecatedString>;
+using BodyInit = Variant<JS::Handle<Streams::ReadableStream>, JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, String>;
 
-using BodyInitOrReadableBytes = Variant<JS::Handle<Streams::ReadableStream>, JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, DeprecatedString, ReadonlyBytes>;
+using BodyInitOrReadableBytes = Variant<JS::Handle<Streams::ReadableStream>, JS::Handle<FileAPI::Blob>, JS::Handle<JS::Object>, JS::Handle<URL::URLSearchParams>, String, ReadonlyBytes>;
 WebIDL::ExceptionOr<Infrastructure::BodyWithType> safely_extract_body(JS::Realm&, BodyInitOrReadableBytes const&);
 WebIDL::ExceptionOr<Infrastructure::BodyWithType> extract_body(JS::Realm&, BodyInitOrReadableBytes const&, bool keepalive = false);
 

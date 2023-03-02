@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -168,7 +168,7 @@ JS::NonnullGCPtr<Response> Response::error(JS::VM& vm)
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-redirect
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, DeprecatedString const& url, u16 status)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::redirect(JS::VM& vm, String const& url, u16 status)
 {
     auto& realm = *vm.current_realm();
 
@@ -236,12 +236,14 @@ Bindings::ResponseType Response::type() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-url
-DeprecatedString Response::url() const
+WebIDL::ExceptionOr<String> Response::url() const
 {
+    auto& vm = this->vm();
+
     // The url getter steps are to return the empty string if this’s response’s URL is null; otherwise this’s response’s URL, serialized with exclude fragment set to true.
     return !m_response->url().has_value()
-        ? DeprecatedString::empty()
-        : m_response->url()->serialize(AK::URL::ExcludeFragment::Yes);
+        ? String {}
+        : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_response->url()->serialize(AK::URL::ExcludeFragment::Yes)));
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-redirected
@@ -266,10 +268,12 @@ bool Response::ok() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-statustext
-DeprecatedString Response::status_text() const
+WebIDL::ExceptionOr<String> Response::status_text() const
 {
+    auto& vm = this->vm();
+
     // The statusText getter steps are to return this’s response’s status message.
-    return DeprecatedString::copy(m_response->status_message());
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(m_response->status_message()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-response-headers

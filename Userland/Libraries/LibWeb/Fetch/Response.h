@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,7 +21,7 @@ namespace Web::Fetch {
 // https://fetch.spec.whatwg.org/#responseinit
 struct ResponseInit {
     u16 status;
-    DeprecatedString status_text;
+    String status_text;
     Optional<HeadersInit> headers;
 };
 
@@ -46,14 +46,14 @@ public:
 
     // JS API functions
     [[nodiscard]] static JS::NonnullGCPtr<Response> error(JS::VM&);
-    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, DeprecatedString const& url, u16 status);
-    [[nodiscard]] static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, String const& url, u16 status);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
     [[nodiscard]] Bindings::ResponseType type() const;
-    [[nodiscard]] DeprecatedString url() const;
+    [[nodiscard]] WebIDL::ExceptionOr<String> url() const;
     [[nodiscard]] bool redirected() const;
     [[nodiscard]] u16 status() const;
     [[nodiscard]] bool ok() const;
-    [[nodiscard]] DeprecatedString status_text() const;
+    [[nodiscard]] WebIDL::ExceptionOr<String> status_text() const;
     [[nodiscard]] JS::NonnullGCPtr<Headers> headers() const;
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone() const;
 

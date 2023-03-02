@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
@@ -18,7 +18,7 @@
 
 namespace Web::Fetch {
 
-using HeadersInit = Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>>;
+using HeadersInit = Variant<Vector<Vector<String>>, OrderedHashMap<String, String>>;
 
 // https://fetch.spec.whatwg.org/#headers-class
 class Headers final : public Bindings::PlatformObject {
@@ -44,17 +44,17 @@ public:
     void set_guard(Guard guard) { m_guard = guard; }
 
     WebIDL::ExceptionOr<void> fill(HeadersInit const&);
+    WebIDL::ExceptionOr<void> append(Infrastructure::Header);
 
     // JS API functions
-    WebIDL::ExceptionOr<void> append(Infrastructure::Header);
-    WebIDL::ExceptionOr<void> append(DeprecatedString const& name, DeprecatedString const& value);
-    WebIDL::ExceptionOr<void> delete_(DeprecatedString const& name);
-    WebIDL::ExceptionOr<DeprecatedString> get(DeprecatedString const& name);
-    WebIDL::ExceptionOr<Vector<DeprecatedString>> get_set_cookie();
-    WebIDL::ExceptionOr<bool> has(DeprecatedString const& name);
-    WebIDL::ExceptionOr<void> set(DeprecatedString const& name, DeprecatedString const& value);
+    WebIDL::ExceptionOr<void> append(String const& name, String const& value);
+    WebIDL::ExceptionOr<void> delete_(String const& name);
+    WebIDL::ExceptionOr<Optional<String>> get(String const& name);
+    WebIDL::ExceptionOr<Vector<String>> get_set_cookie();
+    WebIDL::ExceptionOr<bool> has(String const& name);
+    WebIDL::ExceptionOr<void> set(String const& name, String const& value);
 
-    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(DeprecatedString const&, DeprecatedString const&)>;
+    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, String const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
 
 private:

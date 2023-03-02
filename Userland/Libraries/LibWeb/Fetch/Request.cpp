@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -119,9 +119,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     DOM::AbortSignal const* input_signal = nullptr;
 
     // 5. If input is a string, then:
-    if (input.has<DeprecatedString>()) {
+    if (input.has<String>()) {
         // 1. Let parsedURL be the result of parsing input with baseURL.
-        auto parsed_url = URLParser::parse(input.get<DeprecatedString>(), &base_url);
+        auto parsed_url = URLParser::parse(input.get<String>(), &base_url);
 
         // 2. If parsedURL is failure, then throw a TypeError.
         if (!parsed_url.is_valid())
@@ -355,7 +355,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 23. If init["integrity"] exists, then set request’s integrity metadata to it.
     if (init.integrity.has_value())
-        request->set_integrity_metadata(*init.integrity);
+        request->set_integrity_metadata(init.integrity->to_deprecated_string());
 
     // 24. If init["keepalive"] exists, then set request’s keepalive to it.
     if (init.keepalive.has_value())
@@ -373,7 +373,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
             return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Method must not be one of CONNECT, TRACE, or TRACK"sv };
 
         // 3. Normalize method.
-        method = TRY_OR_THROW_OOM(vm, Infrastructure::normalize_method(method.bytes()));
+        method = TRY_OR_THROW_OOM(vm, String::from_utf8(TRY_OR_THROW_OOM(vm, Infrastructure::normalize_method(method.bytes()))));
 
         // 4. Set request’s method to method.
         request->set_method(MUST(ByteBuffer::copy(method.bytes())));
@@ -424,7 +424,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         // 4. If headers is a Headers object, then for each header of its header list, append header to this’s headers.
         if (auto* header_list = headers.get_pointer<JS::NonnullGCPtr<Infrastructure::HeaderList>>()) {
             for (auto& header : *header_list->ptr())
-                TRY(request_object->headers()->append(DeprecatedString::copy(header.name), DeprecatedString::copy(header.value)));
+                TRY(request_object->headers()->append(TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair(header.name, header.value))));
         }
         // 5. Otherwise, fill this’s headers with headers.
         else {
@@ -457,7 +457,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
         // 4. If type is non-null and this’s headers’s header list does not contain `Content-Type`, then append (`Content-Type`, type) to this’s headers.
         if (type.has_value() && !request_object->headers()->header_list()->contains("Content-Type"sv.bytes()))
-            TRY(request_object->headers()->append("Content-Type"sv, DeprecatedString::copy(type->span())));
+            TRY(request_object->headers()->append(TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair("Content-Type"sv, type->span()))));
     }
 
     // 37. Let inputOrInitBody be initBody if it is non-null; otherwise inputBody.
@@ -500,17 +500,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-method
-DeprecatedString Request::method() const
+WebIDL::ExceptionOr<String> Request::method() const
 {
+    auto& vm = this->vm();
+
     // The method getter steps are to return this’s request’s method.
-    return DeprecatedString::copy(m_request->method());
+    return TRY_OR_THROW_OOM(vm, String::from_utf8(m_request->method()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-url
-DeprecatedString Request::url() const
+WebIDL::ExceptionOr<String> Request::url() const
 {
+    auto& vm = this->vm();
+
     // The url getter steps are to return this’s request’s URL, serialized.
-    return m_request->url().serialize();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_request->url().serialize()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-headers
@@ -528,24 +532,25 @@ Bindings::RequestDestination Request::destination() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-referrer
-DeprecatedString Request::referrer() const
+WebIDL::ExceptionOr<String> Request::referrer() const
 {
+    auto& vm = this->vm();
     return m_request->referrer().visit(
-        [&](Infrastructure::Request::Referrer const& referrer) {
+        [&](Infrastructure::Request::Referrer const& referrer) -> WebIDL::ExceptionOr<String> {
             switch (referrer) {
             // 1. If this’s request’s referrer is "no-referrer", then return the empty string.
             case Infrastructure::Request::Referrer::NoReferrer:
-                return DeprecatedString::empty();
+                return String {};
             // 2. If this’s request’s referrer is "client", then return "about:client".
             case Infrastructure::Request::Referrer::Client:
-                return DeprecatedString { "about:client"sv };
+                return TRY_OR_THROW_OOM(vm, "about:client"_string);
             default:
                 VERIFY_NOT_REACHED();
             }
         },
-        [&](AK::URL const& url) {
+        [&](AK::URL const& url) -> WebIDL::ExceptionOr<String> {
             // 3. Return this’s request’s referrer, serialized.
-            return url.serialize();
+            return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.serialize()));
         });
 }
 
@@ -585,10 +590,12 @@ Bindings::RequestRedirect Request::redirect() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-integrity
-DeprecatedString Request::integrity() const
+WebIDL::ExceptionOr<String> Request::integrity() const
 {
+    auto& vm = this->vm();
+
     // The integrity getter steps are to return this’s request’s integrity metadata.
-    return m_request->integrity_metadata();
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_request->integrity_metadata()));
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-keepalive
