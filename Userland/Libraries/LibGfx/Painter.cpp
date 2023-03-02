@@ -2489,25 +2489,31 @@ void Painter::draw_text_run(IntPoint baseline_start, Utf8View const& string, Fon
 
 void Painter::draw_text_run(FloatPoint baseline_start, Utf8View const& string, Font const& font, Color color)
 {
-    auto pixel_metrics = font.pixel_metrics();
-    float x = baseline_start.x();
-    float y = baseline_start.y() - pixel_metrics.ascent;
-    float space_width = font.glyph_width(' ');
+    float space_width = font.glyph_width(' ') + font.glyph_spacing();
 
     u32 last_code_point = 0;
+
+    auto point = baseline_start;
+    point.translate_by(0, -font.pixel_metrics().ascent);
 
     for (auto code_point_iterator = string.begin(); code_point_iterator != string.end(); ++code_point_iterator) {
         auto code_point = *code_point_iterator;
         if (should_paint_as_space(code_point)) {
-            x += space_width + font.glyph_spacing();
+            point.translate_by(space_width, 0);
             last_code_point = code_point;
             continue;
         }
 
-        // FIXME: this is probably not the real space taken for complex emojis
-        x += font.glyphs_horizontal_kerning(last_code_point, code_point);
-        draw_glyph_or_emoji(FloatPoint { x, y }, code_point_iterator, font, color);
-        x += font.glyph_or_emoji_width(code_point_iterator) + font.glyph_spacing();
+        auto kerning = font.glyphs_horizontal_kerning(last_code_point, code_point);
+        if (kerning != 0.0f)
+            point.translate_by(kerning, 0);
+
+        auto it = code_point_iterator; // The callback function will advance the iterator, so create a copy for this lookup.
+        auto glyph_width = font.glyph_or_emoji_width(it) + font.glyph_spacing();
+
+        draw_glyph_or_emoji(point, code_point_iterator, font, color);
+
+        point.translate_by(glyph_width, 0);
         last_code_point = code_point;
     }
 }
