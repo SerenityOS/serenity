@@ -40,9 +40,6 @@ struct Array {
     T __data[Size];
 };
 
-template<typename... Args>
-void compiletime_fail(Args...);
-
 template<size_t N>
 consteval auto extract_used_argument_index(char const (&fmt)[N], size_t specifier_start_index, size_t specifier_end_index, size_t& next_implicit_argument_index)
 {

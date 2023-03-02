@@ -32,6 +32,9 @@ requires(AK::Detail::IsIntegral<T>)
     return value && !((value) & (value - 1));
 }
 
+template<typename... Args>
+void compiletime_fail(Args...);
+
 }
 
 #if !USING_AK_GLOBALLY || defined(AK_DONT_REPLACE_STD)
