@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -41,14 +41,15 @@ WebIDL::ExceptionOr<Body> Body::clone() const
 }
 
 // https://fetch.spec.whatwg.org/#fully-reading-body-as-promise
-JS::NonnullGCPtr<WebIDL::Promise> Body::fully_read_as_promise() const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> Body::fully_read_as_promise() const
 {
     auto& vm = Bindings::main_thread_vm();
     auto& realm = *vm.current_realm();
 
     // FIXME: Implement the streams spec - this is completely made up for now :^)
     if (auto const* byte_buffer = m_source.get_pointer<ByteBuffer>()) {
-        auto result = DeprecatedString::copy(*byte_buffer);
+        // FIXME: The buffer may or may not be valid UTF-8.
+        auto result = TRY_OR_THROW_OOM(vm, String::from_utf8(*byte_buffer));
         return WebIDL::create_resolved_promise(realm, JS::PrimitiveString::create(vm, move(result)));
     }
     // Empty, Blob, FormData

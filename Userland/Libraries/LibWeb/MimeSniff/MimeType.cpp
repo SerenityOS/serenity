@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -8,6 +8,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/MimeSniff/MimeType.h>
@@ -136,7 +137,7 @@ Optional<MimeType> MimeType::from_string(StringView string)
         // 8. If the code point at position within input is U+0022 ("), then:
         if (lexer.peek() == '"') {
             // 1. Set parameterValue to the result of collecting an HTTP quoted string from input, given position and the extract-value flag.
-            parameter_value = Fetch::Infrastructure::collect_an_http_quoted_string(lexer, Fetch::Infrastructure::HttpQuotedStringExtractValue::Yes);
+            parameter_value = Fetch::Infrastructure::collect_an_http_quoted_string(lexer, Fetch::Infrastructure::HttpQuotedStringExtractValue::Yes).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
             // 2. Collect a sequence of code points that are not U+003B (;) from input, given position.
             lexer.ignore_until(';');

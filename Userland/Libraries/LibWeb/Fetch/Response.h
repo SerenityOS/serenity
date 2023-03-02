@@ -45,7 +45,7 @@ public:
     [[nodiscard]] JS::NonnullGCPtr<Infrastructure::Response> response() const { return m_response; }
 
     // JS API functions
-    [[nodiscard]] static JS::NonnullGCPtr<Response> error(JS::VM&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> error(JS::VM&);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> redirect(JS::VM&, String const& url, u16 status);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> json(JS::VM&, JS::Value data, ResponseInit const& init = {});
     [[nodiscard]] Bindings::ResponseType type() const;

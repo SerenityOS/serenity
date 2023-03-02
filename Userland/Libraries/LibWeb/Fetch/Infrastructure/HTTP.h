@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -37,6 +37,6 @@ enum class HttpQuotedStringExtractValue {
     Yes,
 };
 
-[[nodiscard]] DeprecatedString collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value = HttpQuotedStringExtractValue::No);
+ErrorOr<String> collect_an_http_quoted_string(GenericLexer& lexer, HttpQuotedStringExtractValue extract_value = HttpQuotedStringExtractValue::No);
 
 }

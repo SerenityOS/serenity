@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -56,11 +56,11 @@ ErrorOr<bool> tao_check(Infrastructure::Request const& request, Infrastructure::
     auto values = TRY(response.header_list()->get_decode_and_split("Timing-Allow-Origin"sv.bytes()));
 
     // 3. If values contains "*", then return success.
-    if (values.has_value() && values->contains_slow("*"sv))
+    if (values.has_value() && values->contains_slow("*"_short_string))
         return true;
 
     // 4. If values contains the result of serializing a request origin with request, then return success.
-    if (values.has_value() && values->contains_slow(request.serialize_origin()))
+    if (values.has_value() && values->contains_slow(TRY(request.serialize_origin())))
         return true;
 
     // 5. If request’s mode is "navigate" and request’s current URL’s origin is not same origin with request’s origin, then return failure.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -99,8 +99,8 @@ JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, R
 
         // 3. If response is a network error, then reject p with a TypeError and abort these steps.
         if (response->is_network_error()) {
-            auto message = response->network_error_message().value_or("Response is a network error"sv);
-            WebIDL::reject_promise(vm, promise_capability, JS::TypeError::create(relevant_realm, message).release_allocated_value_but_fixme_should_propagate_errors());
+            auto message = response->network_error_message().value_or("Response is a network error"_string.release_value_but_fixme_should_propagate_errors());
+            WebIDL::reject_promise(vm, promise_capability, JS::TypeError::create(relevant_realm, move(message)));
             return;
         }
 
