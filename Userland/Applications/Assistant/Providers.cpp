@@ -8,7 +8,7 @@
 #include <AK/FuzzyMatch.h>
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
@@ -174,27 +174,25 @@ void FileProvider::build_filesystem_cache()
                 if (base_directory.template is_one_of("/dev"sv, "/proc"sv, "/sys"sv))
                     continue;
 
-                Core::DirIterator di(base_directory, Core::DirIterator::SkipDots);
-
-                while (di.has_next()) {
-                    auto path = di.next_path();
+                // FIXME: Propagate errors.
+                (void)Core::Directory::for_each_entry(base_directory, Core::DirIterator::SkipDots, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
                     struct stat st = {};
-                    if (fstatat(di.fd(), path.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
+                    if (fstatat(directory.fd(), entry.name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0) {
                         perror("fstatat");
-                        continue;
+                        return IterationDecision::Continue;
                     }
 
                     if (S_ISLNK(st.st_mode))
-                        continue;
+                        return IterationDecision::Continue;
 
-                    auto full_path = LexicalPath::join(slash, base_directory, path).string();
-
+                    auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
                     m_full_path_cache.append(full_path);
 
                     if (S_ISDIR(st.st_mode)) {
                         m_work_queue.enqueue(full_path);
                     }
-                }
+                    return IterationDecision::Continue;
+                });
             }
             dbgln("Built cache in {} ms", timer.elapsed());
             return 0;
