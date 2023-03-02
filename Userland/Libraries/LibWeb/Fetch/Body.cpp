@@ -158,7 +158,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
     // 3. If object’s body is non-null, then set promise to the result of fully reading body as promise given object’s body.
     auto const& body = object.body_impl();
     if (body.has_value())
-        promise = body->fully_read_as_promise();
+        promise = body->fully_read_as_promise().release_value_but_fixme_should_propagate_errors();
 
     // 4. Let steps be to return the result of package data with the first argument given, type, and object’s MIME type.
     auto steps = [&vm, &realm, &object, type](JS::Value value) -> WebIDL::ExceptionOr<JS::Value> {

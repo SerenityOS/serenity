@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -31,9 +31,9 @@ public:
     [[nodiscard]] SourceType const& source() const { return m_source; }
     [[nodiscard]] Optional<u64> const& length() const { return m_length; }
 
-    [[nodiscard]] WebIDL::ExceptionOr<Body> clone() const;
+    WebIDL::ExceptionOr<Body> clone() const;
 
-    [[nodiscard]] JS::NonnullGCPtr<WebIDL::Promise> fully_read_as_promise() const;
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> fully_read_as_promise() const;
 
 private:
     // https://fetch.spec.whatwg.org/#concept-body-stream

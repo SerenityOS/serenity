@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -177,21 +177,21 @@ bool Request::has_redirect_tainted_origin() const
 }
 
 // https://fetch.spec.whatwg.org/#serializing-a-request-origin
-DeprecatedString Request::serialize_origin() const
+ErrorOr<String> Request::serialize_origin() const
 {
     // 1. If request has a redirect-tainted origin, then return "null".
     if (has_redirect_tainted_origin())
-        return "null"sv;
+        return "null"_string;
 
     // 2. Return request’s origin, serialized.
-    return m_origin.get<HTML::Origin>().serialize();
+    return String::from_deprecated_string(m_origin.get<HTML::Origin>().serialize());
 }
 
 // https://fetch.spec.whatwg.org/#byte-serializing-a-request-origin
 ErrorOr<ByteBuffer> Request::byte_serialize_origin() const
 {
     // Byte-serializing a request origin, given a request request, is to return the result of serializing a request origin with request, isomorphic encoded.
-    return ByteBuffer::copy(serialize_origin().bytes());
+    return ByteBuffer::copy(TRY(serialize_origin()).bytes());
 }
 
 // https://fetch.spec.whatwg.org/#concept-request-clone
@@ -260,14 +260,14 @@ ErrorOr<void> Request::add_range_header(u64 first, Optional<u64> const& last)
     auto range_value = MUST(ByteBuffer::copy("bytes"sv.bytes()));
 
     // 3. Serialize and isomorphic encode first, and append the result to rangeValue.
-    TRY(range_value.try_append(DeprecatedString::number(first).bytes()));
+    TRY(range_value.try_append(TRY(String::number(first)).bytes()));
 
     // 4. Append 0x2D (-) to rangeValue.
     TRY(range_value.try_append('-'));
 
     // 5. If last is given, then serialize and isomorphic encode it, and append the result to rangeValue.
     if (last.has_value())
-        TRY(range_value.try_append(DeprecatedString::number(*last).bytes()));
+        TRY(range_value.try_append(TRY(String::number(*last)).bytes()));
 
     // 6. Append (`Range`, rangeValue) to request’s header list.
     auto header = Header {

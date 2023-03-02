@@ -87,7 +87,7 @@ ErrorOr<Optional<ByteBuffer>> HeaderList::get(ReadonlyBytes name) const
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-list-get-decode-split
-ErrorOr<Optional<Vector<DeprecatedString>>> HeaderList::get_decode_and_split(ReadonlyBytes name) const
+ErrorOr<Optional<Vector<String>>> HeaderList::get_decode_and_split(ReadonlyBytes name) const
 {
     // To get, decode, and split a header name name from header list list, run these steps:
 
@@ -96,14 +96,14 @@ ErrorOr<Optional<Vector<DeprecatedString>>> HeaderList::get_decode_and_split(Rea
 
     // 2. If value is null, then return null.
     if (!value.has_value())
-        return Optional<Vector<DeprecatedString>> {};
+        return Optional<Vector<String>> {};
 
     // 3. Return the result of getting, decoding, and splitting value.
     return get_decode_and_split_header_value(*value);
 }
 
 // https://fetch.spec.whatwg.org/#header-value-get-decode-and-split
-ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(ReadonlyBytes value)
+ErrorOr<Optional<Vector<String>>> get_decode_and_split_header_value(ReadonlyBytes value)
 {
     // To get, decode, and split a header value value, run these steps:
 
@@ -114,7 +114,7 @@ ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(Re
     auto lexer = GenericLexer { input };
 
     // 3. Let values be a list of strings, initially empty.
-    Vector<DeprecatedString> values;
+    Vector<String> values;
 
     // 4. Let temporaryValue be the empty string.
     StringBuilder temporary_value_builder;
@@ -123,14 +123,14 @@ ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(Re
     while (!lexer.is_eof()) {
         // 1. Append the result of collecting a sequence of code points that are not U+0022 (") or U+002C (,) from input, given position, to temporaryValue.
         // NOTE: The result might be the empty string.
-        temporary_value_builder.append(lexer.consume_until(is_any_of("\","sv)));
+        TRY(temporary_value_builder.try_append(lexer.consume_until(is_any_of("\","sv))));
 
         // 2. If position is not past the end of input, then:
         if (!lexer.is_eof()) {
             // 1. If the code point at position within input is U+0022 ("), then:
             if (lexer.peek() == '"') {
                 // 1. Append the result of collecting an HTTP quoted string from input, given position, to temporaryValue.
-                temporary_value_builder.append(collect_an_http_quoted_string(lexer));
+                TRY(temporary_value_builder.try_append(TRY(collect_an_http_quoted_string(lexer))));
 
                 // 2. If position is not past the end of input, then continue.
                 if (!lexer.is_eof())
@@ -147,10 +147,10 @@ ErrorOr<Optional<Vector<DeprecatedString>>> get_decode_and_split_header_value(Re
         }
 
         // 3. Remove all HTTP tab or space from the start and end of temporaryValue.
-        auto temporary_value = temporary_value_builder.to_deprecated_string().trim(HTTP_TAB_OR_SPACE, TrimMode::Both);
+        auto temporary_value = TRY(String::from_utf8(temporary_value_builder.string_view().trim(HTTP_TAB_OR_SPACE, TrimMode::Both)));
 
         // 4. Append temporaryValue to values.
-        values.append(move(temporary_value));
+        TRY(values.try_append(move(temporary_value)));
 
         // 5. Set temporaryValue to the empty string.
         temporary_value_builder.clear();
@@ -301,10 +301,10 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
 {
     // 1. Let charset be null.
-    Optional<DeprecatedString> charset;
+    Optional<String> charset;
 
     // 2. Let essence be null.
-    Optional<DeprecatedString> essence;
+    Optional<String> essence;
 
     // 3. Let mimeType be null.
     Optional<MimeSniff::MimeType> mime_type;
@@ -332,21 +332,21 @@ Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
         mime_type = temporary_mime_type;
 
         // 4. If mimeType’s essence is not essence, then:
-        if (mime_type->essence() != essence) {
+        if (!essence.has_value() || (mime_type->essence() != essence->bytes_as_string_view())) {
             // 1. Set charset to null.
             charset = {};
 
             // 2. If mimeType’s parameters["charset"] exists, then set charset to mimeType’s parameters["charset"].
-            auto charset_it = mime_type->parameters().find("charset"sv);
-            if (charset_it != mime_type->parameters().end())
-                charset = charset_it->value;
+            auto it = mime_type->parameters().find("charset"sv);
+            if (it != mime_type->parameters().end())
+                charset = String::from_deprecated_string(it->value).release_value_but_fixme_should_propagate_errors();
 
             // 3. Set essence to mimeType’s essence.
-            essence = mime_type->essence();
+            essence = String::from_deprecated_string(mime_type->essence()).release_value_but_fixme_should_propagate_errors();
         }
         // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
         else if (!mime_type->parameters().contains("charset"sv) && charset.has_value()) {
-            mime_type->set_parameter("charset"sv, charset.value());
+            mime_type->set_parameter("charset"sv, charset->to_deprecated_string());
         }
     }
 

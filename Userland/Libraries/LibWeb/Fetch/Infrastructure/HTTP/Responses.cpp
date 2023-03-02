@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -37,14 +37,14 @@ JS::NonnullGCPtr<Response> Response::create(JS::VM& vm)
 // A network error is a response whose status is always 0, status message is always
 // the empty byte sequence, header list is always empty, and body is always null.
 
-JS::NonnullGCPtr<Response> Response::aborted_network_error(JS::VM& vm)
+ErrorOr<JS::NonnullGCPtr<Response>> Response::aborted_network_error(JS::VM& vm)
 {
-    auto response = network_error(vm, "Fetch has been aborted"sv);
+    auto response = network_error(vm, TRY("Fetch has been aborted"_string));
     response->set_aborted(true);
     return response;
 }
 
-JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, DeprecatedString message)
+JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, String message)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Creating network error response with message: {}", message);
     auto response = Response::create(vm);
@@ -56,15 +56,15 @@ JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, DeprecatedString 
 }
 
 // https://fetch.spec.whatwg.org/#appropriate-network-error
-JS::NonnullGCPtr<Response> Response::appropriate_network_error(JS::VM& vm, FetchParams const& fetch_params)
+ErrorOr<JS::NonnullGCPtr<Response>> Response::appropriate_network_error(JS::VM& vm, FetchParams const& fetch_params)
 {
     // 1. Assert: fetchParams is canceled.
     VERIFY(fetch_params.is_canceled());
 
     // 2. Return an aborted network error if fetchParams is aborted; otherwise return a network error.
     return fetch_params.is_aborted()
-        ? aborted_network_error(vm)
-        : network_error(vm, "Fetch has been terminated"sv);
+        ? TRY(aborted_network_error(vm))
+        : network_error(vm, TRY("Fetch has been terminated"_string));
 }
 
 // https://fetch.spec.whatwg.org/#concept-aborted-network-error
@@ -94,7 +94,7 @@ Optional<AK::URL const&> Response::url() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-response-location-url
-ErrorOr<Optional<AK::URL>> Response::location_url(Optional<DeprecatedString> const& request_fragment) const
+ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& request_fragment) const
 {
     // The location URL of a response response, given null or an ASCII string requestFragment, is the value returned by the following steps. They return null, failure, or a URL.
 
@@ -120,7 +120,7 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<DeprecatedString> con
 
     // 4. If location is a URL whose fragment is null, then set location’s fragment to requestFragment.
     if (location.fragment().is_null())
-        location.set_fragment(request_fragment.value_or({}));
+        location.set_fragment(request_fragment.has_value() ? request_fragment->to_deprecated_string() : DeprecatedString {});
 
     // 5. Return location.
     return location;

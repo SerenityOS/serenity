@@ -355,7 +355,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
 
     // 23. If init["integrity"] exists, then set request’s integrity metadata to it.
     if (init.integrity.has_value())
-        request->set_integrity_metadata(init.integrity->to_deprecated_string());
+        request->set_integrity_metadata(*init.integrity);
 
     // 24. If init["keepalive"] exists, then set request’s keepalive to it.
     if (init.keepalive.has_value())
@@ -590,12 +590,10 @@ Bindings::RequestRedirect Request::redirect() const
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-integrity
-WebIDL::ExceptionOr<String> Request::integrity() const
+String Request::integrity() const
 {
-    auto& vm = this->vm();
-
     // The integrity getter steps are to return this’s request’s integrity metadata.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_request->integrity_metadata()));
+    return m_request->integrity_metadata();
 }
 
 // https://fetch.spec.whatwg.org/#dom-request-keepalive

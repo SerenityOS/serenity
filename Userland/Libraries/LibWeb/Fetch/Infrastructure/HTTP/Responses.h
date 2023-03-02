@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -50,9 +50,9 @@ public:
     };
 
     [[nodiscard]] static JS::NonnullGCPtr<Response> create(JS::VM&);
-    [[nodiscard]] static JS::NonnullGCPtr<Response> aborted_network_error(JS::VM&);
-    [[nodiscard]] static JS::NonnullGCPtr<Response> network_error(JS::VM&, DeprecatedString message);
-    [[nodiscard]] static JS::NonnullGCPtr<Response> appropriate_network_error(JS::VM&, FetchParams const&);
+    static ErrorOr<JS::NonnullGCPtr<Response>> aborted_network_error(JS::VM&);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> network_error(JS::VM&, String message);
+    static ErrorOr<JS::NonnullGCPtr<Response>> appropriate_network_error(JS::VM&, FetchParams const&);
 
     virtual ~Response() = default;
 
@@ -104,12 +104,12 @@ public:
     [[nodiscard]] bool is_network_error() const;
 
     [[nodiscard]] Optional<AK::URL const&> url() const;
-    [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<DeprecatedString> const& request_fragment) const;
+    [[nodiscard]] ErrorOr<Optional<AK::URL>> location_url(Optional<String> const& request_fragment) const;
 
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::VM&) const;
 
     // Non-standard
-    Optional<DeprecatedString> const& network_error_message() const { return m_network_error_message; }
+    Optional<String> const& network_error_message() const { return m_network_error_message; }
 
 protected:
     explicit Response(JS::NonnullGCPtr<HeaderList>);
@@ -177,7 +177,7 @@ private:
     bool m_has_cross_origin_redirects { false };
 
     // Non-standard
-    Optional<DeprecatedString> m_network_error_message;
+    Optional<String> m_network_error_message;
 };
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response

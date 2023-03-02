@@ -88,7 +88,7 @@ public:
     [[nodiscard]] Bindings::RequestCredentials credentials() const;
     [[nodiscard]] Bindings::RequestCache cache() const;
     [[nodiscard]] Bindings::RequestRedirect redirect() const;
-    [[nodiscard]] WebIDL::ExceptionOr<String> integrity() const;
+    [[nodiscard]] String integrity() const;
     [[nodiscard]] bool keepalive() const;
     [[nodiscard]] bool is_reload_navigation() const;
     [[nodiscard]] bool is_history_navigation() const;
