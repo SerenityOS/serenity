@@ -9,8 +9,8 @@
         title: "Background Opacity"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
-            spacing: 16
+            margins: [8]
+            spacing: 8
         }
 
         @GUI::HorizontalOpacitySlider {
@@ -25,8 +25,8 @@
         title: "Terminal Font"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
-            spacing: 16
+            margins: [8]
+            spacing: 8
         }
 
         @GUI::CheckBox {
@@ -62,7 +62,7 @@
         title: "Cursor Settings"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
+            margins: [8]
         }
 
         @GUI::RadioButton {

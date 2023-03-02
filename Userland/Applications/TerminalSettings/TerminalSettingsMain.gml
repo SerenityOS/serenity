@@ -8,10 +8,9 @@
     @GUI::GroupBox {
         title: "Bell Mode"
         preferred_height: "fit"
-        fixed_height: 160
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
-            spacing: 16
+            margins: [8]
+            spacing: 8
         }
 
         @GUI::Label {
@@ -46,7 +45,7 @@
         title: "Scrollback Size (Lines)"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
+            margins: [8]
         }
 
         @GUI::CheckBox {
@@ -66,7 +65,7 @@
         title: "Exit Behaviour"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
-            margins: [16, 8, 8]
+            margins: [8]
         }
 
         @GUI::CheckBox {
