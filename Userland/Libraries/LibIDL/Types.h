@@ -206,8 +206,8 @@ struct Typedef {
 };
 
 struct Enumeration {
-    HashTable<DeprecatedString> values;
-    HashMap<DeprecatedString, DeprecatedString> translated_cpp_names;
+    OrderedHashTable<DeprecatedString> values;
+    OrderedHashMap<DeprecatedString, DeprecatedString> translated_cpp_names;
     DeprecatedString first_member;
     bool is_original_definition { true };
 };
