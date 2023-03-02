@@ -39,6 +39,7 @@ public:
 
     ErrorOr<NonnullOwnPtr<File>> open(StringView filename, File::OpenMode mode) const;
     ErrorOr<struct stat> stat() const;
+    int fd() const { return m_directory_fd; }
     ErrorOr<DirIterator> create_iterator() const;
 
     LexicalPath const& path() const { return m_path; }
