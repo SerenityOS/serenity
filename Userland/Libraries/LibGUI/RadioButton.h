@@ -30,6 +30,7 @@ private:
     using AbstractButton::auto_repeat_interval;
     using AbstractButton::set_auto_repeat_interval;
 
+    static int horizontal_padding();
     static Gfx::IntSize circle_size();
 };
 

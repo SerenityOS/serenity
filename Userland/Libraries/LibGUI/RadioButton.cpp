@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -21,8 +21,13 @@ RadioButton::RadioButton(String text)
 {
     set_exclusive(true);
     set_checkable(true);
-    set_min_size({ 22, 22 });
-    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
+    set_min_size(SpecialDimension::Shrink, SpecialDimension::Shrink);
+    set_preferred_size(SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink);
+}
+
+int RadioButton::horizontal_padding()
+{
+    return 2;
 }
 
 Gfx::IntSize RadioButton::circle_size()
@@ -41,12 +46,12 @@ void RadioButton::paint_event(PaintEvent& event)
     if (is_enabled() && is_hovered())
         painter.fill_rect(rect(), palette().hover_highlight());
 
-    Gfx::IntRect circle_rect { { 2, 0 }, circle_size() };
+    Gfx::IntRect circle_rect { { horizontal_padding(), 0 }, circle_size() };
     circle_rect.center_vertically_within(rect());
 
     Gfx::StylePainter::paint_radio_button(painter, circle_rect, palette(), is_checked(), is_being_pressed());
 
-    Gfx::IntRect text_rect { circle_rect.right() + 7, 0, static_cast<int>(ceilf(font().width(text()))), font().glyph_height() };
+    Gfx::IntRect text_rect { circle_rect.right() + 5 + horizontal_padding(), 0, static_cast<int>(ceilf(font().width(text()))), font().glyph_height() };
     text_rect.center_vertically_within(rect());
     paint_text(painter, text_rect, font(), Gfx::TextAlignment::TopLeft);
 
@@ -63,11 +68,10 @@ void RadioButton::click(unsigned)
 
 Optional<UISize> RadioButton::calculated_min_size() const
 {
-    int horizontal = 2 + 7, vertical = 0;
-    auto& font = this->font();
-    vertical = max(font.glyph_height(), circle_size().height());
-    horizontal += static_cast<int>(ceilf(font.width(text())));
-    return UISize(horizontal, vertical);
+    auto const& font = this->font();
+    int width = horizontal_padding() * 2 + circle_size().width() + static_cast<int>(ceilf(font.width(text())));
+    int height = max(22, max(static_cast<int>(ceilf(font.pixel_size())) + 8, circle_size().height()));
+    return UISize(width, height);
 }
 
 }
