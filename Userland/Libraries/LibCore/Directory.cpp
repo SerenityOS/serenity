@@ -93,9 +93,4 @@ ErrorOr<struct stat> Directory::stat() const
     return System::fstat(m_directory_fd);
 }
 
-ErrorOr<DirIterator> Directory::create_iterator() const
-{
-    return DirIterator { path().string() };
-}
-
 }
