@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -135,7 +135,7 @@ WebIDL::ExceptionOr<JS::Value> package_data(JS::Realm& realm, ByteBuffer bytes, 
         return Infra::parse_json_bytes_to_javascript_value(vm, bytes);
     case PackageDataType::Text:
         // Return the result of running UTF-8 decode on bytes.
-        return JS::PrimitiveString::create(vm, DeprecatedString::copy(bytes));
+        return JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, String::from_utf8(bytes)));
     default:
         VERIFY_NOT_REACHED();
     }

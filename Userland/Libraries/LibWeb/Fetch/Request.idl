@@ -6,7 +6,7 @@
 typedef (Request or USVString) RequestInfo;
 
 // https://fetch.spec.whatwg.org/#request
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), UseNewAKString]
 interface Request {
     constructor(RequestInfo input, optional RequestInit init = {});
 

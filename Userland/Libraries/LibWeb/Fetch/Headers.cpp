@@ -52,7 +52,7 @@ void Headers::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-append
-WebIDL::ExceptionOr<void> Headers::append(DeprecatedString const& name_string, DeprecatedString const& value_string)
+WebIDL::ExceptionOr<void> Headers::append(String const& name_string, String const& value_string)
 {
     auto& vm = this->vm();
 
@@ -66,15 +66,15 @@ WebIDL::ExceptionOr<void> Headers::append(DeprecatedString const& name_string, D
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-delete
-WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
+WebIDL::ExceptionOr<void> Headers::delete_(String const& name_string)
 {
     // The delete(name) method steps are:
-    auto& realm = this->realm();
+    auto& vm = this->vm();
     auto name = name_string.bytes();
 
     // 1. If validating (name, ``) for headers returns false, then return.
     // NOTE: Passing a dummy header value ought not to have any negative repercussions.
-    auto header = TRY_OR_THROW_OOM(realm.vm(), Infrastructure::Header::from_string_pair(name, ""sv));
+    auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair(name, ""sv));
     if (!TRY(validate(header)))
         return {};
 
@@ -97,9 +97,10 @@ WebIDL::ExceptionOr<void> Headers::delete_(DeprecatedString const& name_string)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-get
-WebIDL::ExceptionOr<DeprecatedString> Headers::get(DeprecatedString const& name_string)
+WebIDL::ExceptionOr<Optional<String>> Headers::get(String const& name_string)
 {
     // The get(name) method steps are:
+    auto& vm = this->vm();
     auto name = name_string.bytes();
 
     // 1. If name is not a header name, then throw a TypeError.
@@ -107,17 +108,16 @@ WebIDL::ExceptionOr<DeprecatedString> Headers::get(DeprecatedString const& name_
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid header name"sv };
 
     // 2. Return the result of getting name from this’s header list.
-    auto byte_buffer = TRY_OR_THROW_OOM(vm(), m_header_list->get(name));
-    // FIXME: Teach BindingsGenerator about Optional<DeprecatedString>
-    return byte_buffer.has_value() ? DeprecatedString { byte_buffer->span() } : DeprecatedString {};
+    auto byte_buffer = TRY_OR_THROW_OOM(vm, m_header_list->get(name));
+    return byte_buffer.has_value() ? TRY_OR_THROW_OOM(vm, String::from_utf8(*byte_buffer)) : Optional<String> {};
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-getsetcookie
-WebIDL::ExceptionOr<Vector<DeprecatedString>> Headers::get_set_cookie()
+WebIDL::ExceptionOr<Vector<String>> Headers::get_set_cookie()
 {
     // The getSetCookie() method steps are:
     auto& vm = this->vm();
-    auto values = Vector<DeprecatedString> {};
+    auto values = Vector<String> {};
 
     // 1. If this’s header list does not contain `Set-Cookie`, then return « ».
     if (!m_header_list->contains("Set-Cookie"sv.bytes()))
@@ -127,13 +127,13 @@ WebIDL::ExceptionOr<Vector<DeprecatedString>> Headers::get_set_cookie()
     //    `Set-Cookie`, in order.
     for (auto const& header : *m_header_list) {
         if (StringView { header.name }.equals_ignoring_case("Set-Cookie"sv))
-            TRY_OR_THROW_OOM(vm, values.try_append(DeprecatedString { header.value.bytes() }));
+            TRY_OR_THROW_OOM(vm, values.try_append(TRY_OR_THROW_OOM(vm, String::from_utf8(header.value))));
     }
     return values;
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-has
-WebIDL::ExceptionOr<bool> Headers::has(DeprecatedString const& name_string)
+WebIDL::ExceptionOr<bool> Headers::has(String const& name_string)
 {
     // The has(name) method steps are:
     auto name = name_string.bytes();
@@ -147,7 +147,7 @@ WebIDL::ExceptionOr<bool> Headers::has(DeprecatedString const& name_string)
 }
 
 // https://fetch.spec.whatwg.org/#dom-headers-set
-WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, DeprecatedString const& value_string)
+WebIDL::ExceptionOr<void> Headers::set(String const& name_string, String const& value_string)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
@@ -185,12 +185,11 @@ WebIDL::ExceptionOr<void> Headers::set(DeprecatedString const& name_string, Depr
 // https://webidl.spec.whatwg.org/#es-iterable, Step 4
 JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
 {
+    auto& vm = this->vm();
+
     // The value pairs to iterate over are the return value of running sort and combine with this’s header list.
     auto value_pairs_to_iterate_over = [&]() -> JS::ThrowCompletionOr<Vector<Fetch::Infrastructure::Header>> {
-        auto headers_or_error = m_header_list->sort_and_combine();
-        if (headers_or_error.is_error())
-            return vm().throw_completion<JS::InternalError>(JS::ErrorType::NotEnoughMemoryToAllocate);
-        return headers_or_error.release_value();
+        return TRY_OR_THROW_OOM(vm, m_header_list->sort_and_combine());
     };
 
     // 1-5. Are done in the generated wrapper code.
@@ -207,7 +206,7 @@ JS::ThrowCompletionOr<void> Headers::for_each(ForEachCallback callback)
         auto const& pair = pairs[i];
 
         // 2. Invoke idlCallback with « pair’s value, pair’s key, idlObject » and with thisArg as the callback this value.
-        TRY(callback(StringView { pair.name }, StringView { pair.value }));
+        TRY(callback(TRY_OR_THROW_OOM(vm, String::from_utf8(pair.name)), TRY_OR_THROW_OOM(vm, String::from_utf8(pair.value))));
 
         // 3. Set pairs to idlObject’s current list of value pairs to iterate over. (It might have changed.)
         pairs = TRY(value_pairs_to_iterate_over());
@@ -309,20 +308,20 @@ WebIDL::ExceptionOr<void> Headers::fill(HeadersInit const& object)
     // To fill a Headers object headers with a given object object, run these steps:
     return object.visit(
         // 1. If object is a sequence, then for each header of object:
-        [&](Vector<Vector<DeprecatedString>> const& object) -> WebIDL::ExceptionOr<void> {
+        [&](Vector<Vector<String>> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 // 1. If header's size is not 2, then throw a TypeError.
                 if (entry.size() != 2)
                     return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Array must contain header key/value pair"sv };
 
                 // 2. Append (header[0], header[1]) to headers.
-                auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair(entry[0], entry[1].bytes()));
+                auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair(entry[0], entry[1]));
                 TRY(append(move(header)));
             }
             return {};
         },
         // 2. Otherwise, object is a record, then for each key → value of object, append (key, value) to headers.
-        [&](OrderedHashMap<DeprecatedString, DeprecatedString> const& object) -> WebIDL::ExceptionOr<void> {
+        [&](OrderedHashMap<String, String> const& object) -> WebIDL::ExceptionOr<void> {
             for (auto const& entry : object) {
                 auto header = TRY_OR_THROW_OOM(vm, Infrastructure::Header::from_string_pair(entry.key, entry.value));
                 TRY(append(move(header)));

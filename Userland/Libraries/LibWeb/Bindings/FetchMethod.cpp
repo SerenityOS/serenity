@@ -24,7 +24,7 @@
 // ```idl
 // #import <Fetch/Request.idl>
 // #import <Fetch/Response.idl>
-// [Exposed=Window]
+// [Exposed=Window, UseNewAKString]
 // interface Dummy {
 //     static Promise<Response> fetch(RequestInfo input, optional RequestInit init = {});
 // };
@@ -55,7 +55,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (vm.argument_count() < 1)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "fetch");
     auto arg0 = vm.argument(0);
-    auto arg0_to_variant = [&vm, &realm](JS::Value arg0) -> JS::ThrowCompletionOr<Variant<JS::Handle<Request>, DeprecatedString>> {
+    auto arg0_to_variant = [&vm, &realm](JS::Value arg0) -> JS::ThrowCompletionOr<Variant<JS::Handle<Request>, String>> {
         // These might be unused.
         (void)vm;
         (void)realm;
@@ -66,9 +66,9 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                     return JS::make_handle(static_cast<Request&>(arg0_object));
             }
         }
-        return TRY(arg0.to_deprecated_string(vm));
+        return TRY(arg0.to_string(vm));
     };
-    Variant<JS::Handle<Request>, DeprecatedString> input = TRY(arg0_to_variant(arg0));
+    Variant<JS::Handle<Request>, String> input = TRY(arg0_to_variant(arg0));
     auto arg1 = vm.argument(1);
     if (!arg1.is_nullish() && !arg1.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "RequestInit");
@@ -77,7 +77,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (arg1.is_object())
         body_property_value = TRY(arg1.as_object().get("body"));
     if (!body_property_value.is_undefined()) {
-        auto body_property_value_to_variant = [&vm, &realm](JS::Value body_property_value) -> JS::ThrowCompletionOr<Variant<JS::Handle<ReadableStream>, JS::Handle<Blob>, JS::Handle<JS::Object>, JS::Handle<URLSearchParams>, DeprecatedString>> {
+        auto body_property_value_to_variant = [&vm, &realm](JS::Value body_property_value) -> JS::ThrowCompletionOr<Variant<JS::Handle<ReadableStream>, JS::Handle<Blob>, JS::Handle<JS::Object>, JS::Handle<URLSearchParams>, String>> {
             // These might be unused.
             (void)vm;
             (void)realm;
@@ -94,9 +94,9 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                 if (is<JS::ArrayBuffer>(body_property_value_object))
                     return JS::make_handle(body_property_value_object);
             }
-            return TRY(body_property_value.to_deprecated_string(vm));
+            return TRY(body_property_value.to_string(vm));
         };
-        Optional<Variant<JS::Handle<ReadableStream>, JS::Handle<Blob>, JS::Handle<JS::Object>, JS::Handle<URLSearchParams>, DeprecatedString>> body_value;
+        Optional<Variant<JS::Handle<ReadableStream>, JS::Handle<Blob>, JS::Handle<JS::Object>, JS::Handle<URLSearchParams>, String>> body_value;
         if (!body_property_value.is_nullish())
             body_value = TRY(body_property_value_to_variant(body_property_value));
         init.body = body_value;
@@ -161,7 +161,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (arg1.is_object())
         headers_property_value = TRY(arg1.as_object().get("headers"));
     if (!headers_property_value.is_undefined()) {
-        auto headers_property_value_to_variant = [&vm, &realm](JS::Value headers_property_value) -> JS::ThrowCompletionOr<Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>>> {
+        auto headers_property_value_to_variant = [&vm, &realm](JS::Value headers_property_value) -> JS::ThrowCompletionOr<Variant<Vector<Vector<String>>, OrderedHashMap<String, String>>> {
             // These might be unused.
             (void)vm;
             (void)realm;
@@ -170,7 +170,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                 auto* method = TRY(headers_property_value.get_method(vm, *vm.well_known_symbol_iterator()));
                 if (method) {
                     auto iterator1 = TRY(JS::get_iterator(vm, headers_property_value, JS::IteratorHint::Sync, method));
-                    Vector<Vector<DeprecatedString>> headers_value;
+                    Vector<Vector<String>> headers_value;
                     for (;;) {
                         auto* next1 = TRY(JS::iterator_step(vm, iterator1));
                         if (!next1)
@@ -182,17 +182,15 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                         if (!iterator_method1)
                             return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, next_item1.to_string_without_side_effects()));
                         auto iterator2 = TRY(JS::get_iterator(vm, next_item1, JS::IteratorHint::Sync, iterator_method1));
-                        Vector<DeprecatedString> sequence_item1;
+                        Vector<String> sequence_item1;
                         for (;;) {
                             auto* next2 = TRY(JS::iterator_step(vm, iterator2));
                             if (!next2)
                                 break;
                             auto next_item2 = TRY(JS::iterator_value(vm, *next2));
-                            DeprecatedString sequence_item2;
-                            if (next_item2.is_null() && false) {
-                                sequence_item2 = DeprecatedString::empty();
-                            } else {
-                                sequence_item2 = TRY(next_item2.to_deprecated_string(vm));
+                            String sequence_item2;
+                            if (!false || !next_item2.is_null()) {
+                                sequence_item2 = TRY(next_item2.to_string(vm));
                             }
                             sequence_item1.append(sequence_item2);
                         }
@@ -200,25 +198,21 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
                     }
                     return headers_value;
                 }
-                OrderedHashMap<DeprecatedString, DeprecatedString> record_union_type;
+                OrderedHashMap<String, String> record_union_type;
                 auto record_keys1 = TRY(headers_property_value_object.internal_own_property_keys());
                 for (auto& key1 : record_keys1) {
                     auto property_key1 = MUST(JS::PropertyKey::from_value(vm, key1));
                     auto descriptor1 = TRY(headers_property_value_object.internal_get_own_property(property_key1));
                     if (!descriptor1.has_value() || !descriptor1->enumerable.has_value() || !descriptor1->enumerable.value())
                         continue;
-                    DeprecatedString typed_key1;
-                    if (key1.is_null() && false) {
-                        typed_key1 = DeprecatedString::empty();
-                    } else {
-                        typed_key1 = TRY(key1.to_deprecated_string(vm));
+                    String typed_key1;
+                    if (!false || !key1.is_null()) {
+                        typed_key1 = TRY(key1.to_string(vm));
                     }
                     auto value1 = TRY(headers_property_value_object.get(property_key1));
-                    DeprecatedString typed_value1;
-                    if (value1.is_null() && false) {
-                        typed_value1 = DeprecatedString::empty();
-                    } else {
-                        typed_value1 = TRY(value1.to_deprecated_string(vm));
+                    String typed_value1;
+                    if (!false || !value1.is_null()) {
+                        typed_value1 = TRY(value1.to_string(vm));
                     }
                     record_union_type.set(typed_key1, typed_value1);
                 }
@@ -226,7 +220,7 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
             }
             return vm.throw_completion<JS::TypeError>("No union types matched"sv);
         };
-        Optional<Variant<Vector<Vector<DeprecatedString>>, OrderedHashMap<DeprecatedString, DeprecatedString>>> headers_value;
+        Optional<Variant<Vector<Vector<String>>, OrderedHashMap<String, String>>> headers_value;
         if (!headers_property_value.is_nullish())
             headers_value = TRY(headers_property_value_to_variant(headers_property_value));
         init.headers = headers_value;
@@ -235,14 +229,13 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (arg1.is_object())
         integrity_property_value = TRY(arg1.as_object().get("integrity"));
     if (!integrity_property_value.is_undefined()) {
-        DeprecatedString integrity_value;
+        Optional<String> integrity_value;
         if (!integrity_property_value.is_undefined()) {
-            if (integrity_property_value.is_null() && false)
-                integrity_value = DeprecatedString::empty();
-            else
-                integrity_value = TRY(integrity_property_value.to_deprecated_string(vm));
+            if (!false || !integrity_property_value.is_null())
+                integrity_value = TRY(integrity_property_value.to_string(vm));
         }
-        init.integrity = integrity_value;
+        if (integrity_value.has_value())
+            init.integrity = integrity_value.release_value();
     }
     auto keepalive_property_value = JS::js_undefined();
     if (arg1.is_object())
@@ -257,14 +250,13 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (arg1.is_object())
         method_property_value = TRY(arg1.as_object().get("method"));
     if (!method_property_value.is_undefined()) {
-        DeprecatedString method_value;
+        Optional<String> method_value;
         if (!method_property_value.is_undefined()) {
-            if (method_property_value.is_null() && false)
-                method_value = DeprecatedString::empty();
-            else
-                method_value = TRY(method_property_value.to_deprecated_string(vm));
+            if (!false || !method_property_value.is_null())
+                method_value = TRY(method_property_value.to_string(vm));
         }
-        init.method = method_value;
+        if (method_value.has_value())
+            init.method = method_value.release_value();
     }
     auto mode_property_value = JS::js_undefined();
     if (arg1.is_object())
@@ -308,14 +300,13 @@ JS::ThrowCompletionOr<JS::Value> fetch(JS::VM& vm)
     if (arg1.is_object())
         referrer_property_value = TRY(arg1.as_object().get("referrer"));
     if (!referrer_property_value.is_undefined()) {
-        DeprecatedString referrer_value;
+        Optional<String> referrer_value;
         if (!referrer_property_value.is_undefined()) {
-            if (referrer_property_value.is_null() && false)
-                referrer_value = DeprecatedString::empty();
-            else
-                referrer_value = TRY(referrer_property_value.to_deprecated_string(vm));
+            if (!false || !referrer_property_value.is_null())
+                referrer_value = TRY(referrer_property_value.to_string(vm));
         }
-        init.referrer = referrer_value;
+        if (referrer_value.has_value())
+            init.referrer = referrer_value.release_value();
     }
     auto referrer_policy_property_value = JS::js_undefined();
     if (arg1.is_object())
