@@ -1646,9 +1646,6 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     @result_expression@ JS::PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, Bindings::idl_enum_to_string(@value@)));
 )~~~");
         }
-        scoped_generator.append(R"~~~(
-    @result_expression@ JS::PrimitiveString::create(vm, Bindings::idl_enum_to_deprecated_string(@value@));
-)~~~");
     } else if (interface.callback_functions.contains(type.name())) {
         // https://webidl.spec.whatwg.org/#es-callback-function
 
