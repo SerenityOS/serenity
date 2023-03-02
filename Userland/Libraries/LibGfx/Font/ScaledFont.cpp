@@ -6,6 +6,7 @@
 
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
+#include <LibGfx/Font/Emoji.h>
 #include <LibGfx/Font/ScaledFont.h>
 
 namespace Gfx {
@@ -44,18 +45,20 @@ ALWAYS_INLINE float ScaledFont::unicode_view_width(T const& view) const
     float width = 0;
     float longest_width = 0;
     u32 last_code_point = 0;
-    for (auto code_point : view) {
+
+    for (auto it = view.begin(); it != view.end(); last_code_point = *it, ++it) {
+        auto code_point = *it;
+
         if (code_point == '\n' || code_point == '\r') {
             longest_width = max(width, longest_width);
             width = 0;
-            last_code_point = code_point;
             continue;
         }
-        u32 glyph_id = glyph_id_for_code_point(code_point);
+
         auto kerning = glyphs_horizontal_kerning(last_code_point, code_point);
-        width += kerning + glyph_metrics(glyph_id).advance_width;
-        last_code_point = code_point;
+        width += kerning + glyph_or_emoji_width(it);
     }
+
     longest_width = max(width, longest_width);
     return longest_width;
 }
@@ -98,20 +101,23 @@ float ScaledFont::glyph_width(u32 code_point) const
     return metrics.advance_width;
 }
 
+template<typename CodePointIterator>
+static float glyph_or_emoji_width_impl(ScaledFont const& font, CodePointIterator& it)
+{
+    if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it))
+        return font.pixel_size() * emoji->width() / emoji->height();
+
+    return font.glyph_width(*it);
+}
+
 float ScaledFont::glyph_or_emoji_width(Utf8CodePointIterator& it) const
 {
-    // FIXME: Support multi-code point emoji with scaled fonts.
-    auto id = glyph_id_for_code_point(*it);
-    auto metrics = glyph_metrics(id);
-    return metrics.advance_width;
+    return glyph_or_emoji_width_impl(*this, it);
 }
 
 float ScaledFont::glyph_or_emoji_width(Utf32CodePointIterator& it) const
 {
-    // FIXME: Support multi-code point emoji with scaled fonts.
-    auto id = glyph_id_for_code_point(*it);
-    auto metrics = glyph_metrics(id);
-    return metrics.advance_width;
+    return glyph_or_emoji_width_impl(*this, it);
 }
 
 float ScaledFont::glyphs_horizontal_kerning(u32 left_code_point, u32 right_code_point) const
