@@ -29,7 +29,7 @@ static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
     Vector<String> lines;
 
     // FIXME: Both the month name and month header text should be provided by a locale
-    TRY(lines.try_append(TRY(String::formatted("     {:02} - {:02}    ", month, year))));
+    TRY(lines.try_append(TRY(String::formatted("{:^20s}", TRY(String::formatted("{:02} - {:02}", month, year))))));
     TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
 
     int day_to_print = 1;
