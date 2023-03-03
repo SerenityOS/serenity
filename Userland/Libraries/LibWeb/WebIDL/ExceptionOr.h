@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,7 +29,7 @@ enum class SimpleExceptionType {
 
 struct SimpleException {
     SimpleExceptionType type;
-    DeprecatedString message;
+    Variant<String, StringView> message;
 };
 
 template<typename ValueType>

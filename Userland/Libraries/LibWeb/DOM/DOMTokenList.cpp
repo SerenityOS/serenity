@@ -216,10 +216,7 @@ WebIDL::ExceptionOr<bool> DOMTokenList::supports([[maybe_unused]] StringView tok
     // FIXME: Implement this fully when any use case defines supported tokens.
 
     // 1. If the associated attribute’s local name does not define supported tokens, throw a TypeError.
-    return WebIDL::SimpleException {
-        WebIDL::SimpleExceptionType::TypeError,
-        DeprecatedString::formatted("Attribute {} does not define any supported tokens", m_associated_attribute)
-    };
+    return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, String::formatted("Attribute {} does not define any supported tokens", m_associated_attribute).release_value_but_fixme_should_propagate_errors() };
 
     // 2. Let lowercase token be a copy of token, in ASCII lowercase.
     // 3. If lowercase token is present in supported tokens, return true.
