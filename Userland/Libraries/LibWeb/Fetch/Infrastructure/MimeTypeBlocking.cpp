@@ -24,7 +24,7 @@ RequestOrResponseBlocking should_response_to_request_be_blocked_due_to_its_mime_
     // 4. If destination is script-like and one of the following is true, then return blocked:
     if (request.destination_is_script_like() && (
             // - mimeType’s essence starts with "audio/", "image/", or "video/".
-            any_of(Array { "audio/"sv, "image/"sv, "video/"sv }, [&](auto prefix) { return mime_type->essence().starts_with(prefix); })
+            any_of(Array { "audio/"sv, "image/"sv, "video/"sv }, [&](auto prefix) { return mime_type->essence().starts_with_bytes(prefix); })
             // - mimeType’s essence is "text/csv".
             || mime_type->essence() == "text/csv"sv)) {
         return RequestOrResponseBlocking::Blocked;
