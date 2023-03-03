@@ -41,6 +41,8 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     auto text = m_client->get_text();
     clear_nested_token_pairs();
 
+    // FIXME: Add folding regions for start and end tags.
+    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
     Vector<GUI::TextDocumentSpan> spans;
     auto highlight = [&](auto start_line, auto start_column, auto end_line, auto end_column, Gfx::TextAttributes attributes, AugmentedTokenKind kind) {
         if (start_line > end_line || (start_line == end_line && start_column >= end_column)) {
@@ -101,6 +103,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                     }
 
                     spans.extend(proxy_client.corrected_spans());
+                    folding_regions.extend(proxy_client.corrected_folding_regions());
                     substring_builder.clear();
                 } else if (state == State::CSS) {
                     Syntax::ProxyHighlighterClient proxy_client {
@@ -118,6 +121,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                     }
 
                     spans.extend(proxy_client.corrected_spans());
+                    folding_regions.extend(proxy_client.corrected_folding_regions());
                     substring_builder.clear();
                 }
                 state = State::HTML;
@@ -138,6 +142,11 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                 token->end_position().column,
                 { palette.syntax_comment(), {} },
                 AugmentedTokenKind::Comment);
+
+            GUI::TextDocumentFoldingRegion region;
+            region.range.set_start({ token->start_position().line, token->start_position().column + comment_prefix()->length() });
+            region.range.set_end({ token->end_position().line, token->end_position().column - comment_suffix()->length() });
+            folding_regions.append(move(region));
         } else if (token->is_start_tag() || token->is_end_tag()) {
             highlight(
                 token->start_position().line,
@@ -183,6 +192,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     }
 
     m_client->do_set_spans(move(spans));
+    m_client->do_set_folding_regions(move(folding_regions));
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
     m_client->do_update();
