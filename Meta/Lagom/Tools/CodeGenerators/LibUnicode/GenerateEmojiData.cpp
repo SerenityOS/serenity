@@ -12,6 +12,7 @@
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
 #include <LibUnicode/Emoji.h>
 
@@ -162,6 +163,45 @@ static ErrorOr<void> parse_emoji_serenity_data(Core::BufferedFile& file, EmojiDa
 
         emoji.name = emoji_data.unique_strings.ensure(move(name));
         TRY(emoji_data.emojis.try_append(move(emoji)));
+    }
+
+    return {};
+}
+
+static ErrorOr<void> validate_emoji(StringView emoji_resource_path, EmojiData& emoji_data)
+{
+    Core::DirIterator iterator(emoji_resource_path, Core::DirIterator::SkipDots);
+
+    while (iterator.has_next()) {
+        auto filename = iterator.next_path();
+
+        auto lexical_path = LexicalPath(filename);
+        if (lexical_path.extension() != "png")
+            continue;
+
+        auto basename = lexical_path.basename();
+        if (!basename.starts_with("U+"sv))
+            continue;
+
+        basename = basename.substring_view(0, basename.length() - lexical_path.extension().length() - 1);
+
+        Vector<u32> code_points;
+        TRY(basename.for_each_split_view('_', SplitBehavior::Nothing, [&](auto segment) -> ErrorOr<void> {
+            auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segment.substring_view(2));
+            VERIFY(code_point.has_value());
+
+            TRY(code_points.try_append(*code_point));
+            return {};
+        }));
+
+        auto it = emoji_data.emojis.find_if([&](auto const& emoji) {
+            return emoji.code_points == code_points;
+        });
+
+        if (it == emoji_data.emojis.end()) {
+            warnln("\x1b[1;31mError!\x1b[0m Emoji data for \x1b[35m{}\x1b[0m not found. Please check emoji-test.txt and emoji-serenity.txt.", filename);
+            return Error::from_errno(ENOENT);
+        }
     }
 
     return {};
@@ -356,6 +396,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!emoji_serenity_path.is_empty()) {
         auto emoji_serenity_file = TRY(open_file(emoji_serenity_path, Core::File::OpenMode::Read));
         TRY(parse_emoji_serenity_data(*emoji_serenity_file, emoji_data));
+
+        TRY(validate_emoji(emoji_resource_path, emoji_data));
     }
 
     size_t code_point_array_index { 0 };
