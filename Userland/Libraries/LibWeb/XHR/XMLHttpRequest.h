@@ -79,9 +79,9 @@ private:
     void set_status(Fetch::Infrastructure::Status status) { m_status = status; }
     void fire_progress_event(DeprecatedString const&, u64, u64);
 
-    MimeSniff::MimeType get_response_mime_type() const;
-    Optional<StringView> get_final_encoding() const;
-    MimeSniff::MimeType get_final_mime_type() const;
+    ErrorOr<MimeSniff::MimeType> get_response_mime_type() const;
+    ErrorOr<Optional<StringView>> get_final_encoding() const;
+    ErrorOr<MimeSniff::MimeType> get_final_mime_type() const;
 
     DeprecatedString get_text_response() const;
 

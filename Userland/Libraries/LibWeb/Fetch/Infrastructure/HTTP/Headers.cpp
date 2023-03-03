@@ -298,7 +298,7 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
 }
 
 // https://fetch.spec.whatwg.org/#concept-header-extract-mime-type
-Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
+ErrorOr<Optional<MimeSniff::MimeType>> HeaderList::extract_mime_type() const
 {
     // 1. Let charset be null.
     Optional<String> charset;
@@ -312,17 +312,17 @@ Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
     // 4. Let values be the result of getting, decoding, and splitting `Content-Type` from headers.
     auto values_or_error = get_decode_and_split("Content-Type"sv.bytes());
     if (values_or_error.is_error())
-        return {};
+        return OptionalNone {};
     auto values = values_or_error.release_value();
 
     // 5. If values is null, then return failure.
     if (!values.has_value())
-        return {};
+        return OptionalNone {};
 
     // 6. For each value of values:
     for (auto const& value : *values) {
         // 1. Let temporaryMimeType be the result of parsing value.
-        auto temporary_mime_type = MimeSniff::MimeType::parse(value).release_value_but_fixme_should_propagate_errors();
+        auto temporary_mime_type = TRY(MimeSniff::MimeType::parse(value));
 
         // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
         if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
@@ -346,7 +346,7 @@ Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
         }
         // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
         else if (!mime_type->parameters().contains("charset"sv) && charset.has_value()) {
-            mime_type->set_parameter("charset"_string.release_value_but_fixme_should_propagate_errors(), charset.release_value()).release_value_but_fixme_should_propagate_errors();
+            TRY(mime_type->set_parameter(TRY("charset"_string), charset.release_value()));
         }
     }
 

@@ -161,7 +161,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto mime_type_as_string = TRY_OR_THROW_OOM(vm, get_final_mime_type().serialized());
+        auto mime_type_as_string = TRY_OR_THROW_OOM(vm, TRY_OR_THROW_OOM(vm, get_final_mime_type()).serialized());
         auto blob_part = TRY(FileAPI::Blob::create(realm(), m_received_bytes, move(mime_type_as_string)));
         auto blob = TRY(FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
         m_response_object = JS::Value(blob.ptr());
@@ -200,7 +200,7 @@ DeprecatedString XMLHttpRequest::get_text_response() const
     // FIXME: 1. If xhr’s response’s body is null, then return the empty string.
 
     // 2. Let charset be the result of get a final encoding for xhr.
-    auto charset = get_final_encoding();
+    auto charset = get_final_encoding().release_value_but_fixme_should_propagate_errors();
 
     auto is_xml_mime_type = [](MimeSniff::MimeType const& mime_type) {
         // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
@@ -211,7 +211,7 @@ DeprecatedString XMLHttpRequest::get_text_response() const
     };
 
     // 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
-    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty && !charset.has_value() && is_xml_mime_type(get_final_mime_type())) {
+    if (m_response_type == Bindings::XMLHttpRequestResponseType::Empty && !charset.has_value() && is_xml_mime_type(get_final_mime_type().release_value_but_fixme_should_propagate_errors())) {
         // FIXME: then use the rules set forth in the XML specifications to determine the encoding. Let charset be the determined encoding. [XML] [XML-NAMES]
     }
 
@@ -229,7 +229,7 @@ DeprecatedString XMLHttpRequest::get_text_response() const
 }
 
 // https://xhr.spec.whatwg.org/#final-mime-type
-MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
+ErrorOr<MimeSniff::MimeType> XMLHttpRequest::get_final_mime_type() const
 {
     // 1. If xhr’s override MIME type is null, return the result of get a response MIME type for xhr.
     if (!m_override_mime_type.has_value())
@@ -240,36 +240,36 @@ MimeSniff::MimeType XMLHttpRequest::get_final_mime_type() const
 }
 
 // https://xhr.spec.whatwg.org/#response-mime-type
-MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
+ErrorOr<MimeSniff::MimeType> XMLHttpRequest::get_response_mime_type() const
 {
     auto& vm = this->vm();
 
     // FIXME: Use an actual HeaderList for XHR headers.
     auto header_list = Fetch::Infrastructure::HeaderList::create(vm);
     for (auto const& entry : m_response_headers) {
-        auto header = Fetch::Infrastructure::Header::from_string_pair(entry.key, entry.value).release_value_but_fixme_should_propagate_errors();
-        header_list->append(move(header)).release_value_but_fixme_should_propagate_errors();
+        auto header = TRY(Fetch::Infrastructure::Header::from_string_pair(entry.key, entry.value));
+        TRY(header_list->append(move(header)));
     }
 
     // 1. Let mimeType be the result of extracting a MIME type from xhr’s response’s header list.
-    auto mime_type = header_list->extract_mime_type();
+    auto mime_type = TRY(header_list->extract_mime_type());
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
-        return MimeSniff::MimeType::create("text"_string.release_value_but_fixme_should_propagate_errors(), "xml"_short_string).release_value_but_fixme_should_propagate_errors();
+        return MimeSniff::MimeType::create(TRY("text"_string), "xml"_short_string);
 
     // 3. Return mimeType.
     return mime_type.release_value();
 }
 
 // https://xhr.spec.whatwg.org/#final-charset
-Optional<StringView> XMLHttpRequest::get_final_encoding() const
+ErrorOr<Optional<StringView>> XMLHttpRequest::get_final_encoding() const
 {
     // 1. Let label be null.
     Optional<DeprecatedString> label;
 
     // 2. Let responseMIME be the result of get a response MIME type for xhr.
-    auto response_mime = get_response_mime_type();
+    auto response_mime = TRY(get_response_mime_type());
 
     // 3. If responseMIME’s parameters["charset"] exists, then set label to it.
     auto response_mime_charset_it = response_mime.parameters().find("charset"sv);
@@ -285,7 +285,7 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
 
     // 5. If label is null, then return null.
     if (!label.has_value())
-        return {};
+        return OptionalNone {};
 
     // 6. Let encoding be the result of getting an encoding from label.
     auto encoding = TextCodec::get_standardized_encoding(label.value());

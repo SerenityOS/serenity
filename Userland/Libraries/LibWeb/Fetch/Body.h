@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,7 +26,7 @@ class BodyMixin {
 public:
     virtual ~BodyMixin();
 
-    virtual Optional<MimeSniff::MimeType> mime_type_impl() const = 0;
+    virtual ErrorOr<Optional<MimeSniff::MimeType>> mime_type_impl() const = 0;
     virtual Optional<Infrastructure::Body&> body_impl() = 0;
     virtual Optional<Infrastructure::Body const&> body_impl() const = 0;
 

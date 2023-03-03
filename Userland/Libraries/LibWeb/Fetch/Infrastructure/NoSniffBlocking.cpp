@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,7 +38,7 @@ ErrorOr<RequestOrResponseBlocking> should_response_to_request_be_blocked_due_to_
         return RequestOrResponseBlocking::Allowed;
 
     // 2. Let mimeType be the result of extracting a MIME type from response’s header list.
-    auto mime_type = response.header_list()->extract_mime_type();
+    auto mime_type = TRY(response.header_list()->extract_mime_type());
 
     // 3. Let destination be request’s destination.
     auto const& destination = request.destination();
