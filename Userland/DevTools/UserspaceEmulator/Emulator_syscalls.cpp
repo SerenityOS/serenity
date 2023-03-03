@@ -100,8 +100,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$futex(arg1);
     case SC_get_dir_entries:
         return virt$get_dir_entries(arg1, arg2, arg3);
-    case SC_get_process_name:
-        return virt$get_process_name(arg1, arg2);
     case SC_get_stack_bounds:
         return virt$get_stack_bounds(arg1, arg2);
     case SC_getcwd:
@@ -210,8 +208,6 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$sendmsg(arg1, arg2, arg3);
     case SC_set_mmap_name:
         return virt$set_mmap_name(arg1);
-    case SC_set_process_name:
-        return virt$set_process_name(arg1, arg2);
     case SC_set_thread_name:
         return virt$set_thread_name(arg1, arg2, arg3);
     case SC_setgid:
@@ -569,28 +565,6 @@ int Emulator::virt$set_mmap_name(FlatPtr params_addr)
         return -EINVAL;
     static_cast<MmapRegion&>(*region).set_name(DeprecatedString::copy(name));
     return 0;
-}
-
-int Emulator::virt$get_process_name(FlatPtr buffer, int size)
-{
-    if (size < 0)
-        return -EINVAL;
-    auto host_buffer_result = ByteBuffer::create_zeroed((size_t)size);
-    if (host_buffer_result.is_error())
-        return -ENOMEM;
-    auto& host_buffer = host_buffer_result.value();
-    int rc = syscall(SC_get_process_name, host_buffer.data(), host_buffer.size());
-    mmu().copy_to_vm(buffer, host_buffer.data(), host_buffer.size());
-    return rc;
-}
-
-int Emulator::virt$set_process_name(FlatPtr user_buffer, int size)
-{
-    if (size < 0)
-        return -EINVAL;
-    auto host_buffer = mmu().copy_buffer_from_vm(user_buffer, size);
-    auto name = DeprecatedString::formatted("(UE) {}", StringView { host_buffer.data(), host_buffer.size() });
-    return syscall(SC_set_process_name, name.characters(), name.length());
 }
 
 int Emulator::virt$lseek(int fd, FlatPtr offset_addr, int whence)

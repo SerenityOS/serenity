@@ -293,8 +293,6 @@ public:
     ErrorOr<FlatPtr> sys$yield();
     ErrorOr<FlatPtr> sys$sync();
     ErrorOr<FlatPtr> sys$beep(int tone);
-    ErrorOr<FlatPtr> sys$get_process_name(Userspace<char*> buffer, size_t buffer_size);
-    ErrorOr<FlatPtr> sys$set_process_name(Userspace<char const*> user_name, size_t user_name_length);
     ErrorOr<FlatPtr> sys$create_inode_watcher(u32 flags);
     ErrorOr<FlatPtr> sys$inode_watcher_add_watch(Userspace<Syscall::SC_inode_watcher_add_watch_params const*> user_params);
     ErrorOr<FlatPtr> sys$inode_watcher_remove_watch(int fd, int wd);
