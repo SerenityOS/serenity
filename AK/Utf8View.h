@@ -7,10 +7,13 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
+
+#ifndef KERNEL
+#    include <AK/DeprecatedString.h>
+#endif
 
 namespace AK {
 
@@ -61,19 +64,21 @@ public:
 
     Utf8View() = default;
 
-    explicit Utf8View(DeprecatedString& string)
-        : m_string(string.view())
-    {
-    }
-
     explicit constexpr Utf8View(StringView string)
         : m_string(string)
     {
     }
 
-    ~Utf8View() = default;
+#ifndef KERNEL
+    explicit Utf8View(DeprecatedString& string)
+        : m_string(string.view())
+    {
+    }
 
     explicit Utf8View(DeprecatedString&&) = delete;
+#endif
+
+    ~Utf8View() = default;
 
     StringView as_string() const { return m_string; }
 
@@ -224,6 +229,7 @@ private:
     mutable bool m_have_length { false };
 };
 
+#ifndef KERNEL
 class DeprecatedStringCodePointIterator {
 public:
     Optional<u32> next()
@@ -257,6 +263,7 @@ private:
     DeprecatedString m_string;
     Utf8CodePointIterator m_it;
 };
+#endif
 
 template<>
 struct Formatter<Utf8View> : Formatter<StringView> {
@@ -266,7 +273,9 @@ struct Formatter<Utf8View> : Formatter<StringView> {
 }
 
 #if USING_AK_GLOBALLY
+#    ifndef KERNEL
 using AK::DeprecatedStringCodePointIterator;
+#    endif
 using AK::Utf8CodePointIterator;
 using AK::Utf8View;
 #endif
