@@ -34,6 +34,10 @@
 #    cmakedefine01 CANVAS_RENDERING_CONTEXT_2D_DEBUG
 #endif
 
+#ifndef CMAKE_DEBUG
+#    cmakedefine01 CMAKE_DEBUG
+#endif
+
 #ifndef COMPOSE_DEBUG
 #    cmakedefine01 COMPOSE_DEBUG
 #endif
