@@ -23,8 +23,8 @@ namespace GUI {
 Button::Button(String text)
     : AbstractButton(move(text))
 {
-    set_min_size({ 40, 22 });
-    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
+    set_min_size({ 40, SpecialDimension::Shrink });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink });
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 
     on_focus_change = [this](bool has_focus, auto) {
@@ -275,24 +275,26 @@ void Button::timer_event(Core::TimerEvent&)
 
 Optional<UISize> Button::calculated_min_size() const
 {
-    int horizontal = 0, vertical = 0;
+    int width = 0;
+    int height = 0;
 
     if (!text().is_empty()) {
         auto& font = this->font();
-        horizontal = static_cast<int>(ceilf(font.width(text()))) + 2;
-        vertical = font.pixel_size_rounded_up() + 4; // FIXME: Use actual maximum total height
+        width = static_cast<int>(ceilf(font.width(text()))) + 2;
+        height = font.pixel_size_rounded_up() + 4; // FIXME: Use actual maximum total height
     }
 
     if (m_icon) {
-        vertical = max(vertical, m_icon->height());
-
-        horizontal += m_icon->width() + icon_spacing();
+        height += max(height, m_icon->height());
+        width += m_icon->width() + icon_spacing();
     }
 
-    horizontal += 8;
-    vertical += 4;
+    width += 8;
+    height += 4;
 
-    return UISize(horizontal, vertical);
+    height = max(22, height);
+
+    return UISize(width, height);
 }
 
 }
