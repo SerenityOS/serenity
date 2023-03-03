@@ -171,7 +171,6 @@ private:
     int virt$ftruncate(int fd, FlatPtr length_addr);
     int virt$futex(FlatPtr);
     int virt$get_dir_entries(int fd, FlatPtr buffer, ssize_t);
-    int virt$get_process_name(FlatPtr buffer, int size);
     int virt$get_stack_bounds(FlatPtr, FlatPtr);
     int virt$getcwd(FlatPtr buffer, size_t buffer_size);
     gid_t virt$getegid();

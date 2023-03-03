@@ -26,6 +26,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/prctl.h>
 #include <sys/resource.h>
 #include <sys/select.h>
 #include <sys/stat.h>
@@ -969,13 +970,13 @@ void dump_backtrace()
 
 int get_process_name(char* buffer, int buffer_size)
 {
-    int rc = syscall(SC_get_process_name, buffer, buffer_size);
+    int rc = syscall(SC_prctl, PR_GET_PROCESS_NAME, buffer, buffer_size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int set_process_name(char const* name, size_t name_length)
 {
-    int rc = syscall(SC_set_process_name, name, name_length);
+    int rc = syscall(SC_prctl, PR_SET_PROCESS_NAME, name, name_length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

@@ -690,11 +690,6 @@ static void format_dbgputstr(FormattedSyscallBuilder& builder, char* characters,
     builder.add_argument(StringArgument { { characters, size }, "\0\n"sv });
 }
 
-static void format_get_process_name(FormattedSyscallBuilder& builder, char* buffer, size_t buffer_size)
-{
-    builder.add_argument(StringArgument { { buffer, buffer_size }, "\0"sv });
-}
-
 static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::Function syscall_function, syscall_arg_t arg1, syscall_arg_t arg2, syscall_arg_t arg3, syscall_arg_t res)
 {
     enum ResultType {
@@ -729,9 +724,6 @@ static ErrorOr<void> format_syscall(FormattedSyscallBuilder& builder, Syscall::F
     case SC_chdir:
         format_chdir(builder, (char const*)arg1, (size_t)arg2);
         result_type = Int;
-        break;
-    case SC_get_process_name:
-        format_get_process_name(builder, (char*)arg1, (size_t)arg2);
         break;
     case SC_getrandom:
         format_getrandom(builder, (void*)arg1, (size_t)arg2, (unsigned)arg3);
