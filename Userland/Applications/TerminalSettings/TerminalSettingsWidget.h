@@ -27,13 +27,9 @@ private:
     static DeprecatedString stringify_bell(VT::TerminalWidget::BellMode bell_mode);
 
     VT::TerminalWidget::BellMode m_bell_mode { VT::TerminalWidget::BellMode::Disabled };
-    size_t m_max_history_size;
-    bool m_show_scrollbar { true };
     bool m_confirm_close { true };
 
     VT::TerminalWidget::BellMode m_original_bell_mode;
-    size_t m_original_max_history_size;
-    bool m_orignal_show_scrollbar { true };
     bool m_orignal_confirm_close { true };
 };
 
@@ -52,10 +48,14 @@ private:
     DeprecatedString m_color_scheme;
     VT::CursorShape m_cursor_shape { VT::CursorShape::Block };
     bool m_cursor_is_blinking_set { true };
+    size_t m_max_history_size;
+    bool m_show_scrollbar { true };
 
     RefPtr<Gfx::Font const> m_original_font;
     float m_original_opacity;
     DeprecatedString m_original_color_scheme;
     VT::CursorShape m_original_cursor_shape;
     bool m_original_cursor_is_blinking_set;
+    size_t m_original_max_history_size;
+    bool m_original_show_scrollbar { true };
 };

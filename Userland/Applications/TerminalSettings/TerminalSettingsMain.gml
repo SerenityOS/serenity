@@ -6,38 +6,6 @@
     }
 
     @GUI::GroupBox {
-        title: "Scrollback"
-        preferred_height: "fit"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [8]
-            spacing: 8
-        }
-
-        @GUI::Widget {
-            preferred_height: "shrink"
-            layout: @GUI::HorizontalBoxLayout {}
-
-            @GUI::SpinBox {
-                name: "history_size_spinbox"
-                min: 0
-                max: 40960
-                orientation: "Horizontal"
-                preferred_width: 100
-            }
-
-            @GUI::Label {
-                text: "lines"
-                autosize: true
-            }
-        }
-
-        @GUI::CheckBox {
-            name: "terminal_show_scrollbar"
-            text: "Show terminal scrollbar"
-        }
-    }
-
-    @GUI::GroupBox {
         title: "Bell mode"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
