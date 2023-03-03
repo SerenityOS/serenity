@@ -19,7 +19,7 @@ namespace Web::MimeSniff {
 bool is_javascript_mime_type_essence_match(DeprecatedString const& string)
 {
     // NOTE: The mime type parser automatically lowercases the essence.
-    auto type = MimeType::from_string(string);
+    auto type = MimeType::parse(string);
     if (!type.has_value())
         return false;
     return type->is_javascript();
@@ -64,7 +64,7 @@ static bool contains_only_http_token_code_points(StringView string)
 }
 
 // https://mimesniff.spec.whatwg.org/#parse-a-mime-type
-Optional<MimeType> MimeType::from_string(StringView string)
+Optional<MimeType> MimeType::parse(StringView string)
 {
     // 1. Remove any leading and trailing HTTP whitespace from input.
     auto trimmed_string = string.trim(Fetch::Infrastructure::HTTP_WHITESPACE, TrimMode::Both);

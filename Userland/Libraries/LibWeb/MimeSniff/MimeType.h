@@ -17,7 +17,7 @@ bool is_javascript_mime_type_essence_match(DeprecatedString const&);
 // https://mimesniff.spec.whatwg.org/#mime-type
 class MimeType {
 public:
-    static Optional<MimeType> from_string(StringView);
+    static Optional<MimeType> parse(StringView);
 
     MimeType(DeprecatedString type, DeprecatedString subtype);
     ~MimeType();

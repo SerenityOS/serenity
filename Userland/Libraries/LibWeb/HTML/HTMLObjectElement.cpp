@@ -218,7 +218,7 @@ void HTMLObjectElement::resource_did_load()
 
 static bool is_xml_mime_type(StringView resource_type)
 {
-    auto mime_type = MimeSniff::MimeType::from_string(resource_type);
+    auto mime_type = MimeSniff::MimeType::parse(resource_type);
     if (!mime_type.has_value())
         return false;
 
