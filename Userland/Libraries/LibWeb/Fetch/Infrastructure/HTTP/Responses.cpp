@@ -37,16 +37,16 @@ JS::NonnullGCPtr<Response> Response::create(JS::VM& vm)
 // A network error is a response whose status is always 0, status message is always
 // the empty byte sequence, header list is always empty, and body is always null.
 
-ErrorOr<JS::NonnullGCPtr<Response>> Response::aborted_network_error(JS::VM& vm)
+JS::NonnullGCPtr<Response> Response::aborted_network_error(JS::VM& vm)
 {
-    auto response = network_error(vm, TRY("Fetch has been aborted"_string));
+    auto response = network_error(vm, "Fetch has been aborted"sv);
     response->set_aborted(true);
     return response;
 }
 
-JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, String message)
+JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, Variant<String, StringView> message)
 {
-    dbgln_if(WEB_FETCH_DEBUG, "Fetch: Creating network error response with message: {}", message);
+    dbgln_if(WEB_FETCH_DEBUG, "Fetch: Creating network error response with message: {}", message.visit([](auto const& s) -> StringView { return s; }));
     auto response = Response::create(vm);
     response->set_status(0);
     response->set_type(Type::Error);
@@ -56,15 +56,15 @@ JS::NonnullGCPtr<Response> Response::network_error(JS::VM& vm, String message)
 }
 
 // https://fetch.spec.whatwg.org/#appropriate-network-error
-ErrorOr<JS::NonnullGCPtr<Response>> Response::appropriate_network_error(JS::VM& vm, FetchParams const& fetch_params)
+JS::NonnullGCPtr<Response> Response::appropriate_network_error(JS::VM& vm, FetchParams const& fetch_params)
 {
     // 1. Assert: fetchParams is canceled.
     VERIFY(fetch_params.is_canceled());
 
     // 2. Return an aborted network error if fetchParams is aborted; otherwise return a network error.
     return fetch_params.is_aborted()
-        ? TRY(aborted_network_error(vm))
-        : network_error(vm, TRY("Fetch has been terminated"_string));
+        ? aborted_network_error(vm)
+        : network_error(vm, "Fetch has been terminated"sv);
 }
 
 // https://fetch.spec.whatwg.org/#concept-aborted-network-error
@@ -168,6 +168,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> Response::clone(JS::VM& vm) cons
 
     // 4. Return newResponse.
     return new_response;
+}
+
+// Non-standard
+Optional<StringView> Response::network_error_message() const
+{
+    if (!m_network_error_message.has_value())
+        return {};
+    return m_network_error_message->visit([](auto const& s) -> StringView { return s; });
 }
 
 FilteredResponse::FilteredResponse(JS::NonnullGCPtr<Response> internal_response, JS::NonnullGCPtr<HeaderList> header_list)

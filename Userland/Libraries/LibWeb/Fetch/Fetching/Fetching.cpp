@@ -214,7 +214,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
     // 3. If request’s local-URLs-only flag is set and request’s current URL is not local, then set response to a
     //    network error.
     if (request->local_urls_only() && !Infrastructure::is_local_url(request->current_url()))
-        response = Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'local-URLs-only' flag must have a local URL"_string));
+        response = Infrastructure::Response::network_error(vm, "Request with 'local-URLs-only' flag must have a local URL"sv);
 
     // FIXME: 4. Run report Content Security Policy violations for request.
     // FIXME: 5. Upgrade request to a potentially trustworthy URL, if appropriate.
@@ -225,7 +225,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
         || false // FIXME: "should fetching request be blocked as mixed content"
         || false // FIXME: "should request be blocked by Content Security Policy returns blocked"
     ) {
-        response = Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request was blocked"_string));
+        response = Infrastructure::Response::network_error(vm, "Request was blocked"sv);
     }
 
     // 7. If request’s referrer policy is the empty string, then set request’s referrer policy to request’s policy
@@ -300,13 +300,13 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
         // -> request’s mode is "same-origin"
         else if (request->mode() == Infrastructure::Request::Mode::SameOrigin) {
             // Return a network error.
-            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'same-origin' mode must have same URL and request origin"_string)));
+            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'same-origin' mode must have same URL and request origin"sv));
         }
         // -> request’s mode is "no-cors"
         else if (request->mode() == Infrastructure::Request::Mode::NoCORS) {
             // 1. If request’s redirect mode is not "follow", then return a network error.
             if (request->redirect_mode() != Infrastructure::Request::RedirectMode::Follow)
-                return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'no-cors' mode must have redirect mode set to 'follow'"_string)));
+                return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'no-cors' mode must have redirect mode set to 'follow'"sv));
 
             // 2. Set request’s response tainting to "opaque".
             request->set_response_tainting(Infrastructure::Request::ResponseTainting::Opaque);
@@ -320,7 +320,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
             VERIFY(request->mode() == Infrastructure::Request::Mode::CORS);
 
             // Return a network error.
-            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'cors' mode must have URL with HTTP or HTTPS scheme"_string)));
+            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'cors' mode must have URL with HTTP or HTTPS scheme"sv));
         }
         // -> request’s use-CORS-preflight flag is set
         // -> request’s unsafe-request flag is set and either request’s method is not a CORS-safelisted method or
@@ -479,7 +479,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                 // 1. Let processBodyError be this step: run fetch response handover given fetchParams and a network
                 //    error.
                 auto process_body_error = [&]() -> WebIDL::ExceptionOr<void> {
-                    return fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Response body could not be processed"_string)));
+                    return fetch_response_handover(realm, fetch_params, Infrastructure::Response::network_error(vm, "Response body could not be processed"sv));
                 };
 
                 // 2. If response’s body is null, then run processBodyError and abort these steps.
@@ -668,7 +668,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
 
     // 1. If fetchParams is canceled, then return the appropriate network error for fetchParams.
     if (fetch_params.is_canceled())
-        return PendingResponse::create(vm, fetch_params.request(), TRY_OR_THROW_OOM(vm, Infrastructure::Response::appropriate_network_error(vm, fetch_params)));
+        return PendingResponse::create(vm, fetch_params.request(), Infrastructure::Response::appropriate_network_error(vm, fetch_params));
 
     // 2. Let request be fetchParams’s request.
     auto request = fetch_params.request();
@@ -693,7 +693,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
     // -> "blob"
     else if (request->current_url().scheme() == "blob"sv) {
         // FIXME: Support 'blob://' URLs
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request has 'blob:' URL which is currently unsupported"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has 'blob:' URL which is currently unsupported"sv));
     }
     // -> "data"
     else if (request->current_url().scheme() == "data"sv) {
@@ -705,7 +705,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
 
         // 2. If dataURLStruct is failure, then return a network error.
         if (data_or_error.is_error())
-            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request has invalid base64 'data:' URL"_string)));
+            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has invalid base64 'data:' URL"sv));
 
         // 3. Let mimeType be dataURLStruct’s MIME type, serialized.
         auto const& mime_type = url.data_mime_type();
@@ -724,7 +724,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         // For now, unfortunate as it is, file: URLs are left as an exercise for the reader.
         // When in doubt, return a network error.
         // FIXME: Support 'file://' URLs
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request has 'file:' URL which is currently unsupported"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has 'file:' URL which is currently unsupported"sv));
     }
     // -> HTTP(S) scheme
     else if (Infrastructure::is_http_or_https_scheme(request->current_url().scheme())) {
@@ -806,7 +806,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
                 // - request’s redirect mode is not "follow" and response’s URL list has more than one item.
                 || (request->redirect_mode() != Infrastructure::Request::RedirectMode::Follow && response->url_list().size() > 1)) {
                 // then return a network error.
-                return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Invalid request/response state combination"_string)));
+                return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Invalid request/response state combination"sv));
             }
         }
     }
@@ -984,17 +984,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
 
     // 5. If locationURL is failure, then return a network error.
     if (location_url_or_error.is_error())
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request redirect URL is invalid"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request redirect URL is invalid"sv));
 
     auto location_url = location_url_or_error.release_value().release_value();
 
     // 6. If locationURL’s scheme is not an HTTP(S) scheme, then return a network error.
     if (!Infrastructure::is_http_or_https_scheme(location_url.scheme()))
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request redirect URL must have HTTP or HTTPS scheme"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request redirect URL must have HTTP or HTTPS scheme"sv));
 
     // 7. If request’s redirect count is 20, then return a network error.
     if (request->redirect_count() == 20)
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request has reached maximum redirect count of 20"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has reached maximum redirect count of 20"sv));
 
     // 8. Increase request’s redirect count by 1.
     request->set_redirect_count(request->redirect_count() + 1);
@@ -1005,20 +1005,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
         && location_url.includes_credentials()
         && request->origin().has<HTML::Origin>()
         && !request->origin().get<HTML::Origin>().is_same_origin(URL::url_origin(location_url))) {
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'cors' mode and different URL and request origin must not include credentials in redirect URL"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'cors' mode and different URL and request origin must not include credentials in redirect URL"sv));
     }
 
     // 10. If request’s response tainting is "cors" and locationURL includes credentials, then return a network error.
     // NOTE: This catches a cross-origin resource redirecting to a same-origin URL.
     if (request->response_tainting() == Infrastructure::Request::ResponseTainting::CORS && location_url.includes_credentials())
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'cors' response tainting must not include credentials in redirect URL"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'cors' response tainting must not include credentials in redirect URL"sv));
 
     // 11. If actualResponse’s status is not 303, request’s body is non-null, and request’s body’s source is null, then
     //     return a network error.
     if (actual_response->status() != 303
         && !request->body().has<Empty>()
         && request->body().get<Infrastructure::Body>().source().has<Empty>()) {
-        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request has body but no body source"_string)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request has body but no body source"sv));
     }
 
     // 12. If one of the following is true
@@ -1380,7 +1380,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
     // 9. If aborted, then return the appropriate network error for fetchParams.
     if (aborted)
-        return PendingResponse::create(vm, request, TRY_OR_THROW_OOM(vm, Infrastructure::Response::appropriate_network_error(vm, fetch_params)));
+        return PendingResponse::create(vm, request, Infrastructure::Response::appropriate_network_error(vm, fetch_params));
 
     JS::GCPtr<PendingResponse> pending_forward_response;
 
@@ -1388,7 +1388,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
     if (!response) {
         // 1. If httpRequest’s cache mode is "only-if-cached", then return a network error.
         if (http_request->cache_mode() == Infrastructure::Request::CacheMode::OnlyIfCached)
-            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, TRY_OR_THROW_OOM(vm, "Request with 'only-if-cached' cache mode doesn't have a cached response"_string)));
+            return PendingResponse::create(vm, request, Infrastructure::Response::network_error(vm, "Request with 'only-if-cached' cache mode doesn't have a cached response"sv));
 
         // 2. Let forwardResponse be the result of running HTTP-network fetch given httpFetchParams, includeCredentials,
         //    and isNewConnectionFetch.
@@ -1485,7 +1485,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             if (!request->use_url_credentials() || is_authentication_fetch == IsAuthenticationFetch::Yes) {
                 // 1. If fetchParams is canceled, then return the appropriate network error for fetchParams.
                 if (fetch_params.is_canceled()) {
-                    returned_pending_response->resolve(TRY_OR_IGNORE(Infrastructure::Response::appropriate_network_error(vm, fetch_params)));
+                    returned_pending_response->resolve(Infrastructure::Response::appropriate_network_error(vm, fetch_params));
                     return;
                 }
 
@@ -1522,7 +1522,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
 
                 // 3. If fetchParams is canceled, then return the appropriate network error for fetchParams.
                 if (fetch_params.is_canceled()) {
-                    returned_pending_response->resolve(TRY_OR_IGNORE(Infrastructure::Response::appropriate_network_error(vm, fetch_params)));
+                    returned_pending_response->resolve(Infrastructure::Response::appropriate_network_error(vm, fetch_params));
                     return;
                 }
 
@@ -1548,7 +1548,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_network_or_cache_fet
             ) {
                 // 1. If fetchParams is canceled, then return the appropriate network error for fetchParams.
                 if (fetch_params.is_canceled()) {
-                    returned_pending_response->resolve(TRY_OR_IGNORE(Infrastructure::Response::appropriate_network_error(vm, fetch_params)));
+                    returned_pending_response->resolve(Infrastructure::Response::appropriate_network_error(vm, fetch_params));
                     return;
                 }
                 // 2. Set response to the result of running HTTP-network-or-cache fetch given fetchParams,
