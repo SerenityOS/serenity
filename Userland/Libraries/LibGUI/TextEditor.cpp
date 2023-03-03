@@ -497,17 +497,35 @@ void TextEditor::paint_event(PaintEvent& event)
 
     // NOTE: This lambda and TextEditor::text_width_for_font() are used to substitute all glyphs with m_substitution_code_point if necessary.
     //       Painter::draw_text() and Gfx::Font::width() should not be called directly, but using this lambda and TextEditor::text_width_for_font().
-    auto draw_text = [&](Gfx::IntRect const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextAttributes attributes, bool substitute = true) {
+    auto draw_text = [&](auto const& rect, auto const& raw_text, Gfx::Font const& font, Gfx::TextAlignment alignment, Gfx::TextAttributes attributes, bool substitute = true) {
         if (m_substitution_code_point.has_value() && substitute) {
             painter.draw_text(rect, substitution_code_point_view(raw_text.length()), font, alignment, attributes.color);
         } else {
             painter.draw_text(rect, raw_text, font, alignment, attributes.color);
         }
         if (attributes.underline) {
+            auto bottom_left = [&]() {
+                auto point = rect.bottom_left().translated(0, 1);
+
+                if constexpr (IsSame<RemoveCVReference<decltype(rect)>, Gfx::IntRect>)
+                    return point;
+                else
+                    return point.template to_type<int>();
+            };
+
+            auto bottom_right = [&]() {
+                auto point = rect.bottom_right().translated(0, 1);
+
+                if constexpr (IsSame<RemoveCVReference<decltype(rect)>, Gfx::IntRect>)
+                    return point;
+                else
+                    return point.template to_type<int>();
+            };
+
             if (attributes.underline_style == Gfx::TextAttributes::UnderlineStyle::Solid)
-                painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), attributes.underline_color.value_or(attributes.color));
+                painter.draw_line(bottom_left(), bottom_right(), attributes.underline_color.value_or(attributes.color));
             if (attributes.underline_style == Gfx::TextAttributes::UnderlineStyle::Wavy)
-                painter.draw_triangle_wave(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), attributes.underline_color.value_or(attributes.color), 2);
+                painter.draw_triangle_wave(bottom_left(), bottom_right(), attributes.underline_color.value_or(attributes.color), 2);
         }
     };
 
@@ -651,7 +669,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 draw_text(visual_line_rect, visual_line_text, font(), m_text_alignment, unspanned_text_attributes);
             } else {
                 size_t next_column = 0;
-                Gfx::IntRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
+                Gfx::FloatRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
 
                 auto draw_text_helper = [&](size_t start, size_t end, Gfx::Font const& font, Gfx::TextAttributes text_attributes) {
                     size_t length = end - start;
@@ -660,7 +678,7 @@ void TextEditor::paint_event(PaintEvent& event)
                     auto text = visual_line_text.substring_view(start, length);
                     span_rect.set_width(font.width(text) + font.glyph_spacing());
                     if (text_attributes.background_color.has_value()) {
-                        painter.fill_rect(span_rect, text_attributes.background_color.value());
+                        painter.fill_rect(span_rect.to_type<int>(), text_attributes.background_color.value());
                     }
                     draw_text(span_rect, text, font, m_text_alignment, text_attributes);
                     span_rect.translate_by(span_rect.width(), 0);
