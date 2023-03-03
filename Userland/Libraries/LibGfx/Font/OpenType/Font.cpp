@@ -405,7 +405,6 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<Maxp> opt_maxp = {};
     Optional<Hmtx> opt_hmtx = {};
     Optional<Cmap> opt_cmap = {};
-    Optional<Loca> opt_loca = {};
     Optional<OS2> opt_os2 = {};
     Optional<Kern> opt_kern = {};
     Optional<Fpgm> opt_fpgm = {};
@@ -481,13 +480,17 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         return Error::from_string_literal("Could not load Cmap");
     auto cmap = opt_cmap.value();
 
-    if (!opt_loca_slice.has_value() || !(opt_loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format())).has_value())
-        return Error::from_string_literal("Could not load Loca");
-    auto loca = opt_loca.value();
+    Optional<Loca> loca;
+    if (opt_loca_slice.has_value()) {
+        loca = Loca::from_slice(opt_loca_slice.value(), maxp.num_glyphs(), head.index_to_loc_format());
+        if (!loca.has_value())
+            return Error::from_string_literal("Could not load Loca");
+    }
 
-    if (!opt_glyf_slice.has_value())
-        return Error::from_string_literal("Could not load Glyf");
-    auto glyf = Glyf(opt_glyf_slice.value());
+    Optional<Glyf> glyf;
+    if (opt_glyf_slice.has_value()) {
+        glyf = Glyf(opt_glyf_slice.value());
+    }
 
     Optional<OS2> os2;
     if (opt_os2_slice.has_value())
@@ -560,15 +563,18 @@ Gfx::ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_sca
     };
 }
 
-// FIXME: "loca" and "glyf" are not available for CFF fonts.
 Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const
 {
+    if (!m_loca.has_value() || !m_glyf.has_value()) {
+        return Gfx::ScaledGlyphMetrics {};
+    }
+
     if (glyph_id >= glyph_count()) {
         glyph_id = 0;
     }
     auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
+    auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
+    auto glyph = m_glyf->glyph(glyph_offset);
     return Gfx::ScaledGlyphMetrics {
         .ascender = static_cast<float>(glyph.ascender()) * y_scale,
         .descender = static_cast<float>(glyph.descender()) * y_scale,
@@ -584,14 +590,17 @@ float Font::glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, flo
     return m_kern->get_glyph_kerning(left_glyph_id, right_glyph_id) * x_scale;
 }
 
-// FIXME: "loca" and "glyf" are not available for CFF fonts.
 RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset) const
 {
+    if (!m_loca.has_value() || !m_glyf.has_value()) {
+        return nullptr;
+    }
+
     if (glyph_id >= glyph_count()) {
         glyph_id = 0;
     }
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
+    auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
+    auto glyph = m_glyf->glyph(glyph_offset);
 
     i16 ascender = 0;
     i16 descender = 0;
@@ -608,8 +617,8 @@ RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_s
         if (glyph_id >= glyph_count()) {
             glyph_id = 0;
         }
-        auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-        return m_glyf.glyph(glyph_offset);
+        auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
+        return m_glyf->glyph(glyph_offset);
     });
 }
 
@@ -735,8 +744,12 @@ Optional<ReadonlyBytes> Font::control_value_program() const
 
 Optional<ReadonlyBytes> Font::glyph_program(u32 glyph_id) const
 {
-    auto glyph_offset = m_loca.get_glyph_offset(glyph_id);
-    auto glyph = m_glyf.glyph(glyph_offset);
+    if (!m_loca.has_value() || !m_glyf.has_value()) {
+        return {};
+    }
+
+    auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
+    auto glyph = m_glyf->glyph(glyph_offset);
     return glyph.program();
 }
 
