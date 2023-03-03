@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -45,7 +45,7 @@ void GroupBox::paint_event(PaintEvent& event)
     if (!m_title.is_empty()) {
         Gfx::IntRect text_rect { 6, 1, static_cast<int>(ceilf(font().width(m_title) + 6)), font().glyph_height() };
         painter.fill_rect(text_rect, palette().button());
-        painter.draw_text(text_rect, m_title, Gfx::TextAlignment::Center, palette().button_text());
+        painter.draw_text(text_rect, m_title, Gfx::TextAlignment::CenterLeft, palette().button_text());
     }
 }
 
