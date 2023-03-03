@@ -50,9 +50,9 @@ public:
     };
 
     [[nodiscard]] static JS::NonnullGCPtr<Response> create(JS::VM&);
-    static ErrorOr<JS::NonnullGCPtr<Response>> aborted_network_error(JS::VM&);
-    [[nodiscard]] static JS::NonnullGCPtr<Response> network_error(JS::VM&, String message);
-    static ErrorOr<JS::NonnullGCPtr<Response>> appropriate_network_error(JS::VM&, FetchParams const&);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> aborted_network_error(JS::VM&);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> network_error(JS::VM&, Variant<String, StringView> message);
+    [[nodiscard]] static JS::NonnullGCPtr<Response> appropriate_network_error(JS::VM&, FetchParams const&);
 
     virtual ~Response() = default;
 
@@ -109,7 +109,7 @@ public:
     [[nodiscard]] WebIDL::ExceptionOr<JS::NonnullGCPtr<Response>> clone(JS::VM&) const;
 
     // Non-standard
-    Optional<String> const& network_error_message() const { return m_network_error_message; }
+    [[nodiscard]] Optional<StringView> network_error_message() const;
 
 protected:
     explicit Response(JS::NonnullGCPtr<HeaderList>);
@@ -177,7 +177,7 @@ private:
     bool m_has_cross_origin_redirects { false };
 
     // Non-standard
-    Optional<String> m_network_error_message;
+    Optional<Variant<String, StringView>> m_network_error_message;
 };
 
 // https://fetch.spec.whatwg.org/#concept-filtered-response
