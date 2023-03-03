@@ -105,7 +105,7 @@ void Button::paint_event(PaintEvent& event)
         content_rect.set_width(content_rect.width() - m_icon->width() - icon_spacing());
     }
 
-    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text()))), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text()))), font.pixel_size_rounded_up() };
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());

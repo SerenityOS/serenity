@@ -201,7 +201,7 @@ void CardPainter::paint_card_front(Gfx::Bitmap& bitmap, Cards::Suit suit, Cards:
     paint_rect.set_height(paint_rect.height() / 2);
     paint_rect.shrink(10, 6);
 
-    auto text_rect = Gfx::IntRect { 4, 6, static_cast<int>(ceilf(font.width("10"sv))), font.glyph_height() };
+    auto text_rect = Gfx::IntRect { 4, 6, static_cast<int>(ceilf(font.width("10"sv))), font.pixel_size_rounded_up() };
     painter.draw_text(text_rect, card_rank_label(rank), font, Gfx::TextAlignment::Center, suit_color);
 
     painter.draw_bitmap(

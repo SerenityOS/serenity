@@ -78,7 +78,7 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::
     case Type::Em:
         return m_value * font_size;
     case Type::Ch:
-        // FIXME: Use layout_node.font().glyph_height() when writing-mode is not horizontal-tb (it has to be implemented first)
+        // FIXME: Use layout_node.font().pixel_size() when writing-mode is not horizontal-tb (it has to be implemented first)
         return m_value * (font_metrics.advance_of_ascii_zero + font_metrics.glyph_spacing);
     case Type::Rem:
         return m_value * root_font_size;

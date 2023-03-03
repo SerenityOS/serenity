@@ -41,7 +41,7 @@ void KeyButton::paint_event(GUI::PaintEvent& event)
     if (text().is_empty() || text().bytes_as_string_view().starts_with('\0'))
         return;
 
-    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text()))), font.glyph_height() };
+    Gfx::IntRect text_rect { 0, 0, static_cast<int>(ceilf(font.width(text()))), font.pixel_size_rounded_up() };
     text_rect.align_within(key_cap_face_rect, Gfx::TextAlignment::Center);
 
     painter.draw_text(text_rect, text(), font, Gfx::TextAlignment::Center, Color::Black, Gfx::TextElision::Right);

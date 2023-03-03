@@ -502,10 +502,9 @@ void BrickGame::paint_text(GUI::Painter& painter, int row, DeprecatedString cons
     auto const text_width = static_cast<int>(ceilf(font().width(text)));
     auto const entire_area_rect { frame_inner_rect() };
     auto const margin = 4;
-    auto const glyph_height = font().glyph_height();
     auto const rect { Gfx::IntRect { entire_area_rect.x() + entire_area_rect.width() - 116,
-        2 * margin + entire_area_rect.y() + (glyph_height + margin) * row,
-        text_width, glyph_height } };
+        2 * margin + entire_area_rect.y() + (font().pixel_size_rounded_up() + margin) * row,
+        text_width, font().pixel_size_rounded_up() } };
     painter.draw_text(rect, text, Gfx::TextAlignment::TopLeft, Color::Black);
 }
 

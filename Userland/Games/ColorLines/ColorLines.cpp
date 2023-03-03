@@ -212,10 +212,9 @@ void ColorLines::paint_event(GUI::PaintEvent& event)
     // Draw score
     auto const score_text = MUST(String::formatted("{:05}"sv, m_score));
     auto text_width = static_cast<int>(ceilf(m_score_font->width(score_text)));
-    auto const glyph_height = m_score_font->glyph_height();
     auto const score_text_rect = Gfx::IntRect {
         frame_inner_rect().top_left().translated(text_margin),
-        Gfx::IntSize { text_width, glyph_height }
+        Gfx::IntSize { text_width, font().pixel_size_rounded_up() }
     };
     painter.draw_text(score_text_rect, score_text, Gfx::TextAlignment::CenterLeft, text_color);
 
@@ -224,7 +223,7 @@ void ColorLines::paint_event(GUI::PaintEvent& event)
     text_width = m_score_font->width(high_score_text);
     auto const high_score_text_rect = Gfx::IntRect {
         frame_inner_rect().top_right().translated(-(text_margin + text_width), text_margin),
-        Gfx::IntSize { text_width, glyph_height }
+        Gfx::IntSize { text_width, font().pixel_size_rounded_up() }
     };
     painter.draw_text(high_score_text_rect, high_score_text, Gfx::TextAlignment::CenterLeft, text_color);
 

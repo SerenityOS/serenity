@@ -51,7 +51,7 @@ void BoardView::pick_font()
     font_database.for_each_font([&](Gfx::Font const& font) {
         if (font.family() != "Liza" || font.weight() != 700)
             return;
-        auto size = font.glyph_height();
+        auto size = font.pixel_size_rounded_up();
         if (size * 2 <= m_cell_size && size > best_font_size) {
             best_font_name = font.qualified_name();
             best_font_size = size;

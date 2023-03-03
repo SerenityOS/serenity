@@ -24,7 +24,7 @@ void ElementSizePreviewWidget::paint_event(GUI::PaintEvent& event)
     auto content_size_text = DeprecatedString::formatted("{}x{}", m_node_content_width, m_node_content_height);
 
     int inner_content_width = max(100, font().width(content_size_text) + 2 * content_width_padding);
-    int inner_content_height = max(15, font().glyph_height() + 2 * content_height_padding);
+    int inner_content_height = max(15, font().pixel_size_rounded_up() + 2 * content_height_padding);
 
     auto format_size_text = [&](Web::CSSPixels size) {
         return DeprecatedString::formatted("{:.4f}", size);

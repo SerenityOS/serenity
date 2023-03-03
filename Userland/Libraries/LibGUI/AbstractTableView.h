@@ -24,7 +24,7 @@ public:
 
 class AbstractTableView : public AbstractView {
 public:
-    int row_height() const { return font().glyph_height() + vertical_padding(); }
+    int row_height() const { return font().pixel_size_rounded_up() + vertical_padding(); }
 
     virtual int horizontal_padding() const { return m_horizontal_padding; }
     void set_horizontal_padding(int padding) { m_horizontal_padding = padding; }
@@ -122,7 +122,7 @@ private:
     bool m_highlight_selected_rows { true };
 
     int m_vertical_padding { 8 };
-    int m_horizontal_padding { font().glyph_height() / 2 };
+    int m_horizontal_padding { font().pixel_size_rounded_up() / 2 };
     int m_tab_moves { 0 };
 };
 

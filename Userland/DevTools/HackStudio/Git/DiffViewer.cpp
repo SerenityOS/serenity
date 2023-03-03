@@ -120,7 +120,7 @@ void DiffViewer::draw_line(GUI::Painter& painter, DeprecatedString const& line, 
 
 size_t DiffViewer::line_height() const
 {
-    return font().glyph_height() + 4;
+    return font().pixel_size_rounded_up() + 4;
 }
 
 Gfx::IntRect DiffViewer::separator_rect() const

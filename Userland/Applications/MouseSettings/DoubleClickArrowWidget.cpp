@@ -47,7 +47,7 @@ void DoubleClickArrowWidget::paint_event(GUI::PaintEvent& event)
 
     auto text_rect = rect();
     text_rect.set_y(bottom_arrow_rect.bottom());
-    text_rect.set_height(font().glyph_height());
+    text_rect.set_height(font().pixel_size_rounded_up());
 }
 
 void DoubleClickArrowWidget::mousedown_event(GUI::MouseEvent&)

@@ -117,7 +117,7 @@ void MessageBox::build()
 
     int text_width = widget->font().width(m_text);
     auto number_of_lines = m_text.split('\n').size();
-    int padded_text_height = widget->font().glyph_height() * 1.6;
+    int padded_text_height = widget->font().pixel_size_rounded_up() * 1.6;
     int total_text_height = number_of_lines * padded_text_height;
     int icon_width = 0;
 

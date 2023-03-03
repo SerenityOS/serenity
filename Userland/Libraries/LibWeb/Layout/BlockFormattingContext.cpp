@@ -866,7 +866,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         image_height = list_style_image->natural_height().value_or(0);
     }
 
-    CSSPixels default_marker_width = max(4, marker.font().glyph_height() - 4);
+    CSSPixels default_marker_width = max(4, marker.font().pixel_size_rounded_up() - 4);
 
     if (marker.text().is_empty()) {
         marker_state.set_content_width((image_width + default_marker_width).value());
@@ -875,7 +875,7 @@ void BlockFormattingContext::layout_list_item_marker(ListItemBox const& list_ite
         marker_state.set_content_width((image_width + text_width).value());
     }
 
-    marker_state.set_content_height(max(image_height, marker.font().glyph_height() + 1).value());
+    marker_state.set_content_height(max(image_height, marker.font().pixel_size_rounded_up() + 1).value());
 
     marker_state.set_content_offset({ -(marker_state.content_width() + default_marker_width),
         max(CSSPixels(0.f), (CSSPixels(marker.line_height()) - marker_state.content_height()) / 2.f) });

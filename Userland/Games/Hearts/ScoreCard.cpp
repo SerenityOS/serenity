@@ -26,7 +26,7 @@ Gfx::IntSize ScoreCard::recommended_size()
 
     return Gfx::IntSize {
         4 * column_width + 3 * cell_padding,
-        16 * card_font.glyph_height() + 15 * cell_padding
+        16 * card_font.pixel_size_rounded_up() + 15 * cell_padding
     };
 }
 void ScoreCard::paint_event(GUI::PaintEvent& event)
@@ -42,9 +42,9 @@ void ScoreCard::paint_event(GUI::PaintEvent& event)
     auto cell_rect = [this, &font](int x, int y) {
         return Gfx::IntRect {
             frame_inner_rect().left() + x * column_width + x * cell_padding,
-            frame_inner_rect().top() + y * font.glyph_height() + y * cell_padding,
+            frame_inner_rect().top() + y * font.pixel_size_rounded_up() + y * cell_padding,
             column_width,
-            font.glyph_height(),
+            font.pixel_size_rounded_up(),
         };
     };
 
@@ -74,8 +74,8 @@ void ScoreCard::paint_event(GUI::PaintEvent& event)
             auto score_text_width = static_cast<int>(ceilf(font.width(score_text)));
             if (score_index != (int)player.scores.size() - 1) {
                 painter.draw_line(
-                    { text_rect.left() + text_rect.width() / 2 - score_text_width / 2 - 3, text_rect.top() + font.glyph_height() / 2 },
-                    { text_rect.right() - text_rect.width() / 2 + score_text_width / 2 + 3, text_rect.top() + font.glyph_height() / 2 },
+                    { text_rect.left() + text_rect.width() / 2 - score_text_width / 2 - 3, text_rect.top() + font.pixel_size_rounded_up() / 2 },
+                    { text_rect.right() - text_rect.width() / 2 + score_text_width / 2 + 3, text_rect.top() + font.pixel_size_rounded_up() / 2 },
                     text_color);
             }
             painter.draw_text(text_rect,

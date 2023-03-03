@@ -176,7 +176,7 @@ void ScreenNumberOverlay::pick_font()
     font_database.for_each_font([&](Gfx::Font const& font) {
         // TODO: instead of picking *any* font we should probably compare font.name()
         // with default_font.name(). But the default font currently does not provide larger sizes
-        auto size = font.glyph_height();
+        auto size = font.pixel_size_rounded_up();
         if (size * 2 <= screen_number_content_rect_size.height() && size > best_font_size) {
             for (unsigned ch = '0'; ch <= '9'; ch++) {
                 if (!font.contains_glyph(ch)) {
@@ -243,7 +243,7 @@ void WindowGeometryOverlay::update_rect()
         } else {
             m_label = window->rect().to_deprecated_string();
         }
-        m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().glyph_height() + 10 };
+        m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().pixel_size_rounded_up() + 10 };
 
         auto rect = calculate_frame_rect(m_label_rect).centered_within(window->frame().rect());
         auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());
@@ -291,7 +291,7 @@ void DndOverlay::update_rect()
     int bitmap_height = m_bitmap ? m_bitmap->height() : 0;
     auto& font = this->font();
     int width = font.width(m_text) + bitmap_width;
-    int height = max((int)font.glyph_height(), bitmap_height);
+    int height = max(font.pixel_size_rounded_up(), bitmap_height);
     auto location = ScreenInput::the().cursor_location().translated(8, 8);
     set_rect(Gfx::IntRect(location, { width, height }).inflated(16, 8));
 }

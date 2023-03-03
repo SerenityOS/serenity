@@ -26,7 +26,7 @@ void ButtonBox::prepare_for_replaced_layout()
     // its contents normally.
     if (is<HTML::HTMLInputElement>(dom_node())) {
         set_intrinsic_width(font().width(static_cast<HTML::HTMLInputElement&>(dom_node()).value()));
-        set_intrinsic_height(font().glyph_height());
+        set_intrinsic_height(font().pixel_size_rounded_up());
     }
 }
 

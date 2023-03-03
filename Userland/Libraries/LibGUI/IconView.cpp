@@ -379,7 +379,7 @@ Gfx::IntRect IconView::editing_rect(ModelIndex const& index) const
         return {};
     auto& item_data = get_item_data(index.row());
     auto editing_rect = item_data.text_rect;
-    editing_rect.set_height(font_for_index(index)->glyph_height() + 8);
+    editing_rect.set_height(font_for_index(index)->pixel_size_rounded_up() + 8);
     editing_rect.set_y(item_data.text_rect.y() - 2);
     return editing_rect;
 }
@@ -425,13 +425,13 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, Gfx::Font con
 {
     auto item_rect = this->item_rect(item_index);
     item_data.icon_rect = Gfx::IntRect(0, 0, 32, 32).centered_within(item_rect);
-    item_data.icon_offset_y = -font.glyph_height() - 6;
+    item_data.icon_offset_y = -font.pixel_size_rounded_up() - 6;
     item_data.icon_rect.translate_by(0, item_data.icon_offset_y);
 
     int unwrapped_text_width = static_cast<int>(ceilf(font.width(item_data.text)));
     int available_width = item_rect.width() - 6;
 
-    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, 0, font.glyph_height() };
+    item_data.text_rect = { 0, item_data.icon_rect.bottom() + 6 + 1, 0, font.pixel_size_rounded_up() };
     item_data.wrapped_text_lines.clear();
 
     if ((unwrapped_text_width > available_width) && (item_data.selected || m_hovered_index == item_data.index || cursor_index() == item_data.index || m_always_wrap_item_labels)) {
@@ -458,7 +458,7 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, Gfx::Font con
         item_data.text_rect.set_width(widest_line_width);
         item_data.text_rect.center_horizontally_within(item_rect);
         item_data.text_rect.intersect(item_rect);
-        item_data.text_rect.set_height(font.glyph_height() * item_data.wrapped_text_lines.size());
+        item_data.text_rect.set_height(font.pixel_size_rounded_up() * item_data.wrapped_text_lines.size());
         item_data.text_rect.inflate(6, 6);
         item_data.text_rect_wrapped = item_data.text_rect;
     } else {
@@ -551,14 +551,14 @@ void IconView::paint_event(PaintEvent& event)
             // Item text would not fit in the item text rect, let's break it up into lines..
 
             const auto& lines = item_data.wrapped_text_lines;
-            size_t number_of_text_lines = min((size_t)text_rect.height() / font->glyph_height(), lines.size());
+            size_t number_of_text_lines = min((size_t)text_rect.height() / font->pixel_size_rounded_up(), lines.size());
             size_t previous_line_lengths = 0;
             for (size_t line_index = 0; line_index < number_of_text_lines; ++line_index) {
                 Gfx::IntRect line_rect;
                 line_rect.set_width(text_rect.width());
-                line_rect.set_height(font->glyph_height());
+                line_rect.set_height(font->pixel_size_rounded_up());
                 line_rect.center_horizontally_within(item_data.text_rect);
-                line_rect.set_y(3 + item_data.text_rect.y() + line_index * font->glyph_height());
+                line_rect.set_y(3 + item_data.text_rect.y() + line_index * font->pixel_size_rounded_up());
                 line_rect.inflate(6, 0);
 
                 // Shrink the line_rect on the last line to apply elision if there are more lines.

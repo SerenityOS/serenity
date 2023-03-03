@@ -321,7 +321,7 @@ void TabWidget::paint_event(PaintEvent& event)
         painter.draw_text(tab_button_content_rect, m_tabs[i].title, m_text_alignment, palette().button_text(), Gfx::TextElision::Right);
 
         if (is_focused()) {
-            Gfx::IntRect focus_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
+            Gfx::IntRect focus_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().pixel_size_rounded_up() };
             focus_rect.align_within(tab_button_content_rect, m_text_alignment);
             focus_rect.inflate(6, 4);
 

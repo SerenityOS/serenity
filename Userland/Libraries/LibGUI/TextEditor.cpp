@@ -1437,7 +1437,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
 {
     auto& line = this->line(line_index);
     if (is_single_line()) {
-        Gfx::IntRect line_rect = { content_x_for_position({ line_index, 0 }), 0, text_width_for_font(line.view(), font()), font().glyph_height() + 4 };
+        Gfx::IntRect line_rect = { content_x_for_position({ line_index, 0 }), 0, text_width_for_font(line.view(), font()), font().pixel_size_rounded_up() + 4 };
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }

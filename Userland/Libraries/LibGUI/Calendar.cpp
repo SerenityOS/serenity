@@ -484,7 +484,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     x_offset,
                     y_offset + 4,
                     m_tiles[0][i].width - 4,
-                    font().glyph_height() + 4);
+                    font().pixel_size_rounded_up() + 4);
 
                 if (width > 150 && height > 150) {
                     set_font(extra_large_font);

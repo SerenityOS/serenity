@@ -150,7 +150,7 @@ void GraphWidget::paint_event(GUI::PaintEvent& event)
                 continue;
             auto constrain_rect = inner_rect.shrunken(8, 8);
             auto text_rect = constrain_rect.translated(0, y).intersected(constrain_rect);
-            text_rect.set_height(font().glyph_height());
+            text_rect.set_height(font().pixel_size_rounded_up());
             auto text = format.text_formatter(current_values[i]);
             if (format.text_shadow_color != Color::Transparent)
                 painter.draw_text(text_rect.translated(1, 1), text, Gfx::TextAlignment::CenterRight, format.text_shadow_color);
