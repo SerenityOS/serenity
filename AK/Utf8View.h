@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/StringView.h>
@@ -142,7 +141,7 @@ public:
                 code_point |= code_point_bits;
             }
 
-            if (!is_unicode(code_point))
+            if (!is_valid_code_point(code_point, byte_length))
                 return false;
 
             valid_bytes += byte_length;
@@ -162,13 +161,15 @@ private:
         size_t byte_length { 0 };
         u8 encoding_bits { 0 };
         u8 encoding_mask { 0 };
+        u32 first_code_point { 0 };
+        u32 last_code_point { 0 };
     };
 
     static constexpr Array<Utf8EncodedByteData, 4> utf8_encoded_byte_data { {
-        { 1, 0b0000'0000, 0b1000'0000 },
-        { 2, 0b1100'0000, 0b1110'0000 },
-        { 3, 0b1110'0000, 0b1111'0000 },
-        { 4, 0b1111'0000, 0b1111'1000 },
+        { 1, 0b0000'0000, 0b1000'0000, 0x0000, 0x007F },
+        { 2, 0b1100'0000, 0b1110'0000, 0x0080, 0x07FF },
+        { 3, 0b1110'0000, 0b1111'0000, 0x0800, 0xFFFF },
+        { 4, 0b1111'0000, 0b1111'1000, 0x10000, 0x10FFFF },
     } };
 
     struct LeadingByte {
@@ -206,6 +207,16 @@ private:
         }
 
         return { .is_valid = false };
+    }
+
+    static constexpr bool is_valid_code_point(u32 code_point, size_t byte_length)
+    {
+        for (auto const& data : utf8_encoded_byte_data) {
+            if (code_point >= data.first_code_point && code_point <= data.last_code_point)
+                return byte_length == data.byte_length;
+        }
+
+        return false;
     }
 
     StringView m_string;
