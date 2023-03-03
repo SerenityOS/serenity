@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  * Copyright (c) 2022-2023, Kenneth Myhra <kennethmyhra@serenityos.org>
@@ -161,7 +161,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto mime_type_as_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(get_final_mime_type().type()));
+        auto mime_type_as_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(get_final_mime_type().serialized()));
         auto blob_part = TRY(FileAPI::Blob::create(realm(), m_received_bytes, move(mime_type_as_string)));
         auto blob = TRY(FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
         m_response_object = JS::Value(blob.ptr());
