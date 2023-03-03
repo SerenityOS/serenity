@@ -29,6 +29,8 @@ public:
     CheckBoxPosition checkbox_position() const { return m_checkbox_position; }
     void set_checkbox_position(CheckBoxPosition value) { m_checkbox_position = value; }
 
+    virtual Optional<UISize> calculated_min_size() const override;
+
 protected:
     explicit CheckBox(String = {});
 
@@ -40,6 +42,10 @@ private:
     using AbstractButton::set_auto_repeat_interval;
 
     virtual void paint_event(PaintEvent&) override;
+
+    Gfx::IntRect box_rect() const;
+    int gap_between_box_and_rect() const;
+    int horizontal_padding() const;
 
     bool m_autosize { false };
     CheckBoxPosition m_checkbox_position { CheckBoxPosition::Left };
