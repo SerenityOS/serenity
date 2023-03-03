@@ -23,6 +23,9 @@ public:
 
     ALWAYS_INLINE void ref() const
     {
+        // NOTE: If we can't find the matching signature, then RefCountedBase is not the first member
+        // of a Ref-counted object!
+        VERIFY(m_sig == 0x5245465054522020);
         VERIFY(m_ref_count > 0);
         VERIFY(!Checked<RefCountType>::addition_would_overflow(m_ref_count, 1));
         ++m_ref_count;
@@ -30,6 +33,9 @@ public:
 
     [[nodiscard]] bool try_ref() const
     {
+        // NOTE: If we can't find the matching signature, then RefCountedBase is not the first member
+        // of a Ref-counted object!
+        VERIFY(m_sig == 0x5245465054522020);
         if (m_ref_count == 0)
             return false;
         ref();
@@ -44,10 +50,15 @@ protected:
 
     ALWAYS_INLINE RefCountType deref_base() const
     {
+        // NOTE: If we can't find the matching signature, then RefCountedBase is not the first member
+        // of a Ref-counted object!
+        VERIFY(m_sig == 0x5245465054522020);
         VERIFY(m_ref_count);
         return --m_ref_count;
     }
 
+    // NOTE: This stands for "REFPTR  "
+    u64 m_sig { 0x5245465054522020 };
     RefCountType mutable m_ref_count { 1 };
 };
 

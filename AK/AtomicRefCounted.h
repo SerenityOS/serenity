@@ -24,6 +24,9 @@ public:
 
     void ref() const
     {
+        // NOTE: If we can't find the matching signature, then RefCountedBase is not the first member
+        // of a Ref-counted object!
+        VERIFY(m_sig == 0x5245465054522041);
         auto old_ref_count = m_ref_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
         VERIFY(old_ref_count > 0);
         VERIFY(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
@@ -31,6 +34,9 @@ public:
 
     [[nodiscard]] bool try_ref() const
     {
+        // NOTE: If we can't find the matching signature, then RefCountedBase is not the first member
+        // of a Ref-counted object!
+        VERIFY(m_sig == 0x5245465054522041);
         RefCountType expected = m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
         for (;;) {
             if (expected == 0)
@@ -55,11 +61,16 @@ protected:
 
     RefCountType deref_base() const
     {
+        // NOTE: If we can't find the matching signature, then RefCountedBase is not the first member
+        // of a Ref-counted object!
+        VERIFY(m_sig == 0x5245465054522041);
         auto old_ref_count = m_ref_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
         VERIFY(old_ref_count > 0);
         return old_ref_count - 1;
     }
 
+    // NOTE: This stands for "REFPTR A"
+    u64 m_sig { 0x5245465054522041 };
     mutable Atomic<RefCountType> m_ref_count { 1 };
 };
 
