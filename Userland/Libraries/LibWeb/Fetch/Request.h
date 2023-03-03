@@ -71,7 +71,7 @@ public:
     virtual ~Request() override;
 
     // ^BodyMixin
-    virtual Optional<MimeSniff::MimeType> mime_type_impl() const override;
+    virtual ErrorOr<Optional<MimeSniff::MimeType>> mime_type_impl() const override;
     virtual Optional<Infrastructure::Body&> body_impl() override;
     virtual Optional<Infrastructure::Body const&> body_impl() const override;
 

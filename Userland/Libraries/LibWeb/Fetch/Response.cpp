@@ -43,7 +43,7 @@ void Response::visit_edges(Cell::Visitor& visitor)
 
 // https://fetch.spec.whatwg.org/#concept-body-mime-type
 // https://fetch.spec.whatwg.org/#ref-for-concept-header-extract-mime-type%E2%91%A7
-Optional<MimeSniff::MimeType> Response::mime_type_impl() const
+ErrorOr<Optional<MimeSniff::MimeType>> Response::mime_type_impl() const
 {
     // Objects including the Body interface mixin need to define an associated MIME type algorithm which takes no arguments and returns failure or a MIME type.
     // A Response object’s MIME type is to return the result of extracting a MIME type from its response’s header list.

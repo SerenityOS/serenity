@@ -164,7 +164,7 @@ JS::NonnullGCPtr<JS::Promise> consume_body(JS::Realm& realm, BodyMixin const& ob
     auto steps = [&vm, &realm, &object, type](JS::Value value) -> WebIDL::ExceptionOr<JS::Value> {
         VERIFY(value.is_string());
         auto bytes = TRY_OR_THROW_OOM(vm, ByteBuffer::copy(TRY(value.as_string().deprecated_string()).bytes()));
-        return package_data(realm, move(bytes), type, object.mime_type_impl());
+        return package_data(realm, move(bytes), type, object.mime_type_impl().release_value_but_fixme_should_propagate_errors());
     };
 
     // 5. Return the result of upon fulfillment of promise given steps.

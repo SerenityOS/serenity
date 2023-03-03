@@ -51,7 +51,7 @@ public:
     [[nodiscard]] ErrorOr<void> set(Header);
     [[nodiscard]] ErrorOr<void> combine(Header);
     [[nodiscard]] ErrorOr<Vector<Header>> sort_and_combine() const;
-    [[nodiscard]] Optional<MimeSniff::MimeType> extract_mime_type() const;
+    [[nodiscard]] ErrorOr<Optional<MimeSniff::MimeType>> extract_mime_type() const;
 };
 
 struct RangeHeaderValue {
