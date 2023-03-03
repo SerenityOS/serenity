@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/StringView.h>
@@ -105,13 +106,6 @@ public:
         return byte_offset_of(it);
     }
 
-    bool validate(size_t& valid_bytes) const;
-    bool validate() const
-    {
-        size_t valid_bytes;
-        return validate(valid_bytes);
-    }
-
     size_t length() const
     {
         if (!m_have_length) {
@@ -121,10 +115,98 @@ public:
         return m_length;
     }
 
+    constexpr bool validate() const
+    {
+        size_t valid_bytes = 0;
+        return validate(valid_bytes);
+    }
+
+    constexpr bool validate(size_t& valid_bytes) const
+    {
+        valid_bytes = 0;
+
+        for (auto it = m_string.begin(); it != m_string.end(); ++it) {
+            auto [byte_length, code_point, is_valid] = decode_leading_byte(static_cast<u8>(*it));
+            if (!is_valid)
+                return false;
+
+            for (size_t i = 1; i < byte_length; ++i) {
+                if (++it == m_string.end())
+                    return false;
+
+                auto [code_point_bits, is_valid] = decode_continuation_byte(static_cast<u8>(*it));
+                if (!is_valid)
+                    return false;
+
+                code_point <<= 6;
+                code_point |= code_point_bits;
+            }
+
+            if (!is_unicode(code_point))
+                return false;
+
+            valid_bytes += byte_length;
+        }
+
+        return true;
+    }
+
 private:
+    friend class Utf8CodePointIterator;
+
     u8 const* begin_ptr() const { return (u8 const*)m_string.characters_without_null_termination(); }
     u8 const* end_ptr() const { return begin_ptr() + m_string.length(); }
     size_t calculate_length() const;
+
+    struct Utf8EncodedByteData {
+        size_t byte_length { 0 };
+        u8 encoding_bits { 0 };
+        u8 encoding_mask { 0 };
+    };
+
+    static constexpr Array<Utf8EncodedByteData, 4> utf8_encoded_byte_data { {
+        { 1, 0b0000'0000, 0b1000'0000 },
+        { 2, 0b1100'0000, 0b1110'0000 },
+        { 3, 0b1110'0000, 0b1111'0000 },
+        { 4, 0b1111'0000, 0b1111'1000 },
+    } };
+
+    struct LeadingByte {
+        size_t byte_length { 0 };
+        u32 code_point_bits { 0 };
+        bool is_valid { false };
+    };
+
+    static constexpr LeadingByte decode_leading_byte(u8 byte)
+    {
+        for (auto const& data : utf8_encoded_byte_data) {
+            if ((byte & data.encoding_mask) != data.encoding_bits)
+                continue;
+
+            byte &= ~data.encoding_mask;
+            return { data.byte_length, byte, true };
+        }
+
+        return { .is_valid = false };
+    }
+
+    struct ContinuationByte {
+        u32 code_point_bits { 0 };
+        bool is_valid { false };
+    };
+
+    static constexpr ContinuationByte decode_continuation_byte(u8 byte)
+    {
+        constexpr u8 continuation_byte_encoding_bits = 0b1000'0000;
+        constexpr u8 continuation_byte_encoding_mask = 0b1100'0000;
+
+        if ((byte & continuation_byte_encoding_mask) == continuation_byte_encoding_bits) {
+            byte &= ~continuation_byte_encoding_mask;
+            return { byte, true };
+        }
+
+        return { .is_valid = false };
+    }
 
     StringView m_string;
     mutable size_t m_length { 0 };

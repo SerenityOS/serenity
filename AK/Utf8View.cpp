@@ -6,7 +6,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/Utf8View.h>
@@ -69,68 +68,6 @@ Utf8View Utf8View::unicode_substring_view(size_t code_point_offset, size_t code_
     }
 
     VERIFY_NOT_REACHED();
-}
-
-static inline bool decode_first_byte(
-    unsigned char byte,
-    size_t& out_code_point_length_in_bytes,
-    u32& out_value)
-{
-    if ((byte & 128) == 0) {
-        out_value = byte;
-        out_code_point_length_in_bytes = 1;
-        return true;
-    }
-    if ((byte & 64) == 0) {
-        return false;
-    }
-    if ((byte & 32) == 0) {
-        out_value = byte & 31;
-        out_code_point_length_in_bytes = 2;
-        return true;
-    }
-    if ((byte & 16) == 0) {
-        out_value = byte & 15;
-        out_code_point_length_in_bytes = 3;
-        return true;
-    }
-    if ((byte & 8) == 0) {
-        out_value = byte & 7;
-        out_code_point_length_in_bytes = 4;
-        return true;
-    }
-
-    return false;
-}
-
-bool Utf8View::validate(size_t& valid_bytes) const
-{
-    valid_bytes = 0;
-    for (auto ptr = begin_ptr(); ptr < end_ptr(); ptr++) {
-        size_t code_point_length_in_bytes = 0;
-        u32 code_point = 0;
-        bool first_byte_makes_sense = decode_first_byte(*ptr, code_point_length_in_bytes, code_point);
-        if (!first_byte_makes_sense)
-            return false;
-
-        for (size_t i = 1; i < code_point_length_in_bytes; i++) {
-            ptr++;
-            if (ptr >= end_ptr())
-                return false;
-            if (*ptr >> 6 != 2)
-                return false;
-
-            code_point <<= 6;
-            code_point |= *ptr & 63;
-        }
-
-        if (!is_unicode(code_point))
-            return false;
-
-        valid_bytes += code_point_length_in_bytes;
-    }
-
-    return true;
 }
 
 size_t Utf8View::calculate_length() const
@@ -223,9 +160,7 @@ Utf8CodePointIterator& Utf8CodePointIterator::operator++()
 size_t Utf8CodePointIterator::underlying_code_point_length_in_bytes() const
 {
     VERIFY(m_length > 0);
-    size_t code_point_length_in_bytes = 0;
-    u32 value;
-    bool first_byte_makes_sense = decode_first_byte(*m_ptr, code_point_length_in_bytes, value);
+    auto [code_point_length_in_bytes, value, first_byte_makes_sense] = Utf8View::decode_leading_byte(*m_ptr);
 
     // If any of these tests fail, we will output a replacement character for this byte and treat it as a code point of size 1.
     if (!first_byte_makes_sense)
@@ -250,11 +185,7 @@ ReadonlyBytes Utf8CodePointIterator::underlying_code_point_bytes() const
 u32 Utf8CodePointIterator::operator*() const
 {
     VERIFY(m_length > 0);
-
-    u32 code_point_value_so_far = 0;
-    size_t code_point_length_in_bytes = 0;
-
-    bool first_byte_makes_sense = decode_first_byte(m_ptr[0], code_point_length_in_bytes, code_point_value_so_far);
+    auto [code_point_length_in_bytes, code_point_value_so_far, first_byte_makes_sense] = Utf8View::decode_leading_byte(*m_ptr);
 
     if (!first_byte_makes_sense) {
         // The first byte of the code point doesn't make sense: output a replacement character
