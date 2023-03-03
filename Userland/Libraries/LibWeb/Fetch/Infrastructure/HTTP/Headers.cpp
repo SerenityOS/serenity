@@ -322,7 +322,7 @@ Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
     // 6. For each value of values:
     for (auto const& value : *values) {
         // 1. Let temporaryMimeType be the result of parsing value.
-        auto temporary_mime_type = MimeSniff::MimeType::parse(value);
+        auto temporary_mime_type = MimeSniff::MimeType::parse(value).release_value_but_fixme_should_propagate_errors();
 
         // 2. If temporaryMimeType is failure or its essence is "*/*", then continue.
         if (!temporary_mime_type.has_value() || temporary_mime_type->essence() == "*/*"sv)
@@ -339,14 +339,14 @@ Optional<MimeSniff::MimeType> HeaderList::extract_mime_type() const
             // 2. If mimeType’s parameters["charset"] exists, then set charset to mimeType’s parameters["charset"].
             auto it = mime_type->parameters().find("charset"sv);
             if (it != mime_type->parameters().end())
-                charset = String::from_deprecated_string(it->value).release_value_but_fixme_should_propagate_errors();
+                charset = it->value;
 
             // 3. Set essence to mimeType’s essence.
-            essence = String::from_deprecated_string(mime_type->essence()).release_value_but_fixme_should_propagate_errors();
+            essence = mime_type->essence();
         }
         // 5. Otherwise, if mimeType’s parameters["charset"] does not exist, and charset is non-null, set mimeType’s parameters["charset"] to charset.
         else if (!mime_type->parameters().contains("charset"sv) && charset.has_value()) {
-            mime_type->set_parameter("charset"sv, charset->to_deprecated_string());
+            mime_type->set_parameter("charset"_string.release_value_but_fixme_should_propagate_errors(), charset.release_value()).release_value_but_fixme_should_propagate_errors();
         }
     }
 
@@ -457,7 +457,7 @@ bool is_cors_safelisted_request_header(Header const& header)
             return false;
 
         // 2. Let mimeType be the result of parsing the result of isomorphic decoding value.
-        auto mime_type = MimeSniff::MimeType::parse(StringView { value });
+        auto mime_type = MimeSniff::MimeType::parse(StringView { value }).release_value_but_fixme_should_propagate_errors();
 
         // 3. If mimeType is failure, then return false.
         if (!mime_type.has_value())

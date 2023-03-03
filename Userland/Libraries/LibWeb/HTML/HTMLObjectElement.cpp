@@ -218,12 +218,12 @@ void HTMLObjectElement::resource_did_load()
 
 static bool is_xml_mime_type(StringView resource_type)
 {
-    auto mime_type = MimeSniff::MimeType::parse(resource_type);
+    auto mime_type = MimeSniff::MimeType::parse(resource_type).release_value_but_fixme_should_propagate_errors();
     if (!mime_type.has_value())
         return false;
 
     // An XML MIME type is any MIME type whose subtype ends in "+xml" or whose essence is "text/xml" or "application/xml". [RFC7303]
-    if (mime_type->subtype().ends_with("+xml"sv))
+    if (mime_type->subtype().ends_with_bytes("+xml"sv))
         return true;
 
     return mime_type->essence().is_one_of("text/xml"sv, "application/xml"sv);

@@ -161,7 +161,7 @@ WebIDL::ExceptionOr<JS::Value> XMLHttpRequest::response()
     }
     // 6. Otherwise, if this’s response type is "blob", set this’s response object to a new Blob object representing this’s received bytes with type set to the result of get a final MIME type for this.
     else if (m_response_type == Bindings::XMLHttpRequestResponseType::Blob) {
-        auto mime_type_as_string = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(get_final_mime_type().serialized()));
+        auto mime_type_as_string = TRY_OR_THROW_OOM(vm, get_final_mime_type().serialized());
         auto blob_part = TRY(FileAPI::Blob::create(realm(), m_received_bytes, move(mime_type_as_string)));
         auto blob = TRY(FileAPI::Blob::create(realm(), Vector<FileAPI::BlobPart> { JS::make_handle(*blob_part) }));
         m_response_object = JS::Value(blob.ptr());
@@ -207,7 +207,7 @@ DeprecatedString XMLHttpRequest::get_text_response() const
         if (mime_type.essence().is_one_of("text/xml"sv, "application/xml"sv))
             return true;
 
-        return mime_type.subtype().ends_with("+xml"sv);
+        return mime_type.subtype().ends_with_bytes("+xml"sv);
     };
 
     // 3. If xhr’s response type is the empty string, charset is null, and the result of get a final MIME type for xhr is an XML MIME type,
@@ -256,7 +256,7 @@ MimeSniff::MimeType XMLHttpRequest::get_response_mime_type() const
 
     // 2. If mimeType is failure, then set mimeType to text/xml.
     if (!mime_type.has_value())
-        return MimeSniff::MimeType("text"sv, "xml"sv);
+        return MimeSniff::MimeType::create("text"_string.release_value_but_fixme_should_propagate_errors(), "xml"_short_string).release_value_but_fixme_should_propagate_errors();
 
     // 3. Return mimeType.
     return mime_type.release_value();
@@ -274,13 +274,13 @@ Optional<StringView> XMLHttpRequest::get_final_encoding() const
     // 3. If responseMIME’s parameters["charset"] exists, then set label to it.
     auto response_mime_charset_it = response_mime.parameters().find("charset"sv);
     if (response_mime_charset_it != response_mime.parameters().end())
-        label = response_mime_charset_it->value;
+        label = response_mime_charset_it->value.to_deprecated_string();
 
     // 4. If xhr’s override MIME type’s parameters["charset"] exists, then set label to it.
     if (m_override_mime_type.has_value()) {
         auto override_mime_charset_it = m_override_mime_type->parameters().find("charset"sv);
         if (override_mime_charset_it != m_override_mime_type->parameters().end())
-            label = override_mime_charset_it->value;
+            label = override_mime_charset_it->value.to_deprecated_string();
     }
 
     // 5. If label is null, then return null.
@@ -605,16 +605,18 @@ DeprecatedString XMLHttpRequest::get_all_response_headers() const
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-overridemimetype
 WebIDL::ExceptionOr<void> XMLHttpRequest::override_mime_type(DeprecatedString const& mime)
 {
+    auto& vm = this->vm();
+
     // 1. If this’s state is loading or done, then throw an "InvalidStateError" DOMException.
     if (m_state == State::Loading || m_state == State::Done)
         return WebIDL::InvalidStateError::create(realm(), "Cannot override MIME type when state is Loading or Done.");
 
     // 2. Set this’s override MIME type to the result of parsing mime.
-    m_override_mime_type = MimeSniff::MimeType::parse(mime);
+    m_override_mime_type = TRY_OR_THROW_OOM(vm, MimeSniff::MimeType::parse(mime));
 
     // 3. If this’s override MIME type is failure, then set this’s override MIME type to application/octet-stream.
     if (!m_override_mime_type.has_value())
-        m_override_mime_type = MimeSniff::MimeType("application"sv, "octet-stream"sv);
+        m_override_mime_type = TRY_OR_THROW_OOM(vm, MimeSniff::MimeType::create(TRY_OR_THROW_OOM(vm, "application"_string), TRY_OR_THROW_OOM(vm, "octet-stream"_string)));
 
     return {};
 }
