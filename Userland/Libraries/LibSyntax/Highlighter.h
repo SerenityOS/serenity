@@ -118,6 +118,23 @@ public:
         return spans;
     }
 
+    Vector<GUI::TextDocumentFoldingRegion> corrected_folding_regions() const
+    {
+        Vector<GUI::TextDocumentFoldingRegion> folding_regions { m_folding_regions };
+        for (auto& entry : folding_regions) {
+            entry.range.start() = {
+                entry.range.start().line() + m_start.line(),
+                entry.range.start().line() == 0 ? entry.range.start().column() + m_start.column() : entry.range.start().column(),
+            };
+            entry.range.end() = {
+                entry.range.end().line() + m_start.line(),
+                entry.range.end().line() == 0 ? entry.range.end().column() + m_start.column() : entry.range.end().column(),
+            };
+        }
+
+        return folding_regions;
+    }
+
     Vector<Syntax::Highlighter::MatchingTokenPair> corrected_token_pairs(Vector<Syntax::Highlighter::MatchingTokenPair> pairs) const
     {
         for (auto& pair : pairs) {
