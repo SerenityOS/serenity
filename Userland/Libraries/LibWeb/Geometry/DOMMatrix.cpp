@@ -12,13 +12,15 @@ namespace Web::Geometry {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrix>> DOMMatrix::construct_impl(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
 {
+    auto& vm = realm.vm();
+
     // https://drafts.fxtf.org/geometry/#dom-dommatrix-dommatrix
     if (init.has_value()) {
         // -> Otherwise
         //        Throw a TypeError exception.
         // The only condition where this can be met is with a sequence type which doesn't have exactly 6 or 16 elements.
         if (auto* double_sequence = init.value().get_pointer<Vector<double>>(); double_sequence && (double_sequence->size() != 6 && double_sequence->size() != 16))
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size()) };
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size())) };
     }
 
     return realm.heap().allocate<DOMMatrix>(realm, realm, init).release_allocated_value_but_fixme_should_propagate_errors();

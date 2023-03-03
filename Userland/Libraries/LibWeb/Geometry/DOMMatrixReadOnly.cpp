@@ -13,13 +13,15 @@ namespace Web::Geometry {
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<DOMMatrixReadOnly>> DOMMatrixReadOnly::construct_impl(JS::Realm& realm, Optional<Variant<String, Vector<double>>> const& init)
 {
+    auto& vm = realm.vm();
+
     // https://drafts.fxtf.org/geometry/#dom-dommatrixreadonly-dommatrixreadonly
     if (init.has_value()) {
         // -> Otherwise
         //        Throw a TypeError exception.
         // The only condition where this can be met is with a sequence type which doesn't have exactly 6 or 16 elements.
         if (auto* double_sequence = init.value().get_pointer<Vector<double>>(); double_sequence && (double_sequence->size() != 6 && double_sequence->size() != 16))
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, DeprecatedString::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size()) };
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, TRY_OR_THROW_OOM(vm, String::formatted("Sequence must contain exactly 6 or 16 elements, got {} element(s)", double_sequence->size())) };
     }
 
     return realm.heap().allocate<DOMMatrixReadOnly>(realm, realm, init).release_allocated_value_but_fixme_should_propagate_errors();
@@ -394,27 +396,27 @@ WebIDL::ExceptionOr<void> validate_and_fixup_dom_matrix_2d_init(DOMMatrix2DInit&
     // 1. If at least one of the following conditions are true for dict, then throw a TypeError exception and abort these steps.
     // - a and m11 are both present and SameValueZero(a, m11) is false.
     if (init.a.has_value() && init.m11.has_value() && !JS::same_value_zero(JS::Value(init.a.value()), JS::Value(init.m11.value())))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.a and DOMMatrix2DInit.m11 must have the same value if they are both present" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.a and DOMMatrix2DInit.m11 must have the same value if they are both present"sv };
 
     // - b and m12 are both present and SameValueZero(b, m12) is false.
     if (init.b.has_value() && init.m12.has_value() && !JS::same_value_zero(JS::Value(init.b.value()), JS::Value(init.m12.value())))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.b and DOMMatrix2DInit.m12 must have the same value if they are both present" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.b and DOMMatrix2DInit.m12 must have the same value if they are both present"sv };
 
     // - c and m21 are both present and SameValueZero(c, m21) is false.
     if (init.c.has_value() && init.m21.has_value() && !JS::same_value_zero(JS::Value(init.c.value()), JS::Value(init.m21.value())))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.c and DOMMatrix2DInit.m21 must have the same value if they are both present" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.c and DOMMatrix2DInit.m21 must have the same value if they are both present"sv };
 
     // - d and m22 are both present and SameValueZero(d, m22) is false.
     if (init.d.has_value() && init.m22.has_value() && !JS::same_value_zero(JS::Value(init.d.value()), JS::Value(init.m22.value())))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.d and DOMMatrix2DInit.m22 must have the same value if they are both present" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.d and DOMMatrix2DInit.m22 must have the same value if they are both present"sv };
 
     // - e and m41 are both present and SameValueZero(e, m41) is false.
     if (init.e.has_value() && init.m41.has_value() && !JS::same_value_zero(JS::Value(init.e.value()), JS::Value(init.m41.value())))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.e and DOMMatrix2DInit.m41 must have the same value if they are both present" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.e and DOMMatrix2DInit.m41 must have the same value if they are both present"sv };
 
     // - f and m42 are both present and SameValueZero(f, m42) is false.
     if (init.f.has_value() && init.m42.has_value() && !JS::same_value_zero(JS::Value(init.f.value()), JS::Value(init.m42.value())))
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.f and DOMMatrix2DInit.m42 must have the same value if they are both present" };
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrix2DInit.f and DOMMatrix2DInit.m42 must have the same value if they are both present"sv };
 
     // 2. If m11 is not present then set it to the value of member a, or value 1 if a is also not present.
     if (!init.m11.has_value())
@@ -462,7 +464,7 @@ WebIDL::ExceptionOr<void> validate_and_fixup_dom_matrix_init(DOMMatrixInit& init
             || (init.m43 != 0.0 && init.m43 != -0.0)
             || init.m33 != 1.0
             || init.m44 != 1.0) {
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrixInit.is2D is true, but the given matrix is not a 2D matrix" };
+            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "DOMMatrixInit.is2D is true, but the given matrix is not a 2D matrix"sv };
         }
     }
 
