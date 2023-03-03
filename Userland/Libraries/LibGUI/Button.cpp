@@ -280,7 +280,7 @@ Optional<UISize> Button::calculated_min_size() const
     if (!text().is_empty()) {
         auto& font = this->font();
         horizontal = static_cast<int>(ceilf(font.width(text()))) + 2;
-        vertical = static_cast<int>(ceilf(font.pixel_size())) + 4; // FIXME: Use actual maximum total height
+        vertical = font.pixel_size_rounded_up() + 4; // FIXME: Use actual maximum total height
     }
 
     if (m_icon) {

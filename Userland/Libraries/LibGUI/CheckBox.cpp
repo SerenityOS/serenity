@@ -66,8 +66,8 @@ void CheckBox::paint_event(PaintEvent& event)
     if (m_checkbox_position == CheckBoxPosition::Left)
         text_rect.set_left(box_rect.right() + 1 + gap_between_box_and_rect());
     text_rect.set_width(static_cast<int>(ceilf(font().width(text()))));
-    text_rect.set_top(height() / 2 - static_cast<int>(ceilf(font().pixel_size()) / 2));
-    text_rect.set_height(static_cast<int>(ceilf(font().pixel_size())));
+    text_rect.set_top(height() / 2 - font().pixel_size_rounded_up() / 2);
+    text_rect.set_height(font().pixel_size_rounded_up());
 
     if (fill_with_background_color())
         painter.fill_rect(rect(), palette().window());

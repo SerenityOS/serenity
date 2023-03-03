@@ -70,7 +70,7 @@ Optional<UISize> RadioButton::calculated_min_size() const
 {
     auto const& font = this->font();
     int width = horizontal_padding() * 2 + circle_size().width() + static_cast<int>(ceilf(font.width(text())));
-    int height = max(22, max(static_cast<int>(ceilf(font.pixel_size())) + 8, circle_size().height()));
+    int height = max(22, max(font.pixel_size_rounded_up() + 8, circle_size().height()));
     return UISize(width, height);
 }
 

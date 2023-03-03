@@ -16,7 +16,7 @@ namespace Gfx {
 
 int ClassicWindowTheme::menubar_height() const
 {
-    return max(20, ceilf(FontDatabase::default_font().pixel_size()) + 6);
+    return max(20, FontDatabase::default_font().pixel_size_rounded_up() + 6);
 }
 
 Gfx::IntRect ClassicWindowTheme::titlebar_icon_rect(WindowType window_type, WindowMode window_mode, IntRect const& window_rect, Palette const& palette) const
