@@ -82,6 +82,47 @@ TEST_CASE(validate_invalid_ut8)
     EXPECT(valid_bytes == 0);
 }
 
+TEST_CASE(validate_overlong_utf8)
+{
+    size_t valid_bytes = 0;
+
+    // Overlong 2-byte encoding of U+002F
+    char invalid_utf8_1[] = { 42, 35, static_cast<char>(0xc0), static_cast<char>(0xaf) };
+    Utf8View utf8_1 { StringView { invalid_utf8_1, sizeof(invalid_utf8_1) } };
+    EXPECT(!utf8_1.validate(valid_bytes));
+    EXPECT(valid_bytes == 2);
+
+    // Overlong 3-byte encoding of U+002F
+    char invalid_utf8_2[] = { 42, 35, static_cast<char>(0xe0), static_cast<char>(0x80), static_cast<char>(0xaf) };
+    Utf8View utf8_2 { StringView { invalid_utf8_2, sizeof(invalid_utf8_2) } };
+    EXPECT(!utf8_2.validate(valid_bytes));
+    EXPECT(valid_bytes == 2);
+
+    // Overlong 4-byte encoding of U+002F
+    char invalid_utf8_3[] = { 42, 35, static_cast<char>(0xf0), static_cast<char>(0x80), static_cast<char>(0x80), static_cast<char>(0xaf) };
+    Utf8View utf8_3 { StringView { invalid_utf8_3, sizeof(invalid_utf8_3) } };
+    EXPECT(!utf8_3.validate(valid_bytes));
+    EXPECT(valid_bytes == 2);
+
+    // Overlong 3-byte encoding of U+00FF
+    char invalid_utf8_4[] = { 42, 35, static_cast<char>(0xe0), static_cast<char>(0x83), static_cast<char>(0xbf) };
+    Utf8View utf8_4 { StringView { invalid_utf8_4, sizeof(invalid_utf8_4) } };
+    EXPECT(!utf8_4.validate(valid_bytes));
+    EXPECT(valid_bytes == 2);
+
+    // Overlong 4-byte encoding of U+00FF
+    char invalid_utf8_5[] = { 42, 35, static_cast<char>(0xf0), static_cast<char>(0x80), static_cast<char>(0x83), static_cast<char>(0xbf) };
+    Utf8View utf8_5 { StringView { invalid_utf8_5, sizeof(invalid_utf8_5) } };
+    EXPECT(!utf8_5.validate(valid_bytes));
+    EXPECT(valid_bytes == 2);
+
+    // Overlong 4-byte encoding of U+0FFF
+    char invalid_utf8_6[] = { 42, 35, static_cast<char>(0xf0), static_cast<char>(0x8f), static_cast<char>(0xbf), static_cast<char>(0xbf) };
+    Utf8View utf8_6 { StringView { invalid_utf8_6, sizeof(invalid_utf8_6) } };
+    EXPECT(!utf8_6.validate(valid_bytes));
+    EXPECT(valid_bytes == 2);
+}
+
 TEST_CASE(iterate_utf8)
 {
     Utf8View view("Some weird characters \u00A9\u266A\uA755"sv);
