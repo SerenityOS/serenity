@@ -610,7 +610,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::override_mime_type(DeprecatedString co
         return WebIDL::InvalidStateError::create(realm(), "Cannot override MIME type when state is Loading or Done.");
 
     // 2. Set this’s override MIME type to the result of parsing mime.
-    m_override_mime_type = MimeSniff::MimeType::from_string(mime);
+    m_override_mime_type = MimeSniff::MimeType::parse(mime);
 
     // 3. If this’s override MIME type is failure, then set this’s override MIME type to application/octet-stream.
     if (!m_override_mime_type.has_value())
