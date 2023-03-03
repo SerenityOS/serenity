@@ -41,7 +41,7 @@
 
                 @GUI::Button {
                     name: "sizing"
-                    text: "..."
+                    icon: "/res/icons/16x16/fit-image-to-view.png"
                     fixed_width: 24
                     button_style: "Coolbar"
                 }

@@ -28,7 +28,7 @@ public:
     void set_bitmap(Gfx::Bitmap const*);
     Gfx::Bitmap const* bitmap() const { return m_bitmap.ptr(); }
 
-    void set_sizing_mode(VideoSizingMode value) { m_sizing_mode = value; }
+    void set_sizing_mode(VideoSizingMode value);
     VideoSizingMode sizing_mode() const { return m_sizing_mode; }
 
     void set_auto_resize(bool value);

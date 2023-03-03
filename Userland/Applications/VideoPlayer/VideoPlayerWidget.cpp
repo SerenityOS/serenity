@@ -69,9 +69,10 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
         toggle_pause();
     });
 
-    m_cycle_sizing_modes_action = GUI::Action::create("Sizing", [&](auto&) {
-        cycle_sizing_modes();
-    });
+    m_cycle_sizing_modes_action = GUI::Action::create(
+        "Sizing", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)), [&](auto&) {
+            cycle_sizing_modes();
+        });
 
     m_toggle_fullscreen_action = GUI::CommonActions::make_fullscreen_action([&](auto&) {
         toggle_fullscreen();
@@ -82,6 +83,22 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
     find_descendant_of_type_named<GUI::Button>("playback")->set_action(*m_play_pause_action);
     find_descendant_of_type_named<GUI::Button>("sizing")->set_action(*m_cycle_sizing_modes_action);
     find_descendant_of_type_named<GUI::Button>("fullscreen")->set_action(*m_toggle_fullscreen_action);
+
+    m_size_fit_action = GUI::Action::create_checkable("&Fit", [&](auto&) {
+        m_video_display->set_sizing_mode(VideoSizingMode::Fit);
+    });
+
+    m_size_fill_action = GUI::Action::create_checkable("Fi&ll", [&](auto&) {
+        m_video_display->set_sizing_mode(VideoSizingMode::Fill);
+    });
+
+    m_size_stretch_action = GUI::Action::create_checkable("&Stretch", [&](auto&) {
+        m_video_display->set_sizing_mode(VideoSizingMode::Stretch);
+    });
+
+    m_size_fullsize_action = GUI::Action::create_checkable("F&ull Size", [&](auto&) {
+        m_video_display->set_sizing_mode(VideoSizingMode::FullSize);
+    });
 
     return {};
 }
@@ -253,7 +270,27 @@ void VideoPlayerWidget::cycle_sizing_modes()
     auto sizing_mode = m_video_display->sizing_mode();
     sizing_mode = static_cast<VideoSizingMode>((to_underlying(sizing_mode) + 1) % to_underlying(VideoSizingMode::Sentinel));
     m_video_display->set_sizing_mode(sizing_mode);
-    m_video_display->update();
+
+    switch (sizing_mode) {
+    case VideoSizingMode::Fit:
+        m_size_fit_action->set_checked(true);
+        break;
+
+    case VideoSizingMode::Fill:
+        m_size_fill_action->set_checked(true);
+        break;
+
+    case VideoSizingMode::Stretch:
+        m_size_stretch_action->set_checked(true);
+        break;
+
+    case VideoSizingMode::FullSize:
+        m_size_fullsize_action->set_checked(true);
+        break;
+
+    case VideoSizingMode::Sentinel:
+        break;
+    }
 }
 
 void VideoPlayerWidget::toggle_fullscreen()
@@ -317,6 +354,22 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     // View menu
     auto view_menu = TRY(window.try_add_menu("&View"));
     TRY(view_menu->try_add_action(*m_toggle_fullscreen_action));
+
+    auto sizing_mode_menu = TRY(view_menu->try_add_submenu("&Sizing mode"));
+    sizing_mode_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fit-image-to-view.png"sv)));
+
+    m_sizing_mode_group = make<GUI::ActionGroup>();
+    m_sizing_mode_group->set_exclusive(true);
+    m_sizing_mode_group->add_action(*m_size_fit_action);
+    m_sizing_mode_group->add_action(*m_size_fill_action);
+    m_sizing_mode_group->add_action(*m_size_stretch_action);
+    m_sizing_mode_group->add_action(*m_size_fullsize_action);
+    m_size_fit_action->set_checked(true);
+
+    TRY(sizing_mode_menu->try_add_action(*m_size_fit_action));
+    TRY(sizing_mode_menu->try_add_action(*m_size_fill_action));
+    TRY(sizing_mode_menu->try_add_action(*m_size_stretch_action));
+    TRY(sizing_mode_menu->try_add_action(*m_size_fullsize_action));
 
     // Help menu
     auto help_menu = TRY(window.try_add_menu("&Help"));

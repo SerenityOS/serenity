@@ -70,6 +70,12 @@ private:
 
     RefPtr<GUI::Action> m_toggle_fullscreen_action;
 
+    OwnPtr<GUI::ActionGroup> m_sizing_mode_group;
+    RefPtr<GUI::Action> m_size_fit_action;
+    RefPtr<GUI::Action> m_size_fill_action;
+    RefPtr<GUI::Action> m_size_stretch_action;
+    RefPtr<GUI::Action> m_size_fullsize_action;
+
     OwnPtr<Video::PlaybackManager> m_playback_manager;
 
     bool m_was_playing_before_seek { false };
