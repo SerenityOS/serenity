@@ -155,8 +155,13 @@ public:
     virtual FontPixelMetrics pixel_metrics() const = 0;
 
     virtual u8 presentation_size() const = 0;
-    virtual float pixel_size() const = 0;
     virtual u8 slope() const = 0;
+
+    // Font pixel size (distance between ascender and descender).
+    virtual float pixel_size() const = 0;
+
+    // Font pixel size, rounded up to the nearest integer.
+    virtual int pixel_size_rounded_up() const = 0;
 
     virtual u16 width() const = 0;
 

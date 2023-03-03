@@ -22,6 +22,9 @@ ScaledFont::ScaledFont(NonnullRefPtr<VectorFont> font, float point_width, float 
 
     auto metrics = m_font->metrics(m_x_scale, m_y_scale);
 
+    m_pixel_size = m_point_height * 1.33333333f;
+    m_pixel_size_rounded_up = static_cast<int>(ceilf(m_pixel_size));
+
     m_pixel_metrics = Gfx::FontPixelMetrics {
         .size = (float)pixel_size(),
         .x_height = (float)x_height(),
@@ -146,6 +149,16 @@ RefPtr<Font> ScaledFont::with_size(float point_size) const
 Gfx::FontPixelMetrics ScaledFont::pixel_metrics() const
 {
     return m_pixel_metrics;
+}
+
+float ScaledFont::pixel_size() const
+{
+    return m_pixel_size;
+}
+
+int ScaledFont::pixel_size_rounded_up() const
+{
+    return m_pixel_size_rounded_up;
 }
 
 }

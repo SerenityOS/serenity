@@ -43,6 +43,7 @@ public:
     void set_presentation_size(u8 size) { m_presentation_size = size; }
 
     virtual float pixel_size() const override { return m_glyph_height; }
+    virtual int pixel_size_rounded_up() const override { return m_glyph_height; }
 
     u16 width() const override { return FontWidth::Normal; }
 

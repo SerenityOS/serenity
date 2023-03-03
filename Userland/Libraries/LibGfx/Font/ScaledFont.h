@@ -36,7 +36,8 @@ public:
     virtual NonnullRefPtr<Font> clone() const override { return MUST(try_clone()); } // FIXME: clone() should not need to be implemented
     virtual ErrorOr<NonnullRefPtr<Font>> try_clone() const override { return const_cast<ScaledFont&>(*this); }
     virtual u8 presentation_size() const override { return m_point_height; }
-    virtual float pixel_size() const override { return m_point_height * 1.33333333f; }
+    virtual float pixel_size() const override;
+    virtual int pixel_size_rounded_up() const override;
     virtual Gfx::FontPixelMetrics pixel_metrics() const override;
     virtual u8 slope() const override { return m_font->slope(); }
     virtual u16 width() const override { return m_font->width(); }
@@ -79,6 +80,9 @@ private:
     float m_point_height { 0.0f };
     mutable HashMap<GlyphIndexWithSubpixelOffset, RefPtr<Gfx::Bitmap>> m_cached_glyph_bitmaps;
     Gfx::FontPixelMetrics m_pixel_metrics;
+
+    float m_pixel_size { 0.0f };
+    int m_pixel_size_rounded_up { 0 };
 
     template<typename T>
     float unicode_view_width(T const& view) const;
