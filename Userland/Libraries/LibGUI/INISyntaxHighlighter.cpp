@@ -43,6 +43,10 @@ void IniSyntaxHighlighter::rehighlight(Palette const& palette)
     IniLexer lexer(text);
     auto tokens = lexer.lex();
 
+    Optional<IniToken> previous_section_token;
+    IniToken previous_token;
+    Vector<TextDocumentFoldingRegion> folding_regions;
+
     Vector<GUI::TextDocumentSpan> spans;
     for (auto& token : tokens) {
         GUI::TextDocumentSpan span;
@@ -54,8 +58,39 @@ void IniSyntaxHighlighter::rehighlight(Palette const& palette)
         span.is_skippable = token.m_type == IniToken::Type::Whitespace;
         span.data = static_cast<u64>(token.m_type);
         spans.append(span);
+
+        if (token.m_type == IniToken::Type::RightBracket && previous_token.m_type == IniToken::Type::Section) {
+            previous_section_token = token;
+        } else if (token.m_type == IniToken::Type::LeftBracket) {
+            if (previous_section_token.has_value()) {
+                TextDocumentFoldingRegion region;
+                region.range.set_start({ previous_section_token->m_end.line, previous_section_token->m_end.column });
+                // If possible, leave a blank line between sections.
+                // `end_line - start_line > 1` means the whitespace contains at least 1 blank line,
+                // so we can end the region 1 line before the end of that whitespace token.
+                // (Otherwise, we'd end the region at the start of the line that begins the next section.)
+                auto end_line = token.m_start.line;
+                if (previous_token.m_type == IniToken::Type::Whitespace
+                    && (previous_token.m_end.line - previous_token.m_start.line > 1))
+                    end_line--;
+                region.range.set_end({ end_line, token.m_start.column });
+                folding_regions.append(move(region));
+            }
+            previous_section_token = token;
+        }
+
+        previous_token = token;
     }
+    if (previous_section_token.has_value()) {
+        TextDocumentFoldingRegion region;
+        auto& end_token = tokens.last();
+        region.range.set_start({ previous_section_token->m_end.line, previous_section_token->m_end.column });
+        region.range.set_end({ end_token.m_end.line, end_token.m_end.column });
+        folding_regions.append(move(region));
+    }
+
     m_client->do_set_spans(move(spans));
+    m_client->do_set_folding_regions(move(folding_regions));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();
