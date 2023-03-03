@@ -6,23 +6,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Background Opacity"
-        preferred_height: "fit"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [8]
-            spacing: 8
-        }
-
-        @GUI::HorizontalOpacitySlider {
-            name: "background_opacity_slider"
-            min: 0
-            max: 255
-            orientation: "Horizontal"
-        }
-    }
-
-    @GUI::GroupBox {
-        title: "Terminal Font"
+        title: "Terminal font"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
@@ -59,30 +43,57 @@
     }
 
     @GUI::GroupBox {
-        title: "Cursor Settings"
+        title: "Background opacity"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
+            spacing: 8
         }
 
-        @GUI::RadioButton {
-            name: "terminal_cursor_block"
-            text: "Block cursor"
+        @GUI::HorizontalOpacitySlider {
+            name: "background_opacity_slider"
+            min: 0
+            max: 255
+            orientation: "Horizontal"
+        }
+    }
+
+    @GUI::Widget {
+        preferred_height: "shrink"
+        layout: @GUI::HorizontalBoxLayout {}
+
+        @GUI::GroupBox {
+            title: "Cursor shape"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [8]
+            }
+
+            @GUI::RadioButton {
+                name: "terminal_cursor_block"
+                text: "Block"
+            }
+
+            @GUI::RadioButton {
+                name: "terminal_cursor_underline"
+                text: "Underscore"
+            }
+
+            @GUI::RadioButton {
+                name: "terminal_cursor_bar"
+                text: "Vertical bar"
+            }
         }
 
-        @GUI::RadioButton {
-            name: "terminal_cursor_underline"
-            text: "Underline cursor"
-        }
+        @GUI::GroupBox {
+            title: "Cursor behavior"
+            layout: @GUI::VerticalBoxLayout {
+                margins: [8]
+            }
 
-        @GUI::RadioButton {
-            name: "terminal_cursor_bar"
-            text: "Bar cursor"
-        }
-
-        @GUI::CheckBox {
-            name: "terminal_cursor_blinking"
-            text: "Blinking cursor"
+            @GUI::CheckBox {
+                name: "terminal_cursor_blinking"
+                text: "Blink cursor"
+            }
         }
     }
 }
