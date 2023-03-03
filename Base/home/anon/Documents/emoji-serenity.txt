@@ -160,6 +160,7 @@ Emoji Tag Sequence Flags (limited cross-platform support)
 🏴󠁮󠁯󠀲󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0030 U+E007F NO-20 Finnmark
 🏴󠁮󠁯󠀲󠀱󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0031 U+E007F NO-21 Svalbard
 🏴󠁮󠁯󠀲󠀲󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0032 U+E007F NO-22 Jan Mayen
+🏴󠁮󠁯󠀲󠀳󠁿 - U+1F3F4 U+E006E U+E006F U+E0032 U+E0033 U+E007F NO-23 Trøndelag
 🏴󠁮󠁯󠀳󠀰󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0030 U+E007F NO-30 Viken
 🏴󠁮󠁯󠀳󠀴󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0034 U+E007F NO-34 Innlandet
 🏴󠁮󠁯󠀳󠀸󠁿 - U+1F3F4 U+E006E U+E006F U+E0033 U+E0038 U+E007F NO-38 Vestfold og Telemark
