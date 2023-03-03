@@ -6,16 +6,43 @@
     }
 
     @GUI::GroupBox {
-        title: "Bell Mode"
+        title: "Scrollback"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
             spacing: 8
         }
 
-        @GUI::Label {
-            text: "This setting controls the terminal's indication of an ANSI 0x07 bell (\\a)."
-            text_alignment: "TopLeft"
+        @GUI::Widget {
+            preferred_height: "shrink"
+            layout: @GUI::HorizontalBoxLayout {}
+
+            @GUI::SpinBox {
+                name: "history_size_spinbox"
+                min: 0
+                max: 40960
+                orientation: "Horizontal"
+                preferred_width: 100
+            }
+
+            @GUI::Label {
+                text: "lines"
+                autosize: true
+            }
+        }
+
+        @GUI::CheckBox {
+            name: "terminal_show_scrollbar"
+            text: "Show terminal scrollbar"
+        }
+    }
+
+    @GUI::GroupBox {
+        title: "Bell mode"
+        preferred_height: "fit"
+        layout: @GUI::VerticalBoxLayout {
+            margins: [8]
+            spacing: 8
         }
 
         @GUI::Widget {
@@ -26,12 +53,12 @@
 
             @GUI::RadioButton {
                 name: "beep_bell_radio"
-                text: "System beep"
+                text: "Audible bell"
             }
 
             @GUI::RadioButton {
                 name: "visual_bell_radio"
-                text: "Visual bell"
+                text: "Visible bell"
             }
 
             @GUI::RadioButton {
@@ -42,27 +69,7 @@
     }
 
     @GUI::GroupBox {
-        title: "Scrollback Size (Lines)"
-        preferred_height: "fit"
-        layout: @GUI::VerticalBoxLayout {
-            margins: [8]
-        }
-
-        @GUI::CheckBox {
-            name: "terminal_show_scrollbar"
-            text: "Show scrollbar"
-        }
-
-        @GUI::SpinBox {
-            name: "history_size_spinbox"
-            min: 0
-            max: 40960
-            orientation: "Horizontal"
-        }
-    }
-
-    @GUI::GroupBox {
-        title: "Exit Behaviour"
+        title: "Exit behavior"
         preferred_height: "fit"
         layout: @GUI::VerticalBoxLayout {
             margins: [8]
@@ -70,7 +77,7 @@
 
         @GUI::CheckBox {
             name: "terminal_confirm_close"
-            text: "Ask before closing if processes are running in the terminal"
+            text: "Confirm exit when process is active"
         }
     }
 }
