@@ -31,6 +31,15 @@ void VideoFrameWidget::set_bitmap(Gfx::Bitmap const* bitmap)
     update();
 }
 
+void VideoFrameWidget::set_sizing_mode(VideoSizingMode value)
+{
+    if (value == m_sizing_mode)
+        return;
+    m_sizing_mode = value;
+
+    update();
+}
+
 void VideoFrameWidget::set_auto_resize(bool value)
 {
     m_auto_resize = value;
