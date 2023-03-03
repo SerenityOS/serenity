@@ -491,14 +491,24 @@ bool String::contains(char needle, CaseSensitivity case_sensitivity) const
     return contains(StringView { &needle, 1 }, case_sensitivity);
 }
 
+bool String::starts_with(u32 code_point) const
+{
+    return bytes_as_string_view().starts_with(code_point);
+}
+
 bool String::starts_with_bytes(StringView bytes) const
 {
     return bytes_as_string_view().starts_with(bytes);
 }
 
-bool String::starts_with(u32 code_point) const
+bool String::ends_with(u32 code_point) const
 {
-    return bytes_as_string_view().starts_with(code_point);
+    return bytes_as_string_view().ends_with(code_point);
+}
+
+bool String::ends_with_bytes(StringView bytes) const
+{
+    return bytes_as_string_view().ends_with(bytes);
 }
 
 bool String::is_short_string() const
