@@ -60,6 +60,8 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     auto text = m_client->get_text();
     Cpp::Lexer lexer(text);
 
+    Vector<Token> folding_region_start_tokens;
+    Vector<GUI::TextDocumentFoldingRegion> folding_regions;
     Vector<GUI::TextDocumentSpan> spans;
     lexer.lex_iterable([&](auto token) {
         // FIXME: The +1 for the token end column is a quick hack due to not wanting to modify the lexer (which is also used by the parser). Maybe there's a better way to do this.
@@ -73,8 +75,21 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         span.is_skippable = token.type() == Cpp::Token::Type::Whitespace;
         span.data = static_cast<u64>(token.type());
         spans.append(span);
+
+        if (token.type() == Token::Type::LeftCurly) {
+            folding_region_start_tokens.append(token);
+        } else if (token.type() == Token::Type::RightCurly) {
+            if (!folding_region_start_tokens.is_empty()) {
+                auto start_token = folding_region_start_tokens.take_last();
+                GUI::TextDocumentFoldingRegion folding_region;
+                folding_region.range.set_start({ start_token.end().line, start_token.end().column });
+                folding_region.range.set_end({ token.start().line, token.start().column });
+                folding_regions.append(move(folding_region));
+            }
+        }
     });
     m_client->do_set_spans(move(spans));
+    m_client->do_set_folding_regions(move(folding_regions));
 
     m_has_brace_buddies = false;
     highlight_matching_token_pair();

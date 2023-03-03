@@ -23,6 +23,24 @@ void SemanticSyntaxHighlighter::rehighlight(Palette const& palette)
         lexer.set_ignore_whitespace(true);
         auto current_tokens = lexer.lex();
 
+        // Identify folding regions
+        Vector<Token> folding_region_start_tokens;
+        Vector<GUI::TextDocumentFoldingRegion> folding_regions;
+        for (auto& token : current_tokens) {
+            if (token.type() == Token::Type::LeftCurly) {
+                folding_region_start_tokens.append(token);
+            } else if (token.type() == Token::Type::RightCurly) {
+                if (!folding_region_start_tokens.is_empty()) {
+                    auto start_token = folding_region_start_tokens.take_last();
+                    GUI::TextDocumentFoldingRegion folding_region;
+                    folding_region.range.set_start({ start_token.end().line, start_token.end().column });
+                    folding_region.range.set_end({ token.start().line, token.start().column });
+                    folding_regions.append(move(folding_region));
+                }
+            }
+        }
+        m_client->do_set_folding_regions(move(folding_regions));
+
         StringBuilder current_tokens_as_lines;
         StringBuilder previous_tokens_as_lines;
 
