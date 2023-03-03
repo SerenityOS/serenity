@@ -17,9 +17,7 @@
 #define ANSI_INVERT_OUTPUT "\e[7m"
 #define ANSI_RESET_OUTPUT "\e[0m"
 
-// TODO: months are in reality 20-characters wide, but each line contains an extra erronous unneeded space at the end
-// so making this 20 exactly breaks formatting a bit
-int constexpr month_width = "01 02 03 04 05 06 07"sv.length() + 1;
+int constexpr month_width = "01 02 03 04 05 06 07"sv.length();
 // three months plus padding between them
 int constexpr year_width = 3 * month_width + 2 * "  "sv.length();
 
@@ -45,32 +43,31 @@ static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
     TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", TRY(String::formatted("{} - {}", TRY(month_name(month)), year)), month_width))));
     TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
 
-    int day_to_print = 1;
-
     auto date_time = Core::DateTime::create(year, month, 1);
     int first_day_of_week_for_month = date_time.weekday();
-    int days_in_the_month = date_time.days_in_month();
+    int days_in_month = date_time.days_in_month();
 
-    StringBuilder row;
-    for (int i = 1; day_to_print <= days_in_the_month; ++i) {
+    Vector<String> days_in_row;
+    int day = 1;
+    for (int i = 1; day <= days_in_month; ++i) {
         if (i - 1 < first_day_of_week_for_month) {
-            row.append("   "sv);
+            TRY(days_in_row.try_append(TRY(String::from_utf8("  "sv))));
         } else {
-            if (year == current_year && month == current_month && day_to_print == current_day) {
-                row.appendff(ANSI_INVERT_OUTPUT "{:02}" ANSI_RESET_OUTPUT " ", day_to_print);
+            if (year == current_year && month == current_month && day == current_day) {
+                TRY(days_in_row.try_append(TRY(String::formatted(ANSI_INVERT_OUTPUT "{:2}" ANSI_RESET_OUTPUT, day))));
             } else {
-                row.appendff("{:02} ", day_to_print);
+                TRY(days_in_row.try_append(TRY(String::formatted("{:02}", day))));
             }
-            day_to_print++;
+            day++;
         }
 
         if (i % 7 == 0) {
-            TRY(lines.try_append(TRY(row.to_string())));
-            row.clear();
+            TRY(lines.try_append(TRY(String::join(' ', days_in_row))));
+            days_in_row.clear();
         }
     }
 
-    TRY(lines.try_append(TRY(row.to_string())));
+    TRY(lines.try_append(TRY(String::join(' ', days_in_row))));
 
     return lines;
 }
