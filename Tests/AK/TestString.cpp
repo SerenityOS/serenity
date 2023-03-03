@@ -140,6 +140,26 @@ TEST_CASE(long_streams)
     }
 }
 
+TEST_CASE(invalid_utf8)
+{
+    auto string1 = String::from_utf8("long string \xf4\x8f\xbf\xc0"sv); // U+110000
+    EXPECT(string1.is_error());
+    EXPECT(string1.error().string_literal().contains("Input was not valid UTF-8"sv));
+
+    auto string2 = String::from_utf8("\xf4\xa1\xb0\xbd"sv); // U+121C3D
+    EXPECT(string2.is_error());
+    EXPECT(string2.error().string_literal().contains("Input was not valid UTF-8"sv));
+
+    AllocatingMemoryStream stream;
+    MUST(stream.write_value<u8>(0xf4));
+    MUST(stream.write_value<u8>(0xa1));
+    MUST(stream.write_value<u8>(0xb0));
+    MUST(stream.write_value<u8>(0xbd));
+    auto string3 = String::from_stream(stream, stream.used_buffer_size());
+    EXPECT_EQ(string3.is_error(), true);
+    EXPECT(string3.error().string_literal().contains("Input was not valid UTF-8"sv));
+}
+
 TEST_CASE(from_code_points)
 {
     for (u32 code_point = 0; code_point < 0x80; ++code_point) {

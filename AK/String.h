@@ -20,6 +20,7 @@
 #include <AK/Traits.h>
 #include <AK/Types.h>
 #include <AK/UnicodeUtils.h>
+#include <AK/Utf8View.h>
 #include <AK/Vector.h>
 
 namespace AK {
@@ -72,6 +73,7 @@ public:
     static AK_SHORT_STRING_CONSTEVAL String from_utf8_short_string(StringView string)
     {
         VERIFY(string.length() <= MAX_SHORT_STRING_BYTE_COUNT);
+        VERIFY(Utf8View { string }.validate());
 
         ShortString short_string;
         for (size_t i = 0; i < string.length(); ++i)
