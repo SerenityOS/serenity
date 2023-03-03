@@ -190,7 +190,7 @@ public:
     }
 
     template<Concepts::HashCompatible<K> Key>
-    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] bool contains(Key const& value)
+    requires(IsSame<KeyTraits, Traits<K>>) [[nodiscard]] bool contains(Key const& value) const
     {
         return find(value) != end();
     }
