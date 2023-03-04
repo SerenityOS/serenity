@@ -169,6 +169,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int year = 0;
     StringView week_start_day_name {};
     bool three_month_mode = false;
+    bool year_mode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
@@ -176,8 +177,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
     args_parser.add_option(week_start_day_name, "Day that starts the week", "starting-day", 's', "day");
+    args_parser.add_option(year_mode, "Show the whole year at once", "year", 'y');
     args_parser.add_option(three_month_mode, "Show the previous and next month beside the current one", "three-month-view", '3');
     args_parser.parse(arguments);
+
+    if (three_month_mode && year_mode) {
+        warnln("cal: Cannot specify both --year and --three-month-mode at the same time");
+        return 1;
+    }
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
@@ -191,7 +198,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         month = 0;
     }
 
-    bool year_mode = !month && year;
+    if (!month && year)
+        year_mode = true;
 
     int week_start_day;
     if (week_start_day_name.is_empty())
