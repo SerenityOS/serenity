@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Value.h>
@@ -34,7 +35,7 @@ WebIDL::ExceptionOr<JS::Value> parse_json_bytes_to_javascript_value(JS::VM& vm, 
 }
 
 // https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-a-json-string
-WebIDL::ExceptionOr<DeprecatedString> serialize_javascript_value_to_json_string(JS::VM& vm, JS::Value value)
+WebIDL::ExceptionOr<String> serialize_javascript_value_to_json_string(JS::VM& vm, JS::Value value)
 {
     auto& realm = *vm.current_realm();
 
@@ -49,7 +50,7 @@ WebIDL::ExceptionOr<DeprecatedString> serialize_javascript_value_to_json_string(
     VERIFY(result.is_string());
 
     // 4. Return result.
-    return TRY(result.as_string().deprecated_string());
+    return TRY(result.as_string().utf8_string());
 }
 
 // https://infra.spec.whatwg.org/#serialize-a-javascript-value-to-json-bytes
