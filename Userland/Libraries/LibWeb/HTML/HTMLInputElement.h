@@ -87,6 +87,11 @@ public:
     // https://html.spec.whatwg.org/multipage/input.html#update-the-file-selection
     void update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileList>);
 
+    WebIDL::ExceptionOr<bool> check_validity();
+    WebIDL::ExceptionOr<bool> report_validity();
+    void set_custom_validity(DeprecatedString const&);
+
+    WebIDL::ExceptionOr<void> select();
     WebIDL::ExceptionOr<void> set_selection_range(u32 start, u32 end, DeprecatedString const& direction);
 
     WebIDL::ExceptionOr<void> show_picker();

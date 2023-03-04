@@ -40,6 +40,9 @@ public:
     JS::NonnullGCPtr<DOM::HTMLCollection> elements() const;
     unsigned length() const;
 
+    WebIDL::ExceptionOr<bool> check_validity();
+    WebIDL::ExceptionOr<bool> report_validity();
+
     // https://www.w3.org/TR/html-aria/#el-form
     virtual Optional<ARIA::Role> default_role() const override { return ARIA::Role::form; }
 
