@@ -27,6 +27,7 @@ static bool could_be_start_of_emoji_core_sequence(u32 code_point, Optional<u32> 
 
     static constexpr auto emoji_presentation_selector = 0xFE0Fu;
     static constexpr auto combining_enclosing_keycap = 0x20E3u;
+    static constexpr auto zero_width_joiner = 0x200Du;
 
     // https://unicode.org/reports/tr51/#def_emoji_keycap_sequence
     // emoji_keycap_sequence := [0-9#*] \x{FE0F 20E3}
@@ -45,6 +46,8 @@ static bool could_be_start_of_emoji_core_sequence(u32 code_point, Optional<u32> 
         break;
     case SequenceType::EmojiPresentation:
         if (code_point_has_property(code_point, Property::Emoji_Presentation))
+            return true;
+        if (next_code_point == zero_width_joiner && code_point_has_property(code_point, Property::Emoji))
             return true;
         break;
     }
@@ -92,7 +95,7 @@ static bool could_be_start_of_emoji_sequence_impl(CodePointIterator const& it, [
     // emoji_zwj_sequence and emoji_tag_sequence emojis, because:
     //
     //     * emoji_zwj_sequence must begin with emoji_zwj_element, which is:
-    //       emoji_zwj_sequence := emoji_core_sequence | emoji_tag_sequence
+    //       emoji_zwj_element := emoji_core_sequence | emoji_tag_sequence
     //
     //     * emoji_tag_sequence must begin with tag_base, which is:
     //       tag_base := emoji_character | emoji_modifier_sequence | emoji_presentation_sequence
