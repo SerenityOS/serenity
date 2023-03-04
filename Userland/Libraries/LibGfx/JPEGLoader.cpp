@@ -30,12 +30,12 @@
 #define JPEG_APPN7 0XFFE7
 #define JPEG_APPN8 0XFFE8
 #define JPEG_APPN9 0XFFE9
-#define JPEG_APPNA 0XFFEA
-#define JPEG_APPNB 0XFFEB
-#define JPEG_APPNC 0XFFEC
-#define JPEG_APPND 0XFFED
-#define JPEG_APPNE 0xFFEE
-#define JPEG_APPNF 0xFFEF
+#define JPEG_APPN10 0XFFEA
+#define JPEG_APPN11 0XFFEB
+#define JPEG_APPN12 0XFFEC
+#define JPEG_APPN13 0XFFED
+#define JPEG_APPN14 0xFFEE
+#define JPEG_APPN15 0xFFEF
 
 #define JPEG_RESERVED1 0xFFF1
 #define JPEG_RESERVED2 0xFFF2
@@ -555,7 +555,7 @@ static bool is_frame_marker(Marker const marker)
 
 static inline bool is_supported_marker(Marker const marker)
 {
-    if (marker >= JPEG_APPN0 && marker <= JPEG_APPNF) {
+    if (marker >= JPEG_APPN0 && marker <= JPEG_APPN15) {
 
         if (marker != JPEG_APPN0)
             dbgln_if(JPEG_DEBUG, "{:#04x} not supported yet. The decoder may fail!", marker);
@@ -1212,7 +1212,7 @@ static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblo
 
 static bool is_app_marker(Marker const marker)
 {
-    return marker >= JPEG_APPN0 && marker <= JPEG_APPNF;
+    return marker >= JPEG_APPN0 && marker <= JPEG_APPN15;
 }
 
 static bool is_miscellaneous_or_table_marker(Marker const marker)
