@@ -109,7 +109,7 @@ TEST_CASE(test_jpeg_sof0_several_scans)
     EXPECT(plugin_decoder->initialize());
 
     auto frame = MUST(plugin_decoder->frame(0));
-    EXPECT_EQ(frame.image->size(), Gfx::IntSize(720, 859));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(592, 800));
 }
 
 TEST_CASE(test_jpeg_sof2_spectral_selection)
