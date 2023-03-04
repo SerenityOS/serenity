@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibWeb/DOM/Event.h>
 
 namespace Web::HTML {
@@ -18,10 +19,10 @@ class PageTransitionEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(PageTransitionEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> create(JS::Realm&, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> create(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> construct_impl(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 
-    PageTransitionEvent(JS::Realm&, DeprecatedFlyString const& event_name, PageTransitionEventInit const& event_init);
+    PageTransitionEvent(JS::Realm&, FlyString const& event_name, PageTransitionEventInit const& event_init);
 
     virtual ~PageTransitionEvent() override;
 

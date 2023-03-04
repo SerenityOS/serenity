@@ -793,7 +793,7 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     // with the persisted attribute initialized to persisted,
     HTML::PageTransitionEventInit event_init {};
     event_init.persisted = persisted;
-    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), event_name, event_init).release_value_but_fixme_should_propagate_errors();
+    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), String::from_deprecated_string(event_name).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors();
 
     // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
