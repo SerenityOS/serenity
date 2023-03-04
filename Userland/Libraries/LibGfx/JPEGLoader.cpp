@@ -214,6 +214,14 @@ struct Scan {
     }
 };
 
+enum class ColorTransform {
+    // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.872-201206-I!!PDF-E&type=items
+    // 6.5.3 - APP14 marker segment for colour encoding
+    CmykOrRgb = 0,
+    YCbCr = 1,
+    YCCK = 2,
+};
+
 struct JPEGLoadingContext {
     enum State {
         NotDecoded = 0,
@@ -242,6 +250,8 @@ struct JPEGLoadingContext {
     i32 previous_dc_values[3] = { 0 };
     MacroblockMeta mblock_meta;
     OwnPtr<FixedMemoryStream> stream;
+
+    Optional<ColorTransform> color_transform {};
 
     Optional<ICCMultiChunkState> icc_multi_chunk_state;
     Optional<ByteBuffer> icc_data;
@@ -557,7 +567,7 @@ static inline bool is_supported_marker(Marker const marker)
 {
     if (marker >= JPEG_APPN0 && marker <= JPEG_APPN15) {
 
-        if (marker != JPEG_APPN0)
+        if (marker != JPEG_APPN0 && marker != JPEG_APPN14)
             dbgln_if(JPEG_DEBUG, "{:#04x} not supported yet. The decoder may fail!", marker);
         return true;
     }
@@ -787,6 +797,50 @@ static ErrorOr<void> read_icc_profile(SeekableStream& stream, JPEGLoadingContext
     return {};
 }
 
+static ErrorOr<void> read_colour_encoding(SeekableStream& stream, [[maybe_unused]] JPEGLoadingContext& context, int bytes_to_read)
+{
+    // The App 14 segment is application specific in the first JPEG standard.
+    // However, the Adobe implementation is globally accepted and the value of the color transform
+    // was latter standardized as a JPEG-1 extension.
+
+    // For the structure of the App 14 segment, see:
+    // https://www.pdfa.org/norm-refs/5116.DCT_Filter.pdf
+    // 18 Adobe Application-Specific JPEG Marker
+
+    // For the value of color_transform, see:
+    // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.872-201206-I!!PDF-E&type=items
+    // 6.5.3 - APP14 marker segment for colour encoding
+
+    if (bytes_to_read < 6)
+        return Error::from_string_literal("App14 segment too small");
+
+    [[maybe_unused]] auto const version = TRY(stream.read_value<u8>());
+    [[maybe_unused]] u16 const flag0 = TRY(stream.read_value<BigEndian<u16>>());
+    [[maybe_unused]] u16 const flag1 = TRY(stream.read_value<BigEndian<u16>>());
+    auto const color_transform = TRY(stream.read_value<u8>());
+
+    if (bytes_to_read > 6) {
+        dbgln_if(JPEG_DEBUG, "Unread bytes in App14 segment: {}", bytes_to_read - 1);
+        TRY(stream.discard(bytes_to_read - 1));
+    }
+
+    switch (color_transform) {
+    case 0:
+        context.color_transform = ColorTransform::CmykOrRgb;
+        break;
+    case 1:
+        context.color_transform = ColorTransform::YCbCr;
+        break;
+    case 2:
+        context.color_transform = ColorTransform::YCCK;
+        break;
+    default:
+        dbgln("0x{:x} is not a specified transform flag value, ignoring", color_transform);
+    }
+
+    return {};
+}
+
 static ErrorOr<void> read_app_marker(SeekableStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
@@ -814,6 +868,8 @@ static ErrorOr<void> read_app_marker(SeekableStream& stream, JPEGLoadingContext&
 
     if (app_marker_number == 2 && app_id == "ICC_PROFILE"sv)
         return read_icc_profile(stream, context, bytes_to_read);
+    if (app_marker_number == 14 && app_id == "Adobe"sv)
+        return read_colour_encoding(stream, context, bytes_to_read);
 
     return stream.discard(bytes_to_read);
 }
