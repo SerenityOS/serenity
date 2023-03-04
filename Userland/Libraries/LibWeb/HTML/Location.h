@@ -71,7 +71,7 @@ private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-    DOM::Document const* relevant_document() const;
+    JS::GCPtr<DOM::Document> relevant_document() const;
     AK::URL url() const;
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
