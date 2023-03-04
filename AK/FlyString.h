@@ -51,6 +51,9 @@ public:
     // This is primarily interesting to unit tests.
     [[nodiscard]] static size_t number_of_fly_strings();
 
+    // FIXME: Remove this once all code has been ported to FlyString
+    [[nodiscard]] DeprecatedFlyString to_deprecated_fly_string() const;
+
 private:
     // This will hold either the pointer to the Detail::StringData it represents or the raw bytes of
     // an inlined short string.
