@@ -358,16 +358,21 @@ ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already
 
 ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(Credentials const& credentials, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
 {
+    return open(Process::current(), credentials, path, options, mode, base, owner);
+}
+
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::open(Process const& process, Credentials const& credentials, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> owner)
+{
     if ((options & O_CREAT) && (options & O_DIRECTORY))
         return EINVAL;
 
     RefPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path(credentials, path, base, &parent_custody, options);
+    auto custody_or_error = resolve_path(process, credentials, path, base, &parent_custody, options);
     if (custody_or_error.is_error()) {
         // NOTE: ENOENT with a non-null parent custody signals us that the immediate parent
         //       of the file exists, but the file itself does not.
         if ((options & O_CREAT) && custody_or_error.error().code() == ENOENT && parent_custody)
-            return create(credentials, path, options, mode, *parent_custody, move(owner));
+            return create(process, credentials, path, options, mode, *parent_custody, move(owner));
         return custody_or_error.release_error();
     }
 
@@ -473,10 +478,15 @@ ErrorOr<void> VirtualFileSystem::mknod(Credentials const& credentials, StringVie
 
 ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::create(Credentials const& credentials, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
+    return create(Process::current(), credentials, path, options, mode, parent_custody, owner);
+}
+
+ErrorOr<NonnullLockRefPtr<OpenFileDescription>> VirtualFileSystem::create(Process const& process, Credentials const& credentials, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
+{
     auto basename = KLexicalPath::basename(path);
     auto parent_path = TRY(parent_custody.try_serialize_absolute_path());
     auto full_path = TRY(KLexicalPath::try_join(parent_path->view(), basename));
-    TRY(validate_path_against_process_veil(full_path->view(), options));
+    TRY(validate_path_against_process_veil(process, full_path->view(), options));
 
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
         // Turn it into a regular file. (This feels rather hackish.)
@@ -938,11 +948,10 @@ NonnullRefPtr<Custody> VirtualFileSystem::root_custody()
     return m_root_custody.with([](auto& root_custody) -> NonnullRefPtr<Custody> { return *root_custody; });
 }
 
-UnveilNode const& VirtualFileSystem::find_matching_unveiled_path(StringView path)
+UnveilNode const& VirtualFileSystem::find_matching_unveiled_path(Process const& process, StringView path)
 {
-    auto& current_process = Process::current();
-    VERIFY(current_process.veil_state() != VeilState::None);
-    return current_process.unveil_data().with([&](auto const& unveil_data) -> UnveilNode const& {
+    VERIFY(process.veil_state() != VeilState::None);
+    return process.unveil_data().with([&](auto const& unveil_data) -> UnveilNode const& {
         auto path_parts = KLexicalPath::parts(path);
         return unveil_data.paths.traverse_until_last_accessible_node(path_parts.begin(), path_parts.end());
     });
@@ -950,15 +959,20 @@ UnveilNode const& VirtualFileSystem::find_matching_unveiled_path(StringView path
 
 ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(Custody const& custody, int options)
 {
-    if (Process::current().veil_state() == VeilState::None)
-        return {};
-    auto absolute_path = TRY(custody.try_serialize_absolute_path());
-    return validate_path_against_process_veil(absolute_path->view(), options);
+    return validate_path_against_process_veil(Process::current(), custody, options);
 }
 
-ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView path, int options)
+ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(Process const& process, Custody const& custody, int options)
 {
-    if (Process::current().veil_state() == VeilState::None)
+    if (process.veil_state() == VeilState::None)
+        return {};
+    auto absolute_path = TRY(custody.try_serialize_absolute_path());
+    return validate_path_against_process_veil(process, absolute_path->view(), options);
+}
+
+ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(Process const& process, StringView path, int options)
+{
+    if (process.veil_state() == VeilState::None)
         return {};
 
     VERIFY(path.starts_with('/'));
@@ -972,7 +986,7 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
         return {};
 #endif
 
-    auto& unveiled_path = find_matching_unveiled_path(path);
+    auto& unveiled_path = find_matching_unveiled_path(process, path);
     if (unveiled_path.permissions() == UnveilAccess::None) {
         dbgln("Rejecting path '{}' since it hasn't been unveiled.", path);
         dump_backtrace();
@@ -1026,12 +1040,22 @@ ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView p
     return {};
 }
 
+ErrorOr<void> VirtualFileSystem::validate_path_against_process_veil(StringView path, int options)
+{
+    return validate_path_against_process_veil(Process::current(), path, options);
+}
+
 ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(Credentials const& credentials, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
+{
+    return resolve_path(Process::current(), credentials, path, base, out_parent, options, symlink_recursion_level);
+}
+
+ErrorOr<NonnullRefPtr<Custody>> VirtualFileSystem::resolve_path(Process const& process, Credentials const& credentials, StringView path, NonnullRefPtr<Custody> base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     // FIXME: The errors returned by resolve_path_without_veil can leak information about paths that are not unveiled,
     //        e.g. when the error is EACCESS or similar.
     auto custody = TRY(resolve_path_without_veil(credentials, path, base, out_parent, options, symlink_recursion_level));
-    if (auto result = validate_path_against_process_veil(*custody, options); result.is_error()) {
+    if (auto result = validate_path_against_process_veil(process, *custody, options); result.is_error()) {
         if (out_parent)
             out_parent->clear();
         return result.release_error();

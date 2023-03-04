@@ -709,7 +709,7 @@ ErrorOr<void> Process::dump_perfcore()
     LockRefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
-        auto description_or_error = VirtualFileSystem::the().open(credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
+        auto description_or_error = VirtualFileSystem::the().open(*this, credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
         if (!description_or_error.is_error()) {
             description = description_or_error.release_value();
             break;
