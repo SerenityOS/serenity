@@ -71,7 +71,7 @@ private:
     DeprecatedString tooltip(Action const& action) const
     {
         StringBuilder builder;
-        builder.append(action.text());
+        builder.append(action.tooltip());
         if (action.shortcut().is_valid()) {
             builder.append(" ("sv);
             builder.append(action.shortcut().to_deprecated_string());

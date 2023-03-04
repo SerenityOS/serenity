@@ -85,6 +85,9 @@ public:
     DeprecatedString text() const { return m_text; }
     void set_text(DeprecatedString);
 
+    DeprecatedString tooltip() const { return m_tooltip.value_or(m_text); }
+    void set_tooltip(DeprecatedString);
+
     DeprecatedString const& status_tip() const { return m_status_tip; }
     void set_status_tip(DeprecatedString status_tip) { m_status_tip = move(status_tip); }
 
@@ -144,6 +147,7 @@ private:
     void for_each_menu_item(Callback);
 
     DeprecatedString m_text;
+    Optional<DeprecatedString> m_tooltip;
     DeprecatedString m_status_tip;
     RefPtr<Gfx::Bitmap const> m_icon;
     Shortcut m_shortcut;
