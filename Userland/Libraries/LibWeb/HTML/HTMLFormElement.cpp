@@ -258,6 +258,20 @@ unsigned HTMLFormElement::length() const
     return elements()->length();
 }
 
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-checkvalidity
+WebIDL::ExceptionOr<bool> HTMLFormElement::check_validity()
+{
+    dbgln("(STUBBED) HTMLFormElement::check_validity(). Called on: {}", debug_description());
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/forms.html#dom-form-reportvalidity
+WebIDL::ExceptionOr<bool> HTMLFormElement::report_validity()
+{
+    dbgln("(STUBBED) HTMLFormElement::report_validity(). Called on: {}", debug_description());
+    return true;
+}
+
 // https://html.spec.whatwg.org/multipage/forms.html#category-submit
 ErrorOr<Vector<JS::NonnullGCPtr<DOM::Element>>> HTMLFormElement::get_submittable_elements()
 {

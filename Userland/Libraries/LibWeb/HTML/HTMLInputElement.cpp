@@ -874,6 +874,34 @@ i32 HTMLInputElement::default_tab_index_value() const
     return 0;
 }
 
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-checkvalidity
+WebIDL::ExceptionOr<bool> HTMLInputElement::check_validity()
+{
+    dbgln("(STUBBED) HTMLInputElement::check_validity(). Called on: {}", debug_description());
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-reportvalidity
+WebIDL::ExceptionOr<bool> HTMLInputElement::report_validity()
+{
+    dbgln("(STUBBED) HTMLInputElement::report_validity(). Called on: {}", debug_description());
+    return true;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-cva-setcustomvalidity
+void HTMLInputElement::set_custom_validity(DeprecatedString const& error)
+{
+    dbgln("(STUBBED) HTMLInputElement::set_custom_validity(error={}). Called on: {}", error, debug_description());
+    return;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-select
+WebIDL::ExceptionOr<void> HTMLInputElement::select()
+{
+    dbgln("(STUBBED) HTMLInputElement::select(). Called on: {}", debug_description());
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#dom-textarea/input-setselectionrange
 WebIDL::ExceptionOr<void> HTMLInputElement::set_selection_range(u32 start, u32 end, DeprecatedString const& direction)
 {

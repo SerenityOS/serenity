@@ -12,6 +12,8 @@ interface HTMLFormElement : HTMLElement {
 
     undefined submit();
     [CEReactions] undefined reset();
+    boolean checkValidity();
+    boolean reportValidity();
 
     // FIXME: Should be a HTMLFormControlsCollection
     [SameObject] readonly attribute HTMLCollection elements;
