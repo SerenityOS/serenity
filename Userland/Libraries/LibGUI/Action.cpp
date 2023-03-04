@@ -132,7 +132,7 @@ Action::~Action()
 
 void Action::process_event(Window& window, Event& event)
 {
-    if (is_enabled()) {
+    if (is_enabled() && is_visible()) {
         flash_menubar_menu(window);
         activate();
         event.accept();
