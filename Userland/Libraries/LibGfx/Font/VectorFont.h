@@ -35,7 +35,7 @@ class VectorFont : public RefCounted<VectorFont> {
 public:
     virtual ~VectorFont() { }
     virtual ScaledFontMetrics metrics(float x_scale, float y_scale) const = 0;
-    virtual ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale) const = 0;
+    virtual ScaledGlyphMetrics glyph_metrics(u32 glyph_id, float x_scale, float y_scale, float point_width, float point_height) const = 0;
     virtual float glyphs_horizontal_kerning(u32 left_glyph_id, u32 right_glyph_id, float x_scale) const = 0;
     virtual RefPtr<Gfx::Bitmap> rasterize_glyph(u32 glyph_id, float x_scale, float y_scale, GlyphSubpixelOffset) const = 0;
     virtual u32 glyph_count() const = 0;
