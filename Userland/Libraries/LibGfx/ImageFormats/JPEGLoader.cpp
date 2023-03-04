@@ -446,8 +446,20 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
             for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
                 // A.2.3 - Interleaved order
                 u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
-                if (!context.current_scan.are_components_interleaved())
+                if (!context.current_scan.are_components_interleaved()) {
                     macroblock_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
+
+                    // A.2.4 Completion of partial MCU
+                    // If the component is [and only if!] to be interleaved, the encoding process
+                    // shall also extend the number of samples by one or more additional blocks.
+
+                    // Horizontally
+                    if (macroblock_index >= context.mblock_meta.hcount && macroblock_index % context.mblock_meta.hpadded_count >= context.mblock_meta.hcount)
+                        continue;
+                    // Vertically
+                    if (macroblock_index >= context.mblock_meta.hpadded_count * context.mblock_meta.vcount)
+                        continue;
+                }
 
                 // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
                 if (context.current_scan.end_of_bands_run_count > 0) {
