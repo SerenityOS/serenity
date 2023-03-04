@@ -137,6 +137,8 @@ private:
 
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
 
+    virtual bool has_color_bitmaps() const override { return false; }
+
     DeprecatedString m_name;
     DeprecatedString m_family;
     size_t m_glyph_count { 0 };

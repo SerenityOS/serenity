@@ -64,13 +64,16 @@ public:
     {
     }
 
-    Glyph(RefPtr<Bitmap> bitmap, float left_bearing, float advance, float ascent)
+    Glyph(RefPtr<Bitmap> bitmap, float left_bearing, float advance, float ascent, bool is_color_bitmap)
         : m_bitmap(bitmap)
         , m_left_bearing(left_bearing)
         , m_advance(advance)
         , m_ascent(ascent)
+        , m_color_bitmap(is_color_bitmap)
     {
     }
+
+    bool is_color_bitmap() const { return m_color_bitmap; }
 
     bool is_glyph_bitmap() const { return !m_bitmap; }
     GlyphBitmap glyph_bitmap() const { return m_glyph_bitmap; }
@@ -85,6 +88,7 @@ private:
     float m_left_bearing;
     float m_advance;
     float m_ascent;
+    bool m_color_bitmap { false };
 };
 
 struct GlyphSubpixelOffset {
@@ -206,6 +210,8 @@ public:
     virtual RefPtr<Font> with_size(float point_size) const = 0;
 
     Font const& bold_variant() const;
+
+    virtual bool has_color_bitmaps() const = 0;
 
 private:
     mutable RefPtr<Gfx::Font const> m_bold_variant;

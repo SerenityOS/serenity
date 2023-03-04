@@ -37,6 +37,7 @@ public:
     virtual u16 width() const override { return m_input_font->width(); }
     virtual u8 slope() const override { return m_input_font->slope(); }
     virtual bool is_fixed_width() const override { return m_input_font->is_fixed_width(); }
+    virtual bool has_color_bitmaps() const override { return m_input_font->has_color_bitmaps(); }
 
 private:
     Font(NonnullRefPtr<Gfx::VectorFont const> input_font, ByteBuffer input_font_buffer)

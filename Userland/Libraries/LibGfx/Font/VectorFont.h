@@ -47,6 +47,7 @@ public:
     virtual u16 width() const = 0;
     virtual u8 slope() const = 0;
     virtual bool is_fixed_width() const = 0;
+    virtual bool has_color_bitmaps() const = 0;
 };
 
 }

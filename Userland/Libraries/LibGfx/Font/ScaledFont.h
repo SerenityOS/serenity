@@ -71,6 +71,8 @@ public:
 
     virtual RefPtr<Font> with_size(float point_size) const override;
 
+    virtual bool has_color_bitmaps() const override { return m_font->has_color_bitmaps(); }
+
 private:
     NonnullRefPtr<VectorFont> m_font;
     float m_x_scale { 0.0f };

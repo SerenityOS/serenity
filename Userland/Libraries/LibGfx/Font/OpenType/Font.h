@@ -40,6 +40,7 @@ public:
     virtual u16 width() const override;
     virtual u8 slope() const override;
     virtual bool is_fixed_width() const override;
+    virtual bool has_color_bitmaps() const override;
 
     Optional<ReadonlyBytes> font_program() const;
     Optional<ReadonlyBytes> control_value_program() const;

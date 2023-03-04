@@ -88,7 +88,7 @@ Gfx::Glyph ScaledFont::glyph(u32 code_point, GlyphSubpixelOffset subpixel_offset
     auto id = glyph_id_for_code_point(code_point);
     auto bitmap = rasterize_glyph(id, subpixel_offset);
     auto metrics = glyph_metrics(id);
-    return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender);
+    return Gfx::Glyph(bitmap, metrics.left_side_bearing, metrics.advance_width, metrics.ascender, m_font->has_color_bitmaps());
 }
 
 float ScaledFont::glyph_left_bearing(u32 code_point) const
