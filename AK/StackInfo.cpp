@@ -17,6 +17,10 @@
 #elif defined(AK_OS_FREEBSD) or defined(AK_OS_OPENBSD)
 #    include <pthread.h>
 #    include <pthread_np.h>
+#elif defined(AK_OS_WINDOWS)
+#    include <Windows.h>
+// NOTE: Prevent clang-format from re-ordering this header order
+#    include <Processthreadsapi.h>
 #endif
 
 namespace AK {
@@ -77,6 +81,13 @@ StackInfo::StackInfo()
     FlatPtr top_of_stack = (FlatPtr)thread_stack.ss_sp;
     m_size = (size_t)thread_stack.ss_size;
     m_base = top_of_stack - m_size;
+#elif defined(AK_OS_WINDOWS)
+    ULONG_PTR low_limit = 0;
+    ULONG_PTR high_limit = 0;
+    GetCurrentThreadStackLimits(&low_limit, &high_limit);
+
+    m_base = static_cast<FlatPtr>(low_limit);
+    m_size = static_cast<size_t>(high_limit - low_limit);
 #else
 #    pragma message "StackInfo not supported on this platform! Recursion checks and stack scans may not work properly"
     m_size = (size_t)~0;
