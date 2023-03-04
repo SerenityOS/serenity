@@ -23,30 +23,30 @@ public:
     virtual ~Location() override;
 
     WebIDL::ExceptionOr<String> href() const;
-    JS::ThrowCompletionOr<void> set_href(String const&);
+    WebIDL::ExceptionOr<void> set_href(String const&);
 
     WebIDL::ExceptionOr<String> origin() const;
 
     WebIDL::ExceptionOr<String> protocol() const;
-    JS::ThrowCompletionOr<void> set_protocol(String const&);
+    WebIDL::ExceptionOr<void> set_protocol(String const&);
 
     WebIDL::ExceptionOr<String> host() const;
-    JS::ThrowCompletionOr<void> set_host(String const&);
+    WebIDL::ExceptionOr<void> set_host(String const&);
 
     WebIDL::ExceptionOr<String> hostname() const;
-    JS::ThrowCompletionOr<void> set_hostname(String const&);
+    WebIDL::ExceptionOr<void> set_hostname(String const&);
 
     WebIDL::ExceptionOr<String> port() const;
-    JS::ThrowCompletionOr<void> set_port(String const&);
+    WebIDL::ExceptionOr<void> set_port(String const&);
 
     WebIDL::ExceptionOr<String> pathname() const;
-    JS::ThrowCompletionOr<void> set_pathname(String const&);
+    WebIDL::ExceptionOr<void> set_pathname(String const&);
 
     WebIDL::ExceptionOr<String> search() const;
-    JS::ThrowCompletionOr<void> set_search(String const&);
+    WebIDL::ExceptionOr<void> set_search(String const&);
 
     WebIDL::ExceptionOr<String> hash() const;
-    JS::ThrowCompletionOr<void> set_hash(String const&);
+    WebIDL::ExceptionOr<void> set_hash(String const&);
 
     void replace(String const& url) const;
     void reload() const;
