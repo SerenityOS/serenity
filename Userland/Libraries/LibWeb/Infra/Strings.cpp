@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  * Copyright (c) 2023, Kenneth Myhra <kennethmyhra@serenityos.org>
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
@@ -8,7 +8,7 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibWeb/Infra/CharacterTypes.h>
@@ -41,7 +41,7 @@ bool is_ascii_case_insensitive_match(StringView a, StringView b)
 }
 
 // https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
-DeprecatedString strip_and_collapse_whitespace(StringView string)
+ErrorOr<String> strip_and_collapse_whitespace(StringView string)
 {
     // Replace any sequence of one or more consecutive code points that are ASCII whitespace in the string with a single U+0020 SPACE code point.
     StringBuilder builder;
@@ -51,11 +51,11 @@ DeprecatedString strip_and_collapse_whitespace(StringView string)
                 builder.append(' ');
             continue;
         }
-        builder.append_code_point(code_point);
+        TRY(builder.try_append_code_point(code_point));
     }
 
     // ...and then remove any leading and trailing ASCII whitespace from that string.
-    return builder.string_view().trim(Infra::ASCII_WHITESPACE);
+    return String::from_utf8(builder.string_view().trim(Infra::ASCII_WHITESPACE));
 }
 
 // https://infra.spec.whatwg.org/#code-unit-prefix

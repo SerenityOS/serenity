@@ -108,7 +108,7 @@ DeprecatedString HTMLOptionElement::text() const
     });
 
     // Return the result of stripping and collapsing ASCII whitespace from the above concatenation.
-    return Infra::strip_and_collapse_whitespace(builder.string_view());
+    return Infra::strip_and_collapse_whitespace(builder.string_view()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-text
