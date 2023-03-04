@@ -1421,8 +1421,9 @@ void Painter::draw_glyph_or_emoji(FloatPoint point, Utf8CodePointIterator& it, F
             ++it;
     };
 
+    // NOTE: We don't check for emoji
     auto font_contains_glyph = font.contains_glyph(code_point);
-    auto check_for_emoji = Unicode::could_be_start_of_emoji_sequence(it, font_contains_glyph ? Unicode::SequenceType::EmojiPresentation : Unicode::SequenceType::Any);
+    auto check_for_emoji = !font.has_color_bitmaps() && Unicode::could_be_start_of_emoji_sequence(it, font_contains_glyph ? Unicode::SequenceType::EmojiPresentation : Unicode::SequenceType::Any);
 
     // If the font contains the glyph, and we know it's not the start of an emoji, draw a text glyph.
     if (font_contains_glyph && !check_for_emoji) {

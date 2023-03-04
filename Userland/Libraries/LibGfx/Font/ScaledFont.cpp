@@ -107,8 +107,10 @@ float ScaledFont::glyph_width(u32 code_point) const
 template<typename CodePointIterator>
 static float glyph_or_emoji_width_impl(ScaledFont const& font, CodePointIterator& it)
 {
-    if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it))
-        return font.pixel_size() * emoji->width() / emoji->height();
+    if (!font.has_color_bitmaps()) {
+        if (auto const* emoji = Emoji::emoji_for_code_point_iterator(it))
+            return font.pixel_size() * emoji->width() / emoji->height();
+    }
 
     return font.glyph_width(*it);
 }
