@@ -296,4 +296,17 @@ void Action::set_text(DeprecatedString text)
     });
 }
 
+void Action::set_tooltip(DeprecatedString tooltip)
+{
+    if (m_tooltip == tooltip)
+        return;
+    m_tooltip = move(tooltip);
+    for_each_toolbar_button([&](auto& button) {
+        button.set_tooltip(*m_tooltip);
+    });
+    for_each_menu_item([&](auto& menu_item) {
+        menu_item.update_from_action({});
+    });
+}
+
 }
