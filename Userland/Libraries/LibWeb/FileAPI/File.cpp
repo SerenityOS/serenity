@@ -55,7 +55,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<File>> File::create(JS::Realm& realm, Vecto
 
         // 2. Convert every character in t to ASCII lowercase.
         if (!type.is_empty())
-            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lower_case(type));
+            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(type));
 
         // 3. If the lastModified member is provided, let d be set to the lastModified dictionary member. If it is not provided, set d to the current date and time represented as the number of milliseconds since the Unix Epoch (which is the equivalent of Date.now() [ECMA-262]).
         //    Note: Since ECMA-262 Date objects convert to long long values representing the number of milliseconds since the Unix Epoch, the lastModified member could be a Date object [ECMA-262].

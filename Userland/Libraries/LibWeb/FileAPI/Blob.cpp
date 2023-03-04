@@ -169,7 +169,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::create(JS::Realm& realm, Optio
 
         // 2. Convert every character in t to ASCII lowercase.
         if (!type.is_empty())
-            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lower_case(type));
+            type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(type));
     }
 
     // 4. Return a Blob object referring to bytes as its associated byte sequence, with its size set to the length of bytes, and its type set to the value of t from the substeps above.
@@ -233,7 +233,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Blob>> Blob::slice(Optional<i64> start, Opt
         // FIXME: 1. If relativeContentType contains any characters outside the range of U+0020 to U+007E, then set relativeContentType to the empty string and return from these substeps.
 
         // 2. Convert every character in relativeContentType to ASCII lowercase.
-        relative_content_type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lower_case(content_type.value()));
+        relative_content_type = TRY_OR_THROW_OOM(vm, Infra::to_ascii_lowercase(content_type.value()));
     }
 
     // 4. Let span be max((relativeEnd - relativeStart), 0).
