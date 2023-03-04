@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
- * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -409,6 +409,8 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
     Optional<Kern> opt_kern = {};
     Optional<Fpgm> opt_fpgm = {};
     Optional<Prep> opt_prep = {};
+    Optional<CBLC> cblc;
+    Optional<CBDT> cbdt;
 
     auto num_tables = be_u16(buffer.offset_pointer(offset + (u32)Offsets::NumTables));
     if (buffer.size() < offset + (u32)Sizes::OffsetTable + num_tables * (u32)Sizes::TableRecord)
@@ -453,6 +455,10 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
             opt_fpgm_slice = buffer_here;
         } else if (tag == tag_from_str("prep")) {
             opt_prep_slice = buffer_here;
+        } else if (tag == tag_from_str("CBLC")) {
+            cblc = TRY(CBLC::from_slice(buffer_here));
+        } else if (tag == tag_from_str("CBDT")) {
+            cbdt = TRY(CBDT::from_slice(buffer_here));
         }
     }
 
@@ -537,7 +543,22 @@ ErrorOr<NonnullRefPtr<Font>> Font::try_load_from_offset(ReadonlyBytes buffer, u3
         }
     }
 
-    return adopt_ref(*new Font(move(buffer), move(head), move(name), move(hhea), move(maxp), move(hmtx), move(cmap), move(loca), move(glyf), move(os2), move(kern), move(fpgm), move(prep)));
+    return adopt_ref(*new Font(
+        move(buffer),
+        move(head),
+        move(name),
+        move(hhea),
+        move(maxp),
+        move(hmtx),
+        move(cmap),
+        move(loca),
+        move(glyf),
+        move(os2),
+        move(kern),
+        move(fpgm),
+        move(prep),
+        move(cblc),
+        move(cbdt)));
 }
 
 Gfx::ScaledFontMetrics Font::metrics([[maybe_unused]] float x_scale, float y_scale) const

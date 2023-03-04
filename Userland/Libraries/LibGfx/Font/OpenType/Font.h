@@ -59,7 +59,22 @@ private:
 
     static ErrorOr<NonnullRefPtr<Font>> try_load_from_offset(ReadonlyBytes, unsigned index = 0);
 
-    Font(ReadonlyBytes bytes, Head&& head, Name&& name, Hhea&& hhea, Maxp&& maxp, Hmtx&& hmtx, Cmap&& cmap, Optional<Loca>&& loca, Optional<Glyf>&& glyf, Optional<OS2> os2, Optional<Kern>&& kern, Optional<Fpgm> fpgm, Optional<Prep> prep)
+    Font(
+        ReadonlyBytes bytes,
+        Head&& head,
+        Name&& name,
+        Hhea&& hhea,
+        Maxp&& maxp,
+        Hmtx&& hmtx,
+        Cmap&& cmap,
+        Optional<Loca>&& loca,
+        Optional<Glyf>&& glyf,
+        Optional<OS2> os2,
+        Optional<Kern>&& kern,
+        Optional<Fpgm> fpgm,
+        Optional<Prep> prep,
+        Optional<CBLC> cblc,
+        Optional<CBDT> cbdt)
         : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
@@ -73,6 +88,8 @@ private:
         , m_kern(move(kern))
         , m_fpgm(move(fpgm))
         , m_prep(move(prep))
+        , m_cblc(move(cblc))
+        , m_cbdt(move(cbdt))
     {
     }
 
@@ -93,6 +110,8 @@ private:
     Optional<Kern> m_kern;
     Optional<Fpgm> m_fpgm;
     Optional<Prep> m_prep;
+    Optional<CBLC> m_cblc;
+    Optional<CBDT> m_cbdt;
 
     // This cache stores information per code point.
     // It's segmented into pages with data about 256 code points each.

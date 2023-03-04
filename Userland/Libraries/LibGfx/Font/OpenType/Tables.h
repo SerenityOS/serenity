@@ -37,6 +37,7 @@ using FWord = BigEndian<i16>;
 using UFWord = BigEndian<u16>;
 using Tag = BigEndian<u32>;
 using Offset16 = BigEndian<u16>;
+using Offset32 = BigEndian<u32>;
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/head
 // head: Font Header Table
@@ -397,6 +398,139 @@ private:
 
     ReadonlyBytes m_slice;
     FixedArray<size_t> m_subtable_offsets;
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/eblc
+// EBLC — Embedded Bitmap Location Table
+class EBLC {
+public:
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#sbitlinemetrics-record
+    struct SbitLineMetrics {
+        i8 ascender {};
+        i8 descender {};
+        u8 width_max {};
+        i8 caret_slope_numerator {};
+        i8 caret_slope_denominator {};
+        i8 caret_offset {};
+        i8 min_origin_sb {};
+        i8 min_advance_sb {};
+        i8 max_before_bl {};
+        i8 min_after_bl {};
+        i8 pad1 {};
+        i8 pad2 {};
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#indexsubtablearray
+    struct IndexSubTableArray {
+        BigEndian<u16> first_glyph_index;
+        BigEndian<u16> last_glyph_index;
+        Offset32 additional_offset_to_index_subtable;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#indexsubheader
+    struct IndexSubHeader {
+        BigEndian<u16> index_format;
+        BigEndian<u16> image_format;
+        Offset32 image_data_offset;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/eblc#indexsubtable1-variable-metrics-glyphs-with-4-byte-offsets
+    // IndexSubTable1: variable-metrics glyphs with 4-byte offsets
+    struct IndexSubTable1 {
+        IndexSubHeader header;
+        Offset32 sbit_offsets[];
+    };
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/cblc
+// CBLC — Color Bitmap Location Table
+class CBLC {
+public:
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cblc#bitmapsize-record
+    struct BitmapSize {
+        Offset32 index_subtable_array_offset;
+        BigEndian<u32> index_tables_size;
+        BigEndian<u32> number_of_index_subtables;
+        BigEndian<u32> color_ref;
+        EBLC::SbitLineMetrics hori;
+        EBLC::SbitLineMetrics vert;
+        BigEndian<u16> start_glyph_index;
+        BigEndian<u16> end_glyph_index;
+        u8 ppem_x {};
+        u8 ppem_y {};
+        u8 bit_depth {};
+        i8 flags {};
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cblc#cblcheader
+    struct CblcHeader {
+        BigEndian<u16> major_version;
+        BigEndian<u16> minor_version;
+        BigEndian<u32> num_sizes;
+        BitmapSize bitmap_sizes[];
+    };
+
+    CblcHeader const& header() const { return *bit_cast<CblcHeader const*>(m_slice.data()); }
+    ReadonlySpan<BitmapSize> bitmap_sizes() const { return { header().bitmap_sizes, header().num_sizes }; }
+    Optional<BitmapSize const&> bitmap_size_for_glyph_id(u32 glyph_id) const;
+
+    static ErrorOr<CBLC> from_slice(ReadonlyBytes);
+    ReadonlyBytes bytes() const { return m_slice; }
+
+    Optional<EBLC::IndexSubHeader const&> index_subtable_for_glyph_id(u32 glyph_id, u16& first_glyph_index, u16& last_glyph_index) const;
+
+private:
+    explicit CBLC(ReadonlyBytes slice)
+        : m_slice(slice)
+    {
+    }
+
+    ReadonlyBytes m_slice;
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/ebdt
+// EBDT — Embedded Bitmap Data Table
+class EBDT {
+public:
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/ebdt#smallglyphmetrics
+    struct SmallGlyphMetrics {
+        u8 height {};
+        u8 width {};
+        i8 bearing_x {};
+        i8 bearing_y {};
+        u8 advance {};
+    };
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/cbdt
+// CBDT — Color Bitmap Data Table
+class CBDT {
+public:
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cbdt#table-structure
+    struct CbdtHeader {
+        BigEndian<u16> major_version;
+        BigEndian<u16> minor_version;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/cbdt#format-17-small-metrics-png-image-data
+    struct Format17 {
+        EBDT::SmallGlyphMetrics glyph_metrics;
+        BigEndian<u32> data_len;
+        u8 data[];
+    };
+
+    static ErrorOr<CBDT> from_slice(ReadonlyBytes);
+    ReadonlyBytes bytes() const { return m_slice; }
+
+    CbdtHeader const& header() const { return *bit_cast<CbdtHeader const*>(m_slice.data()); }
+
+private:
+    explicit CBDT(ReadonlyBytes slice)
+        : m_slice(slice)
+    {
+    }
+
+    ReadonlyBytes m_slice;
 };
 
 }
