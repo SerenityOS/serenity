@@ -81,7 +81,7 @@ WebIDL::ExceptionOr<String> Location::href() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#the-location-interface:dom-location-href-2
-JS::ThrowCompletionOr<void> Location::set_href(String const& new_href)
+WebIDL::ExceptionOr<void> Location::set_href(String const& new_href)
 {
     auto& vm = this->vm();
     auto& window = verify_cast<HTML::Window>(HTML::current_global_object());
@@ -121,7 +121,7 @@ WebIDL::ExceptionOr<String> Location::protocol() const
     return TRY_OR_THROW_OOM(vm, String::formatted("{}:", url().scheme()));
 }
 
-JS::ThrowCompletionOr<void> Location::set_protocol(String const&)
+WebIDL::ExceptionOr<void> Location::set_protocol(String const&)
 {
     auto& vm = this->vm();
     return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.protocol setter");
@@ -149,7 +149,7 @@ WebIDL::ExceptionOr<String> Location::host() const
     return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", url.host(), *url.port()));
 }
 
-JS::ThrowCompletionOr<void> Location::set_host(String const&)
+WebIDL::ExceptionOr<void> Location::set_host(String const&)
 {
     auto& vm = this->vm();
     return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.host setter");
@@ -172,7 +172,7 @@ WebIDL::ExceptionOr<String> Location::hostname() const
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.host()));
 }
 
-JS::ThrowCompletionOr<void> Location::set_hostname(String const&)
+WebIDL::ExceptionOr<void> Location::set_hostname(String const&)
 {
     auto& vm = this->vm();
     return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.hostname setter");
@@ -195,7 +195,7 @@ WebIDL::ExceptionOr<String> Location::port() const
     return TRY_OR_THROW_OOM(vm, String::number(*url.port()));
 }
 
-JS::ThrowCompletionOr<void> Location::set_port(String const&)
+WebIDL::ExceptionOr<void> Location::set_port(String const&)
 {
     auto& vm = this->vm();
     return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.port setter");
@@ -212,7 +212,7 @@ WebIDL::ExceptionOr<String> Location::pathname() const
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url().path()));
 }
 
-JS::ThrowCompletionOr<void> Location::set_pathname(String const&)
+WebIDL::ExceptionOr<void> Location::set_pathname(String const&)
 {
     auto& vm = this->vm();
     return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.pathname setter");
@@ -235,7 +235,7 @@ WebIDL::ExceptionOr<String> Location::search() const
     return TRY_OR_THROW_OOM(vm, String::formatted("?{}", url.query()));
 }
 
-JS::ThrowCompletionOr<void> Location::set_search(String const&)
+WebIDL::ExceptionOr<void> Location::set_search(String const&)
 {
     auto& vm = this->vm();
     return vm.throw_completion<JS::InternalError>(JS::ErrorType::NotImplemented, "Location.search setter");
@@ -259,7 +259,7 @@ WebIDL::ExceptionOr<String> Location::hash() const
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location-hash
-JS::ThrowCompletionOr<void> Location::set_hash(String const& value)
+WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
 {
     // The hash setter steps are:
     // 1. If this's relevant Document is null, then return.
