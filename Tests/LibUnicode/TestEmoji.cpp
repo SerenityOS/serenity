@@ -43,6 +43,24 @@ TEST_CASE(emoji)
     test_emojis(s_flags);
 }
 
+TEST_CASE(emoji_presentation_only)
+{
+    auto test_emoji = [](auto emoji, auto expected_result) {
+        Utf8View view { emoji };
+        auto is_start_of_emoji_sequence = Unicode::could_be_start_of_emoji_sequence(view.begin(), Unicode::SequenceType::EmojiPresentation);
+        EXPECT_EQ(is_start_of_emoji_sequence, expected_result);
+    };
+
+    test_emoji("©️"sv, true);
+    test_emoji("©"sv, false);
+
+    test_emoji("®️"sv, true);
+    test_emoji("®"sv, false);
+
+    test_emoji("\U0001F3F3\u200D\U0001F41E"sv, true);       // SerenityOS flag
+    test_emoji("\U0001F3F3\uFE0F\u200D\U0001F41E"sv, true); // SerenityOS flag
+}
+
 TEST_CASE(ascii_is_not_emoji)
 {
     for (u32 code_point = 0u; is_ascii(code_point); ++code_point) {
