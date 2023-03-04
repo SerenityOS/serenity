@@ -71,7 +71,7 @@ static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int mont
             if (year == current_year && month == current_month && day == current_day) {
                 TRY(days_in_row.try_append(TRY(String::formatted(ANSI_INVERT_OUTPUT "{:2}" ANSI_RESET_OUTPUT, day))));
             } else {
-                TRY(days_in_row.try_append(TRY(String::formatted("{:02}", day))));
+                TRY(days_in_row.try_append(TRY(String::formatted("{:2}", day))));
             }
             day++;
         }
