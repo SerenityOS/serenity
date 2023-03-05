@@ -9,6 +9,9 @@ interface Window : EventTarget {
     [LegacyUnforgeable] readonly attribute WindowProxy window;
     [Replaceable] readonly attribute WindowProxy self;
 
+    // other browsing contexts
+    [Replaceable] readonly attribute WindowProxy frames;
+
     // the user agent
     readonly attribute Navigator navigator;
     [ImplementedAs=navigator] readonly attribute Navigator clientInformation; // legacy alias of .navigator

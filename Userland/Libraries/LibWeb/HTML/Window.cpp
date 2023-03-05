@@ -1092,7 +1092,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "frames", frames_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "document", document_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
@@ -1211,6 +1210,13 @@ JS::NonnullGCPtr<WindowProxy> Window::window() const
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-self
 JS::NonnullGCPtr<WindowProxy> Window::self() const
+{
+    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
+    return verify_cast<WindowProxy>(relevant_realm(*this).global_environment().global_this_value());
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
+JS::NonnullGCPtr<WindowProxy> Window::frames() const
 {
     // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
     return verify_cast<WindowProxy>(relevant_realm(*this).global_environment().global_this_value());
@@ -1534,14 +1540,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::top_getter)
 
     // 2. Return this Window object's browsing context's top-level browsing context's WindowProxy object.
     return browsing_context->top_level_browsing_context().window_proxy();
-}
-
-// https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
-JS_DEFINE_NATIVE_FUNCTION(Window::frames_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
-    return &relevant_realm(*impl).global_environment().global_this_value();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)
