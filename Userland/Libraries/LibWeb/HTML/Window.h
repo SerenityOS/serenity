@@ -23,6 +23,7 @@
 #include <LibWeb/HTML/Plugin.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
+#include <LibWeb/Bindings/WindowGlobalMixin.h>
 
 namespace Web::HTML {
 
@@ -34,7 +35,8 @@ using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, DeprecatedString>
 class Window final
     : public DOM::EventTarget
     , public HTML::GlobalEventHandlers
-    , public HTML::WindowEventHandlers {
+    , public HTML::WindowEventHandlers
+    , public Bindings::WindowGlobalMixin {
     WEB_PLATFORM_OBJECT(Window, DOM::EventTarget);
 
 public:
