@@ -83,7 +83,7 @@ void XMLHttpRequest::fire_progress_event(DeprecatedString const& event_name, u64
     event_init.length_computable = true;
     event_init.loaded = transmitted;
     event_init.total = length;
-    dispatch_event(*ProgressEvent::create(realm(), event_name, event_init).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*ProgressEvent::create(realm(), String::from_deprecated_string(event_name).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetext
