@@ -25,6 +25,21 @@
       log("Transportation types:");
       for (let i = 0; transportTypes.length > i; i++)
           log("  - " + transportTypes[i]);
+
+      log("\n Iterate over keys: ")
+      for (let key of formData.keys()) {
+        log(`Key: ${key}`);
+      }
+
+      log("\n Iterate over values: ")
+      for (let value of formData.values()) {
+        log(`Value: ${value}`);
+      }
+
+      log("\n Iterate over entries: ")
+      for (let entry of formData.entries()) {
+        log(`Entry: ${entry[0]}, ${entry[1]}`);
+      }
     }
   </script>
 </head>
