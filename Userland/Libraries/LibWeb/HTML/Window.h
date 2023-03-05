@@ -14,6 +14,7 @@
 #include <AK/URL.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
@@ -23,7 +24,6 @@
 #include <LibWeb/HTML/Plugin.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
-#include <LibWeb/Bindings/WindowGlobalMixin.h>
 
 namespace Web::HTML {
 
@@ -142,6 +142,7 @@ public:
     JS::NonnullGCPtr<DOM::Document const> document() const;
     String name() const;
     void set_name(String const&);
+    JS::NonnullGCPtr<Location> location() const;
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
 
@@ -209,9 +210,6 @@ private:
 public:
     HTML::Origin origin() const;
 
-    HTML::Location* location() { return m_location; }
-    HTML::Location const* location() const { return m_location; }
-
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
     CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
@@ -223,7 +221,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(frame_element_getter);
 
-    JS_DECLARE_NATIVE_FUNCTION(location_getter);
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(performance_getter);

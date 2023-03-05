@@ -11,10 +11,12 @@
 #include <AK/GenericLexer.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Completion.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
@@ -1135,8 +1137,9 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     // Legacy
     define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
 
-    // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
-    define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);
+    // FIXME: Implement codegen for readonly properties with [PutForwards]
+    auto& location_accessor = storage_get("location")->value.as_accessor();
+    location_accessor.set_setter(JS::NativeFunction::create(realm, location_setter, 1, "location", &realm, {}, "set"sv));
 
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)), JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1220,6 +1223,13 @@ void Window::set_name(String const& name)
 
     // 2. Set this's navigable's active session history entry's document state's navigable target name to the given value.
     browsing_context()->set_name(name.to_deprecated_string());
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location
+JS::NonnullGCPtr<Location> Window::location() const
+{
+    // The Window object's location getter steps are to return this's Location object.
+    return *m_location;
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
@@ -1630,12 +1640,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::event_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::event_setter)
 {
     REPLACEABLE_PROPERTY_SETTER(Window, event);
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::location_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return impl->m_location;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
