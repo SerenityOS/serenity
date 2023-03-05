@@ -1057,7 +1057,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
-    define_native_function(realm, "open", open, 0, attr);
     define_native_function(realm, "setInterval", set_interval, 1, attr);
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
     define_native_function(realm, "clearInterval", clear_interval, 1, attr);
@@ -1280,6 +1279,13 @@ JS::GCPtr<DOM::Element const> Window::frame_element() const
     return container;
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-open
+WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features)
+{
+    // The open(url, target, features) method steps are to run the window open steps with url, target, and features.
+    return open_impl(*url, *target, *features);
+}
+
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
 JS::NonnullGCPtr<Navigator> Window::navigator() const
 {
@@ -1333,28 +1339,6 @@ void Window::post_message(JS::Value message, String const&)
         event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
         dispatch_event(HTML::MessageEvent::create(realm(), String::from_deprecated_string(HTML::EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
     });
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::open)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    // optional USVString url = ""
-    DeprecatedString url = "";
-    if (!vm.argument(0).is_undefined())
-        url = TRY(vm.argument(0).to_deprecated_string(vm));
-
-    // optional DOMString target = "_blank"
-    DeprecatedString target = "_blank";
-    if (!vm.argument(1).is_undefined())
-        target = TRY(vm.argument(1).to_deprecated_string(vm));
-
-    // optional [LegacyNullToEmptyString] DOMString features = "")
-    DeprecatedString features = "";
-    if (!vm.argument(2).is_nullish())
-        features = TRY(vm.argument(2).to_deprecated_string(vm));
-
-    return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
 }
 
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
