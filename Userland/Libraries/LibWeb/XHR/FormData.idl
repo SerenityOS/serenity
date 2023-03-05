@@ -19,5 +19,5 @@ interface FormData {
     boolean has(USVString name);
     undefined set(USVString name, USVString value);
     undefined set(USVString name, Blob blobValue, optional USVString filename);
-    // FIXME: iterable<USVString, FormDataEntryValue>;
+    iterable<USVString, FormDataEntryValue>;
 };

@@ -171,4 +171,14 @@ WebIDL::ExceptionOr<void> FormData::set_impl(String const& name, Variant<JS::Non
     return {};
 }
 
+JS::ThrowCompletionOr<void> FormData::for_each(ForEachCallback callback)
+{
+    for (auto i = 0u; i < m_entry_list.size(); ++i) {
+        auto& entry = m_entry_list[i];
+        TRY(callback(entry.name, entry.value));
+    }
+
+    return {};
+}
+
 }

@@ -473,6 +473,7 @@ set(SOURCES
     WebSockets/WebSocket.cpp
     XHR/EventNames.cpp
     XHR/FormData.cpp
+    XHR/FormDataIterator.cpp
     XHR/ProgressEvent.cpp
     XHR/XMLHttpRequest.cpp
     XHR/XMLHttpRequestEventTarget.cpp
