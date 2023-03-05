@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +12,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringUtils.h>
-#include <AK/Utf32View.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -23,69 +23,25 @@
 #include <LibGUI/ScrollableContainerWidget.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Font/Emoji.h>
 
 namespace GUI {
 
 struct EmojiCategory {
     Unicode::EmojiGroup group;
-    u32 emoji_code_point { 0 };
+    StringView representative_emoji;
 };
 
 static constexpr auto s_emoji_groups = Array {
-    EmojiCategory { Unicode::EmojiGroup::SmileysAndEmotion, 0x1F600 },
-    EmojiCategory { Unicode::EmojiGroup::PeopleAndBody, 0x1FAF3 },
-    EmojiCategory { Unicode::EmojiGroup::AnimalsAndNature, 0x1F33B },
-    EmojiCategory { Unicode::EmojiGroup::FoodAndDrink, 0x1F355 },
-    EmojiCategory { Unicode::EmojiGroup::TravelAndPlaces, 0x1F3D6 },
-    EmojiCategory { Unicode::EmojiGroup::Activities, 0x1F3B3 },
-    EmojiCategory { Unicode::EmojiGroup::Objects, 0x1F4E6 },
-    EmojiCategory { Unicode::EmojiGroup::Symbols, 0x2764 },
-    EmojiCategory { Unicode::EmojiGroup::Flags, 0x1F6A9 },
-    EmojiCategory { Unicode::EmojiGroup::SerenityOS, 0x10CD0B },
-};
-
-static void resize_bitmap_if_needed(RefPtr<Gfx::Bitmap const>& bitmap)
-{
-    constexpr int max_icon_size = 12;
-
-    if ((bitmap->width() > max_icon_size) || (bitmap->height() > max_icon_size)) {
-        auto x_ratio = static_cast<float>(max_icon_size) / static_cast<float>(bitmap->width());
-        auto y_ratio = static_cast<float>(max_icon_size) / static_cast<float>(bitmap->height());
-        auto ratio = min(x_ratio, y_ratio);
-
-        bitmap = bitmap->scaled(ratio, ratio).release_value_but_fixme_should_propagate_errors();
-    }
-}
-
-class EmojiButton final : public Button {
-    C_OBJECT(EmojiButton);
-
-private:
-    explicit EmojiButton(Vector<u32> emoji_code_points)
-        : Button()
-        , m_emoji_code_points(move(emoji_code_points))
-    {
-    }
-
-    virtual void paint_event(PaintEvent& event) override
-    {
-        if (m_first_paint_event) {
-            m_first_paint_event = false;
-
-            RefPtr<Gfx::Bitmap const> bitmap = Gfx::Emoji::emoji_for_code_points(m_emoji_code_points);
-            VERIFY(bitmap);
-
-            resize_bitmap_if_needed(bitmap);
-            set_icon(move(bitmap));
-        }
-
-        Button::paint_event(event);
-    }
-
-    bool m_first_paint_event { true };
-    Vector<u32> m_emoji_code_points;
+    EmojiCategory { Unicode::EmojiGroup::SmileysAndEmotion, "😀"sv },
+    EmojiCategory { Unicode::EmojiGroup::PeopleAndBody, "🫳"sv },
+    EmojiCategory { Unicode::EmojiGroup::AnimalsAndNature, "🌻"sv },
+    EmojiCategory { Unicode::EmojiGroup::FoodAndDrink, "🍕"sv },
+    EmojiCategory { Unicode::EmojiGroup::TravelAndPlaces, "🏖"sv },
+    EmojiCategory { Unicode::EmojiGroup::Activities, "🎳"sv },
+    EmojiCategory { Unicode::EmojiGroup::Objects, "📦"sv },
+    EmojiCategory { Unicode::EmojiGroup::Symbols, "❤️"sv },
+    EmojiCategory { Unicode::EmojiGroup::Flags, "🚩"sv },
+    EmojiCategory { Unicode::EmojiGroup::SerenityOS, "\U0010CD0B"sv },
 };
 
 EmojiInputDialog::EmojiInputDialog(Window* parent_window)
@@ -98,7 +54,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
     set_window_type(GUI::WindowType::Popup);
     set_window_mode(GUI::WindowMode::Modeless);
     set_blocks_emoji_input(true);
-    resize(400, 300);
+    resize(410, 300);
 
     auto& scrollable_container = *main_widget->find_descendant_of_type_named<GUI::ScrollableContainerWidget>("scrollable_container"sv);
     m_search_box = main_widget->find_descendant_of_type_named<GUI::TextBox>("search_box"sv);
@@ -113,12 +69,9 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
         auto name = Unicode::emoji_group_to_string(category.group);
         auto tooltip = name.replace("&"sv, "&&"sv, ReplaceMode::FirstOnly);
 
-        RefPtr<Gfx::Bitmap const> bitmap = Gfx::Emoji::emoji_for_code_point(category.emoji_code_point);
-        VERIFY(bitmap);
-        resize_bitmap_if_needed(bitmap);
-
         auto set_filter_action = Action::create_checkable(
-            tooltip, bitmap, [this, group = category.group](auto& action) {
+            category.representative_emoji,
+            [this, group = category.group](auto& action) {
                 if (action.is_checked())
                     m_selected_category = group;
                 else
@@ -128,6 +81,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
                 update_displayed_emoji();
             },
             this);
+        set_filter_action->set_tooltip(move(tooltip));
 
         m_category_action_group->add_action(*set_filter_action);
         m_toolbar->add_action(*set_filter_action);
@@ -147,7 +101,7 @@ EmojiInputDialog::EmojiInputDialog(Window* parent_window)
 
 auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
 {
-    constexpr int button_size = 20;
+    static constexpr int button_size = 22;
 
     Vector<Emoji> emojis;
     Core::DirIterator dt("/res/emoji", Core::DirIterator::SkipDots);
@@ -181,10 +135,10 @@ auto EmojiInputDialog::supported_emoji() -> Vector<Emoji>
             emoji->display_order = NumericLimits<u32>::max();
         }
 
-        auto button = EmojiButton::construct(move(code_points));
+        auto button = Button::construct(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
         button->set_fixed_size(button_size, button_size);
         button->set_button_style(Gfx::ButtonStyle::Coolbar);
-        button->on_click = [this, text](auto) {
+        button->on_click = [this, text](auto) mutable {
             m_selected_emoji_text = move(text);
             done(ExecResult::OK);
         };
@@ -210,7 +164,7 @@ void EmojiInputDialog::update_displayed_emoji()
     m_emojis_widget->remove_all_children();
     m_first_displayed_emoji = nullptr;
 
-    constexpr size_t columns = 18;
+    static constexpr size_t columns = 17;
     size_t rows = ceil_div(m_emojis.size(), columns);
     size_t index = 0;
 
