@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,6 +12,7 @@
 #include <AK/Forward.h>
 #include <AK/NumericLimits.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/TypeList.h>
 #include <AK/Variant.h>
@@ -56,6 +58,7 @@ public:
 
     ErrorOr<size_t> decode_size();
 
+    Stream& stream() { return m_stream; }
     Core::LocalSocket& socket() { return m_socket; }
 
 private:
@@ -77,6 +80,9 @@ ErrorOr<T> decode(Decoder& decoder)
     auto value = TRY(decoder.decode<UnderlyingType<T>>());
     return static_cast<T>(value);
 }
+
+template<>
+ErrorOr<String> decode(Decoder&);
 
 template<>
 ErrorOr<DeprecatedString> decode(Decoder&);

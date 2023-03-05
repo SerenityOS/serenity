@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,6 +22,13 @@ namespace IPC {
 ErrorOr<size_t> Decoder::decode_size()
 {
     return static_cast<size_t>(TRY(decode<u32>()));
+}
+
+template<>
+ErrorOr<String> decode(Decoder& decoder)
+{
+    auto length = TRY(decoder.decode_size());
+    return String::from_stream(decoder.stream(), length);
 }
 
 template<>
