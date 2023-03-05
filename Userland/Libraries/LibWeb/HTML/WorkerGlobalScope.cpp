@@ -124,9 +124,7 @@ bool WorkerGlobalScope::is_secure_context() const
 bool WorkerGlobalScope::cross_origin_isolated() const
 {
     // The crossOriginIsolated getter steps are to return this's relevant settings object's cross-origin isolated capability.
-    // FIXME: Is this the same thing as https://html.spec.whatwg.org/multipage/workers.html#concept-workerglobalscope-cross-origin-isolated-capability?
-    //        "A WorkerGlobalScope object has an associated cross-origin isolated capability boolean. It is initially false."
-    return m_cross_origin_isolated_capability;
+    return relevant_settings_object(*this).cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes;
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-btoa
