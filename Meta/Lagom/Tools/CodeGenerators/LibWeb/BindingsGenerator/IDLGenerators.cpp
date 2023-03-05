@@ -2294,7 +2294,7 @@ JS::ThrowCompletionOr<void> @constructor_class@::initialize(JS::Realm& realm)
     auto& vm = this->vm();
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
-    MUST_OR_THROW_OOM(NativeFunction::initialize(realm));
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@name@"), 0);
     define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
@@ -2705,7 +2705,7 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
     generator.append(R"~~~(
     define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@name@"sv)), JS::Attribute::Configurable);
 
-    MUST_OR_THROW_OOM(Object::initialize(realm));
+    MUST_OR_THROW_OOM(Base::initialize(realm));
     return {};
 }
 )~~~");
@@ -3020,7 +3020,7 @@ namespace Web::Bindings {
 JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
 {
     auto& vm = this->vm();
-    MUST_OR_THROW_OOM(Object::initialize(realm));
+    MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
