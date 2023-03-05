@@ -1,6 +1,6 @@
 #import <DOM/Event.idl>
 
-[Exposed=(Window,Worker)]
+[Exposed=(Window,Worker), UseNewAKString]
 interface ErrorEvent : Event {
     constructor(DOMString type, optional ErrorEventInit eventInitDict = {});
 
