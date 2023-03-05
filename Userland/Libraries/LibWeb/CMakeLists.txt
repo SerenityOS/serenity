@@ -15,8 +15,6 @@ set(SOURCES
     Bindings/MainThreadVM.cpp
     Bindings/OptionConstructor.cpp
     Bindings/PlatformObject.cpp
-    Bindings/WindowConstructor.cpp
-    Bindings/WindowPrototype.cpp
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp

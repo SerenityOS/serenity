@@ -1,0 +1,6 @@
+#import <DOM/EventTarget.idl>
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
+[Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties]
+interface Window : EventTarget {
+};
