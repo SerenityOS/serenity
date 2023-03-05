@@ -246,24 +246,22 @@ void MainWidget::open_url(URL const& url)
         m_web_view->load(url);
         m_web_view->scroll_to_top();
 
-        GUI::Application::the()->deferred_invoke([&, path = url.path()] {
-            auto browse_view_index = m_manual_model->index_from_path(path);
-            if (browse_view_index.has_value()) {
-                if (browse_view_index.value() != m_browse_view->selection_start_index()) {
-                    m_browse_view->expand_all_parents_of(browse_view_index.value());
-                    m_browse_view->set_cursor(browse_view_index.value(), GUI::AbstractView::SelectionUpdate::Set);
-                }
-
-                auto page_and_section = m_manual_model->page_and_section(browse_view_index.value());
-                if (!page_and_section.has_value())
-                    return;
-                auto title = String::formatted("{} - Help", page_and_section.value());
-                if (!title.is_error())
-                    window()->set_title(title.release_value().to_deprecated_string());
-            } else {
-                window()->set_title("Help");
+        auto browse_view_index = m_manual_model->index_from_path(url.path());
+        if (browse_view_index.has_value()) {
+            if (browse_view_index.value() != m_browse_view->selection_start_index()) {
+                m_browse_view->expand_all_parents_of(browse_view_index.value());
+                m_browse_view->set_cursor(browse_view_index.value(), GUI::AbstractView::SelectionUpdate::Set);
             }
-        });
+
+            auto page_and_section = m_manual_model->page_and_section(browse_view_index.value());
+            if (!page_and_section.has_value())
+                return;
+            auto title = String::formatted("{} - Help", page_and_section.value());
+            if (!title.is_error())
+                window()->set_title(title.release_value().to_deprecated_string());
+        } else {
+            window()->set_title("Help");
+        }
     }
 }
 
