@@ -1073,7 +1073,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1249,6 +1248,18 @@ u32 Window::length() const
 {
     // The length getter steps are to return this's associated Document's document-tree child navigables's size.
     return static_cast<u32>(document_tree_child_browsing_context_count());
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-top
+JS::GCPtr<WindowProxy const> Window::top() const
+{
+    // 1. If this's navigable is null, then return null.
+    auto const* browsing_context = this->browsing_context();
+    if (!browsing_context)
+        return {};
+
+    // 2. Return this's navigable's top-level traversable's active WindowProxy.
+    return browsing_context->top_level_browsing_context().window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
@@ -1546,20 +1557,6 @@ size_t Window::document_tree_child_browsing_context_count() const
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-// https://html.spec.whatwg.org/multipage/browsers.html#dom-top
-JS_DEFINE_NATIVE_FUNCTION(Window::top_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    // 1. If this Window object's browsing context is null, then return null.
-    auto* browsing_context = impl->browsing_context();
-    if (!browsing_context)
-        return JS::js_null();
-
-    // 2. Return this Window object's browsing context's top-level browsing context's WindowProxy object.
-    return browsing_context->top_level_browsing_context().window_proxy();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)

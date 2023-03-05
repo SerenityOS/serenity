@@ -17,6 +17,7 @@ interface Window : EventTarget {
     // other browsing contexts
     [Replaceable] readonly attribute WindowProxy frames;
     [Replaceable] readonly attribute unsigned long length;
+    [LegacyUnforgeable] readonly attribute WindowProxy? top;
 
     // the user agent
     readonly attribute Navigator navigator;
