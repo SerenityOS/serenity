@@ -28,8 +28,10 @@ static DirectoryEntry::Type directory_entry_type_from_posix(unsigned char dt_con
         return DirectoryEntry::Type::SymbolicLink;
     case DT_SOCK:
         return DirectoryEntry::Type::Socket;
+#ifndef AK_OS_OPENBSD
     case DT_WHT:
         return DirectoryEntry::Type::Whiteout;
+#endif
     }
     VERIFY_NOT_REACHED();
 }
