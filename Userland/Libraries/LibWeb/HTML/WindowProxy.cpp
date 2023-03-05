@@ -72,7 +72,7 @@ JS::ThrowCompletionOr<Optional<JS::PropertyDescriptor>> WindowProxy::internal_ge
         auto index = property_key.as_number();
 
         // 2. Let maxProperties be the number of document-tree child browsing contexts of W.
-        auto max_properties = TRY(m_window->document_tree_child_browsing_context_count());
+        auto max_properties = m_window->document_tree_child_browsing_context_count();
 
         // 3. Let value be undefined.
         Optional<JS::Value> value;
@@ -227,7 +227,7 @@ JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> WindowProxy::internal_own_pro
     auto keys = JS::MarkedVector<JS::Value> { vm.heap() };
 
     // 3. Let maxProperties be the number of document-tree child browsing contexts of W.
-    auto max_properties = TRY(m_window->document_tree_child_browsing_context_count());
+    auto max_properties = m_window->document_tree_child_browsing_context_count();
 
     // 4. Let index be 0.
     // 5. Repeat while index < maxProperties,
