@@ -19,14 +19,14 @@ class FormDataEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(FormDataEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormDataEvent>> construct_impl(JS::Realm&, DeprecatedString const& event_name, FormDataEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FormDataEvent>> construct_impl(JS::Realm&, FlyString const& event_name, FormDataEventInit const& event_init);
 
     virtual ~FormDataEvent() override;
 
     JS::GCPtr<XHR::FormData> form_data() const { return m_form_data; }
 
 private:
-    FormDataEvent(JS::Realm&, DeprecatedString const& event_name, FormDataEventInit const& event_init);
+    FormDataEvent(JS::Realm&, FlyString const& event_name, FormDataEventInit const& event_init);
 
     JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 

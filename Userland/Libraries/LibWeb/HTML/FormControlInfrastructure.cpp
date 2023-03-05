@@ -164,7 +164,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
     // 7. Fire an event named formdata at form using FormDataEvent, with the formData attribute initialized to form data and the bubbles attribute initialized to true.
     FormDataEventInit init {};
     init.form_data = form_data;
-    auto form_data_event = TRY(FormDataEvent::construct_impl(realm, HTML::EventNames::formdata, init));
+    auto form_data_event = TRY(FormDataEvent::construct_impl(realm, String::from_deprecated_string(HTML::EventNames::formdata).release_value_but_fixme_should_propagate_errors(), init));
     form_data_event->set_bubbles(true);
     form.dispatch_event(form_data_event);
 
