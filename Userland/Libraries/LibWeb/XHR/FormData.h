@@ -41,7 +41,12 @@ public:
     WebIDL::ExceptionOr<void> set(String const& name, String const& value);
     WebIDL::ExceptionOr<void> set(String const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<String> const& filename = {});
 
+    using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, FormDataEntryValue const&)>;
+    JS::ThrowCompletionOr<void> for_each(ForEachCallback);
+
 private:
+    friend class FormDataIterator;
+
     explicit FormData(JS::Realm&, Vector<FormDataEntry> entry_list = {});
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
