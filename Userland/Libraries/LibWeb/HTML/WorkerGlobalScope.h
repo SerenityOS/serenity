@@ -11,6 +11,7 @@
 #include <AK/URL.h>
 #include <LibWeb/DOM/EventTarget.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/HTML/WorkerLocation.h>
 #include <LibWeb/HTML/WorkerNavigator.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -28,11 +29,17 @@ namespace Web::HTML {
 // https://html.spec.whatwg.org/multipage/workers.html#the-workerglobalscope-common-interface
 // WorkerGlobalScope is the base class of each real WorkerGlobalScope that will be created when the
 // user agent runs the run a worker algorithm.
-class WorkerGlobalScope : public DOM::EventTarget {
+class WorkerGlobalScope
+    : public DOM::EventTarget
+    , public WindowOrWorkerGlobalScopeMixin {
     WEB_PLATFORM_OBJECT(WorkerGlobalScope, DOM::EventTarget);
 
 public:
     virtual ~WorkerGlobalScope() override;
+
+    // ^WindowOrWorkerGlobalScopeMixin
+    virtual Bindings::PlatformObject& this_impl() override { return *this; }
+    virtual Bindings::PlatformObject const& this_impl() const override { return *this; }
 
     // Following methods are from the WorkerGlobalScope IDL definition
     // https://html.spec.whatwg.org/multipage/workers.html#the-workerglobalscope-common-interface
@@ -50,15 +57,6 @@ public:
     WebIDL::CallbackType* attribute_name();
     ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
-
-    // Following methods are from the WindowOrWorkerGlobalScope mixin
-    // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
-
-    WebIDL::ExceptionOr<String> origin() const;
-    bool is_secure_context() const;
-    bool cross_origin_isolated() const;
-    WebIDL::ExceptionOr<String> btoa(String const& data) const;
-    WebIDL::ExceptionOr<String> atob(String const& data) const;
 
     // Non-IDL public methods
 

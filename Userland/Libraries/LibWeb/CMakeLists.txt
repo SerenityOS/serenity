@@ -303,6 +303,7 @@ set(SOURCES
     HTML/Timer.cpp
     HTML/Window.cpp
     HTML/WindowEventHandlers.cpp
+    HTML/WindowOrWorkerGlobalScope.cpp
     HTML/WindowProxy.cpp
     HTML/Worker.cpp
     HTML/WorkerDebugConsoleClient.cpp
