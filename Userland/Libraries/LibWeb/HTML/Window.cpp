@@ -1076,7 +1076,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "screen", screen_getter, screen_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1230,6 +1229,13 @@ JS::NonnullGCPtr<Location> Window::location() const
 {
     // The Window object's location getter steps are to return this's Location object.
     return *m_location;
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-history
+JS::NonnullGCPtr<History> Window::history() const
+{
+    // The history getter steps are to return this's associated Document's history object.
+    return associated_document().history();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
@@ -1823,12 +1829,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     //        is not actually doing yet, so this is the same for now.
     perform_a_scroll(page, left, top, behavior);
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::history_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return impl->associated_document().history();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::screen_left_getter)

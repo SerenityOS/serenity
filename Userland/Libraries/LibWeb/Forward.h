@@ -249,6 +249,7 @@ class ErrorEvent;
 class EventHandler;
 class EventLoop;
 class FormDataEvent;
+class History;
 class HTMLAnchorElement;
 class HTMLAreaElement;
 class HTMLAudioElement;

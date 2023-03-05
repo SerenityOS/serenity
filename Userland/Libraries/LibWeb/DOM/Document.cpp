@@ -2068,6 +2068,11 @@ JS::NonnullGCPtr<HTML::History> Document::history()
     return *m_history;
 }
 
+JS::NonnullGCPtr<HTML::History> Document::history() const
+{
+    return const_cast<Document*>(this)->history();
+}
+
 // https://html.spec.whatwg.org/multipage/origin.html#dom-document-domain
 DeprecatedString Document::domain() const
 {

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -337,6 +338,7 @@ public:
     bool is_active() const;
 
     JS::NonnullGCPtr<HTML::History> history();
+    JS::NonnullGCPtr<HTML::History> history() const;
 
     HTML::Location* location();
 
