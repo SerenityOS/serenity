@@ -76,7 +76,7 @@ endfunction()
 function (generate_js_bindings target)
     set(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
     function(libweb_js_bindings class)
-        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "ITERABLE" "" "")
+        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "ITERABLE;GLOBAL" "" "")
         get_filename_component(basename "${class}" NAME)
         set(BINDINGS_SOURCES
             "Bindings/${basename}Constructor.h"
@@ -102,6 +102,19 @@ function (generate_js_bindings target)
                 iterator-prototype-implementation
             )
         endif()
+
+        # FIXME: Instead of requiring a manual declaration of global object bindings, we should ask BindingsGenerator if it's global
+        if(LIBWEB_BINDINGS_GLOBAL)
+            list(APPEND BINDINGS_SOURCES
+                "Bindings/${basename}GlobalMixin.h"
+                "Bindings/${basename}GlobalMixin.cpp"
+            )
+            list(APPEND BINDINGS_TYPES
+                global-mixin-header
+                global-mixin-implementation
+            )
+        endif()
+
         target_sources(${target} PRIVATE ${BINDINGS_SOURCES})
         # FIXME: cmake_minimum_required(3.17) for ZIP_LISTS
         list(LENGTH BINDINGS_SOURCES num_bindings)

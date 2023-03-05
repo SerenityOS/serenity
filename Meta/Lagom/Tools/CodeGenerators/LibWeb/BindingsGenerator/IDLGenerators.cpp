@@ -2084,6 +2084,497 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
 )~~~");
 }
 
+static void generate_prototype_or_global_mixin_declarations(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    for (auto const& overload_set : interface.overload_sets) {
+        auto function_generator = generator.fork();
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+        function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
+        )~~~");
+        if (overload_set.value.size() > 1) {
+            for (auto i = 0u; i < overload_set.value.size(); ++i) {
+                function_generator.set("overload_suffix", DeprecatedString::number(i));
+                function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@@overload_suffix@);
+)~~~");
+            }
+        }
+    }
+
+    if (interface.has_stringifier) {
+        auto stringifier_generator = generator.fork();
+        stringifier_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(to_string);
+        )~~~");
+    }
+
+    if (interface.pair_iterator_types.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(entries);
+    JS_DECLARE_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_NATIVE_FUNCTION(keys);
+    JS_DECLARE_NATIVE_FUNCTION(values);
+        )~~~");
+    }
+
+    for (auto& attribute : interface.attributes) {
+        auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
+        attribute_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
+)~~~");
+
+        if (!attribute.readonly) {
+            attribute_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
+)~~~");
+        }
+    }
+
+    generator.append(R"~~~(
+
+};
+
+)~~~");
+
+    for (auto& it : interface.enumerations) {
+        if (!it.value.is_original_definition)
+            continue;
+        auto enum_generator = generator.fork();
+        enum_generator.set("enum.type.name", it.key);
+        enum_generator.append(R"~~~(
+enum class @enum.type.name@ {
+)~~~");
+        for (auto& entry : it.value.translated_cpp_names) {
+            enum_generator.set("enum.entry", entry.value);
+            enum_generator.append(R"~~~(
+    @enum.entry@,
+)~~~");
+        }
+
+        enum_generator.append(R"~~~(
+};
+)~~~");
+
+        if (!interface.extended_attributes.contains("UseNewAKString")) {
+            enum_generator.append(R"~~~(
+inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
+    switch(value) {
+)~~~");
+            for (auto& entry : it.value.translated_cpp_names) {
+                enum_generator.set("enum.entry", entry.value);
+                enum_generator.set("enum.string", entry.key);
+                enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@: return "@enum.string@";
+)~~~");
+            }
+            enum_generator.append(R"~~~(
+    default: return "<unknown>";
+    };
+}
+)~~~");
+        } else {
+            enum_generator.append(R"~~~(
+inline ErrorOr<String> idl_enum_to_string(@enum.type.name@ value) {
+    switch(value) {
+)~~~");
+            for (auto& entry : it.value.translated_cpp_names) {
+                enum_generator.set("enum.entry", entry.value);
+                enum_generator.set("enum.string", entry.key);
+                enum_generator.append(R"~~~(
+    case @enum.type.name@::@enum.entry@: return "@enum.string@"_string;
+)~~~");
+            }
+            enum_generator.append(R"~~~(
+    default: return "<unknown>"_string;
+    };
+}
+)~~~");
+        }
+    }
+}
+
+static void generate_prototype_or_global_mixin_definitions(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    auto is_global_interface = interface.extended_attributes.contains("Global");
+    auto class_name = is_global_interface ? interface.global_mixin_class : interface.prototype_class;
+    generator.set("name", interface.name);
+    generator.set("class_name", class_name);
+    generator.set("fully_qualified_name", interface.fully_qualified_name);
+
+    if (interface.pair_iterator_types.has_value()) {
+        generator.set("iterator_name", DeprecatedString::formatted("{}Iterator", interface.name));
+    }
+
+    if (is_global_interface) {
+        // Doing this with macros is not super nice, but simplifies codegen a lot.
+        generator.append(R"~~~(
+#define define_direct_property (object.define_direct_property)
+#define define_native_accessor (object.define_native_accessor)
+#define define_native_function (object.define_native_function)
+
+JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm, JS::Object& object)
+{
+)~~~");
+    } else {
+        generator.append(R"~~~(
+JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
+{
+)~~~");
+    }
+
+    // FIXME: Currently almost everything gets default_attributes but it should be configurable per attribute.
+    //        See the spec links for details
+    generator.append(R"~~~(
+
+    [[maybe_unused]] auto& vm = realm.vm();
+    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable;
+
+)~~~");
+
+    if (interface.has_unscopable_member) {
+        generator.append(R"~~~(
+    auto unscopable_object = JS::Object::create(realm, nullptr);
+)~~~");
+    }
+
+    // https://webidl.spec.whatwg.org/#es-attributes
+    for (auto& attribute : interface.attributes) {
+        auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.name", attribute.name);
+        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
+
+        if (attribute.readonly)
+            attribute_generator.set("attribute.setter_callback", "nullptr");
+        else
+            attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
+
+        if (attribute.extended_attributes.contains("Unscopable")) {
+            attribute_generator.append(R"~~~(
+    MUST(unscopable_object->create_data_property("@attribute.name@", JS::Value(true)));
+)~~~");
+        }
+
+        attribute_generator.append(R"~~~(
+    define_native_accessor(realm, "@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
+)~~~");
+    }
+
+    // https://webidl.spec.whatwg.org/#es-constants
+    for (auto& constant : interface.constants) {
+        // FIXME: Do constants need to be added to the unscopable list?
+
+        auto constant_generator = generator.fork();
+        constant_generator.set("constant.name", constant.name);
+
+        generate_wrap_statement(constant_generator, constant.value, constant.type, interface, DeprecatedString::formatted("auto constant_{}_value =", constant.name));
+
+        constant_generator.append(R"~~~(
+    define_direct_property("@constant.name@", constant_@constant.name@_value, JS::Attribute::Enumerable);
+)~~~");
+    }
+
+    // https://webidl.spec.whatwg.org/#es-operations
+    for (auto const& overload_set : interface.overload_sets) {
+        auto function_generator = generator.fork();
+        function_generator.set("function.name", overload_set.key);
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+        function_generator.set("function.length", DeprecatedString::number(get_shortest_function_length(overload_set.value)));
+
+        // FIXME: What if only some of the overloads are Unscopable?
+        if (any_of(overload_set.value, [](auto const& function) { return function.extended_attributes.contains("Unscopable"); })) {
+            function_generator.append(R"~~~(
+    MUST(unscopable_object->create_data_property("@function.name@", JS::Value(true)));
+)~~~");
+        }
+
+        function_generator.append(R"~~~(
+    define_native_function(realm, "@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+)~~~");
+    }
+
+    if (interface.has_stringifier) {
+        // FIXME: Do stringifiers need to be added to the unscopable list?
+
+        auto stringifier_generator = generator.fork();
+        stringifier_generator.append(R"~~~(
+    define_native_function(realm, "toString", to_string, 0, default_attributes);
+)~~~");
+    }
+
+    // https://webidl.spec.whatwg.org/#define-the-iteration-methods
+    // This applies to this if block and the following if block.
+    if (interface.indexed_property_getter.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+    define_direct_property(*vm.well_known_symbol_iterator(), realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
+)~~~");
+
+        if (interface.value_iterator_type.has_value()) {
+            iterator_generator.append(R"~~~(
+    define_direct_property(vm.names.entries, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
+    define_direct_property(vm.names.keys, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
+    define_direct_property(vm.names.values, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
+    define_direct_property(vm.names.forEach, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
+)~~~");
+        }
+    }
+
+    if (interface.pair_iterator_types.has_value()) {
+        // FIXME: Do pair iterators need to be added to the unscopable list?
+
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+    define_native_function(realm, vm.names.entries, entries, 0, default_attributes);
+    define_native_function(realm, vm.names.forEach, for_each, 1, default_attributes);
+    define_native_function(realm, vm.names.keys, keys, 0, default_attributes);
+    define_native_function(realm, vm.names.values, values, 0, default_attributes);
+
+    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
+)~~~");
+    }
+
+    if (interface.has_unscopable_member) {
+        generator.append(R"~~~(
+    define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_object, JS::Attribute::Configurable);
+)~~~");
+    }
+
+    generator.append(R"~~~(
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@name@"sv)), JS::Attribute::Configurable);
+)~~~");
+
+    if (!is_global_interface) {
+        generator.append(R"~~~(
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+)~~~");
+    }
+
+    generator.append(R"~~~(
+    return {};
+}
+)~~~");
+
+    if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
+        generator.append(R"~~~(
+static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
+{
+    auto this_value = vm.this_value();
+    JS::Object* this_object = nullptr;
+    if (this_value.is_nullish())
+        this_object = &vm.current_realm()->global_object();
+    else
+        this_object = TRY(this_value.to_object(vm));
+)~~~");
+
+        if (interface.name.is_one_of("EventTarget", "Window")) {
+            generator.append(R"~~~(
+    if (is<HTML::Window>(this_object)) {
+        return static_cast<HTML::Window*>(this_object);
+    }
+    if (is<HTML::WindowProxy>(this_object)) {
+        return static_cast<HTML::WindowProxy*>(this_object)->window().ptr();
+    }
+)~~~");
+        }
+
+        generator.append(R"~~~(
+    if (!is<@fully_qualified_name@>(this_object))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@name@");
+    return static_cast<@fully_qualified_name@*>(this_object);
+}
+)~~~");
+    }
+
+    for (auto& attribute : interface.attributes) {
+        auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
+        attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
+
+        if (attribute.extended_attributes.contains("ImplementedAs")) {
+            auto implemented_as = attribute.extended_attributes.get("ImplementedAs").value();
+            attribute_generator.set("attribute.cpp_name", implemented_as);
+        } else {
+            attribute_generator.set("attribute.cpp_name", attribute.name.to_snakecase());
+        }
+
+        if (attribute.extended_attributes.contains("Reflect")) {
+            auto attribute_name = attribute.extended_attributes.get("Reflect").value();
+            if (attribute_name.is_null())
+                attribute_name = attribute.name;
+            attribute_name = make_input_acceptable_cpp(attribute_name);
+
+            attribute_generator.set("attribute.reflect_name", attribute_name);
+        } else {
+            attribute_generator.set("attribute.reflect_name", attribute.name.to_snakecase());
+        }
+
+        attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
+{
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
+)~~~");
+
+        if (attribute.extended_attributes.contains("Reflect")) {
+            if (attribute.type->name() != "boolean") {
+                attribute_generator.append(R"~~~(
+    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+            } else {
+                attribute_generator.append(R"~~~(
+    auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+            }
+        } else {
+            attribute_generator.append(R"~~~(
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_name@(); }));
+)~~~");
+        }
+
+        generate_return_statement(generator, *attribute.type, interface);
+
+        attribute_generator.append(R"~~~(
+}
+)~~~");
+
+        if (!attribute.readonly) {
+            attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
+{
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
+
+    auto value = vm.argument(0);
+)~~~");
+
+            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
+
+            if (attribute.extended_attributes.contains("Reflect")) {
+                if (attribute.type->name() != "boolean") {
+                    attribute_generator.append(R"~~~(
+    MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value));
+)~~~");
+                } else {
+                    attribute_generator.append(R"~~~(
+    if (!cpp_value)
+        impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+    else
+        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, DeprecatedString::empty()));
+)~~~");
+                }
+            } else {
+                attribute_generator.append(R"~~~(
+    TRY(throw_dom_exception_if_needed(vm, [&] { return impl->set_@attribute.cpp_name@(cpp_value); }));
+)~~~");
+            }
+
+            attribute_generator.append(R"~~~(
+    return JS::js_undefined();
+}
+)~~~");
+        }
+    }
+
+    // Implementation: Functions
+    for (auto& function : interface.functions)
+        generate_function(generator, function, StaticFunction::No, class_name, interface.fully_qualified_name, interface);
+    for (auto const& overload_set : interface.overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        generate_overload_arbiter(generator, overload_set, class_name);
+    }
+
+    if (interface.has_stringifier) {
+        auto stringifier_generator = generator.fork();
+        stringifier_generator.set("class_name", class_name);
+        if (interface.stringifier_attribute.has_value())
+            stringifier_generator.set("attribute.cpp_getter_name", interface.stringifier_attribute->to_snakecase());
+
+        stringifier_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
+{
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
+
+)~~~");
+        if (interface.stringifier_attribute.has_value()) {
+            stringifier_generator.append(R"~~~(
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_getter_name@(); }));
+)~~~");
+        } else {
+            if (!interface.extended_attributes.contains("UseNewAKString")) {
+                stringifier_generator.append(R"~~~(
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_deprecated_string(); }));
+)~~~");
+            } else {
+                stringifier_generator.append(R"~~~(
+    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_string(); }));
+)~~~");
+            }
+        }
+        stringifier_generator.append(R"~~~(
+
+    return JS::PrimitiveString::create(vm, move(retval));
+}
+)~~~");
+    }
+
+    if (interface.pair_iterator_types.has_value()) {
+        auto iterator_generator = generator.fork();
+        iterator_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::entries)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue); }));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::for_each)
+{
+    [[maybe_unused]] auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
+
+    auto callback = vm.argument(0);
+    if (!callback.is_function())
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, callback.to_string_without_side_effects()));
+
+    auto this_value = vm.this_value();
+    TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
+)~~~");
+        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key", interface);
+        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value", interface);
+        iterator_generator.append(R"~~~(
+        TRY(call(vm, callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
+        return {};
+    }));
+
+    return JS::js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::keys)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Key);  }));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::values)
+{
+    auto* impl = TRY(impl_from(vm));
+
+    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Value); }));
+}
+)~~~");
+    }
+}
+
 void generate_constructor_header(IDL::Interface const& interface, StringBuilder& builder)
 {
     SourceGenerator generator { builder };
@@ -2357,113 +2848,14 @@ public:
 private:
 )~~~");
 
-    for (auto const& overload_set : interface.overload_sets) {
-        auto function_generator = generator.fork();
-        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
-        function_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
-        )~~~");
-        if (overload_set.value.size() > 1) {
-            for (auto i = 0u; i < overload_set.value.size(); ++i) {
-                function_generator.set("overload_suffix", DeprecatedString::number(i));
-                function_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@@overload_suffix@);
-)~~~");
-            }
-        }
-    }
-
-    if (interface.has_stringifier) {
-        auto stringifier_generator = generator.fork();
-        stringifier_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(to_string);
-        )~~~");
-    }
-
-    if (interface.pair_iterator_types.has_value()) {
-        auto iterator_generator = generator.fork();
-        iterator_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(entries);
-    JS_DECLARE_NATIVE_FUNCTION(for_each);
-    JS_DECLARE_NATIVE_FUNCTION(keys);
-    JS_DECLARE_NATIVE_FUNCTION(values);
-        )~~~");
-    }
-
-    for (auto& attribute : interface.attributes) {
-        auto attribute_generator = generator.fork();
-        attribute_generator.set("attribute.name:snakecase", attribute.name.to_snakecase());
-        attribute_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
-)~~~");
-
-        if (!attribute.readonly) {
-            attribute_generator.append(R"~~~(
-    JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
-)~~~");
-        }
-    }
-
-    generator.append(R"~~~(
-
-};
-
-)~~~");
-
-    for (auto& it : interface.enumerations) {
-        if (!it.value.is_original_definition)
-            continue;
-        auto enum_generator = generator.fork();
-        enum_generator.set("enum.type.name", it.key);
-        enum_generator.append(R"~~~(
-enum class @enum.type.name@ {
-)~~~");
-        for (auto& entry : it.value.translated_cpp_names) {
-            enum_generator.set("enum.entry", entry.value);
-            enum_generator.append(R"~~~(
-    @enum.entry@,
-)~~~");
-        }
-
-        enum_generator.append(R"~~~(
+    // Generate an empty prototype object for global interfaces.
+    auto is_global_interface = interface.extended_attributes.contains("Global");
+    if (is_global_interface) {
+        generator.append(R"~~~(
 };
 )~~~");
-
-        if (!interface.extended_attributes.contains("UseNewAKString")) {
-            enum_generator.append(R"~~~(
-inline DeprecatedString idl_enum_to_deprecated_string(@enum.type.name@ value) {
-    switch(value) {
-)~~~");
-            for (auto& entry : it.value.translated_cpp_names) {
-                enum_generator.set("enum.entry", entry.value);
-                enum_generator.set("enum.string", entry.key);
-                enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@: return "@enum.string@";
-)~~~");
-            }
-            enum_generator.append(R"~~~(
-    default: return "<unknown>";
-    };
-}
-)~~~");
-        } else {
-            enum_generator.append(R"~~~(
-inline ErrorOr<String> idl_enum_to_string(@enum.type.name@ value) {
-    switch(value) {
-)~~~");
-            for (auto& entry : it.value.translated_cpp_names) {
-                enum_generator.set("enum.entry", entry.value);
-                enum_generator.set("enum.string", entry.key);
-                enum_generator.append(R"~~~(
-    case @enum.type.name@::@enum.entry@: return "@enum.string@"_string;
-)~~~");
-            }
-            enum_generator.append(R"~~~(
-    default: return "<unknown>"_string;
-    };
-}
-)~~~");
-        }
+    } else {
+        generate_prototype_or_global_mixin_declarations(interface, builder);
     }
 
     generator.append(R"~~~(
@@ -2475,15 +2867,9 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 {
     SourceGenerator generator { builder };
 
-    generator.set("name", interface.name);
     generator.set("parent_name", interface.parent_name);
     generator.set("prototype_class", interface.prototype_class);
     generator.set("prototype_base_class", interface.prototype_base_class);
-    generator.set("fully_qualified_name", interface.fully_qualified_name);
-
-    if (interface.pair_iterator_types.has_value()) {
-        generator.set("iterator_name", DeprecatedString::formatted("{}Iterator", interface.name));
-    }
 
     generator.append(R"~~~(
 #include <AK/Function.h>
@@ -2565,8 +2951,6 @@ namespace Web::Bindings {
 )~~~");
     }
 
-    // FIXME: Currently almost everything gets default_attributes but it should be configurable per attribute.
-    //        See the spec links for details
     generator.append(R"~~~(
 {
 }
@@ -2574,341 +2958,20 @@ namespace Web::Bindings {
 @prototype_class@::~@prototype_class@()
 {
 }
+)~~~");
 
+    // Generate an empty prototype object for global interfaces.
+    auto is_global_interface = interface.extended_attributes.contains("Global");
+    if (is_global_interface) {
+        generator.append(R"~~~(
 JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
 {
-    [[maybe_unused]] auto& vm = this->vm();
-    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable | JS::Attribute::Configurable | JS::Attribute::Writable;
-
-)~~~");
-
-    if (interface.has_unscopable_member) {
-        generator.append(R"~~~(
-    auto unscopable_object = JS::Object::create(realm, nullptr);
-)~~~");
-    }
-
-    // https://webidl.spec.whatwg.org/#es-attributes
-    for (auto& attribute : interface.attributes) {
-        auto attribute_generator = generator.fork();
-        attribute_generator.set("attribute.name", attribute.name);
-        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
-
-        if (attribute.readonly)
-            attribute_generator.set("attribute.setter_callback", "nullptr");
-        else
-            attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
-
-        if (attribute.extended_attributes.contains("Unscopable")) {
-            attribute_generator.append(R"~~~(
-    MUST(unscopable_object->create_data_property("@attribute.name@", JS::Value(true)));
-)~~~");
-        }
-
-        attribute_generator.append(R"~~~(
-    define_native_accessor(realm, "@attribute.name@", @attribute.getter_callback@, @attribute.setter_callback@, default_attributes);
-)~~~");
-    }
-
-    // https://webidl.spec.whatwg.org/#es-constants
-    for (auto& constant : interface.constants) {
-        // FIXME: Do constants need to be added to the unscopable list?
-
-        auto constant_generator = generator.fork();
-        constant_generator.set("constant.name", constant.name);
-
-        generate_wrap_statement(constant_generator, constant.value, constant.type, interface, DeprecatedString::formatted("auto constant_{}_value =", constant.name));
-
-        constant_generator.append(R"~~~(
-    define_direct_property("@constant.name@", constant_@constant.name@_value, JS::Attribute::Enumerable);
-)~~~");
-    }
-
-    // https://webidl.spec.whatwg.org/#es-operations
-    for (auto const& overload_set : interface.overload_sets) {
-        auto function_generator = generator.fork();
-        function_generator.set("function.name", overload_set.key);
-        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
-        function_generator.set("function.length", DeprecatedString::number(get_shortest_function_length(overload_set.value)));
-
-        // FIXME: What if only some of the overloads are Unscopable?
-        if (any_of(overload_set.value, [](auto const& function) { return function.extended_attributes.contains("Unscopable"); })) {
-            function_generator.append(R"~~~(
-    MUST(unscopable_object->create_data_property("@function.name@", JS::Value(true)));
-)~~~");
-        }
-
-        function_generator.append(R"~~~(
-    define_native_function(realm, "@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
-)~~~");
-    }
-
-    if (interface.has_stringifier) {
-        // FIXME: Do stringifiers need to be added to the unscopable list?
-
-        auto stringifier_generator = generator.fork();
-        stringifier_generator.append(R"~~~(
-    define_native_function(realm, "toString", to_string, 0, default_attributes);
-)~~~");
-    }
-
-    // https://webidl.spec.whatwg.org/#define-the-iteration-methods
-    // This applies to this if block and the following if block.
-    if (interface.indexed_property_getter.has_value()) {
-        auto iterator_generator = generator.fork();
-        iterator_generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_iterator(), realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
-)~~~");
-
-        if (interface.value_iterator_type.has_value()) {
-            iterator_generator.append(R"~~~(
-    define_direct_property(vm.names.entries, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.entries), default_attributes);
-    define_direct_property(vm.names.keys, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.keys), default_attributes);
-    define_direct_property(vm.names.values, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), default_attributes);
-    define_direct_property(vm.names.forEach, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.forEach), default_attributes);
-)~~~");
-        }
-    }
-
-    if (interface.pair_iterator_types.has_value()) {
-        // FIXME: Do pair iterators need to be added to the unscopable list?
-
-        auto iterator_generator = generator.fork();
-        iterator_generator.append(R"~~~(
-    define_native_function(realm, vm.names.entries, entries, 0, default_attributes);
-    define_native_function(realm, vm.names.forEach, for_each, 1, default_attributes);
-    define_native_function(realm, vm.names.keys, keys, 0, default_attributes);
-    define_native_function(realm, vm.names.values, values, 0, default_attributes);
-
-    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
-)~~~");
-    }
-
-    if (interface.has_unscopable_member) {
-        generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_object, JS::Attribute::Configurable);
-)~~~");
-    }
-
-    generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@name@"sv)), JS::Attribute::Configurable);
-
     MUST_OR_THROW_OOM(Base::initialize(realm));
     return {};
 }
 )~~~");
-
-    if (!interface.attributes.is_empty() || !interface.functions.is_empty() || interface.has_stringifier) {
-        generator.append(R"~~~(
-static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
-{
-    auto this_value = vm.this_value();
-    JS::Object* this_object = nullptr;
-    if (this_value.is_nullish())
-        this_object = &vm.current_realm()->global_object();
-    else
-        this_object = TRY(this_value.to_object(vm));
-)~~~");
-
-        if (interface.name == "EventTarget") {
-            generator.append(R"~~~(
-    if (is<HTML::Window>(this_object)) {
-        return static_cast<HTML::Window*>(this_object);
-    }
-    if (is<HTML::WindowProxy>(this_object)) {
-        return static_cast<HTML::WindowProxy*>(this_object)->window().ptr();
-    }
-)~~~");
-        }
-
-        generator.append(R"~~~(
-    if (!is<@fully_qualified_name@>(this_object))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@name@");
-    return static_cast<@fully_qualified_name@*>(this_object);
-}
-)~~~");
-    }
-
-    for (auto& attribute : interface.attributes) {
-        auto attribute_generator = generator.fork();
-        attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
-        attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
-
-        if (attribute.extended_attributes.contains("ImplementedAs")) {
-            auto implemented_as = attribute.extended_attributes.get("ImplementedAs").value();
-            attribute_generator.set("attribute.cpp_name", implemented_as);
-        } else {
-            attribute_generator.set("attribute.cpp_name", attribute.name.to_snakecase());
-        }
-
-        if (attribute.extended_attributes.contains("Reflect")) {
-            auto attribute_name = attribute.extended_attributes.get("Reflect").value();
-            if (attribute_name.is_null())
-                attribute_name = attribute.name;
-            attribute_name = make_input_acceptable_cpp(attribute_name);
-
-            attribute_generator.set("attribute.reflect_name", attribute_name);
-        } else {
-            attribute_generator.set("attribute.reflect_name", attribute.name.to_snakecase());
-        }
-
-        attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.getter_callback@)
-{
-    [[maybe_unused]] auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm));
-)~~~");
-
-        if (attribute.extended_attributes.contains("Reflect")) {
-            if (attribute.type->name() != "boolean") {
-                attribute_generator.append(R"~~~(
-    auto retval = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
-)~~~");
-            } else {
-                attribute_generator.append(R"~~~(
-    auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
-)~~~");
-            }
-        } else {
-            attribute_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_name@(); }));
-)~~~");
-        }
-
-        generate_return_statement(generator, *attribute.type, interface);
-
-        attribute_generator.append(R"~~~(
-}
-)~~~");
-
-        if (!attribute.readonly) {
-            attribute_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::@attribute.setter_callback@)
-{
-    [[maybe_unused]] auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm));
-
-    auto value = vm.argument(0);
-)~~~");
-
-            generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
-
-            if (attribute.extended_attributes.contains("Reflect")) {
-                if (attribute.type->name() != "boolean") {
-                    attribute_generator.append(R"~~~(
-    MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, cpp_value));
-)~~~");
-                } else {
-                    attribute_generator.append(R"~~~(
-    if (!cpp_value)
-        impl->remove_attribute(HTML::AttributeNames::@attribute.reflect_name@);
-    else
-        MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, DeprecatedString::empty()));
-)~~~");
-                }
-            } else {
-                attribute_generator.append(R"~~~(
-    TRY(throw_dom_exception_if_needed(vm, [&] { return impl->set_@attribute.cpp_name@(cpp_value); }));
-)~~~");
-            }
-
-            attribute_generator.append(R"~~~(
-    return JS::js_undefined();
-}
-)~~~");
-        }
-    }
-
-    // Implementation: Functions
-    for (auto& function : interface.functions)
-        generate_function(generator, function, StaticFunction::No, interface.prototype_class, interface.fully_qualified_name, interface);
-    for (auto const& overload_set : interface.overload_sets) {
-        if (overload_set.value.size() == 1)
-            continue;
-        generate_overload_arbiter(generator, overload_set, interface.prototype_class);
-    }
-
-    if (interface.has_stringifier) {
-        auto stringifier_generator = generator.fork();
-        stringifier_generator.set("class_name", interface.prototype_class);
-        if (interface.stringifier_attribute.has_value())
-            stringifier_generator.set("attribute.cpp_getter_name", interface.stringifier_attribute->to_snakecase());
-
-        stringifier_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_string)
-{
-    [[maybe_unused]] auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm));
-
-)~~~");
-        if (interface.stringifier_attribute.has_value()) {
-            stringifier_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_getter_name@(); }));
-)~~~");
-        } else {
-            if (!interface.extended_attributes.contains("UseNewAKString")) {
-                stringifier_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_deprecated_string(); }));
-)~~~");
-            } else {
-                stringifier_generator.append(R"~~~(
-    auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->to_string(); }));
-)~~~");
-            }
-        }
-        stringifier_generator.append(R"~~~(
-
-    return JS::PrimitiveString::create(vm, move(retval));
-}
-)~~~");
-    }
-
-    if (interface.pair_iterator_types.has_value()) {
-        auto iterator_generator = generator.fork();
-        iterator_generator.append(R"~~~(
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::entries)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::KeyAndValue); }));
-}
-
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::for_each)
-{
-    [[maybe_unused]] auto& realm = *vm.current_realm();
-    auto* impl = TRY(impl_from(vm));
-
-    auto callback = vm.argument(0);
-    if (!callback.is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, callback.to_string_without_side_effects()));
-
-    auto this_value = vm.this_value();
-    TRY(impl->for_each([&](auto key, auto value) -> JS::ThrowCompletionOr<void> {
-)~~~");
-        generate_variable_statement(iterator_generator, "wrapped_key", interface.pair_iterator_types->get<0>(), "key", interface);
-        generate_variable_statement(iterator_generator, "wrapped_value", interface.pair_iterator_types->get<1>(), "value", interface);
-        iterator_generator.append(R"~~~(
-        TRY(call(vm, callback.as_function(), vm.argument(1), wrapped_value, wrapped_key, this_value));
-        return {};
-    }));
-
-    return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::keys)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Key);  }));
-}
-
-JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::values)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    return TRY(throw_dom_exception_if_needed(vm, [&] { return @iterator_name@::create(*impl, Object::PropertyKind::Value); }));
-}
-)~~~");
+    } else {
+        generate_prototype_or_global_mixin_definitions(interface, builder);
     }
 
     generator.append(R"~~~(
@@ -3032,4 +3095,110 @@ JS_DEFINE_NATIVE_FUNCTION(@prototype_class@::next)
 } // namespace Web::Bindings
 )~~~");
 }
+
+void generate_global_mixin_header(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    generator.set("class_name", interface.global_mixin_class);
+
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibJS/Runtime/Object.h>
+
+namespace Web::Bindings {
+
+class @class_name@ {
+public:
+    JS::ThrowCompletionOr<void> initialize(JS::Realm&, JS::Object&);
+    @class_name@();
+    virtual ~@class_name@();
+
+private:
+)~~~");
+
+    generate_prototype_or_global_mixin_declarations(interface, builder);
+
+    generator.append(R"~~~(
+} // namespace Web::Bindings
+    )~~~");
+}
+
+void generate_global_mixin_implementation(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    generator.set("class_name", interface.global_mixin_class);
+
+    generator.append(R"~~~(
+#include <AK/Function.h>
+#include <LibIDL/Types.h>
+#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/DataView.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionObject.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/@class_name@.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/DOM/NodeFilter.h>
+#include <LibWeb/DOM/Range.h>
+#include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/WebIDL/OverloadResolution.h>
+
+)~~~");
+
+    for (auto& path : interface.required_imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
+
+    generator.append(R"~~~(
+
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::Crypto;
+using namespace Web::CSS;
+using namespace Web::DOM;
+using namespace Web::DOMParsing;
+using namespace Web::Fetch;
+using namespace Web::FileAPI;
+using namespace Web::Geometry;
+using namespace Web::HTML;
+using namespace Web::IntersectionObserver;
+using namespace Web::NavigationTiming;
+using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
+using namespace Web::Selection;
+using namespace Web::Streams;
+using namespace Web::SVG;
+using namespace Web::UIEvents;
+using namespace Web::URL;
+using namespace Web::WebSockets;
+using namespace Web::XHR;
+using namespace Web::WebGL;
+using namespace Web::WebIDL;
+
+namespace Web::Bindings {
+
+@class_name@::@class_name@() = default;
+@class_name@::~@class_name@() = default;
+)~~~");
+
+    generate_prototype_or_global_mixin_definitions(interface, builder);
+
+    generator.append(R"~~~(
+} // namespace Web::Bindings
+    )~~~");
+}
+
 }

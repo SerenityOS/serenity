@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
@@ -24,6 +24,8 @@ void generate_prototype_header(IDL::Interface const&, StringBuilder&);
 void generate_prototype_implementation(IDL::Interface const&, StringBuilder&);
 void generate_iterator_prototype_header(IDL::Interface const&, StringBuilder&);
 void generate_iterator_prototype_implementation(IDL::Interface const&, StringBuilder&);
+void generate_global_mixin_header(IDL::Interface const&, StringBuilder&);
+void generate_global_mixin_implementation(IDL::Interface const&, StringBuilder&);
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -40,12 +42,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool prototype_implementation_mode = false;
     bool iterator_prototype_header_mode = false;
     bool iterator_prototype_implementation_mode = false;
+    bool global_mixin_header_mode = false;
+    bool global_mixin_implementation_mode = false;
     args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
     args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
     args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
     args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
     args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
     args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
+    args_parser.add_option(global_mixin_header_mode, "Generate the global object mixin .h file", "global-mixin-header", 0);
+    args_parser.add_option(global_mixin_implementation_mode, "Generate the global object mixin .cpp file", "global-mixin-implementation", 0);
     args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header search path passed to the compiler",
@@ -147,6 +153,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (iterator_prototype_implementation_mode)
         IDL::generate_iterator_prototype_implementation(interface, output_builder);
+
+    if (global_mixin_header_mode)
+        IDL::generate_global_mixin_header(interface, output_builder);
+
+    if (global_mixin_implementation_mode)
+        IDL::generate_global_mixin_implementation(interface, output_builder);
 
     TRY(output_file->write(output_builder.string_view().bytes()));
 
