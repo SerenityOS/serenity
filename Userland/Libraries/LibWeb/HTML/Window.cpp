@@ -1050,7 +1050,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "screen", screen_getter, screen_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1254,6 +1253,31 @@ JS::GCPtr<WindowProxy const> Window::parent() const
 
     // 4. Return navigable's active WindowProxy.
     return navigable->window_proxy();
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-frameelement
+JS::GCPtr<DOM::Element const> Window::frame_element() const
+{
+    // 1. Let current be this's node navigable.
+    auto* current = browsing_context();
+
+    // 2. If current is null, then return null.
+    if (!current)
+        return {};
+
+    // 3. Let container be current's container.
+    auto* container = current->container();
+
+    // 4. If container is null, then return null.
+    if (!container)
+        return {};
+
+    // 5. If container's node document's origin is not same origin-domain with the current settings object's origin, then return null.
+    if (!container->document().origin().is_same_origin_domain(current_settings_object().origin()))
+        return {};
+
+    // 6. Return container.
+    return container;
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
@@ -1551,33 +1575,6 @@ size_t Window::document_tree_child_browsing_context_count() const
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-// https://html.spec.whatwg.org/multipage/browsers.html#dom-frameelement
-JS_DEFINE_NATIVE_FUNCTION(Window::frame_element_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    // 1. Let current be this Window object's browsing context.
-    auto* current = impl->browsing_context();
-
-    // 2. If current is null, then return null.
-    if (!current)
-        return JS::js_null();
-
-    // 3. Let container be current's container.
-    auto* container = current->container();
-
-    // 4. If container is null, then return null.
-    if (!container)
-        return JS::js_null();
-
-    // 5. If container's node document's origin is not same origin-domain with the current settings object's origin, then return null.
-    if (!container->document().origin().is_same_origin(current_settings_object().origin()))
-        return JS::js_null();
-
-    // 6. Return container.
-    return container;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::performance_getter)
