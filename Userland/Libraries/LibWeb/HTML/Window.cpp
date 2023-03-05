@@ -895,26 +895,6 @@ WebIDL::ExceptionOr<JS::Value> Window::structured_clone_impl(JS::VM& vm, JS::Val
     return MUST(structured_deserialize(vm, serialized, *vm.current_realm(), {}));
 }
 
-// https://html.spec.whatwg.org/multipage/window-object.html#dom-name
-DeprecatedString Window::name() const
-{
-    // 1. If this's browsing context is null, then return the empty string.
-    if (!browsing_context())
-        return DeprecatedString::empty();
-    // 2. Return this's browsing context's name.
-    return browsing_context()->name();
-}
-
-// https://html.spec.whatwg.org/multipage/window-object.html#dom-name
-void Window::set_name(DeprecatedString const& name)
-{
-    // 1. If this's browsing context is null, then return.
-    if (!browsing_context())
-        return;
-    // 2. Set this's browsing context's name to the given value.
-    browsing_context()->set_name(name);
-}
-
 // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
 bool Window::has_transient_activation() const
 {
@@ -1094,7 +1074,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "name", name_getter, name_setter, JS::Attribute::Enumerable);
     define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
@@ -1219,6 +1198,28 @@ JS::NonnullGCPtr<DOM::Document const> Window::document() const
 {
     // The document getter steps are to return this's associated Document.
     return associated_document();
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-name
+String Window::name() const
+{
+    // 1. If this's navigable is null, then return the empty string.
+    if (!browsing_context())
+        return String {};
+
+    // 2. Return this's navigable's target name.
+    return String::from_deprecated_string(browsing_context()->name()).release_value_but_fixme_should_propagate_errors();
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#apis-for-creating-and-navigating-browsing-contexts-by-name:dom-name
+void Window::set_name(String const& name)
+{
+    // 1. If this's navigable is null, then return.
+    if (!browsing_context())
+        return;
+
+    // 2. Set this's navigable's active session history entry's document state's navigable target name to the given value.
+    browsing_context()->set_name(name.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
@@ -1895,19 +1896,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::session_storage_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return impl->session_storage();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::name_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::PrimitiveString::create(vm, impl->name());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
-{
-    auto* impl = TRY(impl_from(vm));
-    impl->set_name(TRY(vm.argument(0).to_deprecated_string(vm)));
-    return JS::js_undefined();
 }
 
 }
