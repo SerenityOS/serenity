@@ -141,6 +141,7 @@ public:
 
     // JS API functions
     JS::NonnullGCPtr<WindowProxy> window() const;
+    JS::NonnullGCPtr<WindowProxy> self() const;
 
     JS::NonnullGCPtr<Navigator> navigator() const;
 
@@ -243,7 +244,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(frames_getter);
-    JS_DECLARE_NATIVE_FUNCTION(self_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(parent_getter);
 
