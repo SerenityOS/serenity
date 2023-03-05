@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
+ * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -104,10 +105,12 @@ ENUMERATE_WORKER_GLOBAL_SCOPE_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin
-String WorkerGlobalScope::origin() const
+WebIDL::ExceptionOr<String> WorkerGlobalScope::origin() const
 {
-    // FIXME: The origin getter steps are to return this's relevant settings object's origin, serialized.
-    return {};
+    auto& vm = this->vm();
+
+    // The origin getter steps are to return this's relevant settings object's origin, serialized.
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(relevant_settings_object(this_impl()).origin().serialize()));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-issecurecontext
