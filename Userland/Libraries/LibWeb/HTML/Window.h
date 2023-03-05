@@ -140,6 +140,8 @@ public:
     Vector<JS::NonnullGCPtr<MimeType>> pdf_viewer_mime_type_objects();
 
     // JS API functions
+    JS::NonnullGCPtr<Navigator> navigator() const;
+
     void alert(String const& message = {});
     bool confirm(Optional<String> const& message);
     Optional<String> prompt(Optional<String> const& message, Optional<String> const& default_);
@@ -287,8 +289,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(cancel_idle_callback);
 
     JS_DECLARE_NATIVE_FUNCTION(crypto_getter);
-
-    JS_DECLARE_NATIVE_FUNCTION(navigator_getter);
 
     HTML::Location* m_location { nullptr };
 

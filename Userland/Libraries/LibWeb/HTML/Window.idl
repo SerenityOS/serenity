@@ -1,9 +1,14 @@
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
+#import <HTML/Navigator.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
 [Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
 interface Window : EventTarget {
+    // the user agent
+    readonly attribute Navigator navigator;
+    [ImplementedAs=navigator] readonly attribute Navigator clientInformation; // legacy alias of .navigator
+
     // user prompts
     undefined alert();
     undefined alert(DOMString message);
