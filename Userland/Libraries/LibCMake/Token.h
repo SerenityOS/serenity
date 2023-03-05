@@ -33,10 +33,13 @@ enum class ControlKeywordType {
     EndWhile,
     Break,
     Continue,
+    Return,
     Macro,
     EndMacro,
     Function,
     EndFunction,
+    Block,
+    EndBlock,
 };
 
 struct Token {
