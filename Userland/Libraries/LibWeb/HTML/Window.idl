@@ -1,3 +1,4 @@
+#import <DOM/Document.idl>
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
 #import <HTML/Navigator.idl>
@@ -8,6 +9,7 @@ interface Window : EventTarget {
     // the current browsing context
     [LegacyUnforgeable] readonly attribute WindowProxy window;
     [Replaceable] readonly attribute WindowProxy self;
+    [LegacyUnforgeable] readonly attribute Document document;
 
     // other browsing contexts
     [Replaceable] readonly attribute WindowProxy frames;

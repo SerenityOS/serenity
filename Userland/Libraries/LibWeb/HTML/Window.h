@@ -142,6 +142,7 @@ public:
     // JS API functions
     JS::NonnullGCPtr<WindowProxy> window() const;
     JS::NonnullGCPtr<WindowProxy> self() const;
+    JS::NonnullGCPtr<DOM::Document const> document() const;
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
 
@@ -220,8 +221,6 @@ public:
 private:
     JS_DECLARE_NATIVE_FUNCTION(length_getter);
     JS_DECLARE_NATIVE_FUNCTION(top_getter);
-
-    JS_DECLARE_NATIVE_FUNCTION(document_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(frame_element_getter);
 

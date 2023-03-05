@@ -1093,7 +1093,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "document", document_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "name", name_getter, name_setter, JS::Attribute::Enumerable);
     define_native_accessor(realm, "history", history_getter, {}, JS::Attribute::Enumerable);
@@ -1213,6 +1212,13 @@ JS::NonnullGCPtr<WindowProxy> Window::self() const
 {
     // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
     return verify_cast<WindowProxy>(relevant_realm(*this).global_environment().global_this_value());
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-document-2
+JS::NonnullGCPtr<DOM::Document const> Window::document() const
+{
+    // The document getter steps are to return this's associated Document.
+    return associated_document();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
@@ -1549,12 +1555,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)
     if (!parent)
         return JS::js_null();
     return parent;
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::document_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return &impl->associated_document();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-frameelement
