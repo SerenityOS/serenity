@@ -121,9 +121,6 @@ public:
 
     WebIDL::ExceptionOr<JS::Value> structured_clone_impl(JS::VM& vm, JS::Value);
 
-    DeprecatedString name() const;
-    void set_name(DeprecatedString const&);
-
     void start_an_idle_period();
 
     u32 request_idle_callback_impl(WebIDL::CallbackType& callback);
@@ -143,6 +140,8 @@ public:
     JS::NonnullGCPtr<WindowProxy> window() const;
     JS::NonnullGCPtr<WindowProxy> self() const;
     JS::NonnullGCPtr<DOM::Document const> document() const;
+    String name() const;
+    void set_name(String const&);
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
 
@@ -226,9 +225,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(location_getter);
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(name_getter);
-    JS_DECLARE_NATIVE_FUNCTION(name_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(performance_getter);
     JS_DECLARE_NATIVE_FUNCTION(performance_setter);

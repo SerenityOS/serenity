@@ -10,6 +10,7 @@ interface Window : EventTarget {
     [LegacyUnforgeable] readonly attribute WindowProxy window;
     [Replaceable] readonly attribute WindowProxy self;
     [LegacyUnforgeable] readonly attribute Document document;
+    attribute DOMString name;
 
     // other browsing contexts
     [Replaceable] readonly attribute WindowProxy frames;
