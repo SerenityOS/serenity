@@ -116,8 +116,8 @@ WebIDL::ExceptionOr<String> WorkerGlobalScope::origin() const
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-issecurecontext
 bool WorkerGlobalScope::is_secure_context() const
 {
-    // FIXME: The isSecureContext getter steps are to return true if this's relevant settings object is a secure context, or false otherwise.
-    return false;
+    // The isSecureContext getter steps are to return true if this's relevant settings object is a secure context, or false otherwise.
+    return HTML::is_secure_context(relevant_settings_object(*this));
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-crossoriginisolated
