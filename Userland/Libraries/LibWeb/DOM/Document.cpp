@@ -1298,7 +1298,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
     } else if (Infra::is_ascii_case_insensitive_match(interface, "keyboardevent"sv)) {
         event = TRY(UIEvents::KeyboardEvent::create(realm, ""));
     } else if (Infra::is_ascii_case_insensitive_match(interface, "messageevent"sv)) {
-        event = TRY(HTML::MessageEvent::create(realm, ""));
+        event = TRY(HTML::MessageEvent::create(realm, String {}));
     } else if (Infra::is_ascii_case_insensitive_match(interface, "mouseevent"sv)
         || Infra::is_ascii_case_insensitive_match(interface, "mouseevents"sv)) {
         event = TRY(UIEvents::MouseEvent::create(realm, ""));
