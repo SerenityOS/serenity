@@ -1122,6 +1122,8 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     m_location = MUST_OR_THROW_OOM(heap().allocate<Location>(realm, realm));
     m_navigator = MUST_OR_THROW_OOM(heap().allocate<Navigator>(realm, realm));
 
+    MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
+
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
     define_native_accessor(realm, "window", window_getter, {}, JS::Attribute::Enumerable);
