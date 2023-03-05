@@ -867,29 +867,6 @@ JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
     return *storage;
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-WindowProxy* Window::parent()
-{
-    // 1. Let current be this Window object's browsing context.
-    auto* current = browsing_context();
-
-    // 2. If current is null, then return null.
-    if (!current)
-        return nullptr;
-
-    // 3. If current is a child browsing context of another browsing context parent,
-    //    then return parent's WindowProxy object.
-    if (current->parent()) {
-        return current->parent()->window_proxy();
-    }
-
-    // 4. Assert: current is a top-level browsing context.
-    VERIFY(current->is_top_level());
-
-    // 5. Return current's WindowProxy object.
-    return current->window_proxy();
-}
-
 // https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
 WebIDL::ExceptionOr<JS::Value> Window::structured_clone_impl(JS::VM& vm, JS::Value message)
 {
@@ -1073,7 +1050,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frameElement", frame_element_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
@@ -1260,6 +1236,24 @@ JS::GCPtr<WindowProxy const> Window::top() const
 
     // 2. Return this's navigable's top-level traversable's active WindowProxy.
     return browsing_context->top_level_browsing_context().window_proxy();
+}
+
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-parent
+JS::GCPtr<WindowProxy const> Window::parent() const
+{
+    // 1. Let navigable be this's navigable.
+    auto* navigable = browsing_context();
+
+    // 2. If navigable is null, then return null.
+    if (!navigable)
+        return {};
+
+    // 3. If navigable's parent is not null, then set navigable to navigable's parent.
+    if (auto parent = navigable->parent())
+        navigable = parent;
+
+    // 4. Return navigable's active WindowProxy.
+    return navigable->window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
@@ -1557,15 +1551,6 @@ size_t Window::document_tree_child_browsing_context_count() const
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::parent_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    auto* parent = impl->parent();
-    if (!parent)
-        return JS::js_null();
-    return parent;
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-frameelement

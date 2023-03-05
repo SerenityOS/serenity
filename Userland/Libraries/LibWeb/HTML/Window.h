@@ -116,9 +116,6 @@ public:
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
 
-    // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
-    WindowProxy* parent();
-
     WebIDL::ExceptionOr<JS::Value> structured_clone_impl(JS::VM& vm, JS::Value);
 
     void start_an_idle_period();
@@ -148,6 +145,7 @@ public:
     JS::NonnullGCPtr<WindowProxy> frames() const;
     u32 length() const;
     JS::GCPtr<WindowProxy const> top() const;
+    JS::GCPtr<WindowProxy const> parent() const;
 
     JS::NonnullGCPtr<Navigator> navigator() const;
 
@@ -234,8 +232,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
-
-    JS_DECLARE_NATIVE_FUNCTION(parent_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
 
