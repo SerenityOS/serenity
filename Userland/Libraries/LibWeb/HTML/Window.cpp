@@ -1160,9 +1160,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     // Legacy
     define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
 
-    define_native_accessor(realm, "navigator", navigator_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_native_accessor(realm, "clientInformation", navigator_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
-
     // NOTE: location is marked as [LegacyUnforgeable], meaning it isn't configurable.
     define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);
 
@@ -1205,6 +1202,13 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
         return static_cast<Window*>(this_object);
 
     return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
+}
+
+// https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
+JS::NonnullGCPtr<Navigator> Window::navigator() const
+{
+    // The navigator and clientInformation getter steps are to return this's associated Navigator.
+    return *m_navigator;
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-alert
@@ -1910,12 +1914,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::name_setter)
     auto* impl = TRY(impl_from(vm));
     impl->set_name(TRY(vm.argument(0).to_deprecated_string(vm)));
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::navigator_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return impl->m_navigator;
 }
 
 }
