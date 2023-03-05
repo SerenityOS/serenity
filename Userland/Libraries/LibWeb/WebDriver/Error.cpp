@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Error.h>
 #include <AK/Vector.h>
 #include <LibWeb/WebDriver/Error.h>
 
@@ -45,17 +46,33 @@ static Vector<ErrorCodeData> const s_error_code_data = {
     { ErrorCode::UnknownError, 500, "unknown error" },
     { ErrorCode::UnknownMethod, 405, "unknown method" },
     { ErrorCode::UnsupportedOperation, 500, "unsupported operation" },
+    { ErrorCode::OutOfMemory, 500, "out of memory" },
 };
 
 Error Error::from_code(ErrorCode code, DeprecatedString message, Optional<JsonValue> data)
 {
     auto const& error_code_data = s_error_code_data[to_underlying(code)];
+
     return {
-        .http_status = error_code_data.http_status,
-        .error = error_code_data.json_error_code,
-        .message = move(message),
-        .data = move(data)
+        error_code_data.http_status,
+        error_code_data.json_error_code,
+        move(message),
+        move(data)
     };
+}
+
+Error::Error(AK::Error const& error)
+{
+    VERIFY(error.code() == ENOMEM);
+    *this = from_code(ErrorCode::OutOfMemory, {}, {});
+}
+
+Error::Error(unsigned http_status_, DeprecatedString error_, DeprecatedString message_, Optional<JsonValue> data_)
+    : http_status(http_status_)
+    , error(move(error_))
+    , message(move(message_))
+    , data(move(data_))
+{
 }
 
 }

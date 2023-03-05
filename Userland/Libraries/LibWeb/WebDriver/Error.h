@@ -42,6 +42,9 @@ enum class ErrorCode {
     UnknownError,
     UnknownMethod,
     UnsupportedOperation,
+
+    // Non-standard error codes:
+    OutOfMemory,
 };
 
 // https://w3c.github.io/webdriver/#errors
@@ -52,6 +55,9 @@ struct Error {
     Optional<JsonValue> data;
 
     static Error from_code(ErrorCode, DeprecatedString message, Optional<JsonValue> data = {});
+
+    Error(unsigned http_status, DeprecatedString error, DeprecatedString message, Optional<JsonValue> data);
+    Error(AK::Error const&);
 };
 
 }
