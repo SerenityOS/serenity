@@ -434,8 +434,8 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
  * we're building in the macroblock matrix. `vfactor_i` and `hfactor_i` are cursors
  * that iterate over the vertical and horizontal subsampling factors, respectively.
  * When we finish one iteration of the innermost loop, we'll have the coefficients
- * of one of the components of block at position `mb_index`. When the outermost loop
- * finishes first iteration, we'll have all the luminance coefficients for all the
+ * of one of the components of block at position `macroblock_index`. When the outermost
+ * loop finishes first iteration, we'll have all the luminance coefficients for all the
  * macroblocks that share the chrominance data. Next two iterations (assuming that
  * we are dealing with three components) will fill up the blocks with chroma data.
  */
@@ -445,9 +445,9 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
         for (u8 vfactor_i = 0; vfactor_i < scan_component.component.vsample_factor; vfactor_i++) {
             for (u8 hfactor_i = 0; hfactor_i < scan_component.component.hsample_factor; hfactor_i++) {
                 // A.2.3 - Interleaved order
-                u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
+                u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                 if (!context.current_scan.are_components_interleaved())
-                    mb_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
+                    macroblock_index = vcursor * context.mblock_meta.hpadded_count + (hfactor_i + (hcursor * scan_component.component.vsample_factor) + (vfactor_i * scan_component.component.hsample_factor));
 
                 // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
                 if (context.current_scan.end_of_bands_run_count > 0) {
@@ -455,7 +455,7 @@ static ErrorOr<void> build_macroblocks(JPEGLoadingContext& context, Vector<Macro
                     continue;
                 }
 
-                Macroblock& block = macroblocks[mb_index];
+                Macroblock& block = macroblocks[macroblock_index];
 
                 if (context.current_scan.spectral_selection_start == 0)
                     TRY(add_dc(context, block, scan_component));
@@ -1043,8 +1043,8 @@ static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblo
                 u32 const* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
-                        u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
-                        Macroblock& block = macroblocks[mb_index];
+                        u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
+                        Macroblock& block = macroblocks[macroblock_index];
                         int* block_component = get_component(block, i);
                         for (u32 k = 0; k < 64; k++)
                             block_component[k] *= table[k];
@@ -1078,8 +1078,8 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
                 auto& component = context.components[component_i];
                 for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
-                        u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
-                        Macroblock& block = macroblocks[mb_index];
+                        u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
+                        Macroblock& block = macroblocks[macroblock_index];
                         i32* block_component = get_component(block, component_i);
                         for (u32 k = 0; k < 8; ++k) {
                             float const g0 = block_component[0 * 8 + k] * s0;
@@ -1231,10 +1231,10 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
             // Overflows are intentional.
             for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
                 for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
-                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    i32* y = macroblocks[mb_index].y;
-                    i32* cb = macroblocks[mb_index].cb;
-                    i32* cr = macroblocks[mb_index].cr;
+                    u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
+                    i32* y = macroblocks[macroblock_index].y;
+                    i32* cb = macroblocks[macroblock_index].cb;
+                    i32* cr = macroblocks[macroblock_index].cr;
                     for (u8 i = 7; i < 8; --i) {
                         for (u8 j = 7; j < 8; --j) {
                             const u8 pixel = i * 8 + j;
