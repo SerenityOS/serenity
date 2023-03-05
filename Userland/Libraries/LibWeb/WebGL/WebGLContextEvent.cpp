@@ -9,18 +9,18 @@
 
 namespace Web::WebGL {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> WebGLContextEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, WebGLContextEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> WebGLContextEvent::create(JS::Realm& realm, FlyString const& event_name, WebGLContextEventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<WebGLContextEvent>(realm, realm, event_name, event_init));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> WebGLContextEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, WebGLContextEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> WebGLContextEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, WebGLContextEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-WebGLContextEvent::WebGLContextEvent(JS::Realm& realm, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init)
-    : DOM::Event(realm, type, event_init)
+WebGLContextEvent::WebGLContextEvent(JS::Realm& realm, FlyString const& type, WebGLContextEventInit const& event_init)
+    : DOM::Event(realm, type.to_deprecated_fly_string(), event_init)
     , m_status_message(event_init.status_message)
 {
 }

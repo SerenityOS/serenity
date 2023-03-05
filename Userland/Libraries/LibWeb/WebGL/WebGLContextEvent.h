@@ -7,31 +7,32 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibWeb/DOM/Event.h>
 
 namespace Web::WebGL {
 
 struct WebGLContextEventInit final : public DOM::EventInit {
-    DeprecatedString status_message { DeprecatedString::empty() };
+    String status_message;
 };
 
 class WebGLContextEvent final : public DOM::Event {
     WEB_PLATFORM_OBJECT(WebGLContextEvent, DOM::Event);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> create(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> create(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> construct_impl(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
 
     virtual ~WebGLContextEvent() override;
 
-    DeprecatedString const& status_message() const { return m_status_message; }
+    String const& status_message() const { return m_status_message; }
 
 private:
-    WebGLContextEvent(JS::Realm&, DeprecatedFlyString const& type, WebGLContextEventInit const& event_init);
+    WebGLContextEvent(JS::Realm&, FlyString const& type, WebGLContextEventInit const& event_init);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
-    DeprecatedString m_status_message { DeprecatedString::empty() };
+    String m_status_message;
 };
 
 }
