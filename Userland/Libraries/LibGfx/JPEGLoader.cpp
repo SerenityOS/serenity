@@ -1246,6 +1246,75 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
     }
 }
 
+static void signed_rgb_to_unsigned(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
+                            macroblocks[mb_index].r[i * 8 + j] = clamp(macroblocks[mb_index].r[i * 8 + j] + 128, 0, 255);
+                            macroblocks[mb_index].g[i * 8 + j] = clamp(macroblocks[mb_index].g[i * 8 + j] + 128, 0, 255);
+                            macroblocks[mb_index].b[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    if (context.color_transform.has_value()) {
+        // https://www.itu.int/rec/dologin_pub.asp?lang=e&id=T-REC-T.872-201206-I!!PDF-E&type=items
+        // 6.5.3 - APP14 marker segment for colour encoding
+
+        switch (*context.color_transform) {
+        case ColorTransform::CmykOrRgb:
+            if (context.components.size() == 4) {
+                // FIXME: implement CMYK
+                dbgln("CMYK isn't supported yet");
+            } else if (context.components.size() == 3) {
+                signed_rgb_to_unsigned(context, macroblocks);
+            } else {
+                return Error::from_string_literal("Wrong number of components for CMYK or RGB, aborting.");
+            }
+            break;
+        case ColorTransform::YCbCr:
+            ycbcr_to_rgb(context, macroblocks);
+            break;
+        case ColorTransform::YCCK:
+            // FIXME: implement YCCK
+            dbgln("YCCK isn't supported yet");
+            break;
+        }
+
+        return {};
+    }
+
+    // No App14 segment is present, assuming :
+    //      - 1 components means grayscale
+    //      - 3 components means YCbCr
+    //      - 4 components means CMYK
+    if (context.components.size() == 4) {
+        // FIXME: implement CMYK
+        dbgln("CMYK isn't supported yet");
+    }
+    if (context.components.size() == 3)
+        ycbcr_to_rgb(context, macroblocks);
+
+    if (context.components.size() == 1) {
+        // FIXME: This is what we used to do for grayscale,
+        //        we should at least document it and maybe change it.
+        ycbcr_to_rgb(context, macroblocks);
+    }
+
+    return {};
+}
+
 static ErrorOr<void> compose_bitmap(JPEGLoadingContext& context, Vector<Macroblock> const& macroblocks)
 {
     context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.frame.width, context.frame.height }));
@@ -1457,7 +1526,7 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     auto macroblocks = TRY(construct_macroblocks(context));
     dequantize(context, macroblocks);
     inverse_dct(context, macroblocks);
-    ycbcr_to_rgb(context, macroblocks);
+    TRY(handle_color_transform(context, macroblocks));
     TRY(compose_bitmap(context, macroblocks));
     context.stream.clear();
     return {};
