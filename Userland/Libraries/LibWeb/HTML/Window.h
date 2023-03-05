@@ -146,6 +146,7 @@ public:
     u32 length() const;
     JS::GCPtr<WindowProxy const> top() const;
     JS::GCPtr<WindowProxy const> parent() const;
+    JS::GCPtr<DOM::Element const> frame_element() const;
 
     JS::NonnullGCPtr<Navigator> navigator() const;
 
@@ -217,8 +218,6 @@ public:
     CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(frame_element_getter);
-
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(performance_getter);
