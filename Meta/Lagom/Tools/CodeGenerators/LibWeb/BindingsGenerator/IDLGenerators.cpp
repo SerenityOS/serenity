@@ -248,11 +248,11 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
             continue;
 
         generate_include_for(generator, interface->module_own_path);
+    }
 
-        if (is_iterator) {
-            auto iterator_path = DeprecatedString::formatted("{}Iterator", interface->fully_qualified_name.replace("::"sv, "/"sv, ReplaceMode::All));
-            generate_include_for_iterator(generator, iterator_path);
-        }
+    if (is_iterator) {
+        auto iterator_path = DeprecatedString::formatted("{}Iterator", interface.fully_qualified_name.replace("::"sv, "/"sv, ReplaceMode::All));
+        generate_include_for_iterator(generator, iterator_path);
     }
 }
 
