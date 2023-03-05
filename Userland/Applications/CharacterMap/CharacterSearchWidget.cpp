@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -79,6 +79,9 @@ CharacterSearchWidget::CharacterSearchWidget()
 
 void CharacterSearchWidget::search()
 {
+    ScopeGuard guard { [&] { m_results_table->set_updates_enabled(true); } };
+    m_results_table->set_updates_enabled(false);
+
     // TODO: Sort the results nicely. They're sorted by code-point for now, which is easy, but not the most useful.
     //       Sorting intelligently in a style similar to Assistant would be nicer.
     auto& model = static_cast<CharacterSearchModel&>(*m_results_table->model());
