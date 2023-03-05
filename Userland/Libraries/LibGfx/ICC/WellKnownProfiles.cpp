@@ -43,7 +43,7 @@ ErrorOr<NonnullRefPtr<Profile>> sRGB()
     // Returns an sRGB profile.
     // https://en.wikipedia.org/wiki/SRGB
 
-    // FIXME: There's a surprising amount of variety in sRGB ICC profiles in the wild.
+    // FIXME: There are many different sRGB ICC profiles in the wild.
     //        Explain why, and why this picks the numbers it does.
 
     auto header = rgb_header();
@@ -61,15 +61,22 @@ ErrorOr<NonnullRefPtr<Profile>> sRGB()
     TRY(tag_table.try_set(greenTRCTag, curve));
     TRY(tag_table.try_set(blueTRCTag, curve));
 
-    // Chromatic adaptation matrix, chromacities and whitepoint.
-    // FIXME: Actual values for chromatic adaptation matrix and chromacities.
-    TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(XYZ { 0, 0, 0 }))));
-    TRY(tag_table.try_set(redMatrixColumnTag, TRY(XYZ_data(XYZ { 0, 0, 0 }))));
-    TRY(tag_table.try_set(greenMatrixColumnTag, TRY(XYZ_data(XYZ { 0, 0, 0 }))));
-    TRY(tag_table.try_set(blueMatrixColumnTag, TRY(XYZ_data(XYZ { 0, 0, 0 }))));
+    // White point.
+    // ICC v4, 9.2.36 mediaWhitePointTag: " For displays, the values specified shall be those of the PCS illuminant as defined in 7.2.16."
+    TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(header.pcs_illuminant))));
 
-    Vector<S15Fixed16, 9> chromatic_adaptation_matrix = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+    // The chromatic_adaptation_matrix values are from https://www.color.org/chadtag.xalter
+    // That leads to exactly the S15Fixed16 values in the sRGB profiles in GIMP, Android, RawTherapee (but not in Compact-ICC-Profiles's v4 sRGB profile).
+    Vector<S15Fixed16, 9> chromatic_adaptation_matrix = { 1.047882, 0.022918, -0.050217, 0.029586, 0.990478, -0.017075, -0.009247, 0.015075, 0.751678 };
     TRY(tag_table.try_set(chromaticAdaptationTag, TRY(try_make_ref_counted<S15Fixed16ArrayTagData>(0, 0, move(chromatic_adaptation_matrix)))));
+
+    // The chromaticity values are from https://www.color.org/srgb.pdf
+    // The chromatic adaptation matrix in that document is slightly different from the one on https://www.color.org/chadtag.xalter,
+    // so the values in our sRGB profile are currently not fully self-consistent.
+    // FIXME: Make values self-consistent (probably by using slightly different chromaticities).
+    TRY(tag_table.try_set(redMatrixColumnTag, TRY(XYZ_data(XYZ { 0.436030342570117, 0.222438466210245, 0.013897440074263 }))));
+    TRY(tag_table.try_set(greenMatrixColumnTag, TRY(XYZ_data(XYZ { 0.385101860087134, 0.716942745571917, 0.097076381494207 }))));
+    TRY(tag_table.try_set(blueMatrixColumnTag, TRY(XYZ_data(XYZ { 0.143067806654203, 0.060618777416563, 0.713926257896652 }))));
 
     return Profile::create(header, move(tag_table));
 }
