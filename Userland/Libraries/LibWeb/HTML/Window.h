@@ -137,7 +137,7 @@ public:
     // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
     bool has_transient_activation() const;
 
-    void initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>);
+    WebIDL::ExceptionOr<void> initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>);
 
     Vector<JS::NonnullGCPtr<Plugin>> pdf_viewer_plugin_objects();
     Vector<JS::NonnullGCPtr<MimeType>> pdf_viewer_mime_type_objects();

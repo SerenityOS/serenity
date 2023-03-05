@@ -1111,14 +1111,16 @@ Vector<JS::NonnullGCPtr<MimeType>> Window::pdf_viewer_mime_type_objects()
     return m_pdf_viewer_mime_type_objects;
 }
 
-void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
+WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
 {
     auto& realm = this->realm();
     add_window_exposed_interfaces(*this);
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    m_crypto = Crypto::Crypto::create(realm).release_value_but_fixme_should_propagate_errors();
+    m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm, realm));
+    m_location = MUST_OR_THROW_OOM(heap().allocate<Location>(realm, realm));
+    m_navigator = MUST_OR_THROW_OOM(heap().allocate<Navigator>(realm, realm));
 
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
@@ -1184,7 +1186,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "outerWidth", outer_width_getter, {}, attr);
     define_native_accessor(realm, "outerHeight", outer_height_getter, {}, attr);
 
-    define_direct_property("CSS", heap().allocate<Bindings::CSSNamespace>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors(), 0);
+    define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
 
     define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
     define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
@@ -1194,9 +1196,6 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     // Legacy
     define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
 
-    m_location = heap().allocate<HTML::Location>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
-
-    m_navigator = heap().allocate<HTML::Navigator>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     define_native_accessor(realm, "navigator", navigator_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "clientInformation", navigator_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
@@ -1204,7 +1203,7 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     define_native_accessor(realm, "location", location_getter, location_setter, JS::Attribute::Enumerable);
 
     // WebAssembly "namespace"
-    define_direct_property("WebAssembly", heap().allocate<Bindings::WebAssemblyObject>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors(), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+    define_direct_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     // HTML::GlobalEventHandlers and HTML::WindowEventHandlers
 #define __ENUMERATE(attribute, event_name) \
@@ -1212,6 +1211,8 @@ void Window::initialize_web_interfaces(Badge<WindowEnvironmentSettingsObject>)
     ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
     ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
 #undef __ENUMERATE
+
+    return {};
 }
 
 HTML::Origin Window::origin() const

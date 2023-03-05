@@ -77,7 +77,7 @@ WebIDL::ExceptionOr<void> WindowEnvironmentSettingsObject::setup(AK::URL const& 
 
     // Non-Standard: We cannot fully initialize window object until *after* the we set up
     //    the realm's [[HostDefined]] internal slot as the internal slot contains the web platform intrinsics
-    window.initialize_web_interfaces({});
+    TRY(window.initialize_web_interfaces({}));
 
     return {};
 }
