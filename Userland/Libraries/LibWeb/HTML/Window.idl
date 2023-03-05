@@ -5,6 +5,9 @@
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
 [Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
 interface Window : EventTarget {
+    // the current browsing context
+    [LegacyUnforgeable] readonly attribute WindowProxy window;
+
     // the user agent
     readonly attribute Navigator navigator;
     [ImplementedAs=navigator] readonly attribute Navigator clientInformation; // legacy alias of .navigator
