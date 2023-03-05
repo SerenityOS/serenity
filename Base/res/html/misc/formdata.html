@@ -4,14 +4,14 @@
   <title>FormData</title>
   <script>
     function log(s) {
-      document.getElementById("out").innerHTML += s + "\n"
+      document.getElementById("out").innerHTML += `${s}\n`;
     }
 
     function dumpFormContents() {
       let form = document.getElementById("form1");
       form.onformdata = (e) => {
         log("Event 'formdata' fired.");
-        log("First name logged from the formdata event: " + e.formData.get("first_name") + "\n");
+        log(`First name logged from the formdata event: ${e.formData.get("first_name")}\n`);
       }
 
       let formData = new FormData(form);
@@ -19,12 +19,12 @@
       let lastName = formData.get("last_name");
       let file = formData.get("avatar");
       let transportTypes = formData.getAll("transport_type");
-      log("First name: " + firstName);
-      log("Last name: " + lastName);
-      log("file: " + file.type);
+      log(`First name: ${firstName}`);
+      log(`Last name: ${lastName}`);
+      log(`file: ${file.type}`);
       log("Transportation types:");
       for (let i = 0; transportTypes.length > i; i++)
-          log("  - " + transportTypes[i]);
+          log(`  - ${transportTypes[i]}`);
 
       log("\n Iterate over keys: ")
       for (let key of formData.keys()) {
