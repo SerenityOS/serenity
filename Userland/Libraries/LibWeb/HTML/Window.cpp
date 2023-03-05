@@ -1112,7 +1112,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "pageXOffset", scroll_x_getter, {}, attr);
     define_native_accessor(realm, "scrollY", scroll_y_getter, {}, attr);
     define_native_accessor(realm, "pageYOffset", scroll_y_getter, {}, attr);
-    define_native_accessor(realm, "length", length_getter, {}, attr);
 
     define_native_function(realm, "scroll", scroll, 2, attr);
     define_native_function(realm, "scrollTo", scroll, 2, attr);
@@ -1243,6 +1242,13 @@ JS::NonnullGCPtr<WindowProxy> Window::frames() const
 {
     // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
     return verify_cast<WindowProxy>(relevant_realm(*this).global_environment().global_this_value());
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-length
+u32 Window::length() const
+{
+    // The length getter steps are to return this's associated Document's document-tree child navigables's size.
+    return static_cast<u32>(document_tree_child_browsing_context_count());
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
@@ -1531,7 +1537,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::focus)
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts
-JS::ThrowCompletionOr<size_t> Window::document_tree_child_browsing_context_count() const
+size_t Window::document_tree_child_browsing_context_count() const
 {
     // 1. If W's browsing context is null, then return 0.
     auto* this_browsing_context = associated_document().browsing_context();
@@ -1540,15 +1546,6 @@ JS::ThrowCompletionOr<size_t> Window::document_tree_child_browsing_context_count
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-// https://html.spec.whatwg.org/multipage/window-object.html#dom-length
-JS_DEFINE_NATIVE_FUNCTION(Window::length_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    // The length getter steps are to return the number of document-tree child browsing contexts of this.
-    return TRY(impl->document_tree_child_browsing_context_count());
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-top

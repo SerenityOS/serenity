@@ -58,7 +58,7 @@ public:
     HTML::BrowsingContext const* browsing_context() const;
     HTML::BrowsingContext* browsing_context();
 
-    JS::ThrowCompletionOr<size_t> document_tree_child_browsing_context_count() const;
+    size_t document_tree_child_browsing_context_count() const;
 
     ImportMap const& import_map() const { return m_import_map; }
 
@@ -146,6 +146,7 @@ public:
     JS::NonnullGCPtr<History> history() const;
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
+    u32 length() const;
 
     JS::NonnullGCPtr<Navigator> navigator() const;
 
@@ -217,7 +218,6 @@ public:
     CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
 private:
-    JS_DECLARE_NATIVE_FUNCTION(length_getter);
     JS_DECLARE_NATIVE_FUNCTION(top_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(frame_element_getter);
