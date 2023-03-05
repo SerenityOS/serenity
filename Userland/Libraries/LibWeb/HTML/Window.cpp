@@ -1092,7 +1092,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     // FIXME: These should be native accessors, not properties
     define_native_accessor(realm, "top", top_getter, nullptr, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "window", window_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "frames", frames_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "self", self_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "parent", parent_getter, {}, JS::Attribute::Enumerable);
@@ -1202,6 +1201,13 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
         return static_cast<Window*>(this_object);
 
     return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
+}
+
+// https://html.spec.whatwg.org/multipage/window-object.html#dom-window
+JS::NonnullGCPtr<WindowProxy> Window::window() const
+{
+    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
+    return verify_cast<WindowProxy>(relevant_realm(*this).global_environment().global_this_value());
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
@@ -1526,14 +1532,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::top_getter)
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-self
 JS_DEFINE_NATIVE_FUNCTION(Window::self_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].
-    return &relevant_realm(*impl).global_environment().global_this_value();
-}
-
-// https://html.spec.whatwg.org/multipage/window-object.html#dom-window
-JS_DEFINE_NATIVE_FUNCTION(Window::window_getter)
 {
     auto* impl = TRY(impl_from(vm));
     // The window, frames, and self getter steps are to return this's relevant realm.[[GlobalEnv]].[[GlobalThisValue]].

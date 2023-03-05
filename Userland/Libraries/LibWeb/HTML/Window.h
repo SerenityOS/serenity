@@ -140,6 +140,8 @@ public:
     Vector<JS::NonnullGCPtr<MimeType>> pdf_viewer_mime_type_objects();
 
     // JS API functions
+    JS::NonnullGCPtr<WindowProxy> window() const;
+
     JS::NonnullGCPtr<Navigator> navigator() const;
 
     void alert(String const& message = {});
@@ -240,7 +242,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
-    JS_DECLARE_NATIVE_FUNCTION(window_getter);
     JS_DECLARE_NATIVE_FUNCTION(frames_getter);
     JS_DECLARE_NATIVE_FUNCTION(self_getter);
 
