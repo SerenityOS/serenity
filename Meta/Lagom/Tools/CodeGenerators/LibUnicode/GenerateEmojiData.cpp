@@ -7,6 +7,7 @@
 #include "GeneratorUtil.h"
 #include <AK/AnyOf.h>
 #include <AK/DeprecatedString.h>
+#include <AK/QuickSort.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringUtils.h>
 #include <AK/Types.h>
@@ -306,13 +307,27 @@ static constexpr Array<EmojiData, @emojis_size@> s_emojis { {)~~~");
     generator.append(R"~~~(
 } };
 
+struct EmojiCodePointComparator {
+    constexpr int operator()(ReadonlySpan<u32> code_points, EmojiData const& emoji)
+    {
+        auto emoji_code_points = emoji.code_points();
+
+        if (code_points.size() != emoji_code_points.size())
+            return static_cast<int>(code_points.size()) - static_cast<int>(emoji_code_points.size());
+
+        for (size_t i = 0; i < code_points.size(); ++i) {
+            if (code_points[i] != emoji_code_points[i])
+                return static_cast<int>(code_points[i]) - static_cast<int>(emoji_code_points[i]);
+        }
+
+        return 0;
+    }
+};
+
 Optional<Emoji> find_emoji_for_code_points(ReadonlySpan<u32> code_points)
 {
-    for (auto& emoji : s_emojis) {
-        if (emoji.code_points() == code_points)
-            return emoji.to_unicode_emoji();
-    }
-
+    if (auto const* emoji = binary_search(s_emojis, code_points, nullptr, EmojiCodePointComparator {}))
+        return emoji->to_unicode_emoji();
     return {};
 }
 
@@ -400,28 +415,44 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(validate_emoji(emoji_resource_path, emoji_data));
     }
 
-    size_t code_point_array_index { 0 };
-    for (auto& emoji : emoji_data.emojis) {
-        emoji.code_point_array_index = code_point_array_index;
-        code_point_array_index += emoji.code_points.size();
-
+    for (auto& emoji : emoji_data.emojis)
         set_image_path_for_emoji(emoji_resource_path, emoji_data, emoji);
-    }
-
-    if (!generated_header_path.is_empty()) {
-        auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
-        TRY(generate_emoji_data_header(*generated_header_file, emoji_data));
-    }
-    if (!generated_implementation_path.is_empty()) {
-        auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
-        TRY(generate_emoji_data_implementation(*generated_implementation_file, emoji_data));
-    }
 
     if (!generated_installation_path.is_empty()) {
         TRY(Core::Directory::create(LexicalPath { generated_installation_path }.parent(), Core::Directory::CreateDirectories::Yes));
 
         auto generated_installation_file = TRY(open_file(generated_installation_path, Core::File::OpenMode::Write));
         TRY(generate_emoji_installation(*generated_installation_file, emoji_data));
+    }
+
+    if (!generated_header_path.is_empty()) {
+        auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
+        TRY(generate_emoji_data_header(*generated_header_file, emoji_data));
+    }
+
+    if (!generated_implementation_path.is_empty()) {
+        quick_sort(emoji_data.emojis, [](auto const& lhs, auto const& rhs) {
+            if (lhs.code_points.size() != rhs.code_points.size())
+                return lhs.code_points.size() < rhs.code_points.size();
+
+            for (size_t i = 0; i < lhs.code_points.size(); ++i) {
+                if (lhs.code_points[i] < rhs.code_points[i])
+                    return true;
+                if (lhs.code_points[i] > rhs.code_points[i])
+                    return false;
+            }
+
+            return false;
+        });
+
+        size_t code_point_array_index { 0 };
+        for (auto& emoji : emoji_data.emojis) {
+            emoji.code_point_array_index = code_point_array_index;
+            code_point_array_index += emoji.code_points.size();
+        }
+
+        auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));
+        TRY(generate_emoji_data_implementation(*generated_implementation_file, emoji_data));
     }
 
     return 0;
