@@ -119,7 +119,6 @@ public:
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     WindowProxy* parent();
 
-    WebIDL::ExceptionOr<void> post_message_impl(JS::Value, DeprecatedString const& target_origin);
     WebIDL::ExceptionOr<JS::Value> structured_clone_impl(JS::VM& vm, JS::Value);
 
     DeprecatedString name() const;
@@ -144,6 +143,8 @@ public:
     void alert(String const& message = {});
     bool confirm(Optional<String> const& message);
     Optional<String> prompt(Optional<String> const& message, Optional<String> const& default_);
+
+    void post_message(JS::Value message, String const&);
 
 private:
     explicit Window(JS::Realm&);
@@ -258,7 +259,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(outer_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(outer_height_getter);
 
-    JS_DECLARE_NATIVE_FUNCTION(post_message);
     JS_DECLARE_NATIVE_FUNCTION(structured_clone);
 
     JS_DECLARE_NATIVE_FUNCTION(local_storage_getter);

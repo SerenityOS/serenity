@@ -9,6 +9,10 @@ interface Window : EventTarget {
     undefined alert(DOMString message);
     boolean confirm(optional DOMString message = "");
     DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
+
+    undefined postMessage(any message, USVString targetOrigin);
+    // FIXME: undefined postMessage(any message, USVString targetOrigin, optional sequence<object> transfer = []);
+    // FIXME: undefined postMessage(any message, optional WindowPostMessageOptions options = {});
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;

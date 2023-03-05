@@ -888,20 +888,6 @@ WindowProxy* Window::parent()
     return current->window_proxy();
 }
 
-// https://html.spec.whatwg.org/multipage/web-messaging.html#window-post-message-steps
-WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, DeprecatedString const&)
-{
-    // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
-    //        have serialization and deserialization of messages.
-    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message] {
-        HTML::MessageEventInit event_init {};
-        event_init.data = message;
-        event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
-        dispatch_event(HTML::MessageEvent::create(realm(), String::from_deprecated_string(HTML::EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
-    });
-    return {};
-}
-
 // https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
 WebIDL::ExceptionOr<JS::Value> Window::structured_clone_impl(JS::VM& vm, JS::Value message)
 {
@@ -1141,7 +1127,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "matchMedia", match_media, 1, attr);
     define_native_function(realm, "getSelection", get_selection, 0, attr);
 
-    define_native_function(realm, "postMessage", post_message, 1, attr);
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
 
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
@@ -1255,6 +1240,19 @@ Optional<String> Window::prompt(Optional<String> const& message, Optional<String
         return String::from_deprecated_string(response).release_value_but_fixme_should_propagate_errors();
     }
     return {};
+}
+
+// https://html.spec.whatwg.org/multipage/web-messaging.html#dom-window-postmessage
+void Window::post_message(JS::Value message, String const&)
+{
+    // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
+    //        have serialization and deserialization of messages.
+    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message] {
+        HTML::MessageEventInit event_init {};
+        event_init.data = message;
+        event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
+        dispatch_event(HTML::MessageEvent::create(realm(), String::from_deprecated_string(HTML::EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
+    });
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::open)
@@ -1864,16 +1862,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::outer_height_getter)
 {
     auto* impl = TRY(impl_from(vm));
     return JS::Value(impl->outer_height());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::post_message)
-{
-    auto* impl = TRY(impl_from(vm));
-    auto target_origin = TRY(vm.argument(1).to_deprecated_string(vm));
-    TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
-        return impl->post_message_impl(vm.argument(0), target_origin);
-    }));
-    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
