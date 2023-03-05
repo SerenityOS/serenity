@@ -66,7 +66,6 @@ public:
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
 
     WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open_impl(StringView url, StringView target, StringView features);
-    void alert_impl(DeprecatedString const&);
     bool confirm_impl(DeprecatedString const&);
     DeprecatedString prompt_impl(DeprecatedString const&, DeprecatedString const&);
     i32 request_animation_frame_impl(WebIDL::CallbackType& js_callback);
@@ -142,6 +141,9 @@ public:
 
     Vector<JS::NonnullGCPtr<Plugin>> pdf_viewer_plugin_objects();
     Vector<JS::NonnullGCPtr<MimeType>> pdf_viewer_mime_type_objects();
+
+    // JS API functions
+    void alert(String const& message = {});
 
 private:
     explicit Window(JS::Realm&);
@@ -265,7 +267,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(is_secure_context_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(open);
-    JS_DECLARE_NATIVE_FUNCTION(alert);
     JS_DECLARE_NATIVE_FUNCTION(confirm);
     JS_DECLARE_NATIVE_FUNCTION(prompt);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
