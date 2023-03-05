@@ -833,7 +833,7 @@ Messages::WebDriverClient::FindElementsResponse WebDriverConnection::find_elemen
 }
 
 // 12.3.4 Find Element From Element, https://w3c.github.io/webdriver/#dfn-find-element-from-element
-Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::find_element_from_element(JsonValue const& payload, DeprecatedString const& element_id)
+Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::find_element_from_element(JsonValue const& payload, String const& element_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -869,7 +869,7 @@ Messages::WebDriverClient::FindElementFromElementResponse WebDriverConnection::f
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
-Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::find_elements_from_element(JsonValue const& payload, DeprecatedString const& element_id)
+Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::find_elements_from_element(JsonValue const& payload, String const& element_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -899,7 +899,7 @@ Messages::WebDriverClient::FindElementsFromElementResponse WebDriverConnection::
 }
 
 // 12.3.6 Find Element From Shadow Root, https://w3c.github.io/webdriver/#find-element-from-shadow-root
-Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection::find_element_from_shadow_root(JsonValue const& payload, DeprecatedString const& shadow_id)
+Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection::find_element_from_shadow_root(JsonValue const& payload, String const& shadow_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -935,7 +935,7 @@ Messages::WebDriverClient::FindElementFromShadowRootResponse WebDriverConnection
 }
 
 // 12.3.7 Find Elements From Shadow Root, https://w3c.github.io/webdriver/#find-elements-from-shadow-root
-Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnection::find_elements_from_shadow_root(JsonValue const& payload, DeprecatedString const& shadow_id)
+Messages::WebDriverClient::FindElementsFromShadowRootResponse WebDriverConnection::find_elements_from_shadow_root(JsonValue const& payload, String const& shadow_id)
 {
     // 1. Let location strategy be the result of getting a property called "using".
     auto location_strategy_string = TRY(get_property(payload, "using"sv));
@@ -985,7 +985,7 @@ Messages::WebDriverClient::GetActiveElementResponse WebDriverConnection::get_act
 }
 
 // 12.3.9 Get Element Shadow Root, https://w3c.github.io/webdriver/#get-element-shadow-root
-Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get_element_shadow_root(DeprecatedString const& element_id)
+Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get_element_shadow_root(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1011,7 +1011,7 @@ Messages::WebDriverClient::GetElementShadowRootResponse WebDriverConnection::get
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
-Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(DeprecatedString const& element_id)
+Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_element_selected(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1047,7 +1047,7 @@ Messages::WebDriverClient::IsElementSelectedResponse WebDriverConnection::is_ele
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
-Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(DeprecatedString const& element_id, DeprecatedString const& name)
+Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_element_attribute(String const& element_id, String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1061,16 +1061,18 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
     // 4. Let result be the result of the first matching condition:
     Optional<DeprecatedString> result;
 
+    auto deprecated_name = name.to_deprecated_string();
+
     // -> If name is a boolean attribute
-    if (Web::HTML::is_boolean_attribute(name)) {
+    if (Web::HTML::is_boolean_attribute(deprecated_name)) {
         // "true" (string) if the element has the attribute, otherwise null.
-        if (element->has_attribute(name))
+        if (element->has_attribute(deprecated_name))
             result = "true"sv;
     }
     // -> Otherwise
     else {
         // The result of getting an attribute by name name.
-        result = element->get_attribute(name);
+        result = element->get_attribute(deprecated_name);
     }
 
     // 5. Return success with data result.
@@ -1080,7 +1082,7 @@ Messages::WebDriverClient::GetElementAttributeResponse WebDriverConnection::get_
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
-Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_element_property(DeprecatedString const& element_id, DeprecatedString const& name)
+Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_element_property(String const& element_id, String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1094,7 +1096,7 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
     Optional<DeprecatedString> result;
 
     // 4. Let property be the result of calling the Object.[[GetProperty]](name) on element.
-    if (auto property_or_error = element->get(name); !property_or_error.is_throw_completion()) {
+    if (auto property_or_error = element->get(name.to_deprecated_string()); !property_or_error.is_throw_completion()) {
         auto property = property_or_error.release_value();
 
         // 5. Let result be the value of property if not undefined, or null.
@@ -1111,7 +1113,7 @@ Messages::WebDriverClient::GetElementPropertyResponse WebDriverConnection::get_e
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
-Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_element_css_value(DeprecatedString const& element_id, DeprecatedString const& name)
+Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_element_css_value(String const& element_id, String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1144,7 +1146,7 @@ Messages::WebDriverClient::GetElementCssValueResponse WebDriverConnection::get_e
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
-Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_element_text(DeprecatedString const& element_id)
+Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_element_text(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1163,7 +1165,7 @@ Messages::WebDriverClient::GetElementTextResponse WebDriverConnection::get_eleme
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
-Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_element_tag_name(DeprecatedString const& element_id)
+Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_element_tag_name(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1182,7 +1184,7 @@ Messages::WebDriverClient::GetElementTagNameResponse WebDriverConnection::get_el
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
-Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_element_rect(DeprecatedString const& element_id)
+Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_element_rect(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1213,7 +1215,7 @@ Messages::WebDriverClient::GetElementRectResponse WebDriverConnection::get_eleme
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
-Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(DeprecatedString const& element_id)
+Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_element_enabled(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1239,7 +1241,7 @@ Messages::WebDriverClient::IsElementEnabledResponse WebDriverConnection::is_elem
 }
 
 // 12.4.9 Get Computed Role, https://w3c.github.io/webdriver/#dfn-get-computed-role
-Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_computed_role(DeprecatedString const& element_id)
+Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_computed_role(String const& element_id)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1260,7 +1262,7 @@ Messages::WebDriverClient::GetComputedRoleResponse WebDriverConnection::get_comp
 }
 
 // 12.4.10 Get Computed Label, https://w3c.github.io/webdriver/#get-computed-label
-Messages::WebDriverClient::GetComputedLabelResponse WebDriverConnection::get_computed_label(DeprecatedString const& element_id)
+Messages::WebDriverClient::GetComputedLabelResponse WebDriverConnection::get_computed_label(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1279,7 +1281,7 @@ Messages::WebDriverClient::GetComputedLabelResponse WebDriverConnection::get_com
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
-Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_click(DeprecatedString const& element_id)
+Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_click(String const& element_id)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1521,7 +1523,7 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
 }
 
 // 14.2 Get Named Cookie, https://w3c.github.io/webdriver/#dfn-get-named-cookie
-Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(DeprecatedString const& name)
+Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named_cookie(String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1532,7 +1534,7 @@ Messages::WebDriverClient::GetNamedCookieResponse WebDriverConnection::get_named
     // 3. If the url variable name is equal to a cookie’s cookie name amongst all associated cookies of the current browsing context’s active document, return success with the serialized cookie as data.
     auto* document = m_page_client.page().top_level_browsing_context().active_document();
 
-    if (auto cookie = m_page_client.page_did_request_named_cookie(document->url(), name); cookie.has_value()) {
+    if (auto cookie = m_page_client.page_did_request_named_cookie(document->url(), name.to_deprecated_string()); cookie.has_value()) {
         auto serialized_cookie = serialize_cookie(*cookie);
         return serialized_cookie;
     }
@@ -1615,7 +1617,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
 }
 
 // 14.4 Delete Cookie, https://w3c.github.io/webdriver/#dfn-delete-cookie
-Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cookie(DeprecatedString const& name)
+Messages::WebDriverClient::DeleteCookieResponse WebDriverConnection::delete_cookie(String const& name)
 {
     // 1. If the current browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());
@@ -1766,7 +1768,7 @@ Messages::WebDriverClient::TakeScreenshotResponse WebDriverConnection::take_scre
 }
 
 // 17.2 Take Element Screenshot, https://w3c.github.io/webdriver/#dfn-take-element-screenshot
-Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(DeprecatedString const& element_id)
+Messages::WebDriverClient::TakeElementScreenshotResponse WebDriverConnection::take_element_screenshot(String const& element_id)
 {
     // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
     TRY(ensure_open_top_level_browsing_context());

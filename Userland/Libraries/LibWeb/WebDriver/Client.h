@@ -1,17 +1,18 @@
 /*
  * Copyright (c) 2022, Florent Castelli <florent.castelli@gmail.com>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Error.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
+#include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibCore/Socket.h>
 #include <LibHTTP/Forward.h>
@@ -21,7 +22,7 @@
 
 namespace Web::WebDriver {
 
-using Parameters = ReadonlySpan<StringView>;
+using Parameters = Vector<String>;
 
 class Client : public Core::Object {
     C_OBJECT_ABSTRACT(Client);
