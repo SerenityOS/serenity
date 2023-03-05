@@ -30,6 +30,8 @@ Optional<ControlKeywordType> control_keyword_from_string(StringView value)
         return ControlKeywordType::Break;
     if (value.equals_ignoring_case("continue"sv))
         return ControlKeywordType::Continue;
+    if (value.equals_ignoring_case("return"sv))
+        return ControlKeywordType::Return;
     if (value.equals_ignoring_case("macro"sv))
         return ControlKeywordType::Macro;
     if (value.equals_ignoring_case("endmacro"sv))
@@ -38,6 +40,10 @@ Optional<ControlKeywordType> control_keyword_from_string(StringView value)
         return ControlKeywordType::Function;
     if (value.equals_ignoring_case("endfunction"sv))
         return ControlKeywordType::EndFunction;
+    if (value.equals_ignoring_case("block"sv))
+        return ControlKeywordType::Block;
+    if (value.equals_ignoring_case("endblock"sv))
+        return ControlKeywordType::EndBlock;
     return {};
 }
 
