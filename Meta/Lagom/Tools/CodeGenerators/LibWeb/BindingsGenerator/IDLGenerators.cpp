@@ -192,11 +192,10 @@ static DeprecatedString make_input_acceptable_cpp(DeprecatedString const& input)
     return input.replace("-"sv, "_"sv, ReplaceMode::All);
 }
 
-static void generate_include_for_iterator(auto& generator, auto& iterator_path, auto& iterator_name)
+static void generate_include_for_iterator(auto& generator, auto& iterator_path)
 {
     auto iterator_generator = generator.fork();
     iterator_generator.set("iterator_class.path", iterator_path);
-    iterator_generator.set("iterator_class.name", iterator_name);
     // FIXME: These may or may not exist, because REASONS.
     iterator_generator.append(R"~~~(
 //#if __has_include(<LibWeb/@iterator_class.path@.h>)
@@ -248,9 +247,8 @@ static void emit_includes_for_all_imports(auto& interface, auto& generator, bool
         generate_include_for(generator, interface->module_own_path);
 
         if (is_iterator) {
-            auto iterator_name = DeprecatedString::formatted("{}Iterator", interface->name);
             auto iterator_path = DeprecatedString::formatted("{}Iterator", interface->fully_qualified_name.replace("::"sv, "/"sv, ReplaceMode::All));
-            generate_include_for_iterator(generator, iterator_path, iterator_name);
+            generate_include_for_iterator(generator, iterator_path);
         }
     }
 }
@@ -1749,7 +1747,6 @@ static void generate_function(SourceGenerator& generator, IDL::Function const& f
     auto function_generator = generator.fork();
     function_generator.set("class_name", class_name);
     function_generator.set("interface_fully_qualified_name", interface_fully_qualified_name);
-    function_generator.set("function.name", function.name);
     function_generator.set("function.name:snakecase", make_input_acceptable_cpp(function.name.to_snakecase()));
     function_generator.set("overload_suffix", function.is_overloaded ? DeprecatedString::number(function.overload_index) : DeprecatedString::empty());
 
@@ -2091,10 +2088,7 @@ void generate_constructor_header(IDL::Interface const& interface, StringBuilder&
 {
     SourceGenerator generator { builder };
 
-    generator.set("name", interface.name);
-    generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("constructor_class", interface.constructor_class);
-    generator.set("constructor_class:snakecase", interface.constructor_class.to_snakecase());
 
     generator.append(R"~~~(
 #pragma once
@@ -2147,7 +2141,6 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
     generator.set("name", interface.name);
     generator.set("prototype_class", interface.prototype_class);
     generator.set("constructor_class", interface.constructor_class);
-    generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     generator.append(R"~~~(
@@ -2346,10 +2339,7 @@ void generate_prototype_header(IDL::Interface const& interface, StringBuilder& b
 {
     SourceGenerator generator { builder };
 
-    generator.set("name", interface.name);
-    generator.set("fully_qualified_name", interface.fully_qualified_name);
     generator.set("prototype_class", interface.prototype_class);
-    generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
 
     generator.append(R"~~~(
 #pragma once
@@ -2489,8 +2479,6 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
     generator.set("parent_name", interface.parent_name);
     generator.set("prototype_class", interface.prototype_class);
     generator.set("prototype_base_class", interface.prototype_base_class);
-    generator.set("constructor_class", interface.constructor_class);
-    generator.set("prototype_class:snakecase", interface.prototype_class.to_snakecase());
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
     if (interface.pair_iterator_types.has_value()) {
