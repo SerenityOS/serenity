@@ -67,6 +67,8 @@ private:
 
     Optional<DeprecatedString> m_web_content_socket_path;
     Optional<pid_t> m_browser_pid;
+
+    RefPtr<Core::LocalServer> m_web_content_server;
 };
 
 }
