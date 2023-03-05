@@ -11,6 +11,7 @@ interface Window : EventTarget {
     [Replaceable] readonly attribute WindowProxy self;
     [LegacyUnforgeable] readonly attribute Document document;
     attribute DOMString name;
+    [PutForwards=href, LegacyUnforgeable] readonly attribute Location location;
 
     // other browsing contexts
     [Replaceable] readonly attribute WindowProxy frames;
