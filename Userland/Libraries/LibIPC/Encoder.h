@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -105,6 +106,9 @@ ErrorOr<void> encode(Encoder&, float const&);
 
 template<>
 ErrorOr<void> encode(Encoder&, double const&);
+
+template<>
+ErrorOr<void> encode(Encoder&, String const&);
 
 template<>
 ErrorOr<void> encode(Encoder&, StringView const&);
