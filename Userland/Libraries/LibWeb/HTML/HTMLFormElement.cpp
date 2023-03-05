@@ -83,7 +83,7 @@ ErrorOr<void> HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, boo
 
         SubmitEventInit event_init {};
         event_init.submitter = submitter_button;
-        auto submit_event = SubmitEvent::create(realm(), EventNames::submit, event_init).release_value_but_fixme_should_propagate_errors();
+        auto submit_event = SubmitEvent::create(realm(), String::from_deprecated_string(EventNames::submit).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors();
         submit_event->set_bubbles(true);
         submit_event->set_cancelable(true);
         bool continue_ = dispatch_event(*submit_event);

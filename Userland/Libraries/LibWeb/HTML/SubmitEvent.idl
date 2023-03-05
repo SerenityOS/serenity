@@ -2,7 +2,7 @@
 #import <HTML/HTMLElement.idl>
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#submitevent
-[Exposed=Window]
+[Exposed=Window, UseNewAKString]
 interface SubmitEvent : Event {
     constructor(DOMString type, optional SubmitEventInit eventInitDict = {});
 
