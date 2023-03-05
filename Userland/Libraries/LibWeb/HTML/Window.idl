@@ -12,6 +12,7 @@ interface Window : EventTarget {
     [LegacyUnforgeable] readonly attribute Document document;
     attribute DOMString name;
     [PutForwards=href, LegacyUnforgeable] readonly attribute Location location;
+    readonly attribute History history;
 
     // other browsing contexts
     [Replaceable] readonly attribute WindowProxy frames;

@@ -143,6 +143,7 @@ public:
     String name() const;
     void set_name(String const&);
     JS::NonnullGCPtr<Location> location() const;
+    JS::NonnullGCPtr<History> history() const;
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
 
@@ -225,8 +226,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(performance_getter);
     JS_DECLARE_NATIVE_FUNCTION(performance_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(history_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(screen_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_setter);
