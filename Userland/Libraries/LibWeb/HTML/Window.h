@@ -147,6 +147,7 @@ public:
     JS::GCPtr<WindowProxy const> top() const;
     JS::GCPtr<WindowProxy const> parent() const;
     JS::GCPtr<DOM::Element const> frame_element() const;
+    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
 
     JS::NonnullGCPtr<Navigator> navigator() const;
 
@@ -254,7 +255,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(origin_getter);
     JS_DECLARE_NATIVE_FUNCTION(is_secure_context_getter);
 
-    JS_DECLARE_NATIVE_FUNCTION(open);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
     JS_DECLARE_NATIVE_FUNCTION(clear_interval);
