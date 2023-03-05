@@ -595,6 +595,7 @@ void Parser::parse_interface(Interface& interface)
     interface.constructor_class = DeprecatedString::formatted("{}Constructor", interface.name);
     interface.prototype_class = DeprecatedString::formatted("{}Prototype", interface.name);
     interface.prototype_base_class = DeprecatedString::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);
+    interface.global_mixin_class = DeprecatedString::formatted("{}GlobalMixin", interface.name);
     consume_whitespace();
 }
 
