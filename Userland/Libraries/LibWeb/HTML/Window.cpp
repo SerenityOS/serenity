@@ -430,12 +430,6 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView u
     return target_browsing_context->window_proxy();
 }
 
-void Window::alert_impl(DeprecatedString const& message)
-{
-    if (auto* page = this->page())
-        page->did_request_alert(message);
-}
-
 bool Window::confirm_impl(DeprecatedString const& message)
 {
     if (auto* page = this->page())
@@ -1142,7 +1136,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     define_native_function(realm, "open", open, 0, attr);
-    define_native_function(realm, "alert", alert, 0, attr);
     define_native_function(realm, "confirm", confirm, 0, attr);
     define_native_function(realm, "prompt", prompt, 0, attr);
     define_native_function(realm, "setInterval", set_interval, 1, attr);
@@ -1245,6 +1238,18 @@ static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
     return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
 }
 
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-alert
+void Window::alert(String const& message)
+{
+    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#simple-dialogs
+    // Note: This method is defined using two overloads, instead of using an optional argument,
+    //       for historical reasons. The practical impact of this is that alert(undefined) is
+    //       treated as alert("undefined"), but alert() is treated as alert("").
+    // FIXME: Make this fully spec compliant.
+    if (auto* page = this->page())
+        page->did_request_alert(message.to_deprecated_string());
+}
+
 JS_DEFINE_NATIVE_FUNCTION(Window::open)
 {
     auto* impl = TRY(impl_from(vm));
@@ -1265,20 +1270,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::open)
         features = TRY(vm.argument(2).to_deprecated_string(vm));
 
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::alert)
-{
-    // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#simple-dialogs
-    // Note: This method is defined using two overloads, instead of using an optional argument,
-    //       for historical reasons. The practical impact of this is that alert(undefined) is
-    //       treated as alert("undefined"), but alert() is treated as alert("").
-    auto* impl = TRY(impl_from(vm));
-    DeprecatedString message = "";
-    if (vm.argument_count())
-        message = TRY(vm.argument(0).to_deprecated_string(vm));
-    impl->alert_impl(message);
-    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::confirm)

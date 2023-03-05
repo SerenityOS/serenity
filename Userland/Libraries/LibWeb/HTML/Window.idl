@@ -2,8 +2,11 @@
 #import <DOM/EventTarget.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
-[Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties]
+[Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
 interface Window : EventTarget {
+    // user prompts
+    undefined alert();
+    undefined alert(DOMString message);
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
