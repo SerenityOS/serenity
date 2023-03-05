@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -26,6 +26,5 @@ private:
     void search();
 
     RefPtr<GUI::TextBox> m_search_input;
-    RefPtr<GUI::Button> m_search_button;
     RefPtr<GUI::TableView> m_results_table;
 };
