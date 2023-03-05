@@ -298,6 +298,12 @@ Vector<Parameter> Parser::parse_parameters()
         bool optional = lexer.consume_specific("optional");
         if (optional)
             consume_whitespace();
+        if (lexer.consume_specific('[')) {
+            // Not explicitly forbidden by the grammar but unlikely to happen in practice - if it does,
+            // we'll have to teach the parser how to merge two sets of extended attributes.
+            VERIFY(extended_attributes.is_empty());
+            extended_attributes = parse_extended_attributes();
+        }
         auto type = parse_type();
         bool variadic = lexer.consume_specific("..."sv);
         consume_whitespace();

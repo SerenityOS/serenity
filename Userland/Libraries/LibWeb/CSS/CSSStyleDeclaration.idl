@@ -10,7 +10,7 @@ interface CSSStyleDeclaration {
     CSSOMString getPropertyValue(CSSOMString property);
     CSSOMString getPropertyPriority(CSSOMString property);
 
-    [CEReactions] undefined setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value, [LegacyNullToEmptyString] optional CSSOMString priority = "");
+    [CEReactions] undefined setProperty(CSSOMString property, [LegacyNullToEmptyString] CSSOMString value, optional [LegacyNullToEmptyString] CSSOMString priority = "");
     [CEReactions] CSSOMString removeProperty(CSSOMString property);
 
 };
