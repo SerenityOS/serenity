@@ -3,7 +3,7 @@
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +33,7 @@ struct Route {
 
 struct MatchedRoute {
     RouteHandler handler;
-    Vector<StringView> parameters;
+    Vector<String> parameters;
 };
 
 // clang-format off
@@ -112,7 +112,7 @@ static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request
     dbgln_if(WEBDRIVER_DEBUG, "match_route({}, {})", HTTP::to_deprecated_string(request.method()), request.resource());
 
     auto request_path = request.resource().view();
-    Vector<StringView> parameters;
+    Vector<String> parameters;
 
     auto next_segment = [](auto& path) -> Optional<StringView> {
         if (auto index = path.find('/'); index.has_value() && (*index + 1) < path.length()) {
@@ -150,14 +150,14 @@ static ErrorOr<MatchedRoute, Error> match_route(HTTP::HttpRequest const& request
             else if (request_segment.has_value() != route_segment.has_value())
                 on_failed_match();
             else if (route_segment->starts_with(':'))
-                parameters.append(*request_segment);
+                TRY(parameters.try_append(TRY(String::from_utf8(*request_segment))));
             else if (request_segment != route_segment)
                 on_failed_match();
         }
 
         if (*match) {
             dbgln_if(WEBDRIVER_DEBUG, "- Found match with parameters={}", parameters);
-            return MatchedRoute { route.handler, parameters };
+            return MatchedRoute { route.handler, move(parameters) };
         }
     }
 
@@ -258,8 +258,8 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
             dbgln("Body: {}", body.to_deprecated_string());
     }
 
-    auto const& [handler, parameters] = TRY(match_route(*m_request));
-    auto result = TRY((*handler)(*this, parameters, move(body)));
+    auto [handler, parameters] = TRY(match_route(*m_request));
+    auto result = TRY((*handler)(*this, move(parameters), move(body)));
     return send_success_response(move(result));
 }
 

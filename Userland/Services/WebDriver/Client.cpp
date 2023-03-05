@@ -3,7 +3,7 @@
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2022-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -413,7 +413,7 @@ Web::WebDriver::Response Client::find_element_from_element(Web::WebDriver::Param
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().find_element_from_element(payload, parameters[1]);
+    return session->web_content_connection().find_element_from_element(payload, move(parameters[1]));
 }
 
 // 12.3.5 Find Elements From Element, https://w3c.github.io/webdriver/#dfn-find-elements-from-element
@@ -422,7 +422,7 @@ Web::WebDriver::Response Client::find_elements_from_element(Web::WebDriver::Para
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().find_elements_from_element(payload, parameters[1]);
+    return session->web_content_connection().find_elements_from_element(payload, move(parameters[1]));
 }
 
 // 12.3.6 Find Element From Shadow Root, https://w3c.github.io/webdriver/#find-element-from-shadow-root
@@ -431,7 +431,7 @@ Web::WebDriver::Response Client::find_element_from_shadow_root(Web::WebDriver::P
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/shadow/<shadow_id>/element");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().find_element_from_shadow_root(payload, parameters[1]);
+    return session->web_content_connection().find_element_from_shadow_root(payload, move(parameters[1]));
 }
 
 // 12.3.7 Find Elements From Shadow Root, https://w3c.github.io/webdriver/#find-elements-from-shadow-root
@@ -440,7 +440,7 @@ Web::WebDriver::Response Client::find_elements_from_shadow_root(Web::WebDriver::
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/shadow/<shadow_id>/elements");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().find_elements_from_shadow_root(payload, parameters[1]);
+    return session->web_content_connection().find_elements_from_shadow_root(payload, move(parameters[1]));
 }
 
 // 12.3.8 Get Active Element, https://w3c.github.io/webdriver/#get-active-element
@@ -458,7 +458,7 @@ Web::WebDriver::Response Client::get_element_shadow_root(Web::WebDriver::Paramet
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/shadow");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_shadow_root(parameters[1]);
+    return session->web_content_connection().get_element_shadow_root(move(parameters[1]));
 }
 
 // 12.4.1 Is Element Selected, https://w3c.github.io/webdriver/#dfn-is-element-selected
@@ -467,7 +467,7 @@ Web::WebDriver::Response Client::is_element_selected(Web::WebDriver::Parameters 
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/selected");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().is_element_selected(parameters[1]);
+    return session->web_content_connection().is_element_selected(move(parameters[1]));
 }
 
 // 12.4.2 Get Element Attribute, https://w3c.github.io/webdriver/#dfn-get-element-attribute
@@ -476,7 +476,7 @@ Web::WebDriver::Response Client::get_element_attribute(Web::WebDriver::Parameter
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/attribute/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_attribute(parameters[1], parameters[2]);
+    return session->web_content_connection().get_element_attribute(move(parameters[1]), move(parameters[2]));
 }
 
 // 12.4.3 Get Element Property, https://w3c.github.io/webdriver/#dfn-get-element-property
@@ -485,7 +485,7 @@ Web::WebDriver::Response Client::get_element_property(Web::WebDriver::Parameters
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/property/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_property(parameters[1], parameters[2]);
+    return session->web_content_connection().get_element_property(move(parameters[1]), move(parameters[2]));
 }
 
 // 12.4.4 Get Element CSS Value, https://w3c.github.io/webdriver/#dfn-get-element-css-value
@@ -494,7 +494,7 @@ Web::WebDriver::Response Client::get_element_css_value(Web::WebDriver::Parameter
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/css/<property_name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_css_value(parameters[1], parameters[2]);
+    return session->web_content_connection().get_element_css_value(move(parameters[1]), move(parameters[2]));
 }
 
 // 12.4.5 Get Element Text, https://w3c.github.io/webdriver/#dfn-get-element-text
@@ -503,7 +503,7 @@ Web::WebDriver::Response Client::get_element_text(Web::WebDriver::Parameters par
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/text");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_text(parameters[1]);
+    return session->web_content_connection().get_element_text(move(parameters[1]));
 }
 
 // 12.4.6 Get Element Tag Name, https://w3c.github.io/webdriver/#dfn-get-element-tag-name
@@ -512,7 +512,7 @@ Web::WebDriver::Response Client::get_element_tag_name(Web::WebDriver::Parameters
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/name");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_tag_name(parameters[1]);
+    return session->web_content_connection().get_element_tag_name(move(parameters[1]));
 }
 
 // 12.4.7 Get Element Rect, https://w3c.github.io/webdriver/#dfn-get-element-rect
@@ -521,7 +521,7 @@ Web::WebDriver::Response Client::get_element_rect(Web::WebDriver::Parameters par
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/rect");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_element_rect(parameters[1]);
+    return session->web_content_connection().get_element_rect(move(parameters[1]));
 }
 
 // 12.4.8 Is Element Enabled, https://w3c.github.io/webdriver/#dfn-is-element-enabled
@@ -530,7 +530,7 @@ Web::WebDriver::Response Client::is_element_enabled(Web::WebDriver::Parameters p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/enabled");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().is_element_enabled(parameters[1]);
+    return session->web_content_connection().is_element_enabled(move(parameters[1]));
 }
 
 // 12.4.9 https://w3c.github.io/webdriver/#dfn-get-computed-role
@@ -539,7 +539,7 @@ Web::WebDriver::Response Client::get_computed_role(Web::WebDriver::Parameters pa
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/element/<element id>/computedrole");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_computed_role(parameters[1]);
+    return session->web_content_connection().get_computed_role(move(parameters[1]));
 }
 
 // 12.4.10 Get Computed Label, https://w3c.github.io/webdriver/#get-computed-label
@@ -548,7 +548,7 @@ Web::WebDriver::Response Client::get_computed_label(Web::WebDriver::Parameters p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session id>/element/<element id>/computedlabel");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_computed_label(parameters[1]);
+    return session->web_content_connection().get_computed_label(move(parameters[1]));
 }
 
 // 12.5.1 Element Click, https://w3c.github.io/webdriver/#element-click
@@ -557,7 +557,7 @@ Web::WebDriver::Response Client::element_click(Web::WebDriver::Parameters parame
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/element/<element_id>/click");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().element_click(parameters[1]);
+    return session->web_content_connection().element_click(move(parameters[1]));
 }
 
 // 13.1 Get Page Source, https://w3c.github.io/webdriver/#dfn-get-page-source
@@ -602,7 +602,7 @@ Web::WebDriver::Response Client::get_named_cookie(Web::WebDriver::Parameters par
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_named_cookie(parameters[1]);
+    return session->web_content_connection().get_named_cookie(move(parameters[1]));
 }
 
 // 14.3 Add Cookie, https://w3c.github.io/webdriver/#dfn-adding-a-cookie
@@ -620,7 +620,7 @@ Web::WebDriver::Response Client::delete_cookie(Web::WebDriver::Parameters parame
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/cookie/<name>");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().delete_cookie(parameters[1]);
+    return session->web_content_connection().delete_cookie(move(parameters[1]));
 }
 
 // 14.5 Delete All Cookies, https://w3c.github.io/webdriver/#dfn-delete-all-cookies
@@ -683,7 +683,7 @@ Web::WebDriver::Response Client::take_element_screenshot(Web::WebDriver::Paramet
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/element/<element_id>/screenshot");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().take_element_screenshot(parameters[1]);
+    return session->web_content_connection().take_element_screenshot(move(parameters[1]));
 }
 
 // 18.1 Print Page, https://w3c.github.io/webdriver/#dfn-print-page
