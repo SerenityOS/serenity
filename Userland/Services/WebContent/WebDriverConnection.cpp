@@ -331,9 +331,7 @@ ErrorOr<NonnullRefPtr<WebDriverConnection>> WebDriverConnection::connect(Web::Pa
 WebDriverConnection::WebDriverConnection(NonnullOwnPtr<Core::LocalSocket> socket, Web::PageClient& page_client)
     : IPC::ConnectionToServer<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket))
     , m_page_client(page_client)
-    , m_current_window_handle("main"sv)
 {
-    m_windows.set(m_current_window_handle, { m_current_window_handle, true });
 }
 
 // https://w3c.github.io/webdriver/#dfn-close-the-session
@@ -518,16 +516,6 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
     return title;
 }
 
-// 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
-Messages::WebDriverClient::GetWindowHandleResponse WebDriverConnection::get_window_handle()
-{
-    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
-    TRY(ensure_open_top_level_browsing_context());
-
-    // 2. Return success with data being the window handle associated with the current top-level browsing context.
-    return m_current_window_handle;
-}
-
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window()
 {
@@ -539,58 +527,7 @@ Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window
 
     // 3. Close the current top-level browsing context.
     m_page_client.page().top_level_browsing_context().close();
-    m_windows.remove(m_current_window_handle);
-
-    // 4. If there are no more open top-level browsing contexts, then close the session.
-    if (m_windows.is_empty())
-        close_session();
-
-    // 5. Return the result of running the remote end steps for the Get Window Handles command.
-    return get_window_handles().take_response();
-}
-
-// 11.3 Switch to Window, https://w3c.github.io/webdriver/#dfn-switch-to-window
-Messages::WebDriverClient::SwitchToWindowResponse WebDriverConnection::switch_to_window(JsonValue const& payload)
-{
-    // 1. Let handle be the result of getting the property "handle" from the parameters argument.
-    // 2. If handle is undefined, return error with error code invalid argument.
-    auto handle = TRY(get_property(payload, "handle"sv));
-
-    // 3. If there is an active user prompt, that prevents the focusing of another top-level browsing
-    //    context, return error with error code unexpected alert open.
-    if (m_page_client.page().has_pending_dialog())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::UnexpectedAlertOpen, "A user dialog is open"sv);
-
-    // 4. If handle is equal to the associated window handle for some top-level browsing context in the
-    //    current session, let context be the that browsing context, and set the current top-level
-    //    browsing context with context.
-    //    Otherwise, return error with error code no such window.
-    auto const& maybe_window = m_windows.get(handle);
-
-    if (!maybe_window.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found");
-
-    m_current_window_handle = handle;
-
-    // FIXME: 5. Update any implementation-specific state that would result from the user selecting the current
-    //          browsing context for interaction, without altering OS-level focus.
-
-    // 6. Return success with data null.
     return JsonValue {};
-}
-
-// 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
-Messages::WebDriverClient::GetWindowHandlesResponse WebDriverConnection::get_window_handles()
-{
-    // 1. Let handles be a JSON List.
-    JsonArray handles {};
-
-    // 2. For each top-level browsing context in the remote end, push the associated window handle onto handles.
-    for (auto const& window_handle : m_windows.keys())
-        handles.append(window_handle);
-
-    // 3. Return success with data handles.
-    return handles;
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
