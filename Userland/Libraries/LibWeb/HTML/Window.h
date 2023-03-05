@@ -66,7 +66,6 @@ public:
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
 
     WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open_impl(StringView url, StringView target, StringView features);
-    DeprecatedString prompt_impl(DeprecatedString const&, DeprecatedString const&);
     i32 request_animation_frame_impl(WebIDL::CallbackType& js_callback);
     void cancel_animation_frame_impl(i32);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
@@ -144,6 +143,7 @@ public:
     // JS API functions
     void alert(String const& message = {});
     bool confirm(Optional<String> const& message);
+    Optional<String> prompt(Optional<String> const& message, Optional<String> const& default_);
 
 private:
     explicit Window(JS::Realm&);
@@ -267,7 +267,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(is_secure_context_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(open);
-    JS_DECLARE_NATIVE_FUNCTION(prompt);
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
     JS_DECLARE_NATIVE_FUNCTION(clear_interval);

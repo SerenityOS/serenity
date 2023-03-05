@@ -430,13 +430,6 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView u
     return target_browsing_context->window_proxy();
 }
 
-DeprecatedString Window::prompt_impl(DeprecatedString const& message, DeprecatedString const& default_)
-{
-    if (auto* page = this->page())
-        return page->did_request_prompt(message, default_);
-    return {};
-}
-
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
 i32 Window::set_timeout_impl(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments)
 {
@@ -1129,7 +1122,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     define_native_function(realm, "open", open, 0, attr);
-    define_native_function(realm, "prompt", prompt, 0, attr);
     define_native_function(realm, "setInterval", set_interval, 1, attr);
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
     define_native_function(realm, "clearInterval", clear_interval, 1, attr);
@@ -1252,6 +1244,19 @@ bool Window::confirm(Optional<String> const& message)
     return false;
 }
 
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-prompt
+Optional<String> Window::prompt(Optional<String> const& message, Optional<String> const& default_)
+{
+    // FIXME: Make this fully spec compliant.
+    if (auto* page = this->page()) {
+        auto response = page->did_request_prompt(message->to_deprecated_string(), default_->to_deprecated_string());
+        if (response.is_null())
+            return {};
+        return String::from_deprecated_string(response).release_value_but_fixme_should_propagate_errors();
+    }
+    return {};
+}
+
 JS_DEFINE_NATIVE_FUNCTION(Window::open)
 {
     auto* impl = TRY(impl_from(vm));
@@ -1272,21 +1277,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::open)
         features = TRY(vm.argument(2).to_deprecated_string(vm));
 
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::prompt)
-{
-    auto* impl = TRY(impl_from(vm));
-    DeprecatedString message = "";
-    DeprecatedString default_ = "";
-    if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_deprecated_string(vm));
-    if (!vm.argument(1).is_undefined())
-        default_ = TRY(vm.argument(1).to_deprecated_string(vm));
-    auto response = impl->prompt_impl(message, default_);
-    if (response.is_null())
-        return JS::js_null();
-    return JS::PrimitiveString::create(vm, response);
 }
 
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
