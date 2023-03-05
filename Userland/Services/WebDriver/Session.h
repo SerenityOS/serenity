@@ -10,6 +10,7 @@
 
 #include <AK/Error.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <LibCore/Promise.h>
 #include <LibWeb/WebDriver/Capabilities.h>
 #include <LibWeb/WebDriver/Error.h>
@@ -28,14 +29,27 @@ public:
 
     unsigned session_id() const { return m_id; }
 
-    WebContentConnection& web_content_connection()
+    struct Window {
+        String handle;
+        NonnullRefPtr<WebContentConnection> web_content_connection;
+    };
+
+    WebContentConnection& web_content_connection() const
     {
-        VERIFY(m_web_content_connection);
-        return *m_web_content_connection;
+        auto const& current_window = m_windows.get(m_current_window_handle).value();
+        return current_window.web_content_connection;
+    }
+
+    String const& current_window_handle() const
+    {
+        return m_current_window_handle;
     }
 
     ErrorOr<void> start(LaunchBrowserCallbacks const&);
     Web::WebDriver::Response stop();
+    Web::WebDriver::Response close_window();
+    Web::WebDriver::Response switch_to_window(StringView);
+    Web::WebDriver::Response get_window_handles() const;
 
 private:
     using ServerPromise = Core::Promise<ErrorOr<void>>;
@@ -47,7 +61,10 @@ private:
     bool m_started { false };
     unsigned m_id { 0 };
 
-    RefPtr<WebContentConnection> m_web_content_connection;
+    unsigned m_next_handle_id = 0;
+    HashMap<String, Window> m_windows;
+    String m_current_window_handle;
+
     Optional<DeprecatedString> m_web_content_socket_path;
     Optional<pid_t> m_browser_pid;
 };

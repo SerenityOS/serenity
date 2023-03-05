@@ -309,7 +309,11 @@ Web::WebDriver::Response Client::get_window_handle(Web::WebDriver::Parameters pa
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_window_handle();
+
+    // FIXME: 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+
+    // 2. Return success with data being the window handle associated with the current top-level browsing context.
+    return JsonValue { session->current_window_handle() };
 }
 
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
@@ -318,12 +322,7 @@ Web::WebDriver::Response Client::close_window(Web::WebDriver::Parameters paramet
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-
-    auto open_windows = TRY(session->web_content_connection().close_window());
-    if (open_windows.is_array() && open_windows.as_array().is_empty())
-        TRY(session->stop());
-
-    return open_windows;
+    return session->close_window();
 }
 
 // 11.3 Switch to Window, https://w3c.github.io/webdriver/#dfn-switch-to-window
@@ -332,7 +331,18 @@ Web::WebDriver::Response Client::switch_to_window(Web::WebDriver::Parameters par
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().switch_to_window(payload);
+
+    if (!payload.is_object())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "Payload is not a JSON object");
+
+    // 1. Let handle be the result of getting the property "handle" from the parameters argument.
+    auto handle = payload.as_object().get("handle"sv);
+
+    // 2. If handle is undefined, return error with error code invalid argument.
+    if (!handle.has_value())
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidArgument, "No property called 'handle' present");
+
+    return session->switch_to_window(handle->as_string());
 }
 
 // 11.4 Get Window Handles, https://w3c.github.io/webdriver/#dfn-get-window-handles
@@ -341,7 +351,7 @@ Web::WebDriver::Response Client::get_window_handles(Web::WebDriver::Parameters p
 {
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window/handles");
     auto* session = TRY(find_session_with_id(parameters[0]));
-    return session->web_content_connection().get_window_handles();
+    return session->get_window_handles();
 }
 
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
