@@ -54,7 +54,7 @@ public:
     // Following methods are from the WindowOrWorkerGlobalScope mixin
     // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope-mixin
 
-    String origin() const;
+    WebIDL::ExceptionOr<String> origin() const;
     bool is_secure_context() const;
     bool cross_origin_isolated() const;
     WebIDL::ExceptionOr<String> btoa(String const& data) const;
