@@ -89,12 +89,6 @@ class @legacy_constructor_class@;)~~~");
         add_interface(gen, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
     }
 
-    // FIXME: Special case window. We should convert Window to use IDL.
-    {
-        auto gen = generator.fork();
-        add_interface(gen, "WindowPrototype"sv, "WindowConstructor"sv, {});
-    }
-
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
     {
         auto gen = generator.fork();
@@ -141,11 +135,6 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
 #include <LibWeb/Bindings/@legacy_constructor_class@.h>)~~~");
         }
     }
-
-    // FIXME: Special case window. We should convert Window to use IDL.
-    generator.append(R"~~~(
-#include <LibWeb/Bindings/WindowConstructor.h>
-#include <LibWeb/Bindings/WindowPrototype.h>)~~~");
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
     generator.append(R"~~~(
@@ -202,12 +191,6 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
         add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
-    }
-
-    // FIXME: Special case window. We should convert Window to use IDL
-    {
-        auto gen = generator.fork();
-        add_interface(gen, "Window"sv, "WindowPrototype"sv, "WindowConstructor"sv, {});
     }
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
@@ -285,13 +268,6 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
         }
     }
 
-    // FIXME: Special case window. We should convert Window to use IDL
-    if (class_name == "Window"sv) {
-        generator.append(R"~~~(#include <LibWeb/Bindings/WindowConstructor.h>
-#include <LibWeb/Bindings/WindowPrototype.h>
-)~~~");
-    }
-
     generator.append(R"~~~(
 namespace Web::Bindings {
 
@@ -317,12 +293,6 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
         add_interface(gen, interface.name, interface.prototype_class, lookup_legacy_constructor(interface));
-    }
-
-    // FIXME: Special case window. We should convert Window to use IDL
-    if (class_name == "Window"sv) {
-        auto gen = generator.fork();
-        add_interface(gen, "Window"sv, "WindowPrototype"sv, {});
     }
 
     generator.append(R"~~~(
