@@ -916,8 +916,8 @@ WebIDL::ExceptionOr<void> Window::post_message_impl(JS::Value message, Deprecate
     HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message] {
         HTML::MessageEventInit event_init {};
         event_init.data = message;
-        event_init.origin = "<origin>";
-        dispatch_event(HTML::MessageEvent::create(realm(), HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
+        event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
+        dispatch_event(HTML::MessageEvent::create(realm(), String::from_deprecated_string(HTML::EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
     });
     return {};
 }
