@@ -291,13 +291,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(navigator_getter);
 
-#define __ENUMERATE(attribute, event_name)          \
-    JS_DECLARE_NATIVE_FUNCTION(attribute##_getter); \
-    JS_DECLARE_NATIVE_FUNCTION(attribute##_setter);
-    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
-    ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
-#undef __ENUMERATE
-
     HTML::Location* m_location { nullptr };
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
