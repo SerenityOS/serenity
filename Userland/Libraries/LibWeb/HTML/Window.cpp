@@ -430,13 +430,6 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView u
     return target_browsing_context->window_proxy();
 }
 
-bool Window::confirm_impl(DeprecatedString const& message)
-{
-    if (auto* page = this->page())
-        return page->did_request_confirm(message);
-    return false;
-}
-
 DeprecatedString Window::prompt_impl(DeprecatedString const& message, DeprecatedString const& default_)
 {
     if (auto* page = this->page())
@@ -1136,7 +1129,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     define_native_function(realm, "open", open, 0, attr);
-    define_native_function(realm, "confirm", confirm, 0, attr);
     define_native_function(realm, "prompt", prompt, 0, attr);
     define_native_function(realm, "setInterval", set_interval, 1, attr);
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
@@ -1250,6 +1242,16 @@ void Window::alert(String const& message)
         page->did_request_alert(message.to_deprecated_string());
 }
 
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-confirm
+bool Window::confirm(Optional<String> const& message)
+{
+    // FIXME: Make this fully spec compliant.
+    // NOTE: `message` has an IDL-provided default value and is never empty.
+    if (auto* page = this->page())
+        return page->did_request_confirm(message->to_deprecated_string());
+    return false;
+}
+
 JS_DEFINE_NATIVE_FUNCTION(Window::open)
 {
     auto* impl = TRY(impl_from(vm));
@@ -1270,15 +1272,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::open)
         features = TRY(vm.argument(2).to_deprecated_string(vm));
 
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->open_impl(url, target, features); }));
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::confirm)
-{
-    auto* impl = TRY(impl_from(vm));
-    DeprecatedString message = "";
-    if (!vm.argument(0).is_undefined())
-        message = TRY(vm.argument(0).to_deprecated_string(vm));
-    return JS::Value(impl->confirm_impl(message));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::prompt)

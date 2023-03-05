@@ -7,6 +7,7 @@ interface Window : EventTarget {
     // user prompts
     undefined alert();
     undefined alert(DOMString message);
+    boolean confirm(optional DOMString message = "");
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
