@@ -28,22 +28,22 @@
 
 namespace GUI {
 
-struct EmojiCateogry {
+struct EmojiCategory {
     Unicode::EmojiGroup group;
     u32 emoji_code_point { 0 };
 };
 
 static constexpr auto s_emoji_groups = Array {
-    EmojiCateogry { Unicode::EmojiGroup::SmileysAndEmotion, 0x1F600 },
-    EmojiCateogry { Unicode::EmojiGroup::PeopleAndBody, 0x1FAF3 },
-    EmojiCateogry { Unicode::EmojiGroup::AnimalsAndNature, 0x1F33B },
-    EmojiCateogry { Unicode::EmojiGroup::FoodAndDrink, 0x1F355 },
-    EmojiCateogry { Unicode::EmojiGroup::TravelAndPlaces, 0x1F3D6 },
-    EmojiCateogry { Unicode::EmojiGroup::Activities, 0x1F3B3 },
-    EmojiCateogry { Unicode::EmojiGroup::Objects, 0x1F4E6 },
-    EmojiCateogry { Unicode::EmojiGroup::Symbols, 0x2764 },
-    EmojiCateogry { Unicode::EmojiGroup::Flags, 0x1F6A9 },
-    EmojiCateogry { Unicode::EmojiGroup::SerenityOS, 0x10CD0B },
+    EmojiCategory { Unicode::EmojiGroup::SmileysAndEmotion, 0x1F600 },
+    EmojiCategory { Unicode::EmojiGroup::PeopleAndBody, 0x1FAF3 },
+    EmojiCategory { Unicode::EmojiGroup::AnimalsAndNature, 0x1F33B },
+    EmojiCategory { Unicode::EmojiGroup::FoodAndDrink, 0x1F355 },
+    EmojiCategory { Unicode::EmojiGroup::TravelAndPlaces, 0x1F3D6 },
+    EmojiCategory { Unicode::EmojiGroup::Activities, 0x1F3B3 },
+    EmojiCategory { Unicode::EmojiGroup::Objects, 0x1F4E6 },
+    EmojiCategory { Unicode::EmojiGroup::Symbols, 0x2764 },
+    EmojiCategory { Unicode::EmojiGroup::Flags, 0x1F6A9 },
+    EmojiCategory { Unicode::EmojiGroup::SerenityOS, 0x10CD0B },
 };
 
 static void resize_bitmap_if_needed(RefPtr<Gfx::Bitmap const>& bitmap)
