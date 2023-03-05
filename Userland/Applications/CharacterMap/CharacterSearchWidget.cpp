@@ -84,6 +84,7 @@ void CharacterSearchWidget::search()
 
     // TODO: Sort the results nicely. They're sorted by code-point for now, which is easy, but not the most useful.
     //       Sorting intelligently in a style similar to Assistant would be nicer.
+    //       Note that this will mean limiting the number of results some other way.
     auto& model = static_cast<CharacterSearchModel&>(*m_results_table->model());
     model.clear();
     auto query = m_search_input->text();
@@ -94,5 +95,11 @@ void CharacterSearchWidget::search()
         builder.append_code_point(code_point);
 
         model.add_result({ code_point, builder.to_deprecated_string(), move(display_name) });
+
+        // Stop when we reach 250 results.
+        // This is already too many for the search to be useful, and means we don't spend forever recalculating the column size.
+        if (model.row_count({}) >= 250)
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
     });
 }

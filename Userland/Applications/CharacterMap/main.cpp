@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,6 +28,7 @@ static void search_and_print_results(DeprecatedString const& query)
         builder.append(display_name);
         outln(builder.string_view());
         result_count++;
+        return IterationDecision::Continue;
     });
 
     if (result_count == 0)

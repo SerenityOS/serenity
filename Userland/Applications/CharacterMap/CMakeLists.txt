@@ -10,6 +10,7 @@ compile_gml(CharacterSearchWindow.gml CharacterSearchWindowGML.h character_searc
 set(SOURCES
     CharacterMapWidget.cpp
     CharacterSearchWidget.cpp
+    SearchCharacters.cpp
     main.cpp
 )
 
