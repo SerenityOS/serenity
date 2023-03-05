@@ -1207,13 +1207,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     // WebAssembly "namespace"
     define_direct_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
-    // HTML::GlobalEventHandlers and HTML::WindowEventHandlers
-#define __ENUMERATE(attribute, event_name) \
-    define_native_accessor(realm, #attribute, attribute##_getter, attribute##_setter, attr);
-    ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE);
-    ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE);
-#undef __ENUMERATE
-
     return {};
 }
 
@@ -1962,30 +1955,5 @@ JS_DEFINE_NATIVE_FUNCTION(Window::navigator_getter)
     auto* impl = TRY(impl_from(vm));
     return impl->m_navigator;
 }
-
-#define __ENUMERATE(attribute, event_name)                                      \
-    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_getter)                       \
-    {                                                                           \
-        auto* impl = TRY(impl_from(vm));                                        \
-        auto retval = impl->attribute();                                        \
-        if (!retval)                                                            \
-            return JS::js_null();                                               \
-        return &retval->callback;                                               \
-    }                                                                           \
-    JS_DEFINE_NATIVE_FUNCTION(Window::attribute##_setter)                       \
-    {                                                                           \
-        auto* impl = TRY(impl_from(vm));                                        \
-        auto value = vm.argument(0);                                            \
-        WebIDL::CallbackType* cpp_value = nullptr;                              \
-        if (value.is_object()) {                                                \
-            cpp_value = vm.heap().allocate_without_realm<WebIDL::CallbackType>( \
-                value.as_object(), HTML::incumbent_settings_object());          \
-        }                                                                       \
-        impl->set_##attribute(cpp_value);                                       \
-        return JS::js_undefined();                                              \
-    }
-ENUMERATE_GLOBAL_EVENT_HANDLERS(__ENUMERATE)
-ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)
-#undef __ENUMERATE
 
 }
