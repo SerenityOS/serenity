@@ -40,6 +40,7 @@ interface Window : EventTarget {
     [Replaceable] readonly attribute USVString origin;
     readonly attribute boolean isSecureContext;
     DOMString btoa(DOMString data);
+    ByteString atob(DOMString data);
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;

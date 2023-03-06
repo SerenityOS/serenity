@@ -1063,7 +1063,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
     define_native_function(realm, "requestAnimationFrame", request_animation_frame, 1, attr);
     define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
-    define_native_function(realm, "atob", atob, 1, attr);
     define_native_function(realm, "focus", focus, 0, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
@@ -1470,35 +1469,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::cancel_idle_callback)
     auto id = TRY(vm.argument(0).to_u32(vm));
     impl->cancel_idle_callback_impl(id);
     return JS::js_undefined();
-}
-
-// https://html.spec.whatwg.org/multipage/webappapis.html#dom-atob-dev
-JS_DEFINE_NATIVE_FUNCTION(Window::atob)
-{
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "atob");
-    auto deprecated_string = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto string = String::from_utf8(deprecated_string).release_value_but_fixme_should_propagate_errors();
-
-    // must throw an "InvalidCharacterError" DOMException if data contains any character whose code point is greater than U+00FF
-    for (auto code_point : string.code_points()) {
-        if (code_point > 0x00FF)
-            return throw_completion(WebIDL::InvalidCharacterError::create(*vm.current_realm(), "Data contains characters outside the range U+0000 and U+00FF"));
-    }
-
-    // Otherwise, the user agent must convert data to a byte sequence whose nth byte is the eight-bit representation of the nth code point of data
-    // and then must apply forgiving-base64 encode to that byte sequence and return the result.
-    auto decoded = Infra::decode_forgiving_base64(StringView(deprecated_string));
-    if (decoded.is_error())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::InvalidFormat, "Base64");
-
-    // The bytes object might contain bytes greater than 128, encode them in UTF8
-    // NOTE: Any 8-bit encoding -> utf-8 decoder will work for this
-    auto text_decoder = TextCodec::decoder_for("windows-1252"sv);
-    VERIFY(text_decoder.has_value());
-    auto text = TRY_OR_THROW_OOM(vm, text_decoder->to_utf8(decoded.release_value()));
-
-    return JS::PrimitiveString::create(vm, text);
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus
