@@ -80,6 +80,7 @@ interface Window : EventTarget {
 
     // https://w3c.github.io/requestidlecallback/#window_extensions
     unsigned long requestIdleCallback(IdleRequestCallback callback, optional IdleRequestOptions options = {});
+    undefined cancelIdleCallback(unsigned long handle);
 
     // https://w3c.github.io/selection-api/#extensions-to-window-interface
     Selection? getSelection();

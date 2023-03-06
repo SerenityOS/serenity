@@ -120,8 +120,6 @@ public:
 
     void start_an_idle_period();
 
-    void cancel_idle_callback_impl(u32);
-
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
 
     // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
@@ -181,6 +179,7 @@ public:
     double device_pixel_ratio() const;
 
     u32 request_idle_callback(WebIDL::CallbackType&, RequestIdleCallback::IdleRequestOptions const&);
+    void cancel_idle_callback(u32 handle);
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
@@ -263,8 +262,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
-
-    JS_DECLARE_NATIVE_FUNCTION(cancel_idle_callback);
 
     HTML::Location* m_location { nullptr };
 
