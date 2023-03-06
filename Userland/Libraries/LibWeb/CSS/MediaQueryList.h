@@ -17,7 +17,7 @@ class MediaQueryList final : public DOM::EventTarget {
     WEB_PLATFORM_OBJECT(MediaQueryList, DOM::EventTarget);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryList>> create(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryList>> create(DOM::Document&, Vector<NonnullRefPtr<MediaQuery>>&&);
 
     virtual ~MediaQueryList() override = default;
 
@@ -32,13 +32,13 @@ public:
     WebIDL::CallbackType* onchange();
 
 private:
-    MediaQueryList(DOM::Document&, NonnullRefPtrVector<MediaQuery>&&);
+    MediaQueryList(DOM::Document&, Vector<NonnullRefPtr<MediaQuery>>&&);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::NonnullGCPtr<DOM::Document> m_document;
-    NonnullRefPtrVector<MediaQuery> m_media;
+    Vector<NonnullRefPtr<MediaQuery>> m_media;
 };
 
 }

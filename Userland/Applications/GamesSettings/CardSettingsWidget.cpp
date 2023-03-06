@@ -63,7 +63,7 @@ private:
 
         auto background_color = this->background_color();
         for (auto& stack : stacks())
-            stack.paint(painter, background_color);
+            stack->paint(painter, background_color);
     }
 };
 

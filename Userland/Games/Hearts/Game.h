@@ -64,7 +64,7 @@ private:
     void pass_cards();
     PassingDirection passing_direction() const;
 
-    void start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, Function<void()> did_finish_callback, int initial_delay_ms, int steps = 30);
+    void start_animation(Vector<NonnullRefPtr<Card>> cards, Gfx::IntPoint end, Function<void()> did_finish_callback, int initial_delay_ms, int steps = 30);
     void stop_animation();
 
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -92,7 +92,7 @@ private:
     HashTable<NonnullRefPtr<Card>> m_cards_highlighted;
 
     Player m_players[4];
-    NonnullRefPtrVector<Card> m_trick;
+    Vector<NonnullRefPtr<Card>> m_trick;
     Player* m_leading_player { nullptr };
     u8 m_trick_number { 0 };
     RefPtr<Core::Timer> m_delay_timer;

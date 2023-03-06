@@ -30,5 +30,5 @@ private:
     TrackManager& m_track_manager;
     MainWidget& m_main_widget;
 
-    NonnullRefPtrVector<ProcessorParameterWidget> m_parameter_widgets;
+    Vector<NonnullRefPtr<ProcessorParameterWidget>> m_parameter_widgets;
 };

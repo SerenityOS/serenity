@@ -243,13 +243,13 @@ void BookmarksBarWidget::update_content_size()
 
     for (size_t i = 0; i < m_bookmarks.size(); ++i) {
         auto& bookmark = m_bookmarks.at(i);
-        if (x_position + bookmark.width() + m_additional->width() > width()) {
+        if (x_position + bookmark->width() + m_additional->width() > width()) {
             m_last_visible_index = i;
             break;
         }
-        bookmark.set_x(x_position);
-        bookmark.set_visible(true);
-        x_position += bookmark.width();
+        bookmark->set_x(x_position);
+        bookmark->set_visible(true);
+        x_position += bookmark->width();
     }
 
     if (m_last_visible_index < 0) {
@@ -261,8 +261,8 @@ void BookmarksBarWidget::update_content_size()
         m_additional->set_menu(m_additional_menu);
         for (size_t i = m_last_visible_index; i < m_bookmarks.size(); ++i) {
             auto& bookmark = m_bookmarks.at(i);
-            bookmark.set_visible(false);
-            m_additional_menu->add_action(GUI::Action::create(bookmark.text().to_deprecated_string(), g_icon_bag.filetype_html, [&](auto&) { bookmark.on_click(0); }));
+            bookmark->set_visible(false);
+            m_additional_menu->add_action(GUI::Action::create(bookmark->text().to_deprecated_string(), g_icon_bag.filetype_html, [&](auto&) { bookmark->on_click(0); }));
         }
     }
 }

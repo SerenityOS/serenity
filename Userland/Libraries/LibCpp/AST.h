@@ -54,7 +54,7 @@ public:
     void set_end(Position const& end) { m_end = end; }
     void set_parent(ASTNode const& parent) { m_parent = &parent; }
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const { return {}; }
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const { return {}; }
 
     virtual bool is_identifier() const { return false; }
     virtual bool is_member_expression() const { return false; }
@@ -87,17 +87,17 @@ public:
     virtual ~TranslationUnit() override = default;
     virtual StringView class_name() const override { return "TranslationUnit"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override { return m_declarations; }
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override { return m_declarations; }
 
     TranslationUnit(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : ASTNode(parent, start, end, filename)
     {
     }
 
-    void set_declarations(NonnullRefPtrVector<Declaration const>&& declarations) { m_declarations = move(declarations); }
+    void set_declarations(Vector<NonnullRefPtr<Declaration const>>&& declarations) { m_declarations = move(declarations); }
 
 private:
-    NonnullRefPtrVector<Declaration const> m_declarations;
+    Vector<NonnullRefPtr<Declaration const>> m_declarations;
 };
 
 class Statement : public ASTNode {
@@ -105,7 +105,7 @@ public:
     virtual ~Statement() override = default;
     virtual StringView class_name() const override { return "Statement"sv; }
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
 
 protected:
     Statement(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
@@ -167,20 +167,20 @@ public:
     {
     }
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
     Vector<StringView> const& qualifiers() const { return m_qualifiers; }
     void set_qualifiers(Vector<StringView> const& qualifiers) { m_qualifiers = qualifiers; }
     Type const* return_type() const { return m_return_type.ptr(); }
     void set_return_type(RefPtr<Type const> const& return_type) { m_return_type = return_type; }
-    NonnullRefPtrVector<Parameter const> const& parameters() const { return m_parameters; }
-    void set_parameters(NonnullRefPtrVector<Parameter const> const& parameters) { m_parameters = parameters; }
+    Vector<NonnullRefPtr<Parameter const>> const& parameters() const { return m_parameters; }
+    void set_parameters(Vector<NonnullRefPtr<Parameter const>> const& parameters) { m_parameters = parameters; }
     FunctionDefinition const* definition() const { return m_definition.ptr(); }
     void set_definition(RefPtr<FunctionDefinition const>&& definition) { m_definition = move(definition); }
 
 private:
     Vector<StringView> m_qualifiers;
     RefPtr<Type const> m_return_type;
-    NonnullRefPtrVector<Parameter const> m_parameters;
+    Vector<NonnullRefPtr<Parameter const>> m_parameters;
     RefPtr<FunctionDefinition const> m_definition;
 };
 
@@ -325,11 +325,11 @@ public:
     }
 
     void set_return_type(Type& type) { m_return_type = type; }
-    void set_parameters(NonnullRefPtrVector<Parameter const> parameters) { m_parameters = move(parameters); }
+    void set_parameters(Vector<NonnullRefPtr<Parameter const>> parameters) { m_parameters = move(parameters); }
 
 private:
     RefPtr<Type const> m_return_type;
-    NonnullRefPtrVector<Parameter const> m_parameters;
+    Vector<NonnullRefPtr<Parameter const>> m_parameters;
 };
 
 class FunctionDefinition : public ASTNode {
@@ -343,12 +343,12 @@ public:
     {
     }
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
-    NonnullRefPtrVector<Statement const> const& statements() { return m_statements; }
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
+    Vector<NonnullRefPtr<Statement const>> const& statements() { return m_statements; }
     void add_statement(NonnullRefPtr<Statement const>&& statement) { m_statements.append(move(statement)); }
 
 private:
-    NonnullRefPtrVector<Statement const> m_statements;
+    Vector<NonnullRefPtr<Statement const>> m_statements;
 };
 
 class InvalidStatement : public Statement {
@@ -444,13 +444,13 @@ public:
 
     Identifier const* name() const { return m_name.ptr(); }
     void set_name(RefPtr<Identifier const>&& name) { m_name = move(name); }
-    NonnullRefPtrVector<Identifier const> const& scope() const { return m_scope; }
-    void set_scope(NonnullRefPtrVector<Identifier const> scope) { m_scope = move(scope); }
+    Vector<NonnullRefPtr<Identifier const>> const& scope() const { return m_scope; }
+    void set_scope(Vector<NonnullRefPtr<Identifier const>> scope) { m_scope = move(scope); }
     void add_to_scope(NonnullRefPtr<Identifier const>&& part) { m_scope.append(move(part)); }
 
 private:
     RefPtr<Identifier const> m_name;
-    NonnullRefPtrVector<Identifier const> m_scope;
+    Vector<NonnullRefPtr<Identifier const>> m_scope;
     mutable Optional<DeprecatedString> m_full_name;
 };
 
@@ -469,7 +469,7 @@ public:
     void add_template_argument(NonnullRefPtr<Type const>&& type) { m_template_arguments.append(move(type)); }
 
 private:
-    NonnullRefPtrVector<Type const> m_template_arguments;
+    Vector<NonnullRefPtr<Type const>> m_template_arguments;
     mutable Optional<DeprecatedString> m_full_name;
 };
 
@@ -609,11 +609,11 @@ public:
     void set_callee(RefPtr<Expression const>&& callee) { m_callee = move(callee); }
 
     void add_argument(NonnullRefPtr<Expression const>&& arg) { m_arguments.append(move(arg)); }
-    NonnullRefPtrVector<Expression const> const& arguments() const { return m_arguments; }
+    Vector<NonnullRefPtr<Expression const>> const& arguments() const { return m_arguments; }
 
 private:
     RefPtr<Expression const> m_callee;
-    NonnullRefPtrVector<Expression const> m_arguments;
+    Vector<NonnullRefPtr<Expression const>> m_arguments;
 };
 
 class StringLiteral final : public Expression {
@@ -689,7 +689,7 @@ public:
     virtual bool is_struct_or_class() const override { return true; }
     virtual bool is_struct() const override { return m_type == Type::Struct; }
     virtual bool is_class() const override { return m_type == Type::Class; }
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
 
     enum class Type {
         Struct,
@@ -702,16 +702,16 @@ public:
     {
     }
 
-    NonnullRefPtrVector<Declaration const> const& members() const { return m_members; }
-    void set_members(NonnullRefPtrVector<Declaration const>&& members) { m_members = move(members); }
+    Vector<NonnullRefPtr<Declaration const>> const& members() const { return m_members; }
+    void set_members(Vector<NonnullRefPtr<Declaration const>>&& members) { m_members = move(members); }
 
-    NonnullRefPtrVector<Name const> const& baseclasses() const { return m_baseclasses; }
-    void set_baseclasses(NonnullRefPtrVector<Name const>&& baseclasses) { m_baseclasses = move(baseclasses); }
+    Vector<NonnullRefPtr<Name const>> const& baseclasses() const { return m_baseclasses; }
+    void set_baseclasses(Vector<NonnullRefPtr<Name const>>&& baseclasses) { m_baseclasses = move(baseclasses); }
 
 private:
     StructOrClassDeclaration::Type m_type;
-    NonnullRefPtrVector<Declaration const> m_members;
-    NonnullRefPtrVector<Name const> m_baseclasses;
+    Vector<NonnullRefPtr<Declaration const>> m_members;
+    Vector<NonnullRefPtr<Name const>> m_baseclasses;
 };
 
 enum class UnaryOp {
@@ -776,7 +776,7 @@ public:
     virtual StringView class_name() const override { return "ForStatement"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
 
     void set_init(RefPtr<VariableDeclaration const>&& init) { m_init = move(init); }
     void set_test(RefPtr<Expression const>&& test) { m_test = move(test); }
@@ -802,12 +802,12 @@ public:
     virtual StringView class_name() const override { return "BlockStatement"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
 
     void add_statement(NonnullRefPtr<Statement const>&& statement) { m_statements.append(move(statement)); }
 
 private:
-    NonnullRefPtrVector<Statement const> m_statements;
+    Vector<NonnullRefPtr<Statement const>> m_statements;
 };
 
 class Comment final : public Statement {
@@ -831,7 +831,7 @@ public:
     virtual ~IfStatement() override = default;
     virtual StringView class_name() const override { return "IfStatement"sv; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override;
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override;
 
     void set_predicate(RefPtr<Expression const>&& predicate) { m_predicate = move(predicate); }
     void set_then_statement(RefPtr<Statement const>&& then) { m_then = move(then); }
@@ -858,11 +858,11 @@ public:
     {
     }
 
-    virtual NonnullRefPtrVector<Declaration const> declarations() const override { return m_declarations; }
+    virtual Vector<NonnullRefPtr<Declaration const>> declarations() const override { return m_declarations; }
     void add_declaration(NonnullRefPtr<Declaration const>&& declaration) { m_declarations.append(move(declaration)); }
 
 private:
-    NonnullRefPtrVector<Declaration const> m_declarations;
+    Vector<NonnullRefPtr<Declaration const>> m_declarations;
 };
 
 class CppCastExpression : public Expression {
@@ -936,7 +936,7 @@ public:
     void add_expression(NonnullRefPtr<Expression const>&& exp) { m_expressions.append(move(exp)); }
 
 private:
-    NonnullRefPtrVector<Expression const> m_expressions;
+    Vector<NonnullRefPtr<Expression const>> m_expressions;
 };
 
 class DummyAstNode : public ASTNode {

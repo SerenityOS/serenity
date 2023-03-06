@@ -32,7 +32,7 @@ public:
 private:
     Menubar() = default;
 
-    NonnullRefPtrVector<Menu> m_menus;
+    Vector<NonnullRefPtr<Menu>> m_menus;
 };
 
 }

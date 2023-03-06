@@ -24,7 +24,7 @@ void TranslationUnit::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
     for (auto const& child : m_declarations) {
-        child.dump(output, indent + 1);
+        child->dump(output, indent + 1);
     }
 }
 
@@ -46,7 +46,7 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
     print_indent(output, indent + 1);
     outln(output, "(");
     for (auto const& arg : m_parameters) {
-        arg.dump(output, indent + 1);
+        arg->dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
     outln(output, ")");
@@ -55,9 +55,9 @@ void FunctionDeclaration::dump(FILE* output, size_t indent) const
     }
 }
 
-NonnullRefPtrVector<Declaration const> FunctionDeclaration::declarations() const
+Vector<NonnullRefPtr<Declaration const>> FunctionDeclaration::declarations() const
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     for (auto& arg : m_parameters) {
         declarations.append(arg);
     }
@@ -124,11 +124,11 @@ DeprecatedString FunctionType::to_deprecated_string() const
             first = false;
         else
             builder.append(", "sv);
-        if (parameter.type())
-            builder.append(parameter.type()->to_deprecated_string());
-        if (parameter.name() && !parameter.full_name().is_empty()) {
+        if (parameter->type())
+            builder.append(parameter->type()->to_deprecated_string());
+        if (parameter->name() && !parameter->full_name().is_empty()) {
             builder.append(' ');
-            builder.append(parameter.full_name());
+            builder.append(parameter->full_name());
         }
     }
     builder.append(')');
@@ -156,17 +156,17 @@ void FunctionDefinition::dump(FILE* output, size_t indent) const
     print_indent(output, indent);
     outln(output, "{{");
     for (auto const& statement : m_statements) {
-        statement.dump(output, indent + 1);
+        statement->dump(output, indent + 1);
     }
     print_indent(output, indent);
     outln(output, "}}");
 }
 
-NonnullRefPtrVector<Declaration const> FunctionDefinition::declarations() const
+Vector<NonnullRefPtr<Declaration const>> FunctionDefinition::declarations() const
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     for (auto& statement : m_statements) {
-        declarations.extend(statement.declarations());
+        declarations.extend(statement->declarations());
     }
     return declarations;
 }
@@ -297,7 +297,7 @@ void FunctionCall::dump(FILE* output, size_t indent) const
     ASTNode::dump(output, indent);
     m_callee->dump(output, indent + 1);
     for (auto const& arg : m_arguments) {
-        arg.dump(output, indent + 1);
+        arg->dump(output, indent + 1);
     }
 }
 
@@ -338,7 +338,7 @@ void StructOrClassDeclaration::dump(FILE* output, size_t indent) const
         outln(output, ":");
         for (size_t i = 0; i < m_baseclasses.size(); ++i) {
             auto& baseclass = m_baseclasses[i];
-            baseclass.dump(output, indent + 1);
+            baseclass->dump(output, indent + 1);
             if (i < m_baseclasses.size() - 1) {
                 print_indent(output, indent + 1);
                 outln(output, ",");
@@ -347,12 +347,12 @@ void StructOrClassDeclaration::dump(FILE* output, size_t indent) const
     }
     outln(output, "");
     for (auto& member : m_members) {
-        member.dump(output, indent + 1);
+        member->dump(output, indent + 1);
     }
 }
-NonnullRefPtrVector<Declaration const> StructOrClassDeclaration::declarations() const
+Vector<NonnullRefPtr<Declaration const>> StructOrClassDeclaration::declarations() const
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     for (auto& member : m_members)
         declarations.append(member);
     return declarations;
@@ -425,7 +425,7 @@ void FunctionType::dump(FILE* output, size_t indent) const
     print_indent(output, indent + 1);
     outln("(");
     for (auto& parameter : m_parameters)
-        parameter.dump(output, indent + 2);
+        parameter->dump(output, indent + 2);
     print_indent(output, indent + 1);
     outln(")");
 }
@@ -441,7 +441,7 @@ void BlockStatement::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
     for (auto& statement : m_statements) {
-        statement.dump(output, indent + 1);
+        statement->dump(output, indent + 1);
     }
 }
 
@@ -458,10 +458,10 @@ void ForStatement::dump(FILE* output, size_t indent) const
         m_body->dump(output, indent + 1);
 }
 
-NonnullRefPtrVector<Declaration const> Statement::declarations() const
+Vector<NonnullRefPtr<Declaration const>> Statement::declarations() const
 {
     if (is_declaration()) {
-        NonnullRefPtrVector<Declaration const> vec;
+        Vector<NonnullRefPtr<Declaration const>> vec;
         auto const& decl = static_cast<Declaration const&>(*this);
         vec.empend(const_cast<Declaration&>(decl));
         return vec;
@@ -469,9 +469,9 @@ NonnullRefPtrVector<Declaration const> Statement::declarations() const
     return {};
 }
 
-NonnullRefPtrVector<Declaration const> ForStatement::declarations() const
+Vector<NonnullRefPtr<Declaration const>> ForStatement::declarations() const
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     if (m_init)
         declarations.extend(m_init->declarations());
     if (m_body)
@@ -479,11 +479,11 @@ NonnullRefPtrVector<Declaration const> ForStatement::declarations() const
     return declarations;
 }
 
-NonnullRefPtrVector<Declaration const> BlockStatement::declarations() const
+Vector<NonnullRefPtr<Declaration const>> BlockStatement::declarations() const
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     for (auto& statement : m_statements) {
-        declarations.extend(statement.declarations());
+        declarations.extend(statement->declarations());
     }
     return declarations;
 }
@@ -508,9 +508,9 @@ void IfStatement::dump(FILE* output, size_t indent) const
     }
 }
 
-NonnullRefPtrVector<Declaration const> IfStatement::declarations() const
+Vector<NonnullRefPtr<Declaration const>> IfStatement::declarations() const
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     if (m_predicate)
         declarations.extend(m_predicate->declarations());
     if (m_then)
@@ -526,7 +526,7 @@ void NamespaceDeclaration::dump(FILE* output, size_t indent) const
     print_indent(output, indent + 1);
     outln(output, "{}", full_name());
     for (auto& decl : m_declarations)
-        decl.dump(output, indent + 1);
+        decl->dump(output, indent + 1);
 }
 
 void NullPointerLiteral::dump(FILE* output, size_t indent) const
@@ -549,7 +549,7 @@ StringView Name::full_name() const
     StringBuilder builder;
     if (!m_scope.is_empty()) {
         for (auto& scope : m_scope) {
-            builder.appendff("{}::", scope.name());
+            builder.appendff("{}::", scope->name());
         }
     }
     m_full_name = DeprecatedString::formatted("{}{}", builder.to_deprecated_string(), m_name.is_null() ? ""sv : m_name->name());
@@ -565,7 +565,7 @@ StringView TemplatizedName::full_name() const
     name.append(Name::full_name());
     name.append('<');
     for (auto& type : m_template_arguments) {
-        name.append(type.to_deprecated_string());
+        name.append(type->to_deprecated_string());
     }
     name.append('>');
     m_full_name = name.to_deprecated_string();
@@ -601,7 +601,7 @@ void BracedInitList::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
     for (auto& exp : m_expressions) {
-        exp.dump(output, indent + 1);
+        exp->dump(output, indent + 1);
     }
 }
 
@@ -621,7 +621,7 @@ void Constructor::dump(FILE* output, size_t indent) const
     print_indent(output, indent + 1);
     outln(output, "(");
     for (auto const& arg : parameters()) {
-        arg.dump(output, indent + 1);
+        arg->dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
     outln(output, ")");
@@ -637,7 +637,7 @@ void Destructor::dump(FILE* output, size_t indent) const
     print_indent(output, indent + 1);
     outln(output, "(");
     for (auto const& arg : parameters()) {
-        arg.dump(output, indent + 1);
+        arg->dump(output, indent + 1);
     }
     print_indent(output, indent + 1);
     outln(output, ")");

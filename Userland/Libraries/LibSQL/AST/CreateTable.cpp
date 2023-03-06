@@ -17,18 +17,18 @@ ResultOr<ResultSet> CreateTable::execute(ExecutionContext& context) const
     for (auto const& column : m_columns) {
         SQLType type;
 
-        if (column.type_name()->name().is_one_of("VARCHAR"sv, "TEXT"sv))
+        if (column->type_name()->name().is_one_of("VARCHAR"sv, "TEXT"sv))
             type = SQLType::Text;
-        else if (column.type_name()->name().is_one_of("INT"sv, "INTEGER"sv))
+        else if (column->type_name()->name().is_one_of("INT"sv, "INTEGER"sv))
             type = SQLType::Integer;
-        else if (column.type_name()->name().is_one_of("FLOAT"sv, "NUMBER"sv))
+        else if (column->type_name()->name().is_one_of("FLOAT"sv, "NUMBER"sv))
             type = SQLType::Float;
-        else if (column.type_name()->name().is_one_of("BOOL"sv, "BOOLEAN"sv))
+        else if (column->type_name()->name().is_one_of("BOOL"sv, "BOOLEAN"sv))
             type = SQLType::Boolean;
         else
-            return Result { SQLCommand::Create, SQLErrorCode::InvalidType, column.type_name()->name() };
+            return Result { SQLCommand::Create, SQLErrorCode::InvalidType, column->type_name()->name() };
 
-        table_def->append_column(column.name(), type);
+        table_def->append_column(column->name(), type);
     }
 
     if (auto result = context.database->add_table(*table_def); result.is_error()) {

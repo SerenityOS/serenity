@@ -204,7 +204,7 @@ void Formatter::visit(const AST::BraceExpansion* node)
             if (!first)
                 current_builder().append(',');
             first = false;
-            entry.visit(*this);
+            entry->visit(*this);
         }
     }
 
@@ -529,7 +529,7 @@ void Formatter::visit(const AST::ImmediateExpression* node)
 
     for (auto& node : node->arguments()) {
         current_builder().append(' ');
-        node.visit(*this);
+        node->visit(*this);
     }
 
     if (node->has_closing_brace())
@@ -585,12 +585,12 @@ void Formatter::visit(const AST::MatchExpr* node)
             first_entry = false;
             auto first = true;
             entry.options.visit(
-                [&](NonnullRefPtrVector<AST::Node> const& patterns) {
+                [&](Vector<NonnullRefPtr<AST::Node>> const& patterns) {
                     for (auto& option : patterns) {
                         if (!first)
                             current_builder().append(" | "sv);
                         first = false;
-                        option.visit(*this);
+                        option->visit(*this);
                     }
                 },
                 [&](Vector<Regex<ECMA262>> const& patterns) {
@@ -721,7 +721,7 @@ void Formatter::visit(const AST::Sequence* node)
         else
             insert_separator();
 
-        entry.visit(*this);
+        entry->visit(*this);
     }
 
     visited(node);

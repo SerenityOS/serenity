@@ -33,22 +33,22 @@ bool Track::check_processor_chain_valid_with_initial_type(SignalType initial_typ
     for (auto& processor : m_processor_chain) {
         // The first processor must have the given initial signal type as input.
         if (previous_processor == nullptr) {
-            if (processor.input_type() != initial_type)
+            if (processor->input_type() != initial_type)
                 return false;
-        } else if (previous_processor->output_type() != processor.input_type())
+        } else if (previous_processor->output_type() != processor->input_type())
             return false;
-        previous_processor = &processor;
+        previous_processor = processor.ptr();
     }
     return true;
 }
 
 NonnullRefPtr<Synthesizers::Classic> Track::synth()
 {
-    return static_ptr_cast<Synthesizers::Classic>(m_processor_chain.ptr_at(0));
+    return static_ptr_cast<Synthesizers::Classic>(m_processor_chain[0]);
 }
 NonnullRefPtr<Effects::Delay> Track::delay()
 {
-    return static_ptr_cast<Effects::Delay>(m_processor_chain.ptr_at(1));
+    return static_ptr_cast<Effects::Delay>(m_processor_chain[1]);
 }
 
 bool AudioTrack::check_processor_chain_valid() const
@@ -81,11 +81,11 @@ void Track::current_signal(FixedArray<Sample>& output_signal)
 
     for (auto& processor : m_processor_chain) {
         // Depending on what the processor needs to have as output, we need to place either a pre-allocated note hash map or a pre-allocated sample buffer in the target signal.
-        if (processor.output_type() == SignalType::Note)
+        if (processor->output_type() == SignalType::Note)
             target_signal = &m_secondary_note_buffer;
         else
             target_signal = &m_secondary_sample_buffer;
-        processor.process(*source_signal, *target_signal);
+        processor->process(*source_signal, *target_signal);
         swap(source_signal, target_signal);
     }
     VERIFY(source_signal->type() == SignalType::Sample);
@@ -109,9 +109,9 @@ void NoteTrack::compute_current_clips_signal()
     for (auto& clip : m_clips) {
         // A clip is playing if its start time or end time fall in the current time range.
         // Or, if they both enclose the current time range.
-        if ((clip.start() <= start_time && clip.end() >= end_time)
-            || (clip.start() >= start_time && clip.start() < end_time)
-            || (clip.end() > start_time && clip.end() <= end_time)) {
+        if ((clip->start() <= start_time && clip->end() >= end_time)
+            || (clip->start() >= start_time && clip->start() < end_time)
+            || (clip->end() > start_time && clip->end() <= end_time)) {
             VERIFY(playing_clips_index < playing_clips.size());
             playing_clips[playing_clips_index++] = clip;
         }
@@ -149,8 +149,8 @@ void AudioTrack::compute_current_clips_signal()
 Optional<RollNote> NoteTrack::note_at(u32 time, u8 pitch) const
 {
     for (auto& clip : m_clips) {
-        if (time >= clip.start() && time <= clip.end())
-            return clip.note_at(time, pitch);
+        if (time >= clip->start() && time <= clip->end())
+            return clip->note_at(time, pitch);
     }
 
     return {};
@@ -159,15 +159,15 @@ Optional<RollNote> NoteTrack::note_at(u32 time, u8 pitch) const
 void NoteTrack::set_note(RollNote note)
 {
     for (auto& clip : m_clips) {
-        if (clip.start() <= note.on_sample && clip.end() >= note.on_sample)
-            clip.set_note(note);
+        if (clip->start() <= note.on_sample && clip->end() >= note.on_sample)
+            clip->set_note(note);
     }
 }
 
 void NoteTrack::remove_note(RollNote note)
 {
     for (auto& clip : m_clips)
-        clip.remove_note(note);
+        clip->remove_note(note);
 }
 
 void NoteTrack::add_clip(u32 start_time, u32 end_time)

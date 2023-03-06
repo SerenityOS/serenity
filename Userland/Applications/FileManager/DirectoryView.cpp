@@ -52,21 +52,21 @@ NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(L
     });
 }
 
-RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(NonnullRefPtrVector<LauncherHandler> const& handlers)
+RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(Vector<NonnullRefPtr<LauncherHandler>> const& handlers)
 {
     // If this is an application, pick it first
     for (size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::Application)
+        if (handlers[i]->details().launcher_type == Desktop::Launcher::LauncherType::Application)
             return handlers[i];
     }
     // If there's a handler preferred by the user, pick this first
     for (size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserPreferred)
+        if (handlers[i]->details().launcher_type == Desktop::Launcher::LauncherType::UserPreferred)
             return handlers[i];
     }
     // Otherwise, use the user's default, if available
     for (size_t i = 0; i < handlers.size(); i++) {
-        if (handlers[i].details().launcher_type == Desktop::Launcher::LauncherType::UserDefault)
+        if (handlers[i]->details().launcher_type == Desktop::Launcher::LauncherType::UserDefault)
             return handlers[i];
     }
     // If still no match, use the first one we find
@@ -77,16 +77,16 @@ RefPtr<LauncherHandler> DirectoryView::get_default_launch_handler(NonnullRefPtrV
     return {};
 }
 
-NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(URL const& url)
+Vector<NonnullRefPtr<LauncherHandler>> DirectoryView::get_launch_handlers(URL const& url)
 {
-    NonnullRefPtrVector<LauncherHandler> handlers;
+    Vector<NonnullRefPtr<LauncherHandler>> handlers;
     for (auto& h : Desktop::Launcher::get_handlers_with_details_for_url(url)) {
         handlers.append(adopt_ref(*new LauncherHandler(h)));
     }
     return handlers;
 }
 
-NonnullRefPtrVector<LauncherHandler> DirectoryView::get_launch_handlers(DeprecatedString const& path)
+Vector<NonnullRefPtr<LauncherHandler>> DirectoryView::get_launch_handlers(DeprecatedString const& path)
 {
     return get_launch_handlers(URL::create_with_file_scheme(path));
 }

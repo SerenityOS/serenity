@@ -36,8 +36,8 @@ CardGame::CardGame()
 void CardGame::mark_intersecting_stacks_dirty(Cards::Card const& intersecting_card)
 {
     for (auto& stack : stacks()) {
-        if (intersecting_card.rect().intersects(stack.bounding_box()))
-            update(stack.bounding_box());
+        if (intersecting_card.rect().intersects(stack->bounding_box()))
+            update(stack->bounding_box());
     }
 
     update(intersecting_card.rect());
@@ -49,7 +49,7 @@ Gfx::IntRect CardGame::moving_cards_bounds() const
         return {};
 
     // Note: This assumes that the cards are arranged in a line.
-    return m_moving_cards.first().rect().united(m_moving_cards.last().rect());
+    return m_moving_cards.first()->rect().united(m_moving_cards.last()->rect());
 }
 
 ErrorOr<void> CardGame::pick_up_cards_from_stack(Cards::CardStack& stack, Gfx::IntPoint click_location, CardStack::MovementRule movement_rule)
@@ -70,10 +70,10 @@ RefPtr<CardStack> CardGame::find_stack_to_drop_on(CardStack::MovementRule moveme
         if (stack == moving_cards_source_stack())
             continue;
 
-        if (stack.bounding_box().intersects(bounds_to_check)
-            && stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), movement_rule)) {
+        if (stack->bounding_box().intersects(bounds_to_check)
+            && stack->is_allowed_to_push(moving_cards().at(0), moving_cards().size(), movement_rule)) {
 
-            auto distance = bounds_to_check.center().distance_from(stack.bounding_box().center());
+            auto distance = bounds_to_check.center().distance_from(stack->bounding_box().center());
             if (distance < closest_distance) {
                 closest_stack = stack;
                 closest_distance = distance;

@@ -257,7 +257,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    NonnullRefPtrVector<GUI::Window> applet_windows;
+    Vector<NonnullRefPtr<GUI::Window>> applet_windows;
 
     auto create_applet = [&](GraphType graph_type, StringView spec) -> ErrorOr<void> {
         auto parts = spec.split_view(',');

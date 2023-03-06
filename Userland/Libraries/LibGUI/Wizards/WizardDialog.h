@@ -49,6 +49,6 @@ private:
     RefPtr<Button> m_next_button;
     RefPtr<Button> m_cancel_button;
 
-    NonnullRefPtrVector<AbstractWizardPage> m_page_stack;
+    Vector<NonnullRefPtr<AbstractWizardPage>> m_page_stack;
 };
 }

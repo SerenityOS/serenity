@@ -19,11 +19,11 @@ class CSSStyleRule final : public CSSRule {
     WEB_PLATFORM_OBJECT(CSSStyleRule, CSSRule);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleRule>> create(JS::Realm&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<CSSStyleRule>> create(JS::Realm&, Vector<NonnullRefPtr<Selector>>&&, CSSStyleDeclaration&);
 
     virtual ~CSSStyleRule() override = default;
 
-    NonnullRefPtrVector<Selector> const& selectors() const { return m_selectors; }
+    Vector<NonnullRefPtr<Selector>> const& selectors() const { return m_selectors; }
     CSSStyleDeclaration const& declaration() const { return m_declaration; }
 
     virtual Type type() const override { return Type::Style; };
@@ -34,13 +34,13 @@ public:
     CSSStyleDeclaration* style();
 
 private:
-    CSSStyleRule(JS::Realm&, NonnullRefPtrVector<Selector>&&, CSSStyleDeclaration&);
+    CSSStyleRule(JS::Realm&, Vector<NonnullRefPtr<Selector>>&&, CSSStyleDeclaration&);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
     virtual DeprecatedString serialized() const override;
 
-    NonnullRefPtrVector<Selector> m_selectors;
+    Vector<NonnullRefPtr<Selector>> m_selectors;
     CSSStyleDeclaration& m_declaration;
 };
 

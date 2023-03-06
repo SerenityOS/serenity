@@ -39,41 +39,41 @@ static DeprecatedString result_column_name(ResultColumn const& column, size_t co
 
 ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
 {
-    NonnullRefPtrVector<ResultColumn const> columns;
+    Vector<NonnullRefPtr<ResultColumn const>> columns;
     Vector<DeprecatedString> column_names;
 
     auto const& result_column_list = this->result_column_list();
     VERIFY(!result_column_list.is_empty());
 
     for (auto& table_descriptor : table_or_subquery_list()) {
-        if (!table_descriptor.is_table())
+        if (!table_descriptor->is_table())
             return Result { SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented"sv };
 
-        auto table_def = TRY(context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name()));
+        auto table_def = TRY(context.database->get_table(table_descriptor->schema_name(), table_descriptor->table_name()));
 
-        if (result_column_list.size() == 1 && result_column_list[0].type() == ResultType::All) {
+        if (result_column_list.size() == 1 && result_column_list[0]->type() == ResultType::All) {
             TRY(columns.try_ensure_capacity(columns.size() + table_def->columns().size()));
             TRY(column_names.try_ensure_capacity(column_names.size() + table_def->columns().size()));
 
             for (auto& col : table_def->columns()) {
                 columns.unchecked_append(
                     create_ast_node<ResultColumn>(
-                        create_ast_node<ColumnNameExpression>(table_def->parent()->name(), table_def->name(), col.name()),
+                        create_ast_node<ColumnNameExpression>(table_def->parent()->name(), table_def->name(), col->name()),
                         ""));
 
-                column_names.unchecked_append(col.name());
+                column_names.unchecked_append(col->name());
             }
         }
     }
 
-    if (result_column_list.size() != 1 || result_column_list[0].type() != ResultType::All) {
+    if (result_column_list.size() != 1 || result_column_list[0]->type() != ResultType::All) {
         TRY(columns.try_ensure_capacity(result_column_list.size()));
         TRY(column_names.try_ensure_capacity(result_column_list.size()));
 
         for (size_t i = 0; i < result_column_list.size(); ++i) {
             auto const& col = result_column_list[i];
 
-            if (col.type() == ResultType::All) {
+            if (col->type() == ResultType::All) {
                 // FIXME can have '*' for example in conjunction with computed columns
                 return Result { SQLCommand::Select, SQLErrorCode::SyntaxError, "*"sv };
             }
@@ -93,10 +93,10 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
     rows.append(tuple);
 
     for (auto& table_descriptor : table_or_subquery_list()) {
-        if (!table_descriptor.is_table())
+        if (!table_descriptor->is_table())
             return Result { SQLCommand::Select, SQLErrorCode::NotYetImplemented, "Sub-selects are not yet implemented"sv };
 
-        auto table_def = TRY(context.database->get_table(table_descriptor.schema_name(), table_descriptor.table_name()));
+        auto table_def = TRY(context.database->get_table(table_descriptor->schema_name(), table_descriptor->table_name()));
         if (table_def->num_columns() == 0)
             continue;
 
@@ -118,7 +118,7 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
     bool has_ordering { false };
     auto sort_descriptor = adopt_ref(*new TupleDescriptor);
     for (auto& term : m_ordering_term_list) {
-        sort_descriptor->append(TupleElementDescriptor { .order = term.order() });
+        sort_descriptor->append(TupleElementDescriptor { .order = term->order() });
         has_ordering = true;
     }
     Tuple sort_key(sort_descriptor);
@@ -135,14 +135,14 @@ ResultOr<ResultSet> Select::execute(ExecutionContext& context) const
         tuple.clear();
 
         for (auto& col : columns) {
-            auto value = TRY(col.expression()->evaluate(context));
+            auto value = TRY(col->expression()->evaluate(context));
             tuple.append(value);
         }
 
         if (has_ordering) {
             sort_key.clear();
             for (auto& term : m_ordering_term_list) {
-                auto value = TRY(term.expression()->evaluate(context));
+                auto value = TRY(term->expression()->evaluate(context));
                 sort_key.append(value);
             }
         }

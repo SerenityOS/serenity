@@ -34,7 +34,7 @@ public:
     OwnPtr<PhysicalRegion> try_take_pages_from_beginning(size_t);
 
     RefPtr<PhysicalPage> take_free_page();
-    NonnullRefPtrVector<PhysicalPage> take_contiguous_free_pages(size_t count);
+    Vector<NonnullRefPtr<PhysicalPage>> take_contiguous_free_pages(size_t count);
     void return_page(PhysicalAddress);
 
 private:

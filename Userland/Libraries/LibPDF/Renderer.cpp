@@ -238,7 +238,7 @@ RENDERER_HANDLER(path_cubic_bezier_curve_no_first_control)
 {
     VERIFY(args.size() == 4);
     VERIFY(!m_current_path.segments().is_empty());
-    auto current_point = m_current_path.segments().rbegin()->point();
+    auto current_point = (*m_current_path.segments().rbegin())->point();
     m_current_path.cubic_bezier_curve_to(
         current_point,
         map(args[0].to_float(), args[1].to_float()),

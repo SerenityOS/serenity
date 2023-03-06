@@ -222,7 +222,7 @@ class Interface;
 
 class ParameterizedType : public Type {
 public:
-    ParameterizedType(DeprecatedString name, bool nullable, NonnullRefPtrVector<Type const> parameters)
+    ParameterizedType(DeprecatedString name, bool nullable, Vector<NonnullRefPtr<Type const>> parameters)
         : Type(Kind::Parameterized, move(name), nullable)
         , m_parameters(move(parameters))
     {
@@ -232,11 +232,11 @@ public:
 
     void generate_sequence_from_iterable(SourceGenerator& generator, DeprecatedString const& cpp_name, DeprecatedString const& iterable_cpp_name, DeprecatedString const& iterator_method_cpp_name, IDL::Interface const&, size_t recursion_depth) const;
 
-    NonnullRefPtrVector<Type const> const& parameters() const { return m_parameters; }
-    NonnullRefPtrVector<Type const>& parameters() { return m_parameters; }
+    Vector<NonnullRefPtr<Type const>> const& parameters() const { return m_parameters; }
+    Vector<NonnullRefPtr<Type const>>& parameters() { return m_parameters; }
 
 private:
-    NonnullRefPtrVector<Type const> m_parameters;
+    Vector<NonnullRefPtr<Type const>> m_parameters;
 };
 
 static inline size_t get_shortest_function_length(Vector<Function&> const& overload_set)
@@ -318,7 +318,7 @@ public:
 
 class UnionType : public Type {
 public:
-    UnionType(DeprecatedString name, bool nullable, NonnullRefPtrVector<Type const> member_types)
+    UnionType(DeprecatedString name, bool nullable, Vector<NonnullRefPtr<Type const>> member_types)
         : Type(Kind::Union, move(name), nullable)
         , m_member_types(move(member_types))
     {
@@ -326,16 +326,16 @@ public:
 
     virtual ~UnionType() override = default;
 
-    NonnullRefPtrVector<Type const> const& member_types() const { return m_member_types; }
-    NonnullRefPtrVector<Type const>& member_types() { return m_member_types; }
+    Vector<NonnullRefPtr<Type const>> const& member_types() const { return m_member_types; }
+    Vector<NonnullRefPtr<Type const>>& member_types() { return m_member_types; }
 
     // https://webidl.spec.whatwg.org/#dfn-flattened-union-member-types
-    NonnullRefPtrVector<Type const> flattened_member_types() const
+    Vector<NonnullRefPtr<Type const>> flattened_member_types() const
     {
         // 1. Let T be the union type.
 
         // 2. Initialize S to ∅.
-        NonnullRefPtrVector<Type const> types;
+        Vector<NonnullRefPtr<Type const>> types;
 
         // 3. For each member type U of T:
         for (auto& type : m_member_types) {
@@ -344,8 +344,8 @@ public:
             // 2. If U is a nullable type, then set U to be the inner type of U. (NOTE: Not necessary as nullable is stored with Type and not as a separate struct)
 
             // 3. If U is a union type, then add to S the flattened member types of U.
-            if (type.is_union()) {
-                auto& union_member_type = type.as_union();
+            if (type->is_union()) {
+                auto& union_member_type = type->as_union();
                 types.extend(union_member_type.flattened_member_types());
             } else {
                 // 4. Otherwise, U is not a union type. Add U to S.
@@ -368,7 +368,7 @@ public:
         // 3. For each member type U of T:
         for (auto& type : m_member_types) {
             // 1. If U is a nullable type, then:
-            if (type.is_nullable()) {
+            if (type->is_nullable()) {
                 // 1. Set n to n + 1.
                 ++num_nullable_member_types;
 
@@ -376,8 +376,8 @@ public:
             }
 
             // 2. If U is a union type, then:
-            if (type.is_union()) {
-                auto& union_member_type = type.as_union();
+            if (type->is_union()) {
+                auto& union_member_type = type->as_union();
 
                 // 1. Let m be the number of nullable member types of U.
                 // 2. Set n to n + m.
@@ -390,7 +390,7 @@ public:
     }
 
 private:
-    NonnullRefPtrVector<Type const> m_member_types;
+    Vector<NonnullRefPtr<Type const>> m_member_types;
 };
 
 // https://webidl.spec.whatwg.org/#dfn-optionality-value
@@ -405,7 +405,7 @@ class EffectiveOverloadSet {
 public:
     struct Item {
         int callable_id;
-        NonnullRefPtrVector<Type const> types;
+        Vector<NonnullRefPtr<Type const>> types;
         Vector<Optionality> optionality_values;
     };
 

@@ -61,12 +61,12 @@ void URLResult::activate() const
     Desktop::Launcher::open(URL::create_with_url_or_path(title()));
 }
 
-void AppProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void AppProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (query.starts_with('=') || query.starts_with('$'))
         return;
 
-    NonnullRefPtrVector<Result> results;
+    Vector<NonnullRefPtr<Result>> results;
 
     Desktop::AppFile::for_each([&](NonnullRefPtr<Desktop::AppFile> app_file) {
         auto query_and_arguments = query.split_limit(' ', 2);
@@ -83,7 +83,7 @@ void AppProvider::query(DeprecatedString const& query, Function<void(NonnullRefP
     on_complete(move(results));
 }
 
-void CalculatorProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (!query.starts_with('='))
         return;
@@ -108,7 +108,7 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Nonn
         calculation = result.to_string_without_side_effects().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
     }
 
-    NonnullRefPtrVector<Result> results;
+    Vector<NonnullRefPtr<Result>> results;
     results.append(adopt_ref(*new CalculatorResult(calculation)));
     on_complete(move(results));
 }
@@ -123,16 +123,16 @@ FileProvider::FileProvider()
     build_filesystem_cache();
 }
 
-void FileProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void FileProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     build_filesystem_cache();
 
     if (m_fuzzy_match_work)
         m_fuzzy_match_work->cancel();
 
-    m_fuzzy_match_work = Threading::BackgroundAction<Optional<NonnullRefPtrVector<Result>>>::construct(
-        [this, query](auto& task) -> Optional<NonnullRefPtrVector<Result>> {
-            NonnullRefPtrVector<Result> results;
+    m_fuzzy_match_work = Threading::BackgroundAction<Optional<Vector<NonnullRefPtr<Result>>>>::construct(
+        [this, query](auto& task) -> Optional<Vector<NonnullRefPtr<Result>>> {
+            Vector<NonnullRefPtr<Result>> results;
 
             for (auto& path : m_full_path_cache) {
                 if (task.is_cancelled())
@@ -203,19 +203,19 @@ void FileProvider::build_filesystem_cache()
         });
 }
 
-void TerminalProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void TerminalProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (!query.starts_with('$'))
         return;
 
     auto command = query.substring(1).trim_whitespace();
 
-    NonnullRefPtrVector<Result> results;
+    Vector<NonnullRefPtr<Result>> results;
     results.append(adopt_ref(*new TerminalResult(move(command))));
     on_complete(move(results));
 }
 
-void URLProvider::query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete)
+void URLProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (query.is_empty() || query.starts_with('=') || query.starts_with('$'))
         return;
@@ -232,7 +232,7 @@ void URLProvider::query(DeprecatedString const& query, Function<void(NonnullRefP
     if (!url.is_valid())
         return;
 
-    NonnullRefPtrVector<Result> results;
+    Vector<NonnullRefPtr<Result>> results;
     results.append(adopt_ref(*new URLResult(url)));
     on_complete(results);
 }

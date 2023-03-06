@@ -48,7 +48,7 @@ Object::~Object()
     // NOTE: We also unparent the children, so that they won't try to unparent
     //       themselves in their own destructors.
     for (auto& child : children)
-        child.m_parent = nullptr;
+        child->m_parent = nullptr;
 
     all_objects().remove(*this);
     stop_timer();
@@ -103,7 +103,7 @@ void Object::insert_child_before(Object& new_child, Object& before_child)
 void Object::remove_child(Object& object)
 {
     for (size_t i = 0; i < m_children.size(); ++i) {
-        if (m_children.ptr_at(i).ptr() == &object) {
+        if (m_children[i] == &object) {
             // NOTE: We protect the child so it survives the handling of ChildRemoved.
             NonnullRefPtr<Object> protector = object;
             object.m_parent = nullptr;
@@ -119,7 +119,7 @@ void Object::remove_child(Object& object)
 void Object::remove_all_children()
 {
     while (!m_children.is_empty())
-        m_children.first().remove_from_parent();
+        m_children.first()->remove_from_parent();
 }
 
 void Object::timer_event(Core::TimerEvent&)

@@ -17,7 +17,7 @@ DeprecatedString OutlineItem::to_deprecated_string(int indent) const
     StringBuilder child_builder;
     child_builder.append('[');
     for (auto& child : children)
-        child_builder.appendff("{}\n", child.to_deprecated_string(indent + 1));
+        child_builder.appendff("{}\n", child->to_deprecated_string(indent + 1));
     child_builder.appendff("{}]", indent_str);
 
     StringBuilder builder;
@@ -335,7 +335,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
         auto first_ref = outline_item_dict->get_value(CommonNames::First);
         auto children = TRY(build_outline_item_chain(first_ref, page_number_by_index_ref));
         for (auto& child : children) {
-            child.parent = outline_item;
+            child->parent = outline_item;
         }
         outline_item->children = move(children);
     }
@@ -390,7 +390,7 @@ PDFErrorOr<NonnullRefPtr<OutlineItem>> Document::build_outline_item(NonnullRefPt
     return outline_item;
 }
 
-PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const& page_number_by_index_ref)
+PDFErrorOr<Vector<NonnullRefPtr<OutlineItem>>> Document::build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const& page_number_by_index_ref)
 {
     // We used to receive a last_ref parameter, which was what the parent of this chain
     // thought was this chain's last child. There are documents out there in the wild
@@ -399,7 +399,7 @@ PDFErrorOr<NonnullRefPtrVector<OutlineItem>> Document::build_outline_item_chain(
     // (we already ignore the /Parent attribute too, which can also be out of sync).
     VERIFY(first_ref.has<Reference>());
 
-    NonnullRefPtrVector<OutlineItem> children;
+    Vector<NonnullRefPtr<OutlineItem>> children;
 
     auto first_value = TRY(get_or_load_value(first_ref.as_ref_index())).get<NonnullRefPtr<Object>>();
     auto first_dict = first_value->cast<DictObject>();

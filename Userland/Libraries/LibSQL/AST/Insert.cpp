@@ -27,11 +27,11 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
 
     for (auto& row_expr : m_chained_expressions) {
         for (auto& column_def : table_def->columns()) {
-            if (!m_column_names.contains_slow(column_def.name()))
-                row[column_def.name()] = column_def.default_value();
+            if (!m_column_names.contains_slow(column_def->name()))
+                row[column_def->name()] = column_def->default_value();
         }
 
-        auto row_value = TRY(row_expr.evaluate(context));
+        auto row_value = TRY(row_expr->evaluate(context));
         VERIFY(row_value.type() == SQLType::Tuple);
 
         auto values = row_value.to_vector().release_value();
@@ -46,7 +46,7 @@ ResultOr<ResultSet> Insert::execute(ExecutionContext& context) const
             auto element_type = tuple_descriptor[element_index].type;
 
             if (!values[ix].is_type_compatible_with(element_type))
-                return Result { SQLCommand::Insert, SQLErrorCode::InvalidValueType, table_def->columns()[element_index].name() };
+                return Result { SQLCommand::Insert, SQLErrorCode::InvalidValueType, table_def->columns()[element_index]->name() };
 
             row[element_index] = move(values[ix]);
         }

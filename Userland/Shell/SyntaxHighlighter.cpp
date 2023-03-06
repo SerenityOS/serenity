@@ -421,7 +421,7 @@ private:
     {
         for (auto& entry : node->entries()) {
             ScopedValueRollback first_in_command { m_is_first_in_command };
-            entry.visit(*this);
+            entry->visit(*this);
         }
 
         for (auto& position : node->separator_positions()) {

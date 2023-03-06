@@ -197,7 +197,7 @@ void Game::setup(DeprecatedString player_name, int hand_number)
         m_passing_button->set_focus(false);
     }
 
-    NonnullRefPtrVector<Card> deck = Cards::create_standard_deck(Cards::Shuffle::Yes).release_value_but_fixme_should_propagate_errors();
+    Vector<NonnullRefPtr<Card>> deck = Cards::create_standard_deck(Cards::Shuffle::Yes).release_value_but_fixme_should_propagate_errors();
 
     for (auto& player : m_players) {
         player.hand.ensure_capacity(Card::card_count);
@@ -220,7 +220,7 @@ void Game::setup(DeprecatedString player_name, int hand_number)
     continue_game_after_delay();
 }
 
-void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, Function<void()> did_finish_callback, int initial_delay_ms, int steps)
+void Game::start_animation(Vector<NonnullRefPtr<Card>> cards, Gfx::IntPoint end, Function<void()> did_finish_callback, int initial_delay_ms, int steps)
 {
     stop_animation();
 
@@ -229,7 +229,7 @@ void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint end, F
     m_animation_steps = steps;
     m_animation_cards.clear_with_capacity();
     for (auto& card : cards)
-        m_animation_cards.empend(card, card.position());
+        m_animation_cards.empend(card, card->position());
     m_animation_did_finish = make<Function<void()>>(move(did_finish_callback));
     m_animation_delay_timer = Core::Timer::create_single_shot(initial_delay_ms, [&] {
         m_animation_playing = true;
@@ -338,17 +338,17 @@ size_t Game::pick_card(Player& player)
             return player.pick_lead_card(move(valid_card), move(prefer_card));
         }
     }
-    auto* high_card = &m_trick[0];
+    auto* high_card = m_trick[0].ptr();
     for (auto& card : m_trick)
-        if (high_card->suit() == card.suit() && hearts_card_value(card) > hearts_card_value(*high_card))
-            high_card = &card;
+        if (high_card->suit() == card->suit() && hearts_card_value(card) > hearts_card_value(*high_card))
+            high_card = card;
     if (high_card->suit() == Cards::Suit::Spades && hearts_card_value(*high_card) > CardValue::Queen)
         RETURN_CARD_IF_VALID(player.pick_specific_card(Cards::Suit::Spades, CardValue::Queen));
     auto card_has_points = [](Card& card) { return hearts_card_points(card) > 0; };
     auto trick_has_points = m_trick.first_matching(card_has_points).has_value();
     bool is_trailing_player = m_trick.size() == 3;
     if (!trick_has_points && is_trailing_player) {
-        RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(m_trick[0].suit()));
+        RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(m_trick[0]->suit()));
         if (is_first_trick)
             return player.pick_low_points_high_value_card().value();
         else {
@@ -523,11 +523,11 @@ void Game::advance_game()
         return;
     }
 
-    auto leading_card_suit = m_trick[0].suit();
+    auto leading_card_suit = m_trick[0]->suit();
     size_t taker_index = 0;
     auto taker_value = hearts_card_value(m_trick[0]);
     for (size_t i = 1; i < 4; i++) {
-        if (m_trick[i].suit() != leading_card_suit)
+        if (m_trick[i]->suit() != leading_card_suit)
             continue;
         if (hearts_card_value(m_trick[i]) <= taker_value)
             continue;
@@ -608,7 +608,7 @@ void Game::play_card(Player& player, size_t card_index)
     VERIFY(m_leading_player);
     size_t leading_player_index = player_index(*m_leading_player);
 
-    NonnullRefPtrVector<Card> cards;
+    Vector<NonnullRefPtr<Card>> cards;
     cards.append(*card);
     start_animation(
         cards,
@@ -661,7 +661,7 @@ bool Game::is_valid_play(Player& player, Card& card, DeprecatedString* explanati
     }
 
     // Player must follow suit unless they don't have any matching cards.
-    auto leading_card_suit = m_trick[0].suit();
+    auto leading_card_suit = m_trick[0]->suit();
     if (leading_card_suit == card.suit())
         return true;
     auto has_matching_card = player.has_card_of_suit(leading_card_suit);
@@ -818,13 +818,13 @@ void Game::select_cards_for_passing()
 
 void Game::pass_cards()
 {
-    NonnullRefPtrVector<Card> first_player_cards;
+    Vector<NonnullRefPtr<Card>> first_player_cards;
     for (auto& card : m_cards_highlighted)
         first_player_cards.append(*card);
     clear_highlighted_cards();
     VERIFY(first_player_cards.size() == 3);
 
-    NonnullRefPtrVector<Card> passed_cards[4];
+    Vector<NonnullRefPtr<Card>> passed_cards[4];
     passed_cards[0] = first_player_cards;
     passed_cards[1] = m_players[1].pick_cards_to_pass(passing_direction());
     passed_cards[2] = m_players[2].pick_cards_to_pass(passing_direction());
@@ -852,7 +852,7 @@ void Game::pass_cards()
         for (auto& card : passed_cards[i]) {
             m_players[destination_player_index].hand.append(card);
             if constexpr (!HEARTS_DEBUG)
-                card.set_upside_down(destination_player_index != 0);
+                card->set_upside_down(destination_player_index != 0);
             if (destination_player_index == 0)
                 highlight_card(card);
         }
@@ -911,7 +911,7 @@ void Game::paint_event(GUI::PaintEvent& event)
     }
 
     for (size_t i = 0; i < m_trick.size(); i++)
-        m_trick[i].paint(painter);
+        m_trick[i]->paint(painter);
 }
 
 void Game::dump_state() const

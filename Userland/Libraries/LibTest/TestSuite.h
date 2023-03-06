@@ -32,9 +32,9 @@ public:
         s_global = nullptr;
     }
 
-    int run(NonnullRefPtrVector<TestCase> const&);
+    int run(Vector<NonnullRefPtr<TestCase>> const&);
     int main(DeprecatedString const& suite_name, Span<StringView> arguments);
-    NonnullRefPtrVector<TestCase> find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks);
+    Vector<NonnullRefPtr<TestCase>> find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks);
     void add_case(NonnullRefPtr<TestCase> const& test_case)
     {
         m_cases.append(test_case);
@@ -46,7 +46,7 @@ public:
 
 private:
     static TestSuite* s_global;
-    NonnullRefPtrVector<TestCase> m_cases;
+    Vector<NonnullRefPtr<TestCase>> m_cases;
     u64 m_testtime = 0;
     u64 m_benchtime = 0;
     DeprecatedString m_suite_name;

@@ -56,7 +56,7 @@ struct Destination {
 
 struct OutlineItem final : public RefCounted<OutlineItem> {
     RefPtr<OutlineItem> parent;
-    NonnullRefPtrVector<OutlineItem> children;
+    Vector<NonnullRefPtr<OutlineItem>> children;
     DeprecatedString title;
     i32 count { 0 };
     Destination dest;
@@ -70,7 +70,7 @@ struct OutlineItem final : public RefCounted<OutlineItem> {
 };
 
 struct OutlineDict final : public RefCounted<OutlineDict> {
-    NonnullRefPtrVector<OutlineItem> children;
+    Vector<NonnullRefPtr<OutlineItem>> children;
     u32 count { 0 };
 
     OutlineDict() = default;
@@ -138,7 +138,7 @@ private:
 
     PDFErrorOr<void> build_outline();
     PDFErrorOr<NonnullRefPtr<OutlineItem>> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict, HashMap<u32, u32> const&);
-    PDFErrorOr<NonnullRefPtrVector<OutlineItem>> build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const&);
+    PDFErrorOr<Vector<NonnullRefPtr<OutlineItem>>> build_outline_item_chain(Value const& first_ref, HashMap<u32, u32> const&);
 
     PDFErrorOr<Destination> create_destination_from_parameters(NonnullRefPtr<ArrayObject>, HashMap<u32, u32> const&);
     PDFErrorOr<Destination> create_destination_from_dictionary_entry(NonnullRefPtr<Object> const& entry, HashMap<u32, u32> const& page_number_by_index_ref);
@@ -258,7 +258,7 @@ struct Formatter<PDF::OutlineDict> : Formatter<FormatString> {
         StringBuilder child_builder;
         child_builder.append('[');
         for (auto& child : dict.children)
-            child_builder.appendff("{}\n", child.to_deprecated_string(2));
+            child_builder.appendff("{}\n", child->to_deprecated_string(2));
         child_builder.append("  ]"sv);
 
         return Formatter<FormatString>::format(builder,

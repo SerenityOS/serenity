@@ -43,7 +43,7 @@ private:
     explicit PropertyDependencyNode(String name);
 
     String m_name;
-    NonnullRefPtrVector<PropertyDependencyNode> m_children;
+    Vector<NonnullRefPtr<PropertyDependencyNode>> m_children;
     bool m_marked { false };
 };
 

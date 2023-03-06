@@ -702,7 +702,7 @@ Widget* Widget::child_at(Gfx::IntPoint point) const
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!is<Widget>(children()[i]))
             continue;
-        auto& child = verify_cast<Widget>(children()[i]);
+        auto& child = verify_cast<Widget>(*children()[i]);
         if (!child.is_visible())
             continue;
         if (child.relative_non_grabbable_rect().contains(point))
@@ -976,7 +976,7 @@ bool Widget::is_frontmost() const
     auto* parent = parent_widget();
     if (!parent)
         return true;
-    return &parent->children().last() == this;
+    return parent->children().last() == this;
 }
 
 bool Widget::is_backmost() const
@@ -984,7 +984,7 @@ bool Widget::is_backmost() const
     auto* parent = parent_widget();
     if (!parent)
         return true;
-    return &parent->children().first() == this;
+    return parent->children().first() == this;
 }
 
 Action* Widget::action_for_shortcut(Shortcut const& shortcut)
@@ -1036,8 +1036,8 @@ Vector<Widget&> Widget::child_widgets() const
     Vector<Widget&> widgets;
     widgets.ensure_capacity(children().size());
     for (auto& child : const_cast<Widget*>(this)->children()) {
-        if (is<Widget>(child))
-            widgets.append(static_cast<Widget&>(child));
+        if (is<Widget>(*child))
+            widgets.append(static_cast<Widget&>(*child));
     }
     return widgets;
 }

@@ -42,11 +42,11 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect, flo
     Gfx::PainterStateSaver saver(painter);
     painter.add_clip_rect(dest_rect);
     for (auto const& layer : m_layers) {
-        if (!layer.is_visible())
+        if (!layer->is_visible())
             continue;
-        auto target = dest_rect.to_type<float>().translated(layer.location().x() * scale, layer.location().y() * scale);
-        target.set_size(layer.size().width() * scale, layer.size().height() * scale);
-        painter.draw_scaled_bitmap(target.to_type<int>(), layer.display_bitmap(), layer.rect(), (float)layer.opacity_percent() / 100.0f);
+        auto target = dest_rect.to_type<float>().translated(layer->location().x() * scale, layer->location().y() * scale);
+        target.set_size(layer->size().width() * scale, layer->size().height() * scale);
+        painter.draw_scaled_bitmap(target.to_type<int>(), layer->display_bitmap(), layer->rect(), (float)layer->opacity_percent() / 100.0f);
     }
 }
 
@@ -126,17 +126,17 @@ ErrorOr<void> Image::serialize_as_json(JsonObjectSerializer<StringBuilder>& json
         auto json_layers = TRY(json.add_array("layers"sv));
         for (auto const& layer : m_layers) {
             auto json_layer = TRY(json_layers.add_object());
-            TRY(json_layer.add("width"sv, layer.size().width()));
-            TRY(json_layer.add("height"sv, layer.size().height()));
-            TRY(json_layer.add("name"sv, layer.name()));
-            TRY(json_layer.add("locationx"sv, layer.location().x()));
-            TRY(json_layer.add("locationy"sv, layer.location().y()));
-            TRY(json_layer.add("opacity_percent"sv, layer.opacity_percent()));
-            TRY(json_layer.add("visible"sv, layer.is_visible()));
-            TRY(json_layer.add("selected"sv, layer.is_selected()));
-            TRY(json_layer.add("bitmap"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(layer.content_bitmap()))))));
-            if (layer.is_masked())
-                TRY(json_layer.add("mask"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(*layer.mask_bitmap()))))));
+            TRY(json_layer.add("width"sv, layer->size().width()));
+            TRY(json_layer.add("height"sv, layer->size().height()));
+            TRY(json_layer.add("name"sv, layer->name()));
+            TRY(json_layer.add("locationx"sv, layer->location().x()));
+            TRY(json_layer.add("locationy"sv, layer->location().y()));
+            TRY(json_layer.add("opacity_percent"sv, layer->opacity_percent()));
+            TRY(json_layer.add("visible"sv, layer->is_visible()));
+            TRY(json_layer.add("selected"sv, layer->is_selected()));
+            TRY(json_layer.add("bitmap"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(layer->content_bitmap()))))));
+            if (layer->is_masked())
+                TRY(json_layer.add("mask"sv, TRY(encode_base64(TRY(Gfx::PNGWriter::encode(*layer->mask_bitmap()))))));
             TRY(json_layer.finish());
         }
 
@@ -204,7 +204,7 @@ ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Stream> stream) const
 void Image::add_layer(NonnullRefPtr<Layer> layer)
 {
     for (auto& existing_layer : m_layers) {
-        VERIFY(&existing_layer != layer.ptr());
+        VERIFY(existing_layer != layer);
     }
     m_layers.append(move(layer));
 
@@ -256,7 +256,7 @@ ErrorOr<void> Image::restore_snapshot(Image const& snapshot)
 size_t Image::index_of(Layer const& layer) const
 {
     for (size_t i = 0; i < m_layers.size(); ++i) {
-        if (&m_layers.at(i) == &layer)
+        if (m_layers[i] == &layer)
             return i;
     }
     VERIFY_NOT_REACHED();
@@ -350,18 +350,18 @@ ErrorOr<void> Image::merge_layers(LayerMergeMode layer_merge_mode)
     if (m_layers.size() < 2)
         return {};
 
-    NonnullRefPtrVector<Layer> new_layers;
+    Vector<NonnullRefPtr<Layer>> new_layers;
     Gfx::IntRect merged_layer_bounding_rect = {};
     size_t bottom_layer_index = 0;
     for (auto const& layer : m_layers) {
-        if (!layer.is_visible()) {
+        if (!layer->is_visible()) {
             if (layer_merge_mode == LayerMergeMode::VisibleOnly)
                 TRY(new_layers.try_append(layer));
             if (merged_layer_bounding_rect.is_empty())
                 bottom_layer_index++;
             continue;
         }
-        merged_layer_bounding_rect = merged_layer_bounding_rect.united(layer.relative_rect());
+        merged_layer_bounding_rect = merged_layer_bounding_rect.united(layer->relative_rect());
     }
 
     if (merged_layer_bounding_rect.is_empty())
@@ -379,9 +379,9 @@ ErrorOr<void> Image::merge_layers(LayerMergeMode layer_merge_mode)
         painter.blit(bottom_layer->location() - merged_layer->location(), bottom_layer->display_bitmap(), bottom_layer->rect(), static_cast<float>(bottom_layer->opacity_percent()) / 100.0f);
     for (size_t index = bottom_layer_index + 1; index < m_layers.size(); index++) {
         auto& layer = m_layers.at(index);
-        if (!layer.is_visible())
+        if (!layer->is_visible())
             continue;
-        painter.blit(layer.location() - merged_layer->location(), layer.display_bitmap(), layer.rect(), static_cast<float>(layer.opacity_percent()) / 100.0f);
+        painter.blit(layer->location() - merged_layer->location(), layer->display_bitmap(), layer->rect(), static_cast<float>(layer->opacity_percent()) / 100.0f);
     }
 
     TRY(new_layers.try_append(merged_layer));
@@ -421,7 +421,7 @@ ErrorOr<void> Image::merge_active_layer(NonnullRefPtr<Layer> const& layer, Layer
 
     Optional<NonnullRefPtr<Layer>> maybe_adjacent_layer;
     while (layer_to_merge_index >= 0 && layer_to_merge_index < layer_count) {
-        auto& layer = m_layers.at(layer_to_merge_index);
+        auto const& layer = *m_layers[layer_to_merge_index];
         if (layer.is_visible()) {
             maybe_adjacent_layer = layer;
             break;
@@ -541,7 +541,7 @@ ErrorOr<void> Image::flip(Gfx::Orientation orientation)
         auto& layer = m_layers[i];
         auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
-        if (layer.is_selected())
+        if (layer->is_selected())
             selected_layer_index = i;
 
         TRY(new_layer->flip(orientation, Layer::NotifyClients::No));
@@ -551,9 +551,9 @@ ErrorOr<void> Image::flip(Gfx::Orientation orientation)
 
     m_layers = move(flipped_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::No);
+        layer->did_modify_bitmap({}, Layer::NotifyClients::No);
 
-    select_layer(&m_layers[selected_layer_index]);
+    select_layer(m_layers[selected_layer_index]);
 
     did_change();
 
@@ -572,7 +572,7 @@ ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
         auto& layer = m_layers[i];
         auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
-        if (layer.is_selected())
+        if (layer->is_selected())
             selected_layer_index = i;
 
         TRY(new_layer->rotate(direction, Layer::NotifyClients::No));
@@ -582,9 +582,9 @@ ErrorOr<void> Image::rotate(Gfx::RotationDirection direction)
 
     m_layers = move(rotated_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::Yes);
+        layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
-    select_layer(&m_layers[selected_layer_index]);
+    select_layer(m_layers[selected_layer_index]);
 
     m_size = { m_size.height(), m_size.width() };
     did_change_rect();
@@ -604,7 +604,7 @@ ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
         auto& layer = m_layers[i];
         auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
-        if (layer.is_selected())
+        if (layer->is_selected())
             selected_layer_index = i;
 
         auto layer_location = new_layer->location();
@@ -621,9 +621,9 @@ ErrorOr<void> Image::crop(Gfx::IntRect const& cropped_rect)
 
     m_layers = move(cropped_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::Yes);
+        layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
-    select_layer(&m_layers[selected_layer_index]);
+    select_layer(m_layers[selected_layer_index]);
 
     m_size = { cropped_rect.width(), cropped_rect.height() };
     did_change_rect(cropped_rect);
@@ -638,10 +638,10 @@ Optional<Gfx::IntRect> Image::nonempty_content_bounding_rect() const
 
     Optional<Gfx::IntRect> bounding_rect;
     for (auto const& layer : m_layers) {
-        auto layer_content_rect_in_layer_coordinates = layer.nonempty_content_bounding_rect();
+        auto layer_content_rect_in_layer_coordinates = layer->nonempty_content_bounding_rect();
         if (!layer_content_rect_in_layer_coordinates.has_value())
             continue;
-        auto layer_content_rect_in_image_coordinates = layer_content_rect_in_layer_coordinates->translated(layer.location());
+        auto layer_content_rect_in_image_coordinates = layer_content_rect_in_layer_coordinates->translated(layer->location());
         if (!bounding_rect.has_value())
             bounding_rect = layer_content_rect_in_image_coordinates;
         else
@@ -674,7 +674,7 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
         auto& layer = m_layers[i];
         auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
-        if (layer.is_selected())
+        if (layer->is_selected())
             selected_layer_index = i;
 
         Gfx::IntPoint new_location(scale_x * new_layer->location().x(), scale_y * new_layer->location().y());
@@ -685,9 +685,9 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
 
     m_layers = move(resized_layers);
     for (auto& layer : m_layers)
-        layer.did_modify_bitmap({}, Layer::NotifyClients::Yes);
+        layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
-    select_layer(&m_layers[selected_layer_index]);
+    select_layer(m_layers[selected_layer_index]);
 
     m_size = { new_size.width(), new_size.height() };
     did_change_rect();
@@ -699,11 +699,11 @@ Color Image::color_at(Gfx::IntPoint point) const
 {
     Color color;
     for (auto const& layer : m_layers) {
-        if (!layer.is_visible() || !layer.rect().contains(point))
+        if (!layer->is_visible() || !layer->rect().contains(point))
             continue;
 
-        auto layer_color = layer.display_bitmap().get_pixel(point);
-        float layer_opacity = layer.opacity_percent() / 100.0f;
+        auto layer_color = layer->display_bitmap().get_pixel(point);
+        float layer_opacity = layer->opacity_percent() / 100.0f;
         layer_color.set_alpha((u8)(layer_color.alpha() * layer_opacity));
         color = color.blend(layer_color);
     }

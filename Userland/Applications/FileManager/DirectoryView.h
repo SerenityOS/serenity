@@ -58,9 +58,9 @@ public:
     void open_next_directory();
     int path_history_size() const { return m_path_history.size(); }
     int path_history_position() const { return m_path_history_position; }
-    static RefPtr<LauncherHandler> get_default_launch_handler(NonnullRefPtrVector<LauncherHandler> const& handlers);
-    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(URL const& url);
-    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(DeprecatedString const& path);
+    static RefPtr<LauncherHandler> get_default_launch_handler(Vector<NonnullRefPtr<LauncherHandler>> const& handlers);
+    static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(URL const& url);
+    static Vector<NonnullRefPtr<LauncherHandler>> get_launch_handlers(DeprecatedString const& path);
 
     void refresh();
 

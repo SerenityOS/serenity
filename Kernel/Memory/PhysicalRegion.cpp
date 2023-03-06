@@ -75,7 +75,7 @@ OwnPtr<PhysicalRegion> PhysicalRegion::try_take_pages_from_beginning(size_t page
     return try_create(taken_lower, taken_upper);
 }
 
-NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(size_t count)
+Vector<NonnullRefPtr<PhysicalPage>> PhysicalRegion::take_contiguous_free_pages(size_t count)
 {
     auto rounded_page_count = next_power_of_two(count);
     auto order = count_trailing_zeroes(rounded_page_count);
@@ -95,7 +95,7 @@ NonnullRefPtrVector<PhysicalPage> PhysicalRegion::take_contiguous_free_pages(siz
     if (!page_base.has_value())
         return {};
 
-    NonnullRefPtrVector<PhysicalPage> physical_pages;
+    Vector<NonnullRefPtr<PhysicalPage>> physical_pages;
     physical_pages.ensure_capacity(count);
 
     for (size_t i = 0; i < count; ++i)

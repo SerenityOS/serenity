@@ -24,8 +24,8 @@ public:
     ErrorOr<HTMLElement> render(Presentation const&) const;
 
 private:
-    Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title);
+    Slide(Vector<NonnullRefPtr<SlideObject>> slide_objects, DeprecatedString title);
 
-    NonnullRefPtrVector<SlideObject> m_slide_objects;
+    Vector<NonnullRefPtr<SlideObject>> m_slide_objects;
     DeprecatedString m_title;
 };

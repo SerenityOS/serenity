@@ -208,7 +208,7 @@ struct NodeWithAction {
 
 struct Command {
     Vector<String> argv;
-    NonnullRefPtrVector<Redirection> redirections;
+    Vector<NonnullRefPtr<Redirection>> redirections;
     bool should_wait { true };
     bool is_pipe_source { false };
     bool should_notify_if_in_background { true };
@@ -233,7 +233,7 @@ public:
     virtual ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) { return *this; }
     virtual ErrorOr<NonnullRefPtr<Value>> clone() const = 0;
     virtual ErrorOr<NonnullRefPtr<Value>> with_slices(NonnullRefPtr<Slice> slice) const&;
-    virtual ErrorOr<NonnullRefPtr<Value>> with_slices(NonnullRefPtrVector<Slice> slices) const&;
+    virtual ErrorOr<NonnullRefPtr<Value>> with_slices(Vector<NonnullRefPtr<Slice>> slices) const&;
     virtual ~Value();
     virtual bool is_command() const { return false; }
     virtual bool is_glob() const { return false; }
@@ -243,12 +243,12 @@ public:
     virtual bool is_list_without_resolution() const { return false; }
 
 protected:
-    Value& set_slices(NonnullRefPtrVector<Slice> slices)
+    Value& set_slices(Vector<NonnullRefPtr<Slice>> slices)
     {
         m_slices = move(slices);
         return *this;
     }
-    NonnullRefPtrVector<Slice> m_slices;
+    Vector<NonnullRefPtr<Slice>> m_slices;
 };
 
 class CommandValue final : public Value {
@@ -316,16 +316,16 @@ public:
     virtual bool is_list() const override { return true; }
     virtual bool is_list_without_resolution() const override { return true; }
     ListValue(Vector<String> values);
-    ListValue(NonnullRefPtrVector<Value> values)
+    ListValue(Vector<NonnullRefPtr<Value>> values)
         : m_contained_values(move(values))
     {
     }
 
-    NonnullRefPtrVector<Value> const& values() const { return m_contained_values; }
-    NonnullRefPtrVector<Value>& values() { return m_contained_values; }
+    Vector<NonnullRefPtr<Value>> const& values() const { return m_contained_values; }
+    Vector<NonnullRefPtr<Value>>& values() { return m_contained_values; }
 
 private:
-    NonnullRefPtrVector<Value> m_contained_values;
+    Vector<NonnullRefPtr<Value>> m_contained_values;
 };
 
 class StringValue final : public Value {
@@ -629,11 +629,11 @@ private:
 
 class BraceExpansion final : public Node {
 public:
-    BraceExpansion(Position, NonnullRefPtrVector<Node>);
+    BraceExpansion(Position, Vector<NonnullRefPtr<Node>>);
     virtual ~BraceExpansion() = default;
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    NonnullRefPtrVector<Node> const& entries() const { return m_entries; }
+    Vector<NonnullRefPtr<Node>> const& entries() const { return m_entries; }
 
 private:
     NODE(BraceExpansion);
@@ -642,7 +642,7 @@ private:
     virtual ErrorOr<void> highlight_in_editor(Line::Editor&, Shell&, HighlightMetadata = {}) override;
     virtual HitTestResult hit_test_position(size_t) const override;
 
-    NonnullRefPtrVector<Node> m_entries;
+    Vector<NonnullRefPtr<Node>> m_entries;
 };
 
 class CastToCommand final : public Node {
@@ -1019,11 +1019,11 @@ private:
 
 class ImmediateExpression final : public Node {
 public:
-    ImmediateExpression(Position, NameWithPosition function, NonnullRefPtrVector<AST::Node> arguments, Optional<Position> closing_brace_position);
+    ImmediateExpression(Position, NameWithPosition function, Vector<NonnullRefPtr<AST::Node>> arguments, Optional<Position> closing_brace_position);
     virtual ~ImmediateExpression();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    NonnullRefPtrVector<Node> const& arguments() const { return m_arguments; }
+    Vector<NonnullRefPtr<Node>> const& arguments() const { return m_arguments; }
     auto const& function() const { return m_function; }
     String const& function_name() const { return m_function.name; }
     Position const& function_position() const { return m_function.position; }
@@ -1037,7 +1037,7 @@ private:
     ErrorOr<Vector<Line::CompletionSuggestion>> complete_for_editor(Shell&, size_t, HitTestResult const&) const override;
     virtual HitTestResult hit_test_position(size_t) const override;
 
-    NonnullRefPtrVector<AST::Node> m_arguments;
+    Vector<NonnullRefPtr<AST::Node>> m_arguments;
     NameWithPosition m_function;
     Optional<Position> m_closing_brace_position;
 };
@@ -1066,7 +1066,7 @@ private:
 };
 
 struct MatchEntry {
-    Variant<NonnullRefPtrVector<Node>, Vector<Regex<ECMA262>>> options;
+    Variant<Vector<NonnullRefPtr<Node>>, Vector<Regex<ECMA262>>> options;
     Optional<Vector<String>> match_names;
     Optional<Position> match_as_position;
     Vector<Position> pipe_positions;
@@ -1188,11 +1188,11 @@ private:
 
 class Sequence final : public Node {
 public:
-    Sequence(Position, NonnullRefPtrVector<Node>, Vector<Position> separator_positions);
+    Sequence(Position, Vector<NonnullRefPtr<Node>>, Vector<Position> separator_positions);
     virtual ~Sequence();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    NonnullRefPtrVector<Node> const& entries() const { return m_entries; }
+    Vector<NonnullRefPtr<Node>> const& entries() const { return m_entries; }
 
     Vector<Position> const& separator_positions() const { return m_separator_positions; }
 
@@ -1206,7 +1206,7 @@ private:
     virtual bool should_override_execution_in_current_process() const override { return true; }
     virtual RefPtr<Node const> leftmost_trivial_literal() const override;
 
-    NonnullRefPtrVector<Node> m_entries;
+    Vector<NonnullRefPtr<Node>> m_entries;
     Vector<Position> m_separator_positions;
 };
 

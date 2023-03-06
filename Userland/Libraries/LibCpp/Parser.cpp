@@ -37,9 +37,9 @@ NonnullRefPtr<TranslationUnit> Parser::parse()
     return unit;
 }
 
-NonnullRefPtrVector<Declaration const> Parser::parse_declarations_in_translation_unit(ASTNode const& parent)
+Vector<NonnullRefPtr<Declaration const>> Parser::parse_declarations_in_translation_unit(ASTNode const& parent)
 {
-    NonnullRefPtrVector<Declaration const> declarations;
+    Vector<NonnullRefPtr<Declaration const>> declarations;
     while (!eof()) {
         auto declaration = parse_single_declaration_in_translation_unit(parent);
         if (declaration) {
@@ -259,13 +259,13 @@ bool Parser::match_template_arguments()
     return peek().type() == Token::Type::Greater;
 }
 
-NonnullRefPtrVector<Type const> Parser::parse_template_arguments(ASTNode const& parent)
+Vector<NonnullRefPtr<Type const>> Parser::parse_template_arguments(ASTNode const& parent)
 {
     LOG_SCOPE();
 
     consume(Token::Type::Less);
 
-    NonnullRefPtrVector<Type const> template_arguments;
+    Vector<NonnullRefPtr<Type const>> template_arguments;
     while (!eof() && peek().type() != Token::Type::Greater) {
         template_arguments.append(parse_type(parent));
     }
@@ -350,7 +350,7 @@ NonnullRefPtr<Expression const> Parser::parse_expression(ASTNode const& parent)
         return expression;
     }
 
-    NonnullRefPtrVector<Expression const> secondary_expressions;
+    Vector<NonnullRefPtr<Expression const>> secondary_expressions;
 
     while (match_secondary_expression()) {
         // FIXME: Handle operator precedence
@@ -359,7 +359,7 @@ NonnullRefPtr<Expression const> Parser::parse_expression(ASTNode const& parent)
     }
 
     for (size_t i = 0; secondary_expressions.size() != 0 && i < secondary_expressions.size() - 1; ++i) {
-        const_cast<Expression&>(secondary_expressions[i]).set_parent(secondary_expressions[i + 1]);
+        const_cast<Expression&>(*secondary_expressions[i]).set_parent(secondary_expressions[i + 1]);
     }
 
     return expression;
@@ -748,10 +748,10 @@ bool Parser::match_function_declaration()
     return false;
 }
 
-Optional<NonnullRefPtrVector<Parameter const>> Parser::parse_parameter_list(ASTNode const& parent)
+Optional<Vector<NonnullRefPtr<Parameter const>>> Parser::parse_parameter_list(ASTNode const& parent)
 {
     LOG_SCOPE();
-    NonnullRefPtrVector<Parameter const> parameters;
+    Vector<NonnullRefPtr<Parameter const>> parameters;
     while (peek().type() != Token::Type::RightParen && !eof()) {
         if (match_ellipsis()) {
             auto param = create_ast_node<Parameter>(parent, position(), {}, RefPtr<Name> {});
@@ -981,7 +981,7 @@ Optional<size_t> Parser::index_of_node_at(Position pos) const
 
     for (size_t node_index = 0; node_index < m_nodes.size(); ++node_index) {
         auto& node = m_nodes[node_index];
-        if (node.start() > pos || node.end() < pos)
+        if (node->start() > pos || node->end() < pos)
             continue;
 
         if (!match_node_index.has_value() || (node_span(node) <= node_span(m_nodes[match_node_index.value()])))
@@ -1155,7 +1155,7 @@ NonnullRefPtr<StructOrClassDeclaration const> Parser::parse_class_declaration(AS
 
     auto has_final = match_keyword("final");
 
-    NonnullRefPtrVector<Name const> baseclasses;
+    Vector<NonnullRefPtr<Name const>> baseclasses;
 
     // FIXME: Don't ignore this.
     if (peek(has_final ? 1 : 0).type() == Token::Type::Colon) {
@@ -1569,11 +1569,11 @@ NonnullRefPtr<BracedInitList const> Parser::parse_braced_init_list(ASTNode const
     init_list->set_end(position());
     return init_list;
 }
-NonnullRefPtrVector<Declaration const> Parser::parse_class_members(StructOrClassDeclaration& parent)
+Vector<NonnullRefPtr<Declaration const>> Parser::parse_class_members(StructOrClassDeclaration& parent)
 {
     auto class_name = parent.full_name();
 
-    NonnullRefPtrVector<Declaration const> members;
+    Vector<NonnullRefPtr<Declaration const>> members;
     while (!eof() && peek().type() != Token::Type::RightCurly) {
         if (match_access_specifier())
             consume_access_specifier(); // FIXME: Do not ignore access specifiers

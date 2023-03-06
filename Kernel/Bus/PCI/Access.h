@@ -62,6 +62,6 @@ private:
     mutable Spinlock<LockRank::None> m_scan_lock {};
 
     HashMap<u32, NonnullOwnPtr<PCI::HostController>> m_host_controllers;
-    NonnullRefPtrVector<DeviceIdentifier> m_device_identifiers;
+    Vector<NonnullRefPtr<DeviceIdentifier>> m_device_identifiers;
 };
 }

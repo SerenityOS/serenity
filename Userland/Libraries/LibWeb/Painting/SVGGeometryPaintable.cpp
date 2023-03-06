@@ -64,27 +64,27 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         };
 
         for (auto& segment : path.segments()) {
-            switch (segment.type()) {
+            switch (segment->type()) {
             case Gfx::Segment::Type::Invalid:
                 break;
             case Gfx::Segment::Type::MoveTo:
-                new_path.move_to(transform_point(segment.point()));
+                new_path.move_to(transform_point(segment->point()));
                 break;
             case Gfx::Segment::Type::LineTo:
-                new_path.line_to(transform_point(segment.point()));
+                new_path.line_to(transform_point(segment->point()));
                 break;
             case Gfx::Segment::Type::QuadraticBezierCurveTo: {
-                auto& quadratic_bezier_segment = static_cast<Gfx::QuadraticBezierCurveSegment const&>(segment);
+                auto& quadratic_bezier_segment = static_cast<Gfx::QuadraticBezierCurveSegment const&>(*segment);
                 new_path.quadratic_bezier_curve_to(transform_point(quadratic_bezier_segment.through()), transform_point(quadratic_bezier_segment.point()));
                 break;
             }
             case Gfx::Segment::Type::CubicBezierCurveTo: {
-                auto& cubic_bezier_segment = static_cast<Gfx::CubicBezierCurveSegment const&>(segment);
+                auto& cubic_bezier_segment = static_cast<Gfx::CubicBezierCurveSegment const&>(*segment);
                 new_path.cubic_bezier_curve_to(transform_point(cubic_bezier_segment.through_0()), transform_point(cubic_bezier_segment.through_1()), transform_point(cubic_bezier_segment.point()));
                 break;
             }
             case Gfx::Segment::Type::EllipticalArcTo: {
-                auto& elliptical_arc_segment = static_cast<Gfx::EllipticalArcSegment const&>(segment);
+                auto& elliptical_arc_segment = static_cast<Gfx::EllipticalArcSegment const&>(*segment);
                 new_path.elliptical_arc_to(transform_point(elliptical_arc_segment.point()), elliptical_arc_segment.radii().scaled_by(scaling, scaling), elliptical_arc_segment.x_axis_rotation(), elliptical_arc_segment.large_arc(), elliptical_arc_segment.sweep());
                 break;
             }

@@ -93,16 +93,16 @@ TEST_CASE(create_table)
         for (size_t i = 0; i < columns.size(); ++i) {
             const auto& column = columns[i];
             const auto& expected_column = expected_columns[i];
-            EXPECT_EQ(column.name(), expected_column.name);
+            EXPECT_EQ(column->name(), expected_column.name);
 
-            const auto& type_name = column.type_name();
+            const auto& type_name = column->type_name();
             EXPECT_EQ(type_name->name(), expected_column.type);
 
             const auto& signed_numbers = type_name->signed_numbers();
             EXPECT_EQ(signed_numbers.size(), expected_column.signed_numbers.size());
 
             for (size_t j = 0; j < signed_numbers.size(); ++j) {
-                double signed_number = signed_numbers[j].value();
+                double signed_number = signed_numbers[j]->value();
                 double expected_signed_number = expected_column.signed_numbers[j];
                 EXPECT_EQ(signed_number, expected_signed_number);
             }
@@ -227,7 +227,7 @@ TEST_CASE(alter_table_add_column)
         EXPECT_EQ(signed_numbers.size(), expected_column.signed_numbers.size());
 
         for (size_t j = 0; j < signed_numbers.size(); ++j) {
-            double signed_number = signed_numbers[j].value();
+            double signed_number = signed_numbers[j]->value();
             double expected_signed_number = expected_column.signed_numbers[j];
             EXPECT_EQ(signed_number, expected_signed_number);
         }
@@ -337,7 +337,7 @@ TEST_CASE(insert)
 
             for (size_t i = 0; i < chained_expressions.size(); ++i) {
                 const auto& chained_expression = chained_expressions[i];
-                const auto& expressions = chained_expression.expressions();
+                const auto& expressions = chained_expression->expressions();
                 EXPECT_EQ(expressions.size(), expected_chain_sizes[i]);
 
                 for (const auto& expression : expressions)
@@ -586,17 +586,17 @@ TEST_CASE(select)
         for (size_t i = 0; i < result_column_list.size(); ++i) {
             const auto& result_column = result_column_list[i];
             const auto& expected_column = expected_columns[i];
-            EXPECT_EQ(result_column.type(), expected_column.type);
+            EXPECT_EQ(result_column->type(), expected_column.type);
 
-            switch (result_column.type()) {
+            switch (result_column->type()) {
             case SQL::AST::ResultType::All:
                 EXPECT(expected_column.table_name_or_column_alias.is_null());
                 break;
             case SQL::AST::ResultType::Table:
-                EXPECT_EQ(result_column.table_name(), expected_column.table_name_or_column_alias);
+                EXPECT_EQ(result_column->table_name(), expected_column.table_name_or_column_alias);
                 break;
             case SQL::AST::ResultType::Expression:
-                EXPECT_EQ(result_column.column_alias(), expected_column.table_name_or_column_alias);
+                EXPECT_EQ(result_column->column_alias(), expected_column.table_name_or_column_alias);
                 break;
             }
         }
@@ -606,9 +606,9 @@ TEST_CASE(select)
         for (size_t i = 0; i < table_or_subquery_list.size(); ++i) {
             const auto& result_from = table_or_subquery_list[i];
             const auto& expected_from = expected_from_list[i];
-            EXPECT_EQ(result_from.schema_name(), expected_from.schema_name);
-            EXPECT_EQ(result_from.table_name(), expected_from.table_name);
-            EXPECT_EQ(result_from.table_alias(), expected_from.table_alias);
+            EXPECT_EQ(result_from->schema_name(), expected_from.schema_name);
+            EXPECT_EQ(result_from->table_name(), expected_from.table_name);
+            EXPECT_EQ(result_from->table_alias(), expected_from.table_alias);
         }
 
         const auto& where_clause = select.where_clause();
@@ -635,10 +635,10 @@ TEST_CASE(select)
         for (size_t i = 0; i < ordering_term_list.size(); ++i) {
             const auto& result_order = ordering_term_list[i];
             const auto& expected_order = expected_ordering[i];
-            EXPECT(!is<SQL::AST::ErrorExpression>(*result_order.expression()));
-            EXPECT_EQ(result_order.collation_name(), expected_order.collation_name);
-            EXPECT_EQ(result_order.order(), expected_order.order);
-            EXPECT_EQ(result_order.nulls(), expected_order.nulls);
+            EXPECT(!is<SQL::AST::ErrorExpression>(*result_order->expression()));
+            EXPECT_EQ(result_order->collation_name(), expected_order.collation_name);
+            EXPECT_EQ(result_order->order(), expected_order.order);
+            EXPECT_EQ(result_order->nulls(), expected_order.nulls);
         }
 
         const auto& limit_clause = select.limit_clause();
@@ -731,11 +731,11 @@ TEST_CASE(common_table_expression)
         for (size_t i = 0; i < common_table_expressions.size(); ++i) {
             const auto& common_table_expression = common_table_expressions[i];
             const auto& expected_common_table_expression = expected_selected_tables.selected_tables[i];
-            EXPECT_EQ(common_table_expression.table_name(), expected_common_table_expression.table_name);
-            EXPECT_EQ(common_table_expression.column_names().size(), expected_common_table_expression.column_names.size());
+            EXPECT_EQ(common_table_expression->table_name(), expected_common_table_expression.table_name);
+            EXPECT_EQ(common_table_expression->column_names().size(), expected_common_table_expression.column_names.size());
 
-            for (size_t j = 0; j < common_table_expression.column_names().size(); ++j)
-                EXPECT_EQ(common_table_expression.column_names()[j], expected_common_table_expression.column_names[j]);
+            for (size_t j = 0; j < common_table_expression->column_names().size(); ++j)
+                EXPECT_EQ(common_table_expression->column_names()[j], expected_common_table_expression.column_names[j]);
         }
     };
 

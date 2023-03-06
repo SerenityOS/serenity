@@ -497,7 +497,7 @@ void ProcessModel::update()
                 thread_data->previous_state = move(thread_data->current_state);
                 thread_data->current_state = move(state);
                 if (auto maybe_thread_index = (*process_state)->threads.find_first_index(thread_data); maybe_thread_index.has_value()) {
-                    (*process_state)->threads.ptr_at(maybe_thread_index.value()) = thread_data;
+                    (*process_state)->threads[maybe_thread_index.value()] = thread_data;
                 } else {
                     (*process_state)->threads.append(thread_data);
                 }

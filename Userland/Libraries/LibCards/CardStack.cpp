@@ -37,7 +37,7 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
     auto draw_background_if_empty = [&]() {
         size_t number_of_moving_cards = 0;
         for (auto const& card : m_stack)
-            number_of_moving_cards += card.is_moving() ? 1 : 0;
+            number_of_moving_cards += card->is_moving() ? 1 : 0;
 
         if (m_covered_stack && !m_covered_stack->is_empty())
             return false;
@@ -96,15 +96,15 @@ void CardStack::paint(GUI::Painter& painter, Gfx::Color background_color)
     RefPtr<Card> previewed_card;
 
     for (size_t i = 0; i < m_stack.size(); ++i) {
-        if (auto& card = m_stack[i]; !card.is_moving()) {
-            if (card.is_previewed()) {
+        if (auto& card = m_stack[i]; !card->is_moving()) {
+            if (card->is_previewed()) {
                 VERIFY(!previewed_card);
                 previewed_card = card;
                 continue;
             }
 
             auto highlighted = m_highlighted && (i == m_stack.size() - 1);
-            card.clear_and_paint(painter, Gfx::Color::Transparent, highlighted);
+            card->clear_and_paint(painter, Gfx::Color::Transparent, highlighted);
         }
     }
 
@@ -118,10 +118,10 @@ void CardStack::rebound_cards()
 
     size_t card_index = 0;
     for (auto& card : m_stack)
-        card.set_position(m_stack_positions.at(card_index++));
+        card->set_position(m_stack_positions.at(card_index++));
 }
 
-ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
+ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, Vector<NonnullRefPtr<Card>>& grabbed, MovementRule movement_rule)
 {
     VERIFY(grabbed.is_empty());
 
@@ -137,8 +137,8 @@ ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, Non
     RefPtr<Card> last_intersect;
 
     for (auto& card : m_stack) {
-        if (card.rect().contains(click_location)) {
-            if (card.is_upside_down())
+        if (card->rect().contains(click_location)) {
+            if (card->is_upside_down())
                 continue;
 
             last_intersect = card;
@@ -148,12 +148,12 @@ ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, Non
                 last_intersect->set_moving(true);
             }
 
-            if (card.is_upside_down()) {
+            if (card->is_upside_down()) {
                 grabbed.clear();
                 return {};
             }
 
-            card.set_moving(true);
+            card->set_moving(true);
             TRY(grabbed.try_append(card));
         }
     }
@@ -173,28 +173,28 @@ ErrorOr<void> CardStack::add_all_grabbed_cards(Gfx::IntPoint click_location, Non
             bool color_match;
             switch (movement_rule) {
             case MovementRule::Alternating:
-                color_match = card.color() != last_color;
+                color_match = card->color() != last_color;
                 break;
             case MovementRule::Same:
-                color_match = card.color() == last_color;
+                color_match = card->color() == last_color;
                 break;
             case MovementRule::Any:
                 color_match = true;
                 break;
             }
 
-            if (!color_match || to_underlying(card.rank()) != last_value - 1) {
+            if (!color_match || to_underlying(card->rank()) != last_value - 1) {
                 valid_stack = false;
                 break;
             }
         }
-        last_value = to_underlying(card.rank());
-        last_color = card.color();
+        last_value = to_underlying(card->rank());
+        last_color = card->color();
     }
 
     if (!valid_stack) {
         for (auto& card : grabbed) {
-            card.set_moving(false);
+            card->set_moving(false);
         }
         grabbed.clear();
     }
@@ -257,9 +257,9 @@ bool CardStack::preview_card(Gfx::IntPoint click_location)
     RefPtr<Card> last_intersect;
 
     for (auto& card : m_stack) {
-        if (!card.rect().contains(click_location))
+        if (!card->rect().contains(click_location))
             continue;
-        if (card.is_upside_down())
+        if (card->is_upside_down())
             continue;
 
         last_intersect = card;
@@ -275,7 +275,7 @@ bool CardStack::preview_card(Gfx::IntPoint click_location)
 void CardStack::clear_card_preview()
 {
     for (auto& card : m_stack)
-        card.set_previewed(false);
+        card->set_previewed(false);
 }
 
 bool CardStack::make_top_card_visible()
@@ -350,7 +350,7 @@ void CardStack::calculate_bounding_box()
     size_t card_position = 0;
     for (auto& card : m_stack) {
         if (card_position % m_rules.step == 0 && card_position != 0) {
-            if (card.is_upside_down()) {
+            if (card->is_upside_down()) {
                 width += m_rules.shift_x;
                 height += m_rules.shift_y_upside_down;
             } else {

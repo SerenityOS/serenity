@@ -15,12 +15,12 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryList>> MediaQueryList::create(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaQueryList>> MediaQueryList::create(DOM::Document& document, Vector<NonnullRefPtr<MediaQuery>>&& media)
 {
     return MUST_OR_THROW_OOM(document.heap().allocate<MediaQueryList>(document.realm(), document, move(media)));
 }
 
-MediaQueryList::MediaQueryList(DOM::Document& document, NonnullRefPtrVector<MediaQuery>&& media)
+MediaQueryList::MediaQueryList(DOM::Document& document, Vector<NonnullRefPtr<MediaQuery>>&& media)
     : DOM::EventTarget(document.realm())
     , m_document(document)
     , m_media(move(media))
@@ -52,7 +52,7 @@ DeprecatedString MediaQueryList::media() const
 bool MediaQueryList::matches() const
 {
     for (auto& media : m_media) {
-        if (media.matches())
+        if (media->matches())
             return true;
     }
     return false;
@@ -62,7 +62,7 @@ bool MediaQueryList::evaluate()
 {
     bool now_matches = false;
     for (auto& media : m_media) {
-        now_matches = now_matches || media.evaluate(m_document->window());
+        now_matches = now_matches || media->evaluate(m_document->window());
     }
 
     return now_matches;

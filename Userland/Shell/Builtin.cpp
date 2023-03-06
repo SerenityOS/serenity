@@ -1014,7 +1014,7 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
         auto timer = Core::ElapsedTimer::start_new();
         for (auto& job : run_commands(commands)) {
             block_on_job(job);
-            exit_code = job.exit_code();
+            exit_code = job->exit_code();
         }
         iteration_times.add(static_cast<float>(timer.elapsed()));
     }
@@ -1190,7 +1190,7 @@ ErrorOr<int> Shell::builtin_not(Main::Arguments arguments)
     for (auto& job : run_commands(commands)) {
         found_a_job = true;
         block_on_job(job);
-        exit_code = job.exit_code();
+        exit_code = job->exit_code();
     }
     // In case it was a function.
     if (!found_a_job)
@@ -1242,7 +1242,7 @@ ErrorOr<int> Shell::builtin_kill(Main::Arguments arguments)
     return exit_code;
 }
 
-ErrorOr<bool> Shell::run_builtin(const AST::Command& command, NonnullRefPtrVector<AST::Rewiring> const& rewirings, int& retval)
+ErrorOr<bool> Shell::run_builtin(const AST::Command& command, Vector<NonnullRefPtr<AST::Rewiring>> const& rewirings, int& retval)
 {
     if (command.argv.is_empty())
         return false;
@@ -1266,7 +1266,7 @@ ErrorOr<bool> Shell::run_builtin(const AST::Command& command, NonnullRefPtrVecto
     SavedFileDescriptors fds { rewirings };
 
     for (auto& rewiring : rewirings) {
-        int rc = dup2(rewiring.old_fd, rewiring.new_fd);
+        int rc = dup2(rewiring->old_fd, rewiring->new_fd);
         if (rc < 0) {
             perror("dup2(run)");
             return false;

@@ -18,7 +18,7 @@ Node const* PageNode::parent() const
 
 ErrorOr<Span<NonnullRefPtr<Node const>>> PageNode::children() const
 {
-    static NonnullRefPtrVector<Node const> empty_vector;
+    static Vector<NonnullRefPtr<Node const>> empty_vector;
     return empty_vector.span();
 }
 

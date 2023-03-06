@@ -127,7 +127,7 @@ ResultOr<void> Database::add_table(TableDef& table)
         return Result { SQLCommand::Unknown, SQLErrorCode::TableExists, table.name() };
 
     for (auto& column : table.columns()) {
-        if (!m_table_columns->insert(column.key()))
+        if (!m_table_columns->insert(column->key()))
             VERIFY_NOT_REACHED();
     }
 

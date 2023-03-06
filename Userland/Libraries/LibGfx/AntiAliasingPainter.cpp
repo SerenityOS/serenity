@@ -232,52 +232,52 @@ void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thick
     Optional<FloatLine> first_line;
 
     for (auto& segment : path.segments()) {
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::Invalid:
             VERIFY_NOT_REACHED();
         case Segment::Type::MoveTo:
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         case Segment::Type::LineTo:
-            draw_line(cursor, segment.point(), color, thickness);
+            draw_line(cursor, segment->point(), color, thickness);
             if (thickness > 1) {
                 if (!first_line.has_value())
-                    first_line = FloatLine(cursor, segment.point());
+                    first_line = FloatLine(cursor, segment->point());
                 if (previous_was_line)
-                    stroke_segment_intersection(cursor, segment.point(), last_line, color, thickness);
+                    stroke_segment_intersection(cursor, segment->point(), last_line, color, thickness);
                 last_line.set_a(cursor);
-                last_line.set_b(segment.point());
+                last_line.set_b(segment->point());
             }
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto through = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
-            draw_quadratic_bezier_curve(through, cursor, segment.point(), color, thickness);
-            cursor = segment.point();
+            auto through = static_cast<QuadraticBezierCurveSegment const&>(*segment).through();
+            draw_quadratic_bezier_curve(through, cursor, segment->point(), color, thickness);
+            cursor = segment->point();
             break;
         }
         case Segment::Type::CubicBezierCurveTo: {
-            auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
             auto through_0 = curve.through_0();
             auto through_1 = curve.through_1();
-            draw_cubic_bezier_curve(through_0, through_1, cursor, segment.point(), color, thickness);
-            cursor = segment.point();
+            draw_cubic_bezier_curve(through_0, through_1, cursor, segment->point(), color, thickness);
+            cursor = segment->point();
             break;
         }
         case Segment::Type::EllipticalArcTo:
-            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
-            draw_elliptical_arc(cursor, segment.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
-            cursor = segment.point();
+            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
+            draw_elliptical_arc(cursor, segment->point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
+            cursor = segment->point();
             break;
         }
 
-        previous_was_line = segment.type() == Segment::Type::LineTo;
+        previous_was_line = segment->type() == Segment::Type::LineTo;
     }
 
     // Check if the figure was started and closed as line at the same position.
-    if (thickness > 1 && previous_was_line && path.segments().size() >= 2 && path.segments().first().point() == cursor
-        && (path.segments().first().type() == Segment::Type::LineTo
-            || (path.segments().first().type() == Segment::Type::MoveTo && path.segments()[1].type() == Segment::Type::LineTo))) {
+    if (thickness > 1 && previous_was_line && path.segments().size() >= 2 && path.segments().first()->point() == cursor
+        && (path.segments().first()->type() == Segment::Type::LineTo
+            || (path.segments().first()->type() == Segment::Type::MoveTo && path.segments()[1]->type() == Segment::Type::LineTo))) {
         stroke_segment_intersection(first_line.value().a(), first_line.value().b(), last_line, color, thickness);
     }
 }

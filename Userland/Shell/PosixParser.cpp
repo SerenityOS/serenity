@@ -663,7 +663,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_complete_command()
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_list()
 {
-    NonnullRefPtrVector<AST::Node> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
     Vector<AST::Position> positions;
 
     auto start_position = peek().position.value_or(empty_position());
@@ -1120,7 +1120,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_case_clause()
 ErrorOr<Parser::CaseItemsResult> Parser::parse_case_list()
 {
     // Just a list of words split by '|', delimited by ')'
-    NonnullRefPtrVector<AST::Node> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
     Vector<AST::Position> pipes;
 
     for (;;) {
@@ -1291,7 +1291,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_compound_list()
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_term()
 {
-    NonnullRefPtrVector<AST::Node> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
     Vector<AST::Position> positions;
 
     auto start_position = peek().position.value_or(empty_position());
@@ -1381,7 +1381,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
 
 RefPtr<AST::Node> Parser::parse_word_list()
 {
-    NonnullRefPtrVector<AST::Node> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
 
     auto start_position = peek().position.value_or(empty_position());
 
@@ -1568,7 +1568,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
         }
 
         if (!node) {
-            NonnullRefPtrVector<AST::Node> arguments;
+            Vector<NonnullRefPtr<AST::Node>> arguments;
             arguments.append(make_ref_counted<AST::BarewordLiteral>(
                 token.position.value_or(empty_position()),
                 x.parameter));
@@ -1787,7 +1787,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
     auto start_position = peek().position.value_or(empty_position());
 
     Vector<String> definitions;
-    NonnullRefPtrVector<AST::Node> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
 
     for (;;) {
         if (auto io_redirect = TRY(parse_io_redirect()))
@@ -1858,7 +1858,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
             //             "substitute_aliases"sv,
             //             empty_position(),
             //         },
-            //         NonnullRefPtrVector<AST::Node> { *new_word },
+            //         Vector<NonnullRefPtr<AST::Node>> { *new_word },
             //         Optional<AST::Position> {});
             // }
 

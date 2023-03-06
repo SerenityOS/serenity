@@ -634,9 +634,9 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     }
 
     // Resolve redirections.
-    NonnullRefPtrVector<AST::Rewiring> rewirings;
+    Vector<NonnullRefPtr<AST::Rewiring>> rewirings;
     auto resolve_redirection = [&](auto& redirection) -> ErrorOr<void> {
-        auto rewiring = TRY(redirection.apply());
+        auto rewiring = TRY(redirection->apply());
 
         if (rewiring->fd_action != AST::Rewiring::Close::ImmediatelyCloseNew)
             rewirings.append(*rewiring);
@@ -675,18 +675,18 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
     auto apply_rewirings = [&]() -> ErrorOr<void> {
         for (auto& rewiring : rewirings) {
 
-            dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)"sv : command.argv[0], getpid(), rewiring.old_fd, rewiring.new_fd);
-            int rc = dup2(rewiring.old_fd, rewiring.new_fd);
+            dbgln_if(SH_DEBUG, "in {}<{}>, dup2({}, {})", command.argv.is_empty() ? "(<Empty>)"sv : command.argv[0], getpid(), rewiring->old_fd, rewiring->new_fd);
+            int rc = dup2(rewiring->old_fd, rewiring->new_fd);
             if (rc < 0)
                 return Error::from_syscall("dup2"sv, rc);
-            // {new,old}_fd is closed via the `fds` collector, but rewiring.other_pipe_end->{new,old}_fd
+            // {new,old}_fd is closed via the `fds` collector, but rewiring->other_pipe_end->{new,old}_fd
             // isn't yet in that collector when the first child spawns.
-            if (rewiring.other_pipe_end) {
-                if (rewiring.fd_action == AST::Rewiring::Close::RefreshNew) {
-                    if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->new_fd) < 0)
+            if (rewiring->other_pipe_end) {
+                if (rewiring->fd_action == AST::Rewiring::Close::RefreshNew) {
+                    if (rewiring->other_pipe_end && close(rewiring->other_pipe_end->new_fd) < 0)
                         perror("close other pipe end");
-                } else if (rewiring.fd_action == AST::Rewiring::Close::RefreshOld) {
-                    if (rewiring.other_pipe_end && close(rewiring.other_pipe_end->old_fd) < 0)
+                } else if (rewiring->fd_action == AST::Rewiring::Close::RefreshOld) {
+                    if (rewiring->other_pipe_end && close(rewiring->other_pipe_end->old_fd) < 0)
                         perror("close other pipe end");
                 }
             }
@@ -714,7 +714,7 @@ ErrorOr<RefPtr<Job>> Shell::run_command(const AST::Command& command)
         SavedFileDescriptors fds { rewirings };
 
         for (auto& rewiring : rewirings)
-            TRY(Core::System::dup2(rewiring.old_fd, rewiring.new_fd));
+            TRY(Core::System::dup2(rewiring->old_fd, rewiring->new_fd));
 
         if (int local_return_code = 0; invoke_function(command, local_return_code)) {
             last_return_code = local_return_code;
@@ -1001,7 +1001,7 @@ void Shell::run_tail(RefPtr<Job> job)
     }
 }
 
-NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
+Vector<NonnullRefPtr<Job>> Shell::run_commands(Vector<AST::Command>& commands)
 {
     if (m_error != ShellError::None) {
         possibly_print_error();
@@ -1010,7 +1010,7 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
         return {};
     }
 
-    NonnullRefPtrVector<Job> spawned_jobs;
+    Vector<NonnullRefPtr<Job>> spawned_jobs;
 
     for (auto& command : commands) {
         if constexpr (SH_DEBUG) {
@@ -1018,13 +1018,13 @@ NonnullRefPtrVector<Job> Shell::run_commands(Vector<AST::Command>& commands)
             for (auto& arg : command.argv)
                 dbgln("argv: {}", arg);
             for (auto& redir : command.redirections) {
-                if (redir.is_path_redirection()) {
+                if (redir->is_path_redirection()) {
                     auto path_redir = (const AST::PathRedirection*)&redir;
                     dbgln("redir path '{}' <-({})-> {}", path_redir->path, (int)path_redir->direction, path_redir->fd);
-                } else if (redir.is_fd_redirection()) {
+                } else if (redir->is_fd_redirection()) {
                     auto* fdredir = (const AST::FdRedirection*)&redir;
                     dbgln("redir fd {} -> {}", fdredir->old_fd, fdredir->new_fd);
-                } else if (redir.is_close_redirection()) {
+                } else if (redir->is_close_redirection()) {
                     auto close_redir = (const AST::CloseRedirection*)&redir;
                     dbgln("close fd {}", close_redir->fd);
                 } else {
@@ -2551,7 +2551,7 @@ RefPtr<AST::Node> Shell::parse(StringView input, bool interactive, bool as_comma
 
     auto nodes = parser.parse_as_multiple_expressions();
     return make_ref_counted<AST::ListConcatenate>(
-        nodes.is_empty() ? AST::Position { 0, 0, { 0, 0 }, { 0, 0 } } : nodes.first().position(),
+        nodes.is_empty() ? AST::Position { 0, 0, { 0, 0 }, { 0, 0 } } : nodes.first()->position(),
         move(nodes));
 }
 
@@ -2572,10 +2572,10 @@ void FileDescriptionCollector::add(int fd)
     m_fds.append(fd);
 }
 
-SavedFileDescriptors::SavedFileDescriptors(NonnullRefPtrVector<AST::Rewiring> const& intended_rewirings)
+SavedFileDescriptors::SavedFileDescriptors(Vector<NonnullRefPtr<AST::Rewiring>> const& intended_rewirings)
 {
     for (auto& rewiring : intended_rewirings) {
-        int new_fd = dup(rewiring.new_fd);
+        int new_fd = dup(rewiring->new_fd);
         if (new_fd < 0) {
             if (errno != EBADF)
                 perror("dup");
@@ -2589,7 +2589,7 @@ SavedFileDescriptors::SavedFileDescriptors(NonnullRefPtrVector<AST::Rewiring> co
         auto rc = fcntl(new_fd, F_SETFD, flags | FD_CLOEXEC);
         VERIFY(rc == 0);
 
-        m_saves.append({ rewiring.new_fd, new_fd });
+        m_saves.append({ rewiring->new_fd, new_fd });
         m_collector.add(new_fd);
     }
 }

@@ -104,7 +104,7 @@ private:
     Mode m_mode { Mode::SingleSuit };
 
     LastMove m_last_move;
-    NonnullRefPtrVector<Card> m_new_deck;
+    Vector<NonnullRefPtr<Card>> m_new_deck;
     Gfx::IntPoint m_mouse_down_location;
 
     bool m_mouse_down { false };

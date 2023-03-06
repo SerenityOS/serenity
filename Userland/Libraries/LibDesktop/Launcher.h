@@ -39,7 +39,7 @@ public:
     static bool open(const URL&, DeprecatedString const& handler_name = {});
     static bool open(const URL&, Details const& details);
     static Vector<DeprecatedString> get_handlers_for_url(const URL&);
-    static NonnullRefPtrVector<Details> get_handlers_with_details_for_url(const URL&);
+    static Vector<NonnullRefPtr<Details>> get_handlers_with_details_for_url(const URL&);
 };
 
 }

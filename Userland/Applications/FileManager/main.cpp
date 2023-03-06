@@ -66,7 +66,7 @@ static void do_create_archive(Vector<DeprecatedString> const& selected_file_path
 static void do_set_wallpaper(DeprecatedString const& file_path, GUI::Window* window);
 static void do_unzip_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window);
 static void show_properties(DeprecatedString const& container_dir_path, DeprecatedString const& path, Vector<DeprecatedString> const& selected, GUI::Window* window);
-static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, DeprecatedString const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
+static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, DeprecatedString const& full_path, RefPtr<GUI::Action>& default_action, Vector<NonnullRefPtr<LauncherHandler>>& current_file_launch_handlers);
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -310,7 +310,7 @@ void show_properties(DeprecatedString const& container_dir_path, DeprecatedStrin
     properties->show();
 }
 
-bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, DeprecatedString const& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers)
+bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView const& directory_view, DeprecatedString const& full_path, RefPtr<GUI::Action>& default_action, Vector<NonnullRefPtr<LauncherHandler>>& current_file_launch_handlers)
 {
     current_file_launch_handlers = directory_view.get_launch_handlers(full_path);
 
@@ -337,9 +337,9 @@ bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, DirectoryView c
         added_open_menu_items = true;
         auto& file_open_with_menu = menu->add_submenu("Open with");
         for (auto& handler : current_file_launch_handlers) {
-            if (&handler == default_file_handler.ptr())
+            if (handler == default_file_handler)
                 continue;
-            file_open_with_menu.add_action(handler.create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
+            file_open_with_menu.add_action(handler->create_launch_action([&, full_path = move(full_path)](auto& launcher_handler) {
                 directory_view.launch(URL::create_with_file_scheme(full_path), launcher_handler);
             }));
         }
@@ -502,7 +502,7 @@ ErrorOr<int> run_in_desktop_mode()
     TRY(desktop_context_menu->try_add_action(properties_action));
 
     RefPtr<GUI::Menu> file_context_menu;
-    NonnullRefPtrVector<LauncherHandler> current_file_handlers;
+    Vector<NonnullRefPtr<LauncherHandler>> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
     directory_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
@@ -1168,7 +1168,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     TRY(tree_view_directory_context_menu->try_add_action(properties_action));
 
     RefPtr<GUI::Menu> file_context_menu;
-    NonnullRefPtrVector<LauncherHandler> current_file_handlers;
+    Vector<NonnullRefPtr<LauncherHandler>> current_file_handlers;
     RefPtr<GUI::Action> file_context_menu_action_default_action;
 
     directory_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {

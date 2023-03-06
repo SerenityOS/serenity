@@ -52,7 +52,7 @@ ResultOr<Value> ChainedExpression::evaluate(ExecutionContext& context) const
     TRY(values.try_ensure_capacity(expressions().size()));
 
     for (auto& expression : expressions())
-        values.unchecked_append(TRY(expression.evaluate(context)));
+        values.unchecked_append(TRY(expression->evaluate(context)));
 
     return Value::create_tuple(move(values));
 }

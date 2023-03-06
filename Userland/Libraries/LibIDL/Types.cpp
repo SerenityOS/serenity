@@ -61,7 +61,7 @@ bool Type::includes_undefined() const
     // - the type is a union type and one of its member types includes undefined.
     if (is_union()) {
         for (auto& type : as_union().member_types()) {
-            if (type.includes_undefined())
+            if (type->includes_undefined())
                 return true;
         }
     }
@@ -87,7 +87,7 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
 
         for (auto& this_member_type : this_union.member_types()) {
             for (auto& other_member_type : other_union.member_types()) {
-                if (!this_member_type.is_distinguishable_from(other_member_type))
+                if (!this_member_type->is_distinguishable_from(other_member_type))
                     return false;
             }
         }
@@ -196,7 +196,7 @@ int EffectiveOverloadSet::distinguishing_argument_index()
 
         for (auto first_item_index = 0u; first_item_index < m_items.size(); ++first_item_index) {
             for (auto second_item_index = first_item_index + 1; second_item_index < m_items.size(); ++second_item_index) {
-                if (!m_items[first_item_index].types[argument_index].is_distinguishable_from(m_items[second_item_index].types[argument_index])) {
+                if (!m_items[first_item_index].types[argument_index]->is_distinguishable_from(m_items[second_item_index].types[argument_index])) {
                     found_indistinguishable = true;
                     break;
                 }

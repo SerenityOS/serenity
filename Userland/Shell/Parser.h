@@ -27,7 +27,7 @@ public:
     /// Parse the given string *as* an expression
     /// that is to forcefully enclose it in double-quotes.
     RefPtr<AST::Node> parse_as_single_expression();
-    NonnullRefPtrVector<AST::Node> parse_as_multiple_expressions();
+    Vector<NonnullRefPtr<AST::Node>> parse_as_multiple_expressions();
 
     struct SavedOffset {
         size_t offset;
@@ -47,7 +47,7 @@ private:
     };
 
     struct SequenceParseResult {
-        NonnullRefPtrVector<AST::Node> entries;
+        Vector<NonnullRefPtr<AST::Node>> entries;
         Vector<AST::Position, 1> separator_positions;
         ShouldReadMoreSequences decision;
     };

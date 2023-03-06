@@ -2356,35 +2356,35 @@ void Painter::stroke_path(Path const& path, Color color, int thickness)
     FloatPoint cursor;
 
     for (auto& segment : path.segments()) {
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::Invalid:
             VERIFY_NOT_REACHED();
             break;
         case Segment::Type::MoveTo:
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         case Segment::Type::LineTo:
-            draw_line(cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
-            cursor = segment.point();
+            draw_line(cursor.to_type<int>(), segment->point().to_type<int>(), color, thickness);
+            cursor = segment->point();
             break;
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto through = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
-            draw_quadratic_bezier_curve(through.to_type<int>(), cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
-            cursor = segment.point();
+            auto through = static_cast<QuadraticBezierCurveSegment const&>(*segment).through();
+            draw_quadratic_bezier_curve(through.to_type<int>(), cursor.to_type<int>(), segment->point().to_type<int>(), color, thickness);
+            cursor = segment->point();
             break;
         }
         case Segment::Type::CubicBezierCurveTo: {
-            auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
             auto through_0 = curve.through_0();
             auto through_1 = curve.through_1();
-            draw_cubic_bezier_curve(through_0.to_type<int>(), through_1.to_type<int>(), cursor.to_type<int>(), segment.point().to_type<int>(), color, thickness);
-            cursor = segment.point();
+            draw_cubic_bezier_curve(through_0.to_type<int>(), through_1.to_type<int>(), cursor.to_type<int>(), segment->point().to_type<int>(), color, thickness);
+            cursor = segment->point();
             break;
         }
         case Segment::Type::EllipticalArcTo:
-            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
-            draw_elliptical_arc(cursor.to_type<int>(), segment.point().to_type<int>(), arc.center().to_type<int>(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
-            cursor = segment.point();
+            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
+            draw_elliptical_arc(cursor.to_type<int>(), segment->point().to_type<int>(), arc.center().to_type<int>(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), color, thickness);
+            cursor = segment->point();
             break;
         }
     }

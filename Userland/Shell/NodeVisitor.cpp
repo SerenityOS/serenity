@@ -38,7 +38,7 @@ void NodeVisitor::visit(const AST::BarewordLiteral*)
 void NodeVisitor::visit(const AST::BraceExpansion* node)
 {
     for (auto& entry : node->entries())
-        entry.visit(*this);
+        entry->visit(*this);
 }
 
 void NodeVisitor::visit(const AST::CastToCommand* node)
@@ -128,7 +128,7 @@ void NodeVisitor::visit(const AST::IfCond* node)
 void NodeVisitor::visit(const AST::ImmediateExpression* node)
 {
     for (auto& node : node->arguments())
-        node.visit(*this);
+        node->visit(*this);
 }
 
 void NodeVisitor::visit(const AST::Join* node)
@@ -141,9 +141,9 @@ void NodeVisitor::visit(const AST::MatchExpr* node)
 {
     node->matched_expr()->visit(*this);
     for (auto& entry : node->entries()) {
-        if (auto* ptr = entry.options.get_pointer<NonnullRefPtrVector<Node>>()) {
+        if (auto* ptr = entry.options.get_pointer<Vector<NonnullRefPtr<Node>>>()) {
             for (auto& option : *ptr)
-                option.visit(*this);
+                option->visit(*this);
         }
         if (entry.body)
             entry.body->visit(*this);
@@ -181,7 +181,7 @@ void NodeVisitor::visit(const AST::ReadWriteRedirection* node)
 void NodeVisitor::visit(const AST::Sequence* node)
 {
     for (auto& entry : node->entries())
-        entry.visit(*this);
+        entry->visit(*this);
 }
 
 void NodeVisitor::visit(const AST::Subshell* node)

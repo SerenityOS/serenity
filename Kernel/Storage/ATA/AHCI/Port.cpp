@@ -210,7 +210,7 @@ void AHCIPort::eject()
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
-    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
+    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()]->paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
     command_list_entries[unused_command_header.value()].prdbc = 0;
     command_list_entries[unused_command_header.value()].prdtl = 0;
@@ -221,7 +221,7 @@ void AHCIPort::eject()
     // handshake error bit in PxSERR register if CFL is incorrect.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | AHCI::CommandHeaderAttributes::C | AHCI::CommandHeaderAttributes::A;
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
+    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()]->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
     auto& fis = *(volatile FIS::HostToDevice::Register*)command_table.command_fis;
@@ -497,7 +497,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
     VERIFY(m_lock.is_locked());
     VERIFY(request.block_count() > 0);
 
-    NonnullRefPtrVector<Memory::PhysicalPage> allocated_dma_regions;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> allocated_dma_regions;
     for (size_t index = 0; index < calculate_descriptors_count(request.block_count()); index++) {
         allocated_dma_regions.append(m_dma_buffers.at(index));
     }
@@ -578,7 +578,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
-    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
+    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()]->paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
     command_list_entries[unused_command_header.value()].prdbc = 0;
     command_list_entries[unused_command_header.value()].prdtl = m_current_scatter_list->scatters_count();
@@ -591,7 +591,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba={:#08x}, ctbau={:#08x}, prdbc={:#08x}, prdtl={:#04x}, attributes={:#04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
+    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()]->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite, Memory::Region::Cacheable::No).release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Allocated command table at {}", representative_port_index(), command_table_region->vaddr());
@@ -652,7 +652,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     mark_command_header_ready_to_process(unused_command_header.value());
     full_memory_barrier();
 
-    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0].paddr());
+    dbgln_if(AHCI_DEBUG, "AHCI Port {}: Do a {}, lba {}, block count {} @ {}, ended", representative_port_index(), direction == AsyncBlockDeviceRequest::RequestType::Write ? "write" : "read", lba, block_count, m_dma_buffers[0]->paddr());
     return true;
 }
 
@@ -670,7 +670,7 @@ bool AHCIPort::identify_device()
     auto unused_command_header = try_to_find_unused_command_header();
     VERIFY(unused_command_header.has_value());
     auto* command_list_entries = (volatile AHCI::CommandHeader*)m_command_list_region->vaddr().as_ptr();
-    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()].paddr().get();
+    command_list_entries[unused_command_header.value()].ctba = m_command_table_pages[unused_command_header.value()]->paddr().get();
     command_list_entries[unused_command_header.value()].ctbau = 0;
     command_list_entries[unused_command_header.value()].prdbc = 512;
     command_list_entries[unused_command_header.value()].prdtl = 1;
@@ -679,7 +679,7 @@ bool AHCIPort::identify_device()
     // QEMU doesn't care if we don't set the correct CFL field in this register, real hardware will set an handshake error bit in PxSERR register.
     command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P;
 
-    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite).release_value();
+    auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()]->paddr().page_base(), Memory::page_round_up(sizeof(AHCI::CommandTable)).value(), "AHCI Command Table"sv, Memory::Region::Access::ReadWrite).release_value();
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();
     memset(const_cast<u8*>(command_table.command_fis), 0, 64);
     command_table.descriptors[0].base_high = 0;

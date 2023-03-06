@@ -52,7 +52,7 @@ private:
     ConditionsView();
 
     Vector<ConditionalFormat>* m_formats { nullptr };
-    NonnullRefPtrVector<GUI::Widget> m_widgets;
+    Vector<NonnullRefPtr<GUI::Widget>> m_widgets;
 };
 
 }

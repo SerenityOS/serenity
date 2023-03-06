@@ -65,7 +65,7 @@ WindowActions::WindowActions(GUI::Window& window)
                     on_tabs[i]();
             },
             &window));
-        m_tab_actions.last().set_status_tip(DeprecatedString::formatted("Switch to tab {}", i + 1));
+        m_tab_actions.last()->set_status_tip(DeprecatedString::formatted("Switch to tab {}", i + 1));
     }
     m_tab_actions.append(GUI::Action::create(
         "Last tab", { Mod_Ctrl, Key_9 }, [this](auto&) {
@@ -73,7 +73,7 @@ WindowActions::WindowActions(GUI::Window& window)
                 on_tabs[8]();
         },
         &window));
-    m_tab_actions.last().set_status_tip("Switch to last tab");
+    m_tab_actions.last()->set_status_tip("Switch to last tab");
 
     m_about_action = GUI::CommonActions::make_about_action("Browser", GUI::Icon::default_icon("app-browser"sv), &window);
 

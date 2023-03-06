@@ -21,7 +21,7 @@ class MediaList final : public Bindings::LegacyPlatformObject {
     WEB_PLATFORM_OBJECT(MediaList, Bindings::LegacyPlatformObject);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> create(JS::Realm&, NonnullRefPtrVector<MediaQuery>&& media);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> create(JS::Realm&, Vector<NonnullRefPtr<MediaQuery>>&& media);
     ~MediaList() = default;
 
     DeprecatedString media_text() const;
@@ -38,7 +38,7 @@ public:
     bool matches() const;
 
 private:
-    MediaList(JS::Realm&, NonnullRefPtrVector<MediaQuery>&&);
+    MediaList(JS::Realm&, Vector<NonnullRefPtr<MediaQuery>>&&);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
@@ -55,7 +55,7 @@ private:
     virtual bool named_property_setter_has_identifier() const override { return false; }
     virtual bool named_property_deleter_has_identifier() const override { return false; }
 
-    NonnullRefPtrVector<MediaQuery> m_media;
+    Vector<NonnullRefPtr<MediaQuery>> m_media;
 };
 
 }

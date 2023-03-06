@@ -149,9 +149,9 @@ RefPtr<AST::Node> Parser::parse_as_single_expression()
     return parser.parse_expression();
 }
 
-NonnullRefPtrVector<AST::Node> Parser::parse_as_multiple_expressions()
+Vector<NonnullRefPtr<AST::Node>> Parser::parse_as_multiple_expressions()
 {
-    NonnullRefPtrVector<AST::Node> nodes;
+    Vector<NonnullRefPtr<AST::Node>> nodes;
     for (;;) {
         consume_while(is_whitespace);
         auto node = parse_expression();
@@ -168,7 +168,7 @@ RefPtr<AST::Node> Parser::parse_toplevel()
     auto rule_start = push_start();
 
     SequenceParseResult result;
-    NonnullRefPtrVector<AST::Node> sequence;
+    Vector<NonnullRefPtr<AST::Node>> sequence;
     Vector<AST::Position> positions;
     do {
         result = parse_sequence();
@@ -188,7 +188,7 @@ RefPtr<AST::Node> Parser::parse_toplevel()
 
 Parser::SequenceParseResult Parser::parse_sequence()
 {
-    NonnullRefPtrVector<AST::Node> left;
+    Vector<NonnullRefPtr<AST::Node>> left;
     auto read_terminators = [&](bool consider_tabs_and_spaces) {
         if (m_heredoc_initiations.is_empty()) {
         discard_terminators:;
@@ -927,7 +927,7 @@ AST::MatchEntry Parser::parse_match_entry()
 {
     auto rule_start = push_start();
 
-    NonnullRefPtrVector<AST::Node> patterns;
+    Vector<NonnullRefPtr<AST::Node>> patterns;
     Vector<Regex<ECMA262>> regexps;
     Vector<AST::Position> pipe_positions;
     Optional<Vector<String>> match_names;
@@ -942,14 +942,14 @@ AST::MatchEntry Parser::parse_match_entry()
     auto regex_pattern = parse_regex_pattern();
     if (regex_pattern.has_value()) {
         if (auto error = regex_pattern.value().parser_result.error; error != regex::Error::NoError)
-            return { NonnullRefPtrVector<AST::Node> {}, {}, {}, {}, create<AST::SyntaxError>(String::from_utf8(regex::get_error_string(error)).release_value_but_fixme_should_propagate_errors(), false) };
+            return { Vector<NonnullRefPtr<AST::Node>> {}, {}, {}, {}, create<AST::SyntaxError>(String::from_utf8(regex::get_error_string(error)).release_value_but_fixme_should_propagate_errors(), false) };
 
         pattern_kind = Regex;
         regexps.append(regex_pattern.release_value());
     } else {
         auto glob_pattern = parse_match_pattern();
         if (!glob_pattern)
-            return { NonnullRefPtrVector<AST::Node> {}, {}, {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body"_string.release_value_but_fixme_should_propagate_errors(), true) };
+            return { Vector<NonnullRefPtr<AST::Node>> {}, {}, {}, {}, create<AST::SyntaxError>("Expected a pattern in 'match' body"_string.release_value_but_fixme_should_propagate_errors(), true) };
 
         pattern_kind = Glob;
         patterns.append(glob_pattern.release_nonnull());
@@ -1633,7 +1633,7 @@ RefPtr<AST::Node> Parser::parse_immediate_expression()
 
     consume_while(is_whitespace);
 
-    NonnullRefPtrVector<AST::Node> arguments;
+    Vector<NonnullRefPtr<AST::Node>> arguments;
     do {
         auto expr = parse_expression();
         if (!expr)
@@ -2021,7 +2021,7 @@ RefPtr<AST::Node> Parser::parse_brace_expansion_spec()
     m_extra_chars_not_allowed_in_barewords.append(',');
 
     auto rule_start = push_start();
-    NonnullRefPtrVector<AST::Node> subexpressions;
+    Vector<NonnullRefPtr<AST::Node>> subexpressions;
 
     if (next_is(","sv)) {
         // Note that we don't consume the ',' here.

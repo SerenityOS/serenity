@@ -33,7 +33,7 @@ public:
     // We are informed of an audio buffer size change. This happens off-audio-thread so we can allocate.
     ErrorOr<void> resize_internal_buffers_to(size_t buffer_size);
 
-    NonnullRefPtrVector<Processor> const& processor_chain() const { return m_processor_chain; }
+    Vector<NonnullRefPtr<Processor>> const& processor_chain() const { return m_processor_chain; }
     NonnullRefPtr<Transport const> transport() const { return m_transport; }
     NonnullRefPtr<DSP::Effects::Mastering> track_mastering() { return m_track_mastering; }
 
@@ -53,7 +53,7 @@ protected:
     // Subclasses override to provide the base signal to the processing chain
     virtual void compute_current_clips_signal() = 0;
 
-    NonnullRefPtrVector<Processor> m_processor_chain;
+    Vector<NonnullRefPtr<Processor>> m_processor_chain;
     NonnullRefPtr<Transport> m_transport;
     NonnullRefPtr<Effects::Mastering> m_track_mastering;
     NonnullRefPtr<Keyboard> m_keyboard;
@@ -90,7 +90,7 @@ protected:
     void compute_current_clips_signal() override;
 
 private:
-    NonnullRefPtrVector<NoteClip> m_clips;
+    Vector<NonnullRefPtr<NoteClip>> m_clips;
 };
 
 class AudioTrack final : public Track {
@@ -103,13 +103,13 @@ public:
     }
 
     bool check_processor_chain_valid() const override;
-    NonnullRefPtrVector<AudioClip> const& clips() const { return m_clips; }
+    Vector<NonnullRefPtr<AudioClip>> const& clips() const { return m_clips; }
 
 protected:
     void compute_current_clips_signal() override;
 
 private:
-    NonnullRefPtrVector<AudioClip> m_clips;
+    Vector<NonnullRefPtr<AudioClip>> m_clips;
 };
 
 }

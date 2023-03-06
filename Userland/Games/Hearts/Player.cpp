@@ -25,10 +25,10 @@ static bool compare_card_points_and_value(CardWithIndex& cwi1, CardWithIndex& cw
     return false;
 }
 
-NonnullRefPtrVector<Card> Player::pick_cards_to_pass(PassingDirection)
+Vector<NonnullRefPtr<Card>> Player::pick_cards_to_pass(PassingDirection)
 {
     auto sorted_hand = hand_sorted_by_fn(compare_card_value);
-    NonnullRefPtrVector<Card> cards;
+    Vector<NonnullRefPtr<Card>> cards;
     cards.append(*sorted_hand[0].card);
     cards.append(*sorted_hand[1].card);
     cards.append(*sorted_hand[2].card);
@@ -158,11 +158,11 @@ bool Player::has_card_of_suit(Cards::Suit suit)
     return matching_card.has_value();
 }
 
-void Player::remove_cards(NonnullRefPtrVector<Card> const& cards)
+void Player::remove_cards(Vector<NonnullRefPtr<Card>> const& cards)
 {
     for (auto& card : cards) {
         hand.remove_first_matching([&card](auto& other_card) {
-            return other_card.ptr() == &card;
+            return other_card == card;
         });
     }
 }

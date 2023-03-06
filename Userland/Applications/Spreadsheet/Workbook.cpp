@@ -18,7 +18,7 @@
 
 namespace Spreadsheet {
 
-Workbook::Workbook(NonnullRefPtrVector<Sheet>&& sheets, GUI::Window& parent_window)
+Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_window)
     : m_sheets(move(sheets))
     , m_vm(JS::VM::create())
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_vm))

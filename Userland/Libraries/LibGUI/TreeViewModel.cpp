@@ -32,12 +32,12 @@ ModelIndex TreeViewModel::parent_index(ModelIndex const& index) const
         return {};
     if (parent_node->parent_node() == nullptr) {
         for (size_t row = 0; row < m_nodes.size(); row++)
-            if (m_nodes.ptr_at(row).ptr() == parent_node)
+            if (m_nodes[row] == parent_node)
                 return create_index(static_cast<int>(row), 0, parent_node);
         VERIFY_NOT_REACHED();
     }
     for (size_t row = 0; row < parent_node->parent_node()->child_nodes().size(); row++) {
-        auto const* child_node_at_row = parent_node->parent_node()->child_nodes().ptr_at(row).ptr();
+        auto const* child_node_at_row = parent_node->parent_node()->child_nodes()[row].ptr();
         if (child_node_at_row == parent_node)
             return create_index(static_cast<int>(row), 0, parent_node);
     }

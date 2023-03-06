@@ -27,7 +27,7 @@
 
 namespace Spreadsheet {
 
-SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVector<Sheet>&& sheets, bool should_add_sheet_if_empty)
+SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullRefPtr<Sheet>>&& sheets, bool should_add_sheet_if_empty)
     : m_workbook(make<Workbook>(move(sheets), parent_window))
 {
     set_fill_with_background_color(true);
@@ -111,7 +111,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, NonnullRefPtrVe
     m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         DeprecatedString name;
         if (GUI::InputBox::show(window(), name, "Name for new sheet"sv, "Create sheet"sv) == GUI::Dialog::ExecResult::OK) {
-            NonnullRefPtrVector<Sheet> new_sheets;
+            Vector<NonnullRefPtr<Sheet>> new_sheets;
             new_sheets.append(m_workbook->add_sheet(name));
             setup_tabs(move(new_sheets));
         }
@@ -330,10 +330,10 @@ void SpreadsheetWidget::clipboard_content_did_change(DeprecatedString const& mim
         m_paste_action->set_enabled(!sheet->selected_cells().is_empty() && mime_type.starts_with("text/"sv));
 }
 
-void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
+void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 {
     for (auto& sheet : new_sheets) {
-        auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(sheet.name(), sheet);
+        auto& new_view = m_tab_widget->add_tab<SpreadsheetView>(sheet->name(), sheet);
         new_view.model()->on_cell_data_change = [&](auto& cell, auto& previous_data) {
             undo_stack().push(make<CellsUndoCommand>(cell, previous_data));
             window()->set_modified(true);
@@ -570,7 +570,7 @@ void SpreadsheetWidget::add_sheet()
     name.append("Sheet"sv);
     name.appendff(" {}", m_workbook->sheets().size() + 1);
 
-    NonnullRefPtrVector<Sheet> new_sheets;
+    Vector<NonnullRefPtr<Sheet>> new_sheets;
     new_sheets.append(m_workbook->add_sheet(name.string_view()));
     setup_tabs(move(new_sheets));
 }
@@ -579,7 +579,7 @@ void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
 {
     VERIFY(m_workbook == &sheet->workbook());
 
-    NonnullRefPtrVector<Sheet> new_sheets;
+    Vector<NonnullRefPtr<Sheet>> new_sheets;
     new_sheets.append(move(sheet));
     m_workbook->sheets().extend(new_sheets);
     setup_tabs(new_sheets);

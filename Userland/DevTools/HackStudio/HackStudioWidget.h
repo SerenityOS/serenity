@@ -177,9 +177,9 @@ private:
     ProjectLocation current_project_location() const;
     void update_history_actions();
 
-    NonnullRefPtrVector<EditorWrapper> m_all_editor_wrappers;
+    Vector<NonnullRefPtr<EditorWrapper>> m_all_editor_wrappers;
     RefPtr<EditorWrapper> m_current_editor_wrapper;
-    NonnullRefPtrVector<GUI::TabWidget> m_all_editor_tab_widgets;
+    Vector<NonnullRefPtr<GUI::TabWidget>> m_all_editor_tab_widgets;
     RefPtr<GUI::TabWidget> m_current_editor_tab_widget;
 
     HashMap<DeprecatedString, NonnullRefPtr<ProjectFile>> m_open_files;
@@ -217,7 +217,7 @@ private:
     RefPtr<EditorWrapper> m_current_editor_in_execution;
     RefPtr<GUI::Menu> m_recent_projects_submenu { nullptr };
 
-    NonnullRefPtrVector<GUI::Action> m_new_file_actions;
+    Vector<NonnullRefPtr<GUI::Action>> m_new_file_actions;
     RefPtr<GUI::Action> m_new_plain_file_action;
 
     RefPtr<GUI::Action> m_new_directory_action;

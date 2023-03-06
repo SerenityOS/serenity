@@ -183,7 +183,7 @@ ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& ca
 {
     // Note: We hold the m_access_lock for a brief moment just to ensure we get
     // a complete Vector in case someone wants to mutate it.
-    NonnullRefPtrVector<DeviceIdentifier> device_identifiers;
+    Vector<NonnullRefPtr<DeviceIdentifier>> device_identifiers;
     {
         SpinlockLocker locker(m_access_lock);
         VERIFY(!m_device_identifiers.is_empty());
@@ -198,10 +198,11 @@ ErrorOr<void> Access::fast_enumerate(Function<void(DeviceIdentifier const&)>& ca
 DeviceIdentifier const& Access::get_device_identifier(Address address) const
 {
     for (auto& device_identifier : m_device_identifiers) {
-        if (device_identifier.address().domain() == address.domain()
-            && device_identifier.address().bus() == address.bus()
-            && device_identifier.address().device() == address.device()
-            && device_identifier.address().function() == address.function()) {
+        auto device_address = device_identifier->address();
+        if (device_address.domain() == address.domain()
+            && device_address.bus() == address.bus()
+            && device_address.device() == address.device()
+            && device_address.function() == address.function()) {
             return device_identifier;
         }
     }

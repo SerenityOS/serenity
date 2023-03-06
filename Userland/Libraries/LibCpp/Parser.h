@@ -83,7 +83,7 @@ private:
     bool match_destructor(StringView class_name);
     bool match_using_namespace_declaration();
 
-    Optional<NonnullRefPtrVector<Parameter const>> parse_parameter_list(ASTNode const& parent);
+    Optional<Vector<NonnullRefPtr<Parameter const>>> parse_parameter_list(ASTNode const& parent);
     Optional<Token> consume_whitespace();
     void consume_preprocessor();
 
@@ -110,15 +110,15 @@ private:
     NonnullRefPtr<Comment const> parse_comment(ASTNode const& parent);
     NonnullRefPtr<IfStatement const> parse_if_statement(ASTNode const& parent);
     NonnullRefPtr<NamespaceDeclaration const> parse_namespace_declaration(ASTNode const& parent, bool is_nested_namespace = false);
-    NonnullRefPtrVector<Declaration const> parse_declarations_in_translation_unit(ASTNode const& parent);
+    Vector<NonnullRefPtr<Declaration const>> parse_declarations_in_translation_unit(ASTNode const& parent);
     RefPtr<Declaration const> parse_single_declaration_in_translation_unit(ASTNode const& parent);
-    NonnullRefPtrVector<Type const> parse_template_arguments(ASTNode const& parent);
+    Vector<NonnullRefPtr<Type const>> parse_template_arguments(ASTNode const& parent);
     NonnullRefPtr<Name const> parse_name(ASTNode const& parent);
     NonnullRefPtr<CppCastExpression const> parse_cpp_cast_expression(ASTNode const& parent);
     NonnullRefPtr<SizeofExpression const> parse_sizeof_expression(ASTNode const& parent);
     NonnullRefPtr<BracedInitList const> parse_braced_init_list(ASTNode const& parent);
     NonnullRefPtr<CStyleCastExpression const> parse_c_style_cast_expression(ASTNode const& parent);
-    NonnullRefPtrVector<Declaration const> parse_class_members(StructOrClassDeclaration& parent);
+    Vector<NonnullRefPtr<Declaration const>> parse_class_members(StructOrClassDeclaration& parent);
     NonnullRefPtr<Constructor const> parse_constructor(ASTNode const& parent);
     NonnullRefPtr<Destructor const> parse_destructor(ASTNode const& parent);
     NonnullRefPtr<UsingNamespaceDeclaration const> parse_using_namespace_declaration(ASTNode const& parent);
@@ -138,7 +138,7 @@ private:
 
     struct State {
         size_t token_index { 0 };
-        NonnullRefPtrVector<ASTNode> state_nodes;
+        Vector<NonnullRefPtr<ASTNode>> state_nodes;
     };
 
     void error(StringView message = {});
@@ -192,7 +192,7 @@ private:
     Vector<State> m_saved_states;
     RefPtr<TranslationUnit> m_root_node;
     Vector<DeprecatedString> m_errors;
-    NonnullRefPtrVector<ASTNode> m_nodes;
+    Vector<NonnullRefPtr<ASTNode>> m_nodes;
 };
 
 }

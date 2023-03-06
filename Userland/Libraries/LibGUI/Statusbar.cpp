@@ -63,46 +63,46 @@ void Statusbar::set_segment_count(size_t count)
 void Statusbar::update_segment(size_t index)
 {
     auto& segment = m_segments.at(index);
-    if (segment.mode() == Segment::Mode::Auto) {
-        if (segment.restored_text().is_empty())
-            segment.set_visible(false);
+    if (segment->mode() == Segment::Mode::Auto) {
+        if (segment->restored_text().is_empty())
+            segment->set_visible(false);
         else {
             constexpr auto horizontal_padding { 10 };
-            auto width = font().width(segment.restored_text()) + horizontal_padding;
-            segment.set_restored_width(width);
-            segment.set_fixed_width(width);
+            auto width = font().width(segment->restored_text()) + horizontal_padding;
+            segment->set_restored_width(width);
+            segment->set_fixed_width(width);
         }
-    } else if (segment.mode() == Segment::Mode::Fixed) {
-        if (segment.max_width().is_int()) {
-            segment.set_restored_width(segment.max_width().as_int());
-            segment.set_fixed_width(segment.max_width());
+    } else if (segment->mode() == Segment::Mode::Fixed) {
+        if (segment->max_width().is_int()) {
+            segment->set_restored_width(segment->max_width().as_int());
+            segment->set_fixed_width(segment->max_width());
         }
     }
 
-    if (segment.override_text().is_null()) {
+    if (segment->override_text().is_null()) {
         for (size_t i = 1; i < m_segments.size(); i++) {
             if (!text(i).is_empty())
-                m_segments[i].set_visible(true);
+                m_segments[i]->set_visible(true);
         }
-        segment.set_text(String::from_utf8(segment.restored_text()).release_value_but_fixme_should_propagate_errors());
-        segment.set_frame_shape(Gfx::FrameShape::Panel);
-        if (segment.mode() != Segment::Mode::Proportional)
-            segment.set_fixed_width(segment.restored_width());
+        segment->set_text(String::from_utf8(segment->restored_text()).release_value_but_fixme_should_propagate_errors());
+        segment->set_frame_shape(Gfx::FrameShape::Panel);
+        if (segment->mode() != Segment::Mode::Proportional)
+            segment->set_fixed_width(segment->restored_width());
     } else {
         for (size_t i = 1; i < m_segments.size(); i++) {
-            if (!m_segments[i].is_clickable())
-                m_segments[i].set_visible(false);
+            if (!m_segments[i]->is_clickable())
+                m_segments[i]->set_visible(false);
         }
-        segment.set_text(String::from_utf8(segment.override_text()).release_value_but_fixme_should_propagate_errors());
-        segment.set_frame_shape(Gfx::FrameShape::NoFrame);
-        if (segment.mode() != Segment::Mode::Proportional)
-            segment.set_fixed_width(SpecialDimension::Grow);
+        segment->set_text(String::from_utf8(segment->override_text()).release_value_but_fixme_should_propagate_errors());
+        segment->set_frame_shape(Gfx::FrameShape::NoFrame);
+        if (segment->mode() != Segment::Mode::Proportional)
+            segment->set_fixed_width(SpecialDimension::Grow);
     }
 }
 
 DeprecatedString Statusbar::text(size_t index) const
 {
-    return m_segments.at(index).text().to_deprecated_string();
+    return m_segments[index]->text().to_deprecated_string();
 }
 
 void Statusbar::set_text(DeprecatedString text)
@@ -112,13 +112,13 @@ void Statusbar::set_text(DeprecatedString text)
 
 void Statusbar::set_text(size_t index, DeprecatedString text)
 {
-    m_segments.at(index).m_restored_text = move(text);
+    m_segments[index]->m_restored_text = move(text);
     update_segment(index);
 }
 
 void Statusbar::set_override_text(DeprecatedString override_text)
 {
-    m_segments.at(0).m_override_text = move(override_text);
+    m_segments[0]->m_override_text = move(override_text);
     update_segment(0);
 }
 

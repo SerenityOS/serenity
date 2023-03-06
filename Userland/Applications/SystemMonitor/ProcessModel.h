@@ -207,7 +207,7 @@ private:
 
     struct Process {
         pid_t pid;
-        NonnullRefPtrVector<Thread> threads;
+        Vector<NonnullRefPtr<Thread>> threads;
 
         bool operator==(Process const& other) const
         {
@@ -224,7 +224,7 @@ private:
         {
             auto main_thread_index = -1;
             for (size_t i = 0; i < threads.size(); ++i) {
-                if (threads[i].is_main_thread()) {
+                if (threads[i]->is_main_thread()) {
                     main_thread_index = static_cast<int>(i);
                     break;
                 }

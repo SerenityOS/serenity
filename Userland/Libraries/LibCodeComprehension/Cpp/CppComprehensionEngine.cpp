@@ -199,9 +199,9 @@ Vector<StringView> CppComprehensionEngine::scope_of_reference_to_symbol(ASTNode 
     Vector<StringView> scope_parts;
     for (auto& scope_part : name->scope()) {
         // If the target node is part of a scope reference, we want to end the scope chain before it.
-        if (&scope_part == &node)
+        if (scope_part == &node)
             break;
-        scope_parts.append(scope_part.name());
+        scope_parts.append(scope_part->name());
     }
     return scope_parts;
 }
@@ -263,8 +263,8 @@ DeprecatedString CppComprehensionEngine::type_of_variable(Identifier const& iden
     ASTNode const* current = &identifier;
     while (current) {
         for (auto& decl : current->declarations()) {
-            if (decl.is_variable_or_parameter_declaration()) {
-                auto& var_or_param = verify_cast<VariableOrParameterDeclaration>(decl);
+            if (decl->is_variable_or_parameter_declaration()) {
+                auto& var_or_param = verify_cast<VariableOrParameterDeclaration>(*decl);
                 if (var_or_param.full_name() == identifier.name() && var_or_param.type()->is_named_type()) {
                     VERIFY(verify_cast<NamedType>(*var_or_param.type()).name());
                     if (verify_cast<NamedType>(*var_or_param.type()).name())
@@ -326,7 +326,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::properties_of_typ
         Vector<StringView> scope(type_symbol.scope);
         scope.append(type_symbol.name);
         // FIXME: We don't have to create the Symbol here, it should already exist in the 'm_symbol' table of some DocumentData we already parsed.
-        properties.append(Symbol::create(member.full_name(), scope, member, Symbol::IsLocal::No));
+        properties.append(Symbol::create(member->full_name(), scope, member, Symbol::IsLocal::No));
     }
     return properties;
 }
@@ -346,16 +346,16 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::get_child_symbols
     Vector<Symbol> symbols;
 
     for (auto& decl : node.declarations()) {
-        symbols.append(Symbol::create(decl.full_name(), scope, decl, is_local));
+        symbols.append(Symbol::create(decl->full_name(), scope, decl, is_local));
 
-        bool should_recurse = decl.is_namespace() || decl.is_struct_or_class() || decl.is_function();
-        bool are_child_symbols_local = decl.is_function();
+        bool should_recurse = decl->is_namespace() || decl->is_struct_or_class() || decl->is_function();
+        bool are_child_symbols_local = decl->is_function();
 
         if (!should_recurse)
             continue;
 
         auto new_scope = scope;
-        new_scope.append(decl.full_name());
+        new_scope.append(decl->full_name());
         symbols.extend(get_child_symbols(decl, new_scope, are_child_symbols_local ? Symbol::IsLocal::Yes : is_local));
     }
 
@@ -864,7 +864,7 @@ Optional<CodeComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::ge
 
     Optional<size_t> invoked_arg_index;
     for (size_t arg_index = 0; arg_index < call_node->arguments().size(); ++arg_index) {
-        if (&call_node->arguments()[arg_index] == node.ptr()) {
+        if (call_node->arguments()[arg_index] == node.ptr()) {
             invoked_arg_index = arg_index;
             break;
         }
@@ -920,7 +920,7 @@ Optional<CppComprehensionEngine::FunctionParamsHint> CppComprehensionEngine::get
     hint.current_index = argument_index;
     for (auto& arg : func_decl.parameters()) {
         Vector<StringView> tokens_text;
-        for (auto token : document_of_declaration->parser().tokens_in_range(arg.start(), arg.end())) {
+        for (auto token : document_of_declaration->parser().tokens_in_range(arg->start(), arg->end())) {
             tokens_text.append(token.text());
         }
         hint.params.append(DeprecatedString::join(' ', tokens_text));

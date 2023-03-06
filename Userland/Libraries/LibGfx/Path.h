@@ -160,7 +160,7 @@ public:
     {
         float previous_y = 0;
         if (!m_segments.is_empty())
-            previous_y = m_segments.last().point().y();
+            previous_y = m_segments.last()->point().y();
         line_to({ x, previous_y });
     }
 
@@ -168,7 +168,7 @@ public:
     {
         float previous_x = 0;
         if (!m_segments.is_empty())
-            previous_x = m_segments.last().point().x();
+            previous_x = m_segments.last()->point().x();
         line_to({ previous_x, y });
     }
 
@@ -218,7 +218,7 @@ public:
         float x;
     };
 
-    NonnullRefPtrVector<Segment const> const& segments() const { return m_segments; }
+    Vector<NonnullRefPtr<Segment const>> const& segments() const { return m_segments; }
     auto& split_lines() const
     {
         if (!m_split_lines.has_value()) {
@@ -269,7 +269,7 @@ private:
         m_segments.append(adopt_ref(*new T(forward<Args>(args)...)));
     }
 
-    NonnullRefPtrVector<Segment const> m_segments {};
+    Vector<NonnullRefPtr<Segment const>> m_segments {};
 
     Optional<Vector<SplitLineSegment>> m_split_lines {};
     Optional<Gfx::FloatRect> m_bounding_box;

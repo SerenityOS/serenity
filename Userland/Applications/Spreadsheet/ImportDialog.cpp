@@ -174,13 +174,13 @@ void CSVImportDialogPage::update_preview()
     m_data_preview_table_view->update();
 }
 
-ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook& workbook)
+ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> ImportDialog::make_and_run_for(GUI::Window& parent, StringView mime, String const& filename, Core::File& file, Workbook& workbook)
 {
     auto wizard = GUI::WizardDialog::construct(&parent);
     wizard->set_title("File Import Wizard");
     wizard->set_icon(GUI::Icon::default_icon("app-spreadsheet"sv).bitmap_for_size(16));
 
-    auto import_xsv = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
+    auto import_xsv = [&]() -> ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> {
         auto contents_or_error = file.read_until_eof();
         if (contents_or_error.is_error())
             return DeprecatedString::formatted("{}", contents_or_error.release_error());
@@ -191,7 +191,7 @@ ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run
         if (result == GUI::Dialog::ExecResult::OK) {
             auto& reader = page.reader();
 
-            NonnullRefPtrVector<Sheet> sheets;
+            Vector<NonnullRefPtr<Sheet>> sheets;
 
             if (reader.has_value()) {
                 reader->parse();
@@ -209,7 +209,7 @@ ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run
         return DeprecatedString { "CSV Import was cancelled" };
     };
 
-    auto import_worksheet = [&]() -> ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> {
+    auto import_worksheet = [&]() -> ErrorOr<Vector<NonnullRefPtr<Sheet>>, DeprecatedString> {
         auto contents_or_error = file.read_until_eof();
         if (contents_or_error.is_error())
             return DeprecatedString::formatted("{}", contents_or_error.release_error());
@@ -221,7 +221,7 @@ ErrorOr<NonnullRefPtrVector<Sheet>, DeprecatedString> ImportDialog::make_and_run
         if (!json_value.is_array())
             return DeprecatedString::formatted("Did not find a spreadsheet in {}", filename);
 
-        NonnullRefPtrVector<Sheet> sheets;
+        Vector<NonnullRefPtr<Sheet>> sheets;
 
         auto& json_array = json_value.as_array();
         json_array.for_each([&](auto& sheet_json) {

@@ -31,7 +31,7 @@
 #include <unistd.h>
 
 DeprecatedString g_system_mode = "graphical";
-NonnullRefPtrVector<Service> g_services;
+Vector<NonnullRefPtr<Service>> g_services;
 
 // NOTE: This handler ensures that the destructor of g_services is called.
 static void sigterm_handler(int)
@@ -549,8 +549,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // After we've set them all up, activate them!
     dbgln("Activating {} services...", g_services.size());
     for (auto& service : g_services) {
-        if (auto result = service.activate(); result.is_error())
-            dbgln("{}: {}", service.name(), result.release_error());
+        if (auto result = service->activate(); result.is_error())
+            dbgln("{}: {}", service->name(), result.release_error());
     }
 
     return event_loop.exec();

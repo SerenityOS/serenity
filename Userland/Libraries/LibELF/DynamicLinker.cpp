@@ -348,12 +348,12 @@ static void for_each_unfinished_dependency_of(DeprecatedString const& path, Hash
     callback(*s_loaders.get(path).value());
 }
 
-static NonnullRefPtrVector<DynamicLoader> collect_loaders_for_library(DeprecatedString const& path)
+static Vector<NonnullRefPtr<DynamicLoader>> collect_loaders_for_library(DeprecatedString const& path)
 {
     VERIFY(path.starts_with('/'));
 
     HashTable<DeprecatedString> seen_names;
-    NonnullRefPtrVector<DynamicLoader> loaders;
+    Vector<NonnullRefPtr<DynamicLoader>> loaders;
     for_each_unfinished_dependency_of(path, seen_names, [&](auto& loader) {
         loaders.append(loader);
     });
@@ -386,37 +386,37 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
     auto loaders = collect_loaders_for_library(path);
 
     for (auto& loader : loaders) {
-        auto dynamic_object = loader.map();
+        auto dynamic_object = loader->map();
         if (dynamic_object)
             s_global_objects.set(dynamic_object->filepath(), *dynamic_object);
     }
 
     for (auto& loader : loaders) {
-        bool success = loader.link(flags);
+        bool success = loader->link(flags);
         if (!success) {
-            return DlErrorMessage { DeprecatedString::formatted("Failed to link library {}", loader.filepath()) };
+            return DlErrorMessage { DeprecatedString::formatted("Failed to link library {}", loader->filepath()) };
         }
     }
 
     for (auto& loader : loaders) {
-        auto result = loader.load_stage_3(flags);
+        auto result = loader->load_stage_3(flags);
         VERIFY(!result.is_error());
         auto& object = result.value();
 
-        if (loader.filepath().ends_with("/libc.so"sv)) {
+        if (loader->filepath().ends_with("/libc.so"sv)) {
             initialize_libc(*object);
         }
 
-        if (loader.filepath().ends_with("/libsystem.so"sv)) {
-            VERIFY(!loader.text_segments().is_empty());
-            for (auto const& segment : loader.text_segments()) {
+        if (loader->filepath().ends_with("/libsystem.so"sv)) {
+            VERIFY(!loader->text_segments().is_empty());
+            for (auto const& segment : loader->text_segments()) {
                 auto flags = static_cast<int>(VirtualMemoryRangeFlags::SyscallCode) | static_cast<int>(VirtualMemoryRangeFlags::Immutable);
                 if (syscall(SC_annotate_mapping, segment.address().get(), flags)) {
                     VERIFY_NOT_REACHED();
                 }
             }
         } else {
-            for (auto const& segment : loader.text_segments()) {
+            for (auto const& segment : loader->text_segments()) {
                 auto flags = static_cast<int>(VirtualMemoryRangeFlags::Immutable);
                 if (syscall(SC_annotate_mapping, segment.address().get(), flags)) {
                     VERIFY_NOT_REACHED();
@@ -428,7 +428,7 @@ static Result<void, DlErrorMessage> link_main_library(DeprecatedString const& pa
     drop_loader_promise("prot_exec"sv);
 
     for (auto& loader : loaders) {
-        loader.load_stage_4();
+        loader->load_stage_4();
     }
 
     return {};

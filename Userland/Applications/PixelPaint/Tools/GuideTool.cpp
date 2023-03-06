@@ -24,15 +24,15 @@ RefPtr<Guide> GuideTool::closest_guide(Gfx::IntPoint point)
 
     for (auto& guide : guides) {
         int relevant_position = 0;
-        if (guide.orientation() == Guide::Orientation::Horizontal)
+        if (guide->orientation() == Guide::Orientation::Horizontal)
             relevant_position = point.y();
-        else if (guide.orientation() == Guide::Orientation::Vertical)
+        else if (guide->orientation() == Guide::Orientation::Vertical)
             relevant_position = point.x();
 
-        auto distance = abs(relevant_position - (int)guide.offset());
+        auto distance = abs(relevant_position - (int)guide->offset());
 
         if (distance < closest_guide_distance) {
-            closest_guide = &guide;
+            closest_guide = guide;
             closest_guide_distance = distance;
         }
     }

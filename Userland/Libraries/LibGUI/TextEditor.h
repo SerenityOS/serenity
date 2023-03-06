@@ -414,7 +414,7 @@ private:
     RefPtr<Action> m_select_all_action;
     RefPtr<Action> m_insert_emoji_action;
     Core::ElapsedTimer m_triple_click_timer;
-    NonnullRefPtrVector<Action> m_custom_context_menu_actions;
+    Vector<NonnullRefPtr<Action>> m_custom_context_menu_actions;
 
     size_t m_reflow_deferred { 0 };
     bool m_reflow_requested { false };

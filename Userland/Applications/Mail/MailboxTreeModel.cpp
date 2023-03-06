@@ -48,14 +48,14 @@ GUI::ModelIndex MailboxTreeModel::parent_index(GUI::ModelIndex const& index) con
 
     if (!mailbox_node.has_parent()) {
         for (size_t row = 0; row < mailbox_node.associated_account().mailboxes().size(); ++row) {
-            if (&mailbox_node.associated_account().mailboxes()[row] == &mailbox_node) {
+            if (mailbox_node.associated_account().mailboxes()[row] == &mailbox_node) {
                 return create_index(row, index.column(), &mailbox_node.associated_account());
             }
         }
     } else {
         VERIFY(mailbox_node.parent()->has_children());
         for (size_t row = 0; row < mailbox_node.parent()->children().size(); ++row) {
-            if (&mailbox_node.parent()->children()[row] == &mailbox_node) {
+            if (mailbox_node.parent()->children()[row] == &mailbox_node) {
                 return create_index(row, index.column(), mailbox_node.parent());
             }
         }

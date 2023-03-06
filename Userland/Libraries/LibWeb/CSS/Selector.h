@@ -15,7 +15,7 @@
 
 namespace Web::CSS {
 
-using SelectorList = NonnullRefPtrVector<class Selector>;
+using SelectorList = Vector<NonnullRefPtr<class Selector>>;
 
 // This is a <complex-selector> in the spec. https://www.w3.org/TR/selectors-4/#complex
 class Selector : public RefCounted<Selector> {
@@ -294,7 +294,7 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<String> serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors);
+ErrorOr<String> serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors);
 
 }
 

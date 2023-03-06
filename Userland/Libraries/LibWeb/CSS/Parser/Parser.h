@@ -78,7 +78,7 @@ public:
     Optional<SelectorList> parse_as_selector(SelectorParsingMode = SelectorParsingMode::Standard);
     Optional<SelectorList> parse_as_relative_selector(SelectorParsingMode = SelectorParsingMode::Standard);
 
-    NonnullRefPtrVector<MediaQuery> parse_as_media_query_list();
+    Vector<NonnullRefPtr<MediaQuery>> parse_as_media_query_list();
     RefPtr<MediaQuery> parse_as_media_query();
 
     RefPtr<Supports> parse_as_supports();
@@ -99,14 +99,14 @@ private:
     // "Parse a stylesheet" is intended to be the normal parser entry point, for parsing stylesheets.
     struct ParsedStyleSheet {
         Optional<AK::URL> location;
-        NonnullRefPtrVector<Rule> rules;
+        Vector<NonnullRefPtr<Rule>> rules;
     };
     template<typename T>
     ParsedStyleSheet parse_a_stylesheet(TokenStream<T>&, Optional<AK::URL> location);
 
     // "Parse a list of rules" is intended for the content of at-rules such as @media. It differs from "Parse a stylesheet" in the handling of <CDO-token> and <CDC-token>.
     template<typename T>
-    NonnullRefPtrVector<Rule> parse_a_list_of_rules(TokenStream<T>&);
+    Vector<NonnullRefPtr<Rule>> parse_a_list_of_rules(TokenStream<T>&);
 
     // "Parse a rule" is intended for use by the CSSStyleSheet#insertRule method, and similar functions which might exist, which parse text into a single rule.
     template<typename T>
@@ -142,7 +142,7 @@ private:
     ParseErrorOr<SelectorList> parse_a_selector_list(TokenStream<T>&, SelectorType, SelectorParsingMode = SelectorParsingMode::Standard);
 
     template<typename T>
-    NonnullRefPtrVector<MediaQuery> parse_a_media_query_list(TokenStream<T>&);
+    Vector<NonnullRefPtr<MediaQuery>> parse_a_media_query_list(TokenStream<T>&);
     template<typename T>
     RefPtr<Supports> parse_a_supports(TokenStream<T>&);
 
@@ -153,7 +153,7 @@ private:
         Yes
     };
     template<typename T>
-    [[nodiscard]] NonnullRefPtrVector<Rule> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
+    [[nodiscard]] Vector<NonnullRefPtr<Rule>> consume_a_list_of_rules(TokenStream<T>&, TopLevel);
     template<typename T>
     [[nodiscard]] NonnullRefPtr<Rule> consume_an_at_rule(TokenStream<T>&);
     template<typename T>
@@ -377,7 +377,7 @@ RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const&, Stri
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const&, StringView);
 CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const&, StringView);
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const&, StringView);
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const&, StringView);
+Vector<NonnullRefPtr<CSS::MediaQuery>> parse_media_query_list(CSS::Parser::ParsingContext const&, StringView);
 RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const&, StringView);
 
 }

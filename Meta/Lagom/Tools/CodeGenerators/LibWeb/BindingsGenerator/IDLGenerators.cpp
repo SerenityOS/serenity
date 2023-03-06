@@ -850,7 +850,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         VERIFY(parameterized_type.parameters().size() == 2);
 
         // A record only allows the key to be a string.
-        VERIFY(parameterized_type.parameters()[0].is_string());
+        VERIFY(parameterized_type.parameters()[0]->is_string());
 
         // An ECMAScript value O is converted to an IDL record<K, V> value as follows:
         // 1. If Type(O) is not Object, throw a TypeError.
@@ -924,7 +924,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         RefPtr<Type const> dictionary_type;
         for (auto& dictionary : interface.dictionaries) {
             for (auto& type : types) {
-                if (type.name() == dictionary.key) {
+                if (type->name() == dictionary.key) {
                     dictionary_type = type;
                     break;
                 }
@@ -998,7 +998,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         bool includes_object = false;
         for (auto& type : types) {
-            if (type.name() == "object") {
+            if (type->name() == "object") {
                 includes_object = true;
                 break;
             }
@@ -1032,7 +1032,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
                     continue;
 
                 auto union_platform_object_type_generator = union_generator.fork();
-                union_platform_object_type_generator.set("platform_object_type", type.name());
+                union_platform_object_type_generator.set("platform_object_type", type->name());
 
                 union_platform_object_type_generator.append(R"~~~(
                 if (is<@platform_object_type@>(@js_name@@js_suffix@_object))
@@ -1055,7 +1055,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // 6. If Type(V) is Object and V has an [[ArrayBufferData]] internal slot, then
         //    1. If types includes ArrayBuffer, then return the result of converting V to ArrayBuffer.
         for (auto& type : types) {
-            if (type.name() == "BufferSource") {
+            if (type->name() == "BufferSource") {
                 union_generator.append(R"~~~(
             if (is<JS::ArrayBuffer>(@js_name@@js_suffix@_object))
                 return JS::make_handle(@js_name@@js_suffix@_object);
@@ -1085,8 +1085,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //     1. If types includes a sequence type, then:
         RefPtr<IDL::ParameterizedType const> sequence_type;
         for (auto& type : types) {
-            if (type.name() == "sequence") {
-                sequence_type = verify_cast<IDL::ParameterizedType>(type);
+            if (type->name() == "sequence") {
+                sequence_type = verify_cast<IDL::ParameterizedType>(*type);
                 break;
             }
         }
@@ -1125,8 +1125,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         // 4. If types includes a record type, then return the result of converting V to that record type.
         RefPtr<IDL::ParameterizedType const> record_type;
         for (auto& type : types) {
-            if (type.name() == "record") {
-                record_type = verify_cast<IDL::ParameterizedType>(type);
+            if (type->name() == "record") {
+                record_type = verify_cast<IDL::ParameterizedType>(*type);
                 break;
             }
         }
@@ -1158,7 +1158,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //     1. If types includes boolean, then return the result of converting V to boolean.
         bool includes_boolean = false;
         for (auto& type : types) {
-            if (type.name() == "boolean") {
+            if (type->name() == "boolean") {
                 includes_boolean = true;
                 break;
             }
@@ -1173,7 +1173,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         RefPtr<IDL::Type const> numeric_type;
         for (auto& type : types) {
-            if (type.is_numeric()) {
+            if (type->is_numeric()) {
                 numeric_type = type;
                 break;
             }
@@ -1200,7 +1200,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //     1. If types includes bigint, then return the result of converting V to bigint
         bool includes_bigint = false;
         for (auto& type : types) {
-            if (type.name() == "bigint") {
+            if (type->name() == "bigint") {
                 includes_bigint = true;
                 break;
             }
@@ -1215,7 +1215,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
 
         bool includes_string = false;
         for (auto& type : types) {
-            if (type.is_string()) {
+            if (type->is_string()) {
                 includes_string = true;
                 break;
             }
@@ -1831,7 +1831,7 @@ static EffectiveOverloadSet compute_the_effective_overload_set(auto const& overl
         int argument_count = (int)arguments.size();
 
         // 3. Let types be a type list.
-        NonnullRefPtrVector<Type const> types;
+        Vector<NonnullRefPtr<Type const>> types;
 
         // 4. Let optionalityValues be an optionality list.
         Vector<Optionality> optionality_values;
@@ -1948,7 +1948,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Parameterized: {
         auto const& parameterized_type = type.as_parameterized();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type const> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::ParameterizedTypeType>(\"{}\", {}, Vector<NonnullRefPtr<IDL::Type const>> {{", type.name(), type.is_nullable());
         append_type_list(builder, parameterized_type.parameters());
         builder.append("})"sv);
         return builder.to_deprecated_string();
@@ -1956,7 +1956,7 @@ static DeprecatedString generate_constructor_for_idl_type(Type const& type)
     case Type::Kind::Union: {
         auto const& union_type = type.as_union();
         StringBuilder builder;
-        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, NonnullRefPtrVector<IDL::Type const> {{", type.name(), type.is_nullable());
+        builder.appendff("make_ref_counted<IDL::UnionType>(\"{}\", {}, Vector<NonnullRefPtr<IDL::Type const>> {{", type.name(), type.is_nullable());
         append_type_list(builder, union_type.member_types());
         builder.append("})"sv);
         return builder.to_deprecated_string();
@@ -2015,7 +2015,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@)
                 continue;
 
             StringBuilder types_builder;
-            types_builder.append("NonnullRefPtrVector<IDL::Type const> { "sv);
+            types_builder.append("Vector<NonnullRefPtr<IDL::Type const>> { "sv);
             StringBuilder optionality_builder;
             optionality_builder.append("Vector<IDL::Optionality> { "sv);
 

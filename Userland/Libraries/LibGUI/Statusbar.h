@@ -78,7 +78,7 @@ private:
 
     virtual void child_event(Core::ChildEvent&) override;
 
-    NonnullRefPtrVector<Segment> m_segments;
+    Vector<NonnullRefPtr<Segment>> m_segments;
     RefPtr<ResizeCorner> m_corner;
 };
 

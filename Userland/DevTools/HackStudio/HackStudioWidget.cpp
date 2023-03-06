@@ -265,7 +265,7 @@ void HackStudioWidget::open_project(DeprecatedString const& root_path)
         debugger.set_source_root(m_project->root_path());
     }
     for (auto& editor_wrapper : m_all_editor_wrappers)
-        editor_wrapper.set_project_root(m_project->root_path());
+        editor_wrapper->set_project_root(m_project->root_path());
 
     m_locations_history.clear();
     m_locations_history_end_index = 0;
@@ -398,19 +398,19 @@ void HackStudioWidget::close_file_in_all_editors(DeprecatedString const& filenam
         [&filename](DeprecatedString const& element) { return element == filename; });
 
     for (auto& editor_wrapper : m_all_editor_wrappers) {
-        Editor& editor = editor_wrapper.editor();
+        Editor& editor = editor_wrapper->editor();
         DeprecatedString editor_file_path = editor.code_document().file_path();
         DeprecatedString relative_editor_file_path = LexicalPath::relative_path(editor_file_path, project().root_path());
 
         if (relative_editor_file_path == filename) {
             if (m_open_files_vector.is_empty()) {
                 editor.set_document(CodeDocument::create());
-                editor_wrapper.set_filename("");
+                editor_wrapper->set_filename("");
             } else {
                 auto& first_path = m_open_files_vector[0];
                 auto& document = m_open_files.get(first_path).value()->code_document();
                 editor.set_document(document);
-                editor_wrapper.set_filename(first_path);
+                editor_wrapper->set_filename(first_path);
             }
         }
     }
@@ -713,7 +713,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_project_action(
             // If the user wishes to save the changes, this occurs in warn_unsaved_changes. If they do not,
             // we need to mark the documents as clean so open_project works properly without asking again.
             for (auto& editor_wrapper : m_all_editor_wrappers)
-                editor_wrapper.editor().document().set_unmodified();
+                editor_wrapper->editor().document().set_unmodified();
             auto dialog = NewProjectDialog::construct(window());
             dialog->set_icon(window()->icon());
             auto result = dialog->exec();
@@ -754,7 +754,7 @@ void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
 
     if (m_all_editor_tab_widgets.size() > 1) {
         for (auto& widget : m_all_editor_tab_widgets)
-            widget.set_close_button_enabled(true);
+            widget->set_close_button_enabled(true);
     }
 
     tab_widget->on_change = [&](auto& widget) {
@@ -914,8 +914,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_save_as_action()
             current_editor_wrapper().set_filename(relative_file_path);
         } else {
             for (auto& editor_wrapper : m_all_editor_wrappers) {
-                if (editor_wrapper.filename() == old_filename)
-                    editor_wrapper.set_filename(relative_file_path);
+                if (editor_wrapper->filename() == old_filename)
+                    editor_wrapper->set_filename(relative_file_path);
             }
         }
         current_editor_wrapper().save();
@@ -1031,7 +1031,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_debug_action()
         m_run_action->set_enabled(false);
 
         for (auto& editor_wrapper : m_all_editor_wrappers) {
-            editor_wrapper.set_debug_mode(true);
+            editor_wrapper->set_debug_mode(true);
         }
     });
 }
@@ -1083,7 +1083,7 @@ void HackStudioWidget::initialize_debugger()
                 m_debugger_thread.clear();
 
                 for (auto& editor_wrapper : m_all_editor_wrappers) {
-                    editor_wrapper.set_debug_mode(false);
+                    editor_wrapper->set_debug_mode(false);
                 }
 
                 HackStudioWidget::hide_action_tabs();
@@ -1454,10 +1454,10 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
     auto vim_emulation_setting_action = GUI::Action::create_checkable("&Vim Emulation", { Mod_Ctrl | Mod_Shift | Mod_Alt, Key_V }, [this](auto& action) {
         if (action.is_checked()) {
             for (auto& editor_wrapper : m_all_editor_wrappers)
-                editor_wrapper.editor().set_editing_engine(make<GUI::VimEditingEngine>());
+                editor_wrapper->editor().set_editing_engine(make<GUI::VimEditingEngine>());
         } else {
             for (auto& editor_wrapper : m_all_editor_wrappers)
-                editor_wrapper.editor().set_editing_engine(make<GUI::RegularEditingEngine>());
+                editor_wrapper->editor().set_editing_engine(make<GUI::RegularEditingEngine>());
         }
     });
     vim_emulation_setting_action->set_checked(false);
@@ -1506,17 +1506,17 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)
-            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
+            wrapper->editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
     });
     m_wrap_anywhere_action = GUI::Action::create_checkable("Wrap &Anywhere", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::WrapAnywhere;
         for (auto& wrapper : m_all_editor_wrappers)
-            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
+            wrapper->editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAnywhere);
     });
     m_wrap_at_words_action = GUI::Action::create_checkable("Wrap at &Words", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::WrapAtWords;
         for (auto& wrapper : m_all_editor_wrappers)
-            wrapper.editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
+            wrapper->editor().set_wrapping_mode(GUI::TextEditor::WrappingMode::WrapAtWords);
     });
 
     m_wrapping_mode_actions.add_action(*m_no_wrapping_action);
@@ -1668,8 +1668,8 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(Deprec
 
     if (result == GUI::MessageBox::ExecResult::Yes) {
         for (auto& editor_wrapper : m_all_editor_wrappers) {
-            if (editor_wrapper.editor().document().is_modified()) {
-                editor_wrapper.save();
+            if (editor_wrapper->editor().document().is_modified()) {
+                editor_wrapper->save();
             }
         }
     }
@@ -1680,7 +1680,7 @@ HackStudioWidget::ContinueDecision HackStudioWidget::warn_unsaved_changes(Deprec
 bool HackStudioWidget::any_document_is_dirty() const
 {
     return any_of(m_all_editor_wrappers, [](auto& editor_wrapper) {
-        return editor_wrapper.editor().document().is_modified();
+        return editor_wrapper->editor().document().is_modified();
     });
 }
 
@@ -1858,7 +1858,7 @@ void HackStudioWidget::change_editor_font(RefPtr<Gfx::Font const> font)
 {
     m_editor_font = move(font);
     for (auto& editor_wrapper : m_all_editor_wrappers) {
-        editor_wrapper.editor().set_font(*m_editor_font);
+        editor_wrapper->editor().set_font(*m_editor_font);
     }
 
     Config::write_string("HackStudio"sv, "EditorFont"sv, "Family"sv, m_editor_font->family());
@@ -1893,7 +1893,7 @@ void HackStudioWidget::debug_process(pid_t pid)
     m_run_action->set_enabled(false);
 
     for (auto& editor_wrapper : m_all_editor_wrappers) {
-        editor_wrapper.set_debug_mode(true);
+        editor_wrapper->set_debug_mode(true);
     }
 }
 
@@ -1909,7 +1909,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_toggle_syntax_highl
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"sv));
     auto action = GUI::Action::create_checkable("&Semantic Highlighting", icon, [this](auto& action) {
         for (auto& editor_wrapper : m_all_editor_wrappers)
-            editor_wrapper.editor().set_semantic_syntax_highlighting(action.is_checked());
+            editor_wrapper->editor().set_semantic_syntax_highlighting(action.is_checked());
     });
 
     return action;

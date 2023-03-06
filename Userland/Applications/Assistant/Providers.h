@@ -134,28 +134,28 @@ class Provider : public RefCounted<Provider> {
 public:
     virtual ~Provider() = default;
 
-    virtual void query(DeprecatedString const&, Function<void(NonnullRefPtrVector<Result>)> on_complete) = 0;
+    virtual void query(DeprecatedString const&, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) = 0;
 };
 
 class AppProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
+    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 class CalculatorProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
+    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 class FileProvider final : public Provider {
 public:
     FileProvider();
 
-    void query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
+    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
     void build_filesystem_cache();
 
 private:
-    RefPtr<Threading::BackgroundAction<Optional<NonnullRefPtrVector<Result>>>> m_fuzzy_match_work;
+    RefPtr<Threading::BackgroundAction<Optional<Vector<NonnullRefPtr<Result>>>>> m_fuzzy_match_work;
     bool m_building_cache { false };
     Vector<DeprecatedString> m_full_path_cache;
     Queue<DeprecatedString> m_work_queue;
@@ -163,12 +163,12 @@ private:
 
 class TerminalProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
+    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 class URLProvider final : public Provider {
 public:
-    void query(DeprecatedString const& query, Function<void(NonnullRefPtrVector<Result>)> on_complete) override;
+    void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
 };
 
 }

@@ -36,7 +36,7 @@ namespace Assistant {
 
 struct AppState {
     Optional<size_t> selected_index;
-    NonnullRefPtrVector<Result const> results;
+    Vector<NonnullRefPtr<Result const>> results;
     size_t visible_result_count { 0 };
 
     Threading::Mutex lock;
@@ -84,7 +84,7 @@ public:
     {
     }
 
-    Function<void(NonnullRefPtrVector<Result const>)> on_new_results;
+    Function<void(Vector<NonnullRefPtr<Result const>>)> on_new_results;
 
     void search(DeprecatedString const& query)
     {
@@ -98,7 +98,7 @@ public:
                         auto& result_array = m_result_cache.ensure(query);
                         if (result_array.at(i) != nullptr)
                             return;
-                        result_array[i] = make<NonnullRefPtrVector<Result>>(results);
+                        result_array[i] = make<Vector<NonnullRefPtr<Result>>>(results);
                     }
                     on_result_cache_updated();
                 });
@@ -142,7 +142,7 @@ private:
     Array<NonnullRefPtr<Provider>, ProviderCount> m_providers;
 
     Threading::Mutex m_mutex;
-    HashMap<DeprecatedString, Array<OwnPtr<NonnullRefPtrVector<Result>>, ProviderCount>> m_result_cache;
+    HashMap<DeprecatedString, Array<OwnPtr<Vector<NonnullRefPtr<Result>>>, ProviderCount>> m_result_cache;
 };
 
 }
@@ -211,7 +211,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!app_state.selected_index.has_value())
             return;
         lockfile.release();
-        app_state.results[app_state.selected_index.value()].activate();
+        app_state.results[app_state.selected_index.value()]->activate();
         GUI::Application::the()->quit();
     };
     text_box.on_up_pressed = [&]() {
@@ -254,11 +254,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (size_t i = 0; i < app_state.visible_result_count; ++i) {
             auto& result = app_state.results[i];
             auto& match = results_container.add<Assistant::ResultRow>();
-            match.set_icon(result.bitmap());
-            match.set_text(String::from_deprecated_string(result.title()).release_value_but_fixme_should_propagate_errors());
-            match.set_tooltip(move(result.tooltip()));
+            match.set_icon(result->bitmap());
+            match.set_text(String::from_deprecated_string(result->title()).release_value_but_fixme_should_propagate_errors());
+            match.set_tooltip(move(result->tooltip()));
             match.on_click = [&result](auto) {
-                result.activate();
+                result->activate();
                 GUI::Application::the()->quit();
             };
         }

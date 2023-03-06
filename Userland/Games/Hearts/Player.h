@@ -33,7 +33,7 @@ public:
     {
     }
 
-    NonnullRefPtrVector<Card> pick_cards_to_pass(PassingDirection);
+    Vector<NonnullRefPtr<Card>> pick_cards_to_pass(PassingDirection);
     size_t pick_lead_card(Function<bool(Card&)>, Function<bool(Card&)>);
     Optional<size_t> pick_low_points_high_value_card(Optional<Cards::Suit> suit = {});
     Optional<size_t> pick_lower_value_card(Card& other_card);
@@ -45,7 +45,7 @@ public:
     Vector<CardWithIndex> hand_sorted_by_fn(bool (*)(CardWithIndex&, CardWithIndex&)) const;
 
     void sort_hand() { quick_sort(hand, hearts_card_less); }
-    void remove_cards(NonnullRefPtrVector<Card> const& cards);
+    void remove_cards(Vector<NonnullRefPtr<Card>> const& cards);
 
     Vector<RefPtr<Card>> hand;
     Vector<RefPtr<Card>> cards_taken;

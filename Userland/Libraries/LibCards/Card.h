@@ -131,8 +131,8 @@ enum class Shuffle {
     No,
     Yes,
 };
-ErrorOr<NonnullRefPtrVector<Card>> create_standard_deck(Shuffle);
-ErrorOr<NonnullRefPtrVector<Card>> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle);
+ErrorOr<Vector<NonnullRefPtr<Card>>> create_standard_deck(Shuffle);
+ErrorOr<Vector<NonnullRefPtr<Card>>> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle);
 
 }
 

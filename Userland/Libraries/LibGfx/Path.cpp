@@ -27,7 +27,7 @@ void Path::elliptical_arc_to(FloatPoint point, FloatSize radii, double x_axis_ro
     // Find the last point
     FloatPoint last_point { 0, 0 };
     if (!m_segments.is_empty())
-        last_point = m_segments.last().point();
+        last_point = m_segments.last()->point();
 
     // Step 1 of out-of-range radii correction
     if (rx == 0.0 || ry == 0.0) {
@@ -120,14 +120,14 @@ void Path::close()
     if (m_segments.size() <= 1)
         return;
 
-    auto last_point = m_segments.last().point();
+    auto last_point = m_segments.last()->point();
 
     for (ssize_t i = m_segments.size() - 1; i >= 0; --i) {
         auto& segment = m_segments[i];
-        if (segment.type() == Segment::Type::MoveTo) {
-            if (last_point == segment.point())
+        if (segment->type() == Segment::Type::MoveTo) {
+            if (last_point == segment->point())
                 return;
-            append_segment<LineSegment>(segment.point());
+            append_segment<LineSegment>(segment->point());
             invalidate_split_lines();
             return;
         }
@@ -145,7 +145,7 @@ void Path::close_all_subpaths()
     bool is_first_point_in_subpath { false };
 
     for (auto& segment : m_segments) {
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::MoveTo: {
             if (cursor.has_value() && !is_first_point_in_subpath) {
                 // This is a move from a subpath to another
@@ -157,7 +157,7 @@ void Path::close_all_subpaths()
                 append_segment<LineSegment>(start_of_subpath.value());
             }
             is_first_point_in_subpath = true;
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         }
         case Segment::Type::LineTo:
@@ -168,7 +168,7 @@ void Path::close_all_subpaths()
                 start_of_subpath = cursor;
                 is_first_point_in_subpath = false;
             }
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         case Segment::Type::Invalid:
             VERIFY_NOT_REACHED();
@@ -182,7 +182,7 @@ DeprecatedString Path::to_deprecated_string() const
     StringBuilder builder;
     builder.append("Path { "sv);
     for (auto& segment : m_segments) {
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::MoveTo:
             builder.append("MoveTo"sv);
             break;
@@ -202,21 +202,21 @@ DeprecatedString Path::to_deprecated_string() const
             builder.append("Invalid"sv);
             break;
         }
-        builder.appendff("({}", segment.point());
+        builder.appendff("({}", segment->point());
 
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::QuadraticBezierCurveTo:
             builder.append(", "sv);
-            builder.append(static_cast<QuadraticBezierCurveSegment const&>(segment).through().to_deprecated_string());
+            builder.append(static_cast<QuadraticBezierCurveSegment const&>(*segment).through().to_deprecated_string());
             break;
         case Segment::Type::CubicBezierCurveTo:
             builder.append(", "sv);
-            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_0().to_deprecated_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_0().to_deprecated_string());
             builder.append(", "sv);
-            builder.append(static_cast<CubicBezierCurveSegment const&>(segment).through_1().to_deprecated_string());
+            builder.append(static_cast<CubicBezierCurveSegment const&>(*segment).through_1().to_deprecated_string());
             break;
         case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
+            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
             builder.appendff(", {}, {}, {}, {}, {}",
                 arc.radii().to_deprecated_string().characters(),
                 arc.center().to_deprecated_string().characters(),
@@ -273,47 +273,47 @@ void Path::segmentize_path()
     bool first = true;
 
     for (auto& segment : m_segments) {
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::MoveTo:
             if (first) {
-                min_x = segment.point().x();
-                min_y = segment.point().y();
-                max_x = segment.point().x();
-                max_y = segment.point().y();
+                min_x = segment->point().x();
+                min_y = segment->point().y();
+                max_x = segment->point().x();
+                max_y = segment->point().y();
             } else {
-                add_point_to_bbox(segment.point());
+                add_point_to_bbox(segment->point());
             }
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         case Segment::Type::LineTo: {
-            add_line(cursor, segment.point());
-            cursor = segment.point();
+            add_line(cursor, segment->point());
+            cursor = segment->point();
             break;
         }
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto control = static_cast<QuadraticBezierCurveSegment const&>(segment).through();
-            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment.point(), [&](FloatPoint p0, FloatPoint p1) {
+            auto control = static_cast<QuadraticBezierCurveSegment const&>(*segment).through();
+            Painter::for_each_line_segment_on_bezier_curve(control, cursor, segment->point(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         }
         case Segment::Type::CubicBezierCurveTo: {
-            auto& curve = static_cast<CubicBezierCurveSegment const&>(segment);
+            auto& curve = static_cast<CubicBezierCurveSegment const&>(*segment);
             auto control_0 = curve.through_0();
             auto control_1 = curve.through_1();
-            Painter::for_each_line_segment_on_cubic_bezier_curve(control_0, control_1, cursor, segment.point(), [&](FloatPoint p0, FloatPoint p1) {
+            Painter::for_each_line_segment_on_cubic_bezier_curve(control_0, control_1, cursor, segment->point(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         }
         case Segment::Type::EllipticalArcTo: {
-            auto& arc = static_cast<EllipticalArcSegment const&>(segment);
+            auto& arc = static_cast<EllipticalArcSegment const&>(*segment);
             Painter::for_each_line_segment_on_elliptical_arc(cursor, arc.point(), arc.center(), arc.radii(), arc.x_axis_rotation(), arc.theta_1(), arc.theta_delta(), [&](FloatPoint p0, FloatPoint p1) {
                 add_line(p0, p1);
             });
-            cursor = segment.point();
+            cursor = segment->point();
             break;
         }
         case Segment::Type::Invalid:
@@ -337,28 +337,28 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
     Path result;
 
     for (auto const& segment : m_segments) {
-        switch (segment.type()) {
+        switch (segment->type()) {
         case Segment::Type::MoveTo:
-            result.move_to(transform.map(segment.point()));
+            result.move_to(transform.map(segment->point()));
             break;
         case Segment::Type::LineTo: {
-            result.line_to(transform.map(segment.point()));
+            result.line_to(transform.map(segment->point()));
             break;
         }
         case Segment::Type::QuadraticBezierCurveTo: {
-            auto const& quadratic_segment = static_cast<QuadraticBezierCurveSegment const&>(segment);
-            result.quadratic_bezier_curve_to(transform.map(quadratic_segment.through()), transform.map(segment.point()));
+            auto const& quadratic_segment = static_cast<QuadraticBezierCurveSegment const&>(*segment);
+            result.quadratic_bezier_curve_to(transform.map(quadratic_segment.through()), transform.map(segment->point()));
             break;
         }
         case Segment::Type::CubicBezierCurveTo: {
-            auto const& cubic_segment = static_cast<CubicBezierCurveSegment const&>(segment);
-            result.cubic_bezier_curve_to(transform.map(cubic_segment.through_0()), transform.map(cubic_segment.through_1()), transform.map(segment.point()));
+            auto const& cubic_segment = static_cast<CubicBezierCurveSegment const&>(*segment);
+            result.cubic_bezier_curve_to(transform.map(cubic_segment.through_0()), transform.map(cubic_segment.through_1()), transform.map(segment->point()));
             break;
         }
         case Segment::Type::EllipticalArcTo: {
-            auto const& arc_segment = static_cast<EllipticalArcSegment const&>(segment);
+            auto const& arc_segment = static_cast<EllipticalArcSegment const&>(*segment);
             result.elliptical_arc_to(
-                transform.map(segment.point()),
+                transform.map(segment->point()),
                 transform.map(arc_segment.center()),
                 transform.map(arc_segment.radii()),
                 arc_segment.x_axis_rotation(),

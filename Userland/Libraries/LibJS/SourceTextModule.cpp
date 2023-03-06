@@ -55,13 +55,13 @@ static Vector<ModuleRequest> module_requests(Program& program, Vector<Deprecated
     Vector<RequestedModuleAndSourceIndex> requested_modules_with_indices;
 
     for (auto& import_statement : program.imports())
-        requested_modules_with_indices.empend(import_statement.start_offset(), &import_statement.module_request());
+        requested_modules_with_indices.empend(import_statement->start_offset(), &import_statement->module_request());
 
     for (auto& export_statement : program.exports()) {
-        for (auto& export_entry : export_statement.entries()) {
+        for (auto& export_entry : export_statement->entries()) {
             if (!export_entry.is_module_request())
                 continue;
-            requested_modules_with_indices.empend(export_statement.start_offset(), &export_statement.module_request());
+            requested_modules_with_indices.empend(export_statement->start_offset(), &export_statement->module_request());
         }
     }
 
@@ -141,7 +141,7 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
     // 4. Let importEntries be ImportEntries of body.
     Vector<ImportEntry> import_entries;
     for (auto const& import_statement : body->imports())
-        import_entries.extend(import_statement.entries());
+        import_entries.extend(import_statement->entries());
 
     // 5. Let importedBoundNames be ImportedLocalNames(importEntries).
     // Note: Since we have to potentially extract the import entry we just use importEntries
@@ -163,12 +163,12 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
     // 10. For each ExportEntry Record ee of exportEntries, do
     for (auto const& export_statement : body->exports()) {
 
-        if (export_statement.is_default_export()) {
+        if (export_statement->is_default_export()) {
             VERIFY(!default_export);
-            VERIFY(export_statement.entries().size() == 1);
-            VERIFY(export_statement.has_statement());
+            VERIFY(export_statement->entries().size() == 1);
+            VERIFY(export_statement->has_statement());
 
-            auto const& entry = export_statement.entries()[0];
+            auto const& entry = export_statement->entries()[0];
             VERIFY(entry.kind == ExportEntry::Kind::NamedExport);
             VERIFY(!entry.is_module_request());
             VERIFY(import_entries.find_if(
@@ -179,12 +179,12 @@ Result<NonnullGCPtr<SourceTextModule>, Vector<ParserError>> SourceTextModule::pa
             default_export = export_statement;
         }
 
-        for (auto const& export_entry : export_statement.entries()) {
+        for (auto const& export_entry : export_statement->entries()) {
 
             // Special case, export {} from "module" should add "module" to
             // required_modules but not any import or export so skip here.
             if (export_entry.kind == ExportEntry::Kind::EmptyNamedExport) {
-                VERIFY(export_statement.entries().size() == 1);
+                VERIFY(export_statement->entries().size() == 1);
                 break;
             }
 

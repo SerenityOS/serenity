@@ -15,7 +15,7 @@ static HashMap<int, RefPtr<ConnectionFromClient>> s_connections;
 
 void ConnectionFromClient::for_each(Function<void(ConnectionFromClient&)> callback)
 {
-    NonnullRefPtrVector<ConnectionFromClient> connections;
+    Vector<NonnullRefPtr<ConnectionFromClient>> connections;
     for (auto& it : s_connections)
         connections.append(*it.value);
     for (auto& connection : connections)

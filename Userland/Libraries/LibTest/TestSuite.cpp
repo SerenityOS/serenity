@@ -81,7 +81,7 @@ int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> argumen
     if (do_list_cases) {
         outln("Available cases for {}:", suite_name);
         for (auto const& test : matching_tests) {
-            outln("    {}", test.name());
+            outln("    {}", test->name());
         }
         return 0;
     }
@@ -91,18 +91,18 @@ int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> argumen
     return run(matching_tests);
 }
 
-NonnullRefPtrVector<TestCase> TestSuite::find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks)
+Vector<NonnullRefPtr<TestCase>> TestSuite::find_cases(DeprecatedString const& search, bool find_tests, bool find_benchmarks)
 {
-    NonnullRefPtrVector<TestCase> matches;
+    Vector<NonnullRefPtr<TestCase>> matches;
     for (auto& t : m_cases) {
-        if (!search.is_empty() && !t.name().matches(search, CaseSensitivity::CaseInsensitive)) {
+        if (!search.is_empty() && !t->name().matches(search, CaseSensitivity::CaseInsensitive)) {
             continue;
         }
 
-        if (!find_tests && !t.is_benchmark()) {
+        if (!find_tests && !t->is_benchmark()) {
             continue;
         }
-        if (!find_benchmarks && t.is_benchmark()) {
+        if (!find_benchmarks && t->is_benchmark()) {
             continue;
         }
 
@@ -111,7 +111,7 @@ NonnullRefPtrVector<TestCase> TestSuite::find_cases(DeprecatedString const& sear
     return matches;
 }
 
-int TestSuite::run(NonnullRefPtrVector<TestCase> const& tests)
+int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
 {
     size_t test_count = 0;
     size_t test_failed_count = 0;
@@ -119,18 +119,18 @@ int TestSuite::run(NonnullRefPtrVector<TestCase> const& tests)
     TestElapsedTimer global_timer;
 
     for (auto const& t : tests) {
-        auto const test_type = t.is_benchmark() ? "benchmark" : "test";
+        auto const test_type = t->is_benchmark() ? "benchmark" : "test";
 
-        warnln("Running {} '{}'.", test_type, t.name());
+        warnln("Running {} '{}'.", test_type, t->name());
         m_current_test_case_passed = true;
 
         TestElapsedTimer timer;
-        t.func()();
+        t->func()();
         auto const time = timer.elapsed_milliseconds();
 
-        dbgln("{} {} '{}' in {}ms", m_current_test_case_passed ? "Completed" : "Failed", test_type, t.name(), time);
+        dbgln("{} {} '{}' in {}ms", m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(), time);
 
-        if (t.is_benchmark()) {
+        if (t->is_benchmark()) {
             m_benchtime += time;
             benchmark_count++;
         } else {

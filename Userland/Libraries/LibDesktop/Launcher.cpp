@@ -102,10 +102,10 @@ Vector<DeprecatedString> Launcher::get_handlers_for_url(const URL& url)
     return connection().get_handlers_for_url(url.to_deprecated_string());
 }
 
-auto Launcher::get_handlers_with_details_for_url(const URL& url) -> NonnullRefPtrVector<Details>
+auto Launcher::get_handlers_with_details_for_url(const URL& url) -> Vector<NonnullRefPtr<Details>>
 {
     auto details = connection().get_handlers_with_details_for_url(url.to_deprecated_string());
-    NonnullRefPtrVector<Details> handlers_with_details;
+    Vector<NonnullRefPtr<Details>> handlers_with_details;
     for (auto& value : details) {
         handlers_with_details.append(Details::from_details_str(value));
     }

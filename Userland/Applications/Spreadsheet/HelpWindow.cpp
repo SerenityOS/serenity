@@ -112,7 +112,7 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             window->set_title(DeprecatedString::formatted("Spreadsheet Help - Example {} for {}", name, entry));
             window->on_close = [window = window.ptr()] { window->remove_from_parent(); };
 
-            auto widget = window->set_main_widget<SpreadsheetWidget>(window, NonnullRefPtrVector<Sheet> {}, false).release_value_but_fixme_should_propagate_errors();
+            auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false).release_value_but_fixme_should_propagate_errors();
             auto sheet = Sheet::from_json(value, widget->workbook());
             if (!sheet) {
                 GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, url.path()));

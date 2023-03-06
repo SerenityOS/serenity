@@ -38,7 +38,7 @@ private:
     RefPtr<GUI::Action> m_create_new_window_action;
     RefPtr<GUI::Action> m_next_tab_action;
     RefPtr<GUI::Action> m_previous_tab_action;
-    NonnullRefPtrVector<GUI::Action> m_tab_actions;
+    Vector<NonnullRefPtr<GUI::Action>> m_tab_actions;
     RefPtr<GUI::Action> m_about_action;
     RefPtr<GUI::Action> m_show_bookmarks_bar_action;
     RefPtr<GUI::Action> m_vertical_tabs_action;

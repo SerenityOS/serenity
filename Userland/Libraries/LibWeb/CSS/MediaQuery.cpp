@@ -379,7 +379,7 @@ bool MediaQuery::evaluate(HTML::Window const& window)
 }
 
 // https://www.w3.org/TR/cssom-1/#serialize-a-media-query-list
-ErrorOr<String> serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const& media_queries)
+ErrorOr<String> serialize_a_media_query_list(Vector<NonnullRefPtr<MediaQuery>> const& media_queries)
 {
     // 1. If the media query list is empty, then return the empty string.
     if (media_queries.is_empty())

@@ -94,7 +94,7 @@ public:
     void save_project_as();
     void save_project();
 
-    NonnullRefPtrVector<Guide> const& guides() const { return m_guides; }
+    Vector<NonnullRefPtr<Guide>> const& guides() const { return m_guides; }
     bool guide_visibility() { return m_show_guides; }
     void set_guide_visibility(bool show_guides);
     Function<void(bool)> on_set_guide_visibility;
@@ -168,7 +168,7 @@ private:
     DeprecatedString m_path;
     DeprecatedString m_title;
 
-    NonnullRefPtrVector<Guide> m_guides;
+    Vector<NonnullRefPtr<Guide>> m_guides;
     bool m_show_guides { true };
     bool m_show_rulers { true };
     bool m_show_pixel_grid { true };

@@ -152,11 +152,11 @@ public:
     Optional<RunnablePath> runnable_path_for(StringView);
     Optional<DeprecatedString> help_path_for(Vector<RunnablePath> visited, RunnablePath const& runnable_path);
     ErrorOr<RefPtr<Job>> run_command(const AST::Command&);
-    NonnullRefPtrVector<Job> run_commands(Vector<AST::Command>&);
+    Vector<NonnullRefPtr<Job>> run_commands(Vector<AST::Command>&);
     bool run_file(DeprecatedString const&, bool explicitly_invoked = true);
-    ErrorOr<bool> run_builtin(const AST::Command&, NonnullRefPtrVector<AST::Rewiring> const&, int& retval);
+    ErrorOr<bool> run_builtin(const AST::Command&, Vector<NonnullRefPtr<AST::Rewiring>> const&, int& retval);
     bool has_builtin(StringView) const;
-    ErrorOr<RefPtr<AST::Node>> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
+    ErrorOr<RefPtr<AST::Node>> run_immediate_function(StringView name, AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const&);
     static bool has_immediate_function(StringView);
     void block_on_job(RefPtr<Job>);
     void block_on_pipeline(RefPtr<AST::Pipeline>);
@@ -423,13 +423,13 @@ private:
     virtual void custom_event(Core::CustomEvent&) override;
 
 #define __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(name) \
-    ErrorOr<RefPtr<AST::Node>> immediate_##name(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&);
+    ErrorOr<RefPtr<AST::Node>> immediate_##name(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const&);
 
     ENUMERATE_SHELL_IMMEDIATE_FUNCTIONS();
 
 #undef __ENUMERATE_SHELL_IMMEDIATE_FUNCTION
 
-    ErrorOr<RefPtr<AST::Node>> immediate_length_impl(AST::ImmediateExpression& invoking_node, NonnullRefPtrVector<AST::Node> const&, bool across);
+    ErrorOr<RefPtr<AST::Node>> immediate_length_impl(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const&, bool across);
 
 #define __ENUMERATE_SHELL_BUILTIN(builtin) \
     ErrorOr<int> builtin_##builtin(Main::Arguments);
@@ -460,7 +460,7 @@ private:
     HashMap<DeprecatedString, ShellFunction> m_functions;
     NonnullOwnPtrVector<LocalFrame> m_local_frames;
     Promise::List m_active_promises;
-    NonnullRefPtrVector<AST::Redirection> m_global_redirections;
+    Vector<NonnullRefPtr<AST::Redirection>> m_global_redirections;
 
     HashMap<DeprecatedString, DeprecatedString> m_aliases;
     bool m_is_interactive { true };

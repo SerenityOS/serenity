@@ -20,7 +20,7 @@ static ErrorOr<void> test_once()
     static Vector<int> v;
     v.clear();
     pthread_once_t once = PTHREAD_ONCE_INIT;
-    NonnullRefPtrVector<Threading::Thread, threads_count> threads;
+    Vector<NonnullRefPtr<Threading::Thread>, threads_count> threads;
 
     for (size_t i = 0; i < threads_count; i++) {
         threads.unchecked_append(TRY(Threading::Thread::try_create([&] {
@@ -29,12 +29,12 @@ static ErrorOr<void> test_once()
                 sleep(1);
             });
         })));
-        threads.last().start();
+        threads.last()->start();
     }
     // clang-format off
     // It wants to put [[maybe_unused]] on its own line, for some reason.
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        [[maybe_unused]] auto res = thread->join();
     // clang-format on
 
     VERIFY(v.size() == 1);
@@ -48,7 +48,7 @@ static ErrorOr<void> test_mutex()
     constexpr size_t num_times = 100;
 
     Vector<int> v;
-    NonnullRefPtrVector<Threading::Thread, threads_count> threads;
+    Vector<NonnullRefPtr<Threading::Thread>, threads_count> threads;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
     for (size_t i = 0; i < threads_count; i++) {
@@ -62,12 +62,12 @@ static ErrorOr<void> test_mutex()
             }
             return 0;
         })));
-        threads.last().start();
+        threads.last()->start();
     }
     // clang-format off
     // It wants to put [[maybe_unused]] on its own line, for some reason.
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        [[maybe_unused]] auto res = thread->join();
     // clang-format on
 
     VERIFY(v.size() == threads_count * num_times);
@@ -83,7 +83,7 @@ static ErrorOr<void> test_semaphore_as_lock()
     constexpr size_t num_times = 100;
 
     Vector<int> v;
-    NonnullRefPtrVector<Threading::Thread, threads_count> threads;
+    Vector<NonnullRefPtr<Threading::Thread>, threads_count> threads;
     sem_t semaphore;
     sem_init(&semaphore, 0, 1);
 
@@ -98,12 +98,12 @@ static ErrorOr<void> test_semaphore_as_lock()
             }
             return 0;
         })));
-        threads.last().start();
+        threads.last()->start();
     }
     // clang-format off
     // It wants to put [[maybe_unused]] on its own line, for some reason.
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        [[maybe_unused]] auto res = thread->join();
     // clang-format on
 
     VERIFY(v.size() == threads_count * num_times);
@@ -148,7 +148,7 @@ static ErrorOr<void> test_semaphore_nonbinary()
     constexpr size_t threads_count = 10;
     constexpr size_t num_times = 100;
 
-    NonnullRefPtrVector<Threading::Thread, threads_count> threads;
+    Vector<NonnullRefPtr<Threading::Thread>, threads_count> threads;
     sem_t semaphore;
     sem_init(&semaphore, 0, num);
 
@@ -169,12 +169,12 @@ static ErrorOr<void> test_semaphore_nonbinary()
             }
             return 0;
         })));
-        threads.last().start();
+        threads.last()->start();
     }
     // clang-format off
     // It wants to put [[maybe_unused]] on its own line, for some reason.
     for (auto& thread : threads)
-        [[maybe_unused]] auto res = thread.join();
+        [[maybe_unused]] auto res = thread->join();
     // clang-format on
 
     VERIFY(value.load() == 0);

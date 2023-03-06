@@ -166,13 +166,13 @@ public:
 
     NonnullRefPtr<PhysicalPage> allocate_committed_physical_page(Badge<CommittedPhysicalPageSet>, ShouldZeroFill = ShouldZeroFill::Yes);
     ErrorOr<NonnullRefPtr<PhysicalPage>> allocate_physical_page(ShouldZeroFill = ShouldZeroFill::Yes, bool* did_purge = nullptr);
-    ErrorOr<NonnullRefPtrVector<PhysicalPage>> allocate_contiguous_physical_pages(size_t size);
+    ErrorOr<Vector<NonnullRefPtr<PhysicalPage>>> allocate_contiguous_physical_pages(size_t size);
     void deallocate_physical_page(PhysicalAddress);
 
     ErrorOr<NonnullOwnPtr<Region>> allocate_contiguous_kernel_region(size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access, RefPtr<Memory::PhysicalPage>& dma_buffer_page);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_page(StringView name, Memory::Region::Access access);
-    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, NonnullRefPtrVector<Memory::PhysicalPage>& dma_buffer_pages);
+    ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access, Vector<NonnullRefPtr<Memory::PhysicalPage>>& dma_buffer_pages);
     ErrorOr<NonnullOwnPtr<Memory::Region>> allocate_dma_buffer_pages(size_t size, StringView name, Memory::Region::Access access);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(size_t, StringView name, Region::Access access, AllocationStrategy strategy = AllocationStrategy::Reserve, Region::Cacheable = Region::Cacheable::Yes);
     ErrorOr<NonnullOwnPtr<Region>> allocate_kernel_region(PhysicalAddress, size_t, StringView name, Region::Access access, Region::Cacheable = Region::Cacheable::Yes);

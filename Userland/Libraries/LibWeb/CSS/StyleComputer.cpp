@@ -184,8 +184,8 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
         sheet.for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
-                if (SelectorEngine::matches(selector, element, pseudo_element)) {
-                    matching_rules.append({ &rule, style_sheet_index, rule_index, selector_index, selector.specificity() });
+                if (SelectorEngine::matches(*selector, element, pseudo_element)) {
+                    matching_rules.append({ &rule, style_sheet_index, rule_index, selector_index, selector->specificity() });
                     break;
                 }
                 ++selector_index;
@@ -203,9 +203,9 @@ static void sort_matching_rules(Vector<MatchingRule>& matching_rules)
     quick_sort(matching_rules, [&](MatchingRule& a, MatchingRule& b) {
         auto const& a_selector = a.rule->selectors()[a.selector_index];
         auto const& b_selector = b.rule->selectors()[b.selector_index];
-        auto a_specificity = a_selector.specificity();
-        auto b_specificity = b_selector.specificity();
-        if (a_selector.specificity() == b_selector.specificity()) {
+        auto a_specificity = a_selector->specificity();
+        auto b_specificity = b_selector->specificity();
+        if (a_selector->specificity() == b_selector->specificity()) {
             if (a.style_sheet_index == b.style_sheet_index)
                 return a.rule_index < b.rule_index;
             return a.style_sheet_index < b.style_sheet_index;
@@ -1406,7 +1406,7 @@ PropertyDependencyNode::PropertyDependencyNode(String name)
 void PropertyDependencyNode::add_child(NonnullRefPtr<PropertyDependencyNode> new_child)
 {
     for (auto const& child : m_children) {
-        if (child.m_name == new_child->m_name)
+        if (child->m_name == new_child->m_name)
             return;
     }
 
@@ -1422,7 +1422,7 @@ bool PropertyDependencyNode::has_cycles()
 
     TemporaryChange change { m_marked, true };
     for (auto& child : m_children) {
-        if (child.has_cycles())
+        if (child->has_cycles())
             return true;
     }
     return false;

@@ -48,7 +48,7 @@ protected:
 private:
     ErrorOr<void> reify_if_needed() const;
 
-    mutable NonnullRefPtrVector<Node const> m_children;
+    mutable Vector<NonnullRefPtr<Node const>> m_children;
     mutable bool m_reified { false };
     bool m_open { false };
 };

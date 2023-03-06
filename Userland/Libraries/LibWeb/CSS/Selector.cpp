@@ -45,7 +45,7 @@ u32 Selector::specificity() const
     auto count_specificity_of_most_complex_selector = [&](auto& selector_list) {
         u32 max_selector_list_argument_specificity = 0;
         for (auto const& complex_selector : selector_list) {
-            max_selector_list_argument_specificity = max(max_selector_list_argument_specificity, complex_selector.specificity());
+            max_selector_list_argument_specificity = max(max_selector_list_argument_specificity, complex_selector->specificity());
         }
 
         u32 child_ids = (max_selector_list_argument_specificity & ids_mask) >> ids_shift;
@@ -337,7 +337,7 @@ ErrorOr<String> Selector::serialize() const
 }
 
 // https://www.w3.org/TR/cssom/#serialize-a-group-of-selectors
-ErrorOr<String> serialize_a_group_of_selectors(NonnullRefPtrVector<Selector> const& selectors)
+ErrorOr<String> serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> const& selectors)
 {
     // To serialize a group of selectors serialize each selector in the group of selectors and then serialize a comma-separated list of these serializations.
     return String::join(", "sv, selectors);

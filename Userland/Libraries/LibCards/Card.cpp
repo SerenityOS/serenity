@@ -55,14 +55,14 @@ void Card::clear_and_paint(GUI::Painter& painter, Color background_color, bool h
     save_old_position();
 }
 
-ErrorOr<NonnullRefPtrVector<Card>> create_standard_deck(Shuffle shuffle)
+ErrorOr<Vector<NonnullRefPtr<Card>>> create_standard_deck(Shuffle shuffle)
 {
     return create_deck(1, 1, 1, 1, shuffle);
 }
 
-ErrorOr<NonnullRefPtrVector<Card>> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle shuffle)
+ErrorOr<Vector<NonnullRefPtr<Card>>> create_deck(unsigned full_club_suit_count, unsigned full_diamond_suit_count, unsigned full_heart_suit_count, unsigned full_spade_suit_count, Shuffle shuffle)
 {
-    NonnullRefPtrVector<Card> deck;
+    Vector<NonnullRefPtr<Card>> deck;
     TRY(deck.try_ensure_capacity(Card::card_count * (full_club_suit_count + full_diamond_suit_count + full_heart_suit_count + full_spade_suit_count)));
 
     auto add_cards_for_suit = [&deck](Cards::Suit suit, unsigned number_of_suits) -> ErrorOr<void> {

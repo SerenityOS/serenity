@@ -55,7 +55,7 @@ private:
 
 class TypeName : public ASTNode {
 public:
-    TypeName(DeprecatedString name, NonnullRefPtrVector<SignedNumber> signed_numbers)
+    TypeName(DeprecatedString name, Vector<NonnullRefPtr<SignedNumber>> signed_numbers)
         : m_name(move(name))
         , m_signed_numbers(move(signed_numbers))
     {
@@ -63,11 +63,11 @@ public:
     }
 
     DeprecatedString const& name() const { return m_name; }
-    NonnullRefPtrVector<SignedNumber> const& signed_numbers() const { return m_signed_numbers; }
+    Vector<NonnullRefPtr<SignedNumber>> const& signed_numbers() const { return m_signed_numbers; }
 
 private:
     DeprecatedString m_name;
-    NonnullRefPtrVector<SignedNumber> m_signed_numbers;
+    Vector<NonnullRefPtr<SignedNumber>> m_signed_numbers;
 };
 
 class ColumnDefinition : public ASTNode {
@@ -107,7 +107,7 @@ private:
 
 class CommonTableExpressionList : public ASTNode {
 public:
-    CommonTableExpressionList(bool recursive, NonnullRefPtrVector<CommonTableExpression> common_table_expressions)
+    CommonTableExpressionList(bool recursive, Vector<NonnullRefPtr<CommonTableExpression>> common_table_expressions)
         : m_recursive(recursive)
         , m_common_table_expressions(move(common_table_expressions))
     {
@@ -115,11 +115,11 @@ public:
     }
 
     bool recursive() const { return m_recursive; }
-    NonnullRefPtrVector<CommonTableExpression> const& common_table_expressions() const { return m_common_table_expressions; }
+    Vector<NonnullRefPtr<CommonTableExpression>> const& common_table_expressions() const { return m_common_table_expressions; }
 
 private:
     bool m_recursive;
-    NonnullRefPtrVector<CommonTableExpression> m_common_table_expressions;
+    Vector<NonnullRefPtr<CommonTableExpression>> m_common_table_expressions;
 };
 
 class QualifiedTableName : public ASTNode {
@@ -205,18 +205,18 @@ private:
 
 class GroupByClause : public ASTNode {
 public:
-    GroupByClause(NonnullRefPtrVector<Expression> group_by_list, RefPtr<Expression> having_clause)
+    GroupByClause(Vector<NonnullRefPtr<Expression>> group_by_list, RefPtr<Expression> having_clause)
         : m_group_by_list(move(group_by_list))
         , m_having_clause(move(having_clause))
     {
         VERIFY(!m_group_by_list.is_empty());
     }
 
-    NonnullRefPtrVector<Expression> const& group_by_list() const { return m_group_by_list; }
+    Vector<NonnullRefPtr<Expression>> const& group_by_list() const { return m_group_by_list; }
     RefPtr<Expression> const& having_clause() const { return m_having_clause; }
 
 private:
-    NonnullRefPtrVector<Expression> m_group_by_list;
+    Vector<NonnullRefPtr<Expression>> m_group_by_list;
     RefPtr<Expression> m_having_clause;
 };
 
@@ -232,7 +232,7 @@ public:
     {
     }
 
-    explicit TableOrSubquery(NonnullRefPtrVector<TableOrSubquery> subqueries)
+    explicit TableOrSubquery(Vector<NonnullRefPtr<TableOrSubquery>> subqueries)
         : m_is_subquery(!subqueries.is_empty())
         , m_subqueries(move(subqueries))
     {
@@ -244,7 +244,7 @@ public:
     DeprecatedString const& table_alias() const { return m_table_alias; }
 
     bool is_subquery() const { return m_is_subquery; }
-    NonnullRefPtrVector<TableOrSubquery> const& subqueries() const { return m_subqueries; }
+    Vector<NonnullRefPtr<TableOrSubquery>> const& subqueries() const { return m_subqueries; }
 
 private:
     bool m_is_table { false };
@@ -253,7 +253,7 @@ private:
     DeprecatedString m_table_alias {};
 
     bool m_is_subquery { false };
-    NonnullRefPtrVector<TableOrSubquery> m_subqueries {};
+    Vector<NonnullRefPtr<TableOrSubquery>> m_subqueries {};
 };
 
 class OrderingTerm : public ASTNode {
@@ -573,16 +573,16 @@ private:
 
 class ChainedExpression : public Expression {
 public:
-    explicit ChainedExpression(NonnullRefPtrVector<Expression> expressions)
+    explicit ChainedExpression(Vector<NonnullRefPtr<Expression>> expressions)
         : m_expressions(move(expressions))
     {
     }
 
-    NonnullRefPtrVector<Expression> const& expressions() const { return m_expressions; }
+    Vector<NonnullRefPtr<Expression>> const& expressions() const { return m_expressions; }
     virtual ResultOr<Value> evaluate(ExecutionContext&) const override;
 
 private:
-    NonnullRefPtrVector<Expression> m_expressions;
+    Vector<NonnullRefPtr<Expression>> m_expressions;
 };
 
 class CastExpression : public NestedExpression {
@@ -800,7 +800,7 @@ public:
     {
     }
 
-    CreateTable(DeprecatedString schema_name, DeprecatedString table_name, NonnullRefPtrVector<ColumnDefinition> columns, bool is_temporary, bool is_error_if_table_exists)
+    CreateTable(DeprecatedString schema_name, DeprecatedString table_name, Vector<NonnullRefPtr<ColumnDefinition>> columns, bool is_temporary, bool is_error_if_table_exists)
         : m_schema_name(move(schema_name))
         , m_table_name(move(table_name))
         , m_columns(move(columns))
@@ -816,7 +816,7 @@ public:
     RefPtr<Select> const& select_statement() const { return m_select_statement; }
 
     bool has_columns() const { return !m_columns.is_empty(); }
-    NonnullRefPtrVector<ColumnDefinition> const& columns() const { return m_columns; }
+    Vector<NonnullRefPtr<ColumnDefinition>> const& columns() const { return m_columns; }
 
     bool is_temporary() const { return m_is_temporary; }
     bool is_error_if_table_exists() const { return m_is_error_if_table_exists; }
@@ -827,7 +827,7 @@ private:
     DeprecatedString m_schema_name;
     DeprecatedString m_table_name;
     RefPtr<Select> m_select_statement;
-    NonnullRefPtrVector<ColumnDefinition> m_columns;
+    Vector<NonnullRefPtr<ColumnDefinition>> m_columns;
     bool m_is_temporary;
     bool m_is_error_if_table_exists;
 };
@@ -937,7 +937,7 @@ enum class ConflictResolution {
 
 class Insert : public Statement {
 public:
-    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names, NonnullRefPtrVector<ChainedExpression> chained_expressions)
+    Insert(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, DeprecatedString schema_name, DeprecatedString table_name, DeprecatedString alias, Vector<DeprecatedString> column_names, Vector<NonnullRefPtr<ChainedExpression>> chained_expressions)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_schema_name(move(schema_name))
@@ -979,7 +979,7 @@ public:
     bool default_values() const { return !has_expressions() && !has_selection(); };
 
     bool has_expressions() const { return !m_chained_expressions.is_empty(); }
-    NonnullRefPtrVector<ChainedExpression> const& chained_expressions() const { return m_chained_expressions; }
+    Vector<NonnullRefPtr<ChainedExpression>> const& chained_expressions() const { return m_chained_expressions; }
 
     bool has_selection() const { return !m_select_statement.is_null(); }
     RefPtr<Select> const& select_statement() const { return m_select_statement; }
@@ -993,7 +993,7 @@ private:
     DeprecatedString m_table_name;
     DeprecatedString m_alias;
     Vector<DeprecatedString> m_column_names;
-    NonnullRefPtrVector<ChainedExpression> m_chained_expressions;
+    Vector<NonnullRefPtr<ChainedExpression>> m_chained_expressions;
     RefPtr<Select> m_select_statement;
 };
 
@@ -1004,7 +1004,7 @@ public:
         NonnullRefPtr<Expression> expression;
     };
 
-    Update(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, NonnullRefPtr<QualifiedTableName> qualified_table_name, Vector<UpdateColumns> update_columns, NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
+    Update(RefPtr<CommonTableExpressionList> common_table_expression_list, ConflictResolution conflict_resolution, NonnullRefPtr<QualifiedTableName> qualified_table_name, Vector<UpdateColumns> update_columns, Vector<NonnullRefPtr<TableOrSubquery>> table_or_subquery_list, RefPtr<Expression> where_clause, RefPtr<ReturningClause> returning_clause)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_conflict_resolution(conflict_resolution)
         , m_qualified_table_name(move(qualified_table_name))
@@ -1019,7 +1019,7 @@ public:
     ConflictResolution conflict_resolution() const { return m_conflict_resolution; }
     NonnullRefPtr<QualifiedTableName> const& qualified_table_name() const { return m_qualified_table_name; }
     Vector<UpdateColumns> const& update_columns() const { return m_update_columns; }
-    NonnullRefPtrVector<TableOrSubquery> const& table_or_subquery_list() const { return m_table_or_subquery_list; }
+    Vector<NonnullRefPtr<TableOrSubquery>> const& table_or_subquery_list() const { return m_table_or_subquery_list; }
     RefPtr<Expression> const& where_clause() const { return m_where_clause; }
     RefPtr<ReturningClause> const& returning_clause() const { return m_returning_clause; }
 
@@ -1030,7 +1030,7 @@ private:
     ConflictResolution m_conflict_resolution;
     NonnullRefPtr<QualifiedTableName> m_qualified_table_name;
     Vector<UpdateColumns> m_update_columns;
-    NonnullRefPtrVector<TableOrSubquery> m_table_or_subquery_list;
+    Vector<NonnullRefPtr<TableOrSubquery>> m_table_or_subquery_list;
     RefPtr<Expression> m_where_clause;
     RefPtr<ReturningClause> m_returning_clause;
 };
@@ -1061,7 +1061,7 @@ private:
 
 class Select : public Statement {
 public:
-    Select(RefPtr<CommonTableExpressionList> common_table_expression_list, bool select_all, NonnullRefPtrVector<ResultColumn> result_column_list, NonnullRefPtrVector<TableOrSubquery> table_or_subquery_list, RefPtr<Expression> where_clause, RefPtr<GroupByClause> group_by_clause, NonnullRefPtrVector<OrderingTerm> ordering_term_list, RefPtr<LimitClause> limit_clause)
+    Select(RefPtr<CommonTableExpressionList> common_table_expression_list, bool select_all, Vector<NonnullRefPtr<ResultColumn>> result_column_list, Vector<NonnullRefPtr<TableOrSubquery>> table_or_subquery_list, RefPtr<Expression> where_clause, RefPtr<GroupByClause> group_by_clause, Vector<NonnullRefPtr<OrderingTerm>> ordering_term_list, RefPtr<LimitClause> limit_clause)
         : m_common_table_expression_list(move(common_table_expression_list))
         , m_select_all(move(select_all))
         , m_result_column_list(move(result_column_list))
@@ -1075,22 +1075,22 @@ public:
 
     RefPtr<CommonTableExpressionList> const& common_table_expression_list() const { return m_common_table_expression_list; }
     bool select_all() const { return m_select_all; }
-    NonnullRefPtrVector<ResultColumn> const& result_column_list() const { return m_result_column_list; }
-    NonnullRefPtrVector<TableOrSubquery> const& table_or_subquery_list() const { return m_table_or_subquery_list; }
+    Vector<NonnullRefPtr<ResultColumn>> const& result_column_list() const { return m_result_column_list; }
+    Vector<NonnullRefPtr<TableOrSubquery>> const& table_or_subquery_list() const { return m_table_or_subquery_list; }
     RefPtr<Expression> const& where_clause() const { return m_where_clause; }
     RefPtr<GroupByClause> const& group_by_clause() const { return m_group_by_clause; }
-    NonnullRefPtrVector<OrderingTerm> const& ordering_term_list() const { return m_ordering_term_list; }
+    Vector<NonnullRefPtr<OrderingTerm>> const& ordering_term_list() const { return m_ordering_term_list; }
     RefPtr<LimitClause> const& limit_clause() const { return m_limit_clause; }
     ResultOr<ResultSet> execute(ExecutionContext&) const override;
 
 private:
     RefPtr<CommonTableExpressionList> m_common_table_expression_list;
     bool m_select_all;
-    NonnullRefPtrVector<ResultColumn> m_result_column_list;
-    NonnullRefPtrVector<TableOrSubquery> m_table_or_subquery_list;
+    Vector<NonnullRefPtr<ResultColumn>> m_result_column_list;
+    Vector<NonnullRefPtr<TableOrSubquery>> m_table_or_subquery_list;
     RefPtr<Expression> m_where_clause;
     RefPtr<GroupByClause> m_group_by_clause;
-    NonnullRefPtrVector<OrderingTerm> m_ordering_term_list;
+    Vector<NonnullRefPtr<OrderingTerm>> m_ordering_term_list;
     RefPtr<LimitClause> m_limit_clause;
 };
 

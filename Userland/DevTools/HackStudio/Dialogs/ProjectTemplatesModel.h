@@ -45,7 +45,7 @@ public:
 private:
     explicit ProjectTemplatesModel();
 
-    NonnullRefPtrVector<ProjectTemplate> m_templates;
+    Vector<NonnullRefPtr<ProjectTemplate>> m_templates;
     Vector<ProjectTemplate*> m_mapping;
 
     RefPtr<Core::FileWatcher> m_file_watcher;

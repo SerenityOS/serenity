@@ -9,7 +9,7 @@
 #include "Presentation.h"
 #include <AK/JsonObject.h>
 
-Slide::Slide(NonnullRefPtrVector<SlideObject> slide_objects, DeprecatedString title)
+Slide::Slide(Vector<NonnullRefPtr<SlideObject>> slide_objects, DeprecatedString title)
     : m_slide_objects(move(slide_objects))
     , m_title(move(title))
 {
@@ -25,7 +25,7 @@ ErrorOr<Slide> Slide::parse_slide(JsonObject const& slide_json)
         return Error::from_string_view("Slide objects must be an array"sv);
 
     auto const& json_slide_objects = maybe_slide_objects.value();
-    NonnullRefPtrVector<SlideObject> slide_objects;
+    Vector<NonnullRefPtr<SlideObject>> slide_objects;
     for (auto const& maybe_slide_object_json : json_slide_objects.values()) {
         if (!maybe_slide_object_json.is_object())
             return Error::from_string_view("Slides must be objects"sv);
@@ -43,6 +43,6 @@ ErrorOr<HTMLElement> Slide::render(Presentation const& presentation) const
     HTMLElement wrapper;
     wrapper.tag_name = "div"sv;
     for (auto const& object : m_slide_objects)
-        TRY(wrapper.children.try_append(TRY(object.render(presentation))));
+        TRY(wrapper.children.try_append(TRY(object->render(presentation))));
     return wrapper;
 }

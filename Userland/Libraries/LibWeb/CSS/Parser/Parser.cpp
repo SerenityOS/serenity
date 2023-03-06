@@ -156,7 +156,7 @@ Parser::ParseErrorOr<SelectorList> Parser::parse_a_selector_list(TokenStream<T>&
 {
     auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
-    NonnullRefPtrVector<Selector> selectors;
+    Vector<NonnullRefPtr<Selector>> selectors;
     for (auto& selector_parts : comma_separated_lists) {
         auto stream = TokenStream(selector_parts);
         auto selector = parse_complex_selector(stream, mode);
@@ -662,19 +662,19 @@ Parser::ParseErrorOr<Optional<Selector::SimpleSelector>> Parser::parse_simple_se
     return ParseError::SyntaxError;
 }
 
-NonnullRefPtrVector<MediaQuery> Parser::parse_as_media_query_list()
+Vector<NonnullRefPtr<MediaQuery>> Parser::parse_as_media_query_list()
 {
     return parse_a_media_query_list(m_token_stream);
 }
 
 template<typename T>
-NonnullRefPtrVector<MediaQuery> Parser::parse_a_media_query_list(TokenStream<T>& tokens)
+Vector<NonnullRefPtr<MediaQuery>> Parser::parse_a_media_query_list(TokenStream<T>& tokens)
 {
     // https://www.w3.org/TR/mediaqueries-4/#mq-list
 
     auto comma_separated_lists = parse_a_comma_separated_list_of_component_values(tokens);
 
-    AK::NonnullRefPtrVector<MediaQuery> media_queries;
+    AK::Vector<NonnullRefPtr<MediaQuery>> media_queries;
     for (auto& media_query_parts : comma_separated_lists) {
         auto stream = TokenStream(media_query_parts);
         media_queries.append(parse_media_query(stream));
@@ -1443,12 +1443,12 @@ Optional<GeneralEnclosed> Parser::parse_general_enclosed(TokenStream<ComponentVa
 // 5.4.1. Consume a list of rules
 // https://www.w3.org/TR/css-syntax-3/#consume-list-of-rules
 template<typename T>
-NonnullRefPtrVector<Rule> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
+Vector<NonnullRefPtr<Rule>> Parser::consume_a_list_of_rules(TokenStream<T>& tokens, TopLevel top_level)
 {
     // To consume a list of rules, given a top-level flag:
 
     // Create an initially empty list of rules.
-    NonnullRefPtrVector<Rule> rules;
+    Vector<NonnullRefPtr<Rule>> rules;
 
     // Repeatedly consume the next input token:
     for (;;) {
@@ -2075,7 +2075,7 @@ RefPtr<Rule> Parser::parse_a_rule(TokenStream<T>& tokens)
 // 5.3.4. Parse a list of rules
 // https://www.w3.org/TR/css-syntax-3/#parse-list-of-rules
 template<typename T>
-NonnullRefPtrVector<Rule> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
+Vector<NonnullRefPtr<Rule>> Parser::parse_a_list_of_rules(TokenStream<T>& tokens)
 {
     // To parse a list of rules from input:
 
@@ -7443,7 +7443,7 @@ RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& con
     return parser.parse_as_media_query();
 }
 
-NonnullRefPtrVector<CSS::MediaQuery> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
+Vector<NonnullRefPtr<CSS::MediaQuery>> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
 {
     CSS::Parser::Parser parser(context, string);
     return parser.parse_as_media_query_list();

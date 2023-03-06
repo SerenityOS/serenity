@@ -26,8 +26,8 @@ ResultOr<ResultSet> DescribeTable::execute(ExecutionContext& context) const
 
     for (auto& column : table_def->columns()) {
         Tuple tuple(descriptor);
-        tuple[0] = column.name();
-        tuple[1] = SQLType_name(column.type());
+        tuple[0] = column->name();
+        tuple[1] = SQLType_name(column->type());
 
         result.insert_row(tuple, Tuple {});
     }

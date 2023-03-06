@@ -390,7 +390,7 @@ void WorkbookObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     for (auto& sheet : m_workbook.sheets())
-        visitor.visit(&sheet.global_object());
+        visitor.visit(&sheet->global_object());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
@@ -411,13 +411,13 @@ JS_DEFINE_NATIVE_FUNCTION(WorkbookObject::sheet)
     if (name_value.is_string()) {
         auto name = TRY(name_value.as_string().deprecated_string());
         for (auto& sheet : workbook.sheets()) {
-            if (sheet.name() == name)
-                return JS::Value(&sheet.global_object());
+            if (sheet->name() == name)
+                return JS::Value(&sheet->global_object());
         }
     } else {
         auto index = TRY(name_value.to_length(vm));
         if (index < workbook.sheets().size())
-            return JS::Value(&workbook.sheets()[index].global_object());
+            return JS::Value(&workbook.sheets()[index]->global_object());
     }
 
     return JS::js_undefined();

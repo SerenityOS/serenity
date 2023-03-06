@@ -254,7 +254,7 @@ private:
     bool m_matches { false };
 };
 
-ErrorOr<String> serialize_a_media_query_list(NonnullRefPtrVector<MediaQuery> const&);
+ErrorOr<String> serialize_a_media_query_list(Vector<NonnullRefPtr<MediaQuery>> const&);
 
 bool is_media_feature_name(StringView name);
 

@@ -50,7 +50,7 @@ void Game::setup(Mode mode)
         on_game_end(GameOverReason::NewGame, m_score);
 
     for (auto& stack : stacks())
-        stack.clear();
+        stack->clear();
 
     m_new_game_animation_pile = 0;
 
@@ -91,7 +91,7 @@ void Game::perform_undo()
     if (!m_last_move.was_visible)
         m_last_move.from->peek().set_upside_down(true);
 
-    NonnullRefPtrVector<Card> cards;
+    Vector<NonnullRefPtr<Card>> cards;
     for (size_t i = 0; i < m_last_move.card_count; i++)
         cards.append(m_last_move.to->pop());
     for (ssize_t i = m_last_move.card_count - 1; i >= 0; i--)
@@ -146,18 +146,18 @@ void Game::detect_full_stacks()
         Color color;
         for (size_t i = current_pile.stack().size(); i > 0; i--) {
             auto& card = current_pile.stack().at(i - 1);
-            if (card.is_upside_down())
+            if (card->is_upside_down())
                 break;
 
             if (!started) {
-                if (card.rank() != Cards::Rank::Ace)
+                if (card->rank() != Cards::Rank::Ace)
                     break;
 
                 started = true;
-                color = card.color();
-            } else if (to_underlying(card.rank()) != last_value + 1 || card.color() != color) {
+                color = card->color();
+            } else if (to_underlying(card->rank()) != last_value + 1 || card->color() != color) {
                 break;
-            } else if (card.rank() == Cards::Rank::King) {
+            } else if (card->rank() == Cards::Rank::King) {
                 // we have a full set
                 auto original_current_rect = current_pile.bounding_box();
 
@@ -177,7 +177,7 @@ void Game::detect_full_stacks()
                     on_undo_availability_change(false);
             }
 
-            last_value = to_underlying(card.rank());
+            last_value = to_underlying(card->rank());
         }
     }
 
@@ -212,24 +212,24 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     if (is_moving_cards()) {
         for (auto& card : moving_cards())
-            card.clear(painter, background_color);
+            card->clear(painter, background_color);
     }
 
     for (auto& stack : stacks()) {
-        stack.paint(painter, background_color);
+        stack->paint(painter, background_color);
     }
 
     if (is_moving_cards()) {
         for (auto& card : moving_cards()) {
-            card.paint(painter);
-            card.save_old_position();
+            card->paint(painter);
+            card->save_old_position();
         }
     }
 
     if (!m_mouse_down) {
         if (is_moving_cards()) {
             for (auto& card : moving_cards())
-                card.set_moving(false);
+                card->set_moving(false);
         }
         clear_moving_cards();
     }
@@ -255,15 +255,15 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 
     auto click_location = event.position();
     for (auto& to_check : stacks()) {
-        if (to_check.type() == CardStack::Type::Waste)
+        if (to_check->type() == CardStack::Type::Waste)
             continue;
 
-        if (to_check.bounding_box().contains(click_location)) {
-            if (to_check.type() == CardStack::Type::Stock) {
+        if (to_check->bounding_box().contains(click_location)) {
+            if (to_check->type() == CardStack::Type::Stock) {
                 start_timer_if_necessary();
                 draw_cards();
-            } else if (!to_check.is_empty()) {
-                auto& top_card = to_check.peek();
+            } else if (!to_check->is_empty()) {
+                auto& top_card = to_check->peek();
 
                 if (top_card.is_upside_down()) {
                     if (top_card.rect().contains(click_location)) {
@@ -312,7 +312,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
             if (stack == moving_cards_source_stack())
                 continue;
 
-            if (stack.is_allowed_to_push(moving_cards().at(0), moving_cards().size(), Cards::CardStack::MovementRule::Any) && !stack.is_empty()) {
+            if (stack->is_allowed_to_push(moving_cards().at(0), moving_cards().size(), Cards::CardStack::MovementRule::Any) && !stack->is_empty()) {
                 move_focused_cards(stack);
 
                 rebound = false;
@@ -361,8 +361,8 @@ void Game::mousemove_event(GUI::MouseEvent& event)
 
     for (auto& to_intersect : moving_cards()) {
         mark_intersecting_stacks_dirty(to_intersect);
-        to_intersect.rect().translate_by(dx, dy);
-        update(to_intersect.rect());
+        to_intersect->rect().translate_by(dx, dy);
+        update(to_intersect->rect());
     }
 
     m_mouse_down_location = click_location;

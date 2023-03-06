@@ -53,7 +53,7 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
         "/res/emoji/U+1FAB1.png"sv,
     };
 
-    NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps;
+    Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps;
     TRY(food_bitmaps.try_ensure_capacity(food_bitmaps_files.size()));
 
     for (auto file : food_bitmaps_files) {
@@ -69,7 +69,7 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
     return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps)));
 }
 
-Game::Game(NonnullRefPtrVector<Gfx::Bitmap> food_bitmaps)
+Game::Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps)
     : m_food_bitmaps(move(food_bitmaps))
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
@@ -263,7 +263,7 @@ void Game::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(bottom_side, m_snake_base_color.darkened(0.55));
     }
 
-    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type].rect());
+    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type]->rect());
 }
 
 void Game::game_over()

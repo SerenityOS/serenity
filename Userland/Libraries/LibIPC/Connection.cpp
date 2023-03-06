@@ -64,7 +64,7 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     TRY(buffer.data.try_prepend(reinterpret_cast<u8 const*>(&message_size), sizeof(message_size)));
 
     for (auto& fd : buffer.fds) {
-        if (auto result = fd_passing_socket().send_fd(fd.value()); result.is_error()) {
+        if (auto result = fd_passing_socket().send_fd(fd->value()); result.is_error()) {
             shutdown_with_error(result.error());
             return result;
         }

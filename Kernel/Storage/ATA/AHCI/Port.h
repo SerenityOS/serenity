@@ -112,8 +112,8 @@ private:
 
     mutable bool m_wait_for_completion { false };
 
-    NonnullRefPtrVector<Memory::PhysicalPage> m_dma_buffers;
-    NonnullRefPtrVector<Memory::PhysicalPage> m_command_table_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> m_dma_buffers;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> m_command_table_pages;
     RefPtr<Memory::PhysicalPage> m_command_list_page;
     OwnPtr<Memory::Region> m_command_list_region;
     RefPtr<Memory::PhysicalPage> m_fis_receive_page;

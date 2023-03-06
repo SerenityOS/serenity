@@ -46,7 +46,7 @@ static ErrorOr<NonnullRefPtr<Object>> parse_gml_object(Queue<Token>& tokens)
 
         tokens.dequeue();
 
-        NonnullRefPtrVector<Comment> pending_comments;
+        Vector<NonnullRefPtr<Comment>> pending_comments;
         for (;;) {
             if (peek() == Token::Type::RightCurly) {
                 // End of object

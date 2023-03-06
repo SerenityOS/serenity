@@ -13,12 +13,12 @@
 
 namespace Web::CSS {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> MediaList::create(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MediaList>> MediaList::create(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<MediaList>(realm, realm, move(media)));
 }
 
-MediaList::MediaList(JS::Realm& realm, NonnullRefPtrVector<MediaQuery>&& media)
+MediaList::MediaList(JS::Realm& realm, Vector<NonnullRefPtr<MediaQuery>>&& media)
     : Bindings::LegacyPlatformObject(realm)
     , m_media(move(media))
 {
@@ -58,7 +58,7 @@ DeprecatedString MediaList::item(u32 index) const
     if (!is_supported_property_index(index))
         return {};
 
-    return m_media[index].to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
+    return m_media[index]->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 // https://www.w3.org/TR/cssom-1/#dom-medialist-appendmedium
@@ -74,7 +74,7 @@ void MediaList::append_medium(DeprecatedString medium)
     // 3. If comparing m with any of the media queries in the collection of media queries returns true, then return.
     auto serialized = m->to_string().release_value_but_fixme_should_propagate_errors();
     for (auto& existing_medium : m_media) {
-        if (existing_medium.to_string().release_value_but_fixme_should_propagate_errors() == serialized)
+        if (existing_medium->to_string().release_value_but_fixme_should_propagate_errors() == serialized)
             return;
     }
 
@@ -97,7 +97,7 @@ void MediaList::delete_medium(DeprecatedString medium)
 bool MediaList::evaluate(HTML::Window const& window)
 {
     for (auto& media : m_media)
-        media.evaluate(window);
+        media->evaluate(window);
 
     return matches();
 }
@@ -109,7 +109,7 @@ bool MediaList::matches() const
     }
 
     for (auto& media : m_media) {
-        if (media.matches())
+        if (media->matches())
             return true;
     }
     return false;
@@ -119,7 +119,7 @@ WebIDL::ExceptionOr<JS::Value> MediaList::item_value(size_t index) const
 {
     if (index >= m_media.size())
         return JS::js_undefined();
-    return JS::PrimitiveString::create(vm(), m_media[index].to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
+    return JS::PrimitiveString::create(vm(), m_media[index]->to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string());
 }
 
 }

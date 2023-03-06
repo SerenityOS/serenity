@@ -202,7 +202,7 @@ ErrorOr<void> ExportDialog::make_and_run_for(StringView mime, Core::File& file, 
     auto export_worksheet = [&]() -> ErrorOr<void> {
         JsonArray array;
         for (auto& sheet : workbook.sheets())
-            array.append(sheet.to_json());
+            array.append(sheet->to_json());
 
         auto file_content = array.to_deprecated_string();
         return file.write_entire_buffer(file_content.bytes());

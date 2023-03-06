@@ -110,7 +110,7 @@ class IndexDef : public Relation {
 public:
     ~IndexDef() override = default;
 
-    NonnullRefPtrVector<KeyPartDef> const& key_definition() const { return m_key_definition; }
+    Vector<NonnullRefPtr<KeyPartDef>> const& key_definition() const { return m_key_definition; }
     bool unique() const { return m_unique; }
     [[nodiscard]] size_t size() const { return m_key_definition.size(); }
     void append_column(DeprecatedString, SQLType, Order = Order::Ascending);
@@ -123,7 +123,7 @@ private:
     IndexDef(TableDef*, DeprecatedString, bool unique = true, u32 pointer = 0);
     explicit IndexDef(DeprecatedString, bool unique = true, u32 pointer = 0);
 
-    NonnullRefPtrVector<KeyPartDef> m_key_definition;
+    Vector<NonnullRefPtr<KeyPartDef>> m_key_definition;
     bool m_unique { false };
 
     friend TableDef;
@@ -138,8 +138,8 @@ public:
     void append_column(Key const&);
     size_t num_columns() { return m_columns.size(); }
     size_t num_indexes() { return m_indexes.size(); }
-    NonnullRefPtrVector<ColumnDef> const& columns() const { return m_columns; }
-    NonnullRefPtrVector<IndexDef> const& indexes() const { return m_indexes; }
+    Vector<NonnullRefPtr<ColumnDef>> const& columns() const { return m_columns; }
+    Vector<NonnullRefPtr<IndexDef>> const& indexes() const { return m_indexes; }
     [[nodiscard]] NonnullRefPtr<TupleDescriptor> to_tuple_descriptor() const;
 
     static NonnullRefPtr<IndexDef> index_def();
@@ -149,8 +149,8 @@ public:
 private:
     explicit TableDef(SchemaDef*, DeprecatedString);
 
-    NonnullRefPtrVector<ColumnDef> m_columns;
-    NonnullRefPtrVector<IndexDef> m_indexes;
+    Vector<NonnullRefPtr<ColumnDef>> m_columns;
+    Vector<NonnullRefPtr<IndexDef>> m_indexes;
 };
 
 }

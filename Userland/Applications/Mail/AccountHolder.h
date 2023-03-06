@@ -34,7 +34,7 @@ public:
         m_mailboxes.append(move(mailbox));
     }
 
-    NonnullRefPtrVector<MailboxNode> const& mailboxes() const { return m_mailboxes; }
+    Vector<NonnullRefPtr<MailboxNode>> const& mailboxes() const { return m_mailboxes; }
     DeprecatedString const& name() const { return m_name; }
 
 private:
@@ -44,7 +44,7 @@ private:
     }
 
     DeprecatedString m_name;
-    NonnullRefPtrVector<MailboxNode> m_mailboxes;
+    Vector<NonnullRefPtr<MailboxNode>> m_mailboxes;
 };
 
 class MailboxNode final : public BaseNode {
@@ -66,7 +66,7 @@ public:
     void set_parent(NonnullRefPtr<MailboxNode> parent) { m_parent = parent; }
 
     bool has_children() const { return !m_children.is_empty(); }
-    NonnullRefPtrVector<MailboxNode> const& children() const { return m_children; }
+    Vector<NonnullRefPtr<MailboxNode>> const& children() const { return m_children; }
     void add_child(NonnullRefPtr<MailboxNode> child) { m_children.append(child); }
 
 private:
@@ -81,7 +81,7 @@ private:
     IMAP::ListItem m_mailbox;
     DeprecatedString m_display_name;
 
-    NonnullRefPtrVector<MailboxNode> m_children;
+    Vector<NonnullRefPtr<MailboxNode>> m_children;
     RefPtr<MailboxNode> m_parent;
 };
 
@@ -96,7 +96,7 @@ public:
 
     void add_account_with_name_and_mailboxes(DeprecatedString, Vector<IMAP::ListItem> const&);
 
-    NonnullRefPtrVector<AccountNode> const& accounts() const { return m_accounts; }
+    Vector<NonnullRefPtr<AccountNode>> const& accounts() const { return m_accounts; }
     MailboxTreeModel& mailbox_tree_model() { return *m_mailbox_tree_model; }
 
 private:
@@ -104,6 +104,6 @@ private:
 
     void rebuild_tree();
 
-    NonnullRefPtrVector<AccountNode> m_accounts;
+    Vector<NonnullRefPtr<AccountNode>> m_accounts;
     RefPtr<MailboxTreeModel> m_mailbox_tree_model;
 };

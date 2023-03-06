@@ -23,7 +23,7 @@
 
 namespace WindowServer {
 
-NonnullRefPtrVector<Screen, default_screen_count> Screen::s_screens;
+Vector<NonnullRefPtr<Screen>, default_screen_count> Screen::s_screens;
 Screen* Screen::s_main_screen { nullptr };
 Gfx::IntRect Screen::s_bounding_screens_rect {};
 ScreenLayout Screen::s_layout;
@@ -89,9 +89,9 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, DeprecatedString& error_
         auto& screen = s_layout.screens[it.key];
         auto& new_screen = screen_layout.screens[it.value];
         if (screen.resolution != new_screen.resolution)
-            screens_with_resolution_change.set(&s_screens[it.key], it.value);
+            screens_with_resolution_change.set(s_screens[it.key], it.value);
         if (screen.scale_factor != new_screen.scale_factor)
-            screens_with_scale_change.set(&s_screens[it.key], it.value);
+            screens_with_scale_change.set(s_screens[it.key], it.value);
     }
 
     auto screens_backup = move(s_screens);
@@ -105,18 +105,18 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, DeprecatedString& error_
 
     AK::ArmedScopeGuard rollback([&] {
         for (auto& screen : s_screens)
-            screen.close_device();
+            screen->close_device();
         s_screens = move(screens_backup);
         s_layout = move(layout_backup);
         for (size_t i = 0; i < s_screens.size(); i++) {
             auto& old_screen = s_screens[i];
             // Restore the original screen index in case it changed
-            old_screen.set_index(i);
+            old_screen->set_index(i);
             if (i == s_layout.main_screen_index)
-                old_screen.make_main_screen();
-            bool changed_scale = screens_with_scale_change.contains(&old_screen);
-            if (screens_with_resolution_change.contains(&old_screen)) {
-                if (old_screen.open_device()) {
+                old_screen->make_main_screen();
+            bool changed_scale = screens_with_scale_change.contains(old_screen);
+            if (screens_with_resolution_change.contains(old_screen)) {
+                if (old_screen->open_device()) {
                     // The resolution was changed, so we also implicitly applied the new scale factor
                     changed_scale = false;
                 } else {
@@ -125,9 +125,9 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, DeprecatedString& error_
                 }
             }
 
-            old_screen.update_virtual_and_physical_rects();
+            old_screen->update_virtual_and_physical_rects();
             if (changed_scale)
-                old_screen.scale_factor_changed();
+                old_screen->scale_factor_changed();
         }
         update_bounding_rect();
     });
@@ -137,7 +137,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, DeprecatedString& error_
         bool need_to_open_device;
         if (auto it = new_to_current_indices_map.find(index); it != new_to_current_indices_map.end()) {
             // Re-use the existing screen instance
-            screen = &screens_backup[it->value];
+            screen = screens_backup[it->value];
             s_screens.append(*screen);
             screen->set_index(index);
 
@@ -179,7 +179,7 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, DeprecatedString& error_
             float closest_distance = 0;
             Optional<Gfx::IntPoint> closest_point;
             for (auto& screen : s_screens) {
-                auto closest_point_on_screen_rect = screen.rect().closest_to(cursor_location);
+                auto closest_point_on_screen_rect = screen->rect().closest_to(cursor_location);
                 auto distance = closest_point_on_screen_rect.distance_from(cursor_location);
                 if (!closest_point.has_value() || distance < closest_distance) {
                     closest_distance = distance;
@@ -279,10 +279,10 @@ Screen& Screen::closest_to_rect(Gfx::IntRect const& rect)
     Screen* best_screen = nullptr;
     int best_area = 0;
     for (auto& screen : s_screens) {
-        auto r = screen.rect().intersected(rect);
+        auto r = screen->rect().intersected(rect);
         int area = r.width() * r.height();
         if (!best_screen || area > best_area) {
-            best_screen = &screen;
+            best_screen = screen;
             best_area = area;
         }
     }
@@ -296,7 +296,7 @@ Screen& Screen::closest_to_rect(Gfx::IntRect const& rect)
 Screen& Screen::closest_to_location(Gfx::IntPoint point)
 {
     for (auto& screen : s_screens) {
-        if (screen.rect().contains(point))
+        if (screen->rect().contains(point))
             return screen;
     }
     // TODO: guess based on how close the point is to the next screen rectangle
@@ -306,9 +306,9 @@ Screen& Screen::closest_to_location(Gfx::IntPoint point)
 void Screen::update_bounding_rect()
 {
     if (!s_screens.is_empty()) {
-        s_bounding_screens_rect = s_screens[0].rect();
+        s_bounding_screens_rect = s_screens[0]->rect();
         for (size_t i = 1; i < s_screens.size(); i++)
-            s_bounding_screens_rect = s_bounding_screens_rect.united(s_screens[i].rect());
+            s_bounding_screens_rect = s_bounding_screens_rect.united(s_screens[i]->rect());
     } else {
         s_bounding_screens_rect = {};
     }

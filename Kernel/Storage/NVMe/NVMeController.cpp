@@ -256,9 +256,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
 {
     auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
-    NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
-    NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(qdepth), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(qdepth), 4096);
     if (!reset_controller()) {
@@ -280,8 +280,8 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     }
     auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + REG_SQ0TDBL_START)));
 
-    m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first().paddr().as_ptr()));
-    m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
+    m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
+    m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first()->paddr().as_ptr()));
 
     if (!start_controller()) {
         dmesgln_pci(*this, "Failed to restart the NVMe controller");
@@ -297,9 +297,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
 UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<u8> irq)
 {
     OwnPtr<Memory::Region> cq_dma_region;
-    NonnullRefPtrVector<Memory::PhysicalPage> cq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
     OwnPtr<Memory::Region> sq_dma_region;
-    NonnullRefPtrVector<Memory::PhysicalPage> sq_dma_pages;
+    Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(IO_QUEUE_SIZE), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(IO_QUEUE_SIZE), 4096);
 
@@ -320,7 +320,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
     {
         NVMeSubmission sub {};
         sub.op = OP_ADMIN_CREATE_COMPLETION_QUEUE;
-        sub.create_cq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first().paddr().as_ptr()));
+        sub.create_cq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
         sub.create_cq.cqid = qid;
         // The queue size is 0 based
         sub.create_cq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
@@ -335,7 +335,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
     {
         NVMeSubmission sub {};
         sub.op = OP_ADMIN_CREATE_SUBMISSION_QUEUE;
-        sub.create_sq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first().paddr().as_ptr()));
+        sub.create_sq.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first()->paddr().as_ptr()));
         sub.create_sq.sqid = qid;
         // The queue size is 0 based
         sub.create_sq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);

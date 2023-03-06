@@ -126,7 +126,7 @@ private:
     ErrorOr<void> merge_active_layer(NonnullRefPtr<Layer> const&, LayerMergeDirection);
 
     Gfx::IntSize m_size;
-    NonnullRefPtrVector<Layer> m_layers;
+    Vector<NonnullRefPtr<Layer>> m_layers;
 
     HashTable<ImageClient*> m_clients;
 

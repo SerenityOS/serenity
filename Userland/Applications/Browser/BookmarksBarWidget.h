@@ -66,7 +66,7 @@ private:
     RefPtr<GUI::Action> m_context_menu_default_action;
     DeprecatedString m_context_menu_url;
 
-    NonnullRefPtrVector<GUI::Button> m_bookmarks;
+    Vector<NonnullRefPtr<GUI::Button>> m_bookmarks;
 
     int m_last_visible_index { -1 };
 };

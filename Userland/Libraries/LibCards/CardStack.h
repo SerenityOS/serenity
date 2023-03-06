@@ -35,7 +35,7 @@ public:
 
     bool is_empty() const { return m_stack.is_empty(); }
     Type type() const { return m_type; }
-    NonnullRefPtrVector<Card> const& stack() const { return m_stack; }
+    Vector<NonnullRefPtr<Card>> const& stack() const { return m_stack; }
     size_t count() const { return m_stack.size(); }
     Card const& peek() const { return m_stack.last(); }
     Card& peek() { return m_stack.last(); }
@@ -49,7 +49,7 @@ public:
     void rebound_cards();
 
     bool is_allowed_to_push(Card const&, size_t stack_size = 1, MovementRule movement_rule = MovementRule::Alternating) const;
-    ErrorOr<void> add_all_grabbed_cards(Gfx::IntPoint click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
+    ErrorOr<void> add_all_grabbed_cards(Gfx::IntPoint click_location, Vector<NonnullRefPtr<Card>>& grabbed, MovementRule movement_rule = MovementRule::Alternating);
 
     bool preview_card(Gfx::IntPoint click_location);
     void clear_card_preview();
@@ -91,7 +91,7 @@ private:
     // eg, in Solitaire the Play stack is positioned over the Waste stack.
     RefPtr<CardStack> m_covered_stack;
 
-    NonnullRefPtrVector<Card> m_stack;
+    Vector<NonnullRefPtr<Card>> m_stack;
     Vector<Gfx::IntPoint> m_stack_positions;
     Gfx::IntPoint m_position;
     Gfx::IntRect m_bounding_box;

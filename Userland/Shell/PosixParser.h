@@ -63,7 +63,7 @@ private:
 
     struct CaseItemsResult {
         Vector<AST::Position> pipe_positions;
-        NonnullRefPtrVector<AST::Node> nodes;
+        Vector<NonnullRefPtr<AST::Node>> nodes;
     };
 
     ErrorOr<RefPtr<AST::Node>> parse_complete_command();

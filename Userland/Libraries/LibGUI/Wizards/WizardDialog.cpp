@@ -76,7 +76,7 @@ WizardDialog::WizardDialog(Window* parent_window)
 void WizardDialog::push_page(AbstractWizardPage& page)
 {
     if (!m_page_stack.is_empty())
-        m_page_stack.last().page_leave();
+        m_page_stack.last()->page_leave();
 
     m_page_stack.append(page);
     m_page_container_widget->remove_all_children();
@@ -111,7 +111,7 @@ void WizardDialog::pop_page()
     m_page_container_widget->add_child(m_page_stack.last());
 
     update_navigation();
-    m_page_stack.last().page_enter();
+    m_page_stack.last()->page_enter();
 }
 
 void WizardDialog::update_navigation()

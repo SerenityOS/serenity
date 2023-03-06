@@ -118,9 +118,9 @@ GUI::ModelIndex OutlineModel::parent_index(const GUI::ModelIndex& index) const
     if (!parent)
         return {};
 
-    NonnullRefPtrVector<PDF::OutlineItem> parent_siblings = (parent->parent ? parent->parent->children : m_outline->children);
+    Vector<NonnullRefPtr<PDF::OutlineItem>> parent_siblings = (parent->parent ? parent->parent->children : m_outline->children);
     for (size_t i = 0; i < parent_siblings.size(); i++) {
-        auto* parent_sibling = &parent_siblings[i];
+        auto* parent_sibling = parent_siblings[i].ptr();
         if (parent_sibling == parent.ptr())
             return create_index(static_cast<int>(i), index.column(), parent.ptr());
     }

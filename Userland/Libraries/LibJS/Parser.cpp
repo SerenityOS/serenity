@@ -231,13 +231,13 @@ public:
 
         for (size_t i = 0; i < m_functions_to_hoist.size(); i++) {
             auto const& function_declaration = m_functions_to_hoist[i];
-            if (m_lexical_names.contains(function_declaration.name()) || m_forbidden_var_names.contains(function_declaration.name()))
+            if (m_lexical_names.contains(function_declaration->name()) || m_forbidden_var_names.contains(function_declaration->name()))
                 continue;
             if (is_top_level()) {
-                m_node->add_hoisted_function(move(m_functions_to_hoist.ptr_at(i)));
+                m_node->add_hoisted_function(move(m_functions_to_hoist[i]));
             } else {
-                if (!m_parent_scope->m_lexical_names.contains(function_declaration.name()) && !m_parent_scope->m_function_names.contains(function_declaration.name()))
-                    m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist.ptr_at(i)));
+                if (!m_parent_scope->m_lexical_names.contains(function_declaration->name()) && !m_parent_scope->m_function_names.contains(function_declaration->name()))
+                    m_parent_scope->m_functions_to_hoist.append(move(m_functions_to_hoist[i]));
             }
         }
 
@@ -284,7 +284,7 @@ private:
 
     HashTable<DeprecatedFlyString> m_forbidden_lexical_names;
     HashTable<DeprecatedFlyString> m_forbidden_var_names;
-    NonnullRefPtrVector<FunctionDeclaration const> m_functions_to_hoist;
+    Vector<NonnullRefPtr<FunctionDeclaration const>> m_functions_to_hoist;
 
     Optional<Vector<FunctionParameter>> m_function_parameters;
 
@@ -565,9 +565,9 @@ void Parser::parse_module(Program& program)
         program.set_has_top_level_await();
 
     for (auto& export_statement : program.exports()) {
-        if (export_statement.has_statement())
+        if (export_statement->has_statement())
             continue;
-        for (auto& entry : export_statement.entries()) {
+        for (auto& entry : export_statement->entries()) {
             if (entry.is_module_request() || entry.kind == ExportEntry::Kind::EmptyNamedExport)
                 return;
 
@@ -586,14 +586,14 @@ void Parser::parse_module(Program& program)
                     found = true;
             }));
             for (auto& import : program.imports()) {
-                if (import.has_bound_name(exported_name)) {
+                if (import->has_bound_name(exported_name)) {
                     found = true;
                     break;
                 }
             }
 
             if (!found)
-                syntax_error(DeprecatedString::formatted("'{}' in export is not declared", exported_name), export_statement.source_range().start);
+                syntax_error(DeprecatedString::formatted("'{}' in export is not declared", exported_name), export_statement->source_range().start);
         }
     }
 }
@@ -1065,7 +1065,7 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
 
     consume(TokenType::Class);
 
-    NonnullRefPtrVector<ClassElement const> elements;
+    Vector<NonnullRefPtr<ClassElement const>> elements;
     RefPtr<Expression const> super_class;
     RefPtr<FunctionExpression const> constructor;
     HashTable<DeprecatedFlyString> found_private_names;
@@ -1188,18 +1188,18 @@ NonnullRefPtr<ClassExpression const> Parser::parse_class_expression(bool expect_
                         //   and the getter and setter are either both static or both non-static.
 
                         for (auto& element : elements) {
-                            auto private_name = element.private_bound_identifier();
+                            auto private_name = element->private_bound_identifier();
                             if (!private_name.has_value() || private_name.value() != name)
                                 continue;
 
-                            if (element.class_element_kind() != ClassElement::ElementKind::Method
-                                || element.is_static() != is_static) {
+                            if (element->class_element_kind() != ClassElement::ElementKind::Method
+                                || element->is_static() != is_static) {
                                 syntax_error(DeprecatedString::formatted("Duplicate private field or method named '{}'", name));
                                 break;
                             }
 
-                            VERIFY(is<ClassMethod>(element));
-                            auto& class_method_element = static_cast<ClassMethod const&>(element);
+                            VERIFY(is<ClassMethod>(*element));
+                            auto& class_method_element = static_cast<ClassMethod const&>(*element);
 
                             if (class_method_element.kind() == ClassMethod::Kind::Method || class_method_element.kind() == method_kind) {
                                 syntax_error(DeprecatedString::formatted("Duplicate private field or method named '{}'", name));
@@ -1690,7 +1690,7 @@ NonnullRefPtr<ObjectExpression const> Parser::parse_object_expression()
     auto rule_start = push_start();
     consume(TokenType::CurlyOpen);
 
-    NonnullRefPtrVector<ObjectProperty> properties;
+    Vector<NonnullRefPtr<ObjectProperty>> properties;
     ObjectProperty::Type property_type;
     Optional<SourceRange> invalid_object_literal_property_range;
 
@@ -1908,8 +1908,8 @@ NonnullRefPtr<TemplateLiteral const> Parser::parse_template_literal(bool is_tagg
     auto rule_start = push_start();
     consume(TokenType::TemplateLiteralStart);
 
-    NonnullRefPtrVector<Expression const> expressions;
-    NonnullRefPtrVector<Expression const> raw_strings;
+    Vector<NonnullRefPtr<Expression const>> expressions;
+    Vector<NonnullRefPtr<Expression const>> raw_strings;
 
     auto append_empty_string = [this, &rule_start, &expressions, &raw_strings, is_tagged]() {
         auto string_literal = create_ast_node<StringLiteral>({ m_source_code, rule_start.position(), position() }, "");
@@ -2044,7 +2044,7 @@ NonnullRefPtr<Expression const> Parser::parse_expression(int min_precedence, Ass
     }
 
     if (match(TokenType::Comma) && min_precedence <= 1) {
-        NonnullRefPtrVector<Expression const> expressions;
+        Vector<NonnullRefPtr<Expression const>> expressions;
         expressions.append(expression);
         while (match(TokenType::Comma)) {
             consume();
@@ -3024,7 +3024,7 @@ NonnullRefPtr<VariableDeclaration const> Parser::parse_variable_declaration(IsFo
     }
     consume();
 
-    NonnullRefPtrVector<VariableDeclarator const> declarations;
+    Vector<NonnullRefPtr<VariableDeclarator const>> declarations;
     for (;;) {
         Variant<NonnullRefPtr<Identifier const>, NonnullRefPtr<BindingPattern const>, Empty> target {};
         if (auto pattern = parse_binding_pattern(declaration_kind != DeclarationKind::Var ? AllowDuplicates::No : AllowDuplicates::Yes, AllowMemberExpressions::No)) {
@@ -3096,7 +3096,7 @@ NonnullRefPtr<UsingDeclaration const> Parser::parse_using_declaration(IsForLoopV
     VERIFY(m_state.current_token.original_value() == "using"sv);
     consume(TokenType::Identifier);
     VERIFY(!m_state.current_token.trivia_contains_line_terminator());
-    NonnullRefPtrVector<VariableDeclarator const> declarations;
+    Vector<NonnullRefPtr<VariableDeclarator const>> declarations;
 
     for (;;) {
         auto lexical_binding = parse_lexical_binding();
@@ -3385,7 +3385,7 @@ NonnullRefPtr<SwitchStatement const> Parser::parse_switch_statement()
 
     consume(TokenType::CurlyOpen);
 
-    NonnullRefPtrVector<SwitchCase> cases;
+    Vector<NonnullRefPtr<SwitchCase>> cases;
 
     auto switch_statement = create_ast_node<SwitchStatement>({ m_source_code, rule_start.position(), position() }, move(determinant));
 
@@ -3431,7 +3431,7 @@ NonnullRefPtr<SwitchCase const> Parser::parse_switch_case()
 
     consume(TokenType::Colon);
 
-    NonnullRefPtrVector<Statement> consequent;
+    Vector<NonnullRefPtr<Statement>> consequent;
     TemporaryChange break_change(m_state.in_break_context, true);
     auto switch_case = create_ast_node<SwitchCase>({ m_source_code, rule_start.position(), position() }, move(test));
     parse_statement_list(switch_case);
@@ -3609,7 +3609,7 @@ NonnullRefPtr<Statement const> Parser::parse_for_statement()
             if (match_of(m_state.current_token)) {
                 if (declaration->declarations().size() != 1)
                     syntax_error("Must have exactly one declaration in for using of");
-                else if (declaration->declarations().first().init())
+                else if (declaration->declarations().first()->init())
                     syntax_error("Using declaration cannot have initializer");
 
                 return parse_for_in_of_statement(move(declaration), is_await_loop);
@@ -3643,7 +3643,7 @@ NonnullRefPtr<Statement const> Parser::parse_for_statement()
             }
             if (declaration->declaration_kind() == DeclarationKind::Const) {
                 for (auto const& variable : declaration->declarations()) {
-                    if (!variable.init())
+                    if (!variable->init())
                         syntax_error("Missing initializer in 'const' variable declaration");
                 }
             }
@@ -3699,8 +3699,8 @@ NonnullRefPtr<Statement const> Parser::parse_for_in_of_statement(NonnullRefPtr<A
         if (!declaration.declarations().is_empty()) {
             // AnnexB extension B.3.5 Initializers in ForIn Statement Heads, https://tc39.es/ecma262/#sec-initializers-in-forin-statement-heads
             auto& variable = declaration.declarations().first();
-            if (variable.init()) {
-                if (m_state.strict_mode || declaration.declaration_kind() != DeclarationKind::Var || !variable.target().has<NonnullRefPtr<Identifier const>>())
+            if (variable->init()) {
+                if (m_state.strict_mode || declaration.declaration_kind() != DeclarationKind::Var || !variable->target().has<NonnullRefPtr<Identifier const>>())
                     syntax_error("Variable initializer not allowed in for..in/of");
                 else
                     has_annexB_for_in_init_extension = true;
@@ -4441,7 +4441,7 @@ NonnullRefPtr<ImportStatement const> Parser::parse_import_statement(Program& pro
 
     for (auto& entry : entries_with_location) {
         for (auto& import_statement : program.imports()) {
-            if (import_statement.has_bound_name(entry.entry.local_name))
+            if (import_statement->has_bound_name(entry.entry.local_name))
                 syntax_error(DeprecatedString::formatted("Identifier '{}' already declared", entry.entry.local_name), entry.position);
         }
 
@@ -4660,7 +4660,7 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
                 auto& variables = static_cast<VariableDeclaration const&>(*declaration);
                 VERIFY(variables.is_lexical_declaration());
                 for (auto& decl : variables.declarations()) {
-                    decl.target().visit(
+                    decl->target().visit(
                         [&](NonnullRefPtr<Identifier const> const& identifier) {
                             entries_with_location.append({ ExportEntry::named_export(identifier->string(), identifier->string()), identifier->source_range().start });
                         },
@@ -4678,7 +4678,7 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
             auto variable_declaration = parse_variable_declaration();
             m_state.current_scope_pusher->add_declaration(variable_declaration);
             for (auto& decl : variable_declaration->declarations()) {
-                decl.target().visit(
+                decl->target().visit(
                     [&](NonnullRefPtr<Identifier const> const& identifier) {
                         entries_with_location.append({ ExportEntry::named_export(identifier->string(), identifier->string()), identifier->source_range().start });
                     },
@@ -4742,7 +4742,7 @@ NonnullRefPtr<ExportStatement const> Parser::parse_export_statement(Program& pro
 
     for (auto& entry : entries_with_location) {
         for (auto& export_statement : program.exports()) {
-            if (export_statement.has_export(entry.entry.export_name))
+            if (export_statement->has_export(entry.entry.export_name))
                 syntax_error(DeprecatedString::formatted("Duplicate export with name: '{}'", entry.entry.export_name), entry.position);
         }
 

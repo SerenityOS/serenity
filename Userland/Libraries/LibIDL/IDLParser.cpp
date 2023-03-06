@@ -166,7 +166,7 @@ Optional<Interface&> Parser::resolve_import(auto path)
 NonnullRefPtr<Type const> Parser::parse_type()
 {
     if (lexer.consume_specific('(')) {
-        NonnullRefPtrVector<Type const> union_member_types;
+        Vector<NonnullRefPtr<Type const>> union_member_types;
         union_member_types.append(parse_type());
         consume_whitespace();
         assert_string("or"sv);
@@ -203,7 +203,7 @@ NonnullRefPtr<Type const> Parser::parse_type()
             name = "long long"sv;
     }
 
-    NonnullRefPtrVector<Type const> parameters;
+    Vector<NonnullRefPtr<Type const>> parameters;
     bool is_parameterized_type = false;
     if (lexer.consume_specific('<')) {
         is_parameterized_type = true;

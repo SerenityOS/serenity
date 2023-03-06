@@ -48,7 +48,7 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
 
     for (auto& redir : value.redirections) {
         TRY(builder.put_padding(' ', 1));
-        if (redir.is_path_redirection()) {
+        if (redir->is_path_redirection()) {
             auto path_redir = (Shell::AST::PathRedirection const*)&redir;
             TRY(builder.put_i64(path_redir->fd));
             switch (path_redir->direction) {
@@ -66,12 +66,12 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
                 break;
             }
             TRY(builder.put_literal(path_redir->path));
-        } else if (redir.is_fd_redirection()) {
+        } else if (redir->is_fd_redirection()) {
             auto* fdredir = (Shell::AST::FdRedirection const*)&redir;
             TRY(builder.put_i64(fdredir->new_fd));
             TRY(builder.put_literal(">"sv));
             TRY(builder.put_i64(fdredir->old_fd));
-        } else if (redir.is_close_redirection()) {
+        } else if (redir->is_close_redirection()) {
             auto close_redir = (Shell::AST::CloseRedirection const*)&redir;
             TRY(builder.put_i64(close_redir->fd));
             TRY(builder.put_literal(">&-"sv));
@@ -156,18 +156,18 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     return commands;
 }
 
-static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value, NonnullRefPtrVector<Slice> slices)
+static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value, Vector<NonnullRefPtr<Slice>> slices)
 {
     if (slices.is_empty())
         return move(input_value);
 
     for (auto& slice : slices) {
-        auto value = TRY(slice.run(shell));
+        auto value = TRY(slice->run(shell));
         if (shell && shell->has_any_error())
             break;
 
         if (!value) {
-            shell->raise_error(Shell::ShellError::InvalidSliceContentsError, "Invalid slice contents", slice.position());
+            shell->raise_error(Shell::ShellError::InvalidSliceContentsError, "Invalid slice contents", slice->position());
             return move(input_value);
         }
 
@@ -179,7 +179,7 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
         for (auto& value : index_values) {
             auto maybe_index = value.bytes_as_string_view().to_int();
             if (!maybe_index.has_value()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice->position());
                 return move(input_value);
             }
             ++i;
@@ -190,7 +190,7 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
                 index += input_value.bytes_as_string_view().length();
 
             if (index < 0 || (size_t)index >= input_value.bytes_as_string_view().length()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, input_value.bytes_as_string_view().length()), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, input_value.bytes_as_string_view().length()), slice->position());
                 return move(input_value);
             }
             indices.unchecked_append(index);
@@ -206,18 +206,18 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
     return move(input_value);
 }
 
-static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String>&& values, NonnullRefPtrVector<Slice> slices)
+static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String>&& values, Vector<NonnullRefPtr<Slice>> slices)
 {
     if (slices.is_empty())
         return move(values);
 
     for (auto& slice : slices) {
-        auto value = TRY(slice.run(shell));
+        auto value = TRY(slice->run(shell));
         if (shell && shell->has_any_error())
             break;
 
         if (!value) {
-            shell->raise_error(Shell::ShellError::InvalidSliceContentsError, "Invalid slice contents", slice.position());
+            shell->raise_error(Shell::ShellError::InvalidSliceContentsError, "Invalid slice contents", slice->position());
             return move(values);
         }
 
@@ -229,7 +229,7 @@ static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String
         for (auto& value : index_values) {
             auto maybe_index = value.bytes_as_string_view().to_int();
             if (!maybe_index.has_value()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Invalid value in slice index {}: {} (expected a number)", i, value), slice->position());
                 return move(values);
             }
             ++i;
@@ -240,7 +240,7 @@ static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String
                 index += values.size();
 
             if (index < 0 || (size_t)index >= values.size()) {
-                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, values.size()), slice.position());
+                shell->raise_error(Shell::ShellError::InvalidSliceContentsError, DeprecatedString::formatted("Slice index {} (evaluated as {}) out of value bounds [0-{})", index, original_index, values.size()), slice->position());
                 return move(values);
             }
             indices.unchecked_append(index);
@@ -505,7 +505,7 @@ ErrorOr<RefPtr<Value>> ListConcatenate::run(RefPtr<Shell> shell)
                 result = make_ref_counted<CommandSequenceValue>(move(joined_commands));
             }
         } else {
-            NonnullRefPtrVector<Value> values;
+            Vector<NonnullRefPtr<Value>> values;
 
             if (result->is_list_without_resolution()) {
                 values.extend(static_cast<ListValue*>(result.ptr())->values());
@@ -695,17 +695,17 @@ ErrorOr<void> BraceExpansion::dump(int level) const
 {
     TRY(Node::dump(level));
     for (auto& entry : m_entries)
-        TRY(entry.dump(level + 1));
+        TRY(entry->dump(level + 1));
     return {};
 }
 
 ErrorOr<RefPtr<Value>> BraceExpansion::run(RefPtr<Shell> shell)
 {
-    NonnullRefPtrVector<Value> values;
+    Vector<NonnullRefPtr<Value>> values;
     for (auto& entry : m_entries) {
         if (shell && shell->has_any_error())
             break;
-        auto value = TRY(entry.run(shell));
+        auto value = TRY(entry->run(shell));
         if (value)
             values.append(value.release_nonnull());
     }
@@ -716,10 +716,10 @@ ErrorOr<RefPtr<Value>> BraceExpansion::run(RefPtr<Shell> shell)
 HitTestResult BraceExpansion::hit_test_position(size_t offset) const
 {
     for (auto& entry : m_entries) {
-        auto result = entry.hit_test_position(offset);
+        auto result = entry->hit_test_position(offset);
         if (result.matching_node) {
             if (!result.closest_command_node)
-                result.closest_command_node = &entry;
+                result.closest_command_node = entry;
             return result;
         }
     }
@@ -730,20 +730,20 @@ HitTestResult BraceExpansion::hit_test_position(size_t offset) const
 ErrorOr<void> BraceExpansion::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     for (auto& entry : m_entries) {
-        TRY(entry.highlight_in_editor(editor, shell, metadata));
+        TRY(entry->highlight_in_editor(editor, shell, metadata));
         metadata.is_first_in_list = false;
     }
 
     return {};
 }
 
-BraceExpansion::BraceExpansion(Position position, NonnullRefPtrVector<Node> entries)
+BraceExpansion::BraceExpansion(Position position, Vector<NonnullRefPtr<Node>> entries)
     : Node(move(position))
     , m_entries(move(entries))
 {
     for (auto& entry : m_entries) {
-        if (entry.is_syntax_error()) {
-            set_is_syntax_error(entry.syntax_error_node());
+        if (entry->is_syntax_error()) {
+            set_is_syntax_error(entry->syntax_error_node());
             break;
         }
     }
@@ -838,7 +838,7 @@ ErrorOr<RefPtr<Value>> CastToList::run(RefPtr<Shell> shell)
         return inner_value;
 
     auto values = TRY(inner_value->resolve_as_list(shell));
-    NonnullRefPtrVector<Value> cast_values;
+    Vector<NonnullRefPtr<Value>> cast_values;
     for (auto& value : values)
         cast_values.append(make_ref_counted<StringValue>(value));
 
@@ -1663,7 +1663,7 @@ ErrorOr<RefPtr<Value>> HistoryEvent::run(RefPtr<Shell> shell)
         shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "History word index out of bounds", m_selector.word_selector_range.start.position);
         return make_ref_counted<AST::ListValue>({});
     }
-    return nodes[index].run(shell);
+    return nodes[index]->run(shell);
 }
 
 ErrorOr<void> HistoryEvent::highlight_in_editor(Line::Editor& editor, Shell&, HighlightMetadata metadata)
@@ -1832,9 +1832,9 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
         auto jobs = shell->run_commands(commands);
         ScopeGuard kill_jobs_if_around { [&] {
             for (auto& job : jobs) {
-                if (job.is_running_in_background() && !job.exited() && !job.signaled()) {
-                    job.set_should_announce_signal(false); // We're explicitly killing it here.
-                    shell->kill_job(&job, SIGTERM);
+                if (job->is_running_in_background() && !job->exited() && !job->signaled()) {
+                    job->set_should_announce_signal(false); // We're explicitly killing it here.
+                    shell->kill_job(job, SIGTERM);
                 }
             }
         } };
@@ -1873,7 +1873,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
     auto jobs = shell->run_commands(commands);
 
     if (!jobs.is_empty())
-        TRY(callback(make_ref_counted<JobValue>(&jobs.last())));
+        TRY(callback(make_ref_counted<JobValue>(jobs.last())));
 
     return {};
 }
@@ -1886,13 +1886,13 @@ ErrorOr<RefPtr<Value>> Execute::run(RefPtr<Shell> shell)
     if (m_command->would_execute())
         return m_command->run(shell);
 
-    NonnullRefPtrVector<Value> values;
+    Vector<NonnullRefPtr<Value>> values;
     TRY(for_each_entry(shell, [&](auto value) {
         values.append(*value);
         return IterationDecision::Continue;
     }));
 
-    if (values.size() == 1 && values.first().is_job())
+    if (values.size() == 1 && values.first()->is_job())
         return values.first();
 
     return make_ref_counted<ListValue>(move(values));
@@ -2065,7 +2065,7 @@ ErrorOr<void> ImmediateExpression::dump(int level) const
     print_indented(level + 2, "{}", m_function.name);
     print_indented(level + 1, "(arguments)");
     for (auto& argument : arguments())
-        TRY(argument.dump(level + 2));
+        TRY(argument->dump(level + 2));
 
     return {};
 }
@@ -2093,7 +2093,7 @@ ErrorOr<void> ImmediateExpression::highlight_in_editor(Line::Editor& editor, She
     // Arguments
     for (auto& argument : m_arguments) {
         metadata.is_first_in_list = false;
-        TRY(argument.highlight_in_editor(editor, shell, metadata));
+        TRY(argument->highlight_in_editor(editor, shell, metadata));
     }
 
     // Closing brace
@@ -2123,14 +2123,14 @@ HitTestResult ImmediateExpression::hit_test_position(size_t offset) const
         return { this, this, this };
 
     for (auto& argument : m_arguments) {
-        if (auto result = argument.hit_test_position(offset); result.matching_node)
+        if (auto result = argument->hit_test_position(offset); result.matching_node)
             return result;
     }
 
     return {};
 }
 
-ImmediateExpression::ImmediateExpression(Position position, NameWithPosition function, NonnullRefPtrVector<AST::Node> arguments, Optional<Position> closing_brace_position)
+ImmediateExpression::ImmediateExpression(Position position, NameWithPosition function, Vector<NonnullRefPtr<AST::Node>> arguments, Optional<Position> closing_brace_position)
     : Node(move(position))
     , m_arguments(move(arguments))
     , m_function(move(function))
@@ -2140,8 +2140,8 @@ ImmediateExpression::ImmediateExpression(Position position, NameWithPosition fun
         return;
 
     for (auto& argument : m_arguments) {
-        if (argument.is_syntax_error()) {
-            set_is_syntax_error(argument.syntax_error_node());
+        if (argument->is_syntax_error()) {
+            set_is_syntax_error(argument->syntax_error_node());
             return;
         }
     }
@@ -2244,9 +2244,9 @@ ErrorOr<void> MatchExpr::dump(int level) const
         }
         print_indented(level + 2, "{}", builder.string_view());
         TRY(entry.options.visit(
-            [&](NonnullRefPtrVector<Node> const& options) -> ErrorOr<void> {
+            [&](Vector<NonnullRefPtr<Node>> const& options) -> ErrorOr<void> {
                 for (auto& option : options)
-                    TRY(option.dump(level + 3));
+                    TRY(option->dump(level + 3));
                 return {};
             },
             [&](Vector<Regex<ECMA262>> const& options) -> ErrorOr<void> {
@@ -2307,17 +2307,17 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
             return ErrorOr<Regex<ECMA262>>(move(option));
         } else {
             Vector<String> pattern;
-            if (option.is_glob()) {
-                pattern.append(static_cast<const Glob*>(&option)->text());
-            } else if (option.is_bareword()) {
-                pattern.append(static_cast<const BarewordLiteral*>(&option)->text());
+            if (option->is_glob()) {
+                pattern.append(static_cast<Glob const*>(option.ptr())->text());
+            } else if (option->is_bareword()) {
+                pattern.append(static_cast<BarewordLiteral const*>(option.ptr())->text());
             } else {
-                auto list_or_error = option.run(shell);
+                auto list_or_error = option->run(shell);
                 if (list_or_error.is_error() || (shell && shell->has_any_error()))
                     return ErrorOr<Vector<String>>(move(pattern));
 
                 auto list = list_or_error.release_value();
-                auto result = option.for_each_entry(shell, [&](auto&& value) -> ErrorOr<IterationDecision> {
+                auto result = option->for_each_entry(shell, [&](auto&& value) -> ErrorOr<IterationDecision> {
                     pattern.extend(TRY(value->resolve_as_list(nullptr))); // Note: 'nullptr' incurs special behavior,
                                                                           //       asking the node for a 'raw' value.
                     return IterationDecision::Continue;
@@ -2379,9 +2379,9 @@ ErrorOr<void> MatchExpr::highlight_in_editor(Line::Editor& editor, Shell& shell,
     for (auto& entry : m_entries) {
         metadata.is_first_in_list = false;
         TRY(entry.options.visit(
-            [&](NonnullRefPtrVector<Node>& node_options) -> ErrorOr<void> {
+            [&](Vector<NonnullRefPtr<Node>>& node_options) -> ErrorOr<void> {
                 for (auto& option : node_options)
-                    TRY(option.highlight_in_editor(editor, shell, metadata));
+                    TRY(option->highlight_in_editor(editor, shell, metadata));
                 return {};
             },
             [](auto&) -> ErrorOr<void> { return {}; }));
@@ -2526,9 +2526,9 @@ ErrorOr<RefPtr<Value>> Pipe::run(RefPtr<Shell> shell)
         auto& redirections = command.redirections;
         for (ssize_t i = redirections.size() - 1; i >= 0; --i) {
             auto& redirection = redirections[i];
-            if (!redirection.is_fd_redirection())
+            if (!redirection->is_fd_redirection())
                 continue;
-            auto& fd_redirection = static_cast<FdRedirection&>(redirection);
+            auto& fd_redirection = static_cast<FdRedirection&>(*redirection);
             if (fd_redirection.old_fd == -1) {
                 insert_index = i;
                 break;
@@ -2663,8 +2663,8 @@ ErrorOr<void> Range::dump(int level) const
 
 ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
 {
-    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> NonnullRefPtrVector<Value> {
-        NonnullRefPtrVector<Value> values;
+    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> Vector<NonnullRefPtr<Value>> {
+        Vector<NonnullRefPtr<Value>> values;
 
         if (start->is_string() && end->is_string()) {
             auto start_str = start->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
@@ -2839,7 +2839,7 @@ ErrorOr<void> Sequence::dump(int level) const
 {
     TRY(Node::dump(level));
     for (auto& entry : m_entries)
-        TRY(entry.dump(level + 1));
+        TRY(entry->dump(level + 1));
     return {};
 }
 
@@ -2851,7 +2851,7 @@ ErrorOr<RefPtr<Value>> Sequence::run(RefPtr<Shell> shell)
         if (shell && shell->has_any_error())
             break;
         if (!last_command_in_sequence) {
-            auto commands = TRY(entry.to_lazy_evaluated_commands(shell));
+            auto commands = TRY(entry->to_lazy_evaluated_commands(shell));
             all_commands.extend(move(commands));
             last_command_in_sequence = &all_commands.last();
             continue;
@@ -2860,7 +2860,7 @@ ErrorOr<RefPtr<Value>> Sequence::run(RefPtr<Shell> shell)
         if (last_command_in_sequence->should_wait) {
             last_command_in_sequence->next_chain.append(NodeWithAction { entry, NodeWithAction::Sequence });
         } else {
-            all_commands.extend(TRY(entry.to_lazy_evaluated_commands(shell)));
+            all_commands.extend(TRY(entry->to_lazy_evaluated_commands(shell)));
             last_command_in_sequence = &all_commands.last();
         }
     }
@@ -2871,14 +2871,14 @@ ErrorOr<RefPtr<Value>> Sequence::run(RefPtr<Shell> shell)
 ErrorOr<void> Sequence::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
 {
     for (auto& entry : m_entries)
-        TRY(entry.highlight_in_editor(editor, shell, metadata));
+        TRY(entry->highlight_in_editor(editor, shell, metadata));
     return {};
 }
 
 HitTestResult Sequence::hit_test_position(size_t offset) const
 {
     for (auto& entry : m_entries) {
-        auto result = entry.hit_test_position(offset);
+        auto result = entry->hit_test_position(offset);
         if (result.matching_node) {
             if (!result.closest_command_node)
                 result.closest_command_node = entry;
@@ -2892,20 +2892,20 @@ HitTestResult Sequence::hit_test_position(size_t offset) const
 RefPtr<Node const> Sequence::leftmost_trivial_literal() const
 {
     for (auto& entry : m_entries) {
-        if (auto node = entry.leftmost_trivial_literal())
+        if (auto node = entry->leftmost_trivial_literal())
             return node;
     }
     return nullptr;
 }
 
-Sequence::Sequence(Position position, NonnullRefPtrVector<Node> entries, Vector<Position> separator_positions)
+Sequence::Sequence(Position position, Vector<NonnullRefPtr<Node>> entries, Vector<Position> separator_positions)
     : Node(move(position))
     , m_entries(move(entries))
     , m_separator_positions(separator_positions)
 {
     for (auto& entry : m_entries) {
-        if (entry.is_syntax_error()) {
-            set_is_syntax_error(entry.syntax_error_node());
+        if (entry->is_syntax_error()) {
+            set_is_syntax_error(entry->syntax_error_node());
             break;
         }
     }
@@ -3669,7 +3669,7 @@ ErrorOr<NonnullRefPtr<Value>> Value::with_slices(NonnullRefPtr<Slice> slice) con
     return value;
 }
 
-ErrorOr<NonnullRefPtr<Value>> Value::with_slices(NonnullRefPtrVector<Slice> slices) const&
+ErrorOr<NonnullRefPtr<Value>> Value::with_slices(Vector<NonnullRefPtr<Slice>> slices) const&
 {
     auto value = TRY(clone());
     value->m_slices.extend(move(slices));
@@ -3684,16 +3684,16 @@ ErrorOr<Vector<String>> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
     Vector<String> values;
     for (auto& value : m_contained_values)
-        values.extend(TRY(value.resolve_as_list(shell)));
+        values.extend(TRY(value->resolve_as_list(shell)));
 
     return resolve_slices(shell, move(values), m_slices);
 }
 
 ErrorOr<NonnullRefPtr<Value>> ListValue::resolve_without_cast(RefPtr<Shell> shell)
 {
-    NonnullRefPtrVector<Value> values;
+    Vector<NonnullRefPtr<Value>> values;
     for (auto& value : m_contained_values)
-        values.append(TRY(value.resolve_without_cast(shell)));
+        values.append(TRY(value->resolve_without_cast(shell)));
 
     NonnullRefPtr<Value> value = make_ref_counted<ListValue>(move(values));
     if (!m_slices.is_empty())
