@@ -218,8 +218,6 @@ private:
     Vector<JS::NonnullGCPtr<MimeType>> m_pdf_viewer_mime_type_objects;
 
 public:
-    HTML::Origin origin() const;
-
     virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
 
     CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
@@ -259,7 +257,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(local_storage_getter);
     JS_DECLARE_NATIVE_FUNCTION(session_storage_getter);
-    JS_DECLARE_NATIVE_FUNCTION(origin_getter);
     JS_DECLARE_NATIVE_FUNCTION(is_secure_context_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(set_interval);

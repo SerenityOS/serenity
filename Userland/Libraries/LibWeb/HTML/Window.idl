@@ -35,6 +35,9 @@ interface Window : EventTarget {
     undefined postMessage(any message, USVString targetOrigin);
     // FIXME: undefined postMessage(any message, USVString targetOrigin, optional sequence<object> transfer = []);
     // FIXME: undefined postMessage(any message, optional WindowPostMessageOptions options = {});
+
+    // FIXME: Replace these with 'Window includes WindowOrWorkerGlobalScope;' once we have feature parity
+    [Replaceable] readonly attribute USVString origin;
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
