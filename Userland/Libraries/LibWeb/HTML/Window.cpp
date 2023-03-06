@@ -952,7 +952,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
     define_native_function(realm, "requestAnimationFrame", request_animation_frame, 1, attr);
     define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
-    define_native_function(realm, "focus", focus, 0, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
@@ -1065,6 +1064,25 @@ JS::NonnullGCPtr<History> Window::history() const
 {
     // The history getter steps are to return this's associated Document's history object.
     return associated_document().history();
+}
+
+// https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus
+void Window::focus()
+{
+    // 1. Let current be this Window object's navigable.
+    auto* current = browsing_context();
+
+    // 2. If current is null, then return.
+    if (!current)
+        return;
+
+    // 3. Run the focusing steps with current.
+    // FIXME: We should pass in the browsing context itself instead of the active document, however the focusing steps don't currently accept browsing contexts.
+    //        Passing in a browsing context always makes it resolve to its active document for focus, so this is fine for now.
+    run_focusing_steps(current->active_document());
+
+    // FIXME: 4. If current is a top-level traversable, user agents are encouraged to trigger some sort of notification to
+    //           indicate to the user that the page is attempting to gain focus.
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-frames
@@ -1612,28 +1630,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::cancel_idle_callback)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelIdleCallback");
     auto id = TRY(vm.argument(0).to_u32(vm));
     impl->cancel_idle_callback_impl(id);
-    return JS::js_undefined();
-}
-
-// https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus
-JS_DEFINE_NATIVE_FUNCTION(Window::focus)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    // 1. Let current be this Window object's browsing context.
-    auto* current = impl->browsing_context();
-
-    // 2. If current is null, then return.
-    if (!current)
-        return JS::js_undefined();
-
-    // 3. Run the focusing steps with current.
-    // FIXME: We should pass in the browsing context itself instead of the active document, however the focusing steps don't currently accept browsing contexts.
-    //        Passing in a browsing context always makes it resolve to its active document for focus, so this is fine for now.
-    run_focusing_steps(current->active_document());
-
-    // FIXME: 4. If current is a top-level browsing context, user agents are encouraged to trigger some sort of notification to indicate to the user that the page is attempting to gain focus.
-
     return JS::js_undefined();
 }
 

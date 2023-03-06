@@ -18,6 +18,7 @@ interface Window : EventTarget {
     attribute DOMString name;
     [PutForwards=href, LegacyUnforgeable] readonly attribute Location location;
     readonly attribute History history;
+    undefined focus();
 
     // other browsing contexts
     [Replaceable] readonly attribute WindowProxy frames;

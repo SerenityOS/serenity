@@ -140,6 +140,7 @@ public:
     void set_name(String const&);
     JS::NonnullGCPtr<Location> location() const;
     JS::NonnullGCPtr<History> history() const;
+    void focus();
 
     JS::NonnullGCPtr<WindowProxy> frames() const;
     u32 length() const;
@@ -256,7 +257,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
     JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
-    JS_DECLARE_NATIVE_FUNCTION(focus);
 
     JS_DECLARE_NATIVE_FUNCTION(get_selection);
 
