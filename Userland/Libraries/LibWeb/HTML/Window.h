@@ -24,6 +24,7 @@
 #include <LibWeb/HTML/Plugin.h>
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
+#include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 
 namespace Web::HTML {
 
@@ -36,6 +37,7 @@ class Window final
     : public DOM::EventTarget
     , public HTML::GlobalEventHandlers
     , public HTML::WindowEventHandlers
+    , public WindowOrWorkerGlobalScopeMixin
     , public Bindings::WindowGlobalMixin {
     WEB_PLATFORM_OBJECT(Window, DOM::EventTarget);
 
@@ -44,7 +46,12 @@ public:
 
     ~Window();
 
+    // ^DOM::EventTarget
     virtual bool dispatch_event(DOM::Event&) override;
+
+    // ^WindowOrWorkerGlobalScopeMixin
+    virtual Bindings::PlatformObject& this_impl() override { return *this; }
+    virtual Bindings::PlatformObject const& this_impl() const override { return *this; }
 
     Page* page();
     Page const* page() const;
