@@ -100,9 +100,6 @@ public:
     CSS::CSSStyleDeclaration* get_computed_style_impl(DOM::Element&) const;
     Optional<CSS::MediaFeatureValue> query_media_feature(CSS::MediaFeatureID) const;
 
-    float scroll_x() const;
-    float scroll_y() const;
-
     void fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted);
 
     float device_pixel_ratio() const;
@@ -164,6 +161,9 @@ public:
 
     i32 inner_width() const;
     i32 inner_height() const;
+
+    double scroll_x() const;
+    double scroll_y() const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -233,8 +233,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
 
-    JS_DECLARE_NATIVE_FUNCTION(scroll_x_getter);
-    JS_DECLARE_NATIVE_FUNCTION(scroll_y_getter);
     JS_DECLARE_NATIVE_FUNCTION(scroll);
     JS_DECLARE_NATIVE_FUNCTION(scroll_by);
 
