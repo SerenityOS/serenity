@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,8 +57,9 @@ private:
 
 class Parser {
 public:
-    Parser(ParsingContext const&, StringView input, StringView encoding = "utf-8"sv);
-    ~Parser() = default;
+    static ErrorOr<Parser> create(ParsingContext const&, StringView input, StringView encoding = "utf-8"sv);
+
+    Parser(Parser&&);
 
     CSSStyleSheet* parse_as_css_stylesheet(Optional<AK::URL> location);
     ElementInlineCSSStyleDeclaration* parse_as_style_attribute(DOM::Element&);
@@ -87,6 +88,8 @@ public:
     static RefPtr<CalculatedStyleValue> parse_calculated_value(Badge<StyleComputer>, ParsingContext const&, Vector<ComponentValue> const&);
 
 private:
+    Parser(ParsingContext const&, Vector<Token>);
+
     enum class ParseError {
         IncludesIgnoredVendorPrefix,
         SyntaxError,

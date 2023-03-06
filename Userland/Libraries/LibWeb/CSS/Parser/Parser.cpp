@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
  *
@@ -82,11 +82,29 @@ AK::URL ParsingContext::complete_url(StringView relative_url) const
     return m_url.complete_url(relative_url);
 }
 
-Parser::Parser(ParsingContext const& context, StringView input, StringView encoding)
-    : m_context(context)
-    , m_tokens(Tokenizer::tokenize(input, encoding).release_value_but_fixme_should_propagate_errors())
-    , m_token_stream(TokenStream(m_tokens))
+ErrorOr<Parser> Parser::create(ParsingContext const& context, StringView input, StringView encoding)
 {
+    auto tokens = TRY(Tokenizer::tokenize(input, encoding));
+    return Parser { context, move(tokens) };
+}
+
+Parser::Parser(ParsingContext const& context, Vector<Token> tokens)
+    : m_context(context)
+    , m_tokens(move(tokens))
+    , m_token_stream(m_tokens)
+{
+}
+
+Parser::Parser(Parser&& other)
+    : m_context(other.m_context)
+    , m_tokens(move(other.m_tokens))
+    , m_token_stream(m_tokens)
+{
+    // Moving the TokenStream directly from `other` would break it, because TokenStream holds
+    // a reference to the Vector<Token>, so it would be pointing at the old Parser's tokens.
+    // So instead, we create a new TokenStream from this Parser's tokens, and then tell it to
+    // copy the other TokenStream's state. This is quite hacky.
+    m_token_stream.copy_state({}, other.m_token_stream);
 }
 
 // 5.3.3. Parse a stylesheet
@@ -7260,7 +7278,7 @@ RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(Badge<StyleComputer>
     if (tokens.is_empty())
         return {};
 
-    Parser parser(context, ""sv);
+    auto parser = Parser::create(context, ""sv).release_value_but_fixme_should_propagate_errors();
     return parser.parse_calculated_value(tokens);
 }
 
@@ -7269,7 +7287,7 @@ RefPtr<StyleValue> Parser::parse_css_value(Badge<StyleComputer>, ParsingContext 
     if (tokens.is_empty() || property_id == CSS::PropertyID::Invalid || property_id == CSS::PropertyID::Custom)
         return {};
 
-    Parser parser(context, ""sv);
+    auto parser = Parser::create(context, ""sv).release_value_but_fixme_should_propagate_errors();
     TokenStream<ComponentValue> token_stream { tokens };
     auto result = parser.parse_css_value(property_id, token_stream);
     if (result.is_error())
@@ -7403,7 +7421,7 @@ CSS::CSSStyleSheet* parse_css_stylesheet(CSS::Parser::ParsingContext const& cont
         auto media_list = CSS::MediaList::create(context.realm(), {}).release_value_but_fixme_should_propagate_errors();
         return CSS::CSSStyleSheet::create(context.realm(), rule_list, media_list, location).release_value_but_fixme_should_propagate_errors();
     }
-    CSS::Parser::Parser parser(context, css);
+    auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_css_stylesheet(location);
 }
 
@@ -7411,7 +7429,7 @@ CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::Pa
 {
     if (css.is_empty())
         return CSS::ElementInlineCSSStyleDeclaration::create(element, {}, {}).release_value_but_fixme_should_propagate_errors();
-    CSS::Parser::Parser parser(context, css);
+    auto parser = CSS::Parser::Parser::create(context, css).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_style_attribute(element);
 }
 
@@ -7419,31 +7437,31 @@ RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const& conte
 {
     if (string.is_empty())
         return {};
-    CSS::Parser::Parser parser(context, string);
+    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_css_value(property_id);
 }
 
 CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const& context, StringView css_text)
 {
-    CSS::Parser::Parser parser(context, css_text);
+    auto parser = CSS::Parser::Parser::create(context, css_text).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_css_rule();
 }
 
 Optional<CSS::SelectorList> parse_selector(CSS::Parser::ParsingContext const& context, StringView selector_text)
 {
-    CSS::Parser::Parser parser(context, selector_text);
+    auto parser = CSS::Parser::Parser::create(context, selector_text).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_selector();
 }
 
 RefPtr<CSS::MediaQuery> parse_media_query(CSS::Parser::ParsingContext const& context, StringView string)
 {
-    CSS::Parser::Parser parser(context, string);
+    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_media_query();
 }
 
 Vector<NonnullRefPtr<CSS::MediaQuery>> parse_media_query_list(CSS::Parser::ParsingContext const& context, StringView string)
 {
-    CSS::Parser::Parser parser(context, string);
+    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_media_query_list();
 }
 
@@ -7451,7 +7469,7 @@ RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const& cont
 {
     if (string.is_empty())
         return {};
-    CSS::Parser::Parser parser(context, string);
+    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_supports();
 }
 
@@ -7459,7 +7477,7 @@ Optional<CSS::StyleProperty> parse_css_supports_condition(CSS::Parser::ParsingCo
 {
     if (string.is_empty())
         return {};
-    CSS::Parser::Parser parser(context, string);
+    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
     return parser.parse_as_supports_condition();
 }
 

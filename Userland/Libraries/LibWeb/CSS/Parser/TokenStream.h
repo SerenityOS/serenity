@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -60,8 +60,7 @@ public:
     {
     }
     TokenStream(TokenStream<T> const&) = delete;
-
-    ~TokenStream() = default;
+    TokenStream(TokenStream<T>&&) = default;
 
     bool has_next_token()
     {
@@ -121,6 +120,11 @@ public:
             else
                 dbgln("   {}", token.to_debug_string());
         }
+    }
+
+    void copy_state(Badge<Parser>, TokenStream<T> const& other)
+    {
+        m_iterator_offset = other.m_iterator_offset;
     }
 
 private:
