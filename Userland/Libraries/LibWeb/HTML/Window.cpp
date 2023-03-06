@@ -118,13 +118,6 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
 
 Window::~Window() = default;
 
-HighResolutionTime::Performance& Window::performance()
-{
-    if (!m_performance)
-        m_performance = heap().allocate<HighResolutionTime::Performance>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
-    return *m_performance;
-}
-
 CSS::Screen& Window::screen()
 {
     if (!m_screen)
@@ -553,9 +546,11 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 // https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
 i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
 {
-    return m_animation_frame_callback_driver.add([this, js_callback = JS::make_handle(js_callback)](auto) {
+    // FIXME: `now` is supposed to be passed in
+    auto now = HighResolutionTime::unsafe_shared_current_time();
+    return m_animation_frame_callback_driver.add([this, now, js_callback = JS::make_handle(js_callback)](auto) {
         // 3. Invoke callback, passing now as the only argument,
-        auto result = WebIDL::invoke_callback(*js_callback, {}, JS::Value(performance().now()));
+        auto result = WebIDL::invoke_callback(*js_callback, {}, JS::Value(now));
 
         // and if an exception is thrown, report the exception.
         if (result.is_error())
@@ -1050,7 +1045,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "performance", performance_getter, performance_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "screen", screen_getter, screen_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
@@ -1338,6 +1332,14 @@ Variant<JS::Handle<DOM::Event>, JS::Value> Window::event() const
     return JS::js_undefined();
 }
 
+// https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
+{
+    if (!m_performance)
+        m_performance = MUST_OR_THROW_OOM(heap().allocate<HighResolutionTime::Performance>(realm(), *this));
+    return JS::NonnullGCPtr { *m_performance };
+}
+
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
@@ -1509,29 +1511,6 @@ size_t Window::document_tree_child_browsing_context_count() const
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::performance_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return &impl->performance();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::performance_setter)
-{
-    // https://webidl.spec.whatwg.org/#dfn-attribute-setter
-    // 4.1. If no arguments were passed, then throw a TypeError.
-    if (vm.argument_count() == 0)
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "set performance");
-
-    auto* impl = TRY(impl_from(vm));
-
-    // 5. If attribute is declared with the [Replaceable] extended attribute, then:
-    // 1. Perform ? CreateDataProperty(esValue, id, V).
-    TRY(impl->create_data_property("performance", vm.argument(0)));
-
-    // 2. Return undefined.
-    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::screen_getter)
