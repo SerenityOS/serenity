@@ -1101,9 +1101,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
     define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
 
-    // Legacy
-    define_native_accessor(realm, "event", event_getter, event_setter, JS::Attribute::Enumerable);
-
     // FIXME: Implement codegen for readonly properties with [PutForwards]
     auto& location_accessor = storage_get("location")->value.as_accessor();
     location_accessor.set_setter(JS::NativeFunction::create(realm, location_setter, 1, "location", &realm, {}, "set"sv));
@@ -1332,6 +1329,15 @@ void Window::post_message(JS::Value message, String const&)
     });
 }
 
+// https://dom.spec.whatwg.org/#dom-window-event
+Variant<JS::Handle<DOM::Event>, JS::Value> Window::event() const
+{
+    // The event getter steps are to return this’s current event.
+    if (auto* current_event = this->current_event())
+        return make_handle(const_cast<DOM::Event&>(*current_event));
+    return JS::js_undefined();
+}
+
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
@@ -1537,19 +1543,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::screen_getter)
 JS_DEFINE_NATIVE_FUNCTION(Window::screen_setter)
 {
     REPLACEABLE_PROPERTY_SETTER(Window, screen);
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::event_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!impl->current_event())
-        return JS::js_undefined();
-    return impl->current_event();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::event_setter)
-{
-    REPLACEABLE_PROPERTY_SETTER(Window, event);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
