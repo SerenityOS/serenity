@@ -119,7 +119,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     }
 
     m_size_label = general_tab->find_descendant_of_type_named<GUI::Label>("size");
-    m_size_label->set_text(S_ISDIR(st.st_mode) ? "Calculating..." : human_readable_size_long(st.st_size));
+    m_size_label->set_text(S_ISDIR(st.st_mode) ? "Calculating..." : human_readable_size_long(st.st_size, UseThousandsSeparator::Yes));
 
     auto* owner = general_tab->find_descendant_of_type_named<GUI::Label>("owner");
     owner->set_text(DeprecatedString::formatted("{} ({})", owner_name, st.st_uid));
@@ -173,7 +173,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
         m_directory_statistics_calculator->on_update = [this, origin_event_loop = &Core::EventLoop::current()](off_t total_size_in_bytes, size_t file_count, size_t directory_count) {
             origin_event_loop->deferred_invoke([=, weak_this = make_weak_ptr<PropertiesWindow>()] {
                 if (auto strong_this = weak_this.strong_ref())
-                    strong_this->m_size_label->set_text(DeprecatedString::formatted("{}\n{} files, {} subdirectories", human_readable_size_long(total_size_in_bytes), file_count, directory_count));
+                    strong_this->m_size_label->set_text(DeprecatedString::formatted("{}\n{:'d} files, {:'d} subdirectories", human_readable_size_long(total_size_in_bytes, UseThousandsSeparator::Yes), file_count, directory_count));
             });
         };
         m_directory_statistics_calculator->start();
