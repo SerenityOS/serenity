@@ -69,6 +69,7 @@ public:
     ErrorOr<FlyString> to_fly_string() const;
 
     [[nodiscard]] ByteBuffer to_byte_buffer() const;
+    [[nodiscard]] ErrorOr<ByteBuffer> try_to_byte_buffer() const;
 
     [[nodiscard]] StringView string_view() const;
     void clear();
