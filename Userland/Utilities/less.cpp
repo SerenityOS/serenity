@@ -62,7 +62,6 @@ static Vector<StringView> wrap_line(DeprecatedString const& string, size_t width
         spans.append(string.substring_view(span_start, bit_length));
         span_start += bit_length;
     }
-    spans.append(string.substring_view(span_start));
 
     return spans;
 }
