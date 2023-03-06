@@ -25,6 +25,7 @@
 #include <LibWeb/HTML/Scripting/ImportMap.h>
 #include <LibWeb/HTML/WindowEventHandlers.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
+#include <LibWeb/RequestIdleCallback/IdleRequest.h>
 
 namespace Web::HTML {
 
@@ -119,7 +120,6 @@ public:
 
     void start_an_idle_period();
 
-    u32 request_idle_callback_impl(WebIDL::CallbackType& callback);
     void cancel_idle_callback_impl(u32);
 
     AnimationFrameCallbackDriver& animation_frame_callback_driver() { return m_animation_frame_callback_driver; }
@@ -179,6 +179,8 @@ public:
     i32 outer_width() const;
     i32 outer_height() const;
     double device_pixel_ratio() const;
+
+    u32 request_idle_callback(WebIDL::CallbackType&, RequestIdleCallback::IdleRequestOptions const&);
 
     JS::GCPtr<Selection::Selection> get_selection() const;
 
@@ -262,7 +264,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
-    JS_DECLARE_NATIVE_FUNCTION(request_idle_callback);
     JS_DECLARE_NATIVE_FUNCTION(cancel_idle_callback);
 
     HTML::Location* m_location { nullptr };

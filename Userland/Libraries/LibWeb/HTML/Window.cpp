@@ -826,29 +826,6 @@ void Window::invoke_idle_callbacks()
     }
 }
 
-// https://w3c.github.io/requestidlecallback/#the-requestidlecallback-method
-u32 Window::request_idle_callback_impl(WebIDL::CallbackType& callback)
-{
-    // 1. Let window be this Window object.
-    auto& window = *this;
-    // 2. Increment the window's idle callback identifier by one.
-    window.m_idle_callback_identifier++;
-    // 3. Let handle be the current value of window's idle callback identifier.
-    auto handle = window.m_idle_callback_identifier;
-    // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
-    auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
-        return WebIDL::invoke_callback(const_cast<WebIDL::CallbackType&>(*callback), {}, deadline.ptr());
-    };
-    window.m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
-    // 5. Return handle and then continue running this algorithm asynchronously.
-    return handle;
-    // FIXME: 6. If the timeout property is present in options and has a positive value:
-    // FIXME:    1. Wait for timeout milliseconds.
-    // FIXME:    2. Wait until all invocations of this algorithm, whose timeout added to their posted time occurred before this one's, have completed.
-    // FIXME:    3. Optionally, wait a further user-agent defined length of time.
-    // FIXME:    4. Queue a task on the queue associated with the idle-task task source, which performs the invoke idle callback timeout algorithm, passing handle and window as arguments.
-}
-
 // https://w3c.github.io/requestidlecallback/#the-cancelidlecallback-method
 void Window::cancel_idle_callback_impl(u32 handle)
 {
@@ -955,7 +932,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
-    define_native_function(realm, "requestIdleCallback", request_idle_callback, 1, attr);
     define_native_function(realm, "cancelIdleCallback", cancel_idle_callback, 1, attr);
 
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
@@ -1476,6 +1452,34 @@ double Window::device_pixel_ratio() const
     return 1;
 }
 
+// https://w3c.github.io/requestidlecallback/#dom-window-requestidlecallback
+u32 Window::request_idle_callback(WebIDL::CallbackType& callback, RequestIdleCallback::IdleRequestOptions const& options)
+{
+    // 1. Let window be this Window object.
+
+    // 2. Increment the window's idle callback identifier by one.
+    m_idle_callback_identifier++;
+
+    // 3. Let handle be the current value of window's idle callback identifier.
+    auto handle = m_idle_callback_identifier;
+
+    // 4. Push callback to the end of window's list of idle request callbacks, associated with handle.
+    auto handler = [callback = JS::make_handle(callback)](JS::NonnullGCPtr<RequestIdleCallback::IdleDeadline> deadline) -> JS::Completion {
+        return WebIDL::invoke_callback(*callback, {}, deadline.ptr());
+    };
+    m_idle_request_callbacks.append(adopt_ref(*new IdleCallback(move(handler), handle)));
+
+    // 5. Return handle and then continue running this algorithm asynchronously.
+    return handle;
+
+    // FIXME: 6. If the timeout property is present in options and has a positive value:
+    // FIXME:    1. Wait for timeout milliseconds.
+    // FIXME:    2. Wait until all invocations of this algorithm, whose timeout added to their posted time occurred before this one's, have completed.
+    // FIXME:    3. Optionally, wait a further user-agent defined length of time.
+    // FIXME:    4. Queue a task on the queue associated with the idle-task task source, which performs the invoke idle callback timeout algorithm, passing handle and window as arguments.
+    (void)options;
+}
+
 // https://w3c.github.io/selection-api/#dom-window-getselection
 JS::GCPtr<Selection::Selection> Window::get_selection() const
 {
@@ -1611,21 +1615,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::queue_microtask)
 
     impl->queue_microtask_impl(*callback);
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::request_idle_callback)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "requestIdleCallback");
-    auto* callback_object = TRY(vm.argument(0).to_object(vm));
-    if (!callback_object->is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-    // FIXME: accept options object
-
-    auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
-
-    return JS::Value(impl->request_idle_callback_impl(*callback));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::cancel_idle_callback)
