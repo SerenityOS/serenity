@@ -118,9 +118,6 @@ private:
         if (new_results == m_result_cache.end())
             return;
 
-        // NonnullRefPtrVector will provide dual_pivot_quick_sort references rather than pointers,
-        // and dual_pivot_quick_sort requires being able to construct the underlying type on the
-        // stack. Assistant::Result is pure virtual, thus cannot be constructed on the stack.
         Vector<NonnullRefPtr<Result const>> all_results;
         for (auto const& results_for_provider : new_results->value) {
             if (results_for_provider == nullptr)
