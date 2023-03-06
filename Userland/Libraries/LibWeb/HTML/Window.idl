@@ -64,6 +64,12 @@ interface Window : EventTarget {
     undefined scrollBy(optional ScrollToOptions options = {});
     undefined scrollBy(unrestricted double x, unrestricted double y);
 
+    // client
+    [Replaceable] readonly attribute long screenX;
+    [Replaceable, ImplementedAs=screen_x] readonly attribute long screenLeft;
+    [Replaceable] readonly attribute long screenY;
+    [Replaceable, ImplementedAs=screen_y] readonly attribute long screenTop;
+
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute
     [Replaceable] readonly attribute Performance performance;

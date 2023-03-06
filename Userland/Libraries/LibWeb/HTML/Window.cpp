@@ -750,26 +750,6 @@ float Window::device_pixel_ratio() const
     return 1.0f;
 }
 
-// https://drafts.csswg.org/cssom-view/#dom-window-screenx
-int Window::screen_x() const
-{
-    // The screenX and screenLeft attributes must return the x-coordinate, relative to the origin of the Web-exposed screen area,
-    // of the left of the client window as number of CSS pixels, or zero if there is no such thing.
-    if (auto* page = this->page())
-        return page->window_position().x().value();
-    return 0;
-}
-
-// https://drafts.csswg.org/cssom-view/#dom-window-screeny
-int Window::screen_y() const
-{
-    // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the Web-exposed screen area,
-    // of the top of the client window as number of CSS pixels, or zero if there is no such thing.
-    if (auto* page = this->page())
-        return page->window_position().y().value();
-    return 0;
-}
-
 // https://drafts.csswg.org/cssom-view/#dom-window-outerwidth
 int Window::outer_width() const
 {
@@ -1017,11 +997,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_accessor(realm, "screenX", screen_x_getter, {}, attr);
-    define_native_accessor(realm, "screenY", screen_y_getter, {}, attr);
-    define_native_accessor(realm, "screenLeft", screen_left_getter, {}, attr);
-    define_native_accessor(realm, "screenTop", screen_top_getter, {}, attr);
-
     define_native_accessor(realm, "outerWidth", outer_width_getter, {}, attr);
     define_native_accessor(realm, "outerHeight", outer_height_getter, {}, attr);
 
@@ -1460,6 +1435,26 @@ void Window::scroll_by(double x, double y)
     scroll_by(options);
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-screenx
+i32 Window::screen_x() const
+{
+    // The screenX and screenLeft attributes must return the x-coordinate, relative to the origin of the Web-exposed
+    // screen area, of the left of the client window as number of CSS pixels, or zero if there is no such thing.
+    if (auto* page = this->page())
+        return page->window_position().x().value();
+    return 0;
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-screeny
+i32 Window::screen_y() const
+{
+    // The screenY and screenTop attributes must return the y-coordinate, relative to the origin of the screen of the
+    // Web-exposed screen area, of the top of the client window as number of CSS pixels, or zero if there is no such thing.
+    if (auto* page = this->page())
+        return page->window_position().y().value();
+    return 0;
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1678,30 +1673,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
     // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     auto* impl = TRY(impl_from(vm));
     return impl->associated_document().get_selection();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::screen_left_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->screen_x());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::screen_top_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->screen_y());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::screen_x_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->screen_x());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::screen_y_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->screen_y());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::outer_width_getter)
