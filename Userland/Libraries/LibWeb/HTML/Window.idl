@@ -1,6 +1,7 @@
 #import <DOM/Document.idl>
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
+#import <HighResolutionTime/Performance.idl>
 #import <HTML/Navigator.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
 
@@ -39,6 +40,10 @@ interface Window : EventTarget {
 
     // https://dom.spec.whatwg.org/#interface-window-extensions
     [Replaceable] readonly attribute (Event or undefined) event; // legacy
+
+    // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
+    // https://w3c.github.io/hr-time/#the-performance-attribute
+    [Replaceable] readonly attribute Performance performance;
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;

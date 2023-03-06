@@ -187,8 +187,9 @@ void EventLoop::process()
     // FIXME:     12. For each fully active Document in docs, if the user agent detects that the backing storage associated with a CanvasRenderingContext2D or an OffscreenCanvasRenderingContext2D, context, has been lost, then it must run the context lost steps for each such context:
 
     // FIXME:     13. For each fully active Document in docs, run the animation frame callbacks for that Document, passing in now as the timestamp.
+    auto now = HighResolutionTime::unsafe_shared_current_time();
     for_each_fully_active_document_in_docs([&](DOM::Document& document) {
-        run_animation_frame_callbacks(document, document.window().performance().now());
+        run_animation_frame_callbacks(document, now);
     });
 
     // FIXME:     14. For each fully active Document in docs, run the update intersection observations steps for that Document, passing in now as the timestamp. [INTERSECTIONOBSERVER]

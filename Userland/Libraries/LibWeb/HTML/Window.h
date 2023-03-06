@@ -96,8 +96,6 @@ public:
 
     void deallocate_timer_id(Badge<Timer>, i32);
 
-    HighResolutionTime::Performance& performance();
-
     Crypto::Crypto& crypto() { return *m_crypto; }
 
     CSS::Screen& screen();
@@ -169,6 +167,8 @@ public:
 
     Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
+
 private:
     explicit Window(JS::Realm&);
 
@@ -230,9 +230,6 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(performance_getter);
-    JS_DECLARE_NATIVE_FUNCTION(performance_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(screen_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_setter);
