@@ -46,9 +46,6 @@ for containing_path in PATHS_TO_SEARCH:
                 paths.append(Path(root) / file)
 
 
-# paths = ['/home/matthew/code/serenity/Userland/Libraries/LibJS/Runtime/Set.h']
-
-
 def thread_init():
     signal.signal(signal.SIGINT, signal.SIG_IGN)
 
