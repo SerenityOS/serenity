@@ -252,15 +252,15 @@ Tokenizer::Tokenizer(String decoded_input)
 {
 }
 
-Vector<Token> Tokenizer::tokenize()
+ErrorOr<Vector<Token>> Tokenizer::tokenize()
 {
     Vector<Token> tokens;
     for (;;) {
         auto token_start = m_position;
-        auto token = consume_a_token();
+        auto token = TRY(consume_a_token());
         token.m_start_position = token_start;
         token.m_end_position = m_position;
-        tokens.append(token);
+        TRY(tokens.try_append(token));
 
         if (token.is(Token::Type::EndOfFile)) {
             return tokens;
@@ -428,13 +428,13 @@ u32 Tokenizer::consume_escaped_code_point()
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-ident-like-token
-Token Tokenizer::consume_an_ident_like_token()
+ErrorOr<Token> Tokenizer::consume_an_ident_like_token()
 {
     // This section describes how to consume an ident-like token from a stream of code points.
     // It returns an <ident-token>, <function-token>, <url-token>, or <bad-url-token>.
 
     // Consume an ident sequence, and let string be the result.
-    auto string = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
+    auto string = TRY(consume_an_ident_sequence());
 
     // If string’s value is an ASCII case-insensitive match for "url", and the next input code
     // point is U+0028 LEFT PARENTHESIS ((), consume it.
@@ -625,7 +625,7 @@ ErrorOr<FlyString> Tokenizer::consume_an_ident_sequence()
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-url-token
-Token Tokenizer::consume_a_url_token()
+ErrorOr<Token> Tokenizer::consume_a_url_token()
 {
     // This section describes how to consume a url token from a stream of code points.
     // It returns either a <url-token> or a <bad-url-token>.
@@ -643,8 +643,8 @@ Token Tokenizer::consume_a_url_token()
     // 2. Consume as much whitespace as possible.
     consume_as_much_whitespace_as_possible();
 
-    auto make_token = [&]() {
-        token.m_value = FlyString::from_utf8(builder.string_view()).release_value_but_fixme_should_propagate_errors();
+    auto make_token = [&]() -> ErrorOr<Token> {
+        token.m_value = TRY(FlyString::from_utf8(builder.string_view()));
         return token;
     };
 
@@ -769,7 +769,7 @@ void Tokenizer::reconsume_current_input_code_point()
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-numeric-token
-Token Tokenizer::consume_a_numeric_token()
+ErrorOr<Token> Tokenizer::consume_a_numeric_token()
 {
     // This section describes how to consume a numeric token from a stream of code points.
     // It returns either a <number-token>, <percentage-token>, or <dimension-token>.
@@ -785,7 +785,7 @@ Token Tokenizer::consume_a_numeric_token()
         token.m_number_value = number;
 
         // 2. Consume an ident sequence. Set the <dimension-token>’s unit to the returned value.
-        auto unit = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
+        auto unit = TRY(consume_an_ident_sequence());
         VERIFY(!unit.is_empty());
         // NOTE: We intentionally store this in the `value`, to save space.
         token.m_value = move(unit);
@@ -921,7 +921,7 @@ bool Tokenizer::would_start_an_ident_sequence(U32Triplet values)
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-string-token
-Token Tokenizer::consume_string_token(u32 ending_code_point)
+ErrorOr<Token> Tokenizer::consume_string_token(u32 ending_code_point)
 {
     // This section describes how to consume a string token from a stream of code points.
     // It returns either a <string-token> or <bad-string-token>.
@@ -934,8 +934,8 @@ Token Tokenizer::consume_string_token(u32 ending_code_point)
     auto token = create_new_token(Token::Type::String);
     StringBuilder builder;
 
-    auto make_token = [&]() {
-        token.m_value = FlyString::from_utf8(builder.string_view()).release_value_but_fixme_should_propagate_errors();
+    auto make_token = [&]() -> ErrorOr<Token> {
+        token.m_value = TRY(FlyString::from_utf8(builder.string_view()));
         return token;
     };
 
@@ -1027,7 +1027,7 @@ start:
 }
 
 // https://www.w3.org/TR/css-syntax-3/#consume-token
-Token Tokenizer::consume_a_token()
+ErrorOr<Token> Tokenizer::consume_a_token()
 {
     // This section describes how to consume a token from a stream of code points.
     // It will return a single token of any type.
@@ -1072,7 +1072,7 @@ Token Tokenizer::consume_a_token()
                 token.m_hash_type = Token::HashType::Id;
 
             // 3. Consume an ident sequence, and set the <hash-token>’s value to the returned string.
-            auto name = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
+            auto name = TRY(consume_an_ident_sequence());
             token.m_value = move(name);
 
             // 4. Return the <hash-token>.
@@ -1208,7 +1208,7 @@ Token Tokenizer::consume_a_token()
         // If the next 3 input code points would start an ident sequence, consume an ident sequence, create
         // an <at-keyword-token> with its value set to the returned value, and return it.
         if (would_start_an_ident_sequence(peek_triplet())) {
-            auto name = consume_an_ident_sequence().release_value_but_fixme_should_propagate_errors();
+            auto name = TRY(consume_an_ident_sequence());
             return create_value_token(Token::Type::AtKeyword, move(name));
         }
 
