@@ -23,7 +23,7 @@
 
 static ErrorOr<pid_t> pipe_to_pager(DeprecatedString const& command)
 {
-    char const* argv[] = { "sh", "-c", command.characters(), nullptr };
+    char const* argv[] = { "sh", "--skip-shellrc", "-c", command.characters(), nullptr };
 
     auto stdout_pipe = TRY(Core::System::pipe2(O_CLOEXEC));
 
