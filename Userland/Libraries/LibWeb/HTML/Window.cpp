@@ -1064,7 +1064,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "requestAnimationFrame", request_animation_frame, 1, attr);
     define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
     define_native_function(realm, "atob", atob, 1, attr);
-    define_native_function(realm, "btoa", btoa, 1, attr);
     define_native_function(realm, "focus", focus, 0, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
@@ -1500,24 +1499,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::atob)
     auto text = TRY_OR_THROW_OOM(vm, text_decoder->to_utf8(decoded.release_value()));
 
     return JS::PrimitiveString::create(vm, text);
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::btoa)
-{
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "btoa");
-    auto string = TRY(vm.argument(0).to_deprecated_string(vm));
-
-    Vector<u8> byte_string;
-    byte_string.ensure_capacity(string.length());
-    for (u32 code_point : Utf8View(string)) {
-        if (code_point > 0xff)
-            return throw_completion(WebIDL::InvalidCharacterError::create(*vm.current_realm(), "Data contains characters outside the range U+0000 and U+00FF"));
-        byte_string.append(code_point);
-    }
-
-    auto encoded = MUST(encode_base64(byte_string.span()));
-    return JS::PrimitiveString::create(vm, encoded.to_deprecated_string());
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-window-focus

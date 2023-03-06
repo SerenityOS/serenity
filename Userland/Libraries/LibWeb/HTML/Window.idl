@@ -39,6 +39,7 @@ interface Window : EventTarget {
     // FIXME: Replace these with 'Window includes WindowOrWorkerGlobalScope;' once we have feature parity
     [Replaceable] readonly attribute USVString origin;
     readonly attribute boolean isSecureContext;
+    DOMString btoa(DOMString data);
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
