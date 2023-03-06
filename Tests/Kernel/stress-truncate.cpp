@@ -6,18 +6,15 @@
 
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<StringView> arguments;
-    arguments.ensure_capacity(argc);
-    for (auto i = 0; i < argc; ++i)
-        arguments.append({ argv[i], strlen(argv[i]) });
-
     DeprecatedString target;
     int max_file_size = 1024 * 1024;
     int count = 1024;
@@ -38,16 +35,10 @@ int main(int argc, char** argv)
     for (int i = 0; i < count; i++) {
         auto new_file_size = AK::get_random<uint64_t>() % (max_file_size + 1);
         printf("(%d/%d)\tTruncating to %" PRIu64 " bytes...\n", i + 1, count, new_file_size);
-        if (truncate(target.characters(), new_file_size) < 0) {
-            perror("Couldn't truncate target file");
-            return EXIT_FAILURE;
-        }
+        TRY(Core::System::truncate(target, new_file_size));
     }
 
-    if (unlink(target.characters()) < 0) {
-        perror("Couldn't remove target file");
-        return EXIT_FAILURE;
-    }
+    TRY(Core::System::unlink(target));
 
     return EXIT_SUCCESS;
 }
