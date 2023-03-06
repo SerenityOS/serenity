@@ -46,6 +46,8 @@ public:
 
     ~Window();
 
+    using WindowOrWorkerGlobalScopeMixin::btoa;
+
     // ^DOM::EventTarget
     virtual bool dispatch_event(DOM::Event&) override;
 
@@ -265,7 +267,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(atob);
-    JS_DECLARE_NATIVE_FUNCTION(btoa);
     JS_DECLARE_NATIVE_FUNCTION(focus);
 
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
