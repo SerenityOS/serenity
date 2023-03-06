@@ -1102,7 +1102,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
     define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
-    define_native_accessor(realm, "origin", origin_getter, {}, attr);
     define_native_accessor(realm, "isSecureContext", is_secure_context_getter, {}, attr);
 
     // Legacy
@@ -1116,11 +1115,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_direct_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     return {};
-}
-
-HTML::Origin Window::origin() const
-{
-    return associated_document().origin();
 }
 
 // https://webidl.spec.whatwg.org/#platform-object-setprototypeof
@@ -1833,13 +1827,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
         return impl->structured_clone_impl(vm, vm.argument(0));
     }));
-}
-
-// https://html.spec.whatwg.org/multipage/webappapis.html#dom-origin
-JS_DEFINE_NATIVE_FUNCTION(Window::origin_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::PrimitiveString::create(vm, impl->associated_document().origin().serialize());
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#dom-issecurecontext
