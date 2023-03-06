@@ -362,7 +362,6 @@ private:
 
     ParsingContext m_context;
 
-    Tokenizer m_tokenizer;
     Vector<Token> m_tokens;
     TokenStream<Token> m_token_stream;
 };
