@@ -320,6 +320,8 @@ JS::ThrowCompletionOr<void> Document::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::DocumentPrototype>(realm, "Document"));
 
+    m_selection = MUST_OR_THROW_OOM(heap().allocate<Selection::Selection>(realm, realm, *this));
+
     return {};
 }
 
@@ -369,17 +371,12 @@ void Document::visit_edges(Cell::Visitor& visitor)
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection
-JS::GCPtr<Selection::Selection> Document::get_selection()
+JS::GCPtr<Selection::Selection> Document::get_selection() const
 {
     // The method must return the selection associated with this if this has an associated browsing context,
     // and it must return null otherwise.
-    if (!browsing_context()) {
-        return nullptr;
-    }
-
-    if (!m_selection) {
-        m_selection = Selection::Selection::create(realm(), *this).release_value_but_fixme_should_propagate_errors();
-    }
+    if (!browsing_context())
+        return {};
     return m_selection;
 }
 

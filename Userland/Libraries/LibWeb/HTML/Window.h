@@ -180,6 +180,8 @@ public:
     i32 outer_height() const;
     double device_pixel_ratio() const;
 
+    JS::GCPtr<Selection::Selection> get_selection() const;
+
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> crypto();
@@ -257,8 +259,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
     JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
-
-    JS_DECLARE_NATIVE_FUNCTION(get_selection);
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
