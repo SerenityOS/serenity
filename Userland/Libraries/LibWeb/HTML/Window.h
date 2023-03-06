@@ -96,8 +96,6 @@ public:
 
     void deallocate_timer_id(Badge<Timer>, i32);
 
-    Crypto::Crypto& crypto() { return *m_crypto; }
-
     CSS::Screen& screen();
 
     DOM::Event* current_event() { return m_current_event.ptr(); }
@@ -168,6 +166,8 @@ public:
     Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
+
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> crypto();
 
 private:
     explicit Window(JS::Realm&);
@@ -273,8 +273,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(request_idle_callback);
     JS_DECLARE_NATIVE_FUNCTION(cancel_idle_callback);
-
-    JS_DECLARE_NATIVE_FUNCTION(crypto_getter);
 
     HTML::Location* m_location { nullptr };
 

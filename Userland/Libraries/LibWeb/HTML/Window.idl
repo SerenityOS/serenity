@@ -1,3 +1,4 @@
+#import <Crypto/Crypto.idl>
 #import <DOM/Document.idl>
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
@@ -44,6 +45,9 @@ interface Window : EventTarget {
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute
     [Replaceable] readonly attribute Performance performance;
+
+    // https://w3c.github.io/webcrypto/#crypto-interface
+    [SameObject] readonly attribute Crypto crypto;
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
