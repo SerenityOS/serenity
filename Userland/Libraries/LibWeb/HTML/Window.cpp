@@ -1847,7 +1847,7 @@ JS_DEFINE_NATIVE_FUNCTION(Window::is_secure_context_getter)
 {
     auto* impl = TRY(impl_from(vm));
     // The isSecureContext getter steps are to return true if this's relevant settings object is a secure context, or false otherwise.
-    return JS::Value(is_secure_context(impl->associated_document().relevant_settings_object()));
+    return JS::Value(HTML::is_secure_context(impl->associated_document().relevant_settings_object()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::local_storage_getter)
