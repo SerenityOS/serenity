@@ -958,8 +958,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "requestIdleCallback", request_idle_callback, 1, attr);
     define_native_function(realm, "cancelIdleCallback", cancel_idle_callback, 1, attr);
 
-    define_native_function(realm, "getSelection", get_selection, 0, attr);
-
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
 
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
@@ -1478,6 +1476,13 @@ double Window::device_pixel_ratio() const
     return 1;
 }
 
+// https://w3c.github.io/selection-api/#dom-window-getselection
+JS::GCPtr<Selection::Selection> Window::get_selection() const
+{
+    // The method must invoke and return the result of getSelection() on this's Window.document attribute.
+    return associated_document().get_selection();
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1650,14 +1655,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
     auto* impl = TRY(impl_from(vm));
     TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
-}
-
-// https://w3c.github.io/selection-api/#dom-window-getselection
-JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
-{
-    // The method must invoke and return the result of getSelection() on this's Window.document attribute.
-    auto* impl = TRY(impl_from(vm));
-    return impl->associated_document().get_selection();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
