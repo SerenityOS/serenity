@@ -2,6 +2,7 @@
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
 #import <HTML/Navigator.idl>
+#import <HTML/WindowOrWorkerGlobalScope.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
 [Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
@@ -35,12 +36,7 @@ interface Window : EventTarget {
     undefined postMessage(any message, USVString targetOrigin);
     // FIXME: undefined postMessage(any message, USVString targetOrigin, optional sequence<object> transfer = []);
     // FIXME: undefined postMessage(any message, optional WindowPostMessageOptions options = {});
-
-    // FIXME: Replace these with 'Window includes WindowOrWorkerGlobalScope;' once we have feature parity
-    [Replaceable] readonly attribute USVString origin;
-    readonly attribute boolean isSecureContext;
-    DOMString btoa(DOMString data);
-    ByteString atob(DOMString data);
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
+Window includes WindowOrWorkerGlobalScope;
