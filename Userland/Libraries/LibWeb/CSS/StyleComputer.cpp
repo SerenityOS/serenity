@@ -1247,10 +1247,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     if (family_value->is_value_list()) {
         auto const& family_list = static_cast<StyleValueList const&>(*family_value).values();
         for (auto const& family : family_list) {
-            if (family.is_identifier()) {
-                found_font = find_generic_font(family.to_identifier());
-            } else if (family.is_string()) {
-                found_font = find_font(family.to_string().release_value_but_fixme_should_propagate_errors());
+            if (family->is_identifier()) {
+                found_font = find_generic_font(family->to_identifier());
+            } else if (family->is_string()) {
+                found_font = find_font(family->to_string().release_value_but_fixme_should_propagate_errors());
             }
             if (found_font)
                 break;

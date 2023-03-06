@@ -296,21 +296,21 @@ Vector<CSS::Transformation> StyleProperties::transformations() const
     Vector<CSS::Transformation> transformations;
 
     for (auto& it : list.values()) {
-        if (!it.is_transformation())
+        if (!it->is_transformation())
             return {};
-        auto& transformation_style_value = it.as_transformation();
+        auto& transformation_style_value = it->as_transformation();
         CSS::Transformation transformation;
         transformation.function = transformation_style_value.transform_function();
         Vector<TransformValue> values;
         for (auto& transformation_value : transformation_style_value.values()) {
-            if (transformation_value.is_length()) {
-                values.append({ transformation_value.to_length() });
-            } else if (transformation_value.is_percentage()) {
-                values.append({ transformation_value.as_percentage().percentage() });
-            } else if (transformation_value.is_numeric()) {
-                values.append({ transformation_value.to_number() });
-            } else if (transformation_value.is_angle()) {
-                values.append({ transformation_value.as_angle().angle() });
+            if (transformation_value->is_length()) {
+                values.append({ transformation_value->to_length() });
+            } else if (transformation_value->is_percentage()) {
+                values.append({ transformation_value->as_percentage().percentage() });
+            } else if (transformation_value->is_numeric()) {
+                values.append({ transformation_value->to_number() });
+            } else if (transformation_value->is_angle()) {
+                values.append({ transformation_value->as_angle().angle() });
             } else {
                 dbgln("FIXME: Unsupported value in transform!");
             }
@@ -487,8 +487,8 @@ CSS::ContentData StyleProperties::content() const
         //        For now, we'll just assume strings since that is easiest.
         StringBuilder builder;
         for (auto const& item : content_style_value.content().values()) {
-            if (item.is_string()) {
-                builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
+            if (item->is_string()) {
+                builder.append(item->to_string().release_value_but_fixme_should_propagate_errors());
             } else {
                 // TODO: Implement quotes, counters, images, and other things.
             }
@@ -499,8 +499,8 @@ CSS::ContentData StyleProperties::content() const
         if (content_style_value.has_alt_text()) {
             StringBuilder alt_text_builder;
             for (auto const& item : content_style_value.alt_text()->values()) {
-                if (item.is_string()) {
-                    alt_text_builder.append(item.to_string().release_value_but_fixme_should_propagate_errors());
+                if (item->is_string()) {
+                    alt_text_builder.append(item->to_string().release_value_but_fixme_should_propagate_errors());
                 } else {
                     // TODO: Implement counters
                 }
@@ -592,7 +592,7 @@ Vector<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
         Vector<CSS::TextDecorationLine> lines;
         auto& values = value->as_value_list().values();
         for (auto const& item : values) {
-            lines.append(value_id_to_text_decoration_line(item.to_identifier()).value());
+            lines.append(value_id_to_text_decoration_line(item->to_identifier()).value());
         }
         return lines;
     }
@@ -652,7 +652,7 @@ Vector<ShadowData> StyleProperties::shadow(PropertyID property_id) const
         Vector<ShadowData> shadow_data;
         shadow_data.ensure_capacity(value_list.size());
         for (auto const& layer_value : value_list.values())
-            shadow_data.append(make_shadow_data(layer_value.as_shadow()));
+            shadow_data.append(make_shadow_data(layer_value->as_shadow()));
 
         return shadow_data;
     }

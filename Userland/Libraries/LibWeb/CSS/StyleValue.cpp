@@ -2112,7 +2112,11 @@ ErrorOr<String> TransformationStyleValue::to_string() const
     StringBuilder builder;
     TRY(builder.try_append(CSS::to_string(m_properties.transform_function)));
     TRY(builder.try_append('('));
-    TRY(builder.try_join(", "sv, m_properties.values));
+    for (size_t i = 0; i < m_properties.values.size(); ++i) {
+        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
+        if (i != m_properties.values.size() - 1)
+            TRY(builder.try_append(", "sv));
+    }
     TRY(builder.try_append(')'));
 
     return builder.to_string();
@@ -2158,7 +2162,13 @@ ErrorOr<String> StyleValueList::to_string() const
         VERIFY_NOT_REACHED();
     }
 
-    return String::from_deprecated_string(DeprecatedString::join(separator, m_properties.values));
+    StringBuilder builder;
+    for (size_t i = 0; i < m_properties.values.size(); ++i) {
+        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
+        if (i != m_properties.values.size() - 1)
+            TRY(builder.try_append(separator));
+    }
+    return builder.to_string();
 }
 
 ValueComparingNonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)

@@ -267,9 +267,7 @@ private:
     using RefPtr<T>::operator==;
 };
 
-template<typename T>
-using ValueComparingNonnullRefPtrVector = AK::NonnullPtrVector<ValueComparingNonnullRefPtr<T>>;
-using StyleValueVector = ValueComparingNonnullRefPtrVector<StyleValue const>;
+using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
 
 class StyleValue : public RefCounted<StyleValue> {
 public:
