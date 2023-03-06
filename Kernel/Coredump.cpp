@@ -310,10 +310,10 @@ ErrorOr<void> Coredump::create_notes_threads_data(auto& builder) const
     for (auto const& thread : m_process->threads_for_coredump({})) {
         ELF::Core::ThreadInfo info {};
         info.header.type = ELF::Core::NotesEntryHeader::Type::ThreadInfo;
-        info.tid = thread.tid().value();
+        info.tid = thread->tid().value();
 
-        if (thread.current_trap())
-            copy_kernel_registers_into_ptrace_registers(info.regs, thread.get_register_dump_from_stack());
+        if (thread->current_trap())
+            copy_kernel_registers_into_ptrace_registers(info.regs, thread->get_register_dump_from_stack());
 
         TRY(builder.append_bytes(ReadonlyBytes { &info, sizeof(info) }));
     }

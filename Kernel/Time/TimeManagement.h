@@ -15,7 +15,6 @@
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {
@@ -93,7 +92,7 @@ private:
 #endif
     Vector<HardwareTimerBase*> scan_and_initialize_periodic_timers();
     Vector<HardwareTimerBase*> scan_for_non_periodic_timers();
-    NonnullLockRefPtrVector<HardwareTimerBase> m_hardware_timers;
+    Vector<NonnullLockRefPtr<HardwareTimerBase>> m_hardware_timers;
     void set_system_timer(HardwareTimerBase&);
     static void system_timer_tick(RegisterState const&);
 

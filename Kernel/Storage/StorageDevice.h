@@ -63,7 +63,7 @@ public:
     virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual void prepare_for_unplug() { m_partitions.clear(); }
 
-    NonnullLockRefPtrVector<DiskPartition> const& partitions() const { return m_partitions; }
+    Vector<NonnullLockRefPtr<DiskPartition>> const& partitions() const { return m_partitions; }
 
     void add_partition(NonnullLockRefPtr<DiskPartition> disk_partition) { MUST(m_partitions.try_append(disk_partition)); }
 
@@ -93,7 +93,7 @@ private:
     virtual void will_be_destroyed() override;
 
     mutable IntrusiveListNode<StorageDevice, LockRefPtr<StorageDevice>> m_list_node;
-    NonnullLockRefPtrVector<DiskPartition> m_partitions;
+    Vector<NonnullLockRefPtr<DiskPartition>> m_partitions;
 
     LUNAddress const m_logical_unit_number_address;
 

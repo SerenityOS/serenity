@@ -11,7 +11,6 @@
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -42,7 +41,7 @@ public:
 private:
     ErrorOr<NonnullLockRefPtr<NetworkAdapter>> determine_network_device(PCI::DeviceIdentifier const&) const;
 
-    SpinlockProtected<NonnullLockRefPtrVector<NetworkAdapter>, LockRank::None> m_adapters {};
+    SpinlockProtected<Vector<NonnullLockRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
     LockRefPtr<NetworkAdapter> m_loopback_adapter;
 };
 

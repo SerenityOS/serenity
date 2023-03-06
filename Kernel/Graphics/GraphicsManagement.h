@@ -19,7 +19,6 @@
 #include <Kernel/Graphics/GenericGraphicsAdapter.h>
 #include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Memory/Region.h>
 
 namespace Kernel {
@@ -54,7 +53,7 @@ private:
 
     void initialize_preset_resolution_generic_display_connector();
 
-    NonnullLockRefPtrVector<GenericGraphicsAdapter> m_graphics_devices;
+    Vector<NonnullLockRefPtr<GenericGraphicsAdapter>> m_graphics_devices;
     LockRefPtr<Graphics::Console> m_console;
 
     // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"

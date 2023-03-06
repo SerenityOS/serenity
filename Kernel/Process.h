@@ -28,7 +28,6 @@
 #include <Kernel/Jail.h>
 #include <Kernel/Library/LockWeakPtr.h>
 #include <Kernel/Library/LockWeakable.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Memory/AddressSpace.h>
@@ -566,7 +565,7 @@ public:
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
     ErrorOr<void> try_set_coredump_property(StringView key, StringView value);
 
-    NonnullLockRefPtrVector<Thread> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
+    Vector<NonnullLockRefPtr<Thread>> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
@@ -882,7 +881,7 @@ private:
     };
 
     SpinlockProtected<Array<CoredumpProperty, 4>, LockRank::None> m_coredump_properties {};
-    NonnullLockRefPtrVector<Thread> m_threads_for_coredump;
+    Vector<NonnullLockRefPtr<Thread>> m_threads_for_coredump;
 
     struct SignalActionData {
         VirtualAddress handler_or_sigaction;

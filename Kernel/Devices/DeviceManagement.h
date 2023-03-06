@@ -19,7 +19,6 @@
 #include <Kernel/Devices/DeviceControlDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel {

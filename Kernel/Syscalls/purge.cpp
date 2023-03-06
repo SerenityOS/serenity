@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/InodeVMObject.h>
 #include <Kernel/Memory/MemoryManager.h>
@@ -21,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$purge(int mode)
         return EPERM;
     size_t purged_page_count = 0;
     if (mode & PURGE_ALL_VOLATILE) {
-        NonnullLockRefPtrVector<Memory::AnonymousVMObject> vmobjects;
+        Vector<NonnullLockRefPtr<Memory::AnonymousVMObject>> vmobjects;
         {
             ErrorOr<void> result;
             Memory::MemoryManager::for_each_vmobject([&](auto& vmobject) {
@@ -40,11 +39,11 @@ ErrorOr<FlatPtr> Process::sys$purge(int mode)
                 return result.release_error();
         }
         for (auto& vmobject : vmobjects) {
-            purged_page_count += vmobject.purge();
+            purged_page_count += vmobject->purge();
         }
     }
     if (mode & PURGE_ALL_CLEAN_INODE) {
-        NonnullLockRefPtrVector<Memory::InodeVMObject> vmobjects;
+        Vector<NonnullLockRefPtr<Memory::InodeVMObject>> vmobjects;
         {
             ErrorOr<void> result;
             Memory::MemoryManager::for_each_vmobject([&](auto& vmobject) {
@@ -63,7 +62,7 @@ ErrorOr<FlatPtr> Process::sys$purge(int mode)
                 return result.release_error();
         }
         for (auto& vmobject : vmobjects) {
-            purged_page_count += vmobject.release_all_clean_pages();
+            purged_page_count += vmobject->release_all_clean_pages();
         }
     }
     return purged_page_count;

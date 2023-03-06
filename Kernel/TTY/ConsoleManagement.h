@@ -8,7 +8,6 @@
 
 #include <AK/Types.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
 namespace Kernel {
@@ -37,7 +36,7 @@ public:
     RecursiveSpinlock<LockRank::None>& tty_write_lock() { return m_tty_write_lock; }
 
 private:
-    NonnullLockRefPtrVector<VirtualConsole, s_max_virtual_consoles> m_consoles;
+    Vector<NonnullLockRefPtr<VirtualConsole>, s_max_virtual_consoles> m_consoles;
     VirtualConsole* m_active_console { nullptr };
     Spinlock<LockRank::None> m_lock {};
     RecursiveSpinlock<LockRank::None> m_tty_write_lock {};

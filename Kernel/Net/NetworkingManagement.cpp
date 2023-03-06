@@ -64,7 +64,7 @@ LockRefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address c
         return m_loopback_adapter;
     return m_adapters.with([&](auto& adapters) -> LockRefPtr<NetworkAdapter> {
         for (auto& adapter : adapters) {
-            if (adapter.ipv4_address() == address || adapter.ipv4_broadcast() == address)
+            if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
                 return adapter;
         }
         return nullptr;
@@ -75,7 +75,7 @@ LockRefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name)
 {
     return m_adapters.with([&](auto& adapters) -> LockRefPtr<NetworkAdapter> {
         for (auto& adapter : adapters) {
-            if (adapter.name() == name)
+            if (adapter->name() == name)
                 return adapter;
         }
         return nullptr;

@@ -11,7 +11,6 @@
 #include <AK/kmalloc.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Storage/NVMe/NVMeDefinitions.h>
 #include <Kernel/Storage/NVMe/NVMeQueue.h>
@@ -24,16 +23,16 @@ class NVMeNameSpace : public StorageDevice {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> try_create(NVMeController const&, NonnullLockRefPtrVector<NVMeQueue> queues, u16 nsid, size_t storage_size, size_t lba_size);
+    static ErrorOr<NonnullLockRefPtr<NVMeNameSpace>> try_create(NVMeController const&, Vector<NonnullLockRefPtr<NVMeQueue>> queues, u16 nsid, size_t storage_size, size_t lba_size);
 
     CommandSet command_set() const override { return CommandSet::NVMe; };
     void start_request(AsyncBlockDeviceRequest& request) override;
 
 private:
-    NVMeNameSpace(LUNAddress, u32 hardware_relative_controller_id, NonnullLockRefPtrVector<NVMeQueue> queues, size_t storage_size, size_t lba_size, u16 nsid);
+    NVMeNameSpace(LUNAddress, u32 hardware_relative_controller_id, Vector<NonnullLockRefPtr<NVMeQueue>> queues, size_t storage_size, size_t lba_size, u16 nsid);
 
     u16 m_nsid;
-    NonnullLockRefPtrVector<NVMeQueue> m_queues;
+    Vector<NonnullLockRefPtr<NVMeQueue>> m_queues;
 };
 
 }

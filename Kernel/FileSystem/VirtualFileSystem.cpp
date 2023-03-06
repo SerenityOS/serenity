@@ -135,26 +135,26 @@ ErrorOr<void> VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 
 void VirtualFileSystem::sync_filesystems()
 {
-    NonnullLockRefPtrVector<FileSystem, 32> file_systems;
+    Vector<NonnullLockRefPtr<FileSystem>, 32> file_systems;
     m_file_systems_list.with([&](auto const& list) {
         for (auto& fs : list)
             file_systems.append(fs);
     });
 
     for (auto& fs : file_systems)
-        fs.flush_writes();
+        fs->flush_writes();
 }
 
 void VirtualFileSystem::lock_all_filesystems()
 {
-    NonnullLockRefPtrVector<FileSystem, 32> file_systems;
+    Vector<NonnullLockRefPtr<FileSystem>, 32> file_systems;
     m_file_systems_list.with([&](auto const& list) {
         for (auto& fs : list)
             file_systems.append(fs);
     });
 
     for (auto& fs : file_systems)
-        fs.m_lock.lock();
+        fs->m_lock.lock();
 }
 
 ErrorOr<void> VirtualFileSystem::unmount(Custody& mountpoint_custody)

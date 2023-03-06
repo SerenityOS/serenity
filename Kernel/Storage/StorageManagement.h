@@ -10,7 +10,6 @@
 #include <AK/Types.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Storage/DiskPartition.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
@@ -67,7 +66,7 @@ private:
 
     StringView m_boot_argument;
     LockWeakPtr<BlockDevice> m_boot_block_device;
-    NonnullLockRefPtrVector<StorageController> m_controllers;
+    Vector<NonnullLockRefPtr<StorageController>> m_controllers;
     IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };
 

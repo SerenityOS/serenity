@@ -8,7 +8,6 @@
 
 #include <Kernel/Bus/USB/USBController.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 
 namespace Kernel::USB {
 

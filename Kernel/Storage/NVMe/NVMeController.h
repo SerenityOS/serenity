@@ -13,7 +13,6 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Storage/NVMe/NVMeDefinitions.h>
@@ -70,8 +69,8 @@ private:
 
 private:
     LockRefPtr<NVMeQueue> m_admin_queue;
-    NonnullLockRefPtrVector<NVMeQueue> m_queues;
-    NonnullLockRefPtrVector<NVMeNameSpace> m_namespaces;
+    Vector<NonnullLockRefPtr<NVMeQueue>> m_queues;
+    Vector<NonnullLockRefPtr<NVMeNameSpace>> m_namespaces;
     Memory::TypedMapping<ControllerRegister volatile> m_controller_regs;
     bool m_admin_queue_ready { false };
     size_t m_device_count { 0 };

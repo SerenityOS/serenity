@@ -13,7 +13,6 @@
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/TypedMapping.h>

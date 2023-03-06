@@ -205,7 +205,7 @@ LockRefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
 
 LockRefPtr<StorageDevice> AHCIController::device(u32 index) const
 {
-    NonnullLockRefPtrVector<StorageDevice> connected_devices;
+    Vector<NonnullLockRefPtr<StorageDevice>> connected_devices;
     u32 pi = hba().control_regs.pi;
     u32 bit = bit_scan_forward(pi);
     while (bit) {

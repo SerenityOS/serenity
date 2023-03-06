@@ -129,8 +129,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_storage_devices()
 {
     VERIFY(!m_controllers.is_empty());
     for (auto& controller : m_controllers) {
-        for (size_t device_index = 0; device_index < controller.devices_count(); device_index++) {
-            auto device = controller.device(device_index);
+        for (size_t device_index = 0; device_index < controller->devices_count(); device_index++) {
+            auto device = controller->device(device_index);
             if (device.is_null())
                 continue;
             m_storage_devices.append(device.release_nonnull());
@@ -149,7 +149,7 @@ UNMAP_AFTER_INIT void StorageManagement::dump_storage_devices_and_partitions() c
             dbgln("  Device: block{}:{} ({} partitions)", storage_device.major(), storage_device.minor(), partitions.size());
             unsigned partition_number = 1;
             for (auto const& partition : partitions) {
-                dbgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition.major(), partition.minor(), partition.metadata().unique_guid().to_string());
+                dbgln("    Partition: {}, block{}:{} (UUID {})", partition_number, partition->major(), partition->minor(), partition->metadata().unique_guid().to_string());
                 partition_number++;
             }
         }
@@ -375,9 +375,9 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device_with_partition_uu
 
     for (auto& storage_device : m_storage_devices) {
         for (auto& partition : storage_device.partitions()) {
-            if (partition.metadata().unique_guid().is_zero())
+            if (partition->metadata().unique_guid().is_zero())
                 continue;
-            if (partition.metadata().unique_guid() == partition_uuid) {
+            if (partition->metadata().unique_guid() == partition_uuid) {
                 m_boot_block_device = partition;
                 break;
             }

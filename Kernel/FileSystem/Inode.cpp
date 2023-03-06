@@ -15,7 +15,6 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
@@ -31,7 +30,7 @@ SpinlockProtected<Inode::AllInstancesList, LockRank::None>& Inode::all_instances
 
 void Inode::sync_all()
 {
-    NonnullLockRefPtrVector<Inode, 32> inodes;
+    Vector<NonnullLockRefPtr<Inode>, 32> inodes;
     Inode::all_instances().with([&](auto& all_inodes) {
         for (auto& inode : all_inodes) {
             if (inode.is_metadata_dirty())
@@ -40,8 +39,8 @@ void Inode::sync_all()
     });
 
     for (auto& inode : inodes) {
-        VERIFY(inode.is_metadata_dirty());
-        (void)inode.flush_metadata();
+        VERIFY(inode->is_metadata_dirty());
+        (void)inode->flush_metadata();
     }
 }
 

@@ -11,7 +11,6 @@
 #include <AK/HashTable.h>
 #include <AK/IntrusiveRedBlackTree.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/AllocationStrategy.h>
 #include <Kernel/Memory/PhysicalPage.h>

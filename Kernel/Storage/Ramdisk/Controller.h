@@ -31,6 +31,6 @@ public:
 private:
     RamdiskController();
 
-    NonnullLockRefPtrVector<RamdiskDevice> m_devices;
+    Vector<NonnullLockRefPtr<RamdiskDevice>> m_devices;
 };
 }

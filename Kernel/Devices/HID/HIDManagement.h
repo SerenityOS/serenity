@@ -15,7 +15,6 @@
 #include <Kernel/Devices/HID/HIDDevice.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
@@ -65,7 +64,7 @@ private:
 #if ARCH(X86_64)
     LockRefPtr<I8042Controller> m_i8042_controller;
 #endif
-    NonnullLockRefPtrVector<HIDDevice> m_hid_devices;
+    Vector<NonnullLockRefPtr<HIDDevice>> m_hid_devices;
     Spinlock<LockRank::None> m_client_lock {};
 };
 

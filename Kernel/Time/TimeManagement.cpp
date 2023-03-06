@@ -285,10 +285,10 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_
     dbgln("Time: Scanning for periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
-        if (hardware_timer.is_periodic_capable()) {
-            timers.append(&hardware_timer);
+        if (hardware_timer->is_periodic_capable()) {
+            timers.append(hardware_timer);
             if (should_enable)
-                hardware_timer.set_periodic();
+                hardware_timer->set_periodic();
         }
     }
     return timers;
@@ -299,8 +299,8 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodi
     dbgln("Time: Scanning for non-periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
-        if (!hardware_timer.is_periodic_capable())
-            timers.append(&hardware_timer);
+        if (!hardware_timer->is_periodic_capable())
+            timers.append(hardware_timer);
     }
     return timers;
 }

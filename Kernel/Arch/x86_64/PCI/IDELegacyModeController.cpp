@@ -152,7 +152,7 @@ UNMAP_AFTER_INIT ErrorOr<void> PCIIDELegacyModeController::initialize_and_enumer
         TRY(m_channels.try_append(IDEChannel::create(*this, move(primary_channel_io_window_group), IDEChannel::ChannelType::Primary)));
     }
     TRY(initialize_and_enumerate(m_channels[0]));
-    m_channels[0].enable_irq();
+    m_channels[0]->enable_irq();
 
     if (is_pci_native_mode_enabled_on_secondary_channel()) {
         TRY(m_channels.try_append(IDEChannel::create(*this, irq_line, move(secondary_channel_io_window_group), IDEChannel::ChannelType::Secondary)));
@@ -160,7 +160,7 @@ UNMAP_AFTER_INIT ErrorOr<void> PCIIDELegacyModeController::initialize_and_enumer
         TRY(m_channels.try_append(IDEChannel::create(*this, move(secondary_channel_io_window_group), IDEChannel::ChannelType::Secondary)));
     }
     TRY(initialize_and_enumerate(m_channels[1]));
-    m_channels[1].enable_irq();
+    m_channels[1]->enable_irq();
     return {};
 }
 

@@ -229,7 +229,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
     dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
 
     {
-        NonnullLockRefPtrVector<IPv4Socket> icmp_sockets;
+        Vector<NonnullLockRefPtr<IPv4Socket>> icmp_sockets;
         IPv4Socket::all_sockets().with_exclusive([&](auto& sockets) {
             for (auto& socket : sockets) {
                 if (socket.protocol() == (unsigned)IPv4Protocol::ICMP)
@@ -237,7 +237,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
             }
         });
         for (auto& socket : icmp_sockets)
-            socket.did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
+            socket->did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
     }
 
     auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
@@ -657,7 +657,7 @@ void retransmit_tcp_packets()
 {
     // We must keep the sockets alive until after we've unlocked the hash table
     // in case retransmit_packets() realizes that it wants to close the socket.
-    NonnullLockRefPtrVector<TCPSocket, 16> sockets;
+    Vector<NonnullLockRefPtr<TCPSocket>, 16> sockets;
     TCPSocket::sockets_for_retransmit().for_each_shared([&](auto const& socket) {
         // We ignore allocation failures above the first 16 guaranteed socket slots, as
         // we will just retransmit their packets the next time around
@@ -665,8 +665,8 @@ void retransmit_tcp_packets()
     });
 
     for (auto& socket : sockets) {
-        MutexLocker socket_locker(socket.mutex());
-        socket.retransmit_packets();
+        MutexLocker socket_locker(socket->mutex());
+        socket->retransmit_packets();
     }
 }
 

@@ -472,7 +472,7 @@ ErrorOr<void> LocalSocket::chown(Credentials const& credentials, OpenFileDescrip
     return {};
 }
 
-NonnullLockRefPtrVector<OpenFileDescription>& LocalSocket::recvfd_queue_for(OpenFileDescription const& description)
+Vector<NonnullLockRefPtr<OpenFileDescription>>& LocalSocket::recvfd_queue_for(OpenFileDescription const& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -482,7 +482,7 @@ NonnullLockRefPtrVector<OpenFileDescription>& LocalSocket::recvfd_queue_for(Open
     VERIFY_NOT_REACHED();
 }
 
-NonnullLockRefPtrVector<OpenFileDescription>& LocalSocket::sendfd_queue_for(OpenFileDescription const& description)
+Vector<NonnullLockRefPtr<OpenFileDescription>>& LocalSocket::sendfd_queue_for(OpenFileDescription const& description)
 {
     auto role = this->role(description);
     if (role == Role::Connected)
@@ -520,10 +520,10 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDesc
     return queue.take_first();
 }
 
-ErrorOr<NonnullLockRefPtrVector<OpenFileDescription>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
+ErrorOr<Vector<NonnullLockRefPtr<OpenFileDescription>>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
 {
     MutexLocker locker(mutex());
-    NonnullLockRefPtrVector<OpenFileDescription> fds;
+    Vector<NonnullLockRefPtr<OpenFileDescription>> fds;
 
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)

@@ -10,7 +10,6 @@
 #include <AK/Time.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
@@ -182,7 +181,7 @@ private:
 
     Optional<ErrnoCode> m_so_error;
 
-    NonnullLockRefPtrVector<Socket> m_pending;
+    Vector<NonnullLockRefPtr<Socket>> m_pending;
 };
 
 // This is a special variant of TRY() that also updates the socket's SO_ERROR field on error.

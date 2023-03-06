@@ -187,21 +187,21 @@ void HPET::update_periodic_comparator_value()
     if (m_main_counter_64bits)
         regs.main_counter_value.high = 0;
     for (auto& comparator : m_comparators) {
-        auto& timer = regs.timers[comparator.comparator_number()];
-        if (!comparator.is_enabled())
+        auto& timer = regs.timers[comparator->comparator_number()];
+        if (!comparator->is_enabled())
             continue;
-        if (comparator.is_periodic()) {
+        if (comparator->is_periodic()) {
             // Note that this means we're restarting all periodic timers. There is no
             // way to resume periodic timers properly because we reset the main counter
             // and we can only write the period into the comparator value...
             timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
-            u64 value = ns_to_raw_counter_ticks(1000000000ull / comparator.ticks_per_second());
+            u64 value = ns_to_raw_counter_ticks(1000000000ull / comparator->ticks_per_second());
             dbgln_if(HPET_DEBUG, "HPET: Update periodic comparator {} comparator value to {} main value was: {}",
-                comparator.comparator_number(),
+                comparator->comparator_number(),
                 value,
                 previous_main_value);
             timer.comparator_value.low = (u32)value;
-            if (comparator.is_64bit_capable()) {
+            if (comparator->is_64bit_capable()) {
                 timer.capabilities = timer.capabilities | (u32)HPETFlags::TimerConfiguration::ValueSet;
                 timer.comparator_value.high = (u32)(value >> 32);
             }
@@ -210,12 +210,12 @@ void HPET::update_periodic_comparator_value()
             u64 current_value = (u64)timer.comparator_value.low | ((u64)timer.comparator_value.high << 32);
             u64 value = current_value - previous_main_value;
             dbgln_if(HPET_DEBUG, "HPET: Update non-periodic comparator {} comparator value from {} to {} main value was: {}",
-                comparator.comparator_number(),
+                comparator->comparator_number(),
                 current_value,
                 value,
                 previous_main_value);
             timer.comparator_value.low = (u32)value;
-            if (comparator.is_64bit_capable())
+            if (comparator->is_64bit_capable())
                 timer.comparator_value.high = (u32)(value >> 32);
         }
     }

@@ -44,11 +44,11 @@ UNMAP_AFTER_INIT ErrorOr<void> ISAIDEController::initialize_channels()
 
     TRY(m_channels.try_append(IDEChannel::create(*this, move(primary_channel_io_window_group), IDEChannel::ChannelType::Primary)));
     TRY(initialize_and_enumerate(m_channels[0]));
-    m_channels[0].enable_irq();
+    m_channels[0]->enable_irq();
 
     TRY(m_channels.try_append(IDEChannel::create(*this, move(secondary_channel_io_window_group), IDEChannel::ChannelType::Secondary)));
     TRY(initialize_and_enumerate(m_channels[1]));
-    m_channels[1].enable_irq();
+    m_channels[1]->enable_irq();
     dbgln("ISA IDE controller detected and initialized");
     return {};
 }

@@ -313,7 +313,7 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
         Vector<int> fdnums;
         for (auto& description : descriptions) {
             auto fd_allocation = TRY(m_fds.with_exclusive([](auto& fds) { return fds.allocate(); }));
-            m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(description, 0); });
+            m_fds.with_exclusive([&](auto& fds) { fds[fd_allocation.fd].set(*description, 0); });
             fdnums.append(fd_allocation.fd);
         }
         TRY(try_add_cmsg(SOL_SOCKET, SCM_RIGHTS, fdnums.data(), fdnums.size() * sizeof(int)));

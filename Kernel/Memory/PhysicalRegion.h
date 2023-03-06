@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <AK/Vector.h>
 #include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Memory/PhysicalZone.h>
 
