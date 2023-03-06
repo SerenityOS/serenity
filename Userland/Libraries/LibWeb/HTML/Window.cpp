@@ -1017,8 +1017,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_function(realm, "scroll", scroll, 2, attr);
-    define_native_function(realm, "scrollTo", scroll, 2, attr);
     define_native_function(realm, "scrollBy", scroll_by, 2, attr);
 
     define_native_accessor(realm, "screenX", screen_x_getter, {}, attr);
@@ -1332,6 +1330,99 @@ double Window::scroll_y() const
     return 0;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#perform-a-scroll
+static void perform_a_scroll(Page& page, double x, double y, JS::GCPtr<DOM::Node const> element, Bindings::ScrollBehavior behavior)
+{
+    // FIXME: 1. Abort any ongoing smooth scroll for box.
+    // 2. If the user agent honors the scroll-behavior property and one of the following are true:
+    // - behavior is "auto" and element is not null and its computed value of the scroll-behavior property is smooth
+    // - behavior is smooth
+    // ...then perform a smooth scroll of box to position. Once the position has finished updating, emit the scrollend
+    // event. Otherwise, perform an instant scroll of box to position. After an instant scroll emit the scrollend event.
+    // FIXME: Support smooth scrolling.
+    (void)element;
+    (void)behavior;
+    page.client().page_did_request_scroll_to({ x, y });
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scroll
+void Window::scroll(ScrollToOptions const& options)
+{
+    // 4. If there is no viewport, abort these steps.
+    auto* page = this->page();
+    if (!page)
+        return;
+    auto const& top_level_browsing_context = page->top_level_browsing_context();
+
+    // 1. If invoked with one argument, follow these substeps:
+
+    // 1. Let options be the argument.
+    auto viewport_rect = top_level_browsing_context.viewport_rect().to_type<float>();
+
+    // 2. Let x be the value of the left dictionary member of options, if present, or the viewport’s current scroll
+    //    position on the x axis otherwise.
+    auto x = options.left.value_or(viewport_rect.x());
+
+    // 3. Let y be the value of the top dictionary member of options, if present, or the viewport’s current scroll
+    //    position on the y axis otherwise.
+    auto y = options.top.value_or(viewport_rect.y());
+
+    // 3. Normalize non-finite values for x and y.
+    x = JS::Value(x).is_finite_number() ? x : 0;
+    y = JS::Value(y).is_finite_number() ? y : 0;
+
+    // 5. Let viewport width be the width of the viewport excluding the width of the scroll bar, if any.
+    auto viewport_width = viewport_rect.width();
+
+    // 6. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any.
+    auto viewport_height = viewport_rect.height();
+
+    (void)viewport_width;
+    (void)viewport_height;
+
+    // FIXME: 7.
+    // -> If the viewport has rightward overflow direction
+    //    Let x be max(0, min(x, viewport scrolling area width - viewport width)).
+    // -> If the viewport has leftward overflow direction
+    //    Let x be min(0, max(x, viewport width - viewport scrolling area width)).
+
+    // FIXME: 8.
+    // -> If the viewport has downward overflow direction
+    //    Let y be max(0, min(y, viewport scrolling area height - viewport height)).
+    // -> If the viewport has upward overflow direction
+    //    Let y be min(0, max(y, viewport height - viewport scrolling area height)).
+
+    // FIXME: 9. Let position be the scroll position the viewport would have by aligning the x-coordinate x of the viewport
+    //           scrolling area with the left of the viewport and aligning the y-coordinate y of the viewport scrolling area
+    //           with the top of the viewport.
+
+    // FIXME: 10. If position is the same as the viewport’s current scroll position, and the viewport does not have an ongoing
+    //            smooth scroll, abort these steps.
+
+    // 11. Let document be the viewport’s associated Document.
+    auto const* document = top_level_browsing_context.active_document();
+
+    // 12. Perform a scroll of the viewport to position, document’s root element as the associated element, if there is
+    //     one, or null otherwise, and the scroll behavior being the value of the behavior dictionary member of options.
+    auto element = JS::GCPtr<DOM::Node const> { document ? &document->root() : nullptr };
+    perform_a_scroll(*page, x, y, element, options.behavior);
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scroll
+void Window::scroll(double x, double y)
+{
+    // 2. If invoked with two arguments, follow these substeps:
+
+    // 1. Let options be null converted to a ScrollToOptions dictionary. [WEBIDL]
+    auto options = ScrollToOptions {};
+
+    // 2. Let x and y be the arguments, respectively.
+    options.left = x;
+    options.top = y;
+
+    scroll(options);
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1552,69 +1643,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
     return impl->associated_document().get_selection();
 }
 
-enum class ScrollBehavior {
-    Auto,
-    Smooth
-};
-
-// https://www.w3.org/TR/cssom-view/#perform-a-scroll
-static void perform_a_scroll(Page& page, double x, double y, ScrollBehavior)
-{
-    // FIXME: Stop any existing smooth-scrolls
-    // FIXME: Implement smooth-scroll
-    page.client().page_did_request_scroll_to({ x, y });
-}
-
-// https://www.w3.org/TR/cssom-view/#dom-window-scroll
-JS_DEFINE_NATIVE_FUNCTION(Window::scroll)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!impl->page())
-        return JS::js_undefined();
-    auto& page = *impl->page();
-
-    auto viewport_rect = page.top_level_browsing_context().viewport_rect().to_type<float>();
-    auto x_value = JS::Value(viewport_rect.x());
-    auto y_value = JS::Value(viewport_rect.y());
-    DeprecatedString behavior_string = "auto";
-
-    if (vm.argument_count() == 1) {
-        auto* options = TRY(vm.argument(0).to_object(vm));
-        auto left = TRY(options->get("left"));
-        if (!left.is_undefined())
-            x_value = left;
-
-        auto top = TRY(options->get("top"));
-        if (!top.is_undefined())
-            y_value = top;
-
-        auto behavior_string_value = TRY(options->get("behavior"));
-        if (!behavior_string_value.is_undefined())
-            behavior_string = TRY(behavior_string_value.to_deprecated_string(vm));
-        if (behavior_string != "smooth" && behavior_string != "auto")
-            return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
-
-    } else if (vm.argument_count() >= 2) {
-        // We ignore arguments 2+ in line with behavior of Chrome and Firefox
-        x_value = vm.argument(0);
-        y_value = vm.argument(1);
-    }
-
-    ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
-
-    double x = TRY(x_value.to_double(vm));
-    x = JS::Value(x).is_finite_number() ? x : 0.0;
-
-    double y = TRY(y_value.to_double(vm));
-    y = JS::Value(y).is_finite_number() ? y : 0.0;
-
-    // FIXME: Are we calculating the viewport in the way this function expects?
-    // FIXME: Handle overflow-directions other than top-left to bottom-right
-
-    perform_a_scroll(page, x, y, behavior);
-    return JS::js_undefined();
-}
-
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollby
 JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
 {
@@ -1656,12 +1684,12 @@ JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
     auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_deprecated_string(vm));
     if (behavior_string != "smooth" && behavior_string != "auto")
         return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
-    ScrollBehavior behavior = (behavior_string == "smooth") ? ScrollBehavior::Smooth : ScrollBehavior::Auto;
+    auto behavior = (behavior_string == "smooth") ? Bindings::ScrollBehavior::Smooth : Bindings::ScrollBehavior::Auto;
 
     // FIXME: Spec wants us to call scroll(options) here.
     //        The only difference is that would invoke the viewport calculations that scroll()
     //        is not actually doing yet, so this is the same for now.
-    perform_a_scroll(page, left, top, behavior);
+    perform_a_scroll(page, left, top, nullptr, behavior);
     return JS::js_undefined();
 }
 

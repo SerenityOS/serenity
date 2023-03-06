@@ -57,6 +57,10 @@ interface Window : EventTarget {
     [Replaceable, ImplementedAs=scroll_x] readonly attribute double pageXOffset;
     [Replaceable] readonly attribute double scrollY;
     [Replaceable, ImplementedAs=scroll_y] readonly attribute double pageYOffset;
+    undefined scroll(optional ScrollToOptions options = {});
+    undefined scroll(unrestricted double x, unrestricted double y);
+    [ImplementedAs=scroll] undefined scrollTo(optional ScrollToOptions options = {});
+    [ImplementedAs=scroll] undefined scrollTo(unrestricted double x, unrestricted double y);
 
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute
@@ -68,3 +72,13 @@ interface Window : EventTarget {
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
 Window includes WindowOrWorkerGlobalScope;
+
+enum ScrollBehavior { "auto", "instant", "smooth" };
+
+dictionary ScrollOptions {
+    ScrollBehavior behavior = "auto";
+};
+dictionary ScrollToOptions : ScrollOptions {
+    unrestricted double left;
+    unrestricted double top;
+};
