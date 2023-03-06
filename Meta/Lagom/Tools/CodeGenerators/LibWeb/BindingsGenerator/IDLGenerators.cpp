@@ -2128,7 +2128,7 @@ static void generate_prototype_or_global_mixin_declarations(IDL::Interface const
     JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
 )~~~");
 
-        if (!attribute.readonly) {
+        if (!attribute.readonly || attribute.extended_attributes.contains("Replaceable"sv)) {
             attribute_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
 )~~~");
@@ -2250,10 +2250,10 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
         attribute_generator.set("attribute.name", attribute.name);
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
 
-        if (attribute.readonly)
-            attribute_generator.set("attribute.setter_callback", "nullptr");
-        else
+        if (!attribute.readonly || attribute.extended_attributes.contains("Replaceable"sv))
             attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
+        else
+            attribute_generator.set("attribute.setter_callback", "nullptr");
 
         if (attribute.extended_attributes.contains("Unscopable")) {
             attribute_generator.append(R"~~~(
@@ -2394,6 +2394,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 
     for (auto& attribute : interface.attributes) {
         auto attribute_generator = generator.fork();
+        attribute_generator.set("attribute.name", attribute.name);
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
         attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
 
@@ -2476,6 +2477,17 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
             }
 
             attribute_generator.append(R"~~~(
+    return JS::js_undefined();
+}
+)~~~");
+        } else if (attribute.extended_attributes.contains("Replaceable"sv)) {
+            attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
+{
+    auto this_value = vm.this_value();
+    if (!this_value.is_object() || !is<@fully_qualified_name@>(this_value.as_object()))
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@name@");
+    TRY(this_value.as_object().internal_define_own_property("@attribute.name@", JS::PropertyDescriptor { .value = vm.argument(0), .writable = true }));
     return JS::js_undefined();
 }
 )~~~");
