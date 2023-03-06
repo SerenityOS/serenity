@@ -115,9 +115,6 @@ public:
 
     float device_pixel_ratio() const;
 
-    int screen_x() const;
-    int screen_y() const;
-
     int outer_width() const;
     int outer_height() const;
 
@@ -179,6 +176,9 @@ public:
     void scroll(double x, double y);
     void scroll_by(ScrollToOptions);
     void scroll_by(double x, double y);
+
+    i32 screen_x() const;
+    i32 screen_y() const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -247,11 +247,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
-
-    JS_DECLARE_NATIVE_FUNCTION(screen_x_getter);
-    JS_DECLARE_NATIVE_FUNCTION(screen_y_getter);
-    JS_DECLARE_NATIVE_FUNCTION(screen_left_getter);
-    JS_DECLARE_NATIVE_FUNCTION(screen_top_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(outer_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(outer_height_getter);
