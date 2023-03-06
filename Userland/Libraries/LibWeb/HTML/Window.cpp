@@ -1038,14 +1038,12 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm, realm));
     m_location = MUST_OR_THROW_OOM(heap().allocate<Location>(realm, realm));
     m_navigator = MUST_OR_THROW_OOM(heap().allocate<Navigator>(realm, realm));
 
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "crypto", crypto_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "screen", screen_getter, screen_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
@@ -1340,6 +1338,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::p
     return JS::NonnullGCPtr { *m_performance };
 }
 
+// https://w3c.github.io/webcrypto/#dom-windoworworkerglobalscope-crypto
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> Window::crypto()
+{
+    if (!m_crypto)
+        m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm(), realm()));
+    return JS::NonnullGCPtr { *m_crypto };
+}
+
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
@@ -1529,12 +1535,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
     auto* impl = TRY(impl_from(vm));
     TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::crypto_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return &impl->crypto();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::inner_width_getter)
