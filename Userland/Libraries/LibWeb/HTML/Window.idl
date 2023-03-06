@@ -1,5 +1,6 @@
 #import <Crypto/Crypto.idl>
 #import <CSS/MediaQueryList.idl>
+#import <CSS/Screen.idl>
 #import <DOM/Document.idl>
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
@@ -45,6 +46,7 @@ interface Window : EventTarget {
 
     // https://w3c.github.io/csswg-drafts/cssom-view/#extensions-to-the-window-interface
     [NewObject] MediaQueryList matchMedia(CSSOMString query);
+    [SameObject, Replaceable] readonly attribute Screen screen;
 
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute
