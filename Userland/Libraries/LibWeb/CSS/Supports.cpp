@@ -52,13 +52,13 @@ bool Supports::InParens::evaluate() const
 
 bool Supports::Declaration::evaluate() const
 {
-    auto style_property = Parser::Parser({}, declaration).parse_as_supports_condition();
+    auto style_property = parse_css_supports_condition({}, declaration);
     return style_property.has_value();
 }
 
 bool Supports::Selector::evaluate() const
 {
-    auto style_property = Parser::Parser({}, selector).parse_as_selector();
+    auto style_property = parse_selector({}, selector);
     return style_property.has_value();
 }
 

@@ -7455,4 +7455,12 @@ RefPtr<CSS::Supports> parse_css_supports(CSS::Parser::ParsingContext const& cont
     return parser.parse_as_supports();
 }
 
+Optional<CSS::StyleProperty> parse_css_supports_condition(CSS::Parser::ParsingContext const& context, StringView string)
+{
+    if (string.is_empty())
+        return {};
+    CSS::Parser::Parser parser(context, string);
+    return parser.parse_as_supports_condition();
+}
+
 }
