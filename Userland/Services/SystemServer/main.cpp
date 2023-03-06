@@ -513,8 +513,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool user = false;
     Core::ArgsParser args_parser;
-    args_parser.add_option(user, "Run in user-mode", "user", 'u');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(user, "Run in user-mode", "user", 'u'));
+    TRY(args_parser.parse(arguments));
 
     if (!user) {
         TRY(mount_all_filesystems());

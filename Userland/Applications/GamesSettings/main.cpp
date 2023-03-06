@@ -22,8 +22,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView selected_tab;
     Core::ArgsParser args_parser;
-    args_parser.add_option(selected_tab, "Tab, one of 'cards' or 'chess'", "open-tab", 't', "tab");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(selected_tab, "Tab, one of 'cards' or 'chess'", "open-tab", 't', "tab"));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil("/res", "r"));
     // Both of these are used by the GUI::FileSystemModel in CardSettingsWidget.

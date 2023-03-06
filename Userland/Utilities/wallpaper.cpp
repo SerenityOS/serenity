@@ -25,11 +25,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a');
-    args_parser.add_option(show_current, "Show current wallpaper", "show-current", 'c');
-    args_parser.add_option(set_random, "Set random wallpaper", "set-random", 'r');
-    args_parser.add_positional_argument(path, "Wallpaper to set", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(show_all, "Show all wallpapers", "show-all", 'a'));
+    TRY(args_parser.add_option(show_current, "Show current wallpaper", "show-current", 'c'));
+    TRY(args_parser.add_option(set_random, "Set random wallpaper", "set-random", 'r'));
+    TRY(args_parser.add_positional_argument(path, "Wallpaper to set", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

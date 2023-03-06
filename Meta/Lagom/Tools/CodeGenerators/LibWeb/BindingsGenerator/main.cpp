@@ -40,13 +40,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool prototype_implementation_mode = false;
     bool iterator_prototype_header_mode = false;
     bool iterator_prototype_implementation_mode = false;
-    args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
-    args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
-    args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
-    args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R');
-    args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0);
-    args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0);
-    args_parser.add_option(Core::ArgsParser::Option {
+    TRY(args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C'));
+    TRY(args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O'));
+    TRY(args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P'));
+    TRY(args_parser.add_option(prototype_implementation_mode, "Generate the prototype .cpp file", "prototype-implementation", 'R'));
+    TRY(args_parser.add_option(iterator_prototype_header_mode, "Generate the iterator prototype .h file", "iterator-prototype-header", 0));
+    TRY(args_parser.add_option(iterator_prototype_implementation_mode, "Generate the iterator prototype .cpp file", "iterator-prototype-implementation", 0));
+    TRY(args_parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Add a header search path passed to the compiler",
         .long_name = "header-include-path",
@@ -56,13 +56,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             s_header_search_paths.append(s);
             return true;
         },
-    });
-    args_parser.add_option(output_path, "Path to output generated file into", "output-path", 'o', "output-path");
-    args_parser.add_option(depfile_path, "Path to write dependency file to", "depfile", 'd', "depfile-path");
-    args_parser.add_option(depfile_target, "Name of target in the depfile (default: output path)", "depfile-target", 't', "target");
-    args_parser.add_positional_argument(path, "IDL file", "idl-file");
-    args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    }));
+    TRY(args_parser.add_option(output_path, "Path to output generated file into", "output-path", 'o', "output-path"));
+    TRY(args_parser.add_option(depfile_path, "Path to write dependency file to", "depfile", 'd', "depfile-path"));
+    TRY(args_parser.add_option(depfile_target, "Name of target in the depfile (default: output path)", "depfile-target", 't', "target"));
+    TRY(args_parser.add_positional_argument(path, "IDL file", "idl-file"));
+    TRY(args_parser.add_positional_argument(import_base_path, "Import base path", "import-base-path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
 

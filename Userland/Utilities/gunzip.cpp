@@ -31,10 +31,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool write_to_stdout { false };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
-    args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
-    args_parser.add_positional_argument(filenames, "File to decompress", "FILE");
-    args_parser.parse(args);
+    TRY(args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k'));
+    TRY(args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c'));
+    TRY(args_parser.add_positional_argument(filenames, "File to decompress", "FILE"));
+    TRY(args_parser.parse(args));
 
     if (write_to_stdout)
         keep_input_files = true;

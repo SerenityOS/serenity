@@ -106,11 +106,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool should_interpret_backslash_escapes = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(no_trailing_newline, "Do not output a trailing newline", nullptr, 'n');
-    args_parser.add_option(should_interpret_backslash_escapes, "Interpret backslash escapes", nullptr, 'e');
-    args_parser.add_positional_argument(text, "Text to print out", "text", Core::ArgsParser::Required::No);
+    TRY(args_parser.add_option(no_trailing_newline, "Do not output a trailing newline", nullptr, 'n'));
+    TRY(args_parser.add_option(should_interpret_backslash_escapes, "Interpret backslash escapes", nullptr, 'e'));
+    TRY(args_parser.add_positional_argument(text, "Text to print out", "text", Core::ArgsParser::Required::No));
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     if (text.is_empty()) {
         if (!no_trailing_newline)

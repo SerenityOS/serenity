@@ -109,10 +109,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     StringView command_input;
     Vector<StringView> filepaths;
 
-    args_parser.add_positional_argument(command_input, "Command", "command_input", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(filepaths, "File", "file", Core::ArgsParser::Required::No);
+    TRY(args_parser.add_positional_argument(command_input, "Command", "command_input", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_positional_argument(filepaths, "File", "file", Core::ArgsParser::Required::No));
 
-    args_parser.parse(args);
+    TRY(args_parser.parse(args));
 
     auto command = TRY(parse_command(command_input));
 

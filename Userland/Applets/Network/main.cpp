@@ -175,9 +175,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool display_notifications = false;
     StringView name;
     Core::ArgsParser args_parser;
-    args_parser.add_option(display_notifications, "Display notifications", "display-notifications", 'd');
-    args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(display_notifications, "Display notifications", "display-notifications", 'd'));
+    TRY(args_parser.add_option(name, "Applet name used by WindowServer.ini to set the applet order", "name", 'n', "name"));
+    TRY(args_parser.parse(arguments));
 
     if (name.is_empty())
         name = "Network"sv;

@@ -721,13 +721,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::EventLoop event_loop;
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
-    args_parser.add_option(take_screenshot_after, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
-    args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
-    args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url");
-    args_parser.add_option(ca_certs_path, "The bundled ca certificates file", "certs", 'c', "ca-certs-path");
-    args_parser.add_option(webdriver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
-    args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(take_screenshot_after, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n"));
+    TRY(args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path"));
+    TRY(args_parser.add_option(error_page_url, "URL for the error page (defaults to file:///res/html/error.html)", "error-page", 'e', "error-page-url"));
+    TRY(args_parser.add_option(ca_certs_path, "The bundled ca certificates file", "certs", 'c', "ca-certs-path"));
+    TRY(args_parser.add_option(webdriver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path"));
+    TRY(args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::FontPlugin::install(*new Web::Platform::FontPluginSerenity);

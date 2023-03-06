@@ -20,11 +20,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool decompress { false };
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k');
-    args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c');
-    args_parser.add_option(decompress, "Decompress", "decompress", 'd');
-    args_parser.add_positional_argument(filenames, "Files", "FILES");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(keep_input_files, "Keep (don't delete) input files", "keep", 'k'));
+    TRY(args_parser.add_option(write_to_stdout, "Write to stdout, keep original files unchanged", "stdout", 'c'));
+    TRY(args_parser.add_option(decompress, "Decompress", "decompress", 'd'));
+    TRY(args_parser.add_positional_argument(filenames, "Files", "FILES"));
+    TRY(args_parser.parse(arguments));
 
     if (write_to_stdout)
         keep_input_files = true;

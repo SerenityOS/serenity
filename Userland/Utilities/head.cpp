@@ -28,12 +28,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print the beginning ('head') of a file.");
-    args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number");
-    args_parser.add_option(byte_count, "Number of bytes to print", "bytes", 'c', "number");
-    args_parser.add_option(never_print_filenames, "Never print filenames", "quiet", 'q');
-    args_parser.add_option(always_print_filenames, "Always print filenames", "verbose", 'v');
-    args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(args);
+    TRY(args_parser.add_option(line_count, "Number of lines to print (default 10)", "lines", 'n', "number"));
+    TRY(args_parser.add_option(byte_count, "Number of bytes to print", "bytes", 'c', "number"));
+    TRY(args_parser.add_option(never_print_filenames, "Never print filenames", "quiet", 'q'));
+    TRY(args_parser.add_option(always_print_filenames, "Always print filenames", "verbose", 'v'));
+    TRY(args_parser.add_positional_argument(files, "File to process", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(args));
 
     if (line_count == -1 && byte_count == -1) {
         line_count = 10;

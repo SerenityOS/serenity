@@ -41,16 +41,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString username;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path");
-    args_parser.add_option(uid, "User ID (uid) for the new user", "uid", 'u', "uid");
-    args_parser.add_option(gid, "Group ID (gid) for the new user", "gid", 'g', "gid");
-    args_parser.add_option(password, "Encrypted password of the new user", "password", 'p', "password");
-    args_parser.add_option(create_home_dir, "Create home directory if it does not exist", "create-home", 'm');
-    args_parser.add_option(shell, "Path to the default shell binary for the new user", "shell", 's', "path-to-shell");
-    args_parser.add_option(gecos, "GECOS name of the new user", "gecos", 'n', "general-info");
-    args_parser.add_positional_argument(username, "Login user identity (username)", "login");
+    TRY(args_parser.add_option(home_path, "Home directory for the new user", "home-dir", 'd', "path"));
+    TRY(args_parser.add_option(uid, "User ID (uid) for the new user", "uid", 'u', "uid"));
+    TRY(args_parser.add_option(gid, "Group ID (gid) for the new user", "gid", 'g', "gid"));
+    TRY(args_parser.add_option(password, "Encrypted password of the new user", "password", 'p', "password"));
+    TRY(args_parser.add_option(create_home_dir, "Create home directory if it does not exist", "create-home", 'm'));
+    TRY(args_parser.add_option(shell, "Path to the default shell binary for the new user", "shell", 's', "path-to-shell"));
+    TRY(args_parser.add_option(gecos, "GECOS name of the new user", "gecos", 'n', "general-info"));
+    TRY(args_parser.add_positional_argument(username, "Login user identity (username)", "login"));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     // Let's run a quick sanity check on username
     if (username.find_any_of("\\/!@#$%^&*()~+=`:\n"sv, DeprecatedString::SearchDirection::Forward).has_value()) {

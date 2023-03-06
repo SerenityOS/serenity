@@ -28,11 +28,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     int signal = SIGTERM;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
-    args_parser.add_option(echo, "Display what is killed", "echo", 'e');
-    args_parser.add_option(signal, "Signal number to send", "signal", 's', "number");
-    args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
-    args_parser.parse(args);
+    TRY(args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i'));
+    TRY(args_parser.add_option(echo, "Display what is killed", "echo", 'e'));
+    TRY(args_parser.add_option(signal, "Signal number to send", "signal", 's', "number"));
+    TRY(args_parser.add_positional_argument(pattern, "Process name to search for", "process-name"));
+    TRY(args_parser.parse(args));
 
     auto all_processes = TRY(Core::ProcessStatisticsReader::get_all());
 

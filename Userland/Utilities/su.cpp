@@ -22,11 +22,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool simulate_login = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(first_positional, "See --login", "-", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(second_positional, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No);
-    args_parser.add_option(command, "Command to execute", "command", 'c', "command");
-    args_parser.add_option(simulate_login, "Simulate login", "login", 'l');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(first_positional, "See --login", "-", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(second_positional, "User to switch to (defaults to user with UID 0)", "user", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(command, "Command to execute", "command", 'c', "command"));
+    TRY(args_parser.add_option(simulate_login, "Simulate login", "login", 'l'));
+    TRY(args_parser.parse(arguments));
 
     StringView user = first_positional;
 

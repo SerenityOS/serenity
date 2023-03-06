@@ -20,9 +20,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView group_name;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(gid, "Group ID (gid) for the new group", "gid", 'g', "gid");
-    args_parser.add_positional_argument(group_name, "Name of the group (groupname)", "group");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(gid, "Group ID (gid) for the new group", "gid", 'g', "gid"));
+    TRY(args_parser.add_positional_argument(group_name, "Name of the group (groupname)", "group"));
+    TRY(args_parser.parse(arguments));
 
     auto group = Core::Group { group_name, gid };
     TRY(Core::Group::add_group(group));

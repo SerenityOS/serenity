@@ -19,8 +19,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString filename;
 
     Core::ArgsParser args;
-    args.add_positional_argument(filename, "File to process", "file", Core::ArgsParser::Required::Yes);
-    args.parse(arguments);
+    TRY(args.add_positional_argument(filename, "File to process", "file", Core::ArgsParser::Required::Yes));
+    TRY(args.parse(arguments));
 
     // FIXME: Figure out how to do this sanely from stdin
     auto file = TRY(Core::MappedFile::map(filename));

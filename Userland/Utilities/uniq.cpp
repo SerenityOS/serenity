@@ -62,15 +62,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     unsigned skip_fields = 0;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(duplicates_only, "Only print duplicated lines", "repeated", 'd');
-    args_parser.add_option(unique_only, "Only print unique lines (default)", "unique", 'u');
-    args_parser.add_option(ignore_case, "Ignore case when comparing lines", "ignore-case", 'i');
-    args_parser.add_option(print_count, "Prefix each line by its number of occurrences", "count", 'c');
-    args_parser.add_option(skip_chars, "Skip N chars", "skip-chars", 's', "N");
-    args_parser.add_option(skip_fields, "Skip N fields", "skip-fields", 'f', "N");
-    args_parser.add_positional_argument(inpath, "Input file", "input", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(outpath, "Output file", "output", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(duplicates_only, "Only print duplicated lines", "repeated", 'd'));
+    TRY(args_parser.add_option(unique_only, "Only print unique lines (default)", "unique", 'u'));
+    TRY(args_parser.add_option(ignore_case, "Ignore case when comparing lines", "ignore-case", 'i'));
+    TRY(args_parser.add_option(print_count, "Prefix each line by its number of occurrences", "count", 'c'));
+    TRY(args_parser.add_option(skip_chars, "Skip N chars", "skip-chars", 's', "N"));
+    TRY(args_parser.add_option(skip_fields, "Skip N fields", "skip-fields", 'f', "N"));
+    TRY(args_parser.add_positional_argument(inpath, "Input file", "input", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(outpath, "Output file", "output", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (!unique_only && !duplicates_only) {
         unique_only = true;

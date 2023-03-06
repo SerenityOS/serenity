@@ -145,9 +145,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView filename;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(type, "Type of fuzzing target to run (use \"list\" to list all existing)", "target-kind");
-    args_parser.add_positional_argument(filename, "Input file", "filename", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(type, "Type of fuzzing target to run (use \"list\" to list all existing)", "target-kind"));
+    TRY(args_parser.add_positional_argument(filename, "Input file", "filename", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (arguments.strings.size() <= 2 && arguments.strings[1] != "list"sv) {
         args_parser.print_usage_terminal(stderr, arguments.strings[0]);

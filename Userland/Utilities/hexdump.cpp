@@ -31,11 +31,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Optional<size_t> max_bytes;
     Optional<size_t> seek_to;
 
-    args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
-    args_parser.add_option(verbose, "Display all input data", "verbose", 'v');
-    args_parser.add_option(max_bytes, "Truncate to a fixed number of bytes", nullptr, 'n', "bytes");
-    args_parser.add_option(seek_to, "Seek to a byte offset", "seek", 's', "offset");
-    args_parser.parse(args);
+    TRY(args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(verbose, "Display all input data", "verbose", 'v'));
+    TRY(args_parser.add_option(max_bytes, "Truncate to a fixed number of bytes", nullptr, 'n', "bytes"));
+    TRY(args_parser.add_option(seek_to, "Seek to a byte offset", "seek", 's', "offset"));
+    TRY(args_parser.parse(args));
 
     auto file = TRY(Core::File::open_file_or_standard_stream(path, Core::File::OpenMode::Read));
     if (seek_to.has_value())

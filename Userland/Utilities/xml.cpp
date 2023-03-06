@@ -509,11 +509,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser parser;
     parser.set_general_help("Parse and dump XML files");
-    parser.add_option(g_color, "Syntax highlight the output", "color", 'c');
-    parser.add_option(g_only_contents, "Only display markup and text", "only-contents", 'o');
-    parser.add_option(run_tests, "Run tests", "run-tests", 't');
-    parser.add_positional_argument(filename, "File to read from", "file");
-    parser.parse(arguments);
+    TRY(parser.add_option(g_color, "Syntax highlight the output", "color", 'c'));
+    TRY(parser.add_option(g_only_contents, "Only display markup and text", "only-contents", 'o'));
+    TRY(parser.add_option(run_tests, "Run tests", "run-tests", 't'));
+    TRY(parser.add_positional_argument(filename, "File to read from", "file"));
+    TRY(parser.parse(arguments));
 
     s_path = Core::DeprecatedFile::real_path_for(filename);
     auto file = TRY(Core::File::open(s_path, Core::File::OpenMode::Read));

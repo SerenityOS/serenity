@@ -51,11 +51,11 @@ int main(int argc, char** argv)
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help(
         "Access out of bounds memory; a great testcase for UserEmulator.");
-    args_parser.add_option(do_static, "Use a static region instead of an mmap'ed region. Fixes 'size' to 10*PAGESIZE = 40960. (Default: false)", "static", 'S');
-    args_parser.add_option(size, "The size of the region to allocate. (Default: 10*PAGESIZE = 40960)", "size", 's', "size");
-    args_parser.add_option(offset, "The signed offset at which to start writing. (Default: 10*PAGESIZE-1 = 40959)", "offset", 'o', "offset");
-    args_parser.add_option(bits, "Amount of bits to write in a single instruction. (Default: 16)", "bits", 'b', "bits");
-    args_parser.parse(argc, argv);
+    TRY(args_parser.add_option(do_static, "Use a static region instead of an mmap'ed region. Fixes 'size' to 10*PAGESIZE = 40960. (Default: false)", "static", 'S'));
+    TRY(args_parser.add_option(size, "The size of the region to allocate. (Default: 10*PAGESIZE = 40960)", "size", 's', "size"));
+    TRY(args_parser.add_option(offset, "The signed offset at which to start writing. (Default: 10*PAGESIZE-1 = 40959)", "offset", 'o', "offset"));
+    TRY(args_parser.add_option(bits, "Amount of bits to write in a single instruction. (Default: 16)", "bits", 'b', "bits"));
+    TRY(args_parser.parse(argc, argv));
 
     if (do_static)
         size = 10 * PAGE_SIZE;

@@ -17,8 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     StringView hostname {};
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(hostname, "Hostname to set", "hostname", Core::ArgsParser::Required::No);
-    args_parser.parse(args);
+    TRY(args_parser.add_positional_argument(hostname, "Hostname to set", "hostname", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(args));
 
     if (hostname.is_empty()) {
         outln("{}", TRY(Core::System::gethostname()));

@@ -18,11 +18,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Change the screen resolution.");
-    args_parser.add_option(screen, "Screen", "screen", 's', "screen");
-    args_parser.add_positional_argument(width, "Width", "width");
-    args_parser.add_positional_argument(height, "Height", "height");
-    args_parser.add_positional_argument(scale, "Scale Factor", "scale", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(screen, "Screen", "screen", 's', "screen"));
+    TRY(args_parser.add_positional_argument(width, "Width", "width"));
+    TRY(args_parser.add_positional_argument(height, "Height", "height"));
+    TRY(args_parser.add_positional_argument(scale, "Scale Factor", "scale", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     // A Core::EventLoop is all we need, but ConnectionToWindowServer needs a full Application object.
     char* dummy_argv[] = { arguments.argv[0] };

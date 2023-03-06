@@ -18,10 +18,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView title {};
     StringView message {};
     StringView icon_path {};
-    args_parser.add_positional_argument(title, "Title of the notification", "title");
-    args_parser.add_positional_argument(message, "Message to display in the notification", "message");
-    args_parser.add_positional_argument(icon_path, "Path of icon to display in the notification", "icon-path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(title, "Title of the notification", "title"));
+    TRY(args_parser.add_positional_argument(message, "Message to display in the notification", "message"));
+    TRY(args_parser.add_positional_argument(icon_path, "Path of icon to display in the notification", "icon-path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto notification = TRY(GUI::Notification::try_create());
     notification->set_text(message);

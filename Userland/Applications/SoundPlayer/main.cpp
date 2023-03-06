@@ -32,8 +32,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView file_path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(file_path, "Path to audio file to play", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(file_path, "Path to audio file to play", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());

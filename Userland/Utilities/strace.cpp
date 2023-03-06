@@ -828,13 +828,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.set_stop_on_first_non_option(true);
     parser.set_general_help(
         "Trace all syscalls and their result.");
-    parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
-    parser.add_option(output_filename, "Filename to write output to", "output", 'o', "output");
-    parser.add_option(exclude_syscalls_option, "Comma-delimited syscalls to exclude", "exclude", 'e', "exclude");
-    parser.add_option(include_syscalls_option, "Comma-delimited syscalls to include", "include", 'i', "include");
-    parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No);
+    TRY(parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid"));
+    TRY(parser.add_option(output_filename, "Filename to write output to", "output", 'o', "output"));
+    TRY(parser.add_option(exclude_syscalls_option, "Comma-delimited syscalls to exclude", "exclude", 'e', "exclude"));
+    TRY(parser.add_option(include_syscalls_option, "Comma-delimited syscalls to include", "include", 'i', "include"));
+    TRY(parser.add_positional_argument(child_argv, "Arguments to exec", "argument", Core::ArgsParser::Required::No));
 
-    parser.parse(arguments);
+    TRY(parser.parse(arguments));
 
     auto trace_file = output_filename.is_empty()
         ? TRY(Core::File::standard_error())

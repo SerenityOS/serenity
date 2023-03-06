@@ -31,12 +31,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u');
-    args_parser.add_option(flag_print_gid, "Print GID", nullptr, 'g');
-    args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G');
-    args_parser.add_option(flag_print_name, "Print name", nullptr, 'n');
-    args_parser.add_positional_argument(user_str, "User name/UID to query", "USER", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_print_uid, "Print UID", nullptr, 'u'));
+    TRY(args_parser.add_option(flag_print_gid, "Print GID", nullptr, 'g'));
+    TRY(args_parser.add_option(flag_print_gid_all, "Print all GIDs", nullptr, 'G'));
+    TRY(args_parser.add_option(flag_print_name, "Print name", nullptr, 'n'));
+    TRY(args_parser.add_positional_argument(user_str, "User name/UID to query", "USER", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (flag_print_name && !(flag_print_uid || flag_print_gid || flag_print_gid_all)) {
         warnln("cannot print only names or real IDs in default format");

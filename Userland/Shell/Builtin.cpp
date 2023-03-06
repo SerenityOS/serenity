@@ -37,10 +37,10 @@ ErrorOr<int> Shell::builtin_dump(Main::Arguments arguments)
     StringView source;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(source, "Shell code to parse and dump", "source");
-    parser.add_option(posix, "Use the POSIX parser", "posix", 'p');
+    TRY(parser.add_positional_argument(source, "Shell code to parse and dump", "source"));
+    TRY(parser.add_option(posix, "Use the POSIX parser", "posix", 'p'));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     TRY((posix ? Posix::Parser { source }.parse() : Parser { source }.parse())->dump(0));
@@ -88,12 +88,12 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
     bool do_print_only_type { false };
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(values_to_lookup, "List of shell builtins, aliases or executables", "arguments");
-    parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p');
-    parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's');
-    parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w');
+    TRY(parser.add_positional_argument(values_to_lookup, "List of shell builtins, aliases or executables", "arguments"));
+    TRY(parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p'));
+    TRY(parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's'));
+    TRY(parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w'));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     auto const lookup_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
@@ -152,9 +152,9 @@ ErrorOr<int> Shell::builtin_alias(Main::Arguments arguments)
     Vector<DeprecatedString> aliases;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(aliases, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(aliases, "List of name[=values]'s", "name[=value]", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (aliases.is_empty()) {
@@ -189,10 +189,10 @@ ErrorOr<int> Shell::builtin_unalias(Main::Arguments arguments)
 
     Core::ArgsParser parser;
     parser.set_general_help("Remove alias from the list of aliases");
-    parser.add_option(remove_all, "Remove all aliases", nullptr, 'a');
-    parser.add_positional_argument(aliases, "List of aliases to remove", "alias", Core::ArgsParser::Required::Yes);
+    TRY(parser.add_option(remove_all, "Remove all aliases", nullptr, 'a'));
+    TRY(parser.add_positional_argument(aliases, "List of aliases to remove", "alias", Core::ArgsParser::Required::Yes));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (remove_all) {
@@ -221,7 +221,7 @@ ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
     bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job ID or Jobspec to run in background",
         .name = "job-id",
         .min_values = 0,
@@ -242,9 +242,9 @@ ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -286,10 +286,10 @@ ErrorOr<int> Shell::builtin_type(Main::Arguments arguments)
 
     Core::ArgsParser parser;
     parser.set_general_help("Display information about commands.");
-    parser.add_positional_argument(commands, "Command(s) to list info about", "command");
-    parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f');
+    TRY(parser.add_positional_argument(commands, "Command(s) to list info about", "command"));
+    TRY(parser.add_option(dont_show_function_source, "Do not show functions source.", "no-fn-source", 'f'));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     bool something_not_found = false;
@@ -353,9 +353,9 @@ ErrorOr<int> Shell::builtin_cd(Main::Arguments arguments)
     StringView arg_path;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(arg_path, "Path to change to", "path", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     DeprecatedString new_path;
@@ -407,9 +407,9 @@ ErrorOr<int> Shell::builtin_cdh(Main::Arguments arguments)
     int index = -1;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(index, "Index of the cd history entry (leave out for a list)", "index", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (index == -1) {
@@ -446,12 +446,12 @@ ErrorOr<int> Shell::builtin_dirs(Main::Arguments arguments)
     Vector<DeprecatedString> paths;
 
     Core::ArgsParser parser;
-    parser.add_option(clear, "Clear the directory stack", "clear", 'c');
-    parser.add_option(print, "Print directory entries one per line", "print", 'p');
-    parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v');
-    parser.add_positional_argument(paths, "Extra paths to put on the stack", "path", Core::ArgsParser::Required::No);
+    TRY(parser.add_option(clear, "Clear the directory stack", "clear", 'c'));
+    TRY(parser.add_option(print, "Print directory entries one per line", "print", 'p'));
+    TRY(parser.add_option(number_when_printing, "Number the directories in the stack when printing", "number", 'v'));
+    TRY(parser.add_positional_argument(paths, "Extra paths to put on the stack", "path", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     // -v implies -p
@@ -502,8 +502,8 @@ ErrorOr<int> Shell::builtin_exit(Main::Arguments arguments)
 {
     int exit_code = 0;
     Core::ArgsParser parser;
-    parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No);
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    TRY(parser.add_positional_argument(exit_code, "Exit code", "code", Core::ArgsParser::Required::No));
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (m_is_interactive) {
@@ -528,9 +528,9 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
     Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(vars, "List of variable[=value]'s", "values", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (vars.is_empty()) {
@@ -573,9 +573,9 @@ ErrorOr<int> Shell::builtin_glob(Main::Arguments arguments)
 {
     Vector<DeprecatedString> globs;
     Core::ArgsParser parser;
-    parser.add_positional_argument(globs, "Globs to resolve", "glob");
+    TRY(parser.add_positional_argument(globs, "Globs to resolve", "glob"));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     for (auto& glob : globs) {
@@ -592,7 +592,7 @@ ErrorOr<int> Shell::builtin_fg(Main::Arguments arguments)
     bool is_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job ID or Jobspec to bring to foreground",
         .name = "job-id",
         .min_values = 0,
@@ -613,9 +613,9 @@ ErrorOr<int> Shell::builtin_fg(Main::Arguments arguments)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (job_id == -1 && !jobs.is_empty())
@@ -663,7 +663,7 @@ ErrorOr<int> Shell::builtin_disown(Main::Arguments arguments)
     Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job IDs or Jobspecs to disown",
         .name = "job-id",
         .min_values = 0,
@@ -684,9 +684,9 @@ ErrorOr<int> Shell::builtin_disown(Main::Arguments arguments)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (job_ids.is_empty()) {
@@ -738,10 +738,10 @@ ErrorOr<int> Shell::builtin_jobs(Main::Arguments arguments)
     bool list = false, show_pid = false;
 
     Core::ArgsParser parser;
-    parser.add_option(list, "List all information about jobs", "list", 'l');
-    parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p');
+    TRY(parser.add_option(list, "List all information about jobs", "list", 'l'));
+    TRY(parser.add_option(show_pid, "Display the PID of the jobs", "pid", 'p'));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     Job::PrintStatusMode mode = Job::PrintStatusMode::Basic;
@@ -769,9 +769,9 @@ ErrorOr<int> Shell::builtin_popd(Main::Arguments arguments)
 
     bool should_not_switch = false;
     Core::ArgsParser parser;
-    parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n');
+    TRY(parser.add_option(should_not_switch, "Do not switch dirs", "no-switch", 'n'));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     auto popped_path = directory_stack.take_last();
@@ -893,14 +893,14 @@ ErrorOr<int> Shell::builtin_setopt(Main::Arguments arguments)
 #define __ENUMERATE_SHELL_OPTION(name, default_, description)     \
     bool name = false;                                            \
     bool not_##name = false;                                      \
-    parser.add_option(name, "Enable: " description, #name, '\0'); \
-    parser.add_option(not_##name, "Disable: " description, "no_" #name, '\0');
+    TRY(parser.add_option(name, "Enable: " description, #name, '\0')); \
+    TRY(parser.add_option(not_##name, "Disable: " description, "no_" #name, '\0'));
 
     ENUMERATE_SHELL_OPTIONS();
 
 #undef __ENUMERATE_SHELL_OPTION
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
 #define __ENUMERATE_SHELL_OPTION(name, default_, description) \
@@ -921,9 +921,9 @@ ErrorOr<int> Shell::builtin_shift(Main::Arguments arguments)
     int count = 1;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(count, "Shift count", "count", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (count < 1)
@@ -956,10 +956,10 @@ ErrorOr<int> Shell::builtin_source(Main::Arguments arguments)
     Vector<StringView> args;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(file_to_source, "File to read commands from", "path");
-    parser.add_positional_argument(args, "ARGV for the sourced file", "args", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(file_to_source, "File to read commands from", "path"));
+    TRY(parser.add_positional_argument(args, "ARGV for the sourced file", "args", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments))
+    if (!TRY(parser.parse(arguments)))
         return 1;
 
     auto previous_argv = TRY(lookup_local_variable("ARGV"sv));
@@ -990,11 +990,11 @@ ErrorOr<int> Shell::builtin_time(Main::Arguments arguments)
     int number_of_iterations = 1;
 
     Core::ArgsParser parser;
-    parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations");
+    TRY(parser.add_option(number_of_iterations, "Number of iterations", "iterations", 'n', "iterations"));
     parser.set_stop_on_first_non_option(true);
-    parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
+    TRY(parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (number_of_iterations < 1)
@@ -1047,9 +1047,9 @@ ErrorOr<int> Shell::builtin_umask(Main::Arguments arguments)
     StringView mask_text;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No);
+    TRY(parser.add_positional_argument(mask_text, "New mask (omit to get current mask)", "octal-mask", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     if (mask_text.is_empty()) {
@@ -1089,7 +1089,7 @@ ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
     Vector<bool> id_is_pid;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(Core::ArgsParser::Arg {
+    TRY(parser.add_positional_argument(Core::ArgsParser::Arg {
         .help_string = "Job IDs or Jobspecs to wait for",
         .name = "job-id",
         .min_values = 0,
@@ -1110,9 +1110,9 @@ ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
             }
 
             return false;
-        } });
+        } }));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     Vector<NonnullRefPtr<Job>> jobs_to_wait_for;
@@ -1145,9 +1145,9 @@ ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
     Vector<DeprecatedString> vars;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
+    TRY(parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage)))
         return 1;
 
     bool did_touch_path = false;
@@ -1174,9 +1174,9 @@ ErrorOr<int> Shell::builtin_not(Main::Arguments arguments)
 
     Core::ArgsParser parser;
     parser.set_stop_on_first_non_option(true);
-    parser.add_positional_argument(args, "Command to run followed by its arguments", "string");
+    TRY(parser.add_positional_argument(args, "Command to run followed by its arguments", "string"));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore)))
         return 1;
 
     AST::Command command;
@@ -1390,7 +1390,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
                     return false;
                 };
-                user_parser.add_option(move(option));
+                user_parser.add_option(move(option)).release_value_but_fixme_should_propagate_errors();
                 type = Type::String;
                 treat_arg_as_list = false;
                 return true;
@@ -1412,7 +1412,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
                     return false;
                 };
-                user_parser.add_positional_argument(move(arg));
+                user_parser.add_positional_argument(move(arg)).release_value_but_fixme_should_propagate_errors();
                 type = Type::String;
                 treat_arg_as_list = false;
                 return true;
@@ -1422,7 +1422,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             });
     };
 
-    parser.add_option(Core::ArgsParser::Option {
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Stop processing descriptors after a non-argument parameter is seen",
         .long_name = "stop-on-first-non-option",
@@ -1430,8 +1430,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             user_parser.set_stop_on_first_non_option(true);
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the general help string for the parser",
         .long_name = "general-help",
@@ -1441,8 +1441,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             user_parser.set_general_help(value.characters_without_null_termination());
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing an option",
         .long_name = "add-option",
@@ -1460,8 +1460,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Accept multiple of the current option being given",
         .long_name = "list",
@@ -1473,8 +1473,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             treat_arg_as_list = true;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Define the type of the option or argument being described",
         .long_name = "type",
@@ -1516,8 +1516,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             }
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the help string of the option or argument being defined",
         .long_name = "help-string",
@@ -1534,8 +1534,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     return true;
                 });
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the long name of the option being defined",
         .long_name = "long-name",
@@ -1554,8 +1554,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             option->long_name = value.characters_without_null_termination();
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the short name of the option being defined",
         .long_name = "short-name",
@@ -1577,8 +1577,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             option->short_name = value[0];
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the value name of the option being defined",
         .long_name = "value-name",
@@ -1614,8 +1614,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     return true;
                 });
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Start describing a positional argument",
         .long_name = "add-positional-argument",
@@ -1633,8 +1633,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the minimum required number of positional descriptors for the argument being described",
         .long_name = "min",
@@ -1661,8 +1661,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the maximum required number of positional descriptors for the argument being described",
         .long_name = "max",
@@ -1689,8 +1689,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
             return true;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::None,
         .help_string = "Mark the positional argument being described as required (shorthand for --min 1)",
         .long_name = "required",
@@ -1706,16 +1706,16 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             treat_arg_as_list = arg->max_values > 1 || arg->min_values < 1;
             return true;
         },
-    });
-    parser.add_positional_argument(descriptors, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No);
+    }));
+    TRY(parser.add_positional_argument(descriptors, "Arguments to parse via the described ArgsParser configuration", "arg", Core::ArgsParser::Required::No));
 
-    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
+    if (!TRY(parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore)))
         return 2;
 
     if (!commit())
         return 2;
 
-    if (!user_parser.parse(descriptors, Core::ArgsParser::FailureBehavior::Ignore))
+    if (!TRY(user_parser.parse(descriptors, Core::ArgsParser::FailureBehavior::Ignore)))
         return 1;
 
     return 0;

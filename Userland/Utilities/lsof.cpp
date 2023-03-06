@@ -126,12 +126,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     else {
         Core::ArgsParser parser;
         parser.set_general_help("List open files of a processes. This can mean actual files in the file system, sockets, pipes, etc.");
-        parser.add_option(arg_pid, "Select by PID", nullptr, 'p', "pid");
-        parser.add_option(arg_fd, "Select by file descriptor", nullptr, 'd', "fd");
-        parser.add_option(arg_uid, "Select by login/UID", nullptr, 'u', "login/UID");
-        parser.add_option(arg_pgid, "Select by process group ID", nullptr, 'g', "PGID");
-        parser.add_positional_argument(arg_filename, "Filename", "filename", Core::ArgsParser::Required::No);
-        parser.parse(arguments);
+        TRY(parser.add_option(arg_pid, "Select by PID", nullptr, 'p', "pid"));
+        TRY(parser.add_option(arg_fd, "Select by file descriptor", nullptr, 'd', "fd"));
+        TRY(parser.add_option(arg_uid, "Select by login/UID", nullptr, 'u', "login/UID"));
+        TRY(parser.add_option(arg_pgid, "Select by process group ID", nullptr, 'g', "PGID"));
+        TRY(parser.add_positional_argument(arg_filename, "Filename", "filename", Core::ArgsParser::Required::No));
+        TRY(parser.parse(arguments));
     }
     {
         // try convert UID to int

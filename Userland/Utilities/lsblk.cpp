@@ -23,7 +23,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("List Storage (Block) devices.");
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     Core::DirIterator di("/sys/devices/storage/", Core::DirIterator::SkipParentAndBaseDir);
     if (di.has_error()) {

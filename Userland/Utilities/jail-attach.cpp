@@ -17,11 +17,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     bool preserve_env = false;
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E');
-    args_parser.add_option(new_jail_name, "Create a new jail with a name", "jail-name", 'n', "New jail name");
-    args_parser.add_option(existing_jail_index, "Use an existing jail index instead of creating new jail", "jail-index", 'i', "Existing jail index");
-    args_parser.add_positional_argument(command, "Command to execute", "command");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E'));
+    TRY(args_parser.add_option(new_jail_name, "Create a new jail with a name", "jail-name", 'n', "New jail name"));
+    TRY(args_parser.add_option(existing_jail_index, "Use an existing jail index instead of creating new jail", "jail-index", 'i', "Existing jail index"));
+    TRY(args_parser.add_positional_argument(command, "Command to execute", "command"));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::pledge("stdio rpath exec id jail tty"));
 

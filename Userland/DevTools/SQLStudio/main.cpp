@@ -18,8 +18,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView file_to_open;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(file_to_open, "Path to SQL script or DB", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(file_to_open, "Path to SQL script or DB", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

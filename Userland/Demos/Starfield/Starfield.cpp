@@ -156,10 +156,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The classic starfield screensaver.");
-    args_parser.add_option(star_count, "Number of stars to draw (default = 1000)", "stars", 'c', "number");
-    args_parser.add_option(refresh_rate, "Refresh rate (default = 16)", "rate", 'r', "milliseconds");
-    args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(star_count, "Number of stars to draw (default = 1000)", "stars", 'c', "number"));
+    TRY(args_parser.add_option(refresh_rate, "Refresh rate (default = 16)", "rate", 'r', "milliseconds"));
+    TRY(args_parser.add_option(speed, "Speed (default = 1)", "speed", 's', "number"));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

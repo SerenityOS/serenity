@@ -93,10 +93,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(append, "Append, don't overwrite", "append", 'a');
-    args_parser.add_option(ignore_interrupts, "Ignore SIGINT", "ignore-interrupts", 'i');
-    args_parser.add_positional_argument(paths, "Files to copy stdin to", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(append, "Append, don't overwrite", "append", 'a'));
+    TRY(args_parser.add_option(ignore_interrupts, "Ignore SIGINT", "ignore-interrupts", 'i'));
+    TRY(args_parser.add_positional_argument(paths, "Files to copy stdin to", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (ignore_interrupts)
         TRY(Core::System::signal(SIGINT, int_handler));

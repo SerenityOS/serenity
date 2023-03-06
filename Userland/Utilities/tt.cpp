@@ -30,8 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.set_general_help(
         "Exercise error-handling and edge-case paths of the execution environment "
         "(i.e., Kernel or UE) by doing unusual thread-related things.");
-    args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, k = kill, nothing = join race)", "test-name", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(test_name, "Test to run (m = mutex, d = detached, p = priority, s = stack size, t = simple thread test, x = set stack, k = kill, nothing = join race)", "test-name", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (test_name[0] == 'm')
         return mutex_test();

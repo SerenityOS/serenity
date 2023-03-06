@@ -17,9 +17,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool purge_all_clean_inode = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(purge_all_volatile, "Mode PURGE_ALL_VOLATILE", nullptr, 'v');
-    args_parser.add_option(purge_all_clean_inode, "Mode PURGE_ALL_CLEAN_INODE", nullptr, 'c');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(purge_all_volatile, "Mode PURGE_ALL_VOLATILE", nullptr, 'v'));
+    TRY(args_parser.add_option(purge_all_clean_inode, "Mode PURGE_ALL_CLEAN_INODE", nullptr, 'c'));
+    TRY(args_parser.parse(arguments));
 
     if (!purge_all_volatile && !purge_all_clean_inode)
         purge_all_volatile = purge_all_clean_inode = true;

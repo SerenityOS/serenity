@@ -39,8 +39,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Print group memberships for each username or, if no username is specified, for the current process.");
-    args_parser.add_positional_argument(usernames, "Usernames to list group memberships for", "usernames", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(usernames, "Usernames to list group memberships for", "usernames", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (usernames.is_empty()) {
         auto account = TRY(Core::Account::from_uid(geteuid(), Core::Account::Read::PasswdOnly));

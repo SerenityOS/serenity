@@ -109,11 +109,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // - time.google.com , https://developers.google.com/time/smear , linear-smears over 24 hours
     DeprecatedString host = "time.google.com"sv;
     Core::ArgsParser args_parser;
-    args_parser.add_option(adjust_time, "Gradually adjust system time (requires root)", "adjust", 'a');
-    args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's');
-    args_parser.add_option(verbose, "Verbose output", "verbose", 'v');
-    args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(adjust_time, "Gradually adjust system time (requires root)", "adjust", 'a'));
+    TRY(args_parser.add_option(set_time, "Immediately set system time (requires root)", "set", 's'));
+    TRY(args_parser.add_option(verbose, "Verbose output", "verbose", 'v'));
+    TRY(args_parser.add_positional_argument(host, "NTP server", "host", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil("/tmp/portal/lookup", "rw"));
     TRY(Core::System::unveil("/etc/timezone", "r"));

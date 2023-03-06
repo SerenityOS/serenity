@@ -37,13 +37,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display kernel routing table");
-    args_parser.add_positional_argument(modify_action, "Modify the global routing table { add | del }", "action", Core::ArgsParser::Required::No);
-    args_parser.add_option(value_host_address, "Target destination is an IPv4 address", "host", 'h', "host");
-    args_parser.add_option(value_network_address, "Target destination is a network address", "net", 'n', "net");
-    args_parser.add_option(value_gateway_address, "Route packets via a gateway", "gw", 'g', "gw");
-    args_parser.add_option(value_netmask_address, "The netmask to be used when adding a network route", "netmask", 'm', "netmask");
-    args_parser.add_option(value_interface, "Force the route to be associated with the specified device interface", "interface", 'i', "interface");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(modify_action, "Modify the global routing table { add | del }", "action", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(value_host_address, "Target destination is an IPv4 address", "host", 'h', "host"));
+    TRY(args_parser.add_option(value_network_address, "Target destination is a network address", "net", 'n', "net"));
+    TRY(args_parser.add_option(value_gateway_address, "Route packets via a gateway", "gw", 'g', "gw"));
+    TRY(args_parser.add_option(value_netmask_address, "The netmask to be used when adding a network route", "netmask", 'm', "netmask"));
+    TRY(args_parser.add_option(value_interface, "Force the route to be associated with the specified device interface", "interface", 'i', "interface"));
+    TRY(args_parser.parse(arguments));
 
     enum class Alignment {
         Left,

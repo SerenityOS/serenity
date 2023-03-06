@@ -49,9 +49,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int pid = 0;
     StringView perfcore_file_arg;
     Core::ArgsParser args_parser;
-    args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID");
-    args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(pid, "PID to profile", "pid", 'p', "PID"));
+    TRY(args_parser.add_positional_argument(perfcore_file_arg, "Path of perfcore file", "perfcore-file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (pid && !perfcore_file_arg.is_empty()) {
         warnln("-p/--pid option and perfcore-file argument must not be used together!");

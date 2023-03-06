@@ -22,9 +22,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     static bool extended = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(extended, "Extended output", nullptr, 'x');
-    args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(extended, "Extended output", nullptr, 'x'));
+    TRY(args_parser.add_positional_argument(pid, "PID", "PID", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     auto file = TRY(Core::File::open(DeprecatedString::formatted("/proc/{}/vm", pid), Core::File::OpenMode::Read));
 

@@ -23,12 +23,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView destination;
 
     Core::ArgsParser args_parser;
-    args_parser.add_ignored(nullptr, 'c'); // "copy files" is the default, no contradicting options exist.
-    args_parser.add_option(create_leading_dest_components, "Create leading components of the destination path", nullptr, 'D');
-    args_parser.add_option(mode, "Permissions to set (instead of 0755)", "mode", 'm', "mode");
-    args_parser.add_positional_argument(sources, "Source path", "source");
-    args_parser.add_positional_argument(destination, "Destination path", "destination");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_ignored(nullptr, 'c')); // "copy files" is the default, no contradicting options exist.
+    TRY(args_parser.add_option(create_leading_dest_components, "Create leading components of the destination path", nullptr, 'D'));
+    TRY(args_parser.add_option(mode, "Permissions to set (instead of 0755)", "mode", 'm', "mode"));
+    TRY(args_parser.add_positional_argument(sources, "Source path", "source"));
+    TRY(args_parser.add_positional_argument(destination, "Destination path", "destination"));
+    TRY(args_parser.parse(arguments));
 
     auto permission_mask = TRY(Core::FilePermissionsMask::parse(mode));
 

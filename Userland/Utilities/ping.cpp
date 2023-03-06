@@ -62,10 +62,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio id inet unix sigaction"));
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(host, "Host to ping", "host");
-    args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count");
-    args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(host, "Host to ping", "host"));
+    TRY(args_parser.add_option(count, "Stop after sending specified number of ECHO_REQUEST packets.", "count", 'c', "count"));
+    TRY(args_parser.add_option(payload_size, "Amount of bytes to send as payload in the ECHO_REQUEST packets.", "size", 's', "size"));
+    TRY(args_parser.parse(arguments));
 
     if (count.has_value() && (count.value() < 1 || count.value() > UINT32_MAX)) {
         warnln("invalid count argument: '{}': out of range: 1 <= value <= {}", count.value(), UINT32_MAX);

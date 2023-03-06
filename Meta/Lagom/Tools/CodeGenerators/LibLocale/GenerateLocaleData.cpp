@@ -1763,15 +1763,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView dates_path;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path");
-    args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path");
-    args_parser.add_option(bcp47_path, "Path to cldr-bcp47 directory", "bcp47-path", 'b', "bcp47-path");
-    args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path");
-    args_parser.add_option(locale_names_path, "Path to cldr-localenames directory", "locale-names-path", 'l', "locale-names-path");
-    args_parser.add_option(misc_path, "Path to cldr-misc directory", "misc-path", 'm', "misc-path");
-    args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path");
-    args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(generated_header_path, "Path to the Unicode locale header file to generate", "generated-header-path", 'h', "generated-header-path"));
+    TRY(args_parser.add_option(generated_implementation_path, "Path to the Unicode locale implementation file to generate", "generated-implementation-path", 'c', "generated-implementation-path"));
+    TRY(args_parser.add_option(bcp47_path, "Path to cldr-bcp47 directory", "bcp47-path", 'b', "bcp47-path"));
+    TRY(args_parser.add_option(core_path, "Path to cldr-core directory", "core-path", 'r', "core-path"));
+    TRY(args_parser.add_option(locale_names_path, "Path to cldr-localenames directory", "locale-names-path", 'l', "locale-names-path"));
+    TRY(args_parser.add_option(misc_path, "Path to cldr-misc directory", "misc-path", 'm', "misc-path"));
+    TRY(args_parser.add_option(numbers_path, "Path to cldr-numbers directory", "numbers-path", 'n', "numbers-path"));
+    TRY(args_parser.add_option(dates_path, "Path to cldr-dates directory", "dates-path", 'd', "dates-path"));
+    TRY(args_parser.parse(arguments));
 
     auto generated_header_file = TRY(open_file(generated_header_path, Core::File::OpenMode::Write));
     auto generated_implementation_file = TRY(open_file(generated_implementation_path, Core::File::OpenMode::Write));

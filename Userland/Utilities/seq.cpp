@@ -54,10 +54,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> parameters;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(separator, "Characters to print after each number (default: \\n)", "separator", 's', "separator");
-    args_parser.add_option(terminator, "Characters to print at the end of the sequence", "terminator", 't', "terminator");
-    args_parser.add_positional_argument(parameters, "1 to 3 parameters, interpreted as LAST, FIRST LAST, or FIRST INCREMENT LAST", "parameters");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(separator, "Characters to print after each number (default: \\n)", "separator", 's', "separator"));
+    TRY(args_parser.add_option(terminator, "Characters to print at the end of the sequence", "terminator", 't', "terminator"));
+    TRY(args_parser.add_positional_argument(parameters, "1 to 3 parameters, interpreted as LAST, FIRST LAST, or FIRST INCREMENT LAST", "parameters"));
+    TRY(args_parser.parse(arguments));
 
     double start = 1;
     double step = 1;

@@ -17,9 +17,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.add_option(unveil_paths, "Path to unveil [permissions,path]", "path", 'u', "");
-    args_parser.add_positional_argument(command, "Command to execute", "command");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(unveil_paths, "Path to unveil [permissions,path]", "path", 'u', ""));
+    TRY(args_parser.add_positional_argument(command, "Command to execute", "command"));
+    TRY(args_parser.parse(arguments));
 
     if (unveil_paths.is_empty()) {
         return Error::from_string_view("No unveil paths were specified."sv);

@@ -16,8 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView string = "yes"sv;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(string, "String to output (defaults to 'yes')", "string", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     for (;;)
         outln("{}", string);

@@ -87,10 +87,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool force_without_valid_interpreter = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(recursive_iteration_max, "Max library resolving recursion", "max-recursion", 'r', "max recursion-level");
-    args_parser.add_option(force_without_valid_interpreter, "Force library resolving on ELF object without valid interpreter", "force-without-valid-interpreter", 'f');
-    args_parser.add_positional_argument(path, "ELF path", "path");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(recursive_iteration_max, "Max library resolving recursion", "max-recursion", 'r', "max recursion-level"));
+    TRY(args_parser.add_option(force_without_valid_interpreter, "Force library resolving on ELF object without valid interpreter", "force-without-valid-interpreter", 'f'));
+    TRY(args_parser.add_positional_argument(path, "ELF path", "path"));
+    TRY(args_parser.parse(arguments));
 
     path = LexicalPath::absolute_path(TRY(Core::System::getcwd()), path);
 

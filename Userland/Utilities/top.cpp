@@ -133,7 +133,7 @@ static ErrorOr<Snapshot> get_snapshot()
 static bool g_window_size_changed = true;
 static struct winsize g_window_size;
 
-static void parse_args(Main::Arguments arguments, TopOption& top_option)
+static ErrorOr<void> parse_args(Main::Arguments arguments, TopOption& top_option)
 {
     Core::ArgsParser::Option sort_by_option {
         Core::ArgsParser::OptionArgumentMode::Required,
@@ -169,9 +169,10 @@ static void parse_args(Main::Arguments arguments, TopOption& top_option)
     Core::ArgsParser args_parser;
 
     args_parser.set_general_help("Display information about processes");
-    args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', nullptr);
-    args_parser.add_option(move(sort_by_option));
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(top_option.delay_time, "Delay time interval in seconds", "delay-time", 'd', nullptr));
+    TRY(args_parser.add_option(move(sort_by_option)));
+    TRY(args_parser.parse(arguments));
+    return {};
 }
 
 static bool check_quit()
@@ -211,7 +212,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath tty"));
 
     TopOption top_option;
-    parse_args(arguments, top_option);
+    TRY(parse_args(arguments, top_option));
 
     enable_nonblocking_stdin();
 

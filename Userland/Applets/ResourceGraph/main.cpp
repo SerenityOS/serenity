@@ -247,10 +247,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView memory {};
     StringView network {};
     Core::ArgsParser args_parser;
-    args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu");
-    args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory");
-    args_parser.add_option(network, "Create network graph", "network", 'N', "network");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(cpu, "Create CPU graph", "cpu", 'C', "cpu"));
+    TRY(args_parser.add_option(memory, "Create memory graph", "memory", 'M', "memory"));
+    TRY(args_parser.add_option(network, "Create network graph", "network", 'N', "network"));
+    TRY(args_parser.parse(arguments));
 
     if (cpu.is_empty() && memory.is_empty() && network.is_empty()) {
         printf("At least one of --cpu, --memory, or --network must be used");

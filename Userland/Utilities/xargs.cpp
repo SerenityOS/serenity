@@ -54,15 +54,15 @@ ErrorOr<int> serenity_main(Main::Arguments main_arguments)
     Core::ArgsParser args_parser;
     args_parser.set_stop_on_first_non_option(true);
     args_parser.set_general_help("Read arguments from stdin and interpret them as command-line arguments for another program. See also: 'man xargs'.");
-    args_parser.add_option(placeholder, "Placeholder string to be replaced in arguments", "replace", 'I', "placeholder");
-    args_parser.add_option(split_with_nulls, "Split input items with the null character instead of newline", "null", '0');
-    args_parser.add_option(specified_delimiter, "Split the input items with the specified character", "delimiter", 'd', "delim");
-    args_parser.add_option(verbose, "Display each command before executing it", "verbose", 'v');
-    args_parser.add_option(file_to_read, "Read arguments from the specified file instead of stdin", "arg-file", 'a', "file");
-    args_parser.add_option(max_lines_for_one_command, "Use at most max-lines lines to create a command", "line-limit", 'L', "max-lines");
-    args_parser.add_option(max_bytes_for_one_command, "Use at most max-chars characters to create a command", "char-limit", 's', "max-chars");
-    args_parser.add_positional_argument(arguments, "Command and any initial arguments for it", "command", Core::ArgsParser::Required::No);
-    args_parser.parse(main_arguments);
+    TRY(args_parser.add_option(placeholder, "Placeholder string to be replaced in arguments", "replace", 'I', "placeholder"));
+    TRY(args_parser.add_option(split_with_nulls, "Split input items with the null character instead of newline", "null", '0'));
+    TRY(args_parser.add_option(specified_delimiter, "Split the input items with the specified character", "delimiter", 'd', "delim"));
+    TRY(args_parser.add_option(verbose, "Display each command before executing it", "verbose", 'v'));
+    TRY(args_parser.add_option(file_to_read, "Read arguments from the specified file instead of stdin", "arg-file", 'a', "file"));
+    TRY(args_parser.add_option(max_lines_for_one_command, "Use at most max-lines lines to create a command", "line-limit", 'L', "max-lines"));
+    TRY(args_parser.add_option(max_bytes_for_one_command, "Use at most max-chars characters to create a command", "char-limit", 's', "max-chars"));
+    TRY(args_parser.add_positional_argument(arguments, "Command and any initial arguments for it", "command", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(main_arguments));
 
     size_t max_bytes = min(ARG_MAX, max_bytes_for_one_command);
     size_t max_lines = max(max_lines_for_one_command, 0);

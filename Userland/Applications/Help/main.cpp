@@ -36,17 +36,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     // The actual "page query" parsing happens when we set the main widget's start page.
-    args_parser.add_positional_argument(
+    TRY(args_parser.add_positional_argument(
         first_query_parameter,
         "Section of the man page",
         "section",
-        Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(
+        Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(
         second_query_parameter,
         "Help page to open. Either an absolute path to the markdown file, or a search query",
         "page",
-        Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+        Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
     Vector<StringView, 2> query_parameters;
     if (!first_query_parameter.is_empty())
         query_parameters.append(first_query_parameter);

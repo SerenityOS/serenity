@@ -14,9 +14,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     StringView path;
     bool tokens_mode = false;
-    args_parser.add_option(tokens_mode, "Print Tokens", "tokens", 'T');
-    args_parser.add_positional_argument(path, "Cpp File", "cpp-file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(tokens_mode, "Print Tokens", "tokens", 'T'));
+    TRY(args_parser.add_positional_argument(path, "Cpp File", "cpp-file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (path.is_empty())
         path = "Source/little/main.cpp"sv;

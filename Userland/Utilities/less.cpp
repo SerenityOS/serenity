@@ -504,12 +504,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         emulate_more = true;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No);
-    args_parser.add_option(prompt, "Prompt line", "prompt", 'P', "Prompt");
-    args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X');
-    args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e');
-    args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(filename, "The paged file", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(prompt, "Prompt line", "prompt", 'P', "Prompt"));
+    TRY(args_parser.add_option(dont_switch_buffer, "Don't use xterm alternate buffer", "no-init", 'X'));
+    TRY(args_parser.add_option(quit_at_eof, "Exit when the end of the file is reached", "quit-at-eof", 'e'));
+    TRY(args_parser.add_option(emulate_more, "Pretend that we are more(1)", "emulate-more", 'm'));
+    TRY(args_parser.parse(arguments));
 
     FILE* file;
     if (DeprecatedString("-") == filename) {

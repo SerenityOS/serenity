@@ -31,10 +31,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Call block device ioctls");
-    args_parser.add_option(flag_get_disk_size, "Get size in bytes", "size", 's');
-    args_parser.add_option(flag_get_block_size, "Get block size in bytes", "block-size", 'b');
-    args_parser.add_positional_argument(device, "Device to query", "device");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_get_disk_size, "Get size in bytes", "size", 's'));
+    TRY(args_parser.add_option(flag_get_block_size, "Get block size in bytes", "block-size", 'b'));
+    TRY(args_parser.add_positional_argument(device, "Device to query", "device"));
+    TRY(args_parser.parse(arguments));
 
     int fd = TRY(Core::System::open(device, O_RDONLY));
 

@@ -34,12 +34,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help("Modify an account password.");
-    args_parser.add_option(del, "Delete password", "delete", 'd');
-    args_parser.add_option(lock, "Lock password", "lock", 'l');
-    args_parser.add_option(unlock, "Unlock password", "unlock", 'u');
-    args_parser.add_positional_argument(username, "Username", "username", Core::ArgsParser::Required::No);
+    TRY(args_parser.add_option(del, "Delete password", "delete", 'd'));
+    TRY(args_parser.add_option(lock, "Lock password", "lock", 'l'));
+    TRY(args_parser.add_option(unlock, "Unlock password", "unlock", 'u'));
+    TRY(args_parser.add_positional_argument(username, "Username", "username", Core::ArgsParser::Required::No));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     uid_t current_uid = getuid();
 

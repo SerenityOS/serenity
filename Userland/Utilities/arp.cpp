@@ -37,12 +37,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the system ARP cache");
-    args_parser.add_option(flag_set, "Set an ARP table entry", "set", 's');
-    args_parser.add_option(flag_delete, "Delete an ARP table entry", "delete", 'd');
-    args_parser.add_option(flag_numeric, "Display numerical addresses. Don't resolve hostnames", "numeric", 'n');
-    args_parser.add_positional_argument(value_ipv4_address, "IPv4 protocol address", "address", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(value_hw_address, "Hardware address", "hwaddress", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_set, "Set an ARP table entry", "set", 's'));
+    TRY(args_parser.add_option(flag_delete, "Delete an ARP table entry", "delete", 'd'));
+    TRY(args_parser.add_option(flag_numeric, "Display numerical addresses. Don't resolve hostnames", "numeric", 'n'));
+    TRY(args_parser.add_positional_argument(value_ipv4_address, "IPv4 protocol address", "address", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(value_hw_address, "Hardware address", "hwaddress", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil("/sys/kernel/net/arp", "r"));
     if (!flag_numeric)

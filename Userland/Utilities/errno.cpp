@@ -15,10 +15,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView keyword;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(keyword, "Error number or string to search", "keyword", Core::ArgsParser::Required::No);
-    args_parser.add_option(list, "List all errno values", "list", 'l');
-    args_parser.add_option(search, "Search for error descriptions containing keyword", "search", 's');
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(keyword, "Error number or string to search", "keyword", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(list, "List all errno values", "list", 'l'));
+    TRY(args_parser.add_option(search, "Search for error descriptions containing keyword", "search", 's'));
+    TRY(args_parser.parse(arguments));
 
     if (list) {
         for (int i = 0; i < sys_nerr; i++) {

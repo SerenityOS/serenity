@@ -24,10 +24,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool preserve_env = false;
     args_parser.set_general_help("Escalate privilege to root for a given command using a GUI prompt.");
     args_parser.set_stop_on_first_non_option(true);
-    args_parser.add_option(description, "Custom prompt to use for dialog", "prompt", 'P', "prompt");
-    args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E');
-    args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(description, "Custom prompt to use for dialog", "prompt", 'P', "prompt"));
+    TRY(args_parser.add_option(preserve_env, "Preserve user environment when running command", "preserve-env", 'E'));
+    TRY(args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command"));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd thread cpath rpath wpath unix proc exec id"));
 

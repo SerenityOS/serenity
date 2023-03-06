@@ -24,8 +24,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString destination;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(link, "Link files instead of copying", "link", 'l');
-    args_parser.add_option({
+    TRY(args_parser.add_option(link, "Link files instead of copying", "link", 'l'));
+    TRY(args_parser.add_option({
         Core::ArgsParser::OptionArgumentMode::Optional,
         "Preserve a selection of mode, ownership and timestamps. Defaults to all three if the option is present but no list is given.",
         "preserve",
@@ -55,13 +55,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return values_ok;
         },
         Core::ArgsParser::OptionHideMode::None,
-    });
-    args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'R');
-    args_parser.add_option(recursion_allowed, "Same as -R", nullptr, 'r');
-    args_parser.add_option(verbose, "Verbose", "verbose", 'v');
-    args_parser.add_positional_argument(sources, "Source file paths", "source");
-    args_parser.add_positional_argument(destination, "Destination file path", "destination");
-    args_parser.parse(arguments);
+    }));
+    TRY(args_parser.add_option(recursion_allowed, "Copy directories recursively", "recursive", 'R'));
+    TRY(args_parser.add_option(recursion_allowed, "Same as -R", nullptr, 'r'));
+    TRY(args_parser.add_option(verbose, "Verbose", "verbose", 'v'));
+    TRY(args_parser.add_positional_argument(sources, "Source file paths", "source"));
+    TRY(args_parser.add_positional_argument(destination, "Destination file path", "destination"));
+    TRY(args_parser.parse(arguments));
 
     if (has_flag(preserve, Core::DeprecatedFile::PreserveMode::Permissions)) {
         umask(0);

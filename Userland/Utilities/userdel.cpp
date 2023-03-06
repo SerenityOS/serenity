@@ -22,9 +22,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool remove_home = false;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(remove_home, "Remove home directory", "remove", 'r');
-    args_parser.add_positional_argument(username, "Login user identity (username)", "login");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(remove_home, "Remove home directory", "remove", 'r'));
+    TRY(args_parser.add_positional_argument(username, "Login user identity (username)", "login"));
+    TRY(args_parser.parse(arguments));
 
     auto account_or_error = Core::Account::from_name(username);
 

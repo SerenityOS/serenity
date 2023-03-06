@@ -100,12 +100,12 @@ ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
     Options options;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(options.key_field, "The field to sort by", "key-field", 'k', "keydef");
-    args_parser.add_option(options.unique, "Don't emit duplicate lines", "unique", 'u');
-    args_parser.add_option(options.numeric, "treat the key field as a number", "numeric", 'n');
-    args_parser.add_option(options.separator, "The separator to split fields by", "sep", 't', "char");
-    args_parser.add_positional_argument(options.files, "Files to sort", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(options.key_field, "The field to sort by", "key-field", 'k', "keydef"));
+    TRY(args_parser.add_option(options.unique, "Don't emit duplicate lines", "unique", 'u'));
+    TRY(args_parser.add_option(options.numeric, "treat the key field as a number", "numeric", 'n'));
+    TRY(args_parser.add_option(options.separator, "The separator to split fields by", "sep", 't', "char"));
+    TRY(args_parser.add_positional_argument(options.files, "Files to sort", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     Vector<Line> lines;
     HashTable<Line> seen;

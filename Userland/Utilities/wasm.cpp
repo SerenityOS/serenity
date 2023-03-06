@@ -283,14 +283,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<DeprecatedString> modules_to_link_in;
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(filename, "File name to parse", "file");
-    parser.add_option(debug, "Open a debugger", "debug", 'd');
-    parser.add_option(print, "Print the parsed module", "print", 'p');
-    parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i');
-    parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
-    parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
-    parser.add_option(shell_mode, "Launch a REPL in the module's context (implies -i)", "shell", 's');
-    parser.add_option(Core::ArgsParser::Option {
+    TRY(parser.add_positional_argument(filename, "File name to parse", "file"));
+    TRY(parser.add_option(debug, "Open a debugger", "debug", 'd'));
+    TRY(parser.add_option(print, "Print the parsed module", "print", 'p'));
+    TRY(parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i'));
+    TRY(parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name"));
+    TRY(parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0));
+    TRY(parser.add_option(shell_mode, "Launch a REPL in the module's context (implies -i)", "shell", 's'));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Extra modules to link with, use to resolve imports",
         .long_name = "link",
@@ -303,8 +303,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             return false;
         },
-    });
-    parser.add_option(Core::ArgsParser::Option {
+    }));
+    TRY(parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Supply arguments to the function (default=0) (expects u64, casts to required type)",
         .long_name = "arg",
@@ -317,8 +317,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
             return false;
         },
-    });
-    parser.parse(arguments);
+    }));
+    TRY(parser.parse(arguments));
 
     if (shell_mode) {
         debug = true;

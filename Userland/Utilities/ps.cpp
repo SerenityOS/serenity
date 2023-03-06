@@ -62,10 +62,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString pid_list;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(every_process_flag, "Show every process", nullptr, 'e');
-    args_parser.add_option(full_format_flag, "Full format", nullptr, 'f');
-    args_parser.add_option(pid_list, "A comma-separated list of PIDs. Only processes matching those PIDs will be selected", nullptr, 'q', "pid-list");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(every_process_flag, "Show every process", nullptr, 'e'));
+    TRY(args_parser.add_option(full_format_flag, "Full format", nullptr, 'f'));
+    TRY(args_parser.add_option(pid_list, "A comma-separated list of PIDs. Only processes matching those PIDs will be selected", nullptr, 'q', "pid-list"));
+    TRY(args_parser.parse(arguments));
 
     Vector<Column> columns;
 

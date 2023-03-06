@@ -222,11 +222,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView command;
     pid_t pid_to_debug = -1;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(command,
+    TRY(args_parser.add_positional_argument(command,
         "The program to be debugged, along with its arguments",
-        "program", Core::ArgsParser::Required::No);
-    args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID");
-    args_parser.parse(arguments);
+        "program", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(pid_to_debug, "Attach debugger to running process", "pid", 'p', "PID"));
+    TRY(args_parser.parse(arguments));
 
     g_debug_session = create_debug_session(command, pid_to_debug);
 

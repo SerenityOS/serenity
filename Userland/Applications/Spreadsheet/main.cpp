@@ -29,9 +29,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView filename;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No);
+    TRY(args_parser.add_positional_argument(filename, "File to read from", "file", Core::ArgsParser::Required::No));
 
-    args_parser.parse(arguments);
+    TRY(args_parser.parse(arguments));
 
     if (!filename.is_empty()) {
         if (!Core::DeprecatedFile::exists(filename) || Core::DeprecatedFile::is_directory(filename)) {

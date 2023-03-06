@@ -49,11 +49,11 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     StringView process_name;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(single_shot, "Only return one pid", nullptr, 's');
-    args_parser.add_option(omit_pid_value, "Omit the given PID, or the parent process if the special value %PPID is passed", nullptr, 'o', "pid");
-    args_parser.add_positional_argument(process_name, "Process name to search for", "process-name");
+    TRY(args_parser.add_option(single_shot, "Only return one pid", nullptr, 's'));
+    TRY(args_parser.add_option(omit_pid_value, "Omit the given PID, or the parent process if the special value %PPID is passed", nullptr, 'o', "pid"));
+    TRY(args_parser.add_positional_argument(process_name, "Process name to search for", "process-name"));
 
-    args_parser.parse(args);
+    TRY(args_parser.parse(args));
 
     pid_t pid_to_omit = 0;
     if (!omit_pid_value.is_empty()) {

@@ -109,11 +109,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Vector<StringView> file_filters;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
-    args_parser.add_option(quiet, "Be less verbose", "quiet", 'q');
-    args_parser.add_positional_argument(zip_file_path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(file_filters, "Files or filters in the archive to extract", "files", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path"));
+    TRY(args_parser.add_option(quiet, "Be less verbose", "quiet", 'q'));
+    TRY(args_parser.add_positional_argument(zip_file_path, "File to unzip", "path", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.add_positional_argument(file_filters, "Files or filters in the archive to extract", "files", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     struct stat st = TRY(Core::System::stat(zip_file_path));
 

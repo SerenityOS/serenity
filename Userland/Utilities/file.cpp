@@ -161,9 +161,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Determine type of files");
-    args_parser.add_option(flag_mime_only, "Only print mime type", "mime-type", 'I');
-    args_parser.add_positional_argument(paths, "Files to identify", "files", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(flag_mime_only, "Only print mime type", "mime-type", 'I'));
+    TRY(args_parser.add_positional_argument(paths, "Files to identify", "files", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     bool all_ok = true;
     // Read accounts for longest possible offset + signature we currently match against.

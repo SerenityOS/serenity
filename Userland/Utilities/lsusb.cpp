@@ -25,9 +25,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool flag_show_numerical = false;
     Core::ArgsParser args;
     args.set_general_help("List USB devices.");
-    args.add_option(print_verbose, "Print all device descriptors", "verbose", 'v');
-    args.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
-    args.parse(arguments);
+    TRY(args.add_option(print_verbose, "Print all device descriptors", "verbose", 'v'));
+    TRY(args.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n'));
+    TRY(args.parse(arguments));
 
     if (!flag_show_numerical)
         TRY(Core::System::unveil("/res/usb.ids", "r"));

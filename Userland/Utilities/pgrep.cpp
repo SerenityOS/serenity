@@ -24,10 +24,10 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     StringView pattern;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i');
-    args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v');
-    args_parser.add_positional_argument(pattern, "Process name to search for", "process-name");
-    args_parser.parse(args);
+    TRY(args_parser.add_option(case_insensitive, "Make matches case-insensitive", nullptr, 'i'));
+    TRY(args_parser.add_option(invert_match, "Select non-matching lines", "invert-match", 'v'));
+    TRY(args_parser.add_positional_argument(pattern, "Process name to search for", "process-name"));
+    TRY(args_parser.parse(args));
 
     PosixOptions options {};
     if (case_insensitive)

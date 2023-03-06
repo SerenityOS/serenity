@@ -30,8 +30,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView path;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(path, "The font file for editing.", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-font-editor"sv));
 

@@ -243,8 +243,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
     Vector<StringView> file_paths;
-    args_parser.add_positional_argument(file_paths, "Path to markdown files to read and parse", "paths", Core::ArgsParser::Required::Yes);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(file_paths, "Path to markdown files to read and parse", "paths", Core::ArgsParser::Required::Yes));
+    TRY(args_parser.parse(arguments));
 
     outln("Reading and parsing Markdown files ...");
     HashMap<DeprecatedString, MarkdownLinkage> files;

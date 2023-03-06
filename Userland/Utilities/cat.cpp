@@ -19,8 +19,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Concatenate files or pipes to stdout.");
-    args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(paths, "File path", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (paths.is_empty())
         paths.append("-"sv);

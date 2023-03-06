@@ -26,8 +26,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.set_general_help(
         "Disassemble an executable, and show human-readable "
         "assembly code for each function.");
-    args_parser.add_positional_argument(path, "Path to i386 binary file", "path");
-    args_parser.parse(args);
+    TRY(args_parser.add_positional_argument(path, "Path to i386 binary file", "path"));
+    TRY(args_parser.parse(args));
 
     RefPtr<Core::MappedFile> file;
     u8 const* asm_data = nullptr;

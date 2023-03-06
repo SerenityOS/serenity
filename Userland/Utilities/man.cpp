@@ -63,10 +63,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Read manual pages. Try 'man man' to get started.");
-    args_parser.add_positional_argument(section_argument, "Section of the man page", "section");
-    args_parser.add_positional_argument(name_argument, "Name of the man page", "name", Core::ArgsParser::Required::No);
-    args_parser.add_option(pager, "Pager to pipe the man page to", "pager", 'P', "pager");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(section_argument, "Section of the man page", "section"));
+    TRY(args_parser.add_positional_argument(name_argument, "Name of the man page", "name", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_option(pager, "Pager to pipe the man page to", "pager", 'P', "pager"));
+    TRY(args_parser.parse(arguments));
     Vector<StringView, 2> query_parameters;
     if (!section_argument.is_empty())
         query_parameters.append(section_argument);

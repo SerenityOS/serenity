@@ -13,8 +13,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView new_jail_name;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(new_jail_name, "New jail name", "jail name");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(new_jail_name, "New jail name", "jail name"));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::pledge("stdio jail"));
 

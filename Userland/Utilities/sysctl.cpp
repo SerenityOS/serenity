@@ -101,10 +101,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Show or modify system-internal values. This requires root, and can crash your system.");
-    args_parser.add_option(show_all, "Show all variables", "all", 'a');
-    args_parser.add_option(s_set_variable, "Set variables", "write", 'w');
-    args_parser.add_positional_argument(variables, "variable[=value]", "variables", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(show_all, "Show all variables", "all", 'a'));
+    TRY(args_parser.add_option(s_set_variable, "Set variables", "write", 'w'));
+    TRY(args_parser.add_positional_argument(variables, "variable[=value]", "variables", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (!show_all && variables.is_empty()) {
         args_parser.print_usage(stdout, arguments.strings[0]);

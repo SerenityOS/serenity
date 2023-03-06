@@ -41,9 +41,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString mapping;
     DeprecatedString mappings;
     Core::ArgsParser args_parser;
-    args_parser.add_option(mapping, "The mapping to be used", "set-keymap", 'm', "keymap");
-    args_parser.add_option(mappings, "Comma separated list of enabled mappings", "set-keymaps", 's', "keymaps");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(mapping, "The mapping to be used", "set-keymap", 'm', "keymap"));
+    TRY(args_parser.add_option(mappings, "Comma separated list of enabled mappings", "set-keymaps", 's', "keymaps"));
+    TRY(args_parser.parse(arguments));
 
     TRY(Core::System::unveil(nullptr, nullptr));
 

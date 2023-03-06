@@ -18,9 +18,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView opt_algorithm;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'crc32', use 'list' to list available algorithms)", "algorithm", '\0', nullptr);
-    args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(opt_algorithm, "Checksum algorithm (default 'crc32', use 'list' to list available algorithms)", "algorithm", '\0', nullptr));
+    TRY(args_parser.add_positional_argument(paths, "File", "file", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto algorithm = opt_algorithm.is_empty() ? "crc32" : DeprecatedString(opt_algorithm).to_lowercase();
 

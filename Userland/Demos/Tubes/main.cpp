@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Screensaver rendering colorful moving tubes using LibGL");
-    args_parser.add_option(refresh_rate, "Refresh rate", "rate", 'r', "milliseconds");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(refresh_rate, "Refresh rate", "rate", 'r', "milliseconds"));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 

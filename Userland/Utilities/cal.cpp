@@ -101,10 +101,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
     // FIXME: This should ensure two values get parsed as month + year
-    args_parser.add_positional_argument(day, "Day of year", "day", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
-    args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(day, "Day of year", "day", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No));
+    TRY(args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);

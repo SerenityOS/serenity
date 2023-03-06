@@ -55,10 +55,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         " - Arguments that cannot be interpreted are treated as string arguments, for example 'Hello, friends!'.\n"
         "\n"
         "Full example: syscall -o realpath [ /usr/share/man/man2/getgid.md 1024 buf 1024 ]");
-    args_parser.add_option(list_syscalls, "List all existing syscalls, and exit", "list-syscalls", 'l');
-    args_parser.add_option(output_buffer, "Output the contents of the buffer (beware of stray zero bytes!)", "output-buffer", 'o');
-    args_parser.add_positional_argument(syscall_arguments, "Syscall arguments; see general help.", "syscall-arguments", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(list_syscalls, "List all existing syscalls, and exit", "list-syscalls", 'l'));
+    TRY(args_parser.add_option(output_buffer, "Output the contents of the buffer (beware of stray zero bytes!)", "output-buffer", 'o'));
+    TRY(args_parser.add_positional_argument(syscall_arguments, "Syscall arguments; see general help.", "syscall-arguments", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     if (list_syscalls) {
         outln("syscall list:");

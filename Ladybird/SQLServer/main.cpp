@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     DeprecatedString pid_file;
 
     Core::ArgsParser args_parser;
-    args_parser.add_option(pid_file, "Path to the PID file for the SQLServer singleton process", "pid-file", 'p', "pid_file");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(pid_file, "Path to the PID file for the SQLServer singleton process", "pid-file", 'p', "pid_file"));
+    TRY(args_parser.parse(arguments));
 
     VERIFY(!pid_file.is_empty());
 

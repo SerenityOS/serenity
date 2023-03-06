@@ -20,8 +20,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     StringView file_path;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(file_path, "PDF file to open", "path", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_positional_argument(file_path, "PDF file to open", "path", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     auto app = TRY(GUI::Application::try_create(arguments));
     auto app_icon = GUI::Icon::default_icon("app-pdf-viewer"sv);

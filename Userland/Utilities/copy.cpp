@@ -29,10 +29,10 @@ static ErrorOr<Options> parse_options(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Copy text from stdin or the command-line to the clipboard.");
-    args_parser.add_option(type, "Pick a type", "type", 't', "type");
-    args_parser.add_option(clear, "Instead of copying, clear the clipboard", "clear", 'c');
-    args_parser.add_positional_argument(text, "Text to copy", "text", Core::ArgsParser::Required::No);
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(type, "Pick a type", "type", 't', "type"));
+    TRY(args_parser.add_option(clear, "Instead of copying, clear the clipboard", "clear", 'c'));
+    TRY(args_parser.add_positional_argument(text, "Text to copy", "text", Core::ArgsParser::Required::No));
+    TRY(args_parser.parse(arguments));
 
     Options options;
     options.type = type;

@@ -17,8 +17,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Core::ArgsParser args_parser;
     Optional<double> delta;
-    args_parser.add_option(delta, "Adjust system time by this many seconds", "set", 's', "delta_seconds");
-    args_parser.parse(arguments);
+    TRY(args_parser.add_option(delta, "Adjust system time by this many seconds", "set", 's', "delta_seconds"));
+    TRY(args_parser.parse(arguments));
 
     if (delta.has_value()) {
         long delta_us = static_cast<long>(round(*delta * 1'000'000));
