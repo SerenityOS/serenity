@@ -87,9 +87,6 @@ public:
 
     void queue_microtask_impl(WebIDL::CallbackType& callback);
 
-    int inner_width() const;
-    int inner_height() const;
-
     void did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href);
     void did_call_location_reload(Badge<HTML::Location>);
     void did_call_location_replace(Badge<HTML::Location>, DeprecatedString url);
@@ -165,6 +162,9 @@ public:
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> match_media(String const& query);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> screen();
 
+    i32 inner_width() const;
+    i32 inner_height() const;
+
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> crypto();
@@ -230,9 +230,6 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
-    JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
 
