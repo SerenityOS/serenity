@@ -826,22 +826,6 @@ void Window::invoke_idle_callbacks()
     }
 }
 
-// https://w3c.github.io/requestidlecallback/#the-cancelidlecallback-method
-void Window::cancel_idle_callback_impl(u32 handle)
-{
-    // 1. Let window be this Window object.
-    auto& window = *this;
-    // 2. Find the entry in either the window's list of idle request callbacks or list of runnable idle callbacks
-    //    that is associated with the value handle.
-    // 3. If there is such an entry, remove it from both window's list of idle request callbacks and the list of runnable idle callbacks.
-    window.m_idle_request_callbacks.remove_first_matching([handle](auto& callback) {
-        return callback->handle() == handle;
-    });
-    window.m_runnable_idle_callbacks.remove_first_matching([handle](auto& callback) {
-        return callback->handle() == handle;
-    });
-}
-
 void Window::set_associated_document(DOM::Document& document)
 {
     m_associated_document = &document;
@@ -931,8 +915,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
-
-    define_native_function(realm, "cancelIdleCallback", cancel_idle_callback, 1, attr);
 
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
 
@@ -1480,6 +1462,22 @@ u32 Window::request_idle_callback(WebIDL::CallbackType& callback, RequestIdleCal
     (void)options;
 }
 
+// https://w3c.github.io/requestidlecallback/#dom-window-cancelidlecallback
+void Window::cancel_idle_callback(u32 handle)
+{
+    // 1. Let window be this Window object.
+
+    // 2. Find the entry in either the window's list of idle request callbacks or list of runnable idle callbacks
+    //    that is associated with the value handle.
+    // 3. If there is such an entry, remove it from both window's list of idle request callbacks and the list of runnable idle callbacks.
+    m_idle_request_callbacks.remove_first_matching([&](auto& callback) {
+        return callback->handle() == handle;
+    });
+    m_runnable_idle_callbacks.remove_first_matching([&](auto& callback) {
+        return callback->handle() == handle;
+    });
+}
+
 // https://w3c.github.io/selection-api/#dom-window-getselection
 JS::GCPtr<Selection::Selection> Window::get_selection() const
 {
@@ -1614,16 +1612,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::queue_microtask)
     auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
 
     impl->queue_microtask_impl(*callback);
-    return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::cancel_idle_callback)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelIdleCallback");
-    auto id = TRY(vm.argument(0).to_u32(vm));
-    impl->cancel_idle_callback_impl(id);
     return JS::js_undefined();
 }
 
