@@ -113,8 +113,6 @@ public:
 
     void fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted);
 
-    float device_pixel_ratio() const;
-
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
 
@@ -178,6 +176,7 @@ public:
     i32 screen_y() const;
     i32 outer_width() const;
     i32 outer_height() const;
+    double device_pixel_ratio() const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -244,8 +243,6 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(structured_clone);
 

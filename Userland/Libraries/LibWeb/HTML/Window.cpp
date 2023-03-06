@@ -744,12 +744,6 @@ void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
     });
 }
 
-float Window::device_pixel_ratio() const
-{
-    // FIXME: Return 2.0f if we're in HiDPI mode!
-    return 1.0f;
-}
-
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
 JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 {
@@ -956,7 +950,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     define_native_function(realm, "setInterval", set_interval, 1, attr);
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
@@ -1453,6 +1446,18 @@ i32 Window::outer_height() const
     return 0;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-devicepixelratio
+double Window::device_pixel_ratio() const
+{
+    // 1. If there is no output device, return 1 and abort these steps.
+    // 2. Let CSS pixel size be the size of a CSS pixel at the current page zoom and using a scale factor of 1.0.
+    // 3. Let device pixel size be the vertical size of a device pixel of the output device.
+    // 4. Return the result of dividing CSS pixel size by device pixel size.
+    if (auto* page = this->page())
+        return page->client().device_pixels_per_css_pixel();
+    return 1;
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1647,12 +1652,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
     auto* impl = TRY(impl_from(vm));
     TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::device_pixel_ratio_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->device_pixel_ratio());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::get_computed_style)
