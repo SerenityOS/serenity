@@ -941,14 +941,12 @@ LockRefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* ent
 
 void Process::OpenFileDescriptionAndFlags::clear()
 {
-    // FIXME: Verify Process::m_fds_lock is locked!
     m_description = nullptr;
     m_flags = 0;
 }
 
 void Process::OpenFileDescriptionAndFlags::set(NonnullLockRefPtr<OpenFileDescription>&& description, u32 flags)
 {
-    // FIXME: Verify Process::m_fds_lock is locked!
     m_description = move(description);
     m_flags = flags;
 }
