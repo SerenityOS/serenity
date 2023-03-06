@@ -1017,8 +1017,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_function(realm, "scrollBy", scroll_by, 2, attr);
-
     define_native_accessor(realm, "screenX", screen_x_getter, {}, attr);
     define_native_accessor(realm, "screenY", screen_y_getter, {}, attr);
     define_native_accessor(realm, "screenLeft", screen_left_getter, {}, attr);
@@ -1417,10 +1415,49 @@ void Window::scroll(double x, double y)
     auto options = ScrollToOptions {};
 
     // 2. Let x and y be the arguments, respectively.
+
     options.left = x;
     options.top = y;
 
     scroll(options);
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrollby
+void Window::scroll_by(ScrollToOptions options)
+{
+    // 2. Normalize non-finite values for the left and top dictionary members of options.
+    auto x = options.left.value_or(0);
+    auto y = options.top.value_or(0);
+    x = JS::Value(x).is_finite_number() ? x : 0;
+    y = JS::Value(y).is_finite_number() ? y : 0;
+
+    // 3. Add the value of scrollX to the left dictionary member.
+    options.left = x + scroll_x();
+
+    // 4. Add the value of scrollY to the top dictionary member.
+    options.top = y + scroll_y();
+
+    // 5. Act as if the scroll() method was invoked with options as the only argument.
+    scroll(options);
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrollby
+void Window::scroll_by(double x, double y)
+{
+    // 1. If invoked with two arguments, follow these substeps:
+
+    // 1. Let options be null converted to a ScrollToOptions dictionary. [WEBIDL]
+    auto options = ScrollToOptions {};
+
+    // 2. Let x and y be the arguments, respectively.
+
+    // 3. Let the left dictionary member of options have the value x.
+    options.left = x;
+
+    // 4. Let the top dictionary member of options have the value y.
+    options.top = y;
+
+    scroll_by(options);
 }
 
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
@@ -1641,56 +1678,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
     // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     auto* impl = TRY(impl_from(vm));
     return impl->associated_document().get_selection();
-}
-
-// https://www.w3.org/TR/cssom-view/#dom-window-scrollby
-JS_DEFINE_NATIVE_FUNCTION(Window::scroll_by)
-{
-    auto& realm = *vm.current_realm();
-
-    auto* impl = TRY(impl_from(vm));
-    if (!impl->page())
-        return JS::js_undefined();
-    auto& page = *impl->page();
-
-    JS::Object* options = nullptr;
-
-    if (vm.argument_count() == 0) {
-        options = JS::Object::create(realm, nullptr);
-    } else if (vm.argument_count() == 1) {
-        options = TRY(vm.argument(0).to_object(vm));
-    } else if (vm.argument_count() >= 2) {
-        // We ignore arguments 2+ in line with behavior of Chrome and Firefox
-        options = JS::Object::create(realm, nullptr);
-        MUST(options->set("left", vm.argument(0), ShouldThrowExceptions::No));
-        MUST(options->set("top", vm.argument(1), ShouldThrowExceptions::No));
-        MUST(options->set("behavior", MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "auto"sv)), ShouldThrowExceptions::No));
-    }
-
-    auto left_value = TRY(options->get("left"));
-    auto left = TRY(left_value.to_double(vm));
-
-    auto top_value = TRY(options->get("top"));
-    auto top = TRY(top_value.to_double(vm));
-
-    left = JS::Value(left).is_finite_number() ? left : 0.0;
-    top = JS::Value(top).is_finite_number() ? top : 0.0;
-
-    auto current_scroll_position = page.top_level_browsing_context().viewport_scroll_offset().to_type<float>();
-    left = left + static_cast<double>(current_scroll_position.x());
-    top = top + static_cast<double>(current_scroll_position.y());
-
-    auto behavior_string_value = TRY(options->get("behavior"));
-    auto behavior_string = behavior_string_value.is_undefined() ? "auto" : TRY(behavior_string_value.to_deprecated_string(vm));
-    if (behavior_string != "smooth" && behavior_string != "auto")
-        return vm.throw_completion<JS::TypeError>("Behavior is not one of 'smooth' or 'auto'"sv);
-    auto behavior = (behavior_string == "smooth") ? Bindings::ScrollBehavior::Smooth : Bindings::ScrollBehavior::Auto;
-
-    // FIXME: Spec wants us to call scroll(options) here.
-    //        The only difference is that would invoke the viewport calculations that scroll()
-    //        is not actually doing yet, so this is the same for now.
-    perform_a_scroll(page, left, top, nullptr, behavior);
-    return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::screen_left_getter)

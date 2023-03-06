@@ -177,6 +177,8 @@ public:
     double scroll_y() const;
     void scroll(ScrollToOptions const&);
     void scroll(double x, double y);
+    void scroll_by(ScrollToOptions);
+    void scroll_by(double x, double y);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -245,8 +247,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
-
-    JS_DECLARE_NATIVE_FUNCTION(scroll_by);
 
     JS_DECLARE_NATIVE_FUNCTION(screen_x_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_y_getter);
