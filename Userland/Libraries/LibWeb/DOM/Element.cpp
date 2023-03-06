@@ -977,7 +977,7 @@ void Element::set_scroll_left(double x)
     if (document.document_element() == this) {
         // FIXME: Implement this in terms of invoking scroll() on window.
         if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(x), window->scroll_y() });
+            page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
 
         return;
     }
@@ -986,7 +986,7 @@ void Element::set_scroll_left(double x)
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
         // FIXME: Implement this in terms of invoking scroll() on window.
         if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ static_cast<float>(x), window->scroll_y() });
+            page->client().page_did_request_scroll_to({ static_cast<float>(x), static_cast<float>(window->scroll_y()) });
 
         return;
     }
@@ -1041,7 +1041,7 @@ void Element::set_scroll_top(double y)
     if (document.document_element() == this) {
         // FIXME: Implement this in terms of invoking scroll() on window.
         if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ window->scroll_x(), static_cast<float>(y) });
+            page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
 
         return;
     }
@@ -1050,7 +1050,7 @@ void Element::set_scroll_top(double y)
     if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable()) {
         // FIXME: Implement this in terms of invoking scroll() on window.
         if (auto* page = document.page())
-            page->client().page_did_request_scroll_to({ window->scroll_x(), static_cast<float>(y) });
+            page->client().page_did_request_scroll_to({ static_cast<float>(window->scroll_x()), static_cast<float>(y) });
 
         return;
     }

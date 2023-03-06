@@ -52,6 +52,12 @@ interface Window : EventTarget {
     [Replaceable] readonly attribute long innerWidth;
     [Replaceable] readonly attribute long innerHeight;
 
+    // viewport scrolling
+    [Replaceable] readonly attribute double scrollX;
+    [Replaceable, ImplementedAs=scroll_x] readonly attribute double pageXOffset;
+    [Replaceable] readonly attribute double scrollY;
+    [Replaceable, ImplementedAs=scroll_y] readonly attribute double pageYOffset;
+
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute
     [Replaceable] readonly attribute Performance performance;

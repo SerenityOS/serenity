@@ -712,22 +712,6 @@ Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID
     return {};
 }
 
-// https://www.w3.org/TR/cssom-view/#dom-window-scrollx
-float Window::scroll_x() const
-{
-    if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().x().value();
-    return 0;
-}
-
-// https://www.w3.org/TR/cssom-view/#dom-window-scrolly
-float Window::scroll_y() const
-{
-    if (auto* page = this->page())
-        return page->top_level_browsing_context().viewport_scroll_offset().y().value();
-    return 0;
-}
-
 // https://html.spec.whatwg.org/#fire-a-page-transition-event
 void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted)
 {
@@ -1033,11 +1017,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
     // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_accessor(realm, "scrollX", scroll_x_getter, {}, attr);
-    define_native_accessor(realm, "pageXOffset", scroll_x_getter, {}, attr);
-    define_native_accessor(realm, "scrollY", scroll_y_getter, {}, attr);
-    define_native_accessor(realm, "pageYOffset", scroll_y_getter, {}, attr);
-
     define_native_function(realm, "scroll", scroll, 2, attr);
     define_native_function(realm, "scrollTo", scroll, 2, attr);
     define_native_function(realm, "scrollBy", scroll_by, 2, attr);
@@ -1333,6 +1312,26 @@ i32 Window::inner_height() const
     return 0;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrollx
+double Window::scroll_x() const
+{
+    // The scrollX attribute must return the x-coordinate, relative to the initial containing block origin,
+    // of the left of the viewport, or zero if there is no viewport.
+    if (auto* page = this->page())
+        return page->top_level_browsing_context().viewport_scroll_offset().x().value();
+    return 0;
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-scrolly
+double Window::scroll_y() const
+{
+    // The scrollY attribute must return the y-coordinate, relative to the initial containing block origin,
+    // of the top of the viewport, or zero if there is no viewport.
+    if (auto* page = this->page())
+        return page->top_level_browsing_context().viewport_scroll_offset().y().value();
+    return 0;
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1551,20 +1550,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
     // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     auto* impl = TRY(impl_from(vm));
     return impl->associated_document().get_selection();
-}
-
-// https://www.w3.org/TR/cssom-view/#dom-window-scrollx
-JS_DEFINE_NATIVE_FUNCTION(Window::scroll_x_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->scroll_x());
-}
-
-// https://www.w3.org/TR/cssom-view/#dom-window-scrolly
-JS_DEFINE_NATIVE_FUNCTION(Window::scroll_y_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->scroll_y());
 }
 
 enum class ScrollBehavior {
