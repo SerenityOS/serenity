@@ -596,11 +596,6 @@ Page const* Window::page() const
     return associated_document().page();
 }
 
-CSS::CSSStyleDeclaration* Window::get_computed_style_impl(DOM::Element& element) const
-{
-    return CSS::ResolvedCSSStyleDeclaration::create(element).release_value_but_fixme_should_propagate_errors().ptr();
-}
-
 Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID media_feature) const
 {
     // FIXME: Many of these should be dependent on the hardware
@@ -964,7 +959,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "requestIdleCallback", request_idle_callback, 1, attr);
     define_native_function(realm, "cancelIdleCallback", cancel_idle_callback, 1, attr);
 
-    define_native_function(realm, "getComputedStyle", get_computed_style, 1, attr);
     define_native_function(realm, "getSelection", get_selection, 0, attr);
 
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
@@ -1211,6 +1205,14 @@ Variant<JS::Handle<DOM::Event>, JS::Value> Window::event() const
     if (auto* current_event = this->current_event())
         return make_handle(const_cast<DOM::Event&>(*current_event));
     return JS::js_undefined();
+}
+
+// https://w3c.github.io/csswg-drafts/cssom/#dom-window-getcomputedstyle
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::CSSStyleDeclaration>> Window::get_computed_style(DOM::Element& element, Optional<String> const& pseudo_element) const
+{
+    // FIXME: Make this fully spec compliant.
+    (void)pseudo_element;
+    return MUST_OR_THROW_OOM(heap().allocate<CSS::ResolvedCSSStyleDeclaration>(realm(), element));
 }
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-matchmedia
@@ -1652,16 +1654,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
     auto* impl = TRY(impl_from(vm));
     TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::get_computed_style)
-{
-    auto* impl = TRY(impl_from(vm));
-    auto* object = TRY(vm.argument(0).to_object(vm));
-    if (!is<DOM::Element>(object))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "DOM element");
-
-    return impl->get_computed_style_impl(*static_cast<DOM::Element*>(object));
 }
 
 // https://w3c.github.io/selection-api/#dom-window-getselection
