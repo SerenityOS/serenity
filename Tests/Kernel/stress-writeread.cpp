@@ -6,6 +6,8 @@
 
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/System.h>
+#include <LibMain/Main.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
@@ -58,13 +60,8 @@ bool write_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer)
     return true;
 }
 
-int main(int argc, char** argv)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<StringView> arguments;
-    arguments.ensure_capacity(argc);
-    for (auto i = 0; i < argc; ++i)
-        arguments.append({ argv[i], strlen(argv[i]) });
-
     DeprecatedString target;
     int min_block_offset = 0;
     int block_length = 2048;
@@ -89,18 +86,9 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(target, "Target device/file path", "target");
     args_parser.parse(arguments);
 
-    auto buffer_result = AK::ByteBuffer::create_zeroed(block_size);
-    if (buffer_result.is_error()) {
-        warnln("Failed to allocate a buffer of {} bytes", block_size);
-        return EXIT_FAILURE;
-    }
-    auto buffer = buffer_result.release_value();
+    auto buffer = TRY(AK::ByteBuffer::create_zeroed(block_size));
 
-    int fd = open(target.characters(), O_CREAT | O_RDWR, 0666);
-    if (fd < 0) {
-        perror("Couldn't create target file");
-        return EXIT_FAILURE;
-    }
+    int fd = TRY(Core::System::open(target, O_CREAT | O_RDWR, 0666));
 
     if (!uninitialized_mode) {
         int old_percent = -100;
