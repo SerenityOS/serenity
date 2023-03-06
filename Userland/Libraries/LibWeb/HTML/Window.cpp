@@ -750,24 +750,6 @@ float Window::device_pixel_ratio() const
     return 1.0f;
 }
 
-// https://drafts.csswg.org/cssom-view/#dom-window-outerwidth
-int Window::outer_width() const
-{
-    // The outerWidth attribute must return the width of the client window. If there is no client window this attribute must return zero.
-    if (auto* page = this->page())
-        return page->window_size().width().value();
-    return 0;
-}
-
-// https://drafts.csswg.org/cssom-view/#dom-window-screeny
-int Window::outer_height() const
-{
-    // The outerHeight attribute must return the height of the client window. If there is no client window this attribute must return zero.
-    if (auto* page = this->page())
-        return page->window_size().height().value();
-    return 0;
-}
-
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
 JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 {
@@ -995,10 +977,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
 
     define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
-
-    // FIXME: These properties should be [Replaceable] according to the spec, but [Writable+Configurable] is the closest we have.
-    define_native_accessor(realm, "outerWidth", outer_width_getter, {}, attr);
-    define_native_accessor(realm, "outerHeight", outer_height_getter, {}, attr);
 
     define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
 
@@ -1455,6 +1433,26 @@ i32 Window::screen_y() const
     return 0;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-outerwidth
+i32 Window::outer_width() const
+{
+    // The outerWidth attribute must return the width of the client window. If there is no client window this
+    // attribute must return zero.
+    if (auto* page = this->page())
+        return page->window_size().width().value();
+    return 0;
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-outerheight
+i32 Window::outer_height() const
+{
+    // The outerHeight attribute must return the height of the client window. If there is no client window this
+    // attribute must return zero.
+    if (auto* page = this->page())
+        return page->window_size().height().value();
+    return 0;
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1673,18 +1671,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
     // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     auto* impl = TRY(impl_from(vm));
     return impl->associated_document().get_selection();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::outer_width_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->outer_width());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::outer_height_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->outer_height());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)

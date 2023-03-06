@@ -69,6 +69,8 @@ interface Window : EventTarget {
     [Replaceable, ImplementedAs=screen_x] readonly attribute long screenLeft;
     [Replaceable] readonly attribute long screenY;
     [Replaceable, ImplementedAs=screen_y] readonly attribute long screenTop;
+    [Replaceable] readonly attribute long outerWidth;
+    [Replaceable] readonly attribute long outerHeight;
 
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute

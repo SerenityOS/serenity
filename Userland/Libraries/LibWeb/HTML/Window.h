@@ -115,9 +115,6 @@ public:
 
     float device_pixel_ratio() const;
 
-    int outer_width() const;
-    int outer_height() const;
-
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
 
@@ -179,6 +176,8 @@ public:
 
     i32 screen_x() const;
     i32 screen_y() const;
+    i32 outer_width() const;
+    i32 outer_height() const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -247,9 +246,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
-
-    JS_DECLARE_NATIVE_FUNCTION(outer_width_getter);
-    JS_DECLARE_NATIVE_FUNCTION(outer_height_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(structured_clone);
 
