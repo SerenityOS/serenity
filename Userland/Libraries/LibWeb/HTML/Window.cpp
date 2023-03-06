@@ -586,26 +586,6 @@ bool Window::dispatch_event(DOM::Event& event)
     return DOM::EventDispatcher::dispatch(*this, event, true);
 }
 
-// https://www.w3.org/TR/cssom-view-1/#dom-window-innerwidth
-int Window::inner_width() const
-{
-    // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
-    // or zero if there is no viewport.
-    if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().width().value();
-    return 0;
-}
-
-// https://www.w3.org/TR/cssom-view-1/#dom-window-innerheight
-int Window::inner_height() const
-{
-    // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
-    // or zero if there is no viewport.
-    if (auto const* browsing_context = associated_document().browsing_context())
-        return browsing_context->viewport_rect().height().value();
-    return 0;
-}
-
 Page* Window::page()
 {
     return associated_document().page();
@@ -1030,8 +1010,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
-    define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
     define_native_function(realm, "setInterval", set_interval, 1, attr);
@@ -1335,6 +1313,26 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> Window::screen()
     return JS::NonnullGCPtr { *m_screen };
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-innerwidth
+i32 Window::inner_width() const
+{
+    // The innerWidth attribute must return the viewport width including the size of a rendered scroll bar (if any),
+    // or zero if there is no viewport.
+    if (auto const* browsing_context = associated_document().browsing_context())
+        return browsing_context->viewport_rect().width().value();
+    return 0;
+}
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-innerheight
+i32 Window::inner_height() const
+{
+    // The innerHeight attribute must return the viewport height including the size of a rendered scroll bar (if any),
+    // or zero if there is no viewport.
+    if (auto const* browsing_context = associated_document().browsing_context())
+        return browsing_context->viewport_rect().height().value();
+    return 0;
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1529,18 +1527,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
     auto* impl = TRY(impl_from(vm));
     TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::inner_width_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->inner_width());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::inner_height_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return JS::Value(impl->inner_height());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::device_pixel_ratio_getter)
