@@ -112,21 +112,12 @@ class NonnullRefPtr;
 template<typename T>
 class NonnullOwnPtr;
 
-template<typename T, size_t inline_capacity = 0>
-class NonnullOwnPtrVector;
-
-template<typename T, size_t inline_capacity = 0>
-class NonnullRefPtrVector;
-
 template<typename T>
 class Optional;
 
 #ifdef KERNEL
 template<typename T>
 class NonnullLockRefPtr;
-
-template<typename T, size_t inline_capacity = 0>
-class NonnullLockRefPtrVector;
 
 template<typename T>
 struct LockRefPtrTraits;
@@ -182,9 +173,7 @@ using AK::JsonValue;
 using AK::LittleEndianInputBitStream;
 using AK::LittleEndianOutputBitStream;
 using AK::NonnullOwnPtr;
-using AK::NonnullOwnPtrVector;
 using AK::NonnullRefPtr;
-using AK::NonnullRefPtrVector;
 using AK::Optional;
 using AK::OwnPtr;
 using AK::ReadonlyBytes;
@@ -212,7 +201,6 @@ using AK::Vector;
 using AK::LockRefPtr;
 using AK::LockRefPtrTraits;
 using AK::NonnullLockRefPtr;
-using AK::NonnullLockRefPtrVector;
 #    endif
 
 #endif
