@@ -59,7 +59,6 @@ public:
     }
 
 private:
-    // NonnullRefPtrVector doesn't allow us to quick_sort() it, because its operator[] returns T&.
     Vector<NonnullRefPtr<Desktop::AppFile>> m_apps;
 };
 
