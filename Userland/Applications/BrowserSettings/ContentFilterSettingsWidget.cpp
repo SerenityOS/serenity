@@ -50,7 +50,7 @@ ErrorOr<void> DomainListModel::save()
         TRY(builder.try_appendff("{}\n", domain));
 
     auto file = TRY(Core::File::open(filter_list_file_path(), Core::File::OpenMode::Write));
-    TRY(file->write(builder.to_byte_buffer().bytes()));
+    TRY(file->write(TRY(builder.try_to_byte_buffer()).bytes()));
     return {};
 }
 
