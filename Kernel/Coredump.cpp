@@ -74,7 +74,7 @@ ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullLockRefPtr<Process>
     return adopt_nonnull_own_or_enomem(new (nothrow) Coredump(move(process), move(description), move(regions)));
 }
 
-Coredump::Coredump(NonnullLockRefPtr<Process> process, NonnullLockRefPtr<OpenFileDescription> description, Vector<FlatRegionData> regions)
+Coredump::Coredump(NonnullLockRefPtr<Process> process, NonnullRefPtr<OpenFileDescription> description, Vector<FlatRegionData> regions)
     : m_process(move(process))
     , m_description(move(description))
     , m_regions(move(regions))
@@ -93,7 +93,7 @@ Coredump::Coredump(NonnullLockRefPtr<Process> process, NonnullLockRefPtr<OpenFil
     ++m_num_program_headers; // +1 for NOTE segment
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> Coredump::try_create_target_file(Process const& process, StringView output_path)
 {
     auto output_directory = KLexicalPath::dirname(output_path);
     auto dump_directory = TRY(VirtualFileSystem::the().open_directory(Process::current().credentials(), output_directory, VirtualFileSystem::the().root_custody()));

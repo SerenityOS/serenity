@@ -43,7 +43,7 @@ public:
     MinorNumber minor() const { return m_minor; }
 
     virtual ErrorOr<NonnullOwnPtr<KString>> pseudo_path(OpenFileDescription const&) const override;
-    virtual ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
     UserID uid() const { return m_uid; }
     GroupID gid() const { return m_gid; }

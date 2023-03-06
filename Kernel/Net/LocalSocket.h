@@ -15,8 +15,8 @@ namespace Kernel {
 class OpenFileDescription;
 
 struct SocketPair {
-    NonnullLockRefPtr<OpenFileDescription> description0;
-    NonnullLockRefPtr<OpenFileDescription> description1;
+    NonnullRefPtr<OpenFileDescription> description0;
+    NonnullRefPtr<OpenFileDescription> description1;
 };
 
 class LocalSocket final : public Socket {
@@ -26,9 +26,9 @@ public:
     static ErrorOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 
-    ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullLockRefPtr<OpenFileDescription> passing_description);
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
-    ErrorOr<Vector<NonnullLockRefPtr<OpenFileDescription>>> recvfds(OpenFileDescription const& socket_description, int n);
+    ErrorOr<void> sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> recvfd(OpenFileDescription const& socket_description);
+    ErrorOr<Vector<NonnullRefPtr<OpenFileDescription>>> recvfds(OpenFileDescription const& socket_description, int n);
 
     static void for_each(Function<void(LocalSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(LocalSocket const&)>);
@@ -60,8 +60,8 @@ private:
     bool has_attached_peer(OpenFileDescription const&) const;
     DoubleBuffer* receive_buffer_for(OpenFileDescription&);
     DoubleBuffer* send_buffer_for(OpenFileDescription&);
-    Vector<NonnullLockRefPtr<OpenFileDescription>>& sendfd_queue_for(OpenFileDescription const&);
-    Vector<NonnullLockRefPtr<OpenFileDescription>>& recvfd_queue_for(OpenFileDescription const&);
+    Vector<NonnullRefPtr<OpenFileDescription>>& sendfd_queue_for(OpenFileDescription const&);
+    Vector<NonnullRefPtr<OpenFileDescription>>& recvfd_queue_for(OpenFileDescription const&);
 
     void set_connect_side_role(Role connect_side_role, bool force_evaluate_block_conditions = false)
     {
@@ -101,8 +101,8 @@ private:
     NonnullOwnPtr<DoubleBuffer> m_for_client;
     NonnullOwnPtr<DoubleBuffer> m_for_server;
 
-    Vector<NonnullLockRefPtr<OpenFileDescription>> m_fds_for_client;
-    Vector<NonnullLockRefPtr<OpenFileDescription>> m_fds_for_server;
+    Vector<NonnullRefPtr<OpenFileDescription>> m_fds_for_client;
+    Vector<NonnullRefPtr<OpenFileDescription>> m_fds_for_server;
 
     IntrusiveListNode<LocalSocket> m_list_node;
 

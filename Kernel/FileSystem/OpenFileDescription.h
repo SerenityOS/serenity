@@ -26,8 +26,8 @@ public:
 
 class OpenFileDescription final : public AtomicRefCounted<OpenFileDescription> {
 public:
-    static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> try_create(Custody&);
-    static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> try_create(File&);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(Custody&);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create(File&);
     ~OpenFileDescription();
 
     Thread::FileBlocker::BlockFlags should_unblock(Thread::FileBlocker::BlockFlags) const;

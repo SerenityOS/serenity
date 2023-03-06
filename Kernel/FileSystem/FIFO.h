@@ -29,8 +29,8 @@ public:
 
     UserID uid() const { return m_uid; }
 
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_direction(Direction);
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction(Direction);
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_direction_blocking(Direction);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"

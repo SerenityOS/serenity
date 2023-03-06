@@ -161,7 +161,7 @@ ErrorOr<size_t> ConsolePort::write(OpenFileDescription& desc, u64, UserOrKernelB
     return total_bytes_copied;
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> ConsolePort::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> ConsolePort::open(int options)
 {
     if (!m_open)
         m_console.send_open_control_message(m_port, true);

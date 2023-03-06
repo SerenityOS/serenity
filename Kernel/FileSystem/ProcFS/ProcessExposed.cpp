@@ -262,7 +262,7 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
                 return {};
             }
             bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
-            LockRefPtr<OpenFileDescription> description = file_description_metadata.description();
+            auto const* description = file_description_metadata.description();
             auto description_object = TRY(array.add_object());
             TRY(description_object.add("fd"sv, count));
             // TODO: Better OOM handling.
@@ -275,7 +275,7 @@ ErrorOr<void> Process::procfs_get_fds_stats(KBufferBuilder& builder) const
             TRY(description_object.add("blocking"sv, description->is_blocking()));
             TRY(description_object.add("can_read"sv, description->can_read()));
             TRY(description_object.add("can_write"sv, description->can_write()));
-            Inode* inode = description->inode();
+            Inode const* inode = description->inode();
             if (inode != nullptr) {
                 auto inode_object = TRY(description_object.add_object("inode"sv));
                 TRY(inode_object.add("fsid"sv, inode->fsid().value()));

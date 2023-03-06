@@ -38,9 +38,9 @@ UNMAP_AFTER_INIT void PTYMultiplexer::initialize()
     MUST(the().after_inserting());
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> PTYMultiplexer::open(int options)
 {
-    return m_freelist.with([&](auto& freelist) -> ErrorOr<NonnullLockRefPtr<OpenFileDescription>> {
+    return m_freelist.with([&](auto& freelist) -> ErrorOr<NonnullRefPtr<OpenFileDescription>> {
         if (freelist.is_empty())
             return EBUSY;
 

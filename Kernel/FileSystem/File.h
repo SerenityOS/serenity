@@ -78,7 +78,7 @@ public:
     virtual void will_be_destroyed() { }
     virtual ~File();
 
-    virtual ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options);
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options);
     virtual ErrorOr<void> close();
 
     virtual bool can_read(OpenFileDescription const&, u64) const = 0;

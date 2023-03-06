@@ -196,7 +196,7 @@ ErrorOr<FlatPtr> Process::sys$mmap(Userspace<Syscall::SC_mmap_params const*> use
 
     Memory::Region* region = nullptr;
 
-    LockRefPtr<OpenFileDescription> description;
+    RefPtr<OpenFileDescription> description;
     LockRefPtr<Memory::VMObject> vmobject;
     u64 used_offset = 0;
 

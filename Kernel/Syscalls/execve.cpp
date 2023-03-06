@@ -423,8 +423,8 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
 }
 
 ErrorOr<LoadResult>
-Process::load(NonnullLockRefPtr<OpenFileDescription> main_program_description,
-    LockRefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
+Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
+    RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
     auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
 
@@ -471,8 +471,8 @@ void Process::clear_signal_handlers_for_exec()
     }
 }
 
-ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
-    LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header)
+ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
+    RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::in_critical());
@@ -784,7 +784,7 @@ static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_exec
     return ENOEXEC;
 }
 
-ErrorOr<LockRefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
+ErrorOr<RefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size)
 {
     // Not using ErrorOr here because we'll want to do the same thing in userspace in the RTLD
     StringBuilder interpreter_path_builder;

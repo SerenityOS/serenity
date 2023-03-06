@@ -475,7 +475,7 @@ public:
 
     ErrorOr<void> exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth = 0);
 
-    ErrorOr<LoadResult> load(NonnullLockRefPtr<OpenFileDescription> main_program_description, LockRefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
+    ErrorOr<LoadResult> load(NonnullRefPtr<OpenFileDescription> main_program_description, RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
     void terminate_due_to_signal(u8 signal);
     ErrorOr<void> send_signal(u8 signal, Process* sender);
@@ -605,12 +605,12 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    ErrorOr<void> do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header);
+    ErrorOr<void> do_exec(NonnullRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header);
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
 
-    ErrorOr<LockRefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
+    ErrorOr<RefPtr<OpenFileDescription>> find_elf_interpreter_for_executable(StringView path, ElfW(Ehdr) const& main_executable_header, size_t main_executable_header_size, size_t file_size);
 
     ErrorOr<void> do_kill(Process&, int signal);
     ErrorOr<void> do_killpg(ProcessGroupID pgrp, int signal);
@@ -704,10 +704,10 @@ public:
         void set_flags(u32 flags) { m_flags = flags; }
 
         void clear();
-        void set(NonnullLockRefPtr<OpenFileDescription>&&, u32 flags = 0);
+        void set(NonnullRefPtr<OpenFileDescription>, u32 flags = 0);
 
     private:
-        LockRefPtr<OpenFileDescription> m_description;
+        RefPtr<OpenFileDescription> m_description;
         bool m_is_allocated { false };
         u32 m_flags { 0 };
     };
@@ -758,7 +758,7 @@ public:
             m_fds_metadatas.clear();
         }
 
-        ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_file_description(int fd) const;
+        ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const;
 
     private:
         static constexpr size_t s_max_open_file_descriptors { FD_SETSIZE };
@@ -808,12 +808,12 @@ public:
     MutexProtected<OpenFileDescriptions>& fds() { return m_fds; }
     MutexProtected<OpenFileDescriptions> const& fds() const { return m_fds; }
 
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_file_description(int fd)
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd)
     {
         return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open_file_description(int fd) const
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open_file_description(int fd) const
     {
         return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }

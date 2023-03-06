@@ -38,6 +38,6 @@ private:
     virtual bool is_file_backed() const override { return true; }
 
     IntrusiveListNode<FileBackedFileSystem> m_file_backed_file_system_node;
-    mutable NonnullLockRefPtr<OpenFileDescription> m_file_description;
+    NonnullRefPtr<OpenFileDescription> m_file_description;
 };
 }

@@ -23,7 +23,7 @@ public:
 
     // ^File
     ErrorOr<NonnullLockRefPtr<Memory::VMObject>> vmobject_for_mmap(Process&, Memory::VirtualRange const&, u64& offset, bool shared) override;
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(int options) override;
+    virtual ErrorOr<NonnullRefPtr<OpenFileDescription>> open(int options) override;
 
 protected:
     KCOVDevice();

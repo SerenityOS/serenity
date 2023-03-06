@@ -570,13 +570,13 @@ Process::OpenFileDescriptionAndFlags& Process::OpenFileDescriptions::at(size_t i
     return m_fds_metadatas[i];
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::open_file_description(int fd) const
+ErrorOr<NonnullRefPtr<OpenFileDescription>> Process::OpenFileDescriptions::open_file_description(int fd) const
 {
     if (fd < 0)
         return EBADF;
     if (static_cast<size_t>(fd) >= m_fds_metadatas.size())
         return EBADF;
-    LockRefPtr description = m_fds_metadatas[fd].description();
+    RefPtr description = m_fds_metadatas[fd].description();
     if (!description)
         return EBADF;
     return description.release_nonnull();
@@ -706,7 +706,7 @@ ErrorOr<void> Process::dump_perfcore()
         return KString::formatted("{}_{}", process_name->view(), pid().value());
     }));
     auto perfcore_filename = TRY(KString::formatted("{}.profile", base_filename));
-    LockRefPtr<OpenFileDescription> description;
+    RefPtr<OpenFileDescription> description;
     auto credentials = this->credentials();
     for (size_t attempt = 1; attempt <= 10; ++attempt) {
         auto description_or_error = VirtualFileSystem::the().open(*this, credentials, perfcore_filename->view(), O_CREAT | O_EXCL, 0400, current_directory(), UidAndGid { 0, 0 });
@@ -945,7 +945,7 @@ void Process::OpenFileDescriptionAndFlags::clear()
     m_flags = 0;
 }
 
-void Process::OpenFileDescriptionAndFlags::set(NonnullLockRefPtr<OpenFileDescription>&& description, u32 flags)
+void Process::OpenFileDescriptionAndFlags::set(NonnullRefPtr<OpenFileDescription> description, u32 flags)
 {
     m_description = move(description);
     m_flags = flags;

@@ -59,7 +59,7 @@ ErrorOr<NonnullOwnPtr<KString>> Device::pseudo_path(OpenFileDescription const&) 
     return KString::formatted("device:{},{}", major(), minor());
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> Device::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> Device::open(int options)
 {
     TRY(Process::current().jail().with([&](auto const& my_jail) -> ErrorOr<void> {
         if (my_jail && !is_openable_by_jailed_processes())

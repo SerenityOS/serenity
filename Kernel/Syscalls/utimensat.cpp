@@ -38,7 +38,7 @@ ErrorOr<FlatPtr> Process::sys$utimensat(Userspace<Syscall::SC_utimensat_params c
     }
 
     OwnPtr<KString> path;
-    LockRefPtr<OpenFileDescription> description;
+    RefPtr<OpenFileDescription> description;
     RefPtr<Custody> base;
 
     auto path_or_error = get_syscall_path_argument(params.path);

@@ -65,8 +65,8 @@ private:
         VirtualAddress m_vaddr;
     };
 
-    Coredump(NonnullLockRefPtr<Process>, NonnullLockRefPtr<OpenFileDescription>, Vector<FlatRegionData>);
-    static ErrorOr<NonnullLockRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
+    Coredump(NonnullLockRefPtr<Process>, NonnullRefPtr<OpenFileDescription>, Vector<FlatRegionData>);
+    static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
 
     ErrorOr<void> write_elf_header();
     ErrorOr<void> write_program_headers(size_t notes_size);
@@ -80,7 +80,7 @@ private:
     ErrorOr<void> create_notes_metadata_data(auto&) const;
 
     NonnullLockRefPtr<Process> m_process;
-    NonnullLockRefPtr<OpenFileDescription> m_description;
+    NonnullRefPtr<OpenFileDescription> m_description;
     size_t m_num_program_headers { 0 };
     Vector<FlatRegionData> m_regions;
 };

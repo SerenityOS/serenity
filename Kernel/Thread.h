@@ -519,7 +519,7 @@ public:
         explicit OpenFileDescriptionBlocker(OpenFileDescription&, BlockFlags, BlockFlags&);
 
     private:
-        NonnullLockRefPtr<OpenFileDescription> m_blocked_description;
+        NonnullRefPtr<OpenFileDescription> m_blocked_description;
         const BlockFlags m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
@@ -577,7 +577,7 @@ public:
     class SelectBlocker final : public FileBlocker {
     public:
         struct FDInfo {
-            LockRefPtr<OpenFileDescription> description;
+            RefPtr<OpenFileDescription> description;
             BlockFlags block_flags { BlockFlags::None };
             BlockFlags unblocked_flags { BlockFlags::None };
         };

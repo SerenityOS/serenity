@@ -472,8 +472,9 @@ ErrorOr<void> LocalSocket::chown(Credentials const& credentials, OpenFileDescrip
     return {};
 }
 
-Vector<NonnullLockRefPtr<OpenFileDescription>>& LocalSocket::recvfd_queue_for(OpenFileDescription const& description)
+Vector<NonnullRefPtr<OpenFileDescription>>& LocalSocket::recvfd_queue_for(OpenFileDescription const& description)
 {
+    VERIFY(mutex().is_exclusively_locked_by_current_thread());
     auto role = this->role(description);
     if (role == Role::Connected)
         return m_fds_for_client;
@@ -482,8 +483,9 @@ Vector<NonnullLockRefPtr<OpenFileDescription>>& LocalSocket::recvfd_queue_for(Op
     VERIFY_NOT_REACHED();
 }
 
-Vector<NonnullLockRefPtr<OpenFileDescription>>& LocalSocket::sendfd_queue_for(OpenFileDescription const& description)
+Vector<NonnullRefPtr<OpenFileDescription>>& LocalSocket::sendfd_queue_for(OpenFileDescription const& description)
 {
+    VERIFY(mutex().is_exclusively_locked_by_current_thread());
     auto role = this->role(description);
     if (role == Role::Connected)
         return m_fds_for_server;
@@ -492,7 +494,7 @@ Vector<NonnullLockRefPtr<OpenFileDescription>>& LocalSocket::sendfd_queue_for(Op
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullLockRefPtr<OpenFileDescription> passing_description)
+ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description, NonnullRefPtr<OpenFileDescription> passing_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);
@@ -506,7 +508,7 @@ ErrorOr<void> LocalSocket::sendfd(OpenFileDescription const& socket_description,
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDescription const& socket_description)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDescription const& socket_description)
 {
     MutexLocker locker(mutex());
     auto role = this->role(socket_description);
@@ -520,10 +522,10 @@ ErrorOr<NonnullLockRefPtr<OpenFileDescription>> LocalSocket::recvfd(OpenFileDesc
     return queue.take_first();
 }
 
-ErrorOr<Vector<NonnullLockRefPtr<OpenFileDescription>>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
+ErrorOr<Vector<NonnullRefPtr<OpenFileDescription>>> LocalSocket::recvfds(OpenFileDescription const& socket_description, int n)
 {
     MutexLocker locker(mutex());
-    Vector<NonnullLockRefPtr<OpenFileDescription>> fds;
+    Vector<NonnullRefPtr<OpenFileDescription>> fds;
 
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)

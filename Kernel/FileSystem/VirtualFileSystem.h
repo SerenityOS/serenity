@@ -59,10 +59,10 @@ public:
     ErrorOr<void> remount(Custody& mount_point, int new_flags);
     ErrorOr<void> unmount(Custody& mount_point);
 
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> create(Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
-    ErrorOr<NonnullLockRefPtr<OpenFileDescription>> create(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> open(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
+    ErrorOr<NonnullRefPtr<OpenFileDescription>> create(Process const&, Credentials const&, StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     ErrorOr<void> mkdir(Credentials const&, StringView path, mode_t mode, Custody& base);
     ErrorOr<void> link(Credentials const&, StringView old_path, StringView new_path, Custody& base);
     ErrorOr<void> unlink(Credentials const&, StringView path, Custody& base);

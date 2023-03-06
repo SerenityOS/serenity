@@ -65,7 +65,7 @@ void KCOVDevice::free_process()
     delete kcov_instance;
 }
 
-ErrorOr<NonnullLockRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
+ErrorOr<NonnullRefPtr<OpenFileDescription>> KCOVDevice::open(int options)
 {
     auto pid = Process::current().pid();
     if (proc_instance->get(pid).has_value())
