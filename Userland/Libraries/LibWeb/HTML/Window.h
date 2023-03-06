@@ -103,7 +103,6 @@ public:
     void set_current_event(DOM::Event* event);
 
     CSS::CSSStyleDeclaration* get_computed_style_impl(DOM::Element&) const;
-    JS::NonnullGCPtr<CSS::MediaQueryList> match_media_impl(DeprecatedString);
     Optional<CSS::MediaFeatureValue> query_media_feature(CSS::MediaFeatureID) const;
 
     float scroll_x() const;
@@ -164,6 +163,8 @@ public:
     void post_message(JS::Value message, String const&);
 
     Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
+
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> match_media(String const& query);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -266,7 +267,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(focus);
 
     JS_DECLARE_NATIVE_FUNCTION(get_computed_style);
-    JS_DECLARE_NATIVE_FUNCTION(match_media);
     JS_DECLARE_NATIVE_FUNCTION(get_selection);
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);

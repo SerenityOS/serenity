@@ -1,4 +1,5 @@
 #import <Crypto/Crypto.idl>
+#import <CSS/MediaQueryList.idl>
 #import <DOM/Document.idl>
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
@@ -41,6 +42,9 @@ interface Window : EventTarget {
 
     // https://dom.spec.whatwg.org/#interface-window-extensions
     [Replaceable] readonly attribute (Event or undefined) event; // legacy
+
+    // https://w3c.github.io/csswg-drafts/cssom-view/#extensions-to-the-window-interface
+    [NewObject] MediaQueryList matchMedia(CSSOMString query);
 
     // FIXME: Everything from here on should be shared through WindowOrWorkerGlobalScope
     // https://w3c.github.io/hr-time/#the-performance-attribute

@@ -628,13 +628,6 @@ CSS::CSSStyleDeclaration* Window::get_computed_style_impl(DOM::Element& element)
     return CSS::ResolvedCSSStyleDeclaration::create(element).release_value_but_fixme_should_propagate_errors().ptr();
 }
 
-JS::NonnullGCPtr<CSS::MediaQueryList> Window::match_media_impl(DeprecatedString media)
-{
-    auto media_query_list = CSS::MediaQueryList::create(associated_document(), parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), media)).release_value_but_fixme_should_propagate_errors();
-    associated_document().add_media_query_list(*media_query_list);
-    return media_query_list;
-}
-
 Optional<CSS::MediaFeatureValue> Window::query_media_feature(CSS::MediaFeatureID media_feature) const
 {
     // FIXME: Many of these should be dependent on the hardware
@@ -1063,7 +1056,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "cancelIdleCallback", cancel_idle_callback, 1, attr);
 
     define_native_function(realm, "getComputedStyle", get_computed_style, 1, attr);
-    define_native_function(realm, "matchMedia", match_media, 1, attr);
     define_native_function(realm, "getSelection", get_selection, 0, attr);
 
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
@@ -1330,6 +1322,18 @@ Variant<JS::Handle<DOM::Event>, JS::Value> Window::event() const
     return JS::js_undefined();
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-matchmedia
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> Window::match_media(String const& query)
+{
+    // 1. Let parsed media query list be the result of parsing query.
+    auto parsed_media_query_list = parse_media_query_list(CSS::Parser::ParsingContext(associated_document()), query);
+
+    // 2. Return a new MediaQueryList object, with this's associated Document as the document, with parsed media query list as its associated media query list.
+    auto media_query_list = MUST_OR_THROW_OOM(heap().allocate<CSS::MediaQueryList>(realm(), associated_document(), move(parsed_media_query_list)));
+    associated_document().add_media_query_list(media_query_list);
+    return media_query_list;
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1571,13 +1575,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::get_selection)
     // The method must invoke and return the result of getSelection() on this's Window.document attribute.
     auto* impl = TRY(impl_from(vm));
     return impl->associated_document().get_selection();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::match_media)
-{
-    auto* impl = TRY(impl_from(vm));
-    auto media = TRY(vm.argument(0).to_deprecated_string(vm));
-    return impl->match_media_impl(move(media));
 }
 
 // https://www.w3.org/TR/cssom-view/#dom-window-scrollx
