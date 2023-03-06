@@ -44,7 +44,7 @@ private:
 
     void read_lines(StringView);
 
-    NonnullOwnPtrVector<Line> m_lines;
+    Vector<NonnullOwnPtr<Line>> m_lines;
     URL m_url;
     bool m_inside_preformatted_block { false };
     bool m_inside_unordered_list { false };

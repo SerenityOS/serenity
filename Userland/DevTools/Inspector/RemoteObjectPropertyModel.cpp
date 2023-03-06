@@ -111,7 +111,7 @@ GUI::ModelIndex RemoteObjectPropertyModel::index(int row, int column, const GUI:
         } else {
             return nullptr;
         }
-        return &m_paths.last();
+        return m_paths.last();
     };
 
     if (!parent.is_valid()) {
@@ -176,16 +176,16 @@ JsonPath const* RemoteObjectPropertyModel::cached_path_at(int n, Vector<JsonPath
     JsonPath const* index_path = nullptr;
     int row_index = n;
     for (auto& path : m_paths) {
-        if (path.size() != prefix.size() + 1)
+        if (path->size() != prefix.size() + 1)
             continue;
 
         for (size_t i = 0; i < prefix.size(); ++i) {
-            if (path[i] != prefix[i])
+            if ((*path)[i] != prefix[i])
                 goto do_continue;
         }
 
         if (row_index == 0) {
-            index_path = &path;
+            index_path = path;
             break;
         }
         --row_index;
@@ -198,15 +198,15 @@ JsonPath const* RemoteObjectPropertyModel::cached_path_at(int n, Vector<JsonPath
 JsonPath const* RemoteObjectPropertyModel::find_cached_path(Vector<JsonPathElement> const& path) const
 {
     for (auto& cpath : m_paths) {
-        if (cpath.size() != path.size())
+        if (cpath->size() != path.size())
             continue;
 
-        for (size_t i = 0; i < cpath.size(); ++i) {
-            if (cpath[i] != path[i])
+        for (size_t i = 0; i < cpath->size(); ++i) {
+            if ((*cpath)[i] != path[i])
                 goto do_continue;
         }
 
-        return &cpath;
+        return cpath;
     do_continue:;
     }
 

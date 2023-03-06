@@ -44,7 +44,7 @@ WindowManager::WindowManager(Gfx::PaletteImpl& palette)
 
     {
         // If we haven't created any window stacks, at least create the stationary/main window stack
-        auto row = adopt_own(*new RemoveReference<decltype(m_window_stacks[0])>());
+        auto row = adopt_own(*new RemoveReference<decltype(*m_window_stacks[0])>());
         auto main_window_stack = adopt_own(*new WindowStack(0, 0));
         main_window_stack->set_stationary_window_stack(*main_window_stack);
         m_current_window_stack = main_window_stack.ptr();
@@ -191,9 +191,9 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
 
         // While we have too many rows, merge each row too many into the new bottom row
         while (current_rows > rows) {
-            auto& row = m_window_stacks[rows];
+            auto& row = *m_window_stacks[rows];
             for (size_t column_index = 0; column_index < row.size(); column_index++) {
-                merge_window_stack(row[column_index], m_window_stacks[rows - 1][column_index]);
+                merge_window_stack(*row[column_index], *(*m_window_stacks[rows - 1])[column_index]);
                 if (rows - 1 == current_stack_row && column_index == current_stack_column)
                     need_rerender = true;
             }
@@ -203,8 +203,8 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
         // While we have too many columns, merge each column too many into the new right most column
         while (current_columns > columns) {
             for (size_t row_index = 0; row_index < current_rows; row_index++) {
-                auto& row = m_window_stacks[row_index];
-                merge_window_stack(row[columns], row[columns - 1]);
+                auto& row = *m_window_stacks[row_index];
+                merge_window_stack(*row[columns], *row[columns - 1]);
                 if (row_index == current_stack_row && columns - 1 == current_stack_column)
                     need_rerender = true;
                 row.remove(columns);
@@ -213,10 +213,10 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
         }
         // Add more rows if necessary
         while (rows > current_rows) {
-            auto row = adopt_own(*new RemoveReference<decltype(m_window_stacks[0])>());
+            auto row = adopt_own(*new RemoveReference<decltype(*m_window_stacks[0])>());
             for (size_t column_index = 0; column_index < columns; column_index++) {
                 auto window_stack = adopt_own(*new WindowStack(current_rows, column_index));
-                window_stack->set_stationary_window_stack(m_window_stacks[0][0]);
+                window_stack->set_stationary_window_stack(*(*m_window_stacks[0])[0]);
                 row->append(move(window_stack));
             }
             m_window_stacks.append(move(row));
@@ -226,10 +226,10 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
         while (columns > current_columns) {
             for (size_t row_index = 0; row_index < current_rows; row_index++) {
                 auto& row = m_window_stacks[row_index];
-                while (row.size() < columns) {
-                    auto window_stack = adopt_own(*new WindowStack(row_index, row.size()));
-                    window_stack->set_stationary_window_stack(m_window_stacks[0][0]);
-                    row.append(move(window_stack));
+                while (row->size() < columns) {
+                    auto window_stack = adopt_own(*new WindowStack(row_index, row->size()));
+                    window_stack->set_stationary_window_stack(*(*m_window_stacks[0])[0]);
+                    row->append(move(window_stack));
                 }
             }
             current_columns++;
@@ -237,7 +237,7 @@ bool WindowManager::apply_workspace_settings(unsigned rows, unsigned columns, bo
 
         if (removing_current_stack) {
             // If we're on a window stack that was removed, we need to move...
-            m_current_window_stack = &m_window_stacks[new_current_row][new_current_column];
+            m_current_window_stack = (*m_window_stacks[new_current_row])[new_current_column];
             Compositor::the().set_current_window_stack_no_transition(*m_current_window_stack);
             need_rerender = false; // The compositor already called invalidate_for_window_stack_merge_or_change for us
         }
@@ -320,7 +320,7 @@ bool WindowManager::is_natural_scroll() const
 WindowStack& WindowManager::window_stack_for_window(Window& window)
 {
     if (is_stationary_window_type(window.type()))
-        return m_window_stacks[0][0];
+        return *(*m_window_stacks[0])[0];
     if (auto* parent = window.parent_window(); parent && !is_stationary_window_type(parent->type()))
         return parent->window_stack();
     return current_window_stack();
@@ -1657,7 +1657,7 @@ void WindowManager::process_key_event(KeyEvent& event)
                 column--;
                 return true;
             case Key_Right:
-                if (column + 1 >= m_window_stacks[0].size())
+                if (column + 1 >= m_window_stacks[0]->size())
                     return true;
                 column++;
                 return true;
@@ -1678,7 +1678,7 @@ void WindowManager::process_key_event(KeyEvent& event)
         if (handle_window_stack_switch_key()) {
             request_close_fragile_windows();
             Window* carry_window = nullptr;
-            auto& new_window_stack = m_window_stacks[row][column];
+            auto& new_window_stack = *(*m_window_stacks[row])[column];
             if (&new_window_stack != &current_stack) {
                 if (event.modifiers() == (Mod_Ctrl | Mod_Shift | Mod_Alt))
                     carry_window = this->active_window();

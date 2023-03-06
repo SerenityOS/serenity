@@ -259,11 +259,11 @@ public:
     void switch_to_window_stack(u32 row, u32 col, Window* carry = nullptr, bool show_overlay = true)
     {
         if (row < window_stack_rows() && col < window_stack_columns())
-            switch_to_window_stack(m_window_stacks[row][col], carry, show_overlay);
+            switch_to_window_stack(*(*m_window_stacks[row])[col], carry, show_overlay);
     }
 
     size_t window_stack_rows() const { return m_window_stacks.size(); }
-    size_t window_stack_columns() const { return m_window_stacks[0].size(); }
+    size_t window_stack_columns() const { return m_window_stacks[0]->size(); }
 
     bool apply_workspace_settings(unsigned rows, unsigned columns, bool save);
 
@@ -277,8 +277,8 @@ public:
     IterationDecision for_each_window_stack(F f)
     {
         for (auto& row : m_window_stacks) {
-            for (auto& stack : row) {
-                IterationDecision decision = f(stack);
+            for (auto& stack : *row) {
+                IterationDecision decision = f(*stack);
                 if (decision != IterationDecision::Continue)
                     return decision;
             }
@@ -397,7 +397,7 @@ private:
     RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 
     // Setup 2 rows 1 column by default
-    NonnullOwnPtrVector<NonnullOwnPtrVector<WindowStack, default_window_stack_columns>, default_window_stack_rows> m_window_stacks;
+    Vector<NonnullOwnPtr<Vector<NonnullOwnPtr<WindowStack>, default_window_stack_columns>>, default_window_stack_rows> m_window_stacks;
     WindowStack* m_current_window_stack { nullptr };
 
     struct DoubleClickInfo {

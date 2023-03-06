@@ -348,7 +348,7 @@ ErrorOr<void> Process::procfs_get_command_line(KBufferBuilder& builder) const
 {
     auto array = TRY(JsonArraySerializer<>::try_create(builder));
     for (auto const& arg : arguments()) {
-        TRY(array.add(arg.view()));
+        TRY(array.add(arg->view()));
     }
     TRY(array.finish());
     return {};

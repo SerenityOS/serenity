@@ -365,7 +365,7 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         }
 
         for (auto& region : global_data.physical_regions)
-            global_data.system_memory_info.physical_pages += region.size();
+            global_data.system_memory_info.physical_pages += region->size();
 
         register_reserved_ranges();
         for (auto& range : global_data.reserved_memory_ranges) {
@@ -384,8 +384,8 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         }
 
         for (auto& region : global_data.physical_regions) {
-            dmesgln("MM: User physical region: {} - {} (size {:#x})", region.lower(), region.upper().offset(-1), PAGE_SIZE * region.size());
-            region.initialize_zones();
+            dmesgln("MM: User physical region: {} - {} (size {:#x})", region->lower(), region->upper().offset(-1), PAGE_SIZE * region->size());
+            region->initialize_zones();
         }
     });
 }
@@ -425,8 +425,8 @@ UNMAP_AFTER_INIT void MemoryManager::initialize_physical_pages()
         Optional<size_t> found_region_index;
         for (size_t i = 0; i < global_data.physical_regions.size(); ++i) {
             auto& region = global_data.physical_regions[i];
-            if (region.size() >= physical_page_array_pages_and_page_tables_count) {
-                found_region = &region;
+            if (region->size() >= physical_page_array_pages_and_page_tables_count) {
+                found_region = region;
                 found_region_index = i;
                 break;
             }
@@ -894,10 +894,10 @@ void MemoryManager::deallocate_physical_page(PhysicalAddress paddr)
     return m_global_data.with([&](auto& global_data) {
         // Are we returning a user page?
         for (auto& region : global_data.physical_regions) {
-            if (!region.contains(paddr))
+            if (!region->contains(paddr))
                 continue;
 
-            region.return_page(paddr);
+            region->return_page(paddr);
             --global_data.system_memory_info.physical_pages_used;
 
             // Always return pages to the uncommitted pool. Pages that were
@@ -925,7 +925,7 @@ RefPtr<PhysicalPage> MemoryManager::find_free_physical_page(bool committed)
             global_data.system_memory_info.physical_pages_uncommitted--;
         }
         for (auto& region : global_data.physical_regions) {
-            page = region.take_free_page();
+            page = region->take_free_page();
             if (!page.is_null()) {
                 ++global_data.system_memory_info.physical_pages_used;
                 break;
@@ -1020,7 +1020,7 @@ ErrorOr<Vector<NonnullRefPtr<PhysicalPage>>> MemoryManager::allocate_contiguous_
             return ENOMEM;
 
         for (auto& physical_region : global_data.physical_regions) {
-            auto physical_pages = physical_region.take_contiguous_free_pages(page_count);
+            auto physical_pages = physical_region->take_contiguous_free_pages(page_count);
             if (!physical_pages.is_empty()) {
                 global_data.system_memory_info.physical_pages_uncommitted -= page_count;
                 global_data.system_memory_info.physical_pages_used += page_count;

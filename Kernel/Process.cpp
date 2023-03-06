@@ -217,7 +217,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, TTY* tty)
+ErrorOr<NonnullLockRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY* tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {

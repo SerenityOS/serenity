@@ -462,7 +462,7 @@ void TextDocument::update_regex_matches(StringView needle)
         Vector<RegexStringView> views;
 
         for (size_t line = 0; line < m_lines.size(); ++line) {
-            views.append(m_lines.at(line).view());
+            views.append(m_lines[line]->view());
         }
         re.search(views, m_regex_result);
         m_regex_needs_update = false;

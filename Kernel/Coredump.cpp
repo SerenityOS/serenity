@@ -287,14 +287,14 @@ ErrorOr<void> Coredump::create_notes_process_data(auto& builder) const
         {
             auto arguments_array = TRY(process_obj.add_array("arguments"sv));
             for (auto const& argument : m_process->arguments())
-                TRY(arguments_array.add(argument.view()));
+                TRY(arguments_array.add(argument->view()));
             TRY(arguments_array.finish());
         }
 
         {
             auto environment_array = TRY(process_obj.add_array("environment"sv));
             for (auto const& variable : m_process->environment())
-                TRY(environment_array.add(variable.view()));
+                TRY(environment_array.add(variable->view()));
             TRY(environment_array.finish());
         }
 

@@ -359,7 +359,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         // First, resolve the linked modules
-        NonnullOwnPtrVector<Wasm::ModuleInstance> linked_instances;
+        Vector<NonnullOwnPtr<Wasm::ModuleInstance>> linked_instances;
         Vector<Wasm::Module> linked_modules;
         for (auto& name : modules_to_link_in) {
             auto parse_result = parse(name);
@@ -370,7 +370,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             linked_modules.append(parse_result.release_value());
             Wasm::Linker linker { linked_modules.last() };
             for (auto& instance : linked_instances)
-                linker.link(instance);
+                linker.link(*instance);
             auto link_result = linker.finish();
             if (link_result.is_error()) {
                 warnln("Linking imported module '{}' failed", name);
@@ -387,7 +387,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Wasm::Linker linker { parse_result.value() };
         for (auto& instance : linked_instances)
-            linker.link(instance);
+            linker.link(*instance);
 
         if (export_all_imports) {
             HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;

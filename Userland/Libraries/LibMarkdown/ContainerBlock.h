@@ -17,7 +17,7 @@ namespace Markdown {
 
 class ContainerBlock final : public Block {
 public:
-    ContainerBlock(NonnullOwnPtrVector<Block> blocks, bool has_blank_lines, bool has_trailing_blank_lines)
+    ContainerBlock(Vector<NonnullOwnPtr<Block>> blocks, bool has_blank_lines, bool has_trailing_blank_lines)
         : m_blocks(move(blocks))
         , m_has_blank_lines(has_blank_lines)
         , m_has_trailing_blank_lines(has_trailing_blank_lines)
@@ -35,10 +35,10 @@ public:
     bool has_blank_lines() const { return m_has_blank_lines; }
     bool has_trailing_blank_lines() const { return m_has_trailing_blank_lines; }
 
-    NonnullOwnPtrVector<Block> const& blocks() const { return m_blocks; }
+    Vector<NonnullOwnPtr<Block>> const& blocks() const { return m_blocks; }
 
 private:
-    NonnullOwnPtrVector<Block> m_blocks;
+    Vector<NonnullOwnPtr<Block>> m_blocks;
     bool m_has_blank_lines;
     bool m_has_trailing_blank_lines;
 };

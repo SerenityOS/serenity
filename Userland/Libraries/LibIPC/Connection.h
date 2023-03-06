@@ -75,7 +75,7 @@ protected:
 
     RefPtr<Core::Timer> m_responsiveness_timer;
 
-    NonnullOwnPtrVector<Message> m_unprocessed_messages;
+    Vector<NonnullOwnPtr<Message>> m_unprocessed_messages;
     ByteBuffer m_unprocessed_bytes;
 
     u32 m_local_endpoint_magic { 0 };

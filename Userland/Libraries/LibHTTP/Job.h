@@ -71,7 +71,7 @@ protected:
         ReadonlyBytes pending_flush;
     };
 
-    NonnullOwnPtrVector<ReceivedBuffer> m_received_buffers;
+    Vector<NonnullOwnPtr<ReceivedBuffer>> m_received_buffers;
 
     size_t m_buffered_size { 0 };
     size_t m_received_size { 0 };

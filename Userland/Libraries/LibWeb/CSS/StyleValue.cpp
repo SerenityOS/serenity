@@ -602,7 +602,7 @@ ErrorOr<String> CalculatedStyleValue::CalcSum::to_string() const
     StringBuilder builder;
     TRY(builder.try_append(TRY(first_calc_product->to_string())));
     for (auto const& item : zero_or_more_additional_calc_products)
-        TRY(builder.try_append(TRY(item.to_string())));
+        TRY(builder.try_append(TRY(item->to_string())));
     return builder.to_string();
 }
 
@@ -611,7 +611,7 @@ ErrorOr<String> CalculatedStyleValue::CalcNumberSum::to_string() const
     StringBuilder builder;
     TRY(builder.try_append(TRY(first_calc_number_product->to_string())));
     for (auto const& item : zero_or_more_additional_calc_number_products)
-        TRY(builder.try_append(TRY(item.to_string())));
+        TRY(builder.try_append(TRY(item->to_string())));
     return builder.to_string();
 }
 
@@ -620,7 +620,7 @@ ErrorOr<String> CalculatedStyleValue::CalcProduct::to_string() const
     StringBuilder builder;
     TRY(builder.try_append(TRY(first_calc_value.to_string())));
     for (auto const& item : zero_or_more_additional_calc_values)
-        TRY(builder.try_append(TRY(item.to_string())));
+        TRY(builder.try_append(TRY(item->to_string())));
     return builder.to_string();
 }
 
@@ -642,7 +642,7 @@ ErrorOr<String> CalculatedStyleValue::CalcNumberProduct::to_string() const
     StringBuilder builder;
     TRY(builder.try_append(TRY(first_calc_number_value.to_string())));
     for (auto const& item : zero_or_more_additional_calc_number_values)
-        TRY(builder.try_append(TRY(item.to_string())));
+        TRY(builder.try_append(TRY(item->to_string())));
     return builder.to_string();
 }
 
@@ -790,12 +790,12 @@ static bool is_dimension(CalculatedStyleValue::ResolvedType type)
 }
 
 template<typename SumWithOperator>
-static Optional<CalculatedStyleValue::ResolvedType> resolve_sum_type(CalculatedStyleValue::ResolvedType first_type, NonnullOwnPtrVector<SumWithOperator> const& zero_or_more_additional_products)
+static Optional<CalculatedStyleValue::ResolvedType> resolve_sum_type(CalculatedStyleValue::ResolvedType first_type, Vector<NonnullOwnPtr<SumWithOperator>> const& zero_or_more_additional_products)
 {
     auto type = first_type;
 
     for (auto const& product : zero_or_more_additional_products) {
-        auto maybe_product_type = product.resolved_type();
+        auto maybe_product_type = product->resolved_type();
         if (!maybe_product_type.has_value())
             return {};
         auto product_type = maybe_product_type.value();
@@ -869,17 +869,17 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSum
 }
 
 template<typename ProductWithOperator>
-static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(CalculatedStyleValue::ResolvedType first_type, NonnullOwnPtrVector<ProductWithOperator> const& zero_or_more_additional_values)
+static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(CalculatedStyleValue::ResolvedType first_type, Vector<NonnullOwnPtr<ProductWithOperator>> const& zero_or_more_additional_values)
 {
     auto type = first_type;
 
     for (auto const& value : zero_or_more_additional_values) {
-        auto maybe_value_type = value.resolved_type();
+        auto maybe_value_type = value->resolved_type();
         if (!maybe_value_type.has_value())
             return {};
         auto value_type = maybe_value_type.value();
 
-        if (value.op == CalculatedStyleValue::ProductOperation::Multiply) {
+        if (value->op == CalculatedStyleValue::ProductOperation::Multiply) {
             // At *, check that at least one side is <number>.
             if (!(is_number(type) || is_number(value_type)))
                 return {};
@@ -894,7 +894,7 @@ static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(Calcula
 
             continue;
         } else {
-            VERIFY(value.op == CalculatedStyleValue::ProductOperation::Divide);
+            VERIFY(value->op == CalculatedStyleValue::ProductOperation::Divide);
             // At /, check that the right side is <number>.
             if (!is_number(value_type))
                 return {};
@@ -1005,11 +1005,11 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(L
     auto value = first_calc_product->resolve(layout_node, percentage_basis);
 
     for (auto& additional_product : zero_or_more_additional_calc_products) {
-        auto additional_value = additional_product.resolve(layout_node, percentage_basis);
+        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
 
-        if (additional_product.op == CalculatedStyleValue::SumOperation::Add)
+        if (additional_product->op == CalculatedStyleValue::SumOperation::Add)
             value.add(additional_value, layout_node, percentage_basis);
-        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
+        else if (additional_product->op == CalculatedStyleValue::SumOperation::Subtract)
             value.subtract(additional_value, layout_node, percentage_basis);
         else
             VERIFY_NOT_REACHED();
@@ -1023,11 +1023,11 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::res
     auto value = first_calc_number_product->resolve(layout_node, percentage_basis);
 
     for (auto& additional_product : zero_or_more_additional_calc_number_products) {
-        auto additional_value = additional_product.resolve(layout_node, percentage_basis);
+        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
 
-        if (additional_product.op == CSS::CalculatedStyleValue::SumOperation::Add)
+        if (additional_product->op == CSS::CalculatedStyleValue::SumOperation::Add)
             value.add(additional_value, layout_node, percentage_basis);
-        else if (additional_product.op == CalculatedStyleValue::SumOperation::Subtract)
+        else if (additional_product->op == CalculatedStyleValue::SumOperation::Subtract)
             value.subtract(additional_value, layout_node, percentage_basis);
         else
             VERIFY_NOT_REACHED();
@@ -1041,14 +1041,14 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resol
     auto value = first_calc_value.resolve(layout_node, percentage_basis);
 
     for (auto& additional_value : zero_or_more_additional_calc_values) {
-        additional_value.value.visit(
+        additional_value->value.visit(
             [&](CalculatedStyleValue::CalcValue const& calc_value) {
-                VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Multiply);
+                VERIFY(additional_value->op == CalculatedStyleValue::ProductOperation::Multiply);
                 auto resolved_value = calc_value.resolve(layout_node, percentage_basis);
                 value.multiply_by(resolved_value, layout_node);
             },
             [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
-                VERIFY(additional_value.op == CalculatedStyleValue::ProductOperation::Divide);
+                VERIFY(additional_value->op == CalculatedStyleValue::ProductOperation::Divide);
                 auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
                 // FIXME: Checking for division by 0 should happen during parsing.
                 VERIFY(resolved_calc_number_value.value().get<Number>().value() != 0.0f);
@@ -1064,11 +1064,11 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct:
     auto value = first_calc_number_value.resolve(layout_node, percentage_basis);
 
     for (auto& additional_number_value : zero_or_more_additional_calc_number_values) {
-        auto additional_value = additional_number_value.resolve(layout_node, percentage_basis);
+        auto additional_value = additional_number_value->resolve(layout_node, percentage_basis);
 
-        if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Multiply)
+        if (additional_number_value->op == CalculatedStyleValue::ProductOperation::Multiply)
             value.multiply_by(additional_value, layout_node);
-        else if (additional_number_value.op == CalculatedStyleValue::ProductOperation::Divide)
+        else if (additional_number_value->op == CalculatedStyleValue::ProductOperation::Divide)
             value.divide_by(additional_value, layout_node);
         else
             VERIFY_NOT_REACHED();
@@ -2290,7 +2290,7 @@ bool CalculatedStyleValue::CalcSum::contains_percentage() const
     if (first_calc_product->contains_percentage())
         return true;
     for (auto& part : zero_or_more_additional_calc_products) {
-        if (part.contains_percentage())
+        if (part->contains_percentage())
             return true;
     }
     return false;
@@ -2306,7 +2306,7 @@ bool CalculatedStyleValue::CalcProduct::contains_percentage() const
     if (first_calc_value.contains_percentage())
         return true;
     for (auto& part : zero_or_more_additional_calc_values) {
-        if (part.contains_percentage())
+        if (part->contains_percentage())
             return true;
     }
     return false;

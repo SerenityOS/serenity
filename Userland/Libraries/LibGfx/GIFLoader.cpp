@@ -77,7 +77,7 @@ struct GIFLoadingContext {
     size_t data_size { 0 };
     LogicalScreen logical_screen {};
     u8 background_color_index { 0 };
-    NonnullOwnPtrVector<GIFImageDescriptor> images {};
+    Vector<NonnullOwnPtr<GIFImageDescriptor>> images {};
     size_t loops { 1 };
     RefPtr<Gfx::Bitmap> frame_buffer;
     size_t current_frame { 0 };
@@ -284,11 +284,11 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
     for (size_t i = start_frame; i <= frame_index; ++i) {
         auto& image = context.images.at(i);
 
-        auto const previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : GIFImageDescriptor::DisposalMethod::None;
+        auto const previous_image_disposal_method = i > 0 ? context.images.at(i - 1)->disposal_method : GIFImageDescriptor::DisposalMethod::None;
 
         if (i == 0) {
             context.frame_buffer->fill(Color::Transparent);
-        } else if (i > 0 && image.disposal_method == GIFImageDescriptor::DisposalMethod::RestorePrevious
+        } else if (i > 0 && image->disposal_method == GIFImageDescriptor::DisposalMethod::RestorePrevious
             && previous_image_disposal_method != GIFImageDescriptor::DisposalMethod::RestorePrevious) {
             // This marks the start of a run of frames that once disposed should be restored to the
             // previous underlying image contents. Therefore we make a copy of the current frame
@@ -302,23 +302,23 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
             // background color of the GIF itself. It appears that all major browsers and most other
             // GIF decoders adhere to the former interpretation, therefore we will do the same by
             // clearing the entire frame buffer to transparent.
-            clear_rect(*context.frame_buffer, context.images.at(i - 1).rect(), Color::Transparent);
+            clear_rect(*context.frame_buffer, context.images[i - 1]->rect(), Color::Transparent);
         } else if (i > 0 && previous_image_disposal_method == GIFImageDescriptor::DisposalMethod::RestorePrevious) {
             // Previous frame indicated that once disposed, it should be restored to *its* previous
             // underlying image contents, therefore we restore the saved previous frame buffer.
             copy_frame_buffer(*context.frame_buffer, *context.prev_frame_buffer);
         }
 
-        if (image.lzw_min_code_size > 8)
+        if (image->lzw_min_code_size > 8)
             return Error::from_string_literal("LZW minimum code size is greater than 8");
 
-        LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
+        LZWDecoder decoder(image->lzw_encoded_bytes, image->lzw_min_code_size);
 
         // Add GIF-specific control codes
         int const clear_code = decoder.add_control_code();
         int const end_of_information_code = decoder.add_control_code();
 
-        auto const& color_map = image.use_global_color_map ? context.logical_screen.color_map : image.color_map;
+        auto const& color_map = image->use_global_color_map ? context.logical_screen.color_map : image->color_map;
 
         int pixel_index = 0;
         int row = 0;
@@ -336,25 +336,25 @@ static ErrorOr<void> decode_frame(GIFLoadingContext& context, size_t frame_index
             }
             if (code.value() == end_of_information_code)
                 break;
-            if (!image.width)
+            if (!image->width)
                 continue;
 
             auto colors = decoder.get_output();
             for (auto const& color : colors) {
                 auto c = color_map[color];
 
-                int x = pixel_index % image.width + image.x;
-                int y = row + image.y;
+                int x = pixel_index % image->width + image->x;
+                int y = row + image->y;
 
-                if (context.frame_buffer->rect().contains(x, y) && (!image.transparent || color != image.transparency_index)) {
+                if (context.frame_buffer->rect().contains(x, y) && (!image->transparent || color != image->transparency_index)) {
                     context.frame_buffer->set_pixel(x, y, c);
                 }
 
                 ++pixel_index;
-                if (pixel_index % image.width == 0) {
-                    if (image.interlaced) {
+                if (pixel_index % image->width == 0) {
+                    if (image->interlaced) {
                         if (interlace_pass < 4) {
-                            if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
+                            if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image->height) {
                                 ++interlace_pass;
                                 if (interlace_pass < 4)
                                     row = INTERLACE_ROW_OFFSETS[interlace_pass];
@@ -471,28 +471,28 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
             context.images.append(move(current_image));
             auto& image = context.images.last();
 
-            image.x = TRY(stream.read_value<LittleEndian<u16>>());
-            image.y = TRY(stream.read_value<LittleEndian<u16>>());
-            image.width = TRY(stream.read_value<LittleEndian<u16>>());
-            image.height = TRY(stream.read_value<LittleEndian<u16>>());
+            image->x = TRY(stream.read_value<LittleEndian<u16>>());
+            image->y = TRY(stream.read_value<LittleEndian<u16>>());
+            image->width = TRY(stream.read_value<LittleEndian<u16>>());
+            image->height = TRY(stream.read_value<LittleEndian<u16>>());
 
             auto packed_fields = TRY(stream.read_value<u8>());
 
-            image.use_global_color_map = !(packed_fields & 0x80);
-            image.interlaced = (packed_fields & 0x40) != 0;
+            image->use_global_color_map = !(packed_fields & 0x80);
+            image->interlaced = (packed_fields & 0x40) != 0;
 
-            if (!image.use_global_color_map) {
+            if (!image->use_global_color_map) {
                 size_t local_color_table_size = AK::exp2<size_t>((packed_fields & 7) + 1);
 
                 for (size_t i = 0; i < local_color_table_size; ++i) {
                     u8 r = TRY(stream.read_value<u8>());
                     u8 g = TRY(stream.read_value<u8>());
                     u8 b = TRY(stream.read_value<u8>());
-                    image.color_map[i] = { r, g, b };
+                    image->color_map[i] = { r, g, b };
                 }
             }
 
-            image.lzw_min_code_size = TRY(stream.read_value<u8>());
+            image->lzw_min_code_size = TRY(stream.read_value<u8>());
 
             u8 lzw_encoded_bytes_expected = 0;
 
@@ -505,7 +505,7 @@ static ErrorOr<void> load_gif_frame_descriptors(GIFLoadingContext& context)
                 TRY(stream.read_entire_buffer(buffer.span().trim(lzw_encoded_bytes_expected)));
 
                 for (int i = 0; i < lzw_encoded_bytes_expected; ++i) {
-                    image.lzw_encoded_bytes.append(buffer[i]);
+                    image->lzw_encoded_bytes.append(buffer[i]);
                 }
             }
 
@@ -657,7 +657,7 @@ ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
 
     ImageFrameDescriptor frame {};
     frame.image = TRY(m_context->frame_buffer->clone());
-    frame.duration = m_context->images.at(index).duration * 10;
+    frame.duration = m_context->images[index]->duration * 10;
 
     if (frame.duration <= 10) {
         frame.duration = 100;

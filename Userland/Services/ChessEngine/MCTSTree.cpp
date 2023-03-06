@@ -37,10 +37,10 @@ MCTSTree& MCTSTree::select_leaf()
     MCTSTree* node = nullptr;
     double max_uct = -double(INFINITY);
     for (auto& child : m_children) {
-        double uct = child.uct(m_turn);
+        double uct = child->uct(m_turn);
         if (uct >= max_uct) {
             max_uct = uct;
-            node = &child;
+            node = child;
         }
     }
     VERIFY(node);
@@ -68,8 +68,8 @@ MCTSTree& MCTSTree::expand()
     }
 
     for (auto& child : m_children) {
-        if (child.m_simulations == 0) {
-            return child;
+        if (child->m_simulations == 0) {
+            return *child;
         }
     }
     VERIFY_NOT_REACHED();
@@ -133,8 +133,8 @@ void MCTSTree::do_round()
 Optional<MCTSTree&> MCTSTree::child_with_move(Chess::Move chess_move)
 {
     for (auto& node : m_children) {
-        if (node.last_move() == chess_move)
-            return node;
+        if (node->last_move() == chess_move)
+            return *node;
     }
     return {};
 }
@@ -147,9 +147,9 @@ MCTSTree& MCTSTree::best_node()
     double best_score = -double(INFINITY);
     VERIFY(m_children.size());
     for (auto& node : m_children) {
-        double node_score = node.expected_value() * score_multiplier;
+        double node_score = node->expected_value() * score_multiplier;
         if (node_score >= best_score) {
-            best_node_ptr = &node;
+            best_node_ptr = node;
             best_score = node_score;
         }
     }
@@ -187,7 +187,7 @@ bool MCTSTree::expanded() const
         return false;
 
     for (auto& child : m_children) {
-        if (child.m_simulations == 0)
+        if (child->m_simulations == 0)
             return false;
     }
 

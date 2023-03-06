@@ -121,7 +121,7 @@ public:
 
     class MultiNode : public Node {
     public:
-        NonnullOwnPtrVector<Node> children;
+        Vector<NonnullOwnPtr<Node>> children;
 
         virtual void render_to_html(StringBuilder& builder) const override;
         virtual void render_for_terminal(StringBuilder& builder) const override;

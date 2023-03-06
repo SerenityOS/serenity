@@ -35,7 +35,7 @@ void PlaceBlocks::perform(PassPipelineExecutable& executable)
     };
 
     // Make sure to visit the entry block first
-    visit(&executable.executable.basic_blocks.first());
+    visit(executable.executable.basic_blocks.first());
 
     for (auto& entry : cfg)
         visit(entry.key);

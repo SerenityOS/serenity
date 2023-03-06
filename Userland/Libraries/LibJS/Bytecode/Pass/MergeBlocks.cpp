@@ -81,7 +81,7 @@ void MergeBlocks::perform(PassPipelineExecutable& executable)
                 first_successor_position = it.index();
         }
         for (auto& block : executable.executable.basic_blocks) {
-            InstructionStreamIterator it { block.instruction_stream() };
+            InstructionStreamIterator it { block->instruction_stream() };
             while (!it.at_end()) {
                 auto& instruction = *it;
                 ++it;

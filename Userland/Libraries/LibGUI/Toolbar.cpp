@@ -111,7 +111,7 @@ ErrorOr<NonnullRefPtr<GUI::Button>> Toolbar::try_add_action(Action& action)
     item->widget->set_fixed_size(m_button_size, m_button_size);
 
     m_items.unchecked_append(move(item));
-    return *static_cast<Button*>(m_items.last().widget.ptr());
+    return *static_cast<Button*>(m_items.last()->widget.ptr());
 }
 
 GUI::Button& Toolbar::add_action(Action& action)
@@ -196,12 +196,12 @@ ErrorOr<void> Toolbar::update_overflow_menu()
 
     for (size_t i = 0; i < m_items.size() - 1; ++i) {
         auto& item = m_items.at(i);
-        auto item_size = is_horizontal ? item.widget->width() : item.widget->height();
+        auto item_size = is_horizontal ? item->widget->width() : item->widget->height();
         if (position + item_size + margin > toolbar_size) {
             marginal_index = i;
             break;
         }
-        item.widget->set_visible(true);
+        item->widget->set_visible(true);
         position += item_size + spacing;
     }
 
@@ -216,10 +216,10 @@ ErrorOr<void> Toolbar::update_overflow_menu()
     if (marginal_index.value() > 0) {
         for (size_t i = marginal_index.value() - 1; i > 0; --i) {
             auto& item = m_items.at(i);
-            auto item_size = is_horizontal ? item.widget->width() : item.widget->height();
+            auto item_size = is_horizontal ? item->widget->width() : item->widget->height();
             if (position + m_button_size + spacing + margin <= toolbar_size)
                 break;
-            item.widget->set_visible(false);
+            item->widget->set_visible(false);
             position -= item_size + spacing;
             marginal_index = i;
         }
@@ -228,9 +228,9 @@ ErrorOr<void> Toolbar::update_overflow_menu()
     if (m_grouped) {
         for (size_t i = marginal_index.value(); i > 0; --i) {
             auto& item = m_items.at(i);
-            if (item.type == Item::Type::Separator)
+            if (item->type == Item::Type::Separator)
                 break;
-            item.widget->set_visible(false);
+            item->widget->set_visible(false);
             marginal_index = i;
         }
     }
@@ -247,17 +247,17 @@ ErrorOr<void> Toolbar::update_overflow_menu()
         auto& item = m_items.at(i);
         Item* peek_item;
         if (i > 0) {
-            peek_item = &m_items.at(i - 1);
+            peek_item = m_items[i - 1];
             if (peek_item->type == Item::Type::Separator)
                 peek_item->widget->set_visible(false);
         }
         if (i < m_items.size() - 1) {
-            item.widget->set_visible(false);
-            peek_item = &m_items.at(i + 1);
-            if (item.action)
-                TRY(m_overflow_menu->try_add_action(*item.action));
+            item->widget->set_visible(false);
+            peek_item = m_items[i + 1];
+            if (item->action)
+                TRY(m_overflow_menu->try_add_action(*item->action));
         }
-        if (item.action && peek_item->type == Item::Type::Separator)
+        if (item->action && peek_item->type == Item::Type::Separator)
             TRY(m_overflow_menu->try_add_separator());
     }
 

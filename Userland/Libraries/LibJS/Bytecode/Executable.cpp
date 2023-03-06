@@ -12,7 +12,7 @@ void Executable::dump() const
 {
     dbgln("\033[33;1mJS::Bytecode::Executable\033[0m ({})", name);
     for (auto& block : basic_blocks)
-        block.dump(*this);
+        block->dump(*this);
     if (!string_table->is_empty()) {
         outln();
         string_table->dump();

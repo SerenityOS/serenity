@@ -1103,7 +1103,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_rx_descriptors()
 
         descriptor.buffer_size = RX_BUFFER_SIZE;
         descriptor.flags = RXDescriptor::Ownership; // let the NIC know it can use this descriptor
-        auto physical_address = m_rx_buffers_regions[i].physical_page(0)->paddr().get();
+        auto physical_address = m_rx_buffers_regions[i]->physical_page(0)->paddr().get();
         descriptor.buffer_address_low = physical_address & 0xFFFFFFFF;
         descriptor.buffer_address_high = (u64)physical_address >> 32; // cast to prevent shift count >= with of type warnings in 32 bit systems
     }
@@ -1120,7 +1120,7 @@ UNMAP_AFTER_INIT void RTL8168NetworkAdapter::initialize_tx_descriptors()
         m_tx_buffers_regions.append(move(region));
 
         descriptor.flags = TXDescriptor::FirstSegment | TXDescriptor::LastSegment;
-        auto physical_address = m_tx_buffers_regions[i].physical_page(0)->paddr().get();
+        auto physical_address = m_tx_buffers_regions[i]->physical_page(0)->paddr().get();
         descriptor.buffer_address_low = physical_address & 0xFFFFFFFF;
         descriptor.buffer_address_high = (u64)physical_address >> 32;
     }
@@ -1213,7 +1213,7 @@ void RTL8168NetworkAdapter::send_raw(ReadonlyBytes payload)
     }
 
     dbgln_if(RTL8168_DEBUG, "RTL8168: Chose descriptor {}", m_tx_free_index);
-    memcpy(m_tx_buffers_regions[m_tx_free_index].vaddr().as_ptr(), payload.data(), payload.size());
+    memcpy(m_tx_buffers_regions[m_tx_free_index]->vaddr().as_ptr(), payload.data(), payload.size());
 
     m_tx_free_index = (m_tx_free_index + 1) % number_of_tx_descriptors;
 
@@ -1247,7 +1247,7 @@ void RTL8168NetworkAdapter::receive()
             // Our maximum received packet size is smaller than the descriptor buffer size, so packets should never be segmented
             // if this happens on a real NIC it might not respect that, and we will have to support packet segmentation
         } else {
-            did_receive({ m_rx_buffers_regions[descriptor_index].vaddr().as_ptr(), length });
+            did_receive({ m_rx_buffers_regions[descriptor_index]->vaddr().as_ptr(), length });
         }
 
         descriptor.buffer_size = RX_BUFFER_SIZE;

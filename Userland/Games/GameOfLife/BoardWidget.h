@@ -56,7 +56,7 @@ public:
     void for_each_pattern(Callback callback)
     {
         for (auto& pattern : m_patterns)
-            callback(pattern);
+            callback(*pattern);
     }
 
     void run_generation();
@@ -78,7 +78,7 @@ private:
     Board::RowAndColumn m_last_cell_toggled {};
     Board::RowAndColumn m_last_cell_hovered {};
     Pattern* m_selected_pattern { nullptr };
-    NonnullOwnPtrVector<Pattern> m_patterns;
+    Vector<NonnullOwnPtr<Pattern>> m_patterns;
 
     NonnullOwnPtr<Board> m_board;
 

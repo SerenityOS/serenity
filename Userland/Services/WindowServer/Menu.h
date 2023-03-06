@@ -40,8 +40,8 @@ public:
 
     bool is_empty() const { return m_items.is_empty(); }
     size_t item_count() const { return m_items.size(); }
-    MenuItem const& item(size_t index) const { return m_items.at(index); }
-    MenuItem& item(size_t index) { return m_items.at(index); }
+    MenuItem const& item(size_t index) const { return *m_items.at(index); }
+    MenuItem& item(size_t index) { return *m_items.at(index); }
 
     MenuItem* item_by_identifier(unsigned identifier)
     {
@@ -65,7 +65,7 @@ public:
     IterationDecision for_each_item(Callback callback)
     {
         for (auto& item : m_items) {
-            IterationDecision decision = callback(item);
+            IterationDecision decision = callback(*item);
             if (decision != IterationDecision::Continue)
                 return decision;
         }
@@ -159,7 +159,7 @@ private:
     u32 m_alt_shortcut_character { 0 };
     Gfx::IntRect m_rect_in_window_menubar;
     Gfx::IntPoint m_unadjusted_position;
-    NonnullOwnPtrVector<MenuItem> m_items;
+    Vector<NonnullOwnPtr<MenuItem>> m_items;
     RefPtr<Window> m_menu_window;
 
     WeakPtr<Window> m_window_menu_of;

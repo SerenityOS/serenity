@@ -121,8 +121,8 @@ struct AK::Traits<RequestServer::ConnectionCache::ConnectionKey> : public AK::Ge
 
 namespace RequestServer::ConnectionCache {
 
-extern HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::TCPSocket, Core::Socket>>>> g_tcp_connection_cache;
-extern HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::TLSv12>>>> g_tls_connection_cache;
+extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache;
+extern HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache;
 
 void request_did_finish(URL const&, Core::Socket const*);
 void dump_jobs();
@@ -178,12 +178,12 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
 
     Proxy proxy { proxy_data };
 
-    using ReturnType = decltype(&sockets_for_url[0]);
+    using ReturnType = decltype(sockets_for_url[0].ptr());
     auto it = sockets_for_url.find_if([](auto& connection) { return connection->request_queue.is_empty(); });
     auto did_add_new_connection = false;
     auto failed_to_find_a_socket = it.is_end();
     if (failed_to_find_a_socket && sockets_for_url.size() < ConnectionCache::MaxConcurrentConnectionsPerURL) {
-        using ConnectionType = RemoveCVReference<decltype(cache.begin()->value->at(0))>;
+        using ConnectionType = RemoveCVReference<decltype(*cache.begin()->value->at(0))>;
         auto connection_result = proxy.tunnel<typename ConnectionType::SocketType, typename ConnectionType::StorageType>(url);
         if (connection_result.is_error()) {
             dbgln("ConnectionCache: Connection to {} failed: {}", url, connection_result.error());
@@ -204,7 +204,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
             socket_result.release_value(),
             typename ConnectionType::QueueType {},
             Core::Timer::create_single_shot(ConnectionKeepAliveTimeMilliseconds, nullptr).release_value_but_fixme_should_propagate_errors()));
-        sockets_for_url.last().proxy = move(proxy);
+        sockets_for_url.last()->proxy = move(proxy);
         did_add_new_connection = true;
     }
     size_t index;
@@ -216,7 +216,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
             index = 0;
             auto min_queue_size = (size_t)-1;
             for (auto it = sockets_for_url.begin(); it != sockets_for_url.end(); ++it) {
-                if (auto queue_size = it->request_queue.size(); min_queue_size > queue_size) {
+                if (auto queue_size = (*it)->request_queue.size(); min_queue_size > queue_size) {
                     index = it.index();
                     min_queue_size = queue_size;
                 }
@@ -232,7 +232,7 @@ decltype(auto) get_or_create_connection(auto& cache, URL const& url, auto& job, 
         return ReturnType { nullptr };
     }
 
-    auto& connection = sockets_for_url[index];
+    auto& connection = *sockets_for_url[index];
     if (!connection.has_started) {
         if (auto result = recreate_socket_if_needed(connection, url); result.is_error()) {
             dbgln("ConnectionCache: request failed to start, failed to make a socket: {}", result.error());

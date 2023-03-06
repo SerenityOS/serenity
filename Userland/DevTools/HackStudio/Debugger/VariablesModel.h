@@ -28,14 +28,14 @@ public:
     Debug::ProcessInspector& inspector() { return m_inspector; }
 
 private:
-    explicit VariablesModel(Debug::ProcessInspector& inspector, NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo>&& variables, PtraceRegisters const& regs)
+    explicit VariablesModel(Debug::ProcessInspector& inspector, Vector<NonnullOwnPtr<Debug::DebugInfo::VariableInfo>>&& variables, PtraceRegisters const& regs)
         : m_variables(move(variables))
         , m_regs(regs)
         , m_inspector(inspector)
     {
         m_variable_icon.set_bitmap_for_size(16, Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"sv).release_value_but_fixme_should_propagate_errors());
     }
-    NonnullOwnPtrVector<Debug::DebugInfo::VariableInfo> m_variables;
+    Vector<NonnullOwnPtr<Debug::DebugInfo::VariableInfo>> m_variables;
     PtraceRegisters m_regs;
 
     GUI::Icon m_variable_icon;

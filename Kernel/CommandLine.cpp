@@ -304,9 +304,9 @@ StringView CommandLine::userspace_init() const
     return lookup("init"sv).value_or("/bin/SystemServer"sv);
 }
 
-NonnullOwnPtrVector<KString> CommandLine::userspace_init_args() const
+Vector<NonnullOwnPtr<KString>> CommandLine::userspace_init_args() const
 {
-    NonnullOwnPtrVector<KString> args;
+    Vector<NonnullOwnPtr<KString>> args;
 
     auto init_args = lookup("init_args"sv).value_or(""sv).split_view(';');
     if (!init_args.is_empty())

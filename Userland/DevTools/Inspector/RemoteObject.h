@@ -21,7 +21,7 @@ public:
     RemoteObjectPropertyModel& property_model();
 
     RemoteObject* parent { nullptr };
-    NonnullOwnPtrVector<RemoteObject> children;
+    Vector<NonnullOwnPtr<RemoteObject>> children;
 
     FlatPtr address { 0 };
     FlatPtr parent_address { 0 };

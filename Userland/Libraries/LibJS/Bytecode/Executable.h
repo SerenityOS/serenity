@@ -16,7 +16,7 @@ namespace JS::Bytecode {
 
 struct Executable {
     DeprecatedFlyString name;
-    NonnullOwnPtrVector<BasicBlock> basic_blocks;
+    Vector<NonnullOwnPtr<BasicBlock>> basic_blocks;
     NonnullOwnPtr<StringTable> string_table;
     NonnullOwnPtr<IdentifierTable> identifier_table;
     size_t number_of_registers { 0 };

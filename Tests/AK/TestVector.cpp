@@ -288,7 +288,7 @@ TEST_CASE(nonnullownptrvector)
     struct Object {
         DeprecatedString string;
     };
-    NonnullOwnPtrVector<Object> objects;
+    Vector<NonnullOwnPtr<Object>> objects;
 
     objects.append(make<Object>());
     EXPECT_EQ(objects.size(), 1u);

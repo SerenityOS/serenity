@@ -21,7 +21,7 @@ DeprecatedString Document::render_to_html() const
     html_builder.append("</title>\n</head>\n"sv);
     html_builder.append("<body>\n"sv);
     for (auto& line : m_lines) {
-        html_builder.append(line.render_to_html());
+        html_builder.append(line->render_to_html());
     }
     html_builder.append("</body>"sv);
     html_builder.append("</html>"sv);

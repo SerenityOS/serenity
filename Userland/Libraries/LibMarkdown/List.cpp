@@ -27,7 +27,7 @@ DeprecatedString List::render_to_html(bool) const
 
     for (auto& item : m_items) {
         builder.append("<li>"sv);
-        if (!m_is_tight || (item->blocks().size() != 0 && !dynamic_cast<Paragraph const*>(&(item->blocks()[0]))))
+        if (!m_is_tight || (item->blocks().size() != 0 && !dynamic_cast<Paragraph const*>(item->blocks()[0].ptr())))
             builder.append('\n');
         builder.append(item->render_to_html(m_is_tight));
         builder.append("</li>\n"sv);

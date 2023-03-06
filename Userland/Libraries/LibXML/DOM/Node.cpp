@@ -44,7 +44,7 @@ bool Node::operator==(Node const& other) const
             if (element.children.size() != other_element->children.size())
                 return false;
             for (size_t i = 0; i < element.children.size(); ++i) {
-                if (element.children[i] != other_element->children[i])
+                if (element.children[i].ptr() != other_element->children[i].ptr())
                     return false;
             }
             return true;

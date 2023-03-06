@@ -70,15 +70,15 @@ public:
     virtual ~TextDocument() = default;
 
     size_t line_count() const { return m_lines.size(); }
-    TextDocumentLine const& line(size_t line_index) const { return m_lines[line_index]; }
-    TextDocumentLine& line(size_t line_index) { return m_lines[line_index]; }
+    TextDocumentLine const& line(size_t line_index) const { return *m_lines[line_index]; }
+    TextDocumentLine& line(size_t line_index) { return *m_lines[line_index]; }
 
     void set_spans(u32 span_collection_index, Vector<TextDocumentSpan> spans);
 
     bool set_text(StringView, AllowCallback = AllowCallback::Yes);
 
-    NonnullOwnPtrVector<TextDocumentLine> const& lines() const { return m_lines; }
-    NonnullOwnPtrVector<TextDocumentLine>& lines() { return m_lines; }
+    Vector<NonnullOwnPtr<TextDocumentLine>> const& lines() const { return m_lines; }
+    Vector<NonnullOwnPtr<TextDocumentLine>>& lines() { return m_lines; }
 
     bool has_spans() const { return !m_spans.is_empty(); }
     Vector<TextDocumentSpan>& spans() { return m_spans; }
@@ -163,7 +163,7 @@ protected:
 private:
     void merge_span_collections();
 
-    NonnullOwnPtrVector<TextDocumentLine> m_lines;
+    Vector<NonnullOwnPtr<TextDocumentLine>> m_lines;
     HashMap<u32, Vector<TextDocumentSpan>> m_span_collections;
     Vector<TextDocumentSpan> m_spans;
     Vector<TextDocumentFoldingRegion> m_folding_regions;

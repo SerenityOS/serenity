@@ -53,7 +53,7 @@ private:
         RefPtr<Action> action;
         RefPtr<Widget> widget;
     };
-    NonnullOwnPtrVector<Item> m_items;
+    Vector<NonnullOwnPtr<Item>> m_items;
     RefPtr<Menu> m_overflow_menu;
     RefPtr<Action> m_overflow_action;
     RefPtr<Button> m_overflow_button;

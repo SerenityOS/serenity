@@ -18,7 +18,7 @@
 namespace WebDriver {
 
 Atomic<unsigned> Client::s_next_session_id;
-NonnullOwnPtrVector<Session> Client::s_sessions;
+Vector<NonnullOwnPtr<Session>> Client::s_sessions;
 
 ErrorOr<NonnullRefPtr<Client>> Client::try_create(NonnullOwnPtr<Core::BufferedTCPSocket> socket, LaunchBrowserCallbacks callbacks, Core::Object* parent)
 {
@@ -44,8 +44,8 @@ ErrorOr<Session*, Web::WebDriver::Error> Client::find_session_with_id(StringView
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 
     for (auto& session : Client::s_sessions) {
-        if (session.session_id() == session_id_or_error.value())
-            return &session;
+        if (session->session_id() == session_id_or_error.value())
+            return session;
     }
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 }
@@ -57,7 +57,7 @@ ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> Client::take_session_with
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 
     for (size_t i = 0; i < Client::s_sessions.size(); ++i) {
-        if (Client::s_sessions[i].session_id() == session_id_or_error.value()) {
+        if (Client::s_sessions[i]->session_id() == session_id_or_error.value()) {
             return Client::s_sessions.take(i);
         }
     }

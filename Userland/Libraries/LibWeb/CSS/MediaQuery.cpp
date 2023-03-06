@@ -257,7 +257,7 @@ NonnullOwnPtr<MediaCondition> MediaCondition::from_not(NonnullOwnPtr<MediaCondit
     return adopt_own(*result);
 }
 
-NonnullOwnPtr<MediaCondition> MediaCondition::from_and_list(NonnullOwnPtrVector<MediaCondition>&& conditions)
+NonnullOwnPtr<MediaCondition> MediaCondition::from_and_list(Vector<NonnullOwnPtr<MediaCondition>>&& conditions)
 {
     auto result = new MediaCondition;
     result->type = Type::And;
@@ -266,7 +266,7 @@ NonnullOwnPtr<MediaCondition> MediaCondition::from_and_list(NonnullOwnPtrVector<
     return adopt_own(*result);
 }
 
-NonnullOwnPtr<MediaCondition> MediaCondition::from_or_list(NonnullOwnPtrVector<MediaCondition>&& conditions)
+NonnullOwnPtr<MediaCondition> MediaCondition::from_or_list(Vector<NonnullOwnPtr<MediaCondition>>&& conditions)
 {
     auto result = new MediaCondition;
     result->type = Type::Or;
@@ -285,7 +285,7 @@ ErrorOr<String> MediaCondition::to_string() const
         break;
     case Type::Not:
         builder.append("not "sv);
-        builder.append(TRY(conditions.first().to_string()));
+        builder.append(TRY(conditions.first()->to_string()));
         break;
     case Type::And:
         builder.join(" and "sv, conditions);
@@ -307,11 +307,11 @@ MatchResult MediaCondition::evaluate(HTML::Window const& window) const
     case Type::Single:
         return as_match_result(feature->evaluate(window));
     case Type::Not:
-        return negate(conditions.first().evaluate(window));
+        return negate(conditions.first()->evaluate(window));
     case Type::And:
-        return evaluate_and(conditions, [&](auto& child) { return child.evaluate(window); });
+        return evaluate_and(conditions, [&](auto& child) { return child->evaluate(window); });
     case Type::Or:
-        return evaluate_or(conditions, [&](auto& child) { return child.evaluate(window); });
+        return evaluate_or(conditions, [&](auto& child) { return child->evaluate(window); });
     case Type::GeneralEnclosed:
         return general_enclosed->evaluate();
     }

@@ -160,9 +160,9 @@ Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source
     return result;
 }
 
-ErrorOr<NonnullOwnPtrVector<DebugInfo::VariableInfo>> DebugInfo::get_variables_in_current_scope(PtraceRegisters const& regs) const
+ErrorOr<Vector<NonnullOwnPtr<DebugInfo::VariableInfo>>> DebugInfo::get_variables_in_current_scope(PtraceRegisters const& regs) const
 {
-    NonnullOwnPtrVector<DebugInfo::VariableInfo> variables;
+    Vector<NonnullOwnPtr<DebugInfo::VariableInfo>> variables;
 
     // TODO: We can store the scopes in a better data structure
     for (auto const& scope : m_scopes) {

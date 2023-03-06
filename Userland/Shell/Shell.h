@@ -197,7 +197,7 @@ public:
     };
 
     struct Frame {
-        Frame(NonnullOwnPtrVector<LocalFrame>& frames, LocalFrame const& frame)
+        Frame(Vector<NonnullOwnPtr<LocalFrame>>& frames, LocalFrame const& frame)
             : frames(frames)
             , frame(frame)
         {
@@ -207,7 +207,7 @@ public:
         void leak_frame() { should_destroy_frame = false; }
 
     private:
-        NonnullOwnPtrVector<LocalFrame>& frames;
+        Vector<NonnullOwnPtr<LocalFrame>>& frames;
         LocalFrame const& frame;
         bool should_destroy_frame { true };
     };
@@ -458,7 +458,7 @@ private:
     };
 
     HashMap<DeprecatedString, ShellFunction> m_functions;
-    NonnullOwnPtrVector<LocalFrame> m_local_frames;
+    Vector<NonnullOwnPtr<LocalFrame>> m_local_frames;
     Promise::List m_active_promises;
     Vector<NonnullRefPtr<AST::Redirection>> m_global_redirections;
 

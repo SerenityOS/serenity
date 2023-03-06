@@ -42,7 +42,7 @@ void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
     // FIXME: It would be good if we didn't have to make a local copy of the array value here!
     auto& object_array = response.get_array("objects"sv).value();
 
-    NonnullOwnPtrVector<RemoteObject> remote_objects;
+    Vector<NonnullOwnPtr<RemoteObject>> remote_objects;
     HashMap<FlatPtr, RemoteObject*> objects_by_address;
 
     for (auto& value : object_array.values()) {
@@ -59,7 +59,7 @@ void RemoteProcess::handle_get_all_objects_response(JsonObject const& response)
     }
 
     for (size_t i = 0; i < remote_objects.size(); ++i) {
-        auto& remote_object = remote_objects.ptr_at(i);
+        auto& remote_object = remote_objects[i];
         auto* parent = objects_by_address.get(remote_object->parent_address).value_or(nullptr);
         if (!parent) {
             m_roots.append(move(remote_object));

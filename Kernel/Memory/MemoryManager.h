@@ -292,7 +292,7 @@ private:
 
         SystemMemoryInfo system_memory_info;
 
-        NonnullOwnPtrVector<PhysicalRegion> physical_regions;
+        Vector<NonnullOwnPtr<PhysicalRegion>> physical_regions;
         OwnPtr<PhysicalRegion> physical_pages_region;
 
         RegionTree region_tree;

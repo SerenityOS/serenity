@@ -175,20 +175,20 @@ void EliminateLoads::perform(PassPipelineExecutable& executable)
     //        save some work between blocks
     for (auto it = executable.executable.basic_blocks.begin(); it != executable.executable.basic_blocks.end(); ++it) {
         auto const& old_block = *it;
-        auto new_block = eliminate_loads(old_block, executable.executable.number_of_registers);
+        auto new_block = eliminate_loads(*old_block, executable.executable.number_of_registers);
 
         // We will replace the old block, with a new one, so we need to replace all references,
         // to the old one with the new one
         for (auto& block : executable.executable.basic_blocks) {
-            InstructionStreamIterator it { block.instruction_stream() };
+            InstructionStreamIterator it { block->instruction_stream() };
             while (!it.at_end()) {
                 auto& instruction = *it;
                 ++it;
-                const_cast<Instruction&>(instruction).replace_references(old_block, *new_block);
+                const_cast<Instruction&>(instruction).replace_references(*old_block, *new_block);
             }
         }
 
-        executable.executable.basic_blocks.ptr_at(it.index()) = move(new_block);
+        executable.executable.basic_blocks[it.index()] = move(new_block);
     }
 
     finished();

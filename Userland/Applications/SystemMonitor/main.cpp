@@ -594,11 +594,11 @@ void build_performance_tab(GUI::Widget& graphs_container)
             cpu_graphs.append(cpu_graph);
         }
     }
-    ProcessModel::the().on_cpu_info_change = [cpu_graphs](NonnullOwnPtrVector<ProcessModel::CpuInfo> const& cpus) mutable {
+    ProcessModel::the().on_cpu_info_change = [cpu_graphs](Vector<NonnullOwnPtr<ProcessModel::CpuInfo>> const& cpus) mutable {
         float sum_cpu = 0;
         for (size_t i = 0; i < cpus.size(); ++i) {
-            cpu_graphs[i].add_value({ static_cast<size_t>(cpus[i].total_cpu_percent), static_cast<size_t>(cpus[i].total_cpu_percent_kernel) });
-            sum_cpu += cpus[i].total_cpu_percent;
+            cpu_graphs[i].add_value({ static_cast<size_t>(cpus[i]->total_cpu_percent), static_cast<size_t>(cpus[i]->total_cpu_percent_kernel) });
+            sum_cpu += cpus[i]->total_cpu_percent;
         }
         float cpu_usage = sum_cpu / (float)cpus.size();
         statusbar->set_text(2, DeprecatedString::formatted("CPU usage: {}%", (int)roundf(cpu_usage)));

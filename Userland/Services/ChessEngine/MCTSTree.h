@@ -46,7 +46,7 @@ private:
     // FIXME: Optimize simulations enough for use.
     static constexpr EvalMethod s_eval_method { EvalMethod::Heuristic };
 
-    NonnullOwnPtrVector<MCTSTree> m_children;
+    Vector<NonnullOwnPtr<MCTSTree>> m_children;
     MCTSTree* m_parent { nullptr };
     int m_white_points { 0 };
     int m_simulations { 0 };

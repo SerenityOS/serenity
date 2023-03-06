@@ -43,16 +43,16 @@ struct LoadResult {
 static constexpr size_t auxiliary_vector_size = 15;
 static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, UserID uid, UserID euid, GroupID gid, GroupID egid, StringView executable_path, Optional<Process::ScopedDescriptionAllocation> const& main_program_fd_allocation);
 
-static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, NonnullOwnPtrVector<KString>& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> const& auxiliary)
+static bool validate_stack_size(Vector<NonnullOwnPtr<KString>> const& arguments, Vector<NonnullOwnPtr<KString>>& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> const& auxiliary)
 {
     size_t total_arguments_size = 0;
     size_t total_environment_size = 0;
     size_t total_auxiliary_size = 0;
 
     for (auto const& a : arguments)
-        total_arguments_size += a.length() + 1;
+        total_arguments_size += a->length() + 1;
     for (auto const& e : environment)
-        total_environment_size += e.length() + 1;
+        total_environment_size += e->length() + 1;
     for (auto const& v : auxiliary) {
         if (!v.optional_string.is_empty())
             total_auxiliary_size += round_up_to_power_of_two(v.optional_string.length() + 1, sizeof(FlatPtr));
@@ -77,8 +77,8 @@ static bool validate_stack_size(NonnullOwnPtrVector<KString> const& arguments, N
     return true;
 }
 
-static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, NonnullOwnPtrVector<KString> const& arguments,
-    NonnullOwnPtrVector<KString> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> auxiliary_values)
+static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Memory::Region& region, Vector<NonnullOwnPtr<KString>> const& arguments,
+    Vector<NonnullOwnPtr<KString>> const& environment, Array<ELF::AuxiliaryValue, auxiliary_vector_size> auxiliary_values)
 {
     FlatPtr new_sp = region.range().end().get();
 
@@ -108,13 +108,13 @@ static ErrorOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] 
 
     Vector<FlatPtr> argv_entries;
     for (auto const& argument : arguments) {
-        push_string_on_new_stack(argument.view());
+        push_string_on_new_stack(argument->view());
         TRY(argv_entries.try_append(new_sp));
     }
 
     Vector<FlatPtr> env_entries;
     for (auto const& variable : environment) {
-        push_string_on_new_stack(variable.view());
+        push_string_on_new_stack(variable->view());
         TRY(env_entries.try_append(new_sp));
     }
 
@@ -471,7 +471,7 @@ void Process::clear_signal_handlers_for_exec()
     }
 }
 
-ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment,
+ErrorOr<void> Process::do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment,
     LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
@@ -746,12 +746,12 @@ static Array<ELF::AuxiliaryValue, auxiliary_vector_size> generate_auxiliary_vect
     } };
 }
 
-static ErrorOr<NonnullOwnPtrVector<KString>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
+static ErrorOr<Vector<NonnullOwnPtr<KString>>> find_shebang_interpreter_for_executable(char const first_page[], size_t nread)
 {
     int word_start = 2;
     size_t word_length = 0;
     if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
-        NonnullOwnPtrVector<KString> interpreter_words;
+        Vector<NonnullOwnPtr<KString>> interpreter_words;
 
         for (size_t i = 2; i < nread; ++i) {
             if (first_page[i] == '\n') {
@@ -851,7 +851,7 @@ ErrorOr<LockRefPtr<OpenFileDescription>> Process::find_elf_interpreter_for_execu
     return nullptr;
 }
 
-ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth)
+ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth)
 {
     if (recursion_depth > 2) {
         dbgln("exec({}): SHENANIGANS! recursed too far trying to find #! interpreter", path);
@@ -886,8 +886,8 @@ ErrorOr<void> Process::exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KSt
     auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread);
     if (!shebang_result.is_error()) {
         auto shebang_words = shebang_result.release_value();
-        auto shebang_path = TRY(shebang_words.first().try_clone());
-        arguments.ptr_at(0) = move(path);
+        auto shebang_path = TRY(shebang_words.first()->try_clone());
+        arguments[0] = move(path);
         TRY(arguments.try_prepend(move(shebang_words)));
         return exec(move(shebang_path), move(arguments), move(environment), new_main_thread, previous_interrupts_state, ++recursion_depth);
     }
@@ -949,10 +949,10 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
             return {};
         };
 
-        NonnullOwnPtrVector<KString> arguments;
+        Vector<NonnullOwnPtr<KString>> arguments;
         TRY(copy_user_strings(params.arguments, arguments));
 
-        NonnullOwnPtrVector<KString> environment;
+        Vector<NonnullOwnPtr<KString>> environment;
         TRY(copy_user_strings(params.environment, environment));
 
         TRY(exec(move(path), move(arguments), move(environment), new_main_thread, previous_interrupts_state));

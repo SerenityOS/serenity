@@ -57,7 +57,7 @@ int main(int argc, char** argv, char** env)
         profile_dump_path = DeprecatedString::formatted("{}.{}.profile", LexicalPath(executable_path).basename(), getpid());
 
     OwnPtr<Stream> profile_stream;
-    OwnPtr<NonnullOwnPtrVector<DeprecatedString>> profile_strings;
+    OwnPtr<Vector<NonnullOwnPtr<DeprecatedString>>> profile_strings;
     OwnPtr<Vector<int>> profile_string_id_map;
 
     if (dump_profile) {
@@ -67,7 +67,7 @@ int main(int argc, char** argv, char** env)
             return 1;
         }
         profile_stream = profile_stream_or_error.release_value();
-        profile_strings = make<NonnullOwnPtrVector<DeprecatedString>>();
+        profile_strings = make<Vector<NonnullOwnPtr<DeprecatedString>>>();
         profile_string_id_map = make<Vector<int>>();
 
         profile_stream->write_entire_buffer(R"({"events":[)"sv.bytes()).release_value_but_fixme_should_propagate_errors();

@@ -121,8 +121,8 @@ public:
     size_t line_count() const { return document().line_count(); }
     TextDocumentLine& line(size_t index) { return document().line(index); }
     TextDocumentLine const& line(size_t index) const { return document().line(index); }
-    NonnullOwnPtrVector<TextDocumentLine>& lines() { return document().lines(); }
-    NonnullOwnPtrVector<TextDocumentLine> const& lines() const { return document().lines(); }
+    Vector<NonnullOwnPtr<TextDocumentLine>>& lines() { return document().lines(); }
+    Vector<NonnullOwnPtr<TextDocumentLine>> const& lines() const { return document().lines(); }
     int line_height() const;
     TextPosition cursor() const { return m_cursor; }
     TextRange normalized_selection() const { return m_selection.normalized(); }
@@ -432,7 +432,7 @@ private:
         Gfx::IntRect visual_rect;
     };
 
-    NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
+    Vector<NonnullOwnPtr<LineVisualData>> m_line_visual_data;
 
     OwnPtr<Syntax::Highlighter> m_highlighter;
     OwnPtr<AutocompleteProvider> m_autocomplete_provider;

@@ -43,7 +43,7 @@ private:
     static constexpr size_t large_zone_size = 16 * MiB;
     static constexpr size_t small_zone_size = 1 * MiB;
 
-    NonnullOwnPtrVector<PhysicalZone> m_zones;
+    Vector<NonnullOwnPtr<PhysicalZone>> m_zones;
 
     size_t m_large_zones { 0 };
 

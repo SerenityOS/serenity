@@ -73,14 +73,14 @@ int Menu::content_width() const
     int widest_text = 0;
     int widest_shortcut = 0;
     for (auto& item : m_items) {
-        if (!item.is_visible())
+        if (!item->is_visible())
             continue;
-        if (item.type() != MenuItem::Text)
+        if (item->type() != MenuItem::Text)
             continue;
-        auto& use_font = item.is_default() ? font().bold_variant() : font();
-        int text_width = use_font.width(Gfx::parse_ampersand_string(item.text()));
-        if (!item.shortcut_text().is_empty()) {
-            int shortcut_width = use_font.width(item.shortcut_text());
+        auto& use_font = item->is_default() ? font().bold_variant() : font();
+        int text_width = use_font.width(Gfx::parse_ampersand_string(item->text()));
+        if (!item->shortcut_text().is_empty()) {
+            int shortcut_width = use_font.width(item->shortcut_text());
             widest_shortcut = max(shortcut_width, widest_shortcut);
         }
         widest_text = max(widest_text, text_width);
@@ -129,7 +129,7 @@ Window& Menu::ensure_menu_window(Gfx::IntPoint position)
     auto calculate_window_rect = [&]() -> Gfx::IntRect {
         int window_height_available = screen.height() - frame_thickness() * 2;
         int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
-        int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
+        int content_height = m_items.is_empty() ? 0 : (m_items.last()->rect().bottom() + 1) + frame_thickness();
         int window_height = min(max_window_height, content_height);
         if (window_height < content_height) {
             m_scrollable = true;
@@ -140,14 +140,14 @@ Window& Menu::ensure_menu_window(Gfx::IntPoint position)
 
     Gfx::IntPoint next_item_location(frame_thickness(), frame_thickness());
     for (auto& item : m_items) {
-        if (!item.is_visible())
+        if (!item->is_visible())
             continue;
         int height = 0;
-        if (item.type() == MenuItem::Text)
+        if (item->type() == MenuItem::Text)
             height = item_height();
-        else if (item.type() == MenuItem::Separator)
+        else if (item->type() == MenuItem::Separator)
             height = 8;
-        item.set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
+        item->set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
         next_item_location.translate_by(0, height);
     }
 
@@ -217,7 +217,7 @@ void Menu::draw()
 
     int visible_item_count = this->visible_item_count();
     for (int i = 0; i < visible_item_count; ++i)
-        draw(m_items.at(m_scroll_offset + i), true);
+        draw(*m_items[m_scroll_offset + i], true);
 }
 
 void Menu::draw(MenuItem const& item, bool is_drawing_all)
@@ -407,9 +407,9 @@ void Menu::event(Core::Event& event)
                 // Default to the last enabled, non-separator item on key press if one has not been selected yet
                 for (auto i = static_cast<int>(m_items.size()) - 1; i >= 0; i--) {
                     auto& item = m_items.at(i);
-                    if (!item.is_visible())
+                    if (!item->is_visible())
                         continue;
-                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                    if (item->type() != MenuItem::Separator && item->is_enabled()) {
                         set_hovered_index(i, key == Key_Right);
                         break;
                     }
@@ -418,9 +418,9 @@ void Menu::event(Core::Event& event)
                 // Default to the first enabled, non-separator item on key press if one has not been selected yet
                 int counter = 0;
                 for (auto const& item : m_items) {
-                    if (!item.is_visible())
+                    if (!item->is_visible())
                         continue;
-                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                    if (item->type() != MenuItem::Separator && item->is_enabled()) {
                         set_hovered_index(counter, key == Key_Right);
                         break;
                     }
@@ -562,12 +562,12 @@ void Menu::did_activate(MenuItem& item, bool leave_menu_open)
 bool Menu::activate_default()
 {
     for (auto& item : m_items) {
-        if (!item.is_visible())
+        if (!item->is_visible())
             continue;
-        if (item.type() == MenuItem::Type::Separator)
+        if (item->type() == MenuItem::Type::Separator)
             continue;
-        if (item.is_enabled() && item.is_default()) {
-            did_activate(item, false);
+        if (item->is_enabled() && item->is_default()) {
+            did_activate(*item, false);
             return true;
         }
     }
@@ -577,8 +577,8 @@ bool Menu::activate_default()
 MenuItem* Menu::item_with_identifier(unsigned identifier)
 {
     for (auto& item : m_items) {
-        if (item.identifier() == identifier)
-            return &item;
+        if (item->identifier() == identifier)
+            return item;
     }
     return nullptr;
 }
@@ -592,9 +592,9 @@ int Menu::item_index_at(Gfx::IntPoint position)
 {
     for (int i = 0; i < static_cast<int>(m_items.size()); ++i) {
         auto const& item = m_items[i];
-        if (!item.is_visible())
+        if (!item->is_visible())
             continue;
-        if (item.rect().contains(position))
+        if (item->rect().contains(position))
             return i;
     }
     return -1;
@@ -684,9 +684,9 @@ void Menu::do_popup(Gfx::IntPoint position, bool make_input, bool as_submenu)
 bool Menu::is_menu_ancestor_of(Menu const& other) const
 {
     for (auto& item : m_items) {
-        if (!item.is_submenu())
+        if (!item->is_submenu())
             continue;
-        auto& submenu = *item.submenu();
+        auto& submenu = *item->submenu();
         if (&submenu == &other)
             return true;
         if (submenu.is_menu_ancestor_of(other))
@@ -711,7 +711,7 @@ void Menu::update_alt_shortcuts_for_items()
     m_alt_shortcut_character_to_item_indices.clear();
     int i = 0;
     for (auto& item : m_items) {
-        if (auto alt_shortcut = find_ampersand_shortcut_character(item.text())) {
+        if (auto alt_shortcut = find_ampersand_shortcut_character(item->text())) {
             m_alt_shortcut_character_to_item_indices.ensure(to_ascii_lowercase(alt_shortcut)).append(i);
         }
         ++i;

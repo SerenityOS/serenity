@@ -54,8 +54,8 @@ public:
         HashMap<Wasm::FunctionAddress, JS::NativeFunction*> function_instances;
     };
 
-    static NonnullOwnPtrVector<CompiledWebAssemblyModule> s_compiled_modules;
-    static NonnullOwnPtrVector<Wasm::ModuleInstance> s_instantiated_modules;
+    static Vector<NonnullOwnPtr<CompiledWebAssemblyModule>> s_compiled_modules;
+    static Vector<NonnullOwnPtr<Wasm::ModuleInstance>> s_instantiated_modules;
     static Vector<ModuleCache> s_module_caches;
     static GlobalModuleCache s_global_cache;
 

@@ -821,12 +821,12 @@ public:
 
     // This represents that: https://www.w3.org/TR/css-values-3/#calc-syntax
     struct CalcSum {
-        CalcSum(NonnullOwnPtr<CalcProduct> first_calc_product, NonnullOwnPtrVector<CalcSumPartWithOperator> additional)
+        CalcSum(NonnullOwnPtr<CalcProduct> first_calc_product, Vector<NonnullOwnPtr<CalcSumPartWithOperator>> additional)
             : first_calc_product(move(first_calc_product))
             , zero_or_more_additional_calc_products(move(additional)) {};
 
         NonnullOwnPtr<CalcProduct> first_calc_product;
-        NonnullOwnPtrVector<CalcSumPartWithOperator> zero_or_more_additional_calc_products;
+        Vector<NonnullOwnPtr<CalcSumPartWithOperator>> zero_or_more_additional_calc_products;
 
         ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
@@ -836,12 +836,12 @@ public:
     };
 
     struct CalcNumberSum {
-        CalcNumberSum(NonnullOwnPtr<CalcNumberProduct> first_calc_number_product, NonnullOwnPtrVector<CalcNumberSumPartWithOperator> additional)
+        CalcNumberSum(NonnullOwnPtr<CalcNumberProduct> first_calc_number_product, Vector<NonnullOwnPtr<CalcNumberSumPartWithOperator>> additional)
             : first_calc_number_product(move(first_calc_number_product))
             , zero_or_more_additional_calc_number_products(move(additional)) {};
 
         NonnullOwnPtr<CalcNumberProduct> first_calc_number_product;
-        NonnullOwnPtrVector<CalcNumberSumPartWithOperator> zero_or_more_additional_calc_number_products;
+        Vector<NonnullOwnPtr<CalcNumberSumPartWithOperator>> zero_or_more_additional_calc_number_products;
 
         ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
@@ -850,7 +850,7 @@ public:
 
     struct CalcProduct {
         CalcValue first_calc_value;
-        NonnullOwnPtrVector<CalcProductPartWithOperator> zero_or_more_additional_calc_values;
+        Vector<NonnullOwnPtr<CalcProductPartWithOperator>> zero_or_more_additional_calc_values;
 
         ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
@@ -885,7 +885,7 @@ public:
 
     struct CalcNumberProduct {
         CalcNumberValue first_calc_number_value;
-        NonnullOwnPtrVector<CalcNumberProductPartWithOperator> zero_or_more_additional_calc_number_values;
+        Vector<NonnullOwnPtr<CalcNumberProductPartWithOperator>> zero_or_more_additional_calc_number_values;
 
         ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;

@@ -73,7 +73,7 @@ void Inspector::set_registers(PtraceRegisters const&) {};
 void Inspector::for_each_loaded_library(Function<IterationDecision(Debug::LoadedLibrary const&)> func) const
 {
     for (auto& library : m_loaded_libraries) {
-        if (func(library) == IterationDecision::Break)
+        if (func(*library) == IterationDecision::Break)
             break;
     }
 }

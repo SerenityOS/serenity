@@ -456,21 +456,21 @@ void BrowserWindow::open_previous_tab()
 void BrowserWindow::enable_auto_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
+        tab->view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Auto);
     }
 }
 
 void BrowserWindow::enable_light_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
+        tab->view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Light);
     }
 }
 
 void BrowserWindow::enable_dark_color_scheme()
 {
     for (auto& tab : m_tabs) {
-        tab.view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
+        tab->view().set_preferred_color_scheme(Web::CSS::PreferredColorScheme::Dark);
     }
 }
 

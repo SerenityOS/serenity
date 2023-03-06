@@ -171,7 +171,7 @@ void EditingEngine::move_one_left()
         m_editor->set_cursor(m_editor->cursor().line(), new_column);
     } else if (m_editor->cursor().line() > 0) {
         auto new_line = m_editor->cursor().line() - 1;
-        auto new_column = m_editor->lines()[new_line].length();
+        auto new_column = m_editor->lines()[new_line]->length();
         m_editor->set_cursor(new_line, new_column);
     }
 }
@@ -362,7 +362,7 @@ void EditingEngine::move_to_first_line()
 
 void EditingEngine::move_to_last_line()
 {
-    m_editor->set_cursor(m_editor->line_count() - 1, m_editor->lines()[m_editor->line_count() - 1].length());
+    m_editor->set_cursor(m_editor->line_count() - 1, m_editor->lines()[m_editor->line_count() - 1]->length());
 };
 
 void EditingEngine::get_selection_line_boundaries(Badge<MoveLineUpOrDownCommand>, size_t& first_line, size_t& last_line)

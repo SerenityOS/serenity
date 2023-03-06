@@ -61,7 +61,7 @@ public:
 
     bool is_visible() const { return m_visible; }
 
-    NonnullOwnPtrVector<MenuItem> const& items() const { return m_items; }
+    Vector<NonnullOwnPtr<MenuItem>> const& items() const { return m_items; }
 
 private:
     friend class Menubar;
@@ -77,7 +77,7 @@ private:
     int m_menu_id { -1 };
     DeprecatedString m_name;
     RefPtr<Gfx::Bitmap const> m_icon;
-    NonnullOwnPtrVector<MenuItem> m_items;
+    Vector<NonnullOwnPtr<MenuItem>> m_items;
     WeakPtr<Action> m_current_default_action;
     bool m_visible { false };
 

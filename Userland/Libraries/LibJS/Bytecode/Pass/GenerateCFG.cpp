@@ -164,7 +164,7 @@ void GenerateCFG::perform(PassPipelineExecutable& executable)
 
     unwind_frames.append(&top_level_frame);
 
-    generate_cfg_for_block(executable.executable.basic_blocks.first(), executable);
+    generate_cfg_for_block(*executable.executable.basic_blocks.first(), executable);
 
     finished();
 }

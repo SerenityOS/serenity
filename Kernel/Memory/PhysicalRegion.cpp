@@ -46,7 +46,7 @@ void PhysicalRegion::initialize_zones()
         while (remaining_pages >= pages_per_zone) {
             m_zones.append(adopt_nonnull_own_or_enomem(new (nothrow) PhysicalZone(base_address, pages_per_zone)).release_value_but_fixme_should_propagate_errors());
             base_address = base_address.offset(pages_per_zone * PAGE_SIZE);
-            m_usable_zones.append(m_zones.last());
+            m_usable_zones.append(*m_zones.last());
             remaining_pages -= pages_per_zone;
             ++zone_count;
         }
@@ -131,10 +131,10 @@ void PhysicalRegion::return_page(PhysicalAddress paddr)
         zone_index = m_large_zones + (paddr.get() - small_zone_base) / small_zone_size;
 
     auto& zone = m_zones[zone_index];
-    VERIFY(zone.contains(paddr));
-    zone.deallocate_block(paddr, 0);
-    if (m_full_zones.contains(zone))
-        m_usable_zones.append(zone);
+    VERIFY(zone->contains(paddr));
+    zone->deallocate_block(paddr, 0);
+    if (m_full_zones.contains(*zone))
+        m_usable_zones.append(*zone);
 }
 
 }

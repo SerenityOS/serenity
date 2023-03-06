@@ -268,7 +268,7 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         return Error::from_string_literal("Malformed profile (events is not an array)");
     auto const& perf_events = events_value.value();
 
-    NonnullOwnPtrVector<Process> all_processes;
+    Vector<NonnullOwnPtr<Process>> all_processes;
     HashMap<pid_t, Process*> current_processes;
     Vector<Event> events;
     EventSerialNumber next_serial;
@@ -448,15 +448,15 @@ ErrorOr<NonnullOwnPtr<Profile>> Profile::load_from_perfcore_file(StringView path
         return Error::from_string_literal("No events captured (targeted process was never on CPU)");
 
     quick_sort(all_processes, [](auto& a, auto& b) {
-        if (a.pid == b.pid)
-            return a.start_valid < b.start_valid;
+        if (a->pid == b->pid)
+            return a->start_valid < b->start_valid;
 
-        return a.pid < b.pid;
+        return a->pid < b->pid;
     });
 
     Vector<Process> processes;
     for (auto& it : all_processes)
-        processes.append(move(it));
+        processes.append(move(*it));
 
     return adopt_nonnull_own_or_enomem(new (nothrow) Profile(move(processes), move(events)));
 }

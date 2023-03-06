@@ -32,7 +32,7 @@ private:
 struct ClassViewNode {
     StringView name;
     CodeComprehension::Declaration const* declaration { nullptr };
-    NonnullOwnPtrVector<ClassViewNode> children;
+    Vector<NonnullOwnPtr<ClassViewNode>> children;
     ClassViewNode* parent { nullptr };
 
     explicit ClassViewNode(StringView name)
@@ -51,7 +51,7 @@ public:
 private:
     explicit ClassViewModel();
     void add_declaration(CodeComprehension::Declaration const&);
-    NonnullOwnPtrVector<ClassViewNode> m_root_scope;
+    Vector<NonnullOwnPtr<ClassViewNode>> m_root_scope;
 };
 
 }

@@ -112,7 +112,7 @@ static void dump(XML::Node const& node)
                 color(ColorRole::Reset);
 
                 for (auto& node : element.children)
-                    dump(node);
+                    dump(*node);
 
                 color(ColorRole::Tag);
                 out("</{}>", element.name);
@@ -391,12 +391,12 @@ static void do_run_tests(XML::Document& document)
     Queue<XML::Node*> suites;
     auto dump_cases = [&](auto& root) {
         for (auto& node : root.children) {
-            auto element = node.content.template get_pointer<XML::Node::Element>();
+            auto element = node->content.template get_pointer<XML::Node::Element>();
             if (!element)
                 continue;
             if (element->name != "TESTCASES" && element->name != "TEST")
                 continue;
-            suites.enqueue(&node);
+            suites.enqueue(node);
         }
     };
 

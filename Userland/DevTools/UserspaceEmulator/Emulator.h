@@ -32,7 +32,7 @@ public:
 
     Emulator(DeprecatedString const& executable_path, Vector<StringView> const& arguments, Vector<DeprecatedString> const& environment);
 
-    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, Stream* profile_stream, NonnullOwnPtrVector<DeprecatedString>* profiler_strings, Vector<int>* profiler_string_id_map)
+    void set_profiling_details(bool should_dump_profile, size_t instruction_interval, Stream* profile_stream, Vector<NonnullOwnPtr<DeprecatedString>>* profiler_strings, Vector<int>* profiler_string_id_map)
     {
         m_is_profiling = should_dump_profile;
         m_profile_instruction_interval = instruction_interval;
@@ -47,7 +47,7 @@ public:
     }
 
     Stream& profile_stream() { return *m_profile_stream; }
-    NonnullOwnPtrVector<DeprecatedString>& profiler_strings() { return *m_profiler_strings; }
+    Vector<NonnullOwnPtr<DeprecatedString>>& profiler_strings() { return *m_profiler_strings; }
     Vector<int>& profiler_string_id_map() { return *m_profiler_string_id_map; }
 
     bool is_profiling() const { return m_is_profiling; }
@@ -296,7 +296,7 @@ private:
 
     Stream* m_profile_stream { nullptr };
     Vector<int>* m_profiler_string_id_map { nullptr };
-    NonnullOwnPtrVector<DeprecatedString>* m_profiler_strings { nullptr };
+    Vector<NonnullOwnPtr<DeprecatedString>>* m_profiler_strings { nullptr };
 
     bool m_is_profiling { false };
     size_t m_profile_instruction_interval { 0 };

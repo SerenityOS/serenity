@@ -61,12 +61,12 @@ public:
     {
         started();
         for (auto& pass : m_passes)
-            pass.perform(executable);
+            pass->perform(executable);
         finished();
     }
 
 private:
-    NonnullOwnPtrVector<Pass> m_passes;
+    Vector<NonnullOwnPtr<Pass>> m_passes;
 };
 
 namespace Passes {

@@ -122,7 +122,7 @@ void Job::flush_received_buffers()
         return;
     dbgln_if(JOB_DEBUG, "Job: Flushing received buffers: have {} bytes in {} buffers for {}", m_buffered_size, m_received_buffers.size(), m_request.url());
     for (size_t i = 0; i < m_received_buffers.size(); ++i) {
-        auto& payload = m_received_buffers[i].pending_flush;
+        auto& payload = m_received_buffers[i]->pending_flush;
         auto result = do_write(payload);
         if (result.is_error()) {
             if (!result.error().is_errno()) {
@@ -591,8 +591,8 @@ void Job::finish_up()
 
         u8* flat_ptr = flattened_buffer.data();
         for (auto& received_buffer : m_received_buffers) {
-            memcpy(flat_ptr, received_buffer.pending_flush.data(), received_buffer.pending_flush.size());
-            flat_ptr += received_buffer.pending_flush.size();
+            memcpy(flat_ptr, received_buffer->pending_flush.data(), received_buffer->pending_flush.size());
+            flat_ptr += received_buffer->pending_flush.size();
         }
         m_received_buffers.clear();
 

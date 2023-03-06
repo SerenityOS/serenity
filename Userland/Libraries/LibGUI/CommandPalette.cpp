@@ -243,11 +243,11 @@ void CommandPalette::collect_actions(GUI::Window& parent_window)
     };
 
     Function<void(Menu&)> collect_actions_from_menu = [&](Menu& menu) {
-        for (auto menu_item : menu.items()) {
-            if (menu_item.submenu())
-                collect_actions_from_menu(*menu_item.submenu());
+        for (auto& menu_item : menu.items()) {
+            if (menu_item->submenu())
+                collect_actions_from_menu(*menu_item->submenu());
 
-            auto* action = menu_item.action();
+            auto* action = menu_item->action();
             if (should_show_action(action))
                 actions.set(*action);
         }

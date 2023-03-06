@@ -128,8 +128,8 @@ void ConnectionBase::handle_messages()
 {
     auto messages = move(m_unprocessed_messages);
     for (auto& message : messages) {
-        if (message.endpoint_magic() == m_local_endpoint_magic) {
-            auto handler_result = m_local_stub.handle(message);
+        if (message->endpoint_magic() == m_local_endpoint_magic) {
+            auto handler_result = m_local_stub.handle(*message);
             if (handler_result.is_error()) {
                 dbgln("IPC::ConnectionBase::handle_messages: {}", handler_result.error());
                 continue;
@@ -246,9 +246,9 @@ OwnPtr<IPC::Message> ConnectionBase::wait_for_specific_endpoint_message_impl(u32
         // Otherwise we might end up blocked for a while for no reason.
         for (size_t i = 0; i < m_unprocessed_messages.size(); ++i) {
             auto& message = m_unprocessed_messages[i];
-            if (message.endpoint_magic() != endpoint_magic)
+            if (message->endpoint_magic() != endpoint_magic)
                 continue;
-            if (message.message_id() == message_id)
+            if (message->message_id() == message_id)
                 return m_unprocessed_messages.take(i);
         }
 

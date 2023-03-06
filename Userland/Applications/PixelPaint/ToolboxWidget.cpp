@@ -71,7 +71,7 @@ void ToolboxWidget::setup_tools()
         m_tools.append(move(tool));
         if (is_default_tool) {
             VERIFY(m_active_tool == nullptr);
-            m_active_tool = &m_tools[m_tools.size() - 1];
+            m_active_tool = m_tools[m_tools.size() - 1];
             action->set_checked(true);
         }
     };

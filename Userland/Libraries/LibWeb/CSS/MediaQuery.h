@@ -197,8 +197,8 @@ struct MediaCondition {
     static NonnullOwnPtr<MediaCondition> from_general_enclosed(GeneralEnclosed&&);
     static NonnullOwnPtr<MediaCondition> from_feature(MediaFeature&&);
     static NonnullOwnPtr<MediaCondition> from_not(NonnullOwnPtr<MediaCondition>&&);
-    static NonnullOwnPtr<MediaCondition> from_and_list(NonnullOwnPtrVector<MediaCondition>&&);
-    static NonnullOwnPtr<MediaCondition> from_or_list(NonnullOwnPtrVector<MediaCondition>&&);
+    static NonnullOwnPtr<MediaCondition> from_and_list(Vector<NonnullOwnPtr<MediaCondition>>&&);
+    static NonnullOwnPtr<MediaCondition> from_or_list(Vector<NonnullOwnPtr<MediaCondition>>&&);
 
     MatchResult evaluate(HTML::Window const&) const;
     ErrorOr<String> to_string() const;
@@ -207,7 +207,7 @@ private:
     MediaCondition() = default;
     Type type;
     Optional<MediaFeature> feature;
-    NonnullOwnPtrVector<MediaCondition> conditions;
+    Vector<NonnullOwnPtr<MediaCondition>> conditions;
     Optional<GeneralEnclosed> general_enclosed;
 };
 

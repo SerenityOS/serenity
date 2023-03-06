@@ -104,7 +104,7 @@ public:
         if (name.is_empty())
             name = DeprecatedString::number(m_next_block++);
         m_root_basic_blocks.append(BasicBlock::create(name));
-        return m_root_basic_blocks.last();
+        return *m_root_basic_blocks.last();
     }
 
     bool is_current_block_terminated() const
@@ -227,7 +227,7 @@ private:
     };
 
     BasicBlock* m_current_basic_block { nullptr };
-    NonnullOwnPtrVector<BasicBlock> m_root_basic_blocks;
+    Vector<NonnullOwnPtr<BasicBlock>> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
     NonnullOwnPtr<IdentifierTable> m_identifier_table;
 

@@ -36,9 +36,9 @@ CodeGenerationErrorOr<NonnullOwnPtr<Executable>> Generator::generate(ASTNode con
     if (generator.is_in_generator_or_async_function()) {
         // Terminate all unterminated blocks with yield return
         for (auto& block : generator.m_root_basic_blocks) {
-            if (block.is_terminated())
+            if (block->is_terminated())
                 continue;
-            generator.switch_to_basic_block(block);
+            generator.switch_to_basic_block(*block);
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
             generator.emit<Bytecode::Op::Yield>(nullptr);
         }

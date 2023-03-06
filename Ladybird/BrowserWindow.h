@@ -61,7 +61,7 @@ private:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
     QTabWidget* m_tabs_container { nullptr };
-    NonnullOwnPtrVector<Tab> m_tabs;
+    Vector<NonnullOwnPtr<Tab>> m_tabs;
     Tab* m_current_tab { nullptr };
 
     Browser::CookieJar& m_cookie_jar;

@@ -45,7 +45,7 @@ GUI::ModelIndex RemoteObjectGraphModel::parent_index(const GUI::ModelIndex& inde
     // NOTE: If the parent has no parent, it's a root, so we have to look among the remote roots.
     if (!remote_object.parent->parent) {
         for (size_t row = 0; row < m_process.roots().size(); ++row) {
-            if (&m_process.roots()[row] == remote_object.parent)
+            if (m_process.roots()[row] == remote_object.parent)
                 return create_index(row, 0, remote_object.parent);
         }
         VERIFY_NOT_REACHED();
@@ -53,7 +53,7 @@ GUI::ModelIndex RemoteObjectGraphModel::parent_index(const GUI::ModelIndex& inde
     }
 
     for (size_t row = 0; row < remote_object.parent->parent->children.size(); ++row) {
-        if (&remote_object.parent->parent->children[row] == remote_object.parent)
+        if (remote_object.parent->parent->children[row] == remote_object.parent)
             return create_index(row, 0, remote_object.parent);
     }
 

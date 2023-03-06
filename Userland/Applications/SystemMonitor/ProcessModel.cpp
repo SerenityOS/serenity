@@ -350,7 +350,7 @@ GUI::ModelIndex ProcessModel::index(int row, int column, GUI::ModelIndex const& 
     if (!parent.is_valid()) {
         if (row >= static_cast<int>(m_processes.size()))
             return {};
-        auto corresponding_thread = m_processes[row].main_thread();
+        auto corresponding_thread = m_processes[row]->main_thread();
         if (!corresponding_thread.has_value())
             return {};
         return create_index(row, column, corresponding_thread.release_value().ptr());
@@ -368,8 +368,14 @@ int ProcessModel::thread_model_row(Thread const& thread) const
 {
     auto const& process = thread.current_state.process;
     // A process's main thread uses the global process index.
-    if (process.pid == thread.current_state.pid)
-        return m_processes.find_first_index(process).value_or(0);
+    if (process.pid == thread.current_state.pid) {
+        auto it = m_processes.find_if([&](auto& entry) {
+            return entry.ptr() == &process;
+        });
+        if (it == m_processes.end())
+            return 0;
+        return it.index();
+    }
 
     return process.threads.find_first_index(thread).value_or(0);
 }
@@ -387,7 +393,15 @@ GUI::ModelIndex ProcessModel::parent_index(GUI::ModelIndex const& index) const
     if (!parent.main_thread().has_value())
         return {};
 
-    return create_index(m_processes.find_first_index(parent).release_value(), index.column(), parent.main_thread().value().ptr());
+    auto process_index = [&]() -> size_t {
+        auto it = m_processes.find_if([&](auto& entry) {
+            return entry.ptr() == &parent;
+        });
+        if (it == m_processes.end())
+            return 0;
+        return it.index();
+    }();
+    return create_index(process_index, index.column(), parent.main_thread().value().ptr());
 }
 
 Vector<GUI::ModelIndex> ProcessModel::matches(StringView searching, unsigned flags, GUI::ModelIndex const&)
@@ -444,7 +458,7 @@ void ProcessModel::update()
             auto const& process = all_processes.value().processes[i];
             NonnullOwnPtr<Process>* process_state = nullptr;
             for (size_t i = 0; i < m_processes.size(); ++i) {
-                auto* other_process = &m_processes.ptr_at(i);
+                auto* other_process = &m_processes[i];
                 if ((*other_process)->pid == process.pid) {
                     process_state = other_process;
                     break;
@@ -452,7 +466,7 @@ void ProcessModel::update()
             }
             if (!process_state) {
                 m_processes.append(make<Process>());
-                process_state = &m_processes.ptr_at(m_processes.size() - 1);
+                process_state = &m_processes.last();
             }
             (*process_state)->pid = process.pid;
             for (auto& thread : process.threads) {
@@ -508,8 +522,8 @@ void ProcessModel::update()
     }
 
     for (auto& c : m_cpus) {
-        c.total_cpu_percent = 0.0;
-        c.total_cpu_percent_kernel = 0.0;
+        c->total_cpu_percent = 0.0;
+        c->total_cpu_percent_kernel = 0.0;
     }
 
     Vector<int, 16> tids_to_remove;
@@ -526,8 +540,8 @@ void ProcessModel::update()
         thread.current_state.cpu_percent_kernel = total_time_scheduled_diff > 0 ? (float)((time_scheduled_diff_kernel * 1000) / total_time_scheduled_diff) / 10.0f : 0;
         if (it.value->current_state.pid != 0) {
             auto& cpu_info = m_cpus[thread.current_state.cpu];
-            cpu_info.total_cpu_percent += thread.current_state.cpu_percent;
-            cpu_info.total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
+            cpu_info->total_cpu_percent += thread.current_state.cpu_percent;
+            cpu_info->total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
         }
     }
 
@@ -536,8 +550,8 @@ void ProcessModel::update()
         m_threads.remove(tid);
         for (size_t i = 0; i < m_processes.size(); ++i) {
             auto& process = m_processes[i];
-            process.threads.remove_all_matching([&](auto const& thread) { return thread->current_state.tid == tid; });
-            if (process.threads.size() == 0) {
+            process->threads.remove_all_matching([&](auto const& thread) { return thread->current_state.tid == tid; });
+            if (process->threads.size() == 0) {
                 m_processes.remove(i);
                 --i;
             }

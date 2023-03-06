@@ -35,7 +35,7 @@ private:
 
     NonnullOwnPtr<Reader> m_reader;
 
-    NonnullOwnPtrVector<Debug::LoadedLibrary> m_loaded_libraries;
+    Vector<NonnullOwnPtr<Debug::LoadedLibrary>> m_loaded_libraries;
 };
 
 }

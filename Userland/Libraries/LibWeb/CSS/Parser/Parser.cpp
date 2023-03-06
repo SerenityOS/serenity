@@ -834,7 +834,7 @@ OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<ComponentValue>
             return maybe_media_in_parens.release_nonnull();
         }
 
-        NonnullOwnPtrVector<MediaCondition> child_conditions;
+        Vector<NonnullOwnPtr<MediaCondition>> child_conditions;
         child_conditions.append(maybe_media_in_parens.release_nonnull());
 
         // `<media-and>*`
@@ -7091,7 +7091,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_produc
 {
     auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
         CalculatedStyleValue::CalcNumberValue { Number {} },
-        NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberProductPartWithOperator> {});
+        Vector<NonnullOwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator>> {});
 
     auto first_calc_number_value_or_error = parse_calc_number_value(tokens);
     if (!first_calc_number_value_or_error.has_value())
@@ -7139,7 +7139,7 @@ OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(TokenS
     if (!first_calc_number_product_or_error)
         return nullptr;
 
-    NonnullOwnPtrVector<CalculatedStyleValue::CalcNumberSumPartWithOperator> additional {};
+    Vector<NonnullOwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator>> additional {};
     while (tokens.has_next_token()) {
         auto calc_sum_part = parse_calc_number_sum_part_with_operator(tokens);
         if (!calc_sum_part)
@@ -7175,7 +7175,7 @@ OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream
 {
     auto calc_product = make<CalculatedStyleValue::CalcProduct>(
         CalculatedStyleValue::CalcValue { Number {} },
-        NonnullOwnPtrVector<CalculatedStyleValue::CalcProductPartWithOperator> {});
+        Vector<NonnullOwnPtr<CalculatedStyleValue::CalcProductPartWithOperator>> {});
 
     auto first_calc_value_or_error = parse_calc_value(tokens);
     if (!first_calc_value_or_error.has_value())
@@ -7225,7 +7225,7 @@ OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(TokenStream<Compone
     if (!parsed_calc_product)
         return nullptr;
 
-    NonnullOwnPtrVector<CalculatedStyleValue::CalcSumPartWithOperator> additional {};
+    Vector<NonnullOwnPtr<CalculatedStyleValue::CalcSumPartWithOperator>> additional {};
     while (tokens.has_next_token()) {
         auto calc_sum_part = parse_calc_sum_part_with_operator(tokens);
         if (!calc_sum_part)

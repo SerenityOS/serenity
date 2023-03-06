@@ -33,7 +33,7 @@ void Terminal::clear()
 {
     dbgln_if(TERMINAL_DEBUG, "Clear the entire screen");
     for (size_t i = 0; i < rows(); ++i)
-        active_buffer()[i].clear();
+        active_buffer()[i]->clear();
     set_cursor(0, 0);
 }
 
@@ -715,7 +715,7 @@ void Terminal::linefeed()
     u16 new_row = cursor_row();
 #ifndef KERNEL
     if (!m_controls_are_logically_generated)
-        active_buffer()[new_row].set_terminated(m_column_before_carriage_return.value_or(cursor_column()));
+        active_buffer()[new_row]->set_terminated(m_column_before_carriage_return.value_or(cursor_column()));
 #endif
     if (cursor_row() == m_scroll_region_bottom) {
         scroll_up();
@@ -763,26 +763,26 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
         auto remaining_lines = max_history_size() - history_size();
         history_delta = (count > remaining_lines) ? remaining_lines - count : 0;
         for (size_t i = 0; i < count; ++i)
-            add_line_to_history(move(active_buffer().ptr_at(region_top + i)));
+            add_line_to_history(move(active_buffer().at(region_top + i)));
     }
 
     // Move lines into their new place.
     for (u16 row = region_top; row + count <= region_bottom; ++row)
-        swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row + count));
+        swap(active_buffer().at(row), active_buffer().at(row + count));
     // Clear 'new' lines at the bottom.
     if (should_move_to_scrollback) {
         // Since we moved the previous lines into history, we can't just clear them.
         for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
-            active_buffer().ptr_at(row) = make<Line>(columns());
+            active_buffer().at(row) = make<Line>(columns());
     } else {
         // The new lines haven't been moved and we don't want to leak memory.
         for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
-            active_buffer()[row].clear();
+            active_buffer()[row]->clear();
     }
     // Set dirty flag on swapped lines.
     // The other lines have implicitly been set dirty by being cleared.
     for (u16 row = region_top; row + count <= region_bottom; ++row)
-        active_buffer()[row].set_dirty(true);
+        active_buffer()[row]->set_dirty(true);
     m_client.terminal_history_changed(history_delta);
 }
 
@@ -800,14 +800,14 @@ void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
 
     // Move lines into their new place.
     for (int row = region_bottom; row >= static_cast<int>(region_top + count); --row)
-        swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row - count));
+        swap(active_buffer().at(row), active_buffer().at(row - count));
     // Clear the 'new' lines at the top.
     for (u16 row = region_top; row < region_top + count; ++row)
-        active_buffer()[row].clear();
+        active_buffer()[row]->clear();
     // Set dirty flag on swapped lines.
     // The other lines have implicitly been set dirty by being cleared.
     for (u16 row = region_top + count; row <= region_bottom; ++row)
-        active_buffer()[row].set_dirty(true);
+        active_buffer()[row]->set_dirty(true);
 }
 
 // Insert `count` blank cells at the end of the line. Text moves left.
@@ -820,9 +820,9 @@ void Terminal::scroll_left(u16 row, u16 column, size_t count)
 
     auto& line = active_buffer()[row];
     for (size_t i = column; i < columns() - count; ++i)
-        swap(line.cell_at(i), line.cell_at(i + count));
+        swap(line->cell_at(i), line->cell_at(i + count));
     clear_in_line(row, columns() - count, columns() - 1);
-    line.set_dirty(true);
+    line->set_dirty(true);
 }
 
 // Insert `count` blank cells after `row`. Text moves right.
@@ -835,9 +835,9 @@ void Terminal::scroll_right(u16 row, u16 column, size_t count)
 
     auto& line = active_buffer()[row];
     for (int i = columns() - 1; i >= static_cast<int>(column + count); --i)
-        swap(line.cell_at(i), line.cell_at(i - count));
+        swap(line->cell_at(i), line->cell_at(i - count));
     clear_in_line(row, column, column + count - 1);
-    line.set_dirty(true);
+    line->set_dirty(true);
 }
 
 void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
@@ -845,10 +845,10 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
     VERIFY(row < rows());
     VERIFY(column < columns());
     auto& line = active_buffer()[row];
-    line.set_code_point(column, code_point);
-    line.attribute_at(column) = m_current_state.attribute;
-    line.attribute_at(column).flags |= Attribute::Flags::Touched;
-    line.set_dirty(true);
+    line->set_code_point(column, code_point);
+    line->attribute_at(column) = m_current_state.attribute;
+    line->attribute_at(column).flags |= Attribute::Flags::Touched;
+    line->set_dirty(true);
 
     m_last_code_point = code_point;
 }
@@ -856,7 +856,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 void Terminal::clear_in_line(u16 row, u16 first_column, u16 last_column)
 {
     VERIFY(row < rows());
-    active_buffer()[row].clear_range(first_column, last_column, m_current_state.attribute);
+    active_buffer()[row]->clear_range(first_column, last_column, m_current_state.attribute);
 }
 #endif
 
@@ -1504,44 +1504,44 @@ void Terminal::set_size(u16 columns, u16 rows)
             if (forwards) {
                 for (size_t i = 1; i <= buffer.size(); ++i) {
                     auto is_at_seam = i == 1;
-                    auto next_line = is_at_seam ? nullptr : &buffer[buffer.size() - i + 1];
-                    auto& line = buffer[buffer.size() - i];
+                    Line* next_line = is_at_seam ? nullptr : buffer[buffer.size() - i + 1].ptr();
+                    Line* line = buffer[buffer.size() - i].ptr();
                     auto next_cursor = cursor_on_line(buffer.size() - i + 1);
-                    line.rewrap(columns, next_line, next_cursor ?: cursor_on_line(buffer.size() - i), !!next_cursor);
+                    line->rewrap(columns, next_line, next_cursor ?: cursor_on_line(buffer.size() - i), !!next_cursor);
                 }
             } else {
                 for (size_t i = 0; i < buffer.size(); ++i) {
                     auto is_at_seam = i + 1 == buffer.size();
-                    auto next_line = is_at_seam ? nullptr : &buffer[i + 1];
+                    Line* next_line = is_at_seam ? nullptr : buffer[i + 1].ptr();
                     auto next_cursor = cursor_on_line(i + 1);
-                    buffer[i].rewrap(columns, next_line, next_cursor ?: cursor_on_line(i), !!next_cursor);
+                    buffer[i]->rewrap(columns, next_line, next_cursor ?: cursor_on_line(i), !!next_cursor);
                 }
             }
 
             Queue<size_t> lines_to_reevaluate;
             for (size_t i = 0; i < buffer.size(); ++i) {
-                if (buffer[i].length() != columns)
+                if (buffer[i]->length() != columns)
                     lines_to_reevaluate.enqueue(i);
             }
             while (!lines_to_reevaluate.is_empty()) {
                 auto index = lines_to_reevaluate.dequeue();
                 auto is_at_seam = index + 1 == buffer.size();
-                auto next_line = is_at_seam ? nullptr : &buffer[index + 1];
-                auto& line = buffer[index];
+                Line* const next_line = is_at_seam ? nullptr : buffer[index + 1].ptr();
+                Line* const line = buffer[index].ptr();
                 auto next_cursor = cursor_on_line(index + 1);
-                line.rewrap(columns, next_line, next_cursor ?: cursor_on_line(index), !!next_cursor);
-                if (line.length() > columns) {
+                line->rewrap(columns, next_line, next_cursor ?: cursor_on_line(index), !!next_cursor);
+                if (line->length() > columns) {
                     auto current_cursor = cursor_on_line(index);
                     // Split the line into two (or more)
                     ++index;
                     buffer.insert(index, make<Line>(0));
-                    VERIFY(buffer[index].length() == 0);
-                    line.rewrap(columns, &buffer[index], current_cursor, false);
+                    VERIFY(buffer[index]->length() == 0);
+                    line->rewrap(columns, buffer[index].ptr(), current_cursor, false);
                     // If we inserted a line and the old cursor was after that line, increment its row
                     if (!current_cursor && old_cursor.row >= index)
                         ++old_cursor.row;
 
-                    if (buffer[index].length() != columns)
+                    if (buffer[index]->length() != columns)
                         lines_to_reevaluate.enqueue(index);
                 }
                 if (next_line && next_line->length() != columns)
@@ -1550,7 +1550,7 @@ void Terminal::set_size(u16 columns, u16 rows)
         }
 
         for (auto& line : buffer)
-            line.set_length(columns);
+            line->set_length(columns);
 
         return old_cursor;
     };
@@ -1563,8 +1563,8 @@ void Terminal::set_size(u16 columns, u16 rows)
         while (extra_lines > 0) {
             if (m_history.size() <= cursor_tracker.row)
                 break;
-            if (m_history.last().is_empty()) {
-                if (m_history.size() >= 2 && m_history[m_history.size() - 2].termination_column().has_value())
+            if (m_history.last()->is_empty()) {
+                if (m_history.size() >= 2 && m_history[m_history.size() - 2]->termination_column().has_value())
                     break;
                 --extra_lines;
                 (void)m_history.take_last();
@@ -1635,7 +1635,7 @@ void Terminal::set_size(u16 columns, u16 rows)
 void Terminal::invalidate_cursor()
 {
     if (cursor_row() < active_buffer().size())
-        active_buffer()[cursor_row()].set_dirty(true);
+        active_buffer()[cursor_row()]->set_dirty(true);
 }
 
 Attribute Terminal::attribute_at(Position const& position) const

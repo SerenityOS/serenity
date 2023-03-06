@@ -24,7 +24,7 @@ public:
     virtual ~WebAssemblyInstanceObject() override = default;
 
     size_t index() const { return m_index; }
-    Wasm::ModuleInstance& instance() const { return WebAssemblyObject::s_instantiated_modules.at(m_index); }
+    Wasm::ModuleInstance& instance() const { return *WebAssemblyObject::s_instantiated_modules[m_index]; }
     auto& cache() { return WebAssemblyObject::s_module_caches.at(m_index); }
 
     void visit_edges(Visitor&) override;

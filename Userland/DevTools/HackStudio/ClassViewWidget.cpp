@@ -75,13 +75,13 @@ GUI::ModelIndex ClassViewModel::parent_index(const GUI::ModelIndex& index) const
 
     if (parent->parent == nullptr) {
         for (size_t row = 0; row < m_root_scope.size(); row++) {
-            if (m_root_scope.ptr_at(row).ptr() == parent)
+            if (m_root_scope[row].ptr() == parent)
                 return create_index(row, 0, parent);
         }
         VERIFY_NOT_REACHED();
     }
     for (size_t row = 0; row < parent->parent->children.size(); row++) {
-        ClassViewNode* child_at_row = parent->parent->children.ptr_at(row).ptr();
+        ClassViewNode* child_at_row = parent->parent->children[row].ptr();
         if (child_at_row == parent)
             return create_index(row, 0, parent);
     }
@@ -110,7 +110,7 @@ ClassViewModel::ClassViewModel()
     });
 }
 
-static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& children, NonnullOwnPtr<ClassViewNode>&& node_ptr, ClassViewNode* parent, CodeComprehension::Declaration const* declaration)
+static ClassViewNode& add_child_node(Vector<NonnullOwnPtr<ClassViewNode>>& children, NonnullOwnPtr<ClassViewNode>&& node_ptr, ClassViewNode* parent, CodeComprehension::Declaration const* declaration)
 {
     node_ptr->parent = parent;
     node_ptr->declaration = declaration;
@@ -124,7 +124,7 @@ static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& childre
         },
         0, &inserted_index);
 
-    return children.at(inserted_index);
+    return *children.at(inserted_index);
 }
 
 void ClassViewModel::add_declaration(CodeComprehension::Declaration const& decl)
@@ -135,21 +135,21 @@ void ClassViewModel::add_declaration(CodeComprehension::Declaration const& decl)
     if (!scope_parts.is_empty()) {
         // Traverse declarations tree to the parent of 'decl'
         for (auto& node : m_root_scope) {
-            if (node.name == scope_parts.first())
-                parent = &node;
+            if (node->name == scope_parts.first())
+                parent = node;
         }
 
         if (parent == nullptr) {
             m_root_scope.append(make<ClassViewNode>(scope_parts.first()));
-            parent = &m_root_scope.last();
+            parent = m_root_scope.last();
         }
 
         for (size_t i = 1; i < scope_parts.size(); ++i) {
             auto& scope = scope_parts[i];
             ClassViewNode* next { nullptr };
             for (auto& child : parent->children) {
-                if (child.name == scope) {
-                    next = &child;
+                if (child->name == scope) {
+                    next = child;
                     break;
                 }
             }
@@ -163,7 +163,7 @@ void ClassViewModel::add_declaration(CodeComprehension::Declaration const& decl)
         }
     }
 
-    NonnullOwnPtrVector<ClassViewNode>* children_of_parent = nullptr;
+    Vector<NonnullOwnPtr<ClassViewNode>>* children_of_parent = nullptr;
     if (parent) {
         children_of_parent = &parent->children;
     } else {
@@ -172,10 +172,10 @@ void ClassViewModel::add_declaration(CodeComprehension::Declaration const& decl)
 
     bool already_exists = false;
     for (auto& child : *children_of_parent) {
-        if (child.name == decl.name) {
+        if (child->name == decl.name) {
             already_exists = true;
-            if (!child.declaration) {
-                child.declaration = &decl;
+            if (!child->declaration) {
+                child->declaration = &decl;
             }
             break;
         }

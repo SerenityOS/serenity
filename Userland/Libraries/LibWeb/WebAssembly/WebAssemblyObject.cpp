@@ -58,8 +58,8 @@ JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
     return {};
 }
 
-NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
-NonnullOwnPtrVector<Wasm::ModuleInstance> WebAssemblyObject::s_instantiated_modules;
+Vector<NonnullOwnPtr<WebAssemblyObject::CompiledWebAssemblyModule>> WebAssemblyObject::s_compiled_modules;
+Vector<NonnullOwnPtr<Wasm::ModuleInstance>> WebAssemblyObject::s_instantiated_modules;
 Vector<WebAssemblyObject::ModuleCache> WebAssemblyObject::s_module_caches;
 WebAssemblyObject::GlobalModuleCache WebAssemblyObject::s_global_cache;
 Wasm::AbstractMachine WebAssemblyObject::s_abstract_machine;
@@ -101,7 +101,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
     };
 
     // 3 continued - our "compile" step is lazy with validation, explicitly do the validation.
-    if (s_abstract_machine.validate(s_compiled_modules[maybe_module.value()].module).is_error())
+    if (s_abstract_machine.validate(s_compiled_modules[maybe_module.value()]->module).is_error())
         return JS::Value(false);
 
     // 4. Return true.
@@ -331,7 +331,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
             promise->reject(*result.release_error().value());
             return promise;
         }
-        module = &WebAssemblyObject::s_compiled_modules.at(result.release_value()).module;
+        module = &WebAssemblyObject::s_compiled_modules.at(result.release_value())->module;
         should_return_module = true;
     } else if (is<WebAssemblyModuleObject>(buffer)) {
         module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();

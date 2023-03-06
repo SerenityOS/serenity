@@ -30,7 +30,7 @@ struct Node {
     struct Element {
         Name name;
         HashMap<Name, DeprecatedString> attributes;
-        NonnullOwnPtrVector<Node> children;
+        Vector<NonnullOwnPtr<Node>> children;
     };
 
     bool operator==(Node const&) const;

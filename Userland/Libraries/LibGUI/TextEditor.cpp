@@ -133,8 +133,8 @@ void TextEditor::update_content_size()
     int content_width = 0;
     int content_height = 0;
     for (auto& line : m_line_visual_data) {
-        content_width = max(line.visual_rect.width(), content_width);
-        content_height += line.visual_rect.height();
+        content_width = max(line->visual_rect.width(), content_width);
+        content_height += line->visual_rect.height();
     }
     content_width += m_horizontal_content_padding * 2;
     if (is_right_text_alignment(m_text_alignment))
@@ -167,7 +167,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
             if (!document().line_is_visible(i))
                 continue;
 
-            auto& rect = m_line_visual_data[i].visual_rect;
+            auto& rect = m_line_visual_data[i]->visual_rect;
             if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
                 line_index = i;
                 break;
@@ -634,7 +634,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 first_visual_line_with_selection = visual_line_containing(line_index, selection.start().column());
 
             if (selection.end().line() > line_index)
-                last_visual_line_with_selection = m_line_visual_data[line_index].visual_lines.size();
+                last_visual_line_with_selection = m_line_visual_data[line_index]->visual_lines.size();
             else
                 last_visual_line_with_selection = visual_line_containing(line_index, selection.end().column());
         }
@@ -1441,7 +1441,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
-    return m_line_visual_data[line_index].visual_rect;
+    return m_line_visual_data[line_index]->visual_rect;
 }
 
 void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
@@ -1451,8 +1451,8 @@ void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
     if (line > 1 && line < index_max) {
         int headroom = frame_inner_rect().height() / 3;
         do {
-            auto line_data = m_line_visual_data[line];
-            headroom -= line_data.visual_rect.height();
+            auto const& line_data = m_line_visual_data[line];
+            headroom -= line_data->visual_rect.height();
             line--;
         } while (line > 0 && headroom > 0);
 
@@ -1481,8 +1481,8 @@ void TextEditor::set_cursor(TextPosition const& a_position)
     if (position.line() >= line_count())
         position.set_line(line_count() - 1);
 
-    if (position.column() > lines()[position.line()].length())
-        position.set_column(lines()[position.line()].length());
+    if (position.column() > lines()[position.line()]->length())
+        position.set_column(lines()[position.line()]->length());
 
     if (m_cursor != position && is_visual_data_up_to_date()) {
         // NOTE: If the old cursor is no longer valid, repaint everything just in case.
@@ -1972,8 +1972,8 @@ void TextEditor::recompute_all_visual_lines()
     auto folded_region_iterator = folded_regions.begin();
     for (size_t line_index = 0; line_index < line_count(); ++line_index) {
         recompute_visual_lines(line_index, folded_region_iterator);
-        m_line_visual_data[line_index].visual_rect.set_y(y_offset);
-        y_offset += m_line_visual_data[line_index].visual_rect.height();
+        m_line_visual_data[line_index]->visual_rect.set_y(y_offset);
+        y_offset += m_line_visual_data[line_index]->visual_rect.height();
     }
 
     update_content_size();
@@ -2008,7 +2008,7 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
     size_t line_width_so_far = 0;
 
     auto& visual_data = m_line_visual_data[line_index];
-    visual_data.visual_lines.clear_with_capacity();
+    visual_data->visual_lines.clear_with_capacity();
 
     auto available_width = visible_text_rect_in_inner_coordinates().width();
     auto glyph_spacing = font().glyph_spacing();
@@ -2034,7 +2034,7 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
 
             if (line_width_so_far + glyph_width + glyph_spacing > available_width) {
                 auto start_of_next_visual_line = line.view().iterator_offset(it_before_computing_glyph_width);
-                visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, start_of_next_visual_line - start_of_visual_line));
+                visual_data->visual_lines.append(line.view().substring_view(start_of_visual_line, start_of_next_visual_line - start_of_visual_line));
                 line_width_so_far = 0;
                 start_of_visual_line = start_of_next_visual_line;
             }
@@ -2042,7 +2042,7 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
             line_width_so_far += glyph_width + glyph_spacing;
         }
 
-        visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
+        visual_data->visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
     };
 
     auto wrap_visual_lines_at_words = [&]() {
@@ -2057,7 +2057,7 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
             auto word_width = font().width(word);
 
             if (line_width_so_far + word_width + glyph_spacing > available_width) {
-                visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, last_boundary - start_of_visual_line));
+                visual_data->visual_lines.append(line.view().substring_view(start_of_visual_line, last_boundary - start_of_visual_line));
                 line_width_so_far = 0;
                 start_of_visual_line = last_boundary;
             }
@@ -2068,13 +2068,13 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
             return IterationDecision::Continue;
         });
 
-        visual_data.visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
+        visual_data->visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
     };
 
     if (line_is_visible) {
         switch (wrapping_mode()) {
         case WrappingMode::NoWrap:
-            visual_data.visual_lines.append(line.view());
+            visual_data->visual_lines.append(line.view());
             break;
         case WrappingMode::WrapAnywhere:
             wrap_visual_lines_anywhere();
@@ -2086,9 +2086,9 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
     }
 
     if (is_wrapping_enabled())
-        visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data.visual_lines.size()) * line_height() };
+        visual_data->visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
     else
-        visual_data.visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
+        visual_data->visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
 }
 
 template<typename Callback>
@@ -2100,10 +2100,10 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
     auto& line = document().line(line_index);
     auto& visual_data = m_line_visual_data[line_index];
 
-    for (auto visual_line_view : visual_data.visual_lines) {
+    for (auto visual_line_view : visual_data->visual_lines) {
         Gfx::IntRect visual_line_rect {
-            visual_data.visual_rect.x(),
-            visual_data.visual_rect.y() + ((int)visual_line_index * line_height()),
+            visual_data->visual_rect.x(),
+            visual_data->visual_rect.y() + ((int)visual_line_index * line_height()),
             text_width_for_font(visual_line_view, font()) + font().glyph_spacing(),
             line_height()
         };
@@ -2115,7 +2115,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
                 visual_line_rect.translate_by(icon_size() + icon_padding(), 0);
         }
         size_t start_of_line = visual_line_view.code_points() - line.code_points();
-        if (callback(visual_line_rect, visual_line_view, start_of_line, visual_line_index == visual_data.visual_lines.size() - 1) == IterationDecision::Break)
+        if (callback(visual_line_rect, visual_line_view, start_of_line, visual_line_index == visual_data->visual_lines.size() - 1) == IterationDecision::Break)
             break;
         ++visual_line_index;
     }

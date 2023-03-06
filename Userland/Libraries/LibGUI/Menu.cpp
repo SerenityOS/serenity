@@ -68,7 +68,7 @@ void Menu::add_action(NonnullRefPtr<Action> action)
 void Menu::remove_all_actions()
 {
     for (auto& item : m_items) {
-        ConnectionToWindowServer::the().async_remove_menu_item(m_menu_id, item.identifier());
+        ConnectionToWindowServer::the().async_remove_menu_item(m_menu_id, item->identifier());
     }
     m_items.clear();
 }
@@ -142,7 +142,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     m_current_default_action = default_action;
 
     for (size_t i = 0; i < m_items.size(); ++i) {
-        realize_menu_item(m_items[i], i);
+        realize_menu_item(*m_items[i], i);
     }
 
     all_menus().set(m_menu_id, this);
@@ -168,14 +168,14 @@ Action* Menu::action_at(size_t index)
 {
     if (index >= m_items.size())
         return nullptr;
-    return m_items[index].action();
+    return m_items[index]->action();
 }
 
 void Menu::set_children_actions_enabled(bool enabled)
 {
     for (auto& item : m_items) {
-        if (item.action())
-            item.action()->set_enabled(enabled);
+        if (item->action())
+            item->action()->set_enabled(enabled);
     }
 }
 

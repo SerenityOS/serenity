@@ -22,19 +22,19 @@ void UnifySameBlocks::perform(PassPipelineExecutable& executable)
 
     for (size_t i = 0; i < executable.executable.basic_blocks.size(); ++i) {
         auto& block = executable.executable.basic_blocks[i];
-        auto block_bytes = block.instruction_stream();
+        auto block_bytes = block->instruction_stream();
         for (auto& candidate_block : executable.executable.basic_blocks.span().slice(i + 1)) {
             if (equal_blocks.contains(&*candidate_block))
                 continue;
             // FIXME: This can probably be relaxed a bit...
-            if (candidate_block->size() != block.size())
+            if (candidate_block->size() != block->size())
                 continue;
 
             auto candidate_bytes = candidate_block->instruction_stream();
             // FIXME: NewBigInt's value is not correctly reflected by its encoding in memory,
             //        this will yield false negatives for blocks containing that
             if (memcmp(candidate_bytes.data(), block_bytes.data(), candidate_block->size()) == 0)
-                equal_blocks.set(&*candidate_block, &block);
+                equal_blocks.set(candidate_block.ptr(), block);
         }
     }
 
@@ -47,7 +47,7 @@ void UnifySameBlocks::perform(PassPipelineExecutable& executable)
             first_successor_position = it.index();
 
         for (auto& block : executable.executable.basic_blocks) {
-            InstructionStreamIterator it { block.instruction_stream() };
+            InstructionStreamIterator it { block->instruction_stream() };
             while (!it.at_end()) {
                 auto& instruction = *it;
                 ++it;

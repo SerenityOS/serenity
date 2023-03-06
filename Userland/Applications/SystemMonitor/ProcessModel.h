@@ -85,10 +85,10 @@ public:
         }
     };
 
-    Function<void(NonnullOwnPtrVector<CpuInfo> const&)> on_cpu_info_change;
+    Function<void(Vector<NonnullOwnPtr<CpuInfo>> const&)> on_cpu_info_change;
     Function<void(int process_count, int thread_count)> on_state_update;
 
-    NonnullOwnPtrVector<CpuInfo> const& cpus() const { return m_cpus; }
+    Vector<NonnullOwnPtr<CpuInfo>> const& cpus() const { return m_cpus; }
 
 private:
     ProcessModel();
@@ -243,8 +243,8 @@ private:
 
     // The thread list contains the same threads as the Process structs.
     HashMap<int, NonnullRefPtr<Thread>> m_threads;
-    NonnullOwnPtrVector<Process> m_processes;
-    NonnullOwnPtrVector<CpuInfo> m_cpus;
+    Vector<NonnullOwnPtr<Process>> m_processes;
+    Vector<NonnullOwnPtr<CpuInfo>> m_cpus;
     RefPtr<Core::DeprecatedFile> m_proc_all;
     GUI::Icon m_kernel_process_icon;
     u64 m_total_time_scheduled { 0 };

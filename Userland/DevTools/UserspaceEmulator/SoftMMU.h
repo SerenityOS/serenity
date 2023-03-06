@@ -144,7 +144,7 @@ private:
     Region* m_page_to_region_map[786432] = { nullptr };
 
     OwnPtr<Region> m_tls_region;
-    NonnullOwnPtrVector<Region> m_regions;
+    Vector<NonnullOwnPtr<Region>> m_regions;
 };
 
 }

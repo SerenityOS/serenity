@@ -346,8 +346,8 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
 {
     for (size_t i = m_local_frames.size(); i > 0; --i) {
         auto& frame = m_local_frames[i - 1];
-        if (frame.local_variables.contains(name))
-            return &frame;
+        if (frame->local_variables.contains(name))
+            return frame;
     }
     return nullptr;
 }
@@ -407,7 +407,7 @@ void Shell::set_local_variable(DeprecatedString const& name, RefPtr<AST::Value> 
         }
     }
 
-    m_local_frames.last().local_variables.set(name, move(value));
+    m_local_frames.last()->local_variables.set(name, move(value));
 }
 
 void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
@@ -418,7 +418,7 @@ void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
         return;
     }
 
-    m_local_frames.last().local_variables.remove(name);
+    m_local_frames.last()->local_variables.remove(name);
 }
 
 void Shell::define_function(DeprecatedString name, Vector<DeprecatedString> argnames, RefPtr<AST::Node> body)
@@ -491,7 +491,7 @@ Shell::Frame Shell::push_frame(DeprecatedString name)
 {
     m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
     dbgln_if(SH_DEBUG, "New frame '{}' at {:p}", name, &m_local_frames.last());
-    return { m_local_frames, m_local_frames.last() };
+    return { m_local_frames, *m_local_frames.last() };
 }
 
 void Shell::pop_frame()
@@ -504,11 +504,11 @@ Shell::Frame::~Frame()
 {
     if (!should_destroy_frame)
         return;
-    if (&frames.last() != &frame) {
+    if (frames.last() != &frame) {
         dbgln("Frame destruction order violation near {:p} (container = {:p}) in '{}'", &frame, this, frame.name);
         dbgln("Current frames:");
         for (auto& frame : frames)
-            dbgln("- {:p}: {}", &frame, frame.name);
+            dbgln("- {:p}: {}", &frame, frame->name);
         VERIFY_NOT_REACHED();
     }
     (void)frames.take_last();
@@ -1607,7 +1607,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_variable(StringView name, siz
 
     // Look at local variables.
     for (auto& frame : m_local_frames) {
-        for (auto& variable : frame.local_variables) {
+        for (auto& variable : frame->local_variables) {
             if (variable.key.starts_with(pattern) && !suggestions.contains_slow(variable.key))
                 suggestions.append(variable.key);
         }

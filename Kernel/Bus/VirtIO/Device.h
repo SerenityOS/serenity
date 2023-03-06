@@ -144,13 +144,13 @@ protected:
     Queue& get_queue(u16 queue_index)
     {
         VERIFY(queue_index < m_queue_count);
-        return m_queues[queue_index];
+        return *m_queues[queue_index];
     }
 
     Queue const& get_queue(u16 queue_index) const
     {
         VERIFY(queue_index < m_queue_count);
-        return m_queues[queue_index];
+        return *m_queues[queue_index];
     }
 
     template<typename F>
@@ -190,7 +190,7 @@ private:
     u8 isr_status();
     virtual bool handle_irq(RegisterState const&) override;
 
-    NonnullOwnPtrVector<Queue> m_queues;
+    Vector<NonnullOwnPtr<Queue>> m_queues;
     Vector<Configuration> m_configs;
     Configuration const* m_common_cfg { nullptr }; // Cached due to high usage
     Configuration const* m_notify_cfg { nullptr }; // Cached due to high usage

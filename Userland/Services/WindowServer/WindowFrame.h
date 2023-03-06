@@ -138,7 +138,7 @@ private:
     Gfx::IntRect leftmost_titlebar_button_rect() const;
 
     Window& m_window;
-    NonnullOwnPtrVector<Button> m_buttons;
+    Vector<NonnullOwnPtr<Button>> m_buttons;
     Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };

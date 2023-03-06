@@ -11,8 +11,8 @@
 
 namespace RequestServer::ConnectionCache {
 
-HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<Core::TCPSocket, Core::Socket>>>> g_tcp_connection_cache {};
-HashMap<ConnectionKey, NonnullOwnPtr<NonnullOwnPtrVector<Connection<TLS::TLSv12>>>> g_tls_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<Core::TCPSocket, Core::Socket>>>>> g_tcp_connection_cache {};
+HashMap<ConnectionKey, NonnullOwnPtr<Vector<NonnullOwnPtr<Connection<TLS::TLSv12>>>>> g_tls_connection_cache {};
 
 void request_did_finish(URL const& url, Core::Socket const* socket)
 {
@@ -85,10 +85,10 @@ void dump_jobs()
     for (auto& connection : g_tls_connection_cache) {
         dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
         for (auto& entry : *connection.value) {
-            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry.has_started, entry.socket);
-            dbgln("    Currently loading {} ({} elapsed)", entry.current_url, entry.timer.is_valid() ? entry.timer.elapsed() : 0);
+            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
+            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
             dbgln("    Request Queue:");
-            for (auto& job : entry.request_queue)
+            for (auto& job : entry->request_queue)
                 dbgln("    - {}", &job);
         }
     }
@@ -96,10 +96,10 @@ void dump_jobs()
     for (auto& connection : g_tcp_connection_cache) {
         dbgln(" - {}:{}", connection.key.hostname, connection.key.port);
         for (auto& entry : *connection.value) {
-            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry.has_started, entry.socket);
-            dbgln("    Currently loading {} ({} elapsed)", entry.current_url, entry.timer.is_valid() ? entry.timer.elapsed() : 0);
+            dbgln("  - Connection {} (started={}) (socket={})", &entry, entry->has_started, entry->socket);
+            dbgln("    Currently loading {} ({} elapsed)", entry->current_url, entry->timer.is_valid() ? entry->timer.elapsed() : 0);
             dbgln("    Request Queue:");
-            for (auto& job : entry.request_queue)
+            for (auto& job : entry->request_queue)
                 dbgln("    - {}", &job);
         }
     }

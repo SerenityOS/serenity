@@ -194,14 +194,14 @@ RecursionDecision Text::LinkNode::walk(Visitor& visitor) const
 void Text::MultiNode::render_to_html(StringBuilder& builder) const
 {
     for (auto& child : children) {
-        child.render_to_html(builder);
+        child->render_to_html(builder);
     }
 }
 
 void Text::MultiNode::render_for_terminal(StringBuilder& builder) const
 {
     for (auto& child : children) {
-        child.render_for_terminal(builder);
+        child->render_for_terminal(builder);
     }
 }
 
@@ -209,7 +209,7 @@ size_t Text::MultiNode::terminal_length() const
 {
     size_t length = 0;
     for (auto& child : children) {
-        length += child.terminal_length();
+        length += child->terminal_length();
     }
     return length;
 }
@@ -221,7 +221,7 @@ RecursionDecision Text::MultiNode::walk(Visitor& visitor) const
         return rd;
 
     for (auto const& child : children) {
-        rd = child.walk(visitor);
+        rd = child->walk(visitor);
         if (rd == RecursionDecision::Break)
             return rd;
     }
@@ -550,8 +550,8 @@ NonnullOwnPtr<Text::Node> Text::parse_code(Vector<Token>::ConstIterator& tokens)
 
             // Strip first and last space, when appropriate.
             if (!is_all_whitespace) {
-                auto& first = dynamic_cast<TextNode&>(code->children.first());
-                auto& last = dynamic_cast<TextNode&>(code->children.last());
+                auto& first = dynamic_cast<TextNode&>(*code->children.first());
+                auto& last = dynamic_cast<TextNode&>(*code->children.last());
                 if (first.text.starts_with(' ') && last.text.ends_with(' ')) {
                     first.text = first.text.substring(1);
                     last.text = last.text.substring(0, last.text.length() - 1);
@@ -653,8 +653,8 @@ NonnullOwnPtr<Text::Node> Text::parse_strike_through(Vector<Token>::ConstIterato
             tokens = iterator;
 
             if (!is_all_whitespace) {
-                auto& first = dynamic_cast<TextNode&>(striked_text->children.first());
-                auto& last = dynamic_cast<TextNode&>(striked_text->children.last());
+                auto& first = dynamic_cast<TextNode&>(*striked_text->children.first());
+                auto& last = dynamic_cast<TextNode&>(*striked_text->children.last());
                 if (first.text.starts_with(' ') && last.text.ends_with(' ')) {
                     first.text = first.text.substring(1);
                     last.text = last.text.substring(0, last.text.length() - 1);

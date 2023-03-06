@@ -192,7 +192,7 @@ public:
     }
 
     static LockRefPtr<Process> create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static ErrorOr<NonnullLockRefPtr<Process>> try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID, GroupID, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, TTY*);
+    static ErrorOr<NonnullLockRefPtr<Process>> try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY*);
     static void register_new(Process&);
 
     ~Process();
@@ -471,10 +471,10 @@ public:
     static constexpr size_t max_arguments_size = Thread::default_userspace_stack_size / 8;
     static constexpr size_t max_environment_size = Thread::default_userspace_stack_size / 8;
     static constexpr size_t max_auxiliary_size = Thread::default_userspace_stack_size / 8;
-    NonnullOwnPtrVector<KString> const& arguments() const { return m_arguments; };
-    NonnullOwnPtrVector<KString> const& environment() const { return m_environment; };
+    Vector<NonnullOwnPtr<KString>> const& arguments() const { return m_arguments; };
+    Vector<NonnullOwnPtr<KString>> const& environment() const { return m_environment; };
 
-    ErrorOr<void> exec(NonnullOwnPtr<KString> path, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth = 0);
+    ErrorOr<void> exec(NonnullOwnPtr<KString> path, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, int recursion_depth = 0);
 
     ErrorOr<LoadResult> load(NonnullLockRefPtr<OpenFileDescription> main_program_description, LockRefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
@@ -606,7 +606,7 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    ErrorOr<void> do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, NonnullOwnPtrVector<KString> arguments, NonnullOwnPtrVector<KString> environment, LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header);
+    ErrorOr<void> do_exec(NonnullLockRefPtr<OpenFileDescription> main_program_description, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, LockRefPtr<OpenFileDescription> interpreter_description, Thread*& new_main_thread, InterruptsState& previous_interrupts_state, const ElfW(Ehdr) & main_program_header);
     ErrorOr<FlatPtr> do_write(OpenFileDescription&, UserOrKernelBuffer const&, size_t, Optional<off_t> = {});
 
     ErrorOr<FlatPtr> do_statvfs(FileSystem const& path, Custody const*, statvfs* buf);
@@ -846,8 +846,8 @@ private:
 
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_current_directory;
 
-    NonnullOwnPtrVector<KString> m_arguments;
-    NonnullOwnPtrVector<KString> m_environment;
+    Vector<NonnullOwnPtr<KString>> m_arguments;
+    Vector<NonnullOwnPtr<KString>> m_environment;
 
     LockRefPtr<TTY> m_tty;
 

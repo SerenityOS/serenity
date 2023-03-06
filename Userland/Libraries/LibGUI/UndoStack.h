@@ -41,7 +41,7 @@ public:
     Function<void()> on_state_change;
 
 private:
-    NonnullOwnPtrVector<Command> m_stack;
+    Vector<NonnullOwnPtr<Command>> m_stack;
     size_t m_stack_index { 0 };
     Optional<size_t> m_clean_index;
     Optional<Time> m_last_unmodified_timestamp;

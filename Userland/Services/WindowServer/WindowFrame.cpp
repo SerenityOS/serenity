@@ -294,7 +294,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
 void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
-    Gfx::WindowTheme::current().paint_notification_frame(painter, to_theme_window_mode(m_window.mode()), m_window.rect(), palette, m_buttons.last().relative_rect());
+    Gfx::WindowTheme::current().paint_notification_frame(painter, to_theme_window_mode(m_window.mode()), m_window.rect(), palette, m_buttons.last()->relative_rect());
 }
 
 void WindowFrame::paint_menubar(Gfx::Painter& painter)
@@ -401,7 +401,7 @@ void WindowFrame::render(Screen& screen, Gfx::Painter& painter)
         return;
 
     for (auto& button : m_buttons)
-        button.paint(screen, painter);
+        button->paint(screen, painter);
 }
 
 void WindowFrame::theme_changed()
@@ -585,7 +585,7 @@ Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(Gfx::IntRect const& 
 Gfx::IntRect WindowFrame::leftmost_titlebar_button_rect() const
 {
     if (!m_buttons.is_empty())
-        return m_buttons.last().relative_rect();
+        return m_buttons.last()->relative_rect();
 
     auto rect = titlebar_rect();
     rect.translate_by(rect.width(), 0);
@@ -677,7 +677,7 @@ void WindowFrame::layout_buttons()
 {
     auto button_rects = Gfx::WindowTheme::current().layout_buttons(to_theme_window_type(m_window.type()), to_theme_window_mode(m_window.mode()), m_window.rect(), WindowManager::the().palette(), m_buttons.size());
     for (size_t i = 0; i < m_buttons.size(); i++)
-        m_buttons[i].set_relative_rect(button_rects[i]);
+        m_buttons[i]->set_relative_rect(button_rects[i]);
 }
 
 Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint position)
@@ -795,8 +795,8 @@ void WindowFrame::handle_titlebar_mouse_event(MouseEvent const& event)
     }
 
     for (auto& button : m_buttons) {
-        if (button.relative_rect().contains(event.position()))
-            return button.on_mouse_event(event.translated(-button.relative_rect().location()));
+        if (button->relative_rect().contains(event.position()))
+            return button->on_mouse_event(event.translated(-button->relative_rect().location()));
     }
 
     if (event.type() == Event::MouseDown) {

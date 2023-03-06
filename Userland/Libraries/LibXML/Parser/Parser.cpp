@@ -95,7 +95,7 @@ void Parser::append_text(StringView text)
     m_entered_node->content.visit(
         [&](Node::Element& node) {
             if (!node.children.is_empty()) {
-                auto* text_node = node.children.last().content.get_pointer<Node::Text>();
+                auto* text_node = node.children.last()->content.get_pointer<Node::Text>();
                 if (text_node) {
                     text_node->builder.append(text);
                     return;

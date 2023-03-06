@@ -22,7 +22,7 @@ public:
     virtual ~WebAssemblyModuleObject() override = default;
 
     size_t index() const { return m_index; }
-    Wasm::Module const& module() const { return WebAssemblyObject::s_compiled_modules.at(m_index).module; }
+    Wasm::Module const& module() const { return WebAssemblyObject::s_compiled_modules.at(m_index)->module; }
 
 private:
     size_t m_index { 0 };

@@ -22,15 +22,15 @@ DeprecatedString ContainerBlock::render_to_html(bool tight) const
     StringBuilder builder;
 
     for (size_t i = 0; i + 1 < m_blocks.size(); ++i) {
-        auto s = m_blocks[i].render_to_html(tight);
+        auto s = m_blocks[i]->render_to_html(tight);
         builder.append(s);
     }
 
     // I don't like this edge case.
     if (m_blocks.size() != 0) {
         auto& block = m_blocks[m_blocks.size() - 1];
-        auto s = block.render_to_html(tight);
-        if (tight && dynamic_cast<Paragraph const*>(&block)) {
+        auto s = block->render_to_html(tight);
+        if (tight && dynamic_cast<Paragraph const*>(block.ptr())) {
             builder.append(s.substring_view(0, s.length() - 1));
         } else {
             builder.append(s);
@@ -45,7 +45,7 @@ Vector<DeprecatedString> ContainerBlock::render_lines_for_terminal(size_t view_w
     Vector<DeprecatedString> lines;
 
     for (auto& block : m_blocks) {
-        for (auto& line : block.render_lines_for_terminal(view_width))
+        for (auto& line : block->render_lines_for_terminal(view_width))
             lines.append(move(line));
     }
 
@@ -59,7 +59,7 @@ RecursionDecision ContainerBlock::walk(Visitor& visitor) const
         return rd;
 
     for (auto const& block : m_blocks) {
-        rd = block.walk(visitor);
+        rd = block->walk(visitor);
         if (rd == RecursionDecision::Break)
             return rd;
     }
@@ -68,7 +68,7 @@ RecursionDecision ContainerBlock::walk(Visitor& visitor) const
 }
 
 template<class CodeBlock>
-static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blocks, Heading* current_section)
+static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks, Heading* current_section)
 {
     OwnPtr<CodeBlock> block = CodeBlock::parse(lines, current_section);
     if (!block)
@@ -78,7 +78,7 @@ static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blo
 }
 
 template<typename BlockType>
-static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blocks)
+static bool try_parse_block(LineIterator& lines, Vector<NonnullOwnPtr<Block>>& blocks)
 {
     OwnPtr<BlockType> block = BlockType::parse(lines);
     if (!block)
@@ -89,7 +89,7 @@ static bool try_parse_block(LineIterator& lines, NonnullOwnPtrVector<Block>& blo
 
 OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
 {
-    NonnullOwnPtrVector<Block> blocks;
+    Vector<NonnullOwnPtr<Block>> blocks;
 
     StringBuilder paragraph_text;
     Heading* current_section = nullptr;
@@ -121,7 +121,7 @@ OwnPtr<ContainerBlock> ContainerBlock::parse(LineIterator& lines)
 
         bool heading = false;
         if ((heading = try_parse_block<Heading>(lines, blocks)))
-            current_section = dynamic_cast<Heading*>(&blocks.last());
+            current_section = dynamic_cast<Heading*>(blocks.last().ptr());
 
         bool any = heading
             || try_parse_block<Table>(lines, blocks)
