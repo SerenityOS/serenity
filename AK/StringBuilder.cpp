@@ -111,6 +111,11 @@ ByteBuffer StringBuilder::to_byte_buffer() const
     return ByteBuffer::copy(data(), length()).release_value_but_fixme_should_propagate_errors();
 }
 
+ErrorOr<ByteBuffer> StringBuilder::try_to_byte_buffer() const
+{
+    return TRY(ByteBuffer::copy(data(), length()));
+}
+
 #ifndef KERNEL
 DeprecatedString StringBuilder::to_deprecated_string() const
 {
