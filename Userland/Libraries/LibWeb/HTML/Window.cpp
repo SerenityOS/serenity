@@ -118,13 +118,6 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
 
 Window::~Window() = default;
 
-CSS::Screen& Window::screen()
-{
-    if (!m_screen)
-        m_screen = heap().allocate<CSS::Screen>(realm(), *this).release_allocated_value_but_fixme_should_propagate_errors();
-    return *m_screen;
-}
-
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#normalizing-the-feature-name
 static StringView normalize_feature_name(StringView name)
 {
@@ -1037,7 +1030,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
-    define_native_accessor(realm, "screen", screen_getter, screen_setter, JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_native_accessor(realm, "innerWidth", inner_width_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "innerHeight", inner_height_getter, {}, JS::Attribute::Enumerable);
     define_native_accessor(realm, "devicePixelRatio", device_pixel_ratio_getter, {}, JS::Attribute::Enumerable | JS::Attribute::Configurable);
@@ -1334,6 +1326,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> Window::match_media(S
     return media_query_list;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-window-screen
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> Window::screen()
+{
+    // The screen attribute must return the Screen object associated with the Window object.
+    if (!m_screen)
+        m_screen = MUST_OR_THROW_OOM(heap().allocate<CSS::Screen>(realm(), *this));
+    return JS::NonnullGCPtr { *m_screen };
+}
+
 // https://w3c.github.io/hr-time/#dom-windoworworkerglobalscope-performance
 WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::performance()
 {
@@ -1521,17 +1522,6 @@ size_t Window::document_tree_child_browsing_context_count() const
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::screen_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return &impl->screen();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::screen_setter)
-{
-    REPLACEABLE_PROPERTY_SETTER(Window, screen);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)

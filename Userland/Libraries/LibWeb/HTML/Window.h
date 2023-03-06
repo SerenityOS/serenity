@@ -96,8 +96,6 @@ public:
 
     void deallocate_timer_id(Badge<Timer>, i32);
 
-    CSS::Screen& screen();
-
     DOM::Event* current_event() { return m_current_event.ptr(); }
     DOM::Event const* current_event() const { return m_current_event.ptr(); }
     void set_current_event(DOM::Event* event);
@@ -165,6 +163,7 @@ public:
     Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::MediaQueryList>> match_media(String const& query);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<CSS::Screen>> screen();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -231,9 +230,6 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(screen_getter);
-    JS_DECLARE_NATIVE_FUNCTION(screen_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);
