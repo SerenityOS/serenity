@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>

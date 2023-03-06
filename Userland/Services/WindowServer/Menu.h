@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Font/Font.h>

@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
-#include <AK/NonnullOwnPtrVector.h>
 
 namespace Inspector {
 

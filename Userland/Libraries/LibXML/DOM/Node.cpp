@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtr.h>
 #include <LibXML/DOM/Node.h>
 
 namespace XML {

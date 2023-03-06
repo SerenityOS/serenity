@@ -10,6 +10,7 @@
 #include <AK/HashTable.h>
 #include <AK/SourceLocation.h>
 #include <AK/Tuple.h>
+#include <AK/Vector.h>
 #include <LibWasm/Forward.h>
 #include <LibWasm/Types.h>
 

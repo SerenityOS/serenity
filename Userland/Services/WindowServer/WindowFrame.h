@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/RefPtr.h>
 #include <LibCore/Forward.h>
 #include <LibGfx/Forward.h>

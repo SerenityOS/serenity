@@ -8,7 +8,6 @@
 
 #include <AK/Badge.h>
 #include <AK/DeprecatedString.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {

@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Optional.h>
 #include <LibCore/NetworkJob.h>
 #include <LibCore/Socket.h>

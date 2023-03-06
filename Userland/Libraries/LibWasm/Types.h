@@ -10,7 +10,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/LEB128.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Result.h>
 #include <AK/Variant.h>
 #include <LibWasm/Constants.h>

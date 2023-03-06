@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NonnullOwnPtr.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/UndoStack.h>
 

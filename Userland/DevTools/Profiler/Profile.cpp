@@ -11,7 +11,6 @@
 #include "SourceModel.h"
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/QuickSort.h>
 #include <AK/RefPtr.h>
 #include <AK/Try.h>

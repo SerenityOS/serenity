@@ -9,7 +9,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Model.h>

@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/FileWatcher.h>
 #include <LibGUI/Model.h>

@@ -10,7 +10,6 @@
 #include <AK/Concepts.h>
 #include <AK/HashTable.h>
 #include <AK/IntrusiveRedBlackTree.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/NonnullLockRefPtrVector.h>
 #include <Kernel/Locking/Spinlock.h>

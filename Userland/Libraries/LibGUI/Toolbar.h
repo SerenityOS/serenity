@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>

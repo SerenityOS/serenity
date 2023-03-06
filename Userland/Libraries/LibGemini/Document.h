@@ -8,7 +8,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/URL.h>
 
 namespace Gemini {

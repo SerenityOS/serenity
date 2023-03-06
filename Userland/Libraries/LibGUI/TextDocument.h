@@ -9,7 +9,6 @@
 #pragma once
 
 #include <AK/HashTable.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>

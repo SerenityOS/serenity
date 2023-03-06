@@ -9,7 +9,6 @@
 
 #include "AccountHolder.h"
 #include "InboxModel.h"
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <LibIMAP/Client.h>

@@ -5,6 +5,7 @@
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>

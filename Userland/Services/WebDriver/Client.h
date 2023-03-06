@@ -9,7 +9,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Object.h>
 #include <LibWeb/WebDriver/Client.h>
 #include <LibWeb/WebDriver/Error.h>

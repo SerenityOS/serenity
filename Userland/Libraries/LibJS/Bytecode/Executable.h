@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullOwnPtr.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/IdentifierTable.h>
 #include <LibJS/Bytecode/StringTable.h>

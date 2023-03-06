@@ -10,7 +10,6 @@
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
 #include <AK/Utf8View.h>

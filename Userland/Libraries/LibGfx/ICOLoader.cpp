@@ -7,7 +7,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/ICOLoader.h>

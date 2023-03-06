@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/ConsoleDevice.h>

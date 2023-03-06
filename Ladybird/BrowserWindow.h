@@ -8,7 +8,6 @@
 #pragma once
 
 #include "Tab.h"
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/Forward.h>
 #include <QIcon>
 #include <QLineEdit>

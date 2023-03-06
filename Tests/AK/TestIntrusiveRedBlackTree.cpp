@@ -7,8 +7,9 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/IntrusiveRedBlackTree.h>
-#include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullOwnPtr.h>
 #include <AK/Random.h>
+#include <AK/Vector.h>
 
 class IntrusiveTest {
 public:

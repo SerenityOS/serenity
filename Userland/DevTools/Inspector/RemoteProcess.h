@@ -7,7 +7,6 @@
 #pragma once
 
 #include "InspectorServerClient.h"
-#include <AK/NonnullOwnPtrVector.h>
 
 namespace Inspector {
 

@@ -9,7 +9,6 @@
 
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>

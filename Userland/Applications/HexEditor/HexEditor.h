@@ -14,7 +14,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/StdLibExtras.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>

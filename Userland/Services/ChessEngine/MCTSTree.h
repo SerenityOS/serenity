@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <LibChess/Chess.h>
 #include <math.h>

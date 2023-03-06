@@ -12,7 +12,6 @@
 #include <AK/IntegralMath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Try.h>
 #include <LibGfx/GIFLoader.h>
 #include <string.h>

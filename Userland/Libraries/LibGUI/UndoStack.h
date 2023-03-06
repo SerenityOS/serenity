@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Time.h>
+#include <AK/Vector.h>
 #include <LibGUI/Forward.h>
 
 namespace GUI {

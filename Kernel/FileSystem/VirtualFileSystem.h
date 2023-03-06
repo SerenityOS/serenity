@@ -10,7 +10,6 @@
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>

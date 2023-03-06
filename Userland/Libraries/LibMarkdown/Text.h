@@ -10,9 +10,9 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Noncopyable.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RecursionDecision.h>
+#include <AK/Vector.h>
 #include <LibMarkdown/Forward.h>
 
 namespace Markdown {

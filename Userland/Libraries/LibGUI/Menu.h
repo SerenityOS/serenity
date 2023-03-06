@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Action.h>

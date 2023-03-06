@@ -12,7 +12,6 @@
 #include <AK/CircularQueue.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <AK/StackInfo.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>

@@ -9,7 +9,6 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/AbstractScrollableWidget.h>
