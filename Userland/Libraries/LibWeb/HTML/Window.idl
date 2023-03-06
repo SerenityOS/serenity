@@ -36,6 +36,9 @@ interface Window : EventTarget {
     undefined postMessage(any message, USVString targetOrigin);
     // FIXME: undefined postMessage(any message, USVString targetOrigin, optional sequence<object> transfer = []);
     // FIXME: undefined postMessage(any message, optional WindowPostMessageOptions options = {});
+
+    // https://dom.spec.whatwg.org/#interface-window-extensions
+    [Replaceable] readonly attribute (Event or undefined) event; // legacy
 };
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;

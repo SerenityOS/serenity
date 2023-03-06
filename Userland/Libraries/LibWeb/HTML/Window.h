@@ -167,6 +167,8 @@ public:
 
     void post_message(JS::Value message, String const&);
 
+    Variant<JS::Handle<DOM::Event>, JS::Value> event() const;
+
 private:
     explicit Window(JS::Realm&);
 
@@ -234,9 +236,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(screen_getter);
     JS_DECLARE_NATIVE_FUNCTION(screen_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(event_getter);
-    JS_DECLARE_NATIVE_FUNCTION(event_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(inner_width_getter);
     JS_DECLARE_NATIVE_FUNCTION(inner_height_getter);

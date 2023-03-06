@@ -133,7 +133,7 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name() == "long" && !type.is_nullable())
         return { .name = "i32", .sequence_storage_type = SequenceStorageType::Vector };
 
-    if (type.name() == "any")
+    if (type.name() == "any" || type.name() == "undefined")
         return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
     if (type.name() == "BufferSource")
@@ -1600,10 +1600,10 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
             auto cpp_type = IDL::idl_type_name_to_cpp_type(current_union_type, interface);
             union_generator.set("current_type", cpp_type.name);
             union_generator.append(R"~~~(
-        [&vm, &realm](@current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
+        [&vm, &realm]([[maybe_unused]] @current_type@ const& visited_union_value@recursion_depth@) -> JS::Value {
             // These may be unused.
             (void)vm;
-            (void) realm;
+            (void)realm;
 )~~~");
 
             // NOTE: While we are using const&, the underlying type for wrappable types in unions is (Nonnull)RefPtr, which are not references.
