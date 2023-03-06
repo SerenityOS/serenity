@@ -84,8 +84,7 @@ AK::URL ParsingContext::complete_url(StringView relative_url) const
 
 Parser::Parser(ParsingContext const& context, StringView input, StringView encoding)
     : m_context(context)
-    , m_tokenizer(input, encoding)
-    , m_tokens(m_tokenizer.parse())
+    , m_tokens(Tokenizer::tokenize(input, encoding).release_value_but_fixme_should_propagate_errors())
     , m_token_stream(TokenStream(m_tokens))
 {
 }

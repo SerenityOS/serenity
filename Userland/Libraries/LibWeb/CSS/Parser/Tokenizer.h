@@ -58,15 +58,16 @@ public:
 };
 
 class Tokenizer {
-
 public:
-    explicit Tokenizer(StringView input, StringView encoding);
-
-    [[nodiscard]] Vector<Token> parse();
+    static ErrorOr<Vector<Token>> tokenize(StringView input, StringView encoding);
 
     [[nodiscard]] static Token create_eof_token();
 
 private:
+    explicit Tokenizer(String decoded_input);
+
+    [[nodiscard]] Vector<Token> tokenize();
+
     [[nodiscard]] u32 next_code_point();
     [[nodiscard]] u32 peek_code_point(size_t offset = 0) const;
     [[nodiscard]] U32Twin peek_twin() const;

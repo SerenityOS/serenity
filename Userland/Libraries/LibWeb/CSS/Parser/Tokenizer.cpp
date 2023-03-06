@@ -195,7 +195,7 @@ static inline bool is_E(u32 code_point)
     return code_point == 0x45;
 }
 
-Tokenizer::Tokenizer(StringView input, StringView encoding)
+ErrorOr<Vector<Token>> Tokenizer::tokenize(StringView input, StringView encoding)
 {
     // https://www.w3.org/TR/css-syntax-3/#css-filter-code-points
     auto filter_code_points = [](StringView input, auto encoding) -> ErrorOr<String> {
@@ -206,48 +206,53 @@ Tokenizer::Tokenizer(StringView input, StringView encoding)
         bool last_was_carriage_return = false;
 
         // To filter code points from a stream of (unfiltered) code points input:
-        decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) -> ErrorOr<void> {
-                   // Replace any U+000D CARRIAGE RETURN (CR) code points,
-                   // U+000C FORM FEED (FF) code points,
-                   // or pairs of U+000D CARRIAGE RETURN (CR) followed by U+000A LINE FEED (LF)
-                   // in input by a single U+000A LINE FEED (LF) code point.
-                   if (code_point == '\r') {
-                       if (last_was_carriage_return) {
-                           TRY(builder.try_append('\n'));
-                       } else {
-                           last_was_carriage_return = true;
-                       }
-                   } else {
-                       if (last_was_carriage_return)
-                           TRY(builder.try_append('\n'));
+        TRY(decoder->process(input, [&builder, &last_was_carriage_return](u32 code_point) -> ErrorOr<void> {
+            // Replace any U+000D CARRIAGE RETURN (CR) code points,
+            // U+000C FORM FEED (FF) code points,
+            // or pairs of U+000D CARRIAGE RETURN (CR) followed by U+000A LINE FEED (LF)
+            // in input by a single U+000A LINE FEED (LF) code point.
+            if (code_point == '\r') {
+                if (last_was_carriage_return) {
+                    TRY(builder.try_append('\n'));
+                } else {
+                    last_was_carriage_return = true;
+                }
+            } else {
+                if (last_was_carriage_return)
+                    TRY(builder.try_append('\n'));
 
-                       if (code_point == '\n') {
-                           if (!last_was_carriage_return)
-                               TRY(builder.try_append('\n'));
+                if (code_point == '\n') {
+                    if (!last_was_carriage_return)
+                        TRY(builder.try_append('\n'));
 
-                       } else if (code_point == '\f') {
-                           TRY(builder.try_append('\n'));
-                           // Replace any U+0000 NULL or surrogate code points in input with U+FFFD REPLACEMENT CHARACTER (�).
-                       } else if (code_point == 0x00 || (code_point >= 0xD800 && code_point <= 0xDFFF)) {
-                           TRY(builder.try_append_code_point(REPLACEMENT_CHARACTER));
-                       } else {
-                           TRY(builder.try_append_code_point(code_point));
-                       }
+                } else if (code_point == '\f') {
+                    TRY(builder.try_append('\n'));
+                    // Replace any U+0000 NULL or surrogate code points in input with U+FFFD REPLACEMENT CHARACTER (�).
+                } else if (code_point == 0x00 || (code_point >= 0xD800 && code_point <= 0xDFFF)) {
+                    TRY(builder.try_append_code_point(REPLACEMENT_CHARACTER));
+                } else {
+                    TRY(builder.try_append_code_point(code_point));
+                }
 
-                       last_was_carriage_return = false;
-                   }
-                   return {};
-               })
-            .release_value_but_fixme_should_propagate_errors();
+                last_was_carriage_return = false;
+            }
+            return {};
+        }));
         return builder.to_string();
     };
 
-    m_decoded_input = filter_code_points(input, encoding).release_value_but_fixme_should_propagate_errors();
-    m_utf8_view = Utf8View(m_decoded_input);
-    m_utf8_iterator = m_utf8_view.begin();
+    Tokenizer tokenizer { TRY(filter_code_points(input, encoding)) };
+    return tokenizer.tokenize();
 }
 
-Vector<Token> Tokenizer::parse()
+Tokenizer::Tokenizer(String decoded_input)
+    : m_decoded_input(move(decoded_input))
+    , m_utf8_view(m_decoded_input)
+    , m_utf8_iterator(m_utf8_view.begin())
+{
+}
+
+Vector<Token> Tokenizer::tokenize()
 {
     Vector<Token> tokens;
     for (;;) {
