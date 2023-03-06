@@ -6,7 +6,6 @@
 
 #include "OutlineModel.h"
 #include <AK/Assertions.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/ModelRole.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/TextAlignment.h>

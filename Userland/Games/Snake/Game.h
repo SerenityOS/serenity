@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Frame.h>
 
 namespace Snake {

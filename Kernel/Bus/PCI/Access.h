@@ -9,7 +9,6 @@
 #include <AK/Bitmap.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Controller/HostController.h>

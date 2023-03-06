@@ -9,7 +9,6 @@
 
 #include "MailboxTreeModel.h"
 #include <AK/DeprecatedString.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <LibIMAP/Objects.h>
 

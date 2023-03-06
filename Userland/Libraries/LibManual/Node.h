@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/StringView.h>

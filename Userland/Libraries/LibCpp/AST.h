@@ -8,7 +8,6 @@
 
 #include <AK/DeprecatedFlyString.h>
 #include <AK/DeprecatedString.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/RefCounted.h>
 #include <AK/StringView.h>

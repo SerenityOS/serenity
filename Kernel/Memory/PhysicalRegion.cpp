@@ -5,7 +5,6 @@
  */
 
 #include <AK/BuiltinWrappers.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/PhysicalRegion.h>

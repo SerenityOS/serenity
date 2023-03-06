@@ -11,7 +11,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
-#include <AK/NonnullRefPtrVector.h>
+#include <AK/Vector.h>
 #include <LibTest/TestCase.h>
 
 namespace Test {

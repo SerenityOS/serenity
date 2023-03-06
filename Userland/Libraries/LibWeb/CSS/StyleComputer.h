@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/HashMap.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <LibWeb/CSS/CSSFontFaceRule.h>

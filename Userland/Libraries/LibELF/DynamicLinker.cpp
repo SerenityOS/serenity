@@ -12,7 +12,6 @@
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>

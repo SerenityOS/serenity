@@ -8,7 +8,6 @@
 
 #include <AK/DisjointChunks.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <LibDSP/Clip.h>
 #include <LibDSP/Effects.h>

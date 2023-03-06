@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Wizards/AbstractWizardPage.h>
 

@@ -10,7 +10,6 @@
 #include "SlideObject.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
-#include <AK/NonnullRefPtrVector.h>
 
 // A single slide of a presentation.
 class Slide final {

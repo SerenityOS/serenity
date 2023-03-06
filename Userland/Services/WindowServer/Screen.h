@@ -10,7 +10,6 @@
 #include "HardwareScreenBackend.h"
 #include "ScreenBackend.h"
 #include "ScreenLayout.h"
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Bitmap.h>

@@ -10,7 +10,6 @@
 
 #include <AK/Function.h>
 #include <AK/Iterator.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>
 #include <LibWeb/CSS/CSSRule.h>

@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedFlyString.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DeprecatedFile.h>

@@ -13,7 +13,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <AK/Tuple.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/SourceLocation.h>
 #include <AK/WeakPtr.h>
 #include <LibPDF/Object.h>

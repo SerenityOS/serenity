@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Bindings/LegacyPlatformObject.h>

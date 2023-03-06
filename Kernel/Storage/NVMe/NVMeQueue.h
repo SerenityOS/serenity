@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/AtomicRefCounted.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>

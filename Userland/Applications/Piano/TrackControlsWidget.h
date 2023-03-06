@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ProcessorParameterWidget/ParameterWidget.h"
-#include <AK/NonnullRefPtrVector.h>
 #include <LibDSP/ProcessorParameter.h>
 #include <LibDSP/Synthesizers.h>
 #include <LibGUI/Frame.h>

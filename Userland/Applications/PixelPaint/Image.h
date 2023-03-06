@@ -11,7 +11,6 @@
 #include "Selection.h"
 #include <AK/HashTable.h>
 #include <AK/JsonObjectSerializer.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Result.h>

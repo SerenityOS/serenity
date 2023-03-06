@@ -10,7 +10,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <LibSQL/AST/Token.h>

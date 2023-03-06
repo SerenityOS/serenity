@@ -14,7 +14,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonValue.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringBuilder.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/CSS/Display.h>

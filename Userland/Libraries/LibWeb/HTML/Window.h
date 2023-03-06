@@ -9,7 +9,6 @@
 
 #include <AK/Badge.h>
 #include <AK/IDAllocator.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/URL.h>

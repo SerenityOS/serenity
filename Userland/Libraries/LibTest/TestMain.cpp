@@ -8,6 +8,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Format.h>
+#include <AK/Vector.h>
 #include <LibTest/TestSuite.h>
 
 #ifdef KERNEL

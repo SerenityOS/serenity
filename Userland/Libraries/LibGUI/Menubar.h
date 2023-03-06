@@ -10,7 +10,6 @@
 
 #include <AK/Badge.h>
 #include <AK/IterationDecision.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Forward.h>
 #include <LibGUI/Menu.h>

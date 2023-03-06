@@ -9,7 +9,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/NonnullRefPtrVector.h>
 #include <AK/Optional.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
