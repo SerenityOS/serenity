@@ -7,6 +7,7 @@
 #import <HighResolutionTime/Performance.idl>
 #import <HTML/Navigator.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
+#import <RequestIdleCallback/IdleRequest.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
 [Global=Window, Exposed=Window, LegacyUnenumerableNamedProperties, UseNewAKString]
@@ -76,6 +77,9 @@ interface Window : EventTarget {
     [Replaceable] readonly attribute long outerWidth;
     [Replaceable] readonly attribute long outerHeight;
     [Replaceable] readonly attribute double devicePixelRatio;
+
+    // https://w3c.github.io/requestidlecallback/#window_extensions
+    unsigned long requestIdleCallback(IdleRequestCallback callback, optional IdleRequestOptions options = {});
 
     // https://w3c.github.io/selection-api/#extensions-to-window-interface
     Selection? getSelection();
