@@ -11,6 +11,7 @@
 #include <LibWeb/ARIA/ARIAMixin.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/ShadowRootPrototype.h>
+#include <LibWeb/Bindings/WindowGlobalMixin.h>
 #include <LibWeb/CSS/CSSStyleDeclaration.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Attr.h>
@@ -22,6 +23,7 @@
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/TagNames.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TreeBuilder.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -33,13 +35,8 @@ struct ShadowRootInit {
     bool delegates_focus = false;
 };
 
-// https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrolloptions
-struct ScrollOptions {
-    Bindings::ScrollBehavior behavior { Bindings::ScrollBehavior::Auto };
-};
-
 // https://w3c.github.io/csswg-drafts/cssom-view-1/#dictdef-scrollintoviewoptions
-struct ScrollIntoViewOptions : public ScrollOptions {
+struct ScrollIntoViewOptions : public HTML::ScrollOptions {
     Bindings::ScrollLogicalPosition block { Bindings::ScrollLogicalPosition::Start };
     Bindings::ScrollLogicalPosition inline_ { Bindings::ScrollLogicalPosition::Nearest };
 };

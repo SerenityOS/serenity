@@ -33,6 +33,17 @@ class IdleCallback;
 // https://html.spec.whatwg.org/#timerhandler
 using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, DeprecatedString>;
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dictdef-scrolloptions
+struct ScrollOptions {
+    Bindings::ScrollBehavior behavior { Bindings::ScrollBehavior::Auto };
+};
+
+// https://w3c.github.io/csswg-drafts/cssom-view/#dictdef-scrolltooptions
+struct ScrollToOptions : public ScrollOptions {
+    Optional<double> left;
+    Optional<double> top;
+};
+
 class Window final
     : public DOM::EventTarget
     , public HTML::GlobalEventHandlers
@@ -164,6 +175,8 @@ public:
 
     double scroll_x() const;
     double scroll_y() const;
+    void scroll(ScrollToOptions const&);
+    void scroll(double x, double y);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> performance();
 
@@ -233,7 +246,6 @@ private:
 
     JS_DECLARE_NATIVE_FUNCTION(device_pixel_ratio_getter);
 
-    JS_DECLARE_NATIVE_FUNCTION(scroll);
     JS_DECLARE_NATIVE_FUNCTION(scroll_by);
 
     JS_DECLARE_NATIVE_FUNCTION(screen_x_getter);
