@@ -16,6 +16,7 @@ namespace Syntax {
 
 enum class Language {
     CMake,
+    CMakeCache,
     Cpp,
     CSS,
     GitCommit,
