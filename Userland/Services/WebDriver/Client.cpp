@@ -184,8 +184,8 @@ Web::WebDriver::Response Client::delete_session(Web::WebDriver::Parameters param
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
 
     // 1. If the current session is an active session, try to close the session.
-    auto session = TRY(find_session_with_id(parameters[0]));
-    TRY(session->stop());
+    if (auto session = find_session_with_id(parameters[0]); !session.is_error())
+        TRY(session.value()->stop());
 
     // 2. Return success with data null.
     return JsonValue {};
