@@ -897,7 +897,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
 
-    define_native_accessor(realm, "localStorage", local_storage_getter, {}, attr);
     define_native_accessor(realm, "sessionStorage", session_storage_getter, {}, attr);
 
     // FIXME: Implement codegen for readonly properties with [PutForwards]
@@ -1617,12 +1616,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
     return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
         return impl->structured_clone_impl(vm, vm.argument(0));
     }));
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::local_storage_getter)
-{
-    auto* impl = TRY(impl_from(vm));
-    return impl->local_storage();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::session_storage_getter)
