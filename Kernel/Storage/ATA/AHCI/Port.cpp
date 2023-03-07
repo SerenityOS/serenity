@@ -290,7 +290,7 @@ bool AHCIPort::initialize()
             }
             m_connected_device = ATADiskDevice::create(*controller, { m_port_index, 0 }, 0, logical_sector_size, max_addressable_sector);
         } else {
-            dbgln("AHCI Port {}: Ignoring ATAPI devices for now as we don't currently support them.", representative_port_index());
+            dbgln("AHCI Port {}: Ignoring ATAPI devices as we don't support them.", representative_port_index());
         }
     }
     return true;
