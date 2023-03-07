@@ -2,6 +2,9 @@
 #import <Fetch/Response.idl>
 #import <HTML/MessagePort.idl>
 
+// FIXME: Support VoidFunction in the IDL parser
+callback VoidFunction = undefined ();
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
 interface mixin WindowOrWorkerGlobalScope {
     [Replaceable] readonly attribute USVString origin;
@@ -21,7 +24,7 @@ interface mixin WindowOrWorkerGlobalScope {
     // FIXME: undefined clearInterval(optional long id = 0);
 
     // microtask queuing
-    // FIXME: undefined queueMicrotask(VoidFunction callback);
+    undefined queueMicrotask(VoidFunction callback);
 
     // ImageBitmap
     // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options = {});

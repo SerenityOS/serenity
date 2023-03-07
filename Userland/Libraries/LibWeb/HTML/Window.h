@@ -61,6 +61,7 @@ public:
     using WindowOrWorkerGlobalScopeMixin::atob;
     using WindowOrWorkerGlobalScopeMixin::btoa;
     using WindowOrWorkerGlobalScopeMixin::fetch;
+    using WindowOrWorkerGlobalScopeMixin::queue_microtask;
     using WindowOrWorkerGlobalScopeMixin::structured_clone;
 
     // ^DOM::EventTarget
@@ -96,8 +97,6 @@ public:
     i32 set_interval_impl(TimerHandler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
     void clear_timeout_impl(i32);
     void clear_interval_impl(i32);
-
-    void queue_microtask_impl(WebIDL::CallbackType& callback);
 
     void did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href);
     void did_call_location_reload(Badge<HTML::Location>);
@@ -254,8 +253,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
     JS_DECLARE_NATIVE_FUNCTION(clear_interval);
     JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
-
-    JS_DECLARE_NATIVE_FUNCTION(queue_microtask);
 
     HTML::Location* m_location { nullptr };
 

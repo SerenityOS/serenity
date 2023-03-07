@@ -705,18 +705,6 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     dispatch_event(event);
 }
 
-// https://html.spec.whatwg.org/#dom-queuemicrotask
-void Window::queue_microtask_impl(WebIDL::CallbackType& callback)
-{
-    // The queueMicrotask(callback) method must queue a microtask to invoke callback,
-    HTML::queue_a_microtask(&associated_document(), [this, &callback] {
-        auto result = WebIDL::invoke_callback(callback, {});
-        // and if callback throws an exception, report the exception.
-        if (result.is_error())
-            HTML::report_exception(result, realm());
-    });
-}
-
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
 JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
 {
@@ -882,8 +870,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
     define_native_function(realm, "clearInterval", clear_interval, 1, attr);
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
-
-    define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
     define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
 
@@ -1561,21 +1547,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::clear_interval)
         id = TRY(vm.argument(0).to_i32(vm));
 
     impl->clear_interval_impl(id);
-    return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::queue_microtask)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "queueMicrotask");
-    auto* callback_object = TRY(vm.argument(0).to_object(vm));
-    if (!callback_object->is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-
-    auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
-
-    impl->queue_microtask_impl(*callback);
     return JS::js_undefined();
 }
 

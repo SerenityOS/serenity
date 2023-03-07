@@ -12,10 +12,14 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Fetch/FetchMethod.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/StructuredSerialize.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/Infra/Base64.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -84,6 +88,24 @@ WebIDL::ExceptionOr<String> WindowOrWorkerGlobalScopeMixin::atob(String const& d
     auto decoder = TextCodec::decoder_for("windows-1252"sv);
     VERIFY(decoder.has_value());
     return TRY_OR_THROW_OOM(vm, decoder->to_utf8(decoded_data.value()));
+}
+
+// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-queuemicrotask
+void WindowOrWorkerGlobalScopeMixin::queue_microtask(WebIDL::CallbackType& callback)
+{
+    auto& vm = this_impl().vm();
+    auto& realm = *vm.current_realm();
+
+    JS::GCPtr<DOM::Document> document;
+    if (is<Window>(this_impl()))
+        document = &static_cast<Window&>(this_impl()).associated_document();
+
+    // The queueMicrotask(callback) method must queue a microtask to invoke callback, and if callback throws an exception, report the exception.
+    HTML::queue_a_microtask(document, [&callback, &realm] {
+        auto result = WebIDL::invoke_callback(callback, {});
+        if (result.is_error())
+            HTML::report_exception(result, realm);
+    });
 }
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
