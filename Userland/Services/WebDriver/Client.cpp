@@ -290,7 +290,8 @@ Web::WebDriver::Response Client::get_window_handle(Web::WebDriver::Parameters pa
     dbgln_if(WEBDRIVER_DEBUG, "Handling GET /session/<session_id>/window");
     auto session = TRY(find_session_with_id(parameters[0]));
 
-    // FIXME: 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    // 1. If the current top-level browsing context is no longer open, return error with error code no such window.
+    TRY(session->web_content_connection().ensure_top_level_browsing_context_is_open());
 
     // 2. Return success with data being the window handle associated with the current top-level browsing context.
     return JsonValue { session->current_window_handle() };
