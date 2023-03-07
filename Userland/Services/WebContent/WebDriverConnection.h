@@ -101,6 +101,8 @@ private:
     Gfx::IntRect maximize_the_window();
     Gfx::IntRect iconify_the_window();
 
+    ErrorOr<void, Web::WebDriver::Error> wait_for_navigation_to_complete();
+
     using StartNodeGetter = Function<ErrorOr<Web::DOM::ParentNode*, Web::WebDriver::Error>()>;
     ErrorOr<JsonArray, Web::WebDriver::Error> find(StartNodeGetter&& start_node_getter, Web::WebDriver::LocationStrategy using_, StringView value);
 

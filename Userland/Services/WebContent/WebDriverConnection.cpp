@@ -406,16 +406,22 @@ Messages::WebDriverClient::NavigateToResponse WebDriverConnection::navigate_to(J
     // 4. Handle any user prompts and return its value if it is an error.
     TRY(handle_any_user_prompts());
 
-    // FIXME: 5. Let current URL be the current top-level browsing context’s active document’s URL.
+    // 5. Let current URL be the current top-level browsing context’s active document’s URL.
+    auto const& current_url = m_page_client.page().top_level_browsing_context().active_document()->url();
     // FIXME: 6. If current URL and url do not have the same absolute URL:
     // FIXME:     a. If timer has not been started, start a timer. If this algorithm has not completed before timer reaches the session’s session page load timeout in milliseconds, return an error with error code timeout.
 
     // 7. Navigate the current top-level browsing context to url.
     m_page_client.page().load(url);
 
-    // FIXME: 8. If url is special except for file and current URL and URL do not have the same absolute URL:
-    // FIXME:     a. Try to wait for navigation to complete.
-    // FIXME:     b. Try to run the post-navigation checks.
+    // 8. If url is special except for file and current URL and URL do not have the same absolute URL:
+    if (url.is_special() && url.scheme() != "file"sv && current_url != url) {
+        // a. Try to wait for navigation to complete.
+        TRY(wait_for_navigation_to_complete());
+
+        // FIXME: b. Try to run the post-navigation checks.
+    }
+
     // FIXME: 9. Set the current browsing context with the current top-level browsing context.
     // FIXME: 10. If the current top-level browsing context contains a refresh state pragma directive of time 1 second or less, wait until the refresh timeout has elapsed, a new navigate has begun, and return to the first step of this algorithm.
 
@@ -1804,6 +1810,44 @@ ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::handle_any_user_prompt
     }
 
     // 3. Return success.
+    return {};
+}
+
+// https://w3c.github.io/webdriver/#dfn-waiting-for-the-navigation-to-complete
+ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::wait_for_navigation_to_complete()
+{
+    // 1. If the current session has a page loading strategy of none, return success with data null.
+    if (m_page_load_strategy == Web::WebDriver::PageLoadStrategy::None)
+        return {};
+
+    // 2. If the current browsing context is no longer open, return success with data null.
+    if (m_page_client.page().top_level_browsing_context().has_been_discarded())
+        return {};
+
+    // FIXME: 3. Start a timer. If this algorithm has not completed before timer reaches the session’s session page load timeout in milliseconds, return an error with error code timeout.
+    // FIXME: 4. If there is an ongoing attempt to navigate the current browsing context that has not yet matured, wait for navigation to mature.
+
+    // 5. Let readiness target be the document readiness state associated with the current session’s page loading strategy, which can be found in the table of page load strategies.
+    auto readiness_target = [this]() {
+        switch (m_page_load_strategy) {
+        case Web::WebDriver::PageLoadStrategy::Normal:
+            return Web::HTML::DocumentReadyState::Complete;
+        case Web::WebDriver::PageLoadStrategy::Eager:
+            return Web::HTML::DocumentReadyState::Interactive;
+        default:
+            VERIFY_NOT_REACHED();
+        };
+    }();
+
+    // 6. Wait for the current browsing context’s document readiness state to reach readiness target,
+    // FIXME: or for the session page load timeout to pass, whichever occurs sooner.
+    Web::Platform::EventLoopPlugin::the().spin_until([&]() {
+        return m_page_client.page().top_level_browsing_context().active_document()->readiness() == readiness_target;
+    });
+
+    // FIXME: 7. If the previous step completed by the session page load timeout being reached and the browser does not have an active user prompt, return error with error code timeout.
+
+    // 8. Return success with data null.
     return {};
 }
 
