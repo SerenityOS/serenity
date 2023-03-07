@@ -8,13 +8,9 @@
 
 #include <AK/StringView.h>
 #include <AK/Vector.h>
+#include <LibCMake/Position.h>
 
 namespace CMake {
-
-struct Position {
-    size_t line { 0 };
-    size_t column { 0 };
-};
 
 struct VariableReference {
     StringView value;
