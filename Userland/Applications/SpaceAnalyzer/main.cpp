@@ -78,12 +78,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window)));
 
     auto open_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"sv));
-    // Configure the nodes context menu.
-    auto open_folder_action = GUI::Action::create("Open in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_scheme(get_absolute_path_to_selected_node(tree_map_widget)));
-    });
-    auto open_containing_folder_action = GUI::Action::create("Reveal in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
-        LexicalPath path { get_absolute_path_to_selected_node(tree_map_widget) };
+    // Configure the node's context menu.
+    auto open_action = GUI::Action::create("Open in File Manager", { Mod_Ctrl, Key_O }, open_icon, [&](auto&) {
+        auto path_string = get_absolute_path_to_selected_node(tree_map_widget);
+        if (path_string.is_empty())
+            return;
+
+        if (Core::DeprecatedFile::is_directory(path_string)) {
+            Desktop::Launcher::open(URL::create_with_file_scheme(path_string));
+            return;
+        }
+        LexicalPath path { path_string };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     });
 
@@ -124,8 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     });
 
     auto context_menu = TRY(GUI::Menu::try_create());
-    TRY(context_menu->try_add_action(open_folder_action));
-    TRY(context_menu->try_add_action(open_containing_folder_action));
+    TRY(context_menu->try_add_action(open_action));
     TRY(context_menu->try_add_action(copy_path_action));
     TRY(context_menu->try_add_action(delete_action));
 
@@ -165,13 +169,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (selected_node_path.is_empty())
             return;
         delete_action->set_enabled(Core::DeprecatedFile::can_delete_or_move(selected_node_path));
-        if (Core::DeprecatedFile::is_directory(selected_node_path)) {
-            open_folder_action->set_visible(true);
-            open_containing_folder_action->set_visible(false);
-        } else {
-            open_folder_action->set_visible(false);
-            open_containing_folder_action->set_visible(true);
-        }
+        if (Core::DeprecatedFile::is_directory(selected_node_path))
+            open_action->set_text("Open in File Manager");
+        else
+            open_action->set_text("Reveal in File Manager");
+
         context_menu->popup(event.screen_position());
     };
 
