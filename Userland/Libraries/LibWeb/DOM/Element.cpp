@@ -271,7 +271,7 @@ Vector<DeprecatedString> Element::get_attribute_names() const
     return names;
 }
 
-bool Element::has_class(DeprecatedFlyString const& class_name, CaseSensitivity case_sensitivity) const
+bool Element::has_class(FlyString const& class_name, CaseSensitivity case_sensitivity) const
 {
     if (case_sensitivity == CaseSensitivity::CaseSensitive) {
         return any_of(m_classes, [&](auto& it) {
@@ -279,7 +279,7 @@ bool Element::has_class(DeprecatedFlyString const& class_name, CaseSensitivity c
         });
     } else {
         return any_of(m_classes, [&](auto& it) {
-            return it.equals_ignoring_case(class_name);
+            return it.equals_ignoring_ascii_case(class_name);
         });
     }
 }
@@ -347,7 +347,7 @@ void Element::parse_attribute(DeprecatedFlyString const& name, DeprecatedString 
         m_classes.clear();
         m_classes.ensure_capacity(new_classes.size());
         for (auto& new_class : new_classes) {
-            m_classes.unchecked_append(new_class);
+            m_classes.unchecked_append(FlyString::from_utf8(new_class).release_value_but_fixme_should_propagate_errors());
         }
         if (m_class_list)
             m_class_list->associated_attribute_changed(value);
@@ -580,9 +580,9 @@ bool Element::is_active() const
 
 JS::NonnullGCPtr<HTMLCollection> Element::get_elements_by_class_name(DeprecatedFlyString const& class_names)
 {
-    Vector<DeprecatedFlyString> list_of_class_names;
+    Vector<FlyString> list_of_class_names;
     for (auto& name : class_names.view().split_view_if(Infra::is_ascii_whitespace)) {
-        list_of_class_names.append(name);
+        list_of_class_names.append(FlyString::from_utf8(name).release_value_but_fixme_should_propagate_errors());
     }
     return HTMLCollection::create(*this, [list_of_class_names = move(list_of_class_names), quirks_mode = document().in_quirks_mode()](Element const& element) {
         for (auto& name : list_of_class_names) {

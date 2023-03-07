@@ -354,7 +354,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     case CSS::Selector::SimpleSelector::Type::Id:
         return component.name() == element.attribute(HTML::AttributeNames::id).view();
     case CSS::Selector::SimpleSelector::Type::Class:
-        return element.has_class(component.name().bytes_as_string_view());
+        return element.has_class(component.name());
     case CSS::Selector::SimpleSelector::Type::TagName:
         // See https://html.spec.whatwg.org/multipage/semantics-other.html#case-sensitivity-of-selectors
         if (element.document().document_type() == DOM::Document::Type::HTML)
