@@ -468,6 +468,10 @@ Tab::Tab(BrowserWindow& window)
             go_forward();
     };
 
+    view().on_close = [this] {
+        on_tab_close_request(*this);
+    };
+
     m_tab_context_menu = GUI::Menu::construct();
     m_tab_context_menu->add_action(GUI::CommonActions::make_reload_action([this](auto&) {
         reload();
