@@ -7,6 +7,7 @@
 #import <HighResolutionTime/Performance.idl>
 #import <HTML/AnimationFrameProvider.idl>
 #import <HTML/Navigator.idl>
+#import <HTML/WindowLocalStorage.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
 #import <RequestIdleCallback/IdleRequest.idl>
 
@@ -96,6 +97,7 @@ interface Window : EventTarget {
 Window includes AnimationFrameProvider;
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
+Window includes WindowLocalStorage;
 Window includes WindowOrWorkerGlobalScope;
 
 enum ScrollBehavior { "auto", "instant", "smooth" };
