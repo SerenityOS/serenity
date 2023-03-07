@@ -21,6 +21,7 @@
 #include <LibAudio/FlacTypes.h>
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Resampler.h>
+#include <LibAudio/VorbisComment.h>
 #include <LibCore/File.h>
 
 namespace Audio {
@@ -131,6 +132,10 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
             [[fallthrough]];
         case FlacMetadataBlockType::PADDING:
             // Note: A padding block is empty and does not need any treatment.
+            break;
+        case FlacMetadataBlockType::VORBIS_COMMENT:
+            load_vorbis_comment(block);
+            break;
         default:
             // TODO: Parse the remaining metadata block types.
             break;
@@ -178,6 +183,17 @@ MaybeLoaderError FlacLoaderPlugin::load_picture(FlacRawMetadataBlock& block)
     m_pictures.append(move(picture));
 
     return {};
+}
+
+// 11.15. METADATA_BLOCK_VORBIS_COMMENT
+void FlacLoaderPlugin::load_vorbis_comment(FlacRawMetadataBlock& block)
+{
+    auto metadata_or_error = Audio::load_vorbis_comment(block.data);
+    if (metadata_or_error.is_error()) {
+        dbgln("FLAC Warning: Vorbis comment invalid, error: {}", metadata_or_error.release_error());
+        return;
+    }
+    m_metadata = metadata_or_error.release_value();
 }
 
 // 11.13. METADATA_BLOCK_SEEKTABLE
