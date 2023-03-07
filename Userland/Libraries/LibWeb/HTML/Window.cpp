@@ -536,11 +536,6 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     return id;
 }
 
-void Window::cancel_animation_frame_impl(i32 id)
-{
-    m_animation_frame_callback_driver.remove(id);
-}
-
 void Window::did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href)
 {
     auto* browsing_context = associated_document().browsing_context();
@@ -896,7 +891,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
     define_native_function(realm, "clearInterval", clear_interval, 1, attr);
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
-    define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
@@ -1431,6 +1425,17 @@ i32 Window::request_animation_frame(WebIDL::CallbackType& callback)
     });
 }
 
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animationframeprovider-cancelanimationframe
+void Window::cancel_animation_frame(i32 handle)
+{
+    // 1. If this is not supported, then throw a "NotSupportedError" DOMException.
+    // NOTE: Doesn't apply in this Window-specific implementation.
+
+    // 2. Let callbacks be this's target object's map of animation frame callbacks.
+    // 3. Remove callbacks[handle].
+    m_animation_frame_callback_driver.remove(handle);
+}
+
 // https://w3c.github.io/requestidlecallback/#dom-window-requestidlecallback
 u32 Window::request_idle_callback(WebIDL::CallbackType& callback, RequestIdleCallback::IdleRequestOptions const& options)
 {
@@ -1572,16 +1577,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::clear_interval)
         id = TRY(vm.argument(0).to_i32(vm));
 
     impl->clear_interval_impl(id);
-    return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::cancel_animation_frame)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "cancelAnimationFrame");
-    auto id = TRY(vm.argument(0).to_i32(vm));
-    impl->cancel_animation_frame_impl(id);
     return JS::js_undefined();
 }
 
