@@ -133,3 +133,20 @@ TEST_CASE(base10_units)
     EXPECT_EQ(human_readable_size(1100, AK::HumanReadableBasedOn::Base10), "1.1 KB");
     EXPECT_EQ(human_readable_size(1000000, AK::HumanReadableBasedOn::Base10), "1.0 MB");
 }
+
+TEST_CASE(human_readable_integers)
+{
+    EXPECT_EQ(human_readable_integer(0), "0");
+    EXPECT_EQ(human_readable_integer(1), "1");
+    EXPECT_EQ(human_readable_integer(12), "12");
+    EXPECT_EQ(human_readable_integer(123), "123");
+    EXPECT_EQ(human_readable_integer(1234), "1,234");
+    EXPECT_EQ(human_readable_integer(12345), "12,345");
+    EXPECT_EQ(human_readable_integer(123456), "123,456");
+    EXPECT_EQ(human_readable_integer(1234567), "1,234,567");
+    EXPECT_EQ(human_readable_integer(1234567890123456789LL), "1,234,567,890,123,456,789");
+    // Non-leading sections must have leading zeros.
+    EXPECT_EQ(human_readable_integer(12003), "12,003");
+    // Negative numbers should work.
+    EXPECT_EQ(human_readable_integer(-1234), "-1,234");
+}
