@@ -34,7 +34,7 @@ public:
     // Convenience helpers for "text/uri-list"
     bool has_urls() const { return has_format("text/uri-list"); }
     Vector<URL> urls() const;
-    void set_urls(Vector<URL> const&);
+    ErrorOr<void> set_urls(Vector<URL> const&);
 
     HashMap<DeprecatedString, ByteBuffer> const& all_data() const { return m_data; }
 
