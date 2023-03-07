@@ -104,7 +104,6 @@ UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
 // are hot pluggable.
 UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(I8042Controller const& ps2_controller)
     : IRQHandler(IRQ_KEYBOARD)
-    , KeyboardDevice()
     , I8042Device(ps2_controller)
 {
 }

@@ -13,8 +13,8 @@
 
 namespace Kernel::VirtIO {
 class Console
-    : public VirtIO::Device
-    , public AtomicRefCounted<Console> {
+    : public AtomicRefCounted<Console>
+    , public VirtIO::Device {
     friend VirtIO::ConsolePort;
 
 public:

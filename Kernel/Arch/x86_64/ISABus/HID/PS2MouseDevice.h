@@ -14,8 +14,8 @@
 #include <Kernel/Random.h>
 
 namespace Kernel {
-class PS2MouseDevice : public IRQHandler
-    , public MouseDevice
+class PS2MouseDevice : public MouseDevice
+    , public IRQHandler
     , public I8042Device {
     friend class DeviceManagement;
 

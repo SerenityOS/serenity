@@ -19,7 +19,6 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller)
     : IRQHandler(IRQ_MOUSE)
-    , MouseDevice()
     , I8042Device(ps2_controller)
 {
 }

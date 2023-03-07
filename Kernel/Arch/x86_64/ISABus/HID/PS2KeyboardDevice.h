@@ -16,8 +16,8 @@
 
 namespace Kernel {
 
-class PS2KeyboardDevice final : public IRQHandler
-    , public KeyboardDevice
+class PS2KeyboardDevice final : public KeyboardDevice
+    , public IRQHandler
     , public I8042Device {
     friend class DeviceManagement;
 
