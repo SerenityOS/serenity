@@ -113,6 +113,9 @@ UNMAP_AFTER_INIT void Device::initialize()
             }
             config.offset = capability.read32(0x8);
             config.length = capability.read32(0xc);
+            // NOTE: Configuration length of zero is an invalid configuration that should be ignored.
+            if (config.length == 0)
+                continue;
             dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, bar: {}, offset: {}, length: {}", m_class_name, (u32)config.cfg_type, config.bar, config.offset, config.length);
             if (config.cfg_type == ConfigurationType::Common)
                 m_use_mmio = true;
