@@ -55,4 +55,5 @@ endpoint WebDriverClient {
     take_screenshot() => (Web::WebDriver::Response response)
     take_element_screenshot(String element_id) => (Web::WebDriver::Response response)
     print_page() => (Web::WebDriver::Response response)
+    ensure_top_level_browsing_context_is_open() => (Web::WebDriver::Response response)
 }

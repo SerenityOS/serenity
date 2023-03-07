@@ -1745,11 +1745,18 @@ Messages::WebDriverClient::PrintPageResponse WebDriverConnection::print_page()
 }
 
 // https://w3c.github.io/webdriver/#dfn-no-longer-open
-ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
+Messages::WebDriverClient::EnsureTopLevelBrowsingContextIsOpenResponse WebDriverConnection::ensure_top_level_browsing_context_is_open()
 {
     // A browsing context is said to be no longer open if it has been discarded.
     if (m_page_client.page().top_level_browsing_context().has_been_discarded())
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found"sv);
+    return JsonValue {};
+}
+
+// https://w3c.github.io/webdriver/#dfn-no-longer-open
+ErrorOr<void, Web::WebDriver::Error> WebDriverConnection::ensure_open_top_level_browsing_context()
+{
+    TRY(ensure_top_level_browsing_context_is_open().take_response());
     return {};
 }
 
