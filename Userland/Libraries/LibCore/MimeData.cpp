@@ -31,14 +31,16 @@ Vector<URL> MimeData::urls() const
     return urls;
 }
 
-void MimeData::set_urls(Vector<URL> const& urls)
+ErrorOr<void> MimeData::set_urls(Vector<URL> const& urls)
 {
     StringBuilder builder;
     for (auto& url : urls) {
         builder.append(url.to_deprecated_string());
         builder.append('\n');
     }
-    set_data("text/uri-list", builder.to_byte_buffer());
+    set_data("text/uri-list", TRY(builder.try_to_byte_buffer()));
+
+    return {};
 }
 
 DeprecatedString MimeData::text() const
