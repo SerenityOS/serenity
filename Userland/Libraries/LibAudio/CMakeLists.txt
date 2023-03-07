@@ -4,6 +4,7 @@ set(SOURCES
     WavLoader.cpp
     FlacLoader.cpp
     WavWriter.cpp
+    Metadata.cpp
     MP3Loader.cpp
     QOALoader.cpp
     QOATypes.cpp
