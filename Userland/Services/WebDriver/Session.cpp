@@ -97,7 +97,7 @@ Web::WebDriver::Response Session::stop()
     web_content_connection().close_session();
 
     // 2. Remove the current session from active sessions.
-    // NOTE: Handled by WebDriver::Client.
+    m_client->close_session(session_id());
 
     // 3. Perform any implementation-specific cleanup steps.
     if (m_browser_pid.has_value()) {
