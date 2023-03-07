@@ -54,6 +54,9 @@ public:
     // FIXME: Remove this once all code has been ported to FlyString
     [[nodiscard]] DeprecatedFlyString to_deprecated_fly_string() const;
 
+    // Compare this FlyString against another string with ASCII caseless matching.
+    [[nodiscard]] bool equals_ignoring_ascii_case(FlyString const&) const;
+
 private:
     // This will hold either the pointer to the Detail::StringData it represents or the raw bytes of
     // an inlined short string.

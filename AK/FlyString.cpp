@@ -178,4 +178,12 @@ ErrorOr<void> Formatter<FlyString>::format(FormatBuilder& builder, FlyString con
     return Formatter<StringView>::format(builder, fly_string.bytes_as_string_view());
 }
 
+bool FlyString::equals_ignoring_ascii_case(FlyString const& other) const
+{
+    if (*this == other)
+        return true;
+    // FIXME: Rename StringUtils::equals_ignoring_case to equals_ignoring_ascii_case.
+    return StringUtils::equals_ignoring_case(bytes_as_string_view(), other.bytes_as_string_view());
+}
+
 }
