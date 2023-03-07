@@ -23,9 +23,9 @@ public:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
     virtual ErrorOr<void> flush_metadata() override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
@@ -45,7 +45,7 @@ private:
     virtual ErrorOr<size_t> write_bytes_locked(off_t, size_t, UserOrKernelBuffer const& buffer, OpenFileDescription*) override;
 
     ISO9660Inode(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
-    static ErrorOr<NonnullLockRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
+    static ErrorOr<NonnullRefPtr<ISO9660Inode>> try_create_from_directory_record(ISO9660FS&, ISO::DirectoryRecordHeader const& record, StringView name);
 
     static InodeIndex get_inode_index(ISO::DirectoryRecordHeader const& record, StringView name);
     static StringView get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer);

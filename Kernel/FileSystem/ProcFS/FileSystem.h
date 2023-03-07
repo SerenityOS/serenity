@@ -30,9 +30,9 @@ public:
 private:
     ProcFS();
 
-    ErrorOr<NonnullLockRefPtr<Inode>> get_inode(InodeIdentifier) const;
+    ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
 
-    LockRefPtr<ProcFSInode> m_root_inode;
+    RefPtr<ProcFSInode> m_root_inode;
 };
 
 }

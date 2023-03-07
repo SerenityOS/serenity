@@ -32,14 +32,14 @@ RAMFSInode::RAMFSInode(RAMFS& fs)
 
 RAMFSInode::~RAMFSInode() = default;
 
-ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
+ErrorOr<NonnullRefPtr<RAMFSInode>> RAMFSInode::try_create(RAMFS& fs, InodeMetadata const& metadata, LockWeakPtr<RAMFSInode> parent)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs, metadata, move(parent)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) RAMFSInode(fs, metadata, move(parent)));
 }
 
-ErrorOr<NonnullLockRefPtr<RAMFSInode>> RAMFSInode::try_create_root(RAMFS& fs)
+ErrorOr<NonnullRefPtr<RAMFSInode>> RAMFSInode::try_create_root(RAMFS& fs)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFSInode(fs));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) RAMFSInode(fs));
 }
 
 InodeMetadata RAMFSInode::metadata() const
@@ -234,7 +234,7 @@ ErrorOr<void> RAMFSInode::truncate_to_block_index(size_t block_index)
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> RAMFSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> RAMFSInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock, Mutex::Mode::Shared);
     VERIFY(is_directory());
@@ -243,7 +243,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> RAMFSInode::lookup(StringView name)
         return *this;
     if (name == "..") {
         if (auto parent = m_parent.strong_ref())
-            return parent.release_nonnull();
+            return *parent;
         return ENOENT;
     }
 
@@ -292,7 +292,7 @@ ErrorOr<void> RAMFSInode::chown(UserID uid, GroupID gid)
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> RAMFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullRefPtr<Inode>> RAMFSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     MutexLocker locker(m_inode_lock);
     auto now = kgettimeofday();

@@ -63,7 +63,7 @@ ErrorOr<void> DevPtsFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSy
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
 {
     VERIFY(identifier().index() == 1);
 
@@ -74,7 +74,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> DevPtsFSInode::lookup(StringView name)
     if (!pty_index.has_value())
         return ENOENT;
 
-    return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<NonnullLockRefPtr<Inode>> {
+    return SlavePTY::all_instances().with([&](auto& list) -> ErrorOr<NonnullRefPtr<Inode>> {
         for (SlavePTY& slave_pty : list) {
             if (slave_pty.index() != pty_index.value())
                 continue;
@@ -94,7 +94,7 @@ ErrorOr<void> DevPtsFSInode::add_child(Inode&, StringView, mode_t)
     return EROFS;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> DevPtsFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }

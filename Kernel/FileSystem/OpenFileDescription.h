@@ -114,7 +114,7 @@ public:
 
     OwnPtr<OpenFileDescriptionData>& data();
 
-    void set_original_inode(Badge<VirtualFileSystem>, NonnullLockRefPtr<Inode>&& inode) { m_inode = move(inode); }
+    void set_original_inode(Badge<VirtualFileSystem>, NonnullRefPtr<Inode> inode) { m_inode = move(inode); }
     void set_original_custody(Badge<VirtualFileSystem>, Custody& custody);
 
     ErrorOr<void> truncate(u64);
@@ -140,7 +140,7 @@ private:
         blocker_set().unblock_all_blockers_whose_conditions_are_met();
     }
 
-    LockRefPtr<Inode> m_inode;
+    RefPtr<Inode> m_inode;
     NonnullLockRefPtr<File> m_file;
 
     struct State {

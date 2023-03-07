@@ -815,7 +815,7 @@ ErrorOr<void> Ext2FSInode::write_directory(Vector<Ext2FSDirectoryEntry>& entries
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
+ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::create_child(StringView name, mode_t mode, dev_t dev, UserID uid, GroupID gid)
 {
     if (Kernel::is_directory(mode))
         return fs().create_directory(*this, name, mode, uid, gid);
@@ -965,7 +965,7 @@ ErrorOr<void> Ext2FSInode::populate_lookup_cache()
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
 {
     VERIFY(is_directory());
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): Looking up '{}'", identifier(), name);

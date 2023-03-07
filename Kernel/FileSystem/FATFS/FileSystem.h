@@ -46,7 +46,7 @@ private:
     BlockBasedFileSystem::BlockIndex first_block_of_cluster(u32 cluster) const;
 
     OwnPtr<KBuffer> m_boot_record {};
-    LockRefPtr<FATInode> m_root_inode {};
+    RefPtr<FATInode> m_root_inode;
     u32 m_first_data_sector { 0 };
 };
 

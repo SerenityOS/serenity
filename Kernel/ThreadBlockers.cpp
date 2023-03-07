@@ -822,7 +822,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
     return true;
 }
 
-Thread::FlockBlocker::FlockBlocker(NonnullLockRefPtr<Inode> inode, flock const& flock)
+Thread::FlockBlocker::FlockBlocker(NonnullRefPtr<Inode> inode, flock const& flock)
     : m_inode(move(inode))
     , m_flock(flock)
 {

@@ -23,7 +23,7 @@ DevPtsFS::~DevPtsFS() = default;
 
 ErrorOr<void> DevPtsFS::initialize()
 {
-    m_root_inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevPtsFSInode(*this, 1, nullptr)));
+    m_root_inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(*this, 1, nullptr)));
     m_root_inode->m_metadata.inode = { fsid(), 1 };
     m_root_inode->m_metadata.mode = 0040555;
     m_root_inode->m_metadata.uid = 0;
@@ -44,7 +44,7 @@ Inode& DevPtsFS::root_inode()
     return *m_root_inode;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) const
+ErrorOr<NonnullRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) const
 {
     if (inode_id.index() == 1)
         return *m_root_inode;
@@ -53,7 +53,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> DevPtsFS::get_inode(InodeIdentifier inode_id) 
     auto* device = DeviceManagement::the().get_device(201, pty_index);
     VERIFY(device);
 
-    auto inode = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device))));
+    auto inode = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index(), static_cast<SlavePTY*>(device))));
     inode->m_metadata.inode = inode_id;
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = device->uid();

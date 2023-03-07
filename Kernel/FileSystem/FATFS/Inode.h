@@ -22,7 +22,7 @@ class FATInode final : public Inode {
 public:
     virtual ~FATInode() override = default;
 
-    static ErrorOr<NonnullLockRefPtr<FATInode>> create(FATFS&, FATEntry, Vector<FATLongFileNameEntry> const& = {});
+    static ErrorOr<NonnullRefPtr<FATInode>> create(FATFS&, FATEntry, Vector<FATLongFileNameEntry> const& = {});
 
     FATFS& fs() { return static_cast<FATFS&>(Inode::fs()); }
     FATFS const& fs() const { return static_cast<FATFS const&>(Inode::fs()); }
@@ -47,7 +47,7 @@ private:
 
     ErrorOr<Vector<BlockBasedFileSystem::BlockIndex>> compute_block_list();
     ErrorOr<NonnullOwnPtr<KBuffer>> read_block_list();
-    ErrorOr<LockRefPtr<FATInode>> traverse(Function<ErrorOr<bool>(LockRefPtr<FATInode>)> callback);
+    ErrorOr<RefPtr<FATInode>> traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback);
     u32 first_cluster() const;
 
     // ^Inode
@@ -56,8 +56,8 @@ private:
 
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) override;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;

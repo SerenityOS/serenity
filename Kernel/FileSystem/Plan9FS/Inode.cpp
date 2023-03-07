@@ -14,9 +14,9 @@ Plan9FSInode::Plan9FSInode(Plan9FS& fs, u32 fid)
 {
 }
 
-ErrorOr<NonnullLockRefPtr<Plan9FSInode>> Plan9FSInode::try_create(Plan9FS& fs, u32 fid)
+ErrorOr<NonnullRefPtr<Plan9FSInode>> Plan9FSInode::try_create(Plan9FS& fs, u32 fid)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Plan9FSInode(fs, fid));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Plan9FSInode(fs, fid));
 }
 
 Plan9FSInode::~Plan9FSInode()
@@ -245,7 +245,7 @@ ErrorOr<void> Plan9FSInode::traverse_as_directory(Function<ErrorOr<void>(FileSys
     return ENOTIMPL;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
 {
     u32 newfid = fs().allocate_fid();
     Plan9FSMessage message { fs(), Plan9FSMessage::Type::Twalk };
@@ -254,7 +254,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> Plan9FSInode::lookup(StringView name)
     return TRY(Plan9FSInode::try_create(fs(), newfid));
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> Plan9FSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     // TODO
     return ENOTIMPL;

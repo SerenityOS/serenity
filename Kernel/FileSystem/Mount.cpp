@@ -36,18 +36,18 @@ ErrorOr<NonnullOwnPtr<KString>> Mount::absolute_path() const
     });
 }
 
-LockRefPtr<Inode> Mount::host()
+RefPtr<Inode> Mount::host()
 {
-    return m_host_custody.with([](auto& host_custody) -> LockRefPtr<Inode> {
+    return m_host_custody.with([](auto& host_custody) -> RefPtr<Inode> {
         if (!host_custody)
             return nullptr;
         return &host_custody->inode();
     });
 }
 
-LockRefPtr<Inode const> Mount::host() const
+RefPtr<Inode const> Mount::host() const
 {
-    return m_host_custody.with([](auto& host_custody) -> LockRefPtr<Inode const> {
+    return m_host_custody.with([](auto& host_custody) -> RefPtr<Inode const> {
         if (!host_custody)
             return nullptr;
         return &host_custody->inode();

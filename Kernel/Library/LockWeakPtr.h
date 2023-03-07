@@ -143,7 +143,7 @@ public:
         // use unsafe_ptr(), but as the name suggests, it is not safe...
         LockRefPtr<T> ref;
         // Using do_while_locked protects against a race with clear()!
-        m_link.do_while_locked([&](WeakLink* link) {
+        m_link.do_while_locked([&](LockWeakLink* link) {
             if (link)
                 ref = link->template strong_ref<T>();
         });
@@ -153,7 +153,7 @@ public:
     [[nodiscard]] T* unsafe_ptr() const
     {
         T* ptr = nullptr;
-        m_link.do_while_locked([&](WeakLink* link) {
+        m_link.do_while_locked([&](LockWeakLink* link) {
             if (link)
                 ptr = link->unsafe_ptr<T>();
         });
@@ -165,15 +165,15 @@ public:
     [[nodiscard]] bool is_null() const { return !m_link || m_link->is_null(); }
     void clear() { m_link = nullptr; }
 
-    [[nodiscard]] LockRefPtr<WeakLink> take_link() { return move(m_link); }
+    [[nodiscard]] LockRefPtr<LockWeakLink> take_link() { return move(m_link); }
 
 private:
-    LockWeakPtr(LockRefPtr<WeakLink> const& link)
+    LockWeakPtr(LockRefPtr<LockWeakLink> const& link)
         : m_link(link)
     {
     }
 
-    LockRefPtr<WeakLink> m_link;
+    LockRefPtr<LockWeakLink> m_link;
 };
 
 template<typename T>
@@ -196,10 +196,10 @@ inline ErrorOr<LockWeakPtr<U>> LockWeakable<T>::try_make_weak_ptr() const
             return LockWeakPtr<U> {};
     }
     if (!m_link) {
-        // There is a small chance that we create a new WeakLink and throw
+        // There is a small chance that we create a new LockWeakLink and throw
         // it away because another thread beat us to it. But the window is
         // pretty small and the overhead isn't terrible.
-        m_link.assign_if_null(TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) WeakLink(const_cast<T&>(static_cast<T const&>(*this))))));
+        m_link.assign_if_null(TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) LockWeakLink(const_cast<T&>(static_cast<T const&>(*this))))));
     }
 
     LockWeakPtr<U> weak_ptr(m_link);

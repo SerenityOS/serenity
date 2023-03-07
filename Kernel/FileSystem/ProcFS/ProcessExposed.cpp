@@ -29,7 +29,7 @@ ErrorOr<void> Process::traverse_as_directory(FileSystemID fsid, Function<ErrorOr
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_as_directory(ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_as_directory(ProcFS& procfs, StringView name) const
 {
     for (auto& entry : main_process_directory_entries) {
         if (entry.name == name)
@@ -78,14 +78,14 @@ ErrorOr<void> Process::traverse_stacks_directory(FileSystemID fsid, Function<Err
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_stacks_directory(ProcFS& procfs, StringView name) const
 {
     auto maybe_needle = name.to_uint();
     if (!maybe_needle.has_value())
         return ENOENT;
     auto needle = maybe_needle.release_value();
 
-    ErrorOr<NonnullLockRefPtr<Inode>> thread_stack_inode { ENOENT };
+    ErrorOr<NonnullRefPtr<Inode>> thread_stack_inode { ENOENT };
     for_each_thread([&](Thread const& thread) {
         int tid = thread.tid().value();
         VERIFY(!(tid < 0));
@@ -119,7 +119,7 @@ ErrorOr<void> Process::traverse_children_directory(FileSystemID fsid, Function<E
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_children_directory(ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_children_directory(ProcFS& procfs, StringView name) const
 {
     auto maybe_pid = name.to_uint();
     if (!maybe_pid.has_value())
@@ -172,7 +172,7 @@ ErrorOr<void> Process::traverse_file_descriptions_directory(FileSystemID fsid, F
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS& procfs, StringView name) const
+ErrorOr<NonnullRefPtr<Inode>> Process::lookup_file_descriptions_directory(ProcFS& procfs, StringView name) const
 {
     auto maybe_index = name.to_uint();
     if (!maybe_index.has_value())

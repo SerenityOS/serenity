@@ -38,7 +38,7 @@ public:
     virtual ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*) { return EROFS; }
     virtual ErrorOr<void> refresh_data(OpenFileDescription&) const { return {}; }
 
-    virtual ErrorOr<NonnullLockRefPtr<SysFSInode>> to_inode(SysFS const&) const;
+    virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const&) const;
 
     InodeIndex component_index() const { return m_component_index; };
 
@@ -62,7 +62,7 @@ private:
 class SysFSSymbolicLink : public SysFSComponent {
 public:
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override final;
-    virtual ErrorOr<NonnullLockRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
 protected:
     ErrorOr<NonnullOwnPtr<KString>> try_generate_return_path_to_mount_point() const;
@@ -78,7 +78,7 @@ public:
     virtual ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override final;
     virtual LockRefPtr<SysFSComponent> lookup(StringView name) override final;
 
-    virtual ErrorOr<NonnullLockRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
+    virtual ErrorOr<NonnullRefPtr<SysFSInode>> to_inode(SysFS const& sysfs_instance) const override final;
 
     using ChildList = SpinlockProtected<IntrusiveList<&SysFSComponent::m_list_node>, LockRank::None>;
 

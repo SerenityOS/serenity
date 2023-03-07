@@ -37,7 +37,7 @@ protected:
 
     virtual bool is_inode() const final { return true; }
 
-    NonnullLockRefPtr<Inode> m_inode;
+    NonnullRefPtr<Inode> m_inode;
     Bitmap m_dirty_pages;
 };
 

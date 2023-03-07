@@ -30,7 +30,7 @@ SpinlockProtected<Inode::AllInstancesList, LockRank::None>& Inode::all_instances
 
 void Inode::sync_all()
 {
-    Vector<NonnullLockRefPtr<Inode>, 32> inodes;
+    Vector<NonnullRefPtr<Inode>, 32> inodes;
     Inode::all_instances().with([&](auto& all_inodes) {
         for (auto& inode : all_inodes) {
             if (inode.is_metadata_dirty())

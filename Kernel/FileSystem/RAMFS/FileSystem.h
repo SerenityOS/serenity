@@ -30,7 +30,7 @@ public:
 private:
     RAMFS();
 
-    LockRefPtr<RAMFSInode> m_root_inode;
+    RefPtr<RAMFSInode> m_root_inode;
 
     // NOTE: We start by assigning InodeIndex of 2, because 0 is invalid and 1
     // is reserved for the root directory inode.

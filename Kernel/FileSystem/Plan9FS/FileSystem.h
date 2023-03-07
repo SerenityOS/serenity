@@ -125,7 +125,7 @@ private:
     void thread_main();
     void ensure_thread();
 
-    LockRefPtr<Plan9FSInode> m_root_inode;
+    RefPtr<Plan9FSInode> m_root_inode;
     Atomic<u16> m_next_tag { (u16)-1 };
     Atomic<u32> m_next_fid { 1 };
 

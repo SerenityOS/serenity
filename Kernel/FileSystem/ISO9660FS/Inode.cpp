@@ -75,9 +75,9 @@ ErrorOr<void> ISO9660Inode::replace_child(StringView, Inode&)
     return EROFS;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::lookup(StringView name)
 {
-    LockRefPtr<Inode> inode;
+    RefPtr<Inode> inode;
     Array<u8, max_file_identifier_length> file_identifier_buffer;
 
     TRY(fs().visit_directory_record(m_record, [&](ISO::DirectoryRecordHeader const* record) {
@@ -115,7 +115,7 @@ ErrorOr<size_t> ISO9660Inode::write_bytes_locked(off_t, size_t, UserOrKernelBuff
     return EROFS;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> ISO9660Inode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }
@@ -160,9 +160,9 @@ ISO9660Inode::ISO9660Inode(ISO9660FS& fs, ISO::DirectoryRecordHeader const& reco
 
 ISO9660Inode::~ISO9660Inode() = default;
 
-ErrorOr<NonnullLockRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
+ErrorOr<NonnullRefPtr<ISO9660Inode>> ISO9660Inode::try_create_from_directory_record(ISO9660FS& fs, ISO::DirectoryRecordHeader const& record, StringView name)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) ISO9660Inode(fs, record, name));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) ISO9660Inode(fs, record, name));
 }
 
 void ISO9660Inode::create_metadata()

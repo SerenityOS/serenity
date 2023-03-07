@@ -143,17 +143,17 @@ SysFSDirectory::SysFSDirectory(SysFSDirectory const& parent_directory)
 {
 }
 
-ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
+ErrorOr<NonnullRefPtr<SysFSInode>> SysFSDirectory::to_inode(SysFS const& sysfs_instance) const
 {
     return TRY(SysFSDirectoryInode::try_create(sysfs_instance, *this));
 }
 
-ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSSymbolicLink::to_inode(SysFS const& sysfs_instance) const
+ErrorOr<NonnullRefPtr<SysFSInode>> SysFSSymbolicLink::to_inode(SysFS const& sysfs_instance) const
 {
     return TRY(SysFSLinkInode::try_create(sysfs_instance, *this));
 }
 
-ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
+ErrorOr<NonnullRefPtr<SysFSInode>> SysFSComponent::to_inode(SysFS const& sysfs_instance) const
 {
     return SysFSInode::try_create(sysfs_instance, *this);
 }

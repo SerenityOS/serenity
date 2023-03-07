@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
+ErrorOr<NonnullRefPtr<SysFSInode>> SysFSInode::try_create(SysFS const& fs, SysFSComponent const& component)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFSInode(fs, component));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSInode(fs, component));
 }
 
 SysFSInode::SysFSInode(SysFS const& fs, SysFSComponent const& component)
@@ -47,7 +47,7 @@ ErrorOr<void> SysFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyste
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> SysFSInode::lookup(StringView)
+ErrorOr<NonnullRefPtr<Inode>> SysFSInode::lookup(StringView)
 {
     VERIFY_NOT_REACHED();
 }
@@ -75,7 +75,7 @@ ErrorOr<size_t> SysFSInode::write_bytes_locked(off_t offset, size_t count, UserO
     return m_associated_component->write_bytes(offset, count, buffer, fd);
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> SysFSInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }

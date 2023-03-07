@@ -60,7 +60,7 @@ private:
     u64 blocks_per_group() const;
     u64 inode_size() const;
 
-    ErrorOr<NonnullLockRefPtr<Ext2FSInode>> build_root_inode() const;
+    ErrorOr<NonnullRefPtr<Ext2FSInode>> build_root_inode() const;
 
     ErrorOr<void> write_ext2_inode(InodeIndex, ext2_inode const&);
     bool find_block_containing_inode(InodeIndex, BlockIndex& block_index, unsigned& offset) const;
@@ -71,9 +71,9 @@ private:
     virtual bool is_initialized_while_locked() override;
 
     virtual ErrorOr<void> prepare_to_clear_last_mount() override;
-    ErrorOr<NonnullLockRefPtr<Inode>> get_inode(InodeIdentifier) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
-    ErrorOr<NonnullLockRefPtr<Inode>> create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
+    ErrorOr<NonnullRefPtr<Inode>> get_inode(InodeIdentifier) const;
+    ErrorOr<NonnullRefPtr<Inode>> create_inode(Ext2FSInode& parent_inode, StringView name, mode_t, dev_t, UserID, GroupID);
+    ErrorOr<NonnullRefPtr<Inode>> create_directory(Ext2FSInode& parent_inode, StringView name, mode_t, UserID, GroupID);
     virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;
@@ -104,7 +104,7 @@ private:
     mutable ext2_super_block m_super_block {};
     mutable OwnPtr<KBuffer> m_cached_group_descriptor_table;
 
-    mutable HashMap<InodeIndex, LockRefPtr<Ext2FSInode>> m_inode_cache;
+    mutable HashMap<InodeIndex, RefPtr<Ext2FSInode>> m_inode_cache;
 
     bool m_super_block_dirty { false };
     bool m_block_group_descriptors_dirty { false };
@@ -125,7 +125,7 @@ private:
     ErrorOr<void> update_bitmap_block(BlockIndex bitmap_block, size_t bit_index, bool new_state, u32& super_block_counter, u16& group_descriptor_counter);
 
     Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
-    LockRefPtr<Ext2FSInode> m_root_inode;
+    RefPtr<Ext2FSInode> m_root_inode;
 };
 
 }

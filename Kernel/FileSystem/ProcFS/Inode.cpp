@@ -155,7 +155,7 @@ ErrorOr<void> ProcFSInode::traverse_as_directory(Function<ErrorOr<void>(FileSyst
     return process->traverse_as_directory(procfs().fsid(), move(callback));
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringView name)
 {
     if (name == "self"sv)
         return procfs().get_inode({ fsid(), 2 });
@@ -172,7 +172,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> ProcFSInode::lookup_as_root_directory(StringVi
     return ENOENT;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> ProcFSInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> ProcFSInode::lookup(StringView name)
 {
     MutexLocker locker(procfs().m_lock);
     if (m_type == Type::ProcessSubdirectory) {

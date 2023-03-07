@@ -74,7 +74,7 @@ private:
     ErrorOr<void> try_set_path(StringView);
 
     // The inode this socket is bound to.
-    LockRefPtr<Inode> m_inode;
+    RefPtr<Inode> m_inode;
 
     UserID m_prebind_uid { 0 };
     GroupID m_prebind_gid { 0 };

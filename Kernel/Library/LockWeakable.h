@@ -21,7 +21,7 @@ class LockWeakable;
 template<typename T>
 class LockWeakPtr;
 
-class WeakLink final : public AtomicRefCounted<WeakLink> {
+class LockWeakLink final : public AtomicRefCounted<LockWeakLink> {
     template<typename T>
     friend class LockWeakable;
     template<typename T>
@@ -82,7 +82,7 @@ public:
 
 private:
     template<typename T>
-    explicit WeakLink(T& weakable)
+    explicit LockWeakLink(T& weakable)
         : m_ptr(&weakable)
     {
     }
@@ -115,7 +115,7 @@ protected:
     }
 
 private:
-    mutable LockRefPtr<WeakLink> m_link;
+    mutable LockRefPtr<LockWeakLink> m_link;
     Atomic<bool> m_being_destroyed { false };
 };
 

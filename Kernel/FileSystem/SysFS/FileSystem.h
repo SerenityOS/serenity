@@ -30,7 +30,7 @@ public:
 private:
     SysFS();
 
-    LockRefPtr<SysFSInode> m_root_inode;
+    RefPtr<SysFSInode> m_root_inode;
 };
 
 }

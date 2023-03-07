@@ -635,7 +635,7 @@ private:
 
 public:
     ErrorOr<void> traverse_as_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_as_directory(ProcFS&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_as_directory(ProcFS&, StringView name) const;
     ErrorOr<void> procfs_get_fds_stats(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_perf_events(KBufferBuilder& builder) const;
     ErrorOr<void> procfs_get_unveil_stats(KBufferBuilder& builder) const;
@@ -647,11 +647,11 @@ public:
     mode_t binary_link_required_mode() const;
     ErrorOr<void> procfs_get_thread_stack(ThreadID thread_id, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_stacks_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_stacks_directory(ProcFS&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_stacks_directory(ProcFS&, StringView name) const;
     ErrorOr<size_t> procfs_get_file_description_link(unsigned fd, KBufferBuilder& builder) const;
     ErrorOr<void> traverse_file_descriptions_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS&, StringView name) const;
-    ErrorOr<NonnullLockRefPtr<Inode>> lookup_children_directory(ProcFS&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_file_descriptions_directory(ProcFS&, StringView name) const;
+    ErrorOr<NonnullRefPtr<Inode>> lookup_children_directory(ProcFS&, StringView name) const;
     ErrorOr<void> traverse_children_directory(FileSystemID, Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)> callback) const;
     ErrorOr<size_t> procfs_get_child_process_link(ProcessID child_pid, KBufferBuilder& builder) const;
 

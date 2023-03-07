@@ -9,9 +9,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<SysFSLinkInode>> SysFSLinkInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
+ErrorOr<NonnullRefPtr<SysFSLinkInode>> SysFSLinkInode::try_create(SysFS const& sysfs, SysFSComponent const& component)
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) SysFSLinkInode(sysfs, component));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) SysFSLinkInode(sysfs, component));
 }
 
 SysFSLinkInode::SysFSLinkInode(SysFS const& fs, SysFSComponent const& component)

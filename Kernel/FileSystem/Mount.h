@@ -23,8 +23,8 @@ public:
     Mount(FileSystem&, Custody* host_custody, int flags);
     Mount(Inode& source, Custody& host_custody, int flags);
 
-    LockRefPtr<Inode const> host() const;
-    LockRefPtr<Inode> host();
+    RefPtr<Inode const> host() const;
+    RefPtr<Inode> host();
 
     Inode const& guest() const { return *m_guest; }
     Inode& guest() { return *m_guest; }
@@ -38,7 +38,7 @@ public:
     void set_flags(int flags) { m_flags = flags; }
 
 private:
-    NonnullLockRefPtr<Inode> m_guest;
+    NonnullRefPtr<Inode> m_guest;
     NonnullLockRefPtr<FileSystem> m_guest_fs;
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_host_custody;
     int m_flags;

@@ -14,7 +14,7 @@ class SysFSDirectoryInode : public SysFSInode {
     friend class SysFS;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<SysFSDirectoryInode>> try_create(SysFS const&, SysFSComponent const&);
+    static ErrorOr<NonnullRefPtr<SysFSDirectoryInode>> try_create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSDirectoryInode() override;
 
     SysFS& fs() { return static_cast<SysFS&>(Inode::fs()); }
@@ -25,7 +25,7 @@ protected:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const override;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) override;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override;
 };
 
 }

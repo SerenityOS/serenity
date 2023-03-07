@@ -17,7 +17,7 @@
 
 namespace Kernel {
 
-InodeFile::InodeFile(NonnullLockRefPtr<Inode>&& inode)
+InodeFile::InodeFile(NonnullRefPtr<Inode> inode)
     : m_inode(move(inode))
 {
 }

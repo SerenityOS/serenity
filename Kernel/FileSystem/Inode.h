@@ -62,8 +62,8 @@ public:
     virtual void detach(OpenFileDescription&) { }
     virtual void did_seek(OpenFileDescription&, off_t) { }
     virtual ErrorOr<void> traverse_as_directory(Function<ErrorOr<void>(FileSystem::DirectoryEntryView const&)>) const = 0;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> lookup(StringView name) = 0;
-    virtual ErrorOr<NonnullLockRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
+    virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) = 0;
+    virtual ErrorOr<NonnullRefPtr<Inode>> create_child(StringView name, mode_t, dev_t, UserID, GroupID) = 0;
     virtual ErrorOr<void> add_child(Inode&, StringView name, mode_t) = 0;
     virtual ErrorOr<void> remove_child(StringView name) = 0;
     /// Replace child atomically, incrementing the link count of the replacement

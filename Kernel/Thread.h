@@ -700,7 +700,7 @@ public:
 
     class FlockBlocker final : public Blocker {
     public:
-        FlockBlocker(NonnullLockRefPtr<Inode>, flock const&);
+        FlockBlocker(NonnullRefPtr<Inode>, flock const&);
         virtual StringView state_string() const override { return "Locking File"sv; }
         virtual Type blocker_type() const override { return Type::Flock; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -708,7 +708,7 @@ public:
         bool try_unblock(bool from_add_blocker);
 
     private:
-        NonnullLockRefPtr<Inode> m_inode;
+        NonnullRefPtr<Inode> m_inode;
         flock const& m_flock;
         bool m_did_unblock { false };
     };

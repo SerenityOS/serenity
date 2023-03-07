@@ -14,7 +14,7 @@ class SysFSLinkInode : public SysFSInode {
     friend class SysFS;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
+    static ErrorOr<NonnullRefPtr<SysFSLinkInode>> try_create(SysFS const&, SysFSComponent const&);
     virtual ~SysFSLinkInode() override;
 
 protected:

@@ -11,10 +11,10 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, Vector<FATLongFileNameEntry> const& lfn_entries)
+ErrorOr<NonnullRefPtr<FATInode>> FATInode::create(FATFS& fs, FATEntry entry, Vector<FATLongFileNameEntry> const& lfn_entries)
 {
     auto filename = TRY(compute_filename(entry, lfn_entries));
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) FATInode(fs, entry, move(filename)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) FATInode(fs, entry, move(filename)));
 }
 
 FATInode::FATInode(FATFS& fs, FATEntry entry, NonnullOwnPtr<KString> filename)
@@ -108,7 +108,7 @@ ErrorOr<void> FATInode::replace_child(StringView, Inode&)
     return Error::from_errno(EROFS);
 }
 
-ErrorOr<LockRefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(LockRefPtr<FATInode>)> callback)
+ErrorOr<RefPtr<FATInode>> FATInode::traverse(Function<ErrorOr<bool>(RefPtr<FATInode>)> callback)
 {
     VERIFY(has_flag(m_entry.attributes, FATAttributes::Directory));
 
@@ -233,7 +233,7 @@ ErrorOr<void> FATInode::traverse_as_directory(Function<ErrorOr<void>(FileSystem:
     return {};
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> FATInode::lookup(StringView name)
+ErrorOr<NonnullRefPtr<Inode>> FATInode::lookup(StringView name)
 {
     MutexLocker locker(m_inode_lock);
 
@@ -245,8 +245,7 @@ ErrorOr<NonnullLockRefPtr<Inode>> FATInode::lookup(StringView name)
 
     if (inode.is_null())
         return ENOENT;
-    else
-        return inode.release_nonnull();
+    return inode.release_nonnull();
 }
 
 ErrorOr<size_t> FATInode::write_bytes_locked(off_t, size_t, UserOrKernelBuffer const&, OpenFileDescription*)
@@ -254,7 +253,7 @@ ErrorOr<size_t> FATInode::write_bytes_locked(off_t, size_t, UserOrKernelBuffer c
     return EROFS;
 }
 
-ErrorOr<NonnullLockRefPtr<Inode>> FATInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
+ErrorOr<NonnullRefPtr<Inode>> FATInode::create_child(StringView, mode_t, dev_t, UserID, GroupID)
 {
     return EROFS;
 }

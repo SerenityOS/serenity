@@ -115,7 +115,7 @@ private:
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
 
-    LockRefPtr<Inode> m_root_inode;
+    RefPtr<Inode> m_root_inode;
 
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_root_custody {};
 

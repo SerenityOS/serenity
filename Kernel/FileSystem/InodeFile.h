@@ -14,7 +14,7 @@ class Inode;
 
 class InodeFile final : public File {
 public:
-    static ErrorOr<NonnullLockRefPtr<InodeFile>> create(NonnullLockRefPtr<Inode>&& inode)
+    static ErrorOr<NonnullLockRefPtr<InodeFile>> create(NonnullRefPtr<Inode> inode)
     {
         auto file = adopt_lock_ref_if_nonnull(new (nothrow) InodeFile(move(inode)));
         if (!file)
@@ -51,8 +51,8 @@ public:
 private:
     virtual bool is_regular_file() const override;
 
-    explicit InodeFile(NonnullLockRefPtr<Inode>&&);
-    NonnullLockRefPtr<Inode> m_inode;
+    explicit InodeFile(NonnullRefPtr<Inode>);
+    NonnullRefPtr<Inode> m_inode;
 };
 
 }
