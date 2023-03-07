@@ -12,6 +12,8 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Fetch/FetchMethod.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/WebIDL/DOMException.h>
@@ -82,6 +84,24 @@ WebIDL::ExceptionOr<String> WindowOrWorkerGlobalScopeMixin::atob(String const& d
     auto decoder = TextCodec::decoder_for("windows-1252"sv);
     VERIFY(decoder.has_value());
     return TRY_OR_THROW_OOM(vm, decoder->to_utf8(decoded_data.value()));
+}
+
+// https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
+WebIDL::ExceptionOr<JS::Value> WindowOrWorkerGlobalScopeMixin::structured_clone(JS::Value value, StructuredSerializeOptions const& options) const
+{
+    auto& vm = this_impl().vm();
+    (void)options;
+
+    // 1. Let serialized be ? StructuredSerializeWithTransfer(value, options["transfer"]).
+    // FIXME: Use WithTransfer variant of the AO
+    auto serialized = TRY(structured_serialize(vm, value));
+
+    // 2. Let deserializeRecord be ? StructuredDeserializeWithTransfer(serialized, this's relevant realm).
+    // FIXME: Use WithTransfer variant of the AO
+    auto deserialized = TRY(structured_deserialize(vm, serialized, relevant_realm(this_impl()), {}));
+
+    // 3. Return deserializeRecord.[[Deserialized]].
+    return deserialized;
 }
 
 JS::NonnullGCPtr<JS::Promise> WindowOrWorkerGlobalScopeMixin::fetch(Fetch::RequestInfo const& input, Fetch::RequestInit const& init) const

@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Fetch/Request.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/MessagePort.h>
 
 namespace Web::HTML {
 
@@ -27,6 +28,7 @@ public:
     bool cross_origin_isolated() const;
     WebIDL::ExceptionOr<String> btoa(String const& data) const;
     WebIDL::ExceptionOr<String> atob(String const& data) const;
+    WebIDL::ExceptionOr<JS::Value> structured_clone(JS::Value, StructuredSerializeOptions const&) const;
     JS::NonnullGCPtr<JS::Promise> fetch(Fetch::RequestInfo const&, Fetch::RequestInit const&) const;
 };
 

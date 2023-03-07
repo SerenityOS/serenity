@@ -61,6 +61,7 @@ public:
     using WindowOrWorkerGlobalScopeMixin::atob;
     using WindowOrWorkerGlobalScopeMixin::btoa;
     using WindowOrWorkerGlobalScopeMixin::fetch;
+    using WindowOrWorkerGlobalScopeMixin::structured_clone;
 
     // ^DOM::EventTarget
     virtual bool dispatch_event(DOM::Event&) override;
@@ -114,8 +115,6 @@ public:
 
     JS::NonnullGCPtr<HTML::Storage> local_storage();
     JS::NonnullGCPtr<HTML::Storage> session_storage();
-
-    WebIDL::ExceptionOr<JS::Value> structured_clone_impl(JS::VM& vm, JS::Value);
 
     void start_an_idle_period();
 
@@ -250,8 +249,6 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(structured_clone);
 
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);

@@ -136,6 +136,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name() == "any" || type.name() == "undefined")
         return { .name = "JS::Value", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
+    if (type.name() == "object")
+        return { .name = "JS::Handle<JS::Object>", .sequence_storage_type = SequenceStorageType::Vector };
+
     if (type.name() == "BufferSource")
         return { .name = "JS::Handle<JS::Object>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
@@ -591,6 +594,10 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @js_name@@js_suffix@ = new_promise;
     }
     auto @cpp_name@ = JS::make_handle(&static_cast<JS::Promise&>(@js_name@@js_suffix@.as_object()));
+)~~~");
+    } else if (parameter.type->name() == "object") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
 )~~~");
     } else if (parameter.type->name() == "BufferSource") {
         scoped_generator.append(R"~~~(
