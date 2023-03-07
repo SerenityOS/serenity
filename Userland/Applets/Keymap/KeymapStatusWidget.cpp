@@ -67,6 +67,7 @@ void KeymapStatusWidget::set_current_keymap(DeprecatedString const& keymap)
 {
     m_current_keymap = keymap;
     set_tooltip(keymap);
+    update();
 }
 
 void KeymapStatusWidget::paint_event(GUI::PaintEvent& event)
