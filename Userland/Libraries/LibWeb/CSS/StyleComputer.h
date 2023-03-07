@@ -114,7 +114,13 @@ private:
         HashMap<Selector::PseudoElement, Vector<MatchingRule>> rules_by_pseudo_element;
         Vector<MatchingRule> other_rules;
     };
-    OwnPtr<RuleCache> m_rule_cache;
+
+    NonnullOwnPtr<RuleCache> make_rule_cache_for_cascade_origin(CascadeOrigin);
+
+    RuleCache const& rule_cache_for_cascade_origin(CascadeOrigin) const;
+
+    OwnPtr<RuleCache> m_author_rule_cache;
+    OwnPtr<RuleCache> m_user_agent_rule_cache;
 
     class FontLoader;
     HashMap<String, NonnullOwnPtr<FontLoader>> m_loaded_fonts;
