@@ -49,18 +49,6 @@ ErrorOr<NonnullRefPtr<Session>, Web::WebDriver::Error> Client::find_session_with
     return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
 }
 
-ErrorOr<NonnullRefPtr<Session>, Web::WebDriver::Error> Client::take_session_with_id(StringView session_id)
-{
-    auto session_id_or_error = session_id.to_uint<>();
-    if (!session_id_or_error.has_value())
-        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
-
-    if (auto session = s_sessions.take(*session_id_or_error); session.has_value())
-        return session.release_value();
-
-    return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::InvalidSessionId, "Invalid session id");
-}
-
 void Client::close_session(unsigned session_id)
 {
     if (s_sessions.remove(session_id))
@@ -196,7 +184,7 @@ Web::WebDriver::Response Client::delete_session(Web::WebDriver::Parameters param
     dbgln_if(WEBDRIVER_DEBUG, "Handling DELETE /session/<session_id>");
 
     // 1. If the current session is an active session, try to close the session.
-    auto session = TRY(take_session_with_id(parameters[0]));
+    auto session = TRY(find_session_with_id(parameters[0]));
     TRY(session->stop());
 
     // 2. Return success with data null.
