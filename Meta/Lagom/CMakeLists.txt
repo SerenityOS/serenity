@@ -492,7 +492,7 @@ if (BUILD_LAGOM)
         if (NOT EMSCRIPTEN)
             # LibELF is part of LibC in SerenityOS builds, but not in Lagom.
             add_executable(file ../../Userland/Utilities/file.cpp)
-            target_link_libraries(file LibCompress LibCore LibELF LibGfx LibIPC LibMain)
+            target_link_libraries(file LibAudio LibCompress LibCore LibELF LibGfx LibIPC LibMain)
         endif()
 
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
