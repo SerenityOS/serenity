@@ -49,6 +49,7 @@ public:
     explicit WebContentView(StringView webdriver_content_ipc_path);
     virtual ~WebContentView() override;
 
+    Function<void()> on_close;
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
     Function<void(const AK::URL&, Gfx::IntPoint screen_position)> on_link_context_menu_request;
@@ -154,6 +155,7 @@ public:
     virtual void notify_server_did_finish_handling_input_event(bool event_was_accepted) override;
 
 signals:
+    void close();
     void link_hovered(QString, int timeout = 0);
     void link_unhovered();
     void back_mouse_button();

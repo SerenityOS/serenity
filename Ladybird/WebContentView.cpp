@@ -966,6 +966,7 @@ void WebContentView::notify_server_did_set_cookie(Badge<WebContentClient>, AK::U
 
 void WebContentView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
 {
+    emit close();
 }
 
 void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
