@@ -134,8 +134,8 @@ inline void swap(T& a, U& b)
 {
     if (&a == &b)
         return;
-    U tmp = move((U&)a);
-    a = (T &&) move(b);
+    U tmp = move(static_cast<U&>(a));
+    a = static_cast<T&&>(move(b));
     b = move(tmp);
 }
 

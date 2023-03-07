@@ -68,7 +68,7 @@ inline Userspace<T> static_ptr_cast(Userspace<U> const& ptr)
 #else
     auto casted_ptr = static_cast<T>(ptr.ptr());
 #endif
-    return Userspace<T>((FlatPtr)casted_ptr);
+    return Userspace<T>(reinterpret_cast<FlatPtr>(casted_ptr));
 }
 
 }

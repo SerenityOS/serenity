@@ -97,9 +97,9 @@ static constexpr FlatPtr explode_byte(u8 b)
         return value << 56 | value << 48 | value << 40 | value << 32 | value << 24 | value << 16 | value << 8 | value;
 }
 
-static_assert(explode_byte(0xff) == (FlatPtr)0xffffffffffffffffull);
-static_assert(explode_byte(0x80) == (FlatPtr)0x8080808080808080ull);
-static_assert(explode_byte(0x7f) == (FlatPtr)0x7f7f7f7f7f7f7f7full);
+static_assert(explode_byte(0xff) == static_cast<FlatPtr>(0xffffffffffffffffull));
+static_assert(explode_byte(0x80) == static_cast<FlatPtr>(0x8080808080808080ull));
+static_assert(explode_byte(0x7f) == static_cast<FlatPtr>(0x7f7f7f7f7f7f7f7full));
 static_assert(explode_byte(0) == 0);
 
 constexpr size_t align_up_to(const size_t value, const size_t alignment)
