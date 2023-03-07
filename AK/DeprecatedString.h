@@ -276,7 +276,7 @@ public:
     {
         if (buffer.is_empty())
             return empty();
-        return DeprecatedString((char const*)buffer.data(), buffer.size(), should_chomp);
+        return DeprecatedString(reinterpret_cast<char const*>(buffer.data()), buffer.size(), should_chomp);
     }
 
     [[nodiscard]] static DeprecatedString vformatted(StringView fmtstr, TypeErasedFormatParams&);

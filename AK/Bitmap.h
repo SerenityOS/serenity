@@ -30,7 +30,7 @@ public:
         if (!data)
             return Error::from_errno(ENOMEM);
 
-        auto bitmap = Bitmap { (u8*)data, size, true };
+        auto bitmap = Bitmap { static_cast<u8*>(data), size, true };
         bitmap.fill(default_value);
         return bitmap;
     }
