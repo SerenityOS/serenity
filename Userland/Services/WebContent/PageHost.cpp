@@ -373,6 +373,11 @@ void PageHost::page_did_update_resource_count(i32 count_waiting)
     m_client.async_did_update_resource_count(count_waiting);
 }
 
+void PageHost::page_did_close_browsing_context(Web::HTML::BrowsingContext const&)
+{
+    m_client.async_did_close_browsing_context();
+}
+
 void PageHost::request_file(Web::FileRequest file_request)
 {
     m_client.request_file(move(file_request));
