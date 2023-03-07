@@ -541,6 +541,10 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
 
     for (auto& value : vars) {
         auto parts = value.split_limit('=', 2);
+        if (parts.is_empty()) {
+            warnln("Shell: Invalid export spec '{}', expected `variable=value' or `variable'", value);
+            return 1;
+        }
 
         if (parts.size() == 1) {
             auto value = TRY(lookup_local_variable(parts[0]));
