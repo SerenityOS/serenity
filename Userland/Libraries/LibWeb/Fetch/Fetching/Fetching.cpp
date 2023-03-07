@@ -363,7 +363,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
     if (recursive == Recursive::Yes) {
         // 11. If response is null, then set response to the result of running the steps corresponding to the first
         //     matching statement:
-        auto pending_response = response
+        auto pending_response = !response
             ? TRY(get_response())
             : PendingResponse::create(vm, request, *response);
 
