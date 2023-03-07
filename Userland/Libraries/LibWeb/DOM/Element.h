@@ -101,8 +101,8 @@ public:
         }
     }
 
-    bool has_class(DeprecatedFlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    Vector<DeprecatedFlyString> const& class_names() const { return m_classes; }
+    bool has_class(FlyString const&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
+    Vector<FlyString> const& class_names() const { return m_classes; }
 
     virtual void apply_presentational_hints(CSS::StyleProperties&) const { }
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value);
@@ -284,7 +284,7 @@ private:
     RefPtr<CSS::StyleProperties> m_computed_css_values;
     HashMap<DeprecatedFlyString, CSS::StyleProperty> m_custom_properties;
 
-    Vector<DeprecatedFlyString> m_classes;
+    Vector<FlyString> m_classes;
 
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
 };
