@@ -10,6 +10,7 @@
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
+#include <LibWeb/Fetch/FetchMethod.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/Infra/Base64.h>
@@ -81,6 +82,12 @@ WebIDL::ExceptionOr<String> WindowOrWorkerGlobalScopeMixin::atob(String const& d
     auto decoder = TextCodec::decoder_for("windows-1252"sv);
     VERIFY(decoder.has_value());
     return TRY_OR_THROW_OOM(vm, decoder->to_utf8(decoded_data.value()));
+}
+
+JS::NonnullGCPtr<JS::Promise> WindowOrWorkerGlobalScopeMixin::fetch(Fetch::RequestInfo const& input, Fetch::RequestInit const& init) const
+{
+    auto& vm = this_impl().vm();
+    return Fetch::fetch(vm, input, init);
 }
 
 }

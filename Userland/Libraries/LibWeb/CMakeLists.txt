@@ -6,7 +6,6 @@ set(SOURCES
     ARIA/Roles.cpp
     Bindings/AudioConstructor.cpp
     Bindings/CSSNamespace.cpp
-    Bindings/FetchMethod.cpp
     Bindings/HostDefined.cpp
     Bindings/ImageConstructor.cpp
     Bindings/Intrinsics.cpp

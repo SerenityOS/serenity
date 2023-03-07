@@ -19,12 +19,13 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/Fetch/Request.h>
 #include <LibWeb/Fetch/Response.h>
+#include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Fetch {
 
 // https://fetch.spec.whatwg.org/#dom-global-fetch
-JS::NonnullGCPtr<JS::Promise> fetch_impl(JS::VM& vm, RequestInfo const& input, RequestInit const& init)
+JS::NonnullGCPtr<JS::Promise> fetch(JS::VM& vm, RequestInfo const& input, RequestInit const& init)
 {
     auto& realm = *vm.current_realm();
 

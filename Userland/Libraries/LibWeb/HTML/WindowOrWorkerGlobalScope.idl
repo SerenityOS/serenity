@@ -1,3 +1,6 @@
+#import <Fetch/Request.idl>
+#import <Fetch/Response.idl>
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
 interface mixin WindowOrWorkerGlobalScope {
     [Replaceable] readonly attribute USVString origin;
@@ -25,4 +28,7 @@ interface mixin WindowOrWorkerGlobalScope {
 
     // structured cloning
     // FIXME: any structuredClone(any value, optional StructuredSerializeOptions options = {});
+
+    // https://fetch.spec.whatwg.org/#fetch-method
+    [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init = {});
 };

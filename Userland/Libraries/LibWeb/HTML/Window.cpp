@@ -21,7 +21,6 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/FetchMethod.h>
 #include <LibWeb/Bindings/Replaceable.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
@@ -895,8 +894,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
 
     define_native_function(realm, "structuredClone", structured_clone, 1, attr);
-
-    define_native_function(realm, "fetch", Bindings::fetch, 1, attr);
 
     define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
 
