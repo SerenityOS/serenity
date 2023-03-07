@@ -25,4 +25,5 @@ serenity_app($1 ICON filetype-executable)
 # identify each library by their include path. An exception is LibCore, which
 # is linked to all components by default.
 target_link_libraries($1 LibGUI LibGfx LibMain)
+
 EOF

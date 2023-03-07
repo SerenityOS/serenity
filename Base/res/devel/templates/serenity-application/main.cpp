@@ -16,8 +16,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
 
     auto window = TRY(GUI::Window::try_create());
-    window->set_title("Form1");
-    window->resize(96, 44);
+    window->set_title("Example Application");
+    window->resize(200, 200);
     window->set_resizable(false);
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
