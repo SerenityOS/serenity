@@ -35,8 +35,8 @@ ErrorOr<void> MimeData::set_urls(Vector<URL> const& urls)
 {
     StringBuilder builder;
     for (auto& url : urls) {
-        builder.append(url.to_deprecated_string());
-        builder.append('\n');
+        TRY(builder.try_append(url.to_deprecated_string()));
+        TRY(builder.try_append('\n'));
     }
     set_data("text/uri-list", TRY(builder.try_to_byte_buffer()));
 
