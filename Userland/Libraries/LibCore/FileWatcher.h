@@ -69,8 +69,8 @@ public:
     Optional<FileWatcherEvent> wait_for_event();
 };
 
-class FileWatcher : public FileWatcherBase
-    , public RefCounted<FileWatcher> {
+class FileWatcher : public RefCounted<FileWatcher>
+    , public FileWatcherBase {
     AK_MAKE_NONCOPYABLE(FileWatcher);
 
 public:

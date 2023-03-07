@@ -45,9 +45,8 @@ struct TupleElementDescriptor {
     }
 };
 
-class TupleDescriptor
-    : public Vector<TupleElementDescriptor>
-    , public RefCounted<TupleDescriptor> {
+class TupleDescriptor : public RefCounted<TupleDescriptor>
+    , public Vector<TupleElementDescriptor> {
 public:
     TupleDescriptor() = default;
     ~TupleDescriptor() = default;

@@ -15,9 +15,9 @@ namespace Web::HTML {
 // NOTE: Temporary class to handle console messages from inside Workers
 
 class WorkerDebugConsoleClient final
-    : public JS::ConsoleClient
-    , public RefCounted<WorkerDebugConsoleClient>
-    , public Weakable<WorkerDebugConsoleClient> {
+    : public RefCounted<WorkerDebugConsoleClient>
+    , public Weakable<WorkerDebugConsoleClient>
+    , public JS::ConsoleClient {
 public:
     WorkerDebugConsoleClient(JS::Console& console);
 

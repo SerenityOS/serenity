@@ -15,8 +15,8 @@
 #    pragma clang diagnostic ignored "-Wunused-private-field"
 #endif
 
-class SimpleWeakable : public Weakable<SimpleWeakable>
-    , public RefCounted<SimpleWeakable> {
+class SimpleWeakable : public RefCounted<SimpleWeakable>
+    , public Weakable<SimpleWeakable> {
 public:
     SimpleWeakable() = default;
 
