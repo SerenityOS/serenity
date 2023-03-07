@@ -60,8 +60,6 @@ private:
 
     ALWAYS_INLINE void clear_sata_error_register() const;
 
-    void eject();
-
     char const* try_disambiguate_sata_status();
     void try_disambiguate_sata_error();
 
