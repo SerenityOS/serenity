@@ -15,7 +15,7 @@ namespace Web::WebDriver {
 
 // FIXME: Ideally, this could be `using Response = ErrorOr<JsonValue, Error>`, but that won't be
 //        default-constructible, which is a requirement for the generated IPC.
-struct Response {
+struct [[nodiscard]] Response {
     Response() = default;
     Response(JsonValue&&);
     Response(Error&&);
