@@ -11,6 +11,7 @@
 #include "Session.h"
 #include "Client.h"
 #include <AK/JsonObject.h>
+#include <AK/ScopeGuard.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
@@ -117,13 +118,17 @@ Web::WebDriver::Response Session::stop()
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 Web::WebDriver::Response Session::close_window()
 {
-    // 3. Close the current top-level browsing context.
-    TRY(web_content_connection().close_window());
-    m_windows.remove(m_current_window_handle);
+    {
+        // Defer removing the window handle from this session until after we know we are done with its connection.
+        ScopeGuard guard { [this] { m_windows.remove(m_current_window_handle); } };
 
-    // 4. If there are no more open top-level browsing contexts, then close the session.
-    if (m_windows.is_empty())
-        TRY(stop());
+        // 3. Close the current top-level browsing context.
+        TRY(web_content_connection().close_window());
+
+        // 4. If there are no more open top-level browsing contexts, then close the session.
+        if (m_windows.size() == 1)
+            TRY(stop());
+    }
 
     // 5. Return the result of running the remote end steps for the Get Window Handles command.
     return get_window_handles();
