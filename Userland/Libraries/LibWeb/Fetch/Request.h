@@ -10,6 +10,7 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Bindings/RequestPrototype.h>
 #include <LibWeb/Fetch/Body.h>
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Headers.h>

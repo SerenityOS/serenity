@@ -60,6 +60,7 @@ public:
 
     using WindowOrWorkerGlobalScopeMixin::atob;
     using WindowOrWorkerGlobalScopeMixin::btoa;
+    using WindowOrWorkerGlobalScopeMixin::fetch;
 
     // ^DOM::EventTarget
     virtual bool dispatch_event(DOM::Event&) override;
