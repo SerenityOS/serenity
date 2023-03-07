@@ -5,6 +5,7 @@
  */
 
 #include <AK/Vector.h>
+#include <LibAudio/Loader.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -46,6 +47,48 @@ static Optional<DeprecatedString> image_details(StringView description, StringVi
             builder.appendff(" indefinitely");
         else
             builder.appendff(" {} {}", loop_count, loop_count == 1 ? "time" : "times");
+    }
+
+    return builder.to_deprecated_string();
+}
+
+static Optional<DeprecatedString> audio_details(StringView description, StringView path)
+{
+    auto loader_or_error = Audio::Loader::create(path);
+    if (loader_or_error.is_error())
+        return {};
+
+    auto loader = loader_or_error.release_value();
+    StringBuilder builder;
+    builder.appendff("{}, {} Hz, {}-bit {}, {} samples ({} s)",
+        description,
+        loader->sample_rate(),
+        loader->bits_per_sample(),
+        loader->num_channels() == 1 ? "Mono" : "Stereo",
+        loader->total_samples(),
+        loader->total_samples() / loader->sample_rate());
+    auto metadata = loader->metadata();
+    Vector<String> metadata_parts;
+    if (metadata.title.has_value()) {
+        // FIXME: Use “pretty quotation” once our terminal fonts support these characters.
+        if (auto title_text = String::formatted("\"{}\"", metadata.title.value_or({})); !title_text.is_error()) {
+            // We intentionally discard the error, because not printing part of the metadata due to OOM is not a problem.
+            (void)metadata_parts.try_append(title_text.release_value());
+        }
+    }
+    if (metadata.album.has_value()) {
+        if (auto album_text = String::formatted("(Album: {})", metadata.album.value_or({})); !album_text.is_error())
+            (void)metadata_parts.try_append(album_text.release_value());
+    }
+    if (auto all_artists = metadata.all_artists(); !all_artists.is_error() && all_artists.value().has_value()) {
+        if (auto artist_text = String::formatted("by {}", all_artists.release_value().release_value()); !artist_text.is_error())
+            (void)metadata_parts.try_append(artist_text.release_value());
+    }
+
+    if (!metadata_parts.is_empty()) {
+        // New line for the metadata.
+        builder.append_code_point('\n');
+        builder.join(" "sv, metadata_parts);
     }
 
     return builder.to_deprecated_string();
@@ -113,11 +156,11 @@ static Optional<DeprecatedString> elf_details(StringView description, StringView
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/tar"sv, "tape archive"sv, description_only)                          \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/wasm"sv, "WebAssembly bytecode"sv, description_only)                 \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed"sv, "7-Zip archive"sv, description_only)             \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/flac"sv, "FLAC audio"sv, description_only)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi"sv, "MIDI notes"sv, description_only)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/mpeg"sv, "MP3 audio"sv, description_only)                                  \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/qoa"sv, "Quite OK Audio"sv, description_only)                              \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/wave"sv, "WAVE audio"sv, description_only)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/flac"sv, "FLAC audio"sv, audio_details)                                    \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi"sv, "MIDI notes"sv, audio_details)                                    \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/mpeg"sv, "MP3 audio"sv, audio_details)                                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/qoa"sv, "Quite OK Audio"sv, audio_details)                                 \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/wave"sv, "WAVE audio"sv, audio_details)                                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/blender"sv, "Blender project file"sv, description_only)                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/elf"sv, "ELF"sv, elf_details)                                              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/ext"sv, "ext filesystem"sv, description_only)                              \
