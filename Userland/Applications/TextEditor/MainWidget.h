@@ -128,6 +128,7 @@ private:
     GUI::ActionGroup syntax_actions;
     RefPtr<GUI::Action> m_plain_text_highlight;
     RefPtr<GUI::Action> m_cmake_highlight;
+    RefPtr<GUI::Action> m_cmakecache_highlight;
     RefPtr<GUI::Action> m_cpp_highlight;
     RefPtr<GUI::Action> m_css_highlight;
     RefPtr<GUI::Action> m_js_highlight;
