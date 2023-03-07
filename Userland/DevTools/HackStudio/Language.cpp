@@ -20,6 +20,8 @@ Language language_from_file(LexicalPath const& file)
         return Language::Cpp;
     if (extension == "cmake" || (extension == "txt" && file.title() == "CMakeLists"))
         return Language::CMake;
+    if (extension == "txt" && file.title() == "CMakeCache")
+        return Language::CMakeCache;
     if (extension == "js" || extension == "mjs" || extension == "json")
         return Language::JavaScript;
     if (extension == "html" || extension == "htm")
@@ -64,6 +66,8 @@ DeprecatedString language_name_from_file(LexicalPath const& file)
         return "C++";
     if (extension == "cmake" || (extension == "txt" && file.title() == "CMakeLists"))
         return "CMake";
+    if (extension == "txt" && file.title() == "CMakeCache")
+        return "CMakeCache";
     if (extension == "js" || extension == "mjs" || extension == "json")
         return "JavaScript";
     if (extension == "gml")
