@@ -39,6 +39,7 @@ public:
     bool is_playlist(DeprecatedString const& path);
 
     Playlist& playlist() { return m_playlist; }
+    PlaybackManager const& playback_manager() const { return m_playback_manager; }
     DeprecatedString const& loaded_filename() const { return m_loaded_filename; }
 
     PlayState play_state() const { return m_play_state; }

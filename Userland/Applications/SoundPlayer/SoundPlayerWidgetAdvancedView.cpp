@@ -9,6 +9,7 @@
 #include "BarsVisualizationWidget.h"
 #include "M3UParser.h"
 #include "PlaybackManager.h"
+#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/SIMD.h>
 #include <LibGUI/Action.h>
@@ -215,7 +216,17 @@ void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
 void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
 {
     m_visualization->start_new_file(name);
-    m_window.set_title(DeprecatedString::formatted("{} - Sound Player", name));
+    DeprecatedString title = name;
+    if (playback_manager().loader()) {
+        auto const& metadata = playback_manager().loader()->metadata();
+        if (auto artists_or_error = metadata.all_artists(" / "_short_string);
+            !artists_or_error.is_error() && artists_or_error.value().has_value() && metadata.title.has_value()) {
+            title = DeprecatedString::formatted("{} – {}", metadata.title.value(), artists_or_error.release_value().release_value());
+        } else if (metadata.title.has_value()) {
+            title = metadata.title.value().to_deprecated_string();
+        }
+    }
+    m_window.set_title(DeprecatedString::formatted("{} — Sound Player", title));
 }
 
 void SoundPlayerWidgetAdvancedView::total_samples_changed(int total_samples)
