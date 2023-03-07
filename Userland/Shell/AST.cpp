@@ -49,7 +49,7 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
     for (auto& redir : value.redirections) {
         TRY(builder.put_padding(' ', 1));
         if (redir->is_path_redirection()) {
-            auto path_redir = (Shell::AST::PathRedirection const*)&redir;
+            auto path_redir = static_cast<Shell::AST::PathRedirection const*>(redir.ptr());
             TRY(builder.put_i64(path_redir->fd));
             switch (path_redir->direction) {
             case Shell::AST::PathRedirection::Read:
@@ -67,12 +67,12 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
             }
             TRY(builder.put_literal(path_redir->path));
         } else if (redir->is_fd_redirection()) {
-            auto* fdredir = (Shell::AST::FdRedirection const*)&redir;
+            auto* fdredir = static_cast<Shell::AST::FdRedirection const*>(redir.ptr());
             TRY(builder.put_i64(fdredir->new_fd));
             TRY(builder.put_literal(">"sv));
             TRY(builder.put_i64(fdredir->old_fd));
         } else if (redir->is_close_redirection()) {
-            auto close_redir = (Shell::AST::CloseRedirection const*)&redir;
+            auto close_redir = static_cast<Shell::AST::CloseRedirection const*>(redir.ptr());
             TRY(builder.put_i64(close_redir->fd));
             TRY(builder.put_literal(">&-"sv));
         } else {
