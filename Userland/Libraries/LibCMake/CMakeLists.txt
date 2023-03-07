@@ -1,5 +1,6 @@
 set(SOURCES
     CMakeCache/Lexer.cpp
+    CMakeCache/SyntaxHighlighter.cpp
     Lexer.cpp
     SyntaxHighlighter.cpp
     Token.cpp
