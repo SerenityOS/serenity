@@ -56,6 +56,12 @@ if (NOT HACKSTUDIO_BUILD)
         )
     endif()
 
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")    
+        message("Enabling RefPtr Clang plugin")
+        message(${CMAKE_BINARY_DIR})
+        add_compile_options("-fplugin=${CMAKE_BINARY_DIR}/../lagom/Tools/RefPtrClangPlugin/libRefPtrClangPlugin.so")
+    endif()
+
 endif()
 
 # Meta target to run all code-gen steps in the build.
