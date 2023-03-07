@@ -36,8 +36,10 @@ public:
 
     WebContentConnection& web_content_connection() const
     {
-        auto const& current_window = m_windows.get(m_current_window_handle).value();
-        return current_window.web_content_connection;
+        auto current_window = m_windows.get(m_current_window_handle);
+        VERIFY(current_window.has_value());
+
+        return current_window->web_content_connection;
     }
 
     String const& current_window_handle() const
