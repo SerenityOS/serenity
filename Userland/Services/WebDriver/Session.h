@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <LibCore/Promise.h>
@@ -22,7 +23,7 @@ namespace WebDriver {
 
 struct LaunchBrowserCallbacks;
 
-class Session {
+class Session : public RefCounted<Session> {
 public:
     Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriver::LadybirdOptions options);
     ~Session();

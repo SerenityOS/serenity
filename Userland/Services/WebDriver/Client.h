@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/NonnullRefPtr.h>
 #include <LibCore/Object.h>
 #include <LibWeb/WebDriver/Client.h>
 #include <LibWeb/WebDriver/Error.h>
@@ -34,8 +35,8 @@ public:
 private:
     Client(NonnullOwnPtr<Core::BufferedTCPSocket>, LaunchBrowserCallbacks, Core::Object* parent);
 
-    ErrorOr<Session*, Web::WebDriver::Error> find_session_with_id(StringView session_id);
-    ErrorOr<NonnullOwnPtr<Session>, Web::WebDriver::Error> take_session_with_id(StringView session_id);
+    ErrorOr<NonnullRefPtr<Session>, Web::WebDriver::Error> find_session_with_id(StringView session_id);
+    ErrorOr<NonnullRefPtr<Session>, Web::WebDriver::Error> take_session_with_id(StringView session_id);
 
     virtual Web::WebDriver::Response new_session(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response delete_session(Web::WebDriver::Parameters parameters, JsonValue payload) override;
@@ -92,7 +93,7 @@ private:
     virtual Web::WebDriver::Response take_element_screenshot(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response print_page(Web::WebDriver::Parameters parameters, JsonValue payload) override;
 
-    static Vector<NonnullOwnPtr<Session>> s_sessions;
+    static HashMap<unsigned, NonnullRefPtr<Session>> s_sessions;
     static Atomic<unsigned> s_next_session_id;
 
     LaunchBrowserCallbacks m_callbacks;
