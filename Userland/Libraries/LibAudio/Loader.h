@@ -18,6 +18,7 @@
 #include <AK/Try.h>
 #include <LibAudio/GenericTypes.h>
 #include <LibAudio/LoaderError.h>
+#include <LibAudio/Metadata.h>
 #include <LibAudio/Sample.h>
 #include <LibAudio/SampleFormats.h>
 
@@ -67,12 +68,14 @@ public:
     virtual DeprecatedString format_name() = 0;
     virtual PcmSampleFormat pcm_format() = 0;
 
+    Metadata const& metadata() const { return m_metadata; }
     Vector<PictureData> const& pictures() const { return m_pictures; };
 
 protected:
     NonnullOwnPtr<SeekableStream> m_stream;
 
     Vector<PictureData> m_pictures;
+    Metadata m_metadata;
 };
 
 class Loader : public RefCounted<Loader> {
@@ -96,6 +99,7 @@ public:
     u16 num_channels() const { return m_plugin->num_channels(); }
     DeprecatedString format_name() const { return m_plugin->format_name(); }
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
+    Metadata const& metadata() const { return m_plugin->metadata(); }
     Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
 
 private:
