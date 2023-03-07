@@ -69,6 +69,7 @@ private:
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
     virtual void did_update_cookie(Web::Cookie::Cookie const&) override;
+    virtual void did_close_browsing_context() override;
     virtual void did_update_resource_count(i32 count_waiting) override;
     virtual void did_request_restore_window() override;
     virtual Messages::WebContentClient::DidRequestRepositionWindowResponse did_request_reposition_window(Gfx::IntPoint) override;

@@ -240,6 +240,11 @@ void WebContentClient::did_update_cookie(Web::Cookie::Cookie const& cookie)
     m_view.notify_server_did_update_cookie({}, cookie);
 }
 
+void WebContentClient::did_close_browsing_context()
+{
+    m_view.notify_server_did_close_browsing_context({});
+}
+
 void WebContentClient::did_update_resource_count(i32 count_waiting)
 {
     m_view.notify_server_did_update_resource_count(count_waiting);

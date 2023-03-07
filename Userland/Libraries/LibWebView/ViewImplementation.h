@@ -96,6 +96,7 @@ public:
     virtual DeprecatedString notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) = 0;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) = 0;
     virtual void notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie) = 0;
+    virtual void notify_server_did_close_browsing_context(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) = 0;
     virtual void notify_server_did_request_restore_window() = 0;
     virtual Gfx::IntPoint notify_server_did_request_reposition_window(Gfx::IntPoint) = 0;

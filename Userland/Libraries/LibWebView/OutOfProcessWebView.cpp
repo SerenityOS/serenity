@@ -459,6 +459,12 @@ void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, 
         on_set_cookie(url, cookie, source);
 }
 
+void OutOfProcessWebView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
+{
+    if (on_close)
+        on_close();
+}
+
 void OutOfProcessWebView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
 {
     if (on_update_cookie)
