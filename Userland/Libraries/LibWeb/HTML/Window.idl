@@ -9,6 +9,7 @@
 #import <HTML/Navigator.idl>
 #import <HTML/WindowLocalStorage.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
+#import <HTML/WindowSessionStorage.idl>
 #import <RequestIdleCallback/IdleRequest.idl>
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#window
@@ -98,6 +99,7 @@ Window includes AnimationFrameProvider;
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
 Window includes WindowLocalStorage;
+Window includes WindowSessionStorage;
 Window includes WindowOrWorkerGlobalScope;
 
 enum ScrollBehavior { "auto", "instant", "smooth" };
