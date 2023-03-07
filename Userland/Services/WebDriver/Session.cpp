@@ -123,7 +123,7 @@ Web::WebDriver::Response Session::close_window()
 
     // 4. If there are no more open top-level browsing contexts, then close the session.
     if (m_windows.is_empty())
-        stop();
+        TRY(stop());
 
     // 5. Return the result of running the remote end steps for the Get Window Handles command.
     return get_window_handles();
