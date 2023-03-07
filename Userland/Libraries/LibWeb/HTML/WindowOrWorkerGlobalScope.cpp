@@ -12,6 +12,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
+#include <LibWeb/Infra/Base64.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -69,7 +70,7 @@ WebIDL::ExceptionOr<String> WindowOrWorkerGlobalScopeMixin::atob(String const& d
     auto& realm = *vm.current_realm();
 
     // 1. Let decodedData be the result of running forgiving-base64 decode on data.
-    auto decoded_data = decode_base64(data.bytes_as_string_view());
+    auto decoded_data = Infra::decode_forgiving_base64(data.bytes_as_string_view());
 
     // 2. If decodedData is failure, then throw an "InvalidCharacterError" DOMException.
     if (decoded_data.is_error())
