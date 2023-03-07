@@ -6,9 +6,11 @@
 
 #include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Math.h>
 #include <AK/NumberFormat.h>
 #include <AK/NumericLimits.h>
 #include <AK/StringView.h>
+#include <AK/Vector.h>
 
 namespace AK {
 
@@ -59,9 +61,9 @@ DeprecatedString human_readable_size(u64 size, HumanReadableBasedOn based_on)
 DeprecatedString human_readable_size_long(u64 size)
 {
     if (size < 1 * KiB)
-        return DeprecatedString::formatted("{} bytes", size);
+        return DeprecatedString::formatted("{} bytes", human_readable_integer(size));
     else
-        return DeprecatedString::formatted("{} ({} bytes)", human_readable_size(size), size);
+        return DeprecatedString::formatted("{} ({} bytes)", human_readable_size(size), human_readable_integer(size));
 }
 
 DeprecatedString human_readable_time(i64 time_in_seconds)
@@ -107,6 +109,32 @@ DeprecatedString human_readable_digital_time(i64 time_in_seconds)
     builder.appendff("{:02}", time_in_seconds);
 
     return builder.to_deprecated_string();
+}
+
+DeprecatedString human_readable_integer(i64 const number)
+{
+    u64 const abs_number = abs(number);
+    // Handle the edge case of number being 0 as log10 is undefined for it.
+    u8 const digit_count = ceil(abs_number > 0 ? log10(static_cast<long double>(abs_number)) : 0) + 1;
+    u8 const section_count = (digit_count - 1) / 3 + 1;
+
+    // 7 sections is the maximum for i64.
+    Vector<u16, 7> separated_sections;
+    separated_sections.ensure_capacity(section_count);
+    for (u64 remainder = abs_number; remainder > 0 || separated_sections.is_empty(); remainder /= 1000) {
+        separated_sections.append(remainder % 1000);
+    }
+
+    // Pre-allocate capacity in the result string for the digits themselves, the commas, and the minus sign.
+    u8 const string_capacity = digit_count + (section_count - 1) + (number < 0 ? 1 : 0);
+    auto result_builder = StringBuilder(string_capacity);
+    if (number < 0)
+        result_builder.append('-');
+    result_builder.appendff("{}", *separated_sections.rbegin());
+    for (auto it = separated_sections.rbegin() + 1; it != separated_sections.rend(); ++it) {
+        result_builder.appendff(",{:03}", *it);
+    }
+    return result_builder.to_deprecated_string();
 }
 
 }
