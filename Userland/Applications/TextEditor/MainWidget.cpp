@@ -10,6 +10,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/TextEditor/TextEditorWindowGML.h>
+#include <LibCMake/CMakeCache/SyntaxHighlighter.h>
 #include <LibCMake/SyntaxHighlighter.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>
@@ -623,6 +624,13 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_cmake_highlight);
     syntax_menu.add_action(*m_cmake_highlight);
 
+    m_cmakecache_highlight = GUI::Action::create_checkable("CM&akeCache", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<CMake::Cache::SyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_cmakecache_highlight);
+    syntax_menu.add_action(*m_cmakecache_highlight);
+
     m_js_highlight = GUI::Action::create_checkable("&JavaScript", [&](auto&) {
         m_editor->set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         m_editor->update();
@@ -704,6 +712,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_syntax_statusbar_menu->add_action(*m_plain_text_highlight);
     m_syntax_statusbar_menu->add_action(*m_cpp_highlight);
     m_syntax_statusbar_menu->add_action(*m_cmake_highlight);
+    m_syntax_statusbar_menu->add_action(*m_cmakecache_highlight);
     m_syntax_statusbar_menu->add_action(*m_css_highlight);
     m_syntax_statusbar_menu->add_action(*m_git_highlight);
     m_syntax_statusbar_menu->add_action(*m_gml_highlight);
@@ -732,6 +741,8 @@ void MainWidget::set_path(StringView path)
         m_cpp_highlight->activate();
     } else if (m_extension == "cmake" || (m_extension == "txt" && m_name == "CMakeLists")) {
         m_cmake_highlight->activate();
+    } else if (m_extension == "txt" && m_name == "CMakeCache") {
+        m_cmakecache_highlight->activate();
     } else if (m_extension == "js" || m_extension == "mjs" || m_extension == "json") {
         m_js_highlight->activate();
     } else if (m_name == "COMMIT_EDITMSG") {
