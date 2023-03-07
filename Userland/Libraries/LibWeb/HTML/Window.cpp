@@ -536,21 +536,6 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     return id;
 }
 
-// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#run-the-animation-frame-callbacks
-i32 Window::request_animation_frame_impl(WebIDL::CallbackType& js_callback)
-{
-    // FIXME: `now` is supposed to be passed in
-    auto now = HighResolutionTime::unsafe_shared_current_time();
-    return m_animation_frame_callback_driver.add([this, now, js_callback = JS::make_handle(js_callback)](auto) {
-        // 3. Invoke callback, passing now as the only argument,
-        auto result = WebIDL::invoke_callback(*js_callback, {}, JS::Value(now));
-
-        // and if an exception is thrown, report the exception.
-        if (result.is_error())
-            HTML::report_exception(result, realm());
-    });
-}
-
 void Window::cancel_animation_frame_impl(i32 id)
 {
     m_animation_frame_callback_driver.remove(id);
@@ -911,7 +896,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "setTimeout", set_timeout, 1, attr);
     define_native_function(realm, "clearInterval", clear_interval, 1, attr);
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
-    define_native_function(realm, "requestAnimationFrame", request_animation_frame, 1, attr);
     define_native_function(realm, "cancelAnimationFrame", cancel_animation_frame, 1, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
@@ -1434,6 +1418,19 @@ double Window::device_pixel_ratio() const
     return 1;
 }
 
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#dom-animationframeprovider-requestanimationframe
+i32 Window::request_animation_frame(WebIDL::CallbackType& callback)
+{
+    // FIXME: Make this fully spec compliant. Currently implements a mix of 'requestAnimationFrame()' and 'run the animation frame callbacks'.
+    auto now = HighResolutionTime::unsafe_shared_current_time();
+    return m_animation_frame_callback_driver.add([this, now, callback = JS::make_handle(callback)](auto) {
+        // 3. Invoke callback, passing now as the only argument, and if an exception is thrown, report the exception.
+        auto result = WebIDL::invoke_callback(*callback, {}, JS::Value(now));
+        if (result.is_error())
+            HTML::report_exception(result, realm());
+    });
+}
+
 // https://w3c.github.io/requestidlecallback/#dom-window-requestidlecallback
 u32 Window::request_idle_callback(WebIDL::CallbackType& callback, RequestIdleCallback::IdleRequestOptions const& options)
 {
@@ -1576,18 +1573,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::clear_interval)
 
     impl->clear_interval_impl(id);
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::request_animation_frame)
-{
-    auto* impl = TRY(impl_from(vm));
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountOne, "requestAnimationFrame");
-    auto* callback_object = TRY(vm.argument(0).to_object(vm));
-    if (!callback_object->is_function())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunctionNoParam);
-    auto callback = vm.heap().allocate_without_realm<WebIDL::CallbackType>(*callback_object, HTML::incumbent_settings_object());
-    return JS::Value(impl->request_animation_frame_impl(*callback));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(Window::cancel_animation_frame)

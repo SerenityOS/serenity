@@ -5,6 +5,7 @@
 #import <DOM/EventHandler.idl>
 #import <DOM/EventTarget.idl>
 #import <HighResolutionTime/Performance.idl>
+#import <HTML/AnimationFrameProvider.idl>
 #import <HTML/Navigator.idl>
 #import <HTML/WindowOrWorkerGlobalScope.idl>
 #import <RequestIdleCallback/IdleRequest.idl>
@@ -92,6 +93,7 @@ interface Window : EventTarget {
     // https://w3c.github.io/webcrypto/#crypto-interface
     [SameObject] readonly attribute Crypto crypto;
 };
+Window includes AnimationFrameProvider;
 Window includes GlobalEventHandlers;
 Window includes WindowEventHandlers;
 Window includes WindowOrWorkerGlobalScope;
