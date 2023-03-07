@@ -1,5 +1,6 @@
 #import <Fetch/Request.idl>
 #import <Fetch/Response.idl>
+#import <HTML/MessagePort.idl>
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
 interface mixin WindowOrWorkerGlobalScope {
@@ -27,7 +28,7 @@ interface mixin WindowOrWorkerGlobalScope {
     // FIXME: Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options = {});
 
     // structured cloning
-    // FIXME: any structuredClone(any value, optional StructuredSerializeOptions options = {});
+    any structuredClone(any value, optional StructuredSerializeOptions options = {});
 
     // https://fetch.spec.whatwg.org/#fetch-method
     [NewObject] Promise<Response> fetch(RequestInfo input, optional RequestInit init = {});

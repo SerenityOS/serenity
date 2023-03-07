@@ -46,7 +46,6 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
-#include <LibWeb/HTML/StructuredSerialize.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
@@ -742,13 +741,6 @@ JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
     return *storage;
 }
 
-// https://html.spec.whatwg.org/multipage/structured-data.html#dom-structuredclone
-WebIDL::ExceptionOr<JS::Value> Window::structured_clone_impl(JS::VM& vm, JS::Value message)
-{
-    auto serialized = TRY(structured_serialize(vm, message));
-    return MUST(structured_deserialize(vm, serialized, *vm.current_realm(), {}));
-}
-
 // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
 bool Window::has_transient_activation() const
 {
@@ -892,8 +884,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
 
     define_native_function(realm, "queueMicrotask", queue_microtask, 1, attr);
-
-    define_native_function(realm, "structuredClone", structured_clone, 1, attr);
 
     define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
 
@@ -1606,14 +1596,6 @@ JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
     auto* impl = TRY(impl_from(vm));
     TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::structured_clone)
-{
-    auto* impl = TRY(impl_from(vm));
-    return TRY(Bindings::throw_dom_exception_if_needed(vm, [&] {
-        return impl->structured_clone_impl(vm, vm.argument(0));
-    }));
 }
 
 }
