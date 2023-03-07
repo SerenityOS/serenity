@@ -65,6 +65,36 @@ struct LoaderError {
 
 }
 
+namespace AK {
+
+template<>
+struct Formatter<Audio::LoaderError> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, Audio::LoaderError const& error)
+    {
+        StringView category;
+        switch (error.category) {
+        case Audio::LoaderError::Category::Unknown:
+            category = "Unknown"sv;
+            break;
+        case Audio::LoaderError::Category::IO:
+            category = "I/O"sv;
+            break;
+        case Audio::LoaderError::Category::Format:
+            category = "Format"sv;
+            break;
+        case Audio::LoaderError::Category::Internal:
+            category = "Internal"sv;
+            break;
+        case Audio::LoaderError::Category::Unimplemented:
+            category = "Unimplemented"sv;
+            break;
+        }
+        return Formatter<FormatString>::format(builder, "{} error: {} (at {})"sv, category, error.description, error.index);
+    }
+};
+
+}
+
 // Convenience TRY-like macro to convert an Error to a LoaderError
 #define LOADER_TRY(expression)                                                                       \
     ({                                                                                               \
