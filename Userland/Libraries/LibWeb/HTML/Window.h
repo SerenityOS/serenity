@@ -88,7 +88,6 @@ public:
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
 
     WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open_impl(StringView url, StringView target, StringView features);
-    i32 request_animation_frame_impl(WebIDL::CallbackType& js_callback);
     void cancel_animation_frame_impl(i32);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
@@ -178,6 +177,8 @@ public:
     i32 outer_height() const;
     double device_pixel_ratio() const;
 
+    i32 request_animation_frame(WebIDL::CallbackType&);
+
     u32 request_idle_callback(WebIDL::CallbackType&, RequestIdleCallback::IdleRequestOptions const&);
     void cancel_idle_callback(u32 handle);
 
@@ -258,7 +259,6 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
     JS_DECLARE_NATIVE_FUNCTION(clear_interval);
     JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
-    JS_DECLARE_NATIVE_FUNCTION(request_animation_frame);
     JS_DECLARE_NATIVE_FUNCTION(cancel_animation_frame);
 
     JS_DECLARE_NATIVE_FUNCTION(queue_microtask);

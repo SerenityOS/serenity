@@ -1,0 +1,8 @@
+#import <HighResolutionTime/DOMHighResTimeStamp.idl>
+
+callback FrameRequestCallback = undefined (DOMHighResTimeStamp time);
+
+// https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#animationframeprovider
+interface mixin AnimationFrameProvider {
+    unsigned long requestAnimationFrame(FrameRequestCallback callback);
+};
