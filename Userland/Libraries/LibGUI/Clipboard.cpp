@@ -124,6 +124,29 @@ RefPtr<Gfx::Bitmap> Clipboard::DataAndType::as_bitmap() const
     return bitmap;
 }
 
+ErrorOr<Clipboard::DataAndType> Clipboard::DataAndType::from_json(JsonObject const& object)
+{
+    if (!object.has("data"sv) && !object.has("mime_type"sv))
+        return Error::from_string_literal("JsonObject does not contain necessary fields");
+
+    DataAndType result;
+    result.data = object.get_deprecated_string("data"sv)->to_byte_buffer();
+    result.mime_type = *object.get_deprecated_string("mime_type"sv);
+    // FIXME: Also read metadata
+
+    return result;
+}
+
+ErrorOr<JsonObject> Clipboard::DataAndType::to_json() const
+{
+    JsonObject object;
+    object.set("data", TRY(DeprecatedString::from_utf8(data.bytes())));
+    object.set("mime_type", mime_type);
+    // FIXME: Also write metadata
+
+    return object;
+}
+
 void Clipboard::set_data(ReadonlyBytes data, DeprecatedString const& type, HashMap<DeprecatedString, DeprecatedString> const& metadata)
 {
     if (data.is_empty()) {
