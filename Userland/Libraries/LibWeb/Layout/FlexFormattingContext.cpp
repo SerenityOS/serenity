@@ -331,7 +331,7 @@ void FlexFormattingContext::generate_anonymous_flex_items()
     for (auto key : keys) {
         auto order_bucket = order_item_bucket.get(key);
         if (order_bucket.has_value()) {
-            auto items = order_bucket.value();
+            auto& items = order_bucket.value();
             if (is_direction_reverse()) {
                 for (auto item : items.in_reverse()) {
                     m_flex_items.append(move(item));
