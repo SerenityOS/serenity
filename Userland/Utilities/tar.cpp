@@ -10,6 +10,7 @@
 #include <AK/Vector.h>
 #include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
+#include <LibCompress/Lzma.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
@@ -30,6 +31,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool list = false;
     bool verbose = false;
     bool gzip = false;
+    bool lzma = false;
     bool no_auto_compress = false;
     StringView archive_file;
     bool dereference;
@@ -42,6 +44,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(list, "List contents", "list", 't');
     args_parser.add_option(verbose, "Print paths", "verbose", 'v');
     args_parser.add_option(gzip, "Compress or decompress file using gzip", "gzip", 'z');
+    args_parser.add_option(lzma, "Compress or decompress file using lzma", "lzma", 0);
     args_parser.add_option(no_auto_compress, "Do not use the archive suffix to select the compression algorithm", "no-auto-compress", 0);
     args_parser.add_option(directory, "Directory to extract to/create from", "directory", 'C', "DIRECTORY");
     args_parser.add_option(archive_file, "Archive file", "file", 'f', "FILE");
@@ -57,6 +60,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!no_auto_compress && !archive_file.is_empty()) {
         if (archive_file.ends_with(".gz"sv) || archive_file.ends_with(".tgz"sv))
             gzip = true;
+        if (archive_file.ends_with(".lzma"sv))
+            lzma = true;
     }
 
     if (list || extract) {
@@ -67,6 +72,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (gzip)
             input_stream = make<Compress::GzipDecompressor>(move(input_stream));
+
+        if (lzma)
+            input_stream = TRY(Compress::LzmaDecompressor::create_from_container(move(input_stream)));
 
         auto tar_stream = TRY(Archive::TarInputStream::construct(move(input_stream)));
 
@@ -215,6 +223,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (gzip)
             output_stream = TRY(try_make<Compress::GzipCompressor>(move(output_stream)));
+
+        if (lzma)
+            TODO();
 
         Archive::TarOutputStream tar_stream(move(output_stream));
 
