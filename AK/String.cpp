@@ -489,9 +489,10 @@ bool String::contains(StringView needle, CaseSensitivity case_sensitivity) const
     return StringUtils::contains(bytes_as_string_view(), needle, case_sensitivity);
 }
 
-bool String::contains(char needle, CaseSensitivity case_sensitivity) const
+bool String::contains(u32 needle, CaseSensitivity case_sensitivity) const
 {
-    return contains(StringView { &needle, 1 }, case_sensitivity);
+    auto needle_as_string = String::from_code_point(needle);
+    return contains(needle_as_string.bytes_as_string_view(), case_sensitivity);
 }
 
 bool String::starts_with(u32 code_point) const
