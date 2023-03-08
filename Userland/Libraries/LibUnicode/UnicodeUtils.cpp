@@ -330,31 +330,32 @@ ErrorOr<void> build_titlecase_string([[maybe_unused]] Utf8View code_points, [[ma
 }
 
 // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G53253
-ErrorOr<void> build_casefold_string([[maybe_unused]] Utf8View code_points, [[maybe_unused]] StringBuilder& builder)
+ErrorOr<void> build_casefold_string(Utf8View code_points, StringBuilder& builder)
 {
-#if ENABLE_UNICODE_DATA
     // toCasefold(X): Map each character C in X to Case_Folding(C).
-    //
-    // Case_Folding(C) uses the mappings with the status field value “C” or “F” in the data file
-    // CaseFolding.txt in the Unicode Character Database.
-
-    using enum CaseFoldingStatus;
-
     for (auto code_point : code_points) {
-        auto const* case_folding = find_matching_case_folding<Common, Full>(code_point);
-        if (!case_folding) {
-            TRY(builder.try_append_code_point(code_point));
-            continue;
-        }
-
-        for (size_t i = 0; i < case_folding->mapping_size; ++i)
-            TRY(builder.try_append_code_point(case_folding->mapping[i]));
+        auto case_folding = casefold_code_point(code_point);
+        TRY(builder.try_append(case_folding));
     }
 
     return {};
-#else
-    return Error::from_string_literal("Unicode data has been disabled");
+}
+
+// https://www.unicode.org/reports/tr44/#CaseFolding.txt
+// https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf#G53253
+Utf32View casefold_code_point(u32 const& code_point)
+{
+#if ENABLE_UNICODE_DATA
+    // Case_Folding(C) uses the mappings with the status field value “C” or “F” in the data file
+    // CaseFolding.txt in the Unicode Character Database.
+    using enum CaseFoldingStatus;
+
+    if (auto const* case_folding = find_matching_case_folding<Common, Full>(code_point))
+        return Utf32View { case_folding->mapping, case_folding->mapping_size };
 #endif
+
+    // The case foldings are omitted in the data file if they are the same as the code point itself.
+    return Utf32View { &code_point, 1 };
 }
 
 }

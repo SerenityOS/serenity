@@ -109,7 +109,7 @@ public:
     ErrorOr<String> to_casefold() const;
 
     // Compare this String against another string with caseless matching. Using this method requires linking LibUnicode into your application.
-    ErrorOr<bool> equals_ignoring_case(String const&) const;
+    [[nodiscard]] bool equals_ignoring_case(String const&) const;
 
     [[nodiscard]] bool starts_with(u32 code_point) const;
     [[nodiscard]] bool starts_with_bytes(StringView) const;
