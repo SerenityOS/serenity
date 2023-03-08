@@ -221,12 +221,6 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
             independent_formatting_context->parent_context_did_dimension_child_root_box();
     }
 
-    // FIXME: We run the "copy dimensions" step *again* here, in order to override any sizes
-    //        assigned to the flex item by the "layout inside" step above. This is definitely not
-    //        part of the spec, and simply covering up the fact that our inside layout currently
-    //        mutates the height of BFC roots.
-    copy_dimensions_from_flex_items_to_boxes();
-
     if (available_width.is_intrinsic_sizing_constraint() || available_height.is_intrinsic_sizing_constraint()) {
         // We're computing intrinsic size for the flex container.
         determine_intrinsic_size_of_flex_container();
