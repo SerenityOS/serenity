@@ -146,7 +146,7 @@ public:
     void notify_did_change();
     void set_all_cursors(TextPosition const&);
 
-    TextPosition insert_at(TextPosition const&, u32, Client const* = nullptr);
+    TextPosition insert_at(TextPosition const&, u32, Client const* = nullptr, AllowCallback allow_callback = AllowCallback::Yes);
     TextPosition insert_at(TextPosition const&, StringView, Client const* = nullptr);
     void remove(TextRange const&);
 
@@ -194,10 +194,10 @@ public:
     void set_text(TextDocument&, Vector<u32>);
     void append(TextDocument&, u32);
     void prepend(TextDocument&, u32);
-    void insert(TextDocument&, size_t index, u32);
+    void insert(TextDocument&, size_t index, u32, AllowCallback allow_callback = AllowCallback::Yes);
     void remove(TextDocument&, size_t index);
     void append(TextDocument&, u32 const*, size_t);
-    void truncate(TextDocument&, size_t length);
+    void truncate(TextDocument&, size_t length, AllowCallback allow_callback = AllowCallback::Yes);
     void clear(TextDocument&);
     void remove_range(TextDocument&, size_t start, size_t length);
     void keep_range(TextDocument&, size_t start_index, size_t end_index);

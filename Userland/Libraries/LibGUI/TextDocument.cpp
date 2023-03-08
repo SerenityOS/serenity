@@ -170,10 +170,10 @@ TextDocumentLine::TextDocumentLine(TextDocument& document, StringView text)
     set_text(document, text);
 }
 
-void TextDocumentLine::clear(TextDocument& document)
+void TextDocumentLine::clear(TextDocument&)
 {
     m_text.clear();
-    document.update_views({});
+    // No need to call notify_did_change since all of our callers do that anyways.
 }
 
 void TextDocumentLine::set_text(TextDocument& document, Vector<u32> const text)
@@ -217,14 +217,15 @@ void TextDocumentLine::prepend(TextDocument& document, u32 code_point)
     insert(document, 0, code_point);
 }
 
-void TextDocumentLine::insert(TextDocument& document, size_t index, u32 code_point)
+void TextDocumentLine::insert(TextDocument& document, size_t index, u32 code_point, AllowCallback allow_callback)
 {
     if (index == length()) {
         m_text.append(code_point);
     } else {
         m_text.insert(index, code_point);
     }
-    document.update_views({});
+    if (allow_callback == AllowCallback::Yes)
+        document.update_views({});
 }
 
 void TextDocumentLine::remove(TextDocument& document, size_t index)
@@ -264,10 +265,11 @@ void TextDocumentLine::keep_range(TextDocument& document, size_t start_index, si
     document.update_views({});
 }
 
-void TextDocumentLine::truncate(TextDocument& document, size_t length)
+void TextDocumentLine::truncate(TextDocument& document, size_t length, AllowCallback allow_callback)
 {
     m_text.resize(length);
-    document.update_views({});
+    if (allow_callback == AllowCallback::Yes)
+        document.update_views({});
 }
 
 void TextDocument::append_line(NonnullOwnPtr<TextDocumentLine> line)
@@ -1067,7 +1069,8 @@ ReplaceAllTextCommand::ReplaceAllTextCommand(GUI::TextDocument& document, Deprec
 
 void ReplaceAllTextCommand::redo()
 {
-    m_document.remove(m_range);
+    m_document.remove_all_lines();
+    m_document.append_line(make<TextDocumentLine>(m_document));
     m_document.set_all_cursors(m_range.start());
     auto new_cursor = m_document.insert_at(m_range.start(), m_new_text, m_client);
     m_range.set_end(new_cursor);
@@ -1226,22 +1229,25 @@ TextPosition TextDocument::insert_at(TextPosition const& position, StringView te
     TextPosition cursor = position;
     Utf8View utf8_view(text);
     for (auto code_point : utf8_view)
-        cursor = insert_at(cursor, code_point, client);
+        cursor = insert_at(cursor, code_point, client, AllowCallback::No);
+    notify_did_change();
     return cursor;
 }
 
-TextPosition TextDocument::insert_at(TextPosition const& position, u32 code_point, Client const*)
+TextPosition TextDocument::insert_at(TextPosition const& position, u32 code_point, Client const*, AllowCallback allow_callback)
 {
     if (code_point == '\n') {
         auto new_line = make<TextDocumentLine>(*this);
         new_line->append(*this, line(position.line()).code_points() + position.column(), line(position.line()).length() - position.column());
-        line(position.line()).truncate(*this, position.column());
+        line(position.line()).truncate(*this, position.column(), allow_callback);
         insert_line(position.line() + 1, move(new_line));
-        notify_did_change();
+        if (allow_callback == AllowCallback::Yes)
+            notify_did_change();
         return { position.line() + 1, 0 };
     } else {
-        line(position.line()).insert(*this, position.column(), code_point);
-        notify_did_change();
+        line(position.line()).insert(*this, position.column(), code_point, allow_callback);
+        if (allow_callback == AllowCallback::Yes)
+            notify_did_change();
         return { position.line(), position.column() + 1 };
     }
 }
