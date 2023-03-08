@@ -213,8 +213,7 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
 
 void AntiAliasingPainter::fill_path(Path const& path, Color color, Painter::WindingRule rule)
 {
-    Detail::fill_path<Detail::FillPathMode::AllowFloatingPoints>(
-        m_underlying_painter, path, [=](IntPoint) { return color; }, rule, m_transform.translation());
+    Detail::fill_path<Detail::FillPathMode::AllowFloatingPoints>(m_underlying_painter, path, color, rule, m_transform.translation());
 }
 
 void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)

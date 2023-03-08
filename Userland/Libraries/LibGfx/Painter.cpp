@@ -2393,8 +2393,7 @@ void Painter::stroke_path(Path const& path, Color color, int thickness)
 void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
-    Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(
-        *this, path, [=](IntPoint) { return color; }, winding_rule);
+    Detail::fill_path<Detail::FillPathMode::PlaceOnIntGrid>(*this, path, color, winding_rule);
 }
 
 void Painter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)
