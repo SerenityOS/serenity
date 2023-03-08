@@ -61,6 +61,21 @@ private:
         float scaled_flex_shrink_factor { 0 };
         float desired_flex_fraction { 0 };
 
+        CSSPixels outer_hypothetical_main_size() const
+        {
+            return hypothetical_main_size + margins.main_before + margins.main_after + borders.main_before + borders.main_after + padding.main_before + padding.main_after;
+        }
+
+        CSSPixels outer_target_main_size() const
+        {
+            return target_main_size + margins.main_before + margins.main_after + borders.main_before + borders.main_after + padding.main_before + padding.main_after;
+        }
+
+        CSSPixels outer_flex_base_size() const
+        {
+            return flex_base_size + margins.main_before + margins.main_after + borders.main_before + borders.main_after + padding.main_before + padding.main_after;
+        }
+
         // The used main size of this flex item. Empty until determined.
         Optional<CSSPixels> main_size {};
 
@@ -91,6 +106,9 @@ private:
         CSSPixels cross_size { 0 };
         CSSPixels remaining_free_space { 0 };
         float chosen_flex_fraction { 0 };
+
+        float sum_of_flex_factor_of_unfrozen_items() const;
+        float sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const;
     };
 
     bool has_definite_main_size(Box const&) const;

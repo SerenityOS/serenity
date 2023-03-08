@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -869,176 +869,203 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
     m_flex_lines.append(move(line));
 }
 
-// https://www.w3.org/TR/css-flexbox-1/#resolve-flexible-lengths
-void FlexFormattingContext::resolve_flexible_lengths()
+// https://drafts.csswg.org/css-flexbox-1/#resolve-flexible-lengths
+void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
 {
+    // 1. Determine the used flex factor.
+
+    // Sum the outer hypothetical main sizes of all items on the line.
+    // If the sum is less than the flex container’s inner main size,
+    // use the flex grow factor for the rest of this algorithm; otherwise, use the flex shrink factor
     enum FlexFactor {
         FlexGrowFactor,
         FlexShrinkFactor
     };
-
-    FlexFactor used_flex_factor;
-    // 6.1. Determine used flex factor
-    for (auto& flex_line : m_flex_lines) {
-        size_t number_of_unfrozen_items_on_line = flex_line.items.size();
-
-        CSSPixels sum_of_hypothetical_main_sizes = 0;
-        for (auto& item : flex_line.items) {
-            sum_of_hypothetical_main_sizes += (item.hypothetical_main_size + item.margins.main_before + item.margins.main_after + item.borders.main_before + item.borders.main_after + item.padding.main_before + item.padding.main_after);
+    auto used_flex_factor = [&]() -> FlexFactor {
+        CSSPixels sum = 0;
+        for (auto const& item : line.items) {
+            sum += item.outer_hypothetical_main_size();
         }
-        if (sum_of_hypothetical_main_sizes < m_available_space_for_items->main.to_px_or_zero())
-            used_flex_factor = FlexFactor::FlexGrowFactor;
-        else
-            used_flex_factor = FlexFactor::FlexShrinkFactor;
+        if (sum < inner_main_size(flex_container()))
+            return FlexFactor::FlexGrowFactor;
+        return FlexFactor::FlexShrinkFactor;
+    }();
 
-        for (auto& item : flex_line.items) {
-            if (used_flex_factor == FlexFactor::FlexGrowFactor)
-                item.flex_factor = item.box.computed_values().flex_grow();
-            else if (used_flex_factor == FlexFactor::FlexShrinkFactor)
-                item.flex_factor = item.box.computed_values().flex_shrink();
+    // 2. Each item in the flex line has a target main size, initially set to its flex base size.
+    //    Each item is initially unfrozen and may become frozen.
+    for (auto& item : line.items) {
+        item.target_main_size = item.flex_base_size;
+        item.frozen = false;
+    }
+
+    // 3. Size inflexible items.
+
+    for (FlexItem& item : line.items) {
+        if (used_flex_factor == FlexFactor::FlexGrowFactor) {
+            item.flex_factor = item.box.computed_values().flex_grow();
+        } else if (used_flex_factor == FlexFactor::FlexShrinkFactor) {
+            item.flex_factor = item.box.computed_values().flex_shrink();
         }
-
-        // 6.2. Size inflexible items
-        auto freeze_item_setting_target_main_size_to_hypothetical_main_size = [&number_of_unfrozen_items_on_line](FlexItem& item) {
-            item.target_main_size = item.hypothetical_main_size;
-            number_of_unfrozen_items_on_line--;
+        // Freeze, setting its target main size to its hypothetical main size…
+        // - any item that has a flex factor of zero
+        // - if using the flex grow factor: any item that has a flex base size greater than its hypothetical main size
+        // - if using the flex shrink factor: any item that has a flex base size smaller than its hypothetical main size
+        if (item.flex_factor.value() == 0
+            || (used_flex_factor == FlexFactor::FlexGrowFactor && item.flex_base_size > item.hypothetical_main_size)
+            || (used_flex_factor == FlexFactor::FlexShrinkFactor && item.flex_base_size < item.hypothetical_main_size)) {
             item.frozen = true;
-        };
-        for (auto& item : flex_line.items) {
-            if (item.flex_factor.has_value() && item.flex_factor.value() == 0) {
-                freeze_item_setting_target_main_size_to_hypothetical_main_size(item);
-            } else if (used_flex_factor == FlexFactor::FlexGrowFactor) {
-                // FIXME: Spec doesn't include the == case, but we take a too basic approach to calculating the values used so this is appropriate
-                if (item.flex_base_size > item.hypothetical_main_size) {
-                    freeze_item_setting_target_main_size_to_hypothetical_main_size(item);
+            item.target_main_size = item.hypothetical_main_size;
+        }
+    }
+
+    // 4. Calculate initial free space
+
+    // Sum the outer sizes of all items on the line, and subtract this from the flex container’s inner main size.
+    // For frozen items, use their outer target main size; for other items, use their outer flex base size.
+    auto calculate_remaining_free_space = [&]() -> CSSPixels {
+        CSSPixels sum = 0;
+        for (auto const& item : line.items) {
+            if (item.frozen)
+                sum += item.outer_target_main_size();
+            else
+                sum += item.outer_flex_base_size();
+        }
+        return inner_main_size(flex_container()) - sum;
+    };
+    auto const initial_free_space = calculate_remaining_free_space();
+
+    // 5. Loop
+    while (true) {
+        // a. Check for flexible items.
+        //    If all the flex items on the line are frozen, free space has been distributed; exit this loop.
+        if (all_of(line.items, [](auto const& item) { return item.frozen; })) {
+            break;
+        }
+
+        // b. Calculate the remaining free space as for initial free space, above.
+        line.remaining_free_space = calculate_remaining_free_space();
+
+        // If the sum of the unfrozen flex items’ flex factors is less than one, multiply the initial free space by this sum.
+        if (auto sum_of_flex_factor_of_unfrozen_items = line.sum_of_flex_factor_of_unfrozen_items(); sum_of_flex_factor_of_unfrozen_items < 1) {
+            auto value = initial_free_space * sum_of_flex_factor_of_unfrozen_items;
+            // If the magnitude of this value is less than the magnitude of the remaining free space, use this as the remaining free space.
+            if (abs(value) < abs(line.remaining_free_space))
+                line.remaining_free_space = value;
+        }
+
+        // c. If the remaining free space is non-zero, distribute it proportional to the flex factors:
+        if (line.remaining_free_space != 0) {
+            // If using the flex grow factor
+            if (used_flex_factor == FlexFactor::FlexGrowFactor) {
+                // For every unfrozen item on the line,
+                // find the ratio of the item’s flex grow factor to the sum of the flex grow factors of all unfrozen items on the line.
+                auto sum_of_flex_factor_of_unfrozen_items = line.sum_of_flex_factor_of_unfrozen_items();
+                for (auto& item : line.items) {
+                    if (item.frozen)
+                        continue;
+                    float ratio = item.flex_factor.value() / sum_of_flex_factor_of_unfrozen_items;
+                    // Set the item’s target main size to its flex base size plus a fraction of the remaining free space proportional to the ratio.
+                    item.target_main_size = item.flex_base_size + (line.remaining_free_space * ratio);
                 }
-            } else if (used_flex_factor == FlexFactor::FlexShrinkFactor) {
-                if (item.flex_base_size < item.hypothetical_main_size) {
-                    freeze_item_setting_target_main_size_to_hypothetical_main_size(item);
+            }
+            // If using the flex shrink factor
+            else if (used_flex_factor == FlexFactor::FlexShrinkFactor) {
+                // For every unfrozen item on the line, multiply its flex shrink factor by its inner flex base size, and note this as its scaled flex shrink factor.
+                for (auto& item : line.items) {
+                    item.scaled_flex_shrink_factor = item.flex_factor.value() * item.flex_base_size.value();
+                }
+                auto sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line = line.sum_of_scaled_flex_shrink_factor_of_unfrozen_items();
+                for (auto& item : line.items) {
+                    // Find the ratio of the item’s scaled flex shrink factor to the sum of the scaled flex shrink factors of all unfrozen items on the line.
+                    float ratio = 1.0f;
+                    if (sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line != 0)
+                        ratio = item.scaled_flex_shrink_factor / sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line;
+
+                    // Set the item’s target main size to its flex base size minus a fraction of the absolute value of the remaining free space proportional to the ratio.
+                    // (Note this may result in a negative inner main size; it will be corrected in the next step.)
+                    item.target_main_size = item.flex_base_size - (abs(line.remaining_free_space) * ratio);
                 }
             }
         }
 
-        // 6.3. Calculate initial free space
-        auto calculate_free_space = [&]() {
-            CSSPixels sum_of_items_on_line = 0;
-            for (auto& item : flex_line.items) {
-                if (item.frozen)
-                    sum_of_items_on_line += item.target_main_size + item.margins.main_before + item.margins.main_after + item.borders.main_before + item.borders.main_after + item.padding.main_before + item.padding.main_after;
-                else
-                    sum_of_items_on_line += item.flex_base_size + item.margins.main_before + item.margins.main_after + item.borders.main_before + item.borders.main_after + item.padding.main_before + item.padding.main_after;
-            }
-            return m_available_space_for_items->main.to_px_or_zero() - sum_of_items_on_line;
-        };
+        // d. Fix min/max violations.
+        CSSPixels total_violation = 0;
 
-        CSSPixels initial_free_space = calculate_free_space();
-        flex_line.remaining_free_space = initial_free_space;
+        // Clamp each non-frozen item’s target main size by its used min and max main sizes and floor its content-box size at zero.
+        for (auto& item : line.items) {
+            if (item.frozen)
+                continue;
+            auto used_min_main_size = has_main_min_size(item.box)
+                ? specified_main_min_size(item.box)
+                : automatic_minimum_size(item);
 
-        // 6.4 Loop
-        auto for_each_unfrozen_item = [&flex_line](auto callback) {
-            for (auto& item : flex_line.items) {
+            auto used_max_main_size = has_main_max_size(item.box)
+                ? specified_main_max_size(item.box)
+                : NumericLimits<float>::max();
+
+            auto original_target_main_size = item.target_main_size;
+            item.target_main_size = css_clamp(item.target_main_size, used_min_main_size, used_max_main_size);
+            item.target_main_size = max(item.target_main_size, CSSPixels(0));
+
+            // If the item’s target main size was made smaller by this, it’s a max violation.
+            if (item.target_main_size < original_target_main_size)
+                item.is_max_violation = true;
+
+            // If the item’s target main size was made larger by this, it’s a min violation.
+            if (item.target_main_size > original_target_main_size)
+                item.is_min_violation = true;
+
+            total_violation += item.target_main_size - original_target_main_size;
+        }
+
+        // e. Freeze over-flexed items.
+        //    The total violation is the sum of the adjustments from the previous step ∑(clamped size - unclamped size).
+
+        // If the total violation is:
+        // Zero
+        //   Freeze all items.
+        if (total_violation == 0) {
+            for (auto& item : line.items) {
                 if (!item.frozen)
-                    callback(item);
-            }
-        };
-
-        while (number_of_unfrozen_items_on_line > 0) {
-            // b Calculate the remaining free space
-            flex_line.remaining_free_space = calculate_free_space();
-            float sum_of_unfrozen_flex_items_flex_factors = 0;
-            for_each_unfrozen_item([&](FlexItem const& item) {
-                sum_of_unfrozen_flex_items_flex_factors += item.flex_factor.value_or(1);
-            });
-
-            if (sum_of_unfrozen_flex_items_flex_factors < 1) {
-                auto intermediate_free_space = initial_free_space * sum_of_unfrozen_flex_items_flex_factors;
-                if (abs(intermediate_free_space) < abs(flex_line.remaining_free_space))
-                    flex_line.remaining_free_space = intermediate_free_space;
-            }
-
-            // c Distribute free space proportional to the flex factors
-            if (flex_line.remaining_free_space != 0) {
-                if (used_flex_factor == FlexFactor::FlexGrowFactor) {
-                    float sum_of_flex_grow_factor_of_unfrozen_items = sum_of_unfrozen_flex_items_flex_factors;
-                    for_each_unfrozen_item([&](FlexItem& item) {
-                        float ratio = item.flex_factor.value_or(1) / sum_of_flex_grow_factor_of_unfrozen_items;
-                        item.target_main_size = item.flex_base_size + (flex_line.remaining_free_space * ratio);
-                    });
-                } else if (used_flex_factor == FlexFactor::FlexShrinkFactor) {
-                    float sum_of_scaled_flex_shrink_factor_of_unfrozen_items = 0;
-                    for_each_unfrozen_item([&](FlexItem& item) {
-                        item.scaled_flex_shrink_factor = item.flex_factor.value_or(1) * item.flex_base_size.value();
-                        sum_of_scaled_flex_shrink_factor_of_unfrozen_items += item.scaled_flex_shrink_factor;
-                    });
-
-                    for_each_unfrozen_item([&](FlexItem& item) {
-                        float ratio = 1.0f;
-                        if (sum_of_scaled_flex_shrink_factor_of_unfrozen_items != 0.0f)
-                            ratio = item.scaled_flex_shrink_factor / sum_of_scaled_flex_shrink_factor_of_unfrozen_items;
-                        item.target_main_size = item.flex_base_size - (abs(flex_line.remaining_free_space) * ratio);
-                    });
-                }
-            } else {
-                // This isn't spec but makes sense.
-                for_each_unfrozen_item([&](FlexItem& item) {
-                    item.target_main_size = item.flex_base_size;
-                });
-            }
-            // d Fix min/max violations.
-            CSSPixels adjustments = 0.0f;
-            for_each_unfrozen_item([&](FlexItem& item) {
-                auto min_main = has_main_min_size(item.box)
-                    ? specified_main_min_size(item.box)
-                    : automatic_minimum_size(item);
-                auto max_main = has_main_max_size(item.box)
-                    ? specified_main_max_size(item.box)
-                    : NumericLimits<float>::max();
-
-                CSSPixels original_target_size = item.target_main_size;
-
-                if (item.target_main_size < min_main) {
-                    item.target_main_size = min_main;
-                    item.is_min_violation = true;
-                }
-
-                if (item.target_main_size > max_main) {
-                    item.target_main_size = max_main;
-                    item.is_max_violation = true;
-                }
-                CSSPixels delta = item.target_main_size - original_target_size;
-                adjustments += delta;
-            });
-            // e Freeze over-flexed items
-            CSSPixels total_violation = adjustments;
-            if (total_violation == 0) {
-                for_each_unfrozen_item([&](FlexItem& item) {
-                    --number_of_unfrozen_items_on_line;
                     item.frozen = true;
-                });
-            } else if (total_violation > 0) {
-                for_each_unfrozen_item([&](FlexItem& item) {
-                    if (item.is_min_violation) {
-                        --number_of_unfrozen_items_on_line;
-                        item.frozen = true;
-                    }
-                });
-            } else if (total_violation < 0) {
-                for_each_unfrozen_item([&](FlexItem& item) {
-                    if (item.is_max_violation) {
-                        --number_of_unfrozen_items_on_line;
-                        item.frozen = true;
-                    }
-                });
             }
         }
-
-        // 6.5.
-        for (auto& item : flex_line.items) {
-            item.main_size = item.target_main_size;
-            set_main_size(item.box, item.main_size.value());
+        // Positive
+        //   Freeze all the items with min violations.
+        else if (total_violation > 0) {
+            for (auto& item : line.items) {
+                if (!item.frozen && item.is_min_violation)
+                    item.frozen = true;
+            }
         }
+        // Negative
+        //   Freeze all the items with max violations.
+        else {
+            for (auto& item : line.items) {
+                if (!item.frozen && item.is_max_violation)
+                    item.frozen = true;
+            }
+        }
+        // NOTE: This freezes at least one item, ensuring that the loop makes progress and eventually terminates.
 
-        flex_line.remaining_free_space = calculate_free_space();
+        // f. Return to the start of this loop.
+    }
+
+    // NOTE: Calculate the remaining free space once again here, since it's needed later when aligning items.
+    line.remaining_free_space = calculate_remaining_free_space();
+
+    // 6. Set each item’s used main size to its target main size.
+    for (auto& item : line.items) {
+        item.main_size = item.target_main_size;
+        set_main_size(item.box, item.target_main_size);
+    }
+}
+
+// https://drafts.csswg.org/css-flexbox-1/#resolve-flexible-lengths
+void FlexFormattingContext::resolve_flexible_lengths()
+{
+    for (auto& line : m_flex_lines) {
+        resolve_flexible_lengths_for_line(line);
     }
 }
 
@@ -2087,6 +2114,26 @@ CSSPixelPoint FlexFormattingContext::calculate_static_position(Box const& box) c
     auto diff = absolute_position_of_flex_container - absolute_position_of_abspos_containing_block;
 
     return static_position_offset + diff;
+}
+
+float FlexFormattingContext::FlexLine::sum_of_flex_factor_of_unfrozen_items() const
+{
+    float sum = 0;
+    for (auto const& item : items) {
+        if (!item.frozen)
+            sum += item.flex_factor.value();
+    }
+    return sum;
+}
+
+float FlexFormattingContext::FlexLine::sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const
+{
+    float sum = 0;
+    for (auto const& item : items) {
+        if (!item.frozen)
+            sum += item.scaled_flex_shrink_factor;
+    }
+    return sum;
 }
 
 }
