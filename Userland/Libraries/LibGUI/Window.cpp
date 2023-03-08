@@ -479,7 +479,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         ConnectionToWindowServer::the().async_did_finish_painting(m_window_id, rects);
 }
 
-void Window::propagate_shortcuts_up_to_application(KeyEvent& event, Widget* widget)
+void Window::propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropagationBoundary boundary)
 {
     VERIFY(event.type() == Event::KeyDown);
     auto shortcut = Shortcut(event.modifiers(), event.key());
@@ -497,9 +497,9 @@ void Window::propagate_shortcuts_up_to_application(KeyEvent& event, Widget* widg
         } while (widget);
     }
 
-    if (!action)
+    if (!action && boundary >= ShortcutPropagationBoundary::Window)
         action = action_for_shortcut(shortcut);
-    if (!action)
+    if (!action && boundary >= ShortcutPropagationBoundary::Application)
         action = Application::the()->action_for_shortcut(shortcut);
 
     if (action) {
@@ -533,7 +533,7 @@ void Window::handle_key_event(KeyEvent& event)
 
     // Only process shortcuts if this is a keydown event.
     if (event.type() == Event::KeyDown)
-        propagate_shortcuts_up_to_application(event, nullptr);
+        propagate_shortcuts(event, nullptr, PropagationLimit::Application);
 }
 
 void Window::handle_resize_event(ResizeEvent& event)

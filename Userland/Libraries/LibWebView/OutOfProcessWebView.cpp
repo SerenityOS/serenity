@@ -751,7 +751,7 @@ void OutOfProcessWebView::notify_server_did_finish_handling_input_event(bool eve
 
                     // NOTE: If other events can ever trigger shortcuts, propagate those here.
                     if (!event.is_accepted() && event.type() == GUI::Event::Type::KeyDown)
-                        window()->propagate_shortcuts_up_to_application(event, this);
+                        window()->propagate_shortcuts(event, this);
                 }
             },
             [this](GUI::MouseEvent& event) {

@@ -229,7 +229,12 @@ public:
 
     void set_always_on_top(bool always_on_top = true);
 
-    void propagate_shortcuts_up_to_application(KeyEvent& event, Widget* widget);
+    enum class ShortcutPropagationBoundary {
+        Window,
+        Application,
+    };
+
+    void propagate_shortcuts(KeyEvent& event, Widget* widget, ShortcutPropagationBoundary = ShortcutPropagationBoundary::Application);
 
 protected:
     Window(Core::Object* parent = nullptr);
