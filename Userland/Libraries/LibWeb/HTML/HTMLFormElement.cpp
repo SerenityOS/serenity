@@ -139,8 +139,8 @@ ErrorOr<void> HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, boo
     LoadRequest request = LoadRequest::create_for_url_on_page(url, document().page());
 
     if (effective_method == "post") {
-        auto url_encoded_parameters_as_bytes = TRY(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded)).bytes();
-        auto body = TRY(ByteBuffer::copy(url_encoded_parameters_as_bytes));
+        auto url_encoded_parameters = TRY(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
+        auto body = TRY(ByteBuffer::copy(url_encoded_parameters.bytes()));
         request.set_method("POST");
         request.set_header("Content-Type", "application/x-www-form-urlencoded");
         request.set_body(move(body));
