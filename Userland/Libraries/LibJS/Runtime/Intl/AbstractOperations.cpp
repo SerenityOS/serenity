@@ -29,7 +29,7 @@ ThrowCompletionOr<Optional<::Locale::LocaleID>> is_structurally_valid_language_t
         quick_sort(variants);
 
         for (size_t i = 0; i < variants.size() - 1; ++i) {
-            if (TRY_OR_THROW_OOM(vm, variants[i].equals_ignoring_case(variants[i + 1])))
+            if (variants[i].equals_ignoring_case(variants[i + 1]))
                 return true;
         }
 

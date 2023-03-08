@@ -330,25 +330,33 @@ TEST_CASE(equals_ignoring_case)
         String string1 {};
         String string2 {};
 
-        EXPECT(MUST(string1.equals_ignoring_case(string2)));
+        EXPECT(string1.equals_ignoring_case(string2));
     }
     {
         auto string1 = MUST("abcd"_string);
         auto string2 = MUST("ABCD"_string);
         auto string3 = MUST("AbCd"_string);
         auto string4 = MUST("dcba"_string);
+        auto string5 = MUST("abce"_string);
+        auto string6 = MUST("abc"_string);
 
-        EXPECT(MUST(string1.equals_ignoring_case(string2)));
-        EXPECT(MUST(string1.equals_ignoring_case(string3)));
-        EXPECT(!MUST(string1.equals_ignoring_case(string4)));
+        EXPECT(string1.equals_ignoring_case(string2));
+        EXPECT(string1.equals_ignoring_case(string3));
+        EXPECT(!string1.equals_ignoring_case(string4));
+        EXPECT(!string1.equals_ignoring_case(string5));
+        EXPECT(!string1.equals_ignoring_case(string6));
 
-        EXPECT(MUST(string2.equals_ignoring_case(string1)));
-        EXPECT(MUST(string2.equals_ignoring_case(string3)));
-        EXPECT(!MUST(string2.equals_ignoring_case(string4)));
+        EXPECT(string2.equals_ignoring_case(string1));
+        EXPECT(string2.equals_ignoring_case(string3));
+        EXPECT(!string2.equals_ignoring_case(string4));
+        EXPECT(!string2.equals_ignoring_case(string5));
+        EXPECT(!string2.equals_ignoring_case(string6));
 
-        EXPECT(MUST(string3.equals_ignoring_case(string1)));
-        EXPECT(MUST(string3.equals_ignoring_case(string2)));
-        EXPECT(!MUST(string3.equals_ignoring_case(string4)));
+        EXPECT(string3.equals_ignoring_case(string1));
+        EXPECT(string3.equals_ignoring_case(string2));
+        EXPECT(!string3.equals_ignoring_case(string4));
+        EXPECT(!string3.equals_ignoring_case(string5));
+        EXPECT(!string3.equals_ignoring_case(string6));
     }
     {
         auto string1 = MUST("\u00DF"_string); // LATIN SMALL LETTER SHARP S
@@ -358,29 +366,66 @@ TEST_CASE(equals_ignoring_case)
         auto string5 = MUST("S"_string);
         auto string6 = MUST("s"_string);
 
-        EXPECT(MUST(string1.equals_ignoring_case(string2)));
-        EXPECT(MUST(string1.equals_ignoring_case(string3)));
-        EXPECT(MUST(string1.equals_ignoring_case(string4)));
-        EXPECT(!MUST(string1.equals_ignoring_case(string5)));
-        EXPECT(!MUST(string1.equals_ignoring_case(string6)));
+        EXPECT(string1.equals_ignoring_case(string2));
+        EXPECT(string1.equals_ignoring_case(string3));
+        EXPECT(string1.equals_ignoring_case(string4));
+        EXPECT(!string1.equals_ignoring_case(string5));
+        EXPECT(!string1.equals_ignoring_case(string6));
 
-        EXPECT(MUST(string2.equals_ignoring_case(string1)));
-        EXPECT(MUST(string2.equals_ignoring_case(string3)));
-        EXPECT(MUST(string2.equals_ignoring_case(string4)));
-        EXPECT(!MUST(string2.equals_ignoring_case(string5)));
-        EXPECT(!MUST(string2.equals_ignoring_case(string6)));
+        EXPECT(string2.equals_ignoring_case(string1));
+        EXPECT(string2.equals_ignoring_case(string3));
+        EXPECT(string2.equals_ignoring_case(string4));
+        EXPECT(!string2.equals_ignoring_case(string5));
+        EXPECT(!string2.equals_ignoring_case(string6));
 
-        EXPECT(MUST(string3.equals_ignoring_case(string1)));
-        EXPECT(MUST(string3.equals_ignoring_case(string2)));
-        EXPECT(MUST(string3.equals_ignoring_case(string4)));
-        EXPECT(!MUST(string3.equals_ignoring_case(string5)));
-        EXPECT(!MUST(string3.equals_ignoring_case(string6)));
+        EXPECT(string3.equals_ignoring_case(string1));
+        EXPECT(string3.equals_ignoring_case(string2));
+        EXPECT(string3.equals_ignoring_case(string4));
+        EXPECT(!string3.equals_ignoring_case(string5));
+        EXPECT(!string3.equals_ignoring_case(string6));
 
-        EXPECT(MUST(string4.equals_ignoring_case(string1)));
-        EXPECT(MUST(string4.equals_ignoring_case(string2)));
-        EXPECT(MUST(string4.equals_ignoring_case(string3)));
-        EXPECT(!MUST(string4.equals_ignoring_case(string5)));
-        EXPECT(!MUST(string4.equals_ignoring_case(string6)));
+        EXPECT(string4.equals_ignoring_case(string1));
+        EXPECT(string4.equals_ignoring_case(string2));
+        EXPECT(string4.equals_ignoring_case(string3));
+        EXPECT(!string4.equals_ignoring_case(string5));
+        EXPECT(!string4.equals_ignoring_case(string6));
+    }
+    {
+
+        auto string1 = MUST("Ab\u00DFCd\u00DFeF"_string);
+        auto string2 = MUST("ABSSCDSSEF"_string);
+        auto string3 = MUST("absscdssef"_string);
+        auto string4 = MUST("aBSscDsSEf"_string);
+        auto string5 = MUST("Ab\u00DFCd\u00DFeg"_string);
+        auto string6 = MUST("Ab\u00DFCd\u00DFe"_string);
+
+        EXPECT(string1.equals_ignoring_case(string1));
+        EXPECT(string1.equals_ignoring_case(string2));
+        EXPECT(string1.equals_ignoring_case(string3));
+        EXPECT(string1.equals_ignoring_case(string4));
+        EXPECT(!string1.equals_ignoring_case(string5));
+        EXPECT(!string1.equals_ignoring_case(string6));
+
+        EXPECT(string2.equals_ignoring_case(string1));
+        EXPECT(string2.equals_ignoring_case(string2));
+        EXPECT(string2.equals_ignoring_case(string3));
+        EXPECT(string2.equals_ignoring_case(string4));
+        EXPECT(!string2.equals_ignoring_case(string5));
+        EXPECT(!string2.equals_ignoring_case(string6));
+
+        EXPECT(string3.equals_ignoring_case(string1));
+        EXPECT(string3.equals_ignoring_case(string2));
+        EXPECT(string3.equals_ignoring_case(string3));
+        EXPECT(string3.equals_ignoring_case(string4));
+        EXPECT(!string3.equals_ignoring_case(string5));
+        EXPECT(!string3.equals_ignoring_case(string6));
+
+        EXPECT(string4.equals_ignoring_case(string1));
+        EXPECT(string4.equals_ignoring_case(string2));
+        EXPECT(string4.equals_ignoring_case(string3));
+        EXPECT(string4.equals_ignoring_case(string4));
+        EXPECT(!string4.equals_ignoring_case(string5));
+        EXPECT(!string4.equals_ignoring_case(string6));
     }
 }
 
