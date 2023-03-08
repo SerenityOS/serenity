@@ -264,6 +264,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     TRY(file_menu->try_add_separator());
 
+    TRY(file_menu->add_recent_files_list([&](auto& action) {
+        auto path = action.text();
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, path);
+        if (response.is_error())
+            return;
+        open_image(response.release_value());
+    }));
+
     m_close_image_action = GUI::Action::create("&Close Image", { Mod_Ctrl, Key_W }, g_icon_bag.close_image, [&](auto&) {
         auto* active_widget = m_tab_widget->active_widget();
         VERIFY(active_widget);
@@ -1174,6 +1182,7 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
     editor.set_path(file.filename().to_deprecated_string());
     editor.set_unmodified();
     m_layer_list_widget->set_image(&image);
+    GUI::Application::the()->set_most_recently_open_file(file.filename());
 }
 
 ErrorOr<void> MainWidget::create_default_image()
