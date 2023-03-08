@@ -19,6 +19,8 @@ You can control where and how a piece falls, by moving it left or right, making 
 - A: Move left, D: Move right, W: Rotate right, E: Rotate left, S: Move down
 - H: Move left, L: Move right, K: Rotate right
 
+The Escape and P keys pause and unpause the game.
+
 The seven pieces are commonly named "T", "J", "L", "O", "S", "Z", and "I". Note that while "J" and "L" as well as "S" and "Z" are mirrors of each other, they cannot be used interchangeably since you can only rotate pieces.
 
 ```
