@@ -109,6 +109,11 @@ public:
         return Utf32View(m_code_points + offset, length);
     }
 
+    Utf32View substring_view(size_t offset) const
+    {
+        return substring_view(offset, length() - offset);
+    }
+
 private:
     u32 const* begin_ptr() const
     {
