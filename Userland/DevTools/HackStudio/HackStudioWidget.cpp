@@ -1614,7 +1614,7 @@ void HackStudioWidget::update_statusbar()
     }
 
     m_statusbar->set_text(0, builder.to_deprecated_string());
-    m_statusbar->set_text(1, current_editor_wrapper().editor().code_document().language_name());
+    m_statusbar->set_text(1, Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText)));
     m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
 }
 

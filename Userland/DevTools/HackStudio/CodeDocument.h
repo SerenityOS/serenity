@@ -7,9 +7,9 @@
 
 #pragma once
 
-#include "Language.h"
 #include <AK/LexicalPath.h>
 #include <LibGUI/TextDocument.h>
+#include <LibSyntax/Language.h>
 
 namespace HackStudio {
 
@@ -25,8 +25,7 @@ public:
     void set_execution_position(size_t line) { m_execution_position = line; }
     void clear_execution_position() { m_execution_position.clear(); }
     DeprecatedString const& file_path() const { return m_file_path; }
-    DeprecatedString const& language_name() const { return m_language_name; };
-    Language language() const { return m_language; }
+    Optional<Syntax::Language> const& language() const { return m_language; }
 
     virtual bool is_code_document() const override final { return true; }
 
@@ -35,8 +34,7 @@ private:
     explicit CodeDocument(Client* client = nullptr);
 
     DeprecatedString m_file_path;
-    DeprecatedString m_language_name;
-    Language m_language { Language::Unknown };
+    Optional<Syntax::Language> m_language;
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;
 };

@@ -24,8 +24,7 @@ CodeDocument::CodeDocument(DeprecatedString const& file_path, Client* client)
     , m_file_path(file_path)
 {
     auto lexical_path = LexicalPath(file_path);
-    m_language = language_from_file(lexical_path);
-    m_language_name = language_name_from_file(lexical_path);
+    m_language = Syntax::language_from_filename(lexical_path);
 }
 
 CodeDocument::CodeDocument(Client* client)

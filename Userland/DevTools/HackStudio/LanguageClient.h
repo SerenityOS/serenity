@@ -7,7 +7,6 @@
 #pragma once
 
 #include "AutoCompleteResponse.h"
-#include "Language.h"
 #include <AK/Forward.h>
 #include <AK/LexicalPath.h>
 #include <AK/Types.h>
@@ -16,6 +15,7 @@
 #include <LibCore/ElapsedTimer.h>
 #include <LibCpp/Preprocessor.h>
 #include <LibIPC/ConnectionToServer.h>
+#include <LibSyntax/Language.h>
 
 #include <DevTools/HackStudio/LanguageServers/LanguageClientEndpoint.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
@@ -69,7 +69,7 @@ public:
     template<typename LanguageServerType>
     static ConnectionToServerWrapper& get_or_create(DeprecatedString const& project_path);
 
-    Language language() const { return m_language; }
+    Syntax::Language language() const { return m_language; }
     ConnectionToServer* connection();
     void on_crash();
     void try_respawn_connection();
@@ -83,7 +83,7 @@ private:
     void show_crash_notification() const;
     void show_frequent_crashes_notification() const;
 
-    Language m_language;
+    Syntax::Language m_language;
     Function<NonnullRefPtr<ConnectionToServer>()> m_connection_creator;
     RefPtr<ConnectionToServer> m_connection;
 
@@ -125,7 +125,7 @@ public:
             m_connection_wrapper.set_active_client(*m_previous_client);
     }
 
-    Language language() const { return m_connection_wrapper.language(); }
+    Syntax::Language language() const { return m_connection_wrapper.language(); }
     void set_active_client();
     bool is_active_client() const;
     virtual void open_file(DeprecatedString const& path, int fd);
