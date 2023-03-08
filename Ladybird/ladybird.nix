@@ -8,6 +8,7 @@ pkgs.mkShell.override
 
   nativeBuildInputs = with pkgs; [
     pkgconfig
+    ccache
     cmake
     ninja
     libxcrypt
