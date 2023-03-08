@@ -11,6 +11,7 @@
 #include <AK/Platform.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <AK/Vector.h>
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
