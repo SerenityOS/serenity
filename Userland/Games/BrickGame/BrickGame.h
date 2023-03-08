@@ -18,6 +18,7 @@ public:
     virtual ~BrickGame() override = default;
 
     void reset();
+    void toggle_pause();
 
 private:
     BrickGame(StringView app_name);

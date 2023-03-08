@@ -446,6 +446,12 @@ void BrickGame::reset()
     update();
 }
 
+void BrickGame::toggle_pause()
+{
+    m_brick_game->toggle_pause();
+    update();
+}
+
 void BrickGame::timer_event(Core::TimerEvent&)
 {
     switch (m_brick_game->state()) {
@@ -466,8 +472,7 @@ void BrickGame::keydown_event(GUI::KeyEvent& event)
     switch (event.key()) {
     case KeyCode::Key_Escape:
     case KeyCode::Key_P:
-        m_brick_game->toggle_pause();
-        update();
+        toggle_pause();
         return;
     default:
         break;
