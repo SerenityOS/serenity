@@ -9,7 +9,6 @@
 #include "Debugger/Debugger.h"
 #include "EditorWrapper.h"
 #include "HackStudio.h"
-#include "Language.h"
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/JsonParser.h>
@@ -36,6 +35,7 @@
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
+#include <LibSyntax/Language.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/HTML/HTMLHeadElement.h>
@@ -629,44 +629,50 @@ void Editor::set_cursor(const GUI::TextPosition& a_position)
 
 void Editor::set_syntax_highlighter_for(CodeDocument const& document)
 {
-    switch (document.language()) {
-    case Language::Cpp:
+    if (!document.language().has_value()) {
+        set_syntax_highlighter({});
+        force_rehighlight();
+        return;
+    }
+
+    switch (document.language().value()) {
+    case Syntax::Language::Cpp:
         if (m_use_semantic_syntax_highlighting) {
             set_syntax_highlighter(make<Cpp::SemanticSyntaxHighlighter>());
             on_token_info_timer_tick();
             m_tokens_info_timer->restart();
-        } else
+        } else {
             set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
-
+        }
         break;
-    case Language::CMake:
+    case Syntax::Language::CMake:
         set_syntax_highlighter(make<CMake::SyntaxHighlighter>());
         break;
-    case Language::CMakeCache:
+    case Syntax::Language::CMakeCache:
         set_syntax_highlighter(make<CMake::Cache::SyntaxHighlighter>());
         break;
-    case Language::CSS:
+    case Syntax::Language::CSS:
         set_syntax_highlighter(make<Web::CSS::SyntaxHighlighter>());
         break;
-    case Language::GitCommit:
+    case Syntax::Language::GitCommit:
         set_syntax_highlighter(make<GUI::GitCommitSyntaxHighlighter>());
         break;
-    case Language::GML:
+    case Syntax::Language::GML:
         set_syntax_highlighter(make<GUI::GML::SyntaxHighlighter>());
         break;
-    case Language::HTML:
+    case Syntax::Language::HTML:
         set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
         break;
-    case Language::JavaScript:
+    case Syntax::Language::JavaScript:
         set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         break;
-    case Language::Ini:
+    case Syntax::Language::INI:
         set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
         break;
-    case Language::Shell:
+    case Syntax::Language::Shell:
         set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         break;
-    case Language::SQL:
+    case Syntax::Language::SQL:
         set_syntax_highlighter(make<SQL::AST::SyntaxHighlighter>());
         break;
     default:
@@ -678,11 +684,9 @@ void Editor::set_syntax_highlighter_for(CodeDocument const& document)
 
 void Editor::set_autocomplete_provider_for(CodeDocument const& document)
 {
-    switch (document.language()) {
-    case Language::GML:
+    if (document.language() == Syntax::Language::GML) {
         set_autocomplete_provider(make<GUI::GML::AutocompleteProvider>());
-        break;
-    default:
+    } else {
         set_autocomplete_provider({});
     }
 }
@@ -692,10 +696,10 @@ void Editor::set_language_client_for(CodeDocument const& document)
     if (m_language_client && m_language_client->language() == document.language())
         return;
 
-    if (document.language() == Language::Cpp)
+    if (document.language() == Syntax::Language::Cpp)
         m_language_client = get_language_client<LanguageClients::Cpp::ConnectionToServer>(project().root_path());
 
-    if (document.language() == Language::Shell)
+    if (document.language() == Syntax::Language::Shell)
         m_language_client = get_language_client<LanguageClients::Shell::ConnectionToServer>(project().root_path());
 
     if (m_language_client) {
