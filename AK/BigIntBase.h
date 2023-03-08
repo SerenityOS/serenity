@@ -154,17 +154,6 @@ constexpr StaticStorage<false, bit_width<T>> get_storage_of(T value)
 }
 
 // ===== Utilities =====
-template<typename T>
-ALWAYS_INLINE constexpr void taint_for_optimizer(T& value)
-{
-    if (!is_constant_evaluated()) {
-        asm volatile(""
-                     : "+rm"(value)
-                     :
-                     : "memory");
-    }
-}
-
 ALWAYS_INLINE constexpr NativeWord extend_sign(bool sign)
 {
     return sign ? max_word : 0;
