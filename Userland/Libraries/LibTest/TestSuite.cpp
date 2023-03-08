@@ -10,6 +10,7 @@
 #include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
 #include <LibTest/TestSuite.h>
+#include <math.h>
 #include <stdlib.h>
 #include <sys/time.h>
 
@@ -69,6 +70,7 @@ int TestSuite::main(DeprecatedString const& suite_name, Span<StringView> argumen
 
     args_parser.add_option(do_tests_only, "Only run tests.", "tests", 0);
     args_parser.add_option(do_benchmarks_only, "Only run benchmarks.", "bench", 0);
+    args_parser.add_option(m_benchmark_repetitions, "Number of times to repeat each benchmark (default 1)", "benchmark_repetitions", 0, "N");
     args_parser.add_option(do_list_cases, "List available test cases.", "list", 0);
     args_parser.add_positional_argument(search_string, "Only run matching cases.", "pattern", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
@@ -120,21 +122,43 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
 
     for (auto const& t : tests) {
         auto const test_type = t->is_benchmark() ? "benchmark" : "test";
+        auto const repetitions = t->is_benchmark() ? m_benchmark_repetitions : 1;
 
         warnln("Running {} '{}'.", test_type, t->name());
         m_current_test_case_passed = true;
 
-        TestElapsedTimer timer;
-        t->func()();
-        auto const time = timer.elapsed_milliseconds();
+        u64 total_time = 0;
+        u64 sum_of_squared_times = 0;
+        u64 min_time = NumericLimits<u64>::max();
+        u64 max_time = 0;
 
-        dbgln("{} {} '{}' in {}ms", m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(), time);
+        for (u64 i = 0; i < repetitions; ++i) {
+            TestElapsedTimer timer;
+            t->func()();
+            auto const iteration_time = timer.elapsed_milliseconds();
+            total_time += iteration_time;
+            sum_of_squared_times += iteration_time * iteration_time;
+            min_time = min(min_time, iteration_time);
+            max_time = max(max_time, iteration_time);
+        }
+
+        if (repetitions != 1) {
+            double average = total_time / double(repetitions);
+            double average_squared = average * average;
+            double standard_deviation = sqrt((sum_of_squared_times + repetitions * average_squared - 2 * total_time * average) / (repetitions - 1));
+
+            dbgln("{} {} '{}' on average in {:.1f}±{:.1f}ms (min={}ms, max={}ms, total={}ms)",
+                m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(),
+                average, standard_deviation, min_time, max_time, total_time);
+        } else {
+            dbgln("{} {} '{}' in {}ms", m_current_test_case_passed ? "Completed" : "Failed", test_type, t->name(), total_time);
+        }
 
         if (t->is_benchmark()) {
-            m_benchtime += time;
+            m_benchtime += total_time;
             benchmark_count++;
         } else {
-            m_testtime += time;
+            m_testtime += total_time;
             test_count++;
         }
 

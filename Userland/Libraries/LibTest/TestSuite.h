@@ -50,6 +50,7 @@ private:
     u64 m_testtime = 0;
     u64 m_benchtime = 0;
     DeprecatedString m_suite_name;
+    u64 m_benchmark_repetitions = 1;
     bool m_current_test_case_passed = true;
     Function<void()> m_setup;
 };
