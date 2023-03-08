@@ -106,6 +106,7 @@ public:
     u16 num_channels() const { return m_plugin->num_channels(); }
     DeprecatedString format_name() const { return m_plugin->format_name(); }
     u16 bits_per_sample() const { return pcm_bits_per_sample(m_plugin->pcm_format()); }
+    PcmSampleFormat pcm_format() const { return m_plugin->pcm_format(); }
     Metadata const& metadata() const { return m_plugin->metadata(); }
     Vector<PictureData> const& pictures() const { return m_plugin->pictures(); };
 
