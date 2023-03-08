@@ -54,9 +54,12 @@ public slots:
     void copy_selected_text();
 
 protected:
-    bool eventFilter(QObject* obj, QEvent* event);
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
 private:
+    virtual void resizeEvent(QResizeEvent*) override;
+    virtual void moveEvent(QMoveEvent*) override;
+
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
     QTabWidget* m_tabs_container { nullptr };
