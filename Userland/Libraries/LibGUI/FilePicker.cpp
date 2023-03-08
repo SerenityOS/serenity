@@ -6,6 +6,7 @@
 
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
+#include <LibConfig/Client.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/Action.h>
@@ -207,12 +208,17 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     m_context_menu->add_action(mkdir_action);
     m_context_menu->add_separator();
 
-    m_context_menu->add_action(GUI::Action::create_checkable(
+    auto show_dotfiles = GUI::Action::create_checkable(
         "Show dotfiles", { Mod_Ctrl, Key_H }, [&](auto& action) {
             m_model->set_should_show_dotfiles(action.is_checked());
             m_model->invalidate();
         },
-        this));
+        this);
+    auto show_dotfiles_preset = Config::read_bool("FileManager"sv, "DirectoryView"sv, "ShowDotFiles"sv, false);
+    if (show_dotfiles_preset)
+        show_dotfiles->activate();
+
+    m_context_menu->add_action(show_dotfiles);
 
     m_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
         if (!index.is_valid()) {
