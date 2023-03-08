@@ -463,6 +463,18 @@ void BrickGame::timer_event(Core::TimerEvent&)
 
 void BrickGame::keydown_event(GUI::KeyEvent& event)
 {
+    switch (event.key()) {
+    case KeyCode::Key_Escape:
+    case KeyCode::Key_P:
+        m_brick_game->toggle_pause();
+        return;
+    default:
+        break;
+    }
+
+    if (m_brick_game->state() == Bricks::GameState::Paused)
+        return;
+
     Bricks::RenderRequest render_request { Bricks::RenderRequest::SkipRender };
     switch (event.key()) {
     case KeyCode::Key_A:
@@ -489,10 +501,6 @@ void BrickGame::keydown_event(GUI::KeyEvent& event)
         break;
     case KeyCode::Key_Space:
         render_request = m_brick_game->move_down_fast();
-        break;
-    case KeyCode::Key_Escape:
-    case KeyCode::Key_P:
-        m_brick_game->toggle_pause();
         break;
     default:
         event.ignore();
