@@ -208,7 +208,7 @@ void TerminalWidget::keydown_event(GUI::KeyEvent& event)
 {
     // We specifically need to process shortcuts before input to the Terminal is done
     // since otherwise escape sequences will eat all our shortcuts for dinner.
-    window()->propagate_shortcuts_up_to_application(event, this);
+    window()->propagate_shortcuts(event, this);
     if (event.is_accepted())
         return;
 
