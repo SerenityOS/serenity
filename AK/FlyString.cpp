@@ -97,7 +97,7 @@ bool FlyString::is_empty() const
 
 unsigned FlyString::hash() const
 {
-    return bytes_as_string_view().hash();
+    return String::fly_string_data_to_hash({}, m_data);
 }
 
 FlyString::operator String() const
@@ -170,7 +170,7 @@ DeprecatedFlyString FlyString::to_deprecated_fly_string() const
 
 unsigned Traits<FlyString>::hash(FlyString const& fly_string)
 {
-    return fly_string.bytes_as_string_view().hash();
+    return fly_string.hash();
 }
 
 ErrorOr<void> Formatter<FlyString>::format(FormatBuilder& builder, FlyString const& fly_string)

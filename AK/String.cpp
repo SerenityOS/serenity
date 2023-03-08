@@ -565,6 +565,18 @@ StringView String::fly_string_data_to_string_view(Badge<FlyString>, uintptr_t co
     return string_data->bytes_as_string_view();
 }
 
+u32 String::fly_string_data_to_hash(Badge<FlyString>, uintptr_t const& data)
+{
+    if (has_short_string_bit(data)) {
+        auto const* short_string = reinterpret_cast<ShortString const*>(&data);
+        auto bytes = short_string->bytes();
+        return string_hash(reinterpret_cast<char const*>(bytes.data()), bytes.size());
+    }
+
+    auto const* string_data = reinterpret_cast<Detail::StringData const*>(data);
+    return string_data->hash();
+}
+
 uintptr_t String::to_fly_string_data(Badge<FlyString>) const
 {
     return reinterpret_cast<uintptr_t>(m_data);

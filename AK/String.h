@@ -213,6 +213,7 @@ public:
 
     [[nodiscard]] static String fly_string_data_to_string(Badge<FlyString>, uintptr_t const&);
     [[nodiscard]] static StringView fly_string_data_to_string_view(Badge<FlyString>, uintptr_t const&);
+    [[nodiscard]] static u32 fly_string_data_to_hash(Badge<FlyString>, uintptr_t const&);
     [[nodiscard]] uintptr_t to_fly_string_data(Badge<FlyString>) const;
 
     static void ref_fly_string_data(Badge<FlyString>, uintptr_t);
