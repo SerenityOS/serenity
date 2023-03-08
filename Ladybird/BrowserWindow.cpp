@@ -507,6 +507,22 @@ void BrowserWindow::copy_selected_text()
     }
 }
 
+void BrowserWindow::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    for (auto& tab : m_tabs) {
+        tab->view().set_window_size({ frameSize().width(), frameSize().height() });
+    }
+}
+
+void BrowserWindow::moveEvent(QMoveEvent* event)
+{
+    QWidget::moveEvent(event);
+    for (auto& tab : m_tabs) {
+        tab->view().set_window_position({ event->pos().x(), event->pos().y() });
+    }
+}
+
 bool BrowserWindow::eventFilter(QObject* obj, QEvent* event)
 {
     if (event->type() == QEvent::MouseButtonRelease) {

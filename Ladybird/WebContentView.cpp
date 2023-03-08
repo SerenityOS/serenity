@@ -452,6 +452,16 @@ void WebContentView::set_viewport_rect(Gfx::IntRect rect)
     client().async_set_viewport_rect(rect);
 }
 
+void WebContentView::set_window_size(Gfx::IntSize size)
+{
+    client().async_set_window_size(size);
+}
+
+void WebContentView::set_window_position(Gfx::IntPoint position)
+{
+    client().async_set_window_position(position);
+}
+
 void WebContentView::update_viewport_rect()
 {
     auto scaled_width = int(viewport()->width() / m_inverse_pixel_scaling_ratio);

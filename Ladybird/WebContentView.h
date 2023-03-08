@@ -98,6 +98,8 @@ public:
     ErrorOr<String> dump_layout_tree();
 
     void set_viewport_rect(Gfx::IntRect);
+    void set_window_size(Gfx::IntSize);
+    void set_window_position(Gfx::IntPoint);
 
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
