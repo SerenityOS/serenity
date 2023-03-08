@@ -11,31 +11,14 @@
 #include <LibGUI/TextDocument.h>
 #include <LibGfx/Palette.h>
 #include <LibSyntax/HighlighterClient.h>
+#include <LibSyntax/Language.h>
 
 namespace Syntax {
-
-enum class Language {
-    CMake,
-    CMakeCache,
-    Cpp,
-    CSS,
-    GitCommit,
-    GML,
-    HTML,
-    INI,
-    JavaScript,
-    PlainText,
-    SQL,
-    Shell,
-};
 
 struct TextStyle {
     const Gfx::Color color;
     bool const bold { false };
 };
-
-StringView language_to_string(Language);
-StringView common_language_extension(Language);
 
 class Highlighter {
     AK_MAKE_NONCOPYABLE(Highlighter);
