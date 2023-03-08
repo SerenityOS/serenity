@@ -711,3 +711,85 @@ TEST_CASE(trim)
         EXPECT(result.is_empty());
     }
 }
+
+TEST_CASE(starts_with)
+{
+    EXPECT(String {}.starts_with_bytes({}));
+    EXPECT(!String {}.starts_with_bytes(" "sv));
+    EXPECT(!String {}.starts_with(0));
+
+    EXPECT("a"_short_string.starts_with_bytes({}));
+    EXPECT("a"_short_string.starts_with_bytes("a"sv));
+    EXPECT(!"a"_short_string.starts_with_bytes("b"sv));
+    EXPECT(!"a"_short_string.starts_with_bytes("ab"sv));
+
+    EXPECT("a"_short_string.starts_with(0x0061));
+    EXPECT(!"a"_short_string.starts_with(0x0062));
+
+    EXPECT("abc"_short_string.starts_with_bytes({}));
+    EXPECT("abc"_short_string.starts_with_bytes("a"sv));
+    EXPECT("abc"_short_string.starts_with_bytes("ab"sv));
+    EXPECT("abc"_short_string.starts_with_bytes("abc"sv));
+    EXPECT(!"abc"_short_string.starts_with_bytes("b"sv));
+    EXPECT(!"abc"_short_string.starts_with_bytes("bc"sv));
+
+    EXPECT("abc"_short_string.starts_with(0x0061));
+    EXPECT(!"abc"_short_string.starts_with(0x0062));
+    EXPECT(!"abc"_short_string.starts_with(0x0063));
+
+    auto emoji = MUST("😀🙃"_string);
+    EXPECT(emoji.starts_with_bytes("\xF0"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F\x98"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F\x98\x80"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F\x98\x80\xF0"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F\x98\x80\xF0\x9F"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F\x98\x80\xF0\x9F\x99"sv));
+    EXPECT(emoji.starts_with_bytes("\xF0\x9F\x98\x80\xF0\x9F\x99\x83"sv));
+    EXPECT(!emoji.starts_with_bytes("a"sv));
+    EXPECT(!emoji.starts_with_bytes("🙃"sv));
+
+    EXPECT(emoji.starts_with(0x1F600));
+    EXPECT(!emoji.starts_with(0x1F643));
+}
+
+TEST_CASE(ends_with)
+{
+    EXPECT(String {}.ends_with_bytes({}));
+    EXPECT(!String {}.ends_with_bytes(" "sv));
+    EXPECT(!String {}.ends_with(0));
+
+    EXPECT("a"_short_string.ends_with_bytes({}));
+    EXPECT("a"_short_string.ends_with_bytes("a"sv));
+    EXPECT(!"a"_short_string.ends_with_bytes("b"sv));
+    EXPECT(!"a"_short_string.ends_with_bytes("ba"sv));
+
+    EXPECT("a"_short_string.ends_with(0x0061));
+    EXPECT(!"a"_short_string.ends_with(0x0062));
+
+    EXPECT("abc"_short_string.ends_with_bytes({}));
+    EXPECT("abc"_short_string.ends_with_bytes("c"sv));
+    EXPECT("abc"_short_string.ends_with_bytes("bc"sv));
+    EXPECT("abc"_short_string.ends_with_bytes("abc"sv));
+    EXPECT(!"abc"_short_string.ends_with_bytes("b"sv));
+    EXPECT(!"abc"_short_string.ends_with_bytes("ab"sv));
+
+    EXPECT("abc"_short_string.ends_with(0x0063));
+    EXPECT(!"abc"_short_string.ends_with(0x0062));
+    EXPECT(!"abc"_short_string.ends_with(0x0061));
+
+    auto emoji = MUST("😀🙃"_string);
+    EXPECT(emoji.ends_with_bytes("\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\x99\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\x9F\x99\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\xF0\x9F\x99\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\x80\xF0\x9F\x99\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\x98\x80\xF0\x9F\x99\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\x9F\x98\x80\xF0\x9F\x99\x83"sv));
+    EXPECT(emoji.ends_with_bytes("\xF0\x9F\x98\x80\xF0\x9F\x99\x83"sv));
+    EXPECT(!emoji.ends_with_bytes("a"sv));
+    EXPECT(!emoji.ends_with_bytes("😀"sv));
+
+    EXPECT(emoji.ends_with(0x1F643));
+    EXPECT(!emoji.ends_with(0x1F600));
+}

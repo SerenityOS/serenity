@@ -496,7 +496,10 @@ bool String::contains(char needle, CaseSensitivity case_sensitivity) const
 
 bool String::starts_with(u32 code_point) const
 {
-    return bytes_as_string_view().starts_with(code_point);
+    if (is_empty())
+        return false;
+
+    return *code_points().begin() == code_point;
 }
 
 bool String::starts_with_bytes(StringView bytes) const
@@ -506,7 +509,14 @@ bool String::starts_with_bytes(StringView bytes) const
 
 bool String::ends_with(u32 code_point) const
 {
-    return bytes_as_string_view().ends_with(code_point);
+    if (is_empty())
+        return false;
+
+    u32 last_code_point = 0;
+    for (auto it = code_points().begin(); it != code_points().end(); ++it)
+        last_code_point = *it;
+
+    return last_code_point == code_point;
 }
 
 bool String::ends_with_bytes(StringView bytes) const
