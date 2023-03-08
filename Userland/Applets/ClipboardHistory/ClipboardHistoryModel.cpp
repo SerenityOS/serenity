@@ -7,6 +7,7 @@
  */
 
 #include "ClipboardHistoryModel.h"
+#include <AK/JsonParser.h>
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
@@ -117,29 +118,40 @@ void ClipboardHistoryModel::clipboard_content_did_change(DeprecatedString const&
         add_item(data_and_type);
 }
 
+ErrorOr<void> ClipboardHistoryModel::invalidate_model_and_file(bool rewrite_all)
+{
+    invalidate();
+
+    TRY(write_to_file(rewrite_all));
+    return {};
+}
+
 void ClipboardHistoryModel::add_item(const GUI::Clipboard::DataAndType& item)
 {
+    bool has_deleted_an_item = false;
     m_history_items.remove_first_matching([&](ClipboardItem& existing) {
         return existing.data_and_type.data == item.data && existing.data_and_type.mime_type == item.mime_type;
     });
 
-    if (m_history_items.size() == m_history_limit)
+    if (m_history_items.size() == m_history_limit) {
         m_history_items.take_last();
+        has_deleted_an_item = true;
+    }
 
     m_history_items.prepend({ item, Core::DateTime::now() });
-    invalidate();
+    invalidate_model_and_file(has_deleted_an_item).release_value_but_fixme_should_propagate_errors();
 }
 
 void ClipboardHistoryModel::remove_item(int index)
 {
     m_history_items.remove(index);
-    invalidate();
+    invalidate_model_and_file(true).release_value_but_fixme_should_propagate_errors();
 }
 
 void ClipboardHistoryModel::clear()
 {
     m_history_items.clear();
-    invalidate();
+    invalidate_model_and_file(true).release_value_but_fixme_should_propagate_errors();
 }
 
 void ClipboardHistoryModel::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value_string)
@@ -155,9 +167,84 @@ void ClipboardHistoryModel::config_string_did_change(DeprecatedString const& dom
         auto value = value_or_error.value();
         if (value < (int)m_history_items.size()) {
             m_history_items.remove(value, m_history_items.size() - value);
-            invalidate();
+            invalidate_model_and_file(false).release_value_but_fixme_should_propagate_errors();
         }
         m_history_limit = value;
         return;
     }
+}
+
+ErrorOr<ClipboardHistoryModel::ClipboardItem> ClipboardHistoryModel::ClipboardItem::from_json(JsonObject const& object)
+{
+    if (!object.has("data_and_type"sv) && !object.has("time"sv))
+        return Error::from_string_literal("JsonObject does not contain necessary fields");
+
+    ClipboardItem result;
+    result.data_and_type = TRY(GUI::Clipboard::DataAndType::from_json(*object.get_object("data_and_type"sv)));
+    result.time = Core::DateTime::from_timestamp(*object.get_integer<time_t>("time"sv));
+
+    return result;
+}
+
+ErrorOr<JsonObject> ClipboardHistoryModel::ClipboardItem::to_json() const
+{
+    JsonObject object;
+
+    object.set("data_and_type", TRY(data_and_type.to_json()));
+    object.set("time", time.timestamp());
+
+    return object;
+}
+
+ErrorOr<void> ClipboardHistoryModel::read_from_file(DeprecatedString const& path)
+{
+    m_path = path;
+
+    auto read_from_file_impl = [this]() -> ErrorOr<void> {
+        auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Read));
+        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+
+        auto buffer = TRY(ByteBuffer::create_uninitialized(PAGE_SIZE));
+
+        while (TRY(buffered_file->can_read_line())) {
+            auto line = TRY(buffered_file->read_line(buffer));
+            auto object = TRY(JsonParser { line }.parse()).as_object();
+            TRY(m_history_items.try_append(TRY(ClipboardItem::from_json(object))));
+        }
+        return {};
+    };
+
+    auto maybe_error = read_from_file_impl();
+    if (maybe_error.is_error())
+        dbgln("Unable to load clipboard history: {}", maybe_error.release_error());
+
+    return {};
+}
+
+ErrorOr<void> ClipboardHistoryModel::write_to_file(bool rewrite_all)
+{
+    if (m_history_items.is_empty()) {
+        // This will proceed to empty the file
+        rewrite_all = true;
+    }
+
+    auto const write_element = [](Core::File& file, ClipboardItem const& item) -> ErrorOr<void> {
+        if (!item.data_and_type.mime_type.starts_with("text/"sv))
+            return {};
+        TRY(file.write_until_depleted(TRY(item.to_json()).to_deprecated_string().bytes()));
+        TRY(file.write_until_depleted("\n"sv.bytes()));
+        return {};
+    };
+
+    if (!rewrite_all) {
+        auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Write | Core::File::OpenMode::Append));
+        TRY(write_element(*file, m_history_items.first()));
+    } else {
+        auto file = TRY(Core::File::open(m_path, Core::File::OpenMode::Write | Core::File::OpenMode::Truncate));
+        for (auto const& item : m_history_items) {
+            TRY(write_element(*file, item));
+        }
+    }
+
+    return {};
 }

@@ -11,6 +11,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/JsonObject.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Forward.h>
 
@@ -34,6 +35,9 @@ public:
         HashMap<DeprecatedString, DeprecatedString> metadata;
 
         RefPtr<Gfx::Bitmap> as_bitmap() const;
+
+        static ErrorOr<Clipboard::DataAndType> from_json(JsonObject const& object);
+        ErrorOr<JsonObject> to_json() const;
     };
 
     static ErrorOr<void> initialize(Badge<Application>);
