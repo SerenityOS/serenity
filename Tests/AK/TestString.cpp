@@ -712,6 +712,52 @@ TEST_CASE(trim)
     }
 }
 
+TEST_CASE(contains)
+{
+    EXPECT(!String {}.contains({}));
+    EXPECT(!String {}.contains(" "sv));
+    EXPECT(!String {}.contains(0));
+
+    EXPECT("a"_short_string.contains("a"sv));
+    EXPECT(!"a"_short_string.contains({}));
+    EXPECT(!"a"_short_string.contains("b"sv));
+    EXPECT(!"a"_short_string.contains("ab"sv));
+
+    EXPECT("a"_short_string.contains(0x0061));
+    EXPECT(!"a"_short_string.contains(0x0062));
+
+    EXPECT("abc"_short_string.contains("a"sv));
+    EXPECT("abc"_short_string.contains("b"sv));
+    EXPECT("abc"_short_string.contains("c"sv));
+    EXPECT("abc"_short_string.contains("ab"sv));
+    EXPECT("abc"_short_string.contains("bc"sv));
+    EXPECT("abc"_short_string.contains("abc"sv));
+    EXPECT(!"abc"_short_string.contains({}));
+    EXPECT(!"abc"_short_string.contains("ac"sv));
+    EXPECT(!"abc"_short_string.contains("abcd"sv));
+
+    EXPECT("abc"_short_string.contains(0x0061));
+    EXPECT("abc"_short_string.contains(0x0062));
+    EXPECT("abc"_short_string.contains(0x0063));
+    EXPECT(!"abc"_short_string.contains(0x0064));
+
+    auto emoji = MUST("😀"_string);
+    EXPECT(emoji.contains("\xF0"sv));
+    EXPECT(emoji.contains("\x9F"sv));
+    EXPECT(emoji.contains("\x98"sv));
+    EXPECT(emoji.contains("\x80"sv));
+    EXPECT(emoji.contains("\xF0\x9F"sv));
+    EXPECT(emoji.contains("\xF0\x9F\x98"sv));
+    EXPECT(emoji.contains("\xF0\x9F\x98\x80"sv));
+    EXPECT(emoji.contains("\x9F\x98\x80"sv));
+    EXPECT(emoji.contains("\x98\x80"sv));
+    EXPECT(!emoji.contains("a"sv));
+    EXPECT(!emoji.contains("🙃"sv));
+
+    EXPECT(emoji.contains(0x1F600));
+    EXPECT(!emoji.contains(0x1F643));
+}
+
 TEST_CASE(starts_with)
 {
     EXPECT(String {}.starts_with_bytes({}));
