@@ -87,7 +87,7 @@ private:
     };
 
     struct FlexLine {
-        Vector<FlexItem*> items;
+        Vector<FlexItem&> items;
         CSSPixels cross_size { 0 };
         CSSPixels remaining_free_space { 0 };
         float chosen_flex_fraction { 0 };
