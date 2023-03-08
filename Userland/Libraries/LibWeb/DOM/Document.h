@@ -284,6 +284,7 @@ public:
     JS::NonnullGCPtr<Document> appropriate_template_contents_owner_document();
 
     DeprecatedString ready_state() const;
+    HTML::DocumentReadyState readiness() const { return m_readiness; };
     void update_readiness(HTML::DocumentReadyState);
 
     HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
