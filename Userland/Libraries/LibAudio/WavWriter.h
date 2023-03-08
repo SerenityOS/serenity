@@ -11,6 +11,7 @@
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <LibAudio/Sample.h>
+#include <LibAudio/SampleFormats.h>
 #include <LibCore/File.h>
 #include <LibCore/Forward.h>
 
@@ -21,8 +22,8 @@ class WavWriter {
     AK_MAKE_NONMOVABLE(WavWriter);
 
 public:
-    static ErrorOr<NonnullOwnPtr<WavWriter>> create_from_file(StringView path, int sample_rate = 44100, u16 num_channels = 2, u16 bits_per_sample = 16);
-    WavWriter(int sample_rate = 44100, u16 num_channels = 2, u16 bits_per_sample = 16);
+    static ErrorOr<NonnullOwnPtr<WavWriter>> create_from_file(StringView path, int sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
+    WavWriter(int sample_rate = 44100, u16 num_channels = 2, PcmSampleFormat sample_format = PcmSampleFormat::Int16);
     ~WavWriter();
 
     ErrorOr<void> write_samples(Span<Sample> samples);
@@ -30,13 +31,13 @@ public:
 
     u32 sample_rate() const { return m_sample_rate; }
     u16 num_channels() const { return m_num_channels; }
-    u16 bits_per_sample() const { return m_bits_per_sample; }
+    PcmSampleFormat sample_format() const { return m_sample_format; }
     Core::File& file() const { return *m_file; }
 
     ErrorOr<void> set_file(StringView path);
     void set_num_channels(int num_channels) { m_num_channels = num_channels; }
     void set_sample_rate(int sample_rate) { m_sample_rate = sample_rate; }
-    void set_bits_per_sample(int bits_per_sample) { m_bits_per_sample = bits_per_sample; }
+    void set_sample_format(PcmSampleFormat sample_format) { m_sample_format = sample_format; }
 
 private:
     ErrorOr<void> write_header();
@@ -45,7 +46,7 @@ private:
 
     u32 m_sample_rate;
     u16 m_num_channels;
-    u16 m_bits_per_sample;
+    PcmSampleFormat m_sample_format;
     u32 m_data_sz { 0 };
 };
 
