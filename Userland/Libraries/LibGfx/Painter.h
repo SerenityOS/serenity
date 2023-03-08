@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <AK/Memory.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -179,6 +180,76 @@ public:
     IntRect clip_rect() const { return state().clip_rect; }
 
     int scale() const { return state().scale; }
+
+    template<typename T, typename TColorOrFunction>
+    ALWAYS_INLINE void draw_scanline_for_fill_path(int y, T x_start, T x_end, TColorOrFunction color)
+    {
+        // Note: This is really an internal function for FillPathImplementation.h to use.
+        // This allows fill path to clip more of the pixels and reduce the number of clipping checks
+        // to the number of scanlines (and allows for a fast fill).
+
+        // Fill path should scale the scanlines before calling this.
+        VERIFY(scale() == 1);
+
+        constexpr bool is_floating_point = IsSameIgnoringCV<T, int>;
+        constexpr bool has_constant_color = IsSameIgnoringCV<TColorOrFunction, Color>;
+
+        int x1 = 0;
+        int x2 = 0;
+        u8 left_subpixel_alpha = 0;
+        u8 right_subpixel_alpha = 0;
+        if constexpr (is_floating_point) {
+            x1 = ceilf(x_start);
+            x2 = floorf(x_end);
+            left_subpixel_alpha = (x1 - x_start) * 255;
+            right_subpixel_alpha = (x_end - x2) * 255;
+            x1 -= left_subpixel_alpha > 0;
+            x2 += right_subpixel_alpha > 0;
+        } else {
+            x1 = x_start;
+            x2 = x_end;
+        }
+
+        IntRect scanline(x1, y, x2 - x1, 1);
+        scanline = scanline.translated(translation());
+        auto clipped = scanline.intersected(clip_rect());
+        if (clipped.is_empty())
+            return;
+
+        auto get_color = [&](int offset) {
+            if constexpr (has_constant_color) {
+                return color;
+            } else {
+                return color(offset);
+            }
+        };
+
+        if constexpr (is_floating_point) {
+            // Paint left and right subpixels (then remove them from the scanline).
+            auto get_color_with_alpha = [&](int offset, u8 alpha) {
+                auto color_at_offset = get_color(offset);
+                u8 color_alpha = (alpha * color_at_offset.alpha()) / 255;
+                return color_at_offset.with_alpha(color_alpha);
+            };
+            if (clipped.left() == scanline.left() && left_subpixel_alpha)
+                set_physical_pixel(clipped.top_left(), get_color_with_alpha(0, left_subpixel_alpha), true);
+            if (clipped.right() == scanline.right() && right_subpixel_alpha)
+                set_physical_pixel(clipped.top_right(), get_color_with_alpha(scanline.width(), right_subpixel_alpha), true);
+            clipped.shrink(0, right_subpixel_alpha > 0, 0, left_subpixel_alpha > 0);
+        }
+
+        if constexpr (has_constant_color) {
+            if (color.alpha() == 255) {
+                // Speedy path: Constant color and no alpha blending.
+                fast_u32_fill(m_target->scanline(clipped.y()) + clipped.x(), color.value(), clipped.width());
+                return;
+            }
+        }
+
+        for (int x = clipped.x(); x <= clipped.right(); x++) {
+            set_physical_pixel({ x, clipped.y() }, get_color(x - scanline.x()), true);
+        }
+    }
 
 protected:
     friend GradientLine;

@@ -41,13 +41,13 @@ enum class FillPathMode {
     AllowFloatingPoints,
 };
 
-template<FillPathMode fill_path_mode, typename ColorFunction>
-void fill_path(Painter& painter, Path const& path, ColorFunction color_function, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset = {})
+template<FillPathMode fill_path_mode, typename ColorOrFunction>
+void fill_path(Painter& painter, Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset = {})
 {
     using GridCoordinateType = Conditional<fill_path_mode == FillPathMode::PlaceOnIntGrid, int, float>;
     using PointType = Point<GridCoordinateType>;
 
-    auto draw_scanline = [&](int y, float x1, float x2) {
+    auto draw_scanline = [&](int y, GridCoordinateType x1, GridCoordinateType x2) {
         const auto draw_offset = offset.value_or({ 0, 0 });
         const auto draw_origin = (path.bounding_box().top_left() + draw_offset).to_type<int>();
         // FIMXE: Offset is added here to handle floating point translations in the AA painter,
@@ -57,23 +57,12 @@ void fill_path(Painter& painter, Path const& path, ColorFunction color_function,
         x2 += draw_offset.x();
         if (x1 > x2)
             swap(x1, x2);
-        auto set_pixel = [&](int x, int y, Color color) {
-            painter.set_pixel(x, y, color, true);
-        };
-        if constexpr (fill_path_mode == FillPathMode::AllowFloatingPoints) {
-            int int_x1 = ceilf(x1);
-            int int_x2 = floorf(x2);
-            float left_subpixel = int_x1 - x1;
-            float right_subpixel = x2 - int_x2;
-            auto left_color = color_function(IntPoint(int_x1 - 1, y) - draw_origin);
-            auto right_color = color_function(IntPoint(int_x2, y) - draw_origin);
-            set_pixel(int_x1 - 1, y, left_color.with_alpha(left_color.alpha() * left_subpixel));
-            set_pixel(int_x2, y, right_color.with_alpha(right_color.alpha() * right_subpixel));
-            for (int x = int_x1; x < int_x2; x++)
-                set_pixel(x, y, color_function(IntPoint(x, y) - draw_origin));
+        if constexpr (IsSameIgnoringCV<ColorOrFunction, Color>) {
+            painter.draw_scanline_for_fill_path(y, x1, x2 + 1, color);
         } else {
-            for (int x = x1; x < int(x2); x++)
-                set_pixel(x, y, color_function(IntPoint(x, y) - draw_origin));
+            painter.draw_scanline_for_fill_path(y, x1, x2 + 1, [&](int offset) {
+                return color(IntPoint(x1 + offset, y) - draw_origin);
+            });
         }
     };
 
