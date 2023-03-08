@@ -95,8 +95,8 @@ private:
 
     bool has_definite_main_size(Box const&) const;
     bool has_definite_cross_size(Box const&) const;
-    CSSPixels specified_main_size(Box const&) const;
-    CSSPixels specified_cross_size(Box const&) const;
+    CSSPixels inner_main_size(Box const&) const;
+    CSSPixels inner_cross_size(Box const&) const;
     CSSPixels resolved_definite_main_size(FlexItem const&) const;
     CSSPixels resolved_definite_cross_size(FlexItem const&) const;
     bool has_main_min_size(Box const&) const;
@@ -145,6 +145,7 @@ private:
     void collect_flex_items_into_flex_lines();
 
     void resolve_flexible_lengths();
+    void resolve_flexible_lengths_for_line(FlexLine&);
 
     void resolve_cross_axis_auto_margins();
 
