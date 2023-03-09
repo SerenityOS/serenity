@@ -168,6 +168,11 @@ DeprecatedFlyString FlyString::to_deprecated_fly_string() const
     return DeprecatedFlyString(bytes_as_string_view());
 }
 
+ErrorOr<FlyString> FlyString::from_deprecated_fly_string(DeprecatedFlyString const& deprecated_fly_string)
+{
+    return FlyString::from_utf8(deprecated_fly_string.view());
+}
+
 unsigned Traits<FlyString>::hash(FlyString const& fly_string)
 {
     return fly_string.hash();
