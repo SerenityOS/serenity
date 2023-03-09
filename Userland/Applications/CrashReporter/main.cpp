@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Ali Chraghi <chraghiali1@gmail.com>
  *
@@ -275,9 +275,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             GUI::MessageBox::show(window, DeprecatedString::formatted("Communication failed with FileSystemAccessServer: {}.", file_or_error.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
             return;
         }
-
         auto file = file_or_error.release_value().release_stream();
-        if (auto result = file->write(full_backtrace.to_byte_buffer()); result.is_error())
+
+        auto byte_buffer_or_error = full_backtrace.try_to_byte_buffer();
+        if (byte_buffer_or_error.is_error()) {
+            GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't create backtrace: {}.", byte_buffer_or_error.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto byte_buffer = byte_buffer_or_error.release_value();
+
+        if (auto result = file->write(byte_buffer); result.is_error())
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't save file: {}.", result.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
     };
     save_backtrace_button.set_enabled(false);
