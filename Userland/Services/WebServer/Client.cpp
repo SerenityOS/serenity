@@ -81,7 +81,7 @@ void Client::start()
             builder.append("\r\n"sv);
         }
 
-        auto request = builder.to_byte_buffer();
+        auto request = builder.try_to_byte_buffer().release_value_but_fixme_should_propagate_errors();
         dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", DeprecatedString::copy(request));
 
         auto maybe_did_handle = handle_request(request);
