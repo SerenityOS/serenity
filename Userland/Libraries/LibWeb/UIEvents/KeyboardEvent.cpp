@@ -66,11 +66,13 @@ static unsigned long determine_key_code(KeyCode platform_key, u32 code_point)
     return platform_key;
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, KeyCode platform_key, unsigned modifiers, u32 code_point)
 {
+    auto& vm = realm.vm();
+
     // FIXME: Figure out what these should actually contain.
-    DeprecatedString event_key = key_code_to_string(platform_key);
-    DeprecatedString event_code = "FIXME";
+    auto event_key = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(key_code_to_string(platform_key)));
+    auto event_code = TRY_OR_THROW_OOM(vm, "FIXME"_string);
 
     auto key_code = determine_key_code(platform_key, code_point);
     KeyboardEventInit event_init {};
@@ -91,7 +93,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create_from_
     return KeyboardEvent::create(realm, event_name, event_init);
 }
 
-bool KeyboardEvent::get_modifier_state(DeprecatedString const& key_arg)
+bool KeyboardEvent::get_modifier_state(String const& key_arg)
 {
     if (key_arg == "Alt")
         return m_alt_key;
@@ -104,18 +106,18 @@ bool KeyboardEvent::get_modifier_state(DeprecatedString const& key_arg)
     return false;
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::create(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<KeyboardEvent>(realm, realm, event_name, event_init));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-KeyboardEvent::KeyboardEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, KeyboardEventInit const& event_init)
-    : UIEvent(realm, event_name, event_init)
+KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
+    : UIEvent(realm, event_name.to_deprecated_fly_string(), event_init)
     , m_key(event_init.key)
     , m_code(event_init.code)
     , m_location(event_init.location)
