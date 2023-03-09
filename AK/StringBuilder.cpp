@@ -105,15 +105,9 @@ void StringBuilder::append_repeated(char ch, size_t n)
     MUST(try_append_repeated(ch, n));
 }
 
-ByteBuffer StringBuilder::to_byte_buffer() const
+ErrorOr<ByteBuffer> StringBuilder::to_byte_buffer() const
 {
-    // FIXME: Handle OOM failure.
-    return ByteBuffer::copy(data(), length()).release_value_but_fixme_should_propagate_errors();
-}
-
-ErrorOr<ByteBuffer> StringBuilder::try_to_byte_buffer() const
-{
-    return TRY(ByteBuffer::copy(data(), length()));
+    return ByteBuffer::copy(data(), length());
 }
 
 #ifndef KERNEL

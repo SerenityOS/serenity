@@ -952,7 +952,7 @@ ErrorOr<ByteBuffer> GLContext::build_extension_string()
     TRY(string_builder.try_join(' ', extensions));
 
     // Create null-terminated string
-    auto extensions_bytes = TRY(string_builder.try_to_byte_buffer());
+    auto extensions_bytes = TRY(string_builder.to_byte_buffer());
     TRY(extensions_bytes.try_append(0));
     return extensions_bytes;
 }

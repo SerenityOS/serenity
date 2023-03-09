@@ -277,7 +277,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         auto file = file_or_error.release_value().release_stream();
 
-        auto byte_buffer_or_error = full_backtrace.try_to_byte_buffer();
+        auto byte_buffer_or_error = full_backtrace.to_byte_buffer();
         if (byte_buffer_or_error.is_error()) {
             GUI::MessageBox::show(window, DeprecatedString::formatted("Couldn't create backtrace: {}.", byte_buffer_or_error.release_error()), "Saving backtrace failed"sv, GUI::MessageBox::Type::Error);
             return;

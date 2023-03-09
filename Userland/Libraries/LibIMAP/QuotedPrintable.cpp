@@ -80,7 +80,7 @@ ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
         }
     }
 
-    return output.try_to_byte_buffer();
+    return output.to_byte_buffer();
 }
 
 }

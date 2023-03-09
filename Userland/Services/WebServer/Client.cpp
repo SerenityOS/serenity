@@ -81,7 +81,7 @@ void Client::start()
             builder.append("\r\n"sv);
         }
 
-        auto request = builder.try_to_byte_buffer().release_value_but_fixme_should_propagate_errors();
+        auto request = builder.to_byte_buffer().release_value_but_fixme_should_propagate_errors();
         dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", DeprecatedString::copy(request));
 
         auto maybe_did_handle = handle_request(request);
@@ -191,7 +191,7 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
     builder.appendff("Content-Length: {}\r\n", content_info.length);
     builder.append("\r\n"sv);
 
-    auto builder_contents = TRY(builder.try_to_byte_buffer());
+    auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write(builder_contents));
     log_response(200, request);
 
@@ -233,7 +233,7 @@ ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest 
     builder.append("\r\n"sv);
     builder.append("\r\n"sv);
 
-    auto builder_contents = TRY(builder.try_to_byte_buffer());
+    auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write(builder_contents));
 
     log_response(301, request);
@@ -363,8 +363,8 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
     header_builder.append("Content-Type: text/html; charset=UTF-8\r\n"sv);
     header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
     header_builder.append("\r\n"sv);
-    TRY(m_socket->write(TRY(header_builder.try_to_byte_buffer())));
-    TRY(m_socket->write(TRY(content_builder.try_to_byte_buffer())));
+    TRY(m_socket->write(TRY(header_builder.to_byte_buffer())));
+    TRY(m_socket->write(TRY(content_builder.to_byte_buffer())));
 
     log_response(code, request);
     return {};

@@ -220,7 +220,7 @@ ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
             break;
     }
 
-    m_request = HTTP::HttpRequest::from_raw_request(TRY(builder.try_to_byte_buffer()));
+    m_request = HTTP::HttpRequest::from_raw_request(TRY(builder.to_byte_buffer()));
     if (!m_request.has_value())
         return {};
 
@@ -278,7 +278,7 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
     builder.appendff("Content-Length: {}\r\n", content.length());
     builder.append("\r\n"sv);
 
-    auto builder_contents = TRY(builder.try_to_byte_buffer());
+    auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write(builder_contents));
 
     while (!content.is_empty()) {
@@ -319,8 +319,8 @@ ErrorOr<void, Client::WrappedError> Client::send_error_response(Error const& err
     header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
     header_builder.append("\r\n"sv);
 
-    TRY(m_socket->write(TRY(header_builder.try_to_byte_buffer())));
-    TRY(m_socket->write(TRY(content_builder.try_to_byte_buffer())));
+    TRY(m_socket->write(TRY(header_builder.to_byte_buffer())));
+    TRY(m_socket->write(TRY(content_builder.to_byte_buffer())));
 
     log_response(error.http_status);
     return {};

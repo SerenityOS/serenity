@@ -182,7 +182,7 @@ ErrorOr<void> Client::send_data(StringView data)
         }
     }
 
-    auto builder_contents = TRY(builder.try_to_byte_buffer());
+    auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write(builder_contents));
     return {};
 }

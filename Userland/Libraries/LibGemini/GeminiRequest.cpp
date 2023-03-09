@@ -15,7 +15,7 @@ ErrorOr<ByteBuffer> GeminiRequest::to_raw_request() const
     StringBuilder builder;
     TRY(builder.try_append(m_url.to_deprecated_string()));
     TRY(builder.try_append("\r\n"sv));
-    return builder.try_to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 Optional<GeminiRequest> GeminiRequest::from_raw_request(ByteBuffer const& raw_request)

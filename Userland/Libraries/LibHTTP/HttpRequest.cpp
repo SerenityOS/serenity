@@ -72,7 +72,7 @@ ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
         TRY(builder.try_append((char const*)m_body.data(), m_body.size()));
     }
     TRY(builder.try_append("\r\n"sv));
-    return builder.try_to_byte_buffer();
+    return builder.to_byte_buffer();
 }
 
 Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
