@@ -21,7 +21,7 @@ public:
     const URL& url() const { return m_url; }
     void set_url(const URL& url) { m_url = url; }
 
-    ByteBuffer to_raw_request() const;
+    ErrorOr<ByteBuffer> to_raw_request() const;
 
     static Optional<GeminiRequest> from_raw_request(ByteBuffer const&);
 

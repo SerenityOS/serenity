@@ -10,12 +10,12 @@
 
 namespace Gemini {
 
-ByteBuffer GeminiRequest::to_raw_request() const
+ErrorOr<ByteBuffer> GeminiRequest::to_raw_request() const
 {
     StringBuilder builder;
-    builder.append(m_url.to_deprecated_string());
-    builder.append("\r\n"sv);
-    return builder.to_byte_buffer();
+    TRY(builder.try_append(m_url.to_deprecated_string()));
+    TRY(builder.try_append("\r\n"sv));
+    return builder.try_to_byte_buffer();
 }
 
 Optional<GeminiRequest> GeminiRequest::from_raw_request(ByteBuffer const& raw_request)
