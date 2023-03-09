@@ -11,12 +11,12 @@
 TEST_CASE(test_decode)
 {
     auto decode_equal = [](StringView input, StringView expected) {
-        auto decoded = IMAP::decode_quoted_printable(input);
+        auto decoded = MUST(IMAP::decode_quoted_printable(input));
         EXPECT(decoded.bytes() == expected.bytes());
     };
 
     auto decode_equal_byte_buffer = [](StringView input, StringView expected) {
-        auto decoded = IMAP::decode_quoted_printable(input);
+        auto decoded = MUST(IMAP::decode_quoted_printable(input));
         EXPECT(decoded.bytes() == expected.bytes());
     };
 
@@ -44,6 +44,6 @@ TEST_CASE(test_decode)
             illegal_character_builder.append(byte);
     }
 
-    auto illegal_character_decode = IMAP::decode_quoted_printable(illegal_character_builder.to_deprecated_string());
+    auto illegal_character_decode = MUST(IMAP::decode_quoted_printable(illegal_character_builder.to_deprecated_string()));
     EXPECT(illegal_character_decode.is_empty());
 }

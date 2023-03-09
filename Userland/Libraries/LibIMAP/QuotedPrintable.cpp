@@ -17,7 +17,7 @@ static constexpr bool is_illegal_character(char c)
 }
 
 // RFC 2045 Section 6.7 "Quoted-Printable Content-Transfer-Encoding", https://datatracker.ietf.org/doc/html/rfc2045#section-6.7
-ByteBuffer decode_quoted_printable(StringView input)
+ErrorOr<ByteBuffer> decode_quoted_printable(StringView input)
 {
     GenericLexer lexer(input);
     StringBuilder output;
@@ -50,7 +50,7 @@ ByteBuffer decode_quoted_printable(StringView input)
 
                 if (is_ascii_hex_digit(second_escape_character)) {
                     u8 actual_character = (parse_ascii_hex_digit(first_escape_character) << 4) | parse_ascii_hex_digit(second_escape_character);
-                    output.append(actual_character);
+                    TRY(output.try_append(actual_character));
                 } else {
                     TODO();
                 }
@@ -72,15 +72,15 @@ ByteBuffer decode_quoted_printable(StringView input)
                 }
 
                 // Invalid escape sequence. RFC 2045 says a reasonable solution is just to append '=' followed by the character.
-                output.append('=');
-                output.append(first_escape_character);
+                TRY(output.try_append('='));
+                TRY(output.try_append(first_escape_character));
             }
         } else {
-            output.append(potential_character);
+            TRY(output.try_append(potential_character));
         }
     }
 
-    return output.to_byte_buffer();
+    return output.try_to_byte_buffer();
 }
 
 }

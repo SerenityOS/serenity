@@ -500,7 +500,7 @@ void MailWidget::selected_email_to_load()
         if (!decoded_base64.is_error())
             decoded_data = decoded_base64.release_value();
     } else if (selected_alternative_encoding.equals_ignoring_case("quoted-printable"sv)) {
-        decoded_data = IMAP::decode_quoted_printable(encoded_data);
+        decoded_data = IMAP::decode_quoted_printable(encoded_data).release_value_but_fixme_should_propagate_errors();
     } else {
         dbgln("Mail: Unimplemented decoder for encoding: {}", selected_alternative_encoding);
         GUI::MessageBox::show(window(), DeprecatedString::formatted("The e-mail encoding '{}' is currently unsupported.", selected_alternative_encoding), "Unsupported"sv, GUI::MessageBox::Type::Information);
