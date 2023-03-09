@@ -43,36 +43,36 @@ DeprecatedString HttpRequest::method_name() const
     return to_deprecated_string(m_method);
 }
 
-ByteBuffer HttpRequest::to_raw_request() const
+ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
 {
     StringBuilder builder;
-    builder.append(method_name());
-    builder.append(' ');
+    TRY(builder.try_append(method_name()));
+    TRY(builder.try_append(' '));
     // NOTE: The percent_encode is so that e.g. spaces are properly encoded.
     auto path = m_url.path();
     VERIFY(!path.is_empty());
-    builder.append(URL::percent_encode(m_url.path(), URL::PercentEncodeSet::EncodeURI));
+    TRY(builder.try_append(URL::percent_encode(m_url.path(), URL::PercentEncodeSet::EncodeURI)));
     if (!m_url.query().is_empty()) {
-        builder.append('?');
-        builder.append(m_url.query());
+        TRY(builder.try_append('?'));
+        TRY(builder.try_append(m_url.query()));
     }
-    builder.append(" HTTP/1.1\r\nHost: "sv);
-    builder.append(m_url.host());
+    TRY(builder.try_append(" HTTP/1.1\r\nHost: "sv));
+    TRY(builder.try_append(m_url.host()));
     if (m_url.port().has_value())
-        builder.appendff(":{}", *m_url.port());
-    builder.append("\r\n"sv);
+        TRY(builder.try_appendff(":{}", *m_url.port()));
+    TRY(builder.try_append("\r\n"sv));
     for (auto& header : m_headers) {
-        builder.append(header.name);
-        builder.append(": "sv);
-        builder.append(header.value);
-        builder.append("\r\n"sv);
+        TRY(builder.try_append(header.name));
+        TRY(builder.try_append(": "sv));
+        TRY(builder.try_append(header.value));
+        TRY(builder.try_append("\r\n"sv));
     }
     if (!m_body.is_empty() || method() == Method::POST) {
-        builder.appendff("Content-Length: {}\r\n\r\n", m_body.size());
-        builder.append((char const*)m_body.data(), m_body.size());
+        TRY(builder.try_appendff("Content-Length: {}\r\n\r\n", m_body.size()));
+        TRY(builder.try_append((char const*)m_body.data(), m_body.size()));
     }
-    builder.append("\r\n"sv);
-    return builder.to_byte_buffer();
+    TRY(builder.try_append("\r\n"sv));
+    return builder.try_to_byte_buffer();
 }
 
 Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)

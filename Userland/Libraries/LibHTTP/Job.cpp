@@ -195,7 +195,7 @@ ErrorOr<ByteBuffer> Job::receive(size_t size)
 
 void Job::on_socket_connected()
 {
-    auto raw_request = m_request.to_raw_request();
+    auto raw_request = m_request.to_raw_request().release_value_but_fixme_should_propagate_errors();
 
     if constexpr (JOB_DEBUG) {
         dbgln("Job: raw_request:");

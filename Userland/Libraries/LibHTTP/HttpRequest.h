@@ -57,7 +57,7 @@ public:
     void set_body(ByteBuffer&& body) { m_body = move(body); }
 
     DeprecatedString method_name() const;
-    ByteBuffer to_raw_request() const;
+    ErrorOr<ByteBuffer> to_raw_request() const;
 
     void set_headers(HashMap<DeprecatedString, DeprecatedString> const&);
 
