@@ -9,13 +9,13 @@
 
 namespace Web::UIEvents {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> FocusEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, FocusEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> FocusEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, FocusEventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<FocusEvent>(realm, realm, event_name, event_init));
 }
 
-FocusEvent::FocusEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, FocusEventInit const& event_init)
-    : UIEvent(realm, event_name)
+FocusEvent::FocusEvent(JS::Realm& realm, FlyString const& event_name, FocusEventInit const& event_init)
+    : UIEvent(realm, event_name.to_deprecated_fly_string())
 {
     set_related_target(const_cast<DOM::EventTarget*>(event_init.related_target.ptr()));
 }
