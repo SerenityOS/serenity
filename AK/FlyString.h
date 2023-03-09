@@ -51,8 +51,9 @@ public:
     // This is primarily interesting to unit tests.
     [[nodiscard]] static size_t number_of_fly_strings();
 
-    // FIXME: Remove this once all code has been ported to FlyString
+    // FIXME: Remove these once all code has been ported to FlyString
     [[nodiscard]] DeprecatedFlyString to_deprecated_fly_string() const;
+    static ErrorOr<FlyString> from_deprecated_fly_string(DeprecatedFlyString const&);
 
     // Compare this FlyString against another string with ASCII caseless matching.
     [[nodiscard]] bool equals_ignoring_ascii_case(FlyString const&) const;
