@@ -163,22 +163,28 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
     auto const& rule_cache = rule_cache_for_cascade_origin(cascade_origin);
 
     Vector<MatchingRule> rules_to_run;
-    if (pseudo_element.has_value()) {
-        if (auto it = rule_cache.rules_by_pseudo_element.find(pseudo_element.value()); it != rule_cache.rules_by_pseudo_element.end())
-            rules_to_run.extend(it->value);
-    } else {
-        for (auto const& class_name : element.class_names()) {
-            if (auto it = rule_cache.rules_by_class.find(FlyString::from_utf8(class_name).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_class.end())
-                rules_to_run.extend(it->value);
+    auto add_rules_to_run = [&](Vector<MatchingRule> const& rules) {
+        if (pseudo_element.has_value()) {
+            for (auto& rule : rules) {
+                if (rule.contains_pseudo_element)
+                    rules_to_run.append(rule);
+            }
+        } else {
+            rules_to_run.extend(rules);
         }
-        if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
-            if (auto it = rule_cache.rules_by_id.find(FlyString::from_utf8(id).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_id.end())
-                rules_to_run.extend(it->value);
-        }
-        if (auto it = rule_cache.rules_by_tag_name.find(FlyString::from_utf8(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_tag_name.end())
-            rules_to_run.extend(it->value);
-        rules_to_run.extend(rule_cache.other_rules);
+    };
+
+    for (auto const& class_name : element.class_names()) {
+        if (auto it = rule_cache.rules_by_class.find(FlyString::from_utf8(class_name).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_class.end())
+            add_rules_to_run(it->value);
     }
+    if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
+        if (auto it = rule_cache.rules_by_id.find(FlyString::from_utf8(id).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_id.end())
+            add_rules_to_run(it->value);
+    }
+    if (auto it = rule_cache.rules_by_tag_name.find(FlyString::from_utf8(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_tag_name.end())
+        add_rules_to_run(it->value);
+    add_rules_to_run(rule_cache.other_rules);
 
     Vector<MatchingRule> matching_rules;
     matching_rules.ensure_capacity(rules_to_run.size());
@@ -1443,37 +1449,41 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
         sheet.for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (CSS::Selector const& selector : rule.selectors()) {
-                MatchingRule matching_rule { &rule, style_sheet_index, rule_index, selector_index, selector.specificity() };
+                MatchingRule matching_rule {
+                    &rule,
+                    style_sheet_index,
+                    rule_index,
+                    selector_index,
+                    selector.specificity(),
+                };
 
-                bool added_to_bucket = false;
                 for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
                     if (simple_selector.type == CSS::Selector::SimpleSelector::Type::PseudoElement) {
-                        rule_cache->rules_by_pseudo_element.ensure(simple_selector.pseudo_element()).append(move(matching_rule));
+                        matching_rule.contains_pseudo_element = true;
                         ++num_pseudo_element_rules;
-                        added_to_bucket = true;
                         break;
                     }
                 }
-                if (!added_to_bucket) {
-                    for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
-                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
-                            rule_cache->rules_by_id.ensure(simple_selector.name()).append(move(matching_rule));
-                            ++num_id_rules;
-                            added_to_bucket = true;
-                            break;
-                        }
-                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
-                            rule_cache->rules_by_class.ensure(simple_selector.name()).append(move(matching_rule));
-                            ++num_class_rules;
-                            added_to_bucket = true;
-                            break;
-                        }
-                        if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
-                            rule_cache->rules_by_tag_name.ensure(simple_selector.name()).append(move(matching_rule));
-                            ++num_tag_name_rules;
-                            added_to_bucket = true;
-                            break;
-                        }
+
+                bool added_to_bucket = false;
+                for (auto const& simple_selector : selector.compound_selectors().last().simple_selectors) {
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Id) {
+                        rule_cache->rules_by_id.ensure(simple_selector.name()).append(move(matching_rule));
+                        ++num_id_rules;
+                        added_to_bucket = true;
+                        break;
+                    }
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::Class) {
+                        rule_cache->rules_by_class.ensure(simple_selector.name()).append(move(matching_rule));
+                        ++num_class_rules;
+                        added_to_bucket = true;
+                        break;
+                    }
+                    if (simple_selector.type == CSS::Selector::SimpleSelector::Type::TagName) {
+                        rule_cache->rules_by_tag_name.ensure(simple_selector.name()).append(move(matching_rule));
+                        ++num_tag_name_rules;
+                        added_to_bucket = true;
+                        break;
                     }
                 }
                 if (!added_to_bucket)
