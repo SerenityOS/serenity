@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
@@ -58,7 +59,7 @@ static Count get_count(DeprecatedString const& file_specifier)
     bool start_a_new_word = true;
     for (int ch = fgetc(file_pointer); ch != EOF; ch = fgetc(file_pointer)) {
         count.bytes++;
-        if (isspace(ch)) {
+        if (is_ascii_space(ch)) {
             start_a_new_word = true;
             if (ch == '\n')
                 count.lines++;

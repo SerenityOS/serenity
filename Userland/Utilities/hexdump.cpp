@@ -6,6 +6,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/CharacterTypes.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
@@ -56,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         out("  |");
 
         for (auto const& byte : line) {
-            if (isprint(byte))
+            if (is_ascii_printable(byte))
                 putchar(byte);
             else
                 putchar('.');

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -72,7 +72,7 @@ static int handle_size_arguments(size_t& numeric_value, StringView argument)
 
     unsigned suffix_multiplier = 1;
     auto suffix = value[value.length() - 1];
-    switch (tolower(suffix)) {
+    switch (to_ascii_lowercase(suffix)) {
     case 'k':
         suffix_multiplier = KiB;
         value = value.substring_view(0, value.length() - 1);

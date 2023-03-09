@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
@@ -338,7 +339,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         out("  Magic:                             ");
         for (char i : StringView { header.e_ident, sizeof(header.e_ident) }) {
-            if (isprint(i)) {
+            if (is_ascii_printable(i)) {
                 out("{:c} ", i);
             } else {
                 out("{:02x} ", i);

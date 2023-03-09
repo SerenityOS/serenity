@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
@@ -48,7 +49,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Optional<unsigned> number;
 
-        if (isalpha(arguments.argv[1][1])) {
+        if (is_ascii_alpha(arguments.argv[1][1])) {
             int value = getsignalbyname(&arguments.argv[1][1]);
             if (value >= 0 && value < NSIG)
                 number = value;

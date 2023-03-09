@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
@@ -13,7 +14,6 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <ctype.h>
 
 struct Line {
     StringView key;
@@ -74,7 +74,7 @@ static ErrorOr<void> load_file(Options options, StringView filename, Vector<Line
         if (options.key_field != 0) {
             auto split = (options.separator[0])
                 ? line.split_view(options.separator[0])
-                : line.split_view(isspace);
+                : line.split_view(is_ascii_space);
             if (options.key_field - 1 >= split.size()) {
                 key = ""sv;
             } else {
