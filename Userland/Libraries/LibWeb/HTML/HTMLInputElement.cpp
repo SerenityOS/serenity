@@ -368,7 +368,7 @@ Optional<DeprecatedString> HTMLInputElement::placeholder_value() const
 
 void HTMLInputElement::create_shadow_tree_if_needed()
 {
-    if (shadow_root())
+    if (shadow_root_internal())
         return;
 
     // FIXME: This could be better factored. Everything except the below types becomes a text input.
