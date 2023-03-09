@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Optional.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         Optional<unsigned> number;
 
-        if (isalpha(strings[1][1])) {
+        if (is_ascii_alpha(strings[1][1])) {
             int value = getsignalbyname(&strings[1][1]);
             if (value >= 0 && value < NSIG)
                 number = value;

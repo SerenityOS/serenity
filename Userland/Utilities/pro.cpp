@@ -6,6 +6,7 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/LexicalPath.h>
 #include <AK/MaybeOwned.h>
@@ -30,7 +31,7 @@ public:
     {
         GenericLexer lexer(value);
 
-        lexer.ignore_while(isspace);
+        lexer.ignore_while(is_ascii_space);
 
         if (lexer.consume_specific("inline")) {
             m_kind = Kind::Inline;
@@ -42,7 +43,7 @@ public:
         if (lexer.consume_specific("attachment")) {
             m_kind = Kind::Attachment;
             if (lexer.consume_specific(";")) {
-                lexer.ignore_while(isspace);
+                lexer.ignore_while(is_ascii_space);
                 if (lexer.consume_specific("filename=")) {
                     // RFC 2183: "A short (length <= 78 characters)
                     //            parameter value containing only non-`tspecials' characters SHOULD be
@@ -64,7 +65,7 @@ public:
         if (lexer.consume_specific("form-data")) {
             m_kind = Kind::FormData;
             while (lexer.consume_specific(";")) {
-                lexer.ignore_while(isspace);
+                lexer.ignore_while(is_ascii_space);
                 if (lexer.consume_specific("name=")) {
                     m_name = lexer.consume_quoted_string();
                 } else if (lexer.consume_specific("filename=")) {

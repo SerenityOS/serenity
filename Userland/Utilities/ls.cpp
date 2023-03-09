@@ -211,7 +211,7 @@ static int print_escaped(StringView name)
     }
 
     for (auto c : name) {
-        if (isprint(c)) {
+        if (is_ascii_printable(c)) {
             putchar(c);
             printed++;
         } else {

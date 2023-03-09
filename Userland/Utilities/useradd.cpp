@@ -7,6 +7,7 @@
  */
 
 #include <AK/Base64.h>
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
@@ -59,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     // Disallow names starting with _ and -
-    if (username[0] == '_' || username[0] == '-' || !isalpha(username[0])) {
+    if (username[0] == '_' || username[0] == '-' || !is_ascii_alpha(username[0])) {
         warnln("invalid username, {}", username);
         return 1;
     }

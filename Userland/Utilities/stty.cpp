@@ -7,6 +7,7 @@
 
 #define __USE_MISC
 #define TTYDEFCHARS
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Result.h>
@@ -265,9 +266,9 @@ Result<void, int> apply_stty_readable_modes(StringView mode_string, termios& t)
     auto parse_hex = [&](StringView v) {
         tcflag_t ret = 0;
         for (auto c : v) {
-            c = tolower(c);
+            c = to_ascii_lowercase(c);
             ret *= 16;
-            if (isdigit(c)) {
+            if (is_ascii_digit(c)) {
                 ret += c - '0';
             } else {
                 VERIFY(c >= 'a' && c <= 'f');
@@ -310,8 +311,8 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
     auto looks_like_stty_readable = [&](size_t idx) {
         bool contains_colon = false;
         for (auto c : parameters[idx]) {
-            c = tolower(c);
-            if (!isdigit(c) && !(c >= 'a' && c <= 'f') && c != ':')
+            c = to_ascii_lowercase(c);
+            if (!is_ascii_digit(c) && !(c >= 'a' && c <= 'f') && c != ':')
                 return false;
             if (c == ':')
                 contains_colon = true;
@@ -326,7 +327,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
             // We should add the _POSIX_VDISABLE macro.
             return 0;
         } else if (parameters[idx][0] == '^' && parameters[idx].length() == 2) {
-            return toupper(parameters[idx][1]) - 0x40;
+            return to_ascii_uppercase(parameters[idx][1]) - 0x40;
         } else if (parameters[idx].starts_with("0x"sv)) {
             cc_t value = 0;
             if (parameters[idx].length() == 2) {
@@ -334,12 +335,12 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
                 return {};
             }
             for (size_t i = 2; i < parameters[idx].length(); ++i) {
-                char ch = tolower(parameters[idx][i]);
-                if (!isdigit(ch) && !(ch >= 'a' && ch <= 'f')) {
+                char ch = to_ascii_lowercase(parameters[idx][i]);
+                if (!is_ascii_digit(ch) && !(ch >= 'a' && ch <= 'f')) {
                     warnln("Invalid hexadecimal character code {}", parameters[idx]);
                     return {};
                 }
-                value = 16 * value + (isdigit(ch)) ? (ch - '0') : (ch - 'a');
+                value = 16 * value + (is_ascii_digit(ch) ? (ch - '0') : (ch - 'a'));
             }
             return value;
         } else if (parameters[idx].starts_with("0"sv)) {
@@ -353,7 +354,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
                 value = 8 * value + (ch - '0');
             }
             return value;
-        } else if (isdigit(parameters[idx][0])) {
+        } else if (is_ascii_digit(parameters[idx][0])) {
             auto maybe_value = parameters[idx].to_uint<cc_t>();
             if (!maybe_value.has_value()) {
                 warnln("Invalid decimal character code {}", parameters[idx]);
@@ -449,7 +450,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
             auto maybe_error = apply_stty_readable_modes(parameters[parameter_idx], t);
             if (maybe_error.is_error())
                 return maybe_error.error();
-        } else if (isdigit(parameters[parameter_idx][0])) {
+        } else if (is_ascii_digit(parameters[parameter_idx][0])) {
             auto new_baud = parse_baud(parameter_idx);
             if (!new_baud.has_value()) {
                 warnln("Invalid baud rate {}", parameters[parameter_idx]);

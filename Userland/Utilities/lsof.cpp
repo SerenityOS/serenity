@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonArray.h>
@@ -38,8 +39,8 @@ static bool parse_name(StringView name, OpenFile& file)
         return true;
     } else {
         file.type = component1;
-        auto component2 = lexer.consume_while([](char c) { return isprint(c) && c != '('; });
-        lexer.ignore_while(isspace);
+        auto component2 = lexer.consume_while([](char c) { return is_ascii_printable(c) && c != '('; });
+        lexer.ignore_while(is_ascii_space);
         file.name = component2;
 
         if (lexer.tell_remaining() == 0) {

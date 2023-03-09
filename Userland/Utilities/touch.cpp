@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/CheckedFormatString.h>
 #include <AK/GenericLexer.h>
 #include <AK/Time.h>
@@ -60,7 +61,7 @@ static void parse_time(StringView input_time, timespec& atime, timespec& mtime)
             err("invalid time format '{}'", input_time);
     };
 
-    while (!lexer.is_eof() && lexer.next_is(isdigit))
+    while (!lexer.is_eof() && lexer.next_is(is_ascii_digit))
         lex_number();
     if (parameters.size() > 6)
         err("invalid time format '{}' -- too many parameters", input_time);
@@ -131,7 +132,7 @@ static void parse_datetime(StringView input_datetime, timespec& atime, timespec&
     millisecond = 0;
     if (!lexer.is_eof()) {
         if (lexer.consume_specific(',') || lexer.consume_specific('.')) {
-            auto fractional_second = lexer.consume_while(isdigit);
+            auto fractional_second = lexer.consume_while(is_ascii_digit);
             if (fractional_second.is_empty())
                 err("invalid datetime format '{}' -- expected floating seconds", input_datetime);
             for (u8 i = 0; i < 3 && i < fractional_second.length(); ++i) {
