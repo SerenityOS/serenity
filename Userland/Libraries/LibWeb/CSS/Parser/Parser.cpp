@@ -291,7 +291,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
             // they are converted to lowercase, so we do that here too. If we want to be
             // correct with XML later, we'll need to keep the original case and then do
             // a case-insensitive compare later.
-            .name = FlyString::from_utf8(attribute_part.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors(),
+            .name = FlyString::from_deprecated_fly_string(attribute_part.token().ident().to_lowercase_string()).release_value_but_fixme_should_propagate_errors(),
             .case_type = Selector::SimpleSelector::Attribute::CaseType::DefaultMatch,
         }
     };

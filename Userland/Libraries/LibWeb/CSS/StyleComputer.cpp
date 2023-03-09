@@ -175,14 +175,14 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
     };
 
     for (auto const& class_name : element.class_names()) {
-        if (auto it = rule_cache.rules_by_class.find(FlyString::from_utf8(class_name).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_class.end())
+        if (auto it = rule_cache.rules_by_class.find(class_name); it != rule_cache.rules_by_class.end())
             add_rules_to_run(it->value);
     }
     if (auto id = element.get_attribute(HTML::AttributeNames::id); !id.is_null()) {
-        if (auto it = rule_cache.rules_by_id.find(FlyString::from_utf8(id).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_id.end())
+        if (auto it = rule_cache.rules_by_id.find(FlyString::from_deprecated_fly_string(id).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_id.end())
             add_rules_to_run(it->value);
     }
-    if (auto it = rule_cache.rules_by_tag_name.find(FlyString::from_utf8(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_tag_name.end())
+    if (auto it = rule_cache.rules_by_tag_name.find(FlyString::from_deprecated_fly_string(element.local_name()).release_value_but_fixme_should_propagate_errors()); it != rule_cache.rules_by_tag_name.end())
         add_rules_to_run(it->value);
     add_rules_to_run(rule_cache.other_rules);
 
@@ -699,7 +699,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 // 1. If the attr() function has a substitution value, replace the attr() function by the substitution value.
                 if (!attr_value.is_null()) {
                     // FIXME: attr() should also accept an optional type argument, not just strings.
-                    dest.empend(Parser::Token::of_string(FlyString::from_utf8(attr_value).release_value_but_fixme_should_propagate_errors()));
+                    dest.empend(Parser::Token::of_string(FlyString::from_deprecated_fly_string(attr_value).release_value_but_fixme_should_propagate_errors()));
                     continue;
                 }
 
