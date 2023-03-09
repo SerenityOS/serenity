@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <LibWeb/UIEvents/UIEvent.h>
 
 namespace Web::UIEvents {
@@ -18,12 +19,12 @@ class FocusEvent final : public UIEvent {
     WEB_PLATFORM_OBJECT(FocusEvent, UIEvent);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<FocusEvent>> construct_impl(JS::Realm&, FlyString const& event_name, FocusEventInit const& event_init);
 
     virtual ~FocusEvent() override;
 
 private:
-    FocusEvent(JS::Realm&, DeprecatedFlyString const& event_name, FocusEventInit const&);
+    FocusEvent(JS::Realm&, FlyString const& event_name, FocusEventInit const&);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
