@@ -32,7 +32,7 @@ static inline bool matches_lang_pseudo_class(DOM::Element const& element, Vector
     for (auto const* e = &element; e; e = e->parent_element()) {
         auto lang = e->attribute(HTML::AttributeNames::lang);
         if (!lang.is_null()) {
-            element_language = FlyString::from_utf8(lang).release_value_but_fixme_should_propagate_errors();
+            element_language = FlyString::from_deprecated_fly_string(lang).release_value_but_fixme_should_propagate_errors();
             break;
         }
     }
