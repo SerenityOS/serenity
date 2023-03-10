@@ -13,6 +13,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Result.h>
 #include <AK/Span.h>
+#include <AK/Stream.h>
 #include <AK/StringView.h>
 #include <AK/Try.h>
 #include <LibAudio/GenericTypes.h>
