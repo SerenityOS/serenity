@@ -213,6 +213,8 @@ Once the build script finishes, you can use it to compile SerenityOS. Either set
 option to `Clang` as shown [above](#cmake-build-options), or pass `Clang` as the TOOLCHAIN option to
 `Meta/serenity.sh`, for example: `Meta/serenity.sh run x86_64 Clang`.
 
+### Serenity-aware clang tools
+
 Building the clang-based toolchain also builds libTooling-based tools such as clang-format, clang-tidy and (optionally)
 clangd that are aware of SerenityOS as a valid target. These tools will be installed into ``Toolchain/Local/clang/bin`` by
 the script. Pointing your editor's plugins to the custom-built clang tools and a ``compile_commands.json`` from a clang build

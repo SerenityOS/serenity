@@ -1,30 +1,53 @@
 # Visual Studio Code Project Configuration
 
-Visual Studio Code does not work optimally for Serenity development, and there's a bunch of configuring and fiddling around you'll have to do.
+Visual Studio Code requires some configuration files, and a tailored ``settings.json`` file to understand serenity.
 
-The WSL Remote extension allows you to use VSCode in Windows while using the normal WSL workflow. This works surprisingly well, but for code comprehension speed you should put the Serenity directory on your WSL root partition.
+The WSL Remote extension allows you to use VS Code in Windows while using the normal WSL workflow. This works well, but for code comprehension speed you should put the Serenity directory on your WSL root partition.
+
+The recommended extensions for VS Code include:
+
+- [clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd)
+- [clang-format](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format)
+- [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 
 ## Code comprehension
 
-Both C++ comprehension tools listed below report fake errors.
+Clangd has the best support for cross-compiling workflows, especially if configured as noted below. The Microsoft C/C++ tools can work, but require a lot more configuration and may not understand the sysroot in use.
 
 ### clangd
 
-The official clangd extension can be used for C++ comprehension. It is recommended in general, as it is most likely to work on all platforms. You'll have to use the following .clangd:
+The official clangd extension can be used for C++ comprehension. It is recommended in general, as it is most likely to work on all platforms.
+
+clangd uses ``compile_commands.json`` files to understand the project. CMake will generate these in either Build/x86_64, Build/x86_64clang, and Build/lagom.
+Depending on which configuration you use most, set the CompilationDatabase configuration item in the below ``.clangd`` file accordingly. It goes at the root of your checkout (``serenity/.clangd``):
 
 ```yaml
 CompileFlags:
-  Add: [-D__serenity__, -I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.2.0, -I/path/to/serenity/Toolchain/Local/x86_64/x86_64-pc-serenity/include/c++/12.2.0/x86_64-pc-serenity]
+  Add: [-D__serenity__]
   CompilationDatabase: Build/x86_64
 ```
 
-You only need the `Add:` line if you're using GCC. Run cmake at least once for this to work. There's some configuring to do for the include paths: First, replace `/path/to/serenity` with the actual path to the Serenity source folder. Then, you should replace the toolchain subdirectory and target triple architecture, here `x86_64`, with the one you're compiling most often. And finally, the compiler version (`12.2.0`) might need to be updated in the future. Just look in the `c++` parent folder and see what's currently there.
+Run ``./Meta/serenity.sh run`` at least once to generate the ``compile_commands.json`` file.
 
-A known issue with clangd in general is that it likes to crash. You can usually just restart it via the command palette. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
+In addition to the ``.clangd`` file, the ``settings.json`` file below has a required ``clangd.arguments`` entry for ``--query-driver`` that allows clangd to find the cross-compiler's built-in include paths.
+
+#### Known issues
+
+- Some distribution clangd packages still have issues identifying paths to the serenity cross-compilers' builtin include paths after supplying the ``--query-driver`` option from ``settings.json``. This has been seen on at least Debian. If the inlay hints suggest that ``<new>`` cannot be found, first triple check your configuration matches the ``.clangd`` file from this section, verify that you've run the OS via ``Meta/serenity.sh run``, and quadruple check your ``clangd.arguments`` section in the project-local ``settings.json`` file. If all of the above are correct, building ``clangd`` from the serenity clang toolchain is known to work. See [AdvancedBuildInstructions](AdvancedBuildInstructions.md#serenity-aware-clang-tools) for steps on how to build it from source. After building from source, be sure to set ``clangd.path`` in your ``settings.json`` to ``${workspaceFolder}/Toolchain/Local/clang/bin/clangd``.
+
+- clangd has a tendency to crash when stressing bleeding edge compiler features. You can usually just restart it via the command palette. If that doesn't help, close currently open C++ files and/or switch branches before restarting, which helps sometimes.
+
+### DSL syntax highlighting
+
+There's a syntax highlighter extension for SerenityOS DSLs called "SerenityOS DSL Syntax Highlight", available [here](https://marketplace.visualstudio.com/items?itemName=kleinesfilmroellchen.serenity-dsl-syntaxhighlight) or [here](https://open-vsx.org/extension/kleinesfilmroellchen/serenity-dsl-syntaxhighlight).
+The extension provides syntax highlighting for LibIPC's IPC files, LibGUI's GUI Markup Language (GML), [Web IDL](https://webidl.spec.whatwg.org/), and LibJS's
+serialization format (no extension) as output by js with the -d option.
 
 ### Microsoft C/C++ tools
 
-These extensions can be used as-is, but you need to point them to the custom Serenity compilers. Use the following cpp-preferences to circumvent some errors:
+This extension can be used as-is, but you need to point it to the custom Serenity compilers. Note that enabling the extension in the same workspace as the
+clangd and clang-format extensions will cause conflicts. If you choose to use Microsoft C/C++ Tools rather than clangd and clang-format, use the
+following ``c_cpp_properties.json`` to circumvent some errors. Even with the configuration in place, the extension will likely still report errors related to types and methods not being found.
 
 <details>
 <summary>.vscode/c_cpp_properties.json</summary>
@@ -33,7 +56,7 @@ These extensions can be used as-is, but you need to point them to the custom Ser
 {
     "configurations": [
         {
-            "name": "userland-i386-gcc",
+            "name": "userland-x86_64-gcc",
             "includePath": [
                 "${workspaceFolder}",
                 "${workspaceFolder}/Build/x86_64/",
@@ -87,15 +110,9 @@ These extensions can be used as-is, but you need to point them to the custom Ser
 ```
 </details>
 
-Most nonsensical errors from the extension also involve not finding methods, types etc.
-
-### DSL syntax highlighting
-
-There's a syntax highlighter extension for both IPC and GML called "SerenityOS DSL Syntax Highlight", available [here](https://marketplace.visualstudio.com/items?itemName=kleinesfilmroellchen.serenity-dsl-syntaxhighlight) or [here](https://open-vsx.org/extension/kleinesfilmroellchen/serenity-dsl-syntaxhighlight).
-
 ## Formatting
 
-clang-format is included with the Microsoft tools (see above); there's also a separate extension which works well. The settings below include a key that makes it use the proper style. Alternatively, you can use the clang-format extension itself, which should work out of the box.
+The [clang-format extension](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) works out of the box. ``clang-format`` support is also included with the Microsoft C/C++ tools (see above). The settings below include a key that makes the Microsoft extension use the proper style.
 
 ## Settings
 
@@ -130,7 +147,12 @@ These belong in the `.vscode/settings.json` of Serenity.
     "files.insertFinalNewline": true,
     // git commit message length
     "git.inputValidationLength": 72,
-    "git.inputValidationSubjectLength": 72
+    "git.inputValidationSubjectLength": 72,
+    // Tell clangd to ask the cross-compilers for their builtin include paths
+    "clangd.arguments": [
+        "--query-driver=${workspaceFolder}/Toolchain/Local/**/*",
+        "--header-insertion=never" // See https://github.com/clangd/clangd/issues/1247
+    ]
 }
 ```
 
