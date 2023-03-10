@@ -30,9 +30,11 @@ public:
 
     virtual ~AC97() override;
 
+    // ^PCI::Device
+    virtual StringView device_name() const override { return "AC97"sv; }
+
     // ^IRQHandler
     virtual StringView purpose() const override { return "AC97"sv; }
-    virtual StringView device_name() const override { return purpose(); }
 
 private:
     enum NativeAudioMixerRegister : u8 {
