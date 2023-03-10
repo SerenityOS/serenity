@@ -131,6 +131,10 @@
 #cmakedefine01 INTEL_GRAPHICS_DEBUG
 #endif
 
+#ifndef INTEL_HDA_DEBUG
+#cmakedefine01 INTEL_HDA_DEBUG
+#endif
+
 #ifndef INTERRUPT_DEBUG
 #cmakedefine01 INTERRUPT_DEBUG
 #endif

@@ -8,6 +8,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/Audio/AC97.h>
+#include <Kernel/Devices/Audio/IntelHDA/Controller.h>
 #include <Kernel/Devices/Audio/Management.h>
 #include <Kernel/Sections.h>
 
@@ -38,23 +39,32 @@ UNMAP_AFTER_INIT AudioManagement::AudioManagement()
 
 UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
 {
-    if (!PCI::Access::is_disabled()) {
-        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
-            // Note: Only consider PCI audio controllers
-            if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia)
-                || device_identifier.subclass_code().value() != to_underlying(PCI::Multimedia::SubclassID::AudioController))
-                return;
+    if (PCI::Access::is_disabled())
+        return;
+    MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) {
+        // Only consider PCI multimedia devices
+        if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia))
+            return;
 
-            dbgln("AC97: found audio controller at {}", device_identifier.address());
-            auto ac97_device = AC97::try_create(device_identifier);
-            if (ac97_device.is_error()) {
-                // FIXME: Propagate errors properly
-                dbgln("AudioManagement: failed to initialize AC97 device: {}", ac97_device.error());
-                return;
+        auto create_audio_controller = [](PCI::DeviceIdentifier const& device_identifier) -> ErrorOr<NonnullLockRefPtr<AudioController>> {
+            switch (static_cast<PCI::Multimedia::SubclassID>(device_identifier.subclass_code().value())) {
+            case PCI::Multimedia::SubclassID::AudioController:
+                return AC97::try_create(device_identifier);
+            case PCI::Multimedia::SubclassID::HDACompatibleController:
+                return Audio::IntelHDA::Controller::create(device_identifier);
+            default:
+                return ENOTSUP;
             }
-            m_controllers_list.append(ac97_device.release_value());
-        }));
-    }
+        };
+
+        dbgln("AudioManagement: found audio controller {} at {}", device_identifier.hardware_id(), device_identifier.address());
+        auto audio_controller_device = create_audio_controller(device_identifier);
+        if (audio_controller_device.is_error()) {
+            dbgln("AudioManagement: failed to initialize audio controller: {}", audio_controller_device.error());
+            return;
+        }
+        m_controllers_list.append(audio_controller_device.release_value());
+    }));
 }
 
 UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_audio_channels()
@@ -67,16 +77,14 @@ UNMAP_AFTER_INIT bool AudioManagement::initialize()
 {
 
     /* Explanation on the flow:
-     * 1. Enumerate all audio controllers connected to the system:
-     *  a. Try to find the SB16 ISA-based controller.
-     *  b. Enumerate the PCI bus and try to find audio controllers there too
+     * 1. Enumerate the PCI bus and try to find audio controllers
      * 2. Ask each controller to detect the audio channels and instantiate AudioChannel objects.
      */
     enumerate_hardware_controllers();
     enumerate_hardware_audio_channels();
 
     if (m_controllers_list.is_empty()) {
-        dbgln("No audio controller was initialized.");
+        dbgln("AudioManagement: no audio controller was initialized.");
         return false;
     }
     return true;

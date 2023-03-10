@@ -46,6 +46,10 @@ set(KERNEL_SOURCES
     Devices/AsyncDeviceRequest.cpp
     Devices/Audio/AC97.cpp
     Devices/Audio/Channel.cpp
+    Devices/Audio/IntelHDA/Codec.cpp
+    Devices/Audio/IntelHDA/Controller.cpp
+    Devices/Audio/IntelHDA/Format.cpp
+    Devices/Audio/IntelHDA/Stream.cpp
     Devices/Audio/Management.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
