@@ -54,7 +54,7 @@ public:
     void unmark_as_already_started(Badge<DOM::Range>);
     void unmark_as_parser_inserted(Badge<DOM::Range>);
 
-public:
+private:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
 
     virtual void resource_did_load() override;
