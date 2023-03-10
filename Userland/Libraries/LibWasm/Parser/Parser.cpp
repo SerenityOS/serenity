@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ConstrainedStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/LEB128.h>
@@ -1186,7 +1187,7 @@ ParseResult<CodeSection::Code> CodeSection::Code::parse(Stream& stream)
         return with_eof_check(stream, ParseError::InvalidSize);
     size_t size = size_or_error.release_value();
 
-    auto constrained_stream = ConstrainedStream { stream, size };
+    auto constrained_stream = ConstrainedStream { MaybeOwned<Stream>(stream), size };
 
     auto func = Func::parse(constrained_stream);
     if (func.is_error())
@@ -1301,7 +1302,7 @@ ParseResult<Module> Module::parse(Stream& stream)
             return with_eof_check(stream, ParseError::ExpectedSize);
         size_t section_size = section_size_or_error.release_value();
 
-        auto section_stream = ConstrainedStream { stream, section_size };
+        auto section_stream = ConstrainedStream { MaybeOwned<Stream>(stream), section_size };
 
         switch (section_id) {
         case CustomSection::section_id:

@@ -135,55 +135,6 @@ private:
     Vector<u8, 8> m_buffer;
 };
 
-class ConstrainedStream : public Stream {
-public:
-    explicit ConstrainedStream(Stream& stream, size_t size)
-        : m_stream(stream)
-        , m_bytes_left(size)
-    {
-    }
-
-private:
-    ErrorOr<Bytes> read_some(Bytes bytes) override
-    {
-        auto to_read = min(m_bytes_left, bytes.size());
-        auto read_bytes = TRY(m_stream.read_some(bytes.slice(0, to_read)));
-        m_bytes_left -= read_bytes.size();
-        return read_bytes;
-    }
-
-    bool is_eof() const override
-    {
-        return m_bytes_left == 0 || m_stream.is_eof();
-    }
-
-    ErrorOr<void> discard(size_t count) override
-    {
-        if (count > m_bytes_left)
-            return Error::from_string_literal("Trying to discard more bytes than allowed");
-
-        return m_stream.discard(count);
-    }
-
-    virtual ErrorOr<size_t> write_some(ReadonlyBytes) override
-    {
-        return Error::from_errno(EBADF);
-    }
-
-    virtual bool is_open() const override
-    {
-        return m_stream.is_open();
-    }
-
-    virtual void close() override
-    {
-        m_stream.close();
-    }
-
-    Stream& m_stream;
-    size_t m_bytes_left { 0 };
-};
-
 // https://webassembly.github.io/spec/core/bikeshed/#value-types%E2%91%A2
 class ValueType {
 public:
