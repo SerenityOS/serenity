@@ -75,9 +75,9 @@ StringView Frequency::unit_name() const
 
 Optional<Frequency::Type> Frequency::unit_from_name(StringView name)
 {
-    if (name.equals_ignoring_case("hz"sv)) {
+    if (name.equals_ignoring_ascii_case("hz"sv)) {
         return Type::Hz;
-    } else if (name.equals_ignoring_case("khz"sv)) {
+    } else if (name.equals_ignoring_ascii_case("khz"sv)) {
         return Type::kHz;
     }
     return {};

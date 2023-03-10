@@ -171,7 +171,7 @@ void MailWidget::on_window_close()
 
 IMAP::MultiPartBodyStructureData const* MailWidget::look_for_alternative_body_structure(IMAP::MultiPartBodyStructureData const& current_body_structure, Vector<u32>& position_stack) const
 {
-    if (current_body_structure.media_type.equals_ignoring_case("ALTERNATIVE"sv))
+    if (current_body_structure.media_type.equals_ignoring_ascii_case("ALTERNATIVE"sv))
         return &current_body_structure;
 
     u32 structure_index = 1;
@@ -227,7 +227,7 @@ Vector<MailWidget::Alternative> MailWidget::get_alternatives(IMAP::MultiPartBody
 
 bool MailWidget::is_supported_alternative(Alternative const& alternative) const
 {
-    return alternative.body_structure.type.equals_ignoring_case("text"sv) && (alternative.body_structure.subtype.equals_ignoring_case("plain"sv) || alternative.body_structure.subtype.equals_ignoring_case("html"sv));
+    return alternative.body_structure.type.equals_ignoring_ascii_case("text"sv) && (alternative.body_structure.subtype.equals_ignoring_ascii_case("plain"sv) || alternative.body_structure.subtype.equals_ignoring_ascii_case("html"sv));
 }
 
 void MailWidget::selected_mailbox()
@@ -302,7 +302,7 @@ void MailWidget::selected_mailbox()
             if (!data_item.section->headers.has_value())
                 return false;
             auto header_iterator = data_item.section->headers->find_if([&search_header](auto& header) {
-                return header.equals_ignoring_case(search_header);
+                return header.equals_ignoring_ascii_case(search_header);
             });
             return header_iterator != data_item.section->headers->end();
         };
@@ -493,13 +493,13 @@ void MailWidget::selected_email_to_load()
 
     // FIXME: String uses char internally, so 8bit shouldn't be stored in it.
     //        However, it works for now.
-    if (selected_alternative_encoding.equals_ignoring_case("7bit"sv) || selected_alternative_encoding.equals_ignoring_case("8bit"sv)) {
+    if (selected_alternative_encoding.equals_ignoring_ascii_case("7bit"sv) || selected_alternative_encoding.equals_ignoring_ascii_case("8bit"sv)) {
         decoded_data = encoded_data;
-    } else if (selected_alternative_encoding.equals_ignoring_case("base64"sv)) {
+    } else if (selected_alternative_encoding.equals_ignoring_ascii_case("base64"sv)) {
         auto decoded_base64 = decode_base64(encoded_data);
         if (!decoded_base64.is_error())
             decoded_data = decoded_base64.release_value();
-    } else if (selected_alternative_encoding.equals_ignoring_case("quoted-printable"sv)) {
+    } else if (selected_alternative_encoding.equals_ignoring_ascii_case("quoted-printable"sv)) {
         decoded_data = IMAP::decode_quoted_printable(encoded_data).release_value_but_fixme_should_propagate_errors();
     } else {
         dbgln("Mail: Unimplemented decoder for encoding: {}", selected_alternative_encoding);

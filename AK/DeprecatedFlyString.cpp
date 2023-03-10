@@ -107,9 +107,9 @@ Optional<float> DeprecatedFlyString::to_float(TrimWhitespace trim_whitespace) co
 }
 #endif
 
-bool DeprecatedFlyString::equals_ignoring_case(StringView other) const
+bool DeprecatedFlyString::equals_ignoring_ascii_case(StringView other) const
 {
-    return StringUtils::equals_ignoring_case(view(), other);
+    return StringUtils::equals_ignoring_ascii_case(view(), other);
 }
 
 bool DeprecatedFlyString::starts_with(StringView str, CaseSensitivity case_sensitivity) const

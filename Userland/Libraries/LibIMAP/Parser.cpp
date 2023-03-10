@@ -417,7 +417,7 @@ BodyStructure Parser::parse_one_part_body()
     consume(" "sv);
     auto subtype = parse_string();
     consume(" "sv);
-    if (type.equals_ignoring_case("TEXT"sv)) {
+    if (type.equals_ignoring_ascii_case("TEXT"sv)) {
         // body-type-text
         auto params = parse_body_fields_params();
         consume(" "sv);
@@ -479,7 +479,7 @@ BodyStructure Parser::parse_one_part_body()
         }
 
         return BodyStructure(move(data));
-    } else if (type.equals_ignoring_case("MESSAGE"sv) && subtype.equals_ignoring_case("RFC822"sv)) {
+    } else if (type.equals_ignoring_ascii_case("MESSAGE"sv) && subtype.equals_ignoring_ascii_case("RFC822"sv)) {
         // body-type-message
         auto params = parse_body_fields_params();
         consume(" "sv);
@@ -701,13 +701,13 @@ StringView Parser::consume_until_end_of_line()
 FetchCommand::DataItem Parser::parse_fetch_data_item()
 {
     auto msg_attr = consume_while([](u8 x) { return is_ascii_alpha(x) != 0; });
-    if (msg_attr.equals_ignoring_case("BODY"sv) && try_consume("["sv)) {
+    if (msg_attr.equals_ignoring_ascii_case("BODY"sv) && try_consume("["sv)) {
         auto data_item = FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::BodySection,
             .section = { {} }
         };
         auto section_type = consume_while([](u8 x) { return x != ']' && x != ' '; });
-        if (section_type.equals_ignoring_case("HEADER.FIELDS"sv)) {
+        if (section_type.equals_ignoring_ascii_case("HEADER.FIELDS"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFields;
             data_item.section->headers = Vector<DeprecatedString>();
             consume(" "sv);
@@ -716,7 +716,7 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
                 data_item.section->headers->append(header);
             }
             consume("]"sv);
-        } else if (section_type.equals_ignoring_case("HEADER.FIELDS.NOT"sv)) {
+        } else if (section_type.equals_ignoring_ascii_case("HEADER.FIELDS.NOT"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFieldsNot;
             data_item.section->headers = Vector<DeprecatedString>();
             consume(" ("sv);
@@ -736,14 +736,14 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
                     continue;
                 }
                 auto atom = parse_atom();
-                if (atom.equals_ignoring_case("MIME"sv)) {
+                if (atom.equals_ignoring_ascii_case("MIME"sv)) {
                     data_item.section->ends_with_mime = true;
                     continue;
                 }
             }
-        } else if (section_type.equals_ignoring_case("TEXT"sv)) {
+        } else if (section_type.equals_ignoring_ascii_case("TEXT"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::Text;
-        } else if (section_type.equals_ignoring_case("HEADER"sv)) {
+        } else if (section_type.equals_ignoring_ascii_case("HEADER"sv)) {
             data_item.section->type = FetchCommand::DataItem::SectionType::Header;
         } else {
             dbgln("Unmatched section type {}", section_type);
@@ -757,23 +757,23 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
         }
         try_consume(" "sv);
         return data_item;
-    } else if (msg_attr.equals_ignoring_case("FLAGS"sv)) {
+    } else if (msg_attr.equals_ignoring_ascii_case("FLAGS"sv)) {
         return FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::Flags
         };
-    } else if (msg_attr.equals_ignoring_case("UID"sv)) {
+    } else if (msg_attr.equals_ignoring_ascii_case("UID"sv)) {
         return FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::UID
         };
-    } else if (msg_attr.equals_ignoring_case("INTERNALDATE"sv)) {
+    } else if (msg_attr.equals_ignoring_ascii_case("INTERNALDATE"sv)) {
         return FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::InternalDate
         };
-    } else if (msg_attr.equals_ignoring_case("ENVELOPE"sv)) {
+    } else if (msg_attr.equals_ignoring_ascii_case("ENVELOPE"sv)) {
         return FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::Envelope
         };
-    } else if (msg_attr.equals_ignoring_case("BODY"sv) || msg_attr.equals_ignoring_case("BODYSTRUCTURE"sv)) {
+    } else if (msg_attr.equals_ignoring_ascii_case("BODY"sv) || msg_attr.equals_ignoring_ascii_case("BODYSTRUCTURE"sv)) {
         return FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::BodyStructure
         };

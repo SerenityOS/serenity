@@ -30,18 +30,18 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
 {
     CSS::Parser::ParsingContext parsing_context { document() };
     for_each_attribute([&](auto& name, auto& value) {
-        if (name.equals_ignoring_case("fill"sv)) {
+        if (name.equals_ignoring_ascii_case("fill"sv)) {
             // FIXME: The `fill` attribute and CSS `fill` property are not the same! But our support is limited enough that they are equivalent for now.
             if (auto fill_value = parse_css_value(parsing_context, value, CSS::PropertyID::Fill))
                 style.set_property(CSS::PropertyID::Fill, fill_value.release_nonnull());
-        } else if (name.equals_ignoring_case("stroke"sv)) {
+        } else if (name.equals_ignoring_ascii_case("stroke"sv)) {
             // FIXME: The `stroke` attribute and CSS `stroke` property are not the same! But our support is limited enough that they are equivalent for now.
             if (auto stroke_value = parse_css_value(parsing_context, value, CSS::PropertyID::Stroke))
                 style.set_property(CSS::PropertyID::Stroke, stroke_value.release_nonnull());
-        } else if (name.equals_ignoring_case("stroke-width"sv)) {
+        } else if (name.equals_ignoring_ascii_case("stroke-width"sv)) {
             if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth))
                 style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
-        } else if (name.equals_ignoring_case("transform"sv)) {
+        } else if (name.equals_ignoring_ascii_case("transform"sv)) {
             if (auto transform = parse_css_value(parsing_context, value, CSS::PropertyID::Transform))
                 style.set_property(CSS::PropertyID::Transform, transform.release_nonnull());
         }

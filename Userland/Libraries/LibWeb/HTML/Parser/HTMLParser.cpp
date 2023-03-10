@@ -413,16 +413,16 @@ DOM::QuirksMode HTMLParser::which_quirks_mode(HTMLToken const& doctype_token) co
     auto const& public_identifier = doctype_token.doctype_data().public_identifier;
     auto const& system_identifier = doctype_token.doctype_data().system_identifier;
 
-    if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"sv))
+    if (public_identifier.equals_ignoring_ascii_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"sv))
         return DOM::QuirksMode::Yes;
 
-    if (public_identifier.equals_ignoring_case("-/W3C/DTD HTML 4.0 Transitional/EN"sv))
+    if (public_identifier.equals_ignoring_ascii_case("-/W3C/DTD HTML 4.0 Transitional/EN"sv))
         return DOM::QuirksMode::Yes;
 
-    if (public_identifier.equals_ignoring_case("HTML"sv))
+    if (public_identifier.equals_ignoring_ascii_case("HTML"sv))
         return DOM::QuirksMode::Yes;
 
-    if (system_identifier.equals_ignoring_case("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"sv))
+    if (system_identifier.equals_ignoring_ascii_case("http://www.ibm.com/data/dtd/v11/ibmxhtml1-transitional.dtd"sv))
         return DOM::QuirksMode::Yes;
 
     for (auto& public_id : s_quirks_public_ids) {
@@ -1922,7 +1922,7 @@ void HTMLParser::handle_in_body(HTMLToken& token)
         (void)m_stack_of_open_elements.pop();
         token.acknowledge_self_closing_flag_if_set();
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden"sv)) {
+        if (type_attribute.is_null() || !type_attribute.equals_ignoring_ascii_case("hidden"sv)) {
             m_frameset_ok = false;
         }
         return;
@@ -2698,7 +2698,7 @@ void HTMLParser::handle_in_table(HTMLToken& token)
     }
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::input) {
         auto type_attribute = token.attribute(HTML::AttributeNames::type);
-        if (type_attribute.is_null() || !type_attribute.equals_ignoring_case("hidden"sv)) {
+        if (type_attribute.is_null() || !type_attribute.equals_ignoring_ascii_case("hidden"sv)) {
             goto AnythingElse;
         }
 

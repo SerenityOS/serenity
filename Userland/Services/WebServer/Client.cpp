@@ -214,8 +214,8 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
     } while (true);
 
     auto keep_alive = false;
-    if (auto it = request.headers().find_if([](auto& header) { return header.name.equals_ignoring_case("Connection"sv); }); !it.is_end()) {
-        if (it->value.trim_whitespace().equals_ignoring_case("keep-alive"sv))
+    if (auto it = request.headers().find_if([](auto& header) { return header.name.equals_ignoring_ascii_case("Connection"sv); }); !it.is_end()) {
+        if (it->value.trim_whitespace().equals_ignoring_ascii_case("keep-alive"sv))
             keep_alive = true;
     }
     if (!keep_alive)
@@ -380,7 +380,7 @@ bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers
     VERIFY(Configuration::the().credentials().has_value());
     auto& configured_credentials = Configuration::the().credentials().value();
     for (auto& header : headers) {
-        if (header.name.equals_ignoring_case("Authorization"sv)) {
+        if (header.name.equals_ignoring_ascii_case("Authorization"sv)) {
             auto provided_credentials = HTTP::HttpRequest::parse_http_basic_authentication_header(header.value);
             if (provided_credentials.has_value() && configured_credentials.username == provided_credentials->username && configured_credentials.password == provided_credentials->password)
                 return true;

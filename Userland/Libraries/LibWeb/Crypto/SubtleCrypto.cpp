@@ -55,13 +55,13 @@ JS::NonnullGCPtr<JS::Promise> SubtleCrypto::digest(String const& algorithm, JS::
     // FIXME: This is way more generic than it needs to be right now, so we simplify it.
     ::Crypto::Hash::HashKind hash_kind;
     auto algorithm_as_string_view = algorithm.bytes_as_string_view();
-    if (algorithm_as_string_view.equals_ignoring_case("SHA-1"sv)) {
+    if (algorithm_as_string_view.equals_ignoring_ascii_case("SHA-1"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA1;
-    } else if (algorithm_as_string_view.equals_ignoring_case("SHA-256"sv)) {
+    } else if (algorithm_as_string_view.equals_ignoring_ascii_case("SHA-256"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA256;
-    } else if (algorithm_as_string_view.equals_ignoring_case("SHA-384"sv)) {
+    } else if (algorithm_as_string_view.equals_ignoring_ascii_case("SHA-384"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA384;
-    } else if (algorithm_as_string_view.equals_ignoring_case("SHA-512"sv)) {
+    } else if (algorithm_as_string_view.equals_ignoring_ascii_case("SHA-512"sv)) {
         hash_kind = ::Crypto::Hash::HashKind::SHA512;
     }
     // 4. If an error occurred, return a Promise rejected with normalizedAlgorithm.

@@ -71,21 +71,21 @@ OwnPtr<Request> start_request(TBadgedProtocol&& protocol, ConnectionFromClient& 
     }
 
     HTTP::HttpRequest request;
-    if (method.equals_ignoring_case("post"sv))
+    if (method.equals_ignoring_ascii_case("post"sv))
         request.set_method(HTTP::HttpRequest::Method::POST);
-    else if (method.equals_ignoring_case("head"sv))
+    else if (method.equals_ignoring_ascii_case("head"sv))
         request.set_method(HTTP::HttpRequest::Method::HEAD);
-    else if (method.equals_ignoring_case("delete"sv))
+    else if (method.equals_ignoring_ascii_case("delete"sv))
         request.set_method(HTTP::HttpRequest::Method::DELETE);
-    else if (method.equals_ignoring_case("patch"sv))
+    else if (method.equals_ignoring_ascii_case("patch"sv))
         request.set_method(HTTP::HttpRequest::Method::PATCH);
-    else if (method.equals_ignoring_case("options"sv))
+    else if (method.equals_ignoring_ascii_case("options"sv))
         request.set_method(HTTP::HttpRequest::Method::OPTIONS);
-    else if (method.equals_ignoring_case("trace"sv))
+    else if (method.equals_ignoring_ascii_case("trace"sv))
         request.set_method(HTTP::HttpRequest::Method::TRACE);
-    else if (method.equals_ignoring_case("connect"sv))
+    else if (method.equals_ignoring_ascii_case("connect"sv))
         request.set_method(HTTP::HttpRequest::Method::CONNECT);
-    else if (method.equals_ignoring_case("put"sv))
+    else if (method.equals_ignoring_ascii_case("put"sv))
         request.set_method(HTTP::HttpRequest::Method::PUT);
     else
         request.set_method(HTTP::HttpRequest::Method::GET);

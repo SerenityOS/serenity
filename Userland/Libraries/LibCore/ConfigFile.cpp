@@ -153,7 +153,7 @@ DeprecatedString ConfigFile::read_entry(DeprecatedString const& group, Deprecate
 bool ConfigFile::read_bool_entry(DeprecatedString const& group, DeprecatedString const& key, bool default_value) const
 {
     auto value = read_entry(group, key, default_value ? "true" : "false");
-    return value == "1" || value.equals_ignoring_case("true"sv);
+    return value == "1" || value.equals_ignoring_ascii_case("true"sv);
 }
 
 void ConfigFile::write_entry(DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)

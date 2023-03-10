@@ -148,7 +148,7 @@ public:
         return trimmed_view;
     }
 
-    [[nodiscard]] bool equals_ignoring_case(StringView) const;
+    [[nodiscard]] bool equals_ignoring_ascii_case(StringView) const;
 
     [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool contains(char, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
@@ -310,14 +310,14 @@ public:
     }
 
     template<typename... Ts>
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of_ignoring_case(Ts&&... strings) const
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of_ignoring_ascii_case(Ts&&... strings) const
     {
         return (... ||
                 [this, &strings]() -> bool {
             if constexpr (requires(Ts a) { a.view()->StringView; })
-                return this->equals_ignoring_case(forward<Ts>(strings.view()));
+                return this->equals_ignoring_ascii_case(forward<Ts>(strings.view()));
             else
-                return this->equals_ignoring_case(forward<Ts>(strings));
+                return this->equals_ignoring_ascii_case(forward<Ts>(strings));
         }());
     }
 
@@ -330,9 +330,10 @@ struct Traits<DeprecatedString> : public GenericTraits<DeprecatedString> {
     static unsigned hash(DeprecatedString const& s) { return s.impl() ? s.impl()->hash() : 0; }
 };
 
+// FIXME: Rename this to indicate that it's about ASCII-only case insensitivity.
 struct CaseInsensitiveStringTraits : public Traits<DeprecatedString> {
     static unsigned hash(DeprecatedString const& s) { return s.impl() ? s.impl()->case_insensitive_hash() : 0; }
-    static bool equals(DeprecatedString const& a, DeprecatedString const& b) { return a.equals_ignoring_case(b); }
+    static bool equals(DeprecatedString const& a, DeprecatedString const& b) { return a.equals_ignoring_ascii_case(b); }
 };
 
 DeprecatedString escape_html_entities(StringView html);

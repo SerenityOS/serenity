@@ -182,8 +182,7 @@ bool FlyString::equals_ignoring_ascii_case(FlyString const& other) const
 {
     if (*this == other)
         return true;
-    // FIXME: Rename StringUtils::equals_ignoring_case to equals_ignoring_ascii_case.
-    return StringUtils::equals_ignoring_case(bytes_as_string_view(), other.bytes_as_string_view());
+    return StringUtils::equals_ignoring_ascii_case(bytes_as_string_view(), other.bytes_as_string_view());
 }
 
 }

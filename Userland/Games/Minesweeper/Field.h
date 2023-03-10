@@ -78,16 +78,16 @@ public:
         if (difficulty_string.matches("beginner"sv))
             return Difficulty::Beginner;
 
-        if (difficulty_string.equals_ignoring_case("intermediate"sv))
+        if (difficulty_string.equals_ignoring_ascii_case("intermediate"sv))
             return Difficulty::Intermediate;
 
-        if (difficulty_string.equals_ignoring_case("expert"sv))
+        if (difficulty_string.equals_ignoring_ascii_case("expert"sv))
             return Difficulty::Expert;
 
-        if (difficulty_string.equals_ignoring_case("madwoman"sv))
+        if (difficulty_string.equals_ignoring_ascii_case("madwoman"sv))
             return Difficulty::Madwoman;
 
-        if (difficulty_string.equals_ignoring_case("custom"sv))
+        if (difficulty_string.equals_ignoring_ascii_case("custom"sv))
             return Difficulty::Custom;
 
         return {};

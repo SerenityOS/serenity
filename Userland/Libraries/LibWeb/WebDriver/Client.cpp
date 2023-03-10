@@ -237,7 +237,7 @@ ErrorOr<JsonValue, Client::WrappedError> Client::read_body_as_json()
     size_t content_length = 0;
 
     for (auto const& header : m_request->headers()) {
-        if (header.name.equals_ignoring_case("Content-Length"sv)) {
+        if (header.name.equals_ignoring_ascii_case("Content-Length"sv)) {
             content_length = header.value.to_uint<size_t>(TrimWhitespace::Yes).value_or(0);
             break;
         }
@@ -287,8 +287,8 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
     }
 
     bool keep_alive = false;
-    if (auto it = m_request->headers().find_if([](auto& header) { return header.name.equals_ignoring_case("Connection"sv); }); !it.is_end())
-        keep_alive = it->value.trim_whitespace().equals_ignoring_case("keep-alive"sv);
+    if (auto it = m_request->headers().find_if([](auto& header) { return header.name.equals_ignoring_ascii_case("Connection"sv); }); !it.is_end())
+        keep_alive = it->value.trim_whitespace().equals_ignoring_ascii_case("keep-alive"sv);
 
     if (!keep_alive)
         die();

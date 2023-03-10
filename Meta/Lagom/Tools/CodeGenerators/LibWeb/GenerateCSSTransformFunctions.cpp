@@ -121,7 +121,7 @@ Optional<TransformFunction> transform_function_from_string(StringView name)
         member_generator.set("name", name);
         member_generator.set("name:titlecase", title_casify_transform_function(name));
         member_generator.append(R"~~~(
-    if (name.equals_ignoring_case("@name@"sv))
+    if (name.equals_ignoring_ascii_case("@name@"sv))
         return TransformFunction::@name:titlecase@;
 )~~~");
     });

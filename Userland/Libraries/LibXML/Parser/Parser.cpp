@@ -515,7 +515,7 @@ ErrorOr<Name, ParseError> Parser::parse_processing_instruction_target()
     auto target = TRY(parse_name());
     auto accept = accept_rule();
 
-    if (target.equals_ignoring_case("xml"sv) && m_options.treat_errors_as_fatal) {
+    if (target.equals_ignoring_ascii_case("xml"sv) && m_options.treat_errors_as_fatal) {
         return parse_error(
             m_lexer.tell() - target.length(),
             "Use of the reserved 'xml' name for processing instruction target name is disallowed");

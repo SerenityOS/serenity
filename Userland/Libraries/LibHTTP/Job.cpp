@@ -323,7 +323,7 @@ void Job::on_socket_connected()
                 // responds with nothing (content-length = 0 with normal encoding); if that's the case,
                 // quit early as we won't be reading anything anyway.
                 if (auto result = m_headers.get("Content-Length"sv).value_or(""sv).to_uint(); result.has_value()) {
-                    if (result.value() == 0 && !m_headers.get("Transfer-Encoding"sv).value_or(""sv).view().trim_whitespace().equals_ignoring_case("chunked"sv))
+                    if (result.value() == 0 && !m_headers.get("Transfer-Encoding"sv).value_or(""sv).view().trim_whitespace().equals_ignoring_ascii_case("chunked"sv))
                         return finish_up();
                 }
                 // There's also the possibility that the server responds with 204 (No Content),
@@ -357,7 +357,7 @@ void Job::on_socket_connected()
                 return deferred_invoke([this] { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto value = line.substring(name.length() + 2, line.length() - name.length() - 2);
-            if (name.equals_ignoring_case("Set-Cookie"sv)) {
+            if (name.equals_ignoring_ascii_case("Set-Cookie"sv)) {
                 dbgln_if(JOB_DEBUG, "Job: Received Set-Cookie header: '{}'", value);
                 m_set_cookie_headers.append(move(value));
 
@@ -375,11 +375,11 @@ void Job::on_socket_connected()
             } else {
                 m_headers.set(name, value);
             }
-            if (name.equals_ignoring_case("Content-Encoding"sv)) {
+            if (name.equals_ignoring_ascii_case("Content-Encoding"sv)) {
                 // Assume that any content-encoding means that we can't decode it as a stream :(
                 dbgln_if(JOB_DEBUG, "Content-Encoding {} detected, cannot stream output :(", value);
                 m_can_stream_response = false;
-            } else if (name.equals_ignoring_case("Content-Length"sv)) {
+            } else if (name.equals_ignoring_ascii_case("Content-Length"sv)) {
                 auto length = value.to_uint();
                 if (length.has_value())
                     m_content_length = length.value();
@@ -472,7 +472,7 @@ void Job::on_socket_connected()
                     auto encoding = transfer_encoding.value().trim_whitespace();
 
                     dbgln_if(JOB_DEBUG, "Job: This content has transfer encoding '{}'", encoding);
-                    if (encoding.equals_ignoring_case("chunked"sv)) {
+                    if (encoding.equals_ignoring_ascii_case("chunked"sv)) {
                         m_current_chunk_remaining_size = -1;
                         goto read_chunk_size;
                     } else {
@@ -629,7 +629,7 @@ void Job::finish_up()
         // If the server responded with "Connection: close", close the connection
         // as the server may or may not want to close the socket. Also, if this is
         // a legacy HTTP server (1.0 or older), assume close is the default value.
-        if (auto result = response->headers().get("Connection"sv); result.has_value() ? result->equals_ignoring_case("close"sv) : m_legacy_connection)
+        if (auto result = response->headers().get("Connection"sv); result.has_value() ? result->equals_ignoring_ascii_case("close"sv) : m_legacy_connection)
             shutdown(ShutdownMode::CloseSocket);
         did_finish(response);
     });

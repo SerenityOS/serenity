@@ -41,7 +41,7 @@ bool is_builtin_calendar(StringView identifier)
 
     // 2. If calendars contains the ASCII-lowercase of id, return true.
     for (auto calendar : calendars) {
-        if (calendar.equals_ignoring_case(identifier))
+        if (calendar.equals_ignoring_ascii_case(identifier))
             return true;
     }
 

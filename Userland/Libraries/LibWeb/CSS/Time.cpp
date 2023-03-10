@@ -75,9 +75,9 @@ StringView Time::unit_name() const
 
 Optional<Time::Type> Time::unit_from_name(StringView name)
 {
-    if (name.equals_ignoring_case("s"sv)) {
+    if (name.equals_ignoring_ascii_case("s"sv)) {
         return Type::S;
-    } else if (name.equals_ignoring_case("ms"sv)) {
+    } else if (name.equals_ignoring_ascii_case("ms"sv)) {
         return Type::Ms;
     }
     return {};

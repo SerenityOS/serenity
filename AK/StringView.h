@@ -104,7 +104,7 @@ public:
     [[nodiscard]] bool contains(char) const;
     [[nodiscard]] bool contains(u32) const;
     [[nodiscard]] bool contains(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] bool equals_ignoring_case(StringView other) const;
+    [[nodiscard]] bool equals_ignoring_ascii_case(StringView) const;
 
     [[nodiscard]] StringView trim(StringView characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
@@ -337,14 +337,14 @@ public:
     }
 
     template<typename... Ts>
-    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of_ignoring_case(Ts&&... strings) const
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of_ignoring_ascii_case(Ts&&... strings) const
     {
         return (... ||
                 [this, &strings]() -> bool {
             if constexpr (requires(Ts a) { a.view()->StringView; })
-                return this->equals_ignoring_case(forward<Ts>(strings.view()));
+                return this->equals_ignoring_ascii_case(forward<Ts>(strings.view()));
             else
-                return this->equals_ignoring_case(forward<Ts>(strings));
+                return this->equals_ignoring_ascii_case(forward<Ts>(strings));
         }());
     }
 
@@ -359,6 +359,7 @@ struct Traits<StringView> : public GenericTraits<StringView> {
     static unsigned hash(StringView s) { return s.hash(); }
 };
 
+// FIXME: Rename this to indicate that it's about ASCII-only case insensitivity.
 struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
     static unsigned hash(StringView s)
     {
@@ -366,7 +367,7 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
             return 0;
         return case_insensitive_string_hash(s.characters_without_null_termination(), s.length());
     }
-    static bool equals(StringView const& a, StringView const& b) { return a.equals_ignoring_case(b); }
+    static bool equals(StringView const& a, StringView const& b) { return a.equals_ignoring_ascii_case(b); }
 };
 
 }

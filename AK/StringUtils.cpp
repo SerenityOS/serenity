@@ -254,7 +254,7 @@ template Optional<double> convert_to_floating_point(StringView str, TrimWhitespa
 template Optional<float> convert_to_floating_point(StringView str, TrimWhitespace);
 #endif
 
-bool equals_ignoring_case(StringView a, StringView b)
+bool equals_ignoring_ascii_case(StringView a, StringView b)
 {
     if (a.length() != b.length())
         return false;

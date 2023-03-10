@@ -51,7 +51,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     response = move(client->send_simple_command(IMAP::CommandType::Capability)->await().value().get<IMAP::SolidResponse>());
     outln("[CAPABILITY] First capability: {}", response.data().capabilities().first());
-    bool idle_supported = !response.data().capabilities().find_if([](auto capability) { return capability.equals_ignoring_case("IDLE"sv); }).is_end();
+    bool idle_supported = !response.data().capabilities().find_if([](auto capability) { return capability.equals_ignoring_ascii_case("IDLE"sv); }).is_end();
 
     response = client->list(""sv, "*"sv)->await().release_value();
     outln("[LIST] First mailbox: {}", response.data().list_items().first().name);

@@ -314,7 +314,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     // 10. If stripPrefix is true, then
     if (strip_prefix) {
         // a. If the length of S is at least 2 and the first two code units of S are either "0x" or "0X", then
-        if (trimmed_view.length() >= 2 && trimmed_view.substring_view(0, 2).equals_ignoring_case("0x"sv)) {
+        if (trimmed_view.length() >= 2 && trimmed_view.substring_view(0, 2).equals_ignoring_ascii_case("0x"sv)) {
             // i. Remove the first two code units from S.
             trimmed_view = trimmed_view.substring_view(2);
 

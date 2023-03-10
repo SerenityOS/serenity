@@ -84,13 +84,16 @@ StringView Angle::unit_name() const
 
 Optional<Angle::Type> Angle::unit_from_name(StringView name)
 {
-    if (name.equals_ignoring_case("deg"sv)) {
+    if (name.equals_ignoring_ascii_case("deg"sv)) {
         return Type::Deg;
-    } else if (name.equals_ignoring_case("grad"sv)) {
+    }
+    if (name.equals_ignoring_ascii_case("grad"sv)) {
         return Type::Grad;
-    } else if (name.equals_ignoring_case("rad"sv)) {
+    }
+    if (name.equals_ignoring_ascii_case("rad"sv)) {
         return Type::Rad;
-    } else if (name.equals_ignoring_case("turn"sv)) {
+    }
+    if (name.equals_ignoring_ascii_case("turn"sv)) {
         return Type::Turn;
     }
     return {};

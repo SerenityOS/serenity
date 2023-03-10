@@ -306,11 +306,11 @@ public:
             auto socket = TRY(Core::BufferedSocket<Core::TCPSocket>::create(move(underlying_socket)));
 
             HTTP::HttpRequest request;
-            if (method.equals_ignoring_case("head"sv))
+            if (method.equals_ignoring_ascii_case("head"sv))
                 request.set_method(HTTP::HttpRequest::HEAD);
-            else if (method.equals_ignoring_case("get"sv))
+            else if (method.equals_ignoring_ascii_case("get"sv))
                 request.set_method(HTTP::HttpRequest::GET);
-            else if (method.equals_ignoring_case("post"sv))
+            else if (method.equals_ignoring_ascii_case("post"sv))
                 request.set_method(HTTP::HttpRequest::POST);
             else
                 request.set_method(HTTP::HttpRequest::Invalid);
@@ -385,11 +385,11 @@ public:
             auto socket = TRY(Core::BufferedSocket<TLS::TLSv12>::create(move(underlying_socket)));
 
             HTTP::HttpRequest request;
-            if (method.equals_ignoring_case("head"sv))
+            if (method.equals_ignoring_ascii_case("head"sv))
                 request.set_method(HTTP::HttpRequest::HEAD);
-            else if (method.equals_ignoring_case("get"sv))
+            else if (method.equals_ignoring_ascii_case("get"sv))
                 request.set_method(HTTP::HttpRequest::GET);
-            else if (method.equals_ignoring_case("post"sv))
+            else if (method.equals_ignoring_ascii_case("post"sv))
                 request.set_method(HTTP::HttpRequest::POST);
             else
                 request.set_method(HTTP::HttpRequest::Invalid);
@@ -534,19 +534,19 @@ public:
     virtual RefPtr<Web::ResourceLoaderConnectorRequest> start_request(DeprecatedString const& method, AK::URL const& url, HashMap<DeprecatedString, DeprecatedString> const& request_headers, ReadonlyBytes request_body, Core::ProxyData const& proxy) override
     {
         RefPtr<Web::ResourceLoaderConnectorRequest> request;
-        if (url.scheme().equals_ignoring_case("http"sv)) {
+        if (url.scheme().equals_ignoring_ascii_case("http"sv)) {
             auto request_or_error = HTTPHeadlessRequest::create(method, url, request_headers, request_body, proxy);
             if (request_or_error.is_error())
                 return {};
             request = request_or_error.release_value();
         }
-        if (url.scheme().equals_ignoring_case("https"sv)) {
+        if (url.scheme().equals_ignoring_ascii_case("https"sv)) {
             auto request_or_error = HTTPSHeadlessRequest::create(method, url, request_headers, request_body, proxy);
             if (request_or_error.is_error())
                 return {};
             request = request_or_error.release_value();
         }
-        if (url.scheme().equals_ignoring_case("gemini"sv)) {
+        if (url.scheme().equals_ignoring_ascii_case("gemini"sv)) {
             auto request_or_error = GeminiHeadlessRequest::create(method, url, request_headers, request_body, proxy);
             if (request_or_error.is_error())
                 return {};

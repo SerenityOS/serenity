@@ -133,19 +133,19 @@ void parse_attributes(ParsedCookie& parsed_cookie, StringView unparsed_attribute
 
 void process_attribute(ParsedCookie& parsed_cookie, StringView attribute_name, StringView attribute_value)
 {
-    if (attribute_name.equals_ignoring_case("Expires"sv)) {
+    if (attribute_name.equals_ignoring_ascii_case("Expires"sv)) {
         on_expires_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Max-Age"sv)) {
+    } else if (attribute_name.equals_ignoring_ascii_case("Max-Age"sv)) {
         on_max_age_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Domain"sv)) {
+    } else if (attribute_name.equals_ignoring_ascii_case("Domain"sv)) {
         on_domain_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Path"sv)) {
+    } else if (attribute_name.equals_ignoring_ascii_case("Path"sv)) {
         on_path_attribute(parsed_cookie, attribute_value);
-    } else if (attribute_name.equals_ignoring_case("Secure"sv)) {
+    } else if (attribute_name.equals_ignoring_ascii_case("Secure"sv)) {
         on_secure_attribute(parsed_cookie);
-    } else if (attribute_name.equals_ignoring_case("HttpOnly"sv)) {
+    } else if (attribute_name.equals_ignoring_ascii_case("HttpOnly"sv)) {
         on_http_only_attribute(parsed_cookie);
-    } else if (attribute_name.equals_ignoring_case("SameSite"sv)) {
+    } else if (attribute_name.equals_ignoring_ascii_case("SameSite"sv)) {
         on_same_site_attribute(parsed_cookie, attribute_value);
     }
 }
@@ -279,7 +279,7 @@ Optional<Time> parse_date_time(StringView date_string)
 
     auto parse_month = [&](StringView token) {
         for (unsigned i = 0; i < 12; ++i) {
-            if (token.equals_ignoring_case(short_month_names[i])) {
+            if (token.equals_ignoring_ascii_case(short_month_names[i])) {
                 month = i + 1;
                 return true;
             }

@@ -153,7 +153,7 @@ Attr const* NamedNodeMap::get_attribute(StringView qualified_name, size_t* item_
     // 2. Return the first attribute in element’s attribute list whose qualified name is qualifiedName; otherwise null.
     for (auto const& attribute : m_attributes) {
         if (compare_as_lowercase) {
-            if (attribute->name().equals_ignoring_case(qualified_name))
+            if (attribute->name().equals_ignoring_ascii_case(qualified_name))
                 return attribute.ptr();
         } else {
             if (attribute->name() == qualified_name)

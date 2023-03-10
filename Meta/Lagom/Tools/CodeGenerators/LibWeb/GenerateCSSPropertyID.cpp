@@ -171,7 +171,7 @@ PropertyID property_id_from_camel_case_string(StringView string)
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.set("name:camelcase", camel_casify(name));
         member_generator.append(R"~~~(
-    if (string.equals_ignoring_case("@name:camelcase@"sv))
+    if (string.equals_ignoring_ascii_case("@name:camelcase@"sv))
         return PropertyID::@name:titlecase@;
 )~~~");
     });

@@ -477,7 +477,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
 
         for (auto& url : urls) {
             auto& scheme = url.scheme();
-            if (!scheme.equals_ignoring_case("file"sv))
+            if (!scheme.equals_ignoring_ascii_case("file"sv))
                 continue;
 
             auto lexical_path = LexicalPath(url.path());

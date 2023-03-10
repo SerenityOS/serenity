@@ -78,7 +78,7 @@ public:
     Optional<float> to_float(TrimWhitespace = TrimWhitespace::Yes) const;
 #endif
 
-    bool equals_ignoring_case(StringView) const;
+    bool equals_ignoring_ascii_case(StringView) const;
     bool starts_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     bool ends_with(StringView, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
 

@@ -517,7 +517,7 @@ public:
         return m_view.visit(
             [&](StringView view) {
                 return other.m_view.visit(
-                    [&](StringView other_view) { return view.equals_ignoring_case(other_view); },
+                    [&](StringView other_view) { return view.equals_ignoring_ascii_case(other_view); },
                     [](auto&) -> bool { TODO(); });
             },
             [&](Utf16View view) {

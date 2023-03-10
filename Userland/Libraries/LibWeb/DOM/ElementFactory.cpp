@@ -266,15 +266,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     if (lowercase_tag_name == SVG::TagNames::svg)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGSVGElement>(realm, document, move(qualified_name)));
     // FIXME: Support SVG's mixedCase tag names properly.
-    if (lowercase_tag_name.equals_ignoring_case(SVG::TagNames::clipPath))
+    if (lowercase_tag_name.equals_ignoring_ascii_case(SVG::TagNames::clipPath))
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGClipPathElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::circle)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGCircleElement>(realm, document, move(qualified_name)));
-    if (lowercase_tag_name.equals_ignoring_case(SVG::TagNames::defs))
+    if (lowercase_tag_name.equals_ignoring_ascii_case(SVG::TagNames::defs))
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGDefsElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::ellipse)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGEllipseElement>(realm, document, move(qualified_name)));
-    if (lowercase_tag_name.equals_ignoring_case(SVG::TagNames::foreignObject))
+    if (lowercase_tag_name.equals_ignoring_ascii_case(SVG::TagNames::foreignObject))
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGForeignObjectElement>(realm, document, move(qualified_name)));
     if (lowercase_tag_name == SVG::TagNames::line)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGLineElement>(realm, document, move(qualified_name)));

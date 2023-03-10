@@ -126,7 +126,7 @@ WebIDL::ExceptionOr<Vector<String>> Headers::get_set_cookie()
     // 2. Return the values of all headers in this’s header list whose name is a byte-case-insensitive match for
     //    `Set-Cookie`, in order.
     for (auto const& header : *m_header_list) {
-        if (StringView { header.name }.equals_ignoring_case("Set-Cookie"sv))
+        if (StringView { header.name }.equals_ignoring_ascii_case("Set-Cookie"sv))
             TRY_OR_THROW_OOM(vm, values.try_append(TRY_OR_THROW_OOM(vm, String::from_utf8(header.value))));
     }
     return values;

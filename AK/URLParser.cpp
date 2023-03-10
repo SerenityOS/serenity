@@ -108,12 +108,12 @@ constexpr bool is_normalized_windows_drive_letter(StringView input)
 
 constexpr bool is_single_dot_path_segment(StringView input)
 {
-    return input == "."sv || input.equals_ignoring_case("%2e"sv);
+    return input == "."sv || input.equals_ignoring_ascii_case("%2e"sv);
 }
 
 constexpr bool is_double_dot_path_segment(StringView input)
 {
-    return input == ".."sv || input.equals_ignoring_case(".%2e"sv) || input.equals_ignoring_case("%2e."sv) || input.equals_ignoring_case("%2e%2e"sv);
+    return input == ".."sv || input.equals_ignoring_ascii_case(".%2e"sv) || input.equals_ignoring_ascii_case("%2e."sv) || input.equals_ignoring_ascii_case("%2e%2e"sv);
 }
 
 // https://url.spec.whatwg.org/#string-percent-encode-after-encoding

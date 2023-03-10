@@ -346,9 +346,9 @@ bool DeprecatedString::contains(char needle, CaseSensitivity case_sensitivity) c
     return StringUtils::contains(*this, StringView(&needle, 1), case_sensitivity);
 }
 
-bool DeprecatedString::equals_ignoring_case(StringView other) const
+bool DeprecatedString::equals_ignoring_ascii_case(StringView other) const
 {
-    return StringUtils::equals_ignoring_case(view(), other);
+    return StringUtils::equals_ignoring_ascii_case(view(), other);
 }
 
 DeprecatedString DeprecatedString::reverse() const

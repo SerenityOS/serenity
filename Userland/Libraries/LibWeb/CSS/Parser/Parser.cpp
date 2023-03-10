@@ -360,9 +360,9 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_attribute_simple_se
         auto const& case_sensitivity_part = attribute_tokens.next_token();
         if (case_sensitivity_part.is(Token::Type::Ident)) {
             auto case_sensitivity = case_sensitivity_part.token().ident();
-            if (case_sensitivity.equals_ignoring_case("i"sv)) {
+            if (case_sensitivity.equals_ignoring_ascii_case("i"sv)) {
                 simple_selector.attribute().case_type = Selector::SimpleSelector::Attribute::CaseType::CaseInsensitiveMatch;
-            } else if (case_sensitivity.equals_ignoring_case("s"sv)) {
+            } else if (case_sensitivity.equals_ignoring_ascii_case("s"sv)) {
                 simple_selector.attribute().case_type = Selector::SimpleSelector::Attribute::CaseType::CaseSensitiveMatch;
             } else {
                 dbgln_if(CSS_PARSER_DEBUG, "Expected a \"i\" or \"s\" attribute selector case sensitivity identifier, got: '{}'", case_sensitivity_part.to_debug_string());
@@ -443,39 +443,39 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             };
         };
 
-        if (pseudo_name.equals_ignoring_case("active"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("active"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Active);
-        if (pseudo_name.equals_ignoring_case("checked"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("checked"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Checked);
-        if (pseudo_name.equals_ignoring_case("disabled"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("disabled"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Disabled);
-        if (pseudo_name.equals_ignoring_case("empty"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("empty"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Empty);
-        if (pseudo_name.equals_ignoring_case("enabled"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("enabled"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Enabled);
-        if (pseudo_name.equals_ignoring_case("first-child"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("first-child"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstChild);
-        if (pseudo_name.equals_ignoring_case("first-of-type"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("first-of-type"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FirstOfType);
-        if (pseudo_name.equals_ignoring_case("focus"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("focus"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Focus);
-        if (pseudo_name.equals_ignoring_case("focus-within"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("focus-within"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::FocusWithin);
-        if (pseudo_name.equals_ignoring_case("hover"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("hover"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Hover);
-        if (pseudo_name.equals_ignoring_case("last-child"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("last-child"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastChild);
-        if (pseudo_name.equals_ignoring_case("last-of-type"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("last-of-type"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::LastOfType);
-        if (pseudo_name.equals_ignoring_case("link"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("link"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Link);
-        if (pseudo_name.equals_ignoring_case("only-child"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("only-child"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyChild);
-        if (pseudo_name.equals_ignoring_case("only-of-type"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("only-of-type"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::OnlyOfType);
-        if (pseudo_name.equals_ignoring_case("root"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("root"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Root);
-        if (pseudo_name.equals_ignoring_case("visited"sv))
+        if (pseudo_name.equals_ignoring_ascii_case("visited"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Visited);
 
         // Single-colon syntax allowed for ::after, ::before, ::first-letter and ::first-line for compatibility.
@@ -523,7 +523,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
 
             // Parse the `of <selector-list>` syntax
             auto const& maybe_of = tokens.next_token();
-            if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_case("of"sv)))
+            if (!(maybe_of.is(Token::Type::Ident) && maybe_of.token().ident().equals_ignoring_ascii_case("of"sv)))
                 return ParseError::SyntaxError;
 
             tokens.skip_whitespace();
@@ -543,8 +543,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
         };
 
         auto const& pseudo_function = pseudo_class_token.function();
-        if (pseudo_function.name().equals_ignoring_case("is"sv)
-            || pseudo_function.name().equals_ignoring_case("where"sv)) {
+        if (pseudo_function.name().equals_ignoring_ascii_case("is"sv)
+            || pseudo_function.name().equals_ignoring_ascii_case("where"sv)) {
             auto function_token_stream = TokenStream(pseudo_function.values());
             // NOTE: Because it's forgiving, even complete garbage will parse OK as an empty selector-list.
             auto argument_selector_list = MUST(parse_a_selector_list(function_token_stream, SelectorType::Standalone, SelectorParsingMode::Forgiving));
@@ -552,13 +552,13 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return Selector::SimpleSelector {
                 .type = Selector::SimpleSelector::Type::PseudoClass,
                 .value = Selector::SimpleSelector::PseudoClass {
-                    .type = pseudo_function.name().equals_ignoring_case("is"sv)
+                    .type = pseudo_function.name().equals_ignoring_ascii_case("is"sv)
                         ? Selector::SimpleSelector::PseudoClass::Type::Is
                         : Selector::SimpleSelector::PseudoClass::Type::Where,
                     .argument_selector_list = move(argument_selector_list) }
             };
         }
-        if (pseudo_function.name().equals_ignoring_case("not"sv)) {
+        if (pseudo_function.name().equals_ignoring_ascii_case("not"sv)) {
             auto function_token_stream = TokenStream(pseudo_function.values());
             auto not_selector = TRY(parse_a_selector_list(function_token_stream, SelectorType::Standalone));
 
@@ -569,7 +569,7 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                     .argument_selector_list = move(not_selector) }
             };
         }
-        if (pseudo_function.name().equals_ignoring_case("lang"sv)) {
+        if (pseudo_function.name().equals_ignoring_ascii_case("lang"sv)) {
             if (pseudo_function.values().is_empty()) {
                 dbgln_if(CSS_PARSER_DEBUG, "Empty :lang() selector");
                 return ParseError::SyntaxError;
@@ -584,13 +584,13 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
                     .languages = move(languages) }
             };
         }
-        if (pseudo_function.name().equals_ignoring_case("nth-child"sv))
+        if (pseudo_function.name().equals_ignoring_ascii_case("nth-child"sv))
             return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthChild, pseudo_function.values(), true);
-        if (pseudo_function.name().equals_ignoring_case("nth-last-child"sv))
+        if (pseudo_function.name().equals_ignoring_ascii_case("nth-last-child"sv))
             return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthLastChild, pseudo_function.values(), true);
-        if (pseudo_function.name().equals_ignoring_case("nth-of-type"sv))
+        if (pseudo_function.name().equals_ignoring_ascii_case("nth-of-type"sv))
             return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthOfType, pseudo_function.values(), false);
-        if (pseudo_function.name().equals_ignoring_case("nth-last-of-type"sv))
+        if (pseudo_function.name().equals_ignoring_ascii_case("nth-last-of-type"sv))
             return parse_nth_child_selector(Selector::SimpleSelector::PseudoClass::Type::NthLastOfType, pseudo_function.values(), false);
 
         dbgln_if(CSS_PARSER_DEBUG, "Unrecognized pseudo-class function: ':{}'()", pseudo_function.name());
@@ -720,11 +720,11 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<ComponentValue>&
             return {};
 
         auto ident = token.token().ident();
-        if (ident.equals_ignoring_case("not"sv)) {
+        if (ident.equals_ignoring_ascii_case("not"sv)) {
             transaction.commit();
             return true;
         }
-        if (ident.equals_ignoring_case("only"sv)) {
+        if (ident.equals_ignoring_ascii_case("only"sv)) {
             transaction.commit();
             return false;
         }
@@ -771,7 +771,7 @@ NonnullRefPtr<MediaQuery> Parser::parse_media_query(TokenStream<ComponentValue>&
         return media_query;
 
     // `[ and <media-condition-without-or> ]?`
-    if (auto maybe_and = tokens.next_token(); maybe_and.is(Token::Type::Ident) && maybe_and.token().ident().equals_ignoring_case("and"sv)) {
+    if (auto maybe_and = tokens.next_token(); maybe_and.is(Token::Type::Ident) && maybe_and.token().ident().equals_ignoring_ascii_case("and"sv)) {
         if (auto media_condition = parse_media_condition(tokens, MediaCondition::AllowOr::No)) {
             tokens.skip_whitespace();
             if (tokens.has_next_token())
@@ -800,7 +800,7 @@ OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<ComponentValue>
         tokens.skip_whitespace();
 
         auto& first_token = tokens.next_token();
-        if (first_token.is(Token::Type::Ident) && first_token.token().ident().equals_ignoring_case("not"sv)) {
+        if (first_token.is(Token::Type::Ident) && first_token.token().ident().equals_ignoring_ascii_case("not"sv)) {
             if (auto child_condition = parse_media_condition(tokens, MediaCondition::AllowOr::Yes)) {
                 local_transaction.commit();
                 return MediaCondition::from_not(child_condition.release_nonnull());
@@ -815,7 +815,7 @@ OwnPtr<MediaCondition> Parser::parse_media_condition(TokenStream<ComponentValue>
         tokens.skip_whitespace();
 
         auto& first = tokens.next_token();
-        if (first.is(Token::Type::Ident) && first.token().ident().equals_ignoring_case(combinator)) {
+        if (first.is(Token::Type::Ident) && first.token().ident().equals_ignoring_ascii_case(combinator)) {
             tokens.skip_whitespace();
             if (auto media_in_parens = parse_media_in_parens(tokens)) {
                 local_transaction.commit();
@@ -1296,7 +1296,7 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
 
     auto const& peeked_token = tokens.peek_token();
     // `not <supports-in-parens>`
-    if (peeked_token.is(Token::Type::Ident) && peeked_token.token().ident().equals_ignoring_case("not"sv)) {
+    if (peeked_token.is(Token::Type::Ident) && peeked_token.token().ident().equals_ignoring_ascii_case("not"sv)) {
         tokens.next_token();
         tokens.skip_whitespace();
         auto child = parse_supports_in_parens(tokens);
@@ -1318,9 +1318,9 @@ OwnPtr<Supports::Condition> Parser::parse_supports_condition(TokenStream<Compone
         if (!token.is(Token::Type::Ident))
             return {};
         auto ident = token.token().ident();
-        if (ident.equals_ignoring_case("and"sv))
+        if (ident.equals_ignoring_ascii_case("and"sv))
             return Supports::Condition::Type::And;
-        if (ident.equals_ignoring_case("or"sv))
+        if (ident.equals_ignoring_ascii_case("or"sv))
             return Supports::Condition::Type::Or;
         return {};
     };
@@ -1415,7 +1415,7 @@ Optional<Supports::Feature> Parser::parse_supports_feature(TokenStream<Component
     }
 
     // `<supports-selector-fn>`
-    if (first_token.is_function() && first_token.function().name().equals_ignoring_case("selector"sv)) {
+    if (first_token.is_function() && first_token.function().name().equals_ignoring_ascii_case("selector"sv)) {
         // FIXME: Parsing and then converting back to a string is weird.
         StringBuilder builder;
         for (auto const& item : first_token.function().values())
@@ -2291,7 +2291,7 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
         auto url_string = component_value.token().url();
         return convert_string_to_url(url_string);
     }
-    if (component_value.is_function() && component_value.function().name().equals_ignoring_case("url"sv)) {
+    if (component_value.is_function() && component_value.function().name().equals_ignoring_ascii_case("url"sv)) {
         auto const& function_values = component_value.function().values();
         // FIXME: Handle url-modifiers. https://www.w3.org/TR/css-values-4/#url-modifiers
         for (size_t i = 0; i < function_values.size(); ++i) {
@@ -2453,7 +2453,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         repeating_gradient = GradientRepeating::Yes;
     });
 
-    if (!function_name.equals_ignoring_case("linear-gradient"sv))
+    if (!function_name.equals_ignoring_ascii_case("linear-gradient"sv))
         return {};
 
     // linear-gradient() = linear-gradient([ <angle> | to <side-or-corner> ]?, <color-stop-list>)
@@ -2470,13 +2470,13 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
         : SideOrCorner::Top;
 
     auto to_side = [](StringView value) -> Optional<SideOrCorner> {
-        if (value.equals_ignoring_case("top"sv))
+        if (value.equals_ignoring_ascii_case("top"sv))
             return SideOrCorner::Top;
-        if (value.equals_ignoring_case("bottom"sv))
+        if (value.equals_ignoring_ascii_case("bottom"sv))
             return SideOrCorner::Bottom;
-        if (value.equals_ignoring_case("left"sv))
+        if (value.equals_ignoring_ascii_case("left"sv))
             return SideOrCorner::Left;
-        if (value.equals_ignoring_case("right"sv))
+        if (value.equals_ignoring_ascii_case("right"sv))
             return SideOrCorner::Right;
         return {};
     };
@@ -2486,7 +2486,7 @@ RefPtr<StyleValue> Parser::parse_linear_gradient_function(ComponentValue const& 
             return false;
         if (gradient_type == GradientType::WebKit)
             return to_side(token.token().ident()).has_value();
-        return token.token().ident().equals_ignoring_case("to"sv);
+        return token.token().ident().equals_ignoring_ascii_case("to"sv);
     };
 
     auto const& first_param = tokens.peek_token();
@@ -2574,7 +2574,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
         repeating_gradient = GradientRepeating::Yes;
     });
 
-    if (!function_name.equals_ignoring_case("conic-gradient"sv))
+    if (!function_name.equals_ignoring_ascii_case("conic-gradient"sv))
         return {};
 
     TokenStream tokens { component_value.function().values() };
@@ -2595,7 +2595,7 @@ RefPtr<StyleValue> Parser::parse_conic_gradient_function(ComponentValue const& c
     while (token.is(Token::Type::Ident)) {
         auto consume_identifier = [&](auto identifier) {
             auto token_string = token.token().ident();
-            if (token_string.equals_ignoring_case(identifier)) {
+            if (token_string.equals_ignoring_ascii_case(identifier)) {
                 (void)tokens.next_token();
                 tokens.skip_whitespace();
                 return true;
@@ -2677,7 +2677,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
         repeating_gradient = GradientRepeating::Yes;
     });
 
-    if (!function_name.equals_ignoring_case("radial-gradient"sv))
+    if (!function_name.equals_ignoring_ascii_case("radial-gradient"sv))
         return {};
 
     TokenStream tokens { component_value.function().values() };
@@ -2705,21 +2705,21 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
         if (!token.is(Token::Type::Ident))
             return {};
         auto ident = token.token().ident();
-        if (ident.equals_ignoring_case("circle"sv))
+        if (ident.equals_ignoring_ascii_case("circle"sv))
             return commit_value(EndingShape::Circle, transaction);
-        if (ident.equals_ignoring_case("ellipse"sv))
+        if (ident.equals_ignoring_ascii_case("ellipse"sv))
             return commit_value(EndingShape::Ellipse, transaction);
         return {};
     };
 
     auto parse_extent_keyword = [](StringView keyword) -> Optional<Extent> {
-        if (keyword.equals_ignoring_case("closest-corner"sv))
+        if (keyword.equals_ignoring_ascii_case("closest-corner"sv))
             return Extent::ClosestCorner;
-        if (keyword.equals_ignoring_case("closest-side"sv))
+        if (keyword.equals_ignoring_ascii_case("closest-side"sv))
             return Extent::ClosestSide;
-        if (keyword.equals_ignoring_case("farthest-corner"sv))
+        if (keyword.equals_ignoring_ascii_case("farthest-corner"sv))
             return Extent::FarthestCorner;
-        if (keyword.equals_ignoring_case("farthest-side"sv))
+        if (keyword.equals_ignoring_ascii_case("farthest-side"sv))
             return Extent::FarthestSide;
         return {};
     };
@@ -2786,7 +2786,7 @@ RefPtr<StyleValue> Parser::parse_radial_gradient_function(ComponentValue const& 
         return {};
 
     auto& token = tokens.peek_token();
-    if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("at"sv)) {
+    if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("at"sv)) {
         (void)tokens.next_token();
         auto position = parse_position(tokens);
         if (!position.has_value())
@@ -2817,37 +2817,37 @@ Optional<PositionValue> Parser::parse_position(TokenStream<ComponentValue>& toke
         return {};
 
     auto parse_horizontal_preset = [&](auto ident) -> Optional<PositionValue::HorizontalPreset> {
-        if (ident.equals_ignoring_case("left"sv))
+        if (ident.equals_ignoring_ascii_case("left"sv))
             return PositionValue::HorizontalPreset::Left;
-        if (ident.equals_ignoring_case("center"sv))
+        if (ident.equals_ignoring_ascii_case("center"sv))
             return PositionValue::HorizontalPreset::Center;
-        if (ident.equals_ignoring_case("right"sv))
+        if (ident.equals_ignoring_ascii_case("right"sv))
             return PositionValue::HorizontalPreset::Right;
         return {};
     };
 
     auto parse_vertical_preset = [&](auto ident) -> Optional<PositionValue::VerticalPreset> {
-        if (ident.equals_ignoring_case("top"sv))
+        if (ident.equals_ignoring_ascii_case("top"sv))
             return PositionValue::VerticalPreset::Top;
-        if (ident.equals_ignoring_case("center"sv))
+        if (ident.equals_ignoring_ascii_case("center"sv))
             return PositionValue::VerticalPreset::Center;
-        if (ident.equals_ignoring_case("bottom"sv))
+        if (ident.equals_ignoring_ascii_case("bottom"sv))
             return PositionValue::VerticalPreset::Bottom;
         return {};
     };
 
     auto parse_horizontal_edge = [&](auto ident) -> Optional<PositionValue::HorizontalEdge> {
-        if (ident.equals_ignoring_case("left"sv))
+        if (ident.equals_ignoring_ascii_case("left"sv))
             return PositionValue::HorizontalEdge::Left;
-        if (ident.equals_ignoring_case("right"sv))
+        if (ident.equals_ignoring_ascii_case("right"sv))
             return PositionValue::HorizontalEdge::Right;
         return {};
     };
 
     auto parse_vertical_edge = [&](auto ident) -> Optional<PositionValue::VerticalEdge> {
-        if (ident.equals_ignoring_case("top"sv))
+        if (ident.equals_ignoring_ascii_case("top"sv))
             return PositionValue::VerticalEdge::Top;
-        if (ident.equals_ignoring_case("bottom"sv))
+        if (ident.equals_ignoring_ascii_case("bottom"sv))
             return PositionValue::VerticalEdge::Bottom;
         return {};
     };
@@ -3028,7 +3028,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
     if (rule->is_at_rule()) {
         if (has_ignored_vendor_prefix(rule->at_rule_name()))
             return {};
-        if (rule->at_rule_name().equals_ignoring_case("font-face"sv)) {
+        if (rule->at_rule_name().equals_ignoring_ascii_case("font-face"sv)) {
             if (!rule->block() || !rule->block()->is_curly()) {
                 dbgln_if(CSS_PARSER_DEBUG, "@font-face rule is malformed.");
                 return {};
@@ -3036,7 +3036,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             TokenStream tokens { rule->block()->values() };
             return parse_font_face_rule(tokens);
         }
-        if (rule->at_rule_name().equals_ignoring_case("import"sv) && !rule->prelude().is_empty()) {
+        if (rule->at_rule_name().equals_ignoring_ascii_case("import"sv) && !rule->prelude().is_empty()) {
             Optional<AK::URL> url;
             for (auto const& token : rule->prelude()) {
                 if (token.is(Token::Type::Whitespace))
@@ -3058,7 +3058,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             dbgln_if(CSS_PARSER_DEBUG, "Unable to parse url from @import rule");
             return {};
         }
-        if (rule->at_rule_name().equals_ignoring_case("media"sv)) {
+        if (rule->at_rule_name().equals_ignoring_ascii_case("media"sv)) {
             auto media_query_tokens = TokenStream { rule->prelude() };
             auto media_query_list = parse_a_media_query_list(media_query_tokens);
             if (media_query_list.is_empty() || !rule->block())
@@ -3075,7 +3075,7 @@ CSSRule* Parser::convert_to_rule(NonnullRefPtr<Rule> rule)
             auto rule_list = CSSRuleList::create(m_context.realm(), child_rules).release_value_but_fixme_should_propagate_errors();
             return CSSMediaRule::create(m_context.realm(), media_list, rule_list).release_value_but_fixme_should_propagate_errors();
         }
-        if (rule->at_rule_name().equals_ignoring_case("supports"sv)) {
+        if (rule->at_rule_name().equals_ignoring_ascii_case("supports"sv)) {
             auto supports_tokens = TokenStream { rule->prelude() };
             auto supports = parse_a_supports(supports_tokens);
             if (!supports) {
@@ -3205,11 +3205,11 @@ RefPtr<StyleValue> Parser::parse_builtin_value(ComponentValue const& component_v
 {
     if (component_value.is(Token::Type::Ident)) {
         auto ident = component_value.token().ident();
-        if (ident.equals_ignoring_case("inherit"sv))
+        if (ident.equals_ignoring_ascii_case("inherit"sv))
             return InheritStyleValue::the();
-        if (ident.equals_ignoring_case("initial"sv))
+        if (ident.equals_ignoring_ascii_case("initial"sv))
             return InitialStyleValue::the();
-        if (ident.equals_ignoring_case("unset"sv))
+        if (ident.equals_ignoring_ascii_case("unset"sv))
             return UnsetStyleValue::the();
         // FIXME: Implement `revert` and `revert-layer` keywords, from Cascade4 and Cascade5 respectively
     }
@@ -3258,10 +3258,10 @@ RefPtr<StyleValue> Parser::parse_dynamic_value(ComponentValue const& component_v
     if (component_value.is_function()) {
         auto const& function = component_value.function();
 
-        if (function.name().equals_ignoring_case("calc"sv))
+        if (function.name().equals_ignoring_ascii_case("calc"sv))
             return parse_calculated_value(function.values());
 
-        if (function.name().equals_ignoring_case("var"sv)) {
+        if (function.name().equals_ignoring_ascii_case("var"sv)) {
             // Declarations using `var()` should already be parsed as an UnresolvedStyleValue before this point.
             VERIFY_NOT_REACHED();
         }
@@ -3321,7 +3321,7 @@ Optional<Length> Parser::parse_length(ComponentValue const& component_value)
         return dimension->length();
 
     // FIXME: auto isn't a length!
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_ascii_case("auto"sv))
         return Length::make_auto();
 
     return {};
@@ -3414,7 +3414,7 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
 
     // All options start with 'u'/'U'.
     auto const& u = tokens.next_token();
-    if (!(u.is(Token::Type::Ident) && u.token().ident().equals_ignoring_case("u"sv))) {
+    if (!(u.is(Token::Type::Ident) && u.token().ident().equals_ignoring_ascii_case("u"sv))) {
         dbgln_if(CSS_PARSER_DEBUG, "CSSParser: <urange> does not start with 'u'");
         return {};
     }
@@ -3628,7 +3628,7 @@ RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component
     if (component_value.is(Token::Type::Number) && !(m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)))
         return {};
 
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_case("auto"sv))
+    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_ascii_case("auto"sv))
         return LengthStyleValue::create(Length::make_auto());
 
     auto dimension = parse_dimension(component_value);
@@ -3728,8 +3728,8 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
     if (tokens.has_next_token())
         return {};
 
-    if (function_name.equals_ignoring_case("rgb"sv)
-        || function_name.equals_ignoring_case("rgba"sv)) {
+    if (function_name.equals_ignoring_ascii_case("rgb"sv)
+        || function_name.equals_ignoring_ascii_case("rgba"sv)) {
 
         // https://www.w3.org/TR/css-color-4/#rgb-functions
 
@@ -3760,8 +3760,8 @@ Optional<Color> Parser::parse_rgb_or_hsl_color(StringView function_name, Vector<
 
             return Color(r_val, g_val, b_val, a_val);
         }
-    } else if (function_name.equals_ignoring_case("hsl"sv)
-        || function_name.equals_ignoring_case("hsla"sv)) {
+    } else if (function_name.equals_ignoring_ascii_case("hsl"sv)
+        || function_name.equals_ignoring_ascii_case("hsla"sv)) {
 
         // https://www.w3.org/TR/css-color-4/#the-hsl-notation
 
@@ -3812,7 +3812,7 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
     if (!component_value.is_function())
         return {};
     auto const& function = component_value.function();
-    if (!function.name().equals_ignoring_case("rect"sv))
+    if (!function.name().equals_ignoring_ascii_case("rect"sv))
         return {};
 
     Vector<Length, 4> params;
@@ -3842,7 +3842,7 @@ RefPtr<StyleValue> Parser::parse_rect_value(ComponentValue const& component_valu
         // <top>, <right>, <bottom>, and <left> may either have a <length> value or 'auto'.
         // Negative lengths are permitted.
         auto current_token = tokens.next_token().token();
-        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto"sv)) {
+        if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_ascii_case("auto"sv)) {
             params.append(Length::make_auto());
         } else {
             auto maybe_length = parse_length(current_token);
@@ -4732,7 +4732,7 @@ RefPtr<StyleValue> Parser::parse_single_shadow_value(TokenStream<ComponentValue>
         }
 
         if (allow_inset_keyword == AllowInsetKeyword::Yes
-            && token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("inset"sv)) {
+            && token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("inset"sv)) {
             if (placement.has_value())
                 return nullptr;
             placement = ShadowPlacement::Inner;
@@ -4870,25 +4870,25 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> 
     };
 
     auto parse_filter_function_name = [&](auto name) -> Optional<FilterToken> {
-        if (name.equals_ignoring_case("blur"sv))
+        if (name.equals_ignoring_ascii_case("blur"sv))
             return FilterToken::Blur;
-        if (name.equals_ignoring_case("brightness"sv))
+        if (name.equals_ignoring_ascii_case("brightness"sv))
             return FilterToken::Brightness;
-        if (name.equals_ignoring_case("contrast"sv))
+        if (name.equals_ignoring_ascii_case("contrast"sv))
             return FilterToken::Contrast;
-        if (name.equals_ignoring_case("drop-shadow"sv))
+        if (name.equals_ignoring_ascii_case("drop-shadow"sv))
             return FilterToken::DropShadow;
-        if (name.equals_ignoring_case("grayscale"sv))
+        if (name.equals_ignoring_ascii_case("grayscale"sv))
             return FilterToken::Grayscale;
-        if (name.equals_ignoring_case("hue-rotate"sv))
+        if (name.equals_ignoring_ascii_case("hue-rotate"sv))
             return FilterToken::HueRotate;
-        if (name.equals_ignoring_case("invert"sv))
+        if (name.equals_ignoring_ascii_case("invert"sv))
             return FilterToken::Invert;
-        if (name.equals_ignoring_case("opacity"sv))
+        if (name.equals_ignoring_ascii_case("opacity"sv))
             return FilterToken::Opacity;
-        if (name.equals_ignoring_case("saturate"sv))
+        if (name.equals_ignoring_ascii_case("saturate"sv))
             return FilterToken::Saturate;
-        if (name.equals_ignoring_case("sepia"sv))
+        if (name.equals_ignoring_ascii_case("sepia"sv))
             return FilterToken::Sepia;
         return {};
     };
@@ -5323,7 +5323,7 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
         }
 
         auto const& declaration = declaration_or_at_rule.declaration();
-        if (declaration.name().equals_ignoring_case("font-family"sv)) {
+        if (declaration.name().equals_ignoring_ascii_case("font-family"sv)) {
             // FIXME: This is very similar to, but different from, the logic in parse_font_family_value().
             //        Ideally they could share code.
             Vector<DeprecatedString> font_family_parts;
@@ -5367,14 +5367,14 @@ CSSRule* Parser::parse_font_face_rule(TokenStream<ComponentValue>& tokens)
             font_family = String::join(' ', font_family_parts).release_value_but_fixme_should_propagate_errors();
             continue;
         }
-        if (declaration.name().equals_ignoring_case("src"sv)) {
+        if (declaration.name().equals_ignoring_ascii_case("src"sv)) {
             TokenStream token_stream { declaration.values() };
             Vector<FontFace::Source> supported_sources = parse_font_face_src(token_stream);
             if (!supported_sources.is_empty())
                 src = move(supported_sources);
             continue;
         }
-        if (declaration.name().equals_ignoring_case("unicode-range"sv)) {
+        if (declaration.name().equals_ignoring_ascii_case("unicode-range"sv)) {
             Vector<UnicodeRange> unicode_ranges;
             bool unicode_range_invalid = false;
             TokenStream all_tokens { declaration.values() };
@@ -5418,7 +5418,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
     // Format-name table: https://www.w3.org/TR/css-fonts-4/#font-format-definitions
     auto font_format_is_supported = [](StringView name) {
         // The spec requires us to treat opentype and truetype as synonymous.
-        if (name.is_one_of_ignoring_case("opentype"sv, "truetype"sv, "woff"sv))
+        if (name.is_one_of_ignoring_ascii_case("opentype"sv, "truetype"sv, "woff"sv))
             return true;
         return false;
     };
@@ -5450,7 +5450,7 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
             }
 
             auto const& function = maybe_function.function();
-            if (function.name().equals_ignoring_case("format"sv)) {
+            if (function.name().equals_ignoring_ascii_case("format"sv)) {
                 TokenStream format_tokens { function.values() };
                 format_tokens.skip_whitespace();
                 auto const& format_name_token = format_tokens.next_token();
@@ -5700,7 +5700,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
         tokens.skip_whitespace();
         auto const& part = tokens.next_token();
 
-        if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_case("none"sv)) {
+        if (part.is(Token::Type::Ident) && part.token().ident().equals_ignoring_ascii_case("none"sv)) {
             if (!transformations.is_empty())
                 return nullptr;
             tokens.skip_whitespace();
@@ -5950,16 +5950,16 @@ Optional<CSS::GridSize> Parser::parse_grid_size(ComponentValue const& component_
     if (component_value.is_function())
         return {};
     auto token = component_value.token();
-    if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_case("fr"sv)) {
+    if (token.is(Token::Type::Dimension) && token.dimension_unit().equals_ignoring_ascii_case("fr"sv)) {
         float numeric_value = token.dimension_value();
         if (numeric_value)
             return GridSize(numeric_value);
     }
-    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("auto"sv))
         return GridSize::make_auto();
-    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("max-content"sv))
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("max-content"sv))
         return GridSize(GridSize::Type::MaxContent);
-    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("min-content"sv))
+    if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("min-content"sv))
         return GridSize(GridSize::Type::MinContent);
     auto dimension = parse_dimension(token);
     if (!dimension.has_value())
@@ -6029,9 +6029,9 @@ Optional<CSS::GridRepeat> Parser::parse_repeat(Vector<ComponentValue> const& com
     auto repeat_count = 0;
     if (current_token.is(Token::Type::Number) && current_token.number().is_integer() && current_token.number_value() > 0)
         repeat_count = current_token.number_value();
-    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fill"sv))
+    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_ascii_case("auto-fill"sv))
         is_auto_fill = true;
-    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_case("auto-fit"sv))
+    else if (current_token.is(Token::Type::Ident) && current_token.ident().equals_ignoring_ascii_case("auto-fit"sv))
         is_auto_fit = true;
 
     // The second argument is a track list, which is repeated that number of times.
@@ -6113,13 +6113,13 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
 {
     if (token.is_function()) {
         auto const& function_token = token.function();
-        if (function_token.name().equals_ignoring_case("repeat"sv)) {
+        if (function_token.name().equals_ignoring_ascii_case("repeat"sv)) {
             auto maybe_repeat = parse_repeat(function_token.values());
             if (maybe_repeat.has_value())
                 return CSS::ExplicitGridTrack(maybe_repeat.value());
             else
                 return {};
-        } else if (function_token.name().equals_ignoring_case("minmax"sv)) {
+        } else if (function_token.name().equals_ignoring_ascii_case("minmax"sv)) {
             auto maybe_min_max_value = parse_min_max(function_token.values());
             if (maybe_min_max_value.has_value())
                 return CSS::ExplicitGridTrack(maybe_min_max_value.value());
@@ -6127,7 +6127,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
                 return {};
         }
         return {};
-    } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_case("auto"sv)) {
+    } else if (token.is(Token::Type::Ident) && token.token().ident().equals_ignoring_ascii_case("auto"sv)) {
         return CSS::ExplicitGridTrack(GridSize(Length::make_auto()));
     } else if (token.is_block()) {
         return {};
@@ -6189,12 +6189,12 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     //     [ <integer> && <custom-ident>? ] |
     //     [ span && [ <integer> || <custom-ident> ] ]
     auto is_auto = [](Token token) -> bool {
-        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("auto"sv))
+        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("auto"sv))
             return true;
         return false;
     };
     auto is_span = [](Token token) -> bool {
-        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_case("span"sv))
+        if (token.is(Token::Type::Ident) && token.ident().equals_ignoring_ascii_case("span"sv))
             return true;
         return false;
     };
@@ -6206,7 +6206,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> con
     };
     auto is_line_name = [](Token token) -> bool {
         // The <custom-ident> additionally excludes the keywords span and auto.
-        if (token.is(Token::Type::Ident) && !token.ident().equals_ignoring_case("span"sv) && !token.ident().equals_ignoring_case("auto"sv))
+        if (token.is(Token::Type::Ident) && !token.ident().equals_ignoring_ascii_case("span"sv) && !token.ident().equals_ignoring_ascii_case("auto"sv))
             return true;
         return false;
     };
@@ -6410,7 +6410,7 @@ RefPtr<StyleValue> Parser::parse_grid_template_areas_value(Vector<ComponentValue
 Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(PropertyID property_id, TokenStream<ComponentValue>& tokens)
 {
     auto function_contains_var_or_attr = [](Function const& function, auto&& recurse) -> bool {
-        if (function.name().equals_ignoring_case("var"sv) || function.name().equals_ignoring_case("attr"sv))
+        if (function.name().equals_ignoring_ascii_case("var"sv) || function.name().equals_ignoring_ascii_case("attr"sv))
             return true;
         for (auto const& token : function.values()) {
             if (token.is_function() && recurse(token.function(), recurse))
@@ -6685,16 +6685,16 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     };
 
     auto is_n = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n"sv);
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("n"sv);
     };
     auto is_ndash = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("n-"sv);
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("n-"sv);
     };
     auto is_dashn = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n"sv);
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("-n"sv);
     };
     auto is_dashndash = [](ComponentValue const& value) -> bool {
-        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_case("-n-"sv);
+        return value.is(Token::Type::Ident) && value.token().ident().equals_ignoring_ascii_case("-n-"sv);
     };
     auto is_delim = [](ComponentValue const& value, u32 delim) -> bool {
         return value.is(Token::Type::Delim) && value.token().delim() == delim;
@@ -6707,7 +6707,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             return false;
         if (!value.token().number().is_integer())
             return false;
-        if (!value.token().dimension_unit().equals_ignoring_case("n"sv))
+        if (!value.token().dimension_unit().equals_ignoring_ascii_case("n"sv))
             return false;
         return true;
     };
@@ -6716,7 +6716,7 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
             return false;
         if (!value.token().number().is_integer())
             return false;
-        if (!value.token().dimension_unit().equals_ignoring_case("n-"sv))
+        if (!value.token().dimension_unit().equals_ignoring_ascii_case("n-"sv))
             return false;
         return true;
     };
@@ -6779,11 +6779,11 @@ Optional<Selector::SimpleSelector::ANPlusBPattern> Parser::parse_a_n_plus_b_patt
     // odd | even
     if (first_value.is(Token::Type::Ident)) {
         auto ident = first_value.token().ident();
-        if (ident.equals_ignoring_case("odd"sv)) {
+        if (ident.equals_ignoring_ascii_case("odd"sv)) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 2, 1 };
         }
-        if (ident.equals_ignoring_case("even"sv)) {
+        if (ident.equals_ignoring_ascii_case("even"sv)) {
             transaction.commit();
             return Selector::SimpleSelector::ANPlusBPattern { 2, 0 };
         }
@@ -7263,9 +7263,9 @@ bool Parser::has_ignored_vendor_prefix(StringView string)
 
 bool Parser::is_builtin(StringView name)
 {
-    return name.equals_ignoring_case("inherit"sv)
-        || name.equals_ignoring_case("initial"sv)
-        || name.equals_ignoring_case("unset"sv);
+    return name.equals_ignoring_ascii_case("inherit"sv)
+        || name.equals_ignoring_ascii_case("initial"sv)
+        || name.equals_ignoring_ascii_case("unset"sv);
 }
 
 RefPtr<CalculatedStyleValue> Parser::parse_calculated_value(Badge<StyleComputer>, ParsingContext const& context, Vector<ComponentValue> const& tokens)

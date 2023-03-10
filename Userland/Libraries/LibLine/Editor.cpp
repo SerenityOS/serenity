@@ -54,16 +54,16 @@ Configuration Configuration::from_config(StringView libname)
 
     configuration.set(flags);
 
-    if (refresh.equals_ignoring_case("lazy"sv))
+    if (refresh.equals_ignoring_ascii_case("lazy"sv))
         configuration.set(Configuration::Lazy);
-    else if (refresh.equals_ignoring_case("eager"sv))
+    else if (refresh.equals_ignoring_ascii_case("eager"sv))
         configuration.set(Configuration::Eager);
 
-    if (operation.equals_ignoring_case("full"sv))
+    if (operation.equals_ignoring_ascii_case("full"sv))
         configuration.set(Configuration::OperationMode::Full);
-    else if (operation.equals_ignoring_case("noescapesequences"sv))
+    else if (operation.equals_ignoring_ascii_case("noescapesequences"sv))
         configuration.set(Configuration::OperationMode::NoEscapeSequences);
-    else if (operation.equals_ignoring_case("noninteractive"sv))
+    else if (operation.equals_ignoring_ascii_case("noninteractive"sv))
         configuration.set(Configuration::OperationMode::NonInteractive);
     else
         configuration.set(Configuration::OperationMode::Unset);

@@ -249,11 +249,11 @@ Optional<Color> Color::from_string(StringView string)
         { 0x000000, nullptr }
     };
 
-    if (string.equals_ignoring_case("transparent"sv))
+    if (string.equals_ignoring_ascii_case("transparent"sv))
         return Color::from_argb(0x00000000);
 
     for (size_t i = 0; !web_colors[i].name.is_null(); ++i) {
-        if (string.equals_ignoring_case(web_colors[i].name))
+        if (string.equals_ignoring_ascii_case(web_colors[i].name))
             return Color::from_rgb(web_colors[i].color);
     }
 

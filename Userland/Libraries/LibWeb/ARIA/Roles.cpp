@@ -28,13 +28,13 @@ StringView role_name(Role role)
 Optional<Role> role_from_string(StringView role_name)
 {
     // Note: "switch" is mapped to Role::switch_ (due to C++ keyword clash)
-#define __ENUMERATE_ARIA_ROLE(name)                     \
-    if constexpr (Role::name == Role::switch_) {        \
-        if (role_name.equals_ignoring_case("switch"sv)) \
-            return Role::switch_;                       \
-    } else {                                            \
-        if (role_name.equals_ignoring_case(#name##sv))  \
-            return Role::name;                          \
+#define __ENUMERATE_ARIA_ROLE(name)                           \
+    if constexpr (Role::name == Role::switch_) {              \
+        if (role_name.equals_ignoring_ascii_case("switch"sv)) \
+            return Role::switch_;                             \
+    } else {                                                  \
+        if (role_name.equals_ignoring_ascii_case(#name##sv))  \
+            return Role::name;                                \
     }
     ENUMERATE_ARIA_ROLES
 #undef __ENUMERATE_ARIA_ROLE

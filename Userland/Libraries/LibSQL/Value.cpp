@@ -245,9 +245,9 @@ Optional<bool> Value::to_bool() const
 
     return m_value->visit(
         [](DeprecatedString const& value) -> Optional<bool> {
-            if (value.equals_ignoring_case("true"sv) || value.equals_ignoring_case("t"sv))
+            if (value.equals_ignoring_ascii_case("true"sv) || value.equals_ignoring_ascii_case("t"sv))
                 return true;
-            if (value.equals_ignoring_case("false"sv) || value.equals_ignoring_case("f"sv))
+            if (value.equals_ignoring_ascii_case("false"sv) || value.equals_ignoring_ascii_case("f"sv))
                 return false;
             return {};
         },

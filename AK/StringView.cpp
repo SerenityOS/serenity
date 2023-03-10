@@ -170,9 +170,9 @@ bool StringView::contains(StringView needle, CaseSensitivity case_sensitivity) c
     return StringUtils::contains(*this, needle, case_sensitivity);
 }
 
-bool StringView::equals_ignoring_case(StringView other) const
+bool StringView::equals_ignoring_ascii_case(StringView other) const
 {
-    return StringUtils::equals_ignoring_case(*this, other);
+    return StringUtils::equals_ignoring_ascii_case(*this, other);
 }
 
 #ifndef KERNEL

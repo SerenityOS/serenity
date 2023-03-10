@@ -64,7 +64,7 @@ DeprecatedString HTMLElement::dir() const
 {
     auto dir = attribute(HTML::AttributeNames::dir);
 #define __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE(keyword) \
-    if (dir.equals_ignoring_case(#keyword##sv))         \
+    if (dir.equals_ignoring_ascii_case(#keyword##sv))   \
         return #keyword##sv;
     ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTES
 #undef __ENUMERATE_HTML_ELEMENT_DIR_ATTRIBUTE
@@ -81,10 +81,10 @@ HTMLElement::ContentEditableState HTMLElement::content_editable_state() const
 {
     auto contenteditable = attribute(HTML::AttributeNames::contenteditable);
     // "true", an empty string or a missing value map to the "true" state.
-    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_case("true"sv))
+    if ((!contenteditable.is_null() && contenteditable.is_empty()) || contenteditable.equals_ignoring_ascii_case("true"sv))
         return ContentEditableState::True;
     // "false" maps to the "false" state.
-    if (contenteditable.equals_ignoring_case("false"sv))
+    if (contenteditable.equals_ignoring_ascii_case("false"sv))
         return ContentEditableState::False;
     // Having no such attribute or an invalid value maps to the "inherit" state.
     return ContentEditableState::Inherit;
@@ -121,15 +121,15 @@ DeprecatedString HTMLElement::content_editable() const
 // https://html.spec.whatwg.org/multipage/interaction.html#contenteditable
 WebIDL::ExceptionOr<void> HTMLElement::set_content_editable(DeprecatedString const& content_editable)
 {
-    if (content_editable.equals_ignoring_case("inherit"sv)) {
+    if (content_editable.equals_ignoring_ascii_case("inherit"sv)) {
         remove_attribute(HTML::AttributeNames::contenteditable);
         return {};
     }
-    if (content_editable.equals_ignoring_case("true"sv)) {
+    if (content_editable.equals_ignoring_ascii_case("true"sv)) {
         MUST(set_attribute(HTML::AttributeNames::contenteditable, "true"));
         return {};
     }
-    if (content_editable.equals_ignoring_case("false"sv)) {
+    if (content_editable.equals_ignoring_ascii_case("false"sv)) {
         MUST(set_attribute(HTML::AttributeNames::contenteditable, "false"));
         return {};
     }

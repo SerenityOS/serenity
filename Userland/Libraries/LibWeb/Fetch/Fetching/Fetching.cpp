@@ -1829,7 +1829,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
                     bool is_in_header_names = false;
 
                     for (auto const& allowed_header_name : header_names) {
-                        if (StringView { allowed_header_name }.equals_ignoring_case(header.name)) {
+                        if (StringView { allowed_header_name }.equals_ignoring_ascii_case(header.name)) {
                             is_in_header_names = true;
                             break;
                         }
@@ -1850,7 +1850,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> cors_preflight_fetch(JS::
                 bool is_in_header_names = false;
 
                 for (auto const& header_name : header_names) {
-                    if (StringView { unsafe_name }.equals_ignoring_case(header_name)) {
+                    if (StringView { unsafe_name }.equals_ignoring_ascii_case(header_name)) {
                         is_in_header_names = true;
                         break;
                     }

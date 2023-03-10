@@ -63,7 +63,7 @@ void SVGSVGElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedS
 {
     SVGGraphicsElement::parse_attribute(name, value);
 
-    if (name.equals_ignoring_case(SVG::AttributeNames::viewBox))
+    if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
         m_view_box = try_parse_view_box(value);
 }
 

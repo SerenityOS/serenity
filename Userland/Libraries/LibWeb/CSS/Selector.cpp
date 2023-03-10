@@ -345,21 +345,21 @@ ErrorOr<String> serialize_a_group_of_selectors(Vector<NonnullRefPtr<Selector>> c
 
 Optional<Selector::PseudoElement> pseudo_element_from_string(StringView name)
 {
-    if (name.equals_ignoring_case("after"sv)) {
+    if (name.equals_ignoring_ascii_case("after"sv)) {
         return Selector::PseudoElement::After;
-    } else if (name.equals_ignoring_case("before"sv)) {
+    } else if (name.equals_ignoring_ascii_case("before"sv)) {
         return Selector::PseudoElement::Before;
-    } else if (name.equals_ignoring_case("first-letter"sv)) {
+    } else if (name.equals_ignoring_ascii_case("first-letter"sv)) {
         return Selector::PseudoElement::FirstLetter;
-    } else if (name.equals_ignoring_case("first-line"sv)) {
+    } else if (name.equals_ignoring_ascii_case("first-line"sv)) {
         return Selector::PseudoElement::FirstLine;
-    } else if (name.equals_ignoring_case("marker"sv)) {
+    } else if (name.equals_ignoring_ascii_case("marker"sv)) {
         return Selector::PseudoElement::Marker;
-    } else if (name.equals_ignoring_case("-webkit-progress-bar"sv)) {
+    } else if (name.equals_ignoring_ascii_case("-webkit-progress-bar"sv)) {
         return Selector::PseudoElement::ProgressBar;
-    } else if (name.equals_ignoring_case("-webkit-progress-value"sv)) {
+    } else if (name.equals_ignoring_ascii_case("-webkit-progress-value"sv)) {
         return Selector::PseudoElement::ProgressValue;
-    } else if (name.equals_ignoring_case("placeholder"sv)) {
+    } else if (name.equals_ignoring_ascii_case("placeholder"sv)) {
         return Selector::PseudoElement::Placeholder;
     }
     return {};

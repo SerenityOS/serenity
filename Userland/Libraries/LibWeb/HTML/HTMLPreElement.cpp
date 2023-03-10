@@ -29,7 +29,7 @@ void HTMLPreElement::apply_presentational_hints(CSS::StyleProperties& style) con
     HTMLElement::apply_presentational_hints(style);
 
     for_each_attribute([&](auto const& name, auto const&) {
-        if (name.equals_ignoring_case(HTML::AttributeNames::wrap))
+        if (name.equals_ignoring_ascii_case(HTML::AttributeNames::wrap))
             style.set_property(CSS::PropertyID::WhiteSpace, CSS::IdentifierStyleValue::create(CSS::ValueID::PreWrap));
     });
 }

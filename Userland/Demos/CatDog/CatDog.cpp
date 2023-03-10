@@ -75,13 +75,13 @@ CatDog::State CatDog::special_application_states() const
 
     auto proc_info = maybe_proc_info.release_value();
     auto maybe_paint_program = proc_info.processes.first_matching([](auto& process) {
-        return process.name.equals_ignoring_case("pixelpaint"sv) || process.name.equals_ignoring_case("fonteditor"sv);
+        return process.name.equals_ignoring_ascii_case("pixelpaint"sv) || process.name.equals_ignoring_ascii_case("fonteditor"sv);
     });
     if (maybe_paint_program.has_value())
         return State::Artist;
 
     auto maybe_inspector_program = proc_info.processes.first_matching([](auto& process) {
-        return process.name.equals_ignoring_case("inspector"sv) || process.name.equals_ignoring_case("systemmonitor"sv) || process.name.equals_ignoring_case("profiler"sv);
+        return process.name.equals_ignoring_ascii_case("inspector"sv) || process.name.equals_ignoring_ascii_case("systemmonitor"sv) || process.name.equals_ignoring_ascii_case("profiler"sv);
     });
     if (maybe_inspector_program.has_value())
         return State::Inspector;

@@ -28,7 +28,7 @@ template<typename T>
 requires(IsSameIgnoringCV<T, u8>) struct CaseInsensitiveBytesTraits : public Traits<Span<T>> {
     static constexpr bool equals(Span<T> const& a, Span<T> const& b)
     {
-        return StringView { a }.equals_ignoring_case(StringView { b });
+        return StringView { a }.equals_ignoring_ascii_case(StringView { b });
     }
 
     static constexpr unsigned hash(Span<T> const& span)
@@ -57,7 +57,7 @@ bool HeaderList::contains(ReadonlyBytes name) const
 {
     // A header list list contains a header name name if list contains a header whose name is a byte-case-insensitive match for name.
     return any_of(*this, [&](auto const& header) {
-        return StringView { header.name }.equals_ignoring_case(name);
+        return StringView { header.name }.equals_ignoring_ascii_case(name);
     });
 }
 
@@ -74,7 +74,7 @@ ErrorOr<Optional<ByteBuffer>> HeaderList::get(ReadonlyBytes name) const
     ByteBuffer buffer;
     auto first = true;
     for (auto const& header : *this) {
-        if (!StringView { header.name }.equals_ignoring_case(name))
+        if (!StringView { header.name }.equals_ignoring_ascii_case(name))
             continue;
         if (first) {
             first = false;
@@ -172,7 +172,7 @@ ErrorOr<void> HeaderList::append(Header header)
     // NOTE: This reuses the casing of the name of the header already in list, if any. If there are multiple matched headers their names will all be identical.
     if (contains(name)) {
         auto matching_header = first_matching([&](auto const& existing_header) {
-            return StringView { existing_header.name }.equals_ignoring_case(name);
+            return StringView { existing_header.name }.equals_ignoring_ascii_case(name);
         });
         name.overwrite(0, matching_header->name.data(), matching_header->name.size());
     }
@@ -188,7 +188,7 @@ void HeaderList::delete_(ReadonlyBytes name)
 {
     // To delete a header name name from a header list list, remove all headers whose name is a byte-case-insensitive match for name from list.
     remove_all_matching([&](auto const& header) {
-        return StringView { header.name }.equals_ignoring_case(name);
+        return StringView { header.name }.equals_ignoring_ascii_case(name);
     });
 }
 
@@ -203,7 +203,7 @@ ErrorOr<void> HeaderList::set(Header header)
     // 1. If list contains name, then set the value of the first such header to value and remove the others.
     if (contains(name)) {
         auto matching_index = find_if([&](auto const& existing_header) {
-            return StringView { existing_header.name }.equals_ignoring_case(name);
+            return StringView { existing_header.name }.equals_ignoring_ascii_case(name);
         }).index();
         auto& matching_header = at(matching_index);
         matching_header.value = TRY(ByteBuffer::copy(value));
@@ -212,7 +212,7 @@ ErrorOr<void> HeaderList::set(Header header)
             ScopeGuard increment_i = [&]() { i++; };
             if (i <= matching_index)
                 return false;
-            return StringView { existing_header.name }.equals_ignoring_case(name);
+            return StringView { existing_header.name }.equals_ignoring_ascii_case(name);
         });
     }
     // 2. Otherwise, append header (name, value) to list.
@@ -234,7 +234,7 @@ ErrorOr<void> HeaderList::combine(Header header)
     // 1. If list contains name, then set the value of the first such header to its value, followed by 0x2C 0x20, followed by value.
     if (contains(name)) {
         auto matching_header = first_matching([&](auto const& existing_header) {
-            return StringView { existing_header.name }.equals_ignoring_case(name);
+            return StringView { existing_header.name }.equals_ignoring_ascii_case(name);
         });
         TRY(matching_header->value.try_append(0x2c));
         TRY(matching_header->value.try_append(0x20));
@@ -270,7 +270,7 @@ ErrorOr<Vector<Header>> HeaderList::sort_and_combine() const
             // 1. Let values be a list of all values of headers in list whose name is a byte-case-insensitive match for name, in order.
             // 2. For each value of values:
             for (auto const& [header_name, value] : *this) {
-                if (StringView { header_name }.equals_ignoring_case(name)) {
+                if (StringView { header_name }.equals_ignoring_ascii_case(name)) {
                     // 1. Append (name, value) to headers.
                     auto header = TRY(Header::from_string_pair(name, value));
                     TRY(headers.try_append(move(header)));
@@ -473,14 +473,14 @@ bool is_cors_safelisted_request_header(Header const& header)
     auto name = StringView { header.name };
 
     // `accept`
-    if (name.equals_ignoring_case("accept"sv)) {
+    if (name.equals_ignoring_ascii_case("accept"sv)) {
         // If value contains a CORS-unsafe request-header byte, then return false.
         if (any_of(value.span(), is_cors_unsafe_request_header_byte))
             return false;
     }
     // `accept-language`
     // `content-language`
-    else if (name.is_one_of_ignoring_case("accept-language"sv, "content-language"sv)) {
+    else if (name.is_one_of_ignoring_ascii_case("accept-language"sv, "content-language"sv)) {
         // If value contains a byte that is not in the range 0x30 (0) to 0x39 (9), inclusive, is not in the range 0x41 (A) to 0x5A (Z), inclusive, is not in the range 0x61 (a) to 0x7A (z), inclusive, and is not 0x20 (SP), 0x2A (*), 0x2C (,), 0x2D (-), 0x2E (.), 0x3B (;), or 0x3D (=), then return false.
         if (any_of(value.span(), [](auto byte) {
                 return !(is_ascii_digit(byte) || is_ascii_alpha(byte) || " *,-.;="sv.contains(static_cast<char>(byte)));
@@ -488,7 +488,7 @@ bool is_cors_safelisted_request_header(Header const& header)
             return false;
     }
     // `content-type`
-    else if (name.equals_ignoring_case("content-type"sv)) {
+    else if (name.equals_ignoring_ascii_case("content-type"sv)) {
         // 1. If value contains a CORS-unsafe request-header byte, then return false.
         if (any_of(value.span(), is_cors_unsafe_request_header_byte))
             return false;
@@ -505,7 +505,7 @@ bool is_cors_safelisted_request_header(Header const& header)
             return false;
     }
     // `range`
-    else if (name.equals_ignoring_case("range"sv)) {
+    else if (name.equals_ignoring_ascii_case("range"sv)) {
         // 1. Let rangeValue be the result of parsing a single range header value given value.
         auto range_value = parse_single_range_header_value(value);
 
@@ -579,7 +579,7 @@ ErrorOr<OrderedHashTable<ByteBuffer>> get_cors_unsafe_header_names(HeaderList co
 bool is_cors_non_wildcard_request_header_name(ReadonlyBytes header_name)
 {
     // A CORS non-wildcard request-header name is a header name that is a byte-case-insensitive match for `Authorization`.
-    return StringView { header_name }.equals_ignoring_case("Authorization"sv);
+    return StringView { header_name }.equals_ignoring_ascii_case("Authorization"sv);
 }
 
 // https://fetch.spec.whatwg.org/#privileged-no-cors-request-header-name
@@ -587,7 +587,7 @@ bool is_privileged_no_cors_request_header_name(ReadonlyBytes header_name)
 {
     // A privileged no-CORS request-header name is a header name that is a byte-case-insensitive match for one of
     // - `Range`.
-    return StringView { header_name }.equals_ignoring_case("Range"sv);
+    return StringView { header_name }.equals_ignoring_ascii_case("Range"sv);
 }
 
 // https://fetch.spec.whatwg.org/#cors-safelisted-response-header-name
@@ -602,7 +602,7 @@ bool is_cors_safelisted_response_header_name(ReadonlyBytes header_name, Span<Rea
     // - `Last-Modified`
     // - `Pragma`
     // - Any item in list that is not a forbidden response-header name.
-    return StringView { header_name }.is_one_of_ignoring_case(
+    return StringView { header_name }.is_one_of_ignoring_ascii_case(
                "Cache-Control"sv,
                "Content-Language"sv,
                "Content-Length"sv,
@@ -611,7 +611,7 @@ bool is_cors_safelisted_response_header_name(ReadonlyBytes header_name, Span<Rea
                "Last-Modified"sv,
                "Pragma"sv)
         || any_of(list, [&](auto list_header_name) {
-               return StringView { header_name }.equals_ignoring_case(list_header_name)
+               return StringView { header_name }.equals_ignoring_ascii_case(list_header_name)
                    && !is_forbidden_response_header_name(list_header_name);
            });
 }
@@ -624,7 +624,7 @@ bool is_no_cors_safelisted_request_header_name(ReadonlyBytes header_name)
     // - `Accept-Language`
     // - `Content-Language`
     // - `Content-Type`
-    return StringView { header_name }.is_one_of_ignoring_case(
+    return StringView { header_name }.is_one_of_ignoring_ascii_case(
         "Accept"sv,
         "Accept-Language"sv,
         "Content-Language"sv,
@@ -653,7 +653,7 @@ ErrorOr<bool> is_forbidden_request_header(Header const& header)
     // 1. If name is a byte-case-insensitive match for one of:
     // [...]
     // then return true.
-    if (name.is_one_of_ignoring_case(
+    if (name.is_one_of_ignoring_ascii_case(
             "Accept-Charset"sv,
             "Accept-Encoding"sv,
             "Access-Control-Request-Headers"sv,
@@ -688,7 +688,7 @@ ErrorOr<bool> is_forbidden_request_header(Header const& header)
     // - `X-HTTP-Method-Override`
     // - `X-Method-Override`
     // then:
-    if (name.is_one_of_ignoring_case(
+    if (name.is_one_of_ignoring_ascii_case(
             "X-HTTP-Method"sv,
             "X-HTTP-Method-Override"sv,
             "X-Method"sv)) {
@@ -710,7 +710,7 @@ bool is_forbidden_response_header_name(ReadonlyBytes header_name)
     // A forbidden response-header name is a header name that is a byte-case-insensitive match for one of:
     // - `Set-Cookie`
     // - `Set-Cookie2`
-    return StringView { header_name }.is_one_of_ignoring_case(
+    return StringView { header_name }.is_one_of_ignoring_ascii_case(
         "Set-Cookie"sv,
         "Set-Cookie2"sv);
 }
@@ -723,7 +723,7 @@ bool is_request_body_header_name(ReadonlyBytes header_name)
     // - `Content-Language`
     // - `Content-Location`
     // - `Content-Type`
-    return StringView { header_name }.is_one_of_ignoring_case(
+    return StringView { header_name }.is_one_of_ignoring_ascii_case(
         "Content-Encoding"sv,
         "Content-Language"sv,
         "Content-Location"sv,
@@ -754,7 +754,7 @@ ErrorOr<Variant<Vector<ByteBuffer>, ExtractHeaderParseFailure, Empty>> extract_h
 
     // 4. For each header header list contains whose name is name:
     for (auto const& header : list) {
-        if (!StringView { header.name }.equals_ignoring_case(name))
+        if (!StringView { header.name }.equals_ignoring_ascii_case(name))
             continue;
 
         // 1. Let extract be the result of extracting header values from header.

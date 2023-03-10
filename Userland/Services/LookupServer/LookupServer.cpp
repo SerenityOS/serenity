@@ -278,7 +278,7 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, DeprecatedString 
         auto& response_question = response.questions()[i];
         bool match = request_question.class_code() == response_question.class_code()
             && request_question.record_type() == response_question.record_type()
-            && request_question.name().as_string().equals_ignoring_case(response_question.name().as_string());
+            && request_question.name().as_string().equals_ignoring_ascii_case(response_question.name().as_string());
         if (!match) {
             dbgln("Request and response questions do not match");
             dbgln("   Request: name=_{}_, type={}, class={}", request_question.name().as_string(), response_question.record_type(), response_question.class_code());

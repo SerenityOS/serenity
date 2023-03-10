@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         StringView current = TRY(infile->read_line(current_buf));
 
         StringView current_to_compare = skip(current, skip_chars, skip_fields);
-        bool lines_equal = ignore_case ? current_to_compare.equals_ignoring_case(previous_to_compare) : current_to_compare == previous_to_compare;
+        bool lines_equal = ignore_case ? current_to_compare.equals_ignoring_ascii_case(previous_to_compare) : current_to_compare == previous_to_compare;
         if (!lines_equal) {
             TRY(write_line_content(previous, count, duplicates_only, print_count, *outfile));
             count = 1;

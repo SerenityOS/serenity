@@ -79,7 +79,7 @@ Optional<T> convert_to_uint_from_octal(StringView, TrimWhitespace = TrimWhitespa
 template<typename T>
 Optional<T> convert_to_floating_point(StringView, TrimWhitespace = TrimWhitespace::Yes);
 #endif
-bool equals_ignoring_case(StringView, StringView);
+bool equals_ignoring_ascii_case(StringView, StringView);
 bool ends_with(StringView a, StringView b, CaseSensitivity);
 bool starts_with(StringView, StringView, CaseSensitivity);
 bool contains(StringView, StringView, CaseSensitivity);

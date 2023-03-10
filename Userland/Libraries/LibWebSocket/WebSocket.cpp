@@ -297,9 +297,9 @@ void WebSocket::read_server_handshake()
 
         auto header_name = parts[0];
 
-        if (header_name.equals_ignoring_case("Upgrade"sv)) {
+        if (header_name.equals_ignoring_ascii_case("Upgrade"sv)) {
             // 2. |Upgrade| should be case-insensitive "websocket"
-            if (!parts[1].trim_whitespace().equals_ignoring_case("websocket"sv)) {
+            if (!parts[1].trim_whitespace().equals_ignoring_ascii_case("websocket"sv)) {
                 dbgln("WebSocket: Server HTTP Handshake Header |Upgrade| should be 'websocket', got '{}'. Failing connection.", parts[1]);
                 fatal_error(WebSocket::Error::ConnectionUpgradeFailed);
                 return;
@@ -309,9 +309,9 @@ void WebSocket::read_server_handshake()
             continue;
         }
 
-        if (header_name.equals_ignoring_case("Connection"sv)) {
+        if (header_name.equals_ignoring_ascii_case("Connection"sv)) {
             // 3. |Connection| should be case-insensitive "Upgrade"
-            if (!parts[1].trim_whitespace().equals_ignoring_case("Upgrade"sv)) {
+            if (!parts[1].trim_whitespace().equals_ignoring_ascii_case("Upgrade"sv)) {
                 dbgln("WebSocket: Server HTTP Handshake Header |Connection| should be 'Upgrade', got '{}'. Failing connection.", parts[1]);
                 return;
             }
@@ -320,7 +320,7 @@ void WebSocket::read_server_handshake()
             continue;
         }
 
-        if (header_name.equals_ignoring_case("Sec-WebSocket-Accept"sv)) {
+        if (header_name.equals_ignoring_ascii_case("Sec-WebSocket-Accept"sv)) {
             // 4. |Sec-WebSocket-Accept| should be base64(SHA1(|Sec-WebSocket-Key| + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
             auto expected_content = DeprecatedString::formatted("{}258EAFA5-E914-47DA-95CA-C5AB0DC85B11", m_websocket_key);
 
@@ -330,7 +330,7 @@ void WebSocket::read_server_handshake()
             auto expected_sha1 = hash.digest();
             // FIXME: change to TRY() and make method fallible
             auto expected_sha1_string = MUST(encode_base64({ expected_sha1.immutable_data(), expected_sha1.data_length() }));
-            if (!parts[1].trim_whitespace().equals_ignoring_case(expected_sha1_string)) {
+            if (!parts[1].trim_whitespace().equals_ignoring_ascii_case(expected_sha1_string)) {
                 dbgln("WebSocket: Server HTTP Handshake Header |Sec-Websocket-Accept| should be '{}', got '{}'. Failing connection.", expected_sha1_string, parts[1]);
                 fatal_error(WebSocket::Error::ConnectionUpgradeFailed);
                 return;
@@ -340,14 +340,14 @@ void WebSocket::read_server_handshake()
             continue;
         }
 
-        if (header_name.equals_ignoring_case("Sec-WebSocket-Extensions"sv)) {
+        if (header_name.equals_ignoring_ascii_case("Sec-WebSocket-Extensions"sv)) {
             // 5. |Sec-WebSocket-Extensions| should not contain an extension that doesn't appear in m_connection->extensions()
             auto server_extensions = parts[1].split(',');
             for (auto const& extension : server_extensions) {
                 auto trimmed_extension = extension.trim_whitespace();
                 bool found_extension = false;
                 for (auto const& supported_extension : m_connection.extensions()) {
-                    if (trimmed_extension.equals_ignoring_case(supported_extension)) {
+                    if (trimmed_extension.equals_ignoring_ascii_case(supported_extension)) {
                         found_extension = true;
                     }
                 }
@@ -360,13 +360,13 @@ void WebSocket::read_server_handshake()
             continue;
         }
 
-        if (header_name.equals_ignoring_case("Sec-WebSocket-Protocol"sv)) {
+        if (header_name.equals_ignoring_ascii_case("Sec-WebSocket-Protocol"sv)) {
             // 6. If the response includes a |Sec-WebSocket-Protocol| header field and this header field indicates the use of a subprotocol that was not present in the client's handshake (the server has indicated a subprotocol not requested by the client), the client MUST _Fail the WebSocket Connection_.
             // Additionally, Section 4.2.2 says this is "Either a single value representing the subprotocol the server is ready to use or null."
             auto server_protocol = parts[1].trim_whitespace();
             bool found_protocol = false;
             for (auto const& supported_protocol : m_connection.protocols()) {
-                if (server_protocol.equals_ignoring_case(supported_protocol)) {
+                if (server_protocol.equals_ignoring_ascii_case(supported_protocol)) {
                     found_protocol = true;
                 }
             }

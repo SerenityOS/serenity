@@ -197,7 +197,7 @@ NonnullRefPtr<Type const> Parser::parse_type()
 
     auto name = lexer.consume_until([](auto ch) { return !is_ascii_alphanumeric(ch) && ch != '_'; });
 
-    if (name.equals_ignoring_case("long"sv)) {
+    if (name.equals_ignoring_ascii_case("long"sv)) {
         consume_whitespace();
         if (lexer.consume_specific("long"sv))
             name = "long long"sv;

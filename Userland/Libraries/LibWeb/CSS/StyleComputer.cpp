@@ -618,7 +618,7 @@ bool StyleComputer::expand_variables(DOM::Element& element, StringView property_
             dest.empend(value);
             continue;
         }
-        if (!value.function().name().equals_ignoring_case("var"sv)) {
+        if (!value.function().name().equals_ignoring_ascii_case("var"sv)) {
             auto const& source_function = value.function();
             Vector<Parser::ComponentValue> function_values;
             Parser::TokenStream source_function_contents { source_function.values() };
@@ -683,7 +683,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
     while (source.has_next_token()) {
         auto const& value = source.next_token();
         if (value.is_function()) {
-            if (value.function().name().equals_ignoring_case("attr"sv)) {
+            if (value.function().name().equals_ignoring_ascii_case("attr"sv)) {
                 // https://drafts.csswg.org/css-values-5/#attr-substitution
                 Parser::TokenStream attr_contents { value.function().values() };
                 attr_contents.skip_whitespace();
@@ -720,7 +720,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                 return false;
             }
 
-            if (value.function().name().equals_ignoring_case("calc"sv)) {
+            if (value.function().name().equals_ignoring_ascii_case("calc"sv)) {
                 auto const& calc_function = value.function();
                 if (auto calc_value = CSS::Parser::Parser::parse_calculated_value({}, Parser::ParsingContext { document() }, calc_function.values())) {
                     switch (calc_value->resolved_type()) {

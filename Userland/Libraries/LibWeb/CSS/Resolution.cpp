@@ -54,11 +54,11 @@ StringView Resolution::unit_name() const
 
 Optional<Resolution::Type> Resolution::unit_from_name(StringView name)
 {
-    if (name.equals_ignoring_case("dpi"sv)) {
+    if (name.equals_ignoring_ascii_case("dpi"sv)) {
         return Type::Dpi;
-    } else if (name.equals_ignoring_case("dpcm"sv)) {
+    } else if (name.equals_ignoring_ascii_case("dpcm"sv)) {
         return Type::Dpcm;
-    } else if (name.equals_ignoring_case("dppx"sv)) {
+    } else if (name.equals_ignoring_ascii_case("dppx"sv)) {
         return Type::Dppx;
     }
     return {};

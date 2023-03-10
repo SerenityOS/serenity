@@ -233,7 +233,7 @@ static bool is_form_control(DOM::Element const& element)
     }
 
     if (is<HTMLInputElement>(element)
-        && !element.get_attribute(HTML::AttributeNames::type).equals_ignoring_case("image"sv)) {
+        && !element.get_attribute(HTML::AttributeNames::type).equals_ignoring_ascii_case("image"sv)) {
         return true;
     }
 

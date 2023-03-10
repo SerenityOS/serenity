@@ -110,7 +110,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, HashMap<Depre
         m_mime_type = url().data_mime_type();
     } else {
         auto content_type_options = headers.get("X-Content-Type-Options");
-        if (content_type_options.value_or("").equals_ignoring_case("nosniff"sv)) {
+        if (content_type_options.value_or("").equals_ignoring_ascii_case("nosniff"sv)) {
             m_mime_type = "text/plain";
         } else {
             m_mime_type = Core::guess_mime_type_based_on_filename(url().path());

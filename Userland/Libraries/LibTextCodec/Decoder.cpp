@@ -34,29 +34,29 @@ Optional<Decoder&> decoder_for(StringView a_encoding)
 {
     auto encoding = get_standardized_encoding(a_encoding);
     if (encoding.has_value()) {
-        if (encoding.value().equals_ignoring_case("windows-1252"sv))
+        if (encoding.value().equals_ignoring_ascii_case("windows-1252"sv))
             return s_latin1_decoder;
-        if (encoding.value().equals_ignoring_case("utf-8"sv))
+        if (encoding.value().equals_ignoring_ascii_case("utf-8"sv))
             return s_utf8_decoder;
-        if (encoding.value().equals_ignoring_case("utf-16be"sv))
+        if (encoding.value().equals_ignoring_ascii_case("utf-16be"sv))
             return s_utf16be_decoder;
-        if (encoding.value().equals_ignoring_case("utf-16le"sv))
+        if (encoding.value().equals_ignoring_ascii_case("utf-16le"sv))
             return s_utf16le_decoder;
-        if (encoding.value().equals_ignoring_case("iso-8859-2"sv))
+        if (encoding.value().equals_ignoring_ascii_case("iso-8859-2"sv))
             return s_latin2_decoder;
-        if (encoding.value().equals_ignoring_case("windows-1255"sv))
+        if (encoding.value().equals_ignoring_ascii_case("windows-1255"sv))
             return s_hebrew_decoder;
-        if (encoding.value().equals_ignoring_case("windows-1251"sv))
+        if (encoding.value().equals_ignoring_ascii_case("windows-1251"sv))
             return s_cyrillic_decoder;
-        if (encoding.value().equals_ignoring_case("koi8-r"sv))
+        if (encoding.value().equals_ignoring_ascii_case("koi8-r"sv))
             return s_koi8r_decoder;
-        if (encoding.value().equals_ignoring_case("iso-8859-15"sv))
+        if (encoding.value().equals_ignoring_ascii_case("iso-8859-15"sv))
             return s_latin9_decoder;
-        if (encoding.value().equals_ignoring_case("macintosh"sv))
+        if (encoding.value().equals_ignoring_ascii_case("macintosh"sv))
             return s_mac_roman_decoder;
-        if (encoding.value().equals_ignoring_case("windows-1254"sv))
+        if (encoding.value().equals_ignoring_ascii_case("windows-1254"sv))
             return s_turkish_decoder;
-        if (encoding.value().equals_ignoring_case("x-user-defined"sv))
+        if (encoding.value().equals_ignoring_ascii_case("x-user-defined"sv))
             return s_x_user_defined_decoder;
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
@@ -68,87 +68,87 @@ Optional<StringView> get_standardized_encoding(StringView encoding)
 {
     encoding = encoding.trim_whitespace();
 
-    if (encoding.is_one_of_ignoring_case("unicode-1-1-utf-8"sv, "unicode11utf8"sv, "unicode20utf8"sv, "utf-8"sv, "utf8"sv, "x-unicode20utf8"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("unicode-1-1-utf-8"sv, "unicode11utf8"sv, "unicode20utf8"sv, "utf-8"sv, "utf8"sv, "x-unicode20utf8"sv))
         return "UTF-8"sv;
-    if (encoding.is_one_of_ignoring_case("866"sv, "cp866"sv, "csibm866"sv, "ibm866"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("866"sv, "cp866"sv, "csibm866"sv, "ibm866"sv))
         return "IBM866"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatin2"sv, "iso-8859-2"sv, "iso-ir-101"sv, "iso8859-2"sv, "iso88592"sv, "iso_8859-2"sv, "iso_8859-2:1987"sv, "l2"sv, "latin2"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatin2"sv, "iso-8859-2"sv, "iso-ir-101"sv, "iso8859-2"sv, "iso88592"sv, "iso_8859-2"sv, "iso_8859-2:1987"sv, "l2"sv, "latin2"sv))
         return "ISO-8859-2"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatin3"sv, "iso-8859-3"sv, "iso-ir-109"sv, "iso8859-3"sv, "iso88593"sv, "iso_8859-3"sv, "iso_8859-3:1988"sv, "l3"sv, "latin3"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatin3"sv, "iso-8859-3"sv, "iso-ir-109"sv, "iso8859-3"sv, "iso88593"sv, "iso_8859-3"sv, "iso_8859-3:1988"sv, "l3"sv, "latin3"sv))
         return "ISO-8859-3"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatin4"sv, "iso-8859-4"sv, "iso-ir-110"sv, "iso8859-4"sv, "iso88594"sv, "iso_8859-4"sv, "iso_8859-4:1989"sv, "l4"sv, "latin4"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatin4"sv, "iso-8859-4"sv, "iso-ir-110"sv, "iso8859-4"sv, "iso88594"sv, "iso_8859-4"sv, "iso_8859-4:1989"sv, "l4"sv, "latin4"sv))
         return "ISO-8859-4"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatincyrillic"sv, "cyrillic"sv, "iso-8859-5"sv, "iso-ir-144"sv, "iso8859-5"sv, "iso88595"sv, "iso_8859-5"sv, "iso_8859-5:1988"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatincyrillic"sv, "cyrillic"sv, "iso-8859-5"sv, "iso-ir-144"sv, "iso8859-5"sv, "iso88595"sv, "iso_8859-5"sv, "iso_8859-5:1988"sv))
         return "ISO-8859-5"sv;
-    if (encoding.is_one_of_ignoring_case("arabic"sv, "asmo-708"sv, "csiso88596e"sv, "csiso88596i"sv, "csisolatinarabic"sv, "ecma-114"sv, "iso-8859-6"sv, "iso-8859-6-e"sv, "iso-8859-6-i"sv, "iso-ir-127"sv, "iso8859-6"sv, "iso88596"sv, "iso_8859-6"sv, "iso_8859-6:1987"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("arabic"sv, "asmo-708"sv, "csiso88596e"sv, "csiso88596i"sv, "csisolatinarabic"sv, "ecma-114"sv, "iso-8859-6"sv, "iso-8859-6-e"sv, "iso-8859-6-i"sv, "iso-ir-127"sv, "iso8859-6"sv, "iso88596"sv, "iso_8859-6"sv, "iso_8859-6:1987"sv))
         return "ISO-8859-6"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatingreek"sv, "ecma-118"sv, "elot_928"sv, "greek"sv, "greek8"sv, "iso-8859-7"sv, "iso-ir-126"sv, "iso8859-7"sv, "iso88597"sv, "iso_8859-7"sv, "iso_8859-7:1987"sv, "sun_eu_greek"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatingreek"sv, "ecma-118"sv, "elot_928"sv, "greek"sv, "greek8"sv, "iso-8859-7"sv, "iso-ir-126"sv, "iso8859-7"sv, "iso88597"sv, "iso_8859-7"sv, "iso_8859-7:1987"sv, "sun_eu_greek"sv))
         return "ISO-8859-7"sv;
-    if (encoding.is_one_of_ignoring_case("csiso88598e"sv, "csisolatinhebrew"sv, "hebrew"sv, "iso-8859-8"sv, "iso-8859-8-e"sv, "iso-ir-138"sv, "iso8859-8"sv, "iso88598"sv, "iso_8859-8"sv, "iso_8859-8:1988"sv, "visual"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csiso88598e"sv, "csisolatinhebrew"sv, "hebrew"sv, "iso-8859-8"sv, "iso-8859-8-e"sv, "iso-ir-138"sv, "iso8859-8"sv, "iso88598"sv, "iso_8859-8"sv, "iso_8859-8:1988"sv, "visual"sv))
         return "ISO-8859-8"sv;
-    if (encoding.is_one_of_ignoring_case("csiso88598i"sv, "iso-8859-8-i"sv, "logical"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csiso88598i"sv, "iso-8859-8-i"sv, "logical"sv))
         return "ISO-8859-8-I"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatin6"sv, "iso8859-10"sv, "iso-ir-157"sv, "iso8859-10"sv, "iso885910"sv, "l6"sv, "latin6"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatin6"sv, "iso8859-10"sv, "iso-ir-157"sv, "iso8859-10"sv, "iso885910"sv, "l6"sv, "latin6"sv))
         return "ISO-8859-10"sv;
-    if (encoding.is_one_of_ignoring_case("iso-8859-13"sv, "iso8859-13"sv, "iso885913"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("iso-8859-13"sv, "iso8859-13"sv, "iso885913"sv))
         return "ISO-8859-13"sv;
-    if (encoding.is_one_of_ignoring_case("iso-8859-14"sv, "iso8859-14"sv, "iso885914"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("iso-8859-14"sv, "iso8859-14"sv, "iso885914"sv))
         return "ISO-8859-14"sv;
-    if (encoding.is_one_of_ignoring_case("csisolatin9"sv, "iso-8859-15"sv, "iso8859-15"sv, "iso885915"sv, "iso_8859-15"sv, "l9"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csisolatin9"sv, "iso-8859-15"sv, "iso8859-15"sv, "iso885915"sv, "iso_8859-15"sv, "l9"sv))
         return "ISO-8859-15"sv;
-    if (encoding.is_one_of_ignoring_case("iso-8859-16"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("iso-8859-16"sv))
         return "ISO-8859-16"sv;
-    if (encoding.is_one_of_ignoring_case("cskoi8r"sv, "koi"sv, "koi8"sv, "koi8-r"sv, "koi8_r"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cskoi8r"sv, "koi"sv, "koi8"sv, "koi8-r"sv, "koi8_r"sv))
         return "KOI8-R"sv;
-    if (encoding.is_one_of_ignoring_case("koi8-ru"sv, "koi8-u"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("koi8-ru"sv, "koi8-u"sv))
         return "KOI8-U"sv;
-    if (encoding.is_one_of_ignoring_case("csmacintosh"sv, "mac"sv, "macintosh"sv, "x-mac-roman"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csmacintosh"sv, "mac"sv, "macintosh"sv, "x-mac-roman"sv))
         return "macintosh"sv;
-    if (encoding.is_one_of_ignoring_case("dos-874"sv, "iso-8859-11"sv, "iso8859-11"sv, "iso885911"sv, "tis-620"sv, "windows-874"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("dos-874"sv, "iso-8859-11"sv, "iso8859-11"sv, "iso885911"sv, "tis-620"sv, "windows-874"sv))
         return "windows-874"sv;
-    if (encoding.is_one_of_ignoring_case("cp1250"sv, "windows-1250"sv, "x-cp1250"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1250"sv, "windows-1250"sv, "x-cp1250"sv))
         return "windows-1250"sv;
-    if (encoding.is_one_of_ignoring_case("cp1251"sv, "windows-1251"sv, "x-cp1251"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1251"sv, "windows-1251"sv, "x-cp1251"sv))
         return "windows-1251"sv;
-    if (encoding.is_one_of_ignoring_case("ansi_x3.4-1968"sv, "ascii"sv, "cp1252"sv, "cp819"sv, "csisolatin1"sv, "ibm819"sv, "iso-8859-1"sv, "iso-ir-100"sv, "iso8859-1"sv, "iso88591"sv, "iso_8859-1"sv, "iso_8859-1:1987"sv, "l1"sv, "latin1"sv, "us-ascii"sv, "windows-1252"sv, "x-cp1252"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("ansi_x3.4-1968"sv, "ascii"sv, "cp1252"sv, "cp819"sv, "csisolatin1"sv, "ibm819"sv, "iso-8859-1"sv, "iso-ir-100"sv, "iso8859-1"sv, "iso88591"sv, "iso_8859-1"sv, "iso_8859-1:1987"sv, "l1"sv, "latin1"sv, "us-ascii"sv, "windows-1252"sv, "x-cp1252"sv))
         return "windows-1252"sv;
-    if (encoding.is_one_of_ignoring_case("cp1253"sv, "windows-1253"sv, "x-cp1253"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1253"sv, "windows-1253"sv, "x-cp1253"sv))
         return "windows-1253"sv;
-    if (encoding.is_one_of_ignoring_case("cp1254"sv, "csisolatin5"sv, "iso-8859-9"sv, "iso-ir-148"sv, "iso-8859-9"sv, "iso-88599"sv, "iso_8859-9"sv, "iso_8859-9:1989"sv, "l5"sv, "latin5"sv, "windows-1254"sv, "x-cp1254"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1254"sv, "csisolatin5"sv, "iso-8859-9"sv, "iso-ir-148"sv, "iso-8859-9"sv, "iso-88599"sv, "iso_8859-9"sv, "iso_8859-9:1989"sv, "l5"sv, "latin5"sv, "windows-1254"sv, "x-cp1254"sv))
         return "windows-1254"sv;
-    if (encoding.is_one_of_ignoring_case("cp1255"sv, "windows-1255"sv, "x-cp1255"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1255"sv, "windows-1255"sv, "x-cp1255"sv))
         return "windows-1255"sv;
-    if (encoding.is_one_of_ignoring_case("cp1256"sv, "windows-1256"sv, "x-cp1256"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1256"sv, "windows-1256"sv, "x-cp1256"sv))
         return "windows-1256"sv;
-    if (encoding.is_one_of_ignoring_case("cp1257"sv, "windows-1257"sv, "x-cp1257"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1257"sv, "windows-1257"sv, "x-cp1257"sv))
         return "windows-1257"sv;
-    if (encoding.is_one_of_ignoring_case("cp1258"sv, "windows-1258"sv, "x-cp1258"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cp1258"sv, "windows-1258"sv, "x-cp1258"sv))
         return "windows-1258"sv;
-    if (encoding.is_one_of_ignoring_case("x-mac-cyrillic"sv, "x-mac-ukrainian"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("x-mac-cyrillic"sv, "x-mac-ukrainian"sv))
         return "x-mac-cyrillic"sv;
-    if (encoding.is_one_of_ignoring_case("koi8-r"sv, "koi8r"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("koi8-r"sv, "koi8r"sv))
         return "koi8-r"sv;
-    if (encoding.is_one_of_ignoring_case("chinese"sv, "csgb2312"sv, "csiso58gb231280"sv, "gb2312"sv, "gb_2312"sv, "gb_2312-80"sv, "gbk"sv, "iso-ir-58"sv, "x-gbk"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("chinese"sv, "csgb2312"sv, "csiso58gb231280"sv, "gb2312"sv, "gb_2312"sv, "gb_2312-80"sv, "gbk"sv, "iso-ir-58"sv, "x-gbk"sv))
         return "GBK"sv;
-    if (encoding.is_one_of_ignoring_case("gb18030"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("gb18030"sv))
         return "gb18030"sv;
-    if (encoding.is_one_of_ignoring_case("big5"sv, "big5-hkscs"sv, "cn-big5"sv, "csbig5"sv, "x-x-big5"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("big5"sv, "big5-hkscs"sv, "cn-big5"sv, "csbig5"sv, "x-x-big5"sv))
         return "Big5"sv;
-    if (encoding.is_one_of_ignoring_case("cseucpkdfmtjapanese"sv, "euc-jp"sv, "x-euc-jp"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cseucpkdfmtjapanese"sv, "euc-jp"sv, "x-euc-jp"sv))
         return "EUC-JP"sv;
-    if (encoding.is_one_of_ignoring_case("csiso2022jp"sv, "iso-2022-jp"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csiso2022jp"sv, "iso-2022-jp"sv))
         return "ISO-2022-JP"sv;
-    if (encoding.is_one_of_ignoring_case("csshiftjis"sv, "ms932"sv, "ms_kanji"sv, "shift-jis"sv, "shift_jis"sv, "sjis"sv, "windows-31j"sv, "x-sjis"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csshiftjis"sv, "ms932"sv, "ms_kanji"sv, "shift-jis"sv, "shift_jis"sv, "sjis"sv, "windows-31j"sv, "x-sjis"sv))
         return "Shift_JIS"sv;
-    if (encoding.is_one_of_ignoring_case("cseuckr"sv, "csksc56011987"sv, "euc-kr"sv, "iso-ir-149"sv, "korean"sv, "ks_c_5601-1987"sv, "ks_c_5601-1989"sv, "ksc5601"sv, "ksc_5601"sv, "windows-949"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("cseuckr"sv, "csksc56011987"sv, "euc-kr"sv, "iso-ir-149"sv, "korean"sv, "ks_c_5601-1987"sv, "ks_c_5601-1989"sv, "ksc5601"sv, "ksc_5601"sv, "windows-949"sv))
         return "EUC-KR"sv;
-    if (encoding.is_one_of_ignoring_case("csiso2022kr"sv, "hz-gb-2312"sv, "iso-2022-cn"sv, "iso-2022-cn-ext"sv, "iso-2022-kr"sv, "replacement"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csiso2022kr"sv, "hz-gb-2312"sv, "iso-2022-cn"sv, "iso-2022-cn-ext"sv, "iso-2022-kr"sv, "replacement"sv))
         return "replacement"sv;
-    if (encoding.is_one_of_ignoring_case("unicodefffe"sv, "utf-16be"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("unicodefffe"sv, "utf-16be"sv))
         return "UTF-16BE"sv;
-    if (encoding.is_one_of_ignoring_case("csunicode"sv, "iso-10646-ucs-2"sv, "ucs-2"sv, "unicode"sv, "unicodefeff"sv, "utf-16"sv, "utf-16le"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("csunicode"sv, "iso-10646-ucs-2"sv, "ucs-2"sv, "unicode"sv, "unicodefeff"sv, "utf-16"sv, "utf-16le"sv))
         return "UTF-16LE"sv;
-    if (encoding.is_one_of_ignoring_case("x-user-defined"sv))
+    if (encoding.is_one_of_ignoring_ascii_case("x-user-defined"sv))
         return "x-user-defined"sv;
 
     dbgln("TextCodec: Unrecognized encoding: {}", encoding);

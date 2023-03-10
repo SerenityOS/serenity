@@ -50,11 +50,11 @@ StringView same_site_to_string(SameSite same_site)
 
 SameSite same_site_from_string(StringView same_site_mode)
 {
-    if (same_site_mode.equals_ignoring_case("None"sv))
+    if (same_site_mode.equals_ignoring_ascii_case("None"sv))
         return SameSite::None;
-    if (same_site_mode.equals_ignoring_case("Strict"sv))
+    if (same_site_mode.equals_ignoring_ascii_case("Strict"sv))
         return SameSite::Strict;
-    if (same_site_mode.equals_ignoring_case("Lax"sv))
+    if (same_site_mode.equals_ignoring_ascii_case("Lax"sv))
         return SameSite::Lax;
     return SameSite::Default;
 }
