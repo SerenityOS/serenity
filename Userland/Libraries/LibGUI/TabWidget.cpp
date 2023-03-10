@@ -53,7 +53,7 @@ TabWidget::TabWidget()
 
 ErrorOr<void> TabWidget::try_add_widget(Widget& widget)
 {
-    TRY(m_tabs.try_append({ widget.title().to_deprecated_string(), nullptr, &widget, false }));
+    TRY(m_tabs.try_append({ widget.title(), nullptr, &widget, false }));
     TRY(try_add_child(widget));
     update_focus_policy();
     if (on_tab_count_change)
@@ -596,7 +596,7 @@ void TabWidget::set_tab_title(Widget& tab, StringView title)
     for (auto& t : m_tabs) {
         if (t.widget == &tab) {
             if (t.title != title) {
-                t.title = title;
+                t.title = String::from_utf8(title).release_value_but_fixme_should_propagate_errors();
                 update();
             }
             return;
