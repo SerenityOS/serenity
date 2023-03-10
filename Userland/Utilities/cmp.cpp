@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,17 +8,11 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 static ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file_or_stdin(DeprecatedString const& filename)
 {
-    OwnPtr<Core::File> file;
-    if (filename == "-") {
-        file = TRY(Core::File::adopt_fd(STDIN_FILENO, Core::File::OpenMode::Read));
-    } else {
-        file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
-    }
-    return TRY(Core::BufferedFile::create(file.release_nonnull()));
+    auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
+    return TRY(Core::BufferedFile::create(move(file)));
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
