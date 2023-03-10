@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Martin Falisse <mfalisse@outlook.com>
+ * Copyright (c) 2022-2023, Martin Falisse <mfalisse@outlook.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -29,6 +29,33 @@ private:
     Vector<Vector<bool>> m_occupation_grid;
 };
 
+class PositionedBox {
+public:
+    PositionedBox(Box const& box, int row, int row_span, int column, int column_span)
+        : m_box(box)
+        , m_row(row)
+        , m_row_span(row_span)
+        , m_column(column)
+        , m_column_span(column_span)
+    {
+    }
+
+    Box const& box() { return m_box; }
+
+    int raw_row_span() { return m_row_span; }
+    int raw_column_span() { return m_column_span; }
+
+    int gap_adjusted_row(Box const& parent_box);
+    int gap_adjusted_column(Box const& parent_box);
+
+private:
+    Box const& m_box;
+    int m_row { 0 };
+    int m_row_span { 1 };
+    int m_column { 0 };
+    int m_column_span { 1 };
+};
+
 class GridFormattingContext final : public FormattingContext {
 public:
     explicit GridFormattingContext(LayoutState&, Box const& grid_container, FormattingContext* parent);
@@ -42,14 +69,6 @@ private:
     bool is_auto_positioned_row(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_column(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
     bool is_auto_positioned_track(CSS::GridTrackPlacement const&, CSS::GridTrackPlacement const&) const;
-
-    struct PositionedBox {
-        Box const& box;
-        int row { 0 };
-        int row_span { 1 };
-        int column { 0 };
-        int column_span { 1 };
-    };
 
     struct TemporaryTrack {
         CSS::GridSize min_track_sizing_function;
