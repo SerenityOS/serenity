@@ -28,14 +28,7 @@ AbstractButton::AbstractButton(String text)
         click();
     };
 
-    // FIXME: Port JsonValue to the new String class.
-    register_property(
-        "text",
-        [this]() { return this->text().to_deprecated_string(); },
-        [this](auto& value) {
-            this->set_text(String::from_deprecated_string(value.to_deprecated_string()).release_value_but_fixme_should_propagate_errors());
-            return true;
-        });
+    REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("checked", is_checked, set_checked);
     REGISTER_BOOL_PROPERTY("checkable", is_checkable, set_checkable);
     REGISTER_BOOL_PROPERTY("exclusive", is_exclusive, set_exclusive);
