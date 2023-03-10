@@ -147,7 +147,7 @@ private:
 
     struct TabData {
         int width(Gfx::Font const&) const;
-        DeprecatedString title;
+        String title;
         RefPtr<Gfx::Bitmap const> icon;
         Widget* widget { nullptr };
         bool modified { false };
