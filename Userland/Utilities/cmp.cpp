@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 
-static ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file_or_stdin(DeprecatedString const& filename)
+static ErrorOr<NonnullOwnPtr<Core::BufferedFile>> open_file_or_stdin(StringView filename)
 {
     auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
     return TRY(Core::BufferedFile::create(move(file)));
@@ -21,8 +22,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio rpath"));
 
     Core::ArgsParser parser;
-    DeprecatedString filename1;
-    DeprecatedString filename2;
+    StringView filename1;
+    StringView filename2;
     bool verbose = false;
     bool silent = false;
 
@@ -58,14 +59,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("{} {} differ: char {}, line {}", filename1, filename2, byte_number, line_number);
     };
 
-    auto report_eof = [&](auto& shorter_file_name) {
+    auto report_eof = [&](auto& shorter_file_name) -> ErrorOr<void> {
         files_match = false;
         if (silent)
-            return;
+            return {};
         auto additional_info = verbose
-            ? DeprecatedString::formatted(" after byte {}", byte_number)
-            : DeprecatedString::formatted(" after byte {}, line {}", byte_number, line_number);
+            ? TRY(String::formatted(" after byte {}", byte_number))
+            : TRY(String::formatted(" after byte {}, line {}", byte_number, line_number));
         warnln("cmp: EOF on {}{}", shorter_file_name, additional_info);
+        return {};
     };
 
     while (true) {
@@ -76,7 +78,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             break;
 
         if (file1->is_eof() || file2->is_eof()) {
-            report_eof(file1->is_eof() ? filename1 : filename2);
+            TRY(report_eof(file1->is_eof() ? filename1 : filename2));
             break;
         }
 
