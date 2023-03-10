@@ -51,6 +51,9 @@ public:
 
     void set_source_line_number(Badge<HTMLParser>, size_t source_line_number) { m_source_line_number = source_line_number; }
 
+    void unmark_as_already_started(Badge<DOM::Range>);
+    void unmark_as_parser_inserted(Badge<DOM::Range>);
+
 public:
     HTMLScriptElement(DOM::Document&, DOM::QualifiedName);
 

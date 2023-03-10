@@ -43,4 +43,7 @@ interface Range : AbstractRange {
 
     stringifier;
 
+    // Extensions from the DOM Parsing specification:
+    [CEReactions, NewObject] DocumentFragment createContextualFragment(DOMString fragment);
+
 };

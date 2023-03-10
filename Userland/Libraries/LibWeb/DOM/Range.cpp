@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2022, Luke Wilde <lukew@serenityos.org>
- * Copyright (c) 2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2022-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,13 +11,17 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentFragment.h>
 #include <LibWeb/DOM/DocumentType.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/DOMParsing/InnerHTML.h>
 #include <LibWeb/Geometry/DOMRect.h>
+#include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Namespace.h>
 
 namespace Web::DOM {
 
@@ -1140,6 +1144,60 @@ JS::NonnullGCPtr<Geometry::DOMRect> Range::get_bounding_client_rect() const
 {
     dbgln("(STUBBED) Range::get_bounding_client_rect()");
     return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
+}
+
+// https://w3c.github.io/DOM-Parsing/#dom-range-createcontextualfragment
+WebIDL::ExceptionOr<JS::NonnullGCPtr<DocumentFragment>> Range::create_contextual_fragment(DeprecatedString const& fragment)
+{
+    // 1. Let node be the context object's start node.
+    JS::NonnullGCPtr<Node> node = *start_container();
+
+    // Let element be as follows, depending on node's interface:
+    JS::GCPtr<Element> element;
+    switch (static_cast<NodeType>(node->node_type())) {
+    case NodeType::DOCUMENT_NODE:
+    case NodeType::DOCUMENT_FRAGMENT_NODE:
+        element = nullptr;
+        break;
+    case NodeType::ELEMENT_NODE:
+        element = static_cast<DOM::Element&>(*node);
+        break;
+    case NodeType::TEXT_NODE:
+    case NodeType::COMMENT_NODE:
+        element = node->parent_element();
+        break;
+    case NodeType::DOCUMENT_TYPE_NODE:
+    case NodeType::PROCESSING_INSTRUCTION_NODE:
+        // [DOM4] prevents this case.
+        VERIFY_NOT_REACHED();
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    // 2. If either element is null or the following are all true:
+    //    - element's node document is an HTML document,
+    //    - element's local name is "html", and
+    //    - element's namespace is the HTML namespace;
+    if (!element || is<HTML::HTMLHtmlElement>(*element)) {
+        // let element be a new Element with
+        // - "body" as its local name,
+        // - The HTML namespace as its namespace, and
+        // - The context object's node document as its node document.
+        element = TRY(DOM::create_element(node->document(), "body"sv, Namespace::HTML));
+    }
+
+    // 3. Let fragment node be the result of invoking the fragment parsing algorithm with fragment as markup, and element as the context element.
+    auto fragment_node = TRY(DOMParsing::parse_fragment(fragment, *element));
+
+    // 4. Unmark all scripts in fragment node as "already started" and as "parser-inserted".
+    fragment_node->for_each_in_subtree_of_type<HTML::HTMLScriptElement>([&](HTML::HTMLScriptElement& script_element) {
+        script_element.unmark_as_already_started({});
+        script_element.unmark_as_parser_inserted({});
+        return IterationDecision::Continue;
+    });
+
+    // 5. Return the value of fragment node.
+    return fragment_node;
 }
 
 }

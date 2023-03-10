@@ -561,4 +561,14 @@ void HTMLScriptElement::mark_as_ready(Result result)
     m_document_load_event_delayer.clear();
 }
 
+void HTMLScriptElement::unmark_as_already_started(Badge<DOM::Range>)
+{
+    m_already_started = false;
+}
+
+void HTMLScriptElement::unmark_as_parser_inserted(Badge<DOM::Range>)
+{
+    m_parser_document = nullptr;
+}
+
 }
