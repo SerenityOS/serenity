@@ -12,13 +12,8 @@ pr: none
 trigger: none
 
 stages:
-  - stage: Toolchain
-    dependsOn: []
-    jobs:
-      - template: Toolchain.yml
-
   - stage: SerenityOS_Coverage
-    dependsOn: Toolchain
+    dependsOn: []
     jobs:
       - template: Serenity.yml
         parameters:
