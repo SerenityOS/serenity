@@ -12,10 +12,10 @@
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::EventLoop loop;
-    DeprecatedString domain;
-    DeprecatedString group;
-    DeprecatedString key;
-    DeprecatedString value_to_write;
+    StringView domain;
+    StringView group;
+    StringView key;
+    StringView value_to_write;
     bool remove = false;
 
     Core::ArgsParser args_parser;
@@ -28,19 +28,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (remove) {
-        if (!key.is_null())
+        if (!key.is_empty())
             Config::remove_key(domain, group, key);
         else
             Config::remove_group(domain, group);
         return 0;
     }
 
-    if (key.is_null() && value_to_write.is_null()) {
+    if (key.is_empty() && value_to_write.is_empty()) {
         Config::add_group(domain, group);
         return 0;
     }
 
-    if (!key.is_null() && !value_to_write.is_null()) {
+    if (!key.is_empty() && !value_to_write.is_empty()) {
         Config::write_string(domain, group, key, value_to_write);
         return 0;
     }
