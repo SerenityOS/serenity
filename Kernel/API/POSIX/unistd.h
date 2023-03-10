@@ -45,6 +45,7 @@ enum {
     _SC_MAPPED_FILES,
     _SC_ARG_MAX,
     _SC_IOV_MAX,
+    _SC_PHYS_PAGES,
 };
 
 #define _SC_MONOTONIC_CLOCK _SC_MONOTONIC_CLOCK
@@ -60,6 +61,7 @@ enum {
 #define _SC_MAPPED_FILES _SC_MAPPED_FILES
 #define _SC_ARG_MAX _SC_ARG_MAX
 #define _SC_IOV_MAX _SC_IOV_MAX
+#define _SC_PHYS_PAGES _SC_PHYS_PAGES
 
 #ifdef __cplusplus
 }
