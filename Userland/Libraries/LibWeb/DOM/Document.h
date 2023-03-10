@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -227,6 +227,9 @@ public:
     JS::NonnullGCPtr<Text> create_text_node(DeprecatedString const& data);
     JS::NonnullGCPtr<Comment> create_comment(DeprecatedString const& data);
     WebIDL::ExceptionOr<JS::NonnullGCPtr<ProcessingInstruction>> create_processing_instruction(DeprecatedString const& target, DeprecatedString const& data);
+
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create_attribute(DeprecatedString const& local_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create_attribute_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create_event(DeprecatedString const& interface);
     JS::NonnullGCPtr<Range> create_range();

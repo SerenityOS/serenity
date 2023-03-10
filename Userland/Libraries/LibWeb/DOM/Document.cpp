@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
@@ -2372,6 +2372,29 @@ DeprecatedString Document::dump_accessibility_tree_as_json()
 
     MUST(json.finish());
     return builder.to_deprecated_string();
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createattribute
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute(DeprecatedString const& local_name)
+{
+    // 1. If localName does not match the Name production in XML, then throw an "InvalidCharacterError" DOMException.
+    if (!is_valid_name(local_name))
+        return WebIDL::InvalidCharacterError::create(realm(), "Invalid character in attribute name.");
+
+    // 2. If this is an HTML document, then set localName to localName in ASCII lowercase.
+    // 3. Return a new attribute whose local name is localName and node document is this.
+    return Attr::create(*this, is_html_document() ? local_name.to_lowercase() : local_name);
+}
+
+// https://dom.spec.whatwg.org/#dom-document-createattributens
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name)
+{
+    // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
+    auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
+
+    // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
+
+    return Attr::create(*this, extracted_qualified_name);
 }
 
 }

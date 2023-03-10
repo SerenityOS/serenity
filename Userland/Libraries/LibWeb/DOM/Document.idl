@@ -81,6 +81,9 @@ interface Document : Node {
     Comment createComment(DOMString data);
     [NewObject] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
+    [NewObject] Attr createAttribute(DOMString localName);
+    [NewObject] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);
+
     Range createRange();
     Event createEvent(DOMString interface);
 
