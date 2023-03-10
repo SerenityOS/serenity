@@ -306,7 +306,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     outln("Offset: {}", offset_s);
 
     if (adjust_time) {
-        long delta_us = static_cast<long>(round(offset_s * 1'000'000));
+        long delta_us = lround(offset_s * 1'000'000);
         timeval delta_timeval;
         delta_timeval.tv_sec = delta_us / 1'000'000;
         delta_timeval.tv_usec = delta_us % 1'000'000;
