@@ -106,7 +106,7 @@ UNMAP_AFTER_INIT ErrorOr<void> PCIIDELegacyModeController::initialize_and_enumer
         primary_base_io_window = TRY(IOWindow::create_for_io_space(IOAddress(0x1F0), 8));
         primary_control_io_window = TRY(IOWindow::create_for_io_space(IOAddress(0x3F6), 4));
     } else {
-        auto primary_base_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
+        primary_base_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
         auto pci_primary_control_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR1));
         // Note: the PCI IDE specification says we should access the IO address with an offset of 2
         // on native PCI IDE controllers.
