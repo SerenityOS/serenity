@@ -6,7 +6,12 @@
   .grid-item {
     background-color: lightblue;
   }
+  .with-border {
+    border: 1px solid black;
+  }
 </style>
+
+<body style="margin-bottom: 2rem;">
 
 <!-- A basic grid -->
 <p>Should render a 2x2 grid</p>
@@ -587,4 +592,13 @@ class="grid-container"
   <div class="grid-item" style="grid-area: one; min-width: 25%; max-width: 50%;">min-content</div>
   <div class="grid-item" style="grid-area: two;">max-content</div>
   <div class="grid-item" style="grid-area: three;">1fr</div>
+</div>
+
+<p>Bug with column gaps - grid items should have normal height</p>
+<div class="grid-container with-border" style="
+      grid-column-gap: 10px;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    ">
+    <div class="grid-item with-border">left side text</div>
+    <div class="grid-item with-border">right side text right side text right side text</div>
 </div>
