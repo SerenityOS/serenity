@@ -89,11 +89,14 @@ public:
     virtual bool is_viewport() const { return false; }
     virtual bool is_svg_box() const { return false; }
     virtual bool is_svg_geometry_box() const { return false; }
+    virtual bool is_svg_svg_box() const { return false; }
     virtual bool is_label() const { return false; }
     virtual bool is_replaced_box() const { return false; }
+    virtual bool is_list_item_box() const { return false; }
     virtual bool is_list_item_marker_box() const { return false; }
     virtual bool is_table_wrapper() const { return false; }
     virtual bool is_table() const { return false; }
+    virtual bool is_node_with_style_and_box_model_metrics() const { return false; }
 
     template<typename T>
     bool fast_is() const = delete;
@@ -219,8 +222,13 @@ protected:
     }
 
 private:
+    virtual bool is_node_with_style_and_box_model_metrics() const final { return true; }
+
     BoxModelMetrics m_box_model;
 };
+
+template<>
+inline bool Node::fast_is<NodeWithStyleAndBoxModelMetrics>() const { return is_node_with_style_and_box_model_metrics(); }
 
 inline Gfx::Font const& Node::font() const
 {

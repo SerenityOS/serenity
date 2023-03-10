@@ -618,4 +618,7 @@ private:
     JS::GCPtr<HTML::HTMLBaseElement const> m_first_base_element_with_href_in_tree_order;
 };
 
+template<>
+inline bool Node::fast_is<Document>() const { return is_document(); }
+
 }

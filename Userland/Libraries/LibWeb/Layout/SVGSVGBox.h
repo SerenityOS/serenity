@@ -25,6 +25,12 @@ public:
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
     virtual void prepare_for_replaced_layout() override;
+
+private:
+    virtual bool is_svg_svg_box() const final { return true; }
 };
+
+template<>
+inline bool Node::fast_is<SVGSVGBox>() const { return is_svg_svg_box(); }
 
 }

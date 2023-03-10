@@ -125,6 +125,9 @@ public:
 private:
     HTMLInputElement(DOM::Document&, DOM::QualifiedName);
 
+    // ^DOM::Node
+    virtual bool is_html_input_element() const final { return true; }
+
     // ^DOM::EventTarget
     virtual void did_receive_focus() override;
     virtual void legacy_pre_activation_behavior() override;
@@ -165,4 +168,9 @@ private:
     DeprecatedString m_value;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLInputElement>() const { return is_html_input_element(); }
 }

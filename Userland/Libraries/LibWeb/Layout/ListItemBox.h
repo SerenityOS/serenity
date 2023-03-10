@@ -25,9 +25,13 @@ public:
     void set_marker(JS::GCPtr<ListItemMarkerBox>);
 
 private:
+    virtual bool is_list_item_box() const override { return true; }
+
     virtual void visit_edges(Cell::Visitor&) override;
 
     JS::GCPtr<ListItemMarkerBox> m_marker;
 };
 
+template<>
+inline bool Node::fast_is<ListItemBox>() const { return is_list_item_box(); }
 }

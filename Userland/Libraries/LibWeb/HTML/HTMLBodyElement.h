@@ -29,6 +29,9 @@ public:
 private:
     HTMLBodyElement(DOM::Document&, DOM::QualifiedName);
 
+    // ^DOM::Node
+    virtual bool is_html_body_element() const override { return true; }
+
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     // ^HTML::GlobalEventHandlers
@@ -40,4 +43,9 @@ private:
     RefPtr<CSS::ImageStyleValue> m_background_style_value;
 };
 
+}
+
+namespace Web::DOM {
+template<>
+inline bool Node::fast_is<HTML::HTMLBodyElement>() const { return is_html_body_element(); }
 }
