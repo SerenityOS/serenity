@@ -59,7 +59,7 @@ public:
     ErrorOr<NonnullRefPtr<T>> try_add_tab(DeprecatedString title, Args&&... args)
     {
         auto t = TRY(T::try_create(forward<Args>(args)...));
-        t->set_title(move(title));
+        t->set_title(TRY(String::from_deprecated_string(title)));
         TRY(try_add_widget(*t));
         return *t;
     }
@@ -68,14 +68,14 @@ public:
     T& add_tab(DeprecatedString title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
-        t->set_title(move(title));
+        t->set_title(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
         add_widget(*t);
         return *t;
     }
 
     ErrorOr<void> add_tab(NonnullRefPtr<Widget> const& tab, DeprecatedString title)
     {
-        tab->set_title(move(title));
+        tab->set_title(TRY(String::from_deprecated_string(title)));
         TRY(try_add_widget(*tab));
         return {};
     }
