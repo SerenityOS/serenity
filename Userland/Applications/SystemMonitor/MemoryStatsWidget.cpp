@@ -39,7 +39,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
     VERIFY(!s_the);
     s_the = this;
 
-    REGISTER_STRING_PROPERTY("memory_graph", graph_widget_name, set_graph_widget_via_name);
+    REGISTER_DEPRECATED_STRING_PROPERTY("memory_graph", graph_widget_name, set_graph_widget_via_name);
 
     set_fixed_height(110);
 

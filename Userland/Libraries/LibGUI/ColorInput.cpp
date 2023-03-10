@@ -26,7 +26,7 @@ ColorInput::ColorInput()
             set_color_internal(parsed_color.value(), AllowCallback::Yes, false);
     };
 
-    REGISTER_STRING_PROPERTY("color_picker_title", color_picker_title, set_color_picker_title);
+    REGISTER_DEPRECATED_STRING_PROPERTY("color_picker_title", color_picker_title, set_color_picker_title);
     REGISTER_BOOL_PROPERTY("has_alpha_channel", has_alpha_channel, set_color_has_alpha_channel);
 }
 

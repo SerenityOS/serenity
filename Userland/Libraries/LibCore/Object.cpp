@@ -29,7 +29,7 @@ Object::Object(Object* parent)
         m_parent->add_child(*this);
 
     REGISTER_READONLY_STRING_PROPERTY("class_name", class_name);
-    REGISTER_STRING_PROPERTY("name", name, set_name);
+    REGISTER_DEPRECATED_STRING_PROPERTY("name", name, set_name);
 
     register_property(
         "address", [this] { return FlatPtr(this); },

@@ -47,7 +47,7 @@ Widget::Widget()
     REGISTER_BOOL_PROPERTY("visible", is_visible, set_visible);
     REGISTER_BOOL_PROPERTY("focused", is_focused, set_focus);
     REGISTER_BOOL_PROPERTY("enabled", is_enabled, set_enabled);
-    REGISTER_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
+    REGISTER_DEPRECATED_STRING_PROPERTY("tooltip", tooltip, set_tooltip);
 
     REGISTER_UI_SIZE_PROPERTY("min_size", min_size, set_min_size);
     REGISTER_READONLY_UI_SIZE_PROPERTY("effective_min_size", effective_min_size);
@@ -72,11 +72,11 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("x", x, set_x);
     REGISTER_INT_PROPERTY("y", y, set_y);
 
-    REGISTER_STRING_PROPERTY("font", m_font->family, set_font_family);
+    REGISTER_DEPRECATED_STRING_PROPERTY("font", m_font->family, set_font_family);
     REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
     REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
 
-    REGISTER_STRING_PROPERTY("title", title, set_title);
+    REGISTER_DEPRECATED_STRING_PROPERTY("title", title, set_title);
 
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },

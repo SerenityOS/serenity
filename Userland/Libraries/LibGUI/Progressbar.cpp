@@ -20,7 +20,7 @@ namespace GUI {
 Progressbar::Progressbar(Orientation orientation)
     : m_orientation(orientation)
 {
-    REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
     REGISTER_ENUM_PROPERTY("format", format, set_format, Format,
         { Format::NoText, "NoText" },
         { Format::Percentage, "Percentage" },
