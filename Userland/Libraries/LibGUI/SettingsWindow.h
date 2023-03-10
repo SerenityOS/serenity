@@ -47,17 +47,17 @@ public:
     virtual ~SettingsWindow() override = default;
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> add_tab(DeprecatedString title, StringView id, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> add_tab(String title, StringView id, Args&&... args)
     {
-        auto tab = TRY(m_tab_widget->try_add_tab<T>(TRY(String::from_deprecated_string(title)), forward<Args>(args)...));
+        auto tab = TRY(m_tab_widget->try_add_tab<T>(move(title), forward<Args>(args)...));
         TRY(m_tabs.try_set(id, tab));
         tab->set_settings_window(*this);
         return tab;
     }
 
-    ErrorOr<void> add_tab(NonnullRefPtr<Tab> const& tab, DeprecatedString title, StringView id)
+    ErrorOr<void> add_tab(NonnullRefPtr<Tab> const& tab, String title, StringView id)
     {
-        tab->set_title(TRY(String::from_deprecated_string(title)));
+        tab->set_title(move(title));
         TRY(m_tab_widget->try_add_widget(*tab));
         TRY(m_tabs.try_set(id, tab));
         tab->set_settings_window(*this);

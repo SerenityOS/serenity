@@ -34,8 +34,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto window = TRY(GUI::SettingsWindow::create("Browser Settings", GUI::SettingsWindow::ShowDefaultsButton::Yes));
     window->set_icon(app_icon.bitmap_for_size(16));
-    (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser"sv, "browser"sv));
-    (void)TRY(window->add_tab<ContentFilterSettingsWidget>("Content Filtering"sv, "content-filtering"sv));
+    (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser"_short_string, "browser"sv));
+    (void)TRY(window->add_tab<ContentFilterSettingsWidget>(TRY("Content Filtering"_string), "content-filtering"sv));
     window->set_active_tab(selected_tab);
 
     window->show();
