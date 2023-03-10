@@ -104,7 +104,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         if (GUI::InputBox::show(window(), new_name, DeprecatedString::formatted("New name for '{}'", sheet.name()), "Rename sheet"sv) == GUI::Dialog::ExecResult::OK) {
             sheet.set_name(new_name);
             sheet.update();
-            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
+            m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), String::from_deprecated_string(new_name).release_value_but_fixme_should_propagate_errors());
         }
     });
     m_tab_context_menu->add_action(*m_rename_action);

@@ -1714,7 +1714,7 @@ void HackStudioWidget::update_window_title()
 
 void HackStudioWidget::update_current_editor_title()
 {
-    current_editor_tab_widget().set_tab_title(current_editor_wrapper(), current_editor_wrapper().filename_title());
+    current_editor_tab_widget().set_tab_title(current_editor_wrapper(), String::from_deprecated_string(current_editor_wrapper().filename_title()).release_value_but_fixme_should_propagate_errors());
 }
 
 void HackStudioWidget::on_cursor_change()
