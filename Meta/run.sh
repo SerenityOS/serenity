@@ -172,9 +172,9 @@ else
 fi
 
 if [ "$installed_major_version" -eq 5 ] && [ "$installed_minor_version" -eq 0 ]; then
-    SERENITY_AUDIO_HW="-soundhw pcspk"
+    SERENITY_AUDIO_PC_SPEAKER="-soundhw pcspk"
 else
-    SERENITY_AUDIO_HW="-machine pcspk-audiodev=snd0"
+    SERENITY_AUDIO_PC_SPEAKER="-machine pcspk-audiodev=snd0"
 fi
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
@@ -295,7 +295,7 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -device isa-debugcon,chardev=stdout
         -device virtio-rng-pci
         $SERENITY_AUDIO_BACKEND
-        $SERENITY_AUDIO_HW
+        $SERENITY_AUDIO_PC_SPEAKER
         -device ac97,audiodev=snd0
         -device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
         -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
@@ -411,7 +411,7 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device isa-debugcon,chardev=stdout
 -device virtio-rng-pci
 $SERENITY_AUDIO_BACKEND
-$SERENITY_AUDIO_HW
+$SERENITY_AUDIO_PC_SPEAKER
 $SERENITY_BOOT_DRIVE
 "
 
