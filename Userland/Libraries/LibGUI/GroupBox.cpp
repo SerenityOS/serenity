@@ -18,7 +18,7 @@ namespace GUI {
 GroupBox::GroupBox(StringView title)
     : m_title(title)
 {
-    REGISTER_STRING_PROPERTY("title", title, set_title);
+    REGISTER_DEPRECATED_STRING_PROPERTY("title", title, set_title);
 }
 
 Margins GroupBox::content_margins() const

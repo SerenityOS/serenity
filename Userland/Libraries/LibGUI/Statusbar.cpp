@@ -25,7 +25,7 @@ Statusbar::Statusbar(int count)
     m_corner = add<ResizeCorner>();
     set_segment_count(count);
 
-    REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
     REGISTER_INT_PROPERTY("segment_count", segment_count, set_segment_count);
 }
 

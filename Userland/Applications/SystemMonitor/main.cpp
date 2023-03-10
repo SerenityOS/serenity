@@ -97,7 +97,7 @@ public:
 private:
     UnavailableProcessWidget()
     {
-        REGISTER_STRING_PROPERTY("text", text, set_text);
+        REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
     }
 
     virtual void paint_event(GUI::PaintEvent& event) override

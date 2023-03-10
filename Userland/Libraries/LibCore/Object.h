@@ -295,13 +295,13 @@ requires IsBaseOf<Object, T>
             return true;                                      \
         });
 
-#define REGISTER_STRING_PROPERTY(property_name, getter, setter) \
-    register_property(                                          \
-        property_name,                                          \
-        [this] { return this->getter(); },                      \
-        [this](auto& value) {                                   \
-            this->setter(value.to_deprecated_string());         \
-            return true;                                        \
+#define REGISTER_DEPRECATED_STRING_PROPERTY(property_name, getter, setter) \
+    register_property(                                                     \
+        property_name,                                                     \
+        [this] { return this->getter(); },                                 \
+        [this](auto& value) {                                              \
+            this->setter(value.to_deprecated_string());                    \
+            return true;                                                   \
         });
 
 #define REGISTER_READONLY_STRING_PROPERTY(property_name, getter) \

@@ -31,7 +31,7 @@ Label::Label(DeprecatedString text)
 
     set_foreground_role(Gfx::ColorRole::WindowText);
 
-    REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
     REGISTER_WRITE_ONLY_STRING_PROPERTY("icon", set_icon_from_path);
 }
