@@ -37,6 +37,7 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <LibThreading/BackgroundAction.h>
+#include <mallocdefs.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <string.h>
@@ -81,7 +82,20 @@ static TitleAndText build_backtrace(Coredump::Reader const& coredump, ELF::Core:
     auto fault_type = metadata.get("fault_type");
     auto fault_access = metadata.get("fault_access");
     if (fault_address.has_value() && fault_type.has_value() && fault_access.has_value()) {
-        builder.appendff("{} fault on {} at address {}\n\n", fault_type.value(), fault_access.value(), fault_address.value());
+        builder.appendff("{} fault on {} at address {}", fault_type.value(), fault_access.value(), fault_address.value());
+        constexpr FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
+        constexpr FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        auto raw_fault_address = AK::StringUtils::convert_to_uint_from_hex(fault_address.value().substring_view(2));
+        if (raw_fault_address.has_value() && (raw_fault_address.value() & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
+            builder.append(", looks like it may be uninitialized malloc() memory\n"sv);
+            dbgln("NOTE: Address {:p} looks like it may be uninitialized malloc() memory\n", raw_fault_address.value());
+        } else if (raw_fault_address.has_value() && (raw_fault_address.value() & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
+            builder.append(", looks like it may be recently free()'d memory\n"sv);
+            dbgln("NOTE: Address {:p} looks like it may be recently free()'d memory\n", raw_fault_address.value());
+        } else {
+            builder.append("\n"sv);
+        }
+        builder.append("\n"sv);
     }
 
     auto first_entry = true;
