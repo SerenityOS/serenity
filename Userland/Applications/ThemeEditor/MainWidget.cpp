@@ -435,7 +435,7 @@ void MainWidget::build_override_controls()
 
 ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
 {
-    auto scrollable_container = TRY(m_property_tabs->try_add_tab<GUI::ScrollableContainerWidget>(property_tab.title));
+    auto scrollable_container = TRY(m_property_tabs->try_add_tab<GUI::ScrollableContainerWidget>(TRY(String::from_deprecated_string(property_tab.title))));
     scrollable_container->set_should_hide_unnecessary_scrollbars(true);
 
     auto properties_list = TRY(GUI::Widget::try_create());

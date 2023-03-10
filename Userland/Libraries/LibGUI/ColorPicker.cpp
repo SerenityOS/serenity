@@ -212,12 +212,12 @@ void ColorPicker::build_ui()
 
     auto& tab_widget = root_container->add<GUI::TabWidget>();
 
-    auto& tab_palette = tab_widget.add_tab<Widget>("Palette");
+    auto& tab_palette = tab_widget.add_tab<Widget>("Palette"_short_string);
     tab_palette.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_palette(tab_palette);
 
-    auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color");
+    auto& tab_custom_color = tab_widget.add_tab<Widget>("Custom Color"_string.release_value_but_fixme_should_propagate_errors());
     tab_custom_color.set_layout<VerticalBoxLayout>(4, 4);
 
     build_ui_custom(tab_custom_color);

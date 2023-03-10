@@ -56,26 +56,26 @@ public:
     void remove_widget(Widget&);
 
     template<class T, class... Args>
-    ErrorOr<NonnullRefPtr<T>> try_add_tab(DeprecatedString title, Args&&... args)
+    ErrorOr<NonnullRefPtr<T>> try_add_tab(String title, Args&&... args)
     {
         auto t = TRY(T::try_create(forward<Args>(args)...));
-        t->set_title(TRY(String::from_deprecated_string(title)));
+        t->set_title(move(title));
         TRY(try_add_widget(*t));
         return *t;
     }
 
     template<class T, class... Args>
-    T& add_tab(DeprecatedString title, Args&&... args)
+    T& add_tab(String title, Args&&... args)
     {
         auto t = T::construct(forward<Args>(args)...);
-        t->set_title(String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
+        t->set_title(move(title));
         add_widget(*t);
         return *t;
     }
 
-    ErrorOr<void> add_tab(NonnullRefPtr<Widget> const& tab, DeprecatedString title)
+    ErrorOr<void> add_tab(NonnullRefPtr<Widget> const& tab, String title)
     {
-        tab->set_title(TRY(String::from_deprecated_string(title)));
+        tab->set_title(move(title));
         TRY(try_add_widget(*tab));
         return {};
     }

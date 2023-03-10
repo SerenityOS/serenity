@@ -778,7 +778,7 @@ void HackStudioWidget::add_new_editor_tab_widget(GUI::Widget& parent)
 
 void HackStudioWidget::add_new_editor(GUI::TabWidget& parent)
 {
-    auto& wrapper = parent.add_tab<EditorWrapper>("(Untitled)");
+    auto& wrapper = parent.add_tab<EditorWrapper>("(Untitled)"_string.release_value_but_fixme_should_propagate_errors());
     parent.set_active_widget(&wrapper);
     if (parent.children().size() > 1 || m_all_editor_tab_widgets.size() > 1)
         parent.set_close_button_enabled(true);
@@ -978,7 +978,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_add_terminal_action
     return GUI::Action::create("Add New &Terminal", { Mod_Ctrl | Mod_Alt, Key_T },
         icon,
         [this](auto&) {
-            auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal");
+            auto& terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Terminal"_string.release_value_but_fixme_should_propagate_errors());
             terminal_wrapper.on_command_exit = [&]() {
                 deferred_invoke([this]() {
                     m_action_tab_widget->remove_tab(*m_action_tab_widget->active_widget());
@@ -1335,24 +1335,24 @@ ErrorOr<void> HackStudioWidget::create_action_tab(GUI::Widget& parent)
         first_time = false;
     };
 
-    m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
-    m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO");
-    m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console", false);
+    m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>(TRY("Find in files"_string));
+    m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO"_short_string);
+    m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Console"_short_string, false);
     auto debug_info_widget = TRY(DebugInfoWidget::create());
-    TRY(m_action_tab_widget->add_tab(debug_info_widget, "Debug"));
+    TRY(m_action_tab_widget->add_tab(debug_info_widget, "Debug"_short_string));
     m_debug_info_widget = debug_info_widget;
 
     m_debug_info_widget->on_backtrace_frame_selection = [this](Debug::DebugInfo::SourcePosition const& source_position) {
         open_file(get_absolute_path(source_position.file_path), source_position.line_number - 1);
     };
 
-    m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
-    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git");
+    m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>(TRY("Disassembly"_string));
+    m_git_widget = m_action_tab_widget->add_tab<GitWidget>("Git"_short_string);
     m_git_widget->set_view_diff_callback([this](auto const& original_content, auto const& diff) {
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
-    m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>("GML Preview", "");
+    m_gml_preview_widget = m_action_tab_widget->add_tab<GMLPreviewWidget>(TRY("GML Preview"_string), "");
 
     ToDoEntries::the().on_update = [this]() {
         m_todo_entries_widget->refresh();
@@ -1366,13 +1366,13 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     m_project_tab = parent.add<GUI::TabWidget>();
     m_project_tab->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
 
-    auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files");
+    auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files"_short_string);
     tree_view_container.set_layout<GUI::VerticalBoxLayout>(GUI::Margins {}, 2);
 
     m_project_tree_view = tree_view_container.add<GUI::TreeView>();
     configure_project_tree_view();
 
-    auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes");
+    auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes"_short_string);
     class_view_container.set_layout<GUI::VerticalBoxLayout>(2);
 
     m_class_view = class_view_container.add<ClassViewWidget>();
