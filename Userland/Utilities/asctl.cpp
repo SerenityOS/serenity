@@ -69,7 +69,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (auto to_print : values_to_print) {
             switch (to_print) {
             case AudioVariable::Volume: {
-                auto volume = static_cast<int>(round(audio_client->get_main_mix_volume() * 100));
+                auto volume = lround(audio_client->get_main_mix_volume() * 100);
                 if (human_mode)
                     outln("Volume: {}%", volume);
                 else
