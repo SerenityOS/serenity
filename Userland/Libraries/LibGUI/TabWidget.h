@@ -83,7 +83,7 @@ public:
     void remove_tab(Widget& tab) { remove_widget(tab); }
     void remove_all_tabs_except(Widget& tab);
 
-    void set_tab_title(Widget& tab, StringView title);
+    void set_tab_title(Widget& tab, String title);
     void set_tab_icon(Widget& tab, Gfx::Bitmap const*);
 
     bool is_tab_modified(Widget& tab);

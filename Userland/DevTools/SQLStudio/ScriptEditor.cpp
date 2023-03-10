@@ -72,7 +72,7 @@ ErrorOr<bool> ScriptEditor::save_as()
 
     auto parent = static_cast<GUI::TabWidget*>(parent_widget());
     if (parent)
-        parent->set_tab_title(*this, lexical_path.title());
+        parent->set_tab_title(*this, String::from_deprecated_string(lexical_path.title()).release_value_but_fixme_should_propagate_errors());
 
     document().set_unmodified();
     return true;
