@@ -171,6 +171,17 @@ else
     SERENITY_AUDIO_BACKEND="-audiodev pa,timer-period=2000,id=snd0"
 fi
 
+SERENITY_AUDIO_HARDWARE="${SERENITY_AUDIO_HARDWARE:-intelhda}"
+if [ "${SERENITY_AUDIO_HARDWARE}" = 'ac97' ]; then
+    SERENITY_AUDIO_DEVICE='-device ac97,audiodev=snd0'
+elif [ "${SERENITY_AUDIO_HARDWARE}" = 'intelhda' ]; then
+    SERENITY_AUDIO_DEVICE='-device ich9-intel-hda -device hda-output,audiodev=snd0'
+else
+    echo "Unknown audio hardware: ${SERENITY_AUDIO_HARDWARE}"
+    echo 'Supported values: ac97, intelhda'
+    exit 1
+fi
+
 if [ "$installed_major_version" -eq 5 ] && [ "$installed_minor_version" -eq 0 ]; then
     SERENITY_AUDIO_PC_SPEAKER="-soundhw pcspk"
 else
@@ -296,7 +307,7 @@ if [ -z "$SERENITY_MACHINE" ]; then
         -device virtio-rng-pci
         $SERENITY_AUDIO_BACKEND
         $SERENITY_AUDIO_PC_SPEAKER
-        -device ac97,audiodev=snd0
+        $SERENITY_AUDIO_DEVICE
         -device pci-bridge,chassis_nr=1,id=bridge1 -device $SERENITY_ETHERNET_DEVICE_TYPE,bus=bridge1
         -device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
         -device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
