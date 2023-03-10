@@ -137,3 +137,12 @@ add_dependencies(ladybird SQLServer WebContent WebDriver)
 if(NOT CMAKE_SKIP_INSTALL_RULES)
     include(cmake/InstallRules.cmake)
 endif()
+
+include(CTest)
+if (BUILD_TESTING)
+    add_test(
+        NAME Layout
+        COMMAND ${SERENITY_SOURCE_DIR}/Tests/LibWeb/Layout/layout_test.sh ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    set_tests_properties(Layout PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
+endif()
