@@ -21,23 +21,7 @@ bool is_ascii_case_insensitive_match(StringView a, StringView b)
 {
     // A string A is an ASCII case-insensitive match for a string B,
     // if the ASCII lowercase of A is the ASCII lowercase of B.
-
-    Utf8View a_view { a };
-    Utf8View b_view { b };
-
-    if (a_view.length() != b_view.length())
-        return false;
-
-    auto b_iterator = b_view.begin();
-    for (auto a_char : a_view) {
-        auto b_char = *b_iterator;
-        ++b_iterator;
-
-        if (AK::to_ascii_lowercase(a_char) != AK::to_ascii_lowercase(b_char))
-            return false;
-    }
-
-    return true;
+    return AK::StringUtils::equals_ignoring_ascii_case(a, b);
 }
 
 // https://infra.spec.whatwg.org/#strip-and-collapse-ascii-whitespace
