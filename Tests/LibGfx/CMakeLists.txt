@@ -3,6 +3,7 @@ set(TEST_SOURCES
     TestFontHandling.cpp
     TestICCProfile.cpp
     TestImageDecoder.cpp
+    TestScalingFunctions.cpp
 )
 
 foreach(source IN LISTS TEST_SOURCES)
