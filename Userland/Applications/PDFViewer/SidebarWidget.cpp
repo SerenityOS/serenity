@@ -17,7 +17,7 @@ SidebarWidget::SidebarWidget()
 
     auto& tab_bar = add<GUI::TabWidget>();
 
-    auto& outline_container = tab_bar.add_tab<GUI::Widget>("Outline");
+    auto& outline_container = tab_bar.add_tab<GUI::Widget>("Outline"_short_string);
     outline_container.set_layout<GUI::VerticalBoxLayout>(4);
 
     m_outline_tree_view = outline_container.add<GUI::TreeView>();
@@ -32,7 +32,7 @@ SidebarWidget::SidebarWidget()
         on_destination_selected(destination);
     };
 
-    auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails");
+    auto& thumbnails_container = tab_bar.add_tab<GUI::Widget>("Thumbnails"_string.release_value_but_fixme_should_propagate_errors());
     thumbnails_container.set_layout<GUI::VerticalBoxLayout>(4);
 
     // FIXME: Add thumbnail previews

@@ -132,7 +132,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         m_conditional_formats = cell.conditional_formats();
     }
 
-    auto& type_tab = tabs.add_tab<GUI::Widget>("Type");
+    auto& type_tab = tabs.add_tab<GUI::Widget>("Type"_short_string);
     type_tab.set_layout<GUI::HorizontalBoxLayout>(4);
     {
         auto& left_side = type_tab.add<GUI::Widget>();
@@ -197,7 +197,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         }
     }
 
-    auto& alignment_tab = tabs.add_tab<GUI::Widget>("Alignment");
+    auto& alignment_tab = tabs.add_tab<GUI::Widget>("Alignment"_string.release_value_but_fixme_should_propagate_errors());
     alignment_tab.set_layout<GUI::VerticalBoxLayout>(4);
     {
         // FIXME: Frame?
@@ -264,7 +264,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         }
     }
 
-    auto& colors_tab = tabs.add_tab<GUI::Widget>("Color");
+    auto& colors_tab = tabs.add_tab<GUI::Widget>("Color"_short_string);
     colors_tab.set_layout<GUI::VerticalBoxLayout>(4);
     {
         // Static formatting
@@ -312,7 +312,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
         }
     }
 
-    auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional format");
+    auto& conditional_fmt_tab = tabs.add_tab<GUI::Widget>("Conditional format"_string.release_value_but_fixme_should_propagate_errors());
     conditional_fmt_tab.load_from_gml(cond_fmt_gml).release_value_but_fixme_should_propagate_errors();
     {
         auto& view = *conditional_fmt_tab.find_descendant_of_type_named<Spreadsheet::ConditionsView>("conditions_view");

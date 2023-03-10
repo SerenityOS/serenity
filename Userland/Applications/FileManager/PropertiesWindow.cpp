@@ -58,7 +58,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
 
     auto tab_widget = TRY(main_widget->try_add<GUI::TabWidget>());
 
-    auto general_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("General"));
+    auto general_tab = TRY(tab_widget->try_add_tab<GUI::Widget>("General"_short_string));
     TRY(general_tab->load_from_gml(properties_window_general_tab_gml));
 
     m_icon = general_tab->find_descendant_of_type_named<GUI::ImageWidget>("icon");

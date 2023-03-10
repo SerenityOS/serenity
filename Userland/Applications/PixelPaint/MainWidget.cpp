@@ -1244,7 +1244,7 @@ ImageEditor* MainWidget::current_image_editor()
 
 ImageEditor& MainWidget::create_new_editor(NonnullRefPtr<Image> image)
 {
-    auto& image_editor = m_tab_widget->add_tab<PixelPaint::ImageEditor>("Untitled", image);
+    auto& image_editor = m_tab_widget->add_tab<PixelPaint::ImageEditor>("Untitled"_string.release_value_but_fixme_should_propagate_errors(), image);
 
     image_editor.on_active_layer_change = [&](auto* layer) {
         if (current_image_editor() != &image_editor)

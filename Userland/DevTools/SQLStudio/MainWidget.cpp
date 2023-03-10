@@ -226,7 +226,7 @@ MainWidget::MainWidget()
 
     m_action_tab_widget = find_descendant_of_type_named<GUI::TabWidget>("action_tab_widget"sv);
 
-    m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results");
+    m_query_results_widget = m_action_tab_widget->add_tab<GUI::Widget>("Results"_short_string);
     m_query_results_widget->set_layout<GUI::VerticalBoxLayout>(6);
     m_query_results_table_view = m_query_results_widget->add<GUI::TableView>();
 
@@ -327,7 +327,7 @@ void MainWidget::open_new_script()
     auto new_script_name = DeprecatedString::formatted("New Script - {}", m_new_script_counter);
     ++m_new_script_counter;
 
-    auto& editor = m_tab_widget->add_tab<ScriptEditor>(new_script_name);
+    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_deprecated_string(new_script_name).release_value_but_fixme_should_propagate_errors());
     editor.new_script_with_temp_name(new_script_name);
 
     editor.on_cursor_change = [this] { on_editor_change(); };
@@ -339,7 +339,7 @@ void MainWidget::open_new_script()
 
 void MainWidget::open_script_from_file(LexicalPath const& file_path)
 {
-    auto& editor = m_tab_widget->add_tab<ScriptEditor>(file_path.title());
+    auto& editor = m_tab_widget->add_tab<ScriptEditor>(String::from_deprecated_string(file_path.title()).release_value_but_fixme_should_propagate_errors());
 
     if (auto result = editor.open_script_from_file(file_path); result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to open {}\n{}", file_path, result.error()));

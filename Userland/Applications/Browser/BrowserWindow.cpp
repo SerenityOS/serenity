@@ -567,7 +567,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 
 void BrowserWindow::create_new_tab(URL url, bool activate)
 {
-    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab", *this);
+    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this);
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 
