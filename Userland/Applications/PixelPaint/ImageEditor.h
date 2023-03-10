@@ -54,6 +54,7 @@ public:
 
     DeprecatedString const& title() const { return m_title; }
     void set_title(DeprecatedString);
+    void set_title(String const& title) { set_title(title.to_deprecated_string()); }
 
     void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
     void remove_guide(Guide const& guide)

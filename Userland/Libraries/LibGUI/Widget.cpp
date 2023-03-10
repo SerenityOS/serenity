@@ -76,7 +76,7 @@ Widget::Widget()
     REGISTER_INT_PROPERTY("font_size", m_font->presentation_size, set_font_size);
     REGISTER_FONT_WEIGHT_PROPERTY("font_weight", m_font->weight, set_font_weight);
 
-    REGISTER_DEPRECATED_STRING_PROPERTY("title", title, set_title);
+    REGISTER_STRING_PROPERTY("title", title, set_title);
 
     register_property(
         "font_type", [this] { return m_font->is_fixed_width() ? "FixedWidth" : "Normal"; },
@@ -1048,7 +1048,7 @@ void Widget::set_palette(Palette& palette)
     update();
 }
 
-void Widget::set_title(DeprecatedString title)
+void Widget::set_title(String title)
 {
     m_title = move(title);
     layout_relevant_change_occurred();
@@ -1057,7 +1057,7 @@ void Widget::set_title(DeprecatedString title)
         parent_widget()->update();
 }
 
-DeprecatedString Widget::title() const
+String Widget::title() const
 {
     return m_title;
 }

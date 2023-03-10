@@ -11,6 +11,7 @@
 #include <AK/JsonObject.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/Variant.h>
 #include <LibCore/Object.h>
 #include <LibCore/Timer.h>
@@ -334,8 +335,8 @@ public:
     Gfx::Palette palette() const;
     void set_palette(Gfx::Palette&);
 
-    DeprecatedString title() const;
-    void set_title(DeprecatedString);
+    String title() const;
+    void set_title(String);
 
     Margins const& grabbable_margins() const { return m_grabbable_margins; }
     void set_grabbable_margins(Margins const&);
@@ -458,7 +459,7 @@ private:
     bool m_default_font { true };
 
     NonnullRefPtr<Gfx::PaletteImpl> m_palette;
-    DeprecatedString m_title { DeprecatedString::empty() };
+    String m_title;
 
     WeakPtr<Widget> m_focus_proxy;
     Vector<WeakPtr<Widget>> m_focus_delegators;

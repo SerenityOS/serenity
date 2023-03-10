@@ -57,7 +57,7 @@ public:
 
     ErrorOr<void> add_tab(NonnullRefPtr<Tab> const& tab, DeprecatedString title, StringView id)
     {
-        tab->set_title(move(title));
+        tab->set_title(TRY(String::from_deprecated_string(title)));
         TRY(m_tab_widget->try_add_widget(*tab));
         TRY(m_tabs.try_set(id, tab));
         tab->set_settings_window(*this);
