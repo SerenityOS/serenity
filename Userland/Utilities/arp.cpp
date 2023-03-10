@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonObject.h>
 #include <AK/MACAddress.h>
@@ -56,10 +55,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     struct Column {
-        DeprecatedString title;
+        StringView title;
         Alignment alignment { Alignment::Left };
         int width { 0 };
-        DeprecatedString buffer;
+        StringView buffer;
     };
 
     Vector<Column> columns;
@@ -72,8 +71,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return columns.size() - 1;
     };
 
-    proto_address_column = add_column("Address", Alignment::Left, 15);
-    hw_address_column = add_column("HWaddress", Alignment::Left, 15);
+    proto_address_column = add_column("Address"sv, Alignment::Left, 15);
+    hw_address_column = add_column("HWaddress"sv, Alignment::Left, 15);
 
     auto print_column = [](auto& column, auto& string) {
         if (!column.width) {
