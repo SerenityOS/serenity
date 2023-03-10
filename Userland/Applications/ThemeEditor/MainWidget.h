@@ -72,7 +72,7 @@ struct PropertyGroup {
 };
 
 struct PropertyTab {
-    DeprecatedString title;
+    StringView title;
     Vector<PropertyGroup> property_groups;
 };
 

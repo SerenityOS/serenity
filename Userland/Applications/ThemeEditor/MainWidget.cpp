@@ -36,7 +36,7 @@
 namespace ThemeEditor {
 
 static const PropertyTab window_tab {
-    "Windows",
+    "Windows"sv,
     {
         { "General",
             { { Gfx::FlagRole::IsDark },
@@ -92,7 +92,7 @@ static const PropertyTab window_tab {
 };
 
 static const PropertyTab widgets_tab {
-    "Widgets",
+    "Widgets"sv,
     {
         { "General",
             { { Gfx::ColorRole::Accent },
@@ -161,7 +161,7 @@ static const PropertyTab widgets_tab {
 };
 
 static const PropertyTab syntax_highlighting_tab {
-    "Syntax Highlighting",
+    "Syntax Highlighting"sv,
     {
         { "General",
             { { Gfx::ColorRole::SyntaxComment },
@@ -185,7 +185,7 @@ static const PropertyTab syntax_highlighting_tab {
 };
 
 static const PropertyTab color_scheme_tab {
-    "Color Scheme",
+    "Color Scheme"sv,
     {
         { "General",
             { { Gfx::FlagRole::BoldTextAsBright },
@@ -435,7 +435,7 @@ void MainWidget::build_override_controls()
 
 ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
 {
-    auto scrollable_container = TRY(m_property_tabs->try_add_tab<GUI::ScrollableContainerWidget>(TRY(String::from_deprecated_string(property_tab.title))));
+    auto scrollable_container = TRY(m_property_tabs->try_add_tab<GUI::ScrollableContainerWidget>(TRY(String::from_utf8(property_tab.title))));
     scrollable_container->set_should_hide_unnecessary_scrollbars(true);
 
     auto properties_list = TRY(GUI::Widget::try_create());
