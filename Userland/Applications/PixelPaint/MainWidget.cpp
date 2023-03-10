@@ -173,7 +173,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
                 auto& editor = create_new_editor(*image);
                 auto image_title = dialog->image_name().trim_whitespace();
-                editor.set_title(image_title.is_empty() ? "Untitled" : image_title);
+                editor.set_title((image_title.is_empty() ? "Untitled"_string : String::from_deprecated_string(image_title)).release_value_but_fixme_should_propagate_errors());
                 editor.set_unmodified();
 
                 m_histogram_widget->set_image(image);
@@ -223,7 +223,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             "As &BMP", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title(), "bmp");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "bmp");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -238,7 +238,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 auto* editor = current_image_editor();
                 VERIFY(editor);
                 // TODO: fix bmp on line below?
-                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title(), "png");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "png");
                 if (response.is_error())
                     return;
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
@@ -252,7 +252,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             "As &QOI", [&](auto&) {
                 auto* editor = current_image_editor();
                 VERIFY(editor);
-                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title(), "qoi");
+                auto response = FileSystemAccessClient::Client::the().save_file(&window, editor->title().to_deprecated_string(), "qoi");
                 if (response.is_error())
                     return;
                 auto result = editor->image().export_qoi_to_file(response.value().release_stream());
@@ -1196,7 +1196,7 @@ ErrorOr<void> MainWidget::create_default_image()
     m_layer_list_widget->set_image(image);
 
     auto& editor = create_new_editor(*image);
-    editor.set_title("Untitled");
+    editor.set_title(TRY("Untitled"_string));
     editor.set_active_layer(bg_layer);
     editor.set_unmodified();
 
@@ -1215,7 +1215,7 @@ ErrorOr<void> MainWidget::create_image_from_clipboard()
     image->add_layer(*layer);
 
     auto& editor = create_new_editor(*image);
-    editor.set_title("Untitled");
+    editor.set_title(TRY("Untitled"_string));
 
     m_layer_list_widget->set_image(image);
     m_layer_list_widget->set_selected_layer(layer);
