@@ -103,6 +103,7 @@ namespace Multimedia {
 
 enum class SubclassID {
     AudioController = 0x1,
+    HDACompatibleController = 0x3,
 };
 
 }
