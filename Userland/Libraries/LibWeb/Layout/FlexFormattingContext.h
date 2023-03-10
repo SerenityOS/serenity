@@ -120,8 +120,8 @@ private:
     CSS::Size const& computed_cross_min_size(Box const&) const;
     CSS::Size const& computed_cross_max_size(Box const&) const;
 
-    CSSPixels get_pixel_width(Box const& box, Optional<CSS::Size> const& length_percentage) const;
-    CSSPixels get_pixel_height(Box const& box, Optional<CSS::Size> const& length_percentage) const;
+    CSSPixels get_pixel_width(Box const&, CSS::Size const&) const;
+    CSSPixels get_pixel_height(Box const&, CSS::Size const&) const;
 
     bool flex_item_is_stretched(FlexItem const&) const;
 

@@ -37,36 +37,32 @@ static CSS::Size to_css_size(CSS::LengthPercentage const& length_percentage)
     return CSS::Size::make_percentage(length_percentage.percentage());
 }
 
-CSSPixels FlexFormattingContext::get_pixel_width(Box const& box, Optional<CSS::Size> const& size) const
+CSSPixels FlexFormattingContext::get_pixel_width(Box const& box, CSS::Size const& size) const
 {
-    if (!size.has_value())
-        return 0;
     auto containing_block_width = CSS::Length::make_px(containing_block_width_for(box));
     if (box.computed_values().box_sizing() == CSS::BoxSizing::BorderBox) {
         auto border_left = box.computed_values().border_left().width;
         auto border_right = box.computed_values().border_right().width;
         auto padding_left = box.computed_values().padding().left().resolved(box, containing_block_width).to_px(box);
         auto padding_right = box.computed_values().padding().right().resolved(box, containing_block_width).to_px(box);
-        return size->resolved(box, containing_block_width).to_px(box) - border_left - border_right - padding_left - padding_right;
+        return size.resolved(box, containing_block_width).to_px(box) - border_left - border_right - padding_left - padding_right;
     }
 
-    return size->resolved(box, containing_block_width).to_px(box);
+    return size.resolved(box, containing_block_width).to_px(box);
 }
 
-CSSPixels FlexFormattingContext::get_pixel_height(Box const& box, Optional<CSS::Size> const& size) const
+CSSPixels FlexFormattingContext::get_pixel_height(Box const& box, CSS::Size const& size) const
 {
-    if (!size.has_value())
-        return 0;
     auto containing_block_height = CSS::Length::make_px(containing_block_height_for(box));
     if (box.computed_values().box_sizing() == CSS::BoxSizing::BorderBox) {
         auto border_top = box.computed_values().border_top().width;
         auto border_bottom = box.computed_values().border_bottom().width;
         auto padding_top = box.computed_values().padding().top().resolved(box, containing_block_height).to_px(box);
         auto padding_bottom = box.computed_values().padding().bottom().resolved(box, containing_block_height).to_px(box);
-        return size->resolved(box, containing_block_height).to_px(box) - border_top - border_bottom - padding_top - padding_bottom;
+        return size.resolved(box, containing_block_height).to_px(box) - border_top - border_bottom - padding_top - padding_bottom;
     }
 
-    return size->resolved(box, containing_block_height).to_px(box);
+    return size.resolved(box, containing_block_height).to_px(box);
 }
 
 FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex_container, FormattingContext* parent)
