@@ -26,6 +26,6 @@ for input_html_path in "${SCRIPT_DIR}"/input/*; do
         echo "${input_html_file} PASSED"
     else
         echo "${input_html_file} FAILED"
-        diff "${expected_layout_dump_path}" <(echo "${output_layout_dump}")
+        diff -u "${expected_layout_dump_path}" <(echo "${output_layout_dump}")
     fi
 done
