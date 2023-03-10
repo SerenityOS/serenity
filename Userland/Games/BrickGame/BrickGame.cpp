@@ -246,6 +246,7 @@ class Bricks final {
 public:
     enum class GameState {
         Active,
+        Paused,
         GameOver
     };
 
@@ -314,6 +315,20 @@ public:
             m_block = block;
         }
         return RenderRequest::RequestUpdate;
+    }
+
+    void toggle_pause()
+    {
+        switch (m_state) {
+        case GameState::Active:
+            m_state = GameState::Paused;
+            break;
+        case GameState::Paused:
+            m_state = GameState::Active;
+            break;
+        case GameState::GameOver:
+            break;
+        }
     }
 
     [[nodiscard]] RenderRequest update()
@@ -433,12 +448,17 @@ void BrickGame::reset()
 
 void BrickGame::timer_event(Core::TimerEvent&)
 {
-    if (m_brick_game->state() == Bricks::GameState::GameOver) {
+    switch (m_brick_game->state()) {
+    case Bricks::GameState::GameOver:
         game_over();
-        return;
+        break;
+    case Bricks::GameState::Active:
+        if (m_brick_game->update() == Bricks::RenderRequest::RequestUpdate)
+            update();
+        break;
+    case Bricks::GameState::Paused:
+        break;
     }
-    if (m_brick_game->update() == Bricks::RenderRequest::RequestUpdate)
-        update();
 }
 
 void BrickGame::keydown_event(GUI::KeyEvent& event)
@@ -469,6 +489,10 @@ void BrickGame::keydown_event(GUI::KeyEvent& event)
         break;
     case KeyCode::Key_Space:
         render_request = m_brick_game->move_down_fast();
+        break;
+    case KeyCode::Key_Escape:
+    case KeyCode::Key_P:
+        m_brick_game->toggle_pause();
         break;
     default:
         event.ignore();
