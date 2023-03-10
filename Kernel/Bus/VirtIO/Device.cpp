@@ -96,7 +96,21 @@ UNMAP_AFTER_INIT void Device::initialize()
             // We have a virtio_pci_cap
             Configuration config {};
             auto raw_config_type = capability.read8(0x3);
-            if (raw_config_type < static_cast<u8>(ConfigurationType::Common) || raw_config_type > static_cast<u8>(ConfigurationType::PCI)) {
+            // NOTE: The VirtIO specification allows iteration of configurations
+            // through a special PCI capbility structure with the VIRTIO_PCI_CAP_PCI_CFG tag:
+            //
+            // "Each structure can be mapped by a Base Address register (BAR) belonging to the function, or accessed via
+            // the special VIRTIO_PCI_CAP_PCI_CFG field in the PCI configuration space"
+            //
+            // "The VIRTIO_PCI_CAP_PCI_CFG capability creates an alternative (and likely suboptimal) access method
+            // to the common configuration, notification, ISR and device-specific configuration regions."
+            //
+            // Also, it is *very* likely to see this PCI capability as the first vendor-specific capbility of a certain PCI function,
+            // but this is not guaranteed by the VirtIO specification.
+            // Therefore, ignore this type of configuration as this is not needed by our implementation currently.
+            if (raw_config_type == static_cast<u8>(ConfigurationType::PCICapabilitiesAccess))
+                continue;
+            if (raw_config_type < static_cast<u8>(ConfigurationType::Common) || raw_config_type > static_cast<u8>(ConfigurationType::PCICapabilitiesAccess)) {
                 dbgln("{}: Unknown capability configuration type: {}", m_class_name, raw_config_type);
                 return;
             }
@@ -113,9 +127,15 @@ UNMAP_AFTER_INIT void Device::initialize()
             }
             config.offset = capability.read32(0x8);
             config.length = capability.read32(0xc);
-            // NOTE: Configuration length of zero is an invalid configuration that should be ignored.
-            if (config.length == 0)
+            // NOTE: Configuration length of zero is an invalid configuration, or at the very least a configuration
+            // type we don't know how to handle correctly...
+            // The VIRTIO_PCI_CAP_PCI_CFG configuration structure has length of 0
+            // but because we ignore that type and all other types should have a length
+            // greater than 0, we should ignore any other configuration in case this condition is not met.
+            if (config.length == 0) {
+                dbgln("{}: Found configuration {}, with invalid length of 0", m_class_name, (u32)config.cfg_type);
                 continue;
+            }
             dbgln_if(VIRTIO_DEBUG, "{}: Found configuration {}, bar: {}, offset: {}, length: {}", m_class_name, (u32)config.cfg_type, config.bar, config.offset, config.length);
             if (config.cfg_type == ConfigurationType::Common)
                 m_use_mmio = true;

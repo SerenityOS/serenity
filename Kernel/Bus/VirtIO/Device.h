@@ -70,7 +70,7 @@ enum class ConfigurationType : u8 {
     Notify = 2,
     ISR = 3,
     Device = 4,
-    PCI = 5
+    PCICapabilitiesAccess = 5
 };
 
 struct Configuration {
