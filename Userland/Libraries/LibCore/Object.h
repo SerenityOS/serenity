@@ -295,6 +295,16 @@ requires IsBaseOf<Object, T>
             return true;                                      \
         });
 
+// FIXME: Port JsonValue to the new String class.
+#define REGISTER_STRING_PROPERTY(property_name, getter, setter)                                                                           \
+    register_property(                                                                                                                    \
+        property_name,                                                                                                                    \
+        [this]() { return this->getter().to_deprecated_string(); },                                                                       \
+        [this](auto& value) {                                                                                                             \
+            this->setter(String::from_deprecated_string(value.to_deprecated_string()).release_value_but_fixme_should_propagate_errors()); \
+            return true;                                                                                                                  \
+        });
+
 #define REGISTER_DEPRECATED_STRING_PROPERTY(property_name, getter, setter) \
     register_property(                                                     \
         property_name,                                                     \
