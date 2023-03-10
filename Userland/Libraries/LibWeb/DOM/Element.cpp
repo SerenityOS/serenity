@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -195,6 +195,20 @@ WebIDL::ExceptionOr<void> Element::set_attribute_ns(DeprecatedFlyString const& n
 
     // FIXME: Don't just call through to setAttribute() here.
     return set_attribute(extracted_qualified_name.local_name(), value);
+}
+
+// https://dom.spec.whatwg.org/#dom-element-setattributenode
+WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node(Attr& attr)
+{
+    // The setAttributeNode(attr) and setAttributeNodeNS(attr) methods steps are to return the result of setting an attribute given attr and this.
+    return m_attributes->set_attribute(attr);
+}
+
+// https://dom.spec.whatwg.org/#dom-element-setattributenodens
+WebIDL::ExceptionOr<JS::GCPtr<Attr>> Element::set_attribute_node_ns(Attr& attr)
+{
+    // The setAttributeNode(attr) and setAttributeNodeNS(attr) methods steps are to return the result of setting an attribute given attr and this.
+    return m_attributes->set_attribute(attr);
 }
 
 // https://dom.spec.whatwg.org/#dom-element-removeattribute

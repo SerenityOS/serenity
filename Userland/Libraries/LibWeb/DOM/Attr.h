@@ -18,7 +18,8 @@ class Attr final : public Node {
     WEB_PLATFORM_OBJECT(Attr, Node);
 
 public:
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create(Document&, DeprecatedFlyString local_name, DeprecatedString value, Element const* = nullptr);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create(Document&, QualifiedName, DeprecatedString value = "", Element const* = nullptr);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> create(Document&, DeprecatedFlyString local_name, DeprecatedString value = "", Element const* = nullptr);
     JS::NonnullGCPtr<Attr> clone(Document&);
 
     virtual ~Attr() override = default;

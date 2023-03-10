@@ -95,13 +95,13 @@ Attr const* NamedNodeMap::get_named_item_ns(StringView namespace_, StringView lo
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditem
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_named_item(Attr& attribute)
+WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_named_item(Attr& attribute)
 {
     return set_attribute(attribute);
 }
 
 // https://dom.spec.whatwg.org/#dom-namednodemap-setnameditemns
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_named_item_ns(Attr& attribute)
+WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_named_item_ns(Attr& attribute)
 {
     return set_attribute(attribute);
 }
@@ -195,7 +195,7 @@ Attr const* NamedNodeMap::get_attribute_ns(StringView namespace_, StringView loc
 }
 
 // https://dom.spec.whatwg.org/#concept-element-attributes-set
-WebIDL::ExceptionOr<Attr const*> NamedNodeMap::set_attribute(Attr& attribute)
+WebIDL::ExceptionOr<JS::GCPtr<Attr>> NamedNodeMap::set_attribute(Attr& attribute)
 {
     // 1. If attr’s element is neither null nor element, throw an "InUseAttributeError" DOMException.
     if ((attribute.owner_element() != nullptr) && (attribute.owner_element() != &associated_element()))
