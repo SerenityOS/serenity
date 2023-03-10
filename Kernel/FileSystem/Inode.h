@@ -102,7 +102,7 @@ public:
     ErrorOr<void> register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
-    ErrorOr<NonnullLockRefPtr<FIFO>> fifo();
+    ErrorOr<NonnullRefPtr<FIFO>> fifo();
 
     bool can_apply_flock(flock const&, Optional<OpenFileDescription const&> = {}) const;
     ErrorOr<void> apply_flock(Process const&, OpenFileDescription const&, Userspace<flock const*>, ShouldBlock);
@@ -134,7 +134,7 @@ private:
     LockWeakPtr<LocalSocket> m_bound_socket;
     SpinlockProtected<HashTable<InodeWatcher*>, LockRank::None> m_watchers {};
     bool m_metadata_dirty { false };
-    LockRefPtr<FIFO> m_fifo;
+    RefPtr<FIFO> m_fifo;
     IntrusiveListNode<Inode> m_inode_list_node;
 
     struct Flock {

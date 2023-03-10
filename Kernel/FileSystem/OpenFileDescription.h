@@ -141,7 +141,7 @@ private:
     }
 
     RefPtr<Inode> m_inode;
-    NonnullLockRefPtr<File> m_file;
+    NonnullRefPtr<File> m_file;
 
     struct State {
         OwnPtr<OpenFileDescriptionData> data;

@@ -20,7 +20,7 @@ class OpenFileDescription;
 
 class Socket : public File {
 public:
-    static ErrorOr<NonnullLockRefPtr<Socket>> create(int domain, int type, int protocol);
+    static ErrorOr<NonnullRefPtr<Socket>> create(int domain, int type, int protocol);
     virtual ~Socket() override;
 
     int domain() const { return m_domain; }
@@ -67,7 +67,7 @@ public:
     void set_connected(bool);
 
     bool can_accept() const { return !m_pending.is_empty(); }
-    LockRefPtr<Socket> accept();
+    RefPtr<Socket> accept();
 
     ErrorOr<void> shutdown(int how);
 
@@ -111,7 +111,7 @@ public:
 protected:
     Socket(int domain, int type, int protocol);
 
-    ErrorOr<void> queue_connection_from(NonnullLockRefPtr<Socket>);
+    ErrorOr<void> queue_connection_from(NonnullRefPtr<Socket>);
 
     size_t backlog() const { return m_backlog; }
     void set_backlog(size_t backlog) { m_backlog = backlog; }
@@ -181,7 +181,7 @@ private:
 
     Optional<ErrnoCode> m_so_error;
 
-    Vector<NonnullLockRefPtr<Socket>> m_pending;
+    Vector<NonnullRefPtr<Socket>> m_pending;
 };
 
 // This is a special variant of TRY() that also updates the socket's SO_ERROR field on error.

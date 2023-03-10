@@ -24,7 +24,7 @@ public:
         Writer
     };
 
-    static ErrorOr<NonnullLockRefPtr<FIFO>> try_create(UserID);
+    static ErrorOr<NonnullRefPtr<FIFO>> try_create(UserID);
     virtual ~FIFO() override;
 
     UserID uid() const { return m_uid; }

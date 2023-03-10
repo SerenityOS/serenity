@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<InodeWatcher>> InodeWatcher::try_create()
+ErrorOr<NonnullRefPtr<InodeWatcher>> InodeWatcher::try_create()
 {
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) InodeWatcher);
+    return adopt_nonnull_ref_or_enomem(new (nothrow) InodeWatcher);
 }
 
 InodeWatcher::~InodeWatcher()

@@ -180,7 +180,7 @@ void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
     });
 }
 
-ErrorOr<NonnullLockRefPtr<FIFO>> Inode::fifo()
+ErrorOr<NonnullRefPtr<FIFO>> Inode::fifo()
 {
     MutexLocker locker(m_inode_lock);
     VERIFY(metadata().is_fifo());
@@ -189,7 +189,7 @@ ErrorOr<NonnullLockRefPtr<FIFO>> Inode::fifo()
     if (!m_fifo)
         m_fifo = TRY(FIFO::try_create(metadata().uid));
 
-    return NonnullLockRefPtr { *m_fifo };
+    return NonnullRefPtr { *m_fifo };
 }
 
 void Inode::set_metadata_dirty(bool metadata_dirty)

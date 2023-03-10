@@ -22,7 +22,7 @@ struct SocketPair {
 class LocalSocket final : public Socket {
 
 public:
-    static ErrorOr<NonnullLockRefPtr<LocalSocket>> try_create(int type);
+    static ErrorOr<NonnullRefPtr<LocalSocket>> try_create(int type);
     static ErrorOr<SocketPair> try_create_connected_pair(int type);
     virtual ~LocalSocket() override;
 

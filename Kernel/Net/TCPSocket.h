@@ -20,7 +20,7 @@ class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(TCPSocket const&)>);
     static ErrorOr<void> try_for_each(Function<ErrorOr<void>(TCPSocket const&)>);
-    static ErrorOr<NonnullLockRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
+    static ErrorOr<NonnullRefPtr<TCPSocket>> try_create(int protocol, NonnullOwnPtr<DoubleBuffer> receive_buffer);
     virtual ~TCPSocket() override;
 
     virtual bool unref() const override;
@@ -146,15 +146,15 @@ public:
     bool should_delay_next_ack() const;
 
     static MutexProtected<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
-    static LockRefPtr<TCPSocket> from_tuple(IPv4SocketTuple const& tuple);
+    static RefPtr<TCPSocket> from_tuple(IPv4SocketTuple const& tuple);
 
-    static MutexProtected<HashMap<IPv4SocketTuple, LockRefPtr<TCPSocket>>>& closing_sockets();
+    static MutexProtected<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
-    ErrorOr<NonnullLockRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
+    ErrorOr<NonnullRefPtr<TCPSocket>> try_create_client(IPv4Address const& local_address, u16 local_port, IPv4Address const& peer_address, u16 peer_port);
     void set_originator(TCPSocket& originator) { m_originator = originator; }
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
-    void release_for_accept(NonnullLockRefPtr<TCPSocket>);
+    void release_for_accept(NonnullRefPtr<TCPSocket>);
 
     void retransmit_packets();
 
@@ -186,7 +186,7 @@ private:
     void dequeue_for_retransmit();
 
     LockWeakPtr<TCPSocket> m_originator;
-    HashMap<IPv4SocketTuple, NonnullLockRefPtr<TCPSocket>> m_pending_release_for_accept;
+    HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
     Error m_error { Error::None };
     LockRefPtr<NetworkAdapter> m_adapter;
