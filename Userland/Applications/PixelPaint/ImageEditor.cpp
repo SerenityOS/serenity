@@ -30,7 +30,7 @@ constexpr int marching_ant_length = 4;
 
 ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
     : m_image(move(image))
-    , m_title("Untitled")
+    , m_title("Untitled"_string.release_value_but_fixme_should_propagate_errors())
     , m_gui_event_loop(Core::EventLoop::current())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -103,7 +103,7 @@ bool ImageEditor::redo()
     return true;
 }
 
-void ImageEditor::set_title(DeprecatedString title)
+void ImageEditor::set_title(String title)
 {
     m_title = move(title);
     if (on_title_change)
@@ -113,7 +113,7 @@ void ImageEditor::set_title(DeprecatedString title)
 void ImageEditor::set_path(DeprecatedString path)
 {
     m_path = move(path);
-    set_title(LexicalPath::title(m_path));
+    set_title(String::from_deprecated_string(LexicalPath::title(m_path)).release_value_but_fixme_should_propagate_errors());
 }
 
 void ImageEditor::set_modified(DeprecatedString action_text)
@@ -761,7 +761,7 @@ void ImageEditor::save_project()
 
 void ImageEditor::save_project_as()
 {
-    auto response = FileSystemAccessClient::Client::the().save_file(window(), m_title, "pp");
+    auto response = FileSystemAccessClient::Client::the().save_file(window(), m_title.to_deprecated_string(), "pp");
     if (response.is_error())
         return;
     auto file = response.release_value();

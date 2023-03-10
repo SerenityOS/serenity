@@ -52,9 +52,8 @@ public:
     DeprecatedString const& path() const { return m_path; }
     void set_path(DeprecatedString);
 
-    DeprecatedString const& title() const { return m_title; }
-    void set_title(DeprecatedString);
-    void set_title(String const& title) { set_title(title.to_deprecated_string()); }
+    String const& title() const { return m_title; }
+    void set_title(String);
 
     void add_guide(NonnullRefPtr<Guide> guide) { m_guides.append(guide); }
     void remove_guide(Guide const& guide)
@@ -83,7 +82,7 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
-    Function<void(DeprecatedString const&)> on_title_change;
+    Function<void(String const&)> on_title_change;
 
     Function<void(Gfx::IntPoint)> on_image_mouse_position_change;
 
@@ -170,7 +169,7 @@ private:
     GUI::UndoStack m_undo_stack;
 
     DeprecatedString m_path;
-    DeprecatedString m_title;
+    String m_title;
 
     Vector<NonnullRefPtr<Guide>> m_guides;
     bool m_show_guides { true };
