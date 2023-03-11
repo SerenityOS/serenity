@@ -118,6 +118,7 @@ public:
 
     Core::EventLoop& gui_event_loop() { return m_gui_event_loop; }
 
+    void set_status_info_to_color_at_mouse_position(Gfx::IntPoint position, bool sample_all_layers);
     void set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers);
 
     void set_modified(DeprecatedString action_text);
@@ -160,6 +161,8 @@ private:
     Gfx::IntRect mouse_indicator_rect_y() const;
 
     void paint_selection(Gfx::Painter&);
+
+    Optional<Color> color_from_position(Gfx::IntPoint position, bool sample_all_layers);
 
     NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;

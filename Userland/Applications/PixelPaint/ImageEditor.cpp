@@ -337,29 +337,44 @@ GUI::MouseEvent ImageEditor::event_adjusted_for_layer(GUI::MouseEvent const& eve
     };
 }
 
-void ImageEditor::set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers = false)
+Optional<Color> ImageEditor::color_from_position(Gfx::IntPoint position, bool sample_all_layers)
 {
-    auto position = event.position();
     Color color;
-    auto layer = active_layer();
+    auto* layer = active_layer();
     if (sample_all_layers) {
         color = image().color_at(position);
     } else {
         if (!layer || !layer->rect().contains(position))
-            return;
+            return {};
         color = layer->currently_edited_bitmap().get_pixel(position);
     }
+    return color;
+}
 
-    set_appended_status_info(DeprecatedString::formatted("R:{}, G:{}, B:{}, A:{} [{}]", color.red(), color.green(), color.blue(), color.alpha(), color.to_deprecated_string()));
+void ImageEditor::set_status_info_to_color_at_mouse_position(Gfx::IntPoint position, bool sample_all_layers)
+{
+    auto const color = color_from_position(position, sample_all_layers);
+    if (!color.has_value())
+        return;
+
+    set_appended_status_info(DeprecatedString::formatted("R:{}, G:{}, B:{}, A:{} [{}]", color->red(), color->green(), color->blue(), color->alpha(), color->to_deprecated_string()));
+}
+
+void ImageEditor::set_editor_color_to_color_at_mouse_position(GUI::MouseEvent const& event, bool sample_all_layers = false)
+{
+    auto const color = color_from_position(event.position(), sample_all_layers);
+
+    if (!color.has_value())
+        return;
 
     // We picked a transparent pixel, do nothing.
-    if (!color.alpha())
+    if (!color->alpha())
         return;
 
     if (event.buttons() & GUI::MouseButton::Primary)
-        set_primary_color(color);
+        set_primary_color(*color);
     if (event.buttons() & GUI::MouseButton::Secondary)
-        set_secondary_color(color);
+        set_secondary_color(*color);
 }
 
 void ImageEditor::mousedown_event(GUI::MouseEvent& event)
