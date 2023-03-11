@@ -258,8 +258,8 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     }
 
     if (request == "dump-local-storage") {
-        if (auto* doc = page().top_level_browsing_context().active_document())
-            doc->window().local_storage()->dump();
+        if (auto* document = page().top_level_browsing_context().active_document())
+            document->window().local_storage().release_value_but_fixme_should_propagate_errors()->dump();
     }
 }
 
@@ -549,14 +549,14 @@ void ConnectionFromClient::set_window_size(Gfx::IntSize size)
 Messages::WebContentServer::GetLocalStorageEntriesResponse ConnectionFromClient::get_local_storage_entries()
 {
     auto* document = page().top_level_browsing_context().active_document();
-    auto local_storage = document->window().local_storage();
+    auto local_storage = document->window().local_storage().release_value_but_fixme_should_propagate_errors();
     return local_storage->map();
 }
 
 Messages::WebContentServer::GetSessionStorageEntriesResponse ConnectionFromClient::get_session_storage_entries()
 {
     auto* document = page().top_level_browsing_context().active_document();
-    auto session_storage = document->window().session_storage();
+    auto session_storage = document->window().session_storage().release_value_but_fixme_should_propagate_errors();
     return session_storage->map();
 }
 

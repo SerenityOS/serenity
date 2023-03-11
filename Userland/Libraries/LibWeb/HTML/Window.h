@@ -115,8 +115,8 @@ public:
 
     void fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted);
 
-    JS::NonnullGCPtr<HTML::Storage> local_storage();
-    JS::NonnullGCPtr<HTML::Storage> session_storage();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> local_storage();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> session_storage();
 
     void start_an_idle_period();
 

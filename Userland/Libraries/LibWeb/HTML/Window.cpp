@@ -705,27 +705,35 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
-JS::NonnullGCPtr<HTML::Storage> Window::local_storage()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> Window::local_storage()
 {
     // FIXME: Implement according to spec.
+    auto& vm = this->vm();
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> local_storage_per_origin;
-    auto storage = local_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(realm()).release_value_but_fixme_should_propagate_errors();
-    });
-    return *storage;
+    auto storage = TRY_OR_THROW_OOM(vm, local_storage_per_origin.try_ensure(associated_document().origin(), [this]() -> ErrorOr<JS::Handle<HTML::Storage>> {
+        auto storage_or_exception = HTML::Storage::create(realm());
+        if (storage_or_exception.is_exception())
+            return Error::from_errno(ENOMEM);
+        return *storage_or_exception.release_value();
+    }));
+    return JS::NonnullGCPtr { *storage };
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-sessionstorage
-JS::NonnullGCPtr<HTML::Storage> Window::session_storage()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> Window::session_storage()
 {
     // FIXME: Implement according to spec.
+    auto& vm = this->vm();
 
     static HashMap<Origin, JS::Handle<HTML::Storage>> session_storage_per_origin;
-    auto storage = session_storage_per_origin.ensure(associated_document().origin(), [this]() -> JS::Handle<HTML::Storage> {
-        return *HTML::Storage::create(realm()).release_value_but_fixme_should_propagate_errors();
-    });
-    return *storage;
+    auto storage = TRY_OR_THROW_OOM(vm, session_storage_per_origin.try_ensure(associated_document().origin(), [this]() -> ErrorOr<JS::Handle<HTML::Storage>> {
+        auto storage_or_exception = HTML::Storage::create(realm());
+        if (storage_or_exception.is_exception())
+            return Error::from_errno(ENOMEM);
+        return *storage_or_exception.release_value();
+    }));
+    return JS::NonnullGCPtr { *storage };
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#transient-activation
