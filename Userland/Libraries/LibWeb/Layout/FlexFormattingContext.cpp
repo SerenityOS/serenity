@@ -972,10 +972,14 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
             else if (used_flex_factor == FlexFactor::FlexShrinkFactor) {
                 // For every unfrozen item on the line, multiply its flex shrink factor by its inner flex base size, and note this as its scaled flex shrink factor.
                 for (auto& item : line.items) {
+                    if (item.frozen)
+                        continue;
                     item.scaled_flex_shrink_factor = item.flex_factor.value() * item.flex_base_size.value();
                 }
                 auto sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line = line.sum_of_scaled_flex_shrink_factor_of_unfrozen_items();
                 for (auto& item : line.items) {
+                    if (item.frozen)
+                        continue;
                     // Find the ratio of the item’s scaled flex shrink factor to the sum of the scaled flex shrink factors of all unfrozen items on the line.
                     float ratio = 1.0f;
                     if (sum_of_scaled_flex_shrink_factors_of_all_unfrozen_items_on_line != 0)
