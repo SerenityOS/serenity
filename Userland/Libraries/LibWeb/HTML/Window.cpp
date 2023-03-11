@@ -858,9 +858,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
-    m_location = MUST_OR_THROW_OOM(heap().allocate<Location>(realm, realm));
-    m_navigator = MUST_OR_THROW_OOM(heap().allocate<Navigator>(realm, realm));
-
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
     // FIXME: These should be native accessors, not properties
@@ -959,10 +956,14 @@ void Window::set_name(String const& name)
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location
-JS::NonnullGCPtr<Location> Window::location() const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Location>> Window::location()
 {
+    auto& realm = this->realm();
+
     // The Window object's location getter steps are to return this's Location object.
-    return *m_location;
+    if (!m_location)
+        m_location = MUST_OR_THROW_OOM(heap().allocate<Location>(realm, realm));
+    return JS::NonnullGCPtr { *m_location };
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-history
@@ -1068,10 +1069,14 @@ WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open(Optional<String> 
 }
 
 // https://html.spec.whatwg.org/multipage/system-state.html#dom-navigator
-JS::NonnullGCPtr<Navigator> Window::navigator() const
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> Window::navigator()
 {
+    auto& realm = this->realm();
+
     // The navigator and clientInformation getter steps are to return this's associated Navigator.
-    return *m_navigator;
+    if (!m_navigator)
+        m_navigator = MUST_OR_THROW_OOM(heap().allocate<Navigator>(realm, realm));
+    return JS::NonnullGCPtr { *m_navigator };
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-alert
@@ -1470,8 +1475,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HighResolutionTime::Performance>> Window::p
 // https://w3c.github.io/webcrypto/#dom-windoworworkerglobalscope-crypto
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> Window::crypto()
 {
+    auto& realm = this->realm();
+
     if (!m_crypto)
-        m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm(), realm()));
+        m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm, realm));
     return JS::NonnullGCPtr { *m_crypto };
 }
 
@@ -1567,7 +1574,8 @@ size_t Window::document_tree_child_browsing_context_count() const
 JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
 {
     auto* impl = TRY(impl_from(vm));
-    TRY(impl->m_location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
+    auto location = TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->location(); }));
+    TRY(location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
     return JS::js_undefined();
 }
 

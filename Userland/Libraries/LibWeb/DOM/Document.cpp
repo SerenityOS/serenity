@@ -1673,7 +1673,7 @@ bool Document::is_active() const
 }
 
 // https://html.spec.whatwg.org/multipage/history.html#dom-document-location
-HTML::Location* Document::location()
+WebIDL::ExceptionOr<JS::GCPtr<HTML::Location>> Document::location()
 {
     // The Document object's location attribute's getter must return this Document object's relevant global object's Location object,
     // if this Document object is fully active, and null otherwise.
@@ -1681,7 +1681,7 @@ HTML::Location* Document::location()
     if (!is_fully_active())
         return nullptr;
 
-    return window().location();
+    return TRY(window().location());
 }
 
 // https://html.spec.whatwg.org/multipage/interaction.html#dom-document-hidden

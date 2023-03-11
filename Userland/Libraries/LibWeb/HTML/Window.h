@@ -139,7 +139,7 @@ public:
     JS::NonnullGCPtr<DOM::Document const> document() const;
     String name() const;
     void set_name(String const&);
-    JS::NonnullGCPtr<Location> location() const;
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Location>> location();
     JS::NonnullGCPtr<History> history() const;
     void focus();
 
@@ -150,7 +150,7 @@ public:
     JS::GCPtr<DOM::Element const> frame_element() const;
     WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
 
-    JS::NonnullGCPtr<Navigator> navigator() const;
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> navigator();
 
     void alert(String const& message = {});
     bool confirm(Optional<String> const& message);
