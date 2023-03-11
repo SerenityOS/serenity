@@ -71,6 +71,19 @@ else
     DISK_SIZE_BYTES="$SERENITY_DISK_SIZE_BYTES"
 fi
 
+nearest_power_of_2() {
+    local n=$1
+    local p=1
+    while [ $p -lt "$n" ]; do
+        p=$((p*2))
+    done
+    echo $p
+}
+if [ "$SERENITY_ARCH" = "aarch64" ]; then
+    # The Aarch64 port loads from an SD card, which must have a size that is a power of 2 
+    DISK_SIZE_BYTES=$(nearest_power_of_2 "$DISK_SIZE_BYTES")
+fi
+
 USE_EXISTING=0
 
 if [ -f _disk_image ]; then
