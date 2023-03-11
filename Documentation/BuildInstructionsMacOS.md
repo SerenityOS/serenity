@@ -34,6 +34,10 @@ brew install gcc@12
 
 # Notes
 
+You can use both Intel and Apple Silicon Macs to run the x86-64 version of SerenityOS. You do not
+need to install Rosetta for this. An emulator is used when running on an Apple Silicon, so Serenity
+will be slower compared to running natively with hardware-assisted virtualization on an Intel machine.
+
 If you're building on M1 Mac and have Homebrew installed in both Rosetta and native environments,
 you have to make sure that required packages are installed only in one of the environments. Otherwise,
 these installations can conflict during the build process, which is manifested in hard to diagnose issues.
