@@ -8,7 +8,7 @@ list(APPEND REQUIRED_TARGETS
 )
 list(APPEND RECOMMENDED_TARGETS
     adjtime aplay abench asctl bt checksum chres cksum copy fortune gunzip gzip init install keymap lsirq lsof lspci lzcat man mknod mktemp
-    nc netstat notify ntpquery open passwd pls printf pro shot strings tar tt unzip wallpaper zip
+    nc netstat notify ntpquery open passwd pls printf pro shot strings tar tt unzip wallpaper xzcat zip
 )
 
 # FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
@@ -138,6 +138,7 @@ target_link_libraries(wallpaper PRIVATE LibGfx LibGUI)
 target_link_libraries(wasm PRIVATE LibWasm LibLine LibJS)
 target_link_libraries(wsctl PRIVATE LibGUI LibIPC)
 target_link_libraries(xml PRIVATE LibXML)
+target_link_libraries(xzcat PRIVATE LibCompress)
 target_link_libraries(zip PRIVATE LibArchive LibCompress LibCrypto)
 
 # FIXME: Link this file into headless-browser without compiling it again.
