@@ -117,7 +117,7 @@ bool Node::establishes_stacking_context() const
 
     if (!has_style())
         return false;
-    if (dom_node() == &document().root())
+    if (is_root_element() || dom_node() == &document().root())
         return true;
     auto position = computed_values().position();
 
