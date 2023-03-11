@@ -677,8 +677,11 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
             if (layer->is_selected())
                 selected_layer_index = i;
 
-            Gfx::IntPoint new_location(scale_x * new_layer->location().x(), scale_y * new_layer->location().y());
-            TRY(new_layer->resize(new_size, new_location, scaling_mode, Layer::NotifyClients::No));
+            auto layer_rect = layer->relative_rect().to_type<float>();
+            auto scaled_top_left = layer_rect.top_left().scaled(scale_x, scale_y).to_rounded<int>();
+            auto scaled_bottom_right = layer_rect.bottom_right().translated(1).scaled(scale_x, scale_y).to_rounded<int>();
+            auto scaled_layer_rect = Gfx::IntRect::from_two_points(scaled_top_left, scaled_bottom_right);
+            TRY(new_layer->resize(scaled_layer_rect, scaling_mode, Layer::NotifyClients::No));
 
             resized_layers.unchecked_append(new_layer);
         }
