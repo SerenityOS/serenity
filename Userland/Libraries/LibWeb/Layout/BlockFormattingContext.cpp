@@ -756,36 +756,48 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
             float_to_edge();
             side_data.y_offset = 0;
         } else {
-            auto& previous_box = side_data.current_boxes.last();
 
-            CSSPixels wanted_offset_from_edge = 0;
-            bool fits_on_line = false;
+            // NOTE: If we're in inline layout, the LineBuilder has already provided the right Y offset.
+            //       In block layout, we adjust by the side's current Y offset here.
+            if (!line_builder)
+                y_in_root += side_data.y_offset;
 
-            if (side == FloatSide::Left) {
-                wanted_offset_from_edge = side_data.current_width + box_state.margin_box_left();
-                fits_on_line = (wanted_offset_from_edge + box_state.content_width() + box_state.margin_box_right()) <= width_of_containing_block;
-            } else {
-                wanted_offset_from_edge = side_data.current_width + box_state.margin_box_right() + box_state.content_width();
-                fits_on_line = (wanted_offset_from_edge - box_state.margin_box_left()) >= 0;
+            bool did_touch_preceding_float = false;
+            bool did_place_next_to_preceding_float = false;
+
+            // Walk all currently tracked floats on the side we're floating towards.
+            // We're looking for the innermost preceding float that intersects vertically with `box`.
+            for (auto& preceding_float : side_data.current_boxes.in_reverse()) {
+                auto const preceding_float_rect = margin_box_rect_in_ancestor_coordinate_space(preceding_float.box, root(), m_state);
+                if (!preceding_float_rect.contains_vertically(y_in_root))
+                    continue;
+                // We found a preceding float that intersects vertically with the current float.
+                // Now we need to find out if there's enough inline-axis space to stack them next to each other.
+                auto const& preceding_float_state = m_state.get(preceding_float.box);
+                CSSPixels tentative_offset_from_edge = 0;
+                bool fits_next_to_preceding_float = false;
+                if (side == FloatSide::Left) {
+                    tentative_offset_from_edge = preceding_float.offset_from_edge + preceding_float_state.content_width() + preceding_float_state.margin_box_right() + box_state.margin_box_left();
+                    fits_next_to_preceding_float = (tentative_offset_from_edge + box_state.content_width() + box_state.margin_box_right()) <= width_of_containing_block;
+                } else {
+                    tentative_offset_from_edge = preceding_float.offset_from_edge + preceding_float_state.margin_box_left() + box_state.margin_box_right() + box_state.content_width();
+                    fits_next_to_preceding_float = tentative_offset_from_edge >= 0;
+                }
+                did_touch_preceding_float = true;
+                if (!fits_next_to_preceding_float)
+                    continue;
+                offset_from_edge = tentative_offset_from_edge;
+                did_place_next_to_preceding_float = true;
+                break;
             }
 
-            if (fits_on_line) {
-                auto const previous_rect = margin_box_rect_in_ancestor_coordinate_space(previous_box.box, root(), m_state);
-                // NOTE: If we're in inline layout, the LineBuilder has already provided the right Y offset.
-                //       In block layout, we adjust by the side's current Y offset here.
-                if (!line_builder)
-                    y_in_root += side_data.y_offset;
-                if (previous_rect.contains_vertically(y_in_root)) {
-                    // This box touches another already floating box. Stack after others.
-                    offset_from_edge = wanted_offset_from_edge;
-                } else {
-                    // This box does not touch another floating box, go all the way to the edge.
-                    float_to_edge();
+            if (!did_touch_preceding_float) {
+                // This box does not touch another floating box, go all the way to the edge.
+                float_to_edge();
 
-                    // Also, forget all previous boxes floated to this side while since they're no longer relevant.
-                    side_data.clear();
-                }
-            } else {
+                // Also, forget all previous boxes floated to this side while since they're no longer relevant.
+                side_data.clear();
+            } else if (!did_place_next_to_preceding_float) {
                 // We ran out of horizontal space on this "float line", and need to break.
                 float_to_edge();
                 CSSPixels lowest_margin_edge = 0;
