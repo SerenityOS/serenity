@@ -855,7 +855,7 @@ void Formatter::visit(const AST::Tilde* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append(node->text());
+    current_builder().append(node->text().release_value_but_fixme_should_propagate_errors());
     visited(node);
 }
 

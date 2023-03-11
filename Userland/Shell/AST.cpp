@@ -107,10 +107,16 @@ ErrorOr<void> AK::Formatter<Shell::AST::Command>::format(FormatBuilder& builder,
 namespace Shell::AST {
 
 template<typename... Args>
-static inline void print_indented(int indent, CheckedFormatString<Args...> format, Args&&... args)
+static inline ErrorOr<void> print_indented(int indent, CheckedFormatString<Args...> format, Args&&... args)
 {
-    auto str = DeprecatedString::formatted(format.view(), forward<Args>(args)...);
-    dbgln("{: >{}}", str, str.length() + indent * 2);
+    // FIXME: Don't allocate a temporary string here à la
+    //        ```
+    //        dbg("{: >{}}","",indent*2);
+    //        dbgln(format.view(),forward<Args>(args)...);
+    //        ```
+    String str = TRY(String::formatted(format.view(), forward<Args>(args)...));
+    dbgln("{: >{}}", str, str.bytes().size() + indent * 2);
+    return {};
 }
 
 static inline Optional<Position> merge_positions(Optional<Position> const& left, Optional<Position> const& right)
@@ -171,9 +177,9 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
             return move(input_value);
         }
 
-        auto index_values = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+        auto index_values = TRY(value->resolve_as_list(shell));
         Vector<size_t> indices;
-        indices.ensure_capacity(index_values.size());
+        TRY(indices.try_ensure_capacity(index_values.size()));
 
         size_t i = 0;
         for (auto& value : index_values) {
@@ -198,9 +204,9 @@ static ErrorOr<String> resolve_slices(RefPtr<Shell> shell, String&& input_value,
 
         StringBuilder builder { indices.size() };
         for (auto& index : indices)
-            builder.append(input_value.bytes_as_string_view()[index]);
+            TRY(builder.try_append(input_value.bytes_as_string_view()[index]));
 
-        input_value = builder.to_string().release_value_but_fixme_should_propagate_errors();
+        input_value = TRY(builder.to_string());
     }
 
     return move(input_value);
@@ -221,9 +227,9 @@ static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String
             return move(values);
         }
 
-        auto index_values = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+        auto index_values = TRY(value->resolve_as_list(shell));
         Vector<size_t> indices;
-        indices.ensure_capacity(index_values.size());
+        TRY(indices.try_ensure_capacity(index_values.size()));
 
         size_t i = 0;
         for (auto& value : index_values) {
@@ -247,7 +253,7 @@ static ErrorOr<Vector<String>> resolve_slices(RefPtr<Shell> shell, Vector<String
         }
 
         Vector<String> result;
-        result.ensure_capacity(indices.size());
+        TRY(result.try_ensure_capacity(indices.size()));
         for (auto& index : indices)
             result.unchecked_append(values[index]);
 
@@ -288,7 +294,7 @@ ErrorOr<void> Node::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iterati
     }
 
     if (value->is_list_without_resolution()) {
-        auto list = value->resolve_without_cast(shell).release_value_but_fixme_should_propagate_errors();
+        auto list = TRY(value->resolve_without_cast(shell));
         for (auto& element : static_cast<ListValue*>(list.ptr())->values()) {
             if (TRY(callback(element)) == IterationDecision::Break)
                 break;
@@ -296,7 +302,7 @@ ErrorOr<void> Node::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iterati
         return {};
     }
 
-    auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto list = TRY(value->resolve_as_list(shell));
     for (auto& element : list) {
         if (TRY(callback(make_ref_counted<StringValue>(move(element)))) == IterationDecision::Break)
             break;
@@ -319,7 +325,7 @@ ErrorOr<Vector<Command>> Node::to_lazy_evaluated_commands(RefPtr<Shell> shell)
 
 ErrorOr<void> Node::dump(int level) const
 {
-    print_indented(level,
+    return print_indented(level,
         "{} at {}:{} (from {}.{} to {}.{})",
         class_name(),
         m_position.start_offset,
@@ -328,8 +334,6 @@ ErrorOr<void> Node::dump(int level) const
         m_position.start_line.line_column,
         m_position.end_line.line_number,
         m_position.end_line.line_column);
-
-    return {};
 }
 
 Node::Node(Position position)
@@ -494,8 +498,8 @@ ErrorOr<RefPtr<Value>> ListConcatenate::run(RefPtr<Shell> shell)
 
         if (result->is_command() || element_value->is_command()) {
             auto joined_commands = join_commands(
-                result->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors(),
-                element_value->resolve_as_commands(shell).release_value_but_fixme_should_propagate_errors());
+                TRY(result->resolve_as_commands(shell)),
+                TRY(element_value->resolve_as_commands(shell)));
 
             if (joined_commands.size() == 1) {
                 auto& command = joined_commands[0];
@@ -508,13 +512,13 @@ ErrorOr<RefPtr<Value>> ListConcatenate::run(RefPtr<Shell> shell)
             Vector<NonnullRefPtr<Value>> values;
 
             if (result->is_list_without_resolution()) {
-                values.extend(static_cast<ListValue*>(result.ptr())->values());
+                TRY(values.try_extend(static_cast<ListValue*>(result.ptr())->values()));
             } else {
                 for (auto& result : TRY(result->resolve_as_list(shell)))
-                    values.append(make_ref_counted<StringValue>(result));
+                    TRY(values.try_append(make_ref_counted<StringValue>(result)));
             }
 
-            values.append(element_value);
+            TRY(values.try_append(element_value));
 
             result = make_ref_counted<ListValue>(move(values));
         }
@@ -626,7 +630,7 @@ Background::Background(Position position, NonnullRefPtr<Node> command)
 ErrorOr<void> BarewordLiteral::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "{}", m_text);
+    TRY(print_indented(level + 1, "{}", m_text));
     return {};
 }
 
@@ -821,7 +825,7 @@ ErrorOr<void> CastToList::dump(int level) const
     if (m_inner)
         TRY(m_inner->dump(level + 1));
     else
-        print_indented(level + 1, "(empty)");
+        TRY(print_indented(level + 1, "(empty)"));
     return {};
 }
 
@@ -883,7 +887,7 @@ CastToList::CastToList(Position position, RefPtr<Node> inner)
 ErrorOr<void> CloseFdRedirection::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level, "{} -> Close", m_fd);
+    TRY(print_indented(level, "{} -> Close", m_fd));
     return {};
 }
 
@@ -915,7 +919,7 @@ CloseFdRedirection::~CloseFdRedirection()
 ErrorOr<void> CommandLiteral::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(Generated command literal: {})", m_command);
+    TRY(print_indented(level + 1, "(Generated command literal: {})", m_command));
     return {};
 }
 
@@ -937,7 +941,7 @@ CommandLiteral::~CommandLiteral()
 ErrorOr<void> Comment::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "{}", m_text);
+    TRY(print_indented(level + 1, "{}", m_text));
     return {};
 }
 
@@ -965,7 +969,7 @@ Comment::~Comment()
 ErrorOr<void> ContinuationControl::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "{}", m_kind == Continue ? "(Continue)"sv : "(Break)"sv);
+    TRY(print_indented(level + 1, "{}", m_kind == Continue ? "(Continue)"sv : "(Break)"sv));
     return {};
 }
 
@@ -1047,7 +1051,7 @@ ErrorOr<RefPtr<Value>> DynamicEvaluate::run(RefPtr<Shell> shell)
     // Dynamic Evaluation behaves differently between strings and lists.
     // Strings are treated as variables, and Lists are treated as commands.
     if (result->is_string()) {
-        auto name_part = result->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+        auto name_part = TRY(result->resolve_as_list(shell));
         VERIFY(name_part.size() == 1);
         return make_ref_counted<SimpleVariableValue>(name_part[0]);
     }
@@ -1083,7 +1087,7 @@ DynamicEvaluate::~DynamicEvaluate()
 ErrorOr<void> Fd2FdRedirection::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level, "{} -> {}", m_old_fd, m_new_fd);
+    TRY(print_indented(level, "{} -> {}", m_old_fd, m_new_fd));
     return {};
 }
 
@@ -1115,16 +1119,16 @@ Fd2FdRedirection::~Fd2FdRedirection()
 ErrorOr<void> FunctionDeclaration::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(name: {})\n", m_name.name);
-    print_indented(level + 1, "(argument names)");
+    TRY(print_indented(level + 1, "(name: {})\n", m_name.name));
+    TRY(print_indented(level + 1, "(argument names)"));
     for (auto& arg : m_arguments)
-        print_indented(level + 2, "(name: {})\n", arg.name);
+        TRY(print_indented(level + 2, "(name: {})\n", arg.name));
 
-    print_indented(level + 1, "(body)");
+    TRY(print_indented(level + 1, "(body)"));
     if (m_block)
         TRY(m_block->dump(level + 2));
     else
-        print_indented(level + 2, "(null)");
+        TRY(print_indented(level + 2, "(null)"));
     return {};
 }
 
@@ -1206,18 +1210,18 @@ ErrorOr<void> ForLoop::dump(int level) const
 {
     TRY(Node::dump(level));
     if (m_variable.has_value())
-        print_indented(level + 1, "iterating with {} in", m_variable->name);
+        TRY(print_indented(level + 1, "iterating with {} in", m_variable->name));
     if (m_index_variable.has_value())
-        print_indented(level + 1, "with index name {} in", m_index_variable->name);
+        TRY(print_indented(level + 1, "with index name {} in", m_index_variable->name));
     if (m_iterated_expression)
         TRY(m_iterated_expression->dump(level + 2));
     else
-        print_indented(level + 2, "(ever)");
-    print_indented(level + 1, "Running");
+        TRY(print_indented(level + 2, "(ever)"));
+    TRY(print_indented(level + 1, "Running"));
     if (m_block)
         TRY(m_block->dump(level + 2));
     else
-        print_indented(level + 2, "(null)");
+        TRY(print_indented(level + 2, "(null)"));
     return {};
 }
 
@@ -1374,7 +1378,7 @@ ForLoop::~ForLoop()
 ErrorOr<void> Glob::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "{}", m_text);
+    TRY(print_indented(level + 1, "{}", m_text));
     return {};
 }
 
@@ -1405,19 +1409,19 @@ Glob::~Glob()
 ErrorOr<void> Heredoc::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(End Key)");
-    print_indented(level + 2, "{}", m_end);
-    print_indented(level + 1, "(Allows Interpolation)");
-    print_indented(level + 2, "{}", m_allows_interpolation);
+    TRY(print_indented(level + 1, "(End Key)"));
+    TRY(print_indented(level + 2, "{}", m_end));
+    TRY(print_indented(level + 1, "(Allows Interpolation)"));
+    TRY(print_indented(level + 2, "{}", m_allows_interpolation));
     if (!evaluates_to_string()) {
-        print_indented(level + 1, "(Target FD)");
-        print_indented(level + 2, "{}", *m_target_fd);
+        TRY(print_indented(level + 1, "(Target FD)"));
+        TRY(print_indented(level + 2, "{}", *m_target_fd));
     }
-    print_indented(level + 1, "(Contents)");
+    TRY(print_indented(level + 1, "(Contents)"));
     if (m_contents)
         TRY(m_contents->dump(level + 2));
     else
-        print_indented(level + 2, "(null)");
+        TRY(print_indented(level + 2, "(null)"));
     return {};
 }
 
@@ -1534,43 +1538,42 @@ Heredoc::~Heredoc()
 ErrorOr<void> HistoryEvent::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "Event Selector");
+    TRY(print_indented(level + 1, "Event Selector"));
     switch (m_selector.event.kind) {
     case HistorySelector::EventKind::IndexFromStart:
-        print_indented(level + 2, "IndexFromStart");
+        TRY(print_indented(level + 2, "IndexFromStart"));
         break;
     case HistorySelector::EventKind::IndexFromEnd:
-        print_indented(level + 2, "IndexFromEnd");
+        TRY(print_indented(level + 2, "IndexFromEnd"));
         break;
     case HistorySelector::EventKind::ContainingStringLookup:
-        print_indented(level + 2, "ContainingStringLookup");
+        TRY(print_indented(level + 2, "ContainingStringLookup"));
         break;
     case HistorySelector::EventKind::StartingStringLookup:
-        print_indented(level + 2, "StartingStringLookup");
+        TRY(print_indented(level + 2, "StartingStringLookup"));
         break;
     }
-    print_indented(level + 3, "{}({})", m_selector.event.index, m_selector.event.text);
+    TRY(print_indented(level + 3, "{}({})", m_selector.event.index, m_selector.event.text));
 
-    print_indented(level + 1, "Word Selector");
-    auto print_word_selector = [&](HistorySelector::WordSelector const& selector) {
+    TRY(print_indented(level + 1, "Word Selector"));
+    auto print_word_selector = [&](HistorySelector::WordSelector const& selector) -> ErrorOr<void> {
         switch (selector.kind) {
         case HistorySelector::WordSelectorKind::Index:
-            print_indented(level + 3, "Index {}", selector.selector);
-            break;
+            return print_indented(level + 3, "Index {}", selector.selector);
         case HistorySelector::WordSelectorKind::Last:
-            print_indented(level + 3, "Last");
-            break;
+            return print_indented(level + 3, "Last");
         }
+        return {};
     };
 
     if (m_selector.word_selector_range.end.has_value()) {
-        print_indented(level + 2, "Range Start");
-        print_word_selector(m_selector.word_selector_range.start);
-        print_indented(level + 2, "Range End");
-        print_word_selector(m_selector.word_selector_range.end.value());
+        TRY(print_indented(level + 2, "Range Start"));
+        TRY(print_word_selector(m_selector.word_selector_range.start));
+        TRY(print_indented(level + 2, "Range End"));
+        TRY(print_word_selector(m_selector.word_selector_range.end.value()));
     } else {
-        print_indented(level + 2, "Direct Address");
-        print_word_selector(m_selector.word_selector_range.start);
+        TRY(print_indented(level + 2, "Direct Address"));
+        TRY(print_word_selector(m_selector.word_selector_range.start));
     }
 
     return {};
@@ -1693,7 +1696,7 @@ ErrorOr<void> Execute::dump(int level) const
 {
     TRY(Node::dump(level));
     if (m_capture_stdout)
-        print_indented(level + 1, "(Capturing stdout)");
+        TRY(print_indented(level + 1, "(Capturing stdout)"));
     TRY(m_command->dump(level + 1));
 
     return {};
@@ -1947,18 +1950,18 @@ Execute::~Execute()
 ErrorOr<void> IfCond::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(++level, "Condition");
+    TRY(print_indented(++level, "Condition"));
     TRY(m_condition->dump(level + 1));
-    print_indented(level, "True Branch");
+    TRY(print_indented(level, "True Branch"));
     if (m_true_branch)
         TRY(m_true_branch->dump(level + 1));
     else
-        print_indented(level + 1, "(empty)");
-    print_indented(level, "False Branch");
+        TRY(print_indented(level + 1, "(empty)"));
+    TRY(print_indented(level, "False Branch"));
     if (m_false_branch)
         TRY(m_false_branch->dump(level + 1));
     else
-        print_indented(level + 1, "(empty)");
+        TRY(print_indented(level + 1, "(empty)"));
 
     return {};
 }
@@ -2061,9 +2064,9 @@ IfCond::~IfCond()
 ErrorOr<void> ImmediateExpression::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(function)"sv);
-    print_indented(level + 2, "{}", m_function.name);
-    print_indented(level + 1, "(arguments)");
+    TRY(print_indented(level + 1, "(function)"sv));
+    TRY(print_indented(level + 2, "{}", m_function.name));
+    TRY(print_indented(level + 1, "(arguments)"));
     for (auto& argument : arguments())
         TRY(argument->dump(level + 2));
 
@@ -2221,10 +2224,10 @@ Join::~Join()
 ErrorOr<void> MatchExpr::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(expression: {})", m_expr_name);
+    TRY(print_indented(level + 1, "(expression: {})", m_expr_name));
     TRY(m_matched_expr->dump(level + 2));
-    print_indented(level + 1, "(named: {})", m_expr_name);
-    print_indented(level + 1, "(entries)");
+    TRY(print_indented(level + 1, "(named: {})", m_expr_name));
+    TRY(print_indented(level + 1, "(entries)"));
     for (auto& entry : m_entries) {
         StringBuilder builder;
         builder.append("(match"sv);
@@ -2242,7 +2245,7 @@ ErrorOr<void> MatchExpr::dump(int level) const
         } else {
             builder.append(')');
         }
-        print_indented(level + 2, "{}", builder.string_view());
+        TRY(print_indented(level + 2, "{}", builder.string_view()));
         TRY(entry.options.visit(
             [&](Vector<NonnullRefPtr<Node>> const& options) -> ErrorOr<void> {
                 for (auto& option : options)
@@ -2251,14 +2254,14 @@ ErrorOr<void> MatchExpr::dump(int level) const
             },
             [&](Vector<Regex<ECMA262>> const& options) -> ErrorOr<void> {
                 for (auto& option : options)
-                    print_indented(level + 3, "(regex: {})", option.pattern_value);
+                    TRY(print_indented(level + 3, "(regex: {})", option.pattern_value));
                 return {};
             }));
-        print_indented(level + 2, "(execute)");
+        TRY(print_indented(level + 2, "(execute)"));
         if (entry.body)
             TRY(entry.body->dump(level + 3));
         else
-            print_indented(level + 3, "(nothing)"sv);
+            TRY(print_indented(level + 3, "(nothing)"sv));
     }
     return {};
 }
@@ -2269,9 +2272,9 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto list = value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto list = TRY(value->resolve_as_list(shell));
 
-    auto list_matches = [&](auto&& pattern, auto& spans) {
+    auto list_matches = [&](auto&& pattern, auto& spans) -> ErrorOr<bool> {
         if constexpr (IsSame<RemoveCVReference<decltype(pattern)>, Regex<ECMA262>>) {
             if (list.size() != 1)
                 return false;
@@ -2283,7 +2286,7 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
             spans.ensure_capacity(match.n_capture_groups);
             for (size_t i = 0; i < match.n_capture_groups; ++i) {
                 auto& capture = match.capture_group_matches[0][i];
-                spans.append(capture.view.to_string().release_value_but_fixme_should_propagate_errors());
+                TRY(spans.try_append(TRY(capture.view.to_string())));
             }
             return true;
         } else {
@@ -2295,39 +2298,36 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
                 if (!list[i].bytes_as_string_view().matches(pattern[i], mask_spans))
                     return false;
                 for (auto& span : mask_spans)
-                    spans.append(list[i].substring_from_byte_offset(span.start, span.length).release_value_but_fixme_should_propagate_errors());
+                    TRY(spans.try_append(TRY(list[i].substring_from_byte_offset(span.start, span.length))));
             }
 
             return true;
         }
     };
 
-    auto resolve_pattern = [&](auto& option) -> decltype(auto) {
+    auto resolve_pattern = [&](auto& option) -> ErrorOr<Conditional<IsSame<RemoveCVReference<decltype(option)>, Regex<ECMA262>>, Regex<ECMA262>, Vector<String>>> {
         if constexpr (IsSame<RemoveCVReference<decltype(option)>, Regex<ECMA262>>) {
-            return ErrorOr<Regex<ECMA262>>(move(option));
+            return move(option);
         } else {
             Vector<String> pattern;
             if (option->is_glob()) {
-                pattern.append(static_cast<Glob const*>(option.ptr())->text());
+                TRY(pattern.try_append(static_cast<Glob const*>(option.ptr())->text()));
             } else if (option->is_bareword()) {
-                pattern.append(static_cast<BarewordLiteral const*>(option.ptr())->text());
+                TRY(pattern.try_append(static_cast<BarewordLiteral const*>(option.ptr())->text()));
             } else {
                 auto list_or_error = option->run(shell);
                 if (list_or_error.is_error() || (shell && shell->has_any_error()))
-                    return ErrorOr<Vector<String>>(move(pattern));
+                    return pattern;
 
                 auto list = list_or_error.release_value();
-                auto result = option->for_each_entry(shell, [&](auto&& value) -> ErrorOr<IterationDecision> {
-                    pattern.extend(TRY(value->resolve_as_list(nullptr))); // Note: 'nullptr' incurs special behavior,
-                                                                          //       asking the node for a 'raw' value.
+                TRY(option->for_each_entry(shell, [&](auto&& value) -> ErrorOr<IterationDecision> {
+                    TRY(pattern.try_extend(TRY(value->resolve_as_list(nullptr)))); // Note: 'nullptr' incurs special behavior,
+                                                                                   //       asking the node for a 'raw' value.
                     return IterationDecision::Continue;
-                });
-
-                if (result.is_error())
-                    return ErrorOr<Vector<String>>(result.release_error());
+                }));
             }
 
-            return ErrorOr<Vector<String>>(move(pattern));
+            return pattern;
         }
     };
 
@@ -2339,7 +2339,7 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
         auto result = TRY(entry.options.visit([&](auto& options) -> ErrorOr<Variant<IterationDecision, RefPtr<Value>>> {
             for (auto& option : options) {
                 Vector<String> spans;
-                if (list_matches(TRY(resolve_pattern(option)), spans)) {
+                if (TRY(list_matches(TRY(resolve_pattern(option)), spans))) {
                     if (entry.body) {
                         if (entry.match_names.has_value()) {
                             size_t i = 0;
@@ -2456,7 +2456,7 @@ ErrorOr<RefPtr<Value>> Or::run(RefPtr<Shell> shell)
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    commands.last().next_chain.empend(*m_right, NodeWithAction::Or);
+    TRY(commands.last().next_chain.try_empend(*m_right, NodeWithAction::Or));
     return make_ref_counted<CommandSequenceValue>(move(commands));
 }
 
@@ -2535,11 +2535,11 @@ ErrorOr<RefPtr<Value>> Pipe::run(RefPtr<Shell> shell)
             }
         }
 
-        redirections.insert(insert_index, pipe);
+        return redirections.try_insert(insert_index, pipe);
     };
 
-    insert_at_start_or_after_last_pipe(pipe_read_end, first_in_right);
-    insert_at_start_or_after_last_pipe(pipe_write_end, last_in_left);
+    TRY(insert_at_start_or_after_last_pipe(pipe_read_end, first_in_right));
+    TRY(insert_at_start_or_after_last_pipe(pipe_write_end, last_in_left));
 
     last_in_left.should_wait = false;
     last_in_left.is_pipe_source = true;
@@ -2553,9 +2553,10 @@ ErrorOr<RefPtr<Value>> Pipe::run(RefPtr<Shell> shell)
     }
 
     Vector<Command> commands;
+    TRY(commands.try_ensure_capacity(left.size() + 2 + right.size()));
     commands.extend(left);
-    commands.append(last_in_left);
-    commands.append(first_in_right);
+    commands.unchecked_append(last_in_left);
+    commands.unchecked_append(first_in_right);
     commands.extend(right);
 
     return make_ref_counted<CommandSequenceValue>(move(commands));
@@ -2616,7 +2617,7 @@ ErrorOr<void> PathRedirectionNode::highlight_in_editor(Line::Editor& editor, She
         auto& position = m_path->position();
         auto& path = path_text[0];
         if (!path.starts_with('/'))
-            path = String::formatted("{}/{}", shell.cwd, path).release_value_but_fixme_should_propagate_errors();
+            path = TRY(String::formatted("{}/{}", shell.cwd, path));
         auto url = URL::create_with_file_scheme(path.to_deprecated_string());
         url.set_host(shell.hostname);
         editor.stylize({ position.start_offset, position.end_offset }, { Line::Style::Hyperlink(url.to_deprecated_string()) });
@@ -2654,21 +2655,21 @@ PathRedirectionNode::~PathRedirectionNode()
 ErrorOr<void> Range::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(From)");
+    TRY(print_indented(level + 1, "(From)"));
     TRY(m_start->dump(level + 2));
-    print_indented(level + 1, "(To)");
+    TRY(print_indented(level + 1, "(To)"));
     TRY(m_end->dump(level + 2));
     return {};
 }
 
 ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
 {
-    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> Vector<NonnullRefPtr<Value>> {
+    auto interpolate = [position = position()](RefPtr<Value> start, RefPtr<Value> end, RefPtr<Shell> shell) -> ErrorOr<Vector<NonnullRefPtr<Value>>> {
         Vector<NonnullRefPtr<Value>> values;
 
         if (start->is_string() && end->is_string()) {
-            auto start_str = start->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
-            auto end_str = end->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors()[0];
+            auto start_str = TRY(start->resolve_as_list(shell))[0];
+            auto end_str = TRY(end->resolve_as_list(shell))[0];
 
             Utf8View start_view { start_str }, end_view { end_str };
             if (start_view.validate() && end_view.validate()) {
@@ -2680,13 +2681,13 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
                     StringBuilder builder;
                     for (u32 code_point = start_code_point; code_point != end_code_point; code_point += step) {
                         builder.clear();
-                        builder.append_code_point(code_point);
-                        values.append(make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors()));
+                        TRY(builder.try_append_code_point(code_point));
+                        TRY(values.try_append(make_ref_counted<StringValue>(TRY(builder.to_string()))));
                     }
                     // Append the ending code point too, most shells treat this as inclusive.
                     builder.clear();
-                    builder.append_code_point(end_code_point);
-                    values.append(make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors()));
+                    TRY(builder.try_append_code_point(end_code_point));
+                    TRY(values.try_append(make_ref_counted<StringValue>(TRY(builder.to_string()))));
                 } else {
                     // Could be two numbers?
                     auto start_int = start_str.bytes_as_string_view().to_int();
@@ -2696,9 +2697,9 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
                         auto end = end_int.value();
                         auto step = start > end ? -1 : 1;
                         for (int value = start; value != end; value += step)
-                            values.append(make_ref_counted<StringValue>(String::number(value).release_value_but_fixme_should_propagate_errors()));
+                            TRY(values.try_append(make_ref_counted<StringValue>(TRY(String::number(value)))));
                         // Append the range end too, most shells treat this as inclusive.
-                        values.append(make_ref_counted<StringValue>(String::number(end).release_value_but_fixme_should_propagate_errors()));
+                        TRY(values.try_append(make_ref_counted<StringValue>(end_str)));
                     } else {
                         goto yield_start_end;
                     }
@@ -2707,8 +2708,8 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
             yield_start_end:;
                 shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Cannot interpolate between '{}' and '{}'!", start_str, end_str), position);
                 // We can't really interpolate between the two, so just yield both.
-                values.append(make_ref_counted<StringValue>(move(start_str)));
-                values.append(make_ref_counted<StringValue>(move(end_str)));
+                TRY(values.try_append(make_ref_counted<StringValue>(move(start_str))));
+                TRY(values.try_append(make_ref_counted<StringValue>(move(end_str))));
             }
 
             return values;
@@ -2729,7 +2730,7 @@ ErrorOr<RefPtr<Value>> Range::run(RefPtr<Shell> shell)
     if (!start_value || !end_value)
         return make_ref_counted<ListValue>({});
 
-    return make_ref_counted<ListValue>(interpolate(*start_value, *end_value, shell));
+    return make_ref_counted<ListValue>(TRY(interpolate(*start_value, *end_value, shell)));
 }
 
 ErrorOr<void> Range::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -2777,7 +2778,7 @@ ErrorOr<void> ReadRedirection::dump(int level) const
 {
     TRY(Node::dump(level));
     TRY(m_path->dump(level + 1));
-    print_indented(level + 1, "To {}", m_fd);
+    TRY(print_indented(level + 1, "To {}", m_fd));
     return {};
 }
 
@@ -2789,9 +2790,9 @@ ErrorOr<RefPtr<Value>> ReadRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(' ', path_segments);
+    TRY(builder.try_join(' ', path_segments));
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::Read));
+    command.redirections.append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::Read));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -2808,7 +2809,7 @@ ErrorOr<void> ReadWriteRedirection::dump(int level) const
 {
     TRY(Node::dump(level));
     TRY(m_path->dump(level + 1));
-    print_indented(level + 1, "To/From {}", m_fd);
+    TRY(print_indented(level + 1, "To/From {}", m_fd));
     return {};
 }
 
@@ -2820,9 +2821,9 @@ ErrorOr<RefPtr<Value>> ReadWriteRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(' ', path_segments);
+    TRY(builder.try_join(' ', path_segments));
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::ReadWrite));
+    command.redirections.append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::ReadWrite));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -2852,7 +2853,7 @@ ErrorOr<RefPtr<Value>> Sequence::run(RefPtr<Shell> shell)
             break;
         if (!last_command_in_sequence) {
             auto commands = TRY(entry->to_lazy_evaluated_commands(shell));
-            all_commands.extend(move(commands));
+            TRY(all_commands.try_extend(move(commands)));
             last_command_in_sequence = &all_commands.last();
             continue;
         }
@@ -2860,7 +2861,7 @@ ErrorOr<RefPtr<Value>> Sequence::run(RefPtr<Shell> shell)
         if (last_command_in_sequence->should_wait) {
             last_command_in_sequence->next_chain.append(NodeWithAction { entry, NodeWithAction::Sequence });
         } else {
-            all_commands.extend(TRY(entry->to_lazy_evaluated_commands(shell)));
+            TRY(all_commands.try_extend(TRY(entry->to_lazy_evaluated_commands(shell))));
             last_command_in_sequence = &all_commands.last();
         }
     }
@@ -3002,13 +3003,13 @@ Slice::~Slice()
 ErrorOr<void> SimpleVariable::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(Name)");
-    print_indented(level + 2, "{}", m_name);
-    print_indented(level + 1, "(Slice)");
+    TRY(print_indented(level + 1, "(Name)"));
+    TRY(print_indented(level + 2, "{}", m_name));
+    TRY(print_indented(level + 1, "(Slice)"));
     if (m_slice)
         TRY(m_slice->dump(level + 2));
     else
-        print_indented(level + 2, "(None)");
+        TRY(print_indented(level + 2, "(None)"));
     return {};
 }
 
@@ -3016,7 +3017,7 @@ ErrorOr<RefPtr<Value>> SimpleVariable::run(RefPtr<Shell>)
 {
     NonnullRefPtr<Value> value = make_ref_counted<SimpleVariableValue>(m_name);
     if (m_slice)
-        value = value->with_slices(*m_slice).release_value_but_fixme_should_propagate_errors();
+        value = TRY(value->with_slices(*m_slice));
     return value;
 }
 
@@ -3072,13 +3073,13 @@ SimpleVariable::~SimpleVariable()
 ErrorOr<void> SpecialVariable::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(Name)");
-    print_indented(level + 1, "{:c}", m_name);
-    print_indented(level + 1, "(Slice)");
+    TRY(print_indented(level + 1, "(Name)"));
+    TRY(print_indented(level + 1, "{:c}", m_name));
+    TRY(print_indented(level + 1, "(Slice)"));
     if (m_slice)
         TRY(m_slice->dump(level + 2));
     else
-        print_indented(level + 2, "(None)");
+        TRY(print_indented(level + 2, "(None)"));
     return {};
 }
 
@@ -3086,7 +3087,7 @@ ErrorOr<RefPtr<Value>> SpecialVariable::run(RefPtr<Shell>)
 {
     NonnullRefPtr<Value> value = make_ref_counted<SpecialVariableValue>(m_name);
     if (m_slice)
-        value = value->with_slices(*m_slice).release_value_but_fixme_should_propagate_errors();
+        value = TRY(value->with_slices(*m_slice));
     return value;
 }
 
@@ -3139,23 +3140,23 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
     if (shell && shell->has_any_error())
         return make_ref_counted<ListValue>({});
 
-    auto left = left_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
-    auto right = right_value->resolve_as_list(shell).release_value_but_fixme_should_propagate_errors();
+    auto left = TRY(left_value->resolve_as_list(shell));
+    auto right = TRY(right_value->resolve_as_list(shell));
 
     if (m_mode == Mode::StringExpand) {
         Vector<String> result;
-        result.ensure_capacity(left.size() + right.size());
+        TRY(result.try_ensure_capacity(left.size() + right.size()));
 
         for (auto& left_item : left)
-            result.append(left_item);
+            result.unchecked_append(left_item);
 
         if (!result.is_empty() && !right.is_empty()) {
             auto& last = result.last();
-            last = String::formatted("{}{}", last, right.first()).release_value_but_fixme_should_propagate_errors();
+            last = TRY(String::formatted("{}{}", last, right.first()));
             right.take_first();
         }
         for (auto& right_item : right)
-            result.append(right_item);
+            result.unchecked_append(right_item);
 
         return make_ref_counted<ListValue>(move(result));
     }
@@ -3166,10 +3167,10 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
         VERIFY(right.size() == 1);
 
         StringBuilder builder;
-        builder.append(left[0]);
-        builder.append(right[0]);
+        TRY(builder.try_append(left[0]));
+        TRY(builder.try_append(right[0]));
 
-        return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
+        return make_ref_counted<StringValue>(TRY(builder.to_string()));
     }
 
     // Otherwise, treat them as lists and create a list product (or just append).
@@ -3177,14 +3178,14 @@ ErrorOr<RefPtr<Value>> Juxtaposition::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     Vector<String> result;
-    result.ensure_capacity(left.size() * right.size());
+    TRY(result.try_ensure_capacity(left.size() * right.size()));
 
     StringBuilder builder;
     for (auto& left_element : left) {
         for (auto& right_element : right) {
-            builder.append(left_element);
-            builder.append(right_element);
-            result.append(builder.to_string().release_value_but_fixme_should_propagate_errors());
+            TRY(builder.try_append(left_element));
+            TRY(builder.try_append(right_element));
+            TRY(result.try_append(TRY(builder.to_string())));
             builder.clear();
         }
     }
@@ -3204,9 +3205,9 @@ ErrorOr<void> Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& sh
         auto bareword_value = TRY(TRY(m_right->run(shell))->resolve_as_list(shell))[0];
 
         StringBuilder path_builder;
-        path_builder.append(tilde_value);
-        path_builder.append('/');
-        path_builder.append(bareword_value);
+        TRY(path_builder.try_append(tilde_value));
+        TRY(path_builder.try_append('/'));
+        TRY(path_builder.try_append(bareword_value));
         auto path = path_builder.to_deprecated_string();
 
         if (Core::DeprecatedFile::exists(path)) {
@@ -3291,7 +3292,7 @@ Juxtaposition::~Juxtaposition()
 ErrorOr<void> StringLiteral::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "{}", m_text);
+    TRY(print_indented(level + 1, "{}", m_text));
     return {};
 }
 
@@ -3346,7 +3347,7 @@ ErrorOr<RefPtr<Value>> StringPartCompose::run(RefPtr<Shell> shell)
     builder.join(' ', left);
     builder.join(' ', right);
 
-    return make_ref_counted<StringValue>(builder.to_string().release_value_but_fixme_should_propagate_errors());
+    return make_ref_counted<StringValue>(TRY(builder.to_string()));
 }
 
 ErrorOr<void> StringPartCompose::highlight_in_editor(Line::Editor& editor, Shell& shell, HighlightMetadata metadata)
@@ -3381,10 +3382,10 @@ StringPartCompose::~StringPartCompose()
 ErrorOr<void> SyntaxError::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "(Error text)");
-    print_indented(level + 2, "{}", m_syntax_error_text);
-    print_indented(level + 1, "(Can be recovered from)");
-    print_indented(level + 2, "{}", m_is_continuable);
+    TRY(print_indented(level + 1, "(Error text)"));
+    TRY(print_indented(level + 2, "{}", m_syntax_error_text));
+    TRY(print_indented(level + 1, "(Can be recovered from)"));
+    TRY(print_indented(level + 2, "{}", m_is_continuable));
     return {};
 }
 
@@ -3441,7 +3442,7 @@ SyntheticNode::SyntheticNode(Position position, NonnullRefPtr<Value> value)
 ErrorOr<void> Tilde::dump(int level) const
 {
     TRY(Node::dump(level));
-    print_indented(level + 1, "{}", m_username);
+    TRY(print_indented(level + 1, "{}", m_username));
     return {};
 }
 
@@ -3480,12 +3481,12 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Tilde::complete_for_editor(Shell& sh
     return shell.complete_user(m_username, corrected_offset);
 }
 
-String Tilde::text() const
+ErrorOr<String> Tilde::text() const
 {
     StringBuilder builder;
-    builder.append('~');
-    builder.append(m_username);
-    return builder.to_string().release_value_but_fixme_should_propagate_errors();
+    TRY(builder.try_append('~'));
+    TRY(builder.try_append(m_username));
+    return builder.to_string();
 }
 
 Tilde::Tilde(Position position, String username)
@@ -3502,7 +3503,7 @@ ErrorOr<void> WriteAppendRedirection::dump(int level) const
 {
     TRY(Node::dump(level));
     TRY(m_path->dump(level + 1));
-    print_indented(level + 1, "From {}", m_fd);
+    TRY(print_indented(level + 1, "From {}", m_fd));
     return {};
 }
 
@@ -3514,9 +3515,9 @@ ErrorOr<RefPtr<Value>> WriteAppendRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(' ', path_segments);
+    TRY(builder.try_join(' ', path_segments));
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::WriteAppend));
+    TRY(command.redirections.try_append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::WriteAppend)));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3533,7 +3534,7 @@ ErrorOr<void> WriteRedirection::dump(int level) const
 {
     TRY(Node::dump(level));
     TRY(m_path->dump(level + 1));
-    print_indented(level + 1, "From {}", m_fd);
+    TRY(print_indented(level + 1, "From {}", m_fd));
     return {};
 }
 
@@ -3545,9 +3546,9 @@ ErrorOr<RefPtr<Value>> WriteRedirection::run(RefPtr<Shell> shell)
         return make_ref_counted<ListValue>({});
 
     StringBuilder builder;
-    builder.join(' ', path_segments);
+    TRY(builder.try_join(' ', path_segments));
 
-    command.redirections.append(PathRedirection::create(builder.to_string().release_value_but_fixme_should_propagate_errors(), m_fd, PathRedirection::Write));
+    TRY(command.redirections.try_append(PathRedirection::create(TRY(builder.to_string()), m_fd, PathRedirection::Write)));
     return make_ref_counted<CommandValue>(move(command));
 }
 
@@ -3564,7 +3565,7 @@ ErrorOr<void> VariableDeclarations::dump(int level) const
 {
     TRY(Node::dump(level));
     for (auto& var : m_variables) {
-        print_indented(level + 1, "Set");
+        TRY(print_indented(level + 1, "Set"));
         TRY(var.name->dump(level + 2));
         TRY(var.value->dump(level + 2));
     }
@@ -3657,22 +3658,22 @@ ListValue::ListValue(Vector<String> values)
 {
     if (values.is_empty())
         return;
-    m_contained_values.ensure_capacity(values.size());
+    m_contained_values.try_ensure_capacity(values.size()).release_value_but_fixme_should_propagate_errors();
     for (auto& str : values)
-        m_contained_values.append(adopt_ref(*new StringValue(move(str))));
+        m_contained_values.unchecked_append(adopt_ref(*new StringValue(move(str))));
 }
 
 ErrorOr<NonnullRefPtr<Value>> Value::with_slices(NonnullRefPtr<Slice> slice) const&
 {
     auto value = TRY(clone());
-    value->m_slices.append(move(slice));
+    TRY(value->m_slices.try_append(move(slice)));
     return value;
 }
 
 ErrorOr<NonnullRefPtr<Value>> Value::with_slices(Vector<NonnullRefPtr<Slice>> slices) const&
 {
     auto value = TRY(clone());
-    value->m_slices.extend(move(slices));
+    TRY(value->m_slices.try_extend(move(slices)));
     return value;
 }
 
@@ -3684,7 +3685,7 @@ ErrorOr<Vector<String>> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
     Vector<String> values;
     for (auto& value : m_contained_values)
-        values.extend(TRY(value->resolve_as_list(shell)));
+        TRY(values.try_extend(TRY(value->resolve_as_list(shell))));
 
     return resolve_slices(shell, move(values), m_slices);
 }
@@ -3692,8 +3693,9 @@ ErrorOr<Vector<String>> ListValue::resolve_as_list(RefPtr<Shell> shell)
 ErrorOr<NonnullRefPtr<Value>> ListValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     Vector<NonnullRefPtr<Value>> values;
+    TRY(values.try_ensure_capacity(m_contained_values.size()));
     for (auto& value : m_contained_values)
-        values.append(TRY(value->resolve_without_cast(shell)));
+        values.unchecked_append(TRY(value->resolve_without_cast(shell)));
 
     NonnullRefPtr<Value> value = make_ref_counted<ListValue>(move(values));
     if (!m_slices.is_empty())
@@ -3748,11 +3750,11 @@ ErrorOr<String> StringValue::resolve_as_string(RefPtr<Shell> shell)
 ErrorOr<Vector<String>> StringValue::resolve_as_list(RefPtr<Shell> shell)
 {
     if (is_list()) {
-        auto parts = StringView(m_string).split_view(m_split, m_keep_empty ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing);
         Vector<String> result;
-        result.ensure_capacity(parts.size());
-        for (auto& part : parts)
-            result.append(TRY(String::from_utf8(part)));
+        TRY(StringView(m_string).for_each_split_view(m_split, m_keep_empty ? SplitBehavior::KeepEmpty : SplitBehavior::Nothing,
+            [&](StringView part) -> ErrorOr<void> {
+                return result.try_append(TRY(String::from_utf8(part)));
+            }));
         return resolve_slices(shell, move(result), m_slices);
     }
 
@@ -3783,7 +3785,7 @@ ErrorOr<Vector<String>> GlobValue::resolve_as_list(RefPtr<Shell> shell)
     Vector<String> strings;
     TRY(strings.try_ensure_capacity(results.size()));
     for (auto& entry : results) {
-        TRY(strings.try_append(TRY(String::from_utf8(entry))));
+        strings.unchecked_append(TRY(String::from_utf8(entry)));
     }
 
     return resolve_slices(shell, move(strings), m_slices);
@@ -3905,8 +3907,8 @@ ErrorOr<String> TildeValue::resolve_as_string(RefPtr<Shell> shell)
 ErrorOr<Vector<String>> TildeValue::resolve_as_list(RefPtr<Shell> shell)
 {
     StringBuilder builder;
-    builder.append('~');
-    builder.append(m_username);
+    TRY(builder.try_append('~'));
+    TRY(builder.try_append(m_username));
 
     if (!shell)
         return { resolve_slices(shell, Vector { TRY(builder.to_string()) }, m_slices) };

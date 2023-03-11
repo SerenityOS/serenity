@@ -1477,7 +1477,7 @@ public:
     virtual ~Tilde();
     virtual void visit(NodeVisitor& visitor) override { visitor.visit(this); }
 
-    String text() const;
+    ErrorOr<String> text() const;
 
 private:
     NODE(Tilde);
