@@ -10,7 +10,6 @@
 #    pragma GCC optimize("O3")
 #endif
 
-#include "FillPathImplementation.h"
 #include <AK/Function.h>
 #include <AK/NumericLimits.h>
 #include <LibGfx/AntiAliasingPainter.h>
@@ -213,14 +212,12 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
 
 void AntiAliasingPainter::fill_path(Path const& path, Color color, Painter::WindingRule rule)
 {
-    Detail::fill_path<Detail::FillPathMode::AllowFloatingPoints>(m_underlying_painter, path, color, rule, m_transform.translation());
+    m_underlying_painter.antialiased_fill_path(path, color, rule, m_transform.translation());
 }
 
 void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)
 {
-    paint_style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
-        Detail::fill_path<Detail::FillPathMode::AllowFloatingPoints>(m_underlying_painter, path, move(sampler), rule, m_transform.translation());
-    });
+    m_underlying_painter.antialiased_fill_path(path, paint_style, rule, m_transform.translation());
 }
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)

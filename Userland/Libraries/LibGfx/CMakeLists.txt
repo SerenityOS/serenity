@@ -10,6 +10,7 @@ set(SOURCES
     Color.cpp
     CursorParams.cpp
     DDSLoader.cpp
+    FillPathImplementation.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
     Filters/LumaFilter.cpp
