@@ -14,7 +14,11 @@ if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
         PATH="$SCRIPT_DIR/../Toolchain/Local/aarch64/bin:$PATH"
         SERENITY_KERNEL_DEBUGGER="aarch64-pc-serenity-gdb"
     else
-        SERENITY_KERNEL_DEBUGGER="gdb"
+        if command -v x86_64-elf-gdb >/dev/null 2>&1; then
+            SERENITY_KERNEL_DEBUGGER="x86_64-elf-gdb"
+        else
+            SERENITY_KERNEL_DEBUGGER=gdb
+        fi
     fi
 fi
 

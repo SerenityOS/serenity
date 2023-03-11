@@ -22,6 +22,9 @@ Toolchain/BuildFuseExt2.sh
 
 # (option 2) genext2fs
 brew install genext2fs
+
+# for kernel debugging, on Apple Silicon
+brew install x86_64-elf-gdb
 ```
 
 If you have Xcode version 13 or older, also install a newer host compiler from homebrew. Xcode 14 is known to work.
@@ -51,3 +54,6 @@ It's important to make sure that Xcode is not only installed but also accordingl
 Homebrew is known to ship bleeding edge CMake versions, but building CMake from source with homebrew
 gcc or llvm may not work. If homebrew does not offer cmake 3.25.x+ on your platform, it may be necessary
 to manually run Toolchain/BuildCMake.sh with Apple clang from Xcode as the first compiler in your $PATH.
+
+If you want to debug the x86-64 kernel on an Apple Silicon machine, you can install the `x86_64-elf-gdb`
+package to get a native build of GDB that can cross-debug x86-64 code.
