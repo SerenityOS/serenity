@@ -4,6 +4,7 @@ set(SOURCES
     Deflate.cpp
     Lzma.cpp
     Lzma2.cpp
+    Xz.cpp
     Zlib.cpp
     Gzip.cpp
 )
