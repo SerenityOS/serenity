@@ -47,8 +47,8 @@ struct ScrollToOptions : public ScrollOptions {
 
 class Window final
     : public DOM::EventTarget
-    , public HTML::GlobalEventHandlers
-    , public HTML::WindowEventHandlers
+    , public GlobalEventHandlers
+    , public WindowEventHandlers
     , public WindowOrWorkerGlobalScopeMixin
     , public Bindings::WindowGlobalMixin {
     WEB_PLATFORM_OBJECT(Window, DOM::EventTarget);
@@ -83,8 +83,8 @@ public:
     void set_associated_document(DOM::Document&);
 
     // https://html.spec.whatwg.org/multipage/window-object.html#window-bc
-    HTML::BrowsingContext const* browsing_context() const;
-    HTML::BrowsingContext* browsing_context();
+    BrowsingContext const* browsing_context() const;
+    BrowsingContext* browsing_context();
 
     size_t document_tree_child_browsing_context_count() const;
 
@@ -93,7 +93,7 @@ public:
     bool import_maps_allowed() const { return m_import_maps_allowed; }
     void set_import_maps_allowed(bool import_maps_allowed) { m_import_maps_allowed = import_maps_allowed; }
 
-    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open_impl(StringView url, StringView target, StringView features);
+    WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open_impl(StringView url, StringView target, StringView features);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
     i32 set_timeout_impl(TimerHandler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
@@ -101,9 +101,9 @@ public:
     void clear_timeout_impl(i32);
     void clear_interval_impl(i32);
 
-    void did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href);
-    void did_call_location_reload(Badge<HTML::Location>);
-    void did_call_location_replace(Badge<HTML::Location>, DeprecatedString url);
+    void did_set_location_href(Badge<Location>, AK::URL const& new_href);
+    void did_call_location_reload(Badge<Location>);
+    void did_call_location_replace(Badge<Location>, DeprecatedString url);
 
     void deallocate_timer_id(Badge<Timer>, i32);
 
@@ -115,8 +115,8 @@ public:
 
     void fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> local_storage();
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> session_storage();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> local_storage();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> session_storage();
 
     void start_an_idle_period();
 
@@ -148,7 +148,7 @@ public:
     JS::GCPtr<WindowProxy const> top() const;
     JS::GCPtr<WindowProxy const> parent() const;
     JS::GCPtr<DOM::Element const> frame_element() const;
-    WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
+    WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Navigator>> navigator();
 
@@ -229,8 +229,8 @@ private:
     JS::GCPtr<HighResolutionTime::Performance> m_performance;
     JS::GCPtr<Crypto::Crypto> m_crypto;
     JS::GCPtr<CSS::Screen> m_screen;
-    JS::GCPtr<HTML::Navigator> m_navigator;
-    JS::GCPtr<HTML::Location> m_location;
+    JS::GCPtr<Navigator> m_navigator;
+    JS::GCPtr<Location> m_location;
 
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 

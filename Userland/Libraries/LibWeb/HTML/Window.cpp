@@ -292,12 +292,12 @@ static bool check_if_a_popup_window_is_requested(OrderedHashMap<DeprecatedString
 
 // FIXME: This is based on the old 'browsing context' concept, which was replaced with 'navigable'
 // https://html.spec.whatwg.org/multipage/window-object.html#window-open-steps
-WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open_impl(StringView url, StringView target, StringView features)
+WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, StringView target, StringView features)
 {
     auto& vm = this->vm();
 
     // 1. If the event loop's termination nesting level is nonzero, return null.
-    if (HTML::main_thread_event_loop().termination_nesting_level() != 0)
+    if (main_thread_event_loop().termination_nesting_level() != 0)
         return nullptr;
 
     // 2. Let source browsing context be the entry global object's browsing context.
@@ -476,7 +476,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
             // 2. If handler is a Function, then invoke handler given arguments with the callback this value set to thisArg. If this throws an exception, catch it, and report the exception.
             [&](JS::Handle<WebIDL::CallbackType> callback) {
                 if (auto result = WebIDL::invoke_callback(*callback, this, arguments); result.is_error())
-                    HTML::report_exception(result, realm());
+                    report_exception(result, realm());
             },
             // 3. Otherwise:
             [&](DeprecatedString const& source) {
@@ -493,7 +493,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 
                 // 6. Let fetch options be a script fetch options whose cryptographic nonce is initiating script's fetch options's cryptographic nonce, integrity metadata is the empty string, parser metadata is "not-parser-inserted", credentials mode is initiating script's fetch options's credentials mode, and referrer policy is initiating script's fetch options's referrer policy.
                 // 7. Let script be the result of creating a classic script given handler, settings object, base URL, and fetch options.
-                auto script = HTML::ClassicScript::create(url.basename(), source, settings_object, url);
+                auto script = ClassicScript::create(url.basename(), source, settings_object, url);
 
                 // 8. Run the classic script script.
                 (void)script->run();
@@ -521,7 +521,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
 
     // 12. Let completionStep be an algorithm step which queues a global task on the timer task source given global to run task.
     JS::SafeFunction<void()> completion_step = [this, task = move(task)]() mutable {
-        HTML::queue_global_task(HTML::Task::Source::TimerTask, *this, move(task));
+        queue_global_task(Task::Source::TimerTask, *this, move(task));
     };
 
     // 13. Run steps after a timeout given global, "setTimeout/setInterval", timeout, completionStep, and id.
@@ -533,7 +533,7 @@ i32 Window::run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS
     return id;
 }
 
-void Window::did_set_location_href(Badge<HTML::Location>, AK::URL const& new_href)
+void Window::did_set_location_href(Badge<Location>, AK::URL const& new_href)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -541,7 +541,7 @@ void Window::did_set_location_href(Badge<HTML::Location>, AK::URL const& new_hre
     browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
 }
 
-void Window::did_call_location_reload(Badge<HTML::Location>)
+void Window::did_call_location_reload(Badge<Location>)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -549,7 +549,7 @@ void Window::did_call_location_reload(Badge<HTML::Location>)
     browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
 }
 
-void Window::did_call_location_replace(Badge<HTML::Location>, DeprecatedString url)
+void Window::did_call_location_replace(Badge<Location>, DeprecatedString url)
 {
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
@@ -690,9 +690,9 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
     // To fire a page transition event named eventName at a Window window with a boolean persisted,
     // fire an event named eventName at window, using PageTransitionEvent,
     // with the persisted attribute initialized to persisted,
-    HTML::PageTransitionEventInit event_init {};
+    PageTransitionEventInit event_init {};
     event_init.persisted = persisted;
-    auto event = HTML::PageTransitionEvent::create(associated_document().realm(), String::from_deprecated_string(event_name).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors();
+    auto event = PageTransitionEvent::create(associated_document().realm(), String::from_deprecated_string(event_name).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors();
 
     // ...the cancelable attribute initialized to true,
     event->set_cancelable(true);
@@ -705,14 +705,14 @@ void Window::fire_a_page_transition_event(DeprecatedFlyString const& event_name,
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-localstorage
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> Window::local_storage()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Window::local_storage()
 {
     // FIXME: Implement according to spec.
     auto& vm = this->vm();
 
-    static HashMap<Origin, JS::Handle<HTML::Storage>> local_storage_per_origin;
-    auto storage = TRY_OR_THROW_OOM(vm, local_storage_per_origin.try_ensure(associated_document().origin(), [this]() -> ErrorOr<JS::Handle<HTML::Storage>> {
-        auto storage_or_exception = HTML::Storage::create(realm());
+    static HashMap<Origin, JS::Handle<Storage>> local_storage_per_origin;
+    auto storage = TRY_OR_THROW_OOM(vm, local_storage_per_origin.try_ensure(associated_document().origin(), [this]() -> ErrorOr<JS::Handle<Storage>> {
+        auto storage_or_exception = Storage::create(realm());
         if (storage_or_exception.is_exception())
             return Error::from_errno(ENOMEM);
         return *storage_or_exception.release_value();
@@ -721,14 +721,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> Window::local_storage()
 }
 
 // https://html.spec.whatwg.org/multipage/webstorage.html#dom-sessionstorage
-WebIDL::ExceptionOr<JS::NonnullGCPtr<HTML::Storage>> Window::session_storage()
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> Window::session_storage()
 {
     // FIXME: Implement according to spec.
     auto& vm = this->vm();
 
-    static HashMap<Origin, JS::Handle<HTML::Storage>> session_storage_per_origin;
-    auto storage = TRY_OR_THROW_OOM(vm, session_storage_per_origin.try_ensure(associated_document().origin(), [this]() -> ErrorOr<JS::Handle<HTML::Storage>> {
-        auto storage_or_exception = HTML::Storage::create(realm());
+    static HashMap<Origin, JS::Handle<Storage>> session_storage_per_origin;
+    auto storage = TRY_OR_THROW_OOM(vm, session_storage_per_origin.try_ensure(associated_document().origin(), [this]() -> ErrorOr<JS::Handle<Storage>> {
+        auto storage_or_exception = Storage::create(realm());
         if (storage_or_exception.is_exception())
             return Error::from_errno(ENOMEM);
         return *storage_or_exception.release_value();
@@ -762,7 +762,7 @@ void Window::start_an_idle_period()
 
     // 5. Queue a task on the queue associated with the idle-task task source,
     //    which performs the steps defined in the invoke idle callbacks algorithm with window and getDeadline as parameters.
-    HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this] {
+    queue_global_task(Task::Source::IdleTask, *this, [this] {
         invoke_idle_callbacks();
     });
 }
@@ -783,10 +783,10 @@ void Window::invoke_idle_callbacks()
         // 3. Call callback with deadlineArg as its argument. If an uncaught runtime script error occurs, then report the exception.
         auto result = callback->invoke(deadline_arg);
         if (result.is_error())
-            HTML::report_exception(result, realm());
+            report_exception(result, realm());
         // 4. If window's list of runnable idle callbacks is not empty, queue a task which performs the steps
         //    in the invoke idle callbacks algorithm with getDeadline and window as a parameters and return from this algorithm
-        HTML::queue_global_task(HTML::Task::Source::IdleTask, *this, [this] {
+        queue_global_task(Task::Source::IdleTask, *this, [this] {
             invoke_idle_callbacks();
         });
     }
@@ -802,12 +802,12 @@ void Window::set_current_event(DOM::Event* event)
     m_current_event = event;
 }
 
-HTML::BrowsingContext const* Window::browsing_context() const
+BrowsingContext const* Window::browsing_context() const
 {
     return m_associated_document->browsing_context();
 }
 
-HTML::BrowsingContext* Window::browsing_context()
+BrowsingContext* Window::browsing_context()
 {
     return m_associated_document->browsing_context();
 }
@@ -897,7 +897,7 @@ JS::ThrowCompletionOr<bool> Window::internal_set_prototype_of(JS::Object* protot
     return set_immutable_prototype(prototype);
 }
 
-static JS::ThrowCompletionOr<HTML::Window*> impl_from(JS::VM& vm)
+static JS::ThrowCompletionOr<Window*> impl_from(JS::VM& vm)
 {
     // Since this is a non built-in function we must treat it as non-strict mode
     // this means that a nullish this_value should be converted to the
@@ -1070,7 +1070,7 @@ JS::GCPtr<DOM::Element const> Window::frame_element() const
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-open
-WebIDL::ExceptionOr<JS::GCPtr<HTML::WindowProxy>> Window::open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features)
+WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open(Optional<String> const& url, Optional<String> const& target, Optional<String> const& features)
 {
     // The open(url, target, features) method steps are to run the window open steps with url, target, and features.
     return open_impl(*url, *target, *features);
@@ -1127,11 +1127,11 @@ void Window::post_message(JS::Value message, String const&)
 {
     // FIXME: This is an ad-hoc hack implementation instead, since we don't currently
     //        have serialization and deserialization of messages.
-    HTML::queue_global_task(HTML::Task::Source::PostedMessage, *this, [this, message] {
-        HTML::MessageEventInit event_init {};
+    queue_global_task(Task::Source::PostedMessage, *this, [this, message] {
+        MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
-        dispatch_event(HTML::MessageEvent::create(realm(), String::from_deprecated_string(HTML::EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(MessageEvent::create(realm(), String::from_deprecated_string(EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
     });
 }
 
@@ -1406,7 +1406,7 @@ i32 Window::request_animation_frame(WebIDL::CallbackType& callback)
         // 3. Invoke callback, passing now as the only argument, and if an exception is thrown, report the exception.
         auto result = WebIDL::invoke_callback(*callback, {}, JS::Value(now));
         if (result.is_error())
-            HTML::report_exception(result, realm());
+            report_exception(result, realm());
     });
 }
 
@@ -1493,7 +1493,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> Window::crypto()
 static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
 {
     if (handler.is_function())
-        return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), HTML::incumbent_settings_object()));
+        return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), incumbent_settings_object()));
     return TRY(handler.to_deprecated_string(vm));
 }
 
