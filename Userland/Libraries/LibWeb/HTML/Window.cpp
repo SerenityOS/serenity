@@ -870,14 +870,17 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     define_native_function(realm, "clearInterval", clear_interval, 1, attr);
     define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
 
-    define_direct_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)), 0);
+    // https://webidl.spec.whatwg.org/#define-the-global-property-references
+    // 5. For every namespace namespace that is exposed in realm:
+    //    1. Let id be namespace’s identifier.
+    //    3. Let namespaceObject be the result of creating a namespace object for namespace in realm.
+    //    3. Perform CreateMethodProperty(target, id, namespaceObject).
+    create_method_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)));
+    create_method_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)));
 
     // FIXME: Implement codegen for readonly properties with [PutForwards]
     auto& location_accessor = storage_get("location")->value.as_accessor();
     location_accessor.set_setter(JS::NativeFunction::create(realm, location_setter, 1, "location", &realm, {}, "set"sv));
-
-    // WebAssembly "namespace"
-    define_direct_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     return {};
 }
