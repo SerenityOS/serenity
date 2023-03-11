@@ -55,6 +55,7 @@ struct Options {
     size_t key_field { 0 };
     bool unique { false };
     bool numeric { false };
+    bool reverse { false };
     StringView separator { "\0", 1 };
     Vector<DeprecatedString> files;
 };
@@ -104,6 +105,7 @@ ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
     args_parser.add_option(options.unique, "Don't emit duplicate lines", "unique", 'u');
     args_parser.add_option(options.numeric, "treat the key field as a number", "numeric", 'n');
     args_parser.add_option(options.separator, "The separator to split fields by", "sep", 't', "char");
+    args_parser.add_option(options.reverse, "Sort in reverse order", "reverse", 'r');
     args_parser.add_positional_argument(options.files, "Files to sort", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
@@ -120,9 +122,15 @@ ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
 
     quick_sort(lines);
 
-    for (auto& line : lines) {
-        outln("{}", line.line);
-    }
+    auto print_lines = [](auto const& lines) {
+        for (auto& line : lines)
+            outln("{}", line.line);
+    };
+
+    if (options.reverse)
+        print_lines(lines.in_reverse());
+    else
+        print_lines(lines);
 
     return 0;
 }
