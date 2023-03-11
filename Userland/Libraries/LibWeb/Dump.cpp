@@ -151,8 +151,6 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
             nonbox_color_on,
             identifier,
             color_off);
-        if (interactive)
-            builder.appendff(" @{:p}", &layout_node);
         builder.append("\n"sv);
     } else {
         auto& box = verify_cast<Layout::Box>(layout_node);
@@ -263,8 +261,6 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
                     fragment_index,
                     color_off,
                     fragment.layout_node().class_name());
-                if (interactive)
-                    builder.appendff("@{:p}, ", &fragment.layout_node());
                 builder.appendff("start: {}, length: {}, rect: {}\n",
                     fragment.start(),
                     fragment.length(),
