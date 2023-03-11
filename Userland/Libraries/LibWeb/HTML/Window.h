@@ -71,6 +71,9 @@ public:
     virtual Bindings::PlatformObject& this_impl() override { return *this; }
     virtual Bindings::PlatformObject const& this_impl() const override { return *this; }
 
+    // ^JS::Object
+    virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
+
     Page* page();
     Page const* page() const;
 
@@ -126,6 +129,9 @@ public:
 
     Vector<JS::NonnullGCPtr<Plugin>> pdf_viewer_plugin_objects();
     Vector<JS::NonnullGCPtr<MimeType>> pdf_viewer_mime_type_objects();
+
+    CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
+    CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
 
     // JS API functions
     JS::NonnullGCPtr<WindowProxy> window() const;
@@ -224,6 +230,7 @@ private:
     JS::GCPtr<Crypto::Crypto> m_crypto;
     JS::GCPtr<CSS::Screen> m_screen;
     JS::GCPtr<HTML::Navigator> m_navigator;
+    JS::GCPtr<HTML::Location> m_location;
 
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 
@@ -240,24 +247,15 @@ private:
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-mime-type-objects
     Vector<JS::NonnullGCPtr<MimeType>> m_pdf_viewer_mime_type_objects;
 
-public:
-    virtual JS::ThrowCompletionOr<bool> internal_set_prototype_of(JS::Object* prototype) override;
+    // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
+    CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 
-    CrossOriginPropertyDescriptorMap const& cross_origin_property_descriptor_map() const { return m_cross_origin_property_descriptor_map; }
-    CrossOriginPropertyDescriptorMap& cross_origin_property_descriptor_map() { return m_cross_origin_property_descriptor_map; }
-
-private:
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
 
     JS_DECLARE_NATIVE_FUNCTION(set_interval);
     JS_DECLARE_NATIVE_FUNCTION(set_timeout);
     JS_DECLARE_NATIVE_FUNCTION(clear_interval);
     JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
-
-    HTML::Location* m_location { nullptr };
-
-    // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
-    CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
