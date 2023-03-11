@@ -6,11 +6,14 @@
 
 #pragma once
 
-#include <AK/Error.h>
 #include <AK/Types.h>
 #include <AK/Userspace.h>
 #include <Kernel/API/POSIX/sched.h>
-#include <Kernel/Arch/RegisterState.h>
+
+#ifdef KERNEL
+#    include <AK/Error.h>
+#    include <Kernel/Arch/RegisterState.h>
+#endif
 
 constexpr int syscall_vector = 0x82;
 
@@ -202,7 +205,9 @@ enum class NeedsBigProcessLock {
 
 namespace Syscall {
 
+#ifdef KERNEL
 ErrorOr<FlatPtr> handle(RegisterState&, FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3, FlatPtr arg4);
+#endif
 
 enum Function {
 #undef __ENUMERATE_SYSCALL
