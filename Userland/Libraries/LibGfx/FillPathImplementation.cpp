@@ -1,10 +1,9 @@
 /*
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
-
-#pragma once
 
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
@@ -12,7 +11,77 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 
-namespace Gfx::Detail {
+#if defined(AK_COMPILER_GCC)
+#    pragma GCC optimize("O3")
+#endif
+
+namespace Gfx {
+
+template<typename T, typename TColorOrFunction>
+ALWAYS_INLINE void Painter::draw_scanline_for_fill_path(int y, T x_start, T x_end, TColorOrFunction color)
+{
+    // Fill path should scale the scanlines before calling this.
+    VERIFY(scale() == 1);
+
+    constexpr bool is_floating_point = IsSameIgnoringCV<T, float>;
+    constexpr bool has_constant_color = IsSameIgnoringCV<TColorOrFunction, Color>;
+
+    int x1 = 0;
+    int x2 = 0;
+    u8 left_subpixel_alpha = 0;
+    u8 right_subpixel_alpha = 0;
+    if constexpr (is_floating_point) {
+        x1 = ceilf(x_start);
+        x2 = floorf(x_end);
+        left_subpixel_alpha = (x1 - x_start) * 255;
+        right_subpixel_alpha = (x_end - x2) * 255;
+        x1 -= left_subpixel_alpha > 0;
+        x2 += right_subpixel_alpha > 0;
+    } else {
+        x1 = x_start;
+        x2 = x_end;
+    }
+
+    IntRect scanline(x1, y, x2 - x1, 1);
+    scanline = scanline.translated(translation());
+    auto clipped = scanline.intersected(clip_rect());
+    if (clipped.is_empty())
+        return;
+
+    auto get_color = [&](int offset) {
+        if constexpr (has_constant_color) {
+            return color;
+        } else {
+            return color(offset);
+        }
+    };
+
+    if constexpr (is_floating_point) {
+        // Paint left and right subpixels (then remove them from the scanline).
+        auto get_color_with_alpha = [&](int offset, u8 alpha) {
+            auto color_at_offset = get_color(offset);
+            u8 color_alpha = (alpha * color_at_offset.alpha()) / 255;
+            return color_at_offset.with_alpha(color_alpha);
+        };
+        if (clipped.left() == scanline.left() && left_subpixel_alpha)
+            set_physical_pixel(clipped.top_left(), get_color_with_alpha(0, left_subpixel_alpha), true);
+        if (clipped.right() == scanline.right() && right_subpixel_alpha)
+            set_physical_pixel(clipped.top_right(), get_color_with_alpha(scanline.width(), right_subpixel_alpha), true);
+        clipped.shrink(0, right_subpixel_alpha > 0, 0, left_subpixel_alpha > 0);
+    }
+
+    if constexpr (has_constant_color) {
+        if (color.alpha() == 255) {
+            // Speedy path: Constant color and no alpha blending.
+            fast_u32_fill(m_target->scanline(clipped.y()) + clipped.x(), color.value(), clipped.width());
+            return;
+        }
+    }
+
+    for (int x = clipped.x(); x <= clipped.right(); x++) {
+        set_physical_pixel({ x, clipped.y() }, get_color(x - scanline.x()), true);
+    }
+}
 
 [[maybe_unused]] inline void approximately_place_on_int_grid(FloatPoint ffrom, FloatPoint fto, IntPoint& from, IntPoint& to, Optional<IntPoint> previous_to)
 {
@@ -36,13 +105,8 @@ namespace Gfx::Detail {
         from.set_x(previous_to.value().x());
 }
 
-enum class FillPathMode {
-    PlaceOnIntGrid,
-    AllowFloatingPoints,
-};
-
-template<FillPathMode fill_path_mode, typename ColorOrFunction>
-void fill_path(Painter& painter, Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset = {})
+template<Painter::FillPathMode fill_path_mode, typename ColorOrFunction>
+void Painter::fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset)
 {
     using GridCoordinateType = Conditional<fill_path_mode == FillPathMode::PlaceOnIntGrid, int, float>;
     using PointType = Point<GridCoordinateType>;
@@ -58,9 +122,9 @@ void fill_path(Painter& painter, Path const& path, ColorOrFunction color, Gfx::P
         if (x1 > x2)
             swap(x1, x2);
         if constexpr (IsSameIgnoringCV<ColorOrFunction, Color>) {
-            painter.draw_scanline_for_fill_path(y, x1, x2 + 1, color);
+            draw_scanline_for_fill_path(y, x1, x2 + 1, color);
         } else {
-            painter.draw_scanline_for_fill_path(y, x1, x2 + 1, [&](int offset) {
+            draw_scanline_for_fill_path(y, x1, x2 + 1, [&](int offset) {
                 return color(IntPoint(x1 + offset, y) - draw_origin);
             });
         }
@@ -124,7 +188,7 @@ void fill_path(Painter& painter, Path const& path, ColorOrFunction color, Gfx::P
             });
             if constexpr (fill_path_mode == FillPathMode::PlaceOnIntGrid && FILL_PATH_DEBUG) {
                 if ((int)scanline % 10 == 0) {
-                    painter.draw_text(Gfx::Rect<GridCoordinateType>(active_list.last().x - 20, scanline, 20, 10), DeprecatedString::number((int)scanline));
+                    draw_text(Gfx::Rect<GridCoordinateType>(active_list.last().x - 20, scanline, 20, 10), DeprecatedString::number((int)scanline));
                 }
             }
 
@@ -199,4 +263,33 @@ void fill_path(Painter& painter, Path const& path, ColorOrFunction color, Gfx::P
         }
     }
 }
+
+void Painter::fill_path(Path const& path, Color color, WindingRule winding_rule)
+{
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    fill_path_impl<FillPathMode::PlaceOnIntGrid>(path, color, winding_rule);
+}
+
+void Painter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)
+{
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    paint_style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
+        fill_path_impl<FillPathMode::PlaceOnIntGrid>(path, move(sampler), rule);
+    });
+}
+
+void Painter::antialiased_fill_path(Path const& path, Color color, WindingRule rule, FloatPoint translation)
+{
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    fill_path_impl<FillPathMode::AllowFloatingPoints>(path, color, rule, translation);
+}
+
+void Painter::antialiased_fill_path(Path const& path, PaintStyle const& paint_style, WindingRule rule, FloatPoint translation)
+{
+    VERIFY(scale() == 1); // FIXME: Add scaling support.
+    paint_style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
+        fill_path_impl<FillPathMode::AllowFloatingPoints>(path, move(sampler), rule, translation);
+    });
+}
+
 }
