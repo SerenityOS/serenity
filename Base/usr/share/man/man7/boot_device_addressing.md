@@ -30,7 +30,7 @@ to address raw `StorageDevice`s:
 
 ```
 ata0:0:0 [First ATA controller, ATA first primary channel, master device]
-nvme0:0 [First NVMe Controller, First NVMe Namespace]
+nvme0:1:0 [First NVMe Controller, First NVMe Namespace, Not Applicable]
 ramdisk0 [First Ramdisk]
 ```
 

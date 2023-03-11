@@ -46,7 +46,7 @@ public:
     // For example, on a legacy ATA instance, one might connect an harddrive to the second IDE controller,
     // to the Primary channel as a slave device, which translates to LUN 1:0:1.
     // On NVMe, for example, connecting a second PCIe NVMe storage device as a sole NVMe namespace translates
-    // to LUN 1:0:0.
+    // to LUN 1:1:0.
     struct LUNAddress {
         u32 controller_id;
         u32 target_id;
