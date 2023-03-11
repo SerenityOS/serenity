@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -139,7 +139,7 @@ ThrowCompletionOr<bool> Object::create_data_property(PropertyKey const& property
 }
 
 // 7.3.6 CreateMethodProperty ( O, P, V ), https://tc39.es/ecma262/#sec-createmethodproperty
-ThrowCompletionOr<void> Object::create_method_property(PropertyKey const& property_key, Value value)
+void Object::create_method_property(PropertyKey const& property_key, Value value)
 {
     VERIFY(property_key.is_valid());
     VERIFY(!value.is_empty());
@@ -158,7 +158,6 @@ ThrowCompletionOr<void> Object::create_method_property(PropertyKey const& proper
     MUST(internal_define_own_property(property_key, new_descriptor));
 
     // 4. Return unused.
-    return {};
 }
 
 // 7.3.7 CreateDataPropertyOrThrow ( O, P, V ), https://tc39.es/ecma262/#sec-createdatapropertyorthrow
