@@ -63,11 +63,15 @@ ALWAYS_INLINE void Painter::draw_scanline_for_fill_path(int y, T x_start, T x_en
             u8 color_alpha = (alpha * color_at_offset.alpha()) / 255;
             return color_at_offset.with_alpha(color_alpha);
         };
-        if (clipped.left() == scanline.left() && left_subpixel_alpha)
+        bool paint_left_subpixel = clipped.left() == scanline.left() && left_subpixel_alpha;
+        bool paint_right_subpixel = clipped.right() == scanline.right() && right_subpixel_alpha;
+        if (paint_left_subpixel)
             set_physical_pixel(clipped.top_left(), get_color_with_alpha(0, left_subpixel_alpha), true);
-        if (clipped.right() == scanline.right() && right_subpixel_alpha)
+        if (paint_right_subpixel)
             set_physical_pixel(clipped.top_right(), get_color_with_alpha(scanline.width(), right_subpixel_alpha), true);
-        clipped.shrink(0, right_subpixel_alpha > 0, 0, left_subpixel_alpha > 0);
+        clipped.shrink(0, paint_right_subpixel, 0, paint_left_subpixel);
+        if (clipped.is_empty())
+            return;
     }
 
     if constexpr (has_constant_color) {
@@ -122,9 +126,9 @@ void Painter::fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Paint
         if (x1 > x2)
             swap(x1, x2);
         if constexpr (IsSameIgnoringCV<ColorOrFunction, Color>) {
-            draw_scanline_for_fill_path(y, x1, x2 + 1, color);
+            draw_scanline_for_fill_path(y, x1, x2, color);
         } else {
-            draw_scanline_for_fill_path(y, x1, x2 + 1, [&](int offset) {
+            draw_scanline_for_fill_path(y, x1, x2, [&](int offset) {
                 return color(IntPoint(x1 + offset, y) - draw_origin);
             });
         }
