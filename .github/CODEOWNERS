@@ -1,16 +1,10 @@
-.github @bgianfo
-/AK @bgianfo
-/Kernel @bgianfo
 /Kernel/Devices/Audio @GMTA
 /Ladybird @linusg
 /Ports/neofetch @linusg
 /Ports/python3 @linusg
-/Toolchain @bgianfo
-/Tests @bgianfo
 /Userland/Applications/Browser @linusg
 /Userland/Applications/CrashReporter @linusg
 /Userland/Applications/Spreadsheet @alimpfard
-/Userland/Libraries/LibC @bgianfo
 /Userland/Libraries/LibCrypto @alimpfard
 /Userland/Libraries/LibGfx/Font/Emoji.* @linusg
 /Userland/Libraries/LibGL @GMTA
