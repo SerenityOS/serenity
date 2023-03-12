@@ -27,21 +27,21 @@ bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
             if (red_or_error.is_error())
                 break;
 
-            if (!read_whitespace(context, streamer))
+            if (read_whitespace(context, streamer).is_error())
                 break;
 
             auto const green_or_error = read_number(streamer);
             if (green_or_error.is_error())
                 break;
 
-            if (!read_whitespace(context, streamer))
+            if (read_whitespace(context, streamer).is_error())
                 break;
 
             auto const blue_or_error = read_number(streamer);
             if (blue_or_error.is_error())
                 break;
 
-            if (!read_whitespace(context, streamer))
+            if (read_whitespace(context, streamer).is_error())
                 break;
 
             Color color { (u8)red_or_error.value(), (u8)green_or_error.value(), (u8)blue_or_error.value() };

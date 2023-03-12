@@ -109,25 +109,29 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
 }
 
 template<typename TContext>
-static bool read_whitespace(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_whitespace(TContext& context, Streamer& streamer)
 {
-    bool exist = false;
+    bool is_first_char = true;
     u8 byte {};
 
     while (streamer.read(byte)) {
-        if (byte == ' ' || byte == '\t' || byte == '\n' || byte == '\r') {
-            exist = true;
-        } else if (byte == '#') {
+        if (byte == '#') {
             streamer.step_back();
-            if (read_comment(context, streamer).is_error())
-                return false;
-        } else {
-            streamer.step_back();
-            return exist;
+            TRY(read_comment(context, streamer));
+            continue;
         }
+        if (byte != ' ' && byte != '\t' && byte != '\n' && byte != '\r') {
+            streamer.step_back();
+            if (is_first_char)
+                return Error::from_string_literal("Can't read whitespace from stream");
+            break;
+        }
+
+        if (is_first_char)
+            is_first_char = false;
     }
 
-    return exist;
+    return {};
 }
 
 template<typename TContext>
@@ -212,13 +216,13 @@ static bool decode(TContext& context)
     if (!read_magic_number(context, streamer))
         return false;
 
-    if (!read_whitespace(context, streamer))
+    if (read_whitespace(context, streamer).is_error())
         return false;
 
     if (!read_width(context, streamer))
         return false;
 
-    if (!read_whitespace(context, streamer))
+    if (read_whitespace(context, streamer).is_error())
         return false;
 
     if (!read_height(context, streamer))
@@ -229,14 +233,14 @@ static bool decode(TContext& context)
         return false;
     }
 
-    if (!read_whitespace(context, streamer))
+    if (read_whitespace(context, streamer).is_error())
         return false;
 
     if constexpr (requires { context.format_details.max_val; }) {
         if (!read_max_val(context, streamer))
             return false;
 
-        if (!read_whitespace(context, streamer))
+        if (read_whitespace(context, streamer).is_error())
             return false;
     }
 

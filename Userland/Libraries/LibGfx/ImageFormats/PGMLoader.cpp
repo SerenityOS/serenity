@@ -39,7 +39,7 @@ bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
                 break;
             auto value = number_or_error.value();
 
-            if (!read_whitespace(context, streamer))
+            if (read_whitespace(context, streamer).is_error())
                 break;
 
             color_data.append({ (u8)value, (u8)value, (u8)value });
