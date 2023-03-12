@@ -65,17 +65,11 @@ static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
 static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
 {
     auto resources = DeprecatedString::formatted("{}/res", s_serenity_resource_root);
-    auto error_page = DeprecatedString::formatted("{}/res/html/error.html", s_serenity_resource_root);
-    auto certs = DeprecatedString::formatted("{}/etc/ca_certs.ini", s_serenity_resource_root);
 
     char const* argv[] = {
         "headless-browser",
         "--resources",
         resources.characters(),
-        "--error-page",
-        error_page.characters(),
-        "--certs",
-        certs.characters(),
         "--webdriver-ipc-path",
         socket_path.characters(),
         "about:blank",

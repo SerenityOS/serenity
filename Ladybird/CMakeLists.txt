@@ -103,6 +103,15 @@ target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 
+qt_add_executable(headless-browser
+    ${SERENITY_SOURCE_DIR}/Userland/Utilities/headless-browser.cpp
+    ${SERENITY_SOURCE_DIR}/Userland/Services/WebContent/WebDriverConnection.cpp
+    HelperProcess.cpp
+    Utilities.cpp)
+
+target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
+
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.serenityos.ladybird
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
