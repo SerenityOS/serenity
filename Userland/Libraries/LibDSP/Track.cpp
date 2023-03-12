@@ -14,6 +14,7 @@
 #include <LibDSP/Music.h>
 #include <LibDSP/Processor.h>
 #include <LibDSP/Track.h>
+#include <unistd.h>
 
 namespace DSP {
 
@@ -64,6 +65,12 @@ bool NoteTrack::check_processor_chain_valid() const
 ErrorOr<void> Track::resize_internal_buffers_to(size_t buffer_size)
 {
     m_secondary_sample_buffer = TRY(FixedArray<Sample>::create(buffer_size));
+    FixedArray<Sample> cache = TRY(FixedArray<Sample>::create(buffer_size));
+    bool false_variable = false;
+    while (!m_sample_lock.compare_exchange_strong(false_variable, true))
+        usleep(1);
+    m_cached_sample_buffer.swap(cache);
+    m_sample_lock.store(false);
     return {};
 }
 
@@ -92,6 +99,25 @@ void Track::current_signal(FixedArray<Sample>& output_signal)
     VERIFY(output_signal.size() == source_signal->get<FixedArray<Sample>>().size());
     // The last processor is the fixed mastering processor. This can write directly to the output data. We also just trust this processor that it does the right thing :^)
     m_track_mastering->process_to_fixed_array(*source_signal, output_signal);
+
+    bool false_variable = false;
+    if (m_sample_lock.compare_exchange_strong(false_variable, true)) {
+        AK::TypedTransfer<Sample>::copy(m_cached_sample_buffer.data(), output_signal.data(), m_cached_sample_buffer.size());
+        m_sample_lock.store(false);
+    }
+}
+
+void Track::write_cached_signal_to(Span<Sample> output_signal)
+{
+    bool false_variable = false;
+    while (!m_sample_lock.compare_exchange_strong(false_variable, true)) {
+        usleep(1);
+    }
+    VERIFY(output_signal.size() == m_cached_sample_buffer.size());
+
+    AK::TypedTransfer<Sample>::copy(output_signal.data(), m_cached_sample_buffer.data(), m_cached_sample_buffer.size());
+
+    m_sample_lock.store(false);
 }
 
 void NoteTrack::compute_current_clips_signal()

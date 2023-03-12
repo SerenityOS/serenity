@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/FixedArray.h>
 #include <LibAudio/Sample.h>
 #include <LibGUI/Frame.h>
 
@@ -17,6 +18,12 @@ class WaveWidget final : public GUI::Frame {
     C_OBJECT(WaveWidget)
 public:
     virtual ~WaveWidget() override = default;
+
+    ErrorOr<void> set_sample_size(size_t sample_size)
+    {
+        TRY(m_samples.try_resize(sample_size));
+        return {};
+    }
 
 private:
     // Scales the sample-y value down by a bit, so that it doesn't look like it is clipping.
@@ -29,4 +36,5 @@ private:
     int sample_to_y(float sample, float sample_max) const;
 
     TrackManager& m_track_manager;
+    Vector<Audio::Sample> m_samples;
 };
