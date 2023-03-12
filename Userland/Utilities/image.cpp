@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::PNGWriter::encode(*frame));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = Gfx::QOIWriter::encode(*frame);
+        bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
         warnln("can only write .bmp, .png, and .qoi");
         return 1;

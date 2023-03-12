@@ -196,7 +196,7 @@ ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Stream> stream) const
 {
     auto bitmap = TRY(compose_bitmap(Gfx::BitmapFormat::BGRA8888));
 
-    auto encoded_data = Gfx::QOIWriter::encode(bitmap);
+    auto encoded_data = TRY(Gfx::QOIWriter::encode(bitmap));
     TRY(stream->write_entire_buffer(encoded_data));
     return {};
 }

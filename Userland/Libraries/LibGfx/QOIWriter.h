@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Error.h>
 #include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 
@@ -16,20 +17,20 @@ enum class Channels;
 
 class QOIWriter {
 public:
-    static ByteBuffer encode(Gfx::Bitmap const&);
+    static ErrorOr<ByteBuffer> encode(Gfx::Bitmap const&);
 
 private:
     QOIWriter() = default;
 
     Vector<u8> m_data;
-    void add_header(u32 width, u32 height, Channels, Colorspace);
-    void add_rgb_chunk(u8, u8, u8);
-    void add_rgba_chunk(u8, u8, u8, u8);
-    void add_index_chunk(u32 index);
-    void add_diff_chunk(i8 red_difference, i8 green_difference, i8 blue_difference);
-    void add_luma_chunk(i8 relative_red_difference, i8 green_difference, i8 relative_blue_difference);
-    void add_run_chunk(u32 run_length);
-    void add_end_marker();
+    ErrorOr<void> add_header(u32 width, u32 height, Channels, Colorspace);
+    ErrorOr<void> add_rgb_chunk(u8, u8, u8);
+    ErrorOr<void> add_rgba_chunk(u8, u8, u8, u8);
+    ErrorOr<void> add_index_chunk(u32 index);
+    ErrorOr<void> add_diff_chunk(i8 red_difference, i8 green_difference, i8 blue_difference);
+    ErrorOr<void> add_luma_chunk(i8 relative_red_difference, i8 green_difference, i8 relative_blue_difference);
+    ErrorOr<void> add_run_chunk(u32 run_length);
+    ErrorOr<void> add_end_marker();
 
     Array<Color, 64> running_array;
     static u32 pixel_hash_function(Color pixel);
