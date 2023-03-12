@@ -72,7 +72,7 @@ ErrorOr<ByteBuffer> BMPWriter::encode(Bitmap const& bitmap, Options options)
     return BMPWriter().dump(bitmap, options);
 }
 
-ByteBuffer BMPWriter::compress_pixel_data(ByteBuffer const& pixel_data, BMPWriter::Compression compression)
+ByteBuffer BMPWriter::compress_pixel_data(ByteBuffer pixel_data, BMPWriter::Compression compression)
 {
     switch (compression) {
     case BMPWriter::Compression::BI_BITFIELDS:
@@ -112,7 +112,7 @@ ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, Options options)
     auto buffer = buffer_result.release_value();
 
     auto pixel_data = write_pixel_data(bitmap, pixel_row_data_size, m_bytes_per_pixel, m_include_alpha_channel);
-    pixel_data = compress_pixel_data(pixel_data, m_compression);
+    pixel_data = compress_pixel_data(move(pixel_data), m_compression);
 
     size_t file_size = pixel_data_offset + pixel_data.size();
     OutputStreamer streamer(buffer.data());
