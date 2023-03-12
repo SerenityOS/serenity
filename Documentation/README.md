@@ -55,6 +55,7 @@ Make sure to read the basic [Build Instructions](BuildInstructions.md) first.
 * [General Architecture](Browser/ProcessArchitecture.md)
 * [LibWeb: From Loading to Painting](Browser/LibWebFromLoadingToPainting.md)
 * [How to Add an IDL File](Browser/AddNewIDLFile.md)
+* [LibWeb Code Style & Patterns](Browser/Patterns.md)
 
 ## Kernel
 * [AHCI Locking](Kernel/AHCILocking.md)
