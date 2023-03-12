@@ -67,9 +67,7 @@ public:
     ErrorOr<void> flip(Gfx::Orientation orientation, NotifyClients notify_clients = NotifyClients::Yes);
     ErrorOr<void> rotate(Gfx::RotationDirection direction, NotifyClients notify_clients = NotifyClients::Yes);
     ErrorOr<void> crop(Gfx::IntRect const& rect, NotifyClients notify_clients = NotifyClients::Yes);
-    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
     ErrorOr<void> resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
-    ErrorOr<void> resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients = NotifyClients::Yes);
 
     Optional<Gfx::IntRect> nonempty_content_bounding_rect() const;
 
