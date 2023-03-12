@@ -1294,10 +1294,33 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
             }
         }
     }
+
+    // F.2.1.5 - Inverse DCT (IDCT)
+
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
+                            macroblocks[mb_index].r[i * 8 + j] = clamp(macroblocks[mb_index].r[i * 8 + j] + 128, 0, 255);
+                            macroblocks[mb_index].g[i * 8 + j] = clamp(macroblocks[mb_index].g[i * 8 + j] + 128, 0, 255);
+                            macroblocks[mb_index].b[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
+                            macroblocks[mb_index].k[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
+    // Conversion from YCbCr to RGB isn't specified in the first JPEG specification but in the JFIF extension:
+    // See: https://www.itu.int/rec/dologin_pub.asp?lang=f&id=T-REC-T.871-201105-I!!PDF-E&type=items
+    // 7 - Conversion to and from RGB
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             const u32 chroma_block_index = vcursor * context.mblock_meta.hpadded_count + hcursor;
@@ -1315,32 +1338,12 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
                             const u32 chroma_pxrow = (i / context.vsample_factor) + 4 * vfactor_i;
                             const u32 chroma_pxcol = (j / context.hsample_factor) + 4 * hfactor_i;
                             const u32 chroma_pixel = chroma_pxrow * 8 + chroma_pxcol;
-                            int r = y[pixel] + 1.402f * chroma.cr[chroma_pixel] + 128;
-                            int g = y[pixel] - 0.344f * chroma.cb[chroma_pixel] - 0.714f * chroma.cr[chroma_pixel] + 128;
-                            int b = y[pixel] + 1.772f * chroma.cb[chroma_pixel] + 128;
-                            y[pixel] = r < 0 ? 0 : (r > 255 ? 255 : r);
-                            cb[pixel] = g < 0 ? 0 : (g > 255 ? 255 : g);
-                            cr[pixel] = b < 0 ? 0 : (b > 255 ? 255 : b);
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-static void signed_rgb_to_unsigned(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
-{
-    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
-        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
-                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
-                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    for (u8 i = 0; i < 8; ++i) {
-                        for (u8 j = 0; j < 8; ++j) {
-                            macroblocks[mb_index].r[i * 8 + j] = clamp(macroblocks[mb_index].r[i * 8 + j] + 128, 0, 255);
-                            macroblocks[mb_index].g[i * 8 + j] = clamp(macroblocks[mb_index].g[i * 8 + j] + 128, 0, 255);
-                            macroblocks[mb_index].b[i * 8 + j] = clamp(macroblocks[mb_index].b[i * 8 + j] + 128, 0, 255);
+                            int r = y[pixel] + 1.402f * (chroma.cr[chroma_pixel] - 128);
+                            int g = y[pixel] - 0.3441f * (chroma.cb[chroma_pixel] - 128) - 0.7141f * (chroma.cr[chroma_pixel] - 128);
+                            int b = y[pixel] + 1.772f * (chroma.cb[chroma_pixel] - 128);
+                            y[pixel] = clamp(r, 0, 255);
+                            cb[pixel] = clamp(g, 0, 255);
+                            cr[pixel] = clamp(b, 0, 255);
                         }
                     }
                 }
@@ -1361,7 +1364,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
                 // FIXME: implement CMYK
                 dbgln("CMYK isn't supported yet");
             } else if (context.components.size() == 3) {
-                signed_rgb_to_unsigned(context, macroblocks);
+                // Note: components.size() == 3 means that we have an RGB image, so no color transformation is needed.
             } else {
                 return Error::from_string_literal("Wrong number of components for CMYK or RGB, aborting.");
             }
