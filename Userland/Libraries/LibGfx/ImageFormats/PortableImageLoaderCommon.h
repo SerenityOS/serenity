@@ -135,46 +135,34 @@ static ErrorOr<void> read_whitespace(TContext& context, Streamer& streamer)
 }
 
 template<typename TContext>
-static bool read_width(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_width(TContext& context, Streamer& streamer)
 {
-    auto number_or_error = read_number(streamer);
-    if (number_or_error.is_error())
-        return false;
-
-    context.width = number_or_error.value();
+    context.width = TRY(read_number(streamer));
     context.state = TContext::State::Width;
-    return true;
+    return {};
 }
 
 template<typename TContext>
-static bool read_height(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_height(TContext& context, Streamer& streamer)
 {
-    auto number_or_error = read_number(streamer);
-    if (number_or_error.is_error())
-        return false;
-
-    context.height = number_or_error.value();
+    context.height = TRY(read_number(streamer));
     context.state = TContext::State::Height;
-    return true;
+    return {};
 }
 
 template<typename TContext>
-static bool read_max_val(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_max_val(TContext& context, Streamer& streamer)
 {
-    auto number_or_error = read_number(streamer);
-    if (number_or_error.is_error())
-        return false;
-
-    context.format_details.max_val = number_or_error.value();
+    context.format_details.max_val = TRY(read_number(streamer));
 
     if (context.format_details.max_val > 255) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::FormatDetails::image_type);
         context.state = TContext::State::Error;
-        return false;
+        return Error::from_string_literal("Can't parse 2 byte color");
     }
 
     context.state = TContext::State::Maxval;
-    return true;
+    return {};
 }
 
 template<typename TContext>
@@ -219,13 +207,13 @@ static bool decode(TContext& context)
     if (read_whitespace(context, streamer).is_error())
         return false;
 
-    if (!read_width(context, streamer))
+    if (read_width(context, streamer).is_error())
         return false;
 
     if (read_whitespace(context, streamer).is_error())
         return false;
 
-    if (!read_height(context, streamer))
+    if (read_height(context, streamer).is_error())
         return false;
 
     if (context.width > maximum_width_for_decoded_images || context.height > maximum_height_for_decoded_images) {
@@ -237,7 +225,7 @@ static bool decode(TContext& context)
         return false;
 
     if constexpr (requires { context.format_details.max_val; }) {
-        if (!read_max_val(context, streamer))
+        if (read_max_val(context, streamer).is_error())
             return false;
 
         if (read_whitespace(context, streamer).is_error())
