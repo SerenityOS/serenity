@@ -117,6 +117,10 @@ protected:
     virtual void create_client() = 0;
     virtual void update_zoom() = 0;
 
+#if !defined(AK_OS_SERENITY)
+    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, StringView webdriver_content_ipc_path);
+#endif
+
     struct SharedBitmap {
         i32 id { -1 };
         i32 pending_paints { 0 };
