@@ -13,6 +13,9 @@
 #include <LibMain/Main.h>
 #include <time.h>
 
+#define ANSI_INVERT_OUTPUT "\e[7m"
+#define ANSI_RESET_OUTPUT "\e[0m"
+
 int const line_width = 70;
 int const line_count = 8;
 int const column_width = 22;
@@ -41,9 +44,7 @@ static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
             row.append("   "sv);
         } else {
             if (year == current_year && month == current_month && day_to_print == current_day) {
-                // FIXME: To replicate Unix cal it would be better to use "\x1b[30;47m%2d\x1b[0m " in here instead of *.
-                //        However, doing that messes up the layout.
-                row.appendff("{:02}*", day_to_print);
+                row.appendff(ANSI_INVERT_OUTPUT "{:02}" ANSI_RESET_OUTPUT " ", day_to_print);
             } else {
                 row.appendff("{:02} ", day_to_print);
             }
