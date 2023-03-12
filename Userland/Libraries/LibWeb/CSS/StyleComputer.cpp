@@ -1299,6 +1299,16 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     auto root_font_size = root_element_font_size();
     auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
 
+    // NOTE: Percentage line-height values are relative to the font-size of the element.
+    //       We have to resolve them right away, so that the *computed* line-height is ready for inheritance.
+    //       We can't simply absolutize *all* percentage values against the font size,
+    //       because most percentages are relative to containing block metrics.
+    auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)];
+    if (line_height_value_slot && line_height_value_slot->is_percentage()) {
+        line_height_value_slot = LengthStyleValue::create(
+            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction()));
+    }
+
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
