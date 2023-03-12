@@ -41,6 +41,7 @@ ErrorOr<void> MainWidget::initialize()
 
     m_wave_widget = TRY(try_add<WaveWidget>(m_track_manager));
     m_wave_widget->set_fixed_height(100);
+    TRY(m_wave_widget->set_sample_size(sample_count));
 
     m_tab_widget = TRY(try_add<GUI::TabWidget>());
     m_roll_widget = TRY(m_tab_widget->try_add_tab<RollWidget>(TRY("Piano Roll"_string), m_track_manager));

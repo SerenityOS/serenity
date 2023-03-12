@@ -36,20 +36,19 @@ void WaveWidget::paint_event(GUI::PaintEvent& event)
 
     Color left_wave_color = left_wave_colors[m_track_manager.current_track()->synth()->wave()];
     Color right_wave_color = right_wave_colors[m_track_manager.current_track()->synth()->wave()];
-    // FIXME: We can't get the last buffer from the track manager anymore
-    auto buffer = FixedArray<Audio::Sample>::must_create_but_fixme_should_propagate_errors(sample_count);
-    double width_scale = static_cast<double>(frame_inner_rect().width()) / buffer.size();
+    m_track_manager.current_track()->write_cached_signal_to(m_samples.span());
+    double width_scale = static_cast<double>(frame_inner_rect().width()) / m_samples.size();
 
-    auto const maximum = Audio::Sample::max_range(buffer.span());
+    auto const maximum = Audio::Sample::max_range(m_samples.span());
     int prev_x = 0;
-    int prev_y_left = sample_to_y(buffer[0].left, maximum.left);
-    int prev_y_right = sample_to_y(buffer[0].right, maximum.right);
+    int prev_y_left = sample_to_y(m_samples[0].left, maximum.left);
+    int prev_y_right = sample_to_y(m_samples[0].right, maximum.right);
     painter.set_pixel({ prev_x, prev_y_left }, left_wave_color);
     painter.set_pixel({ prev_x, prev_y_right }, right_wave_color);
 
-    for (size_t x = 1; x < buffer.size(); ++x) {
-        int y_left = sample_to_y(buffer[x].left, maximum.left);
-        int y_right = sample_to_y(buffer[x].right, maximum.right);
+    for (size_t x = 1; x < m_samples.size(); ++x) {
+        int y_left = sample_to_y(m_samples[x].left, maximum.left);
+        int y_right = sample_to_y(m_samples[x].right, maximum.right);
 
         Gfx::IntPoint point1_left(prev_x * width_scale, prev_y_left);
         Gfx::IntPoint point2_left(x * width_scale, y_left);
