@@ -16,9 +16,11 @@
 #define ANSI_INVERT_OUTPUT "\e[7m"
 #define ANSI_RESET_OUTPUT "\e[0m"
 
-int const line_width = 70;
-int const line_count = 8;
-int const column_width = 22;
+// TODO: months are in reality 20-characters wide, but each line contains an extra erronous unneeded space at the end
+// so making this 20 exactly breaks formatting a bit
+int constexpr month_width = "01 02 03 04 05 06 07"sv.length() + 1;
+// three months plus padding between them
+int constexpr year_width = 3 * month_width + 2 * "  "sv.length();
 
 int current_year;
 int current_month;
@@ -29,7 +31,7 @@ static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
     Vector<String> lines;
 
     // FIXME: Both the month name and month header text should be provided by a locale
-    TRY(lines.try_append(TRY(String::formatted("{:^20s}", TRY(String::formatted("{:02} - {:02}", month, year))))));
+    TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", TRY(String::formatted("{:02} - {:02}", month, year)), month_width))));
     TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
 
     int day_to_print = 1;
@@ -69,7 +71,7 @@ static void print_months_side_by_side(Vector<String> const& left_month, Vector<S
         StringView center = i < center_month.size() ? center_month[i] : ""sv;
         StringView right = i < right_month.size() ? right_month[i] : ""sv;
 
-        outln("{: <21}  {: <21}  {: <21}", left, center, right);
+        outln("{: <{}}  {: <{}}  {: <{}}", left, month_width, center, month_width, right, month_width);
     }
 }
 
@@ -109,7 +111,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         month = current_month;
 
     if (year_mode) {
-        outln("                           Year {:04}                            ", year);
+        outln("{: ^{}}", TRY(String::formatted("Year {}", year)), year_width);
 
         for (int i = 1; i < 12; ++i) {
             outln();
