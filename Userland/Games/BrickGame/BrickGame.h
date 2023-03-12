@@ -25,7 +25,8 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
-    void paint_text(GUI::Painter&, int row, DeprecatedString const&);
+    void paint_sidebar_text(GUI::Painter&, int row, DeprecatedString const&);
+    void paint_paused_text(GUI::Painter&);
     void paint_cell(GUI::Painter&, Gfx::IntRect, bool);
     void paint_game(GUI::Painter&, Gfx::IntRect const&);
     void game_over();
