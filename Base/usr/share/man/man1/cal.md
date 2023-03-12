@@ -13,6 +13,8 @@ $ cal [[month] year]
 This program displays a simple calendar. If no arguments are specified, the current month is displayed with the current day highlighted.
 An overview of a whole year is displayed when a `year` is passed without a `month`.
 
+The current day is always highlighted.
+
 Days, months and years are specified with numbers. Week starts at Sunday.
 
 ## Examples
