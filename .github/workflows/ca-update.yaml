@@ -1,0 +1,30 @@
+name: CA Update
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * 0"
+jobs:
+  Step-1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
+        
+      - name: Download and Parse
+        run: |
+          python3.10 -m pip install cryptography
+          wget https://curl.se/ca/cacert.pem
+          python3.10 Meta/ca-update.py
+          mv ca_certs.ini Base/etc/
+          rm -f cacert.pem
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          commit-message: 'Base: Update `certs.ini`'
+          branch: 'ca-update'
+          delete-branch: true
+          title: 'Base: Automcatic update for `certs.ini`'
+      
