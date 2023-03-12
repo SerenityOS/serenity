@@ -5,7 +5,7 @@ cal - Display a calendar
 ## Synopsis
 
 ```**sh
-$ cal [[month] year]
+$ cal [--starting-day weekday] [[month] year]
 ```
 
 ## Description
@@ -16,6 +16,10 @@ An overview of a whole year is displayed when a `year` is passed without a `mont
 The current day is always highlighted.
 
 Days, months and years are specified with numbers. Week starts at Sunday.
+
+## Options
+
+* `-s`, `--starting-day`: Specify which day should start the week. Accepts either short or long weekday names or indexes (0 being Sunday).
 
 ## Examples
 
