@@ -568,53 +568,8 @@ void WebContentView::create_client()
 {
     m_client_state = {};
 
-    int socket_fds[2] {};
-    MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
-
-    int ui_fd = socket_fds[0];
-    int wc_fd = socket_fds[1];
-
-    int fd_passing_socket_fds[2] {};
-    MUST(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, fd_passing_socket_fds));
-
-    int ui_fd_passing_fd = fd_passing_socket_fds[0];
-    int wc_fd_passing_fd = fd_passing_socket_fds[1];
-
-    auto child_pid = fork();
-    if (!child_pid) {
-        MUST(Core::System::close(ui_fd_passing_fd));
-        MUST(Core::System::close(ui_fd));
-
-        auto takeover_string = DeprecatedString::formatted("WebContent:{}", wc_fd);
-        MUST(Core::System::setenv("SOCKET_TAKEOVER"sv, takeover_string, true));
-
-        auto webcontent_fd_passing_socket_string = DeprecatedString::number(wc_fd_passing_fd);
-
-        Vector<StringView, 5> arguments {
-            "WebContent"sv,
-            "--webcontent-fd-passing-socket"sv,
-            webcontent_fd_passing_socket_string
-        };
-
-        if (!m_webdriver_content_ipc_path.is_empty()) {
-            arguments.append("--webdriver-content-path"sv);
-            arguments.append(m_webdriver_content_ipc_path);
-        }
-
-        auto result = spawn_helper_process("WebContent"sv, arguments, Core::System::SearchInPath::Yes);
-        if (result.is_error())
-            warnln("Could not launch WebContent: {}", result.error());
-        VERIFY_NOT_REACHED();
-    }
-
-    MUST(Core::System::close(wc_fd_passing_fd));
-    MUST(Core::System::close(wc_fd));
-
-    auto socket = MUST(Core::LocalSocket::adopt_fd(ui_fd));
-    MUST(socket->set_blocking(true));
-
-    auto new_client = MUST(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(std::move(socket), *this)));
-    new_client->set_fd_passing_socket(MUST(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+    auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
+    auto new_client = launch_web_content_process(candidate_web_content_paths, m_webdriver_content_ipc_path).release_value_but_fixme_should_propagate_errors();
 
     m_web_content_notifier.setSocket(new_client->socket().fd().value());
     m_web_content_notifier.setEnabled(true);
