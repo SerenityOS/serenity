@@ -1,12 +1,15 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Karol Baraniecki <karol@baraniecki.eu>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/DateConstants.h>
+#include <AK/Find.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
@@ -25,6 +28,25 @@ int current_year;
 int current_month;
 int current_day;
 
+static ErrorOr<int> weekday_index(StringView weekday_name)
+{
+    auto is_same_weekday_name = [&weekday_name](StringView other) {
+        return AK::StringUtils::equals_ignoring_ascii_case(weekday_name, other);
+    };
+
+    if (auto it = AK::find_if(AK::long_day_names.begin(), AK::long_day_names.end(), is_same_weekday_name); !it.is_end())
+        return it.index();
+    if (auto it = AK::find_if(AK::short_day_names.begin(), AK::short_day_names.end(), is_same_weekday_name); !it.is_end())
+        return it.index();
+    if (auto it = AK::find_if(AK::mini_day_names.begin(), AK::mini_day_names.end(), is_same_weekday_name); !it.is_end())
+        return it.index();
+
+    if (auto numeric_weekday = AK::StringUtils::convert_to_int(weekday_name); numeric_weekday.has_value())
+        return numeric_weekday.value();
+
+    return Error::from_string_view(TRY(String::formatted("Unknown weekday name: '{}'", weekday_name)));
+}
+
 static ErrorOr<StringView> month_name(int month)
 {
     int month_index = month - 1;
@@ -35,12 +57,24 @@ static ErrorOr<StringView> month_name(int month)
     return AK::long_month_names.at(month_index);
 }
 
+static ErrorOr<String> weekday_names_header(int start_of_week)
+{
+    // Generates a header in a style of "Su Mo Tu We Th Fr Sa"
+
+    Vector<String> weekdays;
+    for (size_t i = 0; i < AK::mini_day_names.size(); i++) {
+        size_t day_index = (i + start_of_week) % mini_day_names.size();
+        TRY(weekdays.try_append(TRY(String::from_utf8(AK::mini_day_names.at(day_index)))));
+    }
+    return TRY(String::join(' ', weekdays));
+}
+
 enum class Header {
     MonthAndYear,
     Month,
 };
 
-static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int month, int year)
+static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int start_of_week, int month, int year)
 {
     Vector<String> lines;
 
@@ -56,11 +90,14 @@ static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int mont
     }
 
     TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", header, month_width))));
-    TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
+    TRY(lines.try_append(TRY(weekday_names_header(start_of_week))));
 
     auto date_time = Core::DateTime::create(year, month, 1);
     int first_day_of_week_for_month = date_time.weekday();
     int days_in_month = date_time.days_in_month();
+
+    first_day_of_week_for_month += 7 - start_of_week;
+    first_day_of_week_for_month %= 7;
 
     Vector<String> days_in_row;
     int day = 1;
@@ -106,12 +143,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     int month = 0;
     int year = 0;
+    StringView week_start_day_name {};
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
     // FIXME: This should ensure one value gets parsed as just a year
     args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
+    args_parser.add_option(week_start_day_name, "Day that starts the week", "starting-day", 's', "day");
     args_parser.parse(arguments);
 
     time_t now = time(nullptr);
@@ -128,6 +167,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool year_mode = !month && year;
 
+    int week_start_day = 0;
+    if (!week_start_day_name.is_empty())
+        week_start_day = TRY(weekday_index(week_start_day_name));
+
     if (!year)
         year = current_year;
     if (!month)
@@ -139,13 +182,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (int month_index = 1; month_index < 12; ++month_index) {
             outln();
             outln();
-            Vector<String> lines_left = TRY(month_lines_to_print(Header::Month, month_index++, year));
-            Vector<String> lines_center = TRY(month_lines_to_print(Header::Month, month_index++, year));
-            Vector<String> lines_right = TRY(month_lines_to_print(Header::Month, month_index, year));
+            Vector<String> lines_left = TRY(month_lines_to_print(Header::Month, week_start_day, month_index++, year));
+            Vector<String> lines_center = TRY(month_lines_to_print(Header::Month, week_start_day, month_index++, year));
+            Vector<String> lines_right = TRY(month_lines_to_print(Header::Month, week_start_day, month_index, year));
             print_months_side_by_side(lines_left, lines_center, lines_right);
         }
     } else {
-        Vector<String> lines = TRY(month_lines_to_print(Header::MonthAndYear, month, year));
+        Vector<String> lines = TRY(month_lines_to_print(Header::MonthAndYear, week_start_day, month, year));
         for (String const& line : lines) {
             outln("{}", line);
         }
