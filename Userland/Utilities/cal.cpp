@@ -19,10 +19,9 @@ int const column_width = 22;
 char print_buffer[line_width * line_count];
 char temp_buffer[line_width * 8];
 
-int target_day;
-
 int current_year;
 int current_month;
+int current_day;
 
 static void append_to_print(char* buffer, int row, int column, char* text)
 {
@@ -54,7 +53,7 @@ static void insert_month_to_print(int column, int month, int year)
         if (i - 1 < first_day_of_week_for_month) {
             last_written_chars += sprintf(temp_buffer + last_written_chars, "   ");
         } else {
-            if (year == current_year && month == current_month && target_day == day_to_print) {
+            if (year == current_year && month == current_month && day_to_print == current_day) {
                 // FIXME: To replicate Unix cal it would be better to use "\x1b[30;47m%2d\x1b[0m " in here instead of *.
                 //        However, doing that messes up the layout.
                 last_written_chars += sprintf(temp_buffer + last_written_chars, "%2d*", day_to_print);
@@ -106,6 +105,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
+    current_year = tm->tm_year + 1900;
+    current_month = tm->tm_mon + 1;
+    current_day = tm->tm_mday;
 
     // Hack: workaround one value parsing as a month
     if (month && !year) {
@@ -116,13 +118,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool year_mode = !month && year;
 
     if (!year)
-        year = tm->tm_year + 1900;
+        year = current_year;
     if (!month)
-        month = tm->tm_mon + 1;
-
-    // FIXME: Those are really _target_ year and month values - not current ones
-    current_year = year;
-    current_month = month;
+        month = current_month;
 
     clean_buffers();
 
