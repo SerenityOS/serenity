@@ -467,6 +467,7 @@ void BrickGame::keydown_event(GUI::KeyEvent& event)
     case KeyCode::Key_Escape:
     case KeyCode::Key_P:
         m_brick_game->toggle_pause();
+        update();
         return;
     default:
         break;
@@ -529,7 +530,7 @@ void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, bool is_on)
     painter.fill_rect(rect, is_on ? m_front_color : m_shadow_color);
 }
 
-void BrickGame::paint_text(GUI::Painter& painter, int row, DeprecatedString const& text)
+void BrickGame::paint_sidebar_text(GUI::Painter& painter, int row, DeprecatedString const& text)
 {
     auto const text_width = static_cast<int>(ceilf(font().width(text)));
     auto const entire_area_rect { frame_inner_rect() };
@@ -538,6 +539,23 @@ void BrickGame::paint_text(GUI::Painter& painter, int row, DeprecatedString cons
         2 * margin + entire_area_rect.y() + (font().pixel_size_rounded_up() + margin) * row,
         text_width, font().pixel_size_rounded_up() } };
     painter.draw_text(rect, text, Gfx::TextAlignment::TopLeft, Color::Black);
+}
+
+void BrickGame::paint_paused_text(GUI::Painter& painter)
+{
+    auto const paused_text = "Paused"sv;
+    auto const paused_text_width = static_cast<int>(ceilf(font().width(paused_text)));
+    auto const more_or_less_font_height = static_cast<int>(font().pixel_size_rounded_up());
+    auto const entire_area_rect { frame_inner_rect() };
+    auto const margin = more_or_less_font_height * 2;
+
+    auto pause_text_box = Gfx::IntRect({}, { paused_text_width + margin, more_or_less_font_height + margin }).centered_within(entire_area_rect);
+    painter.fill_rect(pause_text_box, m_front_color);
+
+    pause_text_box.inflate(-2, -2);
+    painter.fill_rect(pause_text_box, m_back_color);
+
+    painter.draw_text(frame_inner_rect(), paused_text, Gfx::TextAlignment::Center, Color::Black);
 }
 
 void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
@@ -573,10 +591,10 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
                 paint_cell(painter, cell_rect(position), (*m_brick_game)[board_position]);
             }
 
-        paint_text(painter, 0, DeprecatedString::formatted("Score: {}", m_brick_game->score()));
-        paint_text(painter, 1, DeprecatedString::formatted("Level: {}", m_brick_game->level()));
-        paint_text(painter, 4, DeprecatedString::formatted("Hi-Score: {}", m_high_score));
-        paint_text(painter, 12, "Next:");
+        paint_sidebar_text(painter, 0, DeprecatedString::formatted("Score: {}", m_brick_game->score()));
+        paint_sidebar_text(painter, 1, DeprecatedString::formatted("Level: {}", m_brick_game->level()));
+        paint_sidebar_text(painter, 4, DeprecatedString::formatted("Hi-Score: {}", m_high_score));
+        paint_sidebar_text(painter, 12, "Next:");
 
         auto const hint_rect = Gfx::IntRect {
             frame_inner_rect().x() + frame_inner_rect().width() - 105,
@@ -591,6 +609,9 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
         for (size_t y = 0; y < Block::shape_size; ++y)
             for (size_t x = 0; x < Block::shape_size; ++x)
                 paint_cell(painter, dot_rect.translated(int(x * cell_size.width()), int(y * cell_size.height())), m_brick_game->next_block().dot_at({ x, y }));
+
+        if (m_brick_game->state() == Bricks::GameState::Paused)
+            paint_paused_text(painter);
     }
 }
 
