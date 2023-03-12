@@ -8,7 +8,6 @@
 #include "ConnectionToClipboardServer.h"
 #include <AK/DeprecatedString.h>
 #include <LibGfx/BMPLoader.h>
-#include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PNGLoader.h>
