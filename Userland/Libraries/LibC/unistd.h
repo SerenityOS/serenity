@@ -166,8 +166,7 @@ extern int optopt;
 // Index of the next argument to process upon a getopt*() call.
 extern int optind;
 // If set, reset the internal state kept by getopt*(). You may also want to set
-// optind to 1 in that case. Alternatively, setting optind to 0 is treated like
-// doing both of the above.
+// optind to 1 in that case.
 extern int optreset;
 // After parsing an option that accept an argument, set to point to the argument
 // value.
