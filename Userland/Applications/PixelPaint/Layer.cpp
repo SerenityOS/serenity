@@ -237,12 +237,12 @@ ErrorOr<void> Layer::crop(Gfx::IntRect const& rect, NotifyClients notify_clients
     return {};
 }
 
-ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
+ErrorOr<void> Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
 {
-    auto src_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), size());
-    auto dst_rect = Gfx::IntRect(Gfx::IntPoint(0, 0), new_size);
+    auto src_rect = Gfx::IntRect({}, size());
+    auto dst_rect = Gfx::IntRect({}, new_rect.size());
 
-    auto resized_content_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_size));
+    auto resized_content_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_rect.size()));
     {
         Gfx::Painter painter(resized_content_bitmap);
 
@@ -254,7 +254,7 @@ ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, G
     }
 
     if (m_mask_bitmap) {
-        auto dst = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_size));
+        auto dst = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_rect.size()));
         Gfx::Painter painter(dst);
 
         if (scaling_mode == Gfx::Painter::ScalingMode::None) {
@@ -268,20 +268,10 @@ ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::IntPoint new_location, G
 
     m_content_bitmap = move(resized_content_bitmap);
 
-    set_location(new_location);
+    set_location(new_rect.location());
     did_modify_bitmap({}, notify_clients);
 
     return {};
-}
-
-ErrorOr<void> Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
-{
-    return resize(new_rect.size(), new_rect.location(), scaling_mode, notify_clients);
-}
-
-ErrorOr<void> Layer::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
-{
-    return resize(new_size, location(), scaling_mode, notify_clients);
 }
 
 void Layer::update_cached_bitmap()
