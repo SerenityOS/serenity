@@ -52,7 +52,6 @@ public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    PortableImageDecoderPlugin(u8 const*, size_t);
     virtual ~PortableImageDecoderPlugin() override = default;
 
     virtual IntSize size() override;
@@ -68,6 +67,8 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
+    PortableImageDecoderPlugin(u8 const*, size_t);
+
     OwnPtr<TContext> m_context;
 };
 
