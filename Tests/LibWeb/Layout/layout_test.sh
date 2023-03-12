@@ -16,7 +16,7 @@ else
     LADYBIRD_BINARY="./ladybird"
 fi
 
-for input_html_path in "${SCRIPT_DIR}"/input/*; do
+for input_html_path in "${SCRIPT_DIR}"/input/*.html; do
     input_html_file="$(basename "${input_html_path}" .html)"
 
     output_layout_dump=$(cd "${LADYBIRD_BUILD_DIR}"; "${LADYBIRD_BINARY}" -d "${input_html_path}")
