@@ -42,9 +42,9 @@ private:
     u8* m_data;
 };
 
-static ByteBuffer write_pixel_data(RefPtr<Bitmap const> bitmap, int pixel_row_data_size, int bytes_per_pixel, bool include_alpha_channel)
+static ByteBuffer write_pixel_data(Bitmap const& bitmap, int pixel_row_data_size, int bytes_per_pixel, bool include_alpha_channel)
 {
-    int image_size = pixel_row_data_size * bitmap->height();
+    int image_size = pixel_row_data_size * bitmap.height();
     auto buffer_result = ByteBuffer::create_uninitialized(image_size);
     if (buffer_result.is_error())
         return {};
@@ -52,10 +52,10 @@ static ByteBuffer write_pixel_data(RefPtr<Bitmap const> bitmap, int pixel_row_da
     auto buffer = buffer_result.release_value();
 
     int current_row = 0;
-    for (int y = bitmap->physical_height() - 1; y >= 0; --y) {
+    for (int y = bitmap.physical_height() - 1; y >= 0; --y) {
         auto* row = buffer.data() + (pixel_row_data_size * current_row++);
-        for (int x = 0; x < bitmap->physical_width(); x++) {
-            auto pixel = bitmap->get_pixel(x, y);
+        for (int x = 0; x < bitmap.physical_width(); x++) {
+            auto pixel = bitmap.get_pixel(x, y);
             row[x * bytes_per_pixel + 0] = pixel.blue();
             row[x * bytes_per_pixel + 1] = pixel.green();
             row[x * bytes_per_pixel + 2] = pixel.red();
@@ -83,7 +83,7 @@ ByteBuffer BMPWriter::compress_pixel_data(ByteBuffer pixel_data, BMPWriter::Comp
     VERIFY_NOT_REACHED();
 }
 
-ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, Options options)
+ByteBuffer BMPWriter::dump(Bitmap const& bitmap, Options options)
 {
     Options::DibHeader dib_header = options.dib_header;
 
@@ -103,8 +103,8 @@ ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, Options options)
     const size_t file_header_size = 14;
     size_t pixel_data_offset = file_header_size + (u32)dib_header;
 
-    int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap->width() + 31) / 32 * 4;
-    int image_size = pixel_row_data_size * bitmap->height();
+    int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap.width() + 31) / 32 * 4;
+    int image_size = pixel_row_data_size * bitmap.height();
     auto buffer_result = ByteBuffer::create_uninitialized(pixel_data_offset);
     if (buffer_result.is_error())
         return {};
@@ -123,8 +123,8 @@ ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, Options options)
     streamer.write_u32(pixel_data_offset);
 
     streamer.write_u32((u32)dib_header);       // Header size
-    streamer.write_i32(bitmap->width());       // ImageWidth
-    streamer.write_i32(bitmap->height());      // ImageHeight
+    streamer.write_i32(bitmap.width());        // ImageWidth
+    streamer.write_i32(bitmap.height());       // ImageHeight
     streamer.write_u16(1);                     // Planes
     streamer.write_u16(m_bytes_per_pixel * 8); // BitsPerPixel
     streamer.write_u32((u32)m_compression);    // Compression
