@@ -498,11 +498,6 @@ if (BUILD_LAGOM)
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
         target_link_libraries(gml-format LibCore LibGUI LibMain)
 
-        if (ENABLE_LAGOM_LIBWEB)
-            add_executable(headless-browser ../../Userland/Utilities/headless-browser.cpp ../../Userland/Services/WebContent/WebDriverConnection.cpp)
-            target_link_libraries(headless-browser LibWeb LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
-        endif()
-
         if (ENABLE_LAGOM_LADYBIRD)
             add_serenity_subdirectory(Ladybird)
         endif()
