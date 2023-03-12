@@ -33,7 +33,7 @@ int getopt(int argc, char* const* argv, char const* short_options)
     for (auto i = 1; i < argc; ++i)
         s_args.append({ argv[i], strlen(argv[i]) });
 
-    if (optind == 0 || optreset == 1) {
+    if (optind == 1 || optreset == 1) {
         s_parser.reset_state();
         optind = 1;
         optreset = 0;
@@ -75,7 +75,7 @@ int getopt_long(int argc, char* const* argv, char const* short_options, const st
         });
     }
 
-    if (optind == 0 || optreset == 1) {
+    if (optind == 1 || optreset == 1) {
         s_parser.reset_state();
         optind = 1;
         optreset = 0;
