@@ -37,7 +37,7 @@ private:
         BI_BITFIELDS = 3,
     };
 
-    static ByteBuffer compress_pixel_data(ByteBuffer const&, Compression);
+    static ByteBuffer compress_pixel_data(ByteBuffer, Compression);
 
     Compression m_compression { Compression::BI_BITFIELDS };
 
