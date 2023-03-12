@@ -283,7 +283,7 @@ build_image() {
     if [ "$SERENITY_RUN" = "limine" ]; then
         build_target limine-image
     else
-        build_target image
+        build_target qemu-image
     fi
 }
 

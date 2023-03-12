@@ -79,7 +79,7 @@ For completeness, a basic on-target test run will need the SerenityOS image buil
 cmake -GNinja -S Meta/CMake/Superbuild -B Build/superbuild-x86_64
 cmake --build Build/superbuild-x86_64
 cd Build/x86_64
-ninja install && ninja image && ninja run
+ninja install && ninja qemu-image && ninja run
 ```
 
 In the initial terminal, one can easily run the test runner script:
