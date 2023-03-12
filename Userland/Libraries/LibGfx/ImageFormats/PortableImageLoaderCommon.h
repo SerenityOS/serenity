@@ -240,26 +240,4 @@ static bool decode(TContext& context)
     return true;
 }
 
-template<typename TContext>
-static RefPtr<Gfx::Bitmap> load_impl(u8 const* data, size_t data_size)
-{
-    TContext context {};
-    context.data = data;
-    context.data_size = data_size;
-
-    if (!decode(context)) {
-        return nullptr;
-    }
-    return context.bitmap;
-}
-
-template<typename TContext>
-static RefPtr<Gfx::Bitmap> load_from_memory(u8 const* data, size_t length, DeprecatedString const& mmap_name)
-{
-    auto bitmap = load_impl<TContext>(data, length);
-    if (bitmap)
-        bitmap->set_mmap_name(DeprecatedString::formatted("Gfx::Bitmap [{}] - Decoded {}: {}", bitmap->size(), TContext::FormatDetails::image_type, mmap_name));
-    return bitmap;
-}
-
 }
