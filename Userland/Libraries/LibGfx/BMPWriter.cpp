@@ -78,17 +78,18 @@ ByteBuffer BMPWriter::compress_pixel_data(ByteBuffer const& pixel_data, BMPWrite
     VERIFY_NOT_REACHED();
 }
 
-ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, DibHeader dib_header)
+ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, Options options)
 {
+    Options::DibHeader dib_header = options.dib_header;
 
     switch (dib_header) {
-    case DibHeader::Info:
+    case Options::DibHeader::Info:
         m_compression = Compression::BI_RGB;
         m_bytes_per_pixel = 3;
         m_include_alpha_channel = false;
         break;
-    case DibHeader::V3:
-    case DibHeader::V4:
+    case Options::DibHeader::V3:
+    case Options::DibHeader::V4:
         m_compression = Compression::BI_BITFIELDS;
         m_bytes_per_pixel = 4;
         m_include_alpha_channel = true;
@@ -128,14 +129,14 @@ ByteBuffer BMPWriter::dump(RefPtr<Bitmap const> bitmap, DibHeader dib_header)
     streamer.write_u32(0);                     // TotalColors
     streamer.write_u32(0);                     // ImportantColors
 
-    if (dib_header == DibHeader::V3 || dib_header == DibHeader::V4) {
+    if (dib_header == Options::DibHeader::V3 || dib_header == Options::DibHeader::V4) {
         streamer.write_u32(0x00ff0000); // Red bitmask
         streamer.write_u32(0x0000ff00); // Green bitmask
         streamer.write_u32(0x000000ff); // Blue bitmask
         streamer.write_u32(0xff000000); // Alpha bitmask
     }
 
-    if (dib_header == DibHeader::V4) {
+    if (dib_header == Options::DibHeader::V4) {
         streamer.write_u32(0); // Colorspace
 
         for (int i = 0; i < 12; i++) {

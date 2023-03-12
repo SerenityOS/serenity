@@ -12,17 +12,22 @@ namespace Gfx {
 
 class Bitmap;
 
-class BMPWriter {
-public:
-    BMPWriter() = default;
-
+// This is not a nested struct to work around https://llvm.org/PR36684
+struct BMPWriterOptions {
     enum class DibHeader : u32 {
         Info = 40,
         V3 = 56,
         V4 = 108,
     };
+    DibHeader dib_header = DibHeader::V4;
+};
 
-    ByteBuffer dump(RefPtr<Bitmap const>, DibHeader dib_header = DibHeader::V4);
+class BMPWriter {
+public:
+    using Options = BMPWriterOptions;
+    BMPWriter() = default;
+
+    ByteBuffer dump(RefPtr<Bitmap const>, Options options = Options {});
 
 private:
     enum class Compression : u32 {
