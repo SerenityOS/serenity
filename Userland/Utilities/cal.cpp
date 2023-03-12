@@ -4,87 +4,72 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
+#include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
-#include <string.h>
 #include <time.h>
 
 int const line_width = 70;
 int const line_count = 8;
 int const column_width = 22;
 
-char print_buffer[line_width * line_count];
-char temp_buffer[line_width * 8];
-
 int current_year;
 int current_month;
 int current_day;
 
-static void append_to_print(char* buffer, int row, int column, char* text)
+static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
 {
-    int starting_point = (line_width * row) + (column * column_width);
-    for (int i = 0; text[i] != '\0'; i++) {
-        buffer[starting_point + i] = text[i];
-    }
-}
-
-static void insert_month_to_print(int column, int month, int year)
-{
-    int printing_column = column;
-    int printing_row = 0;
+    Vector<String> lines;
 
     // FIXME: Both the month name and month header text should be provided by a locale
-    sprintf(temp_buffer, "     %02u - %04u    ", month, year);
-    append_to_print(print_buffer, printing_row, printing_column, temp_buffer);
-    printing_row++;
+    TRY(lines.try_append(TRY(String::formatted("     {:02} - {:02}    ", month, year))));
+    TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
 
-    sprintf(temp_buffer, "Su Mo Tu We Th Fr Sa");
-    append_to_print(print_buffer, printing_row, printing_column, temp_buffer);
-    printing_row++;
     int day_to_print = 1;
+
     auto date_time = Core::DateTime::create(year, month, 1);
     int first_day_of_week_for_month = date_time.weekday();
     int days_in_the_month = date_time.days_in_month();
-    int last_written_chars = 0;
+
+    StringBuilder row;
     for (int i = 1; day_to_print <= days_in_the_month; ++i) {
         if (i - 1 < first_day_of_week_for_month) {
-            last_written_chars += sprintf(temp_buffer + last_written_chars, "   ");
+            row.append("   "sv);
         } else {
             if (year == current_year && month == current_month && day_to_print == current_day) {
                 // FIXME: To replicate Unix cal it would be better to use "\x1b[30;47m%2d\x1b[0m " in here instead of *.
                 //        However, doing that messes up the layout.
-                last_written_chars += sprintf(temp_buffer + last_written_chars, "%2d*", day_to_print);
+                row.appendff("{:02}*", day_to_print);
             } else {
-                last_written_chars += sprintf(temp_buffer + last_written_chars, "%2d ", day_to_print);
+                row.appendff("{:02} ", day_to_print);
             }
             day_to_print++;
         }
 
-        append_to_print(print_buffer, printing_row, printing_column, temp_buffer);
-
         if (i % 7 == 0) {
-            printing_row++;
-            memset(temp_buffer, ' ', line_width * 8);
-            temp_buffer[line_width * 8 - 1] = '\0';
-            last_written_chars = 0;
+            TRY(lines.try_append(TRY(row.to_string())));
+            row.clear();
         }
     }
+
+    TRY(lines.try_append(TRY(row.to_string())));
+
+    return lines;
 }
 
-static void clean_buffers()
+static void print_months_side_by_side(Vector<String> const& left_month, Vector<String> const& center_month, Vector<String> const& right_month)
 {
-    for (int i = 1; i < line_width * line_count; ++i) {
-        print_buffer[i - 1] = i % line_width == 0 ? '\n' : ' ';
-    }
-    print_buffer[line_width * line_count - 1] = '\0';
+    for (size_t i = 0; i < left_month.size() || i < center_month.size() || i < right_month.size(); i++) {
+        StringView left = i < left_month.size() ? left_month[i] : ""sv;
+        StringView center = i < center_month.size() ? center_month[i] : ""sv;
+        StringView right = i < right_month.size() ? right_month[i] : ""sv;
 
-    for (int i = 0; i < line_width; ++i) {
-        temp_buffer[i] = ' ';
+        outln("{: <21}  {: <21}  {: <21}", left, center, right);
     }
-    temp_buffer[line_width - 1] = '\0';
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -122,24 +107,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!month)
         month = current_month;
 
-    clean_buffers();
-
     if (year_mode) {
-        out("                           Year {:04}                            ", year);
-        outln();
-        outln();
+        outln("                           Year {:04}                            ", year);
 
         for (int i = 1; i < 12; ++i) {
-            insert_month_to_print(0, i++, year);
-            insert_month_to_print(1, i++, year);
-            insert_month_to_print(2, i, year);
-            outln("{}", print_buffer);
-            clean_buffers();
+            outln();
+            outln();
+            Vector<String> lines_left = TRY(month_lines_to_print(i++, year));
+            Vector<String> lines_center = TRY(month_lines_to_print(i++, year));
+            Vector<String> lines_right = TRY(month_lines_to_print(i, year));
+            print_months_side_by_side(lines_left, lines_center, lines_right);
         }
     } else {
-        insert_month_to_print(0, month, year);
-        outln("{}", print_buffer);
-        clean_buffers();
+        Vector<String> lines = TRY(month_lines_to_print(month, year));
+        for (String const& line : lines) {
+            outln("{}", line);
+        }
     }
 
     return 0;
