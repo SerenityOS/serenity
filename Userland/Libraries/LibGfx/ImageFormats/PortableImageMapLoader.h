@@ -59,7 +59,7 @@ public:
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
 
-    virtual bool initialize() override;
+    virtual bool initialize() override { return true; }
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
@@ -109,22 +109,6 @@ bool PortableImageDecoderPlugin<TContext>::set_nonvolatile(bool& was_purged)
         return false;
 
     return m_context->bitmap->set_nonvolatile(was_purged);
-}
-
-template<typename TContext>
-bool PortableImageDecoderPlugin<TContext>::initialize()
-{
-    using Context = TContext;
-    if (m_context->data_size < 2)
-        return false;
-
-    if (m_context->data[0] == 'P' && m_context->data[1] == Context::FormatDetails::ascii_magic_number)
-        return true;
-
-    if (m_context->data[0] == 'P' && m_context->data[1] == Context::FormatDetails::binary_magic_number)
-        return true;
-
-    return false;
 }
 
 template<typename TContext>
