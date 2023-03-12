@@ -65,7 +65,7 @@ jobs:
         CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - script: |
-        ninja install && ninja image
+        ninja install && ninja qemu-image
       displayName: 'Create RootFS'
       workingDirectory: $(Build.SourcesDirectory)/Build/${{ parameters.arch }}clang
 

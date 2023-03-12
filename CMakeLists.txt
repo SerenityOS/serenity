@@ -73,13 +73,9 @@ add_custom_target(run
 # out forcing re-builds when they might not want them.
 add_custom_target(setup-and-run
     COMMAND ${CMAKE_MAKE_PROGRAM} install
-    COMMAND ${CMAKE_MAKE_PROGRAM} image
+    COMMAND ${CMAKE_MAKE_PROGRAM} qemu-image
     COMMAND ${CMAKE_MAKE_PROGRAM} run
     USES_TERMINAL
-)
-
-add_custom_target(image
-    DEPENDS qemu-image
 )
 
 add_custom_target(qemu-image

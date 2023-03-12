@@ -194,7 +194,7 @@ jobs:
       - name: Create Serenity Rootfs
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
         working-directory: ${{ github.workspace }}/Build/${{ matrix.arch }}
-        run: ninja install && ninja image
+        run: ninja install && ninja qemu-image
 
       - name: Run On-Target Tests
         if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
@@ -236,6 +236,6 @@ jobs:
         run: |
           # Running the tests apparently leaves the image sufficiently broken
           rm _disk_image
-          ninja image
+          ninja qemu-image
           /usr/bin/time ../../Meta/export-argsparser-manpages.sh --verify-git-state
         timeout-minutes: 10
