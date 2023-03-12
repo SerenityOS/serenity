@@ -67,7 +67,7 @@ static ByteBuffer write_pixel_data(RefPtr<Bitmap const> bitmap, int pixel_row_da
     return buffer;
 }
 
-static ByteBuffer compress_pixel_data(ByteBuffer const& pixel_data, BMPWriter::Compression compression)
+ByteBuffer BMPWriter::compress_pixel_data(ByteBuffer const& pixel_data, BMPWriter::Compression compression)
 {
     switch (compression) {
     case BMPWriter::Compression::BI_BITFIELDS:
