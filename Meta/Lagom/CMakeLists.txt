@@ -510,6 +510,9 @@ if (BUILD_LAGOM)
         add_executable(icc ../../Userland/Utilities/icc.cpp)
         target_link_libraries(icc LibCore LibGfx LibMain)
 
+        add_executable(image ../../Userland/Utilities/image.cpp)
+        target_link_libraries(image LibCore LibGfx LibMain)
+
         add_executable(ttfdisasm ../../Userland/Utilities/ttfdisasm.cpp)
         target_link_libraries(ttfdisasm LibGfx LibMain)
 
