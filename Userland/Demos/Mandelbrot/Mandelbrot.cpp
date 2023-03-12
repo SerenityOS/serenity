@@ -371,11 +371,9 @@ ErrorOr<void> Mandelbrot::export_image(DeprecatedString const& export_path, Imag
     m_set.resize(Gfx::IntSize { 1920, 1080 });
     ByteBuffer encoded_data;
     switch (image_type) {
-    case ImageType::BMP: {
-        Gfx::BMPWriter dumper;
-        encoded_data = dumper.dump(m_set.bitmap());
+    case ImageType::BMP:
+        encoded_data = TRY(Gfx::BMPWriter::encode(m_set.bitmap()));
         break;
-    }
     case ImageType::PNG:
         encoded_data = TRY(Gfx::PNGWriter::encode(m_set.bitmap()));
         break;
