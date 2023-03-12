@@ -27,8 +27,7 @@
 static ErrorOr<ByteBuffer> dump_bitmap(RefPtr<Gfx::Bitmap> bitmap, AK::StringView extension)
 {
     if (extension == "bmp") {
-        Gfx::BMPWriter dumper;
-        return dumper.dump(bitmap);
+        return Gfx::BMPWriter::encode(*bitmap);
     } else if (extension == "png") {
         return Gfx::PNGWriter::encode(*bitmap);
     } else if (extension == "qoi") {

@@ -176,8 +176,7 @@ ErrorOr<void> Image::export_bmp_to_file(NonnullOwnPtr<Stream> stream, bool prese
     auto bitmap_format = preserve_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888;
     auto bitmap = TRY(compose_bitmap(bitmap_format));
 
-    Gfx::BMPWriter dumper;
-    auto encoded_data = dumper.dump(bitmap);
+    auto encoded_data = TRY(Gfx::BMPWriter::encode(*bitmap));
     TRY(stream->write_entire_buffer(encoded_data));
     return {};
 }

@@ -25,11 +25,13 @@ struct BMPWriterOptions {
 class BMPWriter {
 public:
     using Options = BMPWriterOptions;
-    BMPWriter() = default;
-
-    ByteBuffer dump(RefPtr<Bitmap const>, Options options = Options {});
+    static ErrorOr<ByteBuffer> encode(Bitmap const&, Options options = Options {});
 
 private:
+    BMPWriter() = default;
+
+    ByteBuffer dump(RefPtr<Bitmap const>, Options options);
+
     enum class Compression : u32 {
         BI_RGB = 0,
         BI_BITFIELDS = 3,

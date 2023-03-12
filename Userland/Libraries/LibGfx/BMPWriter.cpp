@@ -67,6 +67,11 @@ static ByteBuffer write_pixel_data(RefPtr<Bitmap const> bitmap, int pixel_row_da
     return buffer;
 }
 
+ErrorOr<ByteBuffer> BMPWriter::encode(Bitmap const& bitmap, Options options)
+{
+    return BMPWriter().dump(bitmap, options);
+}
+
 ByteBuffer BMPWriter::compress_pixel_data(ByteBuffer const& pixel_data, BMPWriter::Compression compression)
 {
     switch (compression) {
