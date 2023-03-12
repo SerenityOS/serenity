@@ -11,6 +11,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
@@ -30,8 +31,7 @@ static constexpr Color adjust_color(u16 max_val, Color color)
     return color;
 }
 
-template<typename TValue>
-static bool read_number(Streamer& streamer, TValue* value)
+static inline ErrorOr<u16> read_number(Streamer& streamer)
 {
     u8 byte {};
     StringBuilder sb {};
@@ -45,14 +45,11 @@ static bool read_number(Streamer& streamer, TValue* value)
         sb.append(byte);
     }
 
-    auto const opt_value = sb.to_deprecated_string().to_uint();
-    if (!opt_value.has_value()) {
-        *value = 0;
-        return false;
-    }
+    auto const maybe_value = TRY(sb.to_string()).to_number<u16>();
+    if (!maybe_value.has_value())
+        return Error::from_string_literal("Can't convert bytes to a number");
 
-    *value = static_cast<u16>(opt_value.value());
-    return true;
+    return *maybe_value;
 }
 
 template<typename TContext>
@@ -133,11 +130,11 @@ static bool read_whitespace(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool read_width(TContext& context, Streamer& streamer)
 {
-    if (bool const result = read_number(streamer, &context.width);
-        !result || context.width == 0) {
+    auto number_or_error = read_number(streamer);
+    if (number_or_error.is_error())
         return false;
-    }
 
+    context.width = number_or_error.value();
     context.state = TContext::State::Width;
     return true;
 }
@@ -145,11 +142,11 @@ static bool read_width(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool read_height(TContext& context, Streamer& streamer)
 {
-    if (bool const result = read_number(streamer, &context.height);
-        !result || context.height == 0) {
+    auto number_or_error = read_number(streamer);
+    if (number_or_error.is_error())
         return false;
-    }
 
+    context.height = number_or_error.value();
     context.state = TContext::State::Height;
     return true;
 }
@@ -157,10 +154,11 @@ static bool read_height(TContext& context, Streamer& streamer)
 template<typename TContext>
 static bool read_max_val(TContext& context, Streamer& streamer)
 {
-    if (bool const result = read_number(streamer, &context.format_details.max_val);
-        !result || context.format_details.max_val == 0) {
+    auto number_or_error = read_number(streamer);
+    if (number_or_error.is_error())
         return false;
-    }
+
+    context.format_details.max_val = number_or_error.value();
 
     if (context.format_details.max_val > 255) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::FormatDetails::image_type);

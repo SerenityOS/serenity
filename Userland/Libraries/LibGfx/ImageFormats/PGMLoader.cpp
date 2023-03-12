@@ -33,11 +33,11 @@ bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
     Vector<Gfx::Color> color_data;
 
     if (context.type == PGMLoadingContext::Type::ASCII) {
-        u16 value;
-
         while (true) {
-            if (!read_number(streamer, &value))
+            auto number_or_error = read_number(streamer);
+            if (number_or_error.is_error())
                 break;
+            auto value = number_or_error.value();
 
             if (!read_whitespace(context, streamer))
                 break;
