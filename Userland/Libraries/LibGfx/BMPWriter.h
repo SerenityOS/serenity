@@ -30,7 +30,7 @@ public:
 private:
     BMPWriter() = default;
 
-    ByteBuffer dump(Bitmap const&, Options options);
+    ErrorOr<ByteBuffer> dump(Bitmap const&, Options options);
 
     enum class Compression : u32 {
         BI_RGB = 0,
