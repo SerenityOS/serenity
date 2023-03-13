@@ -314,7 +314,7 @@ static i64 clip_bigint_to_sane_time(Crypto::SignedBigInteger const& value)
 Vector<Crypto::SignedBigInteger> get_named_time_zone_epoch_nanoseconds(StringView time_zone_identifier, i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond, u16 microsecond, u16 nanosecond)
 {
     auto local_nanoseconds = get_utc_epoch_nanoseconds(year, month, day, hour, minute, second, millisecond, microsecond, nanosecond);
-    auto local_time = Duration::from_nanoseconds(clip_bigint_to_sane_time(local_nanoseconds));
+    auto local_time = UnixDateTime::from_nanoseconds_since_epoch(clip_bigint_to_sane_time(local_nanoseconds));
 
     // FIXME: LibTimeZone does not behave exactly as the spec expects. It does not consider repeated or skipped time points.
     auto offset = TimeZone::get_time_zone_offset(time_zone_identifier, local_time);
@@ -332,10 +332,10 @@ i64 get_named_time_zone_offset_nanoseconds(StringView time_zone_identifier, Cryp
     auto time_zone = TimeZone::time_zone_from_string(time_zone_identifier);
     VERIFY(time_zone.has_value());
 
-    // Since Duration::from_seconds() and Duration::from_nanoseconds() both take an i64, converting to
+    // Since UnixDateTime::from_seconds_since_epoch() and UnixDateTime::from_nanoseconds_since_epoch() both take an i64, converting to
     // seconds first gives us a greater range. The TZDB doesn't have sub-second offsets.
     auto seconds = epoch_nanoseconds.divided_by(s_one_billion_bigint).quotient;
-    auto time = Duration::from_seconds(clip_bigint_to_sane_time(seconds));
+    auto time = UnixDateTime::from_seconds_since_epoch(clip_bigint_to_sane_time(seconds));
 
     auto offset = TimeZone::get_time_zone_offset(*time_zone, time);
     VERIFY(offset.has_value());

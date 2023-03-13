@@ -72,7 +72,7 @@ TEST_CASE(time_zone_name)
         TestData { "ar"sv, Locale::CalendarPatternStyle::ShortGeneric, "Africa/Accra"sv, "غرينتش"sv },
     };
 
-    constexpr auto jan_1_2022 = AK::Duration::from_seconds(1640995200); // Saturday, January 1, 2022 12:00:00 AM
+    constexpr auto jan_1_2022 = AK::UnixDateTime::from_seconds_since_epoch(1640995200); // Saturday, January 1, 2022 12:00:00 AM
 
     for (auto const& test : test_data) {
         auto time_zone = MUST(Locale::format_time_zone(test.locale, test.time_zone, test.style, jan_1_2022));
@@ -122,7 +122,7 @@ TEST_CASE(time_zone_name_dst)
         TestData { "ar"sv, Locale::CalendarPatternStyle::Short, "Africa/Accra"sv, "غرينتش"sv },
     };
 
-    constexpr auto sep_19_2022 = AK::Duration::from_seconds(1663553728); // Monday, September 19, 2022 2:15:28 AM
+    constexpr auto sep_19_2022 = AK::UnixDateTime::from_seconds_since_epoch(1663553728); // Monday, September 19, 2022 2:15:28 AM
 
     for (auto const& test : test_data) {
         auto time_zone = MUST(Locale::format_time_zone(test.locale, test.time_zone, test.style, sep_19_2022));
@@ -132,13 +132,13 @@ TEST_CASE(time_zone_name_dst)
 
 TEST_CASE(format_time_zone_offset)
 {
-    constexpr auto jan_1_1833 = AK::Duration::from_seconds(-4323283200); // Tuesday, January 1, 1833 12:00:00 AM
-    constexpr auto jan_1_2022 = AK::Duration::from_seconds(1640995200);  // Saturday, January 1, 2022 12:00:00 AM
+    constexpr auto jan_1_1833 = AK::UnixDateTime::from_seconds_since_epoch(-4323283200); // Tuesday, January 1, 1833 12:00:00 AM
+    constexpr auto jan_1_2022 = AK::UnixDateTime::from_seconds_since_epoch(1640995200);  // Saturday, January 1, 2022 12:00:00 AM
 
     struct TestData {
         StringView locale;
         Locale::CalendarPatternStyle style;
-        AK::Duration time;
+        AK::UnixDateTime time;
         StringView time_zone;
         StringView expected_result;
     };
