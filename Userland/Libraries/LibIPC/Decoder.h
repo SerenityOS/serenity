@@ -97,6 +97,9 @@ template<>
 ErrorOr<Duration> decode(Decoder&);
 
 template<>
+ErrorOr<UnixDateTime> decode(Decoder&);
+
+template<>
 ErrorOr<URL> decode(Decoder&);
 
 template<>
