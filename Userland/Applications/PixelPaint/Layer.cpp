@@ -237,14 +237,14 @@ ErrorOr<void> Layer::crop(Gfx::IntRect const& rect, NotifyClients notify_clients
     return {};
 }
 
-ErrorOr<void> Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
+ErrorOr<void> Layer::scale(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingMode scaling_mode, NotifyClients notify_clients)
 {
     auto src_rect = Gfx::IntRect({}, size());
     auto dst_rect = Gfx::IntRect({}, new_rect.size());
 
-    auto resized_content_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_rect.size()));
+    auto scaled_content_bitmap = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, new_rect.size()));
     {
-        Gfx::Painter painter(resized_content_bitmap);
+        Gfx::Painter painter(scaled_content_bitmap);
 
         if (scaling_mode == Gfx::Painter::ScalingMode::None) {
             painter.blit(src_rect.top_left(), *m_content_bitmap, src_rect, 1.0f);
@@ -266,7 +266,7 @@ ErrorOr<void> Layer::resize(Gfx::IntRect const& new_rect, Gfx::Painter::ScalingM
         m_mask_bitmap = move(dst);
     }
 
-    m_content_bitmap = move(resized_content_bitmap);
+    m_content_bitmap = move(scaled_content_bitmap);
 
     set_location(new_rect.location());
     did_modify_bitmap({}, notify_clients);

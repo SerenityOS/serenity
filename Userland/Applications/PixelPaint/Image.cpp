@@ -664,8 +664,8 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
     }
 
     if (scaling_mode != Gfx::Painter::ScalingMode::None) {
-        Vector<NonnullRefPtr<Layer>> resized_layers;
-        TRY(resized_layers.try_ensure_capacity(m_layers.size()));
+        Vector<NonnullRefPtr<Layer>> scaled_layers;
+        TRY(scaled_layers.try_ensure_capacity(m_layers.size()));
 
         VERIFY(m_layers.size() > 0);
 
@@ -681,12 +681,12 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
             auto scaled_top_left = layer_rect.top_left().scaled(scale_x, scale_y).to_rounded<int>();
             auto scaled_bottom_right = layer_rect.bottom_right().translated(1).scaled(scale_x, scale_y).to_rounded<int>();
             auto scaled_layer_rect = Gfx::IntRect::from_two_points(scaled_top_left, scaled_bottom_right);
-            TRY(new_layer->resize(scaled_layer_rect, scaling_mode, Layer::NotifyClients::No));
+            TRY(new_layer->scale(scaled_layer_rect, scaling_mode, Layer::NotifyClients::No));
 
-            resized_layers.unchecked_append(new_layer);
+            scaled_layers.unchecked_append(new_layer);
         }
 
-        m_layers = move(resized_layers);
+        m_layers = move(scaled_layers);
         for (auto& layer : m_layers)
             layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
 
