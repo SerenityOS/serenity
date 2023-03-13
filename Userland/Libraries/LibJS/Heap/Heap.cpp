@@ -162,7 +162,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
         }
     };
 
-    for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); i += sizeof(FlatPtr))
+    for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); ++i)
         add_possible_value(raw_jmp_buf[i]);
 
     auto stack_reference = bit_cast<FlatPtr>(&dummy);
