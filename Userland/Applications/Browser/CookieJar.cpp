@@ -286,7 +286,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
     Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value, parsed_cookie.same_site_attribute };
-    cookie.creation_time = Duration::now_realtime();
+    cookie.creation_time = UnixDateTime::now();
     cookie.last_access_time = cookie.creation_time;
 
     if (parsed_cookie.expiry_time_from_max_age_attribute.has_value()) {
@@ -302,7 +302,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     } else {
         // Set the cookie's persistent-flag to false. Set the cookie's expiry-time to the latest representable date.
         cookie.persistent = false;
-        cookie.expiry_time = Duration::max();
+        cookie.expiry_time = UnixDateTime::latest();
     }
 
     // 4. If the cookie-attribute-list contains an attribute with an attribute-name of "Domain":
@@ -421,7 +421,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
     });
 
     // 3. Update the last-access-time of each cookie in the cookie-list to the current date and time.
-    auto now = Duration::now_realtime();
+    auto now = UnixDateTime::now();
 
     for (auto& cookie : cookie_list) {
         cookie.last_access_time = now;
@@ -462,7 +462,7 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
             return Error::from_string_view(name);
 
         auto time = value.to_int<i64>().value();
-        field = Duration::from_seconds(time);
+        field = UnixDateTime::from_seconds_since_epoch(time);
         return {};
     };
 
@@ -505,9 +505,9 @@ void CookieJar::insert_cookie_into_database(Web::Cookie::Cookie const& cookie)
                 cookie.name,
                 cookie.value,
                 to_underlying(cookie.same_site),
-                cookie.creation_time.to_seconds(),
-                cookie.last_access_time.to_seconds(),
-                cookie.expiry_time.to_seconds(),
+                cookie.creation_time.seconds_since_epoch(),
+                cookie.last_access_time.seconds_since_epoch(),
+                cookie.expiry_time.seconds_since_epoch(),
                 cookie.domain,
                 cookie.path,
                 cookie.secure,
@@ -529,9 +529,9 @@ void CookieJar::update_cookie_in_database(Web::Cookie::Cookie const& cookie)
                 storage.statements.update_cookie, {}, [this]() { purge_expired_cookies(); }, {},
                 cookie.value,
                 to_underlying(cookie.same_site),
-                cookie.creation_time.to_seconds(),
-                cookie.last_access_time.to_seconds(),
-                cookie.expiry_time.to_seconds(),
+                cookie.creation_time.seconds_since_epoch(),
+                cookie.last_access_time.seconds_since_epoch(),
+                cookie.expiry_time.seconds_since_epoch(),
                 cookie.secure,
                 cookie.http_only,
                 cookie.host_only,
@@ -624,7 +624,7 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
 
 void CookieJar::purge_expired_cookies()
 {
-    auto now = Duration::now_realtime().to_seconds();
+    auto now = UnixDateTime::now();
 
     m_storage.visit(
         [&](PersistedStorage& storage) {
@@ -634,7 +634,7 @@ void CookieJar::purge_expired_cookies()
             Vector<CookieStorageKey> keys_to_evict;
 
             for (auto const& cookie : storage) {
-                if (cookie.value.expiry_time.to_seconds() < now)
+                if (cookie.value.expiry_time < now)
                     keys_to_evict.append(cookie.key);
             }
 

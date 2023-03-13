@@ -32,9 +32,9 @@ struct Cookie {
     DeprecatedString name;
     DeprecatedString value;
     SameSite same_site;
-    Duration creation_time {};
-    Duration last_access_time {};
-    Duration expiry_time {};
+    UnixDateTime creation_time {};
+    UnixDateTime last_access_time {};
+    UnixDateTime expiry_time {};
     DeprecatedString domain {};
     DeprecatedString path {};
     bool secure { false };

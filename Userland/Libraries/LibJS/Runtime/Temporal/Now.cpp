@@ -165,7 +165,7 @@ TimeZone* system_time_zone(VM& vm)
 BigInt* system_utc_epoch_nanoseconds(VM& vm)
 {
     // 1. Let ns be the approximate current UTC date and time, in nanoseconds since the epoch.
-    auto now = AK::Duration::now_realtime().to_nanoseconds();
+    auto now = AK::UnixDateTime::now().nanoseconds_since_epoch();
     auto ns = Crypto::SignedBigInteger { now };
 
     // 2. Set ns to the result of clamping ns between nsMinInstant and nsMaxInstant.

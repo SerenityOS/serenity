@@ -18,8 +18,8 @@ struct ParsedCookie {
     DeprecatedString name;
     DeprecatedString value;
     SameSite same_site_attribute { SameSite::Default };
-    Optional<Duration> expiry_time_from_expires_attribute {};
-    Optional<Duration> expiry_time_from_max_age_attribute {};
+    Optional<UnixDateTime> expiry_time_from_expires_attribute {};
+    Optional<UnixDateTime> expiry_time_from_max_age_attribute {};
     Optional<DeprecatedString> domain {};
     Optional<DeprecatedString> path {};
     bool secure_attribute_present { false };
