@@ -18,10 +18,13 @@
 static_assert(false, "This file must only be used for macOS");
 #endif
 
-#define FixedPoint FixedPointMacOS // AK::FixedPoint conflicts with FixedPoint from MacTypes.h.
+// Several AK types conflict with MacOS types.
+#define FixedPoint FixedPointMacOS
+#define Duration DurationMacOS
 #include <CoreServices/CoreServices.h>
 #include <dispatch/dispatch.h>
 #undef FixedPoint
+#undef Duration
 
 namespace Core {
 

@@ -107,12 +107,12 @@ void PlaybackManager::pause_playback()
     TRY_OR_FATAL_ERROR(m_playback_handler->pause());
 }
 
-Time PlaybackManager::current_playback_time()
+Duration PlaybackManager::current_playback_time()
 {
     return m_playback_handler->current_time();
 }
 
-Time PlaybackManager::duration()
+Duration PlaybackManager::duration()
 {
     auto duration_result = ({
         auto demuxer_locker = Threading::MutexLocker(m_demuxer_mutex);
@@ -179,12 +179,12 @@ void PlaybackManager::timer_callback()
     TRY_OR_FATAL_ERROR(m_playback_handler->do_timed_state_update());
 }
 
-void PlaybackManager::seek_to_timestamp(Time target_timestamp, SeekMode seek_mode)
+void PlaybackManager::seek_to_timestamp(Duration target_timestamp, SeekMode seek_mode)
 {
     TRY_OR_FATAL_ERROR(m_playback_handler->seek(target_timestamp, seek_mode));
 }
 
-Optional<Time> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample)
+Optional<Duration> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Duration timestamp, Optional<Duration> earliest_available_sample)
 {
     auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp, move(earliest_available_sample));
     if (result.is_error())
@@ -211,13 +211,13 @@ void PlaybackManager::set_state_update_timer(int delay_ms)
 
 void PlaybackManager::restart_playback()
 {
-    seek_to_timestamp(Time::zero());
+    seek_to_timestamp(Duration::zero());
 }
 
 void PlaybackManager::decode_and_queue_one_sample()
 {
 #if PLAYBACK_MANAGER_DEBUG
-    auto start_time = Time::now_monotonic();
+    auto start_time = Duration::now_monotonic();
 #endif
 
     FrameQueueItem item_to_enqueue;
@@ -326,12 +326,12 @@ void PlaybackManager::decode_and_queue_one_sample()
     m_buffer_is_full.exchange(false);
 }
 
-Time PlaybackManager::PlaybackStateHandler::current_time() const
+Duration PlaybackManager::PlaybackStateHandler::current_time() const
 {
     return m_manager.m_last_present_in_media_time;
 }
 
-ErrorOr<void> PlaybackManager::PlaybackStateHandler::seek(Time target_timestamp, SeekMode seek_mode)
+ErrorOr<void> PlaybackManager::PlaybackStateHandler::seek(Duration target_timestamp, SeekMode seek_mode)
 {
     return replace_handler_and_delete_this<SeekingStateHandler>(is_playing(), target_timestamp, seek_mode);
 }
@@ -408,7 +408,7 @@ public:
 private:
     ErrorOr<void> on_enter() override
     {
-        m_last_present_in_real_time = Time::now_monotonic();
+        m_last_present_in_real_time = Duration::now_monotonic();
         return do_timed_state_update();
     }
 
@@ -427,9 +427,9 @@ private:
         return replace_handler_and_delete_this<BufferingStateHandler>(true);
     }
 
-    Time current_time() const override
+    Duration current_time() const override
     {
-        return manager().m_last_present_in_media_time + (Time::now_monotonic() - m_last_present_in_real_time);
+        return manager().m_last_present_in_media_time + (Duration::now_monotonic() - m_last_present_in_real_time);
     }
 
     ErrorOr<void> do_timed_state_update() override
@@ -498,7 +498,7 @@ private:
 
         // If we have a frame, send it for presentation.
         if (should_present_frame) {
-            auto now = Time::now_monotonic();
+            auto now = Duration::now_monotonic();
             manager().m_last_present_in_media_time += now - m_last_present_in_real_time;
             m_last_present_in_real_time = now;
 
@@ -520,7 +520,7 @@ private:
         return {};
     }
 
-    Time m_last_present_in_real_time = Time::zero();
+    Duration m_last_present_in_real_time = Duration::zero();
 };
 
 class PlaybackManager::PausedStateHandler : public PlaybackManager::PlaybackStateHandler {
@@ -574,7 +574,7 @@ class PlaybackManager::BufferingStateHandler : public PlaybackManager::ResumingS
 
 class PlaybackManager::SeekingStateHandler : public PlaybackManager::ResumingStateHandler {
 public:
-    SeekingStateHandler(PlaybackManager& manager, bool playing, Time target_timestamp, SeekMode seek_mode)
+    SeekingStateHandler(PlaybackManager& manager, bool playing, Duration target_timestamp, SeekMode seek_mode)
         : ResumingStateHandler(manager, playing)
         , m_target_timestamp(target_timestamp)
         , m_seek_mode(seek_mode)
@@ -655,14 +655,14 @@ private:
 
     StringView name() override { return "Seeking"sv; }
 
-    ErrorOr<void> seek(Time target_timestamp, SeekMode seek_mode) override
+    ErrorOr<void> seek(Duration target_timestamp, SeekMode seek_mode) override
     {
         m_target_timestamp = target_timestamp;
         m_seek_mode = seek_mode;
         return on_enter();
     }
 
-    Time current_time() const override
+    Duration current_time() const override
     {
         return m_target_timestamp;
     }
@@ -676,7 +676,7 @@ private:
 
     PlaybackState get_state() const override { return PlaybackState::Seeking; }
 
-    Time m_target_timestamp { Time::zero() };
+    Duration m_target_timestamp { Duration::zero() };
     SeekMode m_seek_mode { SeekMode::Accurate };
 };
 
@@ -700,7 +700,7 @@ private:
     {
         // When Stopped, the decoder thread will be waiting for a signal to start its loop going again.
         manager().m_decode_wait_condition.broadcast();
-        return replace_handler_and_delete_this<SeekingStateHandler>(true, Time::zero(), SeekMode::Fast);
+        return replace_handler_and_delete_this<SeekingStateHandler>(true, Duration::zero(), SeekMode::Fast);
     }
     bool is_playing() const override { return false; };
     PlaybackState get_state() const override { return PlaybackState::Stopped; }

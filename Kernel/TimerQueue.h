@@ -22,7 +22,7 @@ class Timer final : public AtomicRefCounted<Timer> {
     friend class TimerQueue;
 
 public:
-    void setup(clockid_t clock_id, Time expires, Function<void()>&& callback)
+    void setup(clockid_t clock_id, Duration expires, Function<void()>&& callback)
     {
         VERIFY(!is_queued());
         m_clock_id = clock_id;
@@ -35,13 +35,13 @@ public:
         VERIFY(!is_queued());
     }
 
-    Time remaining() const;
+    Duration remaining() const;
 
 private:
     TimerId m_id;
     clockid_t m_clock_id;
-    Time m_expires;
-    Time m_remaining {};
+    Duration m_expires;
+    Duration m_remaining {};
     Function<void()> m_callback;
     Atomic<bool> m_cancelled { false };
     Atomic<bool> m_callback_finished { false };
@@ -71,7 +71,7 @@ private:
     void clear_callback_finished() { m_callback_finished.store(false, AK::memory_order_release); }
     void set_callback_finished() { m_callback_finished.store(true, AK::memory_order_release); }
 
-    Time now(bool) const;
+    Duration now(bool) const;
 
     bool is_queued() const { return m_list_node.is_in_list(); }
 
@@ -88,14 +88,14 @@ public:
     static TimerQueue& the();
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
-    bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, Time const&, Function<void()>&&);
+    bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, Duration const&, Function<void()>&&);
     bool cancel_timer(Timer& timer, bool* was_in_use = nullptr);
     void fire();
 
 private:
     struct Queue {
         Timer::List list;
-        Time next_timer_due {};
+        Duration next_timer_due {};
     };
     void remove_timer_locked(Queue&, Timer&);
     void update_next_timer_due(Queue&);

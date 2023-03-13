@@ -32,11 +32,11 @@ public:
     void set_writing_app(DeprecatedString writing_app) { m_writing_app = move(writing_app); }
     Optional<double> duration_unscaled() const { return m_duration_unscaled; }
     void set_duration_unscaled(double duration) { m_duration_unscaled.emplace(duration); }
-    Optional<Time> duration() const
+    Optional<Duration> duration() const
     {
         if (!duration_unscaled().has_value())
             return {};
-        return Time::from_nanoseconds(static_cast<i64>(static_cast<double>(timestamp_scale()) * duration_unscaled().value()));
+        return Duration::from_nanoseconds(static_cast<i64>(static_cast<double>(timestamp_scale()) * duration_unscaled().value()));
     }
 
 private:
@@ -167,8 +167,8 @@ public:
 
     u64 track_number() const { return m_track_number; }
     void set_track_number(u64 track_number) { m_track_number = track_number; }
-    Time timestamp() const { return m_timestamp; }
-    void set_timestamp(Time timestamp) { m_timestamp = timestamp; }
+    Duration timestamp() const { return m_timestamp; }
+    void set_timestamp(Duration timestamp) { m_timestamp = timestamp; }
     bool only_keyframes() const { return m_only_keyframes; }
     void set_only_keyframes(bool only_keyframes) { m_only_keyframes = only_keyframes; }
     bool invisible() const { return m_invisible; }
@@ -185,7 +185,7 @@ public:
 
 private:
     u64 m_track_number { 0 };
-    Time m_timestamp { Time::zero() };
+    Duration m_timestamp { Duration::zero() };
     bool m_only_keyframes { false };
     bool m_invisible { false };
     Lacing m_lacing { None };
@@ -195,11 +195,11 @@ private:
 
 class Cluster {
 public:
-    Time timestamp() const { return m_timestamp; }
-    void set_timestamp(Time timestamp) { m_timestamp = timestamp; }
+    Duration timestamp() const { return m_timestamp; }
+    void set_timestamp(Duration timestamp) { m_timestamp = timestamp; }
 
 private:
-    Time m_timestamp { Time::zero() };
+    Duration m_timestamp { Duration::zero() };
 };
 
 class CueTrackPosition {
@@ -219,14 +219,14 @@ private:
 
 class CuePoint {
 public:
-    Time timestamp() const { return m_timestamp; }
-    void set_timestamp(Time timestamp) { m_timestamp = timestamp; }
+    Duration timestamp() const { return m_timestamp; }
+    void set_timestamp(Duration timestamp) { m_timestamp = timestamp; }
     OrderedHashMap<u64, CueTrackPosition>& track_positions() { return m_track_positions; }
     OrderedHashMap<u64, CueTrackPosition> const& track_positions() const { return m_track_positions; }
     Optional<CueTrackPosition const&> position_for_track(u64 track_number) const { return m_track_positions.get(track_number); }
 
 private:
-    Time m_timestamp = Time::min();
+    Duration m_timestamp = Duration::min();
     OrderedHashMap<u64, CueTrackPosition> m_track_positions;
 };
 

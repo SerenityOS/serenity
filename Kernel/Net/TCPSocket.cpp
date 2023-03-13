@@ -354,7 +354,7 @@ bool TCPSocket::should_delay_next_ack() const
         return false;
 
     // RFC 1122 says we should not delay ACKs for more than 500 milliseconds.
-    if (kgettimeofday() >= m_last_ack_sent_time + Time::from_milliseconds(500))
+    if (kgettimeofday() >= m_last_ack_sent_time + Duration::from_milliseconds(500))
         return false;
 
     return true;
@@ -586,7 +586,7 @@ void TCPSocket::retransmit_packets()
     for (decltype(m_retransmit_attempts) i = 0; i < m_retransmit_attempts; i++)
         retransmit_interval *= 2;
 
-    if (m_last_retransmit_time > now - Time::from_seconds(retransmit_interval))
+    if (m_last_retransmit_time > now - Duration::from_seconds(retransmit_interval))
         return;
 
     dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) handling retransmit", this);

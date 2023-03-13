@@ -10,7 +10,7 @@
 
 namespace Kernel::Graphics::VirtIOGPU {
 
-constexpr static AK::Time refresh_interval = AK::Time::from_milliseconds(16);
+constexpr static AK::Duration refresh_interval = AK::Duration::from_milliseconds(16);
 
 NonnullLockRefPtr<Console> Console::initialize(VirtIODisplayConnector& parent_display_connector)
 {

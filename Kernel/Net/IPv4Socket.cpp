@@ -287,7 +287,7 @@ ErrorOr<size_t> IPv4Socket::receive_byte_buffered(OpenFileDescription& descripti
     return nreceived_or_error;
 }
 
-ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp, bool blocking)
+ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Duration& packet_timestamp, bool blocking)
 {
     MutexLocker locker(mutex());
     ReceivedPacket taken_packet;
@@ -382,7 +382,7 @@ ErrorOr<size_t> IPv4Socket::receive_packet_buffered(OpenFileDescription& descrip
     return protocol_receive(packet->data->bytes(), buffer, buffer_length, flags);
 }
 
-ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Time& packet_timestamp, bool blocking)
+ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> user_addr, Userspace<socklen_t*> user_addr_length, Duration& packet_timestamp, bool blocking)
 {
     if (user_addr_length) {
         socklen_t addr_length;
@@ -415,7 +415,7 @@ ErrorOr<size_t> IPv4Socket::recvfrom(OpenFileDescription& description, UserOrKer
     return total_nreceived;
 }
 
-bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port, ReadonlyBytes packet, Time const& packet_timestamp)
+bool IPv4Socket::did_receive(IPv4Address const& source_address, u16 source_port, ReadonlyBytes packet, Duration const& packet_timestamp)
 {
     MutexLocker locker(mutex());
 

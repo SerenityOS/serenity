@@ -98,17 +98,17 @@ void VideoTrack::pause_video(Badge<HTMLVideoElement>)
     m_playback_manager->pause_playback();
 }
 
-Time VideoTrack::position() const
+Duration VideoTrack::position() const
 {
     return m_playback_manager->current_playback_time();
 }
 
-Time VideoTrack::duration() const
+Duration VideoTrack::duration() const
 {
     return m_playback_manager->selected_video_track().video_data().duration;
 }
 
-void VideoTrack::seek(Time position, MediaSeekMode seek_mode)
+void VideoTrack::seek(Duration position, MediaSeekMode seek_mode)
 {
     switch (seek_mode) {
     case MediaSeekMode::Accurate:

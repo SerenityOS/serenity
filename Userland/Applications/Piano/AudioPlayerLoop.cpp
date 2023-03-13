@@ -112,7 +112,7 @@ ErrorOr<void> AudioPlayerLoop::send_audio_to_server()
 
     auto sample_rate = static_cast<double>(m_resampler->target());
     auto buffer_play_time_ns = 1'000'000'000.0 / (sample_rate / static_cast<double>(Audio::AUDIO_BUFFER_SIZE));
-    auto good_sleep_time = Time::from_nanoseconds(static_cast<unsigned>(buffer_play_time_ns)).to_timespec();
+    auto good_sleep_time = Duration::from_nanoseconds(static_cast<unsigned>(buffer_play_time_ns)).to_timespec();
 
     size_t start_of_chunk_to_write = 0;
     while (start_of_chunk_to_write + Audio::AUDIO_BUFFER_SIZE <= m_remaining_samples.size()) {

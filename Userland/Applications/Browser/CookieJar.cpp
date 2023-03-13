@@ -286,7 +286,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
 
     // 2. Create a new cookie with name cookie-name, value cookie-value. Set the creation-time and the last-access-time to the current date and time.
     Web::Cookie::Cookie cookie { parsed_cookie.name, parsed_cookie.value, parsed_cookie.same_site_attribute };
-    cookie.creation_time = Time::now_realtime();
+    cookie.creation_time = Duration::now_realtime();
     cookie.last_access_time = cookie.creation_time;
 
     if (parsed_cookie.expiry_time_from_max_age_attribute.has_value()) {
@@ -302,7 +302,7 @@ void CookieJar::store_cookie(Web::Cookie::ParsedCookie const& parsed_cookie, con
     } else {
         // Set the cookie's persistent-flag to false. Set the cookie's expiry-time to the latest representable date.
         cookie.persistent = false;
-        cookie.expiry_time = Time::max();
+        cookie.expiry_time = Duration::max();
     }
 
     // 4. If the cookie-attribute-list contains an attribute with an attribute-name of "Domain":
@@ -421,7 +421,7 @@ Vector<Web::Cookie::Cookie> CookieJar::get_matching_cookies(const URL& url, Depr
     });
 
     // 3. Update the last-access-time of each cookie in the cookie-list to the current date and time.
-    auto now = Time::now_realtime();
+    auto now = Duration::now_realtime();
 
     for (auto& cookie : cookie_list) {
         cookie.last_access_time = now;
@@ -462,7 +462,7 @@ static ErrorOr<Web::Cookie::Cookie> parse_cookie(ReadonlySpan<SQL::Value> row)
             return Error::from_string_view(name);
 
         auto time = value.to_int<i64>().value();
-        field = Time::from_seconds(time);
+        field = Duration::from_seconds(time);
         return {};
     };
 
@@ -624,7 +624,7 @@ void CookieJar::select_all_cookies_from_database(OnSelectAllCookiesResult on_res
 
 void CookieJar::purge_expired_cookies()
 {
-    auto now = Time::now_realtime().to_seconds();
+    auto now = Duration::now_realtime().to_seconds();
 
     m_storage.visit(
         [&](PersistedStorage& storage) {

@@ -115,7 +115,7 @@ ErrorOr<size_t> Inode::read_until_filled_or_end(off_t offset, size_t length, Use
     return length - remaining_length;
 }
 
-ErrorOr<void> Inode::update_timestamps([[maybe_unused]] Optional<Time> atime, [[maybe_unused]] Optional<Time> ctime, [[maybe_unused]] Optional<Time> mtime)
+ErrorOr<void> Inode::update_timestamps([[maybe_unused]] Optional<Duration> atime, [[maybe_unused]] Optional<Duration> ctime, [[maybe_unused]] Optional<Duration> mtime)
 {
     return ENOTIMPL;
 }

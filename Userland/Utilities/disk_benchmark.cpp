@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(block_sizes, "A comma-separated list of block sizes", "block-size", 'b', "block-size");
     args_parser.parse(arguments);
 
-    Time const time_per_benchmark = Time::from_seconds(time_per_benchmark_sec);
+    Duration const time_per_benchmark = Duration::from_seconds(time_per_benchmark_sec);
 
     if (file_sizes.size() == 0) {
         file_sizes = { 131072, 262144, 524288, 1048576, 5242880 };

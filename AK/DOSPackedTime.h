@@ -33,7 +33,7 @@ static_assert(sizeof(DOSPackedDate) == 2);
 
 inline constexpr u16 first_dos_year = 1980;
 
-Time time_from_packed_dos(DOSPackedDate, DOSPackedTime);
+Duration time_from_packed_dos(DOSPackedDate, DOSPackedTime);
 DOSPackedDate to_packed_dos_date(unsigned year, unsigned month, unsigned day);
 DOSPackedTime to_packed_dos_time(unsigned hour, unsigned minute, unsigned second);
 

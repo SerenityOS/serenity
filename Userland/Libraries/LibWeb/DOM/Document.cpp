@@ -1651,7 +1651,7 @@ void Document::completely_finish_loading()
     VERIFY(browsing_context());
 
     // 2. Set document's completely loaded time to the current time.
-    m_completely_loaded_time = AK::Time::now_realtime();
+    m_completely_loaded_time = AK::Duration::now_realtime();
 
     // 3. Let container be document's browsing context's container.
     auto container = JS::make_handle(browsing_context()->container());

@@ -82,7 +82,7 @@ ErrorOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<Syscall::SC_clock_nanosl
     if (is_absolute) {
         was_interrupted = Thread::current()->sleep_until(params.clock_id, requested_sleep).was_interrupted();
     } else {
-        Time remaining_sleep;
+        Duration remaining_sleep;
         was_interrupted = Thread::current()->sleep(params.clock_id, requested_sleep, &remaining_sleep).was_interrupted();
         timespec remaining_sleep_ts = remaining_sleep.to_timespec();
         if (was_interrupted && params.remaining_sleep) {
@@ -123,7 +123,7 @@ ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, User
             return EPERM;
         auto delta = TRY(copy_time_from_user(user_delta));
 
-        // FIXME: Should use AK::Time internally
+        // FIXME: Should use AK::Duration internally
         TimeManagement::the().set_remaining_epoch_time_adjustment(delta.to_timespec());
     }
 

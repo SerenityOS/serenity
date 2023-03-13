@@ -381,7 +381,7 @@ ErrorOr<void> RAMFSInode::truncate(u64 size)
     return {};
 }
 
-ErrorOr<void> RAMFSInode::update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime)
+ErrorOr<void> RAMFSInode::update_timestamps(Optional<Duration> atime, Optional<Duration> ctime, Optional<Duration> mtime)
 {
     MutexLocker locker(m_inode_lock);
 

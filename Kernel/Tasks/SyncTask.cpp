@@ -18,7 +18,7 @@ UNMAP_AFTER_INIT void SyncTask::spawn()
         dbgln("VFS SyncTask is running");
         for (;;) {
             VirtualFileSystem::sync();
-            (void)Thread::current()->sleep(Time::from_seconds(1));
+            (void)Thread::current()->sleep(Duration::from_seconds(1));
         }
     }));
 }

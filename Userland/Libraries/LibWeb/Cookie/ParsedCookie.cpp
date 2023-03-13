@@ -27,7 +27,7 @@ static void on_path_attribute(ParsedCookie& parsed_cookie, StringView attribute_
 static void on_secure_attribute(ParsedCookie& parsed_cookie);
 static void on_http_only_attribute(ParsedCookie& parsed_cookie);
 static void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_value);
-static Optional<Time> parse_date_time(StringView date_string);
+static Optional<Duration> parse_date_time(StringView date_string);
 
 Optional<ParsedCookie> parse_cookie(DeprecatedString const& cookie_string)
 {
@@ -169,10 +169,10 @@ void on_max_age_attribute(ParsedCookie& parsed_cookie, StringView attribute_valu
     if (auto delta_seconds = attribute_value.to_int(); delta_seconds.has_value()) {
         if (*delta_seconds <= 0) {
             // If delta-seconds is less than or equal to zero (0), let expiry-time be the earliest representable date and time.
-            parsed_cookie.expiry_time_from_max_age_attribute = Time::min();
+            parsed_cookie.expiry_time_from_max_age_attribute = Duration::min();
         } else {
             // Otherwise, let the expiry-time be the current date and time plus delta-seconds seconds.
-            parsed_cookie.expiry_time_from_max_age_attribute = Time::now_realtime() + Time::from_seconds(*delta_seconds);
+            parsed_cookie.expiry_time_from_max_age_attribute = Duration::now_realtime() + Duration::from_seconds(*delta_seconds);
         }
     }
 }
@@ -236,7 +236,7 @@ void on_same_site_attribute(ParsedCookie& parsed_cookie, StringView attribute_va
     parsed_cookie.same_site_attribute = same_site_from_string(attribute_value);
 }
 
-Optional<Time> parse_date_time(StringView date_string)
+Optional<Duration> parse_date_time(StringView date_string)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.1.1
     unsigned hour = 0;
@@ -345,7 +345,7 @@ Optional<Time> parse_date_time(StringView date_string)
     //    day-of-month-value, the month-value, the year-value, the hour-value, the minute-value, and the second-value, respectively.
     //    If no such date exists, abort these steps and fail to parse the cookie-date.
     // FIXME: Fail on dates that do not exist.
-    auto parsed_cookie_date = Time::from_timestamp(year, month, day_of_month, hour, minute, second, 0);
+    auto parsed_cookie_date = Duration::from_timestamp(year, month, day_of_month, hour, minute, second, 0);
 
     // 7. Return the parsed-cookie-date as the result of this algorithm.
     return parsed_cookie_date;
@@ -374,8 +374,8 @@ ErrorOr<Web::Cookie::ParsedCookie> IPC::decode(Decoder& decoder)
 {
     auto name = TRY(decoder.decode<DeprecatedString>());
     auto value = TRY(decoder.decode<DeprecatedString>());
-    auto expiry_time_from_expires_attribute = TRY(decoder.decode<Optional<Time>>());
-    auto expiry_time_from_max_age_attribute = TRY(decoder.decode<Optional<Time>>());
+    auto expiry_time_from_expires_attribute = TRY(decoder.decode<Optional<Duration>>());
+    auto expiry_time_from_max_age_attribute = TRY(decoder.decode<Optional<Duration>>());
     auto domain = TRY(decoder.decode<Optional<DeprecatedString>>());
     auto path = TRY(decoder.decode<Optional<DeprecatedString>>());
     auto secure_attribute_present = TRY(decoder.decode<bool>());

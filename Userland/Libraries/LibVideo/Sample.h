@@ -21,7 +21,7 @@ public:
 
 class VideoSample : public Sample {
 public:
-    VideoSample(ReadonlyBytes data, CodingIndependentCodePoints container_cicp, Time timestamp)
+    VideoSample(ReadonlyBytes data, CodingIndependentCodePoints container_cicp, Duration timestamp)
         : m_data(data)
         , m_container_cicp(container_cicp)
         , m_timestamp(timestamp)
@@ -31,12 +31,12 @@ public:
     bool is_video_sample() const override { return true; }
     ReadonlyBytes const& data() const { return m_data; }
     CodingIndependentCodePoints container_cicp() const { return m_container_cicp; }
-    Time timestamp() const { return m_timestamp; }
+    Duration timestamp() const { return m_timestamp; }
 
 private:
     ReadonlyBytes m_data;
     CodingIndependentCodePoints m_container_cicp;
-    Time m_timestamp;
+    Duration m_timestamp;
 };
 
 // FIXME: Add samples for audio, subtitles, etc.

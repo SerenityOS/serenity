@@ -12,7 +12,7 @@
 
 namespace Web::Cookie {
 
-static DeprecatedString time_to_string(Time const& time)
+static DeprecatedString time_to_string(Duration const& time)
 {
     auto local_time = Core::DateTime::from_timestamp(time.to_seconds());
     return local_time.to_deprecated_string("%Y-%m-%d %H:%M:%S %Z"sv);
@@ -87,11 +87,11 @@ ErrorOr<Web::Cookie::Cookie> IPC::decode(Decoder& decoder)
     auto value = TRY(decoder.decode<DeprecatedString>());
     auto domain = TRY(decoder.decode<DeprecatedString>());
     auto path = TRY(decoder.decode<DeprecatedString>());
-    auto creation_time = TRY(decoder.decode<Time>());
-    auto expiry_time = TRY(decoder.decode<Time>());
+    auto creation_time = TRY(decoder.decode<Duration>());
+    auto expiry_time = TRY(decoder.decode<Duration>());
     auto host_only = TRY(decoder.decode<bool>());
     auto http_only = TRY(decoder.decode<bool>());
-    auto last_access_time = TRY(decoder.decode<Time>());
+    auto last_access_time = TRY(decoder.decode<Duration>());
     auto persistent = TRY(decoder.decode<bool>());
     auto secure = TRY(decoder.decode<bool>());
     auto same_site = TRY(decoder.decode<Web::Cookie::SameSite>());
