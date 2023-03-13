@@ -100,7 +100,7 @@ ErrorOr<Metadata, LoaderError> load_vorbis_comment(ByteBuffer const& vorbis_comm
     auto vendor_length = TRY(stream.read_value<LittleEndian<u32>>());
     Vector<u8> raw_vendor_string;
     TRY(raw_vendor_string.try_resize(vendor_length));
-    TRY(stream.read_entire_buffer(raw_vendor_string));
+    TRY(stream.read_until_filled(raw_vendor_string));
     auto vendor_string = TRY(String::from_utf8(StringView { raw_vendor_string.span() }));
 
     Metadata metadata;
@@ -111,7 +111,7 @@ ErrorOr<Metadata, LoaderError> load_vorbis_comment(ByteBuffer const& vorbis_comm
         auto user_comment_length = TRY(stream.read_value<LittleEndian<u32>>());
         Vector<u8> raw_user_comment;
         TRY(raw_user_comment.try_resize(user_comment_length));
-        TRY(stream.read_entire_buffer(raw_user_comment));
+        TRY(stream.read_until_filled(raw_user_comment));
         auto unparsed_user_comment = TRY(String::from_utf8(StringView { raw_user_comment.span() }));
         TRY(read_vorbis_field(metadata, unparsed_user_comment));
     }
