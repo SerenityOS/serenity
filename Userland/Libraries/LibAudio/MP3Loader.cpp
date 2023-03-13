@@ -5,9 +5,9 @@
  */
 
 #include "MP3Loader.h"
-#include "LibAudio/MP3Types.h"
 #include "MP3HuffmanTables.h"
 #include "MP3Tables.h"
+#include "MP3Types.h"
 #include <AK/FixedArray.h>
 #include <LibCore/File.h>
 
