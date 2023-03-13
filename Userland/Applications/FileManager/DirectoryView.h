@@ -21,7 +21,7 @@
 
 namespace FileManager {
 
-void spawn_terminal(DeprecatedString const& directory);
+void spawn_terminal(GUI::Window* window, StringView directory);
 
 class LauncherHandler : public RefCounted<LauncherHandler> {
 public:

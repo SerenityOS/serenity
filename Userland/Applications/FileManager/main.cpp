@@ -491,13 +491,13 @@ ErrorOr<int> run_in_desktop_mode()
     auto open_terminal_action = GUI::Action::create("Open in &Terminal", {}, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv)), [&](auto&) {
         auto paths = directory_view->selected_file_paths();
         if (paths.is_empty()) {
-            spawn_terminal(directory_view->path());
+            spawn_terminal(window, directory_view->path());
             return;
         }
 
         for (auto& path : paths) {
             if (FileSystem::is_directory(path)) {
-                spawn_terminal(path);
+                spawn_terminal(window, path);
             }
         }
     });
@@ -841,7 +841,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
                 for (auto& path : paths) {
                     if (FileSystem::is_directory(path)) {
-                        spawn_terminal(path);
+                        spawn_terminal(window, path);
                     }
                 }
             },
