@@ -267,6 +267,8 @@ public:
 
     Optional<AK::URL> const& creator_url() const { return m_creator_url; }
 
+    String const& window_handle() const { return m_window_handle; }
+
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);
 
@@ -301,6 +303,9 @@ private:
     JS::GCPtr<HTML::BrowsingContextContainer> m_container;
     CSSPixelSize m_size;
     CSSPixelPoint m_viewport_scroll_offset;
+
+    // https://w3c.github.io/webdriver/#dfn-window-handles
+    String m_window_handle;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#browsing-context
     JS::GCPtr<HTML::WindowProxy> m_window_proxy;
