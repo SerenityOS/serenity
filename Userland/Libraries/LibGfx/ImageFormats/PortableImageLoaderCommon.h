@@ -53,7 +53,7 @@ static inline ErrorOr<u16> read_number(Streamer& streamer)
 }
 
 template<typename TContext>
-static bool read_comment([[maybe_unused]] TContext& context, Streamer& streamer)
+static ErrorOr<void> read_comment([[maybe_unused]] TContext& context, Streamer& streamer)
 {
     bool is_first_char = true;
     u8 byte {};
@@ -61,14 +61,14 @@ static bool read_comment([[maybe_unused]] TContext& context, Streamer& streamer)
     while (streamer.read(byte)) {
         if (is_first_char) {
             if (byte != '#')
-                return false;
+                return Error::from_string_literal("Can't read comment from stream");
             is_first_char = false;
         } else if (byte == '\t' || byte == '\n') {
             break;
         }
     }
 
-    return true;
+    return {};
 }
 
 template<typename TContext>
@@ -119,7 +119,8 @@ static bool read_whitespace(TContext& context, Streamer& streamer)
             exist = true;
         } else if (byte == '#') {
             streamer.step_back();
-            read_comment(context, streamer);
+            if (read_comment(context, streamer).is_error())
+                return false;
         } else {
             streamer.step_back();
             return exist;
