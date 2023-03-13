@@ -397,9 +397,9 @@ pushd "$DIR/Build/$ARCH"
             -name '*.h' -print)
         for header in $FILES; do
             target=$(echo "$header" | sed \
-                -e "s@$SRC_ROOT/AK/@AK/@" \
-                -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" \
-                -e "s@$SRC_ROOT/Kernel/@Kernel/@")
+                -e "s|$SRC_ROOT/AK/|AK/|" \
+                -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
+                -e "s|$SRC_ROOT/Kernel/|Kernel/|")
             buildstep "system_headers" mkdir -p "$(dirname "Root/usr/include/$target")"
             buildstep "system_headers" $INSTALL "$header" "Root/usr/include/$target"
         done

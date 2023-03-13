@@ -255,7 +255,7 @@ for arch in $ARCHS; do
     pushd "$BUILD/${arch}clang"
         mkdir -p Root/usr/include/
         for header in $FILES; do
-            target=$(echo "$header" | "$SED" -e "s@$SRC_ROOT/Userland/Libraries/LibC@@" -e "s@$SRC_ROOT/Kernel/@Kernel/@")
+            target=$(echo "$header" | "$SED" -e "s|$SRC_ROOT/Userland/Libraries/LibC||" -e "s|$SRC_ROOT/Kernel/|Kernel/|")
             buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"
         done
     popd
