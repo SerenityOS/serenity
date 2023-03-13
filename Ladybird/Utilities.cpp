@@ -29,6 +29,12 @@ QString qstring_from_ak_deprecated_string(AK::DeprecatedString const& ak_depreca
     return QString::fromUtf8(ak_deprecated_string.characters(), ak_deprecated_string.length());
 }
 
+QString qstring_from_ak_string(String const& ak_string)
+{
+    auto view = ak_string.bytes_as_string_view();
+    return QString::fromUtf8(view.characters_without_null_termination(), view.length());
+}
+
 void platform_init()
 {
 #ifdef AK_OS_ANDROID
