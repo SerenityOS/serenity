@@ -23,6 +23,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView out_path;
     args_parser.add_option(out_path, "Path to output image file", "output", 'o', "FILE");
 
+    bool ppm_ascii;
+    args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
+
     args_parser.parse(arguments);
 
     if (out_path.is_empty()) {
@@ -43,7 +46,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::PNGWriter::encode(*frame));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PortableFormatWriter::encode(*frame));
+        auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
+        bytes = TRY(Gfx::PortableFormatWriter::encode(*frame, Gfx::PortableFormatWriter::Options { .format = format }));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
