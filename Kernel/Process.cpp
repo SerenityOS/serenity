@@ -635,7 +635,7 @@ ErrorOr<Process::ScopedDescriptionAllocation> Process::OpenFileDescriptions::all
     return EMFILE;
 }
 
-Time kgettimeofday()
+Duration kgettimeofday()
 {
     return TimeManagement::now();
 }

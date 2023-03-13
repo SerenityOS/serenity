@@ -40,12 +40,12 @@ public:
 
     static ExecResult show(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
     static ExecResult show_error(Window* parent_window, StringView text);
-    static ExecResult ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
+    static ExecResult ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Duration> last_unmodified_timestamp = {});
 
     static ErrorOr<ExecResult> try_show(Badge<FileSystemAccessServer::ConnectionFromClient>, i32 window_server_client_id, i32 parent_window_id, StringView text, StringView title);
     static ErrorOr<ExecResult> try_show(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
     static ErrorOr<ExecResult> try_show_error(Window* parent_window, StringView text);
-    static ErrorOr<ExecResult> try_ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
+    static ErrorOr<ExecResult> try_ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Duration> last_unmodified_timestamp = {});
 
     static ErrorOr<NonnullRefPtr<MessageBox>> create(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
 

@@ -474,10 +474,10 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.uid = m_raw_inode.i_uid;
     metadata.gid = m_raw_inode.i_gid;
     metadata.link_count = m_raw_inode.i_links_count;
-    metadata.atime = Time::from_timespec({ m_raw_inode.i_atime, 0 });
-    metadata.ctime = Time::from_timespec({ m_raw_inode.i_ctime, 0 });
-    metadata.mtime = Time::from_timespec({ m_raw_inode.i_mtime, 0 });
-    metadata.dtime = Time::from_timespec({ m_raw_inode.i_dtime, 0 });
+    metadata.atime = Duration::from_timespec({ m_raw_inode.i_atime, 0 });
+    metadata.ctime = Duration::from_timespec({ m_raw_inode.i_ctime, 0 });
+    metadata.mtime = Duration::from_timespec({ m_raw_inode.i_mtime, 0 });
+    metadata.dtime = Duration::from_timespec({ m_raw_inode.i_dtime, 0 });
     metadata.block_size = fs().block_size();
     metadata.block_count = m_raw_inode.i_blocks;
 
@@ -985,7 +985,7 @@ ErrorOr<NonnullRefPtr<Inode>> Ext2FSInode::lookup(StringView name)
     return fs().get_inode({ fsid(), inode_index });
 }
 
-ErrorOr<void> Ext2FSInode::update_timestamps(Optional<Time> atime, Optional<Time> ctime, Optional<Time> mtime)
+ErrorOr<void> Ext2FSInode::update_timestamps(Optional<Duration> atime, Optional<Duration> ctime, Optional<Duration> mtime)
 {
     MutexLocker locker(m_inode_lock);
     if (fs().is_readonly())

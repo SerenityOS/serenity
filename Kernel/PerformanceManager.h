@@ -164,11 +164,11 @@ public:
 
     static void timer_tick(RegisterState const& regs)
     {
-        static Time last_wakeup;
+        static Duration last_wakeup;
         auto now = kgettimeofday();
-        constexpr auto ideal_interval = Time::from_microseconds(1000'000 / OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE);
+        constexpr auto ideal_interval = Duration::from_microseconds(1000'000 / OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE);
         auto expected_wakeup = last_wakeup + ideal_interval;
-        auto delay = (now > expected_wakeup) ? now - expected_wakeup : Time::from_microseconds(0);
+        auto delay = (now > expected_wakeup) ? now - expected_wakeup : Duration::from_microseconds(0);
         last_wakeup = now;
         auto* current_thread = Thread::current();
         // FIXME: We currently don't collect samples while idle.

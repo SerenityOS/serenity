@@ -347,7 +347,7 @@ void MainWidget::save_to_file(String const& filename, NonnullOwnPtr<Core::File> 
     if (sync_result.is_error()) {
         GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to save theme file: {}", sync_result.error()));
     } else {
-        m_last_modified_time = Time::now_monotonic();
+        m_last_modified_time = Duration::now_monotonic();
         set_path(filename.to_deprecated_string());
         window()->set_modified(false);
     }
@@ -643,7 +643,7 @@ ErrorOr<void> MainWidget::load_from_file(String const& filename, NonnullOwnPtr<C
     ENUMERATE_PATH_ROLES(__ENUMERATE_PATH_ROLE)
 #undef __ENUMERATE_PATH_ROLE
 
-    m_last_modified_time = Time::now_monotonic();
+    m_last_modified_time = Duration::now_monotonic();
     window()->set_modified(false);
     return {};
 }

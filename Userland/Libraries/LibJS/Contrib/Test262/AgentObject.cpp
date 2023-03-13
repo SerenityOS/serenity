@@ -33,7 +33,7 @@ JS::ThrowCompletionOr<void> AgentObject::initialize(JS::Realm& realm)
 
 JS_DEFINE_NATIVE_FUNCTION(AgentObject::monotonic_now)
 {
-    auto time = Time::now_monotonic();
+    auto time = Duration::now_monotonic();
     auto milliseconds = time.to_milliseconds();
     return Value(static_cast<double>(milliseconds));
 }

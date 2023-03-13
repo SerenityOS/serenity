@@ -28,7 +28,7 @@ public:
     virtual void unregister_signal(int handler_id) override;
 
     void wait_for_events(EventLoopImplementation::PumpMode);
-    static Optional<Time> get_next_timer_expiration();
+    static Optional<Duration> get_next_timer_expiration();
 
 private:
     void dispatch_signal(int signal_number);

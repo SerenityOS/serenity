@@ -70,10 +70,10 @@ ErrorOr<JsonValue> decode(Decoder& decoder)
 }
 
 template<>
-ErrorOr<Time> decode(Decoder& decoder)
+ErrorOr<Duration> decode(Decoder& decoder)
 {
     auto nanoseconds = TRY(decoder.decode<i64>());
-    return AK::Time::from_nanoseconds(nanoseconds);
+    return AK::Duration::from_nanoseconds(nanoseconds);
 }
 
 template<>

@@ -19,9 +19,9 @@ void initialize()
     s_boot_time = now();
 }
 
-Time boot_time()
+Duration boot_time()
 {
-    return Time::from_timespec({ s_boot_time, 0 });
+    return Duration::from_timespec({ s_boot_time, 0 });
 }
 
 static bool update_in_progress()

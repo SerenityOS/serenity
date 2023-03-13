@@ -16,12 +16,12 @@ namespace Kernel {
 static Singleton<TimerQueue> s_the;
 static Spinlock<LockRank::None> g_timerqueue_lock {};
 
-Time Timer::remaining() const
+Duration Timer::remaining() const
 {
     return m_remaining;
 }
 
-Time Timer::now(bool is_firing) const
+Duration Timer::now(bool is_firing) const
 {
     // NOTE: If is_firing is true then TimePrecision::Precise isn't really useful here.
     // We already have a quite precise time stamp because we just updated the time in the
@@ -55,7 +55,7 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
     m_ticks_per_second = TimeManagement::the().ticks_per_second();
 }
 
-bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t clock_id, Time const& deadline, Function<void()>&& callback)
+bool TimerQueue::add_timer_without_id(NonnullRefPtr<Timer> timer, clockid_t clock_id, Duration const& deadline, Function<void()>&& callback)
 {
     if (deadline <= TimeManagement::the().current_time(clock_id))
         return false;
@@ -86,7 +86,7 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
 
 void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 {
-    Time timer_expiration = timer->m_expires;
+    Duration timer_expiration = timer->m_expires;
 
     timer->clear_cancelled();
     timer->clear_callback_finished();

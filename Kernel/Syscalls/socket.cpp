@@ -272,7 +272,7 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
         return 0;
 
     auto data_buffer = TRY(UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len));
-    Time timestamp {};
+    Duration timestamp {};
     bool blocking = (flags & MSG_DONTWAIT) ? false : description->is_blocking();
     auto result = socket.recvfrom(*description, data_buffer, iovs[0].iov_len, flags, user_addr, user_addr_length, timestamp, blocking);
 

@@ -29,14 +29,14 @@ thread_local ThreadData* s_thread_data;
 
 struct EventLoopTimer {
     int timer_id { 0 };
-    Time interval;
-    Time fire_time;
+    Duration interval;
+    Duration fire_time;
     bool should_reload { false };
     TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
     WeakPtr<Object> owner;
 
-    void reload(Time const& now) { fire_time = now + interval; }
-    bool has_expired(Time const& now) const { return now > fire_time; }
+    void reload(Duration const& now) { fire_time = now + interval; }
+    bool has_expired(Duration const& now) const { return now > fire_time; }
 };
 
 struct ThreadData {
@@ -171,16 +171,16 @@ retry:
 
     // Figure out how long to wait at maximum.
     // This mainly depends on the PumpMode and whether we have pending events, but also the next expiring timer.
-    Time now;
+    Duration now;
     struct timeval timeout = { 0, 0 };
     bool should_wait_forever = false;
     if (mode == EventLoopImplementation::PumpMode::WaitForEvents && !has_pending_events) {
         auto next_timer_expiration = get_next_timer_expiration();
         if (next_timer_expiration.has_value()) {
-            now = Time::now_monotonic_coarse();
+            now = Duration::now_monotonic_coarse();
             auto computed_timeout = next_timer_expiration.value() - now;
             if (computed_timeout.is_negative())
-                computed_timeout = Time::zero();
+                computed_timeout = Duration::zero();
             timeout = computed_timeout.to_timeval();
         } else {
             should_wait_forever = true;
@@ -231,7 +231,7 @@ try_select_again:
     }
 
     if (!thread_data.timers.is_empty()) {
-        now = Time::now_monotonic_coarse();
+        now = Duration::now_monotonic_coarse();
     }
 
     // Handle expired timers.
@@ -349,10 +349,10 @@ void EventLoopImplementationUnix::notify_forked_and_in_child()
     thread_data.pid = getpid();
 }
 
-Optional<Time> EventLoopManagerUnix::get_next_timer_expiration()
+Optional<Duration> EventLoopManagerUnix::get_next_timer_expiration()
 {
-    auto now = Time::now_monotonic_coarse();
-    Optional<Time> soonest {};
+    auto now = Duration::now_monotonic_coarse();
+    Optional<Duration> soonest {};
     for (auto& it : ThreadData::the().timers) {
         auto& fire_time = it.value->fire_time;
         auto owner = it.value->owner.strong_ref();
@@ -489,8 +489,8 @@ int EventLoopManagerUnix::register_timer(Object& object, int milliseconds, bool 
     auto& thread_data = ThreadData::the();
     auto timer = make<EventLoopTimer>();
     timer->owner = object;
-    timer->interval = Time::from_milliseconds(milliseconds);
-    timer->reload(Time::now_monotonic_coarse());
+    timer->interval = Duration::from_milliseconds(milliseconds);
+    timer->reload(Duration::now_monotonic_coarse());
     timer->should_reload = should_reload;
     timer->fire_when_not_visible = fire_when_not_visible;
     int timer_id = thread_data.id_allocator.allocate();

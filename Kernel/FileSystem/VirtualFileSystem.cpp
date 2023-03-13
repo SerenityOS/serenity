@@ -306,7 +306,7 @@ ErrorOr<void> VirtualFileSystem::utime(Credentials const& credentials, StringVie
     if (custody->is_readonly())
         return EROFS;
 
-    TRY(inode.update_timestamps(Time::from_timespec({ atime, 0 }), {}, Time::from_timespec({ mtime, 0 })));
+    TRY(inode.update_timestamps(Duration::from_timespec({ atime, 0 }), {}, Duration::from_timespec({ mtime, 0 })));
     return {};
 }
 
@@ -326,9 +326,9 @@ ErrorOr<void> VirtualFileSystem::do_utimens(Credentials const& credentials, Cust
 
     // NOTE: A standard ext2 inode cannot store nanosecond timestamps.
     TRY(inode.update_timestamps(
-        (atime.tv_nsec != UTIME_OMIT) ? Time::from_timespec(atime) : Optional<Time> {},
+        (atime.tv_nsec != UTIME_OMIT) ? Duration::from_timespec(atime) : Optional<Duration> {},
         {},
-        (mtime.tv_nsec != UTIME_OMIT) ? Time::from_timespec(mtime) : Optional<Time> {}));
+        (mtime.tv_nsec != UTIME_OMIT) ? Duration::from_timespec(mtime) : Optional<Duration> {}));
 
     return {};
 }

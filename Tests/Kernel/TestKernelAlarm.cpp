@@ -17,7 +17,7 @@ public:
 
     static Core::ElapsedTimer signal_timer;
 
-    static constexpr auto timer_value = Time::from_seconds(1);
+    static constexpr auto timer_value = Duration::from_seconds(1);
 
     static void test_signal_handler(int signal)
     {
@@ -25,7 +25,7 @@ public:
         auto expected_duration = SuccessContext::timer_value;
 
         // Add a small buffer to allow for latency on the system.
-        constexpr auto buffer_duration = Time::from_milliseconds(50);
+        constexpr auto buffer_duration = Duration::from_milliseconds(50);
 
         dbgln("Signal Times - Actual: {} Expected: {}", actual_duration.to_milliseconds(), expected_duration.to_milliseconds());
         EXPECT(actual_duration >= expected_duration);
@@ -47,7 +47,7 @@ TEST_CASE(success_case)
     auto previous_time = alarm(SuccessContext::timer_value.to_seconds());
     EXPECT_EQ(previous_time, 0u);
 
-    auto sleep_time = SuccessContext::timer_value + Time::from_seconds(1);
+    auto sleep_time = SuccessContext::timer_value + Duration::from_seconds(1);
     sleep(sleep_time.to_seconds());
 
     EXPECT(SuccessContext::alarm_fired);
@@ -57,7 +57,7 @@ TEST_CASE(success_case)
 // See: https://github.com/SerenityOS/serenity/issues/9071
 TEST_CASE(regression_inifinite_loop)
 {
-    constexpr auto hour_long_timer_value = Time::from_seconds(60 * 60);
+    constexpr auto hour_long_timer_value = Duration::from_seconds(60 * 60);
 
     // Create an alarm timer significantly far into the future.
     auto previous_time = alarm(hour_long_timer_value.to_seconds());

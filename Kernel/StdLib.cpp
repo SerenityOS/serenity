@@ -39,28 +39,28 @@ ErrorOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<cha
     return new_string;
 }
 
-ErrorOr<Time> copy_time_from_user(timespec const* ts_user)
+ErrorOr<Duration> copy_time_from_user(timespec const* ts_user)
 {
     timespec ts {};
     TRY(copy_from_user(&ts, ts_user, sizeof(timespec)));
-    return Time::from_timespec(ts);
+    return Duration::from_timespec(ts);
 }
 
-ErrorOr<Time> copy_time_from_user(timeval const* tv_user)
+ErrorOr<Duration> copy_time_from_user(timeval const* tv_user)
 {
     timeval tv {};
     TRY(copy_from_user(&tv, tv_user, sizeof(timeval)));
-    return Time::from_timeval(tv);
+    return Duration::from_timeval(tv);
 }
 
 template<>
-ErrorOr<Time> copy_time_from_user<timeval const>(Userspace<timeval const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+ErrorOr<Duration> copy_time_from_user<timeval const>(Userspace<timeval const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
-ErrorOr<Time> copy_time_from_user<timeval>(Userspace<timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+ErrorOr<Duration> copy_time_from_user<timeval>(Userspace<timeval*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
-ErrorOr<Time> copy_time_from_user<timespec const>(Userspace<timespec const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+ErrorOr<Duration> copy_time_from_user<timespec const>(Userspace<timespec const*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 template<>
-ErrorOr<Time> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
+ErrorOr<Duration> copy_time_from_user<timespec>(Userspace<timespec*> src) { return copy_time_from_user(src.unsafe_userspace_ptr()); }
 
 Optional<u32> user_atomic_fetch_add_relaxed(u32 volatile* var, u32 val)
 {

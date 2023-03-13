@@ -130,26 +130,28 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
     return 1970 + round_down(years_since_epoch);
 }
 
-/*
- * Represents a time amount in a "safe" way.
- * Minimum: 0 seconds, 0 nanoseconds
- * Maximum: 2**63-1 seconds, 999'999'999 nanoseconds
- * If any operation (e.g. 'from_timeval' or operator-) would over- or underflow, the closest legal value is returned instead.
- * Inputs (e.g. to 'from_timespec') are allowed to be in non-normal form (e.g. "1 second, 2'012'345'678 nanoseconds" or "1 second, -2 microseconds").
- * Outputs (e.g. from 'to_timeval') are always in normal form.
- */
-class Time {
+// Represents a duration in a "safe" way.
+// Minimum: -(2**63) seconds, 0 nanoseconds
+// Maximum: 2**63-1 seconds, 999'999'999 nanoseconds
+// If any operation (e.g. 'from_timeval' or operator-) would over- or underflow, the closest legal value is returned instead.
+// Inputs (e.g. to 'from_timespec') are allowed to be in non-normal form (e.g. "1 second, 2'012'345'678 nanoseconds" or "1 second, -2 microseconds").
+// Outputs (e.g. from 'to_timeval') are always in normal form.
+//
+// NOTE: This class is naive. It may represent either absolute offsets or relative durations. It does not have a reference point in itself,
+//       and therefore comparing multiple instances of this class is only sensible if you are sure that their reference point is identical.
+//       You should not be using this class directly to represent absolute time.
+class Duration {
 public:
-    Time() = default;
-    Time(Time const&) = default;
-    Time& operator=(Time const&) = default;
+    Duration() = default;
+    Duration(Duration const&) = default;
+    Duration& operator=(Duration const&) = default;
 
-    Time(Time&& other)
+    Duration(Duration&& other)
         : m_seconds(exchange(other.m_seconds, 0))
         , m_nanoseconds(exchange(other.m_nanoseconds, 0))
     {
     }
-    Time& operator=(Time&& other)
+    Duration& operator=(Duration&& other)
     {
         if (this != &other) {
             m_seconds = exchange(other.m_seconds, 0);
@@ -188,7 +190,7 @@ private:
     }
 
 public:
-    [[nodiscard]] constexpr static Time from_timestamp(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
+    [[nodiscard]] constexpr static Duration from_timestamp(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
     {
         constexpr auto milliseconds_per_day = 86'400'000;
         constexpr auto milliseconds_per_hour = 3'600'000;
@@ -206,35 +208,35 @@ public:
         return from_milliseconds(milliseconds_since_epoch);
     }
 
-    [[nodiscard]] constexpr static Time from_seconds(i64 seconds) { return Time(seconds, 0); }
-    [[nodiscard]] constexpr static Time from_nanoseconds(i64 nanoseconds)
+    [[nodiscard]] constexpr static Duration from_seconds(i64 seconds) { return Duration(seconds, 0); }
+    [[nodiscard]] constexpr static Duration from_nanoseconds(i64 nanoseconds)
     {
         i64 seconds = sane_mod(nanoseconds, 1'000'000'000);
-        return Time(seconds, nanoseconds);
+        return Duration(seconds, nanoseconds);
     }
-    [[nodiscard]] constexpr static Time from_microseconds(i64 microseconds)
+    [[nodiscard]] constexpr static Duration from_microseconds(i64 microseconds)
     {
         i64 seconds = sane_mod(microseconds, 1'000'000);
-        return Time(seconds, microseconds * 1'000);
+        return Duration(seconds, microseconds * 1'000);
     }
-    [[nodiscard]] constexpr static Time from_milliseconds(i64 milliseconds)
+    [[nodiscard]] constexpr static Duration from_milliseconds(i64 milliseconds)
     {
         i64 seconds = sane_mod(milliseconds, 1'000);
-        return Time(seconds, milliseconds * 1'000'000);
+        return Duration(seconds, milliseconds * 1'000'000);
     }
-    [[nodiscard]] static Time from_ticks(clock_t, time_t);
-    [[nodiscard]] static Time from_timespec(const struct timespec&);
-    [[nodiscard]] static Time from_timeval(const struct timeval&);
+    [[nodiscard]] static Duration from_ticks(clock_t, time_t);
+    [[nodiscard]] static Duration from_timespec(const struct timespec&);
+    [[nodiscard]] static Duration from_timeval(const struct timeval&);
     // We don't pull in <stdint.h> for the pretty min/max definitions because this file is also included in the Kernel
-    [[nodiscard]] constexpr static Time min() { return Time(-__INT64_MAX__ - 1LL, 0); };
-    [[nodiscard]] constexpr static Time zero() { return Time(0, 0); };
-    [[nodiscard]] constexpr static Time max() { return Time(__INT64_MAX__, 999'999'999); };
+    [[nodiscard]] constexpr static Duration min() { return Duration(-__INT64_MAX__ - 1LL, 0); };
+    [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); };
+    [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); };
 
 #ifndef KERNEL
-    [[nodiscard]] static Time now_realtime();
-    [[nodiscard]] static Time now_realtime_coarse();
-    [[nodiscard]] static Time now_monotonic();
-    [[nodiscard]] static Time now_monotonic_coarse();
+    [[nodiscard]] static Duration now_realtime();
+    [[nodiscard]] static Duration now_realtime_coarse();
+    [[nodiscard]] static Duration now_monotonic();
+    [[nodiscard]] static Duration now_monotonic_coarse();
 #endif
 
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
@@ -253,13 +255,13 @@ public:
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
-    Time operator+(Time const& other) const;
-    Time& operator+=(Time const& other);
-    Time operator-(Time const& other) const;
-    Time& operator-=(Time const& other);
+    Duration operator+(Duration const& other) const;
+    Duration& operator+=(Duration const& other);
+    Duration operator-(Duration const& other) const;
+    Duration& operator-=(Duration const& other);
 
-    constexpr bool operator==(Time const& other) const = default;
-    constexpr int operator<=>(Time const& other) const
+    constexpr bool operator==(Duration const& other) const = default;
+    constexpr int operator<=>(Duration const& other) const
     {
         if (int cmp = (m_seconds > other.m_seconds ? 1 : m_seconds < other.m_seconds ? -1
                                                                                      : 0);
@@ -273,13 +275,13 @@ public:
     }
 
 private:
-    constexpr explicit Time(i64 seconds, u32 nanoseconds)
+    constexpr explicit Duration(i64 seconds, u32 nanoseconds)
         : m_seconds(seconds)
         , m_nanoseconds(nanoseconds)
     {
     }
 
-    [[nodiscard]] static Time from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
+    [[nodiscard]] static Duration from_half_sanitized(i64 seconds, i32 extra_seconds, u32 nanoseconds);
 
     i64 m_seconds { 0 };
     u32 m_nanoseconds { 0 }; // Always less than 1'000'000'000
@@ -357,10 +359,10 @@ inline void timespec_to_timeval(TimespecType const& ts, TimevalType& tv)
 // To use these, add a ``using namespace AK::TimeLiterals`` at block or file scope
 namespace TimeLiterals {
 
-constexpr Time operator""_ns(unsigned long long nanoseconds) { return Time::from_nanoseconds(static_cast<i64>(nanoseconds)); }
-constexpr Time operator""_us(unsigned long long microseconds) { return Time::from_microseconds(static_cast<i64>(microseconds)); }
-constexpr Time operator""_ms(unsigned long long milliseconds) { return Time::from_milliseconds(static_cast<i64>(milliseconds)); }
-constexpr Time operator""_sec(unsigned long long seconds) { return Time::from_seconds(static_cast<i64>(seconds)); }
+constexpr Duration operator""_ns(unsigned long long nanoseconds) { return Duration::from_nanoseconds(static_cast<i64>(nanoseconds)); }
+constexpr Duration operator""_us(unsigned long long microseconds) { return Duration::from_microseconds(static_cast<i64>(microseconds)); }
+constexpr Duration operator""_ms(unsigned long long milliseconds) { return Duration::from_milliseconds(static_cast<i64>(milliseconds)); }
+constexpr Duration operator""_sec(unsigned long long seconds) { return Duration::from_seconds(static_cast<i64>(seconds)); }
 
 }
 
@@ -372,9 +374,9 @@ using AK::day_of_year;
 using AK::days_in_month;
 using AK::days_in_year;
 using AK::days_since_epoch;
+using AK::Duration;
 using AK::is_leap_year;
 using AK::seconds_since_epoch_to_year;
-using AK::Time;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
 using AK::timespec_sub;

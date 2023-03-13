@@ -55,7 +55,7 @@ DOMHighResTimeStamp coarsened_shared_current_time(bool cross_origin_isolated_cap
 DOMHighResTimeStamp unsafe_shared_current_time()
 {
     // The unsafe shared current time must return the current value of the shared monotonic clock.
-    return Time::now_monotonic().to_nanoseconds() / 1e6;
+    return Duration::now_monotonic().to_nanoseconds() / 1e6;
 }
 
 }

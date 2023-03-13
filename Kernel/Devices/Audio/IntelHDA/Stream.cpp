@@ -192,7 +192,7 @@ ErrorOr<size_t> OutputStream::write(UserOrKernelBuffer const& data, size_t lengt
             dbgln_if(INTEL_HDA_DEBUG, "IntelHDA: Waiting {} µs until buffer {} becomes writeable", microseconds_to_wait, buffer_index);
 
             // NOTE: we don't care about the reason for interruption - we simply calculate the next delay
-            [[maybe_unused]] auto block_result = Thread::current()->sleep(Time::from_microseconds(microseconds_to_wait));
+            [[maybe_unused]] auto block_result = Thread::current()->sleep(Duration::from_microseconds(microseconds_to_wait));
         }
     };
 

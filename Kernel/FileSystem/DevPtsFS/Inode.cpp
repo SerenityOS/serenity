@@ -38,7 +38,7 @@ InodeMetadata DevPtsFSInode::metadata() const
 {
     if (auto pty = m_pty.strong_ref()) {
         auto metadata = m_metadata;
-        metadata.mtime = Time::from_timespec({ pty->time_of_last_write(), 0 });
+        metadata.mtime = Duration::from_timespec({ pty->time_of_last_write(), 0 });
         return metadata;
     }
     return m_metadata;
