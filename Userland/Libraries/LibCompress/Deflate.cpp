@@ -477,16 +477,18 @@ ErrorOr<size_t> DeflateCompressor::write(ReadonlyBytes bytes)
 {
     VERIFY(!m_finished);
 
-    if (bytes.size() == 0)
-        return 0; // recursion base case
+    size_t total_written = 0;
+    while (!bytes.is_empty()) {
+        auto n_written = bytes.copy_trimmed_to(pending_block().slice(m_pending_block_size));
+        m_pending_block_size += n_written;
 
-    auto n_written = bytes.copy_trimmed_to(pending_block().slice(m_pending_block_size));
-    m_pending_block_size += n_written;
+        if (m_pending_block_size == block_size)
+            TRY(flush());
 
-    if (m_pending_block_size == block_size)
-        TRY(flush());
-
-    return n_written + TRY(write(bytes.slice(n_written)));
+        bytes = bytes.slice(n_written);
+        total_written += n_written;
+    }
+    return total_written;
 }
 
 bool DeflateCompressor::is_eof() const
