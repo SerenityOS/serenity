@@ -67,13 +67,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView raw_url;
     StringView webdriver_content_ipc_path;
-    bool dump_layout_tree = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("The Ladybird web browser :^)");
     args_parser.add_positional_argument(raw_url, "URL to open", "url", Core::ArgsParser::Required::No);
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
-    args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.parse(arguments);
 
     auto get_formatted_url = [&](StringView const& raw_url) -> URL {
@@ -84,22 +82,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             url = DeprecatedString::formatted("http://{}", raw_url);
         return url;
     };
-
-    if (dump_layout_tree) {
-        WebContentView view({});
-        view.set_viewport_rect(Gfx::IntRect({}, { 800, 600 }));
-        view.on_load_finish = [&](auto&) {
-            auto dump = view.dump_layout_tree().release_value_but_fixme_should_propagate_errors();
-            outln("{}", dump);
-            fflush(stdout);
-
-            event_loop.quit(0);
-            app.quit();
-        };
-
-        view.load(get_formatted_url(raw_url));
-        return app.exec();
-    }
 
     auto sql_server_paths = TRY(get_paths_for_helper_process("SQLServer"sv));
     auto sql_client = TRY(SQL::SQLClient::launch_server_and_create_client(move(sql_server_paths)));
