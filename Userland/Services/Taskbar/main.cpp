@@ -176,42 +176,27 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         }
 
         auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
-        parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier](auto&) {
+        parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier, &window](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
             auto& app = g_apps[app_identifier];
-            char const* argv[4] { nullptr, nullptr, nullptr, nullptr };
-            auto pls_with_executable = DeprecatedString::formatted("/bin/pls {}", app.executable);
+            StringView executable;
+            Vector<char const*, 2> arguments;
+            // FIXME: These single quotes won't be enough for executables with single quotes in their name.
+            auto pls_with_executable = DeprecatedString::formatted("/bin/pls '{}'", app.executable);
             if (app.run_in_terminal && !app.requires_root) {
-                argv[0] = "/bin/Terminal";
-                argv[1] = "-e";
-                argv[2] = app.executable.characters();
+                executable = "/bin/Terminal"sv;
+                arguments = { "-e", app.executable.characters() };
             } else if (!app.run_in_terminal && app.requires_root) {
-                argv[0] = "/bin/Escalator";
-                argv[1] = app.executable.characters();
+                executable = "/bin/Escalator"sv;
+                arguments = { app.executable.characters() };
             } else if (app.run_in_terminal && app.requires_root) {
-                argv[0] = "/bin/Terminal";
-                argv[1] = "-e";
-                argv[2] = pls_with_executable.characters();
+                executable = "/bin/Terminal"sv;
+                arguments = { "-e", pls_with_executable.characters() };
             } else {
-                argv[0] = app.executable.characters();
+                executable = app.executable;
             }
-
-            posix_spawn_file_actions_t spawn_actions;
-            posix_spawn_file_actions_init(&spawn_actions);
-            auto home_directory = Core::StandardPaths::home_directory();
-            if (app.working_directory.is_empty())
-                posix_spawn_file_actions_addchdir(&spawn_actions, home_directory.characters());
-            else
-                posix_spawn_file_actions_addchdir(&spawn_actions, app.working_directory.characters());
-
-            pid_t child_pid;
-            if ((errno = posix_spawn(&child_pid, argv[0], &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
-                perror("posix_spawn");
-            } else {
-                if (disown(child_pid) < 0)
-                    perror("disown");
-            }
-            posix_spawn_file_actions_destroy(&spawn_actions);
+            GUI::Process::spawn_or_show_error(&window, executable, arguments,
+                app.working_directory.is_empty() ? Core::StandardPaths::home_directory() : app.working_directory);
         }));
         ++app_identifier;
     }
