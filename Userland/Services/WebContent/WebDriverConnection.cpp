@@ -56,7 +56,7 @@ static JsonValue serialize_cookie(Web::Cookie::Cookie const& cookie)
     serialized_cookie.set("domain"sv, cookie.domain);
     serialized_cookie.set("secure"sv, cookie.secure);
     serialized_cookie.set("httpOnly"sv, cookie.http_only);
-    serialized_cookie.set("expiry"sv, cookie.expiry_time.to_seconds());
+    serialized_cookie.set("expiry"sv, cookie.expiry_time.seconds_since_epoch());
     serialized_cookie.set("sameSite"sv, Web::Cookie::same_site_to_string(cookie.same_site));
 
     return serialized_cookie;
@@ -1602,7 +1602,7 @@ Messages::WebDriverClient::AddCookieResponse WebDriverConnection::add_cookie(Jso
     if (data.has("expiry"sv)) {
         // NOTE: less than 0 or greater than safe integer are handled by the JSON parser
         auto expiry = TRY(get_property<u32>(data, "expiry"sv));
-        cookie.expiry_time_from_expires_attribute = Duration::from_seconds(expiry);
+        cookie.expiry_time_from_expires_attribute = UnixDateTime::from_seconds_since_epoch(expiry);
     }
 
     // Cookie same site
@@ -2039,7 +2039,7 @@ void WebDriverConnection::delete_cookies(Optional<StringView> const& name)
         // -> name is equal to cookie name
         if (!name.has_value() || name.value() == cookie.name) {
             // Set the cookie expiry time to a Unix timestamp in the past.
-            cookie.expiry_time = Duration::from_seconds(0);
+            cookie.expiry_time = UnixDateTime::earliest();
             m_page_client.page_did_update_cookie(move(cookie));
         }
         // -> Otherwise

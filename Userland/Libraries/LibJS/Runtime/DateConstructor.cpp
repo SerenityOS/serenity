@@ -131,8 +131,8 @@ static double parse_simplified_iso8601(DeprecatedString const& iso_8601)
 
     // We parsed a valid date simplified ISO 8601 string.
     VERIFY(year.has_value()); // A valid date string always has at least a year.
-    auto time = AK::Duration::from_timestamp(*year, month.value_or(1), day.value_or(1), hours.value_or(0), minutes.value_or(0), seconds.value_or(0), milliseconds.value_or(0));
-    auto time_ms = static_cast<double>(time.to_milliseconds());
+    auto time = AK::UnixDateTime::from_unix_time_parts(*year, month.value_or(1), day.value_or(1), hours.value_or(0), minutes.value_or(0), seconds.value_or(0), milliseconds.value_or(0));
+    auto time_ms = static_cast<double>(time.milliseconds_since_epoch());
 
     // https://tc39.es/ecma262/#sec-date.parse:
     // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
@@ -208,7 +208,7 @@ ThrowCompletionOr<Value> DateConstructor::call()
 {
     // 1. If NewTarget is undefined, then
     //     a. Let now be the time value (UTC) identifying the current time.
-    auto now = AK::Duration::now_realtime().to_milliseconds();
+    auto now = AK::UnixDateTime::now().milliseconds_since_epoch();
 
     //     b. Return ToDateString(now).
     return PrimitiveString::create(vm(), to_date_string(now));
@@ -225,7 +225,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> DateConstructor::construct(FunctionObjec
     // 3. If numberOfArgs = 0, then
     if (vm.argument_count() == 0) {
         // a. Let dv be the time value (UTC) identifying the current time.
-        auto now = AK::Duration::now_realtime().to_milliseconds();
+        auto now = AK::UnixDateTime::now().milliseconds_since_epoch();
         date_value = static_cast<double>(now);
     }
     // 4. Else if numberOfArgs = 1, then

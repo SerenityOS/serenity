@@ -57,6 +57,9 @@ public:
     {
     }
 
+    explicit Value(UnixDateTime);
+    explicit Value(Duration);
+
     static ResultOr<Value> create_tuple(NonnullRefPtr<TupleDescriptor>);
     static ResultOr<Value> create_tuple(Vector<Value>);
 

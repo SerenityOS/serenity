@@ -140,6 +140,17 @@ Value::Value(Value&& other)
 {
 }
 
+Value::Value(Duration duration)
+    : m_type(SQLType::Integer)
+    , m_value(duration.to_milliseconds())
+{
+}
+
+Value::Value(UnixDateTime time)
+    : Value(time.offset_to_epoch())
+{
+}
+
 Value::~Value() = default;
 
 ResultOr<Value> Value::create_tuple(NonnullRefPtr<TupleDescriptor> descriptor)

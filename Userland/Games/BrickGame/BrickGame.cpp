@@ -355,7 +355,7 @@ public:
                 break;
             m_level = i;
         }
-        auto const now { Duration::now_realtime() };
+        auto const now { UnixDateTime::now() };
         auto const delay = s_level_map[m_level].m_delay;
         if (now - m_last_update > delay) {
             m_last_update = now;
@@ -372,7 +372,7 @@ public:
         m_block.random_shape();
         m_next_block.random_shape();
         update_shadow_hint_block();
-        m_last_update = Duration::now_realtime();
+        m_last_update = UnixDateTime::now();
         m_state = GameState::Active;
     }
 
@@ -384,7 +384,8 @@ private:
     unsigned m_level {};
     unsigned m_score {};
     GameState m_state { GameState::GameOver };
-    Duration m_last_update {};
+    // FIXME: Should probably use a monotonic clock instead.
+    UnixDateTime m_last_update {};
 
     struct LevelMap final {
         unsigned const m_score;

@@ -130,7 +130,7 @@ void StorageWidget::clear_session_storage_entries()
 void StorageWidget::delete_cookie(Web::Cookie::Cookie cookie)
 {
     // Delete cookie by making its expiry time in the past.
-    cookie.expiry_time = Duration::from_seconds(0);
+    cookie.expiry_time = UnixDateTime::earliest();
     if (on_update_cookie)
         on_update_cookie(move(cookie));
 }
