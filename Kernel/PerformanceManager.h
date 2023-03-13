@@ -164,7 +164,7 @@ public:
 
     static void timer_tick(RegisterState const& regs)
     {
-        static Duration last_wakeup;
+        static UnixDateTime last_wakeup;
         auto now = kgettimeofday();
         constexpr auto ideal_interval = Duration::from_microseconds(1000'000 / OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE);
         auto expected_wakeup = last_wakeup + ideal_interval;

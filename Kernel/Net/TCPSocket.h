@@ -216,11 +216,11 @@ private:
     u32 m_duplicate_acks { 0 };
 
     u32 m_last_ack_number_sent { 0 };
-    Duration m_last_ack_sent_time;
+    UnixDateTime m_last_ack_sent_time;
 
     // FIXME: Make this configurable (sysctl)
     static constexpr u32 maximum_retransmits = 5;
-    Duration m_last_retransmit_time;
+    UnixDateTime m_last_retransmit_time;
     u32 m_retransmit_attempts { 0 };
 
     // FIXME: Parse window size TCP option from the peer

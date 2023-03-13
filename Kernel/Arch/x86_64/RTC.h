@@ -13,6 +13,6 @@ namespace Kernel::RTC {
 
 void initialize();
 time_t now();
-Duration boot_time();
+UnixDateTime boot_time();
 
 }

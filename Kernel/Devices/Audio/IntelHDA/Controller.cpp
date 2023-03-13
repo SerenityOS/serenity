@@ -329,10 +329,11 @@ ErrorOr<u32> Controller::get_pcm_output_sample_rate(size_t channel_index)
 ErrorOr<void> wait_until(size_t delay_in_microseconds, size_t timeout_in_microseconds, Function<ErrorOr<bool>()> condition)
 {
     auto const& time_management = TimeManagement::the();
-    u64 start_microseconds = time_management.now().to_microseconds();
+    // FIXME: Use monotonic time instead.
+    u64 start_microseconds = time_management.now().offset_to_epoch().to_microseconds();
     while (!TRY(condition())) {
         microseconds_delay(delay_in_microseconds);
-        if ((time_management.now().to_microseconds() - start_microseconds) >= timeout_in_microseconds)
+        if ((time_management.now().offset_to_epoch().to_microseconds() - start_microseconds) >= timeout_in_microseconds)
             return ETIMEDOUT;
     }
     return {};
