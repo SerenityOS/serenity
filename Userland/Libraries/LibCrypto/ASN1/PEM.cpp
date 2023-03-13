@@ -56,4 +56,41 @@ ByteBuffer decode_pem(ReadonlyBytes data)
     return decoded;
 }
 
+ErrorOr<Vector<ByteBuffer>> decode_pems(ReadonlyBytes data)
+{
+    GenericLexer lexer { data };
+    ByteBuffer decoded;
+    Vector<ByteBuffer> pems;
+
+    enum {
+        Junk,
+        Parsing,
+    } state { Junk };
+    while (!lexer.is_eof()) {
+        switch (state) {
+        case Junk:
+            if (lexer.consume_specific("-----BEGIN"))
+                state = Parsing;
+            lexer.consume_line();
+            break;
+        case Parsing: {
+            if (lexer.consume_specific("-----END")) {
+                state = Junk;
+                lexer.consume_line();
+                TRY(pems.try_append(decoded));
+                decoded.clear();
+                break;
+            }
+            auto b64decoded = TRY(decode_base64(lexer.consume_line().trim_whitespace(TrimMode::Right)));
+            TRY(decoded.try_append(b64decoded.data(), b64decoded.size()));
+            break;
+        }
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    return pems;
+}
+
 }
