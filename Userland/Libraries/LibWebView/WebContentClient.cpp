@@ -176,22 +176,22 @@ void WebContentClient::did_get_js_console_messages(i32 start_index, Vector<Depre
     m_view.notify_server_did_get_js_console_messages(start_index, message_types, messages);
 }
 
-void WebContentClient::did_request_alert(DeprecatedString const& message)
+void WebContentClient::did_request_alert(String const& message)
 {
     m_view.notify_server_did_request_alert({}, message);
 }
 
-void WebContentClient::did_request_confirm(DeprecatedString const& message)
+void WebContentClient::did_request_confirm(String const& message)
 {
     m_view.notify_server_did_request_confirm({}, message);
 }
 
-void WebContentClient::did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_)
+void WebContentClient::did_request_prompt(String const& message, String const& default_)
 {
     m_view.notify_server_did_request_prompt({}, message, default_);
 }
 
-void WebContentClient::did_request_set_prompt_text(DeprecatedString const& message)
+void WebContentClient::did_request_set_prompt_text(String const& message)
 {
     m_view.notify_server_did_request_set_prompt_text({}, message);
 }

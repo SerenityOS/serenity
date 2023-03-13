@@ -58,10 +58,10 @@ private:
     virtual void did_output_js_console_message(i32 message_index) override;
     virtual void did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> const& message_types, Vector<DeprecatedString> const& messages) override;
     virtual void did_change_favicon(Gfx::ShareableBitmap const&) override;
-    virtual void did_request_alert(DeprecatedString const&) override;
-    virtual void did_request_confirm(DeprecatedString const&) override;
-    virtual void did_request_prompt(DeprecatedString const&, DeprecatedString const&) override;
-    virtual void did_request_set_prompt_text(DeprecatedString const& message) override;
+    virtual void did_request_alert(String const&) override;
+    virtual void did_request_confirm(String const&) override;
+    virtual void did_request_prompt(String const&, String const&) override;
+    virtual void did_request_set_prompt_text(String const& message) override;
     virtual void did_request_accept_dialog() override;
     virtual void did_request_dismiss_dialog() override;
     virtual Messages::WebContentClient::DidRequestAllCookiesResponse did_request_all_cookies(AK::URL const&) override;

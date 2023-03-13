@@ -46,7 +46,7 @@ public:
 
     void alert_closed();
     void confirm_closed(bool accepted);
-    void prompt_closed(DeprecatedString response);
+    void prompt_closed(Optional<String> response);
 
 private:
     // ^PageClient
@@ -83,10 +83,10 @@ private:
     virtual void page_did_start_loading(const URL&, bool) override;
     virtual void page_did_create_main_document() override;
     virtual void page_did_finish_loading(const URL&) override;
-    virtual void page_did_request_alert(DeprecatedString const&) override;
-    virtual void page_did_request_confirm(DeprecatedString const&) override;
-    virtual void page_did_request_prompt(DeprecatedString const&, DeprecatedString const&) override;
-    virtual void page_did_request_set_prompt_text(DeprecatedString const&) override;
+    virtual void page_did_request_alert(String const&) override;
+    virtual void page_did_request_confirm(String const&) override;
+    virtual void page_did_request_prompt(String const&, String const&) override;
+    virtual void page_did_request_set_prompt_text(String const&) override;
     virtual void page_did_request_accept_dialog() override;
     virtual void page_did_request_dismiss_dialog() override;
     virtual void page_did_change_favicon(Gfx::Bitmap const&) override;

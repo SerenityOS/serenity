@@ -70,5 +70,5 @@ endpoint WebContentServer
 
     alert_closed() =|
     confirm_closed(bool accepted) =|
-    prompt_closed(DeprecatedString response) =|
+    prompt_closed(Optional<String> response) =|
 }
