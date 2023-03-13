@@ -363,6 +363,7 @@ private:
 
     size_t visual_line_containing(size_t line_index, size_t column) const;
     void recompute_visual_lines(size_t line_index, Vector<TextDocumentFoldingRegion const&>::Iterator& folded_region_iterator);
+    void populate_line_data();
 
     template<class T, class... Args>
     inline void execute(Args&&... args)

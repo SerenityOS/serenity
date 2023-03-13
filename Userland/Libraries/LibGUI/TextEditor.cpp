@@ -2203,11 +2203,19 @@ void TextEditor::document_did_update_undo_stack()
         on_modified_change(document().is_modified());
 }
 
-void TextEditor::document_did_set_text(AllowCallback allow_callback)
+void TextEditor::populate_line_data()
 {
     m_line_visual_data.clear();
-    for (size_t i = 0; i < m_document->line_count(); ++i)
-        m_line_visual_data.append(make<LineVisualData>());
+    m_line_visual_data.ensure_capacity(m_document->line_count());
+
+    for (size_t i = 0; i < m_document->line_count(); ++i) {
+        m_line_visual_data.unchecked_append(make<LineVisualData>());
+    }
+}
+
+void TextEditor::document_did_set_text(AllowCallback allow_callback)
+{
+    populate_line_data();
     document_did_change(allow_callback);
 }
 
@@ -2233,10 +2241,7 @@ void TextEditor::set_document(TextDocument& document)
     if (m_document)
         m_document->unregister_client(*this);
     m_document = document;
-    m_line_visual_data.clear();
-    for (size_t i = 0; i < m_document->line_count(); ++i) {
-        m_line_visual_data.append(make<LineVisualData>());
-    }
+    populate_line_data();
     set_cursor(0, 0);
     if (has_selection())
         m_selection.clear();
