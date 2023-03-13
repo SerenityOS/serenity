@@ -100,7 +100,7 @@ static ErrorOr<JsonObject, Error> validate_capabilities(JsonValue const& capabil
         // -> name equals "browserName"
         // -> name equals "browserVersion"
         // -> name equals "platformName"
-        else if (name.is_one_of("browserName"sv, "browser_version"sv, "platformName"sv)) {
+        else if (name.is_one_of("browserName"sv, "browserVersion"sv, "platformName"sv)) {
             // If value is not a string return an error with error code invalid argument. Otherwise, let deserialized be set to value.
             if (!value.is_string())
                 return Error::from_code(ErrorCode::InvalidArgument, DeprecatedString::formatted("Capability {} must be a string", name));
