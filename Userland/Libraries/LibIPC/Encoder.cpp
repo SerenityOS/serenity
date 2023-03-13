@@ -91,6 +91,12 @@ ErrorOr<void> encode(Encoder& encoder, Duration const& value)
 }
 
 template<>
+ErrorOr<void> encode(Encoder& encoder, UnixDateTime const& value)
+{
+    return encoder.encode(value.nanoseconds_since_epoch());
+}
+
+template<>
 ErrorOr<void> encode(Encoder& encoder, URL const& value)
 {
     return encoder.encode(value.to_deprecated_string());

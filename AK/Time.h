@@ -354,6 +354,128 @@ private:
     u32 m_nanoseconds { 0 }; // Always less than 1'000'000'000
 };
 
+namespace Detail {
+
+// Common base class for all unaware time types.
+// Naive, or unaware, in the time context means to make heavily simplifying assumptions about time.
+// In the case of this class and its children, they are not timezone-aware and strictly ordered.
+class UnawareTime {
+public:
+    constexpr UnawareTime(UnawareTime const&) = default;
+    constexpr UnawareTime& operator=(UnawareTime const&) = default;
+
+    [[nodiscard]] timespec to_timespec() const { return m_offset.to_timespec(); }
+    // Rounds towards -inf.
+    [[nodiscard]] timeval to_timeval() const { return m_offset.to_timeval(); }
+
+    // We intentionally do not define a comparison operator here to avoid accidentally comparing incompatible time types.
+
+protected:
+    constexpr explicit UnawareTime(Duration offset)
+        : m_offset(offset)
+    {
+    }
+
+    Duration m_offset {};
+};
+
+}
+
+// Naive UNIX time, representing an offset from 1970-01-01 00:00:00Z, without accounting for UTC leap seconds.
+// This class is mainly intended for interoperating with anything that expects a unix timestamp.
+class UnixDateTime : public Detail::UnawareTime {
+public:
+    constexpr UnixDateTime()
+        : Detail::UnawareTime(Duration::zero())
+    {
+    }
+
+    constexpr static UnixDateTime epoch()
+    {
+        return UnixDateTime {};
+    }
+
+    // Creates UNIX time from a unix timestamp.
+    // Note that the returned time is probably not equivalent to the same timestamp in UTC time, since UNIX time does not observe leap seconds.
+    [[nodiscard]] constexpr static UnixDateTime from_unix_time_parts(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
+    {
+        constexpr auto milliseconds_per_day = 86'400'000;
+        constexpr auto milliseconds_per_hour = 3'600'000;
+        constexpr auto milliseconds_per_minute = 60'000;
+        constexpr auto milliseconds_per_second = 1'000;
+
+        i64 days = days_since_epoch(year, month, day);
+        i64 milliseconds_since_epoch = days * milliseconds_per_day;
+
+        milliseconds_since_epoch += hour * milliseconds_per_hour;
+        milliseconds_since_epoch += minute * milliseconds_per_minute;
+        milliseconds_since_epoch += second * milliseconds_per_second;
+        milliseconds_since_epoch += millisecond;
+
+        return from_milliseconds_since_epoch(milliseconds_since_epoch);
+    }
+
+    [[nodiscard]] constexpr static UnixDateTime from_seconds_since_epoch(i64 seconds)
+    {
+        return UnixDateTime { Duration::from_seconds(seconds) };
+    }
+
+    [[nodiscard]] constexpr static UnixDateTime from_milliseconds_since_epoch(i64 milliseconds)
+    {
+        return UnixDateTime { Duration::from_milliseconds(milliseconds) };
+    }
+
+    [[nodiscard]] constexpr static UnixDateTime from_nanoseconds_since_epoch(i64 nanoseconds)
+    {
+        return UnixDateTime { Duration::from_nanoseconds(nanoseconds) };
+    }
+
+    [[nodiscard]] static UnixDateTime from_unix_timespec(struct timespec const& time)
+    {
+        return UnixDateTime { Duration::from_timespec(time) };
+    }
+
+    // Earliest and latest representable UNIX timestamps.
+    [[nodiscard]] constexpr static UnixDateTime earliest() { return UnixDateTime { Duration::min() }; }
+    [[nodiscard]] constexpr static UnixDateTime latest() { return UnixDateTime { Duration::max() }; }
+
+    [[nodiscard]] constexpr Duration offset_to_epoch() const { return m_offset; }
+    // May return an epoch offset *after* what this UnixDateTime contains, because rounding to seconds occurs.
+    [[nodiscard]] i64 seconds_since_epoch() const { return m_offset.to_seconds(); }
+    [[nodiscard]] i64 milliseconds_since_epoch() const { return m_offset.to_milliseconds(); }
+    [[nodiscard]] i64 nanoseconds_since_epoch() const { return m_offset.to_nanoseconds(); }
+    // Never returns a point after this UnixDateTime, since fractional seconds are cut off.
+    [[nodiscard]] i64 truncated_seconds_since_epoch() const { return m_offset.to_truncated_seconds(); }
+
+    // Offsetting a UNIX time by a duration yields another UNIX time.
+    constexpr UnixDateTime operator+(Duration const& other) const { return UnixDateTime { m_offset + other }; };
+    constexpr UnixDateTime& operator+=(Duration const& other)
+    {
+        this->m_offset = this->m_offset + other;
+        return *this;
+    };
+    constexpr UnixDateTime operator-(Duration const& other) const { return UnixDateTime { m_offset - other }; };
+    // Subtracting two UNIX times yields their time difference.
+    constexpr Duration operator-(UnixDateTime const& other) const { return m_offset - other.m_offset; };
+
+#ifndef KERNEL
+    [[nodiscard]] static UnixDateTime now();
+    [[nodiscard]] static UnixDateTime now_coarse();
+#endif
+
+    constexpr bool operator==(UnixDateTime const& other) const
+    {
+        return this->m_offset == other.m_offset;
+    }
+    constexpr int operator<=>(UnixDateTime const& other) const { return this->m_offset <=> other.m_offset; }
+
+private:
+    constexpr explicit UnixDateTime(Duration offset)
+        : Detail::UnawareTime(offset)
+    {
+    }
+};
+
 template<typename TimevalType>
 inline void timeval_sub(TimevalType const& a, TimevalType const& b, TimevalType& result)
 {
@@ -451,5 +573,6 @@ using AK::timespec_to_timeval;
 using AK::timeval_add;
 using AK::timeval_sub;
 using AK::timeval_to_timespec;
+using AK::UnixDateTime;
 using AK::years_to_days_since_epoch;
 #endif

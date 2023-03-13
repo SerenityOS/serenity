@@ -77,6 +77,13 @@ ErrorOr<Duration> decode(Decoder& decoder)
 }
 
 template<>
+ErrorOr<UnixDateTime> decode(Decoder& decoder)
+{
+    auto nanoseconds = TRY(decoder.decode<i64>());
+    return AK::UnixDateTime::from_nanoseconds_since_epoch(nanoseconds);
+}
+
+template<>
 ErrorOr<URL> decode(Decoder& decoder)
 {
     auto url = TRY(decoder.decode<DeprecatedString>());

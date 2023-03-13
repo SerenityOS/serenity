@@ -237,6 +237,16 @@ Duration Duration::now_monotonic_coarse()
     return now_time_from_clock(CLOCK_MONOTONIC_COARSE);
 }
 
+UnixDateTime UnixDateTime::now()
+{
+    return UnixDateTime { now_time_from_clock(CLOCK_REALTIME) };
+}
+
+UnixDateTime UnixDateTime::now_coarse()
+{
+    return UnixDateTime { now_time_from_clock(CLOCK_REALTIME_COARSE) };
+}
+
 #endif
 
 }
