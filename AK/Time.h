@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Assertions.h>
+#include <AK/Badge.h>
 #include <AK/Checked.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
@@ -15,6 +16,12 @@
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
 #    include <Kernel/API/POSIX/sys/time.h>
 #    include <Kernel/API/POSIX/time.h>
+
+// We need a Badge<TimeManagement> for some MonotonicTime operations.
+namespace Kernel {
+class TimeManagement;
+}
+
 #else
 #    include <sys/time.h>
 #    include <time.h>
@@ -456,6 +463,67 @@ private:
     }
 };
 
+// Monotonic time represents time returned from the CLOCK_MONOTONIC clock, which has an arbitrary fixed reference point.
+class MonotonicTime : private Detail::UnawareTime {
+public:
+    // Monotonic time does not have a defined reference point.
+    // A MonotonicTime at the reference point is therefore meaningless.
+    MonotonicTime() = delete;
+    constexpr MonotonicTime(MonotonicTime const&) = default;
+    constexpr MonotonicTime(MonotonicTime&&) = default;
+    constexpr MonotonicTime& operator=(MonotonicTime const&) = default;
+    constexpr MonotonicTime& operator=(MonotonicTime&&) = default;
+
+#ifndef KERNEL
+    [[nodiscard]] static MonotonicTime now();
+    [[nodiscard]] static MonotonicTime now_coarse();
+#endif
+
+    // clang-format off
+    // Clang-format likes to expand this function for some reason.
+    [[nodiscard]] i64 seconds() const { return m_offset.to_seconds(); }
+    // clang-format on
+    [[nodiscard]] i64 milliseconds() const { return m_offset.to_milliseconds(); }
+    [[nodiscard]] i64 nanoseconds() const { return m_offset.to_nanoseconds(); }
+    // Never returns a point in the future, since fractional seconds are cut off.
+    [[nodiscard]] i64 truncated_seconds() const { return m_offset.to_truncated_seconds(); }
+    [[nodiscard]] i64 nanoseconds_within_second() const { return to_timespec().tv_nsec; }
+
+    // clang-format off
+    constexpr bool operator==(MonotonicTime const& other) const { return this->m_offset == other.m_offset; }
+    // clang-format on
+    constexpr int operator<=>(MonotonicTime const& other) const { return this->m_offset <=> other.m_offset; }
+
+    constexpr MonotonicTime operator+(Duration const& other) const { return MonotonicTime { m_offset + other }; }
+    constexpr MonotonicTime& operator+=(Duration const& other)
+    {
+        this->m_offset = this->m_offset + other;
+        return *this;
+    }
+    constexpr MonotonicTime operator-(Duration const& other) const { return MonotonicTime { m_offset - other }; }
+    constexpr Duration operator-(MonotonicTime const& other) const { return m_offset - other.m_offset; }
+
+#ifdef KERNEL
+    // Required in the Kernel in order to create monotonic time information from hardware timers.
+    [[nodiscard]] static MonotonicTime from_hardware_time(Badge<Kernel::TimeManagement>, time_t seconds, long nanoseconds)
+    {
+        return MonotonicTime { Duration::from_timespec({ seconds, nanoseconds }) };
+    }
+
+    // "Start" is whenever the hardware timers started counting (e.g. for HPET it's most certainly boot).
+    [[nodiscard]] Duration time_since_start(Badge<Kernel::TimeManagement>)
+    {
+        return m_offset;
+    }
+#endif
+
+private:
+    constexpr explicit MonotonicTime(Duration offset)
+        : Detail::UnawareTime(offset)
+    {
+    }
+};
+
 template<typename TimevalType>
 inline void timeval_sub(TimevalType const& a, TimevalType const& b, TimevalType& result)
 {
@@ -545,6 +613,7 @@ using AK::days_in_year;
 using AK::days_since_epoch;
 using AK::Duration;
 using AK::is_leap_year;
+using AK::MonotonicTime;
 using AK::seconds_since_epoch_to_year;
 using AK::timespec_add;
 using AK::timespec_add_timeval;
