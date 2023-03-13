@@ -73,9 +73,14 @@ Utf8View Utf8View::unicode_substring_view(size_t code_point_offset, size_t code_
 size_t Utf8View::calculate_length() const
 {
     size_t length = 0;
-    for ([[maybe_unused]] auto code_point : *this) {
-        ++length;
+
+    for (size_t i = 0; i < m_string.length(); ++length) {
+        auto [byte_length, code_point, is_valid] = decode_leading_byte(static_cast<u8>(m_string[i]));
+
+        // Similar to Utf8CodePointIterator::operator++, if the byte is invalid, try the next byte.
+        i += is_valid ? byte_length : 1;
     }
+
     return length;
 }
 
