@@ -663,30 +663,32 @@ ErrorOr<void> Image::resize(Gfx::IntSize new_size, Gfx::Painter::ScalingMode sca
         scale_y = new_size.height() / static_cast<float>(size().height());
     }
 
-    Vector<NonnullRefPtr<Layer>> resized_layers;
-    TRY(resized_layers.try_ensure_capacity(m_layers.size()));
+    if (scaling_mode != Gfx::Painter::ScalingMode::None) {
+        Vector<NonnullRefPtr<Layer>> resized_layers;
+        TRY(resized_layers.try_ensure_capacity(m_layers.size()));
 
-    VERIFY(m_layers.size() > 0);
+        VERIFY(m_layers.size() > 0);
 
-    size_t selected_layer_index = 0;
-    for (size_t i = 0; i < m_layers.size(); ++i) {
-        auto& layer = m_layers[i];
-        auto new_layer = TRY(Layer::create_snapshot(*this, layer));
+        size_t selected_layer_index = 0;
+        for (size_t i = 0; i < m_layers.size(); ++i) {
+            auto& layer = m_layers[i];
+            auto new_layer = TRY(Layer::create_snapshot(*this, layer));
 
-        if (layer->is_selected())
-            selected_layer_index = i;
+            if (layer->is_selected())
+                selected_layer_index = i;
 
-        Gfx::IntPoint new_location(scale_x * new_layer->location().x(), scale_y * new_layer->location().y());
-        TRY(new_layer->resize(new_size, new_location, scaling_mode, Layer::NotifyClients::No));
+            Gfx::IntPoint new_location(scale_x * new_layer->location().x(), scale_y * new_layer->location().y());
+            TRY(new_layer->resize(new_size, new_location, scaling_mode, Layer::NotifyClients::No));
 
-        resized_layers.unchecked_append(new_layer);
+            resized_layers.unchecked_append(new_layer);
+        }
+
+        m_layers = move(resized_layers);
+        for (auto& layer : m_layers)
+            layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
+
+        select_layer(m_layers[selected_layer_index]);
     }
-
-    m_layers = move(resized_layers);
-    for (auto& layer : m_layers)
-        layer->did_modify_bitmap({}, Layer::NotifyClients::Yes);
-
-    select_layer(m_layers[selected_layer_index]);
 
     m_size = { new_size.width(), new_size.height() };
     did_change_rect();
