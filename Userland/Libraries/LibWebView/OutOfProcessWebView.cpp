@@ -346,7 +346,7 @@ void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<Web
         on_image_context_menu_request(url, screen_relative_rect().location().translated(to_widget_position(content_position)), bitmap);
 }
 
-void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, DeprecatedString const& message)
+void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
     m_dialog = GUI::MessageBox::construct(window(), message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
     m_dialog->set_icon(window()->icon());
@@ -356,7 +356,7 @@ void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient
     m_dialog = nullptr;
 }
 
-void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, DeprecatedString const& message)
+void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
     m_dialog = GUI::MessageBox::construct(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     m_dialog->set_icon(window()->icon());
@@ -365,23 +365,27 @@ void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClie
     m_dialog = nullptr;
 }
 
-void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, DeprecatedString const& message, DeprecatedString const& default_)
+void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
-    m_dialog = GUI::InputBox::construct(window(), default_, message, "Prompt"sv, GUI::InputType::Text, StringView {});
+    m_dialog = GUI::InputBox::construct(window(), default_.to_deprecated_string(), message, "Prompt"sv, GUI::InputType::Text, StringView {});
     m_dialog->set_icon(window()->icon());
 
-    if (m_dialog->exec() == GUI::InputBox::ExecResult::OK)
-        client().async_prompt_closed(static_cast<GUI::InputBox&>(*m_dialog).text_value());
-    else
+    if (m_dialog->exec() == GUI::InputBox::ExecResult::OK) {
+        auto const& dialog = static_cast<GUI::InputBox const&>(*m_dialog);
+        auto response = String::from_deprecated_string(dialog.text_value()).release_value_but_fixme_should_propagate_errors();
+
+        client().async_prompt_closed(move(response));
+    } else {
         client().async_prompt_closed({});
+    }
 
     m_dialog = nullptr;
 }
 
-void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, DeprecatedString const& message)
+void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
 {
     if (m_dialog && is<GUI::InputBox>(*m_dialog))
-        static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message);
+        static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message.to_deprecated_string());
 }
 
 void OutOfProcessWebView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)

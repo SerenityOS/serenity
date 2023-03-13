@@ -88,7 +88,7 @@ private:
 
     virtual void alert_closed() override;
     virtual void confirm_closed(bool accepted) override;
-    virtual void prompt_closed(DeprecatedString const& response) override;
+    virtual void prompt_closed(Optional<String> const& response) override;
 
     virtual Messages::WebContentServer::TakeDocumentScreenshotResponse take_document_screenshot() override;
 

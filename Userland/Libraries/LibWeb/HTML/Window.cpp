@@ -1096,7 +1096,7 @@ void Window::alert(String const& message)
     //       treated as alert("undefined"), but alert() is treated as alert("").
     // FIXME: Make this fully spec compliant.
     if (auto* page = this->page())
-        page->did_request_alert(message.to_deprecated_string());
+        page->did_request_alert(message);
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-confirm
@@ -1105,7 +1105,7 @@ bool Window::confirm(Optional<String> const& message)
     // FIXME: Make this fully spec compliant.
     // NOTE: `message` has an IDL-provided default value and is never empty.
     if (auto* page = this->page())
-        return page->did_request_confirm(message->to_deprecated_string());
+        return page->did_request_confirm(*message);
     return false;
 }
 
@@ -1113,12 +1113,8 @@ bool Window::confirm(Optional<String> const& message)
 Optional<String> Window::prompt(Optional<String> const& message, Optional<String> const& default_)
 {
     // FIXME: Make this fully spec compliant.
-    if (auto* page = this->page()) {
-        auto response = page->did_request_prompt(message->to_deprecated_string(), default_->to_deprecated_string());
-        if (response.is_null())
-            return {};
-        return String::from_deprecated_string(response).release_value_but_fixme_should_propagate_errors();
-    }
+    if (auto* page = this->page())
+        return page->did_request_prompt(*message, *default_);
     return {};
 }
 

@@ -1640,7 +1640,7 @@ Messages::WebDriverClient::GetAlertTextResponse WebDriverConnection::get_alert_t
 
     // 4. Return success with data message.
     if (message.has_value())
-        return *message;
+        return message->to_deprecated_string();
     return JsonValue {};
 }
 
@@ -1679,7 +1679,7 @@ Messages::WebDriverClient::SendAlertTextResponse WebDriverConnection::send_alert
     }
 
     // 6. Perform user agent dependent steps to set the value of current user prompt’s text field to text.
-    m_page_client.page_did_request_set_prompt_text(move(text));
+    m_page_client.page_did_request_set_prompt_text(TRY(String::from_deprecated_string(text)));
 
     // 7. Return success with data null.
     return JsonValue {};

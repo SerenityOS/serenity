@@ -282,7 +282,7 @@ void PageHost::page_did_request_link_context_menu(Web::CSSPixelPoint content_pos
     m_client.async_did_request_link_context_menu(page().css_to_device_point(content_position).to_type<int>(), url, target, modifiers);
 }
 
-void PageHost::page_did_request_alert(DeprecatedString const& message)
+void PageHost::page_did_request_alert(String const& message)
 {
     m_client.async_did_request_alert(message);
 }
@@ -292,7 +292,7 @@ void PageHost::alert_closed()
     page().alert_closed();
 }
 
-void PageHost::page_did_request_confirm(DeprecatedString const& message)
+void PageHost::page_did_request_confirm(String const& message)
 {
     m_client.async_did_request_confirm(message);
 }
@@ -302,17 +302,17 @@ void PageHost::confirm_closed(bool accepted)
     page().confirm_closed(accepted);
 }
 
-void PageHost::page_did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_)
+void PageHost::page_did_request_prompt(String const& message, String const& default_)
 {
     m_client.async_did_request_prompt(message, default_);
 }
 
-void PageHost::page_did_request_set_prompt_text(DeprecatedString const& text)
+void PageHost::page_did_request_set_prompt_text(String const& text)
 {
     m_client.async_did_request_set_prompt_text(text);
 }
 
-void PageHost::prompt_closed(DeprecatedString response)
+void PageHost::prompt_closed(Optional<String> response)
 {
     page().prompt_closed(move(response));
 }

@@ -598,7 +598,7 @@ void ConnectionFromClient::confirm_closed(bool accepted)
     m_page_host->confirm_closed(accepted);
 }
 
-void ConnectionFromClient::prompt_closed(DeprecatedString const& response)
+void ConnectionFromClient::prompt_closed(Optional<String> const& response)
 {
     m_page_host->prompt_closed(response);
 }

@@ -29,10 +29,10 @@ endpoint WebContentClient
     did_request_context_menu(Gfx::IntPoint content_position) =|
     did_request_link_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers) =|
     did_request_image_context_menu(Gfx::IntPoint content_position, URL url, DeprecatedString target, unsigned modifiers, Gfx::ShareableBitmap bitmap) =|
-    did_request_alert(DeprecatedString message) =|
-    did_request_confirm(DeprecatedString message) =|
-    did_request_prompt(DeprecatedString message, DeprecatedString default_) =|
-    did_request_set_prompt_text(DeprecatedString message) =|
+    did_request_alert(String message) =|
+    did_request_confirm(String message) =|
+    did_request_prompt(String message, String default_) =|
+    did_request_set_prompt_text(String message) =|
     did_request_accept_dialog() =|
     did_request_dismiss_dialog() =|
     did_get_source(URL url, DeprecatedString source) =|

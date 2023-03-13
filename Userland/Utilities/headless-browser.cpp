@@ -114,10 +114,10 @@ private:
     void notify_server_did_request_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint) override { }
     void notify_server_did_request_link_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned) override { }
     void notify_server_did_request_image_context_menu(Badge<WebView::WebContentClient>, Gfx::IntPoint, const URL&, DeprecatedString const&, unsigned, Gfx::ShareableBitmap const&) override { }
-    void notify_server_did_request_alert(Badge<WebView::WebContentClient>, DeprecatedString const&) override { }
-    void notify_server_did_request_confirm(Badge<WebView::WebContentClient>, DeprecatedString const&) override { }
-    void notify_server_did_request_prompt(Badge<WebView::WebContentClient>, DeprecatedString const&, DeprecatedString const&) override { }
-    void notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, DeprecatedString const&) override { }
+    void notify_server_did_request_alert(Badge<WebView::WebContentClient>, String const&) override { }
+    void notify_server_did_request_confirm(Badge<WebView::WebContentClient>, String const&) override { }
+    void notify_server_did_request_prompt(Badge<WebView::WebContentClient>, String const&, String const&) override { }
+    void notify_server_did_request_set_prompt_text(Badge<WebView::WebContentClient>, String const&) override { }
     void notify_server_did_request_accept_dialog(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_request_dismiss_dialog(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_get_source(const URL&, DeprecatedString const&) override { }

@@ -93,14 +93,14 @@ public:
     DevicePixelSize window_size() const { return m_window_size; }
     void set_window_size(DevicePixelSize size) { m_window_size = size; }
 
-    void did_request_alert(DeprecatedString const& message);
+    void did_request_alert(String const& message);
     void alert_closed();
 
-    bool did_request_confirm(DeprecatedString const& message);
+    bool did_request_confirm(String const& message);
     void confirm_closed(bool accepted);
 
-    DeprecatedString did_request_prompt(DeprecatedString const& message, DeprecatedString const& default_);
-    void prompt_closed(DeprecatedString response);
+    Optional<String> did_request_prompt(String const& message, String const& default_);
+    void prompt_closed(Optional<String> response);
 
     enum class PendingDialog {
         None,
@@ -110,7 +110,7 @@ public:
     };
     bool has_pending_dialog() const { return m_pending_dialog != PendingDialog::None; }
     PendingDialog pending_dialog() const { return m_pending_dialog; }
-    Optional<DeprecatedString> const& pending_dialog_text() const { return m_pending_dialog_text; }
+    Optional<String> const& pending_dialog_text() const { return m_pending_dialog_text; }
     void dismiss_dialog();
     void accept_dialog();
 
@@ -137,10 +137,10 @@ private:
     DevicePixelSize m_window_size {};
 
     PendingDialog m_pending_dialog { PendingDialog::None };
-    Optional<DeprecatedString> m_pending_dialog_text;
+    Optional<String> m_pending_dialog_text;
     Optional<Empty> m_pending_alert_response;
     Optional<bool> m_pending_confirm_response;
-    Optional<DeprecatedString> m_pending_prompt_response;
+    Optional<Optional<String>> m_pending_prompt_response;
 
     // https://html.spec.whatwg.org/multipage/system-state.html#pdf-viewer-supported
     // Each user agent has a PDF viewer supported boolean, whose value is implementation-defined (and might vary according to user preferences).
@@ -189,10 +189,10 @@ public:
     virtual void page_did_request_scroll(i32, i32) { }
     virtual void page_did_request_scroll_to(CSSPixelPoint) { }
     virtual void page_did_request_scroll_into_view(CSSPixelRect const&) { }
-    virtual void page_did_request_alert(DeprecatedString const&) { }
-    virtual void page_did_request_confirm(DeprecatedString const&) { }
-    virtual void page_did_request_prompt(DeprecatedString const&, DeprecatedString const&) { }
-    virtual void page_did_request_set_prompt_text(DeprecatedString const&) { }
+    virtual void page_did_request_alert(String const&) { }
+    virtual void page_did_request_confirm(String const&) { }
+    virtual void page_did_request_prompt(String const&, String const&) { }
+    virtual void page_did_request_set_prompt_text(String const&) { }
     virtual void page_did_request_accept_dialog() { }
     virtual void page_did_request_dismiss_dialog() { }
     virtual Vector<Web::Cookie::Cookie> page_did_request_all_cookies(AK::URL const&) { return {}; }
