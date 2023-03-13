@@ -18,24 +18,23 @@
 
 struct Option {
     DeprecatedString title;
-    Vector<char const*> cmd;
+    ShutdownDialog::Command command;
     bool enabled;
     bool default_action;
 };
 
-static Vector<Option> const options = {
-    { "Power off computer", { "/bin/shutdown", "--now", nullptr }, true, true },
-    { "Reboot", { "/bin/reboot", nullptr }, true, false },
-    { "Log out", { "/bin/logout", nullptr }, true, false },
+static Array const options = {
+    Option { "Power off computer", { "/bin/shutdown"sv, { "--now" } }, true, true },
+    Option { "Reboot", { "/bin/reboot"sv, {} }, true, false },
+    Option { "Log out", { "/bin/logout"sv, {} }, true, false },
 };
 
-Vector<char const*> ShutdownDialog::show()
+Optional<ShutdownDialog::Command const&> ShutdownDialog::show()
 {
     auto dialog = ShutdownDialog::construct();
     auto rc = dialog->exec();
     if (rc == ExecResult::OK && dialog->m_selected_option != -1)
-        return options[dialog->m_selected_option].cmd;
-
+        return options[dialog->m_selected_option].command;
     return {};
 }
 
