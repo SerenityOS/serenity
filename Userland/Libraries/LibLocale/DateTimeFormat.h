@@ -226,7 +226,7 @@ ErrorOr<Optional<StringView>> get_calendar_weekday_symbol(StringView locale, Str
 ErrorOr<Optional<StringView>> get_calendar_day_period_symbol(StringView locale, StringView calendar, CalendarPatternStyle style, DayPeriod value);
 ErrorOr<Optional<StringView>> get_calendar_day_period_symbol_for_hour(StringView locale, StringView calendar, CalendarPatternStyle style, u8 hour);
 
-ErrorOr<String> format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Duration time);
+ErrorOr<String> format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::UnixDateTime time);
 Optional<StringView> get_time_zone_name(StringView locale, StringView time_zone, CalendarPatternStyle style, TimeZone::InDST in_dst);
 Optional<TimeZoneFormat> get_time_zone_format(StringView locale);
 
