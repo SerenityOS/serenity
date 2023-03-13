@@ -72,40 +72,33 @@ static ErrorOr<void> read_comment(TContext& context)
 }
 
 template<typename TContext>
-static bool read_magic_number(TContext& context)
+static ErrorOr<void> read_magic_number(TContext& context)
 {
-    if (context.state >= TContext::State::MagicNumber) {
-        return true;
-    }
+    if (context.state >= TContext::State::MagicNumber)
+        return {};
 
-    if (context.stream->size().release_value_but_fixme_should_propagate_errors() < 2) {
-        context.state = TContext::State::Error;
+    if (TRY(context.stream->size()) < 2) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "There is no enough data for {}", TContext::FormatDetails::image_type);
-        return false;
+        return Error::from_string_literal("There is no enough data to read magic number.");
     }
 
     Array<u8, 2> magic_number {};
-    if (context.stream->read_until_filled(Bytes { magic_number }).is_error()) {
-        context.state = TContext::State::Error;
-        dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't read magic number for {}", TContext::FormatDetails::image_type);
-        return false;
-    }
+    TRY(context.stream->read_until_filled(Bytes { magic_number }));
 
     if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::ascii_magic_number) {
         context.type = TContext::Type::ASCII;
         context.state = TContext::State::MagicNumber;
-        return true;
+        return {};
     }
 
     if (magic_number[0] == 'P' && magic_number[1] == TContext::FormatDetails::binary_magic_number) {
         context.type = TContext::Type::RAWBITS;
         context.state = TContext::State::MagicNumber;
-        return true;
+        return {};
     }
 
-    context.state = TContext::State::Error;
     dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "Magic number is not valid for {}{}{}", magic_number[0], magic_number[1], TContext::FormatDetails::image_type);
-    return false;
+    return Error::from_string_literal("Unable to recognize magic bytes");
 }
 
 template<typename TContext>
@@ -205,7 +198,7 @@ static bool decode(TContext& context)
         context.state = TContext::State::Error;
     });
 
-    if (!read_magic_number(context))
+    if (read_magic_number(context).is_error())
         return false;
 
     if (read_whitespace(context).is_error())
