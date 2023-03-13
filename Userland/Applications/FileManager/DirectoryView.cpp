@@ -19,6 +19,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ModelEditingDelegate.h>
+#include <LibGUI/Process.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <serenity.h>
 #include <spawn.h>
@@ -27,21 +28,9 @@
 
 namespace FileManager {
 
-void spawn_terminal(DeprecatedString const& directory)
+void spawn_terminal(GUI::Window* window, StringView directory)
 {
-    posix_spawn_file_actions_t spawn_actions;
-    posix_spawn_file_actions_init(&spawn_actions);
-    posix_spawn_file_actions_addchdir(&spawn_actions, directory.characters());
-
-    pid_t pid;
-    char const* argv[] = { "Terminal", nullptr };
-    if ((errno = posix_spawn(&pid, "/bin/Terminal", &spawn_actions, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
-    } else {
-        if (disown(pid) < 0)
-            perror("disown");
-    }
-    posix_spawn_file_actions_destroy(&spawn_actions);
+    GUI::Process::spawn_or_show_error(window, "/bin/Terminal"sv, ReadonlySpan<StringView> {}, directory);
 }
 
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(LauncherHandler const&)> launch_handler)
@@ -617,7 +606,7 @@ void DirectoryView::setup_actions()
     });
 
     m_open_terminal_action = GUI::Action::create("Open &Terminal Here", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        spawn_terminal(path());
+        spawn_terminal(window(), path());
     });
 
     m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
