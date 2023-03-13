@@ -117,7 +117,7 @@ static struct tm* time_to_tm(struct tm* tm, time_t t, StringView time_zone)
         return nullptr;
     }
 
-    if (auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_seconds(t)); offset.has_value()) {
+    if (auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Duration::from_seconds(t)); offset.has_value()) {
         tm->tm_isdst = offset->in_dst == TimeZone::InDST::Yes;
         t += offset->seconds;
     }
@@ -171,12 +171,12 @@ static time_t tm_to_time(struct tm* tm, StringView time_zone)
     auto timestamp = ((days_since_epoch * 24 + tm->tm_hour) * 60 + tm->tm_min) * 60 + tm->tm_sec;
 
     if (tm->tm_isdst < 0) {
-        if (auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_seconds(timestamp)); offset.has_value())
+        if (auto offset = TimeZone::get_time_zone_offset(time_zone, AK::Duration::from_seconds(timestamp)); offset.has_value())
             timestamp -= offset->seconds;
     } else {
         auto index = tm->tm_isdst == 0 ? 0 : 1;
 
-        if (auto offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Time::from_seconds(timestamp)); offsets.has_value())
+        if (auto offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Duration::from_seconds(timestamp)); offsets.has_value())
             timestamp -= offsets->at(index).seconds;
     }
 
@@ -407,7 +407,7 @@ void tzset()
         tzname[1] = const_cast<char*>(__utc);
     };
 
-    if (auto offsets = TimeZone::get_named_time_zone_offsets(__tzname, AK::Time::now_realtime()); offsets.has_value()) {
+    if (auto offsets = TimeZone::get_named_time_zone_offsets(__tzname, AK::Duration::now_realtime()); offsets.has_value()) {
         if (!offsets->at(0).name.copy_characters_to_buffer(__tzname_standard, TZNAME_MAX))
             return set_default_values();
         if (!offsets->at(1).name.copy_characters_to_buffer(__tzname_daylight, TZNAME_MAX))

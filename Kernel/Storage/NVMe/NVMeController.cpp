@@ -50,7 +50,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     m_controller_regs = TRY(Memory::map_typed_writable<ControllerRegister volatile>(PhysicalAddress(m_bar)));
 
     auto caps = m_controller_regs->cap;
-    m_ready_timeout = Time::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
+    m_ready_timeout = Duration::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
 
     calculate_doorbell_stride();
     // IO queues + 1 admin queue

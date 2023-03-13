@@ -301,7 +301,7 @@ static ErrorOr<Optional<String>> format_time_zone_offset(StringView locale, Cale
 }
 
 // https://unicode.org/reports/tr35/tr35-dates.html#Time_Zone_Format_Terminology
-ErrorOr<String> format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Time time)
+ErrorOr<String> format_time_zone(StringView locale, StringView time_zone, CalendarPatternStyle style, AK::Duration time)
 {
     auto offset = TimeZone::get_time_zone_offset(time_zone, time);
     if (!offset.has_value())

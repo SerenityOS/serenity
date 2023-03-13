@@ -186,7 +186,7 @@ Optional<StringView> canonicalize_time_zone(StringView time_zone)
 Optional<DaylightSavingsRule> __attribute__((weak)) daylight_savings_rule_from_string(StringView) { return {}; }
 StringView __attribute__((weak)) daylight_savings_rule_to_string(DaylightSavingsRule) { return {}; }
 
-Optional<Offset> __attribute__((weak)) get_time_zone_offset([[maybe_unused]] TimeZone time_zone, AK::Time)
+Optional<Offset> __attribute__((weak)) get_time_zone_offset([[maybe_unused]] TimeZone time_zone, AK::Duration)
 {
 #if !ENABLE_TIME_ZONE_DATA
     VERIFY(time_zone == TimeZone::UTC);
@@ -196,14 +196,14 @@ Optional<Offset> __attribute__((weak)) get_time_zone_offset([[maybe_unused]] Tim
 #endif
 }
 
-Optional<Offset> get_time_zone_offset(StringView time_zone, AK::Time time)
+Optional<Offset> get_time_zone_offset(StringView time_zone, AK::Duration time)
 {
     if (auto maybe_time_zone = time_zone_from_string(time_zone); maybe_time_zone.has_value())
         return get_time_zone_offset(*maybe_time_zone, time);
     return {};
 }
 
-Optional<Array<NamedOffset, 2>> __attribute__((weak)) get_named_time_zone_offsets([[maybe_unused]] TimeZone time_zone, AK::Time)
+Optional<Array<NamedOffset, 2>> __attribute__((weak)) get_named_time_zone_offsets([[maybe_unused]] TimeZone time_zone, AK::Duration)
 {
 #if !ENABLE_TIME_ZONE_DATA
     VERIFY(time_zone == TimeZone::UTC);
@@ -217,7 +217,7 @@ Optional<Array<NamedOffset, 2>> __attribute__((weak)) get_named_time_zone_offset
 #endif
 }
 
-Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(StringView time_zone, AK::Time time)
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(StringView time_zone, AK::Duration time)
 {
     if (auto maybe_time_zone = time_zone_from_string(time_zone); maybe_time_zone.has_value())
         return get_named_time_zone_offsets(*maybe_time_zone, time);

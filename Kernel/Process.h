@@ -41,7 +41,7 @@
 namespace Kernel {
 
 MutexProtected<OwnPtr<KString>>& hostname();
-Time kgettimeofday();
+Duration kgettimeofday();
 
 #define ENUMERATE_PLEDGE_PROMISES         \
     __ENUMERATE_PLEDGE_PROMISE(stdio)     \

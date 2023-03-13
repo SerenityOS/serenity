@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-constexpr static AK::Time refresh_interval = AK::Time::from_milliseconds(16);
+constexpr static AK::Duration refresh_interval = AK::Duration::from_milliseconds(16);
 
 NonnullLockRefPtr<VMWareFramebufferConsole> VMWareFramebufferConsole::initialize(VMWareDisplayConnector& parent_display_connector)
 {

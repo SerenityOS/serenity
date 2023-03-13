@@ -145,7 +145,7 @@ ErrorOr<void> ISO9660Inode::truncate(u64)
     return EROFS;
 }
 
-ErrorOr<void> ISO9660Inode::update_timestamps(Optional<Time>, Optional<Time>, Optional<Time>)
+ErrorOr<void> ISO9660Inode::update_timestamps(Optional<Duration>, Optional<Duration>, Optional<Duration>)
 {
     return EROFS;
 }
@@ -169,7 +169,7 @@ void ISO9660Inode::create_metadata()
 {
     u32 data_length = LittleEndian { m_record.data_length.little };
     bool is_directory = has_flag(m_record.file_flags, ISO::FileFlags::Directory);
-    auto recorded_at = Time::from_timespec({ parse_numerical_date_time(m_record.recording_date_and_time), 0 });
+    auto recorded_at = Duration::from_timespec({ parse_numerical_date_time(m_record.recording_date_and_time), 0 });
 
     m_metadata = {
         .inode = identifier(),

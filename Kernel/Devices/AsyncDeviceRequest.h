@@ -60,7 +60,7 @@ public:
 
     void add_sub_request(NonnullLockRefPtr<AsyncDeviceRequest>);
 
-    [[nodiscard]] RequestWaitResult wait(Time* = nullptr);
+    [[nodiscard]] RequestWaitResult wait(Duration* = nullptr);
 
     void do_start(SpinlockLocker<Spinlock<LockRank::None>>&& requests_lock)
     {

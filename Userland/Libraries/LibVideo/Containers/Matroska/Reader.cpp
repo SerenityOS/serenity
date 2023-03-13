@@ -543,11 +543,11 @@ static DecoderErrorOr<Cluster> parse_cluster(Streamer& streamer, u64 timestamp_s
     TRY_READ(streamer.seek_to_position(first_element_position));
 
     Cluster cluster;
-    cluster.set_timestamp(Time::from_nanoseconds(timestamp.release_value() * timestamp_scale));
+    cluster.set_timestamp(Duration::from_nanoseconds(timestamp.release_value() * timestamp_scale));
     return cluster;
 }
 
-static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster_timestamp, u64 segment_timestamp_scale, TrackEntry track)
+static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Duration cluster_timestamp, u64 segment_timestamp_scale, TrackEntry track)
 {
     Block block;
 
@@ -567,11 +567,11 @@ static DecoderErrorOr<Block> parse_simple_block(Streamer& streamer, Time cluster
     //     of that track. To get the timestamp in nanoseconds of the first frame in a Block or
     //     SimpleBlock, the formula becomes:
     //         `( ( Cluster\Timestamp + ( block timestamp * TrackTimestampScale ) ) * TimestampScale ) - CodecDelay`
-    Time timestamp_offset = Time::from_nanoseconds(static_cast<i64>(static_cast<double>(TRY_READ(streamer.read_i16()) * segment_timestamp_scale) * track.timestamp_scale()));
-    timestamp_offset -= Time::from_nanoseconds(static_cast<i64>(track.codec_delay()));
+    Duration timestamp_offset = Duration::from_nanoseconds(static_cast<i64>(static_cast<double>(TRY_READ(streamer.read_i16()) * segment_timestamp_scale) * track.timestamp_scale()));
+    timestamp_offset -= Duration::from_nanoseconds(static_cast<i64>(track.codec_delay()));
     // This is only mentioned in the elements specification under TrackOffset.
     // https://www.matroska.org/technical/elements.html
-    timestamp_offset += Time::from_nanoseconds(static_cast<i64>(track.timestamp_offset()));
+    timestamp_offset += Duration::from_nanoseconds(static_cast<i64>(track.timestamp_offset()));
     block.set_timestamp(cluster_timestamp + timestamp_offset);
 
     auto flags = TRY_READ(streamer.read_octet());
@@ -704,7 +704,7 @@ static DecoderErrorOr<CuePoint> parse_cue_point(Streamer& streamer, u64 timestam
             // https://github.com/mozilla/nestegg/tree/ec6adfbbf979678e3058cc4695257366f39e290b/src/nestegg.c#L2411-L2416
             // https://github.com/mozilla/nestegg/tree/ec6adfbbf979678e3058cc4695257366f39e290b/src/nestegg.c#L1383-L1392
             // Other fields that specify Matroska Ticks may also use Segment Ticks instead, who knows :^(
-            auto timestamp = Time::from_nanoseconds(static_cast<i64>(TRY_READ(streamer.read_u64()) * timestamp_scale));
+            auto timestamp = Duration::from_nanoseconds(static_cast<i64>(TRY_READ(streamer.read_u64()) * timestamp_scale));
             cue_point.set_timestamp(timestamp);
             dbgln_if(MATROSKA_DEBUG, "Read CuePoint timestamp {}ms", cue_point.timestamp().to_milliseconds());
             break;
@@ -775,7 +775,7 @@ DecoderErrorOr<void> Reader::ensure_cues_are_parsed()
     return {};
 }
 
-DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator, Time const& timestamp)
+DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator, Duration const& timestamp)
 {
     auto const& cue_points = MUST(cue_points_for_track(iterator.m_track.track_number())).release_value();
 
@@ -814,7 +814,7 @@ DecoderErrorOr<void> Reader::seek_to_cue_for_timestamp(SampleIterator& iterator,
     return {};
 }
 
-static DecoderErrorOr<void> search_clusters_for_keyframe_before_timestamp(SampleIterator& iterator, Time const& timestamp)
+static DecoderErrorOr<void> search_clusters_for_keyframe_before_timestamp(SampleIterator& iterator, Duration const& timestamp)
 {
 #if MATROSKA_DEBUG
     size_t inter_frames_count;
@@ -856,7 +856,7 @@ DecoderErrorOr<bool> Reader::has_cues_for_track(u64 track_number)
     return m_cues.contains(track_number);
 }
 
-DecoderErrorOr<SampleIterator> Reader::seek_to_random_access_point(SampleIterator iterator, Time timestamp)
+DecoderErrorOr<SampleIterator> Reader::seek_to_random_access_point(SampleIterator iterator, Duration timestamp)
 {
     if (TRY(has_cues_for_track(iterator.m_track.track_number()))) {
         TRY(seek_to_cue_for_timestamp(iterator, timestamp));

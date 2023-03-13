@@ -25,9 +25,9 @@ public:
     void play_video(Badge<HTMLVideoElement>);
     void pause_video(Badge<HTMLVideoElement>);
 
-    Time position() const;
-    Time duration() const;
-    void seek(Time, MediaSeekMode);
+    Duration position() const;
+    Duration duration() const;
+    void seek(Duration, MediaSeekMode);
 
     u64 pixel_width() const;
     u64 pixel_height() const;

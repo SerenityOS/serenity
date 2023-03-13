@@ -115,7 +115,7 @@ private:
     float m_rotation_speed = 60.f;
     bool m_show_frame_rate = false;
     int m_cycles = 0;
-    Time m_accumulated_time = {};
+    Duration m_accumulated_time = {};
     RefPtr<GUI::Label> m_stats;
     GLint m_wrap_s_mode = GL_REPEAT;
     GLint m_wrap_t_mode = GL_REPEAT;

@@ -15,7 +15,7 @@
 #include <LibCore/Forward.h>
 #include <LibGUI/Command.h>
 
-constexpr Time COMMAND_COMMIT_TIME = Time::from_milliseconds(400);
+constexpr Duration COMMAND_COMMIT_TIME = Duration::from_milliseconds(400);
 
 class HexDocument : public Weakable<HexDocument> {
 public:
@@ -103,9 +103,9 @@ public:
     ErrorOr<void> try_add_changed_bytes(ByteBuffer old_values, ByteBuffer new_values);
 
 private:
-    bool commit_time_expired() const { return Time::now_monotonic() - m_timestamp >= COMMAND_COMMIT_TIME; }
+    bool commit_time_expired() const { return Duration::now_monotonic() - m_timestamp >= COMMAND_COMMIT_TIME; }
 
-    Time m_timestamp = Time::now_monotonic();
+    Duration m_timestamp = Duration::now_monotonic();
     WeakPtr<HexDocument> m_document;
     size_t m_position;
     ByteBuffer m_old;

@@ -14,7 +14,7 @@ using enum TimeZone::InDST;
 
 static void test_offset(StringView time_zone, i64 time, i64 expected_offset, TimeZone::InDST expected_in_dst)
 {
-    auto actual_offset = TimeZone::get_time_zone_offset(time_zone, AK::Time::from_seconds(time));
+    auto actual_offset = TimeZone::get_time_zone_offset(time_zone, AK::Duration::from_seconds(time));
     VERIFY(actual_offset.has_value());
     EXPECT_EQ(actual_offset->seconds, expected_offset);
     EXPECT_EQ(actual_offset->in_dst, expected_in_dst);
@@ -183,7 +183,7 @@ TEST_CASE(get_time_zone_offset_with_dst)
 TEST_CASE(get_named_time_zone_offsets)
 {
     auto test_named_offsets = [](auto time_zone, i64 time, i64 expected_standard_offset, i64 expected_daylight_offset, auto expected_standard_name, auto expected_daylight_name) {
-        auto actual_offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Time::from_seconds(time));
+        auto actual_offsets = TimeZone::get_named_time_zone_offsets(time_zone, AK::Duration::from_seconds(time));
         VERIFY(actual_offsets.has_value());
 
         EXPECT_EQ(actual_offsets->at(0).seconds, expected_standard_offset);

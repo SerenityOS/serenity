@@ -30,7 +30,7 @@ public:
 
 protected:
     Screensaver()
-        : m_start_time(AK::Time::now_monotonic())
+        : m_start_time(AK::Duration::now_monotonic())
     {
     }
 
@@ -38,7 +38,7 @@ private:
     void trigger_exit();
 
     Optional<Gfx::IntPoint> m_mouse_origin;
-    AK::Time m_start_time;
+    AK::Duration m_start_time;
 };
 
 }

@@ -355,7 +355,7 @@ public:
                 break;
             m_level = i;
         }
-        auto const now { Time::now_realtime() };
+        auto const now { Duration::now_realtime() };
         auto const delay = s_level_map[m_level].m_delay;
         if (now - m_last_update > delay) {
             m_last_update = now;
@@ -372,7 +372,7 @@ public:
         m_block.random_shape();
         m_next_block.random_shape();
         update_shadow_hint_block();
-        m_last_update = Time::now_realtime();
+        m_last_update = Duration::now_realtime();
         m_state = GameState::Active;
     }
 
@@ -384,28 +384,28 @@ private:
     unsigned m_level {};
     unsigned m_score {};
     GameState m_state { GameState::GameOver };
-    Time m_last_update {};
+    Duration m_last_update {};
 
     struct LevelMap final {
         unsigned const m_score;
-        Time const m_delay;
+        Duration const m_delay;
     };
 
     static constexpr Array<LevelMap, 14> s_level_map = {
-        LevelMap { 0, Time::from_milliseconds(38000 / 60) },
-        LevelMap { 1000, Time::from_milliseconds(34000 / 60) },
-        LevelMap { 2000, Time::from_milliseconds(29000 / 60) },
-        LevelMap { 3000, Time::from_milliseconds(25000 / 60) },
-        LevelMap { 4000, Time::from_milliseconds(22000 / 60) },
-        LevelMap { 5000, Time::from_milliseconds(18000 / 60) },
-        LevelMap { 6000, Time::from_milliseconds(15000 / 60) },
-        LevelMap { 7000, Time::from_milliseconds(11000 / 60) },
-        LevelMap { 8000, Time::from_milliseconds(7000 / 60) },
-        LevelMap { 9000, Time::from_milliseconds(5000 / 60) },
-        LevelMap { 10000, Time::from_milliseconds(4000 / 60) },
-        LevelMap { 20000, Time::from_milliseconds(3000 / 60) },
-        LevelMap { 30000, Time::from_milliseconds(2000 / 60) },
-        LevelMap { 10000000, Time::from_milliseconds(1000 / 60) }
+        LevelMap { 0, Duration::from_milliseconds(38000 / 60) },
+        LevelMap { 1000, Duration::from_milliseconds(34000 / 60) },
+        LevelMap { 2000, Duration::from_milliseconds(29000 / 60) },
+        LevelMap { 3000, Duration::from_milliseconds(25000 / 60) },
+        LevelMap { 4000, Duration::from_milliseconds(22000 / 60) },
+        LevelMap { 5000, Duration::from_milliseconds(18000 / 60) },
+        LevelMap { 6000, Duration::from_milliseconds(15000 / 60) },
+        LevelMap { 7000, Duration::from_milliseconds(11000 / 60) },
+        LevelMap { 8000, Duration::from_milliseconds(7000 / 60) },
+        LevelMap { 9000, Duration::from_milliseconds(5000 / 60) },
+        LevelMap { 10000, Duration::from_milliseconds(4000 / 60) },
+        LevelMap { 20000, Duration::from_milliseconds(3000 / 60) },
+        LevelMap { 30000, Duration::from_milliseconds(2000 / 60) },
+        LevelMap { 10000000, Duration::from_milliseconds(1000 / 60) }
     };
 
     [[nodiscard]] RenderRequest set_current_block(Block const& block)

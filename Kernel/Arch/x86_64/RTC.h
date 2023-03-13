@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <AK/Time.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Kernel::RTC {
 
 void initialize();
 time_t now();
-Time boot_time();
+Duration boot_time();
 
 }

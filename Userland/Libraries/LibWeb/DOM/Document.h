@@ -612,7 +612,7 @@ private:
     JS::GCPtr<HTMLCollection> m_all;
 
     // https://html.spec.whatwg.org/#completely-loaded-time
-    Optional<AK::Time> m_completely_loaded_time;
+    Optional<AK::Duration> m_completely_loaded_time;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
     Optional<String> m_navigation_id;

@@ -110,7 +110,7 @@ struct AK::Formatter<DaylightSavingsOffset> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, DaylightSavingsOffset const& dst_offset)
     {
         auto format_time = [&](auto year) {
-            return DeprecatedString::formatted("AK::Time::from_timestamp({}, 1, 1, 0, 0, 0, 0)", year);
+            return DeprecatedString::formatted("AK::Duration::from_timestamp({}, 1, 1, 0, 0, 0, 0)", year);
         };
 
         static DeprecatedString max_year_as_time("max_year_as_time"sv);
@@ -494,13 +494,13 @@ static ErrorOr<void> generate_time_zone_data_implementation(Core::InputBufferedF
 
 namespace TimeZone {
 
-static constexpr auto max_year_as_time = AK::Time::from_timestamp(NumericLimits<u16>::max(), 1, 1, 0, 0, 0, 0);
+static constexpr auto max_year_as_time = AK::Duration::from_timestamp(NumericLimits<u16>::max(), 1, 1, 0, 0, 0, 0);
 
 struct DateTime {
-    AK::Time time_since_epoch() const
+    AK::Duration time_since_epoch() const
     {
         // FIXME: This implementation does not take last_weekday, after_weekday, or before_weekday into account.
-        return AK::Time::from_timestamp(year, month, day, hour, minute, second, 0);
+        return AK::Duration::from_timestamp(year, month, day, hour, minute, second, 0);
     }
 
     u16 year { 0 };
@@ -530,7 +530,7 @@ struct TimeZoneOffset {
 };
 
 struct DaylightSavingsOffset {
-    AK::Time time_in_effect(AK::Time time) const
+    AK::Duration time_in_effect(AK::Duration time) const
     {
         auto in_effect = this->in_effect;
         in_effect.year = seconds_since_epoch_to_year(time.to_seconds());
@@ -539,8 +539,8 @@ struct DaylightSavingsOffset {
     }
 
     i64 offset { 0 };
-    AK::Time year_from {};
-    AK::Time year_to {};
+    AK::Duration year_from {};
+    AK::Duration year_to {};
     DateTime in_effect {};
 
     @string_index_type@ format { 0 };
@@ -635,7 +635,7 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
     TRY(append_string_conversions("Region"sv, "region"sv, time_zone_data.time_zone_region_names));
 
     generator.append(R"~~~(
-static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Time time)
+static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset const& time_zone_offset, AK::Duration time)
 {
     auto const& dst_rules = s_dst_offsets[time_zone_offset.dst_rule];
 
@@ -677,7 +677,7 @@ static Array<DaylightSavingsOffset const*, 2> find_dst_offsets(TimeZoneOffset co
     return { standard_offset, daylight_offset ? daylight_offset : standard_offset };
 }
 
-static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Time time)
+static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::Duration time)
 {
     auto offsets = find_dst_offsets(time_zone_offset, time);
     if (offsets[0] == offsets[1])
@@ -697,7 +697,7 @@ static Offset get_active_dst_offset(TimeZoneOffset const& time_zone_offset, AK::
     return { offsets[1]->offset, InDST::Yes };
 }
 
-static TimeZoneOffset const& find_time_zone_offset(TimeZone time_zone, AK::Time time)
+static TimeZoneOffset const& find_time_zone_offset(TimeZone time_zone, AK::Duration time)
 {
     auto const& time_zone_offsets = s_time_zone_offsets[to_underlying(time_zone)];
 
@@ -713,7 +713,7 @@ static TimeZoneOffset const& find_time_zone_offset(TimeZone time_zone, AK::Time 
     return time_zone_offsets[index];
 }
 
-Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
+Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Duration time)
 {
     auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
 
@@ -729,7 +729,7 @@ Optional<Offset> get_time_zone_offset(TimeZone time_zone, AK::Time time)
     return dst_offset;
 }
 
-Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, AK::Time time)
+Optional<Array<NamedOffset, 2>> get_named_time_zone_offsets(TimeZone time_zone, AK::Duration time)
 {
     auto const& time_zone_offset = find_time_zone_offset(time_zone, time);
     Array<NamedOffset, 2> named_offsets;

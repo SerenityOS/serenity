@@ -26,10 +26,10 @@
 namespace Kernel {
 
 static void handle_arp(EthernetFrameHeader const&, size_t frame_size);
-static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, Time const& packet_timestamp);
-static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, Time const& packet_timestamp);
-static void handle_udp(IPv4Packet const&, Time const& packet_timestamp);
-static void handle_tcp(IPv4Packet const&, Time const& packet_timestamp);
+static void handle_ipv4(EthernetFrameHeader const&, size_t frame_size, Duration const& packet_timestamp);
+static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, Duration const& packet_timestamp);
+static void handle_udp(IPv4Packet const&, Duration const& packet_timestamp);
+static void handle_tcp(IPv4Packet const&, Duration const& packet_timestamp);
 static void send_delayed_tcp_ack(TCPSocket& socket);
 static void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, RefPtr<NetworkAdapter> adapter);
 static void flush_delayed_tcp_acks();
@@ -74,7 +74,7 @@ void NetworkTask_main(void*)
         };
     });
 
-    auto dequeue_packet = [&pending_packets](u8* buffer, size_t buffer_size, Time& packet_timestamp) -> size_t {
+    auto dequeue_packet = [&pending_packets](u8* buffer, size_t buffer_size, Duration& packet_timestamp) -> size_t {
         if (pending_packets == 0)
             return 0;
         size_t packet_size = 0;
@@ -94,14 +94,14 @@ void NetworkTask_main(void*)
         TODO();
     auto buffer_region = region_or_error.release_value();
     auto buffer = (u8*)buffer_region->vaddr().get();
-    Time packet_timestamp;
+    Duration packet_timestamp;
 
     for (;;) {
         flush_delayed_tcp_acks();
         retransmit_tcp_packets();
         size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
         if (!packet_size) {
-            auto timeout_time = Time::from_milliseconds(500);
+            auto timeout_time = Duration::from_milliseconds(500);
             auto timeout = Thread::BlockTimeout { false, &timeout_time };
             [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask"sv);
             continue;
@@ -177,7 +177,7 @@ void handle_arp(EthernetFrameHeader const& eth, size_t frame_size)
     }
 }
 
-void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& packet_timestamp)
+void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Duration const& packet_timestamp)
 {
     constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
@@ -222,7 +222,7 @@ void handle_ipv4(EthernetFrameHeader const& eth, size_t frame_size, Time const& 
     }
 }
 
-void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
+void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, Duration const& packet_timestamp)
 {
     auto& icmp_header = *static_cast<ICMPHeader const*>(ipv4_packet.payload());
     dbgln_if(ICMP_DEBUG, "handle_icmp: source={}, destination={}, type={:#02x}, code={:#02x}", ipv4_packet.source().to_string(), ipv4_packet.destination().to_string(), icmp_header.type(), icmp_header.code());
@@ -273,7 +273,7 @@ void handle_icmp(EthernetFrameHeader const& eth, IPv4Packet const& ipv4_packet, 
     }
 }
 
-void handle_udp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
+void handle_udp(IPv4Packet const& ipv4_packet, Duration const& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(UDPPacket)) {
         dbgln("handle_udp: Packet too small ({}, need {})", ipv4_packet.payload_size(), sizeof(UDPPacket));
@@ -367,7 +367,7 @@ void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, Re
     routing_decision.adapter->release_packet_buffer(*packet);
 }
 
-void handle_tcp(IPv4Packet const& ipv4_packet, Time const& packet_timestamp)
+void handle_tcp(IPv4Packet const& ipv4_packet, Duration const& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
         dbgln("handle_tcp: IPv4 payload is too small to be a TCP packet ({}, need {})", ipv4_packet.payload_size(), sizeof(TCPPacket));

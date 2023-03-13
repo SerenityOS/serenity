@@ -329,7 +329,7 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
     auto* window = page.top_level_browsing_context().active_window();
     auto& realm = window->realm();
     auto& vm = window->vm();
-    auto start = Time::now_monotonic();
+    auto start = Duration::now_monotonic();
 
     // 4. Let promise be a new Promise.
     auto promise = JS::Promise::create(realm);
@@ -383,7 +383,7 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
         vm.custom_data()->spin_event_loop_until([&] {
             if (script_promise.state() != JS::Promise::State::Pending)
                 return true;
-            if (timeout.has_value() && (Time::now_monotonic() - start) > Time::from_seconds(static_cast<i64>(*timeout)))
+            if (timeout.has_value() && (Duration::now_monotonic() - start) > Duration::from_seconds(static_cast<i64>(*timeout)))
                 return true;
             return false;
         });

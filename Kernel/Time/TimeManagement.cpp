@@ -77,7 +77,7 @@ ErrorOr<void> TimeManagement::validate_clock_id(clockid_t clock_id)
     };
 }
 
-Time TimeManagement::current_time(clockid_t clock_id) const
+Duration TimeManagement::current_time(clockid_t clock_id) const
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
@@ -101,15 +101,15 @@ bool TimeManagement::is_system_timer(HardwareTimerBase const& timer) const
     return &timer == m_system_timer.ptr();
 }
 
-void TimeManagement::set_epoch_time(Time ts)
+void TimeManagement::set_epoch_time(Duration ts)
 {
     InterruptDisabler disabler;
-    // FIXME: Should use AK::Time internally
+    // FIXME: Should use AK::Duration internally
     m_epoch_time = ts.to_timespec();
     m_remaining_epoch_time_adjustment = { 0, 0 };
 }
 
-Time TimeManagement::monotonic_time(TimePrecision precision) const
+Duration TimeManagement::monotonic_time(TimePrecision precision) const
 {
     // This is the time when last updated by an interrupt.
     u64 seconds;
@@ -144,10 +144,10 @@ Time TimeManagement::monotonic_time(TimePrecision precision) const
     VERIFY(ticks < m_time_ticks_per_second);
     u64 ns = ((u64)ticks * 1000000000ull) / m_time_ticks_per_second;
     VERIFY(ns < 1000000000ull);
-    return Time::from_timespec({ (i64)seconds, (i32)ns });
+    return Duration::from_timespec({ (i64)seconds, (i32)ns });
 }
 
-Time TimeManagement::epoch_time(TimePrecision) const
+Duration TimeManagement::epoch_time(TimePrecision) const
 {
     // TODO: Take into account precision
     timespec ts;
@@ -156,7 +156,7 @@ Time TimeManagement::epoch_time(TimePrecision) const
         update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
         ts = m_epoch_time;
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
-    return Time::from_timespec(ts);
+    return Duration::from_timespec(ts);
 }
 
 u64 TimeManagement::uptime_ms() const
@@ -186,14 +186,14 @@ UNMAP_AFTER_INIT void TimeManagement::initialize([[maybe_unused]] u32 cpu)
             // would trigger a deadlock trying to get the s_the instance while
             // creating it.
             if (auto* apic_timer = APIC::the().initialize_timers(*s_the->m_system_timer)) {
-                dmesgln("Time: Using APIC timer as system timer");
+                dmesgln("Duration: Using APIC timer as system timer");
                 s_the->set_system_timer(*apic_timer);
             }
         }
     } else {
         VERIFY(s_the.is_initialized());
         if (auto* apic_timer = APIC::the().get_timer()) {
-            dmesgln("Time: Enable APIC timer on CPU #{}", cpu);
+            dmesgln("Duration: Enable APIC timer on CPU #{}", cpu);
             apic_timer->enable_local_timer();
         }
     }
@@ -226,26 +226,26 @@ time_t TimeManagement::ticks_per_second() const
     return m_time_keeper_timer->ticks_per_second();
 }
 
-Time TimeManagement::boot_time()
+Duration TimeManagement::boot_time()
 {
 #if ARCH(X86_64)
     return RTC::boot_time();
 #elif ARCH(AARCH64)
     // FIXME: Return correct boot time
-    return Time::from_seconds(0);
+    return Duration::from_seconds(0);
 #else
 #    error Unknown architecture
 #endif
 }
 
-Time TimeManagement::clock_resolution() const
+Duration TimeManagement::clock_resolution() const
 {
     long nanoseconds_per_tick = 1'000'000'000 / m_time_keeper_timer->ticks_per_second();
-    return Time::from_nanoseconds(nanoseconds_per_tick);
+    return Duration::from_nanoseconds(nanoseconds_per_tick);
 }
 
 UNMAP_AFTER_INIT TimeManagement::TimeManagement()
-    : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Time page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
+    : m_time_page_region(MM.allocate_kernel_region(PAGE_SIZE, "Duration page"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value_but_fixme_should_propagate_errors())
 {
 #if ARCH(X86_64)
     bool probe_non_legacy_hardware_timers = !(kernel_command_line().is_legacy_time_enabled());
@@ -275,7 +275,7 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
 #endif
 }
 
-Time TimeManagement::now()
+Duration TimeManagement::now()
 {
     return s_the.ptr()->epoch_time();
 }
@@ -283,7 +283,7 @@ Time TimeManagement::now()
 UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_periodic_timers()
 {
     bool should_enable = is_hpet_periodic_mode_allowed();
-    dbgln("Time: Scanning for periodic timers");
+    dbgln("Duration: Scanning for periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (hardware_timer->is_periodic_capable()) {
@@ -297,7 +297,7 @@ UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_and_initialize_
 
 UNMAP_AFTER_INIT Vector<HardwareTimerBase*> TimeManagement::scan_for_non_periodic_timers()
 {
-    dbgln("Time: Scanning for non-periodic timers");
+    dbgln("Duration: Scanning for non-periodic timers");
     Vector<HardwareTimerBase*> timers;
     for (auto& hardware_timer : m_hardware_timers) {
         if (!hardware_timer->is_periodic_capable())

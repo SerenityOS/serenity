@@ -59,7 +59,7 @@ ErrorOr<void> VideoPlayerWidget::setup_interface()
         update_seek_slider_max();
         auto progress = value / static_cast<double>(m_seek_slider->max());
         auto duration = m_playback_manager->duration().to_milliseconds();
-        Time timestamp = Time::from_milliseconds(static_cast<i64>(round(progress * static_cast<double>(duration))));
+        Duration timestamp = Duration::from_milliseconds(static_cast<i64>(round(progress * static_cast<double>(duration))));
         auto seek_mode_to_use = m_seek_slider->knob_dragging() ? seek_mode() : Video::PlaybackManager::SeekMode::Accurate;
         m_playback_manager->seek_to_timestamp(timestamp, seek_mode_to_use);
         set_current_timestamp(m_playback_manager->current_playback_time());
@@ -252,7 +252,7 @@ void VideoPlayerWidget::update_seek_slider_max()
     m_seek_slider->set_enabled(true);
 }
 
-void VideoPlayerWidget::set_current_timestamp(Time timestamp)
+void VideoPlayerWidget::set_current_timestamp(Duration timestamp)
 {
     set_time_label(timestamp);
     if (!m_playback_manager)
@@ -261,10 +261,10 @@ void VideoPlayerWidget::set_current_timestamp(Time timestamp)
     m_seek_slider->set_value(static_cast<int>(round(progress * m_seek_slider->max())), GUI::AllowCallback::No);
 }
 
-void VideoPlayerWidget::set_time_label(Time timestamp)
+void VideoPlayerWidget::set_time_label(Duration timestamp)
 {
     StringBuilder string_builder;
-    auto append_time = [&](Time time) {
+    auto append_time = [&](Duration time) {
         auto seconds = (time.to_milliseconds() + 500) / 1000;
         string_builder.append(human_readable_digital_time(seconds));
     };

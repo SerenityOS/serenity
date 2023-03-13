@@ -20,7 +20,7 @@ ErrorOr<FlatPtr> Process::sys$alarm(unsigned seconds)
             bool was_in_use = false;
             if (TimerQueue::the().cancel_timer(*timer, &was_in_use)) {
                 // The timer hasn't fired. Round up the remaining time (if any)
-                Time remaining = timer->remaining() + Time::from_nanoseconds(999'999'999);
+                Duration remaining = timer->remaining() + Duration::from_nanoseconds(999'999'999);
                 previous_alarm_remaining = remaining.to_truncated_seconds();
             }
             // We had an existing alarm, must return a non-zero value here!
@@ -30,7 +30,7 @@ ErrorOr<FlatPtr> Process::sys$alarm(unsigned seconds)
 
         if (seconds > 0) {
             auto deadline = TimeManagement::the().current_time(CLOCK_REALTIME_COARSE);
-            deadline = deadline + Time::from_seconds(seconds);
+            deadline = deadline + Duration::from_seconds(seconds);
             if (!timer) {
                 timer = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Timer));
             }
