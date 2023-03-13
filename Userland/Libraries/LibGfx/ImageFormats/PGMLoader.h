@@ -23,5 +23,5 @@ struct PGM {
 using PGMLoadingContext = PortableImageMapLoadingContext<PGM>;
 using PGMImageDecoderPlugin = PortableImageDecoderPlugin<PGMLoadingContext>;
 
-bool read_image_data(PGMLoadingContext& context);
+ErrorOr<void> read_image_data(PGMLoadingContext& context);
 }

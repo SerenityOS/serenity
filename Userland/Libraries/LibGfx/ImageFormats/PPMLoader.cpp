@@ -10,7 +10,7 @@
 
 namespace Gfx {
 
-bool read_image_data(PPMLoadingContext& context)
+ErrorOr<void> read_image_data(PPMLoadingContext& context)
 {
     Vector<Gfx::Color> color_data;
     auto const context_size = context.width * context.height;
@@ -20,28 +20,16 @@ bool read_image_data(PPMLoadingContext& context)
 
     if (context.type == PPMLoadingContext::Type::ASCII) {
         for (u64 i = 0; i < context_size; ++i) {
-            auto const red_or_error = read_number(stream);
-            if (red_or_error.is_error())
-                return false;
+            auto const red = TRY(read_number(stream));
+            TRY(read_whitespace(context));
 
-            if (read_whitespace(context).is_error())
-                return false;
+            auto const green = TRY(read_number(stream));
+            TRY(read_whitespace(context));
 
-            auto const green_or_error = read_number(stream);
-            if (green_or_error.is_error())
-                return false;
+            auto const blue = TRY(read_number(stream));
+            TRY(read_whitespace(context));
 
-            if (read_whitespace(context).is_error())
-                return false;
-
-            auto const blue_or_error = read_number(stream);
-            if (blue_or_error.is_error())
-                return false;
-
-            if (read_whitespace(context).is_error())
-                return false;
-
-            Color color { (u8)red_or_error.value(), (u8)green_or_error.value(), (u8)blue_or_error.value() };
+            Color color { (u8)red, (u8)green, (u8)blue };
             if (context.format_details.max_val < 255)
                 color = adjust_color(context.format_details.max_val, color);
             color_data[i] = color;
@@ -51,20 +39,17 @@ bool read_image_data(PPMLoadingContext& context)
             Array<u8, 3> pixel;
             Bytes buffer { pixel };
 
-            auto const result = stream.read_until_filled(buffer);
-            if (result.is_error())
-                return false;
+            TRY(stream.read_until_filled(buffer));
+
             color_data[i] = { pixel[0], pixel[1], pixel[2] };
         }
     }
 
-    if (!create_bitmap(context)) {
-        return false;
-    }
+    TRY(create_bitmap(context));
 
     set_pixels(context, color_data);
 
     context.state = PPMLoadingContext::State::Bitmap;
-    return true;
+    return {};
 }
 }
