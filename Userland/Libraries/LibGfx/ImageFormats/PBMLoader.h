@@ -22,5 +22,5 @@ struct PBM {
 using PBMLoadingContext = PortableImageMapLoadingContext<PBM>;
 using PBMImageDecoderPlugin = PortableImageDecoderPlugin<PBMLoadingContext>;
 
-bool read_image_data(PBMLoadingContext& context, Streamer& streamer);
+bool read_image_data(PBMLoadingContext& context);
 }

@@ -23,5 +23,5 @@ struct PPM {
 using PPMLoadingContext = PortableImageMapLoadingContext<PPM>;
 using PPMImageDecoderPlugin = PortableImageDecoderPlugin<PPMLoadingContext>;
 
-bool read_image_data(PPMLoadingContext& context, Streamer& streamer);
+bool read_image_data(PPMLoadingContext& context);
 }

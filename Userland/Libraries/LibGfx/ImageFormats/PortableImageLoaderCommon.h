@@ -18,7 +18,6 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
-#include <LibGfx/Streamer.h>
 
 namespace Gfx {
 
@@ -31,14 +30,14 @@ static constexpr Color adjust_color(u16 max_val, Color color)
     return color;
 }
 
-static inline ErrorOr<u16> read_number(Streamer& streamer)
+static inline ErrorOr<u16> read_number(SeekableStream& stream)
 {
-    u8 byte {};
     StringBuilder sb {};
+    u8 byte {};
 
-    while (streamer.read(byte)) {
+    for (auto buffer = TRY(stream.read_some({ &byte, 1 })); !buffer.is_empty(); buffer = TRY(stream.read_some({ &byte, 1 }))) {
         if (byte == ' ' || byte == '\t' || byte == '\n' || byte == '\r') {
-            streamer.step_back();
+            TRY(stream.seek(-1, SeekMode::FromCurrentPosition));
             break;
         }
 
@@ -53,12 +52,13 @@ static inline ErrorOr<u16> read_number(Streamer& streamer)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_comment([[maybe_unused]] TContext& context, Streamer& streamer)
+static ErrorOr<void> read_comment(TContext& context)
 {
+    auto& stream = *context.stream;
     bool is_first_char = true;
     u8 byte {};
 
-    while (streamer.read(byte)) {
+    while ((byte = TRY(stream.template read_value<u8>()))) {
         if (is_first_char) {
             if (byte != '#')
                 return Error::from_string_literal("Can't read comment from stream");
@@ -72,20 +72,20 @@ static ErrorOr<void> read_comment([[maybe_unused]] TContext& context, Streamer& 
 }
 
 template<typename TContext>
-static bool read_magic_number(TContext& context, Streamer& streamer)
+static bool read_magic_number(TContext& context)
 {
     if (context.state >= TContext::State::MagicNumber) {
         return true;
     }
 
-    if (!context.data || context.data_size < 2) {
+    if (context.stream->size().release_value_but_fixme_should_propagate_errors() < 2) {
         context.state = TContext::State::Error;
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "There is no enough data for {}", TContext::FormatDetails::image_type);
         return false;
     }
 
-    u8 magic_number[2] {};
-    if (!streamer.read_bytes(magic_number, 2)) {
+    Array<u8, 2> magic_number {};
+    if (context.stream->read_until_filled(Bytes { magic_number }).is_error()) {
         context.state = TContext::State::Error;
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't read magic number for {}", TContext::FormatDetails::image_type);
         return false;
@@ -109,19 +109,25 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_whitespace(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_whitespace(TContext& context)
 {
+    auto& stream = *context.stream;
     bool is_first_char = true;
-    u8 byte {};
 
-    while (streamer.read(byte)) {
+    while (true) {
+        auto byte_or_error = stream.template read_value<u8>();
+        // Nothing went wrong if we reached eof while reading a comment.
+        if (byte_or_error.is_error())
+            return {};
+        auto const byte = byte_or_error.value();
+
         if (byte == '#') {
-            streamer.step_back();
-            TRY(read_comment(context, streamer));
+            stream.seek(-1, SeekMode::FromCurrentPosition).release_value_but_fixme_should_propagate_errors();
+            TRY(read_comment(context));
             continue;
         }
         if (byte != ' ' && byte != '\t' && byte != '\n' && byte != '\r') {
-            streamer.step_back();
+            stream.seek(-1, SeekMode::FromCurrentPosition).release_value_but_fixme_should_propagate_errors();
             if (is_first_char)
                 return Error::from_string_literal("Can't read whitespace from stream");
             break;
@@ -135,25 +141,25 @@ static ErrorOr<void> read_whitespace(TContext& context, Streamer& streamer)
 }
 
 template<typename TContext>
-static ErrorOr<void> read_width(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_width(TContext& context)
 {
-    context.width = TRY(read_number(streamer));
+    context.width = TRY(read_number(*context.stream));
     context.state = TContext::State::Width;
     return {};
 }
 
 template<typename TContext>
-static ErrorOr<void> read_height(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_height(TContext& context)
 {
-    context.height = TRY(read_number(streamer));
+    context.height = TRY(read_number(*context.stream));
     context.state = TContext::State::Height;
     return {};
 }
 
 template<typename TContext>
-static ErrorOr<void> read_max_val(TContext& context, Streamer& streamer)
+static ErrorOr<void> read_max_val(TContext& context)
 {
-    context.format_details.max_val = TRY(read_number(streamer));
+    context.format_details.max_val = TRY(read_number(*context.stream));
 
     if (context.format_details.max_val > 255) {
         dbgln_if(PORTABLE_IMAGE_LOADER_DEBUG, "We can't parse 2 byte color for {}", TContext::FormatDetails::image_type);
@@ -199,21 +205,19 @@ static bool decode(TContext& context)
         context.state = TContext::State::Error;
     });
 
-    Streamer streamer(context.data, context.data_size);
-
-    if (!read_magic_number(context, streamer))
+    if (!read_magic_number(context))
         return false;
 
-    if (read_whitespace(context, streamer).is_error())
+    if (read_whitespace(context).is_error())
         return false;
 
-    if (read_width(context, streamer).is_error())
+    if (read_width(context).is_error())
         return false;
 
-    if (read_whitespace(context, streamer).is_error())
+    if (read_whitespace(context).is_error())
         return false;
 
-    if (read_height(context, streamer).is_error())
+    if (read_height(context).is_error())
         return false;
 
     if (context.width > maximum_width_for_decoded_images || context.height > maximum_height_for_decoded_images) {
@@ -221,18 +225,18 @@ static bool decode(TContext& context)
         return false;
     }
 
-    if (read_whitespace(context, streamer).is_error())
+    if (read_whitespace(context).is_error())
         return false;
 
     if constexpr (requires { context.format_details.max_val; }) {
-        if (read_max_val(context, streamer).is_error())
+        if (read_max_val(context).is_error())
             return false;
 
-        if (read_whitespace(context, streamer).is_error())
+        if (read_whitespace(context).is_error())
             return false;
     }
 
-    if (!read_image_data(context, streamer))
+    if (!read_image_data(context))
         return false;
 
     error_guard.disarm();

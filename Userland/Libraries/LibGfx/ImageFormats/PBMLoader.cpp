@@ -6,15 +6,13 @@
  */
 
 #include "PBMLoader.h"
-#include "AK/Endian.h"
 #include "PortableImageLoaderCommon.h"
-#include "Userland/Libraries/LibGfx/Streamer.h"
-#include <string.h>
 
 namespace Gfx {
 
-bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
+bool read_image_data(PBMLoadingContext& context)
 {
+    auto& stream = *context.stream;
     Vector<Gfx::Color> color_data;
 
     auto const context_size = context.width * context.height;
@@ -22,9 +20,10 @@ bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
 
     if (context.type == PBMLoadingContext::Type::ASCII) {
         for (u64 i = 0; i < context_size; ++i) {
-            u8 byte;
-            if (!streamer.read(byte))
+            auto byte_or_error = stream.read_value<u8>();
+            if (byte_or_error.is_error())
                 return false;
+            auto const byte = byte_or_error.value();
             if (byte == '0')
                 color_data[i] = Color::White;
             else if (byte == '1')
@@ -34,11 +33,12 @@ bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
         }
     } else if (context.type == PBMLoadingContext::Type::RAWBITS) {
         for (u64 color_index = 0; color_index < context_size;) {
-            u8 byte;
-            if (!streamer.read(byte))
+            auto byte_or_error = stream.read_value<u8>();
+            if (byte_or_error.is_error())
                 return false;
+            auto byte = byte_or_error.value();
             for (int i = 0; i < 8; i++) {
-                int val = byte & 0x80;
+                auto const val = byte & 0x80;
 
                 if (val == 0)
                     color_data[color_index] = Color::White;
