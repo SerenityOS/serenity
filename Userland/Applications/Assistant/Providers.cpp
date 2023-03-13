@@ -174,6 +174,9 @@ void FileProvider::query(DeprecatedString const& query, Function<void(Vector<Non
                 on_complete(move(results.value()));
 
             return {};
+        },
+        [](auto) {
+            // Ignore cancellation errors.
         });
 }
 
