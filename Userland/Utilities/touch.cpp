@@ -88,7 +88,7 @@ static void parse_time(StringView input_time, timespec& atime, timespec& mtime)
     month = parameters.take_last();
 
     if (validate_timestamp(year, month, day, hour, minute, second))
-        atime = mtime = AK::Duration::from_timestamp(year, month, day, hour, minute, second, 0).to_timespec();
+        atime = mtime = AK::UnixDateTime::from_unix_time_parts(year, month, day, hour, minute, second, 0).to_timespec();
     else
         err("invalid time format '{}'", input_time);
 }
@@ -159,7 +159,7 @@ static void parse_datetime(StringView input_datetime, timespec& atime, timespec&
     }
 
     if (validate_timestamp(year, month, day, hour, minute, second)) {
-        auto timestamp = AK::Duration::from_timestamp(year, month, day, hour, minute, second, millisecond);
+        auto timestamp = AK::UnixDateTime::from_unix_time_parts(year, month, day, hour, minute, second, millisecond);
         auto time = timestamp.to_timespec();
         if (time_zone.is_empty() && TimeZone::system_time_zone() != "UTC") {
             auto offset = TimeZone::get_time_zone_offset(TimeZone::system_time_zone(), timestamp);

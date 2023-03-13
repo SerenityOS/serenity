@@ -162,9 +162,9 @@ enum class OptionDefaults {
 // Table 8: Record returned by ToLocalTime, https://tc39.es/ecma402/#table-datetimeformat-tolocaltime-record
 // Note: [[InDST]] is not included here - it is handled by LibUnicode / LibTimeZone.
 struct LocalTime {
-    AK::Duration time_since_epoch() const
+    AK::UnixDateTime time_since_epoch() const
     {
-        return AK::Duration::from_timestamp(year, month + 1, day + 1, hour, minute, second, millisecond);
+        return AK::UnixDateTime::from_unix_time_parts(year, month + 1, day + 1, hour, minute, second, millisecond);
     }
 
     int weekday { 0 };     // [[Weekday]]
