@@ -7,6 +7,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
@@ -15,27 +16,21 @@
 
 static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
 {
-    char const* argv[] = {
-        "/bin/Browser",
-        "--webdriver-content-path",
-        socket_path.characters(),
-        nullptr,
-    };
-
-    return Core::System::posix_spawn("/bin/Browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ);
+    return Core::Process::spawn("/bin/Browser"sv,
+        Array {
+            "--webdriver-content-path",
+            socket_path.characters(),
+        });
 }
 
 static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
 {
-    char const* argv[] = {
-        "/bin/headless-browser",
-        "--webdriver-ipc-path",
-        socket_path.characters(),
-        "about:blank",
-        nullptr,
-    };
-
-    return Core::System::posix_spawn("/bin/headless-browser"sv, nullptr, nullptr, const_cast<char**>(argv), environ);
+    return Core::Process::spawn("/bin/headless-browser"sv,
+        Array {
+            "--webdriver-ipc-path",
+            socket_path.characters(),
+            "about:blank",
+        });
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
