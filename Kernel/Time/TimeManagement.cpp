@@ -87,9 +87,9 @@ Duration TimeManagement::current_time(clockid_t clock_id) const
     case CLOCK_MONOTONIC_RAW:
         return monotonic_time_raw();
     case CLOCK_REALTIME:
-        return epoch_time(TimePrecision::Precise);
+        return epoch_time(TimePrecision::Precise).offset_to_epoch();
     case CLOCK_REALTIME_COARSE:
-        return epoch_time(TimePrecision::Coarse);
+        return epoch_time(TimePrecision::Coarse).offset_to_epoch();
     default:
         // Syscall entrypoint is missing a is_valid_clock_id(..) check?
         VERIFY_NOT_REACHED();
@@ -101,12 +101,13 @@ bool TimeManagement::is_system_timer(HardwareTimerBase const& timer) const
     return &timer == m_system_timer.ptr();
 }
 
-void TimeManagement::set_epoch_time(Duration ts)
+void TimeManagement::set_epoch_time(UnixDateTime ts)
 {
+    // FIXME: The interrupt disabler intends to enforce atomic update of epoch time and remaining adjustment,
+    //        but that sort of assumption is known to break on SMP.
     InterruptDisabler disabler;
-    // FIXME: Should use AK::Duration internally
-    m_epoch_time = ts.to_timespec();
-    m_remaining_epoch_time_adjustment = { 0, 0 };
+    m_epoch_time = ts;
+    m_remaining_epoch_time_adjustment = {};
 }
 
 Duration TimeManagement::monotonic_time(TimePrecision precision) const
@@ -147,16 +148,16 @@ Duration TimeManagement::monotonic_time(TimePrecision precision) const
     return Duration::from_timespec({ (i64)seconds, (i32)ns });
 }
 
-Duration TimeManagement::epoch_time(TimePrecision) const
+UnixDateTime TimeManagement::epoch_time(TimePrecision) const
 {
     // TODO: Take into account precision
-    timespec ts;
+    UnixDateTime time;
     u32 update_iteration;
     do {
         update_iteration = m_update1.load(AK::MemoryOrder::memory_order_acquire);
-        ts = m_epoch_time;
+        time = m_epoch_time;
     } while (update_iteration != m_update2.load(AK::MemoryOrder::memory_order_acquire));
-    return Duration::from_timespec(ts);
+    return time;
 }
 
 u64 TimeManagement::uptime_ms() const
@@ -226,7 +227,7 @@ time_t TimeManagement::ticks_per_second() const
     return m_time_keeper_timer->ticks_per_second();
 }
 
-Duration TimeManagement::boot_time()
+UnixDateTime TimeManagement::boot_time()
 {
 #if ARCH(X86_64)
     return RTC::boot_time();
@@ -252,14 +253,14 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
     if (ACPI::is_enabled()) {
         if (!ACPI::Parser::the()->x86_specific_flags().cmos_rtc_not_present) {
             RTC::initialize();
-            m_epoch_time.tv_sec += boot_time().to_timespec().tv_sec;
+            m_epoch_time += boot_time().offset_to_epoch();
         } else {
             dmesgln("ACPI: RTC CMOS Not present");
         }
     } else {
         // We just assume that we can access RTC CMOS, if ACPI isn't usable.
         RTC::initialize();
-        m_epoch_time.tv_sec += boot_time().to_timespec().tv_sec;
+        m_epoch_time += boot_time().offset_to_epoch();
     }
     if (probe_non_legacy_hardware_timers) {
         if (!probe_and_set_x86_non_legacy_hardware_timers())
@@ -275,7 +276,7 @@ UNMAP_AFTER_INIT TimeManagement::TimeManagement()
 #endif
 }
 
-Duration TimeManagement::now()
+UnixDateTime TimeManagement::now()
 {
     return s_the.ptr()->epoch_time();
 }
@@ -437,7 +438,8 @@ void TimeManagement::increment_time_since_boot_hpet()
     m_seconds_since_boot = seconds_since_boot;
     m_ticks_this_second = ticks_this_second;
     // TODO: Apply m_remaining_epoch_time_adjustment
-    timespec_add(m_epoch_time, { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) }, m_epoch_time);
+    timespec time_adjustment = { (time_t)(delta_ns / 1000000000), (long)(delta_ns % 1000000000) };
+    m_epoch_time += Duration::from_timespec(time_adjustment);
 
     m_update1.store(update_iteration + 1, AK::MemoryOrder::memory_order_release);
 
@@ -483,20 +485,16 @@ void TimeManagement::increment_time_since_boot()
     // Compute time adjustment for adjtime. Let the clock run up to 1% fast or slow.
     // That way, adjtime can adjust up to 36 seconds per hour, without time getting very jumpy.
     // Once we have a smarter NTP service that also adjusts the frequency instead of just slewing time, maybe we can lower this.
-    long NanosPerTick = 1'000'000'000 / m_time_keeper_timer->frequency();
-    time_t MaxSlewNanos = NanosPerTick / 100;
+    long nanos_per_tick = 1'000'000'000 / m_time_keeper_timer->frequency();
+    time_t max_slew_nanos = nanos_per_tick / 100;
 
     u32 update_iteration = m_update2.fetch_add(1, AK::MemoryOrder::memory_order_acquire);
 
-    // Clamp twice, to make sure intermediate fits into a long.
-    long slew_nanos = clamp(clamp(m_remaining_epoch_time_adjustment.tv_sec, (time_t)-1, (time_t)1) * 1'000'000'000 + m_remaining_epoch_time_adjustment.tv_nsec, -MaxSlewNanos, MaxSlewNanos);
-    timespec slew_nanos_ts;
-    timespec_sub({ 0, slew_nanos }, { 0, 0 }, slew_nanos_ts); // Normalize tv_nsec to be positive.
-    timespec_sub(m_remaining_epoch_time_adjustment, slew_nanos_ts, m_remaining_epoch_time_adjustment);
+    auto slew_nanos = Duration::from_nanoseconds(
+        clamp(m_remaining_epoch_time_adjustment.to_nanoseconds(), -max_slew_nanos, max_slew_nanos));
+    m_remaining_epoch_time_adjustment -= slew_nanos;
 
-    timespec epoch_tick = { .tv_sec = 0, .tv_nsec = NanosPerTick };
-    epoch_tick.tv_nsec += slew_nanos; // No need for timespec_add(), guaranteed to be in range.
-    timespec_add(m_epoch_time, epoch_tick, m_epoch_time);
+    m_epoch_time += Duration::from_nanoseconds(nanos_per_tick + slew_nanos.to_nanoseconds());
 
     if (++m_ticks_this_second >= m_time_keeper_timer->ticks_per_second()) {
         // FIXME: Synchronize with other clock somehow to prevent drifting apart.
@@ -540,7 +538,7 @@ void TimeManagement::update_time_page()
 {
     auto& page = time_page();
     u32 update_iteration = AK::atomic_fetch_add(&page.update2, 1u, AK::MemoryOrder::memory_order_acquire);
-    page.clocks[CLOCK_REALTIME_COARSE] = m_epoch_time;
+    page.clocks[CLOCK_REALTIME_COARSE] = m_epoch_time.to_timespec();
     page.clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).to_timespec();
     AK::atomic_store(&page.update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }

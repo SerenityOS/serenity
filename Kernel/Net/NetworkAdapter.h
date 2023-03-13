@@ -29,7 +29,7 @@ class NetworkAdapter;
 using NetworkByteBuffer = AK::Detail::ByteBuffer<1500>;
 
 struct PacketWithTimestamp final : public AtomicRefCounted<PacketWithTimestamp> {
-    PacketWithTimestamp(NonnullOwnPtr<KBuffer> buffer, Duration timestamp)
+    PacketWithTimestamp(NonnullOwnPtr<KBuffer> buffer, UnixDateTime timestamp)
         : buffer(move(buffer))
         , timestamp(timestamp)
     {
@@ -38,7 +38,7 @@ struct PacketWithTimestamp final : public AtomicRefCounted<PacketWithTimestamp> 
     ReadonlyBytes bytes() { return buffer->bytes(); }
 
     NonnullOwnPtr<KBuffer> buffer;
-    Duration timestamp;
+    UnixDateTime timestamp;
     IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
 };
 
@@ -79,7 +79,7 @@ public:
     void send(MACAddress const&, ARPPacket const&);
     void fill_in_ipv4_header(PacketWithTimestamp&, IPv4Address const&, MACAddress const&, IPv4Address const&, IPv4Protocol, size_t, u8 type_of_service, u8 ttl);
 
-    size_t dequeue_packet(u8* buffer, size_t buffer_size, Duration& packet_timestamp);
+    size_t dequeue_packet(u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp);
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 

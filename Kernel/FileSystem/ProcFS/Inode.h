@@ -54,7 +54,7 @@ private:
 
     // ^Inode (Silent ignore handling)
     virtual ErrorOr<void> flush_metadata() override { return {}; }
-    virtual ErrorOr<void> update_timestamps(Optional<Duration>, Optional<Duration>, Optional<Duration>) override { return {}; }
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime>, Optional<UnixDateTime>, Optional<UnixDateTime>) override { return {}; }
 
     // ^Inode
     virtual ErrorOr<void> attach(OpenFileDescription& description) override;

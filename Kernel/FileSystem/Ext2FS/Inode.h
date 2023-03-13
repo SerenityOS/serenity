@@ -37,7 +37,7 @@ private:
     virtual ErrorOr<void> add_child(Inode& child, StringView name, mode_t) override;
     virtual ErrorOr<void> remove_child(StringView name) override;
     virtual ErrorOr<void> replace_child(StringView name, Inode& child) override;
-    virtual ErrorOr<void> update_timestamps(Optional<Duration> atime, Optional<Duration> ctime, Optional<Duration> mtime) override;
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
     virtual ErrorOr<void> increment_link_count() override;
     virtual ErrorOr<void> decrement_link_count() override;
     virtual ErrorOr<void> chmod(mode_t) override;

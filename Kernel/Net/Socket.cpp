@@ -245,7 +245,7 @@ ErrorOr<size_t> Socket::read(OpenFileDescription& description, u64, UserOrKernel
 {
     if (is_shut_down_for_reading())
         return 0;
-    Duration t {};
+    UnixDateTime t {};
     return recvfrom(description, buffer, size, 0, {}, 0, t, description.is_blocking());
 }
 

@@ -22,7 +22,7 @@
 static ErrorOr<void> adjust_modification_time(Archive::ZipMember const& zip_member)
 {
     auto time = time_from_packed_dos(zip_member.modification_date, zip_member.modification_time);
-    auto seconds = static_cast<time_t>(time.to_seconds());
+    auto seconds = static_cast<time_t>(time.seconds_since_epoch());
     struct utimbuf buf {
         .actime = seconds,
         .modtime = seconds

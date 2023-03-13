@@ -110,7 +110,7 @@ ErrorOr<void> SysFSInode::truncate(u64 size)
     return m_associated_component->truncate(size);
 }
 
-ErrorOr<void> SysFSInode::update_timestamps(Optional<Duration>, Optional<Duration>, Optional<Duration>)
+ErrorOr<void> SysFSInode::update_timestamps(Optional<UnixDateTime>, Optional<UnixDateTime>, Optional<UnixDateTime>)
 {
     return {};
 }

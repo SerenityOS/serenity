@@ -82,7 +82,7 @@ public:
 
     bool is_metadata_dirty() const { return m_metadata_dirty; }
 
-    virtual ErrorOr<void> update_timestamps(Optional<Duration> atime, Optional<Duration> ctime, Optional<Duration> mtime);
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime);
     virtual ErrorOr<void> increment_link_count();
     virtual ErrorOr<void> decrement_link_count();
 

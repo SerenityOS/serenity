@@ -635,7 +635,7 @@ ErrorOr<Process::ScopedDescriptionAllocation> Process::OpenFileDescriptions::all
     return EMFILE;
 }
 
-Duration kgettimeofday()
+UnixDateTime kgettimeofday()
 {
     return TimeManagement::now();
 }
@@ -699,7 +699,7 @@ ErrorOr<void> Process::dump_core()
         return {};
     }
     auto coredump_path = TRY(name().with([&](auto& process_name) {
-        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name->view(), pid().value(), kgettimeofday().to_truncated_seconds());
+        return KString::formatted("{}/{}_{}_{}", coredump_directory_path->view(), process_name->view(), pid().value(), kgettimeofday().seconds_since_epoch());
     }));
     auto coredump = TRY(Coredump::try_create(*this, coredump_path->view()));
     return coredump->write();
