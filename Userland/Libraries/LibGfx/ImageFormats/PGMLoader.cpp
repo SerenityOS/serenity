@@ -25,7 +25,7 @@ static void set_adjusted_pixels(PGMLoadingContext& context, Vector<Gfx::Color> c
     }
 }
 
-bool read_image_data(PGMLoadingContext& context)
+ErrorOr<void> read_image_data(PGMLoadingContext& context)
 {
     auto& stream = *context.stream;
     Vector<Gfx::Color> color_data;
@@ -35,32 +35,24 @@ bool read_image_data(PGMLoadingContext& context)
 
     if (context.type == PGMLoadingContext::Type::ASCII) {
         for (u64 i = 0; i < context_size; ++i) {
-            auto number_or_error = read_number(stream);
-            if (number_or_error.is_error())
-                return false;
-            auto value = number_or_error.value();
+            auto value = TRY(read_number(stream));
 
-            if (read_whitespace(context).is_error())
-                return false;
+            TRY(read_whitespace(context));
 
             color_data[i] = { (u8)value, (u8)value, (u8)value };
         }
     } else if (context.type == PGMLoadingContext::Type::RAWBITS) {
         for (u64 i = 0; i < context_size; ++i) {
-            auto pixel_or_error = stream.read_value<u8>();
-            if (pixel_or_error.is_error())
-                return false;
-            auto const pixel = pixel_or_error.value();
+            auto const pixel = TRY(stream.read_value<u8>());
             color_data[i] = { pixel, pixel, pixel };
         }
     }
 
-    if (!create_bitmap(context))
-        return false;
+    TRY(create_bitmap(context));
 
     set_adjusted_pixels(context, color_data);
 
     context.state = PGMLoadingContext::State::Bitmap;
-    return true;
+    return {};
 }
 }

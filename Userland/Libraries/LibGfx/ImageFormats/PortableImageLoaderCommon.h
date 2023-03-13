@@ -165,15 +165,10 @@ static ErrorOr<void> read_max_val(TContext& context)
 }
 
 template<typename TContext>
-static bool create_bitmap(TContext& context)
+static ErrorOr<void> create_bitmap(TContext& context)
 {
-    auto bitmap_or_error = Bitmap::create(BitmapFormat::BGRx8888, { context.width, context.height });
-    if (bitmap_or_error.is_error()) {
-        context.state = TContext::State::Error;
-        return false;
-    }
-    context.bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
-    return true;
+    context.bitmap = TRY(Bitmap::create(BitmapFormat::BGRx8888, { context.width, context.height }));
+    return {};
 }
 
 template<typename TContext>
@@ -229,7 +224,7 @@ static bool decode(TContext& context)
             return false;
     }
 
-    if (!read_image_data(context))
+    if (read_image_data(context).is_error())
         return false;
 
     error_guard.disarm();

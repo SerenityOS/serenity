@@ -10,7 +10,7 @@
 
 namespace Gfx {
 
-bool read_image_data(PBMLoadingContext& context)
+ErrorOr<void> read_image_data(PBMLoadingContext& context)
 {
     auto& stream = *context.stream;
     Vector<Gfx::Color> color_data;
@@ -20,10 +20,7 @@ bool read_image_data(PBMLoadingContext& context)
 
     if (context.type == PBMLoadingContext::Type::ASCII) {
         for (u64 i = 0; i < context_size; ++i) {
-            auto byte_or_error = stream.read_value<u8>();
-            if (byte_or_error.is_error())
-                return false;
-            auto const byte = byte_or_error.value();
+            auto const byte = TRY(stream.read_value<u8>());
             if (byte == '0')
                 color_data[i] = Color::White;
             else if (byte == '1')
@@ -33,10 +30,7 @@ bool read_image_data(PBMLoadingContext& context)
         }
     } else if (context.type == PBMLoadingContext::Type::RAWBITS) {
         for (u64 color_index = 0; color_index < context_size;) {
-            auto byte_or_error = stream.read_value<u8>();
-            if (byte_or_error.is_error())
-                return false;
-            auto byte = byte_or_error.value();
+            auto byte = TRY(stream.read_value<u8>());
             for (int i = 0; i < 8; i++) {
                 auto const val = byte & 0x80;
 
@@ -55,13 +49,11 @@ bool read_image_data(PBMLoadingContext& context)
         }
     }
 
-    if (!create_bitmap(context)) {
-        return false;
-    }
+    TRY(create_bitmap(context));
 
     set_pixels(context, color_data);
 
     context.state = PBMLoadingContext::State::Bitmap;
-    return true;
+    return {};
 }
 }
