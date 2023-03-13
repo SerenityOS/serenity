@@ -8,12 +8,12 @@
 
 namespace AK {
 
-Duration time_from_packed_dos(DOSPackedDate date, DOSPackedTime time)
+UnixDateTime time_from_packed_dos(DOSPackedDate date, DOSPackedTime time)
 {
     if (date.value == 0)
-        return Duration();
+        return UnixDateTime::from_unix_time_parts(first_dos_year, 1, 1, 0, 0, 0, 0);
 
-    return Duration::from_timestamp(first_dos_year + date.year, date.month, date.day, time.hour, time.minute, time.second * 2, 0);
+    return UnixDateTime::from_unix_time_parts(first_dos_year + date.year, date.month, date.day, time.hour, time.minute, time.second * 2, 0);
 }
 
 DOSPackedDate to_packed_dos_date(unsigned year, unsigned month, unsigned day)

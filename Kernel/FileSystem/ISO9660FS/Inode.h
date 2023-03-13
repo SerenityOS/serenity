@@ -32,7 +32,7 @@ public:
     virtual ErrorOr<void> chmod(mode_t) override;
     virtual ErrorOr<void> chown(UserID, GroupID) override;
     virtual ErrorOr<void> truncate(u64) override;
-    virtual ErrorOr<void> update_timestamps(Optional<Duration> atime, Optional<Duration> ctime, Optional<Duration> mtime) override;
+    virtual ErrorOr<void> update_timestamps(Optional<UnixDateTime> atime, Optional<UnixDateTime> ctime, Optional<UnixDateTime> mtime) override;
 
 private:
     // HACK: The base ISO 9660 standard says the maximum filename length is 37
@@ -51,7 +51,7 @@ private:
     static StringView get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer);
 
     void create_metadata();
-    time_t parse_numerical_date_time(ISO::NumericalDateAndTime const&);
+    UnixDateTime parse_numerical_date_time(ISO::NumericalDateAndTime const&);
 
     InodeMetadata m_metadata;
     ISO::DirectoryRecordHeader m_record;

@@ -40,13 +40,13 @@ public:
     virtual bool can_read(OpenFileDescription const&, u64) const override;
     virtual bool can_write(OpenFileDescription const&, u64) const override;
     virtual ErrorOr<size_t> sendto(OpenFileDescription&, UserOrKernelBuffer const&, size_t, int, Userspace<sockaddr const*>, socklen_t) override;
-    virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Duration&, bool blocking) override;
+    virtual ErrorOr<size_t> recvfrom(OpenFileDescription&, UserOrKernelBuffer&, size_t, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, UnixDateTime&, bool blocking) override;
     virtual ErrorOr<void> setsockopt(int level, int option, Userspace<void const*>, socklen_t) override;
     virtual ErrorOr<void> getsockopt(OpenFileDescription&, int level, int option, Userspace<void*>, Userspace<socklen_t*>) override;
 
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
 
-    bool did_receive(IPv4Address const& peer_address, u16 peer_port, ReadonlyBytes, Duration const&);
+    bool did_receive(IPv4Address const& peer_address, u16 peer_port, ReadonlyBytes, UnixDateTime const&);
 
     IPv4Address const& local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }
@@ -99,7 +99,7 @@ private:
     virtual bool is_ipv4() const override { return true; }
 
     ErrorOr<size_t> receive_byte_buffered(OpenFileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, bool blocking);
-    ErrorOr<size_t> receive_packet_buffered(OpenFileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, Duration&, bool blocking);
+    ErrorOr<size_t> receive_packet_buffered(OpenFileDescription&, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*>, Userspace<socklen_t*>, UnixDateTime&, bool blocking);
 
     void set_can_read(bool);
 
@@ -112,7 +112,7 @@ private:
     struct ReceivedPacket {
         IPv4Address peer_address;
         u16 peer_port;
-        Duration timestamp;
+        UnixDateTime timestamp;
         OwnPtr<KBuffer> data;
     };
 

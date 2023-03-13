@@ -145,7 +145,7 @@ ErrorOr<void> ISO9660Inode::truncate(u64)
     return EROFS;
 }
 
-ErrorOr<void> ISO9660Inode::update_timestamps(Optional<Duration>, Optional<Duration>, Optional<Duration>)
+ErrorOr<void> ISO9660Inode::update_timestamps(Optional<UnixDateTime>, Optional<UnixDateTime>, Optional<UnixDateTime>)
 {
     return EROFS;
 }
@@ -169,7 +169,7 @@ void ISO9660Inode::create_metadata()
 {
     u32 data_length = LittleEndian { m_record.data_length.little };
     bool is_directory = has_flag(m_record.file_flags, ISO::FileFlags::Directory);
-    auto recorded_at = Duration::from_timespec({ parse_numerical_date_time(m_record.recording_date_and_time), 0 });
+    auto recorded_at = parse_numerical_date_time(m_record.recording_date_and_time);
 
     m_metadata = {
         .inode = identifier(),
@@ -189,16 +189,12 @@ void ISO9660Inode::create_metadata()
     };
 }
 
-time_t ISO9660Inode::parse_numerical_date_time(ISO::NumericalDateAndTime const& date)
+UnixDateTime ISO9660Inode::parse_numerical_date_time(ISO::NumericalDateAndTime const& date)
 {
     i32 year_offset = date.years_since_1900 - 70;
 
-    return (year_offset * 60 * 60 * 24 * 30 * 12)
-        + (date.month * 60 * 60 * 24 * 30)
-        + (date.day * 60 * 60 * 24)
-        + (date.hour * 60 * 60)
-        + (date.minute * 60)
-        + date.second;
+    // FIXME: This ignores timezone information in date.
+    return UnixDateTime::from_unix_time_parts(year_offset, date.month, date.day, date.hour, date.minute, date.second, 0);
 }
 
 StringView ISO9660Inode::get_normalized_filename(ISO::DirectoryRecordHeader const& record, Bytes buffer)

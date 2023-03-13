@@ -95,7 +95,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         on_receive();
 }
 
-size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Duration& packet_timestamp)
+size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, UnixDateTime& packet_timestamp)
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())

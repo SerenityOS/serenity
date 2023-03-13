@@ -44,7 +44,7 @@ ErrorOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<timesp
     if (!credentials->is_superuser())
         return EPERM;
 
-    auto time = TRY(copy_time_from_user(user_ts));
+    auto time = UnixDateTime::epoch() + TRY(copy_time_from_user(user_ts));
 
     switch (clock_id) {
     case CLOCK_REALTIME:
@@ -110,9 +110,8 @@ ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, User
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (user_old_delta) {
-        timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
-        timeval old_delta;
-        timespec_to_timeval(old_delta_ts, old_delta);
+        auto old_delta_duration = TimeManagement::the().remaining_epoch_time_adjustment();
+        auto old_delta = old_delta_duration.to_timeval();
         TRY(copy_to_user(user_old_delta, &old_delta));
     }
 
@@ -123,8 +122,7 @@ ErrorOr<FlatPtr> Process::sys$adjtime(Userspace<timeval const*> user_delta, User
             return EPERM;
         auto delta = TRY(copy_time_from_user(user_delta));
 
-        // FIXME: Should use AK::Duration internally
-        TimeManagement::the().set_remaining_epoch_time_adjustment(delta.to_timespec());
+        TimeManagement::the().set_remaining_epoch_time_adjustment(delta);
     }
 
     return 0;

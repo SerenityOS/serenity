@@ -48,10 +48,10 @@ public:
         // TODO: implement
         return monotonic_time(TimePrecision::Precise);
     }
-    Duration epoch_time(TimePrecision = TimePrecision::Precise) const;
-    void set_epoch_time(Duration);
+    UnixDateTime epoch_time(TimePrecision = TimePrecision::Precise) const;
+    void set_epoch_time(UnixDateTime);
     time_t ticks_per_second() const;
-    static Duration boot_time();
+    static UnixDateTime boot_time();
     Duration clock_resolution() const;
 
     bool is_system_timer(HardwareTimerBase const&) const;
@@ -64,14 +64,12 @@ public:
     bool disable_profile_timer();
 
     u64 uptime_ms() const;
-    static Duration now();
+    static UnixDateTime now();
 
-    // FIXME: Should use AK::Duration internally
-    // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
-    timespec remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
-    // FIXME: Should use AK::Duration internally
-    // FIXME: Also, most likely broken, because it does not check m_update[12] for in-progress updates.
-    void set_remaining_epoch_time_adjustment(timespec const& adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
+    // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.
+    Duration remaining_epoch_time_adjustment() const { return m_remaining_epoch_time_adjustment; }
+    // FIXME: Most likely broken, because it does not check m_update[12] for in-progress updates.
+    void set_remaining_epoch_time_adjustment(Duration adjustment) { m_remaining_epoch_time_adjustment = adjustment; }
 
     bool can_query_precise_time() const { return m_can_query_precise_time; }
 
@@ -102,9 +100,8 @@ private:
     Atomic<u32> m_update1 { 0 };
     u32 m_ticks_this_second { 0 };
     u64 m_seconds_since_boot { 0 };
-    // FIXME: Should use AK::Duration internally
-    timespec m_epoch_time { 0, 0 };
-    timespec m_remaining_epoch_time_adjustment { 0, 0 };
+    UnixDateTime m_epoch_time {};
+    Duration m_remaining_epoch_time_adjustment {};
     Atomic<u32> m_update2 { 0 };
 
     u32 m_time_ticks_per_second { 0 }; // may be different from interrupts/second (e.g. hpet)
