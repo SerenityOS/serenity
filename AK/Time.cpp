@@ -217,16 +217,6 @@ static Duration now_time_from_clock(clockid_t clock_id)
 }
 }
 
-Duration Duration::now_realtime()
-{
-    return now_time_from_clock(CLOCK_REALTIME);
-}
-
-Duration Duration::now_realtime_coarse()
-{
-    return now_time_from_clock(CLOCK_REALTIME_COARSE);
-}
-
 Duration Duration::now_monotonic()
 {
     return now_time_from_clock(CLOCK_MONOTONIC);
