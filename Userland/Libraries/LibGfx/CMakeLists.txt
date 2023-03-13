@@ -41,6 +41,7 @@ set(SOURCES
     PGMLoader.cpp
     PNGLoader.cpp
     PNGWriter.cpp
+    PortableFormatWriter.cpp
     PPMLoader.cpp
     Painter.cpp
     Palette.cpp
