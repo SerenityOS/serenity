@@ -3586,23 +3586,23 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
     auto escape_string = [](StringView string, AttributeMode attribute_mode) -> DeprecatedString {
         // https://html.spec.whatwg.org/multipage/parsing.html#escapingString
         StringBuilder builder;
-        for (auto& ch : string) {
+        for (auto code_point : Utf8View { string }) {
             // 1. Replace any occurrence of the "&" character by the string "&amp;".
-            if (ch == '&')
+            if (code_point == '&')
                 builder.append("&amp;"sv);
             // 2. Replace any occurrences of the U+00A0 NO-BREAK SPACE character by the string "&nbsp;".
-            else if (ch == '\xA0')
+            else if (code_point == 0xA0)
                 builder.append("&nbsp;"sv);
             // 3. If the algorithm was invoked in the attribute mode, replace any occurrences of the """ character by the string "&quot;".
-            else if (ch == '"' && attribute_mode == AttributeMode::Yes)
+            else if (code_point == '"' && attribute_mode == AttributeMode::Yes)
                 builder.append("&quot;"sv);
             // 4. If the algorithm was not invoked in the attribute mode, replace any occurrences of the "<" character by the string "&lt;", and any occurrences of the ">" character by the string "&gt;".
-            else if (ch == '<' && attribute_mode == AttributeMode::No)
+            else if (code_point == '<' && attribute_mode == AttributeMode::No)
                 builder.append("&lt;"sv);
-            else if (ch == '>' && attribute_mode == AttributeMode::No)
+            else if (code_point == '>' && attribute_mode == AttributeMode::No)
                 builder.append("&gt;"sv);
             else
-                builder.append(ch);
+                builder.append_code_point(code_point);
         }
         return builder.to_deprecated_string();
     };
