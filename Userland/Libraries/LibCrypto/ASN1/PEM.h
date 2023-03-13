@@ -13,5 +13,6 @@
 namespace Crypto {
 
 ByteBuffer decode_pem(ReadonlyBytes);
+ErrorOr<Vector<ByteBuffer>> decode_pems(ReadonlyBytes);
 
 }
