@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <AK/BufferedStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -38,12 +40,18 @@ struct PortableImageMapLoadingContext {
 
     Type type { Type::Unknown };
     State state { State::NotDecoded };
-    u8 const* data { nullptr };
-    size_t data_size { 0 };
+
     size_t width { 0 };
     size_t height { 0 };
     FormatDetails format_details {};
     RefPtr<Gfx::Bitmap> bitmap;
+
+    NonnullOwnPtr<SeekableStream> stream;
+
+    PortableImageMapLoadingContext(NonnullOwnPtr<SeekableStream> stream)
+        : stream(move(stream))
+    {
+    }
 };
 
 template<typename TContext>
@@ -67,17 +75,15 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    PortableImageDecoderPlugin(u8 const*, size_t);
+    PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream);
 
     OwnPtr<TContext> m_context;
 };
 
 template<typename TContext>
-PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(u8 const* data, size_t size)
+PortableImageDecoderPlugin<TContext>::PortableImageDecoderPlugin(NonnullOwnPtr<SeekableStream> stream)
 {
-    m_context = make<TContext>();
-    m_context->data = data;
-    m_context->data_size = size;
+    m_context = make<TContext>(move(stream));
 }
 
 template<typename TContext>
@@ -114,7 +120,8 @@ bool PortableImageDecoderPlugin<TContext>::set_nonvolatile(bool& was_purged)
 template<typename TContext>
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PortableImageDecoderPlugin<TContext>::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(data.data(), data.size()));
+    auto stream = TRY(try_make<FixedMemoryStream>(data));
+    return adopt_nonnull_own_or_enomem(new (nothrow) PortableImageDecoderPlugin<TContext>(move(stream)));
 }
 
 template<typename TContext>

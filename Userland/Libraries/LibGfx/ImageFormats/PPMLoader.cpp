@@ -7,42 +7,38 @@
 
 #include "PPMLoader.h"
 #include "PortableImageLoaderCommon.h"
-#include <AK/Endian.h>
-#include <AK/LexicalPath.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
-#include <LibGfx/Streamer.h>
-#include <string.h>
 
 namespace Gfx {
 
-bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
+bool read_image_data(PPMLoadingContext& context)
 {
     Vector<Gfx::Color> color_data;
     auto const context_size = context.width * context.height;
     color_data.resize(context_size);
 
+    auto& stream = *context.stream;
+
     if (context.type == PPMLoadingContext::Type::ASCII) {
         for (u64 i = 0; i < context_size; ++i) {
-            auto const red_or_error = read_number(streamer);
+            auto const red_or_error = read_number(stream);
             if (red_or_error.is_error())
                 return false;
 
-            if (read_whitespace(context, streamer).is_error())
+            if (read_whitespace(context).is_error())
                 return false;
 
-            auto const green_or_error = read_number(streamer);
+            auto const green_or_error = read_number(stream);
             if (green_or_error.is_error())
                 return false;
 
-            if (read_whitespace(context, streamer).is_error())
+            if (read_whitespace(context).is_error())
                 return false;
 
-            auto const blue_or_error = read_number(streamer);
+            auto const blue_or_error = read_number(stream);
             if (blue_or_error.is_error())
                 return false;
 
-            if (read_whitespace(context, streamer).is_error())
+            if (read_whitespace(context).is_error())
                 return false;
 
             Color color { (u8)red_or_error.value(), (u8)green_or_error.value(), (u8)blue_or_error.value() };
@@ -52,8 +48,11 @@ bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
         }
     } else if (context.type == PPMLoadingContext::Type::RAWBITS) {
         for (u64 i = 0; i < context_size; ++i) {
-            u8 pixel[3];
-            if (!streamer.read_bytes(pixel, 3))
+            Array<u8, 3> pixel;
+            Bytes buffer { pixel };
+
+            auto const result = stream.read_until_filled(buffer);
+            if (result.is_error())
                 return false;
             color_data[i] = { pixel[0], pixel[1], pixel[2] };
         }
