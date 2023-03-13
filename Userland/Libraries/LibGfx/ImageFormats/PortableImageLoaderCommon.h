@@ -184,52 +184,35 @@ static void set_pixels(TContext& context, Vector<Gfx::Color> const& color_data)
 }
 
 template<typename TContext>
-static bool decode(TContext& context)
+static ErrorOr<void> decode(TContext& context)
 {
     if (context.state >= TContext::State::Decoded)
-        return true;
+        return {};
 
-    auto error_guard = ArmedScopeGuard([&] {
-        context.state = TContext::State::Error;
-    });
+    TRY(read_magic_number(context));
 
-    if (read_magic_number(context).is_error())
-        return false;
+    TRY(read_whitespace(context));
 
-    if (read_whitespace(context).is_error())
-        return false;
-
-    if (read_width(context).is_error())
-        return false;
-
-    if (read_whitespace(context).is_error())
-        return false;
-
-    if (read_height(context).is_error())
-        return false;
+    TRY(read_width(context));
+    TRY(read_whitespace(context));
+    TRY(read_height(context));
 
     if (context.width > maximum_width_for_decoded_images || context.height > maximum_height_for_decoded_images) {
         dbgln("This portable network image is too large for comfort: {}x{}", context.width, context.height);
-        return false;
+        return Error::from_string_literal("This portable network image is too large.");
     }
 
-    if (read_whitespace(context).is_error())
-        return false;
+    TRY(read_whitespace(context));
 
     if constexpr (requires { context.format_details.max_val; }) {
-        if (read_max_val(context).is_error())
-            return false;
-
-        if (read_whitespace(context).is_error())
-            return false;
+        TRY(read_max_val(context));
+        TRY(read_whitespace(context));
     }
 
-    if (read_image_data(context).is_error())
-        return false;
+    TRY(read_image_data(context));
 
-    error_guard.disarm();
     context.state = TContext::State::Decoded;
-    return true;
+    return {};
 }
 
 }

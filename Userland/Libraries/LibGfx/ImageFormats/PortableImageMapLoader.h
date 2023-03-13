@@ -93,9 +93,11 @@ IntSize PortableImageDecoderPlugin<TContext>::size()
         return {};
 
     if (m_context->state < TContext::State::Decoded) {
-        bool success = decode(*m_context);
-        if (!success)
+        if (decode(*m_context).is_error()) {
+            m_context->state = TContext::State::Error;
+            // FIXME: We should propagate errors
             return {};
+        }
     }
 
     return { m_context->width, m_context->height };
@@ -168,9 +170,10 @@ ErrorOr<ImageFrameDescriptor> PortableImageDecoderPlugin<TContext>::frame(size_t
         return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");
 
     if (m_context->state < TContext::State::Decoded) {
-        bool success = decode(*m_context);
-        if (!success)
+        if (decode(*m_context).is_error()) {
+            m_context->state = TContext::State::Error;
             return Error::from_string_literal("PortableImageDecoderPlugin: Decoding failed");
+        }
     }
 
     VERIFY(m_context->bitmap);
