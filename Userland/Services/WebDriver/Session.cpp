@@ -50,12 +50,11 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<S
         dbgln("WebDriver is connected to WebContent socket");
         auto web_content_connection = maybe_connection.release_value();
 
-        auto handle_name = String::formatted("window-{}"sv, m_next_handle_id).release_value_but_fixme_should_propagate_errors();
-        m_next_handle_id++;
-        m_windows.set(handle_name, Session::Window { handle_name, move(web_content_connection) });
+        auto window_handle = web_content_connection->get_window_handle();
+        m_windows.set(window_handle, Session::Window { window_handle, move(web_content_connection) });
 
         if (m_current_window_handle.is_empty())
-            m_current_window_handle = handle_name;
+            m_current_window_handle = window_handle;
 
         MUST(promise->resolve({}));
     };

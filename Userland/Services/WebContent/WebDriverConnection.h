@@ -52,6 +52,7 @@ private:
     virtual Messages::WebDriverClient::ForwardResponse forward() override;
     virtual Messages::WebDriverClient::RefreshResponse refresh() override;
     virtual Messages::WebDriverClient::GetTitleResponse get_title() override;
+    virtual Messages::WebDriverClient::GetWindowHandleResponse get_window_handle() override;
     virtual Messages::WebDriverClient::CloseWindowResponse close_window() override;
     virtual Messages::WebDriverClient::NewWindowResponse new_window(JsonValue const& payload) override;
     virtual Messages::WebDriverClient::GetWindowRectResponse get_window_rect() override;

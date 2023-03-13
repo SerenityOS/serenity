@@ -64,7 +64,6 @@ private:
     bool m_started { false };
     unsigned m_id { 0 };
 
-    unsigned m_next_handle_id = 0;
     HashMap<String, Window> m_windows;
     String m_current_window_handle;
 
