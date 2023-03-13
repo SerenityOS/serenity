@@ -13,6 +13,7 @@
 
 #include <AK/Badge.h>
 #include <AK/DeprecatedString.h>
+#include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
@@ -74,6 +75,13 @@ public:
         return client().take_document_screenshot().bitmap();
     }
 
+    ErrorOr<String> dump_layout_tree()
+    {
+        return String::from_deprecated_string(client().dump_layout_tree());
+    }
+
+    Function<void(const URL&)> on_load_finish;
+
 private:
     HeadlessWebContentView() = default;
 
@@ -93,7 +101,13 @@ private:
     void notify_server_did_click_link(Badge<WebView::WebContentClient>, const URL&, DeprecatedString const&, unsigned) override { }
     void notify_server_did_middle_click_link(Badge<WebView::WebContentClient>, const URL&, DeprecatedString const&, unsigned) override { }
     void notify_server_did_start_loading(Badge<WebView::WebContentClient>, const URL&, bool) override { }
-    void notify_server_did_finish_loading(Badge<WebView::WebContentClient>, const URL&) override { }
+
+    void notify_server_did_finish_loading(Badge<WebView::WebContentClient>, const URL& url) override
+    {
+        if (on_load_finish)
+            on_load_finish(url);
+    }
+
     void notify_server_did_request_navigate_back(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_request_navigate_forward(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_request_refresh(Badge<WebView::WebContentClient>) override { }
@@ -195,10 +209,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView url;
     auto resources_folder = "/res"sv;
     StringView web_driver_ipc_path;
+    bool dump_layout_tree = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This utility runs the Browser in headless mode.");
     args_parser.add_option(screenshot_timeout, "Take a screenshot after [n] seconds (default: 1)", "screenshot", 's', "n");
+    args_parser.add_option(dump_layout_tree, "Dump layout tree and exit", "dump-layout-tree", 'd');
     args_parser.add_option(resources_folder, "Path of the base resources folder (defaults to /res)", "resources", 'r', "resources-root-path");
     args_parser.add_option(web_driver_ipc_path, "Path to the WebDriver IPC socket", "webdriver-ipc-path", 0, "path");
     args_parser.add_positional_argument(url, "URL to open", "url", Core::ArgsParser::Required::Yes);
@@ -218,11 +234,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     static constexpr Gfx::IntSize window_size { 800, 600 };
 
     auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path));
-    view->load(TRY(format_url(url)));
-
     RefPtr<Core::Timer> timer;
-    if (web_driver_ipc_path.is_empty())
-        timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, screenshot_timeout));
 
+    if (dump_layout_tree) {
+        view->on_load_finish = [&](auto const&) {
+            auto layout_tree = view->dump_layout_tree().release_value_but_fixme_should_propagate_errors();
+
+            outln("{}", layout_tree);
+            fflush(stdout);
+
+            event_loop.quit(0);
+        };
+    } else if (web_driver_ipc_path.is_empty()) {
+        timer = TRY(load_page_for_screenshot_and_exit(event_loop, *view, screenshot_timeout));
+    }
+
+    view->load(TRY(format_url(url)));
     return event_loop.exec();
 }
