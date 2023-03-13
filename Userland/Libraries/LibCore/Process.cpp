@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2022, MacDue <macdue@dueutil.tech>
+ * Copyright (c) 2022-2023, MacDue <macdue@dueutil.tech>
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/DeprecatedString.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Process.h>
@@ -58,6 +59,9 @@ struct ArgvList {
 #ifdef AK_OS_SERENITY
         posix_spawn_file_actions_t spawn_actions;
         posix_spawn_file_actions_init(&spawn_actions);
+        ScopeGuard cleanup_spawn_actions = [&] {
+            posix_spawn_file_actions_destroy(&spawn_actions);
+        };
         if (!m_working_directory.is_empty())
             posix_spawn_file_actions_addchdir(&spawn_actions, m_working_directory.characters());
 
