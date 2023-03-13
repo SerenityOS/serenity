@@ -35,4 +35,6 @@ private:
     JS::GCPtr<SubtleCrypto> m_subtle;
 };
 
+ErrorOr<String> generate_random_uuid();
+
 }

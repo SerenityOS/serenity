@@ -72,6 +72,18 @@ WebIDL::ExceptionOr<String> Crypto::random_uuid() const
 {
     auto& vm = realm().vm();
 
+    return TRY_OR_THROW_OOM(vm, generate_random_uuid());
+}
+
+void Crypto::visit_edges(Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    visitor.visit(m_subtle.ptr());
+}
+
+// https://w3c.github.io/webcrypto/#dfn-generate-a-random-uuid
+ErrorOr<String> generate_random_uuid()
+{
     // 1. Let bytes be a byte sequence of length 16.
     u8 bytes[16];
 
@@ -113,18 +125,13 @@ WebIDL::ExceptionOr<String> Crypto::random_uuid() const
         ».
         */
     StringBuilder builder;
-    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}{:02x}{:02x}-", bytes[0], bytes[1], bytes[2], bytes[3]));
-    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[4], bytes[5]));
-    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[6], bytes[7]));
-    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}-", bytes[8], bytes[9]));
-    TRY_OR_THROW_OOM(vm, builder.try_appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]));
-    return TRY_OR_THROW_OOM(vm, builder.to_string());
-}
+    TRY(builder.try_appendff("{:02x}{:02x}{:02x}{:02x}-", bytes[0], bytes[1], bytes[2], bytes[3]));
+    TRY(builder.try_appendff("{:02x}{:02x}-", bytes[4], bytes[5]));
+    TRY(builder.try_appendff("{:02x}{:02x}-", bytes[6], bytes[7]));
+    TRY(builder.try_appendff("{:02x}{:02x}-", bytes[8], bytes[9]));
+    TRY(builder.try_appendff("{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}", bytes[10], bytes[11], bytes[12], bytes[13], bytes[14], bytes[15]));
 
-void Crypto::visit_edges(Cell::Visitor& visitor)
-{
-    Base::visit_edges(visitor);
-    visitor.visit(m_subtle.ptr());
-}
+    return builder.to_string();
+};
 
 }
