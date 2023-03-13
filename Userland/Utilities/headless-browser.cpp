@@ -15,6 +15,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
@@ -159,6 +160,15 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
     return timer;
 }
 
+static ErrorOr<URL> format_url(StringView url)
+{
+    URL formatted_url { url };
+    if (!formatted_url.is_valid())
+        formatted_url = TRY(String::formatted("http://{}", url));
+
+    return formatted_url;
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
 #if !defined(AK_OS_SERENITY)
@@ -193,7 +203,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     static constexpr Gfx::IntSize window_size { 800, 600 };
 
     auto view = TRY(HeadlessWebContentView::create(move(theme), window_size, web_driver_ipc_path));
-    view->load(URL { url });
+    view->load(TRY(format_url(url)));
 
     RefPtr<Core::Timer> timer;
     if (web_driver_ipc_path.is_empty())
