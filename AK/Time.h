@@ -191,24 +191,6 @@ private:
     }
 
 public:
-    [[nodiscard]] constexpr static Duration from_timestamp(i32 year, u8 month, u8 day, u8 hour, u8 minute, u8 second, u16 millisecond)
-    {
-        constexpr auto milliseconds_per_day = 86'400'000;
-        constexpr auto milliseconds_per_hour = 3'600'000;
-        constexpr auto milliseconds_per_minute = 60'000;
-        constexpr auto milliseconds_per_second = 1'000;
-
-        i64 milliseconds_since_epoch = days_since_epoch(year, month, day);
-        milliseconds_since_epoch *= milliseconds_per_day;
-
-        milliseconds_since_epoch += hour * milliseconds_per_hour;
-        milliseconds_since_epoch += minute * milliseconds_per_minute;
-        milliseconds_since_epoch += second * milliseconds_per_second;
-        milliseconds_since_epoch += millisecond;
-
-        return from_milliseconds(milliseconds_since_epoch);
-    }
-
     [[nodiscard]] constexpr static Duration from_seconds(i64 seconds) { return Duration(seconds, 0); }
     [[nodiscard]] constexpr static Duration from_nanoseconds(i64 nanoseconds)
     {
@@ -234,8 +216,6 @@ public:
     [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); };
 
 #ifndef KERNEL
-    [[nodiscard]] static Duration now_realtime();
-    [[nodiscard]] static Duration now_realtime_coarse();
     [[nodiscard]] static Duration now_monotonic();
     [[nodiscard]] static Duration now_monotonic_coarse();
 #endif
