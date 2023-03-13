@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 
     auto process_statistics = TRY(Core::ProcessStatisticsReader::get_all());
 
-    auto now = Time::now_realtime().to_seconds();
+    auto now = UnixDateTime::now().seconds_since_epoch();
 
     if (!hide_header)
         outln("\033[1m{:10} {:12} {:16} {:6} {}\033[0m", "USER", "TTY", "LOGIN@", "IDLE", "WHAT");
