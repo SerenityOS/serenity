@@ -31,7 +31,6 @@
 #include <WindowServer/Window.h>
 #include <serenity.h>
 #include <signal.h>
-#include <spawn.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -254,19 +253,9 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> build_system_menu(GUI::Window& window)
         GUI::Process::spawn_or_show_error(&window, "/bin/Run"sv, ReadonlySpan<StringView> {}, Core::StandardPaths::home_directory());
     }));
     system_menu->add_separator();
-    system_menu->add_action(GUI::Action::create("E&xit...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [](auto&) {
-        auto command = ShutdownDialog::show();
-
-        if (command.size() == 0)
-            return;
-
-        pid_t child_pid;
-        if ((errno = posix_spawn(&child_pid, command[0], nullptr, nullptr, const_cast<char**>(command.data()), environ))) {
-            perror("posix_spawn");
-        } else {
-            if (disown(child_pid) < 0)
-                perror("disown");
-        }
+    system_menu->add_action(GUI::Action::create("E&xit...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"sv)), [&](auto&) {
+        if (auto command = ShutdownDialog::show(); command.has_value())
+            GUI::Process::spawn_or_show_error(&window, command->executable, command->arguments);
     }));
 
     return system_menu;
