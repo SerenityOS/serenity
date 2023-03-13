@@ -10,6 +10,7 @@
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/PNGWriter.h>
+#include <LibGfx/PortableFormatWriter.h>
 #include <LibGfx/QOIWriter.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -41,10 +42,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         bytes = TRY(Gfx::BMPWriter::encode(*frame));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::PNGWriter::encode(*frame));
+    } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
+        bytes = TRY(Gfx::PortableFormatWriter::encode(*frame));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
-        warnln("can only write .bmp, .png, and .qoi");
+        warnln("can only write .bmp, .png, .ppm, and .qoi");
         return 1;
     }
 
