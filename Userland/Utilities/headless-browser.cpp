@@ -21,6 +21,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
@@ -31,6 +32,7 @@
 #include <LibGfx/Size.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibIPC/File.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/FrameLoader.h>
@@ -124,7 +126,17 @@ private:
     Gfx::IntRect notify_server_did_request_maximize_window() override { return {}; }
     Gfx::IntRect notify_server_did_request_minimize_window() override { return {}; }
     Gfx::IntRect notify_server_did_request_fullscreen_window() override { return {}; }
-    void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const&, i32) override { }
+
+    void notify_server_did_request_file(Badge<WebView::WebContentClient>, DeprecatedString const& path, i32 request_id) override
+    {
+        auto file = Core::File::open(path, Core::File::OpenMode::Read);
+
+        if (file.is_error())
+            client().async_handle_file_return(file.error().code(), {}, request_id);
+        else
+            client().async_handle_file_return(0, IPC::File(*file.value()), request_id);
+    }
+
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
     void create_client() override { }
@@ -162,6 +174,9 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
 
 static ErrorOr<URL> format_url(StringView url)
 {
+    if (Core::DeprecatedFile::exists(url))
+        return URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(url));
+
     URL formatted_url { url };
     if (!formatted_url.is_valid())
         formatted_url = TRY(String::formatted("http://{}", url));
