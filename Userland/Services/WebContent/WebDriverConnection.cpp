@@ -522,6 +522,12 @@ Messages::WebDriverClient::GetTitleResponse WebDriverConnection::get_title()
     return title;
 }
 
+// 11.1 Get Window Handle, https://w3c.github.io/webdriver/#get-window-handle
+Messages::WebDriverClient::GetWindowHandleResponse WebDriverConnection::get_window_handle()
+{
+    return m_page_client.page().top_level_browsing_context().window_handle();
+}
+
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window()
 {
