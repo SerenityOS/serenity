@@ -55,18 +55,20 @@ static inline ErrorOr<u16> read_number(Streamer& streamer)
 template<typename TContext>
 static bool read_comment([[maybe_unused]] TContext& context, Streamer& streamer)
 {
-    bool exist = false;
+    bool is_first_char = true;
     u8 byte {};
 
     while (streamer.read(byte)) {
-        if (byte == '#') {
-            exist = true;
+        if (is_first_char) {
+            if (byte != '#')
+                return false;
+            is_first_char = false;
         } else if (byte == '\t' || byte == '\n') {
-            return exist;
+            break;
         }
     }
 
-    return exist;
+    return true;
 }
 
 template<typename TContext>
