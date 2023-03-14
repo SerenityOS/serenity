@@ -76,6 +76,8 @@ public:
 
     CSSPixelRect selection_rect(Gfx::Font const&) const;
 
+    bool is_atomic_inline() const;
+
 private:
     Node const& m_layout_node;
     int m_start { 0 };

@@ -149,4 +149,9 @@ CSSPixelRect LineBoxFragment::selection_rect(Gfx::Font const& font) const
     return {};
 }
 
+bool LineBoxFragment::is_atomic_inline() const
+{
+    return layout_node().is_replaced_box() || (layout_node().display().is_inline_outside() && !layout_node().display().is_flow_inside());
+}
+
 }
