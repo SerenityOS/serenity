@@ -1582,7 +1582,7 @@ CSSPixelRect StyleComputer::viewport_rect() const
 
 void StyleComputer::did_load_font([[maybe_unused]] FlyString const& family_name)
 {
-    document().invalidate_layout();
+    document().invalidate_style();
 }
 
 void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
