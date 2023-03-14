@@ -608,7 +608,15 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = JS::make_handle(&@js_name@@js_suffix@.as_object());
 )~~~");
     } else if (parameter.type->name() == "any") {
-        if (!optional) {
+        if (variadic) {
+            scoped_generator.append(R"~~~(
+    JS::MarkedVector<JS::Value> @cpp_name@ { vm.heap() };
+    TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+
+    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i)
+        @cpp_name@.unchecked_append(vm.argument(i));
+)~~~");
+        } else if (!optional) {
             scoped_generator.append(R"~~~(
     auto @cpp_name@ = @js_name@@js_suffix@;
 )~~~");
@@ -1389,9 +1397,15 @@ static void generate_arguments(SourceGenerator& generator, Vector<IDL::Parameter
     Vector<DeprecatedString> parameter_names;
     size_t argument_index = 0;
     for (auto& parameter : parameters) {
-        parameter_names.append(make_input_acceptable_cpp(parameter.name.to_snakecase()));
+        auto parameter_name = make_input_acceptable_cpp(parameter.name.to_snakecase());
 
-        if (!parameter.variadic) {
+        if (parameter.variadic) {
+            // JS::MarkedVector is non-copyable, and the implementations likely want ownership of the
+            // list, so we move() it into the parameter list.
+            parameter_names.append(DeprecatedString::formatted("move({})", parameter_name));
+        } else {
+            parameter_names.append(move(parameter_name));
+
             arguments_generator.set("argument.index", DeprecatedString::number(argument_index));
             arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
