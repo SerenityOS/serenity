@@ -5,6 +5,9 @@
 // FIXME: Support VoidFunction in the IDL parser
 callback VoidFunction = undefined ();
 
+// https://html.spec.whatwg.org/#timerhandler
+typedef (DOMString or Function) TimerHandler;
+
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
 interface mixin WindowOrWorkerGlobalScope {
     [Replaceable] readonly attribute USVString origin;
@@ -18,10 +21,10 @@ interface mixin WindowOrWorkerGlobalScope {
     ByteString atob(DOMString data);
 
     // timers
-    // FIXME: long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
-    // FIXME: undefined clearTimeout(optional long id = 0);
-    // FIXME: long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
-    // FIXME: undefined clearInterval(optional long id = 0);
+    long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
+    undefined clearTimeout(optional long id = 0);
+    long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
+    undefined clearInterval(optional long id = 0);
 
     // microtask queuing
     undefined queueMicrotask(VoidFunction callback);
