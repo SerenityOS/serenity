@@ -99,16 +99,6 @@ ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_container
 
 ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_raw_stream(MaybeOwned<Stream> stream, LzmaDecompressorOptions const& options)
 {
-    // "The LZMA Encoder always writes ZERO in initial byte of compressed stream.
-    //  That scheme allows to simplify the code of the Range Encoder in the
-    //  LZMA Encoder. If initial byte is not equal to ZERO, the LZMA Decoder must
-    //  stop decoding and report error."
-    {
-        auto byte = TRY(stream->read_value<u8>());
-        if (byte != 0)
-            return Error::from_string_literal("Initial byte of data stream is not zero");
-    }
-
     auto output_buffer = TRY(CircularBuffer::create_empty(options.dictionary_size));
 
     // "The LZMA Decoder uses (1 << (lc + lp)) tables with CProb values, where each table contains 0x300 CProb values."
@@ -116,11 +106,7 @@ ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_raw_strea
 
     auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LzmaDecompressor(move(stream), options, move(output_buffer), move(literal_probabilities))));
 
-    // Read the initial bytes into the range decoder.
-    for (size_t i = 0; i < 4; i++) {
-        auto byte = TRY(decompressor->m_stream->read_value<u8>());
-        decompressor->m_range_decoder_code = decompressor->m_range_decoder_code << 8 | byte;
-    }
+    TRY(decompressor->initialize_range_decoder());
 
     return decompressor;
 }
@@ -147,6 +133,45 @@ LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOp
     initialize_to_default_probability(m_is_rep_g1_probabilities);
     initialize_to_default_probability(m_is_rep_g2_probabilities);
     initialize_to_default_probability(m_is_rep0_long_probabilities);
+}
+
+ErrorOr<void> LzmaDecompressor::initialize_range_decoder()
+{
+    // "The LZMA Encoder always writes ZERO in initial byte of compressed stream.
+    //  That scheme allows to simplify the code of the Range Encoder in the
+    //  LZMA Encoder. If initial byte is not equal to ZERO, the LZMA Decoder must
+    //  stop decoding and report error."
+    {
+        auto byte = TRY(m_stream->read_value<u8>());
+        if (byte != 0)
+            return Error::from_string_literal("Initial byte of data stream is not zero");
+    }
+
+    // Read the initial bytes into the range decoder.
+    m_range_decoder_code = 0;
+    for (size_t i = 0; i < 4; i++) {
+        auto byte = TRY(m_stream->read_value<u8>());
+        m_range_decoder_code = m_range_decoder_code << 8 | byte;
+    }
+
+    m_range_decoder_range = 0xFFFFFFFF;
+
+    return {};
+}
+
+ErrorOr<void> LzmaDecompressor::append_input_stream(MaybeOwned<Stream> stream, Optional<u64> uncompressed_size)
+{
+    m_stream = move(stream);
+
+    TRY(initialize_range_decoder());
+
+    if (m_options.uncompressed_size.has_value() != uncompressed_size.has_value())
+        return Error::from_string_literal("Appending LZMA streams with mismatching uncompressed size status");
+
+    if (uncompressed_size.has_value())
+        *m_options.uncompressed_size += *uncompressed_size;
+
+    return {};
 }
 
 ErrorOr<void> LzmaDecompressor::normalize_range_decoder()

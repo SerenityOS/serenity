@@ -55,6 +55,8 @@ public:
     /// Creates a decompressor from a raw stream of LZMA-compressed data (found inside an LZMA container or embedded in other file formats).
     static ErrorOr<NonnullOwnPtr<LzmaDecompressor>> create_from_raw_stream(MaybeOwned<Stream>, LzmaDecompressorOptions const&);
 
+    ErrorOr<void> append_input_stream(MaybeOwned<Stream>, Optional<u64> uncompressed_size);
+
     virtual ErrorOr<Bytes> read_some(Bytes) override;
     virtual ErrorOr<size_t> write_some(ReadonlyBytes) override;
     virtual bool is_eof() const override;
@@ -84,6 +86,7 @@ private:
     u32 m_range_decoder_range { 0xFFFFFFFF };
     u32 m_range_decoder_code { 0 };
 
+    ErrorOr<void> initialize_range_decoder();
     ErrorOr<void> normalize_range_decoder();
     ErrorOr<u8> decode_direct_bit();
     ErrorOr<u8> decode_bit_with_probability(Probability& probability);
