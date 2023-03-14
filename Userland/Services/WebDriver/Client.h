@@ -52,6 +52,7 @@ private:
     virtual Web::WebDriver::Response close_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response switch_to_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response get_window_handles(Web::WebDriver::Parameters parameters, JsonValue payload) override;
+    virtual Web::WebDriver::Response new_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response get_window_rect(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response set_window_rect(Web::WebDriver::Parameters parameters, JsonValue payload) override;
     virtual Web::WebDriver::Response maximize_window(Web::WebDriver::Parameters parameters, JsonValue payload) override;

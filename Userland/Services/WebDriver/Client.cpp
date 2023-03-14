@@ -335,6 +335,15 @@ Web::WebDriver::Response Client::get_window_handles(Web::WebDriver::Parameters p
     return session->get_window_handles();
 }
 
+// 11.5 New Window, https://w3c.github.io/webdriver/#dfn-new-window
+// POST /session/{session id}/window/new
+Web::WebDriver::Response Client::new_window(Web::WebDriver::Parameters parameters, JsonValue payload)
+{
+    dbgln_if(WEBDRIVER_DEBUG, "Handling POST /session/<session_id>/window/new");
+    auto session = TRY(find_session_with_id(parameters[0]));
+    return session->web_content_connection().new_window(payload);
+}
+
 // 11.8.1 Get Window Rect, https://w3c.github.io/webdriver/#dfn-get-window-rect
 // GET /session/{session id}/window/rect
 Web::WebDriver::Response Client::get_window_rect(Web::WebDriver::Parameters parameters, JsonValue)
