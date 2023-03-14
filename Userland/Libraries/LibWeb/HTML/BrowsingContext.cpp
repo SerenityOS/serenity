@@ -17,6 +17,7 @@
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLInputElement.h>
+#include <LibWeb/HTML/RemoteBrowsingContext.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/HTML/Window.h>
@@ -698,7 +699,8 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 
             // 3. If noopener is true, then set chosen to the result of creating a new top-level browsing context.
             if (no_opener) {
-                chosen = HTML::BrowsingContext::create_a_new_top_level_browsing_context(*m_page);
+                auto handle = m_page->client().page_did_request_new_tab();
+                chosen = RemoteBrowsingContext::create_a_new_remote_browsing_context(handle);
             }
 
             // 4. Otherwise:
