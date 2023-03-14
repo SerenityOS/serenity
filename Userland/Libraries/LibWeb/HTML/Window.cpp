@@ -756,10 +756,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     create_method_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)));
     create_method_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)));
 
-    // FIXME: Implement codegen for readonly properties with [PutForwards]
-    auto& location_accessor = storage_get("location")->value.as_accessor();
-    location_accessor.set_setter(JS::NativeFunction::create(realm, location_setter, 1, "location", &realm, {}, "set"sv));
-
     return {};
 }
 
@@ -768,29 +764,6 @@ JS::ThrowCompletionOr<bool> Window::internal_set_prototype_of(JS::Object* protot
 {
     // 1. Return ? SetImmutablePrototype(O, V).
     return set_immutable_prototype(prototype);
-}
-
-static JS::ThrowCompletionOr<Window*> impl_from(JS::VM& vm)
-{
-    // Since this is a non built-in function we must treat it as non-strict mode
-    // this means that a nullish this_value should be converted to the
-    // global_object. Generally this does not matter as we try to convert the
-    // this_value to a specific object type in the bindings. But since window is
-    // the global object we make an exception here.
-    // This allows calls like `setTimeout(f, 10)` to work.
-    auto this_value = vm.this_value();
-    if (this_value.is_nullish())
-        this_value = &vm.current_realm()->global_object();
-
-    auto* this_object = MUST(this_value.to_object(vm));
-
-    if (is<WindowProxy>(*this_object))
-        return static_cast<WindowProxy*>(this_object)->window().ptr();
-
-    if (is<Window>(*this_object))
-        return static_cast<Window*>(this_object);
-
-    return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "Window");
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#dom-window
@@ -1369,14 +1342,6 @@ size_t Window::document_tree_child_browsing_context_count() const
 
     // 2. Return the number of document-tree child browsing contexts of W's browsing context.
     return this_browsing_context->document_tree_child_browsing_context_count();
-}
-
-JS_DEFINE_NATIVE_FUNCTION(Window::location_setter)
-{
-    auto* impl = TRY(impl_from(vm));
-    auto location = TRY(Bindings::throw_dom_exception_if_needed(vm, [&] { return impl->location(); }));
-    TRY(location->set(JS::PropertyKey("href"), vm.argument(0), JS::Object::ShouldThrowExceptions::Yes));
-    return JS::js_undefined();
 }
 
 }
