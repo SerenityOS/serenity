@@ -22,7 +22,8 @@ class ConnectionToNotificationServer final
 public:
     virtual void die() override
     {
-        m_notification->connection_closed();
+        if (!m_notification->m_destroyed)
+            m_notification->connection_closed();
     }
 
 private:
