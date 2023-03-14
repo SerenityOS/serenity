@@ -265,11 +265,14 @@ static void generate_to_deprecated_string(SourceGenerator& scoped_generator, Par
     if (variadic) {
         scoped_generator.append(R"~~~(
     Vector<DeprecatedString> @cpp_name@;
-    @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
-    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
-        @cpp_name@.append(move(to_string_result));
+    if (vm.argument_count() > @js_suffix@) {
+        TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+
+        for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
+            auto to_string_result = TRY(vm.argument(i).to_deprecated_string(vm));
+            @cpp_name@.unchecked_append(move(to_string_result));
+        }
     }
 )~~~");
     } else if (!optional) {
@@ -316,11 +319,14 @@ static void generate_to_new_string(SourceGenerator& scoped_generator, ParameterT
     if (variadic) {
         scoped_generator.append(R"~~~(
     Vector<String> @cpp_name@;
-    @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
-    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-        auto to_string_result = TRY(vm.argument(i).to_string(vm));
-        @cpp_name@.append(move(to_string_result));
+    if (vm.argument_count() > @js_suffix@) {
+        TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+
+        for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
+            auto to_string_result = TRY(vm.argument(i).to_string(vm));
+            @cpp_name@.unchecked_append(move(to_string_result));
+        }
     }
 )~~~");
     } else if (!optional) {
@@ -614,10 +620,13 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (variadic) {
             scoped_generator.append(R"~~~(
     JS::MarkedVector<JS::Value> @cpp_name@ { vm.heap() };
-    TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
 
-    for (size_t i = @js_suffix@; i < vm.argument_count(); ++i)
-        @cpp_name@.unchecked_append(vm.argument(i));
+    if (vm.argument_count() > @js_suffix@) {
+        TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+
+        for (size_t i = @js_suffix@; i < vm.argument_count(); ++i)
+            @cpp_name@.unchecked_append(vm.argument(i));
+    }
 )~~~");
         } else if (!optional) {
             scoped_generator.append(R"~~~(
@@ -1370,11 +1379,14 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         } else {
             union_generator.append(R"~~~(
         Vector<@union_type@> @cpp_name@;
-        @cpp_name@.ensure_capacity(vm.argument_count() - @js_suffix@);
 
-        for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
-            auto result = TRY(@js_name@@js_suffix@_to_variant(vm.argument(i)));
-            @cpp_name@.append(move(result));
+        if (vm.argument_count() > @js_suffix@) {
+            TRY_OR_THROW_OOM(vm, @cpp_name@.try_ensure_capacity(vm.argument_count() - @js_suffix@));
+
+            for (size_t i = @js_suffix@; i < vm.argument_count(); ++i) {
+                auto result = TRY(@js_name@@js_suffix@_to_variant(vm.argument(i)));
+                @cpp_name@.unchecked_append(move(result));
+            }
         }
     )~~~");
         }
