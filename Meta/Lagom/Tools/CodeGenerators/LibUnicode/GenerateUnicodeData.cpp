@@ -1316,7 +1316,7 @@ bool code_point_has_@enum_snake@(u32 code_point, @enum_title@ @enum_snake@)
 
         for (auto const& prop : prop_list) {
             if constexpr (IsSame<RemoveCVReference<decltype(prop)>, DeprecatedString>) {
-                hashes.set(CaseInsensitiveStringViewTraits::hash(prop), prop);
+                hashes.set(CaseInsensitiveASCIIStringViewTraits::hash(prop), prop);
                 options.sensitivity = CaseSensitivity::CaseInsensitive;
             } else {
                 hashes.set(prop.key.hash(), prop.key);

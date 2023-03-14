@@ -359,8 +359,7 @@ struct Traits<StringView> : public GenericTraits<StringView> {
     static unsigned hash(StringView s) { return s.hash(); }
 };
 
-// FIXME: Rename this to indicate that it's about ASCII-only case insensitivity.
-struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
+struct CaseInsensitiveASCIIStringViewTraits : public Traits<StringView> {
     static unsigned hash(StringView s)
     {
         if (s.is_empty())
@@ -386,6 +385,6 @@ struct CaseInsensitiveStringViewTraits : public Traits<StringView> {
 }
 
 #if USING_AK_GLOBALLY
-using AK::CaseInsensitiveStringViewTraits;
+using AK::CaseInsensitiveASCIIStringViewTraits;
 using AK::StringView;
 #endif

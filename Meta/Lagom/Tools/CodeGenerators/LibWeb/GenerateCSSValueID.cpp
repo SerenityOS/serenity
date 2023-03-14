@@ -90,7 +90,7 @@ ErrorOr<void> generate_implementation_file(JsonArray& identifier_data, Core::Fil
 
 namespace Web::CSS {
 
-HashMap<StringView, ValueID, AK::CaseInsensitiveStringViewTraits> g_stringview_to_value_id_map {
+HashMap<StringView, ValueID, AK::CaseInsensitiveASCIIStringViewTraits> g_stringview_to_value_id_map {
 )~~~");
 
     identifier_data.for_each([&](auto& name) {
