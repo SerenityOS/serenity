@@ -176,6 +176,11 @@ void ConnectionFromClient::process_next_input_event()
                     event.button, event.buttons, event.modifiers));
                 break;
             case QueuedMouseEvent::Type::MouseMove:
+                // NOTE: We have to notify the client about coalesced MouseMoves,
+                //       so we do that by saying none of them were handled by the web page.
+                for (size_t i = 0; i < event.coalesced_event_count; ++i) {
+                    report_finished_handling_input_event(false);
+                }
                 report_finished_handling_input_event(page().handle_mousemove(
                     event.position.to_type<Web::DevicePixels>(),
                     event.buttons, event.modifiers));
@@ -221,14 +226,24 @@ void ConnectionFromClient::mouse_down(Gfx::IntPoint position, unsigned int butto
 
 void ConnectionFromClient::mouse_move(Gfx::IntPoint position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    enqueue_input_event(
-        QueuedMouseEvent {
-            .type = QueuedMouseEvent::Type::MouseMove,
-            .position = position,
-            .button = button,
-            .buttons = buttons,
-            .modifiers = modifiers,
-        });
+    auto event = QueuedMouseEvent {
+        .type = QueuedMouseEvent::Type::MouseMove,
+        .position = position,
+        .button = button,
+        .buttons = buttons,
+        .modifiers = modifiers,
+    };
+
+    // OPTIMIZATION: Coalesce with previous unprocessed event iff the previous event is also a MouseMove event.
+    if (!m_input_event_queue.is_empty()
+        && m_input_event_queue.tail().has<QueuedMouseEvent>()
+        && m_input_event_queue.tail().get<QueuedMouseEvent>().type == QueuedMouseEvent::Type::MouseMove) {
+        event.coalesced_event_count = m_input_event_queue.tail().get<QueuedMouseEvent>().coalesced_event_count + 1;
+        m_input_event_queue.tail() = event;
+        return;
+    }
+
+    enqueue_input_event(move(event));
 }
 
 void ConnectionFromClient::mouse_up(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)

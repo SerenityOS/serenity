@@ -136,6 +136,7 @@ private:
         unsigned modifiers {};
         int wheel_delta_x {};
         int wheel_delta_y {};
+        size_t coalesced_event_count { 0 };
     };
 
     struct QueuedKeyboardEvent {
