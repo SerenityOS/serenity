@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/IDAllocator.h>
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
 #include <AK/URL.h>
@@ -30,9 +29,6 @@
 namespace Web::HTML {
 
 class IdleCallback;
-
-// https://html.spec.whatwg.org/#timerhandler
-using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, DeprecatedString>;
 
 // https://w3c.github.io/csswg-drafts/cssom-view/#dictdef-scrolloptions
 struct ScrollOptions {
@@ -96,16 +92,9 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> open_impl(StringView url, StringView target, StringView features);
     bool has_animation_frame_callbacks() const { return m_animation_frame_callback_driver.has_callbacks(); }
 
-    i32 set_timeout_impl(TimerHandler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
-    i32 set_interval_impl(TimerHandler, i32 timeout, JS::MarkedVector<JS::Value> arguments);
-    void clear_timeout_impl(i32);
-    void clear_interval_impl(i32);
-
     void did_set_location_href(Badge<Location>, AK::URL const& new_href);
     void did_call_location_reload(Badge<Location>);
     void did_call_location_replace(Badge<Location>, DeprecatedString url);
-
-    void deallocate_timer_id(Badge<Timer>, i32);
 
     DOM::Event* current_event() { return m_current_event.ptr(); }
     DOM::Event const* current_event() const { return m_current_event.ptr(); }
@@ -204,21 +193,12 @@ private:
     // ^HTML::WindowEventHandlers
     virtual DOM::EventTarget& window_event_handlers_to_event_target() override { return *this; }
 
-    enum class Repeat {
-        Yes,
-        No,
-    };
-    i32 run_timer_initialization_steps(TimerHandler handler, i32 timeout, JS::MarkedVector<JS::Value> arguments, Repeat repeat, Optional<i32> previous_id = {});
-
     void invoke_idle_callbacks();
 
     // https://html.spec.whatwg.org/multipage/window-object.html#concept-document-window
     JS::GCPtr<DOM::Document> m_associated_document;
 
     JS::GCPtr<DOM::Event> m_current_event;
-
-    IDAllocator m_timer_id_allocator;
-    HashMap<int, JS::NonnullGCPtr<Timer>> m_timers;
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#concept-window-import-map
     ImportMap m_import_map;
