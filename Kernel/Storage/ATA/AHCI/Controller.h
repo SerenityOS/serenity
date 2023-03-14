@@ -24,7 +24,7 @@ class AHCIController final : public ATAController
     friend class AHCIInterruptHandler;
 
 public:
-    static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static ErrorOr<NonnullRefPtr<AHCIController>> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
     virtual StringView device_name() const override { return "AHCI"sv; }
@@ -43,7 +43,7 @@ private:
     void enable_global_interrupts() const;
 
     explicit AHCIController(PCI::DeviceIdentifier const&);
-    void initialize_hba(PCI::DeviceIdentifier const&);
+    ErrorOr<void> initialize_hba(PCI::DeviceIdentifier const&);
 
     AHCI::HBADefinedCapabilities capabilities() const;
     LockRefPtr<StorageDevice> device_by_port(u32 index) const;
