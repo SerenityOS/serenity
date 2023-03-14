@@ -55,6 +55,7 @@ endpoint WebContentClient
     did_request_fullscreen_window() => (Gfx::IntRect window_rect)
     did_request_file(DeprecatedString path, i32 request_id) =|
     did_finish_handling_input_event(bool event_was_accepted) =|
+    did_request_new_tab() => (String handle)
 
     did_output_js_console_message(i32 message_index) =|
     did_get_js_console_messages(i32 start_index, Vector<DeprecatedString> message_types, Vector<DeprecatedString> messages) =|

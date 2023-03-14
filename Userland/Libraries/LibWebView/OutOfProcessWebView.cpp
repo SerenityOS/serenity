@@ -59,6 +59,14 @@ void OutOfProcessWebView::handle_web_content_process_crash()
     load_html(builder.to_deprecated_string(), m_url);
 }
 
+String OutOfProcessWebView::notify_request_open_new_tab(Badge<WebContentClient>)
+{
+    if (on_new_tab)
+        return on_new_tab();
+
+    return {};
+}
+
 void OutOfProcessWebView::create_client()
 {
     m_client_state = {};

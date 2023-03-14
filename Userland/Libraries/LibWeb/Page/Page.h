@@ -201,6 +201,7 @@ public:
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
+    virtual String page_did_request_new_tab() { return {}; }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
     virtual void request_file(FileRequest) = 0;
