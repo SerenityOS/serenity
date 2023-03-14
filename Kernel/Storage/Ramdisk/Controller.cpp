@@ -16,14 +16,14 @@ ErrorOr<NonnullRefPtr<RamdiskController>> RamdiskController::try_initialize()
     return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RamdiskController()));
 }
 
-bool RamdiskController::reset()
+ErrorOr<void> RamdiskController::reset()
 {
-    TODO();
+    return Error::from_errno(ENOTIMPL);
 }
 
-bool RamdiskController::shutdown()
+ErrorOr<void> RamdiskController::shutdown()
 {
-    TODO();
+    return Error::from_errno(ENOTIMPL);
 }
 
 size_t RamdiskController::devices_count() const

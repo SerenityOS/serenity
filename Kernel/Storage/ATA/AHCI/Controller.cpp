@@ -25,7 +25,7 @@ UNMAP_AFTER_INIT NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::D
     return controller;
 }
 
-bool AHCIController::reset()
+ErrorOr<void> AHCIController::reset()
 {
     dmesgln_pci(*this, "{}: AHCI controller reset", device_identifier().address());
     {
@@ -40,7 +40,7 @@ bool AHCIController::reset()
         // Note: The HBA is locked or hung if we waited more than 1 second!
         while (true) {
             if (retry > 1000)
-                return false;
+                return Error::from_errno(ETIMEDOUT);
             if (!(hba().control_regs.ghc & 1))
                 break;
             microseconds_delay(1000);
@@ -67,12 +67,12 @@ bool AHCIController::reset()
         m_ports[index] = port;
         port->reset();
     }
-    return true;
+    return {};
 }
 
-bool AHCIController::shutdown()
+ErrorOr<void> AHCIController::shutdown()
 {
-    TODO();
+    return Error::from_errno(ENOTIMPL);
 }
 
 size_t AHCIController::devices_count() const

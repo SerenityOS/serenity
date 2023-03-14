@@ -87,13 +87,13 @@ bool NVMeController::wait_for_ready(bool expected_ready_bit_value)
     return true;
 }
 
-bool NVMeController::reset_controller()
+ErrorOr<void> NVMeController::reset_controller()
 {
     if ((m_controller_regs->cc & (1 << CC_EN_BIT)) != 0) {
         // If the EN bit is already set, we need to wait
         // until the RDY bit is 1, otherwise the behavior is undefined
         if (!wait_for_ready(true))
-            return false;
+            return Error::from_errno(ETIMEDOUT);
     }
 
     auto cc = m_controller_regs->cc;
@@ -106,18 +106,18 @@ bool NVMeController::reset_controller()
 
     // Wait until the RDY bit is cleared
     if (!wait_for_ready(false))
-        return false;
+        return Error::from_errno(ETIMEDOUT);
 
-    return true;
+    return {};
 }
 
-bool NVMeController::start_controller()
+ErrorOr<void> NVMeController::start_controller()
 {
     if (!(m_controller_regs->cc & (1 << CC_EN_BIT))) {
         // If the EN bit is not already set, we need to wait
         // until the RDY bit is 0, otherwise the behavior is undefined
         if (!wait_for_ready(false))
-            return false;
+            return Error::from_errno(ETIMEDOUT);
     }
 
     auto cc = m_controller_regs->cc;
@@ -132,9 +132,9 @@ bool NVMeController::start_controller()
 
     // Wait until the RDY bit is set
     if (!wait_for_ready(true))
-        return false;
+        return Error::from_errno(ETIMEDOUT);
 
-    return true;
+    return {};
 }
 
 UNMAP_AFTER_INIT u32 NVMeController::get_admin_q_dept()
@@ -232,19 +232,16 @@ size_t NVMeController::devices_count() const
     return m_device_count;
 }
 
-bool NVMeController::reset()
+ErrorOr<void> NVMeController::reset()
 {
-    if (!reset_controller())
-        return false;
-    if (!start_controller())
-        return false;
-    return true;
+    TRY(reset_controller());
+    TRY(start_controller());
+    return {};
 }
 
-bool NVMeController::shutdown()
+ErrorOr<void> NVMeController::shutdown()
 {
-    TODO();
-    return false;
+    return Error::from_errno(ENOTIMPL);
 }
 
 void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceRequest::RequestResult result)
@@ -261,9 +258,10 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_pages;
     auto cq_size = round_up_to_power_of_two(CQ_SIZE(qdepth), 4096);
     auto sq_size = round_up_to_power_of_two(SQ_SIZE(qdepth), 4096);
-    if (!reset_controller()) {
+    auto maybe_error = reset_controller();
+    if (maybe_error.is_error()) {
         dmesgln_pci(*this, "Failed to reset the NVMe controller");
-        return EFAULT;
+        return maybe_error;
     }
     {
         auto buffer = TRY(MM.allocate_dma_buffer_pages(cq_size, "Admin CQ queue"sv, Memory::Region::Access::ReadWrite, cq_dma_pages));
@@ -283,9 +281,10 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
     m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
     m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first()->paddr().as_ptr()));
 
-    if (!start_controller()) {
+    maybe_error = start_controller();
+    if (maybe_error.is_error()) {
         dmesgln_pci(*this, "Failed to restart the NVMe controller");
-        return EFAULT;
+        return maybe_error;
     }
     set_admin_queue_ready_flag();
     m_admin_queue = TRY(NVMeQueue::try_create(0, irq, qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs)));
