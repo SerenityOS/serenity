@@ -283,6 +283,7 @@ set(SOURCES
     HTML/Plugin.cpp
     HTML/PluginArray.cpp
     HTML/PromiseRejectionEvent.cpp
+    HTML/RemoteBrowsingContext.cpp
     HTML/Scripting/ClassicScript.cpp
     HTML/Scripting/Environments.cpp
     HTML/Scripting/ExceptionReporter.cpp
