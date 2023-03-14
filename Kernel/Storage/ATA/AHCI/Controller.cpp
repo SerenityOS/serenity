@@ -106,18 +106,16 @@ volatile AHCI::PortRegisters& AHCIController::port(size_t port_number) const
 
 volatile AHCI::HBA& AHCIController::hba() const
 {
-    return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
+    return const_cast<AHCI::HBA&>(*m_hba_mapping);
 }
 
 UNMAP_AFTER_INIT AHCIController::AHCIController(PCI::DeviceIdentifier const& pci_device_identifier)
     : ATAController()
     , PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
-    , m_hba_region(default_hba_region())
-    , m_hba_capabilities(capabilities())
 {
 }
 
-AHCI::HBADefinedCapabilities AHCIController::capabilities() const
+UNMAP_AFTER_INIT AHCI::HBADefinedCapabilities AHCIController::capabilities() const
 {
     u32 capabilities = hba().control_regs.cap;
     u32 extended_capabilities = hba().control_regs.cap2;
@@ -154,15 +152,18 @@ AHCI::HBADefinedCapabilities AHCIController::capabilities() const
     };
 }
 
-UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> AHCIController::default_hba_region() const
+UNMAP_AFTER_INIT ErrorOr<Memory::TypedMapping<AHCI::HBA volatile>> AHCIController::map_default_hba_region(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    return MM.allocate_kernel_region(PhysicalAddress(PCI::get_BAR5(device_identifier())).page_base(), Memory::page_round_up(sizeof(AHCI::HBA)).release_value_but_fixme_should_propagate_errors(), "AHCI HBA"sv, Memory::Region::Access::ReadWrite).release_value();
+    return Memory::map_typed_writable<AHCI::HBA volatile>(PhysicalAddress(PCI::get_BAR5(pci_device_identifier)));
 }
 
 AHCIController::~AHCIController() = default;
 
 UNMAP_AFTER_INIT ErrorOr<void> AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
 {
+    m_hba_mapping = TRY(map_default_hba_region(pci_device_identifier));
+    m_hba_capabilities = capabilities();
+
     u32 version = hba().control_regs.version;
 
     hba().control_regs.ghc = 0x80000000; // Ensure that HBA knows we are AHCI aware.
