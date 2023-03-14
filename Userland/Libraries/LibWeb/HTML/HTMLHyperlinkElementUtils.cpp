@@ -537,7 +537,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     // FIXME: "navigate" means implementing the navigation algorithm here:
     //        https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate
     hyperlink_element_utils_queue_an_element_task(Task::Source::DOMManipulation, [url_string, target] {
-        target->loader().load(url_string, FrameLoader::Type::Navigation);
+        verify_cast<BrowsingContext>(*target).loader().load(url_string, FrameLoader::Type::Navigation);
     });
 }
 
