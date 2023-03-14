@@ -109,7 +109,11 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     }
 
     m_total_samples = LOADER_TRY(streaminfo_data.read_bits<u64>(36));
-    FLAC_VERIFY(m_total_samples > 0, LoaderError::Category::Format, "Number of samples is zero");
+    if (m_total_samples == 0) {
+        // "A value of zero here means the number of total samples is unknown."
+        dbgln("FLAC Warning: File has unknown amount of samples, the loader will not stop before EOF");
+        m_total_samples = NumericLimits<decltype(m_total_samples)>::max();
+    }
 
     VERIFY(streaminfo_data.is_aligned_to_byte_boundary());
     LOADER_TRY(streaminfo_data.read_until_filled({ m_md5_checksum, sizeof(m_md5_checksum) }));
@@ -129,7 +133,7 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
             break;
         case FlacMetadataBlockType::APPLICATION:
             // Note: Third-party library can encode specific data in this.
-            dbgln("Unknown 'Application' metadata block encountered.");
+            dbgln("FLAC Warning: Unknown 'Application' metadata block encountered.");
             [[fallthrough]];
         case FlacMetadataBlockType::PADDING:
             // Note: A padding block is empty and does not need any treatment.
@@ -330,14 +334,15 @@ bool FlacLoaderPlugin::should_insert_seekpoint_at(u64 sample_index) const
 ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(size_t samples_to_read_from_input)
 {
     ssize_t remaining_samples = static_cast<ssize_t>(m_total_samples - m_loaded_samples);
-    if (remaining_samples <= 0)
+    // The first condition is relevant for unknown-size streams (total samples = 0 in the header)
+    if (m_stream->is_eof() || remaining_samples <= 0)
         return Vector<FixedArray<Sample>> {};
 
     size_t samples_to_read = min(samples_to_read_from_input, remaining_samples);
     Vector<FixedArray<Sample>> frames;
     size_t sample_index = 0;
 
-    while (sample_index < samples_to_read) {
+    while (!m_stream->is_eof() && sample_index < samples_to_read) {
         TRY(frames.try_append(TRY(next_frame())));
         sample_index += m_current_frame->sample_count;
     }
