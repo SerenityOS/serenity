@@ -588,7 +588,6 @@ if (BUILD_LAGOM)
             LibPDF
             LibSQL
             LibTextCodec
-            LibTLS
             LibTTF
             LibTimeZone
             LibUnicode
@@ -601,6 +600,9 @@ if (BUILD_LAGOM)
         foreach (dir IN LISTS TEST_DIRECTORIES)
             add_serenity_subdirectory("Tests/${dir}")
         endforeach()
+
+        # LibTLS needs a special working directory to find cacert.pem
+        lagom_test(../../Tests/LibTLS/TestTLSHandshake.cpp LibTLS LIBS LibTLS LibCrypto)
 
         # LibCore
         lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
@@ -717,3 +719,5 @@ if (NOT "$ENV{LAGOM_TARGET}" STREQUAL "")
         VERBATIM
     )
 endif()
+
+include(ca_certificates_data)
