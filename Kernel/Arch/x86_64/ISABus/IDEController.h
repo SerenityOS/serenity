@@ -18,7 +18,7 @@ class AsyncBlockDeviceRequest;
 
 class ISAIDEController final : public IDEController {
 public:
-    static ErrorOr<NonnullLockRefPtr<ISAIDEController>> initialize();
+    static ErrorOr<NonnullRefPtr<ISAIDEController>> initialize();
 
 private:
     ISAIDEController();

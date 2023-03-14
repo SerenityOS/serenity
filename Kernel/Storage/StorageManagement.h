@@ -66,7 +66,7 @@ private:
 
     StringView m_boot_argument;
     LockWeakPtr<BlockDevice> m_boot_block_device;
-    Vector<NonnullLockRefPtr<StorageController>> m_controllers;
+    Vector<NonnullRefPtr<StorageController>> m_controllers;
     IntrusiveList<&StorageDevice::m_list_node> m_storage_devices;
 };
 

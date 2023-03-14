@@ -19,7 +19,7 @@ class AsyncBlockDeviceRequest;
 
 class RamdiskController final : public StorageController {
 public:
-    static NonnullLockRefPtr<RamdiskController> initialize();
+    static NonnullRefPtr<RamdiskController> initialize();
     virtual ~RamdiskController() override;
 
     virtual LockRefPtr<StorageDevice> device(u32 index) const override;

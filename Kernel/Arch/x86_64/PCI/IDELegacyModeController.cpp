@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<PCIIDELegacyModeController>> PCIIDELegacyModeController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<PCIIDELegacyModeController>> PCIIDELegacyModeController::initialize(PCI::DeviceIdentifier const& device_identifier, bool force_pio)
 {
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PCIIDELegacyModeController(device_identifier)));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PCIIDELegacyModeController(device_identifier)));
     PCI::enable_io_space(device_identifier);
     PCI::enable_memory_space(device_identifier);
     PCI::enable_bus_mastering(device_identifier);

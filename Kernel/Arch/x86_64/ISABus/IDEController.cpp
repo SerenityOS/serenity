@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<ISAIDEController>> ISAIDEController::initialize()
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<ISAIDEController>> ISAIDEController::initialize()
 {
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) ISAIDEController()));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ISAIDEController()));
     TRY(controller->initialize_channels());
     return controller;
 }

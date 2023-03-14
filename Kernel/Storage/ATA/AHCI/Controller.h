@@ -24,7 +24,7 @@ class AHCIController final : public ATAController
     friend class AHCIInterruptHandler;
 
 public:
-    static NonnullLockRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
+    static NonnullRefPtr<AHCIController> initialize(PCI::DeviceIdentifier const& pci_device_identifier);
     virtual ~AHCIController() override;
 
     virtual StringView device_name() const override { return "AHCI"sv; }
