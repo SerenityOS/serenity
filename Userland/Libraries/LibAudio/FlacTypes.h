@@ -79,7 +79,7 @@ struct FlacFrameHeader {
     u32 sample_count;
     u32 sample_rate;
     FlacFrameChannelType channels;
-    PcmSampleFormat bit_depth;
+    u8 bit_depth;
 };
 
 // 11.25. SUBFRAME_HEADER

@@ -65,11 +65,11 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     BigEndianInputBitStream bit_input { MaybeOwned<Stream>(*m_stream) };
 
     // A mixture of VERIFY and the non-crashing TRY().
-#define FLAC_VERIFY(check, category, msg)                                                                                                     \
-    do {                                                                                                                                      \
-        if (!(check)) {                                                                                                                       \
-            return LoaderError { category, static_cast<size_t>(m_data_start_location), DeprecatedString::formatted("FLAC header: {}", msg) }; \
-        }                                                                                                                                     \
+#define FLAC_VERIFY(check, category, msg)                                                                                       \
+    do {                                                                                                                        \
+        if (!(check)) {                                                                                                         \
+            return LoaderError { category, LOADER_TRY(m_stream->tell()), DeprecatedString::formatted("FLAC header: {}", msg) }; \
+        }                                                                                                                       \
     } while (0)
 
     // Magic number
@@ -94,18 +94,18 @@ MaybeLoaderError FlacLoaderPlugin::parse_header()
     FLAC_VERIFY(m_sample_rate <= 655350, LoaderError::Category::Format, "Sample rate");
     m_num_channels = LOADER_TRY(streaminfo_data.read_bits<u8>(3)) + 1; // 0 = one channel
 
-    u8 bits_per_sample = LOADER_TRY(streaminfo_data.read_bits<u8>(5)) + 1;
-    if (bits_per_sample == 8) {
+    m_bits_per_sample = LOADER_TRY(streaminfo_data.read_bits<u8>(5)) + 1;
+    if (m_bits_per_sample <= 8) {
         // FIXME: Signed/Unsigned issues?
         m_sample_format = PcmSampleFormat::Uint8;
-    } else if (bits_per_sample == 16) {
+    } else if (m_bits_per_sample <= 16) {
         m_sample_format = PcmSampleFormat::Int16;
-    } else if (bits_per_sample == 24) {
+    } else if (m_bits_per_sample <= 24) {
         m_sample_format = PcmSampleFormat::Int24;
-    } else if (bits_per_sample == 32) {
+    } else if (m_bits_per_sample <= 32) {
         m_sample_format = PcmSampleFormat::Int32;
     } else {
-        FLAC_VERIFY(false, LoaderError::Category::Format, "Sample bit depth invalid");
+        FLAC_VERIFY(false, LoaderError::Category::Format, "Sample bit depth too large");
     }
 
     m_total_samples = LOADER_TRY(streaminfo_data.read_bits<u64>(36));
@@ -387,7 +387,7 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     FLAC_VERIFY(channel_type_num < 0b1011, LoaderError::Category::Format, "Channel assignment");
     FlacFrameChannelType channel_type = (FlacFrameChannelType)channel_type_num;
 
-    PcmSampleFormat bit_depth = TRY(convert_bit_depth_code(LOADER_TRY(bit_stream.read_bits<u8>(3))));
+    u8 bit_depth = TRY(convert_bit_depth_code(LOADER_TRY(bit_stream.read_bits<u8>(3))));
 
     reserved_bit = LOADER_TRY(bit_stream.read_bit());
     FLAC_VERIFY(reserved_bit == 0, LoaderError::Category::Format, "Reserved frame header end bit");
@@ -417,7 +417,7 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     // TODO: check header checksum, see above
     [[maybe_unused]] u8 checksum = LOADER_TRY(bit_stream.read_bits<u8>(8));
 
-    dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {}", sample_count, pcm_bits_per_sample(bit_depth), frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, checksum);
+    dbgln_if(AFLACLOADER_DEBUG, "Frame: {} samples, {}bit {}Hz, channeltype {:x}, {} number {}, header checksum {}", sample_count, bit_depth, frame_sample_rate, channel_type_num, blocking_strategy ? "sample" : "frame", m_current_sample_or_frame, checksum);
 
     m_current_frame = FlacFrameHeader {
         sample_count,
@@ -445,8 +445,8 @@ LoaderSamples FlacLoaderPlugin::next_frame()
     [[maybe_unused]] u16 footer_checksum = LOADER_TRY(bit_stream.read_bits<u16>(16));
     dbgln_if(AFLACLOADER_DEBUG, "Subframe footer checksum: {}", footer_checksum);
 
-    float sample_rescale = 1 / static_cast<float>(1 << (pcm_bits_per_sample(m_current_frame->bit_depth) - 1));
-    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.1f}", pcm_bits_per_sample(m_current_frame->bit_depth), sample_rescale);
+    float sample_rescale = 1 / static_cast<float>(1 << (m_current_frame->bit_depth - 1));
+    dbgln_if(AFLACLOADER_DEBUG, "Sample rescaled from {} bits: factor {:.8f}", m_current_frame->bit_depth, sample_rescale);
 
     FixedArray<Sample> samples = TRY(FixedArray<Sample>::create(m_current_frame->sample_count));
 
@@ -559,20 +559,25 @@ ErrorOr<u32, LoaderError> FlacLoaderPlugin::convert_sample_rate_code(u8 sample_r
 }
 
 // 11.22.6. SAMPLE SIZE
-ErrorOr<PcmSampleFormat, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_code)
+ErrorOr<u8, LoaderError> FlacLoaderPlugin::convert_bit_depth_code(u8 bit_depth_code)
 {
     switch (bit_depth_code) {
     case 0:
-        return m_sample_format;
+        return m_bits_per_sample;
     case 1:
-        return PcmSampleFormat::Uint8;
-    case 4:
-        return PcmSampleFormat::Int16;
-    case 6:
-        return PcmSampleFormat::Int24;
+        return 8;
+    case 2:
+        return 12;
     case 3:
-    case 7:
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), "Reserved sample size" };
+    case 4:
+        return 16;
+    case 5:
+        return 20;
+    case 6:
+        return 24;
+    case 7:
+        return 32;
     default:
         return LoaderError { LoaderError::Category::Format, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("Unsupported sample size {}", bit_depth_code) };
     }
@@ -589,7 +594,7 @@ u8 frame_channel_type_to_channel_count(FlacFrameChannelType channel_type)
 // 11.25. SUBFRAME_HEADER
 ErrorOr<FlacSubframeHeader, LoaderError> FlacLoaderPlugin::next_subframe_header(BigEndianInputBitStream& bit_stream, u8 channel_index)
 {
-    u8 bits_per_sample = static_cast<u16>(pcm_bits_per_sample(m_current_frame->bit_depth));
+    u8 bits_per_sample = m_current_frame->bit_depth;
 
     // For inter-channel correlation, the side channel needs an extra bit for its samples
     switch (m_current_frame->channels) {
