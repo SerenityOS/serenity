@@ -39,6 +39,9 @@ void LocationEdit::highlight_location()
 {
     auto url = AK::URL::create_with_url_or_path(ak_deprecated_string_from_qstring(text()));
 
+    auto darkened_text_color = QPalette().color(QPalette::Text);
+    darkened_text_color.setAlpha(127);
+
     QList<QInputMethodEvent::Attribute> attributes;
     if (url.is_valid() && !hasFocus()) {
         if (url.scheme() == "http" || url.scheme() == "https" || url.scheme() == "gemini") {
@@ -49,7 +52,7 @@ void LocationEdit::highlight_location()
             //        for now just highlight the whole host
 
             QTextCharFormat defaultFormat;
-            defaultFormat.setForeground(QPalette().color(QPalette::PlaceholderText));
+            defaultFormat.setForeground(darkened_text_color);
             attributes.append({
                 QInputMethodEvent::TextFormat,
                 -cursorPosition(),
@@ -67,7 +70,7 @@ void LocationEdit::highlight_location()
             });
         } else if (url.scheme() == "file") {
             QTextCharFormat schemeFormat;
-            schemeFormat.setForeground(QPalette().color(QPalette::PlaceholderText));
+            schemeFormat.setForeground(darkened_text_color);
             attributes.append({
                 QInputMethodEvent::TextFormat,
                 -cursorPosition(),
