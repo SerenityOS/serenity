@@ -132,7 +132,7 @@ public:
 
     Vector<Certificate> const& certificates() const { return m_ca_certificates; }
 
-    void reload_certificates(Core::ConfigFile&);
+    void reload_certificates(ByteBuffer&);
 
     static DefaultRootCACertificates& the() { return s_the; }
 

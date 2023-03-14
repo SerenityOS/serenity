@@ -9,11 +9,13 @@
 #include <AK/Endian.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
+#include <LibTLS/Certificate.h>
 #include <LibTLS/TLSv12.h>
 #include <errno.h>
 
@@ -468,40 +470,49 @@ Vector<Certificate> TLSv12::parse_pem_certificate(ReadonlyBytes certificate_pem_
 Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
-    // FIXME: This might not be the best format, find a better way to represent CA certificates.
-    auto config_result = Core::ConfigFile::open_for_system("ca_certs");
-    if (config_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", config_result.error());
+    auto cacert_result = Core::File::open("/etc/cacert.pem"sv, Core::File::OpenMode::Read);
+    if (cacert_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", cacert_result.error());
         return;
     }
-    auto config = config_result.release_value();
-    reload_certificates(config);
+    auto cacert_file = cacert_result.release_value();
+    auto data_result = cacert_file->read_until_eof();
+    if (data_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", data_result.error());
+        return;
+    }
+    auto data = data_result.release_value();
+    reload_certificates(data);
 }
 
-void DefaultRootCACertificates::reload_certificates(Core::ConfigFile& config)
+void DefaultRootCACertificates::reload_certificates(ByteBuffer& data)
 {
+    auto decode_result = Crypto::decode_pems(data);
+    if (decode_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", decode_result.error());
+        return;
+    }
     m_ca_certificates.clear();
-    for (auto& entity : config.groups()) {
-        for (auto& subject : config.keys(entity)) {
-            auto certificate_base64 = config.read_entry(entity, subject);
-            auto certificate_data_result = decode_base64(certificate_base64);
-            if (certificate_data_result.is_error()) {
-                dbgln("Skipping CA Certificate {} {}: out of memory", entity, subject);
-                continue;
-            }
-            auto certificate_data = certificate_data_result.release_value();
-            auto certificate_result = Certificate::parse_asn1(certificate_data.bytes());
-            // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
-            // supported right now. Currently, ca_certs.ini should only contain certificates with RSA keys/signatures.
-            if (!certificate_result.has_value()) {
-                dbgln("Skipping CA Certificate {} {}: unable to parse", entity, subject);
-                continue;
-            }
-            auto certificate = certificate_result.release_value();
-            m_ca_certificates.append(move(certificate));
+    auto certs = decode_result.release_value();
+
+    for (auto& cert : certs) {
+        auto certificate_result = Certificate::parse_asn1(cert.bytes());
+        // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
+        // supported right now. It might make sense to cleanup cacert.pem before adding it to the system.
+        if (!certificate_result.has_value()) {
+            // FIXME: It would be nice to have more informations about the certificate we failed to parse.
+            //        Like: Issuer, Algorithm, CN, etc
+            continue;
         }
+        auto certificate = certificate_result.release_value();
+        // FIXME: We might want to check additional things here to make sure we only load root CAs:
+        //        - Root certificates are self-signed
+        //        - Either it has matched Authority Key Identifier with Subject Key Identifier,
+        //        - in some cases there is no Authority Key identifier, then Issuer string should match with Subject string
+        if (certificate.is_certificate_authority)
+            m_ca_certificates.append(move(certificate));
     }
 
-    dbgln("Loaded {} CA Certificates", m_ca_certificates.size());
+    dbgln("Loaded {} of {} ({:.2}%) provided CA Certificates", m_ca_certificates.size(), certs.size(), (m_ca_certificates.size() * 100.0) / certs.size());
 }
 }
