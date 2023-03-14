@@ -61,6 +61,11 @@ Web::Page const& ConnectionFromClient::page() const
     return m_page_host->page();
 }
 
+Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_window_handle()
+{
+    return m_page_host->page().top_level_browsing_context().window_handle();
+}
+
 void ConnectionFromClient::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     // FIXME: Propagate this error back to the browser.
