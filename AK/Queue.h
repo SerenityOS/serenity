@@ -62,6 +62,12 @@ public:
         return m_segments.first()->data[m_index_into_first];
     }
 
+    T& tail()
+    {
+        VERIFY(!is_empty());
+        return m_segments.last()->data.last();
+    }
+
     void clear()
     {
         while (auto* segment = m_segments.take_first())
