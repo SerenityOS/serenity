@@ -32,13 +32,13 @@ public:
     virtual StringView device_name() const override { return "NVMeController"sv; }
 
 protected:
-    bool reset() override;
-    bool shutdown() override;
+    ErrorOr<void> reset() override;
+    ErrorOr<void> shutdown() override;
     void complete_current_request(AsyncDeviceRequest::RequestResult result) override;
 
 public:
-    bool reset_controller();
-    bool start_controller();
+    ErrorOr<void> reset_controller();
+    ErrorOr<void> start_controller();
     u32 get_admin_q_dept();
 
     u16 submit_admin_command(NVMeSubmission& sub, bool sync = false)

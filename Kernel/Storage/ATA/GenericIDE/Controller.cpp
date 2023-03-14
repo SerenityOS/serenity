@@ -20,14 +20,14 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<IDEController> IDEController::initialize()
     return adopt_lock_ref(*new IDEController());
 }
 
-bool IDEController::reset()
+ErrorOr<void> IDEController::reset()
 {
-    TODO();
+    return Error::from_errno(ENOTIMPL);
 }
 
-bool IDEController::shutdown()
+ErrorOr<void> IDEController::shutdown()
 {
-    TODO();
+    return Error::from_errno(ENOTIMPL);
 }
 
 size_t IDEController::devices_count() const
