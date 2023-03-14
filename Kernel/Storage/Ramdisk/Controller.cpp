@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<RamdiskController> RamdiskController::initialize()
+ErrorOr<NonnullRefPtr<RamdiskController>> RamdiskController::try_initialize()
 {
-    return adopt_ref(*new RamdiskController());
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RamdiskController()));
 }
 
 bool RamdiskController::reset()
