@@ -333,7 +333,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
     m_current_tab->debug_request(request, argument);
 }
 
-void BrowserWindow::new_tab(QString const& url, Activate activate)
+Tab& BrowserWindow::new_tab(QString const& url, Activate activate)
 {
     auto tab = make<Tab>(this, m_webdriver_content_ipc_path);
     auto tab_ptr = tab.ptr();
@@ -357,6 +357,11 @@ void BrowserWindow::new_tab(QString const& url, Activate activate)
         for (qsizetype i = 1; i < urls.size(); ++i)
             new_tab(urls[i].toString(), Activate::No);
     });
+
+    tab_ptr->view().on_new_tab = [this]() {
+        auto& tab = new_tab("about:blank", Activate::Yes);
+        return tab.view().handle();
+    };
 
     tab_ptr->view().on_get_all_cookies = [this](auto const& url) {
         return m_cookie_jar.get_all_cookies(url);
@@ -386,6 +391,8 @@ void BrowserWindow::new_tab(QString const& url, Activate activate)
         // We make it HistoryNavigation so that the initial page doesn't get added to the history.
         tab_ptr->navigate(url, Tab::LoadType::HistoryNavigation);
     }
+
+    return *tab_ptr;
 }
 
 void BrowserWindow::close_tab(int index)
