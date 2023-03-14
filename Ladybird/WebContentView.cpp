@@ -975,6 +975,11 @@ void WebContentView::notify_server_did_close_browsing_context(Badge<WebContentCl
     emit close();
 }
 
+String WebContentView::notify_request_open_new_tab(Badge<WebContentClient>)
+{
+    return {};
+}
+
 void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
 {
     if (on_update_cookie)

@@ -240,6 +240,11 @@ void WebContentClient::did_update_cookie(Web::Cookie::Cookie const& cookie)
     m_view.notify_server_did_update_cookie({}, cookie);
 }
 
+Messages::WebContentClient::DidRequestNewTabResponse WebContentClient::did_request_new_tab()
+{
+    return m_view.notify_request_open_new_tab({});
+}
+
 void WebContentClient::did_close_browsing_context()
 {
     m_view.notify_server_did_close_browsing_context({});
