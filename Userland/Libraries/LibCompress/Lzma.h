@@ -17,6 +17,12 @@ namespace Compress {
 // This implementation is mostly based on the LZMA specification contained in the 7-Zip SDK, which has been placed in the public domain.
 // LZMA Specification Draft (2015): https://www.7-zip.org/a/lzma-specification.7z
 
+struct LzmaModelProperties {
+    u8 literal_context_bits;
+    u8 literal_position_bits;
+    u8 position_bits;
+};
+
 struct LzmaDecompressorOptions {
     u8 literal_context_bits { 0 };
     u8 literal_position_bits { 0 };
@@ -32,10 +38,10 @@ struct [[gnu::packed]] LzmaHeader {
 
     ErrorOr<LzmaDecompressorOptions> as_decompressor_options() const;
 
-private:
-    ErrorOr<void> decode_model_properties(u8& literal_context_bits, u8& literal_pos_bits, u8& pos_bits) const;
+    static ErrorOr<LzmaModelProperties> decode_model_properties(u8 input_bits);
 
-    u8 m_model_properties;
+private:
+    u8 m_encoded_model_properties;
     u32 m_dictionary_size;
     u64 m_uncompressed_size;
 };
