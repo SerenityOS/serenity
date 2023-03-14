@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
  *
@@ -9,6 +9,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/Queue.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Handle.h>
@@ -119,6 +120,41 @@ private:
 
     HashMap<int, Web::FileRequest> m_requested_files {};
     int last_id { 0 };
+
+    struct QueuedMouseEvent {
+        enum class Type {
+            MouseMove,
+            MouseDown,
+            MouseUp,
+            MouseWheel,
+            DoubleClick,
+        };
+        Type type {};
+        Gfx::IntPoint position {};
+        unsigned button {};
+        unsigned buttons {};
+        unsigned modifiers {};
+        int wheel_delta_x {};
+        int wheel_delta_y {};
+    };
+
+    struct QueuedKeyboardEvent {
+        enum class Type {
+            KeyDown,
+            KeyUp,
+        };
+        Type type {};
+        i32 key {};
+        unsigned int modifiers {};
+        u32 code_point {};
+    };
+
+    void enqueue_input_event(Variant<QueuedMouseEvent, QueuedKeyboardEvent>);
+    void process_next_input_event();
+
+    Queue<Variant<QueuedMouseEvent, QueuedKeyboardEvent>> m_input_event_queue;
+
+    RefPtr<Web::Platform::Timer> m_input_event_queue_timer;
 };
 
 }

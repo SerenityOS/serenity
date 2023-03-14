@@ -43,6 +43,7 @@ ConnectionFromClient::ConnectionFromClient(NonnullOwnPtr<Core::LocalSocket> sock
     , m_page_host(PageHost::create(*this))
 {
     m_paint_flush_timer = Web::Platform::Timer::create_single_shot(0, [this] { flush_pending_paint_requests(); });
+    m_input_event_queue_timer = Web::Platform::Timer::create_single_shot(0, [this] { process_next_input_event(); });
 }
 
 void ConnectionFromClient::die()
@@ -155,39 +156,145 @@ void ConnectionFromClient::flush_pending_paint_requests()
     m_pending_paint_requests.clear();
 }
 
+void ConnectionFromClient::process_next_input_event()
+{
+    if (m_input_event_queue.is_empty())
+        return;
+
+    auto event = m_input_event_queue.dequeue();
+    event.visit(
+        [&](QueuedMouseEvent const& event) {
+            switch (event.type) {
+            case QueuedMouseEvent::Type::MouseDown:
+                report_finished_handling_input_event(page().handle_mousedown(
+                    event.position.to_type<Web::DevicePixels>(),
+                    event.button, event.buttons, event.modifiers));
+                break;
+            case QueuedMouseEvent::Type::MouseUp:
+                report_finished_handling_input_event(page().handle_mouseup(
+                    event.position.to_type<Web::DevicePixels>(),
+                    event.button, event.buttons, event.modifiers));
+                break;
+            case QueuedMouseEvent::Type::MouseMove:
+                report_finished_handling_input_event(page().handle_mousemove(
+                    event.position.to_type<Web::DevicePixels>(),
+                    event.buttons, event.modifiers));
+                break;
+            case QueuedMouseEvent::Type::DoubleClick:
+                report_finished_handling_input_event(page().handle_doubleclick(
+                    event.position.to_type<Web::DevicePixels>(),
+                    event.button, event.buttons, event.modifiers));
+                break;
+            case QueuedMouseEvent::Type::MouseWheel:
+                report_finished_handling_input_event(page().handle_mousewheel(
+                    event.position.to_type<Web::DevicePixels>(),
+                    event.button, event.buttons, event.modifiers, event.wheel_delta_x, event.wheel_delta_y));
+                break;
+            }
+        },
+        [&](QueuedKeyboardEvent const& event) {
+            switch (event.type) {
+            case QueuedKeyboardEvent::Type::KeyDown:
+                report_finished_handling_input_event(page().handle_keydown((KeyCode)event.key, event.modifiers, event.code_point));
+                break;
+            case QueuedKeyboardEvent::Type::KeyUp:
+                report_finished_handling_input_event(page().handle_keyup((KeyCode)event.key, event.modifiers, event.code_point));
+                break;
+            }
+        });
+
+    if (!m_input_event_queue.is_empty())
+        m_input_event_queue_timer->start();
+}
+
 void ConnectionFromClient::mouse_down(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    report_finished_handling_input_event(page().handle_mousedown(position.to_type<Web::DevicePixels>(), button, buttons, modifiers));
+    enqueue_input_event(
+        QueuedMouseEvent {
+            .type = QueuedMouseEvent::Type::MouseDown,
+            .position = position,
+            .button = button,
+            .buttons = buttons,
+            .modifiers = modifiers,
+        });
 }
 
 void ConnectionFromClient::mouse_move(Gfx::IntPoint position, [[maybe_unused]] unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    report_finished_handling_input_event(page().handle_mousemove(position.to_type<Web::DevicePixels>(), buttons, modifiers));
+    enqueue_input_event(
+        QueuedMouseEvent {
+            .type = QueuedMouseEvent::Type::MouseMove,
+            .position = position,
+            .button = button,
+            .buttons = buttons,
+            .modifiers = modifiers,
+        });
 }
 
 void ConnectionFromClient::mouse_up(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    report_finished_handling_input_event(page().handle_mouseup(position.to_type<Web::DevicePixels>(), button, buttons, modifiers));
+    enqueue_input_event(
+        QueuedMouseEvent {
+            .type = QueuedMouseEvent::Type::MouseUp,
+            .position = position,
+            .button = button,
+            .buttons = buttons,
+            .modifiers = modifiers,
+        });
 }
 
 void ConnectionFromClient::mouse_wheel(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers, i32 wheel_delta_x, i32 wheel_delta_y)
 {
-    report_finished_handling_input_event(page().handle_mousewheel(position.to_type<Web::DevicePixels>(), button, buttons, modifiers, wheel_delta_x, wheel_delta_y));
+    enqueue_input_event(
+        QueuedMouseEvent {
+            .type = QueuedMouseEvent::Type::MouseWheel,
+            .position = position,
+            .button = button,
+            .buttons = buttons,
+            .modifiers = modifiers,
+            .wheel_delta_x = wheel_delta_x,
+            .wheel_delta_y = wheel_delta_y,
+        });
 }
 
 void ConnectionFromClient::doubleclick(Gfx::IntPoint position, unsigned int button, unsigned int buttons, unsigned int modifiers)
 {
-    report_finished_handling_input_event(page().handle_doubleclick(position.to_type<Web::DevicePixels>(), button, buttons, modifiers));
+    enqueue_input_event(
+        QueuedMouseEvent {
+            .type = QueuedMouseEvent::Type::DoubleClick,
+            .position = position,
+            .button = button,
+            .buttons = buttons,
+            .modifiers = modifiers,
+        });
 }
 
 void ConnectionFromClient::key_down(i32 key, unsigned int modifiers, u32 code_point)
 {
-    report_finished_handling_input_event(page().handle_keydown((KeyCode)key, modifiers, code_point));
+    enqueue_input_event(
+        QueuedKeyboardEvent {
+            .type = QueuedKeyboardEvent::Type::KeyDown,
+            .key = key,
+            .modifiers = modifiers,
+            .code_point = code_point,
+        });
 }
 
 void ConnectionFromClient::key_up(i32 key, unsigned int modifiers, u32 code_point)
 {
-    report_finished_handling_input_event(page().handle_keyup((KeyCode)key, modifiers, code_point));
+    enqueue_input_event(
+        QueuedKeyboardEvent {
+            .type = QueuedKeyboardEvent::Type::KeyUp,
+            .key = key,
+            .modifiers = modifiers,
+            .code_point = code_point,
+        });
+}
+
+void ConnectionFromClient::enqueue_input_event(Variant<QueuedMouseEvent, QueuedKeyboardEvent> event)
+{
+    m_input_event_queue.enqueue(move(event));
+    m_input_event_queue_timer->start();
 }
 
 void ConnectionFromClient::report_finished_handling_input_event(bool event_was_handled)
