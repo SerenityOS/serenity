@@ -578,7 +578,6 @@ if (BUILD_LAGOM)
         # LibTest tests from Tests/
         set(TEST_DIRECTORIES
             AK
-            LibAudio
             LibCrypto
             LibCompress
             LibGL
@@ -603,6 +602,9 @@ if (BUILD_LAGOM)
 
         # LibTLS needs a special working directory to find cacert.pem
         lagom_test(../../Tests/LibTLS/TestTLSHandshake.cpp LibTLS LIBS LibTLS LibCrypto)
+
+        # The FLAC tests need a special working directory to find the test files
+        lagom_test(../../Tests/LibAudio/TestFLACSpec.cpp LIBS LibAudio WORKING_DIRECTORY "${FLAC_TEST_PATH}/..")
 
         # LibCore
         lagom_test(../../Tests/LibCore/TestLibCoreIODevice.cpp WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore)
