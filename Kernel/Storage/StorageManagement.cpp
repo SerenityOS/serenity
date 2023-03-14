@@ -111,7 +111,10 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
 
             if (subclass_code == SubclassID::SATAController
                 && device_identifier.prog_if().value() == to_underlying(PCI::MassStorage::SATAProgIF::AHCI)) {
-                m_controllers.append(AHCIController::initialize(device_identifier));
+                if (auto ahci_controller_or_error = AHCIController::initialize(device_identifier); !ahci_controller_or_error.is_error())
+                    m_controllers.append(ahci_controller_or_error.value());
+                else
+                    dmesgln("Unable to initialize AHCI controller: {}", ahci_controller_or_error.error());
             }
             if (subclass_code == SubclassID::NVMeController) {
                 auto controller = NVMeController::try_initialize(device_identifier, nvme_poll);

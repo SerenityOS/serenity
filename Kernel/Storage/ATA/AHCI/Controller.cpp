@@ -18,10 +18,10 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AHCIController>> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto controller = adopt_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
-    controller->initialize_hba(pci_device_identifier);
+    TRY(controller->initialize_hba(pci_device_identifier));
     return controller;
 }
 
@@ -161,7 +161,7 @@ UNMAP_AFTER_INIT NonnullOwnPtr<Memory::Region> AHCIController::default_hba_regio
 
 AHCIController::~AHCIController() = default;
 
-UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<void> AHCIController::initialize_hba(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     u32 version = hba().control_regs.version;
 
@@ -172,9 +172,12 @@ UNMAP_AFTER_INIT void AHCIController::initialize_hba(PCI::DeviceIdentifier const
 
     auto implemented_ports = AHCI::MaskedBitField((u32 volatile&)(hba().control_regs.pi));
     m_irq_handler = AHCIInterruptHandler::create(*this, pci_device_identifier.interrupt_line().value(), implemented_ports).release_value_but_fixme_should_propagate_errors();
-    reset();
+    TRY(reset());
+
     dbgln_if(AHCI_DEBUG, "{}: AHCI Controller Version = {:#08x}", device_identifier().address(), version);
     dbgln("{}: AHCI command list entries count - {}", device_identifier().address(), m_hba_capabilities.max_command_list_entries_count);
+
+    return {};
 }
 
 void AHCIController::handle_interrupt_for_port(Badge<AHCIInterruptHandler>, u32 port_index) const
