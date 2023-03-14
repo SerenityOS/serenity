@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2023, Aliaksandr Kalenik <kalenik.aliaksandr@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <LibJS/Forward.h>
+#include <LibJS/Heap/Cell.h>
+#include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/PolicyContainers.h>
+#include <LibWeb/HTML/WindowProxy.h>
+
+namespace Web::HTML {
+
+class AbstractBrowsingContext : public JS::Cell {
+    JS_CELL(AbstractBrowsingContext, Cell);
+
+public:
+    virtual HTML::WindowProxy* window_proxy() = 0;
+    virtual HTML::WindowProxy const* window_proxy() const = 0;
+
+    DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString const& name) { m_name = name; }
+
+    JS::GCPtr<BrowsingContext> opener_browsing_context() const { return m_opener_browsing_context; }
+    void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
+
+    virtual WebIDL::ExceptionOr<void> navigate(
+        JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource,
+        BrowsingContext& source_browsing_context,
+        bool exceptions_enabled = false,
+        HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
+        Optional<PolicyContainer> history_policy_container = {},
+        DeprecatedString navigation_type = "other",
+        Optional<DeprecatedString> navigation_id = {},
+        Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {})
+        = 0;
+
+    void set_is_popup(bool is_popup) { m_is_popup = is_popup; }
+
+    virtual String const& window_handle() const = 0;
+    virtual void set_window_handle(String handle) = 0;
+
+protected:
+    DeprecatedString m_name;
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
+    bool m_is_popup { false };
+
+    // https://html.spec.whatwg.org/multipage/browsers.html#opener-browsing-context
+    JS::GCPtr<BrowsingContext> m_opener_browsing_context;
+};
+
+}
