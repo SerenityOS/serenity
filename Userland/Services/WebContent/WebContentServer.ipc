@@ -9,6 +9,8 @@
 
 endpoint WebContentServer
 {
+    get_window_handle() => (String handle)
+
     connect_to_webdriver(DeprecatedString webdriver_ipc_path) =|
 
     update_system_theme(Core::AnonymousBuffer theme_buffer) =|

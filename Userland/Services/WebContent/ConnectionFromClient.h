@@ -48,6 +48,7 @@ private:
     Web::Page& page();
     Web::Page const& page() const;
 
+    virtual Messages::WebContentServer::GetWindowHandleResponse get_window_handle() override;
     virtual void connect_to_webdriver(DeprecatedString const& webdriver_ipc_path) override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(DeprecatedString const&, DeprecatedString const&, DeprecatedString const&) override;
