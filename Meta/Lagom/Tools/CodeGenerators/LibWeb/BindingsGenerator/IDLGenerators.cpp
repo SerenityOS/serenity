@@ -145,6 +145,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (type.name() == "File")
         return { .name = "JS::Handle<FileAPI::File>", .sequence_storage_type = SequenceStorageType::MarkedVector };
 
+    if (type.name() == "Function")
+        return { .name = "JS::Handle<WebIDL::CallbackType>", .sequence_storage_type = SequenceStorageType::MarkedVector };
+
     if (type.name() == "sequence") {
         auto& parameterized_type = verify_cast<ParameterizedType>(type);
         auto& sequence_type = parameterized_type.parameters().first();
@@ -1092,9 +1095,23 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         //           1. If types includes a typed array type whose name is the value of V’s [[TypedArrayName]] internal slot, then return the result of converting V to that type.
         //           2. If types includes object, then return the IDL value that is a reference to the object V.
 
-        // FIXME: 9. If IsCallable(V) is true, then:
-        //           1. If types includes a callback function type, then return the result of converting V to that callback function type.
-        //           2. If types includes object, then return the IDL value that is a reference to the object V.
+        // 9. If IsCallable(V) is true, then:
+        //     1. If types includes a callback function type, then return the result of converting V to that callback function type.
+        //     2. If types includes object, then return the IDL value that is a reference to the object V.
+        bool includes_callable = false;
+        for (auto const& type : types) {
+            if (type->name() == "Function"sv) {
+                includes_callable = true;
+                break;
+            }
+        }
+
+        if (includes_callable) {
+            union_generator.append(R"~~~(
+            if (@js_name@@js_suffix@_object.is_function())
+                return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_function(), HTML::incumbent_settings_object()));
+)~~~");
+        }
 
         // 10. If Type(V) is Object, then:
         //     1. If types includes a sequence type, then:
