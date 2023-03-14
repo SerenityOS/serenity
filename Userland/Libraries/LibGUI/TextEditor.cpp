@@ -131,7 +131,7 @@ void TextEditor::update_content_size()
 {
     int content_width = 0;
     int content_height = 0;
-    for (auto& line : m_line_visual_data) {
+    for (auto& line : m_line_data) {
         content_width = max(line->visual_rect.width(), content_width);
         content_height += line->visual_rect.height();
     }
@@ -166,7 +166,7 @@ TextPosition TextEditor::text_position_at_content_position(Gfx::IntPoint content
             if (!document().line_is_visible(i))
                 continue;
 
-            auto& rect = m_line_visual_data[i]->visual_rect;
+            auto& rect = m_line_data[i]->visual_rect;
             if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
                 line_index = i;
                 break;
@@ -633,7 +633,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 first_visual_line_with_selection = visual_line_containing(line_index, selection.start().column());
 
             if (selection.end().line() > line_index)
-                last_visual_line_with_selection = m_line_visual_data[line_index]->visual_lines.size();
+                last_visual_line_with_selection = m_line_data[line_index]->visual_lines.size();
             else
                 last_visual_line_with_selection = visual_line_containing(line_index, selection.end().column());
         }
@@ -1440,7 +1440,7 @@ Gfx::IntRect TextEditor::line_content_rect(size_t line_index) const
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
-    return m_line_visual_data[line_index]->visual_rect;
+    return m_line_data[line_index]->visual_rect;
 }
 
 void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
@@ -1450,7 +1450,7 @@ void TextEditor::set_cursor_and_focus_line(size_t line, size_t column)
     if (line > 1 && line < index_max) {
         int headroom = frame_inner_rect().height() / 3;
         do {
-            auto const& line_data = m_line_visual_data[line];
+            auto const& line_data = m_line_data[line];
             headroom -= line_data->visual_rect.height();
             line--;
         } while (line > 0 && headroom > 0);
@@ -1971,8 +1971,8 @@ void TextEditor::recompute_all_visual_lines()
     auto folded_region_iterator = folded_regions.begin();
     for (size_t line_index = 0; line_index < line_count(); ++line_index) {
         recompute_visual_lines(line_index, folded_region_iterator);
-        m_line_visual_data[line_index]->visual_rect.set_y(y_offset);
-        y_offset += m_line_visual_data[line_index]->visual_rect.height();
+        m_line_data[line_index]->visual_rect.set_y(y_offset);
+        y_offset += m_line_data[line_index]->visual_rect.height();
     }
 
     update_content_size();
@@ -2006,7 +2006,7 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
     auto const& line = document().line(line_index);
     size_t line_width_so_far = 0;
 
-    auto& visual_data = m_line_visual_data[line_index];
+    auto& visual_data = m_line_data[line_index];
     visual_data->visual_lines.clear_with_capacity();
 
     auto available_width = visible_text_rect_in_inner_coordinates().width();
@@ -2097,7 +2097,7 @@ void TextEditor::for_each_visual_line(size_t line_index, Callback callback) cons
     size_t visual_line_index = 0;
 
     auto& line = document().line(line_index);
-    auto& visual_data = m_line_visual_data[line_index];
+    auto& visual_data = m_line_data[line_index];
 
     for (auto visual_line_view : visual_data->visual_lines) {
         Gfx::IntRect visual_line_rect {
@@ -2147,28 +2147,28 @@ void TextEditor::did_change_font()
 
 void TextEditor::document_did_append_line()
 {
-    m_line_visual_data.append(make<LineVisualData>());
+    m_line_data.append(make<LineData>());
     recompute_all_visual_lines();
     update();
 }
 
 void TextEditor::document_did_remove_line(size_t line_index)
 {
-    m_line_visual_data.remove(line_index);
+    m_line_data.remove(line_index);
     recompute_all_visual_lines();
     update();
 }
 
 void TextEditor::document_did_remove_all_lines()
 {
-    m_line_visual_data.clear();
+    m_line_data.clear();
     recompute_all_visual_lines();
     update();
 }
 
 void TextEditor::document_did_insert_line(size_t line_index)
 {
-    m_line_visual_data.insert(line_index, make<LineVisualData>());
+    m_line_data.insert(line_index, make<LineData>());
     recompute_all_visual_lines();
     update();
 }
@@ -2205,11 +2205,11 @@ void TextEditor::document_did_update_undo_stack()
 
 void TextEditor::populate_line_data()
 {
-    m_line_visual_data.clear();
-    m_line_visual_data.ensure_capacity(m_document->line_count());
+    m_line_data.clear();
+    m_line_data.ensure_capacity(m_document->line_count());
 
     for (size_t i = 0; i < m_document->line_count(); ++i) {
-        m_line_visual_data.unchecked_append(make<LineVisualData>());
+        m_line_data.unchecked_append(make<LineData>());
     }
 }
 

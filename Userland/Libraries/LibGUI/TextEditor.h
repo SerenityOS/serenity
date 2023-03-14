@@ -427,12 +427,12 @@ private:
     template<typename Callback>
     void for_each_visual_line(size_t line_index, Callback) const;
 
-    struct LineVisualData {
+    struct LineData {
         Vector<Utf32View> visual_lines;
         Gfx::IntRect visual_rect;
     };
 
-    Vector<NonnullOwnPtr<LineVisualData>> m_line_visual_data;
+    Vector<NonnullOwnPtr<LineData>> m_line_data;
 
     OwnPtr<Syntax::Highlighter> m_highlighter;
     OwnPtr<AutocompleteProvider> m_autocomplete_provider;
