@@ -444,7 +444,12 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     }
     // Note: Whether PCI bus is present on the system or not, always try to attach
     // a given ramdisk.
-    m_controllers.append(RamdiskController::initialize());
+    auto controller = RamdiskController::try_initialize();
+    if (controller.is_error()) {
+        dmesgln("Unable to initialize RAM controller: {}", controller.error());
+    } else {
+        m_controllers.append(controller.release_value());
+    }
     enumerate_storage_devices();
     enumerate_disk_partitions();
 
