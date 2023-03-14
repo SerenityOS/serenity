@@ -620,7 +620,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     // a boolean noopener are as follows:
 
     // 1. Let chosen be null.
-    JS::GCPtr<BrowsingContext> chosen = nullptr;
+    JS::GCPtr<AbstractBrowsingContext> chosen = nullptr;
 
     // 2. Let windowType be "existing or none".
     auto window_type = WindowType::ExistingOrNone;
@@ -734,7 +734,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
     }
 
     // 9. Return chosen and windowType.
-    return { chosen, window_type };
+    return { chosen.ptr(), window_type };
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#document-tree-child-browsing-context
