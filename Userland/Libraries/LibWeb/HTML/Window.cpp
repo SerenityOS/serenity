@@ -748,13 +748,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
 
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
 
-    // FIXME: These should be native accessors, not properties
-    u8 attr = JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable;
-    define_native_function(realm, "setInterval", set_interval, 1, attr);
-    define_native_function(realm, "setTimeout", set_timeout, 1, attr);
-    define_native_function(realm, "clearInterval", clear_interval, 1, attr);
-    define_native_function(realm, "clearTimeout", clear_timeout, 1, attr);
-
     // https://webidl.spec.whatwg.org/#define-the-global-property-references
     // 5. For every namespace namespace that is exposed in realm:
     //    1. Let id be namespace’s identifier.
@@ -1364,83 +1357,6 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> Window::crypto()
     if (!m_crypto)
         m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm, realm));
     return JS::NonnullGCPtr { *m_crypto };
-}
-
-static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Value handler)
-{
-    if (handler.is_function())
-        return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), incumbent_settings_object()));
-    return TRY(handler.to_string(vm));
-}
-
-// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout
-JS_DEFINE_NATIVE_FUNCTION(Window::set_timeout)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setTimeout");
-
-    auto handler = TRY(make_timer_handler(vm, vm.argument(0)));
-
-    i32 timeout = 0;
-    if (vm.argument_count() >= 2)
-        timeout = TRY(vm.argument(1).to_i32(vm));
-
-    JS::MarkedVector<JS::Value> arguments { vm.heap() };
-    for (size_t i = 2; i < vm.argument_count(); ++i)
-        arguments.append(vm.argument(i));
-
-    auto id = static_cast<WindowOrWorkerGlobalScopeMixin*>(impl)->set_timeout(move(handler), timeout, move(arguments));
-    return JS::Value(id);
-}
-
-// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-setinterval
-JS_DEFINE_NATIVE_FUNCTION(Window::set_interval)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    if (!vm.argument_count())
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::BadArgCountAtLeastOne, "setInterval");
-
-    auto handler = TRY(make_timer_handler(vm, vm.argument(0)));
-
-    i32 timeout = 0;
-    if (vm.argument_count() >= 2)
-        timeout = TRY(vm.argument(1).to_i32(vm));
-
-    JS::MarkedVector<JS::Value> arguments { vm.heap() };
-    for (size_t i = 2; i < vm.argument_count(); ++i)
-        arguments.append(vm.argument(i));
-
-    auto id = static_cast<WindowOrWorkerGlobalScopeMixin*>(impl)->set_interval(move(handler), timeout, move(arguments));
-    return JS::Value(id);
-}
-
-// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-cleartimeout
-JS_DEFINE_NATIVE_FUNCTION(Window::clear_timeout)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    i32 id = 0;
-    if (vm.argument_count())
-        id = TRY(vm.argument(0).to_i32(vm));
-
-    static_cast<WindowOrWorkerGlobalScopeMixin*>(impl)->clear_timeout(id);
-    return JS::js_undefined();
-}
-
-// https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-clearinterval
-JS_DEFINE_NATIVE_FUNCTION(Window::clear_interval)
-{
-    auto* impl = TRY(impl_from(vm));
-
-    i32 id = 0;
-    if (vm.argument_count())
-        id = TRY(vm.argument(0).to_i32(vm));
-
-    static_cast<WindowOrWorkerGlobalScopeMixin*>(impl)->clear_interval(id);
-    return JS::js_undefined();
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts

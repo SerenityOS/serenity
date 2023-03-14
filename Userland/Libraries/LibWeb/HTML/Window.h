@@ -56,8 +56,12 @@ public:
 
     using WindowOrWorkerGlobalScopeMixin::atob;
     using WindowOrWorkerGlobalScopeMixin::btoa;
+    using WindowOrWorkerGlobalScopeMixin::clear_interval;
+    using WindowOrWorkerGlobalScopeMixin::clear_timeout;
     using WindowOrWorkerGlobalScopeMixin::fetch;
     using WindowOrWorkerGlobalScopeMixin::queue_microtask;
+    using WindowOrWorkerGlobalScopeMixin::set_interval;
+    using WindowOrWorkerGlobalScopeMixin::set_timeout;
     using WindowOrWorkerGlobalScopeMixin::structured_clone;
 
     // ^DOM::EventTarget
@@ -231,11 +235,6 @@ private:
     CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
 
     JS_DECLARE_NATIVE_FUNCTION(location_setter);
-
-    JS_DECLARE_NATIVE_FUNCTION(set_interval);
-    JS_DECLARE_NATIVE_FUNCTION(set_timeout);
-    JS_DECLARE_NATIVE_FUNCTION(clear_interval);
-    JS_DECLARE_NATIVE_FUNCTION(clear_timeout);
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
