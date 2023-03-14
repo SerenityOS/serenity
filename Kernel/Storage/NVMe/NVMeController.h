@@ -25,7 +25,7 @@ namespace Kernel {
 class NVMeController : public PCI::Device
     , public StorageController {
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
+    static ErrorOr<NonnullRefPtr<NVMeController>> try_initialize(PCI::DeviceIdentifier const&, bool is_queue_polled);
     ErrorOr<void> initialize(bool is_queue_polled);
     LockRefPtr<StorageDevice> device(u32 index) const override;
     size_t devices_count() const override;

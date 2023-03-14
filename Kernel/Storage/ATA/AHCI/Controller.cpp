@@ -18,9 +18,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT NonnullRefPtr<AHCIController> AHCIController::initialize(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto controller = adopt_lock_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
+    auto controller = adopt_ref_if_nonnull(new (nothrow) AHCIController(pci_device_identifier)).release_nonnull();
     controller->initialize_hba(pci_device_identifier);
     return controller;
 }

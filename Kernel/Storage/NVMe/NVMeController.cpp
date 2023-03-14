@@ -19,9 +19,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NVMeController>> NVMeController::try_initialize(Kernel::PCI::DeviceIdentifier const& device_identifier, bool is_queue_polled)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NVMeController>> NVMeController::try_initialize(Kernel::PCI::DeviceIdentifier const& device_identifier, bool is_queue_polled)
 {
-    auto controller = TRY(adopt_nonnull_lock_ref_or_enomem(new NVMeController(device_identifier, StorageManagement::generate_relative_nvme_controller_id({}))));
+    auto controller = TRY(adopt_nonnull_ref_or_enomem(new NVMeController(device_identifier, StorageManagement::generate_relative_nvme_controller_id({}))));
     TRY(controller->initialize(is_queue_polled));
     return controller;
 }
