@@ -20,18 +20,18 @@ class Timer final : public JS::Cell {
     JS_CELL(Timer, JS::Cell);
 
 public:
-    static JS::NonnullGCPtr<Timer> create(Window&, i32 milliseconds, Function<void()> callback, i32 id);
+    static JS::NonnullGCPtr<Timer> create(JS::Object&, i32 milliseconds, Function<void()> callback, i32 id);
     virtual ~Timer() override;
 
     void start();
 
 private:
-    Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id);
+    Timer(JS::Object& window, i32 milliseconds, Function<void()> callback, i32 id);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
     RefPtr<Platform::Timer> m_timer;
-    JS::NonnullGCPtr<Window> m_window;
+    JS::NonnullGCPtr<JS::Object> m_window_or_worker_global_scope;
     Function<void()> m_callback;
     i32 m_id { 0 };
 };
