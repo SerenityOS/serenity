@@ -210,21 +210,18 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
     // 16. Align all flex lines (per align-content)
     align_all_flex_lines();
 
-    // AD-HOC: Layout the inside of all flex items.
-    copy_dimensions_from_flex_items_to_boxes();
-    for (auto& item : m_flex_items) {
-        auto& box_state = m_state.get(item.box);
-        if (auto independent_formatting_context = layout_inside(item.box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(m_available_space_for_flex_container->space)))
-            independent_formatting_context->parent_context_did_dimension_child_root_box();
-    }
-
     if (available_width.is_intrinsic_sizing_constraint() || available_height.is_intrinsic_sizing_constraint()) {
         // We're computing intrinsic size for the flex container.
         determine_intrinsic_size_of_flex_container();
-
-        // Our caller is only interested in the content-width and content-height results,
-        // which have now been set on m_flex_container_state, so there's no need to continue
-        // the main layout algorithm after this point.
+    } else {
+        // This is a normal layout (not intrinsic sizing).
+        // AD-HOC: Finally, layout the inside of all flex items.
+        copy_dimensions_from_flex_items_to_boxes();
+        for (auto& item : m_flex_items) {
+            auto& box_state = m_state.get(item.box);
+            if (auto independent_formatting_context = layout_inside(item.box, LayoutMode::Normal, box_state.available_inner_space_or_constraints_from(m_available_space_for_flex_container->space)))
+                independent_formatting_context->parent_context_did_dimension_child_root_box();
+        }
     }
 }
 
