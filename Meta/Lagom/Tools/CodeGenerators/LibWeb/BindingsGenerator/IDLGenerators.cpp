@@ -2178,7 +2178,7 @@ static void generate_prototype_or_global_mixin_declarations(IDL::Interface const
     JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_getter);
 )~~~");
 
-        if (!attribute.readonly || attribute.extended_attributes.contains("Replaceable"sv)) {
+        if (!attribute.readonly || attribute.extended_attributes.contains("Replaceable"sv) || attribute.extended_attributes.contains("PutForwards"sv)) {
             attribute_generator.append(R"~~~(
     JS_DECLARE_NATIVE_FUNCTION(@attribute.name:snakecase@_setter);
 )~~~");
@@ -2300,7 +2300,7 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
         attribute_generator.set("attribute.name", attribute.name);
         attribute_generator.set("attribute.getter_callback", attribute.getter_callback_name);
 
-        if (!attribute.readonly || attribute.extended_attributes.contains("Replaceable"sv))
+        if (!attribute.readonly || attribute.extended_attributes.contains("Replaceable"sv) || attribute.extended_attributes.contains("PutForwards"sv))
             attribute_generator.set("attribute.setter_callback", attribute.setter_callback_name);
         else
             attribute_generator.set("attribute.setter_callback", "nullptr");
@@ -2538,6 +2538,22 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     if (!this_value.is_object() || !is<@fully_qualified_name@>(this_value.as_object()))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@name@");
     TRY(this_value.as_object().internal_define_own_property("@attribute.name@", JS::PropertyDescriptor { .value = vm.argument(0), .writable = true }));
+    return JS::js_undefined();
+}
+)~~~");
+        } else if (auto put_forwards_identifier = attribute.extended_attributes.get("PutForwards"sv); put_forwards_identifier.has_value()) {
+            attribute_generator.set("attribute.name", attribute.name.to_snakecase());
+            attribute_generator.set("put_forwards_identifier"sv, *put_forwards_identifier);
+
+            attribute_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
+{
+    auto* impl = TRY(impl_from(vm));
+    auto value = vm.argument(0);
+
+    auto receiver = TRY(throw_dom_exception_if_needed(vm, [&]() { return impl->@attribute.name@(); }));
+    TRY(receiver->set(JS::PropertyKey { "@put_forwards_identifier@" }, value, JS::Object::ShouldThrowExceptions::Yes));
+
     return JS::js_undefined();
 }
 )~~~");

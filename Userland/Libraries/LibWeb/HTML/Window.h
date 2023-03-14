@@ -233,8 +233,6 @@ private:
 
     // [[CrossOriginPropertyDescriptorMap]], https://html.spec.whatwg.org/multipage/browsers.html#crossoriginpropertydescriptormap
     CrossOriginPropertyDescriptorMap m_cross_origin_property_descriptor_map;
-
-    JS_DECLARE_NATIVE_FUNCTION(location_setter);
 };
 
 void run_animation_frame_callbacks(DOM::Document&, double now);
