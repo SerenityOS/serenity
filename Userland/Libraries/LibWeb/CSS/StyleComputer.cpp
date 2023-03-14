@@ -867,7 +867,7 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Vector<Mat
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
-ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, bool& did_match_any_pseudo_element_rules) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
     MatchingRuleSet matching_rule_set;
@@ -875,6 +875,11 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     sort_matching_rules(matching_rule_set.user_agent_rules);
     matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author, pseudo_element);
     sort_matching_rules(matching_rule_set.author_rules);
+
+    if (pseudo_element.has_value() && matching_rule_set.author_rules.is_empty() && matching_rule_set.user_agent_rules.is_empty()) {
+        did_match_any_pseudo_element_rules = false;
+        return {};
+    }
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
     // FIXME: Look into how custom properties should interact with pseudo elements and support that properly.
@@ -1401,11 +1406,26 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
 
 ErrorOr<NonnullRefPtr<StyleProperties>> StyleComputer::compute_style(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
+    auto style = TRY(compute_style_impl(element, move(pseudo_element), ComputeStyleMode::Normal));
+    return style.release_nonnull();
+}
+
+ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_pseudo_element_style_if_needed(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+{
+    return compute_style_impl(element, move(pseudo_element), ComputeStyleMode::CreatePseudoElementStyleIfNeeded);
+}
+
+ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, ComputeStyleMode mode) const
+{
     build_rule_cache_if_needed();
 
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
-    TRY(compute_cascaded_values(style, element, pseudo_element));
+    bool did_match_any_pseudo_element_rules = false;
+    TRY(compute_cascaded_values(style, element, pseudo_element, did_match_any_pseudo_element_rules));
+
+    if (mode == ComputeStyleMode::CreatePseudoElementStyleIfNeeded && !did_match_any_pseudo_element_rules)
+        return nullptr;
 
     // 2. Compute the font, since that may be needed for font-relative CSS units
     compute_font(style, &element, pseudo_element);

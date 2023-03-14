@@ -154,7 +154,10 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
     auto& document = element.document();
     auto& style_computer = document.style_computer();
 
-    auto pseudo_element_style = TRY(style_computer.compute_style(element, pseudo_element));
+    auto pseudo_element_style = TRY(style_computer.compute_pseudo_element_style_if_needed(element, pseudo_element));
+    if (!pseudo_element_style)
+        return {};
+
     auto pseudo_element_content = pseudo_element_style->content();
     auto pseudo_element_display = pseudo_element_style->display();
     // ::before and ::after only exist if they have content. `content: normal` computes to `none` for them.
@@ -164,7 +167,7 @@ ErrorOr<void> TreeBuilder::create_pseudo_element_if_needed(DOM::Element& element
         || pseudo_element_content.type == CSS::ContentData::Type::None)
         return {};
 
-    auto pseudo_element_node = DOM::Element::create_layout_node_for_display_type(document, pseudo_element_display, pseudo_element_style, nullptr);
+    auto pseudo_element_node = DOM::Element::create_layout_node_for_display_type(document, pseudo_element_display, *pseudo_element_style, nullptr);
     if (!pseudo_element_node)
         return {};
 
