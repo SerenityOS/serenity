@@ -867,7 +867,7 @@ static ErrorOr<void> cascade_custom_properties(DOM::Element& element, Vector<Mat
 }
 
 // https://www.w3.org/TR/css-cascade/#cascading
-ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, bool& did_match_any_pseudo_element_rules) const
+ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, bool& did_match_any_pseudo_element_rules, ComputeStyleMode mode) const
 {
     // First, we collect all the CSS rules whose selectors match `element`:
     MatchingRuleSet matching_rule_set;
@@ -876,9 +876,13 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     matching_rule_set.author_rules = collect_matching_rules(element, CascadeOrigin::Author, pseudo_element);
     sort_matching_rules(matching_rule_set.author_rules);
 
-    if (pseudo_element.has_value() && matching_rule_set.author_rules.is_empty() && matching_rule_set.user_agent_rules.is_empty()) {
-        did_match_any_pseudo_element_rules = false;
-        return {};
+    if (mode == ComputeStyleMode::CreatePseudoElementStyleIfNeeded) {
+        VERIFY(pseudo_element.has_value());
+        if (matching_rule_set.author_rules.is_empty() && matching_rule_set.user_agent_rules.is_empty()) {
+            did_match_any_pseudo_element_rules = false;
+            return {};
+        }
+        did_match_any_pseudo_element_rules = true;
     }
 
     // Then we resolve all the CSS custom properties ("variables") for this element:
@@ -1422,7 +1426,7 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
     auto style = StyleProperties::create();
     // 1. Perform the cascade. This produces the "specified style"
     bool did_match_any_pseudo_element_rules = false;
-    TRY(compute_cascaded_values(style, element, pseudo_element, did_match_any_pseudo_element_rules));
+    TRY(compute_cascaded_values(style, element, pseudo_element, did_match_any_pseudo_element_rules, mode));
 
     if (mode == ComputeStyleMode::CreatePseudoElementStyleIfNeeded && !did_match_any_pseudo_element_rules)
         return nullptr;
