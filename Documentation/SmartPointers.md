@@ -43,8 +43,9 @@ if (my_object_or_error.is_error()) {
 auto my_object = my_object_or_error.release_value();
 my_object->do_stuff();
 ```
-
-Note: Objects constructed using `try_make<T>()` should only be dereferenced after a null check.
+Note: -Objects constructed using `try_make<T>()` should only be dereferenced after a null check.
+      -"new code should use the ErrorOr<> versions" 
+      -try_make<>() and try_make_ref_counted<>(), wrap the _or_enomem() functions.
 
 ### Manual construction
 
