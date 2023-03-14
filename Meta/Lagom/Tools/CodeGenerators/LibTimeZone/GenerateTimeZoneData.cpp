@@ -613,7 +613,7 @@ static constexpr Array<Location, @size@> s_time_zone_locations { {
         TRY(hashes.try_ensure_capacity(values.size()));
 
         auto hash = [](auto const& value) {
-            return CaseInsensitiveStringViewTraits::hash(value);
+            return CaseInsensitiveASCIIStringViewTraits::hash(value);
         };
 
         for (auto const& value : values)

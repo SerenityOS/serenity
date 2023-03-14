@@ -111,7 +111,7 @@ TEST_CASE(case_insensitive)
 
 TEST_CASE(case_insensitive_stringview)
 {
-    HashMap<StringView, int, CaseInsensitiveStringViewTraits> casemap;
+    HashMap<StringView, int, CaseInsensitiveASCIIStringViewTraits> casemap;
     EXPECT_EQ(casemap.set("nickserv"sv, 3), AK::HashSetResult::InsertedNewEntry);
     EXPECT_EQ(casemap.set("NickServ"sv, 3), AK::HashSetResult::ReplacedExistingEntry);
     EXPECT_EQ(casemap.size(), 1u);

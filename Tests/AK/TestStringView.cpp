@@ -196,7 +196,7 @@ TEST_CASE(case_insensitive_hash)
     auto string3 = "aBcDeF"sv;
     auto string4 = "foo"sv;
 
-    EXPECT_EQ(CaseInsensitiveStringViewTraits::hash(string1), CaseInsensitiveStringViewTraits::hash(string2));
-    EXPECT_EQ(CaseInsensitiveStringViewTraits::hash(string1), CaseInsensitiveStringViewTraits::hash(string3));
-    EXPECT_NE(CaseInsensitiveStringViewTraits::hash(string1), CaseInsensitiveStringViewTraits::hash(string4));
+    EXPECT_EQ(CaseInsensitiveASCIIStringViewTraits::hash(string1), CaseInsensitiveASCIIStringViewTraits::hash(string2));
+    EXPECT_EQ(CaseInsensitiveASCIIStringViewTraits::hash(string1), CaseInsensitiveASCIIStringViewTraits::hash(string3));
+    EXPECT_NE(CaseInsensitiveASCIIStringViewTraits::hash(string1), CaseInsensitiveASCIIStringViewTraits::hash(string4));
 }

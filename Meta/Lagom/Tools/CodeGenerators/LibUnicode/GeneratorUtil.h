@@ -454,7 +454,7 @@ Optional<@return_type@> @method_name@(StringView key)
 )~~~");
     } else {
         generator.append(R"~~~(
-    auto hash = CaseInsensitiveStringViewTraits::hash(key);
+    auto hash = CaseInsensitiveASCIIStringViewTraits::hash(key);
 )~~~");
     }
 
