@@ -18,7 +18,7 @@
 namespace Web::HTML {
 
 // https://html.spec.whatwg.org/#timerhandler
-using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, DeprecatedString>;
+using TimerHandler = Variant<JS::Handle<WebIDL::CallbackType>, String>;
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#windoworworkerglobalscope
 class WindowOrWorkerGlobalScopeMixin {
