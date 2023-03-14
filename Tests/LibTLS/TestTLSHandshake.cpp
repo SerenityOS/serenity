@@ -9,10 +9,11 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCrypto/ASN1/ASN1.h>
+#include <LibCrypto/ASN1/PEM.h>
 #include <LibTLS/TLSv12.h>
 #include <LibTest/TestCase.h>
 
-static StringView ca_certs_file = "./ca_certs.ini"sv;
+static StringView ca_certs_file = "./cacert.pem"sv;
 static int port = 443;
 
 constexpr auto DEFAULT_SERVER = "www.google.com"sv;
@@ -30,7 +31,7 @@ DeprecatedString locate_ca_certs_file()
     if (Core::DeprecatedFile::exists(ca_certs_file)) {
         return ca_certs_file;
     }
-    auto on_target_path = DeprecatedString("/etc/ca_certs.ini");
+    auto on_target_path = DeprecatedString("/etc/cacert.pem");
     if (Core::DeprecatedFile::exists(on_target_path)) {
         return on_target_path;
     }
@@ -40,33 +41,41 @@ DeprecatedString locate_ca_certs_file()
 Vector<Certificate> load_certificates()
 {
     Vector<Certificate> certificates;
-    auto ca_certs_filepath = locate_ca_certs_file();
-    if (ca_certs_filepath == "") {
-        warnln("Could not locate ca_certs.ini file.");
+
+    auto cacert_result = Core::File::open(locate_ca_certs_file(), Core::File::OpenMode::Read);
+    if (cacert_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", cacert_result.error());
         return certificates;
     }
-
-    auto config = Core::ConfigFile::open(ca_certs_filepath).release_value_but_fixme_should_propagate_errors();
-    for (auto& entity : config->groups()) {
-        for (auto& subject : config->keys(entity)) {
-            auto certificate_base64 = config->read_entry(entity, subject);
-            auto certificate_data_result = decode_base64(certificate_base64);
-            if (certificate_data_result.is_error()) {
-                dbgln("Skipping CA Certificate {} {}: out of memory", entity, subject);
-                continue;
-            }
-            auto certificate_data = certificate_data_result.release_value();
-            auto certificate_result = Certificate::parse_asn1(certificate_data.bytes());
-            // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
-            // supported right now. Currently, ca_certs.ini should only contain certificates with RSA keys/signatures.
-            if (!certificate_result.has_value()) {
-                dbgln("Skipping CA Certificate {} {}: unable to parse", entity, subject);
-                continue;
-            }
-            auto certificate = certificate_result.release_value();
-            certificates.append(move(certificate));
-        }
+    auto cacert_file = cacert_result.release_value();
+    auto data_result = cacert_file->read_until_eof();
+    if (data_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", data_result.error());
+        return certificates;
     }
+    auto data = data_result.release_value();
+
+    auto decode_result = Crypto::decode_pems(data);
+    if (decode_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", decode_result.error());
+        return certificates;
+    }
+    auto certs = decode_result.release_value();
+
+    for (auto& cert : certs) {
+        auto certificate_result = Certificate::parse_asn1(cert.bytes());
+        // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
+        // supported right now. It might make sense to cleanup cacert.pem before adding it to the system.
+        if (!certificate_result.has_value()) {
+            // FIXME: It would be nice to have more informations about the certificate we failed to parse.
+            //        Like: Issuer, Algorithm, CN, etc
+            continue;
+        }
+        auto certificate = certificate_result.release_value();
+        if (certificate.is_certificate_authority)
+            certificates.append(move(certificate));
+    }
+
     return certificates;
 }
 
