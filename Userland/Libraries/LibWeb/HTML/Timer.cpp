@@ -4,19 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Object.h>
 #include <LibWeb/HTML/Timer.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
 
-JS::NonnullGCPtr<Timer> Timer::create(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
+JS::NonnullGCPtr<Timer> Timer::create(JS::Object& window_or_worker_global_scope, i32 milliseconds, Function<void()> callback, i32 id)
 {
-    return window.heap().allocate_without_realm<Timer>(window, milliseconds, move(callback), id);
+    return window_or_worker_global_scope.heap().allocate_without_realm<Timer>(window_or_worker_global_scope, milliseconds, move(callback), id);
 }
 
-Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id)
-    : m_window(window)
+Timer::Timer(JS::Object& window_or_worker_global_scope, i32 milliseconds, Function<void()> callback, i32 id)
+    : m_window_or_worker_global_scope(window_or_worker_global_scope)
     , m_callback(move(callback))
     , m_id(id)
 {
@@ -28,7 +29,7 @@ Timer::Timer(Window& window, i32 milliseconds, Function<void()> callback, i32 id
 void Timer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
+    visitor.visit(m_window_or_worker_global_scope.ptr());
 }
 
 Timer::~Timer()
