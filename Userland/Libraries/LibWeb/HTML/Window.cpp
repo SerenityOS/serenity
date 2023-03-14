@@ -1370,7 +1370,7 @@ static JS::ThrowCompletionOr<TimerHandler> make_timer_handler(JS::VM& vm, JS::Va
 {
     if (handler.is_function())
         return JS::make_handle(vm.heap().allocate_without_realm<WebIDL::CallbackType>(handler.as_function(), incumbent_settings_object()));
-    return TRY(handler.to_deprecated_string(vm));
+    return TRY(handler.to_string(vm));
 }
 
 // https://html.spec.whatwg.org/multipage/timers-and-user-prompts.html#dom-settimeout

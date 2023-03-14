@@ -211,7 +211,7 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
                     report_exception(result, this_impl().realm());
             },
             // 3. Otherwise:
-            [&](DeprecatedString const& source) {
+            [&](String const& source) {
                 // 1. Assert: handler is a string.
                 // FIXME: 2. Perform HostEnsureCanCompileStrings(callerRealm, calleeRealm). If this throws an exception, catch it, report the exception, and abort these steps.
 
