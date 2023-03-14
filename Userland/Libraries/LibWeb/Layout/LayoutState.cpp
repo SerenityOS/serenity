@@ -110,7 +110,7 @@ CSSPixels box_baseline(LayoutState const& state, Box const& box)
             return box_state.border_box_top();
         case CSS::VerticalAlign::Bottom:
             // Bottom: Align the bottom of the aligned subtree with the bottom of the line box.
-            return box_state.content_height() + box_state.border_box_bottom();
+            return box_state.content_height() + box_state.margin_box_top();
         case CSS::VerticalAlign::TextTop:
             // TextTop: Align the top of the box with the top of the parent's content area (see 10.6.1).
             return box.computed_values().font_size();
@@ -123,13 +123,13 @@ CSSPixels box_baseline(LayoutState const& state, Box const& box)
     }
 
     if (!box_state.line_boxes.is_empty())
-        return box_state.border_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
+        return box_state.margin_box_top() + box_state.offset.y() + box_state.line_boxes.last().baseline();
     if (box.has_children() && !box.children_are_inline()) {
         auto const* child_box = box.last_child_of_type<Box>();
         VERIFY(child_box);
         return box_baseline(state, *child_box);
     }
-    return box_state.border_box_height();
+    return box_state.margin_box_height();
 }
 
 CSSPixelRect margin_box_rect(Box const& box, LayoutState const& state)

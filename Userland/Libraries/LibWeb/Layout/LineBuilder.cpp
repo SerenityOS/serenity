@@ -78,7 +78,7 @@ void LineBuilder::append_box(Box const& box, CSSPixels leading_size, CSSPixels t
     auto& box_state = m_layout_state.get_mutable(box);
     auto& line_box = ensure_last_line_box();
     line_box.add_fragment(box, 0, 0, leading_size, trailing_size, leading_margin, trailing_margin, box_state.content_width(), box_state.content_height(), box_state.border_box_top(), box_state.border_box_bottom());
-    m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.border_box_height());
+    m_max_height_on_current_line = max(m_max_height_on_current_line, box_state.margin_box_height());
 
     box_state.containing_line_box_fragment = LineBoxFragmentCoordinate {
         .line_box_index = m_containing_block_state.line_boxes.size() - 1,
@@ -235,11 +235,17 @@ void LineBuilder::update_last_line()
         CSSPixels new_fragment_y = 0;
 
         auto y_value_for_alignment = [&](CSS::VerticalAlign vertical_align) {
+            CSSPixels effective_box_top = fragment.border_box_top();
+            if (fragment.is_atomic_inline()) {
+                auto const& fragment_box_state = m_layout_state.get(static_cast<Box const&>(fragment.layout_node()));
+                effective_box_top = fragment_box_state.margin_box_top();
+            }
+
             switch (vertical_align) {
             case CSS::VerticalAlign::Baseline:
-                return m_current_y + line_box_baseline - fragment.baseline() + fragment.border_box_top();
+                return m_current_y + line_box_baseline - fragment.baseline() + effective_box_top;
             case CSS::VerticalAlign::Top:
-                return m_current_y + fragment.border_box_top();
+                return m_current_y + effective_box_top;
             case CSS::VerticalAlign::Middle:
             case CSS::VerticalAlign::Bottom:
             case CSS::VerticalAlign::Sub:
@@ -247,7 +253,7 @@ void LineBuilder::update_last_line()
             case CSS::VerticalAlign::TextBottom:
             case CSS::VerticalAlign::TextTop:
                 // FIXME: These are all 'baseline'
-                return m_current_y + line_box_baseline - fragment.baseline() + fragment.border_box_top();
+                return m_current_y + line_box_baseline - fragment.baseline() + effective_box_top;
             }
             VERIFY_NOT_REACHED();
         };
@@ -268,7 +274,7 @@ void LineBuilder::update_last_line()
         CSSPixels bottom_of_inline_box = 0;
         {
             // FIXME: Support inline-table elements.
-            if (fragment.layout_node().is_replaced_box() || (fragment.layout_node().display().is_inline_outside() && !fragment.layout_node().display().is_flow_inside())) {
+            if (fragment.is_atomic_inline()) {
                 auto const& fragment_box_state = m_layout_state.get(static_cast<Box const&>(fragment.layout_node()));
                 top_of_inline_box = (fragment.offset().y() - fragment_box_state.margin_box_top());
                 bottom_of_inline_box = (fragment.offset().y() + fragment_box_state.content_height() + fragment_box_state.margin_box_bottom());
