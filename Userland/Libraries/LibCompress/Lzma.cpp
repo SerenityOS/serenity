@@ -39,7 +39,7 @@ Optional<u64> LzmaHeader::uncompressed_size() const
     return uncompressed_size;
 }
 
-ErrorOr<void> LzmaHeader::decode_model_properties(u8& literal_context_bits, u8& literal_pos_bits, u8& pos_bits) const
+ErrorOr<LzmaModelProperties> LzmaHeader::decode_model_properties(u8 input_bits)
 {
     // "Decodes the following values from the encoded model properties field:
     //
@@ -50,34 +50,35 @@ ErrorOr<void> LzmaHeader::decode_model_properties(u8& literal_context_bits, u8& 
     //
     //  Encoded using `((pb * 5 + lp) * 9 + lc)`."
 
-    u8 input_bits = m_model_properties;
-
     if (input_bits >= (9 * 5 * 5))
         return Error::from_string_literal("Encoded model properties value is larger than the highest possible value");
 
-    literal_context_bits = input_bits % 9;
+    u8 literal_context_bits = input_bits % 9;
     input_bits /= 9;
+    VERIFY(literal_context_bits >= 0 && literal_context_bits <= 8);
 
-    literal_pos_bits = input_bits % 5;
+    u8 literal_position_bits = input_bits % 5;
     input_bits /= 5;
+    VERIFY(literal_position_bits >= 0 && literal_position_bits <= 4);
 
-    pos_bits = input_bits;
+    u8 position_bits = input_bits;
+    VERIFY(position_bits >= 0 && position_bits <= 4);
 
-    return {};
+    return LzmaModelProperties {
+        .literal_context_bits = literal_context_bits,
+        .literal_position_bits = literal_position_bits,
+        .position_bits = position_bits,
+    };
 }
 
 ErrorOr<LzmaDecompressorOptions> LzmaHeader::as_decompressor_options() const
 {
-    u8 literal_context_bits { 0 };
-    u8 literal_position_bits { 0 };
-    u8 position_bits { 0 };
+    auto model_properties = TRY(decode_model_properties(m_encoded_model_properties));
 
-    TRY(decode_model_properties(literal_context_bits, literal_position_bits, position_bits));
-
-    return LzmaDecompressorOptions {
-        .literal_context_bits = literal_context_bits,
-        .literal_position_bits = literal_position_bits,
-        .position_bits = position_bits,
+    return Compress::LzmaDecompressorOptions {
+        .literal_context_bits = model_properties.literal_context_bits,
+        .literal_position_bits = model_properties.literal_position_bits,
+        .position_bits = model_properties.position_bits,
         .dictionary_size = dictionary_size(),
         .uncompressed_size = uncompressed_size(),
     };
