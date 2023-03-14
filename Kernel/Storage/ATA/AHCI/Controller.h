@@ -9,6 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/AHCI/Definitions.h>
 #include <Kernel/Storage/ATA/ATAController.h>
@@ -49,11 +50,11 @@ private:
     LockRefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    NonnullOwnPtr<Memory::Region> default_hba_region() const;
+    ErrorOr<Memory::TypedMapping<AHCI::HBA volatile>> map_default_hba_region(PCI::DeviceIdentifier const&);
     volatile AHCI::HBA& hba() const;
 
     Array<LockRefPtr<AHCIPort>, 32> m_ports;
-    NonnullOwnPtr<Memory::Region> m_hba_region;
+    Memory::TypedMapping<AHCI::HBA volatile> m_hba_mapping;
     AHCI::HBADefinedCapabilities m_hba_capabilities;
 
     // FIXME: There could be multiple IRQ (MSI) handlers for AHCI. Find a way to use all of them.
