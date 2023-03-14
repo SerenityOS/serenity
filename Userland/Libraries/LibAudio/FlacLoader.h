@@ -85,14 +85,16 @@ private:
     // Converters for special coding used in frame headers
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_count_code(u8 sample_count_code);
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
-    ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
+    ALWAYS_INLINE ErrorOr<u8, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
 
     bool should_insert_seekpoint_at(u64 sample_index) const;
 
     // Data obtained directly from the FLAC metadata: many values have specific bit counts
-    u32 m_sample_rate { 0 };         // 20 bit
-    u8 m_num_channels { 0 };         // 3 bit
-    PcmSampleFormat m_sample_format; // 5 bits for the integer bit depth
+    u32 m_sample_rate { 0 };    // 20 bit
+    u8 m_num_channels { 0 };    // 3 bit
+    u8 m_bits_per_sample { 0 }; // 5 bits for the integer bit depth
+    // Externally visible format; the smallest integer format that's larger than the precise bit depth.
+    PcmSampleFormat m_sample_format;
     // Blocks are units of decoded audio data
     u16 m_min_block_size { 0 };
     u16 m_max_block_size { 0 };
