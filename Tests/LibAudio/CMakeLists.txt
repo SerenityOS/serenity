@@ -6,4 +6,4 @@ foreach(source IN LISTS TEST_SOURCES)
     serenity_test("${source}" LibAudio LIBS LibAudio)
 endforeach()
 
-install(DIRECTORY ${FLAC_SPEC_TEST_PATH} DESTINATION usr/Tests/LibAudio)
+install(DIRECTORY ${FLAC_SPEC_TEST_PATH} DESTINATION usr/Tests/LibAudio/FLAC)

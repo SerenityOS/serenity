@@ -13,7 +13,7 @@ struct DiscoverFLACTestsHack {
     DiscoverFLACTestsHack()
     {
         // FIXME: Also run (our own) tests in this directory.
-        (void)Core::Directory::for_each_entry("./SpecTests"sv, Core::DirIterator::Flags::SkipParentAndBaseDir, [](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
+        (void)Core::Directory::for_each_entry("./FLAC/SpecTests"sv, Core::DirIterator::Flags::SkipParentAndBaseDir, [](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
             auto path = LexicalPath::join(directory.path().string(), entry.name);
             if (path.extension() == "flac"sv) {
                 Test::add_test_case_to_suite(adopt_ref(*new ::Test::TestCase(
