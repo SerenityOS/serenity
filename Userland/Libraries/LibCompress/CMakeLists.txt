@@ -3,6 +3,7 @@ set(SOURCES
     BrotliDictionary.cpp
     Deflate.cpp
     Lzma.cpp
+    Lzma2.cpp
     Zlib.cpp
     Gzip.cpp
 )
