@@ -32,14 +32,18 @@ static Vector<DeprecatedString> get_device_paths()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
+    TRY(Core::System::unveil("/dev", "r"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil("/proc", "r"));
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
+    TRY(Core::System::unveil("/tmp/portal/window", "rw"));
+    TRY(Core::System::unveil(nullptr, nullptr));
+
     TRY(Core::System::pledge("stdio recvfd sendfd rpath unix"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath"));
-    TRY(Core::System::unveil("/dev", "r"));
-    TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil(nullptr, nullptr));
 
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-partition-editor"sv));
 
