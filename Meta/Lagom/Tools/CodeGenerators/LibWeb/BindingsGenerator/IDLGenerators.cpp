@@ -2770,6 +2770,7 @@ using namespace Web::Streams;
 using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::XHR;
+using namespace Web::WebAssembly;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -2959,6 +2960,7 @@ using namespace Web::Streams;
 using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::XHR;
+using namespace Web::WebAssembly;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -3183,6 +3185,7 @@ using namespace Web::UIEvents;
 using namespace Web::URL;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
+using namespace Web::WebAssembly;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 

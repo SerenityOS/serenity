@@ -481,6 +481,9 @@ class Resource;
 class ResourceLoader;
 }
 
+namespace Web::WebAssembly {
+}
+
 namespace Web::WebGL {
 class WebGLContextEvent;
 class WebGLRenderingContext;
