@@ -605,9 +605,17 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     auto @cpp_name@ = JS::make_handle(&static_cast<JS::Promise&>(@js_name@@js_suffix@.as_object()));
 )~~~");
     } else if (parameter.type->name() == "object") {
-        scoped_generator.append(R"~~~(
+        if (optional) {
+            scoped_generator.append(R"~~~(
+    Optional<JS::Handle<JS::Object>> @cpp_name@;
+    if (!@js_name@@js_suffix@.is_undefined())
+        @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
     auto @cpp_name@ = JS::make_handle(TRY(@js_name@@js_suffix@.to_object(vm)));
 )~~~");
+        }
     } else if (parameter.type->name() == "BufferSource") {
         scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_object() || !(is<JS::TypedArrayBase>(@js_name@@js_suffix@.as_object()) || is<JS::ArrayBuffer>(@js_name@@js_suffix@.as_object()) || is<JS::DataView>(@js_name@@js_suffix@.as_object())))
