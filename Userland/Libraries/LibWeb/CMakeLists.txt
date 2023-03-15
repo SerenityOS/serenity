@@ -5,7 +5,6 @@ set(SOURCES
     ARIA/ARIAMixin.idl
     ARIA/Roles.cpp
     Bindings/AudioConstructor.cpp
-    Bindings/CSSNamespace.cpp
     Bindings/HostDefined.cpp
     Bindings/ImageConstructor.cpp
     Bindings/Intrinsics.cpp
@@ -18,6 +17,7 @@ set(SOURCES
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp
     CSS/Clip.cpp
+    CSS/CSS.cpp
     CSS/CSSConditionRule.cpp
     CSS/CSSGroupingRule.cpp
     CSS/CSSImportRule.cpp
