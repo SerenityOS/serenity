@@ -9,7 +9,7 @@
 
 namespace CMake::Cache {
 
-static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token::Type type)
+static Gfx::TextAttributes style_for_token_type(Gfx::Palette const& palette, Token::Type type)
 {
     switch (type) {
     case Token::Type::Comment:
@@ -25,7 +25,7 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token
     case Token::Type::Value:
         return { palette.syntax_string() };
     case Token::Type::Garbage:
-        return { palette.red() };
+        return { palette.red(), {}, false, Gfx::TextAttributes::UnderlineStyle::Wavy, palette.red() };
     default:
         return { palette.base_text() };
     }
@@ -50,13 +50,7 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette const& palette)
         if (!span.range.is_valid())
             return;
 
-        auto style = style_for_token_type(palette, type);
-        span.attributes.color = style.color;
-        span.attributes.bold = style.bold;
-        if (type == Token::Type::Garbage) {
-            span.attributes.underline_color = palette.red();
-            span.attributes.underline_style = Gfx::TextAttributes::UnderlineStyle::Wavy;
-        }
+        span.attributes = style_for_token_type(palette, type);
         span.is_skippable = false;
         span.data = static_cast<u64>(type);
         spans.append(move(span));

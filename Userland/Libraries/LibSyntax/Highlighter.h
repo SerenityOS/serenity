@@ -15,11 +15,6 @@
 
 namespace Syntax {
 
-struct TextStyle {
-    const Gfx::Color color;
-    bool const bold { false };
-};
-
 class Highlighter {
     AK_MAKE_NONCOPYABLE(Highlighter);
     AK_MAKE_NONMOVABLE(Highlighter);

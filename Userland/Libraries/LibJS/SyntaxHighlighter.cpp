@@ -13,7 +13,7 @@
 
 namespace JS {
 
-static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, TokenType type)
+static Gfx::TextAttributes style_for_token_type(Gfx::Palette const& palette, TokenType type)
 {
     switch (Token::category(type)) {
     case TokenCategory::Invalid:
@@ -27,9 +27,9 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token
     case TokenCategory::Operator:
         return { palette.syntax_operator() };
     case TokenCategory::Keyword:
-        return { palette.syntax_keyword(), true };
+        return { palette.syntax_keyword(), {}, true };
     case TokenCategory::ControlKeyword:
-        return { palette.syntax_control_keyword(), true };
+        return { palette.syntax_control_keyword(), {}, true };
     case TokenCategory::Identifier:
         return { palette.syntax_identifier() };
     default:
@@ -79,9 +79,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         span.range.set_start(start);
         span.range.set_end({ position.line(), position.column() });
         auto type = is_trivia ? TokenType::Invalid : token.type();
-        auto style = style_for_token_type(palette, type);
-        span.attributes.color = style.color;
-        span.attributes.bold = style.bold;
+        span.attributes = style_for_token_type(palette, type);
         span.is_skippable = is_trivia;
         span.data = static_cast<u64>(type);
         spans.append(span);
