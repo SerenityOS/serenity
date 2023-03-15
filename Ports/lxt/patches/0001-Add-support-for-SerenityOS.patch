@@ -1,0 +1,62 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Seal Sealy <butilkama@gmail.com>
+Date: Wed, 15 Mar 2023 17:24:38 +0300
+Subject: [PATCH] Add support for SerenityOS
+ This patch adds support for SerenityOS.
+ Specifially, it does the following things:
+ 1. Specifies MAXNAMLEN, otherwise it's undefined and build fails
+ 2. Addresses issues with configure.ac
+ 3. Fixes path to clear utility
+
+---
+ compatible.h | 2 +-
+ configure.ac | 3 ---
+ main.c       | 2 +-
+ 3 files changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/compatible.h b/compatible.h
+index ce045d6badfa7f580867a964001709f2a25bc430..d39ca70693a06ed81fa40d4454640426f109d8f3 100644
+--- a/compatible.h    2023-03-17 15:55:49.236081335 +0300
++++ b/compatible.h        2023-03-17 16:01:12.646080029 +0300
+@@ -7,7 +7,10 @@
+        unpredictible things when you deal with paths that are longer than this
+        number. */
+ /* #define PATH_MAX 4096 */  /* length of longest pathname */
+-/* #define MAXNAMLEN 256 */  /* length of longest filename */
++// Serenity-specific: MAXNAMLEN is just the glibc/BSD name for NAME_MAX;
++// from the discussion on Discord I conclude that I should probably link these two but not globally
++#include <limits.h>
++#define MAXNAMLEN NAME_MAX  /* length of longest filename */
+
+ /* maybe this fixes things on some systems */
+ #ifndef PATH_MAX
+diff --git a/configure.ac b/configure.ac
+index 87022ebdbdbb7efd11a891fb4cf06550e182323f..222a5a8fb788136722f18be00f2cd77bbbbf29f6 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -42,14 +42,11 @@ AC_CHECK_MEMBERS([struct stat.st_rdev])
+ # Checks for library functions.
+ AC_FUNC_CHOWN
+ AC_FUNC_CLOSEDIR_VOID
+-AC_REPLACE_FNMATCH
+ AC_FUNC_FORK
+ AC_FUNC_GETMNTENT
+ AC_PROG_GCC_TRADITIONAL
+ AC_FUNC_LSTAT
+ AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+-AC_FUNC_MALLOC
+-AC_FUNC_REALLOC
+ AC_TYPE_SIGNAL
+ AC_FUNC_STAT
+ AC_FUNC_VPRINTF
+diff --git a/main.c b/main.c
+index 5308cb634834d78b9de9df93c7a562299bfb4125..10d7daa7be5796ab53ec819079c4fcdb97a64f51 100644
+--- a/main.c
++++ b/main.c
+@@ -206,5 +206,5 @@ void crapout_nobug(const char *fmt, ...) {
+ }
+ 
+ void clearscreen(void) {
+-	system("/usr/bin/clear");
++	system("/bin/clear");
+ }
