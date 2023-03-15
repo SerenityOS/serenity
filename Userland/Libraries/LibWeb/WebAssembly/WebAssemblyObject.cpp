@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebAssemblyInstanceObject.h"
 #include "WebAssemblyMemoryPrototype.h"
 #include "WebAssemblyTableObject.h"
 #include "WebAssemblyTablePrototype.h"
@@ -19,10 +18,11 @@
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/AbstractMachine/Validator.h>
+#include <LibWeb/Bindings/InstancePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ModulePrototype.h>
+#include <LibWeb/WebAssembly/Instance.h>
 #include <LibWeb/WebAssembly/Module.h>
-#include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
@@ -45,7 +45,7 @@ JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
     auto& memory_constructor = Bindings::ensure_web_constructor<WebAssemblyMemoryPrototype>(realm, "WebAssembly.Memory"sv);
     define_direct_property("Memory", &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
-    auto& instance_constructor = Bindings::ensure_web_constructor<WebAssemblyInstancePrototype>(realm, "WebAssembly.Instance"sv);
+    auto& instance_constructor = Bindings::ensure_web_constructor<InstancePrototype>(realm, "WebAssembly.Instance"sv);
     define_direct_property("Instance", &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     auto& module_constructor = Bindings::ensure_web_constructor<ModulePrototype>(realm, "WebAssembly.Module"sv);
@@ -345,7 +345,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     if (result.is_error()) {
         promise->reject(*result.release_error().value());
     } else {
-        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value()));
+        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Instance>(realm, realm, result.release_value()));
         if (should_return_module) {
             auto object = JS::Object::create(realm, nullptr);
             object->define_direct_property("module", MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Module>(realm, realm, s_compiled_modules.size() - 1)), JS::default_attributes);

@@ -37,6 +37,7 @@ static bool is_platform_object(Type const& type)
         "FileList"sv,
         "FormData"sv,
         "ImageData"sv,
+        "Instance"sv,
         "Module"sv,
         "MutationRecord"sv,
         "NamedNodeMap"sv,
