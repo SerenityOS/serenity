@@ -150,7 +150,7 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
             streamer.write_u32(0); // Colorspace CALIBRATED_RGB
 
         for (int i = 0; i < 12; i++) {
-            streamer.write_u32(0); // Endpoints
+            streamer.write_u32(0); // Endpoints and gamma
         }
     }
 
