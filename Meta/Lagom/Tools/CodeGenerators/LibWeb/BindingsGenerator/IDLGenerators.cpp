@@ -60,6 +60,19 @@ static bool is_platform_object(Type const& type)
     return false;
 }
 
+// FIXME: Generate this automatically somehow.
+static bool is_javascript_builtin(Type const& type)
+{
+    // NOTE: This is a hand-curated subset of JavaScript built-in types that are actually relevant
+    // in places where this function is used. If you add IDL code and get compile errors, you
+    // might simply need to add another type here.
+    static constexpr Array types = {
+        "ArrayBuffer"sv,
+    };
+
+    return types.span().contains_slow(type.name());
+}
+
 static StringView sequence_storage_type_to_cpp_storage_type_name(SequenceStorageType sequence_storage_type)
 {
     switch (sequence_storage_type) {
@@ -1522,7 +1535,10 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     auto scoped_generator = generator.fork();
     scoped_generator.set("value", value);
     if (!libweb_interface_namespaces.span().contains_slow(type.name())) {
-        scoped_generator.set("type", type.name());
+        if (is_javascript_builtin(type))
+            scoped_generator.set("type", DeprecatedString::formatted("JS::{}", type.name()));
+        else
+            scoped_generator.set("type", type.name());
     } else {
         // e.g. Document.getSelection which returns Selection, which is in the Selection namespace.
         StringBuilder builder;
@@ -3109,6 +3125,7 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #include <AK/Function.h>
 #include <LibIDL/Types.h>
 #include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
