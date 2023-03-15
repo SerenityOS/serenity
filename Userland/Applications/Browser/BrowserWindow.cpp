@@ -565,7 +565,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
     set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_deprecated_string() : title));
 }
 
-void BrowserWindow::create_new_tab(URL url, bool activate)
+Tab& BrowserWindow::create_new_tab(URL url, bool activate)
 {
     auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this);
 
@@ -652,6 +652,8 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
 
     if (activate)
         m_tab_widget->set_active_widget(&new_tab);
+
+    return new_tab;
 }
 
 void BrowserWindow::create_new_window(URL url)
