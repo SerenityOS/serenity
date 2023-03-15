@@ -36,8 +36,7 @@ public:
 
     ErrorOr<void> add_u8(u8);
 
-    template<typename T>
-    ErrorOr<void> add(T*, size_t);
+    ErrorOr<void> add(ReadonlyBytes);
 
     ErrorOr<void> store_type();
     void store_data_length();
@@ -84,10 +83,9 @@ ErrorOr<void> PNGChunk::add(T data)
     return {};
 }
 
-template<typename T>
-ErrorOr<void> PNGChunk::add(T* data, size_t size)
+ErrorOr<void> PNGChunk::add(ReadonlyBytes bytes)
 {
-    TRY(m_data.try_append(data, size));
+    TRY(m_data.try_append(bytes));
     return {};
 }
 
@@ -266,7 +264,7 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 
     auto zlib_buffer = TRY(Compress::ZlibCompressor::compress_all(uncompressed_block_data, Compress::ZlibCompressionLevel::Best));
 
-    TRY(png_chunk.add(zlib_buffer.data(), zlib_buffer.size()));
+    TRY(png_chunk.add(zlib_buffer));
     TRY(add_chunk(png_chunk));
     return {};
 }
