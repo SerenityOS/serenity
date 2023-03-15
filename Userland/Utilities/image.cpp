@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        bytes = TRY(Gfx::PortableFormatWriter::encode(*frame, Gfx::PortableFormatWriter::Options { .format = format }));
+        bytes = TRY(Gfx::PortableFormatWriter::encode(*frame, { .format = format }));
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
