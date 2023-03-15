@@ -255,6 +255,7 @@ public:
 
     DeprecatedString name;
     DeprecatedString parent_name;
+    DeprecatedString namespaced_name;
 
     bool is_namespace { false };
     bool is_mixin { false };
