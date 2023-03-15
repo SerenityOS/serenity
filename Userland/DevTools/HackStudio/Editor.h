@@ -36,6 +36,8 @@ public:
 
     Vector<size_t> const& breakpoint_lines() const { return code_document().breakpoint_lines(); }
     Vector<size_t>& breakpoint_lines() { return code_document().breakpoint_lines(); }
+    ErrorOr<void> add_breakpoint(size_t line_number);
+    void remove_breakpoint(size_t line_number);
     Optional<size_t> execution_position() const { return code_document().execution_position(); }
     bool is_program_running() const { return execution_position().has_value(); }
     void set_execution_position(size_t line_number);
@@ -120,6 +122,8 @@ private:
     RefPtr<Core::Timer> m_tokens_info_timer; // Used for querying language server for syntax highlighting info
     OwnPtr<LanguageClient> m_language_client;
     bool m_use_semantic_syntax_highlighting { false };
+
+    GutterIndicatorID m_breakpoint_indicator_id;
 };
 
 }
