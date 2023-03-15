@@ -527,13 +527,13 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
 
         auto& font = fragment.layout_node().font();
         auto scaled_font = [&]() -> RefPtr<Gfx::Font const> {
-            auto device_font_pt_size = context.enclosing_device_pixels(font.presentation_size());
-            FontSelector font_selector = { FlyString::from_deprecated_fly_string(font.family()).release_value_but_fixme_should_propagate_errors(), static_cast<float>(device_font_pt_size.value()), font.weight(), font.width(), font.slope() };
+            auto device_font_pt_size = font.point_size() * context.device_pixels_per_css_pixel();
+            FontSelector font_selector = { FlyString::from_deprecated_fly_string(font.family()).release_value_but_fixme_should_propagate_errors(), device_font_pt_size, font.weight(), font.width(), font.slope() };
             if (auto cached_font = FontCache::the().get(font_selector)) {
                 return cached_font;
             }
 
-            if (auto font_with_device_pt_size = font.with_size(static_cast<float>(device_font_pt_size.value()))) {
+            if (auto font_with_device_pt_size = font.with_size(device_font_pt_size)) {
                 FontCache::the().set(font_selector, *font_with_device_pt_size);
                 return font_with_device_pt_size;
             }

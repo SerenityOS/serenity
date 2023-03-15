@@ -59,6 +59,8 @@ public:
         return clone;
     }
 
+    float device_pixels_per_css_pixel() const { return m_device_pixels_per_css_pixel; }
+
 private:
     Gfx::Painter& m_painter;
     Palette m_palette;
