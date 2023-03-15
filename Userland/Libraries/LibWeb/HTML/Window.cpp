@@ -19,7 +19,6 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
-#include <LibWeb/Bindings/CSSNamespace.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/Bindings/WindowPrototype.h>
@@ -753,7 +752,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     //    1. Let id be namespace’s identifier.
     //    3. Let namespaceObject be the result of creating a namespace object for namespace in realm.
     //    3. Perform CreateMethodProperty(target, id, namespaceObject).
-    create_method_property("CSS", MUST_OR_THROW_OOM(heap().allocate<Bindings::CSSNamespace>(realm, realm)));
     create_method_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)));
 
     return {};
