@@ -468,6 +468,11 @@ Tab::Tab(BrowserWindow& window)
             go_forward();
     };
 
+    view().on_new_tab = [this] {
+        auto& tab = this->window().create_new_tab(URL("about:blank"), true);
+        return tab.view().handle();
+    };
+
     view().on_close = [this] {
         on_tab_close_request(*this);
     };
