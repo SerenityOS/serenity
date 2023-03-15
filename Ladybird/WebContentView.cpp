@@ -31,6 +31,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibJS/Runtime/ConsoleObject.h>
@@ -47,6 +48,7 @@
 #include <QMouseEvent>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QPalette>
 #include <QScrollBar>
 #include <QTextEdit>
 #include <QTimer>
@@ -564,6 +566,38 @@ void WebContentView::hideEvent(QHideEvent* event)
     client().async_set_system_visibility_state(false);
 }
 
+static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget)
+{
+    auto qt_palette = widget.palette();
+
+    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)).release_value_but_fixme_should_propagate_errors();
+    auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
+    auto palette = Gfx::Palette(move(palette_impl));
+
+    auto translate = [&](Gfx::ColorRole gfx_color_role, QPalette::ColorRole qt_color_role) {
+        auto new_color = Gfx::Color::from_argb(qt_palette.color(qt_color_role).rgba());
+        palette.set_color(gfx_color_role, new_color);
+    };
+
+    translate(Gfx::ColorRole::ThreedHighlight, QPalette::ColorRole::Light);
+    translate(Gfx::ColorRole::ThreedShadow1, QPalette::ColorRole::Mid);
+    translate(Gfx::ColorRole::ThreedShadow2, QPalette::ColorRole::Dark);
+    translate(Gfx::ColorRole::HoverHighlight, QPalette::ColorRole::Light);
+    translate(Gfx::ColorRole::Link, QPalette::ColorRole::Link);
+    translate(Gfx::ColorRole::VisitedLink, QPalette::ColorRole::LinkVisited);
+    translate(Gfx::ColorRole::Button, QPalette::ColorRole::Button);
+    translate(Gfx::ColorRole::ButtonText, QPalette::ColorRole::ButtonText);
+    translate(Gfx::ColorRole::Selection, QPalette::ColorRole::Highlight);
+    translate(Gfx::ColorRole::SelectionText, QPalette::ColorRole::HighlightedText);
+
+    return theme;
+}
+
+void WebContentView::update_palette()
+{
+    client().async_update_system_theme(make_system_theme_from_qt_palette(*this));
+}
+
 void WebContentView::create_client()
 {
     m_client_state = {};
@@ -597,7 +631,7 @@ void WebContentView::create_client()
     };
 
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
-    client().async_update_system_theme(MUST(Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root))));
+    update_palette();
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
 
     // FIXME: Get the screen rect.
@@ -1013,6 +1047,13 @@ bool WebContentView::event(QEvent* event)
         keyReleaseEvent(static_cast<QKeyEvent*>(event));
         return true;
     }
+
+    if (event->type() == QEvent::PaletteChange) {
+        update_palette();
+        request_repaint();
+        return QAbstractScrollArea::event(event);
+    }
+
     return QAbstractScrollArea::event(event);
 }
 

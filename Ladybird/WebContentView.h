@@ -192,6 +192,8 @@ private:
     bool is_inspector_open() const;
     void close_sub_widgets();
 
+    void update_palette();
+
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
 
