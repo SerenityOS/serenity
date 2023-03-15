@@ -528,12 +528,11 @@ void Window::handle_key_event(KeyEvent& event)
     if (event.is_accepted())
         return;
 
-    if (is_blocking() || is_popup())
-        return;
-
     // Only process shortcuts if this is a keydown event.
-    if (event.type() == Event::KeyDown)
-        propagate_shortcuts(event, nullptr, PropagationLimit::Application);
+    if (event.type() == Event::KeyDown) {
+        auto const boundary = (is_blocking() || is_popup()) ? ShortcutPropagationBoundary::Window : ShortcutPropagationBoundary::Application;
+        propagate_shortcuts(event, nullptr, boundary);
+    }
 }
 
 void Window::handle_resize_event(ResizeEvent& event)
