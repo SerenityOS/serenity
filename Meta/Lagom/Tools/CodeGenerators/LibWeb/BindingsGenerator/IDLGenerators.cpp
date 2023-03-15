@@ -2653,6 +2653,151 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::values)
     }
 }
 
+void generate_namespace_header(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    generator.set("namespace_class", interface.namespace_class);
+
+    generator.append(R"~~~(
+#pragma once
+
+#include <LibJS/Runtime/Object.h>
+
+namespace Web::Bindings {
+
+class @namespace_class@ final : public JS::Object {
+    JS_OBJECT(@namespace_class@, JS::Object);
+
+public:
+    explicit @namespace_class@(JS::Realm&);
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+    virtual ~@namespace_class@() override;
+
+private:
+)~~~");
+
+    for (auto const& overload_set : interface.overload_sets) {
+        auto function_generator = generator.fork();
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+        function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@);
+)~~~");
+        if (overload_set.value.size() > 1) {
+            for (auto i = 0u; i < overload_set.value.size(); ++i) {
+                function_generator.set("overload_suffix", DeprecatedString::number(i));
+                function_generator.append(R"~~~(
+    JS_DECLARE_NATIVE_FUNCTION(@function.name:snakecase@@overload_suffix@);
+)~~~");
+            }
+        }
+    }
+
+    generator.append(R"~~~(
+};
+
+} // namespace Web::Bindings
+)~~~");
+}
+
+void generate_namespace_implementation(IDL::Interface const& interface, StringBuilder& builder)
+{
+    SourceGenerator generator { builder };
+
+    generator.set("name", interface.name);
+    generator.set("namespace_class", interface.namespace_class);
+
+    generator.append(R"~~~(
+#include <AK/Function.h>
+#include <LibIDL/Types.h>
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/Value.h>
+#include <LibWeb/Bindings/@namespace_class@.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/HTML/Window.h>
+#include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/WebIDL/OverloadResolution.h>
+
+)~~~");
+
+    for (auto& path : interface.required_imported_paths)
+        generate_include_for(generator, path);
+
+    emit_includes_for_all_imports(interface, generator, interface.pair_iterator_types.has_value());
+
+    generator.append(R"~~~(
+// FIXME: This is a total hack until we can figure out the namespace for a given type somehow.
+using namespace Web::CSS;
+using namespace Web::DOM;
+using namespace Web::DOMParsing;
+using namespace Web::Fetch;
+using namespace Web::FileAPI;
+using namespace Web::Geometry;
+using namespace Web::HighResolutionTime;
+using namespace Web::HTML;
+using namespace Web::IntersectionObserver;
+using namespace Web::RequestIdleCallback;
+using namespace Web::ResizeObserver;
+using namespace Web::Selection;
+using namespace Web::Streams;
+using namespace Web::UIEvents;
+using namespace Web::URL;
+using namespace Web::XHR;
+using namespace Web::WebGL;
+using namespace Web::WebIDL;
+
+namespace Web::Bindings {
+
+@namespace_class@::@namespace_class@(JS::Realm& realm)
+    : Object(ConstructWithoutPrototypeTag::Tag, realm)
+{
+}
+
+@namespace_class@::~@namespace_class@()
+{
+}
+
+JS::ThrowCompletionOr<void> @namespace_class@::initialize(JS::Realm& realm)
+{
+    [[maybe_unused]] auto& vm = this->vm();
+    [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
+
+    MUST_OR_THROW_OOM(Base::initialize(realm));
+
+)~~~");
+
+    // https://webidl.spec.whatwg.org/#es-operations
+    for (auto const& overload_set : interface.overload_sets) {
+        auto function_generator = generator.fork();
+        function_generator.set("function.name", overload_set.key);
+        function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
+        function_generator.set("function.length", DeprecatedString::number(get_shortest_function_length(overload_set.value)));
+
+        function_generator.append(R"~~~(
+    define_native_function(realm, "@function.name@", @function.name:snakecase@, @function.length@, default_attributes);
+)~~~");
+    }
+
+    generator.append(R"~~~(
+    return {};
+}
+)~~~");
+
+    for (auto const& function : interface.functions)
+        generate_function(generator, function, StaticFunction::Yes, interface.namespace_class, interface.name, interface);
+    for (auto const& overload_set : interface.overload_sets) {
+        if (overload_set.value.size() == 1)
+            continue;
+        generate_overload_arbiter(generator, overload_set, interface.namespace_class);
+    }
+
+    generator.append(R"~~~(
+} // namespace Web::Bindings
+)~~~");
+}
+
 void generate_constructor_header(IDL::Interface const& interface, StringBuilder& builder)
 {
     SourceGenerator generator { builder };

@@ -18,6 +18,8 @@
 extern Vector<StringView> s_header_search_paths;
 
 namespace IDL {
+void generate_namespace_header(IDL::Interface const&, StringBuilder&);
+void generate_namespace_implementation(IDL::Interface const&, StringBuilder&);
 void generate_constructor_header(IDL::Interface const&, StringBuilder&);
 void generate_constructor_implementation(IDL::Interface const&, StringBuilder&);
 void generate_prototype_header(IDL::Interface const&, StringBuilder&);
@@ -36,6 +38,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView output_path = "-"sv;
     StringView depfile_path;
     StringView depfile_target;
+    bool namespace_header_mode = false;
+    bool namespace_implementation_mode = false;
     bool constructor_header_mode = false;
     bool constructor_implementation_mode = false;
     bool prototype_header_mode = false;
@@ -44,6 +48,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool iterator_prototype_implementation_mode = false;
     bool global_mixin_header_mode = false;
     bool global_mixin_implementation_mode = false;
+    args_parser.add_option(namespace_header_mode, "Generate the namespace .h file", "namespace-header", 'N');
+    args_parser.add_option(namespace_implementation_mode, "Generate the namespace .cpp file", "namespace-implementation", 'A');
     args_parser.add_option(constructor_header_mode, "Generate the constructor .h file", "constructor-header", 'C');
     args_parser.add_option(constructor_implementation_mode, "Generate the constructor .cpp file", "constructor-implementation", 'O');
     args_parser.add_option(prototype_header_mode, "Generate the prototype .h file", "prototype-header", 'P');
@@ -136,6 +142,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     StringBuilder output_builder;
+
+    if (namespace_header_mode)
+        IDL::generate_namespace_header(interface, output_builder);
+
+    if (namespace_implementation_mode)
+        IDL::generate_namespace_implementation(interface, output_builder);
+
     if (constructor_header_mode)
         IDL::generate_constructor_header(interface, output_builder);
 

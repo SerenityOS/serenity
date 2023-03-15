@@ -25,6 +25,16 @@ public:
     {
     }
 
+    template<typename NamespaceType>
+    JS::Object& ensure_web_namespace(DeprecatedString const& namespace_name)
+    {
+        if (auto it = m_namespaces.find(namespace_name); it != m_namespaces.end())
+            return *it->value;
+
+        create_web_namespace<NamespaceType>(*m_realm);
+        return *m_namespaces.find(namespace_name)->value;
+    }
+
     template<typename PrototypeType>
     JS::Object& ensure_web_prototype(DeprecatedString const& class_name)
     {
@@ -48,9 +58,13 @@ public:
 private:
     virtual void visit_edges(JS::Cell::Visitor&) override;
 
+    template<typename NamespaceType>
+    void create_web_namespace(JS::Realm& realm);
+
     template<typename PrototypeType>
     void create_web_prototype_and_constructor(JS::Realm& realm);
 
+    HashMap<DeprecatedString, JS::NonnullGCPtr<JS::Object>> m_namespaces;
     HashMap<DeprecatedString, JS::NonnullGCPtr<JS::Object>> m_prototypes;
     HashMap<DeprecatedString, JS::GCPtr<JS::NativeFunction>> m_constructors;
     JS::NonnullGCPtr<JS::Realm> m_realm;
@@ -59,6 +73,12 @@ private:
 [[nodiscard]] inline Intrinsics& host_defined_intrinsics(JS::Realm& realm)
 {
     return *verify_cast<HostDefined>(realm.host_defined())->intrinsics;
+}
+
+template<typename T>
+[[nodiscard]] JS::Object& ensure_web_namespace(JS::Realm& realm, DeprecatedString const& namespace_name)
+{
+    return host_defined_intrinsics(realm).ensure_web_namespace<T>(namespace_name);
 }
 
 template<typename T>
