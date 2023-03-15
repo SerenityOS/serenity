@@ -170,7 +170,7 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
     if (icc_data.has_value())
         TRY(buffer.try_append(icc_data.value()));
 
-    TRY(buffer.try_append(pixel_data.data(), pixel_data.size()));
+    TRY(buffer.try_append(pixel_data));
     return buffer;
 }
 
