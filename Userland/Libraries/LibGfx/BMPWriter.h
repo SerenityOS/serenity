@@ -21,6 +21,8 @@ struct BMPWriterOptions {
         V5 = 124,
     };
     DibHeader dib_header = DibHeader::V5;
+
+    Optional<ReadonlyBytes> icc_data;
 };
 
 class BMPWriter {
