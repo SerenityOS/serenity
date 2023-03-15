@@ -10,7 +10,7 @@
 
 namespace CMake {
 
-static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token::Type type)
+static Gfx::TextAttributes style_for_token_type(Gfx::Palette const& palette, Token::Type type)
 {
     switch (type) {
     case Token::Type::BracketComment:
@@ -30,7 +30,7 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token
     case Token::Type::UnquotedArgument:
         return { palette.syntax_parameter() };
     case Token::Type::Garbage:
-        return { palette.red() };
+        return { palette.red(), {}, false, Gfx::TextAttributes::UnderlineStyle::Wavy, palette.red() };
     case Token::Type::VariableReference:
         // This is a bit arbitrary, since we don't have a color specifically for this.
         return { palette.syntax_preprocessor_value() };
@@ -66,13 +66,7 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette const& palette)
         if (!span.range.is_valid())
             return;
 
-        auto style = style_for_token_type(palette, type);
-        span.attributes.color = style.color;
-        span.attributes.bold = style.bold;
-        if (type == Token::Type::Garbage) {
-            span.attributes.underline_color = palette.red();
-            span.attributes.underline_style = Gfx::TextAttributes::UnderlineStyle::Wavy;
-        }
+        span.attributes = style_for_token_type(palette, type);
         span.is_skippable = false;
         span.data = static_cast<u64>(type);
         spans.append(move(span));
