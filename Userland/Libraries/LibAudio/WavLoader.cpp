@@ -268,8 +268,25 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         } else {
             TRY(m_stream->seek(-RIFF::chunk_id_size, SeekMode::FromCurrentPosition));
             auto chunk = TRY(m_stream->read_value<RIFF::Chunk>());
-            dbgln_if(AWAVLOADER_DEBUG, "Unhandled WAV chunk of type {}, size {} bytes", chunk.id.as_ascii_string(), chunk.size);
-            // TODO: Handle LIST INFO chunks.
+            if (chunk.id == RIFF::list_chunk_id) {
+                auto maybe_list = chunk.data_stream().read_value<RIFF::List>();
+                if (maybe_list.is_error()) {
+                    dbgln("WAV Warning: LIST chunk invalid, error: {}", maybe_list.release_error());
+                    continue;
+                }
+
+                auto list = maybe_list.release_value();
+                if (list.type == RIFF::info_chunk_id) {
+                    auto maybe_error = load_wav_info_block(move(list.chunks));
+                    if (maybe_error.is_error())
+                        dbgln("WAV Warning: INFO chunk invalid, error: {}", maybe_error.release_error());
+
+                } else {
+                    dbgln("Unhandled WAV list of type {} with {} subchunks", list.type.as_ascii_string(), list.chunks.size());
+                }
+            } else {
+                dbgln_if(AWAVLOADER_DEBUG, "Unhandled WAV chunk of type {}, size {} bytes", chunk.id.as_ascii_string(), chunk.size);
+            }
         }
     }
 
@@ -285,6 +302,44 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         m_total_samples);
 
     m_byte_offset_of_data_samples = TRY(m_stream->tell());
+    return {};
+}
+
+// http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf page 23 (LIST type)
+// We only recognize the relevant official metadata types; types added in later errata of RIFF are not relevant for audio.
+MaybeLoaderError WavLoaderPlugin::load_wav_info_block(Vector<RIFF::Chunk> info_chunks)
+{
+    for (auto const& chunk : info_chunks) {
+        auto metadata_name = chunk.id.as_ascii_string();
+        // Chunk contents are zero-terminated strings "ZSTR", so we just drop the null terminator.
+        StringView metadata_text { chunk.data.span().trim(chunk.data.size() - 1) };
+        // Note that we assume chunks to be unique, since that seems to almost always be the case.
+        // Worst case we just drop some metadata.
+        if (metadata_name == "IART"sv) {
+            // Artists are combined together with semicolons, at least when you edit them in Windows File Explorer.
+            auto artists = metadata_text.split_view(";"sv);
+            for (auto artist : artists)
+                TRY(m_metadata.add_person(Person::Role::Artist, TRY(String::from_utf8(artist))));
+        } else if (metadata_name == "ICMT"sv) {
+            m_metadata.comment = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "ICOP"sv) {
+            m_metadata.copyright = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "ICRD"sv) {
+            m_metadata.unparsed_time = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "IENG"sv) {
+            TRY(m_metadata.add_person(Person::Role::Engineer, TRY(String::from_utf8(metadata_text))));
+        } else if (metadata_name == "IGNR"sv) {
+            m_metadata.genre = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "INAM"sv) {
+            m_metadata.title = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "ISFT"sv) {
+            m_metadata.encoder = TRY(String::from_utf8(metadata_text));
+        } else if (metadata_name == "ISRC"sv) {
+            TRY(m_metadata.add_person(Person::Role::Publisher, TRY(String::from_utf8(metadata_text))));
+        } else {
+            TRY(m_metadata.add_miscellaneous(TRY(String::from_utf8(metadata_name)), TRY(String::from_utf8(metadata_text))));
+        }
+    }
     return {};
 }
 

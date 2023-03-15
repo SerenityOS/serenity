@@ -52,4 +52,12 @@ struct Chunk {
     FixedArray<u8> data;
 };
 
+// http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Docs/riffmci.pdf page 23 (LIST type)
+struct List {
+    static ErrorOr<List> read_from_stream(Stream& stream);
+
+    ChunkID type;
+    Vector<Chunk> chunks;
+};
+
 }
