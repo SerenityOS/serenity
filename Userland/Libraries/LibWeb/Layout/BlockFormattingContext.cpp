@@ -785,20 +785,17 @@ void BlockFormattingContext::layout_floating_box(Box const& box, BlockContainer 
                 }
                 did_touch_preceding_float = true;
                 if (!fits_next_to_preceding_float)
-                    continue;
+                    break;
                 offset_from_edge = tentative_offset_from_edge;
                 did_place_next_to_preceding_float = true;
                 break;
             }
 
-            if (!did_touch_preceding_float) {
-                // This box does not touch another floating box, go all the way to the edge.
-                float_to_edge();
-
-                // Also, forget all previous boxes floated to this side while since they're no longer relevant.
-                side_data.clear();
-            } else if (!did_place_next_to_preceding_float) {
-                // We ran out of horizontal space on this "float line", and need to break.
+            if (!did_touch_preceding_float || !did_place_next_to_preceding_float) {
+                // One of two things happened:
+                // - This box does not touch another floating box.
+                // - We ran out of horizontal space on this "float line", and need to break.
+                // Either way, we float this box all the way to the edge.
                 float_to_edge();
                 CSSPixels lowest_margin_edge = 0;
                 for (auto const& box : side_data.current_boxes) {
