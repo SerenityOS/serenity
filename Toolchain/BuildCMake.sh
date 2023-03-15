@@ -40,8 +40,8 @@ check_sha() {
 }
 
 # Note: Update this alongside Meta/CMake/cmake-version.cmake
-CMAKE_VERSION=3.25.1
-CMAKE_ARCHIVE_SHA256=1c511d09516af493694ed9baf13c55947a36389674d657a2d5e0ccedc6b291d8
+CMAKE_VERSION=3.26.0
+CMAKE_ARCHIVE_SHA256=4256613188857e95700621f7cdaaeb954f3546a9249e942bc2f9b3c26e381365
 CMAKE_ARCHIVE=cmake-${CMAKE_VERSION}.tar.gz
 CMAKE_ARCHIVE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/${CMAKE_ARCHIVE}
 
