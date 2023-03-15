@@ -31,9 +31,6 @@ public:
     template<typename T>
     ErrorOr<void> add_as_big_endian(T);
 
-    template<typename T>
-    ErrorOr<void> add_as_little_endian(T);
-
     ErrorOr<void> add_u8(u8);
 
     ErrorOr<void> compress_and_add(ReadonlyBytes);
@@ -92,14 +89,6 @@ ErrorOr<void> PNGChunk::compress_and_add(ReadonlyBytes uncompressed_bytes)
 ErrorOr<void> PNGChunk::add(ReadonlyBytes bytes)
 {
     TRY(m_data.try_append(bytes));
-    return {};
-}
-
-template<typename T>
-ErrorOr<void> PNGChunk::add_as_little_endian(T data)
-{
-    auto data_out = AK::convert_between_host_and_little_endian(data);
-    TRY(add(data_out));
     return {};
 }
 
