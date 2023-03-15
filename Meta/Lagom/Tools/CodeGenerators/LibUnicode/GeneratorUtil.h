@@ -20,7 +20,6 @@
 #include <AK/StringView.h>
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibLocale/Locale.h>
 
@@ -339,28 +338,6 @@ inline ErrorOr<JsonValue> read_json_file(StringView path)
     auto buffer = TRY(file->read_until_eof());
 
     return JsonValue::from_string(buffer);
-}
-
-inline ErrorOr<Core::DirIterator> path_to_dir_iterator(DeprecatedString path, StringView subpath = "main"sv)
-{
-    LexicalPath lexical_path(move(path));
-    if (!subpath.is_empty())
-        lexical_path = lexical_path.append(subpath);
-
-    Core::DirIterator iterator(lexical_path.string(), Core::DirIterator::SkipParentAndBaseDir);
-    if (iterator.has_error())
-        return iterator.error();
-
-    return iterator;
-}
-
-inline ErrorOr<DeprecatedString> next_path_from_dir_iterator(Core::DirIterator& iterator)
-{
-    auto next_path = iterator.next_full_path();
-    if (iterator.has_error())
-        return iterator.error();
-
-    return next_path;
 }
 
 inline void ensure_from_string_types_are_generated(SourceGenerator& generator)
