@@ -9,6 +9,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
 #include <Applications/Run/RunGML.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
@@ -110,14 +111,12 @@ void RunWindow::do_run()
 
 bool RunWindow::run_as_command(DeprecatedString const& run_input)
 {
-    pid_t child_pid;
-    char const* shell_executable = "/bin/Shell"; // TODO query and use the user's preferred shell.
-    char const* argv[] = { shell_executable, "-c", run_input.characters(), nullptr };
-
-    if ((errno = posix_spawn(&child_pid, shell_executable, nullptr, nullptr, const_cast<char**>(argv), environ))) {
-        perror("posix_spawn");
+    // TODO: Query and use the user's preferred shell.
+    auto maybe_child_pid = Core::Process::spawn("/bin/Shell"sv, Array { "-c", run_input.characters() }, {}, Core::Process::KeepAsChild::Yes);
+    if (maybe_child_pid.is_error())
         return false;
-    }
+
+    pid_t child_pid = maybe_child_pid.release_value();
 
     // Command spawned in child shell. Hide and wait for exit code.
     int status;
