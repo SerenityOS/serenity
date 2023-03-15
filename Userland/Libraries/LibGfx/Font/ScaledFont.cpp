@@ -163,4 +163,9 @@ int ScaledFont::pixel_size_rounded_up() const
     return m_pixel_size_rounded_up;
 }
 
+float ScaledFont::point_size() const
+{
+    return m_point_height;
+}
+
 }
