@@ -41,9 +41,6 @@ public:
     u32 crc();
 
 private:
-    template<Unsigned T>
-    ErrorOr<void> add(T);
-
     ByteBuffer m_data;
     DeprecatedString m_type;
 };
@@ -52,7 +49,7 @@ PNGChunk::PNGChunk(DeprecatedString type)
     : m_type(move(type))
 {
     // NOTE: These are MUST() because they should always be able to fit in m_data's inline capacity.
-    MUST(add<data_length_type>(0));
+    MUST(add_as_big_endian<data_length_type>(0));
     MUST(store_type());
 }
 
@@ -74,13 +71,6 @@ u32 PNGChunk::crc()
     return crc;
 }
 
-template<Unsigned T>
-ErrorOr<void> PNGChunk::add(T data)
-{
-    TRY(m_data.try_append(&data, sizeof(T)));
-    return {};
-}
-
 ErrorOr<void> PNGChunk::compress_and_add(ReadonlyBytes uncompressed_bytes)
 {
     return add(TRY(Compress::ZlibCompressor::compress_all(uncompressed_bytes, Compress::ZlibCompressionLevel::Best)));
@@ -96,13 +86,13 @@ template<typename T>
 ErrorOr<void> PNGChunk::add_as_big_endian(T data)
 {
     auto data_out = AK::convert_between_host_and_big_endian(data);
-    TRY(add(data_out));
+    TRY(m_data.try_append(&data_out, sizeof(T)));
     return {};
 }
 
 ErrorOr<void> PNGChunk::add_u8(u8 data)
 {
-    TRY(add(data));
+    TRY(m_data.try_append(data));
     return {};
 }
 
