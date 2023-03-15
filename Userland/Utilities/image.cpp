@@ -39,12 +39,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // This uses ImageDecoder instead of Bitmap::load_from_file() to have more control
     // over selecting a frame, access color profile data, and so on in the future.
     auto frame = TRY(decoder->frame(0)).image;
+    Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::BMPWriter::encode(*frame));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::PNGWriter::encode(*frame));
+        bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
         bytes = TRY(Gfx::PortableFormatWriter::encode(*frame, Gfx::PortableFormatWriter::Options { .format = format }));
