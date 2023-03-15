@@ -54,7 +54,7 @@ struct ArgvList {
         m_working_directory = working_directory;
     }
 
-    ErrorOr<pid_t> spawn()
+    ErrorOr<pid_t> spawn(Process::KeepAsChild keep_as_child)
     {
 #ifdef AK_OS_SERENITY
         posix_spawn_file_actions_t spawn_actions;
@@ -66,24 +66,27 @@ struct ArgvList {
             posix_spawn_file_actions_addchdir(&spawn_actions, m_working_directory.characters());
 
         auto pid = TRY(System::posix_spawn(m_path.view(), &spawn_actions, nullptr, const_cast<char**>(get().data()), environ));
-        TRY(System::disown(pid));
+        if (keep_as_child == Process::KeepAsChild::No)
+            TRY(System::disown(pid));
 #else
         auto pid = TRY(System::posix_spawn(m_path.view(), nullptr, nullptr, const_cast<char**>(get().data()), environ));
+        // FIXME: Support keep_as_child outside Serenity.
+        (void)keep_as_child;
 #endif
         return pid;
     }
 };
 
-ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<DeprecatedString> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
 {
     ArgvList argv { path, arguments.size() };
     for (auto const& arg : arguments)
         argv.append(arg.characters());
     argv.set_working_directory(working_directory);
-    return argv.spawn();
+    return argv.spawn(keep_as_child);
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
 {
     Vector<DeprecatedString> backing_strings;
     backing_strings.ensure_capacity(arguments.size());
@@ -93,16 +96,16 @@ ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<StringView> argument
         argv.append(backing_strings.last().characters());
     }
     argv.set_working_directory(working_directory);
-    return argv.spawn();
+    return argv.spawn(keep_as_child);
 }
 
-ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, DeprecatedString working_directory)
+ErrorOr<pid_t> Process::spawn(StringView path, ReadonlySpan<char const*> arguments, DeprecatedString working_directory, KeepAsChild keep_as_child)
 {
     ArgvList argv { path, arguments.size() };
     for (auto arg : arguments)
         argv.append(arg);
     argv.set_working_directory(working_directory);
-    return argv.spawn();
+    return argv.spawn(keep_as_child);
 }
 
 ErrorOr<String> Process::get_name()
