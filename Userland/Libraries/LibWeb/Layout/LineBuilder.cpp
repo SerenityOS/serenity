@@ -26,6 +26,9 @@ LineBuilder::~LineBuilder()
 
 void LineBuilder::break_line(Optional<CSSPixels> next_item_width)
 {
+    auto last_line_box = ensure_last_line_box();
+    last_line_box.m_has_break = true;
+
     update_last_line();
     size_t break_count = 0;
     bool floats_intrude_at_current_y = false;
@@ -305,7 +308,7 @@ void LineBuilder::remove_last_line_if_empty()
 {
     // If there's an empty line box at the bottom, just remove it instead of giving it height.
     auto& line_boxes = m_containing_block_state.line_boxes;
-    if (!line_boxes.is_empty() && line_boxes.last().fragments().is_empty()) {
+    if (!line_boxes.is_empty() && line_boxes.last().is_empty()) {
         line_boxes.take_last();
         m_last_line_needs_update = false;
     }
