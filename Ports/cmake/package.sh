@@ -1,8 +1,8 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='cmake'
-version='3.25.1'
+version='3.26.0'
 useconfigure='true'
-files="https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz cmake-${version}.tar.gz 1c511d09516af493694ed9baf13c55947a36389674d657a2d5e0ccedc6b291d8"
+files="https://github.com/Kitware/CMake/releases/download/v${version}/cmake-${version}.tar.gz cmake-${version}.tar.gz 4256613188857e95700621f7cdaaeb954f3546a9249e942bc2f9b3c26e381365"
 auth_type='sha256'
 depends=(
     'bash'
