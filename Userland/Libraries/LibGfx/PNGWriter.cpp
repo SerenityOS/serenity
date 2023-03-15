@@ -48,6 +48,8 @@ private:
 PNGChunk::PNGChunk(String type)
     : m_type(move(type))
 {
+    VERIFY(m_type.bytes().size() == 4);
+
     // NOTE: These are MUST() because they should always be able to fit in m_data's inline capacity.
     MUST(add_as_big_endian<data_length_type>(0));
     MUST(store_type());
