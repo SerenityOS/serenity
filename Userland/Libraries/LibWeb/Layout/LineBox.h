@@ -28,7 +28,7 @@ public:
     void trim_trailing_whitespace();
 
     bool is_empty_or_ends_in_whitespace() const;
-    bool is_empty() const { return m_fragments.is_empty(); }
+    bool is_empty() const { return m_fragments.is_empty() && !m_has_break; }
 
 private:
     friend class BlockContainer;
@@ -40,6 +40,7 @@ private:
     CSSPixels m_height { 0 };
     CSSPixels m_bottom { 0 };
     CSSPixels m_baseline { 0 };
+    bool m_has_break { false };
 };
 
 }
