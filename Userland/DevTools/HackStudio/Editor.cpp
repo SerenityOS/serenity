@@ -82,6 +82,18 @@ Editor::Editor()
     add_custom_context_menu_action(*m_move_execution_to_line_action);
 
     set_gutter_visible(true);
+    on_gutter_click = [&](auto line, auto) {
+        add_breakpoint(line).release_value_but_fixme_should_propagate_errors();
+    };
+
+    m_breakpoint_indicator_id = register_gutter_indicator(
+        [&](auto& painter, Gfx::IntRect rect, size_t) {
+            auto const& icon = breakpoint_icon_bitmap();
+            painter.draw_scaled_bitmap(rect, icon, icon.rect());
+        },
+        [&](size_t line_index, auto) {
+            remove_breakpoint(line_index);
+        }).release_value_but_fixme_should_propagate_errors();
 
     if (Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv).is_empty()) {
         Config::write_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv, "[\"/usr/share/man/man2\", \"/usr/share/man/man3\"]"sv);
@@ -146,13 +158,6 @@ void Editor::paint_event(GUI::PaintEvent& event)
         size_t first_visible_line = text_position_at(event.rect().top_left()).line();
         size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
 
-        for (size_t line : breakpoint_lines()) {
-            if (line < first_visible_line || line > last_visible_line) {
-                continue;
-            }
-            auto const& icon = breakpoint_icon_bitmap();
-            painter.blit(gutter_icon_rect(line).top_left(), icon, icon.rect());
-        }
         if (execution_position().has_value()) {
             auto const& icon = current_position_icon_bitmap();
             painter.blit(gutter_icon_rect(execution_position().value()).top_left(), icon, icon.rect());
@@ -344,16 +349,6 @@ void Editor::mousedown_event(GUI::MouseEvent& event)
     }
 
     auto text_position = text_position_at(event.position());
-    auto ruler_line_rect = ruler_content_rect(text_position.line());
-    if (event.button() == GUI::MouseButton::Primary && event.position().x() < ruler_line_rect.width()) {
-        if (!breakpoint_lines().contains_slow(text_position.line())) {
-            breakpoint_lines().append(text_position.line());
-            Debugger::the().on_breakpoint_change(wrapper().filename_title(), text_position.line(), BreakpointChange::Added);
-        } else {
-            breakpoint_lines().remove_first_matching([&](size_t line) { return line == text_position.line(); });
-            Debugger::the().on_breakpoint_change(wrapper().filename_title(), text_position.line(), BreakpointChange::Removed);
-        }
-    }
 
     if (!(event.modifiers() & Mod_Ctrl)) {
         GUI::TextEditor::mousedown_event(event);
@@ -808,6 +803,24 @@ void Editor::set_semantic_syntax_highlighting(bool value)
 {
     m_use_semantic_syntax_highlighting = value;
     set_syntax_highlighter_for(code_document());
+}
+
+ErrorOr<void> Editor::add_breakpoint(size_t line_number)
+{
+    if (!breakpoint_lines().contains_slow(line_number)) {
+        add_gutter_indicator(m_breakpoint_indicator_id, line_number);
+        TRY(breakpoint_lines().try_append(line_number));
+        Debugger::the().on_breakpoint_change(wrapper().filename_title(), line_number, BreakpointChange::Added);
+    }
+
+    return {};
+}
+
+void Editor::remove_breakpoint(size_t line_number)
+{
+    remove_gutter_indicator(m_breakpoint_indicator_id, line_number);
+    breakpoint_lines().remove_first_matching([&](size_t line) { return line == line_number; });
+    Debugger::the().on_breakpoint_change(wrapper().filename_title(), line_number, BreakpointChange::Removed);
 }
 
 }
