@@ -13,6 +13,7 @@
 #include <LibWeb/Bindings/InstancePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/Instance.h>
+#include <LibWeb/WebAssembly/Memory.h>
 #include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableObject.h>
@@ -60,9 +61,9 @@ JS::ThrowCompletionOr<void> Instance::initialize(JS::Realm& realm)
                 return {};
             },
             [&](Wasm::MemoryAddress const& address) -> JS::ThrowCompletionOr<void> {
-                Optional<JS::GCPtr<Bindings::WebAssemblyMemoryObject>> object = cache.memory_instances.get(address);
+                Optional<JS::GCPtr<Memory>> object = cache.memory_instances.get(address);
                 if (!object.has_value()) {
-                    object = MUST_OR_THROW_OOM(heap().allocate<Web::Bindings::WebAssemblyMemoryObject>(realm, realm, address));
+                    object = MUST_OR_THROW_OOM(heap().allocate<Memory>(realm, realm, address));
                     cache.memory_instances.set(address, *object);
                 }
 

@@ -103,7 +103,6 @@ class @legacy_constructor_class@;)~~~");
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
     {
         auto gen = generator.fork();
-        add_interface(gen, "WebAssemblyMemoryPrototype"sv, "WebAssemblyMemoryConstructor"sv, {});
         add_interface(gen, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
     }
 
@@ -153,8 +152,6 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
     generator.append(R"~~~(
-#include <LibWeb/WebAssembly/WebAssemblyMemoryConstructor.h>
-#include <LibWeb/WebAssembly/WebAssemblyMemoryPrototype.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyTablePrototype.h>)~~~");
 
@@ -225,7 +222,6 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
     {
         auto gen = generator.fork();
-        add_interface(gen, "WebAssembly.Memory"sv, "WebAssemblyMemoryPrototype"sv, "WebAssemblyMemoryConstructor"sv, {});
         add_interface(gen, "WebAssembly.Table"sv, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
     }
 

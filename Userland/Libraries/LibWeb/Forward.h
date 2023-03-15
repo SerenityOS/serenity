@@ -483,6 +483,7 @@ class ResourceLoader;
 
 namespace Web::WebAssembly {
 class Instance;
+class Memory;
 class Module;
 }
 
