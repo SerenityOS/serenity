@@ -727,9 +727,10 @@ void Parser::parse_dictionary(Interface& interface)
         if (lexer.consume_specific("required")) {
             required = true;
             consume_whitespace();
-            if (lexer.consume_specific('['))
-                extended_attributes = parse_extended_attributes();
         }
+
+        if (lexer.consume_specific('['))
+            extended_attributes = parse_extended_attributes();
 
         auto type = parse_type();
         consume_whitespace();
