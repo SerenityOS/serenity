@@ -1,12 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, kleines Filmröllchen <filmroellchen@serenityos.org>
+ * Copyright (c) 2021-2023, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "WavLoader.h"
 #include "LoaderError.h"
+#include "RIFFTypes.h"
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/FixedArray.h>
@@ -183,95 +184,56 @@ MaybeLoaderError WavLoaderPlugin::seek(int sample_index)
 // Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 MaybeLoaderError WavLoaderPlugin::parse_header()
 {
-    bool ok = true;
-    size_t bytes_read = 0;
-
-    auto read_u8 = [&]() -> ErrorOr<u8, LoaderError> {
-        u8 value = LOADER_TRY(m_stream->read_value<LittleEndian<u8>>());
-        bytes_read += 1;
-        return value;
-    };
-
-    auto read_u16 = [&]() -> ErrorOr<u16, LoaderError> {
-        u16 value = LOADER_TRY(m_stream->read_value<LittleEndian<u16>>());
-        bytes_read += 2;
-        return value;
-    };
-
-    auto read_u32 = [&]() -> ErrorOr<u32, LoaderError> {
-        u32 value = LOADER_TRY(m_stream->read_value<LittleEndian<u32>>());
-        bytes_read += 4;
-        return value;
-    };
-
-#define CHECK_OK(category, msg)                                                                      \
-    do {                                                                                             \
-        if (!ok)                                                                                     \
-            return LoaderError { category, DeprecatedString::formatted("Parsing failed: {}", msg) }; \
+#define CHECK(check, category, msg)                                                                                                                 \
+    do {                                                                                                                                            \
+        if (!(check)) {                                                                                                                             \
+            return LoaderError { category, static_cast<size_t>(LOADER_TRY(m_stream->tell())), DeprecatedString::formatted("WAV header: {}", msg) }; \
+        }                                                                                                                                           \
     } while (0)
 
-    u32 riff = TRY(read_u32());
-    ok = ok && riff == 0x46464952; // "RIFF"
-    CHECK_OK(LoaderError::Category::Format, "RIFF header");
+    auto riff = TRY(m_stream->read_value<RIFF::ChunkID>());
+    CHECK(riff == RIFF::riff_magic, LoaderError::Category::Format, "RIFF header magic invalid");
 
-    u32 sz = TRY(read_u32());
-    ok = ok && sz < maximum_wav_size;
-    CHECK_OK(LoaderError::Category::Format, "File size");
+    u32 size = TRY(m_stream->read_value<LittleEndian<u32>>());
+    CHECK(size < maximum_wav_size, LoaderError::Category::Format, "File size too large");
 
-    u32 wave = TRY(read_u32());
-    ok = ok && wave == 0x45564157; // "WAVE"
-    CHECK_OK(LoaderError::Category::Format, "WAVE header");
+    auto wave = TRY(m_stream->read_value<RIFF::ChunkID>());
+    CHECK(wave == RIFF::wave_subformat_id, LoaderError::Category::Format, "WAVE subformat id invalid");
 
-    u32 fmt_id = TRY(read_u32());
-    ok = ok && fmt_id == 0x20746D66; // "fmt "
-    CHECK_OK(LoaderError::Category::Format, "FMT header");
+    auto format_chunk = TRY(m_stream->read_value<RIFF::Chunk>());
+    CHECK(format_chunk.id.as_ascii_string() == RIFF::format_chunk_id, LoaderError::Category::Format, "FMT chunk id invalid");
 
-    u32 fmt_size = TRY(read_u32());
-    ok = ok && (fmt_size == 16 || fmt_size == 18 || fmt_size == 40);
-    CHECK_OK(LoaderError::Category::Format, "FMT size");
+    auto format_stream = format_chunk.data_stream();
+    u16 audio_format = TRY(format_stream.read_value<LittleEndian<u16>>());
+    CHECK(audio_format == to_underlying(RIFF::WaveFormat::Pcm) || audio_format == to_underlying(RIFF::WaveFormat::IEEEFloat) || audio_format == to_underlying(RIFF::WaveFormat::Extensible),
+        LoaderError::Category::Unimplemented, "Audio format not supported");
 
-    u16 audio_format = TRY(read_u16());
-    CHECK_OK(LoaderError::Category::Format, "Audio format"); // incomplete read check
-    ok = ok && (audio_format == WAVE_FORMAT_PCM || audio_format == WAVE_FORMAT_IEEE_FLOAT || audio_format == WAVE_FORMAT_EXTENSIBLE);
-    CHECK_OK(LoaderError::Category::Unimplemented, "Audio format PCM/Float"); // value check
+    m_num_channels = TRY(format_stream.read_value<LittleEndian<u16>>());
+    CHECK(m_num_channels == 1 || m_num_channels == 2, LoaderError::Category::Unimplemented, "Channel count");
 
-    m_num_channels = TRY(read_u16());
-    ok = ok && (m_num_channels == 1 || m_num_channels == 2);
-    CHECK_OK(LoaderError::Category::Unimplemented, "Channel count");
+    m_sample_rate = TRY(format_stream.read_value<LittleEndian<u32>>());
+    // Data rate; can be ignored.
+    TRY(format_stream.read_value<LittleEndian<u32>>());
+    u16 block_size_bytes = TRY(format_stream.read_value<LittleEndian<u16>>());
 
-    m_sample_rate = TRY(read_u32());
-    CHECK_OK(LoaderError::Category::IO, "Sample rate");
+    u16 bits_per_sample = TRY(format_stream.read_value<LittleEndian<u16>>());
 
-    TRY(read_u32());
-    CHECK_OK(LoaderError::Category::IO, "Data rate");
-
-    u16 block_size_bytes = TRY(read_u16());
-    CHECK_OK(LoaderError::Category::IO, "Block size");
-
-    u16 bits_per_sample = TRY(read_u16());
-    CHECK_OK(LoaderError::Category::IO, "Bits per sample");
-
-    if (audio_format == WAVE_FORMAT_EXTENSIBLE) {
-        ok = ok && (fmt_size == 40);
-        CHECK_OK(LoaderError::Category::Format, "Extensible fmt size"); // value check
+    if (audio_format == to_underlying(RIFF::WaveFormat::Extensible)) {
+        CHECK(format_chunk.size == 40, LoaderError::Category::Format, "Extensible fmt size is not 40 bytes");
 
         // Discard everything until the GUID.
         // We've already read 16 bytes from the stream. The GUID starts in another 8 bytes.
-        TRY(read_u32());
-        TRY(read_u32());
-        CHECK_OK(LoaderError::Category::IO, "Discard until GUID");
+        TRY(format_stream.read_value<LittleEndian<u64>>());
 
         // Get the underlying audio format from the first two bytes of GUID
-        u16 guid_subformat = TRY(read_u16());
-        ok = ok && (guid_subformat == WAVE_FORMAT_PCM || guid_subformat == WAVE_FORMAT_IEEE_FLOAT);
-        CHECK_OK(LoaderError::Category::Unimplemented, "GUID SubFormat");
+        u16 guid_subformat = TRY(format_stream.read_value<LittleEndian<u16>>());
+        CHECK(guid_subformat == to_underlying(RIFF::WaveFormat::Pcm) || guid_subformat == to_underlying(RIFF::WaveFormat::IEEEFloat), LoaderError::Category::Unimplemented, "GUID SubFormat not supported");
 
         audio_format = guid_subformat;
     }
 
-    if (audio_format == WAVE_FORMAT_PCM) {
-        ok = ok && (bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
-        CHECK_OK(LoaderError::Category::Unimplemented, "Bits per sample (PCM)"); // value check
+    if (audio_format == to_underlying(RIFF::WaveFormat::Pcm)) {
+        CHECK(bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24, LoaderError::Category::Unimplemented, "PCM bits per sample not supported");
 
         // We only support 8-24 bit audio right now because other formats are uncommon
         if (bits_per_sample == 8) {
@@ -281,9 +243,8 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         } else if (bits_per_sample == 24) {
             m_sample_format = PcmSampleFormat::Int24;
         }
-    } else if (audio_format == WAVE_FORMAT_IEEE_FLOAT) {
-        ok = ok && (bits_per_sample == 32 || bits_per_sample == 64);
-        CHECK_OK(LoaderError::Category::Unimplemented, "Bits per sample (Float)"); // value check
+    } else if (audio_format == to_underlying(RIFF::WaveFormat::IEEEFloat)) {
+        CHECK(bits_per_sample == 32 || bits_per_sample == 64, LoaderError::Category::Unimplemented, "Float bits per sample not supported");
 
         // Again, only the common 32 and 64 bit
         if (bits_per_sample == 32) {
@@ -293,42 +254,28 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         }
     }
 
-    ok = ok && (block_size_bytes == (m_num_channels * (bits_per_sample / 8)));
-    CHECK_OK(LoaderError::Category::Format, "Block size sanity check");
+    CHECK(block_size_bytes == (m_num_channels * (bits_per_sample / 8)), LoaderError::Category::Format, "Block size invalid");
 
     dbgln_if(AWAVLOADER_DEBUG, "WAV format {} at {} bit, {} channels, rate {}Hz ",
         sample_format_name(m_sample_format), pcm_bits_per_sample(m_sample_format), m_num_channels, m_sample_rate);
 
-    // Read chunks until we find DATA
+    // Read all chunks before DATA.
     bool found_data = false;
-    u32 data_size = 0;
-    u8 search_byte = 0;
-    while (true) {
-        search_byte = TRY(read_u8());
-        CHECK_OK(LoaderError::Category::IO, "Reading byte searching for data");
-        if (search_byte != 0x64) // D
-            continue;
-
-        search_byte = TRY(read_u8());
-        CHECK_OK(LoaderError::Category::IO, "Reading next byte searching for data");
-        if (search_byte != 0x61) // A
-            continue;
-
-        u16 search_remaining = TRY(read_u16());
-        CHECK_OK(LoaderError::Category::IO, "Reading remaining bytes searching for data");
-        if (search_remaining != 0x6174) // TA
-            continue;
-
-        data_size = TRY(read_u32());
-        found_data = true;
-        break;
+    while (!found_data) {
+        auto chunk_header = TRY(m_stream->read_value<RIFF::ChunkID>());
+        if (chunk_header == RIFF::data_chunk_id) {
+            found_data = true;
+        } else {
+            TRY(m_stream->seek(-RIFF::chunk_id_size, SeekMode::FromCurrentPosition));
+            auto chunk = TRY(m_stream->read_value<RIFF::Chunk>());
+            dbgln_if(AWAVLOADER_DEBUG, "Unhandled WAV chunk of type {}, size {} bytes", chunk.id.as_ascii_string(), chunk.size);
+            // TODO: Handle LIST INFO chunks.
+        }
     }
 
-    ok = ok && found_data;
-    CHECK_OK(LoaderError::Category::Format, "Found no data chunk");
-
-    ok = ok && data_size < maximum_wav_size;
-    CHECK_OK(LoaderError::Category::Format, "Data was too large");
+    u32 data_size = TRY(m_stream->read_value<LittleEndian<u32>>());
+    CHECK(found_data, LoaderError::Category::Format, "Found no data chunk");
+    CHECK(data_size < maximum_wav_size, LoaderError::Category::Format, "Data too large");
 
     m_total_samples = data_size / block_size_bytes;
 
@@ -337,7 +284,8 @@ MaybeLoaderError WavLoaderPlugin::parse_header()
         block_size_bytes,
         m_total_samples);
 
-    m_byte_offset_of_data_samples = bytes_read;
+    m_byte_offset_of_data_samples = TRY(m_stream->tell());
     return {};
 }
+
 }
