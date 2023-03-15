@@ -7,11 +7,13 @@
  */
 
 #include "BackgroundSettingsWidget.h"
+#include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -19,7 +21,6 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/IconView.h>
@@ -100,16 +101,11 @@ ErrorOr<void> BackgroundSettingsWidget::create_frame()
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
     button.on_click = [this](auto) {
-        auto path_or_empty = GUI::FilePicker::get_open_filepath(window(), "Select wallpaper from file system", "/res/wallpapers"sv, false, GUI::Dialog::ScreenPosition::CenterWithinParent, { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } });
-        if (!path_or_empty.has_value())
+        auto response = FileSystemAccessClient::Client::the().open_file(window(), "Select wallpaper"sv, "/res/wallpapers"sv, Core::File::OpenMode::Read, { { GUI::FileTypeFilter::image_files(), GUI::FileTypeFilter::all_files() } });
+        if (response.is_error())
             return;
-        auto path = String::from_deprecated_string(path_or_empty.value());
-        if (path.is_error()) {
-            GUI::MessageBox::show_error(window(), "Unable to set wallpaper"sv);
-            return;
-        }
         m_wallpaper_view->selection().clear();
-        m_monitor_widget->set_wallpaper(path.release_value());
+        m_monitor_widget->set_wallpaper(response.release_value().filename());
         m_background_settings_changed = true;
         set_modified(true);
     };
