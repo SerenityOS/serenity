@@ -525,30 +525,16 @@ static void paint_text_fragment(PaintContext& context, Layout::TextNode const& t
         DevicePixelPoint baseline_start { fragment_absolute_device_rect.x(), fragment_absolute_device_rect.y() + context.rounded_device_pixels(fragment.baseline()) };
         Utf8View view { text.substring_view(fragment.start(), fragment.length()) };
 
-        auto& font = fragment.layout_node().font();
-        auto scaled_font = [&]() -> RefPtr<Gfx::Font const> {
-            auto device_font_pt_size = font.point_size() * context.device_pixels_per_css_pixel();
-            FontSelector font_selector = { FlyString::from_deprecated_fly_string(font.family()).release_value_but_fixme_should_propagate_errors(), device_font_pt_size, font.weight(), font.width(), font.slope() };
-            if (auto cached_font = FontCache::the().get(font_selector)) {
-                return cached_font;
-            }
+        auto scaled_font = FontCache::the().scaled_font(fragment.layout_node().font(), context.device_pixels_per_css_pixel());
 
-            if (auto font_with_device_pt_size = font.with_size(device_font_pt_size)) {
-                FontCache::the().set(font_selector, *font_with_device_pt_size);
-                return font_with_device_pt_size;
-            }
-
-            return {};
-        }();
-
-        painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font ? *scaled_font : font, text_node.computed_values().color());
+        painter.draw_text_run(baseline_start.to_type<int>(), view, *scaled_font, text_node.computed_values().color());
 
         auto selection_rect = context.enclosing_device_rect(fragment.selection_rect(text_node.font())).to_type<int>();
         if (!selection_rect.is_empty()) {
             painter.fill_rect(selection_rect, context.palette().selection());
             Gfx::PainterStateSaver saver(painter);
             painter.add_clip_rect(selection_rect);
-            painter.draw_text_run(baseline_start.to_type<int>(), view, scaled_font ? *scaled_font : font, context.palette().selection_text());
+            painter.draw_text_run(baseline_start.to_type<int>(), view, *scaled_font, context.palette().selection_text());
         }
 
         paint_text_decoration(context, painter, text_node, fragment);

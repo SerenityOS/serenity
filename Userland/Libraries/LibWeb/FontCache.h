@@ -37,6 +37,8 @@ public:
     RefPtr<Gfx::Font const> get(FontSelector const&) const;
     void set(FontSelector const&, NonnullRefPtr<Gfx::Font const>);
 
+    NonnullRefPtr<Gfx::Font const> scaled_font(Gfx::Font const&, float scale_factor);
+
 private:
     FontCache() = default;
     mutable HashMap<FontSelector, NonnullRefPtr<Gfx::Font const>> m_fonts;
