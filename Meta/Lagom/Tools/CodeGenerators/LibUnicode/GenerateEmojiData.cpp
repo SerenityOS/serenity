@@ -180,14 +180,12 @@ static ErrorOr<void> validate_emoji(StringView emoji_resource_path, EmojiData& e
         if (lexical_path.extension() != "png")
             continue;
 
-        auto basename = lexical_path.basename();
-        if (!basename.starts_with("U+"sv))
-            continue;
-
-        basename = basename.substring_view(0, basename.length() - lexical_path.extension().length() - 1);
+        auto title = lexical_path.title();
+        if (!title.starts_with("U+"sv))
+            return IterationDecision::Continue;
 
         Vector<u32> code_points;
-        TRY(basename.for_each_split_view('_', SplitBehavior::Nothing, [&](auto segment) -> ErrorOr<void> {
+        TRY(title.for_each_split_view('_', SplitBehavior::Nothing, [&](auto segment) -> ErrorOr<void> {
             auto code_point = AK::StringUtils::convert_to_uint_from_hex<u32>(segment.substring_view(2));
             VERIFY(code_point.has_value());
 
