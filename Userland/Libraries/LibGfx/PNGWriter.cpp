@@ -7,9 +7,9 @@
  */
 
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
 #include <AK/SIMDExtras.h>
+#include <AK/String.h>
 #include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
@@ -23,9 +23,9 @@ class PNGChunk {
     using data_length_type = u32;
 
 public:
-    explicit PNGChunk(DeprecatedString);
+    explicit PNGChunk(String);
     auto const& data() const { return m_data; };
-    DeprecatedString const& type() const { return m_type; };
+    String const& type() const { return m_type; };
     ErrorOr<void> reserve(size_t bytes) { return m_data.try_ensure_capacity(bytes); }
 
     template<typename T>
@@ -42,10 +42,10 @@ public:
 
 private:
     ByteBuffer m_data;
-    DeprecatedString m_type;
+    String m_type;
 };
 
-PNGChunk::PNGChunk(DeprecatedString type)
+PNGChunk::PNGChunk(String type)
     : m_type(move(type))
 {
     // NOTE: These are MUST() because they should always be able to fit in m_data's inline capacity.
@@ -61,7 +61,7 @@ ErrorOr<void> PNGChunk::store_type()
 
 void PNGChunk::store_data_length()
 {
-    auto data_length = BigEndian<u32>(m_data.size() - sizeof(data_length_type) - m_type.length());
+    auto data_length = BigEndian<u32>(m_data.size() - sizeof(data_length_type) - m_type.bytes().size());
     __builtin_memcpy(m_data.offset_pointer(0), &data_length, sizeof(u32));
 }
 
@@ -113,7 +113,7 @@ ErrorOr<void> PNGWriter::add_png_header()
 
 ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG::ColorType color_type, u8 compression_method, u8 filter_method, u8 interlace_method)
 {
-    PNGChunk png_chunk { "IHDR" };
+    PNGChunk png_chunk { "IHDR"_short_string };
     TRY(png_chunk.add_as_big_endian(width));
     TRY(png_chunk.add_as_big_endian(height));
     TRY(png_chunk.add_u8(bit_depth));
@@ -128,7 +128,7 @@ ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG
 ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
 {
     // https://www.w3.org/TR/png/#11iCCP
-    PNGChunk chunk { "iCCP" };
+    PNGChunk chunk { "iCCP"_short_string };
 
     TRY(chunk.add("embedded profile"sv.bytes()));
     TRY(chunk.add_u8(0)); // \0-terminate profile name
@@ -142,7 +142,7 @@ ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
 
 ErrorOr<void> PNGWriter::add_IEND_chunk()
 {
-    PNGChunk png_chunk { "IEND" };
+    PNGChunk png_chunk { "IEND"_short_string };
     TRY(add_chunk(png_chunk));
     return {};
 }
@@ -167,7 +167,7 @@ static_assert(AssertSize<Pixel, 4>());
 
 ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
 {
-    PNGChunk png_chunk { "IDAT" };
+    PNGChunk png_chunk { "IDAT"_short_string };
     TRY(png_chunk.reserve(bitmap.size_in_bytes()));
 
     ByteBuffer uncompressed_block_data;
