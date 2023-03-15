@@ -9,7 +9,6 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
 
 namespace Web::Bindings {
 

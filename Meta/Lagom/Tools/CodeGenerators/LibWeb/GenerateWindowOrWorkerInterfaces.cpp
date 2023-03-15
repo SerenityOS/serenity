@@ -104,7 +104,6 @@ class @legacy_constructor_class@;)~~~");
     {
         auto gen = generator.fork();
         add_interface(gen, "WebAssemblyMemoryPrototype"sv, "WebAssemblyMemoryConstructor"sv, {});
-        add_interface(gen, "WebAssemblyInstancePrototype"sv, "WebAssemblyInstanceConstructor"sv, {});
         add_interface(gen, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
     }
 
@@ -156,8 +155,6 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
     generator.append(R"~~~(
 #include <LibWeb/WebAssembly/WebAssemblyMemoryConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyMemoryPrototype.h>
-#include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
-#include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
 #include <LibWeb/WebAssembly/WebAssemblyTableConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyTablePrototype.h>)~~~");
 
@@ -229,7 +226,6 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
     {
         auto gen = generator.fork();
         add_interface(gen, "WebAssembly.Memory"sv, "WebAssemblyMemoryPrototype"sv, "WebAssemblyMemoryConstructor"sv, {});
-        add_interface(gen, "WebAssembly.Instance"sv, "WebAssemblyInstancePrototype"sv, "WebAssemblyInstanceConstructor"sv, {});
         add_interface(gen, "WebAssembly.Table"sv, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
     }
 
