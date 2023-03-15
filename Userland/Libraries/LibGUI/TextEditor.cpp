@@ -290,6 +290,28 @@ void TextEditor::mousedown_event(MouseEvent& event)
         }
     }
 
+    if (gutter_content_rect(text_position.line()).contains(event.position())) {
+        auto& gutter_indicators = m_line_data[text_position.line()]->gutter_indicators;
+        auto indicator_position = 0;
+        for (auto i = 0u; i < m_gutter_indicators.size(); ++i) {
+            if ((gutter_indicators & (1 << i)) == 0)
+                continue;
+
+            if (gutter_indicator_rect(text_position.line(), indicator_position).contains(event.position())) {
+                auto& indicator_data = m_gutter_indicators[i];
+                if (indicator_data.on_click)
+                    indicator_data.on_click(text_position.line(), event.modifiers());
+                return;
+            }
+            indicator_position++;
+        }
+
+        // We didn't click on an indicator
+        if (on_gutter_click)
+            on_gutter_click(text_position.line(), event.modifiers());
+        return;
+    }
+
     if (on_mousedown)
         on_mousedown();
 
@@ -404,7 +426,7 @@ int TextEditor::gutter_width() const
 {
     if (!m_gutter_visible)
         return 0;
-    return line_height(); // square gutter
+    return line_height() * (m_most_gutter_indicators_displayed_on_one_line + 1);
 }
 
 Gfx::IntRect TextEditor::gutter_content_rect(size_t line_index) const
@@ -443,6 +465,18 @@ Gfx::IntRect TextEditor::folding_indicator_rect(size_t line_index) const
         line_content_rect(line_index).y() - vertical_scrollbar().value(),
         folding_indicator_width(),
         line_content_rect(line_index).height()
+    };
+}
+
+Gfx::IntRect TextEditor::gutter_indicator_rect(size_t line_number, int indicator_position) const
+{
+    auto gutter_rect = gutter_content_rect(line_number);
+    auto indicator_size = gutter_rect.height();
+    return Gfx::IntRect {
+        gutter_rect.right() - static_cast<int>(lroundf(indicator_size * (indicator_position + 1.5f))),
+        gutter_rect.top(),
+        indicator_size,
+        indicator_size
     };
 }
 
@@ -596,6 +630,28 @@ void TextEditor::paint_event(PaintEvent& event)
                 is_current_line ? font().bold_variant() : font(),
                 Gfx::TextAlignment::CenterRight,
                 is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
+        }
+    }
+
+    // Draw gutter indicators
+    if (m_gutter_visible) {
+        for (size_t line_index = first_visible_line; line_index <= last_visible_line; ++line_index) {
+            if (!document().line_is_visible(line_index))
+                continue;
+
+            auto& gutter_indicators = m_line_data[line_index]->gutter_indicators;
+            if (gutter_indicators == 0)
+                continue;
+
+            auto indicator_position = 0;
+            for (auto i = 0u; i < m_gutter_indicators.size(); ++i) {
+                if ((gutter_indicators & (1 << i)) == 0)
+                    continue;
+
+                auto rect = gutter_indicator_rect(line_index, indicator_position);
+                m_gutter_indicators[i].draw_indicator(painter, rect, line_index);
+                indicator_position++;
+            }
         }
     }
 
@@ -2509,6 +2565,48 @@ void TextEditor::highlighter_did_set_folding_regions(Vector<GUI::TextDocumentFol
 {
     document().set_folding_regions(move(folding_regions));
     recompute_all_visual_lines();
+}
+
+ErrorOr<TextEditor::GutterIndicatorID> TextEditor::register_gutter_indicator(PaintGutterIndicator draw_indicator, OnGutterIndicatorClick on_click)
+{
+    // We use a u32 to store a line's active gutter indicators, so that's the limit of how many we can have.
+    VERIFY(m_gutter_indicators.size() < 32);
+
+    GutterIndicatorID id = m_gutter_indicators.size();
+    TRY(m_gutter_indicators.try_empend(move(draw_indicator), move(on_click)));
+    return id;
+}
+
+void TextEditor::add_gutter_indicator(GutterIndicatorID id, size_t line)
+{
+    auto& line_indicators = m_line_data[line]->gutter_indicators;
+    if (line_indicators & (1 << id.value()))
+        return;
+    line_indicators |= (1 << id.value());
+
+    // Ensure the gutter is at least wide enough to display all the indicators on this line.
+    if (m_most_gutter_indicators_displayed_on_one_line < m_gutter_indicators.size()) {
+        unsigned indicators_on_line = popcount(line_indicators);
+        if (indicators_on_line > m_most_gutter_indicators_displayed_on_one_line) {
+            m_most_gutter_indicators_displayed_on_one_line = indicators_on_line;
+            update();
+        }
+    }
+
+    update(gutter_content_rect(line));
+}
+
+void TextEditor::remove_gutter_indicator(GutterIndicatorID id, size_t line)
+{
+    m_line_data[line]->gutter_indicators &= ~(1 << id.value());
+    update(gutter_content_rect(line));
+}
+
+void TextEditor::clear_gutter_indicators(GutterIndicatorID id)
+{
+    for (auto line = 0u; line < line_count(); ++line)
+        remove_gutter_indicator(id, line);
+    update();
 }
 
 }

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <AK/DistinctNumeric.h>
 #include <AK/Function.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Timer.h>
@@ -105,6 +106,15 @@ public:
     bool is_gutter_visible() const { return m_gutter_visible; }
     void set_gutter_visible(bool);
 
+    AK_TYPEDEF_DISTINCT_NUMERIC_GENERAL(size_t, GutterIndicatorID, CastToUnderlying, Comparison);
+    using PaintGutterIndicator = Function<void(Gfx::Painter&, Gfx::IntRect, size_t line)>;
+    using OnGutterIndicatorClick = Function<void(size_t line, unsigned modifiers)>;
+    ErrorOr<GutterIndicatorID> register_gutter_indicator(PaintGutterIndicator, OnGutterIndicatorClick = nullptr);
+    void add_gutter_indicator(GutterIndicatorID, size_t line);
+    void remove_gutter_indicator(GutterIndicatorID, size_t line);
+    void clear_gutter_indicators(GutterIndicatorID);
+    Gfx::IntRect gutter_indicator_rect(size_t line_number, int indicator_position) const;
+
     void set_icon(Gfx::Bitmap const*);
     Gfx::Bitmap const* icon() const { return m_icon; }
 
@@ -113,6 +123,7 @@ public:
     Function<void()> on_focusin;
     Function<void()> on_focusout;
     Function<void()> on_highlighter_change;
+    Function<void(size_t line, unsigned modifiers)> on_gutter_click;
 
     void set_text(StringView, AllowCallback = AllowCallback::Yes);
     void scroll_cursor_into_view();
@@ -400,6 +411,13 @@ private:
     int m_horizontal_content_padding { 3 };
     TextRange m_selection {};
 
+    struct GutterIndicator {
+        PaintGutterIndicator draw_indicator;
+        OnGutterIndicatorClick on_click;
+    };
+    Vector<GutterIndicator> m_gutter_indicators;
+    unsigned m_most_gutter_indicators_displayed_on_one_line { 0 };
+
     Optional<u32> m_substitution_code_point;
     mutable OwnPtr<Vector<u32>> m_substitution_string_data; // Used to avoid repeated String construction.
 
@@ -430,6 +448,7 @@ private:
     struct LineData {
         Vector<Utf32View> visual_lines;
         Gfx::IntRect visual_rect;
+        u32 gutter_indicators { 0 }; // A bitfield of which gutter indicators are present. (1 << GutterIndicatorID)
     };
 
     Vector<NonnullOwnPtr<LineData>> m_line_data;
