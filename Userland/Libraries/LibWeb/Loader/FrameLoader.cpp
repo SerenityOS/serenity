@@ -212,6 +212,8 @@ bool FrameLoader::load(LoadRequest& request, Type type)
         return false;
     }
 
+    request.set_main_resource(true);
+
     auto& url = request.url();
 
     if (type == Type::Navigation || type == Type::Reload || type == Type::Redirect) {

@@ -322,7 +322,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
                     store_response_cookies(request.page().value(), request.url(), *set_cookie);
             }
 
-            if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599 && payload.is_empty())) {
+            if (!success || (status_code.has_value() && *status_code >= 400 && *status_code <= 599 && (payload.is_empty() || !request.is_main_resource()))) {
                 StringBuilder error_builder;
                 if (status_code.has_value())
                     error_builder.appendff("Load failed: {}", *status_code);
