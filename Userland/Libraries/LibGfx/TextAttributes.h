@@ -20,11 +20,10 @@ struct TextAttributes {
 
     Color color;
     Optional<Color> background_color {};
-    bool underline { false };
     bool bold { false };
 
+    Optional<UnderlineStyle> underline_style {};
     Optional<Color> underline_color {};
-    UnderlineStyle underline_style { UnderlineStyle::Solid };
 };
 
 }

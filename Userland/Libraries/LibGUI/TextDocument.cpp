@@ -1391,9 +1391,8 @@ void TextDocument::merge_span_collections()
         merged_span.span.attributes.color = span_and_collection_index.collection_index > last_span_and_collection_index.collection_index ? span.attributes.color : last_span.attributes.color;
         merged_span.span.attributes.bold = span.attributes.bold | last_span.attributes.bold;
         merged_span.span.attributes.background_color = span.attributes.background_color.has_value() ? span.attributes.background_color.value() : last_span.attributes.background_color;
-        merged_span.span.attributes.underline = span.attributes.underline | last_span.attributes.underline;
         merged_span.span.attributes.underline_color = span.attributes.underline_color.has_value() ? span.attributes.underline_color.value() : last_span.attributes.underline_color;
-        merged_span.span.attributes.underline_style = span.attributes.underline_style;
+        merged_span.span.attributes.underline_style = span.attributes.underline_style.has_value() ? span.attributes.underline_style : last_span.attributes.underline_style;
         merged_spans.append(move(merged_span));
 
         if (span.range.end() == last_span.range.end())

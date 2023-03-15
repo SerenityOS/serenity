@@ -54,7 +54,6 @@ void SyntaxHighlighter::rehighlight(Gfx::Palette const& palette)
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
         if (type == Token::Type::Garbage) {
-            span.attributes.underline = true;
             span.attributes.underline_color = palette.red();
             span.attributes.underline_style = Gfx::TextAttributes::UnderlineStyle::Wavy;
         }
