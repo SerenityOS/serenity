@@ -1,0 +1,27 @@
+enum ImportExportKind {
+    "function",
+    "table",
+    "memory",
+    "global"
+};
+
+dictionary ModuleExportDescriptor {
+    required USVString name;
+    required ImportExportKind kind;
+};
+
+dictionary ModuleImportDescriptor {
+    required USVString module;
+    required USVString name;
+    required ImportExportKind kind;
+};
+
+// https://webassembly.github.io/spec/js-api/#modules
+[LegacyNamespace=WebAssembly, Exposed=*]
+interface Module {
+    constructor(BufferSource bytes);
+
+    // FIXME: static sequence<ModuleExportDescriptor> exports(Module moduleObject);
+    // FIXME: static sequence<ModuleImportDescriptor> imports(Module moduleObject);
+    // FIXME: static sequence<ArrayBuffer> customSections(Module moduleObject, DOMString sectionName);
+};

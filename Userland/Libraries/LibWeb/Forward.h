@@ -482,6 +482,7 @@ class ResourceLoader;
 }
 
 namespace Web::WebAssembly {
+class Module;
 }
 
 namespace Web::WebGL {

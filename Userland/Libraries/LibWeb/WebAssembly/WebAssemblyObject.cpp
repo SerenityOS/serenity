@@ -6,9 +6,6 @@
 
 #include "WebAssemblyInstanceObject.h"
 #include "WebAssemblyMemoryPrototype.h"
-#include "WebAssemblyModuleConstructor.h"
-#include "WebAssemblyModuleObject.h"
-#include "WebAssemblyModulePrototype.h"
 #include "WebAssemblyTableObject.h"
 #include "WebAssemblyTablePrototype.h"
 #include <AK/MemoryStream.h>
@@ -23,6 +20,8 @@
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/AbstractMachine/Validator.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/ModulePrototype.h>
+#include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
@@ -49,7 +48,7 @@ JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
     auto& instance_constructor = Bindings::ensure_web_constructor<WebAssemblyInstancePrototype>(realm, "WebAssembly.Instance"sv);
     define_direct_property("Instance", &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
-    auto& module_constructor = Bindings::ensure_web_constructor<WebAssemblyModulePrototype>(realm, "WebAssembly.Module"sv);
+    auto& module_constructor = Bindings::ensure_web_constructor<ModulePrototype>(realm, "WebAssembly.Module"sv);
     define_direct_property("Module", &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     auto& table_constructor = Bindings::ensure_web_constructor<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"sv);
@@ -159,7 +158,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
     if (result.is_error())
         promise->reject(*result.release_error().value());
     else
-        promise->fulfill(MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, result.release_value())));
+        promise->fulfill(MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Module>(realm, realm, result.release_value())));
     return promise;
 }
 
@@ -333,8 +332,8 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
         }
         module = &WebAssemblyObject::s_compiled_modules.at(result.release_value())->module;
         should_return_module = true;
-    } else if (is<WebAssemblyModuleObject>(buffer)) {
-        module = &static_cast<WebAssemblyModuleObject*>(buffer)->module();
+    } else if (is<WebAssembly::Module>(buffer)) {
+        module = &static_cast<WebAssembly::Module*>(buffer)->module();
     } else {
         auto error = JS::TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name())));
         promise->reject(error);
@@ -349,7 +348,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
         auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyInstanceObject>(realm, realm, result.release_value()));
         if (should_return_module) {
             auto object = JS::Object::create(realm, nullptr);
-            object->define_direct_property("module", MUST_OR_THROW_OOM(vm.heap().allocate<WebAssemblyModuleObject>(realm, realm, s_compiled_modules.size() - 1)), JS::default_attributes);
+            object->define_direct_property("module", MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Module>(realm, realm, s_compiled_modules.size() - 1)), JS::default_attributes);
             object->define_direct_property("instance", instance_object, JS::default_attributes);
             promise->fulfill(object);
         } else {

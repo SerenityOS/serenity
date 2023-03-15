@@ -6,10 +6,10 @@
 
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceConstructor.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyInstanceObjectPrototype.h>
-#include <LibWeb/WebAssembly/WebAssemblyModuleObject.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
@@ -32,9 +32,9 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> WebAssemblyInstanceConstruct
     auto& realm = *vm.current_realm();
 
     auto* module_argument = TRY(vm.argument(0).to_object(vm));
-    if (!is<WebAssemblyModuleObject>(module_argument))
+    if (!is<WebAssembly::Module>(module_argument))
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "WebAssembly.Module");
-    auto& module_object = static_cast<WebAssemblyModuleObject&>(*module_argument);
+    auto& module_object = static_cast<WebAssembly::Module&>(*module_argument);
     auto result = TRY(WebAssemblyObject::instantiate_module(vm, module_object.module()));
     return MUST_OR_THROW_OOM(heap().allocate<WebAssemblyInstanceObject>(realm, realm, result));
 }
