@@ -40,6 +40,7 @@ private:
     HashMap<DeprecatedString, DeprecatedString> parse_extended_attributes();
     void parse_attribute(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
     void parse_interface(Interface&);
+    void parse_namespace(Interface&);
     void parse_non_interface_entities(bool allow_interface, Interface&);
     void parse_enumeration(Interface&);
     void parse_typedef(Interface&);
