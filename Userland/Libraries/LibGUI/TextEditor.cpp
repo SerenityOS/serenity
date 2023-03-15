@@ -503,7 +503,7 @@ void TextEditor::paint_event(PaintEvent& event)
         } else {
             painter.draw_text(rect, raw_text, font, alignment, attributes.color);
         }
-        if (attributes.underline) {
+        if (attributes.underline_style.has_value()) {
             auto bottom_left = [&]() {
                 auto point = rect.bottom_left().translated(0, 1);
 
@@ -2493,7 +2493,7 @@ void TextEditor::on_search_results(GUI::TextRange current, Vector<GUI::TextRange
         span.attributes.color = Color::from_argb(0xff000000); // So text without spans from a highlighter will have color
         if (i == m_search_result_index) {
             span.attributes.bold = true;
-            span.attributes.underline = true;
+            span.attributes.underline_style = Gfx::TextAttributes::UnderlineStyle::Solid;
         }
         spans.append(move(span));
     }

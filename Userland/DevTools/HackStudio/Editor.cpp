@@ -292,8 +292,8 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
     for (auto& span : document().spans()) {
         bool is_clickable = (highlighter->is_navigatable(span.data) || highlighter->is_identifier(span.data));
         if (span.range.contains(m_previous_text_position) && !span.range.contains(text_position)) {
-            if (is_clickable && span.attributes.underline) {
-                span.attributes.underline = false;
+            if (is_clickable && span.attributes.underline_style.has_value()) {
+                span.attributes.underline_style.clear();
                 wrapper().editor().update();
             }
         }
@@ -304,9 +304,12 @@ void Editor::mousemove_event(GUI::MouseEvent& event)
 
             if (is_clickable) {
                 is_over_clickable = true;
-                bool was_underlined = span.attributes.underline;
-                span.attributes.underline = event.modifiers() & Mod_Ctrl;
-                if (span.attributes.underline != was_underlined) {
+                bool was_underlined = span.attributes.underline_style.has_value();
+                bool now_underlined = event.modifiers() & Mod_Ctrl;
+                span.attributes.underline_style.clear();
+                if (now_underlined)
+                    span.attributes.underline_style = Gfx::TextAttributes::UnderlineStyle::Solid;
+                if (now_underlined != was_underlined) {
                     wrapper().editor().update();
                 }
             }

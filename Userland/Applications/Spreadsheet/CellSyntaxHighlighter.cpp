@@ -29,7 +29,6 @@ void CellSyntaxHighlighter::rehighlight(Palette const& palette)
             palette.syntax_keyword(),
             Optional<Color> {},
             false,
-            false,
         },
         (u64)-1,
         false);
@@ -46,7 +45,6 @@ void CellSyntaxHighlighter::rehighlight(Palette const& palette)
                     Gfx::TextAttributes {
                         Color::Black,
                         Color::Red,
-                        false,
                         false,
                     },
                     (u64)-1,
