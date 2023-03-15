@@ -18,8 +18,9 @@ struct BMPWriterOptions {
         Info = 40,
         V3 = 56,
         V4 = 108,
+        V5 = 124,
     };
-    DibHeader dib_header = DibHeader::V4;
+    DibHeader dib_header = DibHeader::V5;
 };
 
 class BMPWriter {

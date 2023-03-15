@@ -91,6 +91,7 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
         break;
     case Options::DibHeader::V3:
     case Options::DibHeader::V4:
+    case Options::DibHeader::V5:
         m_compression = Compression::BI_BITFIELDS;
         m_bytes_per_pixel = 4;
         m_include_alpha_channel = true;
@@ -126,19 +127,26 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
     streamer.write_u32(0);                     // TotalColors
     streamer.write_u32(0);                     // ImportantColors
 
-    if (dib_header == Options::DibHeader::V3 || dib_header == Options::DibHeader::V4) {
+    if (dib_header >= Options::DibHeader::V3) {
         streamer.write_u32(0x00ff0000); // Red bitmask
         streamer.write_u32(0x0000ff00); // Green bitmask
         streamer.write_u32(0x000000ff); // Blue bitmask
         streamer.write_u32(0xff000000); // Alpha bitmask
     }
 
-    if (dib_header == Options::DibHeader::V4) {
+    if (dib_header >= Options::DibHeader::V4) {
         streamer.write_u32(0); // Colorspace
 
         for (int i = 0; i < 12; i++) {
             streamer.write_u32(0); // Endpoints
         }
+    }
+
+    if (dib_header >= Options::DibHeader::V5) {
+        streamer.write_u32(4); // Rendering intent IMAGES / Perceptual.
+        streamer.write_u32(0); // Profile data
+        streamer.write_u32(0); // Profile size
+        streamer.write_u32(0); // Reserved
     }
 
     TRY(buffer.try_append(pixel_data.data(), pixel_data.size()));
