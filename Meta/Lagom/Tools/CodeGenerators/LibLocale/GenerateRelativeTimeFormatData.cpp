@@ -15,7 +15,7 @@
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/RelativeTimeFormat.h>
 
@@ -137,8 +137,6 @@ static ErrorOr<void> parse_date_fields(DeprecatedString locale_dates_path, CLDR&
 
 static ErrorOr<void> parse_all_locales(DeprecatedString dates_path, CLDR& cldr)
 {
-    auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
-
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
@@ -152,13 +150,14 @@ static ErrorOr<void> parse_all_locales(DeprecatedString dates_path, CLDR& cldr)
         return builder.to_deprecated_string();
     };
 
-    while (dates_iterator.has_next()) {
-        auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", dates_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto dates_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(dates_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_date_fields(move(dates_path), cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
     return {};
 }

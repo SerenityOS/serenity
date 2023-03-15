@@ -23,7 +23,7 @@
 #include <AK/Traits.h>
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibLocale/DateTimeFormat.h>
 #include <LibTimeZone/TimeZone.h>
 
@@ -1654,8 +1654,6 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
     TRY(parse_week_data(core_path, cldr));
     TRY(parse_meta_zones(core_path, cldr));
 
-    auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
-
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));
 
@@ -1669,20 +1667,21 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         return builder.to_deprecated_string();
     };
 
-    while (dates_iterator.has_next()) {
-        auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
-        auto calendars_iterator = TRY(path_to_dir_iterator(dates_path, {}));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", dates_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto dates_path = LexicalPath::join(directory.path().string(), entry.name).string();
 
         auto language = TRY(remove_variants_from_path(dates_path));
         auto& locale = cldr.locales.ensure(language);
 
-        while (calendars_iterator.has_next()) {
-            auto calendars_path = TRY(next_path_from_dir_iterator(calendars_iterator));
+        TRY(Core::Directory::for_each_entry(dates_path, Core::DirIterator::SkipParentAndBaseDir, [&](auto& dates_entry, auto& dates_directory) -> ErrorOr<IterationDecision> {
+            auto calendars_path = LexicalPath::join(dates_directory.path().string(), dates_entry.name).string();
             TRY(parse_calendars(move(calendars_path), cldr, locale));
-        }
+            return IterationDecision::Continue;
+        }));
 
         TRY(parse_time_zone_names(move(dates_path), cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
     TRY(parse_day_periods(move(core_path), cldr));
     return {};

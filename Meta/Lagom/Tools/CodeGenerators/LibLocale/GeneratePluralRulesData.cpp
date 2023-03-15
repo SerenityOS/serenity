@@ -15,6 +15,7 @@
 #include <AK/Variant.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibCore/Directory.h>
 #include <LibLocale/PluralRules.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
@@ -393,8 +394,6 @@ static ErrorOr<void> parse_plural_ranges(DeprecatedString core_supplemental_path
 
 static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedString locale_names_path, CLDR& cldr)
 {
-    auto identity_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
-
     LexicalPath core_supplemental_path(move(core_path));
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
     VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
@@ -412,12 +411,13 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         return builder.to_deprecated_string();
     };
 
-    while (identity_iterator.has_next()) {
-        auto locale_path = TRY(next_path_from_dir_iterator(identity_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", locale_names_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto locale_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(locale_path));
 
         cldr.locales.ensure(language);
-    }
+        return IterationDecision::Continue;
+    }));
 
     TRY(parse_plural_rules(core_supplemental_path.string(), "plurals.json"sv, cldr));
     TRY(parse_plural_rules(core_supplemental_path.string(), "ordinals.json"sv, cldr));
