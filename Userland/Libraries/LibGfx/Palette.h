@@ -59,7 +59,7 @@ private:
 class Palette {
 
 public:
-    explicit Palette(PaletteImpl&);
+    explicit Palette(NonnullRefPtr<PaletteImpl>);
     ~Palette() = default;
 
     Color accent() const { return color(ColorRole::Accent); }

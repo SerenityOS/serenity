@@ -22,8 +22,8 @@ PaletteImpl::PaletteImpl(Core::AnonymousBuffer buffer)
 {
 }
 
-Palette::Palette(PaletteImpl& impl)
-    : m_impl(impl)
+Palette::Palette(NonnullRefPtr<PaletteImpl> impl)
+    : m_impl(move(impl))
 {
 }
 
