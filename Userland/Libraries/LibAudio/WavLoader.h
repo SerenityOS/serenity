@@ -14,6 +14,7 @@
 #include <AK/Span.h>
 #include <AK/StringView.h>
 #include <LibAudio/Loader.h>
+#include <LibAudio/RIFFTypes.h>
 
 namespace Audio {
 
@@ -46,6 +47,7 @@ private:
     MaybeLoaderError initialize();
 
     MaybeLoaderError parse_header();
+    MaybeLoaderError load_wav_info_block(Vector<RIFF::Chunk> info_chunks);
 
     LoaderSamples samples_from_pcm_data(Bytes const& data, size_t samples_to_read) const;
     template<typename SampleReader>

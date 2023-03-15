@@ -8,6 +8,7 @@
 #include <AK/Endian.h>
 #include <AK/Stream.h>
 #include <AK/Try.h>
+#include <AK/TypeCasts.h>
 
 namespace Audio::RIFF {
 
@@ -26,10 +27,34 @@ ErrorOr<Chunk> Chunk::read_from_stream(Stream& stream)
     auto data = TRY(FixedArray<u8>::create(size));
     TRY(stream.read_until_filled(data.span()));
 
+    // RIFF chunks may have trailing padding to align to x86 "words" (i.e. 2 bytes).
+    if (is<SeekableStream>(stream)) {
+        if (!stream.is_eof()) {
+            auto stream_position = TRY(static_cast<SeekableStream&>(stream).tell());
+            if (stream_position % 2 != 0)
+                TRY(static_cast<SeekableStream&>(stream).seek(1, SeekMode::FromCurrentPosition));
+        }
+    } else {
+        dbgln("RIFF Warning: Cannot align stream to 2-byte boundary, next chunk may be bogus!");
+    }
+
     return Chunk {
         id,
         size,
         move(data),
+    };
+}
+
+ErrorOr<List> List::read_from_stream(Stream& stream)
+{
+    auto type = TRY(stream.read_value<ChunkID>());
+    Vector<Chunk> chunks;
+    while (!stream.is_eof())
+        TRY(chunks.try_append(TRY(stream.read_value<Chunk>())));
+
+    return List {
+        .type = type,
+        .chunks = move(chunks),
     };
 }
 
