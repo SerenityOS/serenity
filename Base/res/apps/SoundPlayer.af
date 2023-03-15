@@ -5,4 +5,4 @@ Category=Media
 
 [Launcher]
 FileTypes=mp3,flac,m3u,m3u8,qoa,wav
-MimeTypes=audio/mpeg,audio/wave,audio/flac,audio/qoa
+MimeTypes=audio/mpeg,audio/wav,audio/flac,audio/qoa

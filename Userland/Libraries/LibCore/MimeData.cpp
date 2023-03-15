@@ -156,7 +156,7 @@ StringView guess_mime_type_based_on_filename(StringView path)
     __ENUMERATE_MIME_TYPE_HEADER(tiff, "image/tiff", 0, 4, 'I', 'I', '*', 0x00)                                                                  \
     __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff", 0, 4, 'M', 'M', 0x00, '*')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(wasm, "application/wasm", 0, 4, 0x00, 'a', 's', 'm')                                                            \
-    __ENUMERATE_MIME_TYPE_HEADER(wav, "audio/wave", 8, 4, 'W', 'A', 'V', 'E')                                                                    \
+    __ENUMERATE_MIME_TYPE_HEADER(wav, "audio/wav", 8, 4, 'W', 'A', 'V', 'E')                                                                     \
     __ENUMERATE_MIME_TYPE_HEADER(webp, "image/webp", 8, 4, 'W', 'E', 'B', 'P')                                                                   \
     __ENUMERATE_MIME_TYPE_HEADER(win_31x_archive, "extra/win-31x-compressed", 0, 4, 'K', 'W', 'A', 'J')                                          \
     __ENUMERATE_MIME_TYPE_HEADER(win_95_archive, "extra/win-95-compressed", 0, 4, 'S', 'Z', 'D', 'D')                                            \
