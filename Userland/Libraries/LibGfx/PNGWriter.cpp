@@ -55,7 +55,7 @@ PNGChunk::PNGChunk(DeprecatedString type)
 
 ErrorOr<void> PNGChunk::store_type()
 {
-    TRY(m_data.try_append(type().bytes()));
+    TRY(add(type().bytes()));
     return {};
 }
 
