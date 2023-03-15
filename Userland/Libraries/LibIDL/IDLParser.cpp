@@ -592,6 +592,11 @@ void Parser::parse_interface(Interface& interface)
         parse_function(extended_attributes, interface);
     }
 
+    if (auto legacy_namespace = interface.extended_attributes.get("LegacyNamespace"sv); legacy_namespace.has_value())
+        interface.namespaced_name = DeprecatedString::formatted("{}.{}", *legacy_namespace, interface.name);
+    else
+        interface.namespaced_name = interface.name;
+
     interface.constructor_class = DeprecatedString::formatted("{}Constructor", interface.name);
     interface.prototype_class = DeprecatedString::formatted("{}Prototype", interface.name);
     interface.prototype_base_class = DeprecatedString::formatted("{}Prototype", interface.parent_name.is_empty() ? "Object" : interface.parent_name);

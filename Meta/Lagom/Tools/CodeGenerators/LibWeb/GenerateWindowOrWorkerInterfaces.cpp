@@ -225,7 +225,7 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
         if (interface.is_namespace)
             add_namespace(gen, interface.name, interface.namespace_class);
         else
-            add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
+            add_interface(gen, interface.namespaced_name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
     }
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
@@ -346,7 +346,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
         if (interface.is_namespace)
             add_namespace(gen, interface.name, interface.namespace_class);
         else
-            add_interface(gen, interface.name, interface.prototype_class, lookup_legacy_constructor(interface));
+            add_interface(gen, interface.namespaced_name, interface.prototype_class, lookup_legacy_constructor(interface));
     }
 
     generator.append(R"~~~(

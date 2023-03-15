@@ -2279,6 +2279,7 @@ static void generate_prototype_or_global_mixin_definitions(IDL::Interface const&
     auto is_global_interface = interface.extended_attributes.contains("Global");
     auto class_name = is_global_interface ? interface.global_mixin_class : interface.prototype_class;
     generator.set("name", interface.name);
+    generator.set("namespaced_name", interface.namespaced_name);
     generator.set("class_name", class_name);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
 
@@ -2421,7 +2422,7 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
     }
 
     generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@name@"sv)), JS::Attribute::Configurable);
+    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@namespaced_name@"sv)), JS::Attribute::Configurable);
 )~~~");
 
     if (!is_global_interface) {
@@ -2460,7 +2461,7 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
 
         generator.append(R"~~~(
     if (!is<@fully_qualified_name@>(this_object))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@namespaced_name@");
     return static_cast<@fully_qualified_name@*>(this_object);
 }
 )~~~");
@@ -2560,7 +2561,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
     auto this_value = vm.this_value();
     if (!this_value.is_object() || !is<@fully_qualified_name@>(this_value.as_object()))
-        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@name@");
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObjectOfType, "@namespaced_name@");
     TRY(this_value.as_object().internal_define_own_property("@attribute.name@", JS::PropertyDescriptor { .value = vm.argument(0), .writable = true }));
     return JS::js_undefined();
 }
@@ -2877,6 +2878,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
     SourceGenerator generator { builder };
 
     generator.set("name", interface.name);
+    generator.set("namespaced_name", interface.namespaced_name);
     generator.set("prototype_class", interface.prototype_class);
     generator.set("constructor_class", interface.constructor_class);
     generator.set("fully_qualified_name", interface.fully_qualified_name);
@@ -2973,7 +2975,7 @@ namespace Web::Bindings {
 
 JS::ThrowCompletionOr<JS::Value> @constructor_class@::call()
 {
-    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "@name@");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::ConstructorWithoutNew, "@namespaced_name@");
 }
 
 JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::construct(FunctionObject&)
@@ -2984,7 +2986,7 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
         // No constructor
         generator.set("constructor.length", "0");
         generator.append(R"~~~(
-    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@name@");
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@namespaced_name@");
 )~~~");
     } else if (interface.constructors.size() == 1) {
         // Single constructor
@@ -3029,7 +3031,7 @@ JS::ThrowCompletionOr<void> @constructor_class@::initialize(JS::Realm& realm)
     [[maybe_unused]] u8 default_attributes = JS::Attribute::Enumerable;
 
     MUST_OR_THROW_OOM(Base::initialize(realm));
-    define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@name@"), 0);
+    define_direct_property(vm.names.prototype, &ensure_web_prototype<@prototype_class@>(realm, "@namespaced_name@"), 0);
     define_direct_property(vm.names.length, JS::Value(@constructor.length@), JS::Attribute::Configurable);
 
 )~~~");
