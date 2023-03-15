@@ -443,9 +443,8 @@ set(SOURCES
     URL/URLSearchParams.cpp
     URL/URLSearchParamsIterator.cpp
     WebAssembly/Instance.cpp
+    WebAssembly/Memory.cpp
     WebAssembly/Module.cpp
-    WebAssembly/WebAssemblyMemoryConstructor.cpp
-    WebAssembly/WebAssemblyMemoryPrototype.cpp
     WebAssembly/WebAssemblyObject.cpp
     WebAssembly/WebAssemblyTableConstructor.cpp
     WebAssembly/WebAssemblyTableObject.cpp

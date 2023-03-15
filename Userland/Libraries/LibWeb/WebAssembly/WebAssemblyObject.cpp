@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebAssemblyMemoryPrototype.h"
 #include "WebAssemblyTableObject.h"
 #include "WebAssemblyTablePrototype.h"
 #include <AK/MemoryStream.h>
@@ -20,8 +19,10 @@
 #include <LibWasm/AbstractMachine/Validator.h>
 #include <LibWeb/Bindings/InstancePrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/Bindings/MemoryPrototype.h>
 #include <LibWeb/Bindings/ModulePrototype.h>
 #include <LibWeb/WebAssembly/Instance.h>
+#include <LibWeb/WebAssembly/Memory.h>
 #include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
@@ -42,7 +43,7 @@ JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
     define_native_function(realm, "compile", compile, 1, attr);
     define_native_function(realm, "instantiate", instantiate, 1, attr);
 
-    auto& memory_constructor = Bindings::ensure_web_constructor<WebAssemblyMemoryPrototype>(realm, "WebAssembly.Memory"sv);
+    auto& memory_constructor = Bindings::ensure_web_constructor<MemoryPrototype>(realm, "WebAssembly.Memory"sv);
     define_direct_property("Memory", &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     auto& instance_constructor = Bindings::ensure_web_constructor<InstancePrototype>(realm, "WebAssembly.Instance"sv);
@@ -262,11 +263,11 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                     return {};
                 },
                 [&](Wasm::MemoryType const&) -> JS::ThrowCompletionOr<void> {
-                    if (!import_.is_object() || !is<WebAssemblyMemoryObject>(import_.as_object())) {
+                    if (!import_.is_object() || !is<WebAssembly::Memory>(import_.as_object())) {
                         // FIXME: Throw a LinkError instead
                         return vm.throw_completion<JS::TypeError>("LinkError: Expected an instance of WebAssembly.Memory for a memory import"sv);
                     }
-                    auto address = static_cast<WebAssemblyMemoryObject const&>(import_.as_object()).address();
+                    auto address = static_cast<WebAssembly::Memory const&>(import_.as_object()).address();
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
                     return {};
                 },
@@ -470,12 +471,6 @@ JS::NativeFunction* create_native_function(JS::VM& vm, Wasm::FunctionAddress add
 
     WebAssemblyObject::s_global_cache.function_instances.set(address, function);
     return function;
-}
-
-WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::Realm& realm, Wasm::MemoryAddress address)
-    : Object(ConstructWithPrototypeTag::Tag, Bindings::ensure_web_prototype<WebAssemblyMemoryPrototype>(realm, "WebAssembly.Memory"))
-    , m_address(address)
-{
 }
 
 }
