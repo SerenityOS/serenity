@@ -146,6 +146,21 @@ ErrorOr<void> PNGWriter::add_IHDR_chunk(u32 width, u32 height, u8 bit_depth, PNG
     return {};
 }
 
+ErrorOr<void> PNGWriter::add_iCCP_chunk(ReadonlyBytes icc_data)
+{
+    // https://www.w3.org/TR/png/#11iCCP
+    PNGChunk chunk { "iCCP" };
+
+    TRY(chunk.add("embedded profile"sv.bytes()));
+    TRY(chunk.add_u8(0)); // \0-terminate profile name
+
+    TRY(chunk.add_u8(0)); // compression method deflate
+    TRY(chunk.compress_and_add(icc_data));
+
+    TRY(add_chunk(chunk));
+    return {};
+}
+
 ErrorOr<void> PNGWriter::add_IEND_chunk()
 {
     PNGChunk png_chunk { "IEND" };
@@ -273,11 +288,13 @@ ErrorOr<void> PNGWriter::add_IDAT_chunk(Gfx::Bitmap const& bitmap)
     return {};
 }
 
-ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap)
+ErrorOr<ByteBuffer> PNGWriter::encode(Gfx::Bitmap const& bitmap, Options options)
 {
     PNGWriter writer;
     TRY(writer.add_png_header());
     TRY(writer.add_IHDR_chunk(bitmap.width(), bitmap.height(), 8, PNG::ColorType::TruecolorWithAlpha, 0, 0, 0));
+    if (options.icc_data.has_value())
+        TRY(writer.add_iCCP_chunk(options.icc_data.value()));
     TRY(writer.add_IDAT_chunk(bitmap));
     TRY(writer.add_IEND_chunk());
     return ByteBuffer::copy(writer.m_data);
