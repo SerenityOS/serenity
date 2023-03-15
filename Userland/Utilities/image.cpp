@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
-        bytes = TRY(Gfx::BMPWriter::encode(*frame));
+        bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".png"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
