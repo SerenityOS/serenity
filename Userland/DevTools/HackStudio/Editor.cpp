@@ -86,6 +86,24 @@ Editor::Editor()
         add_breakpoint(line).release_value_but_fixme_should_propagate_errors();
     };
 
+    m_git_diff_indicator_id = register_gutter_indicator(
+        [&](auto& painter, Gfx::IntRect rect, size_t line) {
+            auto diff_type = code_document().line_difference(line);
+            switch (diff_type) {
+            case CodeDocument::DiffType::AddedLine:
+                painter.draw_text(rect, "+"sv, font(), Gfx::TextAlignment::Center);
+                break;
+            case CodeDocument::DiffType::ModifiedLine:
+                painter.draw_text(rect, "!"sv, font(), Gfx::TextAlignment::Center);
+                break;
+            case CodeDocument::DiffType::DeletedLinesBefore:
+                painter.draw_text(rect, "-"sv, font(), Gfx::TextAlignment::Center);
+                break;
+            case CodeDocument::DiffType::None:
+                VERIFY_NOT_REACHED();
+            }
+        }).release_value_but_fixme_should_propagate_errors();
+
     m_breakpoint_indicator_id = register_gutter_indicator(
         [&](auto& painter, Gfx::IntRect rect, size_t) {
             auto const& icon = breakpoint_icon_bitmap();
@@ -158,36 +176,6 @@ void Editor::paint_event(GUI::PaintEvent& event)
         if (horizontal_scrollbar().is_visible())
             rect.set_height(rect.height() - horizontal_scrollbar().height());
         painter.draw_rect(rect, palette().selection());
-    }
-
-    if (gutter_visible()) {
-        size_t first_visible_line = text_position_at(event.rect().top_left()).line();
-        size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
-
-        if (wrapper().git_repo()) {
-            for (auto& hunk : wrapper().hunks()) {
-                auto start_line = hunk.target_start_line;
-                auto finish_line = start_line + hunk.added_lines.size();
-
-                auto additions = hunk.added_lines.size();
-                auto deletions = hunk.removed_lines.size();
-
-                for (size_t line_offset = 0; line_offset < additions; line_offset++) {
-                    auto line = start_line + line_offset;
-                    if (line < first_visible_line || line > last_visible_line) {
-                        continue;
-                    }
-                    auto sign = (line_offset < deletions) ? "!"sv : "+"sv;
-                    painter.draw_text(gutter_icon_rect(line), sign, font(), Gfx::TextAlignment::Center);
-                }
-                if (additions < deletions) {
-                    auto deletions_line = min(finish_line, line_count() - 1);
-                    if (deletions_line <= last_visible_line) {
-                        painter.draw_text(gutter_icon_rect(deletions_line), "-"sv, font(), Gfx::TextAlignment::Center);
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -825,6 +813,43 @@ void Editor::remove_breakpoint(size_t line_number)
     remove_gutter_indicator(m_breakpoint_indicator_id, line_number);
     breakpoint_lines().remove_first_matching([&](size_t line) { return line == line_number; });
     Debugger::the().on_breakpoint_change(wrapper().filename_title(), line_number, BreakpointChange::Removed);
+}
+
+ErrorOr<void> Editor::update_git_diff_indicators()
+{
+    clear_gutter_indicators(m_git_diff_indicator_id);
+
+    if (!wrapper().git_repo())
+        return {};
+
+    Vector<CodeDocument::DiffType> line_differences;
+    TRY(line_differences.try_ensure_capacity(document().line_count()));
+    for (auto i = 0u; i < document().line_count(); ++i)
+        line_differences.unchecked_append(CodeDocument::DiffType::None);
+
+    for (auto& hunk : wrapper().hunks()) {
+        auto start_line = hunk.target_start_line;
+        auto finish_line = start_line + hunk.added_lines.size();
+
+        auto additions = hunk.added_lines.size();
+        auto deletions = hunk.removed_lines.size();
+
+        for (size_t line_offset = 0; line_offset < additions; line_offset++) {
+            auto line = start_line + line_offset;
+            auto difference = (line_offset < deletions) ? CodeDocument::DiffType::ModifiedLine : CodeDocument::DiffType::AddedLine;
+            line_differences[line] = difference;
+            add_gutter_indicator(m_git_diff_indicator_id, line);
+        }
+        if (additions < deletions) {
+            auto deletions_line = min(finish_line, line_count() - 1);
+            line_differences[deletions_line] = CodeDocument::DiffType::DeletedLinesBefore;
+            add_gutter_indicator(m_git_diff_indicator_id, deletions_line);
+        }
+    }
+    code_document().set_line_differences({}, move(line_differences));
+    update();
+
+    return {};
 }
 
 }

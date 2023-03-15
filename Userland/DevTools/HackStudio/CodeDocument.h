@@ -13,6 +13,8 @@
 
 namespace HackStudio {
 
+class Editor;
+
 class CodeDocument final : public GUI::TextDocument {
 public:
     virtual ~CodeDocument() override = default;
@@ -29,6 +31,15 @@ public:
 
     virtual bool is_code_document() const override final { return true; }
 
+    enum class DiffType {
+        None,
+        AddedLine,
+        ModifiedLine,
+        DeletedLinesBefore,
+    };
+    DiffType line_difference(size_t line) const;
+    void set_line_differences(Badge<Editor>, Vector<DiffType>);
+
 private:
     explicit CodeDocument(DeprecatedString const& file_path, Client* client = nullptr);
     explicit CodeDocument(Client* client = nullptr);
@@ -37,6 +48,8 @@ private:
     Optional<Syntax::Language> m_language;
     Vector<size_t> m_breakpoint_lines;
     Optional<size_t> m_execution_position;
+
+    Vector<DiffType> m_line_differences;
 };
 
 }
