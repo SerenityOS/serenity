@@ -124,6 +124,7 @@ private:
     bool m_use_semantic_syntax_highlighting { false };
 
     GutterIndicatorID m_breakpoint_indicator_id;
+    GutterIndicatorID m_execution_indicator_id;
 };
 
 }
