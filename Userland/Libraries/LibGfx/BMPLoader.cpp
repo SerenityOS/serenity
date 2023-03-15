@@ -805,6 +805,7 @@ static bool decode_bmp_v5_dib(BMPLoadingContext& context, InputStreamer& streame
     v5.intent = streamer.read_u32();
     v5.profile_data = streamer.read_u32();
     v5.profile_size = streamer.read_u32();
+    streamer.drop_bytes(4); // Ignore reserved field.
 
     if constexpr (BMP_DEBUG) {
         dbgln("BMP intent: {}", v5.intent);
