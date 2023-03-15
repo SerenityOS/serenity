@@ -83,6 +83,10 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
 {
     Options::DibHeader dib_header = options.dib_header;
 
+    auto icc_data = options.icc_data;
+    if (icc_data.has_value() && dib_header < Options::DibHeader::V5)
+        return Error::from_string_literal("can only embed ICC profiles in v5+ bmps");
+
     switch (dib_header) {
     case Options::DibHeader::Info:
         m_compression = Compression::BI_RGB;
@@ -98,15 +102,20 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
     }
 
     const size_t file_header_size = 14;
-    size_t pixel_data_offset = file_header_size + (u32)dib_header;
+    size_t header_size = file_header_size + (u32)dib_header;
 
     int pixel_row_data_size = (m_bytes_per_pixel * 8 * bitmap.width() + 31) / 32 * 4;
     int image_size = pixel_row_data_size * bitmap.height();
-    auto buffer = TRY(ByteBuffer::create_uninitialized(pixel_data_offset));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(header_size));
 
     auto pixel_data = TRY(write_pixel_data(bitmap, pixel_row_data_size, m_bytes_per_pixel, m_include_alpha_channel));
     pixel_data = compress_pixel_data(move(pixel_data), m_compression);
 
+    size_t icc_profile_size = 0;
+    if (icc_data.has_value())
+        icc_profile_size = icc_data->size();
+
+    size_t pixel_data_offset = header_size + icc_profile_size;
     size_t file_size = pixel_data_offset + pixel_data.size();
     OutputStreamer streamer(buffer.data());
     streamer.write_u8('B');
@@ -135,7 +144,10 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
     }
 
     if (dib_header >= Options::DibHeader::V4) {
-        streamer.write_u32(0); // Colorspace
+        if (icc_data.has_value())
+            streamer.write_u32(0x4D424544); // Colorspace EMBEDDED
+        else
+            streamer.write_u32(0); // Colorspace CALIBRATED_RGB
 
         for (int i = 0; i < 12; i++) {
             streamer.write_u32(0); // Endpoints
@@ -144,10 +156,19 @@ ErrorOr<ByteBuffer> BMPWriter::dump(Bitmap const& bitmap, Options options)
 
     if (dib_header >= Options::DibHeader::V5) {
         streamer.write_u32(4); // Rendering intent IMAGES / Perceptual.
-        streamer.write_u32(0); // Profile data
-        streamer.write_u32(0); // Profile size
+
+        if (icc_data.has_value()) {
+            streamer.write_u32((u32)dib_header);  // Profile data (relative to file_header_size)
+            streamer.write_u32(icc_data->size()); // Profile size
+        } else {
+            streamer.write_u32(0); // Profile data
+            streamer.write_u32(0); // Profile size
+        }
         streamer.write_u32(0); // Reserved
     }
+
+    if (icc_data.has_value())
+        TRY(buffer.try_append(icc_data.value()));
 
     TRY(buffer.try_append(pixel_data.data(), pixel_data.size()));
     return buffer;
