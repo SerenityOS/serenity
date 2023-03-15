@@ -690,6 +690,10 @@ private:
 
             auto* shift_to_bucket = &m_buckets[shift_to_index];
             *shift_to_bucket = move(*shift_from_bucket);
+            if constexpr (IsOrdered) {
+                shift_from_bucket->previous = nullptr;
+                shift_from_bucket->next = nullptr;
+            }
             shift_to_bucket->state = bucket_state_for_probe_length(shift_from_probe_length - 1);
             update_bucket_neighbours(shift_to_bucket);
 

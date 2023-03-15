@@ -410,3 +410,27 @@ TEST_CASE(ordered_remove_from_head)
 
     EXPECT_EQ(map.size(), 0u);
 }
+
+TEST_CASE(ordered_infinite_loop_clang_regression)
+{
+    OrderedHashTable<DeprecatedString> map;
+    map.set("");
+    map.set("1");
+    map.set("_cb");
+    map.set("2");
+    map.set("3");
+    map.set("_cb_svref");
+    map.set("_cb_svref_expires");
+    map.remove("_cb_svref");
+    map.remove("_cb_svref_expires");
+    map.set("_cb_svref");
+
+    size_t iterations = 0;
+    auto size = map.size();
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        if (++iterations > size) {
+            VERIFY(false);
+            break;
+        }
+    }
+}
