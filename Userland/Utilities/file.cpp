@@ -160,7 +160,7 @@ static Optional<DeprecatedString> elf_details(StringView description, StringView
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi"sv, "MIDI notes"sv, audio_details)                                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/mpeg"sv, "MP3 audio"sv, audio_details)                                     \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/qoa"sv, "Quite OK Audio"sv, audio_details)                                 \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/wave"sv, "WAVE audio"sv, audio_details)                                    \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/wav"sv, "WAVE audio"sv, audio_details)                                     \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/blender"sv, "Blender project file"sv, description_only)                    \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/elf"sv, "ELF"sv, elf_details)                                              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/ext"sv, "ext filesystem"sv, description_only)                              \
