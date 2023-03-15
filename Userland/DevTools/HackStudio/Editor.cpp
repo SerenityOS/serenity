@@ -95,6 +95,12 @@ Editor::Editor()
             remove_breakpoint(line_index);
         }).release_value_but_fixme_should_propagate_errors();
 
+    m_execution_indicator_id = register_gutter_indicator(
+        [&](auto& painter, Gfx::IntRect rect, size_t) {
+            auto const& icon = current_position_icon_bitmap();
+            painter.draw_scaled_bitmap(rect, icon, icon.rect());
+        }).release_value_but_fixme_should_propagate_errors();
+
     if (Config::read_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv).is_empty()) {
         Config::write_string("HackStudio"sv, "Global"sv, "DocumentationSearchPaths"sv, "[\"/usr/share/man/man2\", \"/usr/share/man/man3\"]"sv);
     }
@@ -157,11 +163,6 @@ void Editor::paint_event(GUI::PaintEvent& event)
     if (gutter_visible()) {
         size_t first_visible_line = text_position_at(event.rect().top_left()).line();
         size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
-
-        if (execution_position().has_value()) {
-            auto const& icon = current_position_icon_bitmap();
-            painter.blit(gutter_icon_rect(execution_position().value()).top_left(), icon, icon.rect());
-        }
 
         if (wrapper().git_repo()) {
             for (auto& hunk : wrapper().hunks()) {
@@ -452,9 +453,11 @@ void Editor::navigate_to_include_if_available(DeprecatedString path)
 
 void Editor::set_execution_position(size_t line_number)
 {
+    if (execution_position().has_value())
+        remove_gutter_indicator(m_execution_indicator_id, execution_position().value());
+    add_gutter_indicator(m_execution_indicator_id, line_number);
     code_document().set_execution_position(line_number);
     scroll_position_into_view({ line_number, 0 });
-    update(gutter_icon_rect(line_number));
 }
 
 void Editor::clear_execution_position()
@@ -464,6 +467,7 @@ void Editor::clear_execution_position()
     }
     size_t previous_position = execution_position().value();
     code_document().clear_execution_position();
+    remove_gutter_indicator(m_execution_indicator_id, previous_position);
     update(gutter_icon_rect(previous_position));
 }
 
