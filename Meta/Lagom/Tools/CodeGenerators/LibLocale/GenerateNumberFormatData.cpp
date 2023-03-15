@@ -24,7 +24,7 @@
 #include <AK/Utf8View.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 #include <LibJS/Runtime/Intl/SingleUnitIdentifiers.h>
 #include <LibLocale/Locale.h>
 #include <LibLocale/NumberFormat.h>
@@ -698,9 +698,6 @@ static ErrorOr<void> parse_units(DeprecatedString locale_units_path, CLDR& cldr,
 
 static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedString numbers_path, DeprecatedString units_path, CLDR& cldr)
 {
-    auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
-    auto units_iterator = TRY(path_to_dir_iterator(move(units_path)));
-
     LexicalPath core_supplemental_path(move(core_path));
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
     VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
@@ -720,21 +717,23 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
         return builder.to_deprecated_string();
     };
 
-    while (numbers_iterator.has_next()) {
-        auto numbers_path = TRY(next_path_from_dir_iterator(numbers_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", numbers_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto numbers_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(numbers_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_number_systems(numbers_path, cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
-    while (units_iterator.has_next()) {
-        auto units_path = TRY(next_path_from_dir_iterator(units_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", units_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto units_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(units_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_units(units_path, cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
     return {};
 }

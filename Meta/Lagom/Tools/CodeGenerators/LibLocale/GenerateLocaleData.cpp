@@ -20,7 +20,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
 {
@@ -771,15 +771,14 @@ static ErrorOr<void> parse_number_system_keywords(DeprecatedString locale_number
 
 static ErrorOr<void> parse_calendar_keywords(DeprecatedString locale_dates_path, CLDR& cldr, LocaleData& locale)
 {
-    auto calendars_iterator = TRY(path_to_dir_iterator(locale_dates_path, {}));
     KeywordList keywords {};
 
-    while (calendars_iterator.has_next()) {
-        auto locale_calendars_path = TRY(next_path_from_dir_iterator(calendars_iterator));
+    TRY(Core::Directory::for_each_entry(locale_dates_path, Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto locale_calendars_path = LexicalPath::join(directory.path().string(), entry.name).string();
 
         LexicalPath calendars_path(move(locale_calendars_path));
         if (!calendars_path.basename().starts_with("ca-"sv))
-            continue;
+            return IterationDecision::Continue;
 
         auto calendars = TRY(read_json_file(calendars_path.string()));
         auto const& main_object = calendars.as_object().get_object("main"sv).value();
@@ -798,7 +797,9 @@ static ErrorOr<void> parse_calendar_keywords(DeprecatedString locale_dates_path,
 
             keywords.append(cldr.unique_strings.ensure(calendar_name));
         });
-    }
+
+        return IterationDecision::Continue;
+    }));
 
     locale.calendar_keywords = cldr.unique_keyword_lists.ensure(move(keywords));
     return {};
@@ -910,14 +911,6 @@ static ErrorOr<void> define_aliases_without_scripts(CLDR& cldr)
 
 static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedString core_path, DeprecatedString locale_names_path, DeprecatedString misc_path, DeprecatedString numbers_path, DeprecatedString dates_path, CLDR& cldr)
 {
-    auto bcp47_iterator = TRY(path_to_dir_iterator(move(bcp47_path), "bcp47"sv));
-    auto identity_iterator = TRY(path_to_dir_iterator(locale_names_path));
-    auto preprocess_iterator = TRY(path_to_dir_iterator(locale_names_path));
-    auto locale_names_iterator = TRY(path_to_dir_iterator(move(locale_names_path)));
-    auto misc_iterator = TRY(path_to_dir_iterator(move(misc_path)));
-    auto numbers_iterator = TRY(path_to_dir_iterator(move(numbers_path)));
-    auto dates_iterator = TRY(path_to_dir_iterator(move(dates_path)));
-
     LexicalPath core_supplemental_path(core_path);
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
     VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
@@ -938,30 +931,33 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
         return builder.to_deprecated_string();
     };
 
-    while (identity_iterator.has_next()) {
-        auto locale_path = TRY(next_path_from_dir_iterator(identity_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", locale_names_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto locale_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(locale_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_identity(locale_path, cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
-    while (preprocess_iterator.has_next()) {
-        auto locale_path = TRY(next_path_from_dir_iterator(preprocess_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", locale_names_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto locale_path = LexicalPath::join(directory.path().string(), entry.name).string();
         TRY(preprocess_languages(locale_path, cldr));
-    }
+        return IterationDecision::Continue;
+    }));
 
     quick_sort(cldr.languages);
     quick_sort(cldr.territories);
     quick_sort(cldr.scripts);
 
-    while (bcp47_iterator.has_next()) {
-        auto bcp47_path = TRY(next_path_from_dir_iterator(bcp47_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/bcp47", bcp47_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto bcp47_path = LexicalPath::join(directory.path().string(), entry.name).string();
         TRY(parse_unicode_extension_keywords(move(bcp47_path), cldr));
-    }
+        return IterationDecision::Continue;
+    }));
 
-    while (locale_names_iterator.has_next()) {
-        auto locale_path = TRY(next_path_from_dir_iterator(locale_names_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", locale_names_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto locale_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(locale_path));
 
         auto& locale = cldr.locales.ensure(language);
@@ -970,35 +966,39 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
         TRY(parse_locale_territories(locale_path, cldr, locale));
         TRY(parse_locale_scripts(locale_path, cldr, locale));
         TRY(parse_locale_calendars(locale_path, cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
-    while (misc_iterator.has_next()) {
-        auto misc_path = TRY(next_path_from_dir_iterator(misc_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", misc_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto misc_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(misc_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_locale_list_patterns(misc_path, cldr, locale));
         TRY(parse_locale_layout(misc_path, cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
-    while (numbers_iterator.has_next()) {
-        auto numbers_path = TRY(next_path_from_dir_iterator(numbers_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", numbers_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto numbers_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(numbers_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_locale_currencies(numbers_path, cldr, locale));
         TRY(parse_number_system_keywords(numbers_path, cldr, locale));
         fill_in_collation_keywords(cldr, locale);
-    }
+        return IterationDecision::Continue;
+    }));
 
-    while (dates_iterator.has_next()) {
-        auto dates_path = TRY(next_path_from_dir_iterator(dates_iterator));
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", dates_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto dates_path = LexicalPath::join(directory.path().string(), entry.name).string();
         auto language = TRY(remove_variants_from_path(dates_path));
 
         auto& locale = cldr.locales.ensure(language);
         TRY(parse_locale_date_fields(dates_path, cldr, locale));
         TRY(parse_calendar_keywords(dates_path, cldr, locale));
-    }
+        return IterationDecision::Continue;
+    }));
 
     TRY(parse_default_content_locales(move(core_path), cldr));
     TRY(define_aliases_without_scripts(cldr));
