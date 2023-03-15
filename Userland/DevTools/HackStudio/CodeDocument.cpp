@@ -32,4 +32,14 @@ CodeDocument::CodeDocument(Client* client)
 {
 }
 
+CodeDocument::DiffType CodeDocument::line_difference(size_t line) const
+{
+    return m_line_differences[line];
+}
+
+void CodeDocument::set_line_differences(Badge<HackStudio::Editor>, Vector<HackStudio::CodeDocument::DiffType> line_differences)
+{
+    m_line_differences = move(line_differences);
+}
+
 }

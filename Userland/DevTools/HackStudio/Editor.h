@@ -44,6 +44,8 @@ public:
     void clear_execution_position();
     void set_debug_mode(bool);
 
+    ErrorOr<void> update_git_diff_indicators();
+
     CodeDocument const& code_document() const;
     CodeDocument& code_document();
 
@@ -125,6 +127,7 @@ private:
 
     GutterIndicatorID m_breakpoint_indicator_id;
     GutterIndicatorID m_execution_indicator_id;
+    GutterIndicatorID m_git_diff_indicator_id;
 };
 
 }

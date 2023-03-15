@@ -87,8 +87,10 @@ void EditorWrapper::save()
 
 void EditorWrapper::update_diff()
 {
-    if (m_git_repo)
+    if (m_git_repo) {
         m_hunks = Diff::parse_hunks(m_git_repo->unstaged_diff(filename()).value());
+        editor().update_git_diff_indicators().release_value_but_fixme_should_propagate_errors();
+    }
 }
 
 void EditorWrapper::set_project_root(DeprecatedString const& project_root)
