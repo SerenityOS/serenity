@@ -69,6 +69,13 @@ static ErrorOr<void> generate_forwarding_header(StringView output_path, Vector<I
 namespace Web::Bindings {
 )~~~");
 
+    auto add_namespace = [](SourceGenerator& gen, StringView namespace_class) {
+        gen.set("namespace_class", namespace_class);
+
+        gen.append(R"~~~(
+class @namespace_class@;)~~~");
+    };
+
     auto add_interface = [](SourceGenerator& gen, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
         gen.set("prototype_class", prototype_class);
         gen.set("constructor_class", constructor_class);
@@ -86,7 +93,11 @@ class @legacy_constructor_class@;)~~~");
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
-        add_interface(gen, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
+
+        if (interface.is_namespace)
+            add_namespace(gen, interface.namespace_class);
+        else
+            add_interface(gen, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
     }
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
@@ -122,17 +133,23 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
+        gen.set("namespace_class", interface.namespace_class);
         gen.set("prototype_class", interface.prototype_class);
         gen.set("constructor_class", interface.constructor_class);
 
-        gen.append(R"~~~(
+        if (interface.is_namespace) {
+            gen.append(R"~~~(
+#include <LibWeb/Bindings/@namespace_class@.h>)~~~");
+        } else {
+            gen.append(R"~~~(
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>)~~~");
 
-        if (auto const& legacy_constructor = lookup_legacy_constructor(interface); legacy_constructor.has_value()) {
-            gen.set("legacy_constructor_class", legacy_constructor->constructor_class);
-            gen.append(R"~~~(
+            if (auto const& legacy_constructor = lookup_legacy_constructor(interface); legacy_constructor.has_value()) {
+                gen.set("legacy_constructor_class", legacy_constructor->constructor_class);
+                gen.append(R"~~~(
 #include <LibWeb/Bindings/@legacy_constructor_class@.h>)~~~");
+            }
         }
     }
 
@@ -151,6 +168,20 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
 
 namespace Web::Bindings {
 )~~~");
+
+    auto add_namespace = [&](SourceGenerator& gen, StringView name, StringView namespace_class) {
+        gen.set("interface_name", name);
+        gen.set("namespace_class", namespace_class);
+
+        gen.append(R"~~~(
+template<>
+void Intrinsics::create_web_namespace<@namespace_class@>(JS::Realm& realm)
+{
+    auto namespace_object = heap().allocate<@namespace_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
+    m_namespaces.set("@interface_name@"sv, namespace_object);
+}
+)~~~");
+    };
 
     auto add_interface = [&](SourceGenerator& gen, StringView name, StringView prototype_class, StringView constructor_class, Optional<LegacyConstructor> const& legacy_constructor) {
         gen.set("interface_name", name);
@@ -190,7 +221,11 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
 
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
-        add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
+
+        if (interface.is_namespace)
+            add_namespace(gen, interface.name, interface.namespace_class);
+        else
+            add_interface(gen, interface.name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
     }
 
     // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
@@ -254,17 +289,24 @@ static ErrorOr<void> generate_exposed_interface_implementation(StringView class_
 )~~~");
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
+        gen.set("namespace_class", interface.namespace_class);
         gen.set("prototype_class", interface.prototype_class);
         gen.set("constructor_class", interface.constructor_class);
 
-        gen.append(R"~~~(#include <LibWeb/Bindings/@constructor_class@.h>
+        if (interface.is_namespace) {
+            gen.append(R"~~~(#include <LibWeb/Bindings/@namespace_class@.h>
+)~~~");
+        } else {
+
+            gen.append(R"~~~(#include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 )~~~");
 
-        if (auto const& legacy_constructor = lookup_legacy_constructor(interface); legacy_constructor.has_value()) {
-            gen.set("legacy_constructor_class", legacy_constructor->constructor_class);
-            gen.append(R"~~~(#include <LibWeb/Bindings/@legacy_constructor_class@.h>
+            if (auto const& legacy_constructor = lookup_legacy_constructor(interface); legacy_constructor.has_value()) {
+                gen.set("legacy_constructor_class", legacy_constructor->constructor_class);
+                gen.append(R"~~~(#include <LibWeb/Bindings/@legacy_constructor_class@.h>
 )~~~");
+            }
         }
     }
 
@@ -290,9 +332,21 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
         }
     };
 
+    auto add_namespace = [](SourceGenerator& gen, StringView name, StringView namespace_class) {
+        gen.set("interface_name", name);
+        gen.set("namespace_class", namespace_class);
+
+        gen.append(R"~~~(
+    global.define_intrinsic_accessor("@interface_name@", attr, [](auto& realm) -> JS::Value { return &ensure_web_namespace<@namespace_class@>(realm, "@interface_name@"sv); });)~~~");
+    };
+
     for (auto& interface : exposed_interfaces) {
         auto gen = generator.fork();
-        add_interface(gen, interface.name, interface.prototype_class, lookup_legacy_constructor(interface));
+
+        if (interface.is_namespace)
+            add_namespace(gen, interface.name, interface.namespace_class);
+        else
+            add_interface(gen, interface.name, interface.prototype_class, lookup_legacy_constructor(interface));
     }
 
     generator.append(R"~~~(

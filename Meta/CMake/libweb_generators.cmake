@@ -76,20 +76,33 @@ endfunction()
 function (generate_js_bindings target)
     set(LIBWEB_INPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}")
     function(libweb_js_bindings class)
-        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "ITERABLE;GLOBAL" "" "")
+        cmake_parse_arguments(PARSE_ARGV 1 LIBWEB_BINDINGS "NAMESPACE;ITERABLE;GLOBAL" "" "")
         get_filename_component(basename "${class}" NAME)
-        set(BINDINGS_SOURCES
-            "Bindings/${basename}Constructor.h"
-            "Bindings/${basename}Constructor.cpp"
-            "Bindings/${basename}Prototype.h"
-            "Bindings/${basename}Prototype.cpp"
-        )
-        set(BINDINGS_TYPES
-            constructor-header
-            constructor-implementation
-            prototype-header
-            prototype-implementation
-        )
+
+        # FIXME: Instead of requiring a manual declaration of namespace bindings, we should ask BindingsGenerator if it's a namespace
+        if (LIBWEB_BINDINGS_NAMESPACE)
+            set(BINDINGS_SOURCES
+                "Bindings/${basename}Namespace.h"
+                "Bindings/${basename}Namespace.cpp"
+            )
+            set(BINDINGS_TYPES
+                namespace-header
+                namespace-implementation
+            )
+        else()
+            set(BINDINGS_SOURCES
+                "Bindings/${basename}Constructor.h"
+                "Bindings/${basename}Constructor.cpp"
+                "Bindings/${basename}Prototype.h"
+                "Bindings/${basename}Prototype.cpp"
+            )
+            set(BINDINGS_TYPES
+                constructor-header
+                constructor-implementation
+                prototype-header
+                prototype-implementation
+            )
+        endif()
 
         # FIXME: Instead of requiring a manual declaration of iterable bindings, we should ask BindingsGenerator if it's iterable
         if(LIBWEB_BINDINGS_ITERABLE)
