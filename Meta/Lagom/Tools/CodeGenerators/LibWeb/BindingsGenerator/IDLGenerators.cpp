@@ -2739,8 +2739,11 @@ void generate_namespace_implementation(IDL::Interface const& interface, StringBu
     generator.append(R"~~~(
 #include <AK/Function.h>
 #include <LibIDL/Types.h>
+#include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@namespace_class@.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
