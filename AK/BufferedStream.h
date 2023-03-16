@@ -193,7 +193,10 @@ public:
         if (stream().is_eof())
             return m_buffer.used_space() > 0;
 
-        return TRY(find_and_populate_until_any_of(Array<StringView, 1> { "\n"sv })).has_value();
+        auto maybe_match = TRY(find_and_populate_until_any_of(Array { "\n"sv }));
+        if (maybe_match.has_value())
+            return true;
+        return stream().is_eof() && m_buffer.used_space() > 0;
     }
 
     bool is_eof() const

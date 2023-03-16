@@ -553,6 +553,24 @@ TEST_CASE(buffered_file_tell_and_seek)
     }
 }
 
+constexpr auto new_newlines_message = "Hi, look, no newlines"sv;
+
+TEST_CASE(buffered_file_without_newlines)
+{
+    constexpr auto filename = "/tmp/file-without-newlines"sv;
+    auto file_wo_newlines = Core::File::open(filename, Core::File::OpenMode::Write).release_value();
+    EXPECT(!file_wo_newlines->write_until_depleted(new_newlines_message.bytes()).is_error());
+    file_wo_newlines->close();
+
+    auto ro_file = Core::BufferedFile::create(Core::File::open(filename, Core::File::OpenMode::Read).release_value(), new_newlines_message.length() + 1).release_value();
+
+    auto maybe_can_read_line = ro_file->can_read_line();
+    EXPECT(!maybe_can_read_line.is_error());
+    EXPECT(maybe_can_read_line.release_value());
+    Array<u8, new_newlines_message.length() + 1> buffer;
+    EXPECT(ro_file->read_line(buffer).release_value() == new_newlines_message);
+}
+
 constexpr auto buffered_sent_data = "Well hello friends!\n:^)\nThis shouldn't be present. :^("sv;
 constexpr auto first_line = "Well hello friends!"sv;
 constexpr auto second_line = ":^)"sv;
