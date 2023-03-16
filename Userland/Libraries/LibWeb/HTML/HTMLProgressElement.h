@@ -40,7 +40,7 @@ private:
     HTMLProgressElement(DOM::Document&, DOM::QualifiedName);
 
     // ^DOM::Node
-    virtual bool is_html_input_element() const final { return true; }
+    virtual bool is_html_progress_element() const final { return true; }
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
