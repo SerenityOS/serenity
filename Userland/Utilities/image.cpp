@@ -26,6 +26,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool ppm_ascii;
     args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
 
+    StringView assign_color_profile_path;
+    args_parser.add_option(assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
+
     bool strip_color_profile;
     args_parser.add_option(strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
 
@@ -43,6 +46,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // over selecting a frame, access color profile data, and so on in the future.
     auto frame = TRY(decoder->frame(0)).image;
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
+
+    RefPtr<Core::MappedFile> icc_file;
+    if (!assign_color_profile_path.is_empty()) {
+        icc_file = TRY(Core::MappedFile::map(assign_color_profile_path));
+        icc_data = icc_file->bytes();
+    }
 
     if (strip_color_profile)
         icc_data.clear();
