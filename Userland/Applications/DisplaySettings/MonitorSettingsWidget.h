@@ -7,6 +7,7 @@
 #pragma once
 
 #include "MonitorWidget.h"
+#include <AK/String.h>
 #include <LibCore/Timer.h>
 #include <LibEDID/EDID.h>
 #include <LibGUI/ColorInput.h>
@@ -41,15 +42,15 @@ private:
     ErrorOr<void> create_frame();
     ErrorOr<void> create_resolution_list();
     ErrorOr<void> load_current_settings();
-    void selected_screen_index_or_resolution_changed();
+    ErrorOr<void> selected_screen_index_or_resolution_changed();
 
     size_t m_selected_screen_index { 0 };
 
     WindowServer::ScreenLayout m_screen_layout;
-    Vector<DeprecatedString> m_screens;
+    Vector<String> m_screens;
     Vector<Optional<EDID::Parser>> m_screen_edids;
     Vector<Gfx::IntSize> m_resolutions;
-    Vector<DeprecatedString> m_resolution_strings;
+    Vector<String> m_resolution_strings;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;
     RefPtr<GUI::ComboBox> m_screen_combo;

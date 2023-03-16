@@ -128,8 +128,8 @@ ErrorOr<void> EffectsSettingsWidget::load_settings()
         "Never"sv
     };
     for (size_t i = 0; i < list.size(); ++i)
-        TRY(m_geometry_list.try_append(list[i]));
-    m_geometry_combobox->set_model(ItemListModel<DeprecatedString>::create(m_geometry_list));
+        TRY(m_geometry_list.try_append(TRY(String::from_utf8(list[i]))));
+    m_geometry_combobox->set_model(ItemListModel<String>::create(m_geometry_list));
     m_geometry_combobox->set_selected_index(m_system_effects.geometry());
 
     return {};

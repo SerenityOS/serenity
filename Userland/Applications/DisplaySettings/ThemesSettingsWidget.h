@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/SettingsWindow.h>
@@ -26,13 +26,13 @@ public:
 private:
     ErrorOr<void> setup_interface();
     Vector<Gfx::SystemThemeMetaData> m_themes;
-    Vector<DeprecatedString> m_theme_names;
-    Vector<DeprecatedString> m_color_scheme_names;
+    Vector<String> m_theme_names;
+    Vector<String> m_color_scheme_names;
 
     RefPtr<GUI::ComboBox> m_themes_combo;
     RefPtr<ThemePreviewWidget> m_theme_preview;
     Gfx::SystemThemeMetaData const* m_selected_theme { nullptr };
-    DeprecatedString m_selected_color_scheme_name = "";
+    String m_selected_color_scheme_name {};
 
     RefPtr<GUI::Button> m_cursor_themes_button;
 
