@@ -334,6 +334,10 @@
 #    cmakedefine01 OCCLUSIONS_DEBUG
 #endif
 
+#ifndef OPENTYPE_GPOS_DEBUG
+#    cmakedefine01 OPENTYPE_GPOS_DEBUG
+#endif
+
 #ifndef HTML_PARSER_DEBUG
 #    cmakedefine01 HTML_PARSER_DEBUG
 #endif

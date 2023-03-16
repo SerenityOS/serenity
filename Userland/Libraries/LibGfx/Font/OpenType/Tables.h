@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include "AK/Endian.h"
+#include "AK/Forward.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
@@ -533,4 +535,100 @@ private:
     ReadonlyBytes m_slice;
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#feature-list-table
+struct FeatureRecord {
+    Tag feature_tag;
+    Offset16 feature_offset;
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#feature-list-table
+struct FeatureList {
+    BigEndian<u16> feature_count;
+    FeatureRecord feature_records[];
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#feature-table
+struct Feature {
+    Offset16 feature_params_offset;
+    BigEndian<u16> lookup_index_count;
+    BigEndian<u16> lookup_list_indices[];
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#lookup-table
+struct Lookup {
+    BigEndian<u16> lookup_type;
+    BigEndian<u16> lookup_flag;
+    BigEndian<u16> subtable_count;
+    BigEndian<u16> subtable_offsets[];
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#lookup-list-table
+struct LookupList {
+    BigEndian<u16> lookup_count;
+    Offset16 lookup_offsets[];
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#class-definition-table-format-2
+struct ClassRangeRecord {
+    BigEndian<u16> start_glyph_id;
+    BigEndian<u16> end_glyph_id;
+    BigEndian<u16> class_;
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#class-definition-table-format-2
+struct ClassDefFormat2 {
+    BigEndian<u16> class_format;
+    BigEndian<u16> class_range_count;
+    ClassRangeRecord class_range_records[];
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#gpos-header
+class GPOS {
+public:
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#gpos-header
+    struct GPOSHeader {
+        BigEndian<u16> major_version;
+        BigEndian<u16> minor_version;
+        Offset16 script_list_offset;
+        Offset16 feature_list_offset;
+        Offset16 lookup_list_offset;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
+    struct PairPosFormat2 {
+        BigEndian<u16> pos_format;
+        Offset16 coverage_offset;
+        BigEndian<u16> value_format1;
+        BigEndian<u16> value_format2;
+        Offset16 class_def1_offset;
+        Offset16 class_def2_offset;
+        BigEndian<u16> class1_count;
+        BigEndian<u16> class2_count;
+    };
+
+    enum class ValueFormat : u16 {
+        X_PLACEMENT = 0x0001,
+        Y_PLACEMENT = 0x0002,
+        X_ADVANCE = 0x0004,
+        Y_ADVANCE = 0x0008,
+        X_PLACEMENT_DEVICE = 0x0010,
+        Y_PLACEMENT_DEVICE = 0x0020,
+        X_ADVANCE_DEVICE = 0x0040,
+        Y_ADVANCE_DEVICE = 0x0080,
+    };
+
+    GPOSHeader const& header() const { return *bit_cast<GPOSHeader const*>(m_slice.data()); }
+
+    Optional<i16> glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const;
+
+    static ErrorOr<GPOS> from_slice(ReadonlyBytes slice) { return GPOS { slice }; }
+
+private:
+    GPOS(ReadonlyBytes slice)
+        : m_slice(slice)
+    {
+    }
+
+    ReadonlyBytes m_slice;
+};
 }

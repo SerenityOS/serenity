@@ -86,7 +86,8 @@ private:
         Optional<Fpgm> fpgm,
         Optional<Prep> prep,
         Optional<CBLC> cblc,
-        Optional<CBDT> cbdt)
+        Optional<CBDT> cbdt,
+        Optional<GPOS> gpos)
         : m_buffer(move(bytes))
         , m_head(move(head))
         , m_name(move(name))
@@ -102,6 +103,7 @@ private:
         , m_prep(move(prep))
         , m_cblc(move(cblc))
         , m_cbdt(move(cbdt))
+        , m_gpos(move(gpos))
     {
     }
 
@@ -124,6 +126,7 @@ private:
     Optional<Prep> m_prep;
     Optional<CBLC> m_cblc;
     Optional<CBDT> m_cbdt;
+    Optional<GPOS> m_gpos;
 
     // This cache stores information per code point.
     // It's segmented into pages with data about 256 code points each.
