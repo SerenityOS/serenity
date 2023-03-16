@@ -94,4 +94,19 @@ void GPIO::internal_enable_pins(u32 enable[2], PullUpDownState state)
     // I don't know if the RPi3 has that already, so this uses the old BCM2835 approach for now.
 }
 
+void GPIO::set_pin_high_detect_enable(unsigned pin_number, bool enable)
+{
+    if (enable) {
+        if (pin_number < 32)
+            m_registers->high_detect_enable.bits[0] = m_registers->high_detect_enable.bits[0] | (1 << pin_number);
+        else
+            m_registers->high_detect_enable.bits[1] = m_registers->high_detect_enable.bits[1] | (1 << (pin_number - 32));
+    } else {
+        if (pin_number < 32)
+            m_registers->high_detect_enable.bits[0] = m_registers->high_detect_enable.bits[0] & ~(1 << pin_number);
+        else
+            m_registers->high_detect_enable.bits[1] = m_registers->high_detect_enable.bits[1] & ~(1 << (pin_number - 32));
+    }
+}
+
 }

@@ -50,6 +50,8 @@ public:
         internal_enable_pins(enable, state);
     }
 
+    void set_pin_high_detect_enable(unsigned pin_number, bool enable);
+
 private:
     GPIO();
     void internal_enable_pins(u32 enable[2], PullUpDownState state);
