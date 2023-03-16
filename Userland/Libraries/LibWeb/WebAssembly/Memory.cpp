@@ -10,7 +10,7 @@
 #include <LibWasm/Types.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/Memory.h>
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
+#include <LibWeb/WebAssembly/WebAssembly.h>
 
 namespace Web::WebAssembly {
 
@@ -21,7 +21,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Memory>> Memory::construct_impl(JS::Realm& 
     Wasm::Limits limits { descriptor.initial, move(descriptor.maximum) };
     Wasm::MemoryType memory_type { move(limits) };
 
-    auto address = Bindings::WebAssemblyObject::s_abstract_machine.store().allocate(memory_type);
+    auto address = Detail::s_abstract_machine.store().allocate(memory_type);
     if (!address.has_value())
         return vm.throw_completion<JS::TypeError>("Wasm Memory allocation failed"sv);
 
@@ -47,7 +47,7 @@ WebIDL::ExceptionOr<u32> Memory::grow(u32 delta)
 {
     auto& vm = this->vm();
 
-    auto* memory = Bindings::WebAssemblyObject::s_abstract_machine.store().get(address());
+    auto* memory = Detail::s_abstract_machine.store().get(address());
     if (!memory)
         return vm.throw_completion<JS::RangeError>("Could not find the memory instance to grow"sv);
 
@@ -64,7 +64,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> Memory::buffer() const
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
 
-    auto* memory = Bindings::WebAssemblyObject::s_abstract_machine.store().get(address());
+    auto* memory = Detail::s_abstract_machine.store().get(address());
     if (!memory)
         return vm.throw_completion<JS::RangeError>("Could not find the memory instance"sv);
 

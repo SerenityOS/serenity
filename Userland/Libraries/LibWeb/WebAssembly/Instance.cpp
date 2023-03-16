@@ -16,7 +16,7 @@
 #include <LibWeb/WebAssembly/Memory.h>
 #include <LibWeb/WebAssembly/Module.h>
 #include <LibWeb/WebAssembly/Table.h>
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
+#include <LibWeb/WebAssembly/WebAssembly.h>
 
 namespace Web::WebAssembly {
 
@@ -27,7 +27,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Instance>> Instance::construct_impl(JS::Rea
 
     auto& vm = realm.vm();
 
-    auto index = TRY(Bindings::WebAssemblyObject::instantiate_module(vm, module.module()));
+    auto index = TRY(Detail::instantiate_module(vm, module.module()));
     return MUST_OR_THROW_OOM(vm.heap().allocate<Instance>(realm, realm, index));
 }
 
@@ -45,15 +45,15 @@ JS::ThrowCompletionOr<void> Instance::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
     set_prototype(&Bindings::ensure_web_prototype<Bindings::InstancePrototype>(realm, "WebAssembly.Instance"sv));
 
-    auto& instance = *Bindings::WebAssemblyObject::s_instantiated_modules[m_index];
-    auto& cache = Bindings::WebAssemblyObject::s_module_caches.at(m_index);
+    auto& instance = *Detail::s_instantiated_modules[m_index];
+    auto& cache = Detail::s_module_caches.at(m_index);
 
     for (auto& export_ : instance.exports()) {
         TRY(export_.value().visit(
             [&](Wasm::FunctionAddress const& address) -> JS::ThrowCompletionOr<void> {
                 Optional<JS::GCPtr<JS::FunctionObject>> object = cache.function_instances.get(address);
                 if (!object.has_value()) {
-                    object = Bindings::create_native_function(vm, address, export_.name());
+                    object = Detail::create_native_function(vm, address, export_.name());
                     cache.function_instances.set(address, *object);
                 }
 
