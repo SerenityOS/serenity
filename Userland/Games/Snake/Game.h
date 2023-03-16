@@ -9,12 +9,16 @@
 #pragma once
 
 #include "Geometry.h"
+#include "Skins/SnakeSkin.h"
 #include <AK/CircularQueue.h>
+#include <LibConfig/Listener.h>
 #include <LibGUI/Frame.h>
 
 namespace Snake {
 
-class Game : public GUI::Frame {
+class Game
+    : public GUI::Frame
+    , public Config::Listener {
     C_OBJECT_ABSTRACT(Game);
 
 public:
@@ -27,16 +31,21 @@ public:
     void pause();
     void reset();
 
-    void set_snake_base_color(Color color);
-
     Function<bool(u32)> on_score_update;
 
+    void set_skin_color(Color);
+    void set_skin_name(DeprecatedString);
+    void set_skin(NonnullOwnPtr<SnakeSkin> skin);
+
 private:
-    explicit Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps);
+    explicit Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps, Color snake_color, DeprecatedString snake_skin_name, NonnullOwnPtr<SnakeSkin> skin);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+
+    virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
+    void config_u32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value) override;
 
     void game_over();
     void spawn_fruit();
@@ -44,6 +53,7 @@ private:
     void queue_velocity(int v, int h);
     Velocity const& last_velocity() const;
     Gfx::IntRect cell_rect(Coordinate const&) const;
+    Direction direction_to_position(Coordinate const& from, Coordinate const& to) const;
 
     int m_rows { 20 };
     int m_columns { 20 };
@@ -65,7 +75,9 @@ private:
 
     Vector<NonnullRefPtr<Gfx::Bitmap>> m_food_bitmaps;
 
-    Gfx::Color m_snake_base_color { Color::Yellow };
+    Color m_snake_color;
+    DeprecatedString m_snake_skin_name;
+    NonnullOwnPtr<SnakeSkin> m_snake_skin;
 };
 
 }
