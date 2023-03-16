@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <LibGUI/SettingsWindow.h>
 #include <LibGUI/SystemEffects.h>
 
@@ -30,7 +31,7 @@ private:
     ErrorOr<void> load_settings();
 
     SystemEffects m_system_effects;
-    Vector<DeprecatedString> m_geometry_list;
+    Vector<String> m_geometry_list;
     RefPtr<ComboBox> m_geometry_combobox;
 };
 

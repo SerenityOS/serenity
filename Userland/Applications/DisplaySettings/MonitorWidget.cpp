@@ -28,7 +28,7 @@ ErrorOr<NonnullRefPtr<MonitorWidget>> MonitorWidget::try_create()
     return monitor_widget;
 }
 
-bool MonitorWidget::set_wallpaper(DeprecatedString path)
+bool MonitorWidget::set_wallpaper(String path)
 {
     if (!is_different_to_current_wallpaper_path(path))
         return false;
@@ -55,19 +55,21 @@ bool MonitorWidget::set_wallpaper(DeprecatedString path)
         });
 
     if (path.is_empty())
-        m_desktop_wallpaper_path = nullptr;
+        m_desktop_wallpaper_path = OptionalNone();
     else
-        m_desktop_wallpaper_path = move(path);
+        m_desktop_wallpaper_path = path;
 
     return true;
 }
 
-StringView MonitorWidget::wallpaper() const
+Optional<StringView> MonitorWidget::wallpaper() const
 {
-    return m_desktop_wallpaper_path;
+    if (m_desktop_wallpaper_path.has_value())
+        return m_desktop_wallpaper_path->bytes_as_string_view();
+    return OptionalNone();
 }
 
-void MonitorWidget::set_wallpaper_mode(DeprecatedString mode)
+void MonitorWidget::set_wallpaper_mode(String mode)
 {
     if (m_desktop_wallpaper_mode == mode)
         return;
@@ -133,12 +135,12 @@ void MonitorWidget::redraw_desktop_if_needed()
     }
     auto scaled_bitmap = scaled_bitmap_or_error.release_value();
 
-    if (m_desktop_wallpaper_mode == "Center") {
+    if (m_desktop_wallpaper_mode == "Center"sv) {
         auto centered_rect = Gfx::IntRect({}, scaled_size).centered_within(m_desktop_bitmap->rect());
         painter.blit(centered_rect.location(), *scaled_bitmap, scaled_bitmap->rect());
-    } else if (m_desktop_wallpaper_mode == "Tile") {
+    } else if (m_desktop_wallpaper_mode == "Tile"sv) {
         painter.draw_tiled_bitmap(m_desktop_bitmap->rect(), *scaled_bitmap);
-    } else if (m_desktop_wallpaper_mode == "Stretch") {
+    } else if (m_desktop_wallpaper_mode == "Stretch"sv) {
         painter.draw_scaled_bitmap(m_desktop_bitmap->rect(), *m_wallpaper_bitmap, m_wallpaper_bitmap->rect());
     } else {
         VERIFY_NOT_REACHED();

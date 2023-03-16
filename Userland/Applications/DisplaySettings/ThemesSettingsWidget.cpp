@@ -19,12 +19,13 @@
 
 namespace DisplaySettings {
 
-static DeprecatedString get_color_scheme_name_from_pathname(DeprecatedString const& color_scheme_path)
+static ErrorOr<String> get_color_scheme_name_from_pathname(StringView color_scheme_path)
 {
-    return color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly);
+    return TRY(String::from_deprecated_string(color_scheme_path.replace("/res/color-schemes/"sv, ""sv, ReplaceMode::FirstOnly).replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)));
 };
 
-ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed) {
+ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bool& background_settings_changed)
+{
     auto theme_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ThemesSettingsWidget(background_settings_changed)));
     TRY(theme_settings_widget->load_from_gml(themes_settings_gml));
     TRY(theme_settings_widget->setup_interface());
@@ -32,14 +33,15 @@ ErrorOr<NonnullRefPtr<ThemesSettingsWidget>> ThemesSettingsWidget::try_create(bo
     return theme_settings_widget;
 }
 
-ErrorOr<void> ThemesSettingsWidget::setup_interface() {
+ErrorOr<void> ThemesSettingsWidget::setup_interface()
+{
     m_themes = TRY(Gfx::list_installed_system_themes());
 
     size_t current_theme_index;
     auto current_theme_name = GUI::ConnectionToWindowServer::the().get_system_theme();
     TRY(m_theme_names.try_ensure_capacity(m_themes.size()));
     for (auto& theme_meta : m_themes) {
-        m_theme_names.append(theme_meta.name);
+        TRY(m_theme_names.try_append(TRY(String::from_deprecated_string(theme_meta.name))));
         if (current_theme_name == theme_meta.name) {
             m_selected_theme = &theme_meta;
             current_theme_index = m_theme_names.size() - 1;
@@ -49,12 +51,20 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface() {
     m_theme_preview = find_descendant_of_type_named<GUI::Frame>("preview_frame")->add<ThemePreviewWidget>(palette());
     m_themes_combo = *find_descendant_of_type_named<GUI::ComboBox>("themes_combo");
     m_themes_combo->set_only_allow_values_from_model(true);
-    m_themes_combo->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_theme_names));
+    m_themes_combo->set_model(*GUI::ItemListModel<String>::create(m_theme_names));
     m_themes_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_selected_theme = &m_themes.at(index.row());
-        auto set_theme_result = m_theme_preview->set_theme(m_selected_theme->path);
+        auto selected_theme_path = String::from_deprecated_string(m_selected_theme->path);
+        ErrorOr<void> set_theme_result;
+        if (!selected_theme_path.is_error())
+            set_theme_result = m_theme_preview->set_theme(selected_theme_path.release_value());
         if (set_theme_result.is_error()) {
-            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("There was an error generating the theme preview: {}", set_theme_result.error()));
+            auto detailed_error_message = String::formatted("There was an error generating the theme preview: {}", set_theme_result.error());
+            if (!detailed_error_message.is_error())
+                GUI::MessageBox::show_error(window(), detailed_error_message.release_value());
+            else
+                GUI::MessageBox::show_error(window(), "There was an error generating the theme preview"sv);
+            return;
         }
         set_modified(true);
     };
@@ -66,13 +76,13 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface() {
     Core::DirIterator iterator("/res/color-schemes", Core::DirIterator::SkipParentAndBaseDir);
     while (iterator.has_next()) {
         auto path = iterator.next_path();
-        m_color_scheme_names.append(path.replace(".ini"sv, ""sv, ReplaceMode::FirstOnly));
+        TRY(m_color_scheme_names.try_append(TRY(String::from_deprecated_string(path.replace(".ini"sv, ""sv, ReplaceMode::FirstOnly)))));
     }
     quick_sort(m_color_scheme_names);
     auto& color_scheme_combo = *find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo");
     color_scheme_combo.set_only_allow_values_from_model(true);
-    color_scheme_combo.set_model(*GUI::ItemListModel<DeprecatedString>::create(m_color_scheme_names));
-    m_selected_color_scheme_name = get_color_scheme_name_from_pathname(GUI::Widget::palette().color_scheme_path());
+    color_scheme_combo.set_model(*GUI::ItemListModel<String>::create(m_color_scheme_names));
+    m_selected_color_scheme_name = TRY(get_color_scheme_name_from_pathname(GUI::Widget::palette().color_scheme_path()));
     auto selected_color_scheme_index = m_color_scheme_names.find_first_index(m_selected_color_scheme_name);
     if (selected_color_scheme_index.has_value())
         color_scheme_combo.set_selected_index(selected_color_scheme_index.value());
@@ -85,7 +95,10 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface() {
         }
     }
     color_scheme_combo.on_change = [this](auto&, const GUI::ModelIndex& index) {
-        m_selected_color_scheme_name = index.data().as_string();
+        auto result = String::from_deprecated_string(index.data().as_string());
+        if (result.is_error())
+            return;
+        m_selected_color_scheme_name = result.release_value();
         m_color_scheme_is_file_based = true;
         set_modified(true);
     };
@@ -123,9 +136,16 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface() {
             if (current_theme_name == theme_meta.name) {
                 m_themes_combo->set_selected_index(index, GUI::AllowCallback::No);
                 m_selected_theme = &m_themes.at(index);
-                auto set_theme_result = m_theme_preview->set_theme(m_selected_theme->path);
+                auto selected_theme_path = String::from_deprecated_string(m_selected_theme->path);
+                ErrorOr<void> set_theme_result;
+                if (!selected_theme_path.is_error())
+                    set_theme_result = m_theme_preview->set_theme(selected_theme_path.release_value());
                 if (set_theme_result.is_error()) {
-                    GUI::MessageBox::show_error(window(), DeprecatedString::formatted("There was an error setting the new theme: {}", set_theme_result.error()));
+                    auto detailed_error_message = String::formatted("There was an error generating the theme preview: {}", set_theme_result.error());
+                    if (!detailed_error_message.is_error())
+                        GUI::MessageBox::show_error(window(), detailed_error_message.release_value());
+                    else
+                        GUI::MessageBox::show_error(window(), "There was an error generating the theme preview"sv);
                 }
             }
             ++index;
@@ -136,36 +156,42 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface() {
 }
 
 ThemesSettingsWidget::ThemesSettingsWidget(bool& background_settings_changed)
-    : m_background_settings_changed {background_settings_changed }
+    : m_background_settings_changed { background_settings_changed }
 {
 }
 
 void ThemesSettingsWidget::apply_settings()
 {
     m_background_settings_changed = false;
-    Optional<DeprecatedString> color_scheme_path = DeprecatedString::formatted("/res/color-schemes/{}.ini", m_selected_color_scheme_name);
+    auto color_scheme_path_or_error = String::formatted("/res/color-schemes/{}.ini", m_selected_color_scheme_name);
+    if (color_scheme_path_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), "Unable to apply changes"sv);
+        return;
+    }
+    auto color_scheme_path = color_scheme_path_or_error.release_value();
 
     if (!m_color_scheme_is_file_based && find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
         auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, "Custom"sv);
-        if(!set_theme_result)
+        if (!set_theme_result)
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
     } else if (find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->is_checked()) {
-        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path);
-        if(!set_theme_result)
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, color_scheme_path.to_deprecated_string());
+        if (!set_theme_result)
             GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
     } else {
-        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, OptionalNone());
-        if (!set_theme_result) {
-            GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
-            return;
-        }
-        // Update the color scheme combobox to match the new theme.
         auto theme_config = Core::ConfigFile::open(m_selected_theme->path);
         if (theme_config.is_error()) {
             GUI::MessageBox::show_error(window(), "Failed to open theme config file"sv);
             return;
         }
-        auto const color_scheme_index = m_color_scheme_names.find_first_index(get_color_scheme_name_from_pathname(theme_config.release_value()->read_entry("Paths", "ColorScheme")));
+        auto preferred_color_scheme_path = get_color_scheme_name_from_pathname(theme_config.release_value()->read_entry("Paths", "ColorScheme"));
+        auto set_theme_result = GUI::ConnectionToWindowServer::the().set_system_theme(m_selected_theme->path, m_selected_theme->name, m_background_settings_changed, OptionalNone());
+        if (!set_theme_result || preferred_color_scheme_path.is_error()) {
+            GUI::MessageBox::show_error(window(), "Failed to apply theme settings"sv);
+            return;
+        }
+        // Update the color scheme combobox to match the new theme.
+        auto const color_scheme_index = m_color_scheme_names.find_first_index(preferred_color_scheme_path.value());
         if (color_scheme_index.has_value())
             find_descendant_of_type_named<GUI::ComboBox>("color_scheme_combo")->set_selected_index(color_scheme_index.value());
     }

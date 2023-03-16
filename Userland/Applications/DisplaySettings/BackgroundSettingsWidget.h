@@ -9,6 +9,7 @@
 #pragma once
 
 #include "MonitorWidget.h"
+#include <AK/String.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
@@ -33,7 +34,7 @@ private:
     ErrorOr<void> create_frame();
     ErrorOr<void> load_current_settings();
 
-    Vector<DeprecatedString> m_modes;
+    Vector<String> m_modes;
 
     bool& m_background_settings_changed;
 

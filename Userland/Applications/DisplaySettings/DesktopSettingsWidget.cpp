@@ -15,7 +15,8 @@
 
 namespace DisplaySettings {
 
-ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> DesktopSettingsWidget::try_create() {
+ErrorOr<NonnullRefPtr<DesktopSettingsWidget>> DesktopSettingsWidget::try_create()
+{
     auto desktop_settings_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DesktopSettingsWidget()));
     TRY(desktop_settings_widget->create_frame());
     desktop_settings_widget->load_current_settings();
@@ -55,8 +56,7 @@ void DesktopSettingsWidget::apply_settings()
     auto& desktop = GUI::Desktop::the();
     if (workspace_rows != desktop.workspace_rows() || workspace_columns != desktop.workspace_columns()) {
         if (!GUI::ConnectionToWindowServer::the().apply_workspace_settings(workspace_rows, workspace_columns, true)) {
-            GUI::MessageBox::show(window(), DeprecatedString::formatted("Error applying workspace settings"),
-                "Workspace settings"sv, GUI::MessageBox::Type::Error);
+            GUI::MessageBox::show_error(window(), "Error applying workspace settings"sv);
         }
     }
 }

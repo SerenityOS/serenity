@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Optional.h>
+#include <AK/String.h>
 #include <LibGUI/Widget.h>
 
 namespace DisplaySettings {
@@ -15,10 +17,10 @@ class MonitorWidget final : public GUI::Widget {
 
 public:
     static ErrorOr<NonnullRefPtr<MonitorWidget>> try_create();
-    bool set_wallpaper(DeprecatedString path);
-    StringView wallpaper() const;
+    bool set_wallpaper(String path);
+    Optional<StringView> wallpaper() const;
 
-    void set_wallpaper_mode(DeprecatedString mode);
+    void set_wallpaper_mode(String mode);
     StringView wallpaper_mode() const;
 
     RefPtr<Gfx::Bitmap> wallpaper_bitmap() const { return m_wallpaper_bitmap; }
@@ -44,16 +46,23 @@ private:
     RefPtr<Gfx::Bitmap> m_desktop_bitmap;
     bool m_desktop_dirty { true };
 
-    DeprecatedString m_desktop_wallpaper_path;
+    Optional<String> m_desktop_wallpaper_path;
     RefPtr<Gfx::Bitmap> m_wallpaper_bitmap;
-    DeprecatedString m_desktop_wallpaper_mode;
+    String m_desktop_wallpaper_mode;
     Gfx::IntSize m_desktop_resolution;
     int m_desktop_scale_factor { 1 };
     Gfx::Color m_desktop_color;
 
-    bool is_different_to_current_wallpaper_path(DeprecatedString const& path)
+    bool is_different_to_current_wallpaper_path(String const& path)
     {
-        return (!path.is_empty() && path != m_desktop_wallpaper_path) || (path.is_empty() && m_desktop_wallpaper_path != nullptr);
+        if (!m_desktop_wallpaper_path.has_value()) {
+            if (path.is_empty())
+                return false;
+            return true;
+        }
+        if (m_desktop_wallpaper_path.value() == path)
+            return false;
+        return true;
     }
 };
 
