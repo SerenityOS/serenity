@@ -36,6 +36,7 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibMain/Main.h>
+#include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWebView/WebContentClient.h>
 #include <QApplication>
@@ -629,6 +630,9 @@ void WebContentView::create_client()
             handle_web_content_process_crash();
         });
     };
+
+    m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
+    client().async_set_window_handle(m_client_state.client_handle);
 
     client().async_set_device_pixels_per_css_pixel(m_device_pixel_ratio);
     update_palette();
