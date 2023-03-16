@@ -448,7 +448,6 @@ set(SOURCES
     WebAssembly/Module.cpp
     WebAssembly/Table.cpp
     WebAssembly/WebAssembly.cpp
-    WebAssembly/WebAssemblyObject.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
     WebDriver/ElementLocationStrategies.cpp

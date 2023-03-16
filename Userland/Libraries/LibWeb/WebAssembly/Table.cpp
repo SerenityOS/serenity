@@ -10,7 +10,7 @@
 #include <LibWasm/Types.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/WebAssembly/Table.h>
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
+#include <LibWeb/WebAssembly/WebAssembly.h>
 
 namespace Web::WebAssembly {
 
@@ -30,7 +30,7 @@ static JS::ThrowCompletionOr<Wasm::Value> value_to_reference(JS::VM& vm, JS::Val
 {
     if (value.is_undefined())
         return Wasm::Value(reference_type, 0ull);
-    return Bindings::to_webassembly_value(vm, value, reference_type);
+    return Detail::to_webassembly_value(vm, value, reference_type);
 }
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<Table>> Table::construct_impl(JS::Realm& realm, TableDescriptor& descriptor, JS::Value value)
@@ -43,12 +43,12 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Table>> Table::construct_impl(JS::Realm& re
     Wasm::Limits limits { descriptor.initial, move(descriptor.maximum) };
     Wasm::TableType table_type { reference_type, move(limits) };
 
-    auto address = Bindings::WebAssemblyObject::s_abstract_machine.store().allocate(table_type);
+    auto address = Detail::s_abstract_machine.store().allocate(table_type);
     if (!address.has_value())
         return vm.throw_completion<JS::TypeError>("Wasm Table allocation failed"sv);
 
     auto const& reference = reference_value.value().get<Wasm::Reference>();
-    auto& table = *Bindings::WebAssemblyObject::s_abstract_machine.store().get(*address);
+    auto& table = *Detail::s_abstract_machine.store().get(*address);
     for (auto& element : table.elements())
         element = reference;
 
@@ -74,7 +74,7 @@ WebIDL::ExceptionOr<u32> Table::grow(u32 delta, JS::Value value)
 {
     auto& vm = this->vm();
 
-    auto* table = Bindings::WebAssemblyObject::s_abstract_machine.store().get(address());
+    auto* table = Detail::s_abstract_machine.store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table to grow"sv);
 
@@ -94,7 +94,7 @@ WebIDL::ExceptionOr<JS::Value> Table::get(u32 index) const
 {
     auto& vm = this->vm();
 
-    auto* table = Bindings::WebAssemblyObject::s_abstract_machine.store().get(address());
+    auto* table = Detail::s_abstract_machine.store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table"sv);
 
@@ -106,7 +106,7 @@ WebIDL::ExceptionOr<JS::Value> Table::get(u32 index) const
         return JS::js_undefined();
 
     Wasm::Value wasm_value { ref.value() };
-    return Bindings::to_js_value(vm, wasm_value);
+    return Detail::to_js_value(vm, wasm_value);
 }
 
 // https://webassembly.github.io/spec/js-api/#dom-table-set
@@ -114,7 +114,7 @@ WebIDL::ExceptionOr<void> Table::set(u32 index, JS::Value value)
 {
     auto& vm = this->vm();
 
-    auto* table = Bindings::WebAssemblyObject::s_abstract_machine.store().get(address());
+    auto* table = Detail::s_abstract_machine.store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table"sv);
 
@@ -134,7 +134,7 @@ WebIDL::ExceptionOr<u32> Table::length() const
 {
     auto& vm = this->vm();
 
-    auto* table = Bindings::WebAssemblyObject::s_abstract_machine.store().get(address());
+    auto* table = Detail::s_abstract_machine.store().get(address());
     if (!table)
         return vm.throw_completion<JS::RangeError>("Could not find the memory table"sv);
 

@@ -10,7 +10,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/ModulePrototype.h>
 #include <LibWeb/WebAssembly/Module.h>
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
+#include <LibWeb/WebAssembly/WebAssembly.h>
 
 namespace Web::WebAssembly {
 
@@ -18,7 +18,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Module>> Module::construct_impl(JS::Realm& 
 {
     auto& vm = realm.vm();
 
-    auto index = TRY(Bindings::parse_module(vm, bytes.cell()));
+    auto index = TRY(Detail::parse_module(vm, bytes.cell()));
     return MUST_OR_THROW_OOM(vm.heap().allocate<Module>(realm, realm, index));
 }
 
@@ -38,7 +38,7 @@ JS::ThrowCompletionOr<void> Module::initialize(JS::Realm& realm)
 
 Wasm::Module const& Module::module() const
 {
-    return Bindings::WebAssemblyObject::s_compiled_modules.at(index())->module;
+    return Detail::s_compiled_modules.at(index())->module;
 }
 
 }
