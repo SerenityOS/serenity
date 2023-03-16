@@ -62,7 +62,7 @@ ErrorOr<NonnullRefPtr<Profile>> sRGB()
     TRY(tag_table.try_set(blueTRCTag, curve));
 
     // White point.
-    // ICC v4, 9.2.36 mediaWhitePointTag: " For displays, the values specified shall be those of the PCS illuminant as defined in 7.2.16."
+    // ICC v4, 9.2.36 mediaWhitePointTag: "For displays, the values specified shall be those of the PCS illuminant as defined in 7.2.16."
     TRY(tag_table.try_set(mediaWhitePointTag, TRY(XYZ_data(header.pcs_illuminant))));
 
     // The chromatic_adaptation_matrix values are from https://www.color.org/chadtag.xalter
