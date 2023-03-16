@@ -126,7 +126,7 @@ void ViewImplementation::run_javascript(StringView js_source)
 
 #if !defined(AK_OS_SERENITY)
 
-ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, StringView webdriver_content_ipc_path)
+ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -149,16 +149,11 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
 
         auto webcontent_fd_passing_socket_string = TRY(String::number(wc_fd_passing_fd));
 
-        Vector<StringView> arguments {
+        auto arguments = Array {
             "WebContent"sv,
             "--webcontent-fd-passing-socket"sv,
             webcontent_fd_passing_socket_string
         };
-
-        if (!webdriver_content_ipc_path.is_empty()) {
-            TRY(arguments.try_append("--webdriver-content-path"sv));
-            TRY(arguments.try_append(webdriver_content_ipc_path));
-        }
 
         ErrorOr<void> result;
         for (auto const& path : candidate_web_content_paths) {

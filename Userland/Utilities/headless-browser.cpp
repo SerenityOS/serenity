@@ -53,12 +53,9 @@ public:
 
 #if defined(AK_OS_SERENITY)
         view->m_client_state.client = TRY(WebView::WebContentClient::try_create(*view));
-
-        if (!web_driver_ipc_path.is_empty())
-            view->client().async_connect_to_webdriver(web_driver_ipc_path);
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
-        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths, web_driver_ipc_path));
+        view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths));
 #endif
 
         view->client().async_update_system_theme(move(theme));
@@ -66,6 +63,9 @@ public:
 
         view->client().async_set_viewport_rect({ { 0, 0 }, window_size });
         view->client().async_set_window_size(window_size);
+
+        if (!web_driver_ipc_path.is_empty())
+            view->client().async_connect_to_webdriver(web_driver_ipc_path);
 
         return view;
     }

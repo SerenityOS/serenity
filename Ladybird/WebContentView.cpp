@@ -603,7 +603,7 @@ void WebContentView::create_client()
     m_client_state = {};
 
     auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
-    auto new_client = launch_web_content_process(candidate_web_content_paths, m_webdriver_content_ipc_path).release_value_but_fixme_should_propagate_errors();
+    auto new_client = launch_web_content_process(candidate_web_content_paths).release_value_but_fixme_should_propagate_errors();
 
     m_web_content_notifier.setSocket(new_client->socket().fd().value());
     m_web_content_notifier.setEnabled(true);
@@ -636,6 +636,9 @@ void WebContentView::create_client()
 
     // FIXME: Get the screen rect.
     // client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
+
+    if (!m_webdriver_content_ipc_path.is_empty())
+        client().async_connect_to_webdriver(m_webdriver_content_ipc_path);
 }
 
 void WebContentView::handle_web_content_process_crash()

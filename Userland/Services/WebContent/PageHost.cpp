@@ -93,6 +93,10 @@ ErrorOr<void> PageHost::connect_to_webdriver(DeprecatedString const& webdriver_i
 {
     VERIFY(!m_webdriver);
     m_webdriver = TRY(WebDriverConnection::connect(*this, webdriver_ipc_path));
+
+    if (on_webdriver_connection)
+        on_webdriver_connection(*m_webdriver);
+
     return {};
 }
 
