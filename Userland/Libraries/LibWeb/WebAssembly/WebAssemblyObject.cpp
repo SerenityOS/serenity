@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "WebAssemblyTableObject.h"
-#include "WebAssemblyTablePrototype.h"
 #include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
@@ -21,9 +19,11 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MemoryPrototype.h>
 #include <LibWeb/Bindings/ModulePrototype.h>
+#include <LibWeb/Bindings/TablePrototype.h>
 #include <LibWeb/WebAssembly/Instance.h>
 #include <LibWeb/WebAssembly/Memory.h>
 #include <LibWeb/WebAssembly/Module.h>
+#include <LibWeb/WebAssembly/Table.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 namespace Web::Bindings {
@@ -52,7 +52,7 @@ JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
     auto& module_constructor = Bindings::ensure_web_constructor<ModulePrototype>(realm, "WebAssembly.Module"sv);
     define_direct_property("Module", &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
-    auto& table_constructor = Bindings::ensure_web_constructor<WebAssemblyTablePrototype>(realm, "WebAssembly.Table"sv);
+    auto& table_constructor = Bindings::ensure_web_constructor<TablePrototype>(realm, "WebAssembly.Table"sv);
     define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
 
     return {};
@@ -272,11 +272,11 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
                     return {};
                 },
                 [&](Wasm::TableType const&) -> JS::ThrowCompletionOr<void> {
-                    if (!import_.is_object() || !is<WebAssemblyTableObject>(import_.as_object())) {
+                    if (!import_.is_object() || !is<WebAssembly::Table>(import_.as_object())) {
                         // FIXME: Throw a LinkError instead
                         return vm.throw_completion<JS::TypeError>("LinkError: Expected an instance of WebAssembly.Table for a table import"sv);
                     }
-                    auto address = static_cast<WebAssemblyTableObject const&>(import_.as_object()).address();
+                    auto address = static_cast<WebAssembly::Table const&>(import_.as_object()).address();
                     resolved_imports.set(import_name, Wasm::ExternValue { address });
                     return {};
                 },

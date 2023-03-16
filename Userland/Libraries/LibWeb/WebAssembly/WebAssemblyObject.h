@@ -12,7 +12,6 @@
 
 namespace Web::Bindings {
 
-class WebAssemblyTableObject;
 JS::ThrowCompletionOr<size_t> parse_module(JS::VM&, JS::Object* buffer);
 JS::NativeFunction* create_native_function(JS::VM&, Wasm::FunctionAddress address, DeprecatedString const& name);
 JS::Value to_js_value(JS::VM&, Wasm::Value& wasm_value);
@@ -46,7 +45,7 @@ public:
     struct ModuleCache {
         HashMap<Wasm::FunctionAddress, JS::GCPtr<JS::FunctionObject>> function_instances;
         HashMap<Wasm::MemoryAddress, JS::GCPtr<WebAssembly::Memory>> memory_instances;
-        HashMap<Wasm::TableAddress, JS::GCPtr<WebAssemblyTableObject>> table_instances;
+        HashMap<Wasm::TableAddress, JS::GCPtr<WebAssembly::Table>> table_instances;
     };
     struct GlobalModuleCache {
         HashMap<Wasm::FunctionAddress, JS::GCPtr<JS::NativeFunction>> function_instances;
