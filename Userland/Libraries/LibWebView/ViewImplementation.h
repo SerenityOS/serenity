@@ -30,6 +30,8 @@ public:
 
     AK::URL const& url() const { return m_url; }
 
+    String const& handle() const { return m_client_state.client_handle; }
+
     void load(AK::URL const&);
     void load_html(StringView, AK::URL const&);
     void load_empty_document();
@@ -129,6 +131,7 @@ protected:
 
     struct ClientState {
         RefPtr<WebContentClient> client;
+        String client_handle;
         SharedBitmap front_bitmap;
         SharedBitmap back_bitmap;
         i32 next_bitmap_id { 0 };
