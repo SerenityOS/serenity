@@ -13,6 +13,9 @@
 #    include <Kernel/Arch/x86_64/ISABus/IDEController.h>
 #    include <Kernel/Arch/x86_64/PCI/IDELegacyModeController.h>
 #endif
+#if ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/SDHostController.h>
+#endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
@@ -26,6 +29,7 @@
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
+#include <Kernel/Storage/SD/SDHostController.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibPartition/EBRPartitionTable.h>
 #include <LibPartition/GUIDPartitionTable.h>
@@ -40,6 +44,7 @@ static Atomic<u32> s_controller_id;
 
 static Atomic<u32> s_relative_ata_controller_id;
 static Atomic<u32> s_relative_nvme_controller_id;
+static Atomic<u32> s_relative_sd_controller_id;
 
 static constexpr StringView partition_uuid_prefix = "PARTUUID:"sv;
 
@@ -61,10 +66,18 @@ u32 StorageManagement::generate_relative_nvme_controller_id(Badge<NVMeController
     s_relative_nvme_controller_id++;
     return controller_id;
 }
+
 u32 StorageManagement::generate_relative_ata_controller_id(Badge<ATAController>)
 {
     auto controller_id = s_relative_ata_controller_id.load();
     s_relative_ata_controller_id++;
+    return controller_id;
+}
+
+u32 StorageManagement::generate_relative_sd_controller_id(Badge<SDHostController>)
+{
+    auto controller_id = s_relative_sd_controller_id.load();
+    s_relative_sd_controller_id++;
     return controller_id;
 }
 
@@ -445,6 +458,16 @@ UNMAP_AFTER_INIT void StorageManagement::initialize(StringView root_device, bool
     } else {
         enumerate_pci_controllers(force_pio, poll);
     }
+
+#if ARCH(AARCH64)
+    auto& rpi_sdhc = RPi::SDHostController::the();
+    if (auto maybe_error = rpi_sdhc.initialize(); maybe_error.is_error()) {
+        dmesgln("Unable to initialize RaspberryPi's SD Host Controller: {}", maybe_error.error());
+    } else {
+        m_controllers.append(rpi_sdhc);
+    }
+#endif
+
     // Note: Whether PCI bus is present on the system or not, always try to attach
     // a given ramdisk.
     auto controller = RamdiskController::try_initialize();

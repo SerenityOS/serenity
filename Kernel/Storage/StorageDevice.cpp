@@ -77,6 +77,8 @@ StringView StorageDevice::command_set_to_string_view() const
         return "ata"sv;
     case CommandSet::NVMe:
         return "nvme"sv;
+    case CommandSet::SD:
+        return "sd"sv;
     default:
         break;
     }
