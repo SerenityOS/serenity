@@ -50,10 +50,10 @@ static_assert(sizeof(LzmaHeader) == 13);
 class LzmaDecompressor : public Stream {
 public:
     /// Creates a decompressor from a standalone LZMA container (.lzma file extension, occasionally known as an LZMA 'archive').
-    static ErrorOr<NonnullOwnPtr<LzmaDecompressor>> create_from_container(MaybeOwned<Stream>);
+    static ErrorOr<NonnullOwnPtr<LzmaDecompressor>> create_from_container(MaybeOwned<Stream>, Optional<MaybeOwned<CircularBuffer>> dictionary = {});
 
     /// Creates a decompressor from a raw stream of LZMA-compressed data (found inside an LZMA container or embedded in other file formats).
-    static ErrorOr<NonnullOwnPtr<LzmaDecompressor>> create_from_raw_stream(MaybeOwned<Stream>, LzmaDecompressorOptions const&);
+    static ErrorOr<NonnullOwnPtr<LzmaDecompressor>> create_from_raw_stream(MaybeOwned<Stream>, LzmaDecompressorOptions const&, Optional<MaybeOwned<CircularBuffer>> dictionary = {});
 
     ErrorOr<void> append_input_stream(MaybeOwned<Stream>, Optional<u64> uncompressed_size);
 
@@ -72,12 +72,13 @@ private:
     static constexpr Probability default_probability = (1 << probability_bit_count) / 2;
     static void initialize_to_default_probability(Span<Probability>);
 
-    LzmaDecompressor(MaybeOwned<Stream>, LzmaDecompressorOptions, CircularBuffer, FixedArray<Probability> literal_probabilities);
+    LzmaDecompressor(MaybeOwned<Stream>, LzmaDecompressorOptions, MaybeOwned<CircularBuffer>, FixedArray<Probability> literal_probabilities);
 
     MaybeOwned<Stream> m_stream;
     LzmaDecompressorOptions m_options;
 
-    CircularBuffer m_output_buffer;
+    // This doubles as an output buffer, since we have to write all of our results into this anyways.
+    MaybeOwned<CircularBuffer> m_dictionary;
     u64 m_total_decoded_bytes { 0 };
     bool m_found_end_of_stream_marker { false };
     Optional<u16> m_leftover_match_length;
