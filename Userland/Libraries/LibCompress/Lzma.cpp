@@ -90,31 +90,36 @@ void LzmaDecompressor::initialize_to_default_probability(Span<Probability> span)
         entry = default_probability;
 }
 
-ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_container(MaybeOwned<Stream> stream)
+ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_container(MaybeOwned<Stream> stream, Optional<MaybeOwned<CircularBuffer>> dictionary)
 {
     auto header = TRY(stream->read_value<LzmaHeader>());
 
-    return TRY(LzmaDecompressor::create_from_raw_stream(move(stream), TRY(header.as_decompressor_options())));
+    return TRY(LzmaDecompressor::create_from_raw_stream(move(stream), TRY(header.as_decompressor_options()), move(dictionary)));
 }
 
-ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_raw_stream(MaybeOwned<Stream> stream, LzmaDecompressorOptions const& options)
+ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_raw_stream(MaybeOwned<Stream> stream, LzmaDecompressorOptions const& options, Optional<MaybeOwned<CircularBuffer>> dictionary)
 {
-    auto output_buffer = TRY(CircularBuffer::create_empty(options.dictionary_size));
+    if (!dictionary.has_value()) {
+        auto new_dictionary = TRY(CircularBuffer::create_empty(options.dictionary_size));
+        dictionary = TRY(try_make<CircularBuffer>(move(new_dictionary)));
+    }
+
+    VERIFY((*dictionary)->capacity() >= options.dictionary_size);
 
     // "The LZMA Decoder uses (1 << (lc + lp)) tables with CProb values, where each table contains 0x300 CProb values."
     auto literal_probabilities = TRY(FixedArray<Probability>::create(literal_probability_table_size * (1 << (options.literal_context_bits + options.literal_position_bits))));
 
-    auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LzmaDecompressor(move(stream), options, move(output_buffer), move(literal_probabilities))));
+    auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) LzmaDecompressor(move(stream), options, dictionary.release_value(), move(literal_probabilities))));
 
     TRY(decompressor->initialize_range_decoder());
 
     return decompressor;
 }
 
-LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOptions options, CircularBuffer output_buffer, FixedArray<Probability> literal_probabilities)
+LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOptions options, MaybeOwned<CircularBuffer> dictionary, FixedArray<Probability> literal_probabilities)
     : m_stream(move(stream))
     , m_options(move(options))
-    , m_output_buffer(move(output_buffer))
+    , m_dictionary(move(dictionary))
     , m_literal_probabilities(move(literal_probabilities))
 {
     initialize_to_default_probability(m_literal_probabilities.span());
@@ -277,7 +282,7 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
 {
     u8 previous_byte = 0;
     if (m_total_decoded_bytes > 0) {
-        auto read_bytes = MUST(m_output_buffer.read_with_seekback({ &previous_byte, sizeof(previous_byte) }, 1));
+        auto read_bytes = MUST(m_dictionary->read_with_seekback({ &previous_byte, sizeof(previous_byte) }, 1));
         VERIFY(read_bytes.size() == sizeof(previous_byte));
     }
 
@@ -302,7 +307,7 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
     //       Testing `(State > 7)` with actual test files yields errors, so the reference implementation appears to be the correct one.
     if (m_state >= 7) {
         u8 matched_byte = 0;
-        auto read_bytes = TRY(m_output_buffer.read_with_seekback({ &matched_byte, sizeof(matched_byte) }, m_rep0 + 1));
+        auto read_bytes = TRY(m_dictionary->read_with_seekback({ &matched_byte, sizeof(matched_byte) }, m_rep0 + 1));
         VERIFY(read_bytes.size() == sizeof(matched_byte));
 
         do {
@@ -322,7 +327,7 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
 
     u8 actual_result = result - 0x100;
 
-    size_t written_bytes = m_output_buffer.write({ &actual_result, sizeof(actual_result) });
+    size_t written_bytes = m_dictionary->write({ &actual_result, sizeof(actual_result) });
     VERIFY(written_bytes == sizeof(actual_result));
     m_total_decoded_bytes += sizeof(actual_result);
 
@@ -438,7 +443,7 @@ ErrorOr<u32> LzmaDecompressor::decode_normalized_match_distance(u16 normalized_m
 
 ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 {
-    while (m_output_buffer.used_space() < bytes.size() && m_output_buffer.empty_space() != 0) {
+    while (m_dictionary->used_space() < bytes.size() && m_dictionary->empty_space() != 0) {
         if (m_found_end_of_stream_marker) {
             if (m_options.uncompressed_size.has_value() && m_total_decoded_bytes < m_options.uncompressed_size.value())
                 return Error::from_string_literal("Found end-of-stream marker earlier than expected");
@@ -494,16 +499,16 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
                 return Error::from_string_literal("Tried to copy match beyond expected uncompressed file size");
 
             while (real_length > 0) {
-                if (m_output_buffer.empty_space() == 0) {
+                if (m_dictionary->empty_space() == 0) {
                     m_leftover_match_length = real_length;
                     break;
                 }
 
                 u8 byte;
-                auto read_bytes = TRY(m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, m_rep0 + 1));
+                auto read_bytes = TRY(m_dictionary->read_with_seekback({ &byte, sizeof(byte) }, m_rep0 + 1));
                 VERIFY(read_bytes.size() == sizeof(byte));
 
-                auto written_bytes = m_output_buffer.write({ &byte, sizeof(byte) });
+                auto written_bytes = m_dictionary->write({ &byte, sizeof(byte) });
                 VERIFY(written_bytes == sizeof(byte));
                 m_total_decoded_bytes++;
 
@@ -570,7 +575,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 
             // "Also the decoder must check that "rep0" value is not larger than dictionary size
             //  and is not larger than the number of already decoded bytes."
-            if (m_rep0 > min(m_options.dictionary_size, m_total_decoded_bytes))
+            if (m_rep0 > m_dictionary->seekback_limit())
                 return Error::from_string_literal("rep0 value is larger than the possible lookback size");
 
             // "Then the decoder must copy match bytes as described in
@@ -595,10 +600,10 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
                 update_state_after_short_rep();
 
                 u8 byte;
-                auto read_bytes = TRY(m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, m_rep0 + 1));
+                auto read_bytes = TRY(m_dictionary->read_with_seekback({ &byte, sizeof(byte) }, m_rep0 + 1));
                 VERIFY(read_bytes.size() == sizeof(byte));
 
-                auto written_bytes = m_output_buffer.write({ &byte, sizeof(byte) });
+                auto written_bytes = m_dictionary->write({ &byte, sizeof(byte) });
                 VERIFY(written_bytes == sizeof(byte));
                 m_total_decoded_bytes++;
 
@@ -653,7 +658,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             return Error::from_string_literal("LZMA stream ends in an unclean state");
     }
 
-    return m_output_buffer.read(bytes);
+    return m_dictionary->read(bytes);
 }
 
 ErrorOr<size_t> LzmaDecompressor::write_some(ReadonlyBytes)
@@ -663,7 +668,7 @@ ErrorOr<size_t> LzmaDecompressor::write_some(ReadonlyBytes)
 
 bool LzmaDecompressor::is_eof() const
 {
-    if (m_output_buffer.used_space() > 0)
+    if (m_dictionary->used_space() > 0)
         return false;
 
     if (m_options.uncompressed_size.has_value())
