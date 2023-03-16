@@ -2,6 +2,7 @@
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -66,16 +67,21 @@ ErrorOr<NonnullRefPtr<Game>> Game::try_create()
         food_bitmaps.unchecked_append(bitmap.release_value());
     }
 
-    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps)));
+    auto color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, Color(Color::Green).value()));
+    auto skin_name = Config::read_string("Snake"sv, "Snake"sv, "SnakeSkin"sv, "classic"sv);
+    auto skin = TRY(SnakeSkin::create(skin_name, color));
+
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Game(move(food_bitmaps), color, skin_name, move(skin)));
 }
 
-Game::Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps)
+Game::Game(Vector<NonnullRefPtr<Gfx::Bitmap>> food_bitmaps, Color snake_color, DeprecatedString snake_skin_name, NonnullOwnPtr<SnakeSkin> skin)
     : m_food_bitmaps(move(food_bitmaps))
+    , m_snake_color(move(snake_color))
+    , m_snake_skin_name(move(snake_skin_name))
+    , m_snake_skin(move(skin))
 {
     set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
     reset();
-
-    m_snake_base_color = Color::from_argb(Config::read_u32("Snake"sv, "Snake"sv, "BaseColor"sv, m_snake_base_color.value()));
 }
 
 void Game::pause()
@@ -105,12 +111,6 @@ void Game::reset()
     start();
     spawn_fruit();
     update();
-}
-
-void Game::set_snake_base_color(Color color)
-{
-    Config::write_u32("Snake"sv, "Snake"sv, "BaseColor"sv, color.value());
-    m_snake_base_color = color;
 }
 
 bool Game::is_available(Coordinate const& coord)
@@ -154,6 +154,7 @@ void Game::timer_event(Core::TimerEvent&)
         m_velocity = m_velocity_queue.dequeue();
 
     dirty_cells.append(m_head);
+    dirty_cells.append(m_tail.last());
 
     m_head.row += m_velocity.vertical;
     m_head.column += m_velocity.horizontal;
@@ -248,19 +249,19 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::Black);
 
-    painter.fill_rect(cell_rect(m_head), m_snake_base_color);
-    for (auto& part : m_tail) {
-        auto rect = cell_rect(part);
-        painter.fill_rect(rect, m_snake_base_color.darkened(0.77));
+    auto head_rect = cell_rect(m_head);
+    m_snake_skin->draw_head(painter, head_rect, m_last_velocity.as_direction());
 
-        Gfx::IntRect left_side(rect.x(), rect.y(), 2, rect.height());
-        Gfx::IntRect top_side(rect.x(), rect.y(), rect.width(), 2);
-        Gfx::IntRect right_side(rect.right() - 1, rect.y(), 2, rect.height());
-        Gfx::IntRect bottom_side(rect.x(), rect.bottom() - 1, rect.width(), 2);
-        painter.fill_rect(left_side, m_snake_base_color.darkened(0.88));
-        painter.fill_rect(right_side, m_snake_base_color.darkened(0.55));
-        painter.fill_rect(top_side, m_snake_base_color.darkened(0.88));
-        painter.fill_rect(bottom_side, m_snake_base_color.darkened(0.55));
+    for (size_t i = 0; i < m_tail.size(); i++) {
+        auto previous_position = i > 0 ? m_tail[i - 1] : m_head;
+        auto rect = cell_rect(m_tail[i]);
+
+        if (i == m_tail.size() - 1) {
+            m_snake_skin->draw_tail(painter, rect, direction_to_position(m_tail[i], previous_position));
+            continue;
+        }
+
+        m_snake_skin->draw_body(painter, rect, direction_to_position(m_tail[i], previous_position), direction_to_position(m_tail[i], m_tail[i + 1]));
     }
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), m_food_bitmaps[m_fruit_type], m_food_bitmaps[m_fruit_type]->rect());
@@ -296,6 +297,70 @@ Velocity const& Game::last_velocity() const
         return m_velocity_queue.last();
 
     return m_last_velocity;
+}
+
+Direction Game::direction_to_position(Snake::Coordinate const& from, Snake::Coordinate const& to) const
+{
+    auto x_difference = to.column - from.column;
+    auto y_difference = to.row - from.row;
+
+    if (y_difference == 1)
+        return Direction::Down;
+    if (y_difference == -1)
+        return Direction::Up;
+    if (y_difference != 0) {
+        // We wrapped around the screen, so invert the direction.
+        return (y_difference > 0) ? Direction::Up : Direction::Down;
+    }
+
+    if (x_difference == 1)
+        return Direction::Right;
+    if (x_difference == -1)
+        return Direction::Left;
+    if (x_difference != 0) {
+        // We wrapped around the screen, so invert the direction.
+        return (x_difference > 0) ? Direction::Left : Direction::Right;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
+void Game::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
+{
+    if (domain == "Snake"sv && group == "Snake"sv && key == "SnakeSkin"sv) {
+        set_skin_name(value);
+        return;
+    }
+}
+
+void Game::config_u32_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, u32 value)
+{
+    if (domain == "Snake"sv && group == "Snake"sv && key == "BaseColor"sv) {
+        set_skin_color(Color::from_argb(value));
+        return;
+    }
+}
+
+void Game::set_skin_color(Gfx::Color color)
+{
+    if (m_snake_color != color) {
+        m_snake_color = color;
+        set_skin(SnakeSkin::create(m_snake_skin_name, m_snake_color).release_value_but_fixme_should_propagate_errors());
+    }
+}
+
+void Game::set_skin_name(DeprecatedString name)
+{
+    if (m_snake_skin_name != name) {
+        m_snake_skin_name = name;
+        set_skin(SnakeSkin::create(m_snake_skin_name, m_snake_color).release_value_but_fixme_should_propagate_errors());
+    }
+}
+
+void Game::set_skin(NonnullOwnPtr<Snake::SnakeSkin> skin)
+{
+    m_snake_skin = move(skin);
+    update();
 }
 
 }
