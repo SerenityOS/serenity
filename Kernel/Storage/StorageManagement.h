@@ -11,6 +11,7 @@
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Storage/DiskPartition.h>
+#include <Kernel/Storage/SD/SDHostController.h>
 #include <Kernel/Storage/StorageController.h>
 #include <Kernel/Storage/StorageDevice.h>
 #include <LibPartition/PartitionTable.h>
@@ -37,6 +38,7 @@ public:
 
     static u32 generate_relative_nvme_controller_id(Badge<NVMeController>);
     static u32 generate_relative_ata_controller_id(Badge<ATAController>);
+    static u32 generate_relative_sd_controller_id(Badge<SDHostController>);
 
     void remove_device(StorageDevice&);
 

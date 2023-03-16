@@ -38,6 +38,7 @@ public:
         SCSI,
         ATA,
         NVMe,
+        SD,
     };
 
     // Note: The most reliable way to address this device from userspace interfaces,

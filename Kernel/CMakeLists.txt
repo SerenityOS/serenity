@@ -110,6 +110,8 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeQueue.cpp
     Storage/Ramdisk/Controller.cpp
     Storage/Ramdisk/Device.cpp
+    Storage/SD/SDHostController.cpp
+    Storage/SD/SDMemoryCard.cpp
     Storage/DiskPartition.cpp
     Storage/StorageController.cpp
     Storage/StorageDevice.cpp
@@ -436,6 +438,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/RPi/InterruptController.cpp
         Arch/aarch64/RPi/Mailbox.cpp
         Arch/aarch64/RPi/MMIO.cpp
+        Arch/aarch64/RPi/SDHostController.cpp
         Arch/aarch64/RPi/Timer.cpp
         Arch/aarch64/RPi/UART.cpp
     )
