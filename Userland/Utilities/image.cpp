@@ -26,6 +26,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool ppm_ascii;
     args_parser.add_option(ppm_ascii, "Convert to a PPM in ASCII", "ppm-ascii", {});
 
+    bool strip_color_profile;
+    args_parser.add_option(strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
+
     args_parser.parse(arguments);
 
     if (out_path.is_empty()) {
@@ -40,6 +43,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // over selecting a frame, access color profile data, and so on in the future.
     auto frame = TRY(decoder->frame(0)).image;
     Optional<ReadonlyBytes> icc_data = TRY(decoder->icc_data());
+
+    if (strip_color_profile)
+        icc_data.clear();
 
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
