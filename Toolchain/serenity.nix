@@ -29,6 +29,9 @@ stdenv.mkDerivation {
     qemu
     e2fsprogs
     fuse2fs
+    # To build the GRUB disk image
+    grub2
+    parted
   ];
 
   hardeningDisable = [ "format" "fortify" ];
