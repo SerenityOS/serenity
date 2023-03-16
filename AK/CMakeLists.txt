@@ -3,6 +3,7 @@ set(AK_SOURCES
     Base64.cpp
     CircularBuffer.cpp
     ConstrainedStream.cpp
+    CountingStream.cpp
     DOSPackedTime.cpp
     DeprecatedFlyString.cpp
     DeprecatedString.cpp
