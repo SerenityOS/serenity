@@ -1,12 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include "Geometry.h"
 #include <AK/CircularQueue.h>
 #include <LibGUI/Frame.h>
 
@@ -35,21 +37,6 @@ private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
-
-    struct Coordinate {
-        int row { 0 };
-        int column { 0 };
-
-        bool operator==(Coordinate const& other) const
-        {
-            return row == other.row && column == other.column;
-        }
-    };
-
-    struct Velocity {
-        int vertical { 0 };
-        int horizontal { 0 };
-    };
 
     void game_over();
     void spawn_fruit();

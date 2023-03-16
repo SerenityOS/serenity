@@ -290,7 +290,7 @@ void Game::queue_velocity(int v, int h)
     m_velocity_queue.enqueue({ v, h });
 }
 
-Game::Velocity const& Game::last_velocity() const
+Velocity const& Game::last_velocity() const
 {
     if (!m_velocity_queue.is_empty())
         return m_velocity_queue.last();
