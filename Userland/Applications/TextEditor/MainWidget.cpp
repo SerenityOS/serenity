@@ -388,7 +388,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
                 return;
         }
 
-        auto response = FileSystemAccessClient::Client::the().request_file(&window, action.text(), Core::File::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
         if (response.is_error())
             return;
 
