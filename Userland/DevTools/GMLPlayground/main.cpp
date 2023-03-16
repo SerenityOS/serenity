@@ -8,6 +8,7 @@
  */
 
 #include <AK/URL.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -66,6 +67,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio thread recvfd sendfd cpath rpath wpath unix"));
     auto app = TRY(GUI::Application::try_create(arguments));
+
+    Config::pledge_domain("GMLPlayground");
+    app->set_config_domain(TRY("GMLPlayground"_string));
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
@@ -136,6 +140,18 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         update_title();
     };
 
+    auto load_file = [&](auto file) {
+        auto buffer_or_error = file.stream().read_until_eof();
+        if (buffer_or_error.is_error())
+            return;
+
+        editor->set_text(buffer_or_error.release_value());
+        editor->set_focus(true);
+        update_title();
+
+        GUI::Application::the()->set_most_recently_open_file(file.filename());
+    };
+
     auto file_menu = TRY(window->try_add_menu("&File"));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
@@ -150,6 +166,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
         file_path = response.value().filename().to_deprecated_string();
         update_title();
+
+        GUI::Application::the()->set_most_recently_open_file(response.value().filename());
     });
 
     auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
@@ -182,21 +200,29 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (response.is_error())
             return;
 
-        auto file = response.release_value();
-        file_path = file.filename().to_deprecated_string();
-        auto buffer_or_error = file.stream().read_until_eof();
-        if (buffer_or_error.is_error())
-            return;
-
-        editor->set_text(buffer_or_error.release_value());
-        editor->set_focus(true);
-        update_title();
+        load_file(response.release_value());
     });
 
     TRY(file_menu->try_add_action(open_action));
     TRY(file_menu->try_add_action(save_action));
     TRY(file_menu->try_add_action(save_as_action));
     TRY(file_menu->try_add_separator());
+
+    TRY(file_menu->add_recent_files_list([&](auto& action) {
+        if (window->is_modified()) {
+            auto result = GUI::MessageBox::ask_about_unsaved_changes(window, file_path, editor->document().undo_stack().last_unmodified_timestamp());
+            if (result == GUI::MessageBox::ExecResult::Yes)
+                save_action->activate();
+            if (result != GUI::MessageBox::ExecResult::No && window->is_modified())
+                return;
+        }
+
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, action.text());
+        if (response.is_error())
+            return;
+        file_path = response.value().filename().to_deprecated_string();
+        load_file(response.release_value());
+    }));
 
     TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         if (window->on_close_request() == GUI::Window::CloseRequestDecision::Close)
