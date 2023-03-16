@@ -94,10 +94,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(game_menu->try_add_action(GUI::Action::create("&Change snake color", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/color-chooser.png"sv)), [&](auto&) {
         game.pause();
+        auto was_paused = game.is_paused();
+        if (!was_paused)
+            game.pause();
         auto dialog = GUI::ColorPicker::construct(Gfx::Color::White, window);
         if (dialog->exec() == GUI::Dialog::ExecResult::OK)
             game.set_snake_base_color(dialog->color());
-        game.start();
+        if (!was_paused)
+            game.start();
     })));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
