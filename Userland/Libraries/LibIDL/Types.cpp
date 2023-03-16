@@ -178,11 +178,9 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
     auto other_distinguishability = determine_category(other_innermost_type);
 
     if (this_distinguishability == DistinguishabilityCategory::InterfaceLike && other_distinguishability == DistinguishabilityCategory::InterfaceLike) {
-        // Two interface-likes are distinguishable if:
-        // "The two identified interface-like types are not the same, and no single platform object
-        // implements both interface-like types."
-        // FIXME: Implement this.
-        return false;
+        // The two identified interface-like types are not the same, and
+        // FIXME: no single platform object implements both interface-like types.
+        return this_innermost_type.name() != other_innermost_type.name();
     }
 
     return table[to_underlying(this_distinguishability)][to_underlying(other_distinguishability)];
