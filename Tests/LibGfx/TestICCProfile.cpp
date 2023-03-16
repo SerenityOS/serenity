@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Endian.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
+#include <LibGfx/ICC/WellKnownProfiles.h>
 #include <LibGfx/JPEGLoader.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibGfx/WebPLoader.h>
@@ -74,4 +76,22 @@ TEST_CASE(serialize_icc)
 
     auto serialized_bytes = MUST(Gfx::ICC::encode(*icc_profile));
     EXPECT_EQ(serialized_bytes, file->bytes());
+}
+
+TEST_CASE(built_in_sRGB)
+{
+    auto sRGB = MUST(Gfx::ICC::sRGB());
+    auto serialized_bytes = MUST(Gfx::ICC::encode(sRGB));
+
+    // We currently exactly match the curve in GIMP's built-in sRGB profile. It's a type 3 'para' curve with 5 parameters.
+    u32 para[] = { 0x70617261, 0x00000000, 0x00030000, 0x00026666, 0x0000F2A7, 0x00000D59, 0x000013D0, 0x00000A5B };
+    for (u32& i : para)
+        i = AK::convert_between_host_and_big_endian(i);
+    EXPECT(memmem(serialized_bytes.data(), serialized_bytes.size(), para, sizeof(para)) != nullptr);
+
+    // We currently exactly match the chromatic adaptation matrix in GIMP's (and other's) built-in sRGB profile.
+    u32 sf32[] = { 0x73663332, 0x00000000, 0x00010C42, 0x000005DE, 0xFFFFF325, 0x00000793, 0x0000FD90, 0xFFFFFBA1, 0xFFFFFDA2, 0x000003DC, 0x0000C06E };
+    for (u32& i : sf32)
+        i = AK::convert_between_host_and_big_endian(i);
+    EXPECT(memmem(serialized_bytes.data(), serialized_bytes.size(), sf32, sizeof(sf32)) != nullptr);
 }
