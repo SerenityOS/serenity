@@ -2706,6 +2706,12 @@ public:
 private:
 )~~~");
 
+    if (interface.extended_attributes.contains("WithGCVistor"sv)) {
+        generator.append(R"~~~(
+    virtual void visit_edges(JS::Cell::Visitor&) override;
+)~~~");
+    }
+
     for (auto const& overload_set : interface.overload_sets) {
         auto function_generator = generator.fork();
         function_generator.set("function.name:snakecase", make_input_acceptable_cpp(overload_set.key.to_snakecase()));
@@ -2817,6 +2823,16 @@ JS::ThrowCompletionOr<void> @namespace_class@::initialize(JS::Realm& realm)
     return {};
 }
 )~~~");
+
+    if (interface.extended_attributes.contains("WithGCVistor"sv)) {
+        generator.append(R"~~~(
+void @namespace_class@::visit_edges(JS::Cell::Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+    @name@::visit_edges(visitor);
+}
+)~~~");
+    }
 
     for (auto const& function : interface.functions)
         generate_function(generator, function, StaticFunction::Yes, interface.namespace_class, interface.name, interface);
