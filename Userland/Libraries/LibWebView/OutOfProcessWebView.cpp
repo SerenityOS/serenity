@@ -19,6 +19,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
+#include <LibWeb/Crypto/Crypto.h>
 
 REGISTER_WIDGET(WebView, OutOfProcessWebView)
 
@@ -68,6 +69,9 @@ void OutOfProcessWebView::create_client()
             handle_web_content_process_crash();
         });
     };
+
+    m_client_state.client_handle = Web::Crypto::generate_random_uuid().release_value_but_fixme_should_propagate_errors();
+    client().async_set_window_handle(m_client_state.client_handle);
 
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query(), Gfx::FontDatabase::window_title_font_query());
