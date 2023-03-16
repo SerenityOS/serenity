@@ -41,6 +41,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file = TRY(Core::MappedFile::map(in_path));
     auto decoder = Gfx::ImageDecoder::try_create_for_raw_bytes(file->bytes());
+    if (!decoder) {
+        warnln("Failed to decode input file '{}'", in_path);
+        return 1;
+    }
 
     // This uses ImageDecoder instead of Bitmap::load_from_file() to have more control
     // over selecting a frame, access color profile data, and so on in the future.
