@@ -159,6 +159,21 @@ void Intrinsics::create_web_namespace<@namespace_class@>(JS::Realm& realm)
 {
     auto namespace_object = heap().allocate<@namespace_class@>(realm, realm).release_allocated_value_but_fixme_should_propagate_errors();
     m_namespaces.set("@interface_name@"sv, namespace_object);
+
+    [[maybe_unused]] static constexpr u8 attr = JS::Attribute::Writable | JS::Attribute::Configurable;)~~~");
+
+        for (auto& interface : exposed_interfaces) {
+            if (interface.extended_attributes.get("LegacyNamespace"sv) != name)
+                continue;
+
+            gen.set("owned_interface_name", interface.name);
+            gen.set("owned_prototype_class", interface.prototype_class);
+
+            gen.append(R"~~~(
+    namespace_object->define_intrinsic_accessor("@owned_interface_name@", attr, [](auto& realm) -> JS::Value { return &Bindings::ensure_web_constructor<@owned_prototype_class@>(realm, "@interface_name@.@owned_interface_name@"sv); });)~~~");
+        }
+
+        gen.append(R"~~~(
 }
 )~~~");
     };
@@ -316,7 +331,7 @@ void add_@global_object_snake_name@_exposed_interfaces(JS::Object& global)
 
         if (interface.is_namespace)
             add_namespace(gen, interface.name, interface.namespace_class);
-        else
+        else if (!interface.extended_attributes.contains("LegacyNamespace"sv))
             add_interface(gen, interface.namespaced_name, interface.prototype_class, lookup_legacy_constructor(interface));
     }
 
