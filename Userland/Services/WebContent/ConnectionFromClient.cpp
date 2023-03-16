@@ -66,6 +66,11 @@ Messages::WebContentServer::GetWindowHandleResponse ConnectionFromClient::get_wi
     return m_page_host->page().top_level_browsing_context().window_handle();
 }
 
+void ConnectionFromClient::set_window_handle(String const& handle)
+{
+    m_page_host->page().top_level_browsing_context().set_window_handle(handle);
+}
+
 void ConnectionFromClient::connect_to_webdriver(DeprecatedString const& webdriver_ipc_path)
 {
     // FIXME: Propagate this error back to the browser.
