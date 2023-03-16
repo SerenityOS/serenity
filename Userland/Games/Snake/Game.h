@@ -20,6 +20,7 @@ public:
 
     virtual ~Game() override = default;
 
+    bool is_paused() const { return !has_timer(); }
     void start();
     void pause();
     void reset();
