@@ -53,7 +53,6 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/RequestIdleCallback/IdleDeadline.h>
 #include <LibWeb/Selection/Selection.h>
-#include <LibWeb/WebAssembly/WebAssemblyObject.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 
 namespace Web::HTML {
@@ -746,13 +745,6 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
-
-    // https://webidl.spec.whatwg.org/#define-the-global-property-references
-    // 5. For every namespace namespace that is exposed in realm:
-    //    1. Let id be namespace’s identifier.
-    //    3. Let namespaceObject be the result of creating a namespace object for namespace in realm.
-    //    3. Perform CreateMethodProperty(target, id, namespaceObject).
-    create_method_property("WebAssembly", MUST_OR_THROW_OOM(heap().allocate<Bindings::WebAssemblyObject>(realm, realm)));
 
     return {};
 }

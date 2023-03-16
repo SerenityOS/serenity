@@ -28,85 +28,11 @@
 
 namespace Web::Bindings {
 
-WebAssemblyObject::WebAssemblyObject(JS::Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
-{
-    s_abstract_machine.enable_instruction_count_limit();
-}
-
-JS::ThrowCompletionOr<void> WebAssemblyObject::initialize(JS::Realm& realm)
-{
-    MUST_OR_THROW_OOM(Object::initialize(realm));
-
-    u8 attr = JS::Attribute::Configurable | JS::Attribute::Writable | JS::Attribute::Enumerable;
-    define_native_function(realm, "validate", validate, 1, attr);
-    define_native_function(realm, "compile", compile, 1, attr);
-    define_native_function(realm, "instantiate", instantiate, 1, attr);
-
-    auto& memory_constructor = Bindings::ensure_web_constructor<MemoryPrototype>(realm, "WebAssembly.Memory"sv);
-    define_direct_property("Memory", &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
-
-    auto& instance_constructor = Bindings::ensure_web_constructor<InstancePrototype>(realm, "WebAssembly.Instance"sv);
-    define_direct_property("Instance", &instance_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
-
-    auto& module_constructor = Bindings::ensure_web_constructor<ModulePrototype>(realm, "WebAssembly.Module"sv);
-    define_direct_property("Module", &module_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
-
-    auto& table_constructor = Bindings::ensure_web_constructor<TablePrototype>(realm, "WebAssembly.Table"sv);
-    define_direct_property("Table", &table_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
-
-    return {};
-}
-
 Vector<NonnullOwnPtr<WebAssemblyObject::CompiledWebAssemblyModule>> WebAssemblyObject::s_compiled_modules;
 Vector<NonnullOwnPtr<Wasm::ModuleInstance>> WebAssemblyObject::s_instantiated_modules;
 Vector<WebAssemblyObject::ModuleCache> WebAssemblyObject::s_module_caches;
 WebAssemblyObject::GlobalModuleCache WebAssemblyObject::s_global_cache;
 Wasm::AbstractMachine WebAssemblyObject::s_abstract_machine;
-
-void WebAssemblyObject::visit_edges(Visitor& visitor)
-{
-    Base::visit_edges(visitor);
-
-    for (auto& entry : s_global_cache.function_instances)
-        visitor.visit(entry.value);
-    for (auto& module_cache : s_module_caches) {
-        for (auto& entry : module_cache.function_instances)
-            visitor.visit(entry.value);
-        for (auto& entry : module_cache.memory_instances)
-            visitor.visit(entry.value);
-        for (auto& entry : module_cache.table_instances)
-            visitor.visit(entry.value);
-    }
-}
-
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
-{
-    // 1. Let stableBytes be a copy of the bytes held by the buffer bytes.
-    // Note: There's no need to copy the bytes here as the buffer data cannot change while we're compiling the module.
-    auto buffer = TRY(vm.argument(0).to_object(vm));
-
-    // 2. Compile stableBytes as a WebAssembly module and store the results as module.
-    auto maybe_module = parse_module(vm, buffer);
-
-    // 3. If module is error, return false.
-    if (maybe_module.is_error())
-        return JS::Value(false);
-
-    // Drop the module from the cache, we're never going to refer to it.
-    ScopeGuard drop_from_cache {
-        [&] {
-            (void)s_compiled_modules.take_last();
-        }
-    };
-
-    // 3 continued - our "compile" step is lazy with validation, explicitly do the validation.
-    if (s_abstract_machine.validate(s_compiled_modules[maybe_module.value()]->module).is_error())
-        return JS::Value(false);
-
-    // 4. Return true.
-    return JS::Value(true);
-}
 
 JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object)
 {
@@ -137,30 +63,6 @@ JS::ThrowCompletionOr<size_t> parse_module(JS::VM& vm, JS::Object* buffer_object
 
     WebAssemblyObject::s_compiled_modules.append(make<WebAssemblyObject::CompiledWebAssemblyModule>(module_result.release_value()));
     return WebAssemblyObject::s_compiled_modules.size() - 1;
-}
-
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::compile)
-{
-    auto& realm = *vm.current_realm();
-
-    // FIXME: This shouldn't block!
-    auto buffer_or_error = vm.argument(0).to_object(vm);
-    JS::Value rejection_value;
-    if (buffer_or_error.is_error())
-        rejection_value = *buffer_or_error.throw_completion().value();
-
-    auto promise = JS::Promise::create(realm);
-    if (!rejection_value.is_empty()) {
-        promise->reject(rejection_value);
-        return promise;
-    }
-    auto* buffer = buffer_or_error.release_value();
-    auto result = parse_module(vm, buffer);
-    if (result.is_error())
-        promise->reject(*result.release_error().value());
-    else
-        promise->fulfill(MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Module>(realm, realm, result.release_value())));
-    return promise;
 }
 
 JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, Wasm::Module const& module)
@@ -307,56 +209,6 @@ JS::ThrowCompletionOr<size_t> WebAssemblyObject::instantiate_module(JS::VM& vm, 
     s_instantiated_modules.append(instance_result.release_value());
     s_module_caches.empend();
     return s_instantiated_modules.size() - 1;
-}
-
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
-{
-    auto& realm = *vm.current_realm();
-
-    // FIXME: This shouldn't block!
-    auto buffer_or_error = vm.argument(0).to_object(vm);
-    auto promise = JS::Promise::create(realm);
-    bool should_return_module = false;
-    if (buffer_or_error.is_error()) {
-        auto rejection_value = *buffer_or_error.throw_completion().value();
-        promise->reject(rejection_value);
-        return promise;
-    }
-    auto* buffer = buffer_or_error.release_value();
-
-    Wasm::Module const* module { nullptr };
-    if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
-        auto result = parse_module(vm, buffer);
-        if (result.is_error()) {
-            promise->reject(*result.release_error().value());
-            return promise;
-        }
-        module = &WebAssemblyObject::s_compiled_modules.at(result.release_value())->module;
-        should_return_module = true;
-    } else if (is<WebAssembly::Module>(buffer)) {
-        module = &static_cast<WebAssembly::Module*>(buffer)->module();
-    } else {
-        auto error = JS::TypeError::create(realm, TRY_OR_THROW_OOM(vm, String::formatted("{} is not an ArrayBuffer or a Module", buffer->class_name())));
-        promise->reject(error);
-        return promise;
-    }
-    VERIFY(module);
-
-    auto result = instantiate_module(vm, *module);
-    if (result.is_error()) {
-        promise->reject(*result.release_error().value());
-    } else {
-        auto instance_object = MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Instance>(realm, realm, result.release_value()));
-        if (should_return_module) {
-            auto object = JS::Object::create(realm, nullptr);
-            object->define_direct_property("module", MUST_OR_THROW_OOM(vm.heap().allocate<WebAssembly::Module>(realm, realm, s_compiled_modules.size() - 1)), JS::default_attributes);
-            object->define_direct_property("instance", instance_object, JS::default_attributes);
-            promise->fulfill(object);
-        } else {
-            promise->fulfill(instance_object);
-        }
-    }
-    return promise;
 }
 
 JS::Value to_js_value(JS::VM& vm, Wasm::Value& wasm_value)
