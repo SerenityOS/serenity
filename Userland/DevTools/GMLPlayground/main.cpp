@@ -114,17 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString file_path;
     auto update_title = [&] {
-        StringBuilder builder;
-        if (file_path.is_empty())
-            builder.append("Untitled"sv);
-        else
-            builder.append(file_path);
-
-        if (window->is_modified())
-            builder.append("[*]"sv);
-
-        builder.append(" - GML Playground"sv);
-        window->set_title(builder.to_deprecated_string());
+        window->set_title(DeprecatedString::formatted("{}[*] - GML Playground", file_path.is_empty() ? "Untitled"sv : file_path.view()));
     };
 
     editor->on_change = [&] {
@@ -137,7 +127,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     editor->on_modified_change = [&](bool modified) {
         window->set_modified(modified);
-        update_title();
     };
 
     auto load_file = [&](auto file) {
