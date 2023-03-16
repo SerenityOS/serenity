@@ -36,7 +36,7 @@ jobs:
         value: g++-12
 
     - name: ndk_version # only relevant for Android
-      value: '24.0.8215888'
+      value: '25.2.9519653'
 
     pool:
       vmImage: $(job_pool)
