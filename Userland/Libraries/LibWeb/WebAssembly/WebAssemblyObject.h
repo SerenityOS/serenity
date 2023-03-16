@@ -17,16 +17,8 @@ JS::NativeFunction* create_native_function(JS::VM&, Wasm::FunctionAddress addres
 JS::Value to_js_value(JS::VM&, Wasm::Value& wasm_value);
 JS::ThrowCompletionOr<Wasm::Value> to_webassembly_value(JS::VM&, JS::Value value, Wasm::ValueType const& type);
 
-class WebAssemblyObject final : public JS::Object {
-    JS_OBJECT(WebAssemblyObject, JS::Object);
-
+class WebAssemblyObject final {
 public:
-    explicit WebAssemblyObject(JS::Realm&);
-    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
-    virtual ~WebAssemblyObject() override = default;
-
-    virtual void visit_edges(Cell::Visitor&) override;
-
     static JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM&, Wasm::Module const&);
 
     struct CompiledWebAssemblyModule {
@@ -57,11 +49,6 @@ public:
     static GlobalModuleCache s_global_cache;
 
     static Wasm::AbstractMachine s_abstract_machine;
-
-private:
-    JS_DECLARE_NATIVE_FUNCTION(validate);
-    JS_DECLARE_NATIVE_FUNCTION(compile);
-    JS_DECLARE_NATIVE_FUNCTION(instantiate);
 };
 
 }
