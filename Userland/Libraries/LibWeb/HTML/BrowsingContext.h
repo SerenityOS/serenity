@@ -268,6 +268,7 @@ public:
     Optional<AK::URL> const& creator_url() const { return m_creator_url; }
 
     String const& window_handle() const { return m_window_handle; }
+    void set_window_handle(String handle) { m_window_handle = move(handle); }
 
 private:
     explicit BrowsingContext(Page&, HTML::BrowsingContextContainer*);

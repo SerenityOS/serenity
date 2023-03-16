@@ -10,6 +10,7 @@
 endpoint WebContentServer
 {
     get_window_handle() => (String handle)
+    set_window_handle(String handle) =|
 
     connect_to_webdriver(DeprecatedString webdriver_ipc_path) =|
 
