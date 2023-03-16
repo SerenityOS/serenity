@@ -43,6 +43,7 @@ public:
     Web::DevicePixelSize content_size() const { return m_content_size; }
 
     ErrorOr<void> connect_to_webdriver(DeprecatedString const& webdriver_ipc_path);
+    Function<void(WebDriverConnection&)> on_webdriver_connection;
 
     void alert_closed();
     void confirm_closed(bool accepted);

@@ -83,11 +83,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dbgln("Failed to load content filters: {}", maybe_content_filter_error.error());
 
     int webcontent_fd_passing_socket { -1 };
-    DeprecatedString webdriver_content_ipc_path;
 
     Core::ArgsParser args_parser;
     args_parser.add_option(webcontent_fd_passing_socket, "File descriptor of the passing socket for the WebContent connection", "webcontent-fd-passing-socket", 'c', "webcontent_fd_passing_socket");
-    args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
     args_parser.parse(arguments);
 
     VERIFY(webcontent_fd_passing_socket >= 0);
@@ -100,11 +98,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     proxy_socket_through_notifier(*webcontent_client, webcontent_notifier);
 
     QSocketNotifier webdriver_notifier(QSocketNotifier::Type::Read);
-    RefPtr<WebContent::WebDriverConnection> webdriver_client;
-    if (!webdriver_content_ipc_path.is_empty()) {
-        webdriver_client = TRY(WebContent::WebDriverConnection::connect(webcontent_client->page_host(), webdriver_content_ipc_path));
-        proxy_socket_through_notifier(*webdriver_client, webdriver_notifier);
-    }
+    webcontent_client->page_host().on_webdriver_connection = [&](auto& webdriver) {
+        proxy_socket_through_notifier(webdriver, webdriver_notifier);
+    };
 
     return app.exec();
 }
