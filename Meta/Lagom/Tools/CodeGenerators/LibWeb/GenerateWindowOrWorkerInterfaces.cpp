@@ -100,12 +100,6 @@ class @legacy_constructor_class@;)~~~");
             add_interface(gen, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
     }
 
-    // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
-    {
-        auto gen = generator.fork();
-        add_interface(gen, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
-    }
-
     generator.append(R"~~~(
 
 }
@@ -149,11 +143,6 @@ static ErrorOr<void> generate_intrinsic_definitions(StringView output_path, Vect
             }
         }
     }
-
-    // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
-    generator.append(R"~~~(
-#include <LibWeb/WebAssembly/WebAssemblyTableConstructor.h>
-#include <LibWeb/WebAssembly/WebAssemblyTablePrototype.h>)~~~");
 
     generator.append(R"~~~(
 
@@ -217,12 +206,6 @@ void Intrinsics::create_web_prototype_and_constructor<@prototype_class@>(JS::Rea
             add_namespace(gen, interface.name, interface.namespace_class);
         else
             add_interface(gen, interface.namespaced_name, interface.prototype_class, interface.constructor_class, lookup_legacy_constructor(interface));
-    }
-
-    // FIXME: Special case WebAssembly. We should convert WASM to use IDL.
-    {
-        auto gen = generator.fork();
-        add_interface(gen, "WebAssembly.Table"sv, "WebAssemblyTablePrototype"sv, "WebAssemblyTableConstructor"sv, {});
     }
 
     generator.append(R"~~~(

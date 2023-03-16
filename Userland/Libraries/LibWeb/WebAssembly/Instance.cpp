@@ -15,8 +15,8 @@
 #include <LibWeb/WebAssembly/Instance.h>
 #include <LibWeb/WebAssembly/Memory.h>
 #include <LibWeb/WebAssembly/Module.h>
+#include <LibWeb/WebAssembly/Table.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
-#include <LibWeb/WebAssembly/WebAssemblyTableObject.h>
 
 namespace Web::WebAssembly {
 
@@ -71,9 +71,9 @@ JS::ThrowCompletionOr<void> Instance::initialize(JS::Realm& realm)
                 return {};
             },
             [&](Wasm::TableAddress const& address) -> JS::ThrowCompletionOr<void> {
-                Optional<JS::GCPtr<Bindings::WebAssemblyTableObject>> object = cache.table_instances.get(address);
+                Optional<JS::GCPtr<Table>> object = cache.table_instances.get(address);
                 if (!object.has_value()) {
-                    object = MUST_OR_THROW_OOM(heap().allocate<Web::Bindings::WebAssemblyTableObject>(realm, realm, address));
+                    object = MUST_OR_THROW_OOM(heap().allocate<Table>(realm, realm, address));
                     cache.table_instances.set(address, *object);
                 }
 

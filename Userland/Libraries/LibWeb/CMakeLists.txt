@@ -445,10 +445,8 @@ set(SOURCES
     WebAssembly/Instance.cpp
     WebAssembly/Memory.cpp
     WebAssembly/Module.cpp
+    WebAssembly/Table.cpp
     WebAssembly/WebAssemblyObject.cpp
-    WebAssembly/WebAssemblyTableConstructor.cpp
-    WebAssembly/WebAssemblyTableObject.cpp
-    WebAssembly/WebAssemblyTablePrototype.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
     WebDriver/ElementLocationStrategies.cpp
