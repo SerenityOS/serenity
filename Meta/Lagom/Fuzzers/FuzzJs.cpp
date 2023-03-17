@@ -15,6 +15,9 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     auto js = StringView(static_cast<unsigned char const*>(data), size);
+    // FIXME: https://github.com/SerenityOS/serenity/issues/17899
+    if (!Utf8View(js).validate())
+        return 0;
     auto vm = MUST(JS::VM::create());
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
     auto parse_result = JS::Script::parse(js, interpreter->realm());
