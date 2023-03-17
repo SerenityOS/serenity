@@ -68,7 +68,7 @@ public:
 #define __JS_ENUMERATE(SymbolName, snake_name)     \
     Symbol* well_known_symbol_##snake_name() const \
     {                                              \
-        return m_well_known_symbol_##snake_name;   \
+        return m_well_known_symbols.snake_name;    \
     }
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
@@ -269,7 +269,16 @@ public:
     Function<ThrowCompletionOr<void>(Object&)> host_ensure_can_add_private_element;
 
 private:
-    explicit VM(OwnPtr<CustomData>);
+    using ErrorMessages = AK::Array<String, to_underlying(ErrorMessage::__Count)>;
+
+    struct WellKnownSymbols {
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    GCPtr<Symbol> snake_name;
+        JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
+    };
+
+    VM(OwnPtr<CustomData>, ErrorMessages);
 
     ThrowCompletionOr<void> property_binding_initialization(BindingPattern const& binding, Value value, Environment* environment);
     ThrowCompletionOr<void> iterator_binding_initialization(BindingPattern const& binding, Iterator& iterator_record, Environment* environment);
@@ -279,6 +288,8 @@ private:
 
     ThrowCompletionOr<void> import_module_dynamically(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability);
     void finish_dynamic_import(ScriptOrModule referencing_script_or_module, ModuleRequest module_request, PromiseCapability const& promise_capability, Promise* inner_promise);
+
+    void set_well_known_symbols(WellKnownSymbols well_known_symbols) { m_well_known_symbols = move(well_known_symbols); }
 
     HashMap<String, GCPtr<PrimitiveString>> m_string_cache;
     HashMap<DeprecatedString, GCPtr<PrimitiveString>> m_deprecated_string_cache;
@@ -301,7 +312,7 @@ private:
 
     GCPtr<PrimitiveString> m_empty_string;
     GCPtr<PrimitiveString> m_single_ascii_character_strings[128] {};
-    AK::Array<String, to_underlying(ErrorMessage::__Count)> m_error_messages;
+    ErrorMessages m_error_messages;
 
     struct StoredModule {
         ScriptOrModule referencing_script_or_module;
@@ -315,10 +326,7 @@ private:
 
     Vector<StoredModule> m_loaded_modules;
 
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    GCPtr<Symbol> m_well_known_symbol_##snake_name;
-    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
-#undef __JS_ENUMERATE
+    WellKnownSymbols m_well_known_symbols;
 
     u32 m_execution_generation { 0 };
 

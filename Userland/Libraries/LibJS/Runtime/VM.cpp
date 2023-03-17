@@ -36,7 +36,20 @@ namespace JS {
 
 NonnullRefPtr<VM> VM::create(OwnPtr<CustomData> custom_data)
 {
-    return adopt_ref(*new VM(move(custom_data)));
+    ErrorMessages error_messages {};
+    error_messages[to_underlying(ErrorMessage::OutOfMemory)] = String::from_utf8(ErrorType::OutOfMemory.message()).release_value_but_fixme_should_propagate_errors();
+
+    auto vm = adopt_ref(*new VM(move(custom_data), move(error_messages)));
+
+    WellKnownSymbols well_known_symbols {
+#define __JS_ENUMERATE(SymbolName, snake_name) \
+    Symbol::create(*vm, "Symbol." #SymbolName##_string.release_value_but_fixme_should_propagate_errors(), false),
+        JS_ENUMERATE_WELL_KNOWN_SYMBOLS
+#undef __JS_ENUMERATE
+    };
+
+    vm->set_well_known_symbols(move(well_known_symbols));
+    return vm;
 }
 
 template<u32... code_points>
@@ -47,8 +60,9 @@ static constexpr auto make_single_ascii_character_strings(IndexSequence<code_poi
 
 static constexpr auto single_ascii_character_strings = make_single_ascii_character_strings(MakeIndexSequence<128>());
 
-VM::VM(OwnPtr<CustomData> custom_data)
+VM::VM(OwnPtr<CustomData> custom_data, ErrorMessages error_messages)
     : m_heap(*this)
+    , m_error_messages(move(error_messages))
     , m_custom_data(move(custom_data))
 {
     m_empty_string = m_heap.allocate_without_realm<PrimitiveString>(String {});
@@ -150,13 +164,6 @@ VM::VM(OwnPtr<CustomData> custom_data)
         // NOTE: Since LibJS has no way of knowing whether the current environment is a browser we always
         //       call HostEnsureCanAddPrivateElement when needed.
     };
-
-#define __JS_ENUMERATE(SymbolName, snake_name) \
-    m_well_known_symbol_##snake_name = Symbol::create(*this, "Symbol." #SymbolName##_string.release_value_but_fixme_should_propagate_errors(), false);
-    JS_ENUMERATE_WELL_KNOWN_SYMBOLS
-#undef __JS_ENUMERATE
-
-    m_error_messages[to_underlying(ErrorMessage::OutOfMemory)] = String::from_utf8(ErrorType::OutOfMemory.message()).release_value_but_fixme_should_propagate_errors();
 }
 
 String const& VM::error_message(ErrorMessage type) const
