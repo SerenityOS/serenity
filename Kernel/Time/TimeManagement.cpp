@@ -54,7 +54,7 @@ static u64 (*s_scheduler_current_time)();
 static u64 current_time_monotonic()
 {
     // We always need a precise timestamp here, we cannot rely on a coarse timestamp
-    return (u64)TimeManagement::the().monotonic_time(TimePrecision::Precise).to_nanoseconds();
+    return (u64)TimeManagement::the().monotonic_time(TimePrecision::Precise).nanoseconds();
 }
 
 u64 TimeManagement::scheduler_current_time()
@@ -81,11 +81,11 @@ Duration TimeManagement::current_time(clockid_t clock_id) const
 {
     switch (clock_id) {
     case CLOCK_MONOTONIC:
-        return monotonic_time(TimePrecision::Precise);
+        return monotonic_time(TimePrecision::Precise).time_since_start({});
     case CLOCK_MONOTONIC_COARSE:
-        return monotonic_time(TimePrecision::Coarse);
+        return monotonic_time(TimePrecision::Coarse).time_since_start({});
     case CLOCK_MONOTONIC_RAW:
-        return monotonic_time_raw();
+        return monotonic_time_raw().time_since_start({});
     case CLOCK_REALTIME:
         return epoch_time(TimePrecision::Precise).offset_to_epoch();
     case CLOCK_REALTIME_COARSE:
@@ -110,7 +110,7 @@ void TimeManagement::set_epoch_time(UnixDateTime ts)
     m_remaining_epoch_time_adjustment = {};
 }
 
-Duration TimeManagement::monotonic_time(TimePrecision precision) const
+MonotonicTime TimeManagement::monotonic_time(TimePrecision precision) const
 {
     // This is the time when last updated by an interrupt.
     u64 seconds;
@@ -145,7 +145,7 @@ Duration TimeManagement::monotonic_time(TimePrecision precision) const
     VERIFY(ticks < m_time_ticks_per_second);
     u64 ns = ((u64)ticks * 1000000000ull) / m_time_ticks_per_second;
     VERIFY(ns < 1000000000ull);
-    return Duration::from_timespec({ (i64)seconds, (i32)ns });
+    return MonotonicTime::from_hardware_time({}, seconds, ns);
 }
 
 UnixDateTime TimeManagement::epoch_time(TimePrecision) const
@@ -162,7 +162,7 @@ UnixDateTime TimeManagement::epoch_time(TimePrecision) const
 
 u64 TimeManagement::uptime_ms() const
 {
-    auto mtime = monotonic_time().to_timespec();
+    auto mtime = monotonic_time().time_since_start({}).to_timespec();
     // This overflows after 292 million years of uptime.
     // Since this is only used for performance timestamps and sys$times, that's probably enough.
     u64 ms = mtime.tv_sec * 1000ull;
@@ -539,7 +539,7 @@ void TimeManagement::update_time_page()
     auto& page = time_page();
     u32 update_iteration = AK::atomic_fetch_add(&page.update2, 1u, AK::MemoryOrder::memory_order_acquire);
     page.clocks[CLOCK_REALTIME_COARSE] = m_epoch_time.to_timespec();
-    page.clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).to_timespec();
+    page.clocks[CLOCK_MONOTONIC_COARSE] = monotonic_time(TimePrecision::Coarse).time_since_start({}).to_timespec();
     AK::atomic_store(&page.update1, update_iteration + 1u, AK::MemoryOrder::memory_order_release);
 }
 

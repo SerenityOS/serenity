@@ -25,9 +25,9 @@ namespace Kernel {
 
 static void delay(i64 nanoseconds)
 {
-    auto start = TimeManagement::the().monotonic_time().to_nanoseconds();
-    auto end = start + nanoseconds;
-    while (TimeManagement::the().monotonic_time().to_nanoseconds() < end)
+    auto start = TimeManagement::the().monotonic_time();
+    auto end = start + Duration::from_nanoseconds(nanoseconds);
+    while (TimeManagement::the().monotonic_time() < end)
         Processor::pause();
 }
 

@@ -41,9 +41,10 @@ public:
     static u64 scheduler_current_time();
 
     static ErrorOr<void> validate_clock_id(clockid_t);
+    // This API cannot distinguish returned time types; prefer the clock-specific functions instead.
     Duration current_time(clockid_t) const;
-    Duration monotonic_time(TimePrecision = TimePrecision::Coarse) const;
-    Duration monotonic_time_raw() const
+    MonotonicTime monotonic_time(TimePrecision = TimePrecision::Coarse) const;
+    MonotonicTime monotonic_time_raw() const
     {
         // TODO: implement
         return monotonic_time(TimePrecision::Precise);

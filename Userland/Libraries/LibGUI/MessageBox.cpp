@@ -63,12 +63,12 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_show_error(Window* parent_window, St
     return TRY(try_show(parent_window, text, "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK));
 }
 
-Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Duration> last_unmodified_timestamp)
+Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<MonotonicTime> last_unmodified_timestamp)
 {
-    return MUST(try_ask_about_unsaved_changes(parent_window, path, last_unmodified_timestamp));
+    return MUST(try_ask_about_unsaved_changes(parent_window, path, move(last_unmodified_timestamp)));
 }
 
-ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Duration> last_unmodified_timestamp)
+ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<MonotonicTime> last_unmodified_timestamp)
 {
     StringBuilder builder;
     TRY(builder.try_append("Save changes to "sv));
@@ -79,7 +79,7 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* pa
     TRY(builder.try_append(" before closing?"sv));
 
     if (!path.is_empty() && last_unmodified_timestamp.has_value()) {
-        auto age = (Duration::now_monotonic() - *last_unmodified_timestamp).to_seconds();
+        auto age = (MonotonicTime::now() - *last_unmodified_timestamp).to_seconds();
         auto readable_time = human_readable_time(age);
         TRY(builder.try_appendff("\nLast saved {} ago.", readable_time));
     }

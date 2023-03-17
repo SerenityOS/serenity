@@ -32,10 +32,10 @@ public:
         return elapsed_milliseconds();
     }
 
-    Duration const& origin_time() const { return m_origin_time; }
+    MonotonicTime const& origin_time() const { return m_origin_time; }
 
 private:
-    Duration m_origin_time {};
+    MonotonicTime m_origin_time { MonotonicTime::now() };
     bool m_precise { false };
     bool m_valid { false };
 };
