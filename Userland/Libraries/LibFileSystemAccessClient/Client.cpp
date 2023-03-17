@@ -74,7 +74,7 @@ Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& 
     return handle_promise(id);
 }
 
-Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::File::OpenMode requested_access)
+Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& window_title, StringView path, Core::File::OpenMode requested_access, Optional<Vector<GUI::FileTypeFilter>> const& allowed_file_types)
 {
     auto const id = get_new_id();
     m_promises.set(id, PromiseAndWindow { { Core::Promise<Result>::construct() }, parent_window });
@@ -89,7 +89,7 @@ Result Client::open_file(GUI::Window* parent_window, DeprecatedString const& win
         GUI::ConnectionToWindowServer::the().remove_window_stealing_for_client(child_window_server_client_id, parent_window_id);
     });
 
-    async_prompt_open_file(id, parent_window_server_client_id, parent_window_id, window_title, path, requested_access);
+    async_prompt_open_file(id, parent_window_server_client_id, parent_window_id, window_title, path, requested_access, allowed_file_types);
 
     return handle_promise(id);
 }

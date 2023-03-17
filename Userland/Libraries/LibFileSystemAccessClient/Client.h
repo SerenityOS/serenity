@@ -14,6 +14,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/Window.h>
 #include <LibIPC/ConnectionToServer.h>
 
@@ -47,7 +48,7 @@ class Client final
 public:
     Result request_file_read_only_approved(GUI::Window* parent_window, DeprecatedString const& path);
     Result request_file(GUI::Window* parent_window, DeprecatedString const& path, Core::File::OpenMode requested_access);
-    Result open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::File::OpenMode requested_access = Core::File::OpenMode::Read);
+    Result open_file(GUI::Window* parent_window, DeprecatedString const& window_title = {}, StringView path = Core::StandardPaths::home_directory(), Core::File::OpenMode requested_access = Core::File::OpenMode::Read, Optional<Vector<GUI::FileTypeFilter>> const& = {});
     Result save_file(GUI::Window* parent_window, DeprecatedString const& name, DeprecatedString const ext, Core::File::OpenMode requested_access = Core::File::OpenMode::Write | Core::File::OpenMode::Truncate);
 
     static Client& the();

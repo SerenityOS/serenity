@@ -112,14 +112,14 @@ void ConnectionFromClient::request_file(i32 request_id, i32 window_server_client
     request_file_handler(request_id, window_server_client_id, parent_window_id, path, requested_access, ShouldPrompt::Yes);
 }
 
-void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& window_title, DeprecatedString const& path_to_view, Core::File::OpenMode requested_access)
+void ConnectionFromClient::prompt_open_file(i32 request_id, i32 window_server_client_id, i32 parent_window_id, DeprecatedString const& window_title, DeprecatedString const& path_to_view, Core::File::OpenMode requested_access, Optional<Vector<GUI::FileTypeFilter>> const& allowed_file_types)
 {
     auto relevant_permissions = requested_access & (Core::File::OpenMode::Read | Core::File::OpenMode::Write);
     VERIFY(relevant_permissions != Core::File::OpenMode::NotOpen);
 
     auto main_window = create_dummy_child_window(window_server_client_id, parent_window_id);
 
-    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, window_title, path_to_view);
+    auto user_picked_file = GUI::FilePicker::get_open_filepath(main_window, window_title, path_to_view, false, GUI::Dialog::ScreenPosition::CenterWithinParent, allowed_file_types);
 
     prompt_helper(request_id, user_picked_file, requested_access);
 }

@@ -10,6 +10,7 @@
 #include <FileSystemAccessServer/FileSystemAccessClientEndpoint.h>
 #include <FileSystemAccessServer/FileSystemAccessServerEndpoint.h>
 #include <LibCore/Forward.h>
+#include <LibGUI/FileTypeFilter.h>
 #include <LibGUI/Forward.h>
 #include <LibIPC/ConnectionFromClient.h>
 
@@ -29,7 +30,7 @@ private:
 
     virtual void request_file_read_only_approved(i32, i32, i32, DeprecatedString const&) override;
     virtual void request_file(i32, i32, i32, DeprecatedString const&, Core::File::OpenMode) override;
-    virtual void prompt_open_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode) override;
+    virtual void prompt_open_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode, Optional<Vector<GUI::FileTypeFilter>> const&) override;
     virtual void prompt_save_file(i32, i32, i32, DeprecatedString const&, DeprecatedString const&, DeprecatedString const&, Core::File::OpenMode) override;
 
     void prompt_helper(i32, Optional<DeprecatedString> const&, Core::File::OpenMode);
