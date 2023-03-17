@@ -48,7 +48,10 @@ bool DirIterator::advance_next()
         errno = 0;
         auto* de = readdir(m_dir);
         if (!de) {
-            m_error = Error::from_errno(errno);
+            if (errno != 0) {
+                m_error = Error::from_errno(errno);
+                dbgln("DirIteration error: {}", m_error.value());
+            }
             m_next.clear();
             return false;
         }
