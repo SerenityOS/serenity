@@ -121,12 +121,6 @@ ErrorOr<void> VirtIOGraphicsAdapter::attach_physical_range_to_framebuffer(VirtIO
     TRY(ensure_backing_storage(buffer.resource_id, connector.framebuffer_region(), buffer.framebuffer_offset, framebuffer_size));
     // 3. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
     TRY(set_scanout_resource(connector.scanout_id(), buffer.resource_id, display_info.rect));
-    // 4. Render our test pattern
-    connector.draw_ntsc_test_pattern({});
-    // 5. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
-    TRY(transfer_framebuffer_data_to_host(connector.scanout_id(), buffer.resource_id, display_info.rect));
-    // 6. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
-    TRY(flush_displayed_image(buffer.resource_id, display_info.rect));
 
     // Make sure we constrain the existing dirty rect (if any)
     if (buffer.dirty_rect.width != 0 || buffer.dirty_rect.height != 0) {

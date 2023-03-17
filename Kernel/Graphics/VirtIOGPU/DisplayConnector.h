@@ -37,8 +37,6 @@ public:
     Graphics::VirtIOGPU::ScanoutID scanout_id() const { return m_scanout_id; }
     Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display display_information(Badge<VirtIOGraphicsAdapter>) const;
 
-    void draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>);
-
     void initialize_console(Badge<VirtIOGraphicsAdapter>);
 
 private:

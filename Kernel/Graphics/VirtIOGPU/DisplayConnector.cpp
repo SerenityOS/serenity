@@ -185,65 +185,6 @@ void VirtIODisplayConnector::clear_to_black()
     }
 }
 
-void VirtIODisplayConnector::draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>)
-{
-    constexpr u8 colors[12][4] = {
-        { 0xff, 0xff, 0xff, 0xff }, // White
-        { 0x00, 0xff, 0xff, 0xff }, // Primary + Composite colors
-        { 0xff, 0xff, 0x00, 0xff },
-        { 0x00, 0xff, 0x00, 0xff },
-        { 0xff, 0x00, 0xff, 0xff },
-        { 0x00, 0x00, 0xff, 0xff },
-        { 0xff, 0x00, 0x00, 0xff },
-        { 0xba, 0x01, 0x5f, 0xff }, // Dark blue
-        { 0x8d, 0x3d, 0x00, 0xff }, // Purple
-        { 0x22, 0x22, 0x22, 0xff }, // Shades of gray
-        { 0x10, 0x10, 0x10, 0xff },
-        { 0x00, 0x00, 0x00, 0xff },
-    };
-    size_t width = m_display_info.rect.width;
-    size_t height = m_display_info.rect.height;
-    u8* data = framebuffer_data();
-    // Draw NTSC test card
-    for (size_t i = 0; i < 2; ++i) {
-        for (size_t y = 0; y < height; ++y) {
-            for (size_t x = 0; x < width; ++x) {
-                size_t color = 0;
-                if (3 * y < 2 * height) {
-                    // Top 2/3 of image is 7 vertical stripes of color spectrum
-                    color = (7 * x) / width;
-                } else if (4 * y < 3 * height) {
-                    // 2/3 mark to 3/4 mark  is backwards color spectrum alternating with black
-                    auto segment = (7 * x) / width;
-                    color = segment % 2 ? 10 : 6 - segment;
-                } else {
-                    if (28 * x < 5 * width) {
-                        color = 8;
-                    } else if (28 * x < 10 * width) {
-                        color = 0;
-                    } else if (28 * x < 15 * width) {
-                        color = 7;
-                    } else if (28 * x < 20 * width) {
-                        color = 10;
-                    } else if (7 * x < 6 * width) {
-                        // Grayscale gradient
-                        color = 26 - ((21 * x) / width);
-                    } else {
-                        // Solid black
-                        color = 10;
-                    }
-                }
-                u8* pixel = &data[4 * (y * width + x)];
-                for (int i = 0; i < 4; ++i) {
-                    pixel[i] = colors[color][i];
-                }
-            }
-        }
-        data = data + (width * height * sizeof(u32));
-    }
-    dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
-}
-
 ErrorOr<void> VirtIODisplayConnector::flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
 {
     VERIFY(m_graphics_adapter->operation_lock().is_locked());
