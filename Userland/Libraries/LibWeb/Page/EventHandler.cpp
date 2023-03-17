@@ -112,9 +112,8 @@ static CSSPixelPoint compute_mouse_event_offset(CSSPixelPoint position, Layout::
 }
 
 EventHandler::EventHandler(Badge<HTML::BrowsingContext>, HTML::BrowsingContext& browsing_context)
-    : m_browsing_context(browsing_context)
+{    : m_browsing_context(browsing_context)
     , m_edit_event_handler(make<EditEventHandler>(browsing_context))
-{
 }
 
 EventHandler::~EventHandler() = default;
@@ -157,13 +156,15 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
 
     if (modifiers & KeyModifier::Mod_Shift)
         swap(wheel_delta_x, wheel_delta_y);
-
     bool handled_event = false;
 
     JS::GCPtr<Painting::Paintable> paintable;
-    if (m_mouse_event_tracking_layout_node) {
+    if (m_mouse_event_tracking_layout_node)
+    {
         paintable = m_mouse_event_tracking_layout_node->paintable();
-    } else {
+    } 
+    else
+    {
         if (auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact); result.has_value())
             paintable = result->paintable;
     }
@@ -385,7 +386,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
             if (paintable->dom_node()) {
                 // See if we want to focus something.
                 bool did_focus_something = false;
-                for (auto candidate = node; candidate; candidate = candidate->parent()) {
+                for (auto candidate = node; candidate; candidate = candidate->parent_or_shadow_host()) {
                     if (candidate->is_focusable()) {
                         // When a user activates a click focusable focusable area, the user agent must run the focusing steps on the focusable area with focus trigger set to "click".
                         // Spec Note: Note that focusing is not an activation behavior, i.e. calling the click() method on an element or dispatching a synthetic click event on it won't cause the element to get focused.
