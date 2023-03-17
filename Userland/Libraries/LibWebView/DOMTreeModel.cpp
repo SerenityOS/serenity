@@ -127,7 +127,7 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     if (role == GUI::ModelRole::ForegroundColor) {
         // FIXME: Allow models to return a foreground color *role*.
         //        Then we won't need to have a GUI::TreeView& member anymore.
-        if (type == "comment"sv)
+        if (type == "comment"sv || type == "shadow-root"sv)
             return m_tree_view->palette().syntax_comment();
         if (type == "pseudo-element"sv)
             return m_tree_view->palette().syntax_type();
@@ -154,6 +154,8 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return with_whitespace_collapsed(node.get_deprecated_string("text"sv).value());
         if (type == "comment"sv)
             return DeprecatedString::formatted("<!--{}-->", node.get_deprecated_string("data"sv).value());
+        if (type == "shadow-root"sv)
+            return DeprecatedString::formatted("{} ({})", node_name, node.get_deprecated_string("mode"sv).value());
         if (type != "element")
             return node_name;
 
