@@ -1585,7 +1585,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::dispatch_time_update_event()
     ScopeGuard guard { [this] { m_running_time_update_event_handler = false; } };
     m_running_time_update_event_handler = true;
 
-    m_last_time_update_event_time = Duration::now_monotonic();
+    m_last_time_update_event_time = MonotonicTime::now();
 
     dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::timeupdate)));
     return {};
@@ -1617,7 +1617,7 @@ void HTMLMediaElement::time_marches_on(TimeMarchesOnReason reason)
         auto dispatch_event = true;
 
         if (m_last_time_update_event_time.has_value()) {
-            auto time_since_last_event = Duration::now_monotonic() - *m_last_time_update_event_time;
+            auto time_since_last_event = MonotonicTime::now() - *m_last_time_update_event_time;
             dispatch_event = time_since_last_event.to_milliseconds() > 250;
         }
 

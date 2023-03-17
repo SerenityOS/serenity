@@ -40,7 +40,7 @@ void Screensaver::mousedown_event(GUI::MouseEvent&)
 
 void Screensaver::mousemove_event(GUI::MouseEvent& event)
 {
-    auto now = AK::Duration::now_monotonic();
+    auto now = MonotonicTime::now();
     if ((now - m_start_time).to_milliseconds() < mouse_tracking_delay_milliseconds)
         return;
 

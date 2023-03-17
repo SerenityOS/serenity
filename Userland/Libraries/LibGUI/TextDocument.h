@@ -228,9 +228,9 @@ public:
     }
 
 protected:
-    bool commit_time_expired() const { return Duration::now_monotonic() - m_timestamp >= COMMAND_COMMIT_TIME; }
+    bool commit_time_expired() const { return MonotonicTime::now() - m_timestamp >= COMMAND_COMMIT_TIME; }
 
-    Duration m_timestamp = Duration::now_monotonic();
+    MonotonicTime m_timestamp = MonotonicTime::now();
     TextDocument& m_document;
     TextDocument::Client const* m_client { nullptr };
 };

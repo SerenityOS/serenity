@@ -103,9 +103,9 @@ public:
     ErrorOr<void> try_add_changed_bytes(ByteBuffer old_values, ByteBuffer new_values);
 
 private:
-    bool commit_time_expired() const { return Duration::now_monotonic() - m_timestamp >= COMMAND_COMMIT_TIME; }
+    bool commit_time_expired() const { return MonotonicTime::now() - m_timestamp >= COMMAND_COMMIT_TIME; }
 
-    Duration m_timestamp = Duration::now_monotonic();
+    MonotonicTime m_timestamp = MonotonicTime::now();
     WeakPtr<HexDocument> m_document;
     size_t m_position;
     ByteBuffer m_old;
