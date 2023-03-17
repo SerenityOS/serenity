@@ -29,7 +29,7 @@ ErrorOr<void> read_image_data(PPMLoadingContext& context)
             auto const blue = TRY(read_number(stream));
             TRY(read_whitespace(context));
 
-            Color color { (u8)red, (u8)green, (u8)blue };
+            Color color { static_cast<u8>(red), static_cast<u8>(green), static_cast<u8>(blue) };
             if (context.format_details.max_val < 255)
                 color = adjust_color(context.format_details.max_val, color);
             color_data[i] = color;

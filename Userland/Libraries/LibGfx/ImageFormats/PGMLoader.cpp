@@ -39,7 +39,7 @@ ErrorOr<void> read_image_data(PGMLoadingContext& context)
 
             TRY(read_whitespace(context));
 
-            color_data[i] = { (u8)value, (u8)value, (u8)value };
+            color_data[i] = { static_cast<u8>(value), static_cast<u8>(value), static_cast<u8>(value) };
         }
     } else if (context.type == PGMLoadingContext::Type::RAWBITS) {
         for (u64 i = 0; i < context_size; ++i) {
