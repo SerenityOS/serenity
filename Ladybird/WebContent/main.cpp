@@ -20,6 +20,7 @@
 #include <LibCore/SystemServerTakeover.h>
 #include <LibIPC/ConnectionFromClient.h>
 #include <LibMain/Main.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -77,6 +78,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Web::Platform::FontPlugin::install(*new Ladybird::FontPluginQt);
 
     Web::FrameLoader::set_error_page_url(DeprecatedString::formatted("file://{}/res/html/error.html", s_serenity_resource_root));
+
+    TRY(Web::Bindings::initialize_main_thread_vm());
 
     auto maybe_content_filter_error = load_content_filters();
     if (maybe_content_filter_error.is_error())
