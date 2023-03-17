@@ -88,6 +88,11 @@ ErrorOr<NonnullOwnPtr<File>> Directory::open(StringView filename, File::OpenMode
     return File::adopt_fd(fd, mode);
 }
 
+ErrorOr<struct stat> Directory::stat(StringView filename, int flags) const
+{
+    return System::fstatat(m_directory_fd, filename, flags);
+}
+
 ErrorOr<struct stat> Directory::stat() const
 {
     return System::fstat(m_directory_fd);
