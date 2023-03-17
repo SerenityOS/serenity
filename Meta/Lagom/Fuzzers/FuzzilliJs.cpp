@@ -210,16 +210,20 @@ int main(int, char**)
 
         auto js = StringView(static_cast<unsigned char const*>(data_buffer.data()), script_size);
 
-        auto parse_result = JS::Script::parse(js, interpreter->realm());
-        if (parse_result.is_error()) {
+        // FIXME: https://github.com/SerenityOS/serenity/issues/17899
+        if (!UTF8View(js).validate()) {
             result = 1;
         } else {
-            auto completion = interpreter->run(parse_result.value());
-            if (completion.is_error()) {
+            auto parse_result = JS::Script::parse(js, interpreter->realm());
+            if (parse_result.is_error()) {
                 result = 1;
+            } else {
+                auto completion = interpreter->run(parse_result.value());
+                if (completion.is_error()) {
+                    result = 1;
+                }
             }
         }
-
         fflush(stdout);
         fflush(stderr);
 
