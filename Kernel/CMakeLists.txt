@@ -733,7 +733,6 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/kernel.map" DESTINATION res)
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
     embed_resource(Kernel serenity_boot_logo "Arch/aarch64/SerenityLogoRGB.ppm")
-    embed_resource(Kernel disk_image "../Build/aarch64/_disk_image")
     add_custom_command(
             TARGET Kernel POST_BUILD
             COMMAND ${CMAKE_OBJCOPY} -O binary Kernel kernel8.img

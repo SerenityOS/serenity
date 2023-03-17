@@ -80,11 +80,6 @@ SECTIONS
     page_tables_phys_end = .;
 
     end_of_kernel_image = .;
-
-    disk_image ALIGN(4K) : AT (ADDR(disk_image) - KERNEL_MAPPING_BASE)
-    {
-        *(disk_image)
-    }
 }
 
 size_of_bss_divided_by_8 = (end_of_bss - start_of_bss + 7) / 8;
