@@ -1005,6 +1005,7 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
     auto lookup_list_slice = m_slice.slice(header.lookup_list_offset);
     if (lookup_list_slice.size() < sizeof(LookupList)) {
         dbgln_if(OPENTYPE_GPOS_DEBUG, "GPOS table lookup list slice is too small");
+        return {};
     }
     auto const& lookup_list = *bit_cast<LookupList const*>(lookup_list_slice.data());
 
