@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2022, Kenneth Myhra <kennethmyhra@serenityos.org>
- * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2021-2023, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Matthias Zimmerman <matthias291999@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -378,6 +378,22 @@ ErrorOr<struct stat> fstat(int fd)
     if (::fstat(fd, &st) < 0)
         return Error::from_syscall("fstat"sv, -errno);
     return st;
+}
+
+ErrorOr<struct stat> fstatat(int fd, StringView path, int flags)
+{
+    if (!path.characters_without_null_termination())
+        return Error::from_syscall("fstatat"sv, -EFAULT);
+
+    struct stat st = {};
+#ifdef AK_OS_SERENITY
+    Syscall::SC_stat_params params { { path.characters_without_null_termination(), path.length() }, &st, fd, !(flags & AT_SYMLINK_NOFOLLOW) };
+    int rc = syscall(SC_stat, &params);
+#else
+    DeprecatedString path_string = path;
+    int rc = ::fstatat(fd, path_string.characters(), &st, flags);
+#endif
+    HANDLE_SYSCALL_RETURN_VALUE("fstatat", rc, st);
 }
 
 ErrorOr<int> fcntl(int fd, int command, ...)

@@ -116,6 +116,7 @@ ErrorOr<sig_t> signal(int signal, sig_t handler);
 ErrorOr<sighandler_t> signal(int signal, sighandler_t handler);
 #endif
 ErrorOr<struct stat> fstat(int fd);
+ErrorOr<struct stat> fstatat(int fd, StringView path, int flags);
 ErrorOr<int> fcntl(int fd, int command, ...);
 ErrorOr<void*> mmap(void* address, size_t, int protection, int flags, int fd, off_t, size_t alignment = 0, StringView name = {});
 ErrorOr<void> munmap(void* address, size_t);
