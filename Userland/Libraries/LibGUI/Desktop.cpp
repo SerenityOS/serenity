@@ -59,7 +59,7 @@ RefPtr<Gfx::Bitmap> Desktop::wallpaper_bitmap() const
     return ConnectionToWindowServer::the().get_wallpaper().bitmap();
 }
 
-bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<DeprecatedString> path)
+bool Desktop::set_wallpaper(RefPtr<Gfx::Bitmap const> wallpaper_bitmap, Optional<StringView> path)
 {
     if (m_is_setting_desktop_wallpaper)
         return false;
