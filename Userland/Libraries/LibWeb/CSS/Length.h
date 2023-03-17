@@ -35,6 +35,8 @@ public:
         Vw,
         Vmax,
         Vmin,
+        Lh,
+        Rlh,
     };
 
     static Optional<Type> unit_from_name(StringView);
@@ -76,7 +78,9 @@ public:
             || m_type == Type::Vh
             || m_type == Type::Vw
             || m_type == Type::Vmax
-            || m_type == Type::Vmin;
+            || m_type == Type::Vmin
+            || m_type == Type::Lh
+            || m_type == Type::Rlh;
     }
 
     float raw_value() const { return m_value; }
@@ -84,12 +88,12 @@ public:
 
     CSSPixels to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
     {
         if (is_auto())
             return 0;
         if (is_relative())
-            return relative_length_to_px(viewport_rect, font_metrics, font_size, root_font_size);
+            return relative_length_to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
         if (is_calculated())
             VERIFY_NOT_REACHED(); // We can't resolve a calculated length from here. :^(
         return absolute_length_to_px();
@@ -125,7 +129,7 @@ public:
     // this file already. To break the cyclic dependency, we must move all method definitions out.
     bool operator==(Length const& other) const;
 
-    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const;
+    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
 
 private:
     char const* unit_name() const;

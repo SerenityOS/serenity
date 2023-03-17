@@ -1010,7 +1010,27 @@ CSSPixels StyleComputer::root_element_font_size() const
 
     auto root_value = computed_root_style->property(CSS::PropertyID::FontSize);
 
-    return root_value->to_length().to_px(viewport_rect(), computed_root_style->computed_font().pixel_metrics(), default_root_element_font_size, default_root_element_font_size);
+    auto font_metrics = computed_root_style->computed_font().pixel_metrics();
+    auto line_height = font_metrics.line_spacing();
+    return root_value->to_length().to_px(viewport_rect(), font_metrics, default_root_element_font_size, default_root_element_font_size, line_height, line_height);
+}
+
+CSSPixels StyleComputer::root_element_line_height() const
+{
+    constexpr float default_root_element_line_height = 16;
+
+    auto const* root_element = m_document->first_child_of_type<HTML::HTMLHtmlElement>();
+    if (!root_element)
+        return default_root_element_line_height;
+
+    auto const* computed_root_style = root_element->computed_css_values();
+    if (!computed_root_style)
+        return default_root_element_line_height;
+
+    auto font_metrics = computed_root_style->computed_font().pixel_metrics();
+    auto font_size = root_element_font_size();
+    auto line_height = font_metrics.line_spacing();
+    return computed_root_style->line_height(viewport_rect(), font_metrics, font_size, font_size, line_height, line_height);
 }
 
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -1022,6 +1042,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontStretch, pseudo_element);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontStyle, pseudo_element);
     compute_defaulted_property_value(style, element, CSS::PropertyID::FontWeight, pseudo_element);
+    compute_defaulted_property_value(style, element, CSS::PropertyID::LineHeight, pseudo_element);
 
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
@@ -1156,6 +1177,7 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
 
     } else {
         auto root_font_size = root_element_font_size();
+        auto root_line_height = root_element_line_height();
 
         Gfx::FontPixelMetrics font_metrics;
         if (parent_element && parent_element->computed_css_values())
@@ -1169,8 +1191,9 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             auto value = parent_element->computed_css_values()->property(CSS::PropertyID::FontSize);
             if (value->is_length()) {
                 auto length = static_cast<LengthStyleValue const&>(*value).to_length();
+                auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
                 if (length.is_absolute() || length.is_relative())
-                    return length.to_px(viewport_rect(), font_metrics, font_size_in_px, root_font_size);
+                    return length.to_px(viewport_rect(), font_metrics, font_size_in_px, root_font_size, parent_line_height, root_line_height);
             }
             return font_size_in_px;
         };
@@ -1190,7 +1213,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
             if (!maybe_length->is_calculated()) {
-                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size).value();
+                auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
+                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size, parent_line_height, root_line_height).value();
                 if (px != 0)
                     font_size_in_px = px;
             }
@@ -1311,11 +1335,29 @@ Gfx::Font const& StyleComputer::initial_font() const
     return StyleProperties::font_fallback(false, false);
 }
 
-void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const
+CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
+    auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
+    if (!parent_element)
+        return root_element_line_height();
+    auto root_font_size = root_element_font_size();
+    auto root_line_height = root_element_line_height();
+    auto* computed_values = parent_element->computed_css_values();
+    auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->to_length();
+    // FIXME: Can the parent font size be non-absolute here?
+    auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : root_font_size;
+    auto parent_parent_line_height = parent_or_root_element_line_height(parent_element, {});
+    return computed_values->line_height(viewport_rect(), computed_values->computed_font().pixel_metrics(), parent_font_size_value, root_font_size, parent_parent_line_height, root_line_height);
+}
+
+void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+{
+    auto root_line_height = root_element_line_height();
+    auto parent_or_root_line_height = parent_or_root_element_line_height(element, pseudo_element);
+
     auto font_metrics = style.computed_font().pixel_metrics();
     auto root_font_size = root_element_font_size();
-    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size);
+    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size, parent_or_root_line_height, root_line_height);
 
     // NOTE: Percentage line-height values are relative to the font-size of the element.
     //       We have to resolve them right away, so that the *computed* line-height is ready for inheritance.
@@ -1327,11 +1369,17 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
             Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction()));
     }
 
+    auto line_height = style.line_height(viewport_rect(), font_metrics, font_size.value(), root_font_size.value(), parent_or_root_line_height, root_line_height);
+
+    // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
+    if (line_height_value_slot && line_height_value_slot->is_length())
+        line_height_value_slot = LengthStyleValue::create(Length::make_px(line_height));
+
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size.value(), root_font_size.value());
+        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size.value(), root_font_size.value(), line_height, root_line_height);
     }
 }
 

@@ -138,6 +138,35 @@ NonnullRefPtr<Gfx::Font const> StyleProperties::font_fallback(bool monospace, bo
     return Platform::FontPlugin::the().default_font();
 }
 
+// FIXME: This implementation is almost identical to line_height(Layout::Node) below. Maybe they can be combined somehow.
+CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels parent_line_height, CSSPixels root_line_height) const
+{
+    auto line_height = property(CSS::PropertyID::LineHeight);
+
+    if (line_height->is_identifier() && line_height->to_identifier() == ValueID::Normal)
+        return font_metrics.line_spacing();
+
+    if (line_height->is_length()) {
+        auto line_height_length = line_height->to_length();
+        if (!line_height_length.is_auto())
+            return line_height_length.to_px(viewport_rect, font_metrics, font_size, root_font_size, parent_line_height, root_line_height);
+    }
+
+    if (line_height->is_numeric())
+        return Length(line_height->to_number(), Length::Type::Em).to_px(viewport_rect, font_metrics, font_size, root_font_size, parent_line_height, root_line_height);
+
+    if (line_height->is_percentage()) {
+        // Percentages are relative to 1em. https://www.w3.org/TR/css-inline-3/#valdef-line-height-percentage
+        auto& percentage = line_height->as_percentage().percentage();
+        return Length(percentage.as_fraction(), Length::Type::Em).to_px(viewport_rect, font_metrics, font_size, root_font_size, parent_line_height, root_line_height);
+    }
+
+    if (line_height->is_calculated())
+        return CSS::Length::make_calculated(const_cast<CalculatedStyleValue&>(line_height->as_calculated())).to_px(viewport_rect, font_metrics, font_size, root_font_size, parent_line_height, root_line_height);
+
+    return font_metrics.line_spacing();
+}
+
 CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
 {
     auto line_height = property(CSS::PropertyID::LineHeight);
