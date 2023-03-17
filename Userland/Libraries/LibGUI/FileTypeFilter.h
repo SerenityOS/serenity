@@ -9,6 +9,8 @@
 #include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
 #include <AK/Vector.h>
+#include <LibIPC/Decoder.h>
+#include <LibIPC/Encoder.h>
 
 namespace GUI {
 
@@ -26,5 +28,26 @@ struct FileTypeFilter {
         return FileTypeFilter { "Image Files", Vector<DeprecatedString> { "png", "gif", "bmp", "dip", "pbm", "pgm", "ppm", "ico", "jpeg", "jpg", "dds", "qoi" } };
     }
 };
+
+}
+
+namespace IPC {
+
+template<>
+inline ErrorOr<void> encode(Encoder& encoder, GUI::FileTypeFilter const& response)
+{
+    TRY(encoder.encode(response.name));
+    TRY(encoder.encode(response.extensions));
+    return {};
+}
+
+template<>
+inline ErrorOr<GUI::FileTypeFilter> decode(Decoder& decoder)
+{
+    auto name = TRY(decoder.decode<DeprecatedString>());
+    auto extensions = TRY(decoder.decode<Optional<Vector<AK::DeprecatedString>>>());
+
+    return GUI::FileTypeFilter { move(name), move(extensions) };
+}
 
 }
