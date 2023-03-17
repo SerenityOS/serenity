@@ -45,12 +45,6 @@ uintptr_t __stack_chk_guard;
 
 READONLY_AFTER_INIT bool g_in_early_boot;
 
-extern "C" const u32 disk_image_start;
-extern "C" const u32 disk_image_size;
-
-multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
-size_t multiboot_copy_boot_modules_count;
-
 namespace Kernel {
 
 static void draw_logo(u8* framebuffer_data);
@@ -118,12 +112,6 @@ extern "C" [[noreturn]] void init()
 
     multiboot_memory_map = mmap;
     multiboot_memory_map_count = 1;
-
-    multiboot_flags = 0x4;
-    multiboot_copy_boot_modules_count = 1;
-    auto disk_image_start_physical_addr = ((FlatPtr)&disk_image_start - kernel_load_base);
-    multiboot_copy_boot_modules_array[0].start = disk_image_start_physical_addr;
-    multiboot_copy_boot_modules_array[0].end = disk_image_start_physical_addr + disk_image_size;
 
     dbgln("Welcome to Serenity OS!");
     dbgln("Imagine this being your ideal operating system.");
