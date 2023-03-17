@@ -1069,24 +1069,32 @@ void Node::serialize_tree_as_json(JsonObjectSerializer<StringBuilder>& object) c
     } else if (is_comment()) {
         MUST(object.add("type"sv, "comment"sv));
         MUST(object.add("data"sv, static_cast<DOM::Comment const&>(*this).data()));
+    } else if (is_shadow_root()) {
+        MUST(object.add("type"sv, "shadow-root"));
+        MUST(object.add("mode"sv, static_cast<DOM::ShadowRoot const&>(*this).mode() == Bindings::ShadowRootMode::Open ? "open"sv : "closed"sv));
     }
 
     MUST((object.add("visible"sv, !!layout_node())));
 
-    if (has_child_nodes()) {
+    if (has_child_nodes() || (is_element() && static_cast<DOM::Element const*>(this)->is_shadow_host())) {
         auto children = MUST(object.add_array("children"sv));
-        for_each_child([&children](DOM::Node& child) {
+        auto add_child = [&children](DOM::Node const& child) {
             if (child.is_uninteresting_whitespace_node())
                 return;
             JsonObjectSerializer<StringBuilder> child_object = MUST(children.add_object());
             child.serialize_tree_as_json(child_object);
             MUST(child_object.finish());
-        });
+        };
+        for_each_child(add_child);
 
-        // Pseudo-elements don't have DOM nodes,so we have to add them separately.
         if (is_element()) {
             auto const* element = static_cast<DOM::Element const*>(this);
+
+            // Pseudo-elements don't have DOM nodes,so we have to add them separately.
             element->serialize_pseudo_elements_as_json(children);
+
+            if (element->is_shadow_host())
+                add_child(*element->shadow_root_internal());
         }
 
         MUST(children.finish());
