@@ -70,7 +70,7 @@ Length Length::resolved(Layout::Node const& layout_node) const
     return *this;
 }
 
-CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size) const
+CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
 {
     switch (m_type) {
     case Type::Ex:
@@ -90,6 +90,10 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::
         return min(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
     case Type::Vmax:
         return max(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
+    case Type::Lh:
+        return m_value * line_height;
+    case Type::Rlh:
+        return m_value * root_line_height;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -109,7 +113,7 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
     auto* root_element = layout_node.document().document_element();
     if (!root_element || !root_element->layout_node())
         return 0;
-    return to_px(viewport_rect, layout_node.font().pixel_metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size());
+    return to_px(viewport_rect, layout_node.font().pixel_metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size(), layout_node.line_height(), root_element->layout_node()->line_height());
 }
 
 ErrorOr<String> Length::to_string() const
@@ -156,6 +160,10 @@ char const* Length::unit_name() const
         return "vmax";
     case Type::Vmin:
         return "vmin";
+    case Type::Lh:
+        return "lh";
+    case Type::Rlh:
+        return "rlh";
     case Type::Calculated:
         return "calculated";
     }
@@ -194,6 +202,10 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
         return Length::Type::In;
     } else if (name.equals_ignoring_ascii_case("Q"sv)) {
         return Length::Type::Q;
+    } else if (name.equals_ignoring_ascii_case("lh"sv)) {
+        return Length::Type::Lh;
+    } else if (name.equals_ignoring_ascii_case("rlh"sv)) {
+        return Length::Type::Rlh;
     }
 
     return {};

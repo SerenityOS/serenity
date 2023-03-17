@@ -108,6 +108,7 @@ public:
         m_font = move(font);
     }
 
+    CSSPixels line_height(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const&, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
     CSSPixels line_height(Layout::Node const&) const;
 
     bool operator==(StyleProperties const&) const;
