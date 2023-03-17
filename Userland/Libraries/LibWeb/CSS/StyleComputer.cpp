@@ -751,7 +751,7 @@ bool StyleComputer::expand_unresolved_values(DOM::Element& element, StringView p
                         continue;
                     }
                     default:
-                        dbgln("FIXME: Unimplement calc() expansion in StyleComputer");
+                        dbgln("FIXME: Unimplemented calc() expansion: {}", calc_value->to_string());
                         break;
                     }
                 }
