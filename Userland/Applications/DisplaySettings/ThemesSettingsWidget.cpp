@@ -89,6 +89,10 @@ ErrorOr<void> ThemesSettingsWidget::setup_interface()
     else {
         color_scheme_combo.set_text("Custom");
         m_color_scheme_is_file_based = false;
+    }
+
+    auto theme_config = TRY(Core::ConfigFile::open(m_selected_theme->path));
+    if (!selected_color_scheme_index.has_value() || GUI::Widget::palette().color_scheme_path() != theme_config->read_entry("Paths", "ColorScheme")) {
         if (m_color_scheme_names.size() > 1) {
             color_scheme_combo.set_enabled(true);
             find_descendant_of_type_named<GUI::CheckBox>("custom_color_scheme_checkbox")->set_checked(true);
