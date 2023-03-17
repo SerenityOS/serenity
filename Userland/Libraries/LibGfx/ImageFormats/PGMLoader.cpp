@@ -31,30 +31,29 @@ static void set_adjusted_pixels(PGMLoadingContext& context, Vector<Gfx::Color> c
 bool read_image_data(PGMLoadingContext& context, Streamer& streamer)
 {
     Vector<Gfx::Color> color_data;
+    auto const context_size = context.width * context.height;
+
+    color_data.resize(context_size);
 
     if (context.type == PGMLoadingContext::Type::ASCII) {
-        while (true) {
+        for (u64 i = 0; i < context_size; ++i) {
             auto number_or_error = read_number(streamer);
             if (number_or_error.is_error())
-                break;
+                return false;
             auto value = number_or_error.value();
 
             if (read_whitespace(context, streamer).is_error())
-                break;
+                return false;
 
-            color_data.append({ (u8)value, (u8)value, (u8)value });
+            color_data[i] = { (u8)value, (u8)value, (u8)value };
         }
     } else if (context.type == PGMLoadingContext::Type::RAWBITS) {
-        u8 pixel;
-        while (streamer.read(pixel)) {
-            color_data.append({ pixel, pixel, pixel });
+        for (u64 i = 0; i < context_size; ++i) {
+            u8 pixel;
+            if (!streamer.read(pixel))
+                return false;
+            color_data[i] = { pixel, pixel, pixel };
         }
-    }
-
-    size_t context_size = (u32)context.width * (u32)context.height;
-    if (context_size != color_data.size()) {
-        dbgln("Not enough color data in image.");
-        return false;
     }
 
     if (!create_bitmap(context))
