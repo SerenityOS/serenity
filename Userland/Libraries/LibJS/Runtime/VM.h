@@ -38,7 +38,7 @@ public:
         virtual void spin_event_loop_until(Function<bool()> goal_condition) = 0;
     };
 
-    static NonnullRefPtr<VM> create(OwnPtr<CustomData> = {});
+    static ErrorOr<NonnullRefPtr<VM>> create(OwnPtr<CustomData> = {});
     ~VM() = default;
 
     Heap& heap() { return m_heap; }

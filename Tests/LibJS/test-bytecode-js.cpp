@@ -13,7 +13,7 @@
 #include <LibTest/TestCase.h>
 
 #define SETUP_AND_PARSE(source)                                                     \
-    auto vm = JS::VM::create();                                                     \
+    auto vm = MUST(JS::VM::create());                                               \
     auto ast_interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);          \
                                                                                     \
     auto script_or_error = JS::Script::parse(source##sv, ast_interpreter->realm()); \

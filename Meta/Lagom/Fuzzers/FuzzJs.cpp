@@ -15,7 +15,7 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     auto js = StringView(static_cast<unsigned char const*>(data), size);
-    auto vm = JS::VM::create();
+    auto vm = MUST(JS::VM::create());
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
     auto parse_result = JS::Script::parse(js, interpreter->realm());
     if (!parse_result.is_error())

@@ -56,7 +56,7 @@ JS::VM& main_thread_vm()
 {
     static RefPtr<JS::VM> vm;
     if (!vm) {
-        vm = JS::VM::create(make<WebEngineCustomData>());
+        vm = JS::VM::create(make<WebEngineCustomData>()).release_value_but_fixme_should_propagate_errors();
 
         // NOTE: We intentionally leak the main thread JavaScript VM.
         //       This avoids doing an exhaustive garbage collection on process exit.

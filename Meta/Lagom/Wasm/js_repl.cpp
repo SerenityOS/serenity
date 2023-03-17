@@ -359,7 +359,7 @@ extern "C" int initialize_repl(char const* time_zone)
     if (time_zone)
         setenv("TZ", time_zone, 1);
 
-    g_vm = JS::VM::create();
+    g_vm = MUST(JS::VM::create());
     g_vm->enable_default_host_import_module_dynamically_hook();
 
     // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -

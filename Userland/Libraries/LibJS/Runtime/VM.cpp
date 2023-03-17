@@ -34,16 +34,16 @@
 
 namespace JS {
 
-NonnullRefPtr<VM> VM::create(OwnPtr<CustomData> custom_data)
+ErrorOr<NonnullRefPtr<VM>> VM::create(OwnPtr<CustomData> custom_data)
 {
     ErrorMessages error_messages {};
-    error_messages[to_underlying(ErrorMessage::OutOfMemory)] = String::from_utf8(ErrorType::OutOfMemory.message()).release_value_but_fixme_should_propagate_errors();
+    error_messages[to_underlying(ErrorMessage::OutOfMemory)] = TRY(String::from_utf8(ErrorType::OutOfMemory.message()));
 
     auto vm = adopt_ref(*new VM(move(custom_data), move(error_messages)));
 
     WellKnownSymbols well_known_symbols {
 #define __JS_ENUMERATE(SymbolName, snake_name) \
-    Symbol::create(*vm, "Symbol." #SymbolName##_string.release_value_but_fixme_should_propagate_errors(), false),
+    Symbol::create(*vm, TRY("Symbol." #SymbolName##_string), false),
         JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
     };

@@ -190,7 +190,7 @@ int main(int, char**)
     reprl_input = (char*)mmap(0, REPRL_MAX_DATA_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, REPRL_DRFD, 0);
     VERIFY(reprl_input != MAP_FAILED);
 
-    auto vm = JS::VM::create();
+    auto vm = MUST(JS::VM::create());
     auto interpreter = JS::Interpreter::create<TestRunnerGlobalObject>(*vm);
 
     while (true) {

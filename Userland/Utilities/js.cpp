@@ -621,7 +621,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     s_history_path = TRY(String::formatted("{}/.js-history", Core::StandardPaths::home_directory()));
 
-    g_vm = JS::VM::create();
+    g_vm = TRY(JS::VM::create());
     g_vm->enable_default_host_import_module_dynamically_hook();
 
     // NOTE: These will print out both warnings when using something like Promise.reject().catch(...) -

@@ -88,7 +88,7 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vect
     if (!query.starts_with('='))
         return;
 
-    auto vm = JS::VM::create();
+    auto vm = JS::VM::create().release_value_but_fixme_should_propagate_errors();
     auto interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
 
     auto source_code = query.substring(1);
