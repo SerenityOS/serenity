@@ -8,6 +8,7 @@
 
 #include <AK/Array.h>
 #include <AK/Assertions.h>
+#include <AK/Checked.h>
 #include <AK/Platform.h>
 #include <AK/Types.h>
 
@@ -142,16 +143,16 @@ constexpr i64 seconds_since_epoch_to_year(i64 seconds)
 //       You should not be using this class directly to represent absolute time.
 class Duration {
 public:
-    Duration() = default;
-    Duration(Duration const&) = default;
-    Duration& operator=(Duration const&) = default;
+    constexpr Duration() = default;
+    constexpr Duration(Duration const&) = default;
+    constexpr Duration& operator=(Duration const&) = default;
 
-    Duration(Duration&& other)
+    constexpr Duration(Duration&& other)
         : m_seconds(exchange(other.m_seconds, 0))
         , m_nanoseconds(exchange(other.m_nanoseconds, 0))
     {
     }
-    Duration& operator=(Duration&& other)
+    constexpr Duration& operator=(Duration&& other)
     {
         if (this != &other) {
             m_seconds = exchange(other.m_seconds, 0);
@@ -255,10 +256,76 @@ public:
     [[nodiscard]] bool is_zero() const { return (m_seconds == 0) && (m_nanoseconds == 0); }
     [[nodiscard]] bool is_negative() const { return m_seconds < 0; }
 
-    Duration operator+(Duration const& other) const;
-    Duration& operator+=(Duration const& other);
-    Duration operator-(Duration const& other) const;
-    Duration& operator-=(Duration const& other);
+    constexpr Duration operator+(Duration const& other) const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        VERIFY(other.m_nanoseconds < 1'000'000'000);
+
+        u32 new_nsecs = m_nanoseconds + other.m_nanoseconds;
+        u32 extra_secs = new_nsecs / 1'000'000'000;
+        new_nsecs %= 1'000'000'000;
+
+        i64 this_secs = m_seconds;
+        i64 other_secs = other.m_seconds;
+        // We would like to just add "this_secs + other_secs + extra_secs".
+        // However, computing this naively may overflow even though the result is in-bounds.
+        // Example in 8-bit: (-127) + (-2) + (+1) = (-128), which fits in an i8.
+        // Example in 8-bit, the other way around: (-2) + (127) + (+1) = 126.
+        // So we do something more sophisticated:
+        if (extra_secs) {
+            VERIFY(extra_secs == 1);
+            if (this_secs != 0x7fff'ffff'ffff'ffff) {
+                this_secs += 1;
+            } else if (other_secs != 0x7fff'ffff'ffff'ffff) {
+                other_secs += 1;
+            } else {
+                /* If *both* are INT64_MAX, then adding them will overflow in any case. */
+                return Duration::max();
+            }
+        }
+
+        Checked<i64> new_secs { this_secs };
+        new_secs += other_secs;
+        if (new_secs.has_overflow()) {
+            if (other_secs > 0)
+                return Duration::max();
+            else
+                return Duration::min();
+        }
+
+        return Duration { new_secs.value(), new_nsecs };
+    }
+
+    constexpr Duration& operator+=(Duration const& other)
+    {
+        *this = *this + other;
+        return *this;
+    }
+
+    constexpr Duration operator-(Duration const& other) const
+    {
+        VERIFY(m_nanoseconds < 1'000'000'000);
+        VERIFY(other.m_nanoseconds < 1'000'000'000);
+
+        if (other.m_nanoseconds)
+            return *this + Duration((i64) ~(u64)other.m_seconds, 1'000'000'000 - other.m_nanoseconds);
+
+        if (other.m_seconds != (i64)-0x8000'0000'0000'0000)
+            return *this + Duration(-other.m_seconds, 0);
+
+        // Only remaining case: We want to subtract -0x8000'0000'0000'0000 seconds,
+        // i.e. add a very large number.
+
+        if (m_seconds >= 0)
+            return Duration::max();
+        return Duration { (m_seconds + 0x4000'0000'0000'0000) + 0x4000'0000'0000'0000, m_nanoseconds };
+    }
+
+    constexpr Duration& operator-=(Duration const& other)
+    {
+        *this = *this - other;
+        return *this;
+    }
 
     constexpr bool operator==(Duration const& other) const = default;
     constexpr int operator<=>(Duration const& other) const
