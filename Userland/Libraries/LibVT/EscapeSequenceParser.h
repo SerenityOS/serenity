@@ -69,7 +69,7 @@ private:
     Vector<unsigned, 4> m_param_vector;
     unsigned m_param { 0 };
 
-    Vector<u8> m_osc_parameter_indexes;
+    Vector<size_t> m_osc_parameter_indexes;
     Vector<u8, 16> m_osc_raw;
 
     bool m_ignoring { false };
