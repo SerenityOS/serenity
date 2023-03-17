@@ -222,11 +222,6 @@ public:
     [[nodiscard]] constexpr static Duration zero() { return Duration(0, 0); };
     [[nodiscard]] constexpr static Duration max() { return Duration(__INT64_MAX__, 999'999'999); };
 
-#ifndef KERNEL
-    [[nodiscard]] static Duration now_monotonic();
-    [[nodiscard]] static Duration now_monotonic_coarse();
-#endif
-
     // Truncates towards zero (2.8s to 2s, -2.8s to -2s).
     [[nodiscard]] i64 to_truncated_seconds() const;
     [[nodiscard]] i64 to_truncated_milliseconds() const;
