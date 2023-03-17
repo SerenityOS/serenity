@@ -1103,7 +1103,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         return;
     }
 
-    if (computed_cross_size(item.box).is_auto()) {
+    if (should_treat_cross_size_as_auto(item.box)) {
         // Item has automatic cross size, layout with "fit-content"
 
         CSSPixels fit_content_cross_size = 0;
