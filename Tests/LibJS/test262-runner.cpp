@@ -232,7 +232,7 @@ static Result<void, TestError> run_test(StringView source, StringView filepath, 
         return {};
     }
 
-    auto vm = JS::VM::create();
+    auto vm = MUST(JS::VM::create());
     vm->enable_default_host_import_module_dynamically_hook();
     auto ast_interpreter = JS::Interpreter::create<JS::Test262::GlobalObject>(*vm);
     auto& realm = ast_interpreter->realm();

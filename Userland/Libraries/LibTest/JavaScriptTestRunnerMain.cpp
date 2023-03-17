@@ -189,7 +189,7 @@ int main(int argc, char** argv)
         g_main_hook();
 
     if (!g_vm) {
-        g_vm = JS::VM::create();
+        g_vm = MUST(JS::VM::create());
         g_vm->enable_default_host_import_module_dynamically_hook();
     }
 

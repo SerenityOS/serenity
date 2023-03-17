@@ -20,7 +20,7 @@ namespace Spreadsheet {
 
 Workbook::Workbook(Vector<NonnullRefPtr<Sheet>>&& sheets, GUI::Window& parent_window)
     : m_sheets(move(sheets))
-    , m_vm(JS::VM::create())
+    , m_vm(JS::VM::create().release_value_but_fixme_should_propagate_errors())
     , m_interpreter(JS::Interpreter::create<JS::GlobalObject>(m_vm))
     , m_interpreter_scope(*m_interpreter)
     , m_main_execution_context(m_vm->heap())
