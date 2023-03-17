@@ -11,9 +11,10 @@
 namespace DisplaySettings {
 
 class MonitorWidget final : public GUI::Widget {
-    C_OBJECT(MonitorWidget);
+    C_OBJECT_ABSTRACT(MonitorWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<MonitorWidget>> try_create();
     bool set_wallpaper(DeprecatedString path);
     StringView wallpaper() const;
 
@@ -32,7 +33,7 @@ public:
     Gfx::Color background_color();
 
 private:
-    MonitorWidget();
+    MonitorWidget() = default;
 
     void redraw_desktop_if_needed();
 

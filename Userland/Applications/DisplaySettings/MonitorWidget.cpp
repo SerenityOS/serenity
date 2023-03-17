@@ -7,6 +7,7 @@
 
 #include "MonitorWidget.h"
 #include <LibGUI/Desktop.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -16,13 +17,15 @@ REGISTER_WIDGET(DisplaySettings, MonitorWidget)
 
 namespace DisplaySettings {
 
-MonitorWidget::MonitorWidget()
+ErrorOr<NonnullRefPtr<MonitorWidget>> MonitorWidget::try_create()
 {
-    m_desktop_resolution = GUI::Desktop::the().rect().size();
-    m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/graphics/monitor.png"sv).release_value_but_fixme_should_propagate_errors();
-    m_desktop_bitmap = Gfx::Bitmap::create(m_monitor_bitmap->format(), { 280, 158 }).release_value_but_fixme_should_propagate_errors();
-    m_monitor_rect = { { 12, 13 }, m_desktop_bitmap->size() };
-    set_fixed_size(304, 201);
+    auto monitor_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MonitorWidget()));
+    monitor_widget->m_desktop_resolution = GUI::Desktop::the().rect().size();
+    monitor_widget->m_monitor_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/graphics/monitor.png"sv));
+    monitor_widget->m_desktop_bitmap = TRY(Gfx::Bitmap::create(monitor_widget->m_monitor_bitmap->format(), { 280, 158 }));
+    monitor_widget->m_monitor_rect = { { 12, 13 }, monitor_widget->m_desktop_bitmap->size() };
+    monitor_widget->set_fixed_size(304, 201);
+    return monitor_widget;
 }
 
 bool MonitorWidget::set_wallpaper(DeprecatedString path)
@@ -123,7 +126,12 @@ void MonitorWidget::redraw_desktop_if_needed()
     float sh = (float)m_desktop_bitmap->height() / (float)m_desktop_resolution.height();
 
     auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled_by(sw, sh).to_type<int>();
-    auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh).release_value_but_fixme_should_propagate_errors();
+    auto scaled_bitmap_or_error = m_wallpaper_bitmap->scaled(sw, sh);
+    if (scaled_bitmap_or_error.is_error()) {
+        GUI::MessageBox::show_error(window(), "There was an error updating the desktop preview"sv);
+        return;
+    }
+    auto scaled_bitmap = scaled_bitmap_or_error.release_value();
 
     if (m_desktop_wallpaper_mode == "Center") {
         auto centered_rect = Gfx::IntRect({}, scaled_size).centered_within(m_desktop_bitmap->rect());
