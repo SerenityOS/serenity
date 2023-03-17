@@ -67,7 +67,7 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOw
     },
         "Media Decoder"sv));
 
-    playback_manager->m_playback_handler = make<SeekingStateHandler>(*playback_manager, false, Time::zero(), SeekMode::Fast);
+    playback_manager->m_playback_handler = make<SeekingStateHandler>(*playback_manager, false, Duration::zero(), SeekMode::Fast);
     DECODER_TRY_ALLOC(playback_manager->m_playback_handler->on_enter());
 
     playback_manager->m_decode_thread->start();
@@ -217,7 +217,7 @@ void PlaybackManager::restart_playback()
 void PlaybackManager::decode_and_queue_one_sample()
 {
 #if PLAYBACK_MANAGER_DEBUG
-    auto start_time = Duration::now_monotonic();
+    auto start_time = MonotonicTime::now();
 #endif
 
     FrameQueueItem item_to_enqueue;
@@ -292,7 +292,7 @@ void PlaybackManager::decode_and_queue_one_sample()
 
     VERIFY(!item_to_enqueue.is_empty());
 #if PLAYBACK_MANAGER_DEBUG
-    dbgln("Media Decoder: Sample at {}ms took {}ms to decode, queue contains ~{} items", item_to_enqueue.timestamp().to_milliseconds(), (Time::now_monotonic() - start_time).to_milliseconds(), m_frame_queue.weak_used());
+    dbgln("Media Decoder: Sample at {}ms took {}ms to decode, queue contains ~{} items", item_to_enqueue.timestamp().to_milliseconds(), (MonotonicTime::now() - start_time).to_milliseconds(), m_frame_queue.weak_used());
 #endif
 
     auto wait = [&] {
@@ -408,7 +408,7 @@ public:
 private:
     ErrorOr<void> on_enter() override
     {
-        m_last_present_in_real_time = Duration::now_monotonic();
+        m_last_present_in_real_time = MonotonicTime::now();
         return do_timed_state_update();
     }
 
@@ -429,7 +429,7 @@ private:
 
     Duration current_time() const override
     {
-        return manager().m_last_present_in_media_time + (Duration::now_monotonic() - m_last_present_in_real_time);
+        return manager().m_last_present_in_media_time + (MonotonicTime::now() - m_last_present_in_real_time);
     }
 
     ErrorOr<void> do_timed_state_update() override
@@ -498,7 +498,7 @@ private:
 
         // If we have a frame, send it for presentation.
         if (should_present_frame) {
-            auto now = Duration::now_monotonic();
+            auto now = MonotonicTime::now();
             manager().m_last_present_in_media_time += now - m_last_present_in_real_time;
             m_last_present_in_real_time = now;
 
@@ -520,7 +520,7 @@ private:
         return {};
     }
 
-    Duration m_last_present_in_real_time = Duration::zero();
+    MonotonicTime m_last_present_in_real_time = MonotonicTime::now_coarse();
 };
 
 class PlaybackManager::PausedStateHandler : public PlaybackManager::PlaybackStateHandler {

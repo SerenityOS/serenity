@@ -31,7 +31,7 @@ public:
     void set_current_unmodified();
     bool is_current_modified() const;
 
-    Optional<Duration> last_unmodified_timestamp() const { return m_last_unmodified_timestamp; }
+    Optional<MonotonicTime> last_unmodified_timestamp() const { return m_last_unmodified_timestamp; }
 
     void clear();
 
@@ -44,7 +44,7 @@ private:
     Vector<NonnullOwnPtr<Command>> m_stack;
     size_t m_stack_index { 0 };
     Optional<size_t> m_clean_index;
-    Optional<Duration> m_last_unmodified_timestamp;
+    Optional<MonotonicTime> m_last_unmodified_timestamp;
 };
 
 }

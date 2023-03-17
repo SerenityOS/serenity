@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Time.h>
 #include <LibCore/EventLoopImplementation.h>
 
 namespace Core {
@@ -28,7 +29,7 @@ public:
     virtual void unregister_signal(int handler_id) override;
 
     void wait_for_events(EventLoopImplementation::PumpMode);
-    static Optional<Duration> get_next_timer_expiration();
+    static Optional<MonotonicTime> get_next_timer_expiration();
 
 private:
     void dispatch_signal(int signal_number);

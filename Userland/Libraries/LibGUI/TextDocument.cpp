@@ -894,7 +894,7 @@ bool InsertTextCommand::merge_with(GUI::Command const& other)
     m_text = builder.to_deprecated_string();
     m_range.set_end(typed_other.m_range.end());
 
-    m_timestamp = Duration::now_monotonic();
+    m_timestamp = MonotonicTime::now();
     return true;
 }
 
@@ -994,7 +994,7 @@ bool RemoveTextCommand::merge_with(GUI::Command const& other)
     m_text = builder.to_deprecated_string();
     m_range.set_start(typed_other.m_range.start());
 
-    m_timestamp = Duration::now_monotonic();
+    m_timestamp = MonotonicTime::now();
     return true;
 }
 

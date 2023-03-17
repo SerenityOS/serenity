@@ -211,7 +211,7 @@ private:
     Optional<DOM::DocumentLoadEventDelayer> m_delaying_the_load_event;
 
     bool m_running_time_update_event_handler { false };
-    Optional<Duration> m_last_time_update_event_time;
+    Optional<MonotonicTime> m_last_time_update_event_time;
 
     JS::GCPtr<DOM::DocumentObserver> m_document_observer;
 

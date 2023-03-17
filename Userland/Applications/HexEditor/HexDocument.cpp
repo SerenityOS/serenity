@@ -229,7 +229,7 @@ bool HexDocumentUndoCommand::merge_with(GUI::Command const& other)
             m_old[relative_start + i] = typed_other.m_old[i];
     }
 
-    m_timestamp = Duration::now_monotonic();
+    m_timestamp = MonotonicTime::now();
     return true;
 }
 
