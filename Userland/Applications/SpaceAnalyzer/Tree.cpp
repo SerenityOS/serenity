@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
-#include <LibCore/DirIterator.h>
+#include <LibCore/Directory.h>
 
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -71,6 +72,12 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
     size_t files_encountered_count = 0;
     HashMap<int, int> error_accumulator;
 
+    auto log_error = [&](Error& error) {
+        auto error_code = error.code();
+        int error_sum = error_accumulator.get(error_code).value_or(0);
+        error_accumulator.set(error_code, error_sum + 1);
+    };
+
     StringBuilder builder = StringBuilder();
     builder.append(m_name);
     builder.append('/');
@@ -90,37 +97,38 @@ HashMap<int, int> TreeNode::populate_filesize_tree(Vector<MountInfo>& mounts, Fu
             continue;
         }
 
-        Core::DirIterator dir_iterator(builder.to_deprecated_string(), Core::DirIterator::SkipParentAndBaseDir);
-        if (dir_iterator.has_error()) {
-            auto error_code = dir_iterator.error().code();
-            int error_sum = error_accumulator.get(error_code).value_or(0);
-            error_accumulator.set(error_code, error_sum + 1);
+        auto directory_or_error = Core::Directory::create(builder.string_view(), Core::Directory::CreateDirectories::No);
+        if (directory_or_error.is_error()) {
+            log_error(directory_or_error.error());
         } else {
+            auto directory = directory_or_error.release_value();
             queue_entry.node->m_children = make<Vector<TreeNode>>();
-            while (dir_iterator.has_next()) {
-                queue_entry.node->m_children->append(TreeNode(dir_iterator.next_path()));
-            }
+
+            auto iteration_result = Core::Directory::for_each_entry(builder.string_view(), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto&) -> ErrorOr<IterationDecision> {
+                TRY(queue_entry.node->m_children->try_append(TreeNode(entry.name)));
+                return IterationDecision::Continue;
+            });
+            if (iteration_result.is_error())
+                log_error(iteration_result.error());
+
             for (auto& child : *queue_entry.node->m_children) {
                 files_encountered_count += 1;
                 if (!(files_encountered_count % FILES_ENCOUNTERED_UPDATE_STEP_SIZE))
                     on_progress(files_encountered_count);
 
-                DeprecatedString& name = child.m_name;
-                int name_len = name.length();
-                builder.append(name);
-                struct stat st;
-                int stat_result = fstatat(dir_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW);
-                if (stat_result < 0) {
-                    int error_sum = error_accumulator.get(errno).value_or(0);
-                    error_accumulator.set(errno, error_sum + 1);
+                builder.append(child.m_name);
+                auto st_or_error = directory.stat(child.m_name, AT_SYMLINK_NOFOLLOW);
+                if (st_or_error.is_error()) {
+                    log_error(st_or_error.error());
                 } else {
+                    auto st = st_or_error.release_value();
                     if (S_ISDIR(st.st_mode)) {
                         queue.enqueue(QueueEntry(builder.to_deprecated_string(), &child));
                     } else {
                         child.m_area = st.st_size;
                     }
                 }
-                builder.trim(name_len);
+                builder.trim(child.m_name.length());
             }
         }
     }
