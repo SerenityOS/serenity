@@ -15,29 +15,35 @@ namespace Gfx {
 
 bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
 {
-    u8 byte;
     Vector<Gfx::Color> color_data;
 
+    auto const context_size = context.width * context.height;
+    color_data.resize(context_size);
+
     if (context.type == PBMLoadingContext::Type::ASCII) {
-        while (streamer.read(byte)) {
-            if (byte == '0') {
-                color_data.append(Color::White);
-            } else if (byte == '1') {
-                color_data.append(Color::Black);
-            }
+        for (u64 i = 0; i < context_size; ++i) {
+            u8 byte;
+            if (!streamer.read(byte))
+                return false;
+            if (byte == '0')
+                color_data[i] = Color::White;
+            else if (byte == '1')
+                color_data[i] = Color::Black;
+            else
+                i--;
         }
     } else if (context.type == PBMLoadingContext::Type::RAWBITS) {
-        size_t color_index = 0;
-
-        while (streamer.read(byte)) {
+        for (u64 color_index = 0; color_index < context_size;) {
+            u8 byte;
+            if (!streamer.read(byte))
+                return false;
             for (int i = 0; i < 8; i++) {
                 int val = byte & 0x80;
 
-                if (val == 0) {
-                    color_data.append(Color::White);
-                } else {
-                    color_data.append(Color::Black);
-                }
+                if (val == 0)
+                    color_data[color_index] = Color::White;
+                else
+                    color_data[color_index] = Color::Black;
 
                 byte = byte << 1;
                 color_index++;
@@ -47,12 +53,6 @@ bool read_image_data(PBMLoadingContext& context, Streamer& streamer)
                 }
             }
         }
-    }
-
-    size_t context_size = (u32)context.width * (u32)context.height;
-    if (context_size != color_data.size()) {
-        dbgln("Not enough color data in image.");
-        return false;
     }
 
     if (!create_bitmap(context)) {

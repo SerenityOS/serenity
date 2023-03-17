@@ -19,45 +19,45 @@ namespace Gfx {
 bool read_image_data(PPMLoadingContext& context, Streamer& streamer)
 {
     Vector<Gfx::Color> color_data;
-    color_data.ensure_capacity(context.width * context.height);
+    auto const context_size = context.width * context.height;
+    color_data.resize(context_size);
 
     if (context.type == PPMLoadingContext::Type::ASCII) {
-        while (true) {
+        for (u64 i = 0; i < context_size; ++i) {
             auto const red_or_error = read_number(streamer);
             if (red_or_error.is_error())
-                break;
+                return false;
 
             if (read_whitespace(context, streamer).is_error())
-                break;
+                return false;
 
             auto const green_or_error = read_number(streamer);
             if (green_or_error.is_error())
-                break;
+                return false;
 
             if (read_whitespace(context, streamer).is_error())
-                break;
+                return false;
 
             auto const blue_or_error = read_number(streamer);
             if (blue_or_error.is_error())
-                break;
+                return false;
 
             if (read_whitespace(context, streamer).is_error())
-                break;
+                return false;
 
             Color color { (u8)red_or_error.value(), (u8)green_or_error.value(), (u8)blue_or_error.value() };
             if (context.format_details.max_val < 255)
                 color = adjust_color(context.format_details.max_val, color);
-            color_data.append(color);
+            color_data[i] = color;
         }
     } else if (context.type == PPMLoadingContext::Type::RAWBITS) {
-        u8 pixel[3];
-        while (streamer.read_bytes(pixel, 3)) {
-            color_data.append({ pixel[0], pixel[1], pixel[2] });
+        for (u64 i = 0; i < context_size; ++i) {
+            u8 pixel[3];
+            if (!streamer.read_bytes(pixel, 3))
+                return false;
+            color_data[i] = { pixel[0], pixel[1], pixel[2] };
         }
     }
-
-    if (context.width * context.height != color_data.size())
-        return false;
 
     if (!create_bitmap(context)) {
         return false;
