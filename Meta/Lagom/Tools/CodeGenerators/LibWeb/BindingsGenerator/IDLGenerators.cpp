@@ -2990,7 +2990,7 @@ using namespace Web::WebIDL;
 namespace Web::Bindings {
 
 @constructor_class@::@constructor_class@(JS::Realm& realm)
-    : NativeFunction(*realm.intrinsics().function_prototype())
+    : NativeFunction("@name@"sv, *realm.intrinsics().function_prototype())
 {
 }
 
