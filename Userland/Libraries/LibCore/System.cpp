@@ -11,6 +11,7 @@
 #include <AK/FixedArray.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>
@@ -995,6 +996,16 @@ ErrorOr<int> mkstemp(Span<char> pattern)
     if (fd < 0)
         return Error::from_syscall("mkstemp"sv, -errno);
     return fd;
+}
+
+ErrorOr<String> mkdtemp(Span<char> pattern)
+{
+    auto* path = ::mkdtemp(pattern.data());
+    if (path == nullptr) {
+        return Error::from_errno(errno);
+    }
+
+    return String::from_utf8({ path, strlen(path) });
 }
 
 ErrorOr<void> rename(StringView old_path, StringView new_path)

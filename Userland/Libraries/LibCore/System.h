@@ -166,6 +166,7 @@ ErrorOr<void> chdir(StringView path);
 ErrorOr<void> rmdir(StringView path);
 ErrorOr<pid_t> fork();
 ErrorOr<int> mkstemp(Span<char> pattern);
+ErrorOr<String> mkdtemp(Span<char> pattern);
 ErrorOr<void> fchmod(int fd, mode_t mode);
 ErrorOr<void> fchown(int fd, uid_t, gid_t);
 ErrorOr<void> rename(StringView old_path, StringView new_path);
