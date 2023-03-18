@@ -163,6 +163,7 @@ using AK::Error;
 using AK::ErrorOr;
 using AK::FixedArray;
 using AK::FixedPoint;
+using AK::FlyString;
 using AK::Function;
 using AK::GenericLexer;
 using AK::HashMap;
