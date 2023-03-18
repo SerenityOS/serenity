@@ -12,11 +12,10 @@ namespace Web::Namespace {
 ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 
-[[gnu::constructor]] static void initialize()
+ErrorOr<void> initialize_strings()
 {
     static bool s_initialized = false;
-    if (s_initialized)
-        return;
+    VERIFY(!s_initialized);
 
 #define __ENUMERATE_NAMESPACE(name, namespace_) \
     name = namespace_;
@@ -24,6 +23,7 @@ ENUMERATE_NAMESPACES
 #undef __ENUMERATE_NAMESPACE
 
     s_initialized = true;
+    return {};
 }
 
 }

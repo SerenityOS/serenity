@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web::SVG::AttributeNames {
 
@@ -90,5 +91,7 @@ namespace Web::SVG::AttributeNames {
 #define __ENUMERATE_SVG_ATTRIBUTE(name) extern DeprecatedFlyString name;
 ENUMERATE_SVG_ATTRIBUTES(__ENUMERATE_SVG_ATTRIBUTE)
 #undef __ENUMERATE_SVG_ATTRIBUTE
+
+ErrorOr<void> initialize_strings();
 
 }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web {
 namespace HTML {
@@ -232,6 +233,8 @@ namespace AttributeNames {
 #define __ENUMERATE_HTML_ATTRIBUTE(name) extern DeprecatedFlyString name;
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
+
+ErrorOr<void> initialize_strings();
 
 }
 

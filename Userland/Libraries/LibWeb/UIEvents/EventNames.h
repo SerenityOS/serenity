@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web::UIEvents::EventNames {
 
@@ -32,5 +33,7 @@ namespace Web::UIEvents::EventNames {
 #define __ENUMERATE_UI_EVENT(name) extern DeprecatedFlyString name;
 ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
+
+ErrorOr<void> initialize_strings();
 
 }

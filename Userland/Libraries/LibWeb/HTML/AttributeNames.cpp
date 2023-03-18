@@ -14,11 +14,10 @@ namespace AttributeNames {
 ENUMERATE_HTML_ATTRIBUTES
 #undef __ENUMERATE_HTML_ATTRIBUTE
 
-[[gnu::constructor]] static void initialize()
+ErrorOr<void> initialize_strings()
 {
     static bool s_initialized = false;
-    if (s_initialized)
-        return;
+    VERIFY(!s_initialized);
 
 #define __ENUMERATE_HTML_ATTRIBUTE(name) \
     name = #name;
@@ -36,6 +35,7 @@ ENUMERATE_HTML_ATTRIBUTES
     http_equiv = "http-equiv";
 
     s_initialized = true;
+    return {};
 }
 
 }

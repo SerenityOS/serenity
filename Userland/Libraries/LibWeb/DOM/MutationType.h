@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web::DOM::MutationType {
 
@@ -18,5 +19,7 @@ namespace Web::DOM::MutationType {
 #define __ENUMERATE_MUTATION_TYPE(name) extern DeprecatedFlyString name;
 ENUMERATE_MUTATION_TYPES
 #undef __ENUMERATE_MUTATION_TYPE
+
+ErrorOr<void> initialize_strings();
 
 }
