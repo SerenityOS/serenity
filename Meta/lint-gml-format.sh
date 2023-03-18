@@ -10,12 +10,12 @@ if [ -z "${GML_FORMAT:-}" ] ; then
         echo "Directory Build/lagom/ does not exist. Skipping GML formatting."
         exit 0
     fi
-    if ! [ -r Build/lagom/gml-format ] ; then
+    if ! [ -r Build/lagom/bin/gml-format ] ; then
         echo "Lagom executable gml-format was not built. Skipping GML formatting."
         echo "To enable this check, you may need to run './Meta/serenity.sh build lagom' first."
         exit 0
     fi
-    GML_FORMAT="Build/lagom/gml-format"
+    GML_FORMAT="Build/lagom/bin/gml-format"
 fi
 
 if [ "$#" -gt "0" ] ; then

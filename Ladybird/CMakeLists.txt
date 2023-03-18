@@ -167,7 +167,7 @@ include(CTest)
 if (BUILD_TESTING)
     add_test(
         NAME LibWeb
-        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/headless-browser --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb
+        COMMAND ${CMAKE_CURRENT_BINARY_DIR}/../bin/headless-browser --run-tests ${SERENITY_SOURCE_DIR}/Tests/LibWeb
     )
     set_tests_properties(LibWeb PROPERTIES ENVIRONMENT QT_QPA_PLATFORM=offscreen)
 endif()

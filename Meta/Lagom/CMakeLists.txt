@@ -80,12 +80,17 @@ include(lagom_compile_options)
 
 include(GNUInstallDirs) # make sure to include before we mess w/RPATH
 
+# Mirror the structure of the installed tree to ensure that rpaths
+# always remain valid.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+
 set(CMAKE_SKIP_BUILD_RPATH FALSE)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 # See slide 100 of the following ppt :^)
 # https://crascit.com/wp-content/uploads/2019/09/Deep-CMake-For-Library-Authors-Craig-Scott-CppCon-2019.pdf
 if (APPLE)
-    # FIXME: This doesn't work for the full BUILD_LAGOM=ON build, see #10055
     set(CMAKE_MACOSX_RPATH TRUE)
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
@@ -256,7 +261,6 @@ function(lagom_test source)
         WORKING_DIRECTORY ${LAGOM_TEST_WORKING_DIRECTORY}
     )
     set_target_properties(${name} PROPERTIES LAGOM_WORKING_DIRECTORY "${LAGOM_TEST_WORKING_DIRECTORY}")
-    set_tests_properties(${name} PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}")
 endfunction()
 
 function(serenity_test test_src sub_dir)
@@ -462,9 +466,6 @@ if (BUILD_LAGOM)
     lagom_lib(LibGUI gui
         SOURCES ${LIBGUI_SOURCES}
         LIBS LibGfx LibSyntax)
-
-    # FIXME: Why doesn't RPATH of the tests handle this properly?
-    set_target_properties(LibSoftGPU PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
     # FIXME: LibLocaleData is an object lib in Lagom, because the weak symbol trick we use on serenity
     #    straight up isn't supposed to work per ELF rules
@@ -731,8 +732,8 @@ endif()
 if (NOT "$ENV{LAGOM_TARGET}" STREQUAL "")
     add_custom_target(run-lagom-target
         COMMAND "${CMAKE_COMMAND}"
-            -E env "SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}" "LD_LIBRARY_PATH=${PROJECT_BINARY_DIR}"
-            "$<TARGET_FILE:$ENV{LAGOM_TARGET}>" $ENV{LAGOM_ARGS}
+            -E env "SERENITY_SOURCE_DIR=${SERENITY_PROJECT_ROOT}" "$<TARGET_FILE:$ENV{LAGOM_TARGET}>"
+            $ENV{LAGOM_ARGS}
 
         WORKING_DIRECTORY "$<TARGET_PROPERTY:$ENV{LAGOM_TARGET},LAGOM_WORKING_DIRECTORY>"
         DEPENDS "$<TARGET_FILE:$ENV{LAGOM_TARGET}>"
