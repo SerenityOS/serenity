@@ -9,7 +9,7 @@
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
-#include <Kernel/API/Graphics.h>
+#include <Kernel/API/GPU.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
@@ -92,8 +92,8 @@ ErrorOr<int> serenity_main(Main::Arguments)
                 if (!Core::DeprecatedFile::is_device(full_path))
                     continue;
                 auto display_connector_fd = TRY(Core::System::open(full_path, O_RDWR | O_CLOEXEC));
-                if (int rc = graphics_connector_set_responsible(display_connector_fd); rc != 0)
-                    return Error::from_syscall("graphics_connector_set_responsible"sv, rc);
+                if (int rc = gpu_connector_set_responsible(display_connector_fd); rc != 0)
+                    return Error::from_syscall("gpu_connector_set_responsible"sv, rc);
                 TRY(Core::System::close(display_connector_fd));
                 if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
                     continue;

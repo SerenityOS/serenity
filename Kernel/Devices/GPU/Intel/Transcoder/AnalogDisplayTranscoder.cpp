@@ -28,7 +28,7 @@ IntelAnalogDisplayTranscoder::IntelAnalogDisplayTranscoder(Memory::TypedMapping<
 {
 }
 
-ErrorOr<void> IntelAnalogDisplayTranscoder::set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGraphics::PLLSettings const& settings, size_t dac_multiplier)
+ErrorOr<void> IntelAnalogDisplayTranscoder::set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGPU::PLLSettings const& settings, size_t dac_multiplier)
 {
     SpinlockLocker locker(m_access_lock);
     u32 value = (settings.m2 - 2) | ((settings.m1 - 2) << 8) | ((settings.n - 2) << 16);

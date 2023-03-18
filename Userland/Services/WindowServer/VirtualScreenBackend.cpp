@@ -36,7 +36,7 @@ ErrorOr<void> VirtualScreenBackend::set_safe_head_mode_setting()
     return {};
 }
 
-ErrorOr<void> VirtualScreenBackend::set_head_mode_setting(GraphicsHeadModeSetting mode_setting)
+ErrorOr<void> VirtualScreenBackend::set_head_mode_setting(GPUHeadModeSetting mode_setting)
 {
     m_height = mode_setting.vertical_active;
 
@@ -50,9 +50,9 @@ ErrorOr<void> VirtualScreenBackend::set_head_mode_setting(GraphicsHeadModeSettin
     return {};
 }
 
-ErrorOr<GraphicsHeadModeSetting> VirtualScreenBackend::get_head_mode_setting()
+ErrorOr<GPUHeadModeSetting> VirtualScreenBackend::get_head_mode_setting()
 {
-    return GraphicsHeadModeSetting {
+    return GPUHeadModeSetting {
         .horizontal_stride = m_pitch,
         .pixel_clock_in_khz = 0,
         .horizontal_active = m_width,

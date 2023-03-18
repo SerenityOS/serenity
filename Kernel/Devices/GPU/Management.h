@@ -16,8 +16,8 @@
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Generic/DisplayConnector.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GenericGPUAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/Adapter.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/Region.h>
 
@@ -40,8 +40,8 @@ public:
     void disable_vga_text_mode_console_cursor();
     void disable_vga_emulation_access_permanently();
 
-    LockRefPtr<Graphics::Console> console() const { return m_console; }
-    void set_console(Graphics::Console&);
+    LockRefPtr<GPU::Console> console() const { return m_console; }
+    void set_console(GPU::Console&);
 
     void deactivate_graphical_mode();
     void activate_graphical_mode();
@@ -49,14 +49,14 @@ public:
 private:
     void enable_vga_text_mode_console_cursor();
 
-    ErrorOr<void> determine_and_initialize_graphics_device(PCI::DeviceIdentifier const&);
+    ErrorOr<void> determine_and_initialize_gpu_device(PCI::DeviceIdentifier const&);
 
     void initialize_preset_resolution_generic_display_connector();
 
-    Vector<NonnullLockRefPtr<GenericGraphicsAdapter>> m_graphics_devices;
-    LockRefPtr<Graphics::Console> m_console;
+    Vector<NonnullLockRefPtr<GenericGPUAdapter>> m_gpu_devices;
+    LockRefPtr<GPU::Console> m_console;
 
-    // Note: This is only used when booting with kernel commandline that includes "graphics_subsystem_mode=limited"
+    // Note: This is only used when booting with kernel commandline that includes "gpu_subsystem_mode=limited"
     LockRefPtr<GenericDisplayConnector> m_preset_resolution_generic_display_connector;
 
     LockRefPtr<DisplayConnector> m_platform_board_specific_display_connector;

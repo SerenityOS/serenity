@@ -66,7 +66,7 @@ set(KERNEL_SOURCES
     Devices/HID/HIDManagement.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/MouseDevice.cpp
-    Devices/GPU/Bochs/GraphicsAdapter.cpp
+    Devices/GPU/Bochs/Adapter.cpp
     Devices/GPU/Bochs/QEMUDisplayConnector.cpp
     Devices/GPU/Console/BootFramebufferConsole.cpp
     Devices/GPU/Console/GenericFramebufferConsole.cpp
@@ -83,14 +83,14 @@ set(KERNEL_SOURCES
     Devices/GPU/Intel/Transcoder/PLL.cpp
     Devices/GPU/Intel/DisplayConnectorGroup.cpp
     Devices/GPU/Intel/NativeDisplayConnector.cpp
-    Devices/GPU/Intel/NativeGraphicsAdapter.cpp
+    Devices/GPU/Intel/NativeAdapter.cpp
     Devices/GPU/VMWare/Console.cpp
-    Devices/GPU/VMWare/GraphicsAdapter.cpp
+    Devices/GPU/VMWare/Adapter.cpp
     Devices/GPU/VMWare/DisplayConnector.cpp
     Devices/GPU/VirtIO/DisplayConnector.cpp
     Devices/GPU/VirtIO/Console.cpp
     Devices/GPU/VirtIO/GPU3DDevice.cpp
-    Devices/GPU/VirtIO/GraphicsAdapter.cpp
+    Devices/GPU/VirtIO/Adapter.cpp
     IOWindow.cpp
     Jail.cpp
     SanCov.cpp
@@ -167,10 +167,10 @@ set(KERNEL_SOURCES
     FileSystem/SysFS/Subsystems/Devices/Storage/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.cpp
     FileSystem/SysFS/Subsystems/Devices/Storage/Directory.cpp
-    FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.cpp
-    FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.cpp
-    FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.cpp
-    FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceAttribute.cpp
+    FileSystem/SysFS/Subsystems/Devices/GPU/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/Directory.cpp
+    FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/DeviceDirectory.cpp
+    FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/DeviceAttribute.cpp
     FileSystem/SysFS/Subsystems/Devices/Directory.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Component.cpp
     FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.cpp

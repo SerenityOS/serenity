@@ -11,12 +11,12 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/Adapter.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 #include <Kernel/Memory/Region.h>
 #include <LibEDID/EDID.h>
 
-namespace Kernel::Graphics::VirtIOGPU {
+namespace Kernel::GPU::VirtIOGPU {
 
 class Console;
 
@@ -24,22 +24,22 @@ class Console;
 
 namespace Kernel {
 
-class VirtIOGraphicsAdapter;
+class VirtIOGPUAdapter;
 class VirtIODisplayConnector final : public DisplayConnector {
-    friend class Graphics::VirtIOGPU::Console;
+    friend class GPU::VirtIOGPU::Console;
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<VirtIODisplayConnector> must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
+    static NonnullLockRefPtr<VirtIODisplayConnector> must_create(VirtIOGPUAdapter& gpu_adapter, GPU::VirtIOGPU::ScanoutID scanout_id);
 
-    void set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes);
-    void set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>);
-    Graphics::VirtIOGPU::ScanoutID scanout_id() const { return m_scanout_id; }
-    Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display display_information(Badge<VirtIOGraphicsAdapter>) const;
+    void set_edid_bytes(Badge<VirtIOGPUAdapter>, Array<u8, 128> const& edid_bytes);
+    void set_safe_mode_setting_after_initialization(Badge<VirtIOGPUAdapter>);
+    GPU::VirtIOGPU::ScanoutID scanout_id() const { return m_scanout_id; }
+    GPU::VirtIOGPU::Protocol::DisplayInfoResponse::Display display_information(Badge<VirtIOGPUAdapter>) const;
 
-    void draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>);
+    void draw_ntsc_test_pattern(Badge<VirtIOGPUAdapter>);
 
-    void initialize_console(Badge<VirtIOGraphicsAdapter>);
+    void initialize_console(Badge<VirtIOGPUAdapter>);
 
 private:
     virtual bool mutable_mode_setting_capable() const override { return true; }
@@ -67,21 +67,21 @@ private:
     }
 
 private:
-    VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id);
+    VirtIODisplayConnector(VirtIOGPUAdapter& gpu_adapter, GPU::VirtIOGPU::ScanoutID scanout_id);
 
-    ErrorOr<void> flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
-    void set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
+    ErrorOr<void> flush_displayed_image(GPU::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
+    void set_dirty_displayed_rect(GPU::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer);
 
     void clear_to_black();
 
     // Member data
     // Context used for kernel operations (e.g. flushing resources to scanout)
-    Graphics::VirtIOGPU::ContextID m_kernel_context_id;
+    GPU::VirtIOGPU::ContextID m_kernel_context_id;
 
-    NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
-    LockRefPtr<Graphics::VirtIOGPU::Console> m_console;
-    Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display m_display_info {};
-    Graphics::VirtIOGPU::ScanoutID m_scanout_id;
+    NonnullLockRefPtr<VirtIOGPUAdapter> m_gpu_adapter;
+    LockRefPtr<GPU::VirtIOGPU::Console> m_console;
+    GPU::VirtIOGPU::Protocol::DisplayInfoResponse::Display m_display_info {};
+    GPU::VirtIOGPU::ScanoutID m_scanout_id;
 
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 256;
 };

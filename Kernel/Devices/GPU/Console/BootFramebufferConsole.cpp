@@ -8,7 +8,7 @@
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 BootFramebufferConsole::BootFramebufferConsole(PhysicalAddress framebuffer_addr, size_t width, size_t height, size_t pitch)
     : GenericFramebufferConsoleImpl(width, height, pitch)

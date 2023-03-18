@@ -8,7 +8,7 @@
 
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/DeviceDirectory.h>
 #include <Kernel/KBuffer.h>
 
 namespace Kernel {

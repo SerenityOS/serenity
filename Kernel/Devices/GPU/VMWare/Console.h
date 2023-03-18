@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-class VMWareFramebufferConsole final : public Graphics::GenericFramebufferConsole {
+class VMWareFramebufferConsole final : public GPU::GenericFramebufferConsole {
 public:
     static NonnullLockRefPtr<VMWareFramebufferConsole> initialize(VMWareDisplayConnector& parent_display_connector);
 

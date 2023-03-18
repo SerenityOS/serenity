@@ -7,7 +7,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Definitions.h>
-#include <Kernel/Devices/GPU/Intel/NativeGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/Intel/NativeAdapter.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -26,21 +26,21 @@ static bool is_supported_model(u16 device_id)
     return false;
 }
 
-ErrorOr<bool> IntelNativeGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<bool> IntelNativeGPUAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     return is_supported_model(pci_device_identifier.hardware_id().device_id);
 }
 
-ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> IntelNativeGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> IntelNativeGPUAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelNativeGraphicsAdapter(pci_device_identifier)));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelNativeGPUAdapter(pci_device_identifier)));
     TRY(adapter->initialize_adapter());
     return adapter;
 }
 
-ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
+ErrorOr<void> IntelNativeGPUAdapter::initialize_adapter()
 {
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Native Graphics Adapter @ {}", device_identifier().address());
+    dbgln_if(INTEL_GPU_DEBUG, "Intel Native GPU Adapter @ {}", device_identifier().address());
     auto bar0_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR0);
     auto bar2_space_size = PCI::get_BAR_space_size(device_identifier(), PCI::HeaderType0BaseRegister::BAR2);
     dmesgln_pci(*this, "MMIO @ {}, space size is {:x} bytes", PhysicalAddress(PCI::get_BAR0(device_identifier())), bar0_space_size);
@@ -56,15 +56,15 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
 
     switch (device_identifier().hardware_id().device_id) {
     case 0x29c2:
-        m_connector_group = TRY(IntelDisplayConnectorGroup::try_create({}, IntelGraphics::Generation::Gen4, first_region, second_region));
+        m_connector_group = TRY(IntelDisplayConnectorGroup::try_create({}, IntelGPU::Generation::Gen4, first_region, second_region));
         return {};
     default:
         return Error::from_errno(ENODEV);
     }
 }
 
-IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
-    : GenericGraphicsAdapter()
+IntelNativeGPUAdapter::IntelNativeGPUAdapter(PCI::DeviceIdentifier const& pci_device_identifier)
+    : GenericGPUAdapter()
     , PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
 {
 }

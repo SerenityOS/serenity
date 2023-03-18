@@ -16,22 +16,22 @@
 
 namespace Kernel {
 
-class IntelNativeGraphicsAdapter final
-    : public GenericGraphicsAdapter
+class IntelNativeGPUAdapter final
+    : public GenericGPUAdapter
     , public PCI::Device {
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> create(PCI::DeviceIdentifier const&);
 
-    virtual ~IntelNativeGraphicsAdapter() = default;
+    virtual ~IntelNativeGPUAdapter() = default;
 
-    virtual StringView device_name() const override { return "IntelNativeGraphicsAdapter"sv; }
+    virtual StringView device_name() const override { return "IntelNativeGPUAdapter"sv; }
 
 private:
     ErrorOr<void> initialize_adapter();
 
-    explicit IntelNativeGraphicsAdapter(PCI::DeviceIdentifier const&);
+    explicit IntelNativeGPUAdapter(PCI::DeviceIdentifier const&);
 
     LockRefPtr<IntelDisplayConnectorGroup> m_connector_group;
 };

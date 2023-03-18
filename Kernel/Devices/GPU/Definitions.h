@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 // Note: Address 0x50 is expected to be the DDC2 (EDID) i2c address.
 static constexpr u8 ddc2_i2c_address = 0x50;

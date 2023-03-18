@@ -8,7 +8,7 @@
 
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 class ContiguousFramebufferConsole final : public GenericFramebufferConsole {
 public:

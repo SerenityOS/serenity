@@ -37,10 +37,10 @@ LockRefPtr<BochsDisplayConnector> BochsDisplayConnector::try_create_for_vga_isa_
 
     auto video_ram_64k_chunks_count = get_register_with_io(to_underlying(BochsDISPIRegisters::VIDEO_RAM_64K_CHUNKS_COUNT));
     if (video_ram_64k_chunks_count == 0 || video_ram_64k_chunks_count == 0xffff) {
-        dmesgln("Graphics: Bochs ISA VGA compatible adapter does not indicate amount of VRAM, default to 8 MiB");
+        dmesgln("GPU: Bochs ISA VGA compatible adapter does not indicate amount of VRAM, default to 8 MiB");
         video_ram_64k_chunks_count = (8 * MiB) / (64 * KiB);
     } else {
-        dmesgln("Graphics: Bochs ISA VGA compatible adapter indicates {} bytes of VRAM", video_ram_64k_chunks_count * (64 * KiB));
+        dmesgln("GPU: Bochs ISA VGA compatible adapter indicates {} bytes of VRAM", video_ram_64k_chunks_count * (64 * KiB));
     }
 
     // Note: The default physical address for isa-vga framebuffer in QEMU is 0xE0000000.
@@ -76,7 +76,7 @@ BochsDisplayConnector::BochsDisplayConnector(PhysicalAddress framebuffer_address
 ErrorOr<void> BochsDisplayConnector::create_attached_framebuffer_console()
 {
     // We assume safe resolution is 1024x768x32
-    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), 1024, 768, 1024 * sizeof(u32));
+    m_framebuffer_console = GPU::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), 1024, 768, 1024 * sizeof(u32));
     GPUManagement::the().set_console(*m_framebuffer_console);
     return {};
 }

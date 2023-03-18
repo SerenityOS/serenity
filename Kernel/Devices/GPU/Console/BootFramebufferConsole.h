@@ -9,7 +9,7 @@
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/Forward.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 class BootFramebufferConsole : public GenericFramebufferConsoleImpl {
 public:

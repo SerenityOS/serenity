@@ -19,7 +19,7 @@ namespace Kernel {
 struct BochsDisplayMMIORegisters;
 class QEMUDisplayConnector final
     : public DisplayConnector {
-    friend class BochsGraphicsAdapter;
+    friend class BochsGPUAdapter;
     friend class DeviceManagement;
 
 public:
@@ -52,7 +52,7 @@ private:
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<GPU::GenericFramebufferConsole> m_framebuffer_console;
 
     Memory::TypedMapping<BochsDisplayMMIORegisters volatile> m_registers;
 };

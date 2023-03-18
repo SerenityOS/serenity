@@ -9,7 +9,7 @@
 #include <AK/Try.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VMWare/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VMWare/Adapter.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/TypedMapping.h>
@@ -18,15 +18,15 @@ namespace Kernel {
 
 class VMWareFramebufferConsole;
 class VMWareDisplayConnector : public DisplayConnector {
-    friend class VMWareGraphicsAdapter;
+    friend class VMWareGPUAdapter;
     friend class VMWareFramebufferConsole;
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<VMWareDisplayConnector> must_create(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    static NonnullLockRefPtr<VMWareDisplayConnector> must_create(VMWareGPUAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
 
 private:
-    VMWareDisplayConnector(VMWareGraphicsAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
+    VMWareDisplayConnector(VMWareGPUAdapter const& parent_adapter, PhysicalAddress framebuffer_address, size_t framebuffer_resource_size);
     ErrorOr<void> create_attached_framebuffer_console();
 
     virtual bool mutable_mode_setting_capable() const override { return true; }
@@ -48,7 +48,7 @@ private:
     virtual void disable_console() override;
 
 private:
-    NonnullLockRefPtr<VMWareGraphicsAdapter> m_parent_adapter;
+    NonnullLockRefPtr<VMWareGPUAdapter> m_parent_adapter;
     LockRefPtr<VMWareFramebufferConsole> m_framebuffer_console;
 };
 }

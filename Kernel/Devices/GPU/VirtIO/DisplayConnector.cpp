@@ -7,17 +7,17 @@
 #include <Kernel/API/VirGL.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Management.h>
+#include <Kernel/Devices/GPU/VirtIO/Adapter.h>
 #include <Kernel/Devices/GPU/VirtIO/Console.h>
 #include <Kernel/Devices/GPU/VirtIO/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 
-NonnullLockRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
+NonnullLockRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(VirtIOGPUAdapter& gpu_adapter, GPU::VirtIOGPU::ScanoutID scanout_id)
 {
-    auto device_or_error = DeviceManagement::try_create_device<VirtIODisplayConnector>(graphics_adapter, scanout_id);
+    auto device_or_error = DeviceManagement::try_create_device<VirtIODisplayConnector>(gpu_adapter, scanout_id);
     VERIFY(!device_or_error.is_error());
     auto connector = device_or_error.release_value();
     return connector;
@@ -25,20 +25,20 @@ NonnullLockRefPtr<VirtIODisplayConnector> VirtIODisplayConnector::must_create(Vi
 
 static_assert((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2) % PAGE_SIZE == 0);
 
-VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_adapter, Graphics::VirtIOGPU::ScanoutID scanout_id)
+VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGPUAdapter& gpu_adapter, GPU::VirtIOGPU::ScanoutID scanout_id)
     : DisplayConnector((MAX_VIRTIOGPU_RESOLUTION_WIDTH * MAX_VIRTIOGPU_RESOLUTION_HEIGHT * sizeof(u32) * 2), false)
-    , m_graphics_adapter(graphics_adapter)
+    , m_gpu_adapter(gpu_adapter)
     , m_scanout_id(scanout_id)
 {
 }
 
-void VirtIODisplayConnector::initialize_console(Badge<VirtIOGraphicsAdapter>)
+void VirtIODisplayConnector::initialize_console(Badge<VirtIOGPUAdapter>)
 {
-    m_console = Kernel::Graphics::VirtIOGPU::Console::initialize(*this);
+    m_console = Kernel::GPU::VirtIOGPU::Console::initialize(*this);
     GPUManagement::the().set_console(*m_console);
 }
 
-void VirtIODisplayConnector::set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>)
+void VirtIODisplayConnector::set_safe_mode_setting_after_initialization(Badge<VirtIOGPUAdapter>)
 {
     MUST(set_safe_mode_setting());
 }
@@ -57,7 +57,7 @@ ErrorOr<void> VirtIODisplayConnector::set_mode_setting(ModeSetting const& mode_s
         .height = (u32)mode_setting.vertical_active,
     };
 
-    TRY(m_graphics_adapter->mode_set_resolution({}, *this, mode_setting.horizontal_active, mode_setting.vertical_active));
+    TRY(m_gpu_adapter->mode_set_resolution({}, *this, mode_setting.horizontal_active, mode_setting.vertical_active));
 
     if (m_console)
         m_console->set_resolution(info.rect.width, info.rect.height, info.rect.width * sizeof(u32));
@@ -117,15 +117,15 @@ ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRec
     VERIFY(m_flushing_lock.is_locked());
     if (!is_valid_buffer_index(buffer_index))
         return Error::from_errno(EINVAL);
-    SpinlockLocker locker(m_graphics_adapter->operation_lock());
-    Graphics::VirtIOGPU::Protocol::Rect dirty_rect {
+    SpinlockLocker locker(m_gpu_adapter->operation_lock());
+    GPU::VirtIOGPU::Protocol::Rect dirty_rect {
         .x = rect.x,
         .y = rect.y,
         .width = rect.width,
         .height = rect.height
     };
 
-    TRY(m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true));
+    TRY(m_gpu_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true));
     // Flushing directly to screen
     TRY(flush_displayed_image(dirty_rect, true));
     return {};
@@ -134,15 +134,15 @@ ErrorOr<void> VirtIODisplayConnector::flush_rectangle(size_t buffer_index, FBRec
 ErrorOr<void> VirtIODisplayConnector::flush_first_surface()
 {
     VERIFY(m_flushing_lock.is_locked());
-    SpinlockLocker locker(m_graphics_adapter->operation_lock());
-    Graphics::VirtIOGPU::Protocol::Rect dirty_rect {
+    SpinlockLocker locker(m_gpu_adapter->operation_lock());
+    GPU::VirtIOGPU::Protocol::Rect dirty_rect {
         .x = 0,
         .y = 0,
         .width = m_display_info.rect.width,
         .height = m_display_info.rect.height
     };
 
-    TRY(m_graphics_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true));
+    TRY(m_gpu_adapter->transfer_framebuffer_data_to_host({}, *this, dirty_rect, true));
     // Flushing directly to screen
     TRY(flush_displayed_image(dirty_rect, true));
     return {};
@@ -162,12 +162,12 @@ void VirtIODisplayConnector::disable_console()
     m_console->disable();
 }
 
-void VirtIODisplayConnector::set_edid_bytes(Badge<VirtIOGraphicsAdapter>, Array<u8, 128> const& edid_bytes)
+void VirtIODisplayConnector::set_edid_bytes(Badge<VirtIOGPUAdapter>, Array<u8, 128> const& edid_bytes)
 {
     DisplayConnector::set_edid_bytes(edid_bytes);
 }
 
-Graphics::VirtIOGPU::Protocol::DisplayInfoResponse::Display VirtIODisplayConnector::display_information(Badge<VirtIOGraphicsAdapter>) const
+GPU::VirtIOGPU::Protocol::DisplayInfoResponse::Display VirtIODisplayConnector::display_information(Badge<VirtIOGPUAdapter>) const
 {
     return m_display_info;
 }
@@ -185,7 +185,7 @@ void VirtIODisplayConnector::clear_to_black()
     }
 }
 
-void VirtIODisplayConnector::draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>)
+void VirtIODisplayConnector::draw_ntsc_test_pattern(Badge<VirtIOGPUAdapter>)
 {
     constexpr u8 colors[12][4] = {
         { 0xff, 0xff, 0xff, 0xff }, // White
@@ -244,17 +244,17 @@ void VirtIODisplayConnector::draw_ntsc_test_pattern(Badge<VirtIOGraphicsAdapter>
     dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
 }
 
-ErrorOr<void> VirtIODisplayConnector::flush_displayed_image(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
+ErrorOr<void> VirtIODisplayConnector::flush_displayed_image(GPU::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
 {
-    VERIFY(m_graphics_adapter->operation_lock().is_locked());
-    TRY(m_graphics_adapter->flush_displayed_image({}, *this, dirty_rect, main_buffer));
+    VERIFY(m_gpu_adapter->operation_lock().is_locked());
+    TRY(m_gpu_adapter->flush_displayed_image({}, *this, dirty_rect, main_buffer));
     return {};
 }
 
-void VirtIODisplayConnector::set_dirty_displayed_rect(Graphics::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
+void VirtIODisplayConnector::set_dirty_displayed_rect(GPU::VirtIOGPU::Protocol::Rect const& dirty_rect, bool main_buffer)
 {
-    VERIFY(m_graphics_adapter->operation_lock().is_locked());
-    m_graphics_adapter->set_dirty_displayed_rect({}, *this, dirty_rect, main_buffer);
+    VERIFY(m_gpu_adapter->operation_lock().is_locked());
+    m_gpu_adapter->set_dirty_displayed_rect({}, *this, dirty_rect, main_buffer);
 }
 
 }

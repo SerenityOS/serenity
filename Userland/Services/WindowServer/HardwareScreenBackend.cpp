@@ -8,7 +8,7 @@
 #include "HardwareScreenBackend.h"
 #include "ScreenBackend.h"
 #include <AK/Try.h>
-#include <Kernel/API/Graphics.h>
+#include <Kernel/API/GPU.h>
 #include <LibCore/System.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -26,8 +26,8 @@ ErrorOr<void> HardwareScreenBackend::open()
 {
     m_display_connector_fd = TRY(Core::System::open(m_device, O_RDWR | O_CLOEXEC));
 
-    GraphicsConnectorProperties properties;
-    if (graphics_connector_get_properties(m_display_connector_fd, &properties) < 0)
+    GPUConnectorProperties properties;
+    if (gpu_connector_get_properties(m_display_connector_fd, &properties) < 0)
         return Error::from_syscall(DeprecatedString::formatted("failed to ioctl {}", m_device), errno);
 
     m_can_device_flush_buffers = (properties.partial_flushing_support != 0);
@@ -53,15 +53,15 @@ HardwareScreenBackend::~HardwareScreenBackend()
 
 ErrorOr<void> HardwareScreenBackend::set_safe_head_mode_setting()
 {
-    auto rc = graphics_connector_set_safe_head_mode_setting(m_display_connector_fd);
+    auto rc = gpu_connector_set_safe_head_mode_setting(m_display_connector_fd);
     if (rc != 0) {
         dbgln("Failed to set backend safe mode setting: aborting");
-        return Error::from_syscall("graphics_connector_set_safe_head_mode_setting"sv, rc);
+        return Error::from_syscall("gpu_connector_set_safe_head_mode_setting"sv, rc);
     }
     return {};
 }
 
-ErrorOr<void> HardwareScreenBackend::set_head_mode_setting(GraphicsHeadModeSetting mode_setting)
+ErrorOr<void> HardwareScreenBackend::set_head_mode_setting(GPUHeadModeSetting mode_setting)
 {
     size_t size_in_bytes = 0;
     if (m_can_set_head_buffer) {
@@ -73,14 +73,14 @@ ErrorOr<void> HardwareScreenBackend::set_head_mode_setting(GraphicsHeadModeSetti
     if (m_max_size_in_bytes < size_in_bytes)
         return Error::from_errno(EOVERFLOW);
 
-    GraphicsHeadModeSetting requested_mode_setting = mode_setting;
-    auto rc = graphics_connector_set_head_mode_setting(m_display_connector_fd, &requested_mode_setting);
+    GPUHeadModeSetting requested_mode_setting = mode_setting;
+    auto rc = gpu_connector_set_head_mode_setting(m_display_connector_fd, &requested_mode_setting);
     if (rc != 0) {
         dbgln("Failed to set backend mode setting: falling back to safe resolution");
-        rc = graphics_connector_set_safe_head_mode_setting(m_display_connector_fd);
+        rc = gpu_connector_set_safe_head_mode_setting(m_display_connector_fd);
         if (rc != 0) {
             dbgln("Failed to set backend safe mode setting: aborting");
-            return Error::from_syscall("graphics_connector_set_safe_head_mode_setting"sv, rc);
+            return Error::from_syscall("gpu_connector_set_safe_head_mode_setting"sv, rc);
         }
         dbgln("Failed to set backend mode setting: falling back to safe resolution - success.");
     }
@@ -99,11 +99,11 @@ ErrorOr<void> HardwareScreenBackend::unmap_framebuffer()
 
 ErrorOr<void> HardwareScreenBackend::map_framebuffer()
 {
-    GraphicsHeadModeSetting mode_setting {};
-    memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
-    int rc = graphics_connector_get_head_mode_setting(m_display_connector_fd, &mode_setting);
+    GPUHeadModeSetting mode_setting {};
+    memset(&mode_setting, 0, sizeof(GPUHeadModeSetting));
+    int rc = gpu_connector_get_head_mode_setting(m_display_connector_fd, &mode_setting);
     if (rc != 0) {
-        return Error::from_syscall("graphics_connector_get_head_mode_setting"sv, rc);
+        return Error::from_syscall("gpu_connector_get_head_mode_setting"sv, rc);
     }
     if (m_can_set_head_buffer) {
         m_size_in_bytes = mode_setting.horizontal_stride * mode_setting.vertical_active * 2;
@@ -129,13 +129,13 @@ ErrorOr<void> HardwareScreenBackend::map_framebuffer()
     return {};
 }
 
-ErrorOr<GraphicsHeadModeSetting> HardwareScreenBackend::get_head_mode_setting()
+ErrorOr<GPUHeadModeSetting> HardwareScreenBackend::get_head_mode_setting()
 {
-    GraphicsHeadModeSetting mode_setting {};
-    memset(&mode_setting, 0, sizeof(GraphicsHeadModeSetting));
-    int rc = graphics_connector_get_head_mode_setting(m_display_connector_fd, &mode_setting);
+    GPUHeadModeSetting mode_setting {};
+    memset(&mode_setting, 0, sizeof(GPUHeadModeSetting));
+    int rc = gpu_connector_get_head_mode_setting(m_display_connector_fd, &mode_setting);
     if (rc != 0) {
-        return Error::from_syscall("graphics_connector_get_head_mode_setting"sv, rc);
+        return Error::from_syscall("gpu_connector_get_head_mode_setting"sv, rc);
     }
     m_pitch = mode_setting.horizontal_stride;
     return mode_setting;
@@ -145,7 +145,7 @@ void HardwareScreenBackend::set_head_buffer(int head_index)
 {
     VERIFY(m_can_set_head_buffer);
     VERIFY(head_index <= 1 && head_index >= 0);
-    GraphicsHeadVerticalOffset offset { 0, 0 };
+    GPUHeadVerticalOffset offset { 0, 0 };
     if (head_index == 1)
         offset.offsetted = 1;
     int rc = fb_set_head_vertical_offset_buffer(m_display_connector_fd, &offset);

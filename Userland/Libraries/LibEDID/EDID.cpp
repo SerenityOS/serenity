@@ -14,7 +14,7 @@
 #    include <Kernel/StdLib.h>
 #else
 #    include <AK/ScopeGuard.h>
-#    include <Kernel/API/Graphics.h>
+#    include <Kernel/API/GPU.h>
 #    include <fcntl.h>
 #    include <unistd.h>
 
@@ -203,16 +203,16 @@ ErrorOr<Parser> Parser::from_bytes(ByteBuffer&& bytes)
 ErrorOr<Parser> Parser::from_display_connector_device(int display_connector_fd)
 {
     RawBytes edid_bytes;
-    GraphicsHeadEDID edid_info {};
+    GPUHeadEDID edid_info {};
     edid_info.bytes = &edid_bytes[0];
     edid_info.bytes_size = sizeof(edid_bytes);
-    if (graphics_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
+    if (gpu_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
         int err = errno;
         if (err == EOVERFLOW) {
             // We need a bigger buffer with at least bytes_size bytes
             auto edid_byte_buffer = TRY(ByteBuffer::create_zeroed(edid_info.bytes_size));
             edid_info.bytes = edid_byte_buffer.data();
-            if (graphics_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
+            if (gpu_connector_get_head_edid(display_connector_fd, &edid_info) < 0) {
                 err = errno;
                 return Error::from_errno(err);
             }

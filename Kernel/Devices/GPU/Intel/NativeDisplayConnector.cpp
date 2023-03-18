@@ -33,7 +33,7 @@ ErrorOr<void> IntelNativeDisplayConnector::create_attached_framebuffer_console(B
         height = m_current_mode_setting.vertical_active;
         pitch = m_current_mode_setting.horizontal_stride;
     }
-    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), width, height, pitch);
+    m_framebuffer_console = GPU::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), width, height, pitch);
     GPUManagement::the().set_console(*m_framebuffer_console);
     return {};
 }

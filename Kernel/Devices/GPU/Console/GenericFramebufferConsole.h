@@ -10,7 +10,7 @@
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/PhysicalAddress.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 class GenericFramebufferConsoleImpl : public Console {
 public:

@@ -13,14 +13,14 @@
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
-class GenericGraphicsAdapter
-    : public AtomicRefCounted<GenericGraphicsAdapter>
-    , public LockWeakable<GenericGraphicsAdapter> {
+class GenericGPUAdapter
+    : public AtomicRefCounted<GenericGPUAdapter>
+    , public LockWeakable<GenericGPUAdapter> {
 public:
-    virtual ~GenericGraphicsAdapter() = default;
+    virtual ~GenericGPUAdapter() = default;
 
 protected:
-    GenericGraphicsAdapter() = default;
+    GenericGPUAdapter() = default;
 };
 
 }

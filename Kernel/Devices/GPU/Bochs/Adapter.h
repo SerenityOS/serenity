@@ -10,7 +10,7 @@
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GenericGPUAdapter.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -19,20 +19,20 @@ namespace Kernel {
 class GPUManagement;
 struct BochsDisplayMMIORegisters;
 
-class BochsGraphicsAdapter final : public GenericGraphicsAdapter
+class BochsGPUAdapter final : public GenericGPUAdapter
     , public PCI::Device {
     friend class GPUManagement;
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
-    virtual ~BochsGraphicsAdapter() = default;
-    virtual StringView device_name() const override { return "BochsGraphicsAdapter"sv; }
+    static ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> create(PCI::DeviceIdentifier const&);
+    virtual ~BochsGPUAdapter() = default;
+    virtual StringView device_name() const override { return "BochsGPUAdapter"sv; }
 
 private:
     ErrorOr<void> initialize_adapter(PCI::DeviceIdentifier const&);
 
-    explicit BochsGraphicsAdapter(PCI::DeviceIdentifier const&);
+    explicit BochsGPUAdapter(PCI::DeviceIdentifier const&);
 
     LockRefPtr<DisplayConnector> m_display_connector;
 };

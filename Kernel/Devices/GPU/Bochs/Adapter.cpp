@@ -12,8 +12,8 @@
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
+#include <Kernel/Devices/GPU/Bochs/Adapter.h>
 #include <Kernel/Devices/GPU/Bochs/Definitions.h>
-#include <Kernel/Devices/GPU/Bochs/GraphicsAdapter.h>
 #include <Kernel/Devices/GPU/Bochs/QEMUDisplayConnector.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
@@ -22,7 +22,7 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<bool> BochsGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> BochsGPUAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     PCI::HardwareID id = pci_device_identifier.hardware_id();
     if (id.vendor_id == PCI::VendorID::QEMUOld && id.device_id == 0x1111)
@@ -32,19 +32,19 @@ UNMAP_AFTER_INIT ErrorOr<bool> BochsGraphicsAdapter::probe(PCI::DeviceIdentifier
     return false;
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> BochsGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> BochsGPUAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BochsGraphicsAdapter(pci_device_identifier)));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) BochsGPUAdapter(pci_device_identifier)));
     MUST(adapter->initialize_adapter(pci_device_identifier));
     return adapter;
 }
 
-UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT BochsGPUAdapter::BochsGPUAdapter(PCI::DeviceIdentifier const& device_identifier)
     : PCI::Device(const_cast<PCI::DeviceIdentifier&>(device_identifier))
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> BochsGraphicsAdapter::initialize_adapter(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<void> BochsGPUAdapter::initialize_adapter(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
     // Note: Bochs (the real bochs graphics adapter in the Bochs emulator) uses revision ID of 0x0

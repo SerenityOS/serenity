@@ -1,8 +1,8 @@
-# Introduction to the Kernel Graphics Subsystem
+# Introduction to the Kernel GPU Subsystem
 
-## What is the Kernel Graphics Subsystem?
+## What is the Kernel GPU Subsystem?
 
-The Kernel Graphics Subsystem is the kernel subsystem that is responsible to
+The Kernel GPU Subsystem is the kernel subsystem that is responsible to
 manage all graphics devices, framebuffers, hardware 3D acceleration, memory mappings, etc.
 
 ## Responsibilities
@@ -73,7 +73,7 @@ like with VGA, which ensured everyone are conforming to well-known and expected 
 To try to cope with the dire situation, the VBE (Video BIOS extensions) standard was created to
 help BIOS and operating system vendors to be able to get high resolution framebuffer from
 any hardware that complied to the standard. When UEFI came along, the vendors agreed
-to create the Graphics output protocol (known as UEFI GOP), to provide the same set of features
+to create the GPU output protocol (known as UEFI GOP), to provide the same set of features
 that VBE had, but now is usable from 64-bit kernel code as long as the kernel didn't shutdown 
 the UEFI services (which it really should do) after completing the boot process.
 
@@ -152,7 +152,7 @@ console. Therefore, the SerenityOS kernel will probably never support pure VGA f
 That technology was good for operating systems in the 90s, but is not usable anymore.
 
 By doing so, we ensure that legacy cruft is not introduced in the Kernel space. This indeed
-helps keeping the Graphics subsystem lean and flexible to future changes.
+helps keeping the GPU subsystem lean and flexible to future changes.
 
 ## What about the Video BIOS Extensions? It can gives high resolution framebuffers without writing native drivers!
 
@@ -198,17 +198,17 @@ By default, we try to fully-initialize the graphics subsystem, which means we it
 over all PCI devices, searching for VGA compatible devices or Display Controller devices.
 
 We currently natively support QEMU std-vga (and bochs-display) device, VirtIO GPU, VMWare SVGA II adapter,
-and Intel Graphics (Gen 4 only). We try our best to avoid using a pre-initialized framebuffer, so
+and Intel GPU (Gen 4 only). We try our best to avoid using a pre-initialized framebuffer, so
 if we detect any of the said devices, we simply ignore the pre-initialized framebuffer from the bootloader.
 
-The user can choose to use a different condition of the Graphics subsystem, but hardware limitations
+The user can choose to use a different condition of the GPU subsystem, but hardware limitations
 such as lack of supported hardware can either lead the Kernel to use a pre-initialized framebuffer
 or completely "abandon" graphics usage (as was mentioned in third condition), making the system usable
 only through a VGA 80x25 text mode console.
 
 # Userspace APIs
 
-## Unified Graphics IOCTLs
+## Unified GPU IOCTLs
 
 All graphics ioctls are currently unified and being implemented in one final method
 of the `DisplayDevice` class, to keep implementation consistent as much as possible.

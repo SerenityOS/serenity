@@ -52,7 +52,7 @@ public:
     };
 
     ErrorOr<void> set_mode_setting_timings(Badge<IntelDisplayConnectorGroup>, DisplayConnector::ModeSetting const&);
-    virtual ErrorOr<void> set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGraphics::PLLSettings const& settings, size_t dac_multiplier) = 0;
+    virtual ErrorOr<void> set_dpll_settings(Badge<IntelDisplayConnectorGroup>, IntelGPU::PLLSettings const& settings, size_t dac_multiplier) = 0;
     virtual ErrorOr<void> enable_dpll_without_vga(Badge<IntelDisplayConnectorGroup>) = 0;
     virtual ErrorOr<void> disable_dpll(Badge<IntelDisplayConnectorGroup>) = 0;
 

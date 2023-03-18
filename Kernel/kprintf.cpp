@@ -21,7 +21,7 @@
 #include <Kernel/kstdio.h>
 
 namespace Kernel {
-extern Atomic<Graphics::Console*> g_boot_console;
+extern Atomic<GPU::Console*> g_boot_console;
 }
 
 static bool s_serial_debug_enabled;

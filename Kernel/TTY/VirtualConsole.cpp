@@ -194,55 +194,55 @@ UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
     VERIFY_NOT_REACHED();
 }
 
-static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Color::ANSIColor color)
+static inline GPU::Console::Color ansi_color_to_standard_vga_color(VT::Color::ANSIColor color)
 {
     switch (color) {
     case VT::Color::ANSIColor::DefaultBackground:
     case VT::Color::ANSIColor::Black:
-        return Graphics::Console::Color::Black;
+        return GPU::Console::Color::Black;
     case VT::Color::ANSIColor::Red:
-        return Graphics::Console::Color::Red;
+        return GPU::Console::Color::Red;
     case VT::Color::ANSIColor::Green:
-        return Graphics::Console::Color::Green;
+        return GPU::Console::Color::Green;
     case VT::Color::ANSIColor::Yellow:
         // VGA only has bright yellow, and treats normal yellow as a brownish orange color.
-        return Graphics::Console::Color::Brown;
+        return GPU::Console::Color::Brown;
     case VT::Color::ANSIColor::Blue:
-        return Graphics::Console::Color::Blue;
+        return GPU::Console::Color::Blue;
     case VT::Color::ANSIColor::Magenta:
-        return Graphics::Console::Color::Magenta;
+        return GPU::Console::Color::Magenta;
     case VT::Color::ANSIColor::Cyan:
-        return Graphics::Console::Color::Cyan;
+        return GPU::Console::Color::Cyan;
     case VT::Color::ANSIColor::DefaultForeground:
     case VT::Color::ANSIColor::White:
-        return Graphics::Console::Color::LightGray;
+        return GPU::Console::Color::LightGray;
     case VT::Color::ANSIColor::BrightBlack:
-        return Graphics::Console::Color::DarkGray;
+        return GPU::Console::Color::DarkGray;
     case VT::Color::ANSIColor::BrightRed:
-        return Graphics::Console::Color::BrightRed;
+        return GPU::Console::Color::BrightRed;
     case VT::Color::ANSIColor::BrightGreen:
-        return Graphics::Console::Color::BrightGreen;
+        return GPU::Console::Color::BrightGreen;
     case VT::Color::ANSIColor::BrightYellow:
-        return Graphics::Console::Color::Yellow;
+        return GPU::Console::Color::Yellow;
     case VT::Color::ANSIColor::BrightBlue:
-        return Graphics::Console::Color::BrightBlue;
+        return GPU::Console::Color::BrightBlue;
     case VT::Color::ANSIColor::BrightMagenta:
-        return Graphics::Console::Color::BrightMagenta;
+        return GPU::Console::Color::BrightMagenta;
     case VT::Color::ANSIColor::BrightCyan:
-        return Graphics::Console::Color::BrightCyan;
+        return GPU::Console::Color::BrightCyan;
     case VT::Color::ANSIColor::BrightWhite:
-        return Graphics::Console::Color::White;
+        return GPU::Console::Color::White;
     }
     VERIFY_NOT_REACHED();
 }
 
-static inline Graphics::Console::Color terminal_to_standard_color(VT::Color color)
+static inline GPU::Console::Color terminal_to_standard_color(VT::Color color)
 {
     switch (color.kind()) {
     case VT::Color::Kind::Named:
         return ansi_color_to_standard_vga_color(color.as_named());
     default:
-        return Graphics::Console::Color::LightGray;
+        return GPU::Console::Color::LightGray;
     }
 }
 
@@ -311,7 +311,7 @@ void VirtualConsole::flush_dirty_lines()
 
             auto foreground_color = terminal_to_standard_color(cell.attribute.effective_foreground_color());
             if (has_flag(cell.attribute.flags, VT::Attribute::Flags::Bold))
-                foreground_color = (Graphics::Console::Color)((u8)foreground_color | 0x08);
+                foreground_color = (GPU::Console::Color)((u8)foreground_color | 0x08);
             GPUManagement::the().console()->write(column,
                 visual_row,
                 ((u8)cell.ch < 128 ? cell.ch : '?'),

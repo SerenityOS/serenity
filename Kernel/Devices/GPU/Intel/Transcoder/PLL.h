@@ -9,7 +9,7 @@
 #include <AK/Optional.h>
 #include <Kernel/Devices/GPU/Intel/Definitions.h>
 
-namespace Kernel::IntelGraphics {
+namespace Kernel::IntelGPU {
 
 PLLMaxSettings const& pll_max_settings_for_generation(Generation);
 Optional<PLLSettings> create_pll_settings(Generation, u64 target_frequency, u64 reference_clock);

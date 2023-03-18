@@ -139,7 +139,7 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_bpp;
 READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
-Atomic<Graphics::Console*> g_boot_console;
+Atomic<GPU::Console*> g_boot_console;
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 {
@@ -198,9 +198,9 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     // We do so we can see the output on the screen as soon as possible.
     if (!kernel_command_line().is_early_boot_console_disabled()) {
         if (!multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+            g_boot_console = &try_make_lock_ref_counted<GPU::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
         } else {
-            g_boot_console = &Graphics::VGATextModeConsole::initialize().leak_ref();
+            g_boot_console = &GPU::VGATextModeConsole::initialize().leak_ref();
         }
     }
     dmesgln("Starting SerenityOS...");

@@ -8,7 +8,7 @@
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/WorkQueue.h>
 
-namespace Kernel::Graphics::VirtIOGPU {
+namespace Kernel::GPU::VirtIOGPU {
 
 constexpr static AK::Time refresh_interval = AK::Time::from_milliseconds(16);
 

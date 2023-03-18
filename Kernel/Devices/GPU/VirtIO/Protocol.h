@@ -10,7 +10,7 @@
 
 #define VIRTIO_GPU_MAX_SCANOUTS 16
 
-namespace Kernel::Graphics::VirtIOGPU {
+namespace Kernel::GPU::VirtIOGPU {
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ContextID);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ResourceID);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
@@ -33,7 +33,7 @@ AK_TYPEDEF_DISTINCT_ORDERED_ID(u32, ScanoutID);
 #define VIRGL_BIND_CUSTOM (1 << 17)
 #define VIRGL_BIND_SCANOUT (1 << 18)
 
-namespace Kernel::Graphics::VirtIOGPU::Protocol {
+namespace Kernel::GPU::VirtIOGPU::Protocol {
 
 // Specification equivalent: enum virtio_gpu_ctrl_type
 enum class CommandType : u32 {

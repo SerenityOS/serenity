@@ -11,51 +11,51 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
+#include <Kernel/Devices/GPU/VMWare/Adapter.h>
 #include <Kernel/Devices/GPU/VMWare/Definitions.h>
 #include <Kernel/Devices/GPU/VMWare/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VMWare/GraphicsAdapter.h>
 #include <Kernel/IOWindow.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
 
-ErrorOr<bool> VMWareGraphicsAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<bool> VMWareGPUAdapter::probe(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     PCI::HardwareID id = pci_device_identifier.hardware_id();
     // Note: We only support VMWare SVGA II adapter
     return id.vendor_id == PCI::VendorID::VMWare && id.device_id == 0x0405;
 }
 
-ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VMWareGraphicsAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> VMWareGPUAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto registers_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGraphicsAdapter(pci_device_identifier, move(registers_io_window))));
+    auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VMWareGPUAdapter(pci_device_identifier, move(registers_io_window))));
     TRY(adapter->initialize_adapter());
     return adapter;
 }
 
-UNMAP_AFTER_INIT VMWareGraphicsAdapter::VMWareGraphicsAdapter(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
+UNMAP_AFTER_INIT VMWareGPUAdapter::VMWareGPUAdapter(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> registers_io_window)
     : PCI::Device(const_cast<PCI::DeviceIdentifier&>(pci_device_identifier))
     , m_registers_io_window(move(registers_io_window))
 {
     dbgln("VMWare SVGA @ {}, {}", pci_device_identifier.address(), m_registers_io_window);
 }
 
-u32 VMWareGraphicsAdapter::read_io_register(VMWareDisplayRegistersOffset register_offset) const
+u32 VMWareGPUAdapter::read_io_register(VMWareDisplayRegistersOffset register_offset) const
 {
     SpinlockLocker locker(m_io_access_lock);
     m_registers_io_window->write32(0, to_underlying(register_offset));
     return m_registers_io_window->read32_unaligned(1);
 }
-void VMWareGraphicsAdapter::write_io_register(VMWareDisplayRegistersOffset register_offset, u32 value)
+void VMWareGPUAdapter::write_io_register(VMWareDisplayRegistersOffset register_offset, u32 value)
 {
     SpinlockLocker locker(m_io_access_lock);
     m_registers_io_window->write32(0, to_underlying(register_offset));
     m_registers_io_window->write32_unaligned(1, value);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::negotiate_device_version()
+UNMAP_AFTER_INIT ErrorOr<void> VMWareGPUAdapter::negotiate_device_version()
 {
     write_io_register(VMWareDisplayRegistersOffset::ID, vmware_svga_version_2_id);
     auto accepted_version = read_io_register(VMWareDisplayRegistersOffset::ID);
@@ -65,7 +65,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::negotiate_device_version()
     return Error::from_errno(ENOTSUP);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers()
+UNMAP_AFTER_INIT ErrorOr<void> VMWareGPUAdapter::initialize_fifo_registers()
 {
     auto framebuffer_size = read_io_register(VMWareDisplayRegistersOffset::FB_SIZE);
     auto fifo_size = read_io_register(VMWareDisplayRegistersOffset::MEM_SIZE);
@@ -85,7 +85,7 @@ UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_fifo_registers(
     return {};
 }
 
-UNMAP_AFTER_INIT void VMWareGraphicsAdapter::print_svga_capabilities() const
+UNMAP_AFTER_INIT void VMWareGPUAdapter::print_svga_capabilities() const
 {
     auto svga_capabilities = read_io_register(VMWareDisplayRegistersOffset::CAPABILITIES);
     dbgln("VMWare SVGA capabilities (raw {:x}):", svga_capabilities);
@@ -123,7 +123,7 @@ UNMAP_AFTER_INIT void VMWareGraphicsAdapter::print_svga_capabilities() const
         dbgln("\tScreen object 2");
 }
 
-ErrorOr<void> VMWareGraphicsAdapter::modeset_primary_screen_resolution(Badge<VMWareDisplayConnector>, size_t width, size_t height)
+ErrorOr<void> VMWareGPUAdapter::modeset_primary_screen_resolution(Badge<VMWareDisplayConnector>, size_t width, size_t height)
 {
     auto max_width = read_io_register(VMWareDisplayRegistersOffset::MAX_WIDTH);
     auto max_height = read_io_register(VMWareDisplayRegistersOffset::MAX_HEIGHT);
@@ -133,23 +133,23 @@ ErrorOr<void> VMWareGraphicsAdapter::modeset_primary_screen_resolution(Badge<VMW
     return {};
 }
 
-size_t VMWareGraphicsAdapter::primary_screen_width(Badge<VMWareDisplayConnector>) const
+size_t VMWareGPUAdapter::primary_screen_width(Badge<VMWareDisplayConnector>) const
 {
     SpinlockLocker locker(m_operation_lock);
     return read_io_register(VMWareDisplayRegistersOffset::WIDTH);
 }
-size_t VMWareGraphicsAdapter::primary_screen_height(Badge<VMWareDisplayConnector>) const
+size_t VMWareGPUAdapter::primary_screen_height(Badge<VMWareDisplayConnector>) const
 {
     SpinlockLocker locker(m_operation_lock);
     return read_io_register(VMWareDisplayRegistersOffset::HEIGHT);
 }
-size_t VMWareGraphicsAdapter::primary_screen_pitch(Badge<VMWareDisplayConnector>) const
+size_t VMWareGPUAdapter::primary_screen_pitch(Badge<VMWareDisplayConnector>) const
 {
     SpinlockLocker locker(m_operation_lock);
     return read_io_register(VMWareDisplayRegistersOffset::BYTES_PER_LINE);
 }
 
-void VMWareGraphicsAdapter::primary_screen_flush(Badge<VMWareDisplayConnector>, size_t current_width, size_t current_height)
+void VMWareGPUAdapter::primary_screen_flush(Badge<VMWareDisplayConnector>, size_t current_width, size_t current_height)
 {
     SpinlockLocker locker(m_operation_lock);
     m_fifo_registers->start = 16;
@@ -164,7 +164,7 @@ void VMWareGraphicsAdapter::primary_screen_flush(Badge<VMWareDisplayConnector>, 
     write_io_register(VMWareDisplayRegistersOffset::SYNC, 1);
 }
 
-void VMWareGraphicsAdapter::modeset_primary_screen_resolution(size_t width, size_t height)
+void VMWareGPUAdapter::modeset_primary_screen_resolution(size_t width, size_t height)
 {
     SpinlockLocker locker(m_operation_lock);
     write_io_register(VMWareDisplayRegistersOffset::ENABLE, 0);
@@ -175,7 +175,7 @@ void VMWareGraphicsAdapter::modeset_primary_screen_resolution(size_t width, size
     write_io_register(VMWareDisplayRegistersOffset::CONFIG_DONE, 1);
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> VMWareGraphicsAdapter::initialize_adapter()
+UNMAP_AFTER_INIT ErrorOr<void> VMWareGPUAdapter::initialize_adapter()
 {
     TRY(negotiate_device_version());
     print_svga_capabilities();

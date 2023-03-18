@@ -7,7 +7,7 @@
 #include <Kernel/Devices/GPU/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 NonnullLockRefPtr<ContiguousFramebufferConsole> ContiguousFramebufferConsole::initialize(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
 {

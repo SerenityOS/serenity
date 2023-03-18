@@ -10,7 +10,7 @@
 #include <Kernel/Devices/GPU/VirtIO/DisplayConnector.h>
 #include <Kernel/TimerQueue.h>
 
-namespace Kernel::Graphics::VirtIOGPU {
+namespace Kernel::GPU::VirtIOGPU {
 
 class Console final : public GenericFramebufferConsole {
 public:

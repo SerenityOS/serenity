@@ -61,7 +61,7 @@ public:
         No,
     };
 
-    enum class GraphicsSubsystemMode {
+    enum class GPUSubsystemMode {
         Enabled,
         Limited,
         Disabled
@@ -82,7 +82,7 @@ public:
     [[nodiscard]] bool is_pci_disabled() const;
     [[nodiscard]] bool is_legacy_time_enabled() const;
     [[nodiscard]] bool is_pc_speaker_enabled() const;
-    [[nodiscard]] GraphicsSubsystemMode graphics_subsystem_mode() const;
+    [[nodiscard]] GPUSubsystemMode gpu_subsystem_mode() const;
     [[nodiscard]] I8042PresenceMode i8042_presence_mode() const;
     [[nodiscard]] bool is_force_pio() const;
     [[nodiscard]] AcpiFeatureLevel acpi_feature_level() const;

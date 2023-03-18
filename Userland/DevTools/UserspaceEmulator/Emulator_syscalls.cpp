@@ -1114,13 +1114,13 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
         return syscall(SC_ioctl, fd, request, 0);
     case TIOCSTI:
         return -EIO;
-    case GRAPHICS_IOCTL_GET_PROPERTIES: {
+    case GPU_IOCTL_GET_PROPERTIES: {
         size_t size = 0;
         auto rc = syscall(SC_ioctl, fd, request, &size);
         mmu().copy_to_vm(arg, &size, sizeof(size));
         return rc;
     }
-    case GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER:
+    case GPU_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER:
         return syscall(SC_ioctl, fd, request, arg);
     case FIONBIO: {
         int enabled;

@@ -11,7 +11,7 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 
-namespace Kernel::Graphics::VirtIOGPU {
+namespace Kernel::GPU::VirtIOGPU {
 
 enum class VirGLCommand : u32 {
     NOP = 0,
@@ -90,19 +90,19 @@ union ClearType {
 
 namespace Kernel {
 
-class VirtIOGraphicsAdapter;
+class VirtIOGPUAdapter;
 class VirtIOGPU3DDevice : public CharacterDevice {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> try_create(VirtIOGraphicsAdapter&);
+    static ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> try_create(VirtIOGPUAdapter&);
 
 private:
-    VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id);
+    VirtIOGPU3DDevice(VirtIOGPUAdapter const& gpu_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, GPU::VirtIOGPU::ContextID kernel_context_id);
 
     class PerContextState final : public AtomicRefCounted<PerContextState> {
     public:
-        static ErrorOr<LockRefPtr<PerContextState>> try_create(Graphics::VirtIOGPU::ContextID context_id)
+        static ErrorOr<LockRefPtr<PerContextState>> try_create(GPU::VirtIOGPU::ContextID context_id)
         {
             auto region_result = TRY(MM.allocate_kernel_region(
                 NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
@@ -111,13 +111,13 @@ private:
                 AllocationStrategy::AllocateNow));
             return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PerContextState(context_id, move(region_result))));
         }
-        Graphics::VirtIOGPU::ContextID context_id() { return m_context_id; }
+        GPU::VirtIOGPU::ContextID context_id() { return m_context_id; }
         Memory::Region& transfer_buffer_region() { return *m_transfer_buffer_region; }
 
     private:
         PerContextState() = delete;
-        explicit PerContextState(Graphics::VirtIOGPU::ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region);
-        Graphics::VirtIOGPU::ContextID m_context_id;
+        explicit PerContextState(GPU::VirtIOGPU::ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region);
+        GPU::VirtIOGPU::ContextID m_context_id;
         OwnPtr<Memory::Region> m_transfer_buffer_region;
     };
 
@@ -133,9 +133,9 @@ private:
 private:
     ErrorOr<LockRefPtr<PerContextState>> get_context_for_description(OpenFileDescription&);
 
-    NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
+    NonnullLockRefPtr<VirtIOGPUAdapter> m_gpu_adapter;
     // Context used for kernel operations (e.g. flushing resources to scanout)
-    Graphics::VirtIOGPU::ContextID m_kernel_context_id;
+    GPU::VirtIOGPU::ContextID m_kernel_context_id;
     HashMap<OpenFileDescription*, LockRefPtr<PerContextState>> m_context_state_lookup;
     // Memory management for backing buffers
     NonnullOwnPtr<Memory::Region> m_transfer_buffer_region;

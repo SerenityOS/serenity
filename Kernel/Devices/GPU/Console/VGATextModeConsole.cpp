@@ -8,7 +8,7 @@
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Sections.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 UNMAP_AFTER_INIT NonnullLockRefPtr<VGATextModeConsole> VGATextModeConsole::initialize()
 {

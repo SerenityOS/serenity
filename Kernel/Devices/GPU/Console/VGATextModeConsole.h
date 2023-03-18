@@ -10,7 +10,7 @@
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Locking/Spinlock.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 class VGATextModeConsole final : public Console {
 public:
     static NonnullLockRefPtr<VGATextModeConsole> initialize();

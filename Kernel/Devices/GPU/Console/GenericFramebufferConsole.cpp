@@ -8,7 +8,7 @@
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 // Note: This bitmap was generated from CathodeRegular10.font
 constexpr unsigned char const font_cathode_8x16[128][16] = {

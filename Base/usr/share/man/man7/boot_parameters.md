@@ -45,7 +45,7 @@ List of options:
   but only if **`acpi`** is set to **`limited`** or **`on`**, and a `MADT` (APIC) table is available.
   Otherwise, the kernel will fallback to use the i8259 PICs.
 
-* **`graphics_subsystem_mode`** - This parameter expects one of the following values. **`on`**- Boot into the graphical environment if possible (default). **`off`** - Boot into text mode, don't initialize any driver. **`limited`** - Boot into the pre-defined framebuffer that the bootloader
+* **`gpu_subsystem_mode`** - This parameter expects one of the following values. **`on`**- Boot into the graphical environment if possible (default). **`off`** - Boot into text mode, don't initialize any driver. **`limited`** - Boot into the pre-defined framebuffer that the bootloader
 has set up before booting the Kernel, don't initialize any driver.
 
 * **`force_pio`** - If present on the command line, the IDE controllers will be force into PIO mode when initialized IDE Channels on boot.
@@ -85,7 +85,7 @@ has set up before booting the Kernel, don't initialize any driver.
 * **`system_mode`** - This parameter is not interpreted by the Kernel, and is made available at `/sys/kernel/system_mode`. SystemServer uses it to select the set of services that should be started. Common values are:
   - **`graphical`** (default) - Boots the system in the normal graphical mode.
   - **`self-test`** - Boots the system in self-test, validation mode.
-  - **`text`** - Boots the system in text only mode. (You may need to also set **`graphics_subsystem_mode=off`**.)
+  - **`text`** - Boots the system in text only mode. (You may need to also set **`gpu_subsystem_mode=off`**.)
 
 * **`time`** - This parameter expects one of the following values. **`modern`** - This configures the system to attempt
   to use High Precision Event Timer (HPET) on boot. **`legacy`** - Configures the system to use the legacy programmable interrupt

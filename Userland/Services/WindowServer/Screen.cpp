@@ -14,7 +14,7 @@
 #include "WindowManager.h"
 #include <AK/Debug.h>
 #include <AK/Format.h>
-#include <Kernel/API/Graphics.h>
+#include <Kernel/API/GPU.h>
 #include <Kernel/API/MousePacket.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -325,8 +325,8 @@ bool Screen::set_resolution(bool initial)
 
     ErrorOr<void> return_value = Error::from_errno(EINVAL);
     {
-        GraphicsHeadModeSetting requested_mode_setting;
-        memset(&requested_mode_setting, 0, sizeof(GraphicsHeadModeSetting));
+        GPUHeadModeSetting requested_mode_setting;
+        memset(&requested_mode_setting, 0, sizeof(GPUHeadModeSetting));
         requested_mode_setting.horizontal_stride = info.resolution.width() * 4;
         requested_mode_setting.pixel_clock_in_khz = 0;
         requested_mode_setting.horizontal_active = info.resolution.width();

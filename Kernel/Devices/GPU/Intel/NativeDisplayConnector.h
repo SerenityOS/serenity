@@ -75,6 +75,6 @@ private:
     Type const m_type { Type::Analog };
     ConnectorIndex const m_connector_index { 0 };
     NonnullLockRefPtr<IntelDisplayConnectorGroup> m_parent_connector_group;
-    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<GPU::GenericFramebufferConsole> m_framebuffer_console;
 };
 }

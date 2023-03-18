@@ -12,15 +12,15 @@
 
 namespace Kernel {
 
-class SysFSGraphicsDirectory : public SysFSDirectory {
+class SysFSGPUDirectory : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
 public:
     virtual StringView name() const override { return "graphics"sv; }
-    static NonnullLockRefPtr<SysFSGraphicsDirectory> must_create(SysFSDevicesDirectory const&);
+    static NonnullLockRefPtr<SysFSGPUDirectory> must_create(SysFSDevicesDirectory const&);
 
 private:
-    explicit SysFSGraphicsDirectory(SysFSDevicesDirectory const&);
+    explicit SysFSGPUDirectory(SysFSDevicesDirectory const&);
 };
 
 }

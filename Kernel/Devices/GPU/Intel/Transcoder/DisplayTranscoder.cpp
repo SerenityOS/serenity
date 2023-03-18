@@ -26,31 +26,31 @@ ErrorOr<void> IntelDisplayTranscoder::set_mode_setting_timings(Badge<IntelDispla
 {
     SpinlockLocker locker(m_access_lock);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "htotal - {}, {}", (mode_setting.horizontal_active - 1), (mode_setting.horizontal_total() - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "htotal - {}, {}", (mode_setting.horizontal_active - 1), (mode_setting.horizontal_total() - 1));
     m_shadow_registers.horizontal_total = ((mode_setting.horizontal_active - 1) | (mode_setting.horizontal_total() - 1) << 16);
     m_transcoder_registers->horizontal_total = ((mode_setting.horizontal_active - 1) | (mode_setting.horizontal_total() - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "hblank - {}, {}", (mode_setting.horizontal_blanking_start() - 1), (mode_setting.horizontal_blanking_start() + mode_setting.horizontal_blank_pixels - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "hblank - {}, {}", (mode_setting.horizontal_blanking_start() - 1), (mode_setting.horizontal_blanking_start() + mode_setting.horizontal_blank_pixels - 1));
     m_shadow_registers.horizontal_blank = ((mode_setting.horizontal_blanking_start() - 1) | (mode_setting.horizontal_blanking_start() + mode_setting.horizontal_blank_pixels - 1) << 16);
     m_transcoder_registers->horizontal_blank = ((mode_setting.horizontal_blanking_start() - 1) | (mode_setting.horizontal_blanking_start() + mode_setting.horizontal_blank_pixels - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "hsync - {}, {}", (mode_setting.horizontal_sync_start() - 1), (mode_setting.horizontal_sync_end() - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "hsync - {}, {}", (mode_setting.horizontal_sync_start() - 1), (mode_setting.horizontal_sync_end() - 1));
     m_shadow_registers.horizontal_sync = ((mode_setting.horizontal_sync_start() - 1) | (mode_setting.horizontal_sync_end() - 1) << 16);
     m_transcoder_registers->horizontal_sync = ((mode_setting.horizontal_sync_start() - 1) | (mode_setting.horizontal_sync_end() - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vtotal - {}, {}", (mode_setting.vertical_active - 1), (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "vtotal - {}, {}", (mode_setting.vertical_active - 1), (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1));
     m_shadow_registers.vertical_total = ((mode_setting.vertical_active - 1) | (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1) << 16);
     m_transcoder_registers->vertical_total = ((mode_setting.vertical_active - 1) | (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vblank - {}, {}", (mode_setting.vertical_blanking_start() - 1), (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "vblank - {}, {}", (mode_setting.vertical_blanking_start() - 1), (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1));
     m_shadow_registers.vertical_blank = ((mode_setting.vertical_blanking_start() - 1) | (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1) << 16);
     m_transcoder_registers->vertical_blank = ((mode_setting.vertical_blanking_start() - 1) | (mode_setting.vertical_blanking_start() + mode_setting.vertical_blank_lines - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "vsync - {}, {}", (mode_setting.vertical_sync_start() - 1), (mode_setting.vertical_sync_end() - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "vsync - {}, {}", (mode_setting.vertical_sync_start() - 1), (mode_setting.vertical_sync_end() - 1));
     m_shadow_registers.vertical_sync = ((mode_setting.vertical_sync_start() - 1) | (mode_setting.vertical_sync_end() - 1) << 16);
     m_transcoder_registers->vertical_sync = ((mode_setting.vertical_sync_start() - 1) | (mode_setting.vertical_sync_end() - 1) << 16);
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "sourceSize - {}, {}", (mode_setting.vertical_active - 1), (mode_setting.horizontal_active - 1));
+    dbgln_if(INTEL_GPU_DEBUG, "sourceSize - {}, {}", (mode_setting.vertical_active - 1), (mode_setting.horizontal_active - 1));
     m_shadow_registers.pipe_source = ((mode_setting.vertical_active - 1) | (mode_setting.horizontal_active - 1) << 16);
     m_transcoder_registers->pipe_source = ((mode_setting.vertical_active - 1) | (mode_setting.horizontal_active - 1) << 16);
     return {};
@@ -61,7 +61,7 @@ ErrorOr<void> IntelDisplayTranscoder::disable_pipe(Badge<IntelDisplayConnectorGr
     SpinlockLocker locker(m_access_lock);
     m_pipe_registers->pipe_configuration = 0;
     m_shadow_registers.pipe_conf = 0;
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Disabling Pipe");
+    dbgln_if(INTEL_GPU_DEBUG, "Disabling Pipe");
     size_t milliseconds_elapsed = 0;
     while (milliseconds_elapsed < 100) {
         u32 value = m_pipe_registers->pipe_configuration;
@@ -89,7 +89,7 @@ ErrorOr<void> IntelDisplayTranscoder::enable_pipe(Badge<IntelDisplayConnectorGro
     //  Cursor and Display planes.
     m_pipe_registers->pipe_configuration = (1 << 31) | (1 << 24);
     m_shadow_registers.pipe_conf = (1 << 31) | (1 << 24);
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Enabling Pipe");
+    dbgln_if(INTEL_GPU_DEBUG, "Enabling Pipe");
     size_t milliseconds_elapsed = 0;
     while (milliseconds_elapsed < 100) {
         u32 value = m_pipe_registers->pipe_configuration;

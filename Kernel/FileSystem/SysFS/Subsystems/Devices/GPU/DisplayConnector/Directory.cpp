@@ -6,9 +6,9 @@
 
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/GPU/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/Directory.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Storage/StorageDevice.h>
 
@@ -16,7 +16,7 @@ namespace Kernel {
 
 static SysFSDisplayConnectorsDirectory* s_the { nullptr };
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDisplayConnectorsDirectory> SysFSDisplayConnectorsDirectory::must_create(SysFSGraphicsDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDisplayConnectorsDirectory> SysFSDisplayConnectorsDirectory::must_create(SysFSGPUDirectory const& parent_directory)
 {
     auto directory = adopt_lock_ref(*new (nothrow) SysFSDisplayConnectorsDirectory(parent_directory));
     s_the = directory;
@@ -46,7 +46,7 @@ void SysFSDisplayConnectorsDirectory::unplug(Badge<DisplayConnector>, SysFSDirec
     }));
 }
 
-UNMAP_AFTER_INIT SysFSDisplayConnectorsDirectory::SysFSDisplayConnectorsDirectory(SysFSGraphicsDirectory const& parent_directory)
+UNMAP_AFTER_INIT SysFSDisplayConnectorsDirectory::SysFSDisplayConnectorsDirectory(SysFSGPUDirectory const& parent_directory)
     : SysFSDirectory(parent_directory)
 {
 }

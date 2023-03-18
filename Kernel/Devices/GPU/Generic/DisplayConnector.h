@@ -47,6 +47,6 @@ protected:
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<GPU::GenericFramebufferConsole> m_framebuffer_console;
 };
 }

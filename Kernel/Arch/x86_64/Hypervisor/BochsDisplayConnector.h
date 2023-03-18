@@ -18,7 +18,7 @@ namespace Kernel {
 
 class BochsDisplayConnector
     : public DisplayConnector {
-    friend class BochsGraphicsAdapter;
+    friend class BochsGPUAdapter;
     friend class DeviceManagement;
     friend class GPUManagement;
 
@@ -53,6 +53,6 @@ private:
     virtual void enable_console() override final;
     virtual void disable_console() override final;
 
-    LockRefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
+    LockRefPtr<GPU::GenericFramebufferConsole> m_framebuffer_console;
 };
 }

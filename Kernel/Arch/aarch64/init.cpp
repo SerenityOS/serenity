@@ -65,7 +65,7 @@ ALWAYS_INLINE static Processor& bootstrap_processor()
     return (Processor&)bootstrap_processor_storage;
 }
 
-Atomic<Graphics::Console*> g_boot_console;
+Atomic<GPU::Console*> g_boot_console;
 
 VirtualConsole* tty0;
 ProcessID g_init_pid { 0 };
@@ -162,8 +162,8 @@ extern "C" [[noreturn]] void init()
 
     auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
-        g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(PhysicalAddress((PhysicalPtr)framebuffer.gpu_buffer()), framebuffer.width(), framebuffer.height(), framebuffer.pitch()).value().leak_ref();
-        draw_logo(static_cast<Graphics::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
+        g_boot_console = &try_make_lock_ref_counted<GPU::BootFramebufferConsole>(PhysicalAddress((PhysicalPtr)framebuffer.gpu_buffer()), framebuffer.width(), framebuffer.height(), framebuffer.pitch()).value().leak_ref();
+        draw_logo(static_cast<GPU::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
     }
 
     initialize_interrupts();

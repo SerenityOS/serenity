@@ -7,21 +7,21 @@
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/VirGL.h>
 #include <Kernel/Devices/GPU/Management.h>
+#include <Kernel/Devices/GPU/VirtIO/Adapter.h>
 #include <Kernel/Devices/GPU/VirtIO/Console.h>
 #include <Kernel/Devices/GPU/VirtIO/GPU3DDevice.h>
-#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 
-VirtIOGPU3DDevice::PerContextState::PerContextState(Graphics::VirtIOGPU::ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region)
+VirtIOGPU3DDevice::PerContextState::PerContextState(GPU::VirtIOGPU::ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region)
     : m_context_id(context_id)
     , m_transfer_buffer_region(move(transfer_buffer_region))
 {
 }
 
-ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGraphicsAdapter& adapter)
+ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(VirtIOGPUAdapter& adapter)
 {
     // Setup memory transfer region
     auto region_result = TRY(MM.allocate_kernel_region(
@@ -33,9 +33,9 @@ ErrorOr<NonnullLockRefPtr<VirtIOGPU3DDevice>> VirtIOGPU3DDevice::try_create(Virt
     return TRY(DeviceManagement::try_create_device<VirtIOGPU3DDevice>(adapter, move(region_result), kernel_context_id));
 }
 
-VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id)
+VirtIOGPU3DDevice::VirtIOGPU3DDevice(VirtIOGPUAdapter const& gpu_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, GPU::VirtIOGPU::ContextID kernel_context_id)
     : CharacterDevice(28, 0)
-    , m_graphics_adapter(graphics_adapter)
+    , m_gpu_adapter(gpu_adapter)
     , m_kernel_context_id(kernel_context_id)
     , m_transfer_buffer_region(move(transfer_buffer_region))
 {
@@ -62,9 +62,9 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
     case VIRGL_IOCTL_CREATE_CONTEXT: {
         if (m_context_state_lookup.contains(&description))
             return EEXIST;
-        SpinlockLocker locker(m_graphics_adapter->operation_lock());
+        SpinlockLocker locker(m_gpu_adapter->operation_lock());
         // TODO: Delete the context if it fails to be set in m_context_state_lookup
-        auto context_id = TRY(m_graphics_adapter->create_context());
+        auto context_id = TRY(m_gpu_adapter->create_context());
         LockRefPtr<PerContextState> per_context_state = TRY(PerContextState::try_create(context_id));
         TRY(m_context_state_lookup.try_set(&description, per_context_state));
         return {};
@@ -91,10 +91,10 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
     }
     case VIRGL_IOCTL_SUBMIT_CMD: {
         auto context_id = TRY(get_context_for_description(description))->context_id();
-        SpinlockLocker locker(m_graphics_adapter->operation_lock());
+        SpinlockLocker locker(m_gpu_adapter->operation_lock());
         auto user_command_buffer = static_ptr_cast<VirGLCommandBuffer const*>(arg);
         auto command_buffer = TRY(copy_typed_from_user(user_command_buffer));
-        TRY(m_graphics_adapter->submit_command_buffer(context_id, [&](Bytes buffer) {
+        TRY(m_gpu_adapter->submit_command_buffer(context_id, [&](Bytes buffer) {
             auto num_bytes = command_buffer.num_elems * sizeof(u32);
             VERIFY(num_bytes <= buffer.size());
             MUST(copy_from_user(buffer.data(), command_buffer.data, num_bytes));
@@ -107,8 +107,8 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
         auto user_spec = static_ptr_cast<VirGL3DResourceSpec const*>(arg);
         VirGL3DResourceSpec spec = TRY(copy_typed_from_user(user_spec));
 
-        Graphics::VirtIOGPU::Protocol::Resource3DSpecification const resource_spec = {
-            .target = static_cast<Graphics::VirtIOGPU::Protocol::Gallium::PipeTextureTarget>(spec.target),
+        GPU::VirtIOGPU::Protocol::Resource3DSpecification const resource_spec = {
+            .target = static_cast<GPU::VirtIOGPU::Protocol::Gallium::PipeTextureTarget>(spec.target),
             .format = spec.format,
             .bind = spec.bind,
             .width = spec.width,
@@ -120,12 +120,12 @@ ErrorOr<void> VirtIOGPU3DDevice::ioctl(OpenFileDescription& description, unsigne
             .flags = spec.flags,
             .padding = 0,
         };
-        SpinlockLocker locker(m_graphics_adapter->operation_lock());
+        SpinlockLocker locker(m_gpu_adapter->operation_lock());
         // FIXME: What would be an appropriate resource free-ing mechanism to use in case anything
         // after this fails?
-        auto resource_id = TRY(m_graphics_adapter->create_3d_resource(resource_spec));
-        TRY(m_graphics_adapter->attach_resource_to_context(resource_id, per_context_state->context_id()));
-        TRY(m_graphics_adapter->ensure_backing_storage(resource_id, per_context_state->transfer_buffer_region(), 0, NUM_TRANSFER_REGION_PAGES * PAGE_SIZE));
+        auto resource_id = TRY(m_gpu_adapter->create_3d_resource(resource_spec));
+        TRY(m_gpu_adapter->attach_resource_to_context(resource_id, per_context_state->context_id()));
+        TRY(m_gpu_adapter->ensure_backing_storage(resource_id, per_context_state->transfer_buffer_region(), 0, NUM_TRANSFER_REGION_PAGES * PAGE_SIZE));
         spec.created_resource_id = resource_id.value();
         // FIXME: We should delete the resource we just created if we fail to copy the resource id out
         return copy_to_user(static_ptr_cast<VirGL3DResourceSpec*>(arg), &spec);

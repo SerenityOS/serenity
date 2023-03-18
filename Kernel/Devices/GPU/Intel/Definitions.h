@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Kernel::IntelGraphics {
+namespace Kernel::IntelGPU {
 
 enum class Generation {
     Gen4,

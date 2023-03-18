@@ -8,7 +8,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/GPU/Intel/Transcoder/PLL.h>
 
-namespace Kernel::IntelGraphics {
+namespace Kernel::IntelGPU {
 
 static constexpr PLLMaxSettings g35limits {
     { 20'000'000, 400'000'000 },      // values in Hz, dot_clock
@@ -46,13 +46,13 @@ Optional<PLLSettings> create_pll_settings(Generation generation, u64 target_freq
     auto& limits = pll_max_settings_for_generation(generation);
     // FIXME: Is this correct for all Intel Native graphics cards?
     settings.p2 = 10;
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Check PLL settings for ref clock of {} Hz, for target of {} Hz", reference_clock, target_frequency);
+    dbgln_if(INTEL_GPU_DEBUG, "Check PLL settings for ref clock of {} Hz, for target of {} Hz", reference_clock, target_frequency);
     u64 best_difference = 0xffffffff;
     for (settings.n = limits.n.min; settings.n <= limits.n.max; ++settings.n) {
         for (settings.m1 = limits.m1.max; settings.m1 >= limits.m1.min; --settings.m1) {
             for (settings.m2 = limits.m2.max; settings.m2 >= limits.m2.min; --settings.m2) {
                 for (settings.p1 = limits.p1.max; settings.p1 >= limits.p1.min; --settings.p1) {
-                    dbgln_if(INTEL_GRAPHICS_DEBUG, "Check PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
+                    dbgln_if(INTEL_GPU_DEBUG, "Check PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
                     if (!check_pll_settings(settings, reference_clock, limits))
                         continue;
                     auto current_dot_clock = settings.compute_dot_clock(reference_clock);
@@ -75,24 +75,24 @@ Optional<PLLSettings> create_pll_settings(Generation generation, u64 target_freq
 bool check_pll_settings(PLLSettings const& settings, size_t reference_clock, PLLMaxSettings const& limits)
 {
     if (settings.n < limits.n.min || settings.n > limits.n.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "N is invalid {}", settings.n);
+        dbgln_if(INTEL_GPU_DEBUG, "N is invalid {}", settings.n);
         return false;
     }
     if (settings.m1 < limits.m1.min || settings.m1 > limits.m1.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m1 is invalid {}", settings.m1);
+        dbgln_if(INTEL_GPU_DEBUG, "m1 is invalid {}", settings.m1);
         return false;
     }
     if (settings.m2 < limits.m2.min || settings.m2 > limits.m2.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m2 is invalid {}", settings.m2);
+        dbgln_if(INTEL_GPU_DEBUG, "m2 is invalid {}", settings.m2);
         return false;
     }
     if (settings.p1 < limits.p1.min || settings.p1 > limits.p1.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "p1 is invalid {}", settings.p1);
+        dbgln_if(INTEL_GPU_DEBUG, "p1 is invalid {}", settings.p1);
         return false;
     }
 
     if (settings.m1 <= settings.m2) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m2 is invalid {} as it is bigger than m1 {}", settings.m2, settings.m1);
+        dbgln_if(INTEL_GPU_DEBUG, "m2 is invalid {} as it is bigger than m1 {}", settings.m2, settings.m1);
         return false;
     }
 
@@ -100,11 +100,11 @@ bool check_pll_settings(PLLSettings const& settings, size_t reference_clock, PLL
     auto p = settings.compute_p();
 
     if (m < limits.m.min || m > limits.m.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "m invalid {}", m);
+        dbgln_if(INTEL_GPU_DEBUG, "m invalid {}", m);
         return false;
     }
     if (p < limits.p.min || p > limits.p.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "p invalid {}", p);
+        dbgln_if(INTEL_GPU_DEBUG, "p invalid {}", p);
         return false;
     }
 
@@ -112,11 +112,11 @@ bool check_pll_settings(PLLSettings const& settings, size_t reference_clock, PLL
     auto vco = settings.compute_vco(reference_clock);
 
     if (dot < limits.dot_clock.min || dot > limits.dot_clock.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "Dot clock invalid {}", dot);
+        dbgln_if(INTEL_GPU_DEBUG, "Dot clock invalid {}", dot);
         return false;
     }
     if (vco < limits.vco.min || vco > limits.vco.max) {
-        dbgln_if(INTEL_GRAPHICS_DEBUG, "VCO clock invalid {}", vco);
+        dbgln_if(INTEL_GPU_DEBUG, "VCO clock invalid {}", vco);
         return false;
     }
     return true;

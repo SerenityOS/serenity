@@ -19,9 +19,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation generation, MMIORegion const& first_region, MMIORegion const& second_region)
+ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGroup::try_create(Badge<IntelNativeGPUAdapter>, IntelGPU::Generation generation, MMIORegion const& first_region, MMIORegion const& second_region)
 {
-    auto registers_region = TRY(MM.allocate_kernel_region(first_region.pci_bar_paddr, first_region.pci_bar_space_length, "Intel Native Graphics Registers"sv, Memory::Region::Access::ReadWrite));
+    auto registers_region = TRY(MM.allocate_kernel_region(first_region.pci_bar_paddr, first_region.pci_bar_space_length, "Intel Native GPU Registers"sv, Memory::Region::Access::ReadWrite));
     // NOTE: 0x5100 is the offset of the start of the GMBus registers
     auto gmbus_connector = TRY(GMBusConnector::create_with_physical_address(first_region.pci_bar_paddr.offset(0x5100)));
     auto connector_group = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) IntelDisplayConnectorGroup(generation, move(gmbus_connector), move(registers_region), first_region, second_region)));
@@ -29,7 +29,7 @@ ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> IntelDisplayConnectorGrou
     return connector_group;
 }
 
-IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(IntelGraphics::Generation generation, NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const& first_region, MMIORegion const& second_region)
+IntelDisplayConnectorGroup::IntelDisplayConnectorGroup(IntelGPU::Generation generation, NonnullOwnPtr<GMBusConnector> gmbus_connector, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const& first_region, MMIORegion const& second_region)
     : m_mmio_first_region(first_region)
     , m_mmio_second_region(second_region)
     , m_assigned_mmio_registers_region(m_mmio_first_region)
@@ -56,8 +56,8 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
     Array<u8, 128> crt_edid_bytes {};
     {
         SpinlockLocker control_lock(m_control_lock);
-        TRY(m_gmbus_connector->write(Graphics::ddc2_i2c_address, 0));
-        TRY(m_gmbus_connector->read(Graphics::ddc2_i2c_address, crt_edid_bytes.data(), crt_edid_bytes.size()));
+        TRY(m_gmbus_connector->write(GPU::ddc2_i2c_address, 0));
+        TRY(m_gmbus_connector->read(GPU::ddc2_i2c_address, crt_edid_bytes.data(), crt_edid_bytes.size()));
     }
     m_connectors[0] = TRY(IntelNativeDisplayConnector::try_create_with_display_connector_group(*this, IntelNativeDisplayConnector::ConnectorIndex::PortA, IntelNativeDisplayConnector::Type::Analog, m_mmio_second_region.pci_bar_paddr, m_mmio_second_region.pci_bar_space_length));
     m_connectors[0]->set_edid_bytes({}, crt_edid_bytes);
@@ -67,9 +67,9 @@ ErrorOr<void> IntelDisplayConnectorGroup::initialize_gen4_connectors()
 ErrorOr<void> IntelDisplayConnectorGroup::initialize_connectors()
 {
 
-    // NOTE: Intel Graphics Generation 4 is pretty ancient beast, and we should not
+    // NOTE: Intel GPU Generation 4 is pretty ancient beast, and we should not
     // assume we can find a VBT for it. Just initialize the (assumed) CRT connector and be done with it.
-    if (m_generation == IntelGraphics::Generation::Gen4) {
+    if (m_generation == IntelGPU::Generation::Gen4) {
         TRY(initialize_gen4_connectors());
     } else {
         VERIFY_NOT_REACHED();
@@ -129,7 +129,7 @@ ErrorOr<void> IntelDisplayConnectorGroup::set_mode_setting(IntelNativeDisplayCon
     DisplayConnector::ModeSetting actual_mode_setting = mode_setting;
     actual_mode_setting.horizontal_stride = actual_mode_setting.horizontal_active * sizeof(u32);
     VERIFY(actual_mode_setting.horizontal_stride != 0);
-    if (m_generation == IntelGraphics::Generation::Gen4) {
+    if (m_generation == IntelGPU::Generation::Gen4) {
         TRY(set_gen4_mode_setting(connector, actual_mode_setting));
     } else {
         VERIFY_NOT_REACHED();
@@ -137,7 +137,7 @@ ErrorOr<void> IntelDisplayConnectorGroup::set_mode_setting(IntelNativeDisplayCon
 
     connector.m_current_mode_setting = actual_mode_setting;
     if (!connector.m_framebuffer_console.is_null())
-        static_cast<Graphics::GenericFramebufferConsoleImpl*>(connector.m_framebuffer_console.ptr())->set_resolution(actual_mode_setting.horizontal_active, actual_mode_setting.vertical_active, actual_mode_setting.horizontal_stride);
+        static_cast<GPU::GenericFramebufferConsoleImpl*>(connector.m_framebuffer_console.ptr())->set_resolution(actual_mode_setting.horizontal_active, actual_mode_setting.vertical_active, actual_mode_setting.horizontal_stride);
     return {};
 }
 
@@ -187,20 +187,20 @@ u32 IntelDisplayConnectorGroup::read_from_general_register(RegisterOffset offset
 
 void IntelDisplayConnectorGroup::write_to_analog_output_register(AnalogOutputRegisterOffset index, u32 value)
 {
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector:: Write to {} value of {:x}", convert_analog_output_register_to_string(index), value);
+    dbgln_if(INTEL_GPU_DEBUG, "Intel GPU Display Connector:: Write to {} value of {:x}", convert_analog_output_register_to_string(index), value);
     write_to_general_register(to_underlying(index), value);
 }
 
 u32 IntelDisplayConnectorGroup::read_from_analog_output_register(AnalogOutputRegisterOffset index) const
 {
     u32 value = read_from_general_register(to_underlying(index));
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel Graphics Display Connector: Read from {} value of {:x}", convert_analog_output_register_to_string(index), value);
+    dbgln_if(INTEL_GPU_DEBUG, "Intel GPU Display Connector: Read from {} value of {:x}", convert_analog_output_register_to_string(index), value);
     return value;
 }
 
 static size_t compute_dac_multiplier(size_t pixel_clock_in_khz)
 {
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "Intel native graphics: Pixel clock is {} KHz", pixel_clock_in_khz);
+    dbgln_if(INTEL_GPU_DEBUG, "Intel native graphics: Pixel clock is {} KHz", pixel_clock_in_khz);
     VERIFY(pixel_clock_in_khz >= 25000);
     if (pixel_clock_in_khz >= 100000) {
         return 1;
@@ -231,7 +231,7 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
     MUST(m_transcoders[0]->disable_dpll({}));
     disable_vga_emulation();
 
-    dbgln_if(INTEL_GRAPHICS_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
+    dbgln_if(INTEL_GPU_DEBUG, "PLL settings for {} {} {} {} {}", settings.n, settings.m1, settings.m2, settings.p1, settings.p2);
     MUST(m_transcoders[0]->set_dpll_settings({}, settings, dac_multiplier));
     MUST(m_transcoders[0]->disable_dpll({}));
     MUST(m_transcoders[0]->enable_dpll_without_vga({}));

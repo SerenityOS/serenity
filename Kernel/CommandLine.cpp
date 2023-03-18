@@ -287,16 +287,16 @@ PanicMode CommandLine::panic_mode(Validate should_validate) const
     return PanicMode::Halt;
 }
 
-UNMAP_AFTER_INIT CommandLine::GraphicsSubsystemMode CommandLine::graphics_subsystem_mode() const
+UNMAP_AFTER_INIT CommandLine::GPUSubsystemMode CommandLine::gpu_subsystem_mode() const
 {
-    auto const graphics_subsystem_mode_value = lookup("graphics_subsystem_mode"sv).value_or("on"sv);
-    if (graphics_subsystem_mode_value == "on"sv)
-        return GraphicsSubsystemMode::Enabled;
-    if (graphics_subsystem_mode_value == "limited"sv)
-        return GraphicsSubsystemMode::Limited;
-    if (graphics_subsystem_mode_value == "off"sv)
-        return GraphicsSubsystemMode::Disabled;
-    PANIC("Invalid graphics_subsystem_mode value: {}", graphics_subsystem_mode_value);
+    auto const gpu_subsystem_mode_value = lookup("gpu_subsystem_mode"sv).value_or("on"sv);
+    if (gpu_subsystem_mode_value == "on"sv)
+        return GPUSubsystemMode::Enabled;
+    if (gpu_subsystem_mode_value == "limited"sv)
+        return GPUSubsystemMode::Limited;
+    if (gpu_subsystem_mode_value == "off"sv)
+        return GPUSubsystemMode::Disabled;
+    PANIC("Invalid gpu_subsystem_mode value: {}", gpu_subsystem_mode_value);
 }
 
 StringView CommandLine::userspace_init() const

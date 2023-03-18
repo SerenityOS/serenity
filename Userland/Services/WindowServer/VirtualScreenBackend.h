@@ -36,8 +36,8 @@ private:
 
     virtual ErrorOr<void> set_safe_head_mode_setting() override;
 
-    virtual ErrorOr<void> set_head_mode_setting(GraphicsHeadModeSetting) override;
-    virtual ErrorOr<GraphicsHeadModeSetting> get_head_mode_setting() override;
+    virtual ErrorOr<void> set_head_mode_setting(GPUHeadModeSetting) override;
+    virtual ErrorOr<GPUHeadModeSetting> get_head_mode_setting() override;
 
     int m_height { 0 };
     int m_width { 0 };

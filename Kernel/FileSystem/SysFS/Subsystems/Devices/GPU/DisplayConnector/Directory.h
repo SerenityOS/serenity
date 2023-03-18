@@ -13,20 +13,20 @@ namespace Kernel {
 
 class DisplayConnectorSysFSDirectory;
 class DisplayConnector;
-class SysFSGraphicsDirectory;
+class SysFSGPUDirectory;
 class SysFSDisplayConnectorsDirectory : public SysFSDirectory {
     friend class SysFSComponentRegistry;
 
 public:
     virtual StringView name() const override { return "connectors"sv; }
     static SysFSDisplayConnectorsDirectory& the();
-    static NonnullLockRefPtr<SysFSDisplayConnectorsDirectory> must_create(SysFSGraphicsDirectory const&);
+    static NonnullLockRefPtr<SysFSDisplayConnectorsDirectory> must_create(SysFSGPUDirectory const&);
 
     void plug(Badge<DisplayConnector>, DisplayConnectorSysFSDirectory&);
     void unplug(Badge<DisplayConnector>, SysFSDirectory&);
 
 private:
-    explicit SysFSDisplayConnectorsDirectory(SysFSGraphicsDirectory const&);
+    explicit SysFSDisplayConnectorsDirectory(SysFSGPUDirectory const&);
 };
 
 }

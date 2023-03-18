@@ -12,12 +12,12 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Devices/GPU/Bochs/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/Bochs/Adapter.h>
 #include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
-#include <Kernel/Devices/GPU/Intel/NativeGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/Intel/NativeAdapter.h>
 #include <Kernel/Devices/GPU/Management.h>
-#include <Kernel/Devices/GPU/VMWare/GraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VMWare/Adapter.h>
+#include <Kernel/Devices/GPU/VirtIO/Adapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Sections.h>
@@ -26,7 +26,7 @@ namespace Kernel {
 
 static Singleton<GPUManagement> s_the;
 
-extern Atomic<Graphics::Console*> g_boot_console;
+extern Atomic<GPU::Console*> g_boot_console;
 
 GPUManagement& GPUManagement::the()
 {
@@ -120,31 +120,31 @@ static inline bool is_display_controller_pci_device(PCI::DeviceIdentifier const&
     return device_identifier.class_code().value() == 0x3;
 }
 
-struct PCIGraphicsDriverInitializer {
+struct PCIGPUDriverInitializer {
     ErrorOr<bool> (*probe)(PCI::DeviceIdentifier const&) = nullptr;
-    ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
+    ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
 };
 
-static constexpr PCIGraphicsDriverInitializer s_initializers[] = {
-    { IntelNativeGraphicsAdapter::probe, IntelNativeGraphicsAdapter::create },
-    { BochsGraphicsAdapter::probe, BochsGraphicsAdapter::create },
-    { VirtIOGraphicsAdapter::probe, VirtIOGraphicsAdapter::create },
-    { VMWareGraphicsAdapter::probe, VMWareGraphicsAdapter::create },
+static constexpr PCIGPUDriverInitializer s_initializers[] = {
+    { IntelNativeGPUAdapter::probe, IntelNativeGPUAdapter::create },
+    { BochsGPUAdapter::probe, BochsGPUAdapter::create },
+    { VirtIOGPUAdapter::probe, VirtIOGPUAdapter::create },
+    { VMWareGPUAdapter::probe, VMWareGPUAdapter::create },
 };
 
-UNMAP_AFTER_INIT ErrorOr<void> GPUManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<void> GPUManagement::determine_and_initialize_gpu_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     for (auto& initializer : s_initializers) {
         auto initializer_probe_found_driver_match_or_error = initializer.probe(device_identifier);
         if (initializer_probe_found_driver_match_or_error.is_error()) {
-            dmesgln("Graphics: Failed to probe device {}, due to {}", device_identifier.address(), initializer_probe_found_driver_match_or_error.error());
+            dmesgln("GPU: Failed to probe device {}, due to {}", device_identifier.address(), initializer_probe_found_driver_match_or_error.error());
             continue;
         }
         auto initializer_probe_found_driver_match = initializer_probe_found_driver_match_or_error.release_value();
         if (initializer_probe_found_driver_match) {
             auto adapter = TRY(initializer.create(device_identifier));
-            TRY(m_graphics_devices.try_append(*adapter));
+            TRY(m_gpu_devices.try_append(*adapter));
             return {};
         }
     }
@@ -155,7 +155,7 @@ UNMAP_AFTER_INIT void GPUManagement::initialize_preset_resolution_generic_displa
 {
     VERIFY(!multiboot_framebuffer_addr.is_null());
     VERIFY(multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB);
-    dmesgln("Graphics: Using a preset resolution from the bootloader, without knowing the PCI device");
+    dmesgln("GPU: Using a preset resolution from the bootloader, without knowing the PCI device");
     m_preset_resolution_generic_display_connector = GenericDisplayConnector::must_create_with_preset_resolution(
         multiboot_framebuffer_addr,
         multiboot_framebuffer_width,
@@ -194,8 +194,8 @@ UNMAP_AFTER_INIT bool GPUManagement::initialize()
     m_vga_arbiter = VGAIOArbiter::must_create({});
 #endif
 
-    auto graphics_subsystem_mode = kernel_command_line().graphics_subsystem_mode();
-    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Disabled) {
+    auto gpu_subsystem_mode = kernel_command_line().gpu_subsystem_mode();
+    if (gpu_subsystem_mode == CommandLine::GPUSubsystemMode::Disabled) {
         VERIFY(!m_console);
         return true;
     }
@@ -204,27 +204,27 @@ UNMAP_AFTER_INIT bool GPUManagement::initialize()
     // present but the user decided to disable its usage nevertheless.
     // Otherwise we risk using the Bochs VBE driver on a wrong physical address
     // for the framebuffer.
-    if (PCI::Access::is_hardware_disabled() && !(graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
+    if (PCI::Access::is_hardware_disabled() && !(gpu_subsystem_mode == CommandLine::GPUSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB)) {
 #if ARCH(X86_64)
         auto vga_isa_bochs_display_connector = BochsDisplayConnector::try_create_for_vga_isa_connector();
         if (vga_isa_bochs_display_connector) {
-            dmesgln("Graphics: Using a Bochs ISA VGA compatible adapter");
+            dmesgln("GPU: Using a Bochs ISA VGA compatible adapter");
             MUST(vga_isa_bochs_display_connector->set_safe_mode_setting());
             m_platform_board_specific_display_connector = vga_isa_bochs_display_connector;
-            dmesgln("Graphics: Invoking manual blanking with VGA ISA ports");
+            dmesgln("GPU: Invoking manual blanking with VGA ISA ports");
             m_vga_arbiter->unblank_screen({});
             return true;
         }
 #endif
     }
 
-    if (graphics_subsystem_mode == CommandLine::GraphicsSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (gpu_subsystem_mode == CommandLine::GPUSubsystemMode::Limited && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }
 
     if (PCI::Access::is_disabled()) {
-        dmesgln("Graphics: Using an assumed-to-exist ISA VGA compatible generic adapter");
+        dmesgln("GPU: Using an assumed-to-exist ISA VGA compatible generic adapter");
         return true;
     }
 
@@ -234,7 +234,7 @@ UNMAP_AFTER_INIT bool GPUManagement::initialize()
         // framebuffer console will take the control instead.
         if (!is_vga_compatible_pci_device(device_identifier) && !is_display_controller_pci_device(device_identifier))
             return;
-        if (auto result = determine_and_initialize_graphics_device(device_identifier); result.is_error())
+        if (auto result = determine_and_initialize_gpu_device(device_identifier); result.is_error())
             dbgln("Failed to initialize device {}, due to {}", device_identifier.address(), result.error());
     }));
 
@@ -245,19 +245,19 @@ UNMAP_AFTER_INIT bool GPUManagement::initialize()
     // is not present, as there is likely never a valid framebuffer at this physical address.
     // Note: We only support RGB framebuffers. Any other format besides RGBX (and RGBA) or BGRX (and BGRA) is obsolete
     // and is not useful for us.
-    if (m_graphics_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+    if (m_gpu_devices.is_empty() && !multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
         initialize_preset_resolution_generic_display_connector();
         return true;
     }
 
-    if (m_graphics_devices.is_empty()) {
+    if (m_gpu_devices.is_empty()) {
         dbgln("No graphics adapter was initialized.");
         return false;
     }
     return true;
 }
 
-void GPUManagement::set_console(Graphics::Console& console)
+void GPUManagement::set_console(GPU::Console& console)
 {
     m_console = console;
 

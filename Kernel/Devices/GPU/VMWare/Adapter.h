@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GenericGPUAdapter.h>
 #include <Kernel/Devices/GPU/VMWare/Definitions.h>
 #include <Kernel/IOWindow.h>
 #include <Kernel/Locking/Spinlock.h>
@@ -17,20 +17,20 @@
 
 namespace Kernel {
 
-class GraphicsManagement;
+class GPUManagement;
 
 class VMWareDisplayConnector;
-class VMWareGraphicsAdapter final
-    : public GenericGraphicsAdapter
+class VMWareGPUAdapter final
+    : public GenericGPUAdapter
     , public PCI::Device {
-    friend class GraphicsManagement;
+    friend class GPUManagement;
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
-    virtual ~VMWareGraphicsAdapter() = default;
+    static ErrorOr<NonnullLockRefPtr<GenericGPUAdapter>> create(PCI::DeviceIdentifier const&);
+    virtual ~VMWareGPUAdapter() = default;
 
-    virtual StringView device_name() const override { return "VMWareGraphicsAdapter"sv; }
+    virtual StringView device_name() const override { return "VMWareGPUAdapter"sv; }
 
     ErrorOr<void> modeset_primary_screen_resolution(Badge<VMWareDisplayConnector>, size_t width, size_t height);
     size_t primary_screen_width(Badge<VMWareDisplayConnector>) const;
@@ -49,7 +49,7 @@ private:
     void print_svga_capabilities() const;
     void modeset_primary_screen_resolution(size_t width, size_t height);
 
-    VMWareGraphicsAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
+    VMWareGPUAdapter(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow> registers_io_window);
 
     Memory::TypedMapping<VMWareDisplayFIFORegisters volatile> m_fifo_registers;
     LockRefPtr<VMWareDisplayConnector> m_display_connector;

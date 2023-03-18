@@ -20,9 +20,9 @@
 
 namespace Kernel {
 
-class IntelNativeGraphicsAdapter;
+class IntelNativeGPUAdapter;
 class IntelDisplayConnectorGroup : public RefCounted<IntelDisplayConnectorGroup> {
-    friend class IntelNativeGraphicsAdapter;
+    friend class IntelNativeGPUAdapter;
 
 public:
     struct MMIORegion {
@@ -44,13 +44,13 @@ private:
     };
 
 public:
-    static ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> try_create(Badge<IntelNativeGraphicsAdapter>, IntelGraphics::Generation, MMIORegion const&, MMIORegion const&);
+    static ErrorOr<NonnullLockRefPtr<IntelDisplayConnectorGroup>> try_create(Badge<IntelNativeGPUAdapter>, IntelGPU::Generation, MMIORegion const&, MMIORegion const&);
 
     ErrorOr<void> set_safe_mode_setting(Badge<IntelNativeDisplayConnector>, IntelNativeDisplayConnector&);
     ErrorOr<void> set_mode_setting(Badge<IntelNativeDisplayConnector>, IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
 
 private:
-    IntelDisplayConnectorGroup(IntelGraphics::Generation generation, NonnullOwnPtr<GMBusConnector>, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const&, MMIORegion const&);
+    IntelDisplayConnectorGroup(IntelGPU::Generation generation, NonnullOwnPtr<GMBusConnector>, NonnullOwnPtr<Memory::Region> registers_region, MMIORegion const&, MMIORegion const&);
 
     ErrorOr<void> set_mode_setting(IntelNativeDisplayConnector&, DisplayConnector::ModeSetting const&);
 
@@ -90,7 +90,7 @@ private:
     const MMIORegion m_mmio_second_region;
     MMIORegion const& m_assigned_mmio_registers_region;
 
-    const IntelGraphics::Generation m_generation;
+    const IntelGPU::Generation m_generation;
     NonnullOwnPtr<Memory::Region> m_registers_region;
     NonnullOwnPtr<GMBusConnector> m_gmbus_connector;
 };

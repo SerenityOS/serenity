@@ -8,9 +8,9 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
+#include <Kernel/Devices/GPU/GenericGPUAdapter.h>
 
-namespace Kernel::Graphics {
+namespace Kernel::GPU {
 
 class Console : public AtomicRefCounted<Console> {
 public:

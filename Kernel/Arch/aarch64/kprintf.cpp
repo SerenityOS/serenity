@@ -12,7 +12,7 @@
 // FIXME: Merge the code in this file with Kernel/kprintf.cpp once the proper abstractions are in place.
 
 namespace Kernel {
-extern Atomic<Graphics::Console*> g_boot_console;
+extern Atomic<GPU::Console*> g_boot_console;
 }
 
 static void console_out(char ch)

@@ -8,8 +8,8 @@
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/DeviceDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/DeviceDirectory.h>
+#include <Kernel/FileSystem/SysFS/Subsystems/Devices/GPU/DisplayConnector/Directory.h>
 #include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel {
@@ -272,23 +272,23 @@ ErrorOr<ByteBuffer> DisplayConnector::get_edid() const
     return ByteBuffer::copy(m_edid_bytes, sizeof(m_edid_bytes));
 }
 
-struct GraphicsIOCtlChecker {
+struct GPUIOCtlChecker {
     unsigned ioctl_number;
     StringView name;
     bool requires_ownership { false };
 };
 
-static constexpr GraphicsIOCtlChecker s_checkers[] = {
-    { GRAPHICS_IOCTL_GET_PROPERTIES, "GRAPHICS_IOCTL_GET_PROPERTIES"sv, false },
-    { GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, "GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER"sv, true },
-    { GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, "GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER"sv, false },
-    { GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS, "GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS"sv, true },
-    { GRAPHICS_IOCTL_FLUSH_HEAD, "GRAPHICS_IOCTL_FLUSH_HEAD"sv, true },
-    { GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING"sv, true },
-    { GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING"sv, false },
-    { GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING, "GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING"sv, true },
-    { GRAPHICS_IOCTL_SET_RESPONSIBLE, "GRAPHICS_IOCTL_SET_RESPONSIBLE"sv, false },
-    { GRAPHICS_IOCTL_UNSET_RESPONSIBLE, "GRAPHICS_IOCTL_UNSET_RESPONSIBLE"sv, true },
+static constexpr GPUIOCtlChecker s_checkers[] = {
+    { GPU_IOCTL_GET_PROPERTIES, "GPU_IOCTL_GET_PROPERTIES"sv, false },
+    { GPU_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER, "GPU_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER"sv, true },
+    { GPU_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER, "GPU_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER"sv, false },
+    { GPU_IOCTL_FLUSH_HEAD_BUFFERS, "GPU_IOCTL_FLUSH_HEAD_BUFFERS"sv, true },
+    { GPU_IOCTL_FLUSH_HEAD, "GPU_IOCTL_FLUSH_HEAD"sv, true },
+    { GPU_IOCTL_SET_HEAD_MODE_SETTING, "GPU_IOCTL_SET_HEAD_MODE_SETTING"sv, true },
+    { GPU_IOCTL_GET_HEAD_MODE_SETTING, "GPU_IOCTL_GET_HEAD_MODE_SETTING"sv, false },
+    { GPU_IOCTL_SET_SAFE_HEAD_MODE_SETTING, "GPU_IOCTL_SET_SAFE_HEAD_MODE_SETTING"sv, true },
+    { GPU_IOCTL_SET_RESPONSIBLE, "GPU_IOCTL_SET_RESPONSIBLE"sv, false },
+    { GPU_IOCTL_UNSET_RESPONSIBLE, "GPU_IOCTL_UNSET_RESPONSIBLE"sv, true },
 };
 
 static StringView ioctl_to_stringview(unsigned request)
@@ -327,7 +327,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
     }
 
     switch (request) {
-    case GRAPHICS_IOCTL_SET_RESPONSIBLE: {
+    case GPU_IOCTL_SET_RESPONSIBLE: {
         SpinlockLocker locker(m_responsible_process_lock);
         auto process = m_responsible_process.strong_ref();
         // Note: If there's already a process being responsible, just return an error.
@@ -339,7 +339,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         m_responsible_process = Process::current();
         return {};
     }
-    case GRAPHICS_IOCTL_UNSET_RESPONSIBLE: {
+    case GPU_IOCTL_UNSET_RESPONSIBLE: {
         SpinlockLocker locker(m_responsible_process_lock);
         auto process = m_responsible_process.strong_ref();
         if (!process)
@@ -349,10 +349,10 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         m_responsible_process.clear();
         return {};
     }
-    case GRAPHICS_IOCTL_GET_PROPERTIES: {
+    case GPU_IOCTL_GET_PROPERTIES: {
         VERIFY(m_shared_framebuffer_vmobject);
-        auto user_properties = static_ptr_cast<GraphicsConnectorProperties*>(arg);
-        GraphicsConnectorProperties properties {};
+        auto user_properties = static_ptr_cast<GPUConnectorProperties*>(arg);
+        GPUConnectorProperties properties {};
         properties.flushing_support = flush_support();
         properties.doublebuffer_support = double_framebuffering_capable();
         properties.partial_flushing_support = partial_flush_support();
@@ -361,9 +361,9 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
 
         return copy_to_user(user_properties, &properties);
     }
-    case GRAPHICS_IOCTL_GET_HEAD_MODE_SETTING: {
-        auto user_head_mode_setting = static_ptr_cast<GraphicsHeadModeSetting*>(arg);
-        GraphicsHeadModeSetting head_mode_setting {};
+    case GPU_IOCTL_GET_HEAD_MODE_SETTING: {
+        auto user_head_mode_setting = static_ptr_cast<GPUHeadModeSetting*>(arg);
+        GPUHeadModeSetting head_mode_setting {};
         TRY(copy_from_user(&head_mode_setting, user_head_mode_setting));
         {
             SpinlockLocker control_locker(m_control_lock);
@@ -382,8 +382,8 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         }
         return copy_to_user(user_head_mode_setting, &head_mode_setting);
     }
-    case GRAPHICS_IOCTL_SET_HEAD_MODE_SETTING: {
-        auto user_mode_setting = static_ptr_cast<GraphicsHeadModeSetting const*>(arg);
+    case GPU_IOCTL_SET_HEAD_MODE_SETTING: {
+        auto user_mode_setting = static_ptr_cast<GPUHeadModeSetting const*>(arg);
         auto head_mode_setting = TRY(copy_typed_from_user(user_mode_setting));
 
         if (head_mode_setting.horizontal_stride < 0)
@@ -431,13 +431,13 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         return {};
     }
 
-    case GRAPHICS_IOCTL_SET_SAFE_HEAD_MODE_SETTING: {
+    case GPU_IOCTL_SET_SAFE_HEAD_MODE_SETTING: {
         SpinlockLocker control_locker(m_control_lock);
         TRY(set_safe_mode_setting());
         return {};
     }
 
-    case GRAPHICS_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
+    case GPU_IOCTL_SET_HEAD_VERTICAL_OFFSET_BUFFER: {
         // FIXME: We silently ignore the request if we are in console mode.
         // WindowServer is not ready yet to handle errors such as EBUSY currently.
         SpinlockLocker control_locker(m_control_lock);
@@ -445,7 +445,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
             return {};
         }
 
-        auto user_head_vertical_buffer_offset = static_ptr_cast<GraphicsHeadVerticalOffset const*>(arg);
+        auto user_head_vertical_buffer_offset = static_ptr_cast<GPUHeadVerticalOffset const*>(arg);
         auto head_vertical_buffer_offset = TRY(copy_typed_from_user(user_head_vertical_buffer_offset));
 
         SpinlockLocker locker(m_modeset_lock);
@@ -459,15 +459,15 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
             m_vertical_offsetted = true;
         return {};
     }
-    case GRAPHICS_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
-        auto user_head_vertical_buffer_offset = static_ptr_cast<GraphicsHeadVerticalOffset*>(arg);
-        GraphicsHeadVerticalOffset head_vertical_buffer_offset {};
+    case GPU_IOCTL_GET_HEAD_VERTICAL_OFFSET_BUFFER: {
+        auto user_head_vertical_buffer_offset = static_ptr_cast<GPUHeadVerticalOffset*>(arg);
+        GPUHeadVerticalOffset head_vertical_buffer_offset {};
         TRY(copy_from_user(&head_vertical_buffer_offset, user_head_vertical_buffer_offset));
 
         head_vertical_buffer_offset.offsetted = m_vertical_offsetted;
         return copy_to_user(user_head_vertical_buffer_offset, &head_vertical_buffer_offset);
     }
-    case GRAPHICS_IOCTL_FLUSH_HEAD_BUFFERS: {
+    case GPU_IOCTL_FLUSH_HEAD_BUFFERS: {
         if (console_mode())
             return {};
         if (!partial_flush_support())
@@ -492,7 +492,7 @@ ErrorOr<void> DisplayConnector::ioctl(OpenFileDescription&, unsigned request, Us
         }
         return {};
     };
-    case GRAPHICS_IOCTL_FLUSH_HEAD: {
+    case GPU_IOCTL_FLUSH_HEAD: {
         // FIXME: We silently ignore the request if we are in console mode.
         // WindowServer is not ready yet to handle errors such as EBUSY currently.
         MutexLocker locker(m_flushing_lock);
