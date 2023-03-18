@@ -98,8 +98,12 @@ private:
                     error = result.release_error();
 
                 m_promise->cancel(Error::from_errno(ECANCELED));
-                if (m_on_error)
-                    m_on_error(move(error));
+                if (m_on_error) {
+                    origin_event_loop->deferred_invoke([this, error = move(error)]() mutable {
+                        m_on_error(move(error));
+                    });
+                    origin_event_loop->wake();
+                }
 
                 remove_from_parent();
             }
