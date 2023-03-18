@@ -145,6 +145,17 @@ TEST_CASE(test_jpeg_sof0_several_scans_odd_number_mcu)
     EXPECT_EQ(frame.image->size(), Gfx::IntSize(600, 600));
 }
 
+TEST_CASE(test_jpeg_sof2_successive_aproximation)
+{
+    auto file = MUST(Core::MappedFile::map(TEST_INPUT("successive_approximation.jpg"sv)));
+    EXPECT(Gfx::JPEGImageDecoderPlugin::sniff(file->bytes()));
+    auto plugin_decoder = MUST(Gfx::JPEGImageDecoderPlugin::create(file->bytes()));
+    EXPECT(plugin_decoder->initialize());
+
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(600, 800));
+}
+
 TEST_CASE(test_pbm)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("buggie-raw.pbm"sv)));
