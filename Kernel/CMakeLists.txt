@@ -55,23 +55,23 @@ set(KERNEL_SOURCES
     Devices/Audio/Management.cpp
     Devices/BlockDevice.cpp
     Devices/CharacterDevice.cpp
-    Devices/ConsoleDevice.cpp
     Devices/Device.cpp
-    Devices/DeviceControlDevice.cpp
     Devices/DeviceManagement.cpp
-    Devices/FullDevice.cpp
     Devices/KCOVDevice.cpp
     Devices/KCOVInstance.cpp
-    Devices/MemoryDevice.cpp
-    Devices/NullDevice.cpp
     Devices/PCISerialDevice.cpp
-    Devices/RandomDevice.cpp
-    Devices/SelfTTYDevice.cpp
     Devices/SerialDevice.cpp
-    Devices/ZeroDevice.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/Management.cpp
     Devices/HID/MouseDevice.cpp
+    Devices/Generic/ConsoleDevice.cpp
+    Devices/Generic/DeviceControlDevice.cpp
+    Devices/Generic/FullDevice.cpp
+    Devices/Generic/MemoryDevice.cpp
+    Devices/Generic/NullDevice.cpp
+    Devices/Generic/RandomDevice.cpp
+    Devices/Generic/SelfTTYDevice.cpp
+    Devices/Generic/ZeroDevice.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Bochs/QEMUDisplayConnector.cpp
     Graphics/Console/BootFramebufferConsole.cpp

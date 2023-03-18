@@ -7,7 +7,7 @@
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/Generic/RandomDevice.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/EthernetFrameHeader.h>

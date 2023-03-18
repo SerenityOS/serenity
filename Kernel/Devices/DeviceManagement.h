@@ -14,10 +14,10 @@
 #include <Kernel/API/TimePage.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Devices/DeviceControlDevice.h>
-#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/Generic/ConsoleDevice.h>
+#include <Kernel/Devices/Generic/DeviceControlDevice.h>
+#include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UnixTypes.h>
 

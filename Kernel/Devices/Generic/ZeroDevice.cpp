@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/ZeroDevice.h>
+#include <Kernel/Devices/Generic/ZeroDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/SelfTTYDevice.h>
+#include <Kernel/Devices/Generic/SelfTTYDevice.h>
 #include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
 

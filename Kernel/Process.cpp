@@ -21,7 +21,7 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/Arch/PageDirectory.h>
-#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
