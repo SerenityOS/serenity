@@ -161,8 +161,10 @@ CSSPixels StyleProperties::line_height(CSSPixelRect const& viewport_rect, Gfx::F
         return Length(percentage.as_fraction(), Length::Type::Em).to_px(viewport_rect, font_metrics, font_size, root_font_size, parent_line_height, root_line_height);
     }
 
-    if (line_height->is_calculated())
-        return CSS::Length::make_calculated(const_cast<CalculatedStyleValue&>(line_height->as_calculated())).to_px(viewport_rect, font_metrics, font_size, root_font_size, parent_line_height, root_line_height);
+    if (line_height->is_calculated()) {
+        // FIXME: Handle `line-height: calc(...)` despite not having a LayoutNode here.
+        return font_metrics.line_spacing();
+    }
 
     return font_metrics.line_spacing();
 }
