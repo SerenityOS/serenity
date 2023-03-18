@@ -320,7 +320,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     Vector<Regex<PosixBasic>> regular_expressions;
     for (auto pattern : patterns) {
         auto escaped_pattern = (fixed_strings) ? escape_characters(pattern, basic_special_characters) : pattern;
-        dbgln("'{}'", escaped_pattern);
         regular_expressions.append(Regex<PosixBasic>(escaped_pattern, options));
     }
     return grep_logic(regular_expressions);
