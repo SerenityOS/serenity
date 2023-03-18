@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/MemoryStream.h>
 #include <LibGfx/ImageDecoder.h>
 
 namespace Gfx {
@@ -31,7 +32,7 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    JPEGImageDecoderPlugin(u8 const*, size_t);
+    JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
 
     OwnPtr<JPEGLoadingContext> m_context;
 };
