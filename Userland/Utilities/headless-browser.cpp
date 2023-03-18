@@ -18,7 +18,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
@@ -36,7 +35,6 @@
 #include <LibIPC/File.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
-#include <LibWeb/Loader/FrameLoader.h>
 #include <LibWebView/ViewImplementation.h>
 #include <LibWebView/WebContentClient.h>
 

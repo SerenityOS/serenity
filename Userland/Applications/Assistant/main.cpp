@@ -6,12 +6,8 @@
  */
 
 #include "Providers.h"
-#include <AK/Array.h>
-#include <AK/DeprecatedString.h>
-#include <AK/Error.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <AK/Try.h>
 #include <LibCore/Debounce.h>
 #include <LibCore/LockFile.h>
 #include <LibCore/System.h>
@@ -21,7 +17,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Painter.h>
@@ -30,7 +25,6 @@
 #include <LibMain/Main.h>
 #include <LibThreading/Mutex.h>
 #include <string.h>
-#include <unistd.h>
 
 namespace Assistant {
 

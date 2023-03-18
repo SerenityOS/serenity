@@ -6,14 +6,11 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Sections.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/StorageManagement.h>
 

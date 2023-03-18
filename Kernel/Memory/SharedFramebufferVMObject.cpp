@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/SharedFramebufferVMObject.h>
 
 namespace Kernel::Memory {

@@ -6,7 +6,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
-#include <AK/Format.h>
 #include <AK/Vector.h>
 #include <LibGfx/WebPLoader.h>
 

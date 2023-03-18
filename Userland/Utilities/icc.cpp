@@ -5,7 +5,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>

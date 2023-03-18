@@ -14,7 +14,6 @@
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/VM.h>
 
 namespace JS {
 

@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-
 static constexpr int constexpr_sum(ReadonlySpan<int> const span)
 {
     int sum = 0;

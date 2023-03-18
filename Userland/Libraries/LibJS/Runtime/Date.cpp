@@ -13,7 +13,6 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Temporal/ISO8601.h>
 #include <LibTimeZone/TimeZone.h>
-#include <time.h>
 
 namespace JS {
 

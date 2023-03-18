@@ -6,7 +6,6 @@
 
 #include <AK/StringView.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/StorageManagement.h>
 

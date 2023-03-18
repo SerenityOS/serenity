@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Types.h>
 #include <string.h>
 
 struct TestCase {

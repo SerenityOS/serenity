@@ -9,7 +9,6 @@
 #    include <Kernel/Arch/x86_64/ProcessorInfo.h>
 #endif
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/CPUInfo.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

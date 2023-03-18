@@ -8,7 +8,6 @@
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

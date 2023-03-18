@@ -6,9 +6,7 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/LexicalPath.h>
-#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -16,7 +14,6 @@
 #include <LibMain/Main.h>
 #include <sched.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 struct WorkItem {
     enum class Type {

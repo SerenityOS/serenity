@@ -5,8 +5,6 @@
  */
 
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Bus/Directory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

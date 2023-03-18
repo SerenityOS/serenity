@@ -10,7 +10,6 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
-#include <LibWeb/Layout/TextNode.h>
 
 namespace Web::DOM {
 

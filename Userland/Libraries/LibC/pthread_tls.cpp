@@ -7,7 +7,6 @@
 #include <AK/Atomic.h>
 #include <errno.h>
 #include <pthread.h>
-#include <unistd.h>
 
 #ifndef _DYNAMIC_LOADER
 extern "C" {

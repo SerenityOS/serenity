@@ -5,7 +5,6 @@
  */
 
 #include <AK/Find.h>
-#include <AK/IterationDecision.h>
 #include <AK/NumericLimits.h>
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -17,7 +16,6 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/Utf16String.h>
-#include <LibLocale/Locale.h>
 #include <LibLocale/NumberFormat.h>
 #include <math.h>
 

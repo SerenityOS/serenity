@@ -6,24 +6,19 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/JsonObject.h>
 #include <AK/Result.h>
 #include <AK/ScopeGuard.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
-#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Contrib/Test262/GlobalObject.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Script.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <unistd.h>
 
 #if !defined(AK_OS_MACOS) && !defined(AK_OS_EMSCRIPTEN)

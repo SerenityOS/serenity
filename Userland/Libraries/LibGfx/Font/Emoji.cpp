@@ -9,13 +9,10 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
-#include <AK/Span.h>
 #include <AK/Utf32View.h>
 #include <AK/Utf8View.h>
-#include <AK/Variant.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/Emoji.h>
-#include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Emoji.h>
 
 namespace Gfx {

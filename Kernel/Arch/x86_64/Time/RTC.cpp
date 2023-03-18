@@ -9,7 +9,6 @@
 #include <Kernel/Arch/x86_64/NonMaskableInterruptDisabler.h>
 #include <Kernel/Arch/x86_64/Time/RTC.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 #define IRQ_TIMER 8

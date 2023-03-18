@@ -6,14 +6,10 @@
 
 #include "DebugSession.h"
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <AK/Optional.h>
-#include <AK/Platform.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
-#include <sys/mman.h>
 
 namespace Debug {
 

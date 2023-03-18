@@ -6,7 +6,6 @@
 
 #include <AK/Endian.h>
 #include <Kernel/FileSystem/ISO9660FS/DirectoryIterator.h>
-#include <Kernel/FileSystem/ISO9660FS/FileSystem.h>
 #include <Kernel/FileSystem/ISO9660FS/Inode.h>
 
 namespace Kernel {

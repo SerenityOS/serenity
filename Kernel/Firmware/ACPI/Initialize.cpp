@@ -7,8 +7,6 @@
 
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel::ACPI {
 

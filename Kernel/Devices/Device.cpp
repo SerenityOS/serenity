@@ -7,11 +7,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/FileSystem/SysFS/Component.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

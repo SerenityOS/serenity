@@ -6,7 +6,6 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Time.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
@@ -28,9 +27,6 @@
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Time/HardwareTimer.h>
-#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 
 namespace Kernel {

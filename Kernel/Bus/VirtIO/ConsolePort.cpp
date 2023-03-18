@@ -6,7 +6,6 @@
  */
 
 #include <Kernel/Bus/VirtIO/Console.h>
-#include <Kernel/Bus/VirtIO/ConsolePort.h>
 
 namespace Kernel::VirtIO {
 

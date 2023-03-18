@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>

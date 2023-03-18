@@ -7,7 +7,6 @@
 #include <AK/Array.h>
 #include <AK/CharacterTypes.h>
 #include <AK/String.h>
-#include <AK/Utf8View.h>
 #include <LibTest/TestCase.h>
 #include <LibUnicode/Emoji.h>
 

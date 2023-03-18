@@ -8,7 +8,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/ScopeGuard.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>

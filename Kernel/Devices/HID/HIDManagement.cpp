@@ -12,7 +12,6 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

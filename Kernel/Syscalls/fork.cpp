@@ -8,7 +8,6 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/Memory/Region.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 
 namespace Kernel {

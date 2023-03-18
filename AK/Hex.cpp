@@ -7,8 +7,6 @@
 
 #include <AK/Hex.h>
 #include <AK/StringBuilder.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
 
 namespace AK {
 

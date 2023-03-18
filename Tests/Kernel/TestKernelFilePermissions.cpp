@@ -7,12 +7,9 @@
 #include <AK/DeprecatedString.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibTest/TestCase.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 TEST_CASE(test_change_file_contents)

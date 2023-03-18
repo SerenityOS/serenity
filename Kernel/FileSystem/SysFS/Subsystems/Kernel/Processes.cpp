@@ -5,11 +5,9 @@
  */
 
 #include <AK/JsonObjectSerializer.h>
-#include <AK/Try.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Processes.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
 #include <Kernel/TTY/TTY.h>
 
 namespace Kernel {

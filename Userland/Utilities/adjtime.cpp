@@ -9,7 +9,6 @@
 #include <LibCore/System.h>
 #include <math.h>
 #include <sys/time.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

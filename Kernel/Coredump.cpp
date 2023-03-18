@@ -16,7 +16,6 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KLexicalPath.h>
-#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 #include <Kernel/Process.h>
 #include <LibC/elf.h>

@@ -5,12 +5,9 @@
  */
 
 #include <Kernel/FileSystem/SysFS/Registry.h>
-#include <Kernel/FileSystem/SysFS/RootDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Bus/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

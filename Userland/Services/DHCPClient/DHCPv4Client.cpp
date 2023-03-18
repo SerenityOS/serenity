@@ -5,15 +5,10 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/Array.h>
 #include <AK/Debug.h>
-#include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonParser.h>
 #include <AK/Random.h>
-#include <AK/ScopeGuard.h>
-#include <AK/Try.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>

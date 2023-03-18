@@ -6,7 +6,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/EventLoop.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>

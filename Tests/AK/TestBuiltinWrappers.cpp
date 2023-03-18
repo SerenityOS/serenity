@@ -6,9 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/BuiltinWrappers.h>
-#include <AK/Types.h>
-
 TEST_CASE(wrapped_popcount)
 {
     EXPECT_EQ(popcount(NumericLimits<u8>::max()), 8);

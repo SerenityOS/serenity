@@ -5,9 +5,7 @@
  */
 
 #include "BigFraction.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Math.h>
-#include <AK/StringBuilder.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 
 namespace Crypto {

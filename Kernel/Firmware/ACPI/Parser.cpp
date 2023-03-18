@@ -7,9 +7,6 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Platform.h>
-#include <AK/StringView.h>
-#include <AK/Try.h>
 #include <Kernel/InterruptDisabler.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/IO.h>
@@ -18,9 +15,6 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Firmware/BIOS.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel::ACPI {
 

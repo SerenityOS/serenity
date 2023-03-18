@@ -39,7 +39,6 @@
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/ReferrerPolicy/AbstractOperations.h>
 #include <LibWeb/URL/URL.h>
-#include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::Fetch::Fetching {
 

@@ -9,7 +9,6 @@
 #include <LibGfx/Font/BitmapFont.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibTest/TestCase.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 

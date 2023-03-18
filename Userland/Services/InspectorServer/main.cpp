@@ -9,7 +9,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
-#include <LibIPC/ConnectionFromClient.h>
 #include <LibIPC/MultiServer.h>
 #include <LibMain/Main.h>
 

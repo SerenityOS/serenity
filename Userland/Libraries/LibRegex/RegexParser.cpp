@@ -6,17 +6,9 @@
  */
 
 #include "RegexParser.h"
-#include "RegexDebug.h"
-#include <AK/AnyOf.h>
-#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
-#include <AK/GenericLexer.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
 #include <AK/TemporaryChange.h>
-#include <AK/Utf16View.h>
 #include <LibUnicode/CharacterTypes.h>
 
 namespace regex {

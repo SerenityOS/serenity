@@ -13,8 +13,6 @@
 #include "EventLoop.h"
 #include "Screen.h"
 #include "WindowManager.h"
-#include <AK/Badge.h>
-#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <LibCore/Account.h>
 #include <LibCore/ProcessStatisticsReader.h>

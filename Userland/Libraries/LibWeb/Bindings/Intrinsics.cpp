@@ -6,7 +6,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <LibJS/Forward.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Bindings/Intrinsics.h>

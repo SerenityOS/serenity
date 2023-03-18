@@ -8,7 +8,6 @@
 
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
-#include <AK/NonnullRefPtr.h>
 #include <LibCore/File.h>
 
 namespace LanguageServers {

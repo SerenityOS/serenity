@@ -6,11 +6,9 @@
 
 #include "FlameGraphView.h"
 #include "Profile.h"
-#include <AK/Function.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <LibGfx/Forward.h>
 #include <LibGfx/Palette.h>
 
 namespace Profiler {

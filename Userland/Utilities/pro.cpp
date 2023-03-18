@@ -10,7 +10,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/MaybeOwned.h>
 #include <AK/NumberFormat.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>

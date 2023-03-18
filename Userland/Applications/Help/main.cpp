@@ -8,7 +8,6 @@
  */
 
 #include "MainWidget.h"
-#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>

@@ -11,7 +11,6 @@
 #include "SampleWidget.h"
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ConnectionToServer.h>
-#include <LibAudio/FlacLoader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>

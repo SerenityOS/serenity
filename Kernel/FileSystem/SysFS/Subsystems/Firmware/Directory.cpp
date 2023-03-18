@@ -6,9 +6,7 @@
 
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/BIOS/Directory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

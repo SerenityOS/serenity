@@ -9,8 +9,6 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
 #include <WindowServer/KeymapSwitcher.h>
-#include <spawn.h>
-#include <unistd.h>
 
 namespace WindowServer {
 

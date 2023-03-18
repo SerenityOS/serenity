@@ -14,7 +14,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Calendar.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Process.h>
 #include <LibGUI/Toolbar.h>

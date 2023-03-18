@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <cstring>
-
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <LibSQL/Serializer.h>
 #include <LibSQL/Tuple.h>
 #include <LibSQL/TupleDescriptor.h>

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Fetch/Infrastructure/FetchTimingInfo.h>
 

@@ -9,10 +9,8 @@
 #include "Debugger/Debugger.h"
 #include "EditorWrapper.h"
 #include "HackStudio.h"
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/JsonParser.h>
-#include <AK/LexicalPath.h>
 #include <LibCMake/CMakeCache/SyntaxHighlighter.h>
 #include <LibCMake/SyntaxHighlighter.h>
 #include <LibConfig/Client.h>
@@ -27,7 +25,6 @@
 #include <LibGUI/GML/SyntaxHighlighter.h>
 #include <LibGUI/GitCommitSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>

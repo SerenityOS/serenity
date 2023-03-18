@@ -12,7 +12,6 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Memory/PrivateInodeVMObject.h>
-#include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {

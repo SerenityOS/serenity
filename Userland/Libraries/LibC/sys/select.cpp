@@ -6,7 +6,6 @@
 
 #include <bits/pthread_cancel.h>
 #include <errno.h>
-#include <stdio.h>
 #include <sys/poll.h>
 #include <sys/select.h>
 #include <sys/time.h>

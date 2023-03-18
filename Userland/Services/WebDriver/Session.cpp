@@ -11,7 +11,6 @@
 #include "Session.h"
 #include "Client.h"
 #include <AK/JsonObject.h>
-#include <AK/ScopeGuard.h>
 #include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>

@@ -5,7 +5,6 @@
  */
 
 #include <LibTest/TestCase.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
 #include <sys/mman.h>

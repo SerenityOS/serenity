@@ -13,7 +13,6 @@
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
-#include <AK/CharacterTypes.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -21,7 +20,6 @@
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/Triangle.h>
 #include <WindowServer/ConnectionFromClient.h>
-#include <WindowServer/WindowClientEndpoint.h>
 
 namespace WindowServer {
 

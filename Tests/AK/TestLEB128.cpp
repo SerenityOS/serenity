@@ -6,7 +6,6 @@
 
 #include <AK/LEB128.h>
 #include <AK/MemoryStream.h>
-#include <AK/NumericLimits.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(single_byte)

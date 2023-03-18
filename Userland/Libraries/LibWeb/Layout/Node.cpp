@@ -6,7 +6,6 @@
 
 #include <AK/Demangle.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockContainer.h>

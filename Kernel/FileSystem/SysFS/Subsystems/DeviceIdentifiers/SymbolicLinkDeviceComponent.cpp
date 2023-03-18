@@ -5,9 +5,6 @@
  */
 
 #include <Kernel/Devices/Device.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/SymbolicLinkDeviceComponent.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

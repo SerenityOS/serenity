@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Bus/VirtIO/RNG.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel::VirtIO {
 

@@ -21,7 +21,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

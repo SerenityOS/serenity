@@ -8,7 +8,6 @@
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibTest/TestCase.h>
-#include <string.h>
 
 class ParserResult {
 public:

@@ -8,8 +8,6 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/DeviceDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Storage/Directory.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Storage/StorageDevice.h>
 
 namespace Kernel {
 

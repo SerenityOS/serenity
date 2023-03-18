@@ -6,16 +6,10 @@
  */
 
 #include "Mixer.h"
-#include <AK/Array.h>
-#include <AK/Format.h>
-#include <AK/MemoryStream.h>
-#include <AK/NumericLimits.h>
 #include <AudioServer/ConnectionFromClient.h>
-#include <AudioServer/Mixer.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Timer.h>
-#include <pthread.h>
 #include <sys/ioctl.h>
 
 namespace AudioServer {

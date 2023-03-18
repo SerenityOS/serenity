@@ -6,7 +6,6 @@
  */
 
 #include <AK/IPv4Address.h>
-#include <AK/Types.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/System.h>
 #include <LibCore/UDPServer.h>

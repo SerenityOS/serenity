@@ -7,13 +7,10 @@
  */
 
 #include "BackgroundSettingsWidget.h"
-#include <AK/StringBuilder.h>
 #include <Applications/DisplaySettings/BackgroundSettingsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/Launcher.h>
-#include <LibGUI/Application.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/ComboBox.h>

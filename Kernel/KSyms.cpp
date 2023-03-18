@@ -11,7 +11,6 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

@@ -7,7 +7,6 @@
 #include <LibThreading/Thread.h>
 #include <pthread.h>
 #include <string.h>
-#include <unistd.h>
 
 namespace Threading {
 

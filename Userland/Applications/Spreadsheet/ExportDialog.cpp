@@ -7,12 +7,9 @@
 #include "ExportDialog.h"
 #include "Spreadsheet.h"
 #include "Workbook.h"
-#include <AK/DeprecatedString.h>
-#include <AK/JsonArray.h>
 #include <AK/LexicalPath.h>
 #include <AK/MemoryStream.h>
 #include <Applications/Spreadsheet/CSVExportGML.h>
-#include <LibCore/StandardPaths.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
@@ -21,8 +18,6 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Wizards/WizardDialog.h>
 #include <LibGUI/Wizards/WizardPage.h>
-#include <string.h>
-#include <unistd.h>
 
 // This is defined in ImportDialog.cpp, we can't include it twice, since the generated symbol is exported.
 extern StringView select_format_page_gml;

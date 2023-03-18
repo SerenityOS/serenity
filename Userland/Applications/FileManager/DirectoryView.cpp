@@ -9,7 +9,6 @@
 #include "FileUtils.h"
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>

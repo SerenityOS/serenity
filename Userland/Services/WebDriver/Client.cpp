@@ -10,7 +10,6 @@
 
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <LibWeb/WebDriver/Capabilities.h>
 #include <LibWeb/WebDriver/TimeoutsConfiguration.h>
 #include <WebDriver/Client.h>

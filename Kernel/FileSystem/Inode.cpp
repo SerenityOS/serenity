@@ -7,7 +7,6 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Inode.h>
@@ -15,7 +14,6 @@
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
 

@@ -6,7 +6,6 @@
 
 #include "Selection.h"
 #include "ImageEditor.h"
-#include <LibGfx/Painter.h>
 
 namespace PixelPaint {
 

@@ -6,9 +6,7 @@
 
 #include "BitmapFont.h"
 #include "Emoji.h"
-#include <AK/BuiltinWrappers.h>
 #include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
 #include <LibCore/File.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Font/FontStyleMapping.h>

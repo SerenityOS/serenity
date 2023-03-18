@@ -6,8 +6,6 @@
 
 #include <AK/Format.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/RegionTree.h>
 #include <Kernel/Random.h>
 
 namespace Kernel::Memory {

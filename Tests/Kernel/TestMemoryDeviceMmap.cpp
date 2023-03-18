@@ -6,14 +6,12 @@
 
 #include <AK/Types.h>
 #include <LibTest/TestCase.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 static u8 read_buffer[0x100000];

@@ -9,10 +9,6 @@
 #include <Kernel/Arch/x86_64/Time/HPETComparator.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 

@@ -5,7 +5,6 @@
  */
 
 #include "HighlightPreviewWidget.h"
-#include <AK/DeprecatedString.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>

@@ -7,8 +7,6 @@
 #include "ParsedCookie.h"
 #include <AK/DateConstants.h>
 #include <AK/Function.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>

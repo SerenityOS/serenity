@@ -8,7 +8,6 @@
 #include <LibCore/ArgsParser.h>
 #include <fcntl.h>
 #include <inttypes.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

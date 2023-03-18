@@ -5,7 +5,6 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <stdlib.h>

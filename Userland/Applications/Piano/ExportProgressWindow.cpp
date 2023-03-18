@@ -5,7 +5,6 @@
  */
 
 #include "ExportProgressWindow.h"
-#include <AK/DeprecatedString.h>
 #include <Applications/Piano/ExportProgressWidget.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Label.h>

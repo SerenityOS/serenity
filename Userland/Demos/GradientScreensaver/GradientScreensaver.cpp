@@ -8,14 +8,11 @@
 #include <LibDesktop/Screensaver.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 #include <time.h>
-#include <unistd.h>
 
 class Screensaver final : public Desktop::Screensaver {
     C_OBJECT(Screensaver)

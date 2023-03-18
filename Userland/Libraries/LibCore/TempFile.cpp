@@ -7,9 +7,7 @@
 #include "TempFile.h"
 #include <AK/Random.h>
 #include <LibCore/DeprecatedFile.h>
-#include <fcntl.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 
 namespace Core {
 

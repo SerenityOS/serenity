@@ -8,20 +8,13 @@
 #include <AK/GenericLexer.h>
 #include <AK/RefPtr.h>
 #include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
-#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
-#include <Kernel/FileSystem/FileSystem.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KLexicalPath.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Process.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

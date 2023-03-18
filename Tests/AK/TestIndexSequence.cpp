@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StdLibExtras.h>
-#include <AK/TypeList.h>
 #include <AK/Vector.h>
 
 template<typename F, typename... Args>

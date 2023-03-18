@@ -31,7 +31,6 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ScrollableContainerWidget.h>
-#include <LibGfx/Filters/ColorBlindnessFilter.h>
 
 namespace ThemeEditor {
 

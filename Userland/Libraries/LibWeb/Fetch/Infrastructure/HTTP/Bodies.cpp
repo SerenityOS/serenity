@@ -9,7 +9,6 @@
 #include <LibWeb/Fetch/BodyInit.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Bodies.h>
 #include <LibWeb/Fetch/Infrastructure/Task.h>
-#include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Fetch::Infrastructure {
 

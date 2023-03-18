@@ -5,13 +5,9 @@
  */
 
 #include "ProjectTemplate.h"
-#include <AK/DeprecatedString.h>
-#include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <fcntl.h>
 #include <spawn.h>
 #include <sys/stat.h>
 #include <sys/wait.h>

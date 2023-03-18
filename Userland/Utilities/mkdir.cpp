@@ -7,14 +7,12 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/FilePermissionsMask.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <errno.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

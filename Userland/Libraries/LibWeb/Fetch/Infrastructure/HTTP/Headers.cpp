@@ -11,7 +11,6 @@
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StringUtils.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibRegex/Regex.h>

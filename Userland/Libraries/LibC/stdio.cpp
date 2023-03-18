@@ -7,10 +7,8 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
-#include <AK/StdLibExtras.h>
 #include <assert.h>
 #include <bits/mutex_locker.h>
 #include <bits/stdio_file_implementation.h>

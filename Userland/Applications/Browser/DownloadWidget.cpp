@@ -7,8 +7,6 @@
 
 #include "DownloadWidget.h"
 #include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
-#include <LibCore/Proxy.h>
 #include <LibCore/StandardPaths.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/BoxLayout.h>
@@ -18,7 +16,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
-#include <LibGUI/Window.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 
 #include <LibConfig/Client.h>

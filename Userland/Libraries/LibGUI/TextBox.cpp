@@ -7,7 +7,6 @@
  */
 
 #include <AK/URL.h>
-#include <AK/Vector.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Palette.h>

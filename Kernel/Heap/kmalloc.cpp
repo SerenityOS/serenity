@@ -9,14 +9,10 @@
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
-#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 
 #if ARCH(X86_64) || ARCH(AARCH64)
 static constexpr size_t CHUNK_SIZE = 64;

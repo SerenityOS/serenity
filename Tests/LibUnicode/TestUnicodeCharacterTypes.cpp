@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StringView.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <ctype.h>
 

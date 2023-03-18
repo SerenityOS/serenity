@@ -8,7 +8,6 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include <sys/sysmacros.h>
 
 static int usage()

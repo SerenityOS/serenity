@@ -10,7 +10,6 @@
 #include "Helpers.h"
 #include "ScoreCard.h"
 #include <AK/Debug.h>
-#include <AK/QuickSort.h>
 #include <AK/Random.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

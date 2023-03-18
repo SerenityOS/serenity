@@ -13,7 +13,6 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Painter.h>

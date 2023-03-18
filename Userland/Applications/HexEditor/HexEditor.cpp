@@ -10,10 +10,6 @@
 #include "HexEditor.h"
 #include "SearchResultsModel.h"
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
-#include <AK/Format.h>
-#include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
@@ -25,10 +21,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>
-#include <fcntl.h>
-#include <stdio.h>
 #include <string.h>
-#include <unistd.h>
 
 HexEditor::HexEditor()
     : m_document(make<HexDocumentMemory>(ByteBuffer::create_zeroed(0).release_value_but_fixme_should_propagate_errors()))

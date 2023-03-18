@@ -5,7 +5,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibTest/TestCase.h>
 #include <LibTextCodec/Decoder.h>
 

@@ -7,7 +7,6 @@
 
 #include "SignpostsModel.h"
 #include "Profile.h"
-#include <AK/StringBuilder.h>
 
 namespace Profiler {
 

@@ -5,18 +5,13 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/StringBuilder.h>
 #include <Kernel/API/Ioctl.h>
-#include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/UnixTypes.h>
 
 namespace Kernel {
 

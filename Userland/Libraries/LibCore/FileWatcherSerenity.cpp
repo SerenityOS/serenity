@@ -7,9 +7,7 @@
 
 #include "FileWatcher.h"
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/NonnullRefPtr.h>
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/API/InodeWatcherFlags.h>
 #include <LibCore/Notifier.h>

@@ -9,7 +9,6 @@
 #include "TaskbarWindow.h"
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
-#include <AK/Try.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>

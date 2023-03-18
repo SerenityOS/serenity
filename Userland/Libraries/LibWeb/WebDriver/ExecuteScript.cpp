@@ -6,11 +6,8 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/NumericLimits.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Time.h>
-#include <AK/Variant.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>

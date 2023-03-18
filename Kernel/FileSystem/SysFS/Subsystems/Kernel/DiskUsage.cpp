@@ -8,7 +8,6 @@
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/DiskUsage.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

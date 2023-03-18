@@ -7,7 +7,6 @@
 #include "DIE.h"
 #include "CompilationUnit.h"
 #include "DwarfInfo.h"
-#include <AK/ByteBuffer.h>
 #include <AK/LEB128.h>
 #include <AK/MemoryStream.h>
 

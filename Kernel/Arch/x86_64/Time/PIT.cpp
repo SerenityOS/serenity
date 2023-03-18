@@ -7,11 +7,9 @@
 #include <Kernel/Arch/x86_64/IO.h>
 #include <Kernel/Arch/x86_64/Time/PIT.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
-#include <Kernel/Time/TimeManagement.h>
 
 #define IRQ_TIMER 0
 namespace Kernel {

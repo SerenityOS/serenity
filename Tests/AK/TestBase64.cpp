@@ -7,8 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/Base64.h>
-#include <AK/DeprecatedString.h>
-#include <string.h>
 
 TEST_CASE(test_decode)
 {

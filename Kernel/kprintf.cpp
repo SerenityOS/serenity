@@ -5,8 +5,6 @@
  */
 
 #include <AK/PrintfImplementation.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/DebugOutput.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
@@ -16,7 +14,6 @@
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Locking/Spinlock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 

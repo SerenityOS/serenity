@@ -9,7 +9,6 @@
 
 #include <AK/Function.h>
 #include <AK/HashTable.h>
-#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
@@ -20,7 +19,6 @@
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Map.h>
-#include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/Value.h>
 

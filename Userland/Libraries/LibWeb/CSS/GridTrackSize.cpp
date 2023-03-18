@@ -5,7 +5,6 @@
  */
 
 #include "GridTrackSize.h"
-#include <AK/String.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
 #include <LibWeb/CSS/StyleValue.h>

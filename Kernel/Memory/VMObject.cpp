@@ -6,7 +6,6 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/VMObject.h>
 
 namespace Kernel::Memory {
 

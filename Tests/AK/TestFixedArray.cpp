@@ -5,7 +5,6 @@
  */
 
 #include <LibTest/TestCase.h>
-#include <LibTest/TestSuite.h>
 
 #include <AK/FixedArray.h>
 #include <AK/NoAllocationGuard.h>

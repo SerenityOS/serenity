@@ -8,14 +8,12 @@
 #include "HackStudio.h"
 #include "HackStudioWidget.h"
 #include "Project.h"
-#include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menubar.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Notification.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>

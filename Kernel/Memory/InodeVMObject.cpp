@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/Memory/InodeVMObject.h>
 
 namespace Kernel::Memory {
 

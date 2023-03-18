@@ -9,7 +9,6 @@
 
 #include <AK/Array.h>
 #include <AK/LexicalPath.h>
-#include <AK/StringView.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/AbstractThemePreview.h>
 #include <LibGUI/Painter.h>

@@ -15,7 +15,6 @@
 #include <LibMain/Main.h>
 #include <math.h>
 #include <stdio.h>
-#include <sys/ioctl.h>
 
 enum AudioVariable : u32 {
     Volume,

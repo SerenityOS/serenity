@@ -6,8 +6,6 @@
 
 #include "VectorscopeWidget.h"
 #include "Layer.h"
-#include <AK/Math.h>
-#include <AK/Types.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -16,7 +14,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibGfx/TextAlignment.h>
-#include <LibGfx/TextElision.h>
 
 REGISTER_WIDGET(PixelPaint, VectorscopeWidget);
 

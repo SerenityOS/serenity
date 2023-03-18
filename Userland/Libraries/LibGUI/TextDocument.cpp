@@ -11,7 +11,6 @@
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>

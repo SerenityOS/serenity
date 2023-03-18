@@ -6,15 +6,10 @@
  */
 
 #include "InlineFormattingContext.h"
-#include <AK/Function.h>
-#include <AK/QuickSort.h>
-#include <AK/StdLibExtras.h>
-#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/FlexFormattingContext.h>
 #include <LibWeb/Layout/ReplacedBox.h>
-#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
 
 namespace Web::Layout {

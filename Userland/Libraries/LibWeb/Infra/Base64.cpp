@@ -5,12 +5,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/ByteBuffer.h>
-#include <AK/CharacterTypes.h>
-#include <AK/Error.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
 #include <LibWeb/Infra/Base64.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 

@@ -7,7 +7,6 @@
  */
 
 #include <AK/JsonValue.h>
-#include <AK/NonnullRefPtr.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Variant.h>
 

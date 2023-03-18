@@ -5,9 +5,7 @@
  */
 
 #include <AK/Singleton.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Time.h>
-#include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/Credentials.h>
@@ -17,26 +15,14 @@
 #ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
 #    include <Kernel/Devices/KCOVDevice.h>
 #endif
-#include <Kernel/API/POSIX/errno.h>
-#include <Kernel/API/POSIX/sys/limits.h>
-#include <Kernel/Arch/PageDirectory.h>
-#include <Kernel/Devices/NullDevice.h>
-#include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/SharedInodeVMObject.h>
 #include <Kernel/Panic.h>
-#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
-#include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
 

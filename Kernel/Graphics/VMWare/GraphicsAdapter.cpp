@@ -13,10 +13,6 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VMWare/Definitions.h>
 #include <Kernel/Graphics/VMWare/DisplayConnector.h>
-#include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
-#include <Kernel/IOWindow.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

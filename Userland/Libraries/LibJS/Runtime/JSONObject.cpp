@@ -8,10 +8,8 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <AK/StringBuilder.h>
 #include <AK/TypeCasts.h>
 #include <AK/Utf16View.h>
-#include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigIntObject.h>

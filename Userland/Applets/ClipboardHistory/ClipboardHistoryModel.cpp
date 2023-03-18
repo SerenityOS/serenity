@@ -8,7 +8,6 @@
 
 #include "ClipboardHistoryModel.h"
 #include <AK/NumberFormat.h>
-#include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
 
 NonnullRefPtr<ClipboardHistoryModel> ClipboardHistoryModel::create()

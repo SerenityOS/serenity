@@ -9,11 +9,7 @@
 #include "ProfileModel.h"
 #include "SamplesModel.h"
 #include "SourceModel.h"
-#include <AK/HashTable.h>
-#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <AK/RefPtr.h>
-#include <AK/Try.h>
 #include <LibCore/MappedFile.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>

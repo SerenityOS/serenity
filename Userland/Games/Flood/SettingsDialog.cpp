@@ -5,16 +5,11 @@
  */
 
 #include "SettingsDialog.h"
-#include <AK/IntegralMath.h>
-#include <AK/QuickSort.h>
 #include <Games/Flood/SettingsDialogGML.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/CheckBox.h>
-#include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
 
 SettingsDialog::SettingsDialog(GUI::Window* parent, size_t board_rows, size_t board_columns)

@@ -6,7 +6,6 @@
 
 #include "DNSServer.h"
 #include "LookupServer.h"
-#include <AK/IPv4Address.h>
 #include <LibDNS/Packet.h>
 
 namespace LookupServer {

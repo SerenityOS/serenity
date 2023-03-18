@@ -12,14 +12,12 @@
 #include <AK/Format.h>
 #include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/Singleton.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibCore/Promise.h>
@@ -33,14 +31,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
-#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <time.h>
 #include <unistd.h>
 
 #ifdef AK_OS_SERENITY
-#    include <LibCore/Account.h>
 
 extern bool s_global_initializers_ran;
 #endif

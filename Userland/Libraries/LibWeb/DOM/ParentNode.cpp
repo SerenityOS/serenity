@@ -12,7 +12,6 @@
 #include <LibWeb/DOM/NodeOperations.h>
 #include <LibWeb/DOM/ParentNode.h>
 #include <LibWeb/DOM/StaticNodeList.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/Namespace.h>
 
 namespace Web::DOM {

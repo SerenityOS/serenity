@@ -5,7 +5,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/Format.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>

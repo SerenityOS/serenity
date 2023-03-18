@@ -17,7 +17,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <LibCore/System.h>
 #include <LibCore/Timer.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>

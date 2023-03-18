@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 #include <pthread.h>
 #include <sched.h>
-#include <unistd.h>
 
 #define TEST_CASE_IN_PTHREAD(x)                                                 \
     static void* __TESTCASE_FUNC(x##__inner)(void*);                            \

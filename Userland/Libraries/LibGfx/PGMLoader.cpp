@@ -8,7 +8,6 @@
 #include "PGMLoader.h"
 #include "PortableImageLoaderCommon.h"
 #include "Streamer.h"
-#include <AK/Endian.h>
 #include <string.h>
 
 namespace Gfx {

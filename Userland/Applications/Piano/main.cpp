@@ -11,8 +11,6 @@
 #include "ExportProgressWindow.h"
 #include "MainWidget.h"
 #include "TrackManager.h"
-#include <AK/Atomic.h>
-#include <AK/Queue.h>
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/WavWriter.h>
 #include <LibCore/EventLoop.h>

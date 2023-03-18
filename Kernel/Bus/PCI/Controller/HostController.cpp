@@ -6,8 +6,6 @@
 
 #include <AK/Format.h>
 #include <Kernel/Bus/PCI/Access.h>
-#include <Kernel/Bus/PCI/Controller/HostController.h>
-#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel::PCI {

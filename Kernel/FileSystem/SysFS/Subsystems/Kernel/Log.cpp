@@ -7,7 +7,6 @@
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Log.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

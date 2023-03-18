@@ -8,10 +8,8 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
-#include <errno.h>
 #include <spawn.h>
 #include <unistd.h>
 

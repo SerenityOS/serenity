@@ -7,9 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Painter.h>
-#include <stdio.h>
 
 BENCHMARK_CASE(diagonal_lines)
 {

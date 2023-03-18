@@ -8,8 +8,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
@@ -18,7 +16,6 @@
 #include <limits.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 static bool flag_show_hidden_files = false;
 static bool flag_show_only_directories = false;

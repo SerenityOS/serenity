@@ -19,7 +19,6 @@
 #include <LibWeb/HTML/Path2D.h>
 #include <LibWeb/HTML/TextMetrics.h>
 #include <LibWeb/Infra/CharacterTypes.h>
-#include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Platform/FontPlugin.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 

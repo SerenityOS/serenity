@@ -5,19 +5,16 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/Platform.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <libgen.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <utime.h>
 
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>

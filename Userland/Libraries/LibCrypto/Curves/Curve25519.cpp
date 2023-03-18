@@ -5,7 +5,6 @@
  */
 
 #include <AK/Endian.h>
-#include <AK/Types.h>
 #include <LibCrypto/Curves/Curve25519.h>
 
 namespace Crypto::Curves {

@@ -10,7 +10,6 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <pwd.h>
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 

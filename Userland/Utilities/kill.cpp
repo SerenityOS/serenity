@@ -5,14 +5,12 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Optional.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 static void print_usage_and_exit()
 {

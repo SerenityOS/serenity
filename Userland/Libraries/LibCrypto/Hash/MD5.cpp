@@ -5,7 +5,6 @@
  */
 
 #include <AK/Memory.h>
-#include <AK/Types.h>
 #include <LibCrypto/Hash/MD5.h>
 
 static constexpr u32 F(u32 x, u32 y, u32 z) { return (x & y) | ((~x) & z); };

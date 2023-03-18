@@ -8,29 +8,20 @@
 
 #include <AK/BuiltinWrappers.h>
 #include <AK/Format.h>
-#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
-#include <AK/Types.h>
 
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/Thread.h>
 
 #include <Kernel/Arch/Interrupts.h>
-#include <Kernel/Arch/Processor.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/TrapFrame.h>
-#include <Kernel/Arch/x86_64/CPUID.h>
 #include <Kernel/Arch/x86_64/MSR.h>
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
-#include <Kernel/ScopedCritical.h>
 
-#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Memory/ScopedAddressSpaceSwitcher.h>
 
 namespace Kernel {

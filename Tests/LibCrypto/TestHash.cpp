@@ -5,7 +5,6 @@
  */
 
 #include <LibCrypto/Authentication/GHash.h>
-#include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
 #include <LibCrypto/Hash/SHA2.h>

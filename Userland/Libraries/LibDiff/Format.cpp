@@ -5,8 +5,6 @@
  */
 
 #include "Format.h"
-#include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 
 namespace Diff {

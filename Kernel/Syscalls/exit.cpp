@@ -6,8 +6,6 @@
 
 #include <Kernel/KSyms.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 

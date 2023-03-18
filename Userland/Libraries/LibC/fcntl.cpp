@@ -8,11 +8,9 @@
 #include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <limits.h>
 #include <stdarg.h>
 #include <string.h>
 #include <syscall.h>
-#include <time.h>
 
 extern "C" {
 

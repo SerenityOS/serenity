@@ -10,7 +10,6 @@
 // Make a reasonable guess as to which timespec/timeval definition to use.
 // It doesn't really matter, since both are identical.
 #ifdef KERNEL
-#    include <Kernel/UnixTypes.h>
 #else
 #    include <sys/time.h>
 #    include <time.h>

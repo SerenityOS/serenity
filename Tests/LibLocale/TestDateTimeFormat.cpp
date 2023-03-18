@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/StringView.h>
 #include <AK/Time.h>
 #include <LibLocale/DateTimeFormat.h>
 

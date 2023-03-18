@@ -9,14 +9,10 @@
  */
 
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/Time.h>
-#include <AK/Vector.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleProperties.h>
-#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/DOM/Document.h>
@@ -37,7 +33,6 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
-#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWeb/WebDriver/Screenshot.h>

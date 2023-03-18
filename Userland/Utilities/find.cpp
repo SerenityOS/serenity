@@ -9,7 +9,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
-#include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <dirent.h>

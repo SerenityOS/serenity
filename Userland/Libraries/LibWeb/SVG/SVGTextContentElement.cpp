@@ -6,7 +6,6 @@
 
 #include <AK/Utf16View.h>
 #include <LibJS/Runtime/Completion.h>
-#include <LibJS/Runtime/Utf16String.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/SVG/SVGTextContentElement.h>
 

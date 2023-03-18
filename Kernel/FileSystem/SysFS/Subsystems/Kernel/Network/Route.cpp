@@ -7,7 +7,6 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/Route.h>
 #include <Kernel/Net/Routing.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

@@ -8,8 +8,6 @@
 
 #include "KeysWidget.h"
 #include "TrackManager.h"
-#include <AK/Array.h>
-#include <AK/StringView.h>
 #include <LibDSP/Keyboard.h>
 #include <LibGUI/Painter.h>
 

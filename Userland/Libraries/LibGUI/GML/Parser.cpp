@@ -9,12 +9,8 @@
 #include "Parser.h"
 #include "AST.h"
 #include "Lexer.h"
-#include <AK/Error.h>
-#include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/Queue.h>
-#include <AK/RefPtr.h>
 
 namespace GUI::GML {
 

@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct_empty)

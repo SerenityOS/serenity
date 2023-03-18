@@ -7,7 +7,6 @@
 
 #include "HardwareScreenBackend.h"
 #include "ScreenBackend.h"
-#include <AK/Try.h>
 #include <Kernel/API/Graphics.h>
 #include <LibCore/System.h>
 #include <fcntl.h>

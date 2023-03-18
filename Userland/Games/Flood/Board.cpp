@@ -6,7 +6,6 @@
 
 #include "Board.h"
 #include <AK/Random.h>
-#include <time.h>
 
 Board::Board(size_t rows, size_t columns)
 {

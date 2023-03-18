@@ -5,29 +5,21 @@
  */
 
 #include "TerminalSettingsWidget.h"
-#include <AK/Assertions.h>
-#include <AK/JsonObject.h>
-#include <AK/QuickSort.h>
 #include <Applications/TerminalSettings/TerminalSettingsMainGML.h>
 #include <Applications/TerminalSettings/TerminalSettingsViewGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DirIterator.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FontPicker.h>
-#include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/OpacitySlider.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <LibKeyboard/CharacterMap.h>
 #include <LibVT/TerminalWidget.h>
-#include <spawn.h>
 
 TerminalSettingsMainWidget::TerminalSettingsMainWidget()
 {

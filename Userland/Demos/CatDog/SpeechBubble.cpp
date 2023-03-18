@@ -6,9 +6,7 @@
  */
 
 #include "SpeechBubble.h"
-#include <AK/Array.h>
 #include <AK/Random.h>
-#include <AK/StringView.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 

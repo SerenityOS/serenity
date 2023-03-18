@@ -5,7 +5,6 @@
  */
 
 #include <AK/NumericLimits.h>
-#include <AK/Types.h>
 #include <LibAudio/Loader.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>

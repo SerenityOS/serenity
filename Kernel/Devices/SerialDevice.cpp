@@ -7,8 +7,6 @@
 
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/SerialDevice.h>
-#include <Kernel/IOWindow.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

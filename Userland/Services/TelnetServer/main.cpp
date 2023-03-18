@@ -5,9 +5,6 @@
  */
 
 #include "Client.h"
-#include <AK/DeprecatedString.h>
-#include <AK/HashMap.h>
-#include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>

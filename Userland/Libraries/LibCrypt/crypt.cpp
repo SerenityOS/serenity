@@ -5,7 +5,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/Types.h>
 #include <LibCrypto/Hash/SHA2.h>
 #include <crypt.h>
 #include <errno.h>

@@ -10,7 +10,6 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

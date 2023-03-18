@@ -10,7 +10,6 @@
 #include <LibSQL/BTree.h>
 #include <LibSQL/Heap.h>
 #include <LibSQL/Key.h>
-#include <LibSQL/Meta.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>
 #include <LibTest/TestCase.h>

@@ -9,7 +9,6 @@
 #include <LibCore/Object.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/Font/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/SystemTheme.h>

@@ -6,7 +6,6 @@
 
 #include "ConnectionCache.h"
 #include <LibCore/EventLoop.h>
-#include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
 #include <RequestServer/GeminiRequest.h>
 

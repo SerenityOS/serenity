@@ -5,7 +5,6 @@
  */
 
 #include "TimerSerenity.h"
-#include <AK/NonnullRefPtr.h>
 #include <LibCore/Timer.h>
 
 namespace Web::Platform {

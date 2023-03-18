@@ -9,7 +9,6 @@
 #include <Kernel/Arch/x86_64/IO.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

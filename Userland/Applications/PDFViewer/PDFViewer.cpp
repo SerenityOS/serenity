@@ -6,9 +6,7 @@
  */
 
 #include "PDFViewer.h"
-#include <AK/Array.h>
 #include <AK/BinarySearch.h>
-#include <AK/HashFunctions.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/MessageBox.h>

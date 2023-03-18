@@ -6,7 +6,6 @@
 
 #include <pthread.h>
 #include <stdio.h>
-#include <sys/select.h>
 #include <unistd.h>
 
 int main(int, char**)

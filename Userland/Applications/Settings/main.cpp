@@ -17,9 +17,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <serenity.h>
-#include <stdio.h>
-#include <unistd.h>
 
 // Modeled after PlaylistWidget.
 enum class SettingsAppsModelCustomRole {

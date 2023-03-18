@@ -9,9 +9,6 @@
 #include <AK/DeprecatedString.h>
 #include <LibCore/File.h>
 #include <LibMain/Main.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {

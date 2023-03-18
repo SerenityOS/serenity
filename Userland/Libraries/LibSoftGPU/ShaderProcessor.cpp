@@ -5,7 +5,6 @@
  */
 
 #include <LibGfx/Vector2.h>
-#include <LibGfx/Vector4.h>
 #include <LibSoftGPU/Shader.h>
 #include <LibSoftGPU/ShaderProcessor.h>
 

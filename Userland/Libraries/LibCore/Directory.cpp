@@ -7,7 +7,6 @@
 #include "Directory.h"
 #include "DirIterator.h"
 #include "System.h"
-#include <dirent.h>
 
 namespace Core {
 

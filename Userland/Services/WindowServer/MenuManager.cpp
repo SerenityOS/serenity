@@ -8,7 +8,6 @@
 #include <AK/Badge.h>
 #include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/MenuManager.h>
-#include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
 
 namespace WindowServer {

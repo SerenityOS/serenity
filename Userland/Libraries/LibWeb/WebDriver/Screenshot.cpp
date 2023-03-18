@@ -9,7 +9,6 @@
 #include <LibGfx/Rect.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
-#include <LibWeb/HTML/AnimationFrameCallbackDriver.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
 #include <LibWeb/HTML/TagNames.h>

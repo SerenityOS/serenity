@@ -6,8 +6,6 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/StringView.h>
 
 #ifndef KERNEL
 #    include <AK/JsonParser.h>

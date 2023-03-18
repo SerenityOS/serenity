@@ -9,7 +9,6 @@
 #include <LibGL/GL/gl.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Vector3.h>
-#include <LibGfx/Vector4.h>
 
 #include "Mesh.h"
 

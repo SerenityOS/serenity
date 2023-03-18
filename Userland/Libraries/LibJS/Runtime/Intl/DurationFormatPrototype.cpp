@@ -6,7 +6,6 @@
  */
 
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/DurationFormatPrototype.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 

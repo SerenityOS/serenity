@@ -19,10 +19,8 @@
 #include <LibJS/Runtime/Intl/PluralRulesConstructor.h>
 #include <LibJS/Runtime/Intl/RelativeTimeFormatConstructor.h>
 #include <LibJS/Runtime/Intl/SegmenterConstructor.h>
-#include <LibJS/Runtime/Temporal/TimeZone.h>
 #include <LibLocale/DateTimeFormat.h>
 #include <LibLocale/Locale.h>
-#include <LibLocale/NumberFormat.h>
 
 namespace JS::Intl {
 

@@ -6,8 +6,6 @@
 
 #include "QuickLaunchWidget.h"
 #include <AK/LexicalPath.h>
-#include <AK/OwnPtr.h>
-#include <Kernel/API/InodeWatcherFlags.h>
 #include <LibConfig/Client.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/MimeData.h>
@@ -19,7 +17,6 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <serenity.h>
-#include <sys/stat.h>
 
 namespace Taskbar {
 

@@ -9,7 +9,6 @@
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 static ErrorOr<void> decompress_file(NonnullOwnPtr<Core::File> input_stream, Stream& output_stream)
 {

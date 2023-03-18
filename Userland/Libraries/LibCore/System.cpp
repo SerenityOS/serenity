@@ -9,8 +9,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
-#include <AK/ScopedValueRollback.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/SessionManagement.h>

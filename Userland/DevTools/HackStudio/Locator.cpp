@@ -7,7 +7,6 @@
 
 #include "Locator.h"
 #include "HackStudio.h"
-#include "Project.h"
 #include "ProjectDeclarations.h"
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibGUI/BoxLayout.h>

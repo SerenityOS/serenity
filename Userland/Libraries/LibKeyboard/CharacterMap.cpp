@@ -5,7 +5,6 @@
  */
 
 #include "CharacterMap.h"
-#include <AK/StringBuilder.h>
 #include <LibKeyboard/CharacterMapFile.h>
 #include <errno.h>
 #include <serenity.h>

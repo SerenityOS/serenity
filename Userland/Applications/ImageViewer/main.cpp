@@ -20,7 +20,6 @@
 #include <LibGUI/Desktop.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Toolbar.h>
@@ -30,7 +29,6 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 #include <LibMain/Main.h>
-#include <serenity.h>
 #include <string.h>
 
 using namespace ImageViewer;

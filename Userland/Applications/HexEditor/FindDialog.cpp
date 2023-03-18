@@ -5,10 +5,7 @@
  */
 
 #include "FindDialog.h"
-#include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Hex.h>
-#include <AK/StringView.h>
 #include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

@@ -9,8 +9,6 @@
 #include "Identity.h"
 #include "Numeric.h"
 #include "String.h"
-#include <AK/HashMap.h>
-#include <AK/OwnPtr.h>
 
 static HashMap<DeprecatedString, Spreadsheet::CellType*> s_cell_types;
 static Spreadsheet::StringCell s_string_cell;

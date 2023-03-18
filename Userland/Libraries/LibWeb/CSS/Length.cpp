@@ -7,7 +7,6 @@
  */
 
 #include <AK/NonnullOwnPtr.h>
-#include <AK/Variant.h>
 #include <LibGfx/Font/Font.h>
 #include <LibGfx/Rect.h>
 #include <LibWeb/CSS/Length.h>

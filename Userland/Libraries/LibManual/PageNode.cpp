@@ -7,7 +7,6 @@
 
 #include "PageNode.h"
 #include "SectionNode.h"
-#include <AK/RefPtr.h>
 
 namespace Manual {
 

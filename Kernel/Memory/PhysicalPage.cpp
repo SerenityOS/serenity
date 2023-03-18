@@ -6,7 +6,6 @@
 
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PhysicalPage.h>
 
 namespace Kernel::Memory {
 

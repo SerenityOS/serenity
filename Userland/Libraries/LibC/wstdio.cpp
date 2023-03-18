@@ -8,7 +8,6 @@
 #include <AK/BitCast.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <bits/stdio_file_implementation.h>
 #include <errno.h>
 #include <stdio.h>

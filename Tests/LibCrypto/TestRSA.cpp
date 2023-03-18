@@ -5,7 +5,6 @@
  */
 
 #include <LibCrypto/Hash/SHA2.h>
-#include <LibCrypto/PK/PK.h>
 #include <LibCrypto/PK/RSA.h>
 #include <LibTest/TestCase.h>
 #include <cstring>

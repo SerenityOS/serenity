@@ -8,10 +8,8 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <AK/URLParser.h>
-#include <AK/Utf8View.h>
 
 namespace AK {
 

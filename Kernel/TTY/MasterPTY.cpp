@@ -6,7 +6,6 @@
 
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/API/POSIX/errno.h>
-#include <Kernel/API/POSIX/signal_numbers.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>

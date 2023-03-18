@@ -8,9 +8,7 @@
 #define SYSLOG_NAMES 1
 
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <stdio.h>
-#include <string.h>
 #include <syslog.h>
 #include <unistd.h>
 

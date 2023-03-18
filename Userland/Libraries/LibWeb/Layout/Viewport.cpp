@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/DOM/Range.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>

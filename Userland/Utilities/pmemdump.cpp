@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/StringUtils.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -16,7 +15,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 static bool try_set_offset_and_length_parameters(DeprecatedString const& arg_offset, DeprecatedString const& arg_length, u64& offset, u64& length)

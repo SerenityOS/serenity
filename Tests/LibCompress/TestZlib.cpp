@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
 #include <LibCompress/Zlib.h>
 
 TEST_CASE(zlib_decompress_simple)

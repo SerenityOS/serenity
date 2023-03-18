@@ -6,7 +6,6 @@
 
 #include <AK/JsonObject.h>
 #include <AK/JsonPath.h>
-#include <AK/JsonValue.h>
 
 namespace AK {
 

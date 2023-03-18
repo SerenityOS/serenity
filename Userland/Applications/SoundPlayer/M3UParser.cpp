@@ -6,8 +6,6 @@
 
 #include "M3UParser.h"
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
-#include <AK/ScopeGuard.h>
 #include <AK/Utf8View.h>
 #include <LibCore/File.h>
 

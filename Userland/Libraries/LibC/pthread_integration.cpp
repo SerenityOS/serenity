@@ -6,12 +6,10 @@
 
 #include <AK/Atomic.h>
 #include <AK/NeverDestroyed.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <bits/pthread_integration.h>
 #include <errno.h>
 #include <pthread.h>
-#include <sched.h>
 #include <serenity.h>
 #include <unistd.h>
 

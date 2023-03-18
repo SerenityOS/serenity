@@ -7,13 +7,9 @@
 #include "LookupServer.h"
 #include "ConnectionFromClient.h"
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
-#include <AK/HashMap.h>
 #include <AK/Random.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DeprecatedFile.h>
-#include <LibCore/LocalServer.h>
 #include <LibDNS/Packet.h>
 #include <limits.h>
 #include <stdio.h>

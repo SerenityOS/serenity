@@ -7,7 +7,6 @@
 #include "Providers.h"
 #include <AK/FuzzyMatch.h>
 #include <AK/LexicalPath.h>
-#include <AK/URL.h>
 #include <LibCore/Directory.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Process.h>
@@ -18,10 +17,8 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Script.h>
-#include <errno.h>
 #include <fcntl.h>
 #include <serenity.h>
-#include <spawn.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

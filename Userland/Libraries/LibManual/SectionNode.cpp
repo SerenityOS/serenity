@@ -8,7 +8,6 @@
 #include "PageNode.h"
 #include "Path.h"
 #include "SubsectionNode.h"
-#include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>

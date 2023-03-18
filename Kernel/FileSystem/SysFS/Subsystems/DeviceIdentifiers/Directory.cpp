@@ -7,8 +7,6 @@
 #include <Kernel/FileSystem/SysFS/RootDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/Directory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

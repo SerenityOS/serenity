@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/Plan9FS/FileSystem.h>
 #include <Kernel/FileSystem/Plan9FS/Inode.h>
-#include <Kernel/FileSystem/Plan9FS/Message.h>
 
 namespace Kernel {
 

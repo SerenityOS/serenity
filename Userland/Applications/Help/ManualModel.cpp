@@ -5,8 +5,6 @@
  */
 
 #include "ManualModel.h"
-#include <AK/Try.h>
-#include <AK/Utf8View.h>
 #include <LibManual/Node.h>
 #include <LibManual/PageNode.h>
 #include <LibManual/Path.h>

@@ -10,8 +10,6 @@
 #include <DevTools/HackStudio/Dialogs/NewProjectDialogGML.h>
 #include <DevTools/HackStudio/ProjectTemplate.h>
 
-#include <AK/DeprecatedString.h>
-#include <AK/LexicalPath.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
 #include <LibGUI/BoxLayout.h>

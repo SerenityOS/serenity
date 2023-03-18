@@ -10,7 +10,6 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
-#include <unistd.h>
 
 static u8 parse_octal_number(GenericLexer& lexer)
 {

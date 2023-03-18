@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>

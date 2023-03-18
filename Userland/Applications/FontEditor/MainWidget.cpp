@@ -8,9 +8,6 @@
 #include "MainWidget.h"
 #include "GlyphEditorWidget.h"
 #include "NewFontDialog.h"
-#include <AK/Array.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <Applications/FontEditor/FontPreviewWindowGML.h>
 #include <LibConfig/Client.h>
@@ -28,7 +25,6 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SpinBox.h>

@@ -5,11 +5,9 @@
  */
 
 #include "GradientTool.h"
-#include "../ImageEditor.h"
 #include "../Layer.h"
 
 #include <LibGUI/Action.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
@@ -19,7 +17,6 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Gradients.h>
-#include <LibGfx/Path.h>
 #include <LibGfx/Rect.h>
 
 namespace PixelPaint {

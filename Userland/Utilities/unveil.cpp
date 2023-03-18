@@ -5,9 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
-#include <LibELF/Image.h>
 #include <LibMain/Main.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)

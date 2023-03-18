@@ -7,14 +7,9 @@
 
 #include "SoundPlayerWidgetAdvancedView.h"
 #include "BarsVisualizationWidget.h"
-#include "M3UParser.h"
 #include "PlaybackManager.h"
-#include <AK/DeprecatedString.h>
-#include <AK/LexicalPath.h>
-#include <AK/SIMD.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Slider.h>

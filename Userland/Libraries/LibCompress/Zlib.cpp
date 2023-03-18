@@ -6,9 +6,7 @@
 
 #include <AK/IntegralMath.h>
 #include <AK/MemoryStream.h>
-#include <AK/Span.h>
 #include <AK/TypeCasts.h>
-#include <AK/Types.h>
 #include <LibCompress/Deflate.h>
 #include <LibCompress/Zlib.h>
 

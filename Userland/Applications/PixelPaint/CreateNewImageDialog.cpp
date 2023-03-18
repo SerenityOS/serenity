@@ -6,7 +6,6 @@
  */
 
 #include "CreateNewImageDialog.h"
-#include <AK/Array.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>

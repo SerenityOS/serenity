@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
 #include <AK/Random.h>
 #include <LibCompress/Gzip.h>
 

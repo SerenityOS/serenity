@@ -7,23 +7,19 @@
 
 #include <AK/Platform.h>
 #include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <AK/UUID.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/ISABus/IDEController.h>
 #    include <Kernel/Arch/x86_64/PCI/IDELegacyModeController.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Controller/VolumeManagementDevice.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/FileSystem/Ext2FS/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
-#include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 #include <Kernel/Storage/StorageManagement.h>

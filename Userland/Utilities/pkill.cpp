@@ -13,7 +13,6 @@
 #include <LibRegex/Regex.h>
 #include <LibRegex/RegexOptions.h>
 #include <signal.h>
-#include <sys/types.h>
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {

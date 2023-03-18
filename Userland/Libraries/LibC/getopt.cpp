@@ -5,10 +5,7 @@
  */
 
 #include <AK/OptionParser.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
 #include <getopt.h>
-#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 

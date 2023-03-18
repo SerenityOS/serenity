@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/DumpKmallocStack.h>
 #include <Kernel/Process.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

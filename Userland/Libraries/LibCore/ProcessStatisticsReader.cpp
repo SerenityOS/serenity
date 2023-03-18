@@ -7,7 +7,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <pwd.h>

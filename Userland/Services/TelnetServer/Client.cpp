@@ -6,12 +6,7 @@
 
 #include "Client.h"
 
-#include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Socket.h>

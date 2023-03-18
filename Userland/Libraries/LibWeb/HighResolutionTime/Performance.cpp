@@ -6,7 +6,6 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/NavigationTiming/PerformanceTiming.h>

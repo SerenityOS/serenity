@@ -8,7 +8,6 @@
 #include <Kernel/Arch/x86_64/ISABus/HID/PS2MouseDevice.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

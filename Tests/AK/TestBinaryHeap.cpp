@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/BinaryHeap.h>
-#include <AK/DeprecatedString.h>
 
 TEST_CASE(construct)
 {

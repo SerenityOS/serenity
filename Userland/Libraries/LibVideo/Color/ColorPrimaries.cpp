@@ -5,7 +5,6 @@
  */
 
 #include <LibGfx/Vector2.h>
-#include <LibGfx/Vector3.h>
 
 #include "ColorPrimaries.h"
 

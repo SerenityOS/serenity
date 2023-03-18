@@ -6,8 +6,6 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/WorkerGlobalScopePrototype.h>
-#include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/WorkerGlobalScope.h>

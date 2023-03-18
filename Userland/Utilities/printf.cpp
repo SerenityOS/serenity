@@ -7,11 +7,8 @@
 #include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
 #include <AK/PrintfImplementation.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
-#include <unistd.h>
 
 [[gnu::noreturn]] static void fail(char const* message)
 {

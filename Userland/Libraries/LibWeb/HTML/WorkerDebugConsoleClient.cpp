@@ -6,7 +6,6 @@
 
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>
-#include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/HTML/WorkerDebugConsoleClient.h>

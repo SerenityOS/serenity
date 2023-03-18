@@ -4,13 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Platform.h>
 #include <Kernel/Arch/x86_64/Hypervisor/BochsDisplayConnector.h>
 #include <Kernel/Arch/x86_64/IO.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 

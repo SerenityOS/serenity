@@ -12,7 +12,6 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
 void MailSettingsWidget::reset_default_values()

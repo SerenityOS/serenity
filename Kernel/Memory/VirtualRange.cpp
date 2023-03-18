@@ -7,7 +7,6 @@
 
 #include <AK/Vector.h>
 #include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/VirtualRange.h>
 
 namespace Kernel::Memory {
 

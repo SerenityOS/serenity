@@ -5,12 +5,9 @@
  */
 
 #include <AK/Atomic.h>
-#include <AK/StdLibExtras.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Locking/Mutex.h>
 #include <Kernel/Process.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 

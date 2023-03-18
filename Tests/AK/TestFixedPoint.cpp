@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/FixedPoint.h>
-#include <AK/NumericLimits.h>
 
 using Type = FixedPoint<4>;
 

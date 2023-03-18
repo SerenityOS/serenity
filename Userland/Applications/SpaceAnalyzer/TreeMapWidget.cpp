@@ -8,8 +8,6 @@
 #include "TreeMapWidget.h"
 #include "ProgressWindow.h"
 #include "Tree.h"
-#include <AK/Array.h>
-#include <AK/DeprecatedString.h>
 #include <AK/NumberFormat.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/Painter.h>

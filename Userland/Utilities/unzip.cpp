@@ -7,7 +7,6 @@
 #include <AK/Assertions.h>
 #include <AK/DOSPackedTime.h>
 #include <AK/NumberFormat.h>
-#include <AK/StringUtils.h>
 #include <LibArchive/Zip.h>
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>

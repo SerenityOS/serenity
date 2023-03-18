@@ -6,7 +6,6 @@
 
 #include "ConnectionFromClient.h"
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibIPC/SingleServer.h>
 #include <LibMain/Main.h>

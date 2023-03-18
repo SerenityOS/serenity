@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Forward.h>
 #include <LibCore/MappedFile.h>
 #include <LibPDF/Document.h>
 #include <LibTest/Macros.h>

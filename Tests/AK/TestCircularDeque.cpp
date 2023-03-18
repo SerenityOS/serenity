@@ -7,8 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/CircularDeque.h>
-#include <AK/DeprecatedString.h>
-#include <AK/StdLibExtras.h>
 
 TEST_CASE(enqueue_begin)
 {

@@ -5,11 +5,8 @@
  */
 
 #include <Kernel/Arch/InterruptManagement.h>
-#include <Kernel/Assertions.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

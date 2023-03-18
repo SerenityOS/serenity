@@ -5,7 +5,6 @@
  */
 
 #include "ProjectConfig.h"
-#include <AK/NonnullOwnPtr.h>
 #include <LibCore/File.h>
 
 namespace HackStudio {

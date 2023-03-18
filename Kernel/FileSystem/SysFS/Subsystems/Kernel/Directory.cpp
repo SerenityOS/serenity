@@ -5,13 +5,11 @@
  */
 
 #include <AK/Error.h>
-#include <AK/Try.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/CPUInfo.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/DiskUsage.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Interrupts.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Jails.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Keymap.h>

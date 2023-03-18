@@ -7,7 +7,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Random.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
@@ -19,7 +18,6 @@
 #include <shadow.h>
 #include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 

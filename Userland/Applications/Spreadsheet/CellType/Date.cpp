@@ -5,9 +5,7 @@
  */
 
 #include "Date.h"
-#include "../Cell.h"
 #include "../Spreadsheet.h"
-#include <AK/ScopeGuard.h>
 #include <LibCore/DateTime.h>
 
 namespace Spreadsheet {

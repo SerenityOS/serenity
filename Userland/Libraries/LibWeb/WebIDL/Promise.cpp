@@ -10,8 +10,6 @@
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
-#include <LibWeb/Bindings/HostDefined.h>
-#include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::WebIDL {

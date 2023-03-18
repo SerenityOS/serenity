@@ -6,11 +6,8 @@
  */
 
 #include "MulticastDNS.h"
-#include <AK/DeprecatedString.h>
-#include <AK/IPv4Address.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <limits.h>

@@ -11,7 +11,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/ScopeGuard.h>
-#include <AK/Types.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <fcntl.h>

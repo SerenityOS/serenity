@@ -6,7 +6,6 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
-#include <AK/FixedArray.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/LexicalPath.h>
@@ -16,8 +15,6 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibUSBDB/Database.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

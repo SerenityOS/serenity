@@ -13,8 +13,6 @@
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/NavigationParams.h>
-#include <LibWeb/HTML/Origin.h>
-#include <LibWeb/Page/Page.h>
 
 namespace Web::HTML {
 

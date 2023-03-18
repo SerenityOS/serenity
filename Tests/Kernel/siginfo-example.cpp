@@ -7,7 +7,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 // Supposed to use volatile everywhere here but good lord does C++ make that a pain

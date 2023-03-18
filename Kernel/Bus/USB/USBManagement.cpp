@@ -10,7 +10,6 @@
 #include <Kernel/Bus/USB/USBManagement.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel::USB {
 

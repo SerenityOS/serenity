@@ -8,7 +8,6 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
-#include <AK/URL.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>

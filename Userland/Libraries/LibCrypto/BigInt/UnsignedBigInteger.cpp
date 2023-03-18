@@ -7,10 +7,7 @@
 
 #include "UnsignedBigInteger.h"
 #include <AK/BuiltinWrappers.h>
-#include <AK/CharacterTypes.h>
 #include <AK/FloatingPoint.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
 #include <math.h>
 

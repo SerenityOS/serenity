@@ -6,7 +6,6 @@
 
 #include <AK/UBSanitizer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/UBSANDeadly.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

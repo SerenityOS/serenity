@@ -7,7 +7,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

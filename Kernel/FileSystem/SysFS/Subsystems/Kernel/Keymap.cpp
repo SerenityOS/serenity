@@ -7,7 +7,6 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Keymap.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

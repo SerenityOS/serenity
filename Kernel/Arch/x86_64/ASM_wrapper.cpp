@@ -7,7 +7,6 @@
 #include <AK/Types.h>
 
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/x86_64/ASM_wrapper.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

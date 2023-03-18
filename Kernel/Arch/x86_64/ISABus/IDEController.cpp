@@ -5,11 +5,7 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/x86_64/ISABus/IDEController.h>
-#include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Library/LockRefPtr.h>
-#include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 

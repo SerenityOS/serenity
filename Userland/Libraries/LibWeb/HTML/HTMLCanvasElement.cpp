@@ -5,7 +5,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/Checked.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/PNGWriter.h>
 #include <LibWeb/CSS/StyleComputer.h>

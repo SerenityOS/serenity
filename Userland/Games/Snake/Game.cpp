@@ -12,7 +12,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font/Font.h>
 #include <LibGfx/Font/FontDatabase.h>
 
 REGISTER_WIDGET(Snake, Game);

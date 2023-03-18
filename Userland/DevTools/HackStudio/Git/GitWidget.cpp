@@ -16,7 +16,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <stdio.h>
 
 namespace HackStudio {
 

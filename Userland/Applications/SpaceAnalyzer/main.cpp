@@ -8,7 +8,6 @@
 #include "Tree.h"
 #include "TreeMapWidget.h"
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DeprecatedFile.h>

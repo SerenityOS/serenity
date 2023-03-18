@@ -11,7 +11,6 @@
 #include "Profile.h"
 #include <LibGUI/FileIconProvider.h>
 #include <LibSymbolication/Symbolication.h>
-#include <stdio.h>
 
 namespace Profiler {
 

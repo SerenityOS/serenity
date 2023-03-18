@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <LibMarkdown/HorizontalRule.h>
 #include <LibMarkdown/Visitor.h>
 #include <LibRegex/Regex.h>

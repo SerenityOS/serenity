@@ -8,9 +8,6 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <limits.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {

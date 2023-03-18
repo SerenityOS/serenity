@@ -7,7 +7,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtr.h>
 

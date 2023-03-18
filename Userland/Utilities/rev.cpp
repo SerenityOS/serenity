@@ -9,7 +9,6 @@
 #include <LibMain/Main.h>
 #include <errno.h>
 #include <string.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

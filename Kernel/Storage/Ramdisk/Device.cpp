@@ -5,11 +5,8 @@
  */
 
 #include <AK/Memory.h>
-#include <AK/StringView.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
-#include <Kernel/Storage/Ramdisk/Device.h>
 
 namespace Kernel {
 

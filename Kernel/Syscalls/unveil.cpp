@@ -6,7 +6,6 @@
  */
 
 #include <AK/RefPtr.h>
-#include <AK/StringView.h>
 #include <Kernel/API/Unveil.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>

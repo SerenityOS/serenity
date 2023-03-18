@@ -6,24 +6,19 @@
  */
 
 #include <AK/Bitmap.h>
-#include <AK/Checked.h>
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
-#include <AK/Optional.h>
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
-#include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
-#include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
 

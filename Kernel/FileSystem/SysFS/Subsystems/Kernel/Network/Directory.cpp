@@ -5,7 +5,6 @@
  */
 
 #include <AK/Error.h>
-#include <AK/Try.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/ARP.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/Adapters.h>

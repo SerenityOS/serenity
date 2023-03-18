@@ -22,7 +22,6 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GeneratorObject.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Collator.h>
 #include <LibJS/Runtime/Intl/DateTimeFormat.h>
 #include <LibJS/Runtime/Intl/DisplayNames.h>
@@ -45,9 +44,7 @@
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/Set.h>
 #include <LibJS/Runtime/ShadowRealm.h>
-#include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
-#include <LibJS/Runtime/StringPrototype.h>
 #include <LibJS/Runtime/Temporal/Calendar.h>
 #include <LibJS/Runtime/Temporal/Duration.h>
 #include <LibJS/Runtime/Temporal/Instant.h>

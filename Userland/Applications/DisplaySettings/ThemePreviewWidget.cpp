@@ -5,7 +5,6 @@
  */
 
 #include "ThemePreviewWidget.h"
-#include <AK/Array.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>

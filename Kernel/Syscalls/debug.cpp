@@ -6,7 +6,6 @@
 
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
-#include <Kernel/UserOrKernelBuffer.h>
 #include <Kernel/kstdio.h>
 
 namespace Kernel {

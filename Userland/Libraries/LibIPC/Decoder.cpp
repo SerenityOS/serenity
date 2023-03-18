@@ -6,7 +6,6 @@
  */
 
 #include <AK/JsonValue.h>
-#include <AK/NumericLimits.h>
 #include <AK/URL.h>
 #include <LibCore/AnonymousBuffer.h>
 #include <LibCore/DateTime.h>

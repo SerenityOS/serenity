@@ -6,21 +6,18 @@
  */
 
 #include "BoardWidget.h"
-#include <AK/Try.h>
 #include <AK/URL.h>
 #include <Games/GameOfLife/GameOfLifeGML.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 

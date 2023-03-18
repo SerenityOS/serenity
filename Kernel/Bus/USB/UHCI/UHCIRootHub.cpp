@@ -5,11 +5,9 @@
  */
 
 #include <Kernel/Bus/USB/UHCI/UHCIController.h>
-#include <Kernel/Bus/USB/UHCI/UHCIRootHub.h>
 #include <Kernel/Bus/USB/USBClasses.h>
 #include <Kernel/Bus/USB/USBConstants.h>
 #include <Kernel/Bus/USB/USBEndpoint.h>
-#include <Kernel/Bus/USB/USBHub.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 
 namespace Kernel::USB {

@@ -5,8 +5,6 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/HTML/EventNames.h>
-#include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/WheelEvent.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 

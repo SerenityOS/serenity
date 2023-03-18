@@ -6,9 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/HashFunctions.h>
-#include <AK/Types.h>
-
 TEST_CASE(int_hash)
 {
     static_assert(int_hash(42) == 3564735745u);

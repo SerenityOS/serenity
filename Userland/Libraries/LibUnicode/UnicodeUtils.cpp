@@ -4,10 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Platform.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Segmentation.h>
 #include <LibUnicode/UnicodeUtils.h>

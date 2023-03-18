@@ -8,7 +8,6 @@
 #include "MonitorSettingsWidget.h"
 #include <Applications/DisplaySettings/MonitorSettingsGML.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ConnectionToWindowServer.h>
 #include <LibGUI/ItemListModel.h>

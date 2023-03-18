@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Types.h>
 
 #include "Parser.h"
 

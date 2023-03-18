@@ -7,9 +7,7 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/Platform.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/StandardPaths.h>
 #include <pwd.h>

@@ -7,7 +7,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/Types.h>
 #include <bits/pthread_cancel.h>
 #include <errno.h>
 #include <pthread.h>

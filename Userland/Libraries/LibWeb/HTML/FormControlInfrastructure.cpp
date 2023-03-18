@@ -6,7 +6,6 @@
 
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/HTML/FormDataEvent.h>
-#include <LibWeb/HTML/HTMLButtonElement.h>
 #include <LibWeb/HTML/HTMLDataListElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>

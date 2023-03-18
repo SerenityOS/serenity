@@ -6,18 +6,14 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/IOWindow.h>
-#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
-#include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
 #include <Kernel/Storage/ATA/Definitions.h>
 #include <Kernel/Storage/ATA/GenericIDE/Channel.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
-#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 

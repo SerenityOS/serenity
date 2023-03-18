@@ -9,7 +9,6 @@
 
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 

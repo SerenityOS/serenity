@@ -6,8 +6,6 @@
 
 #include "Keyboard.h"
 #include "Music.h"
-#include <AK/Error.h>
-#include <AK/NumericLimits.h>
 
 namespace DSP {
 

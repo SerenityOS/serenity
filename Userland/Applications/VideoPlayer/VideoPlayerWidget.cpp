@@ -7,13 +7,11 @@
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Slider.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <Userland/Applications/VideoPlayer/VideoPlayerWindowGML.h>
 

@@ -34,9 +34,7 @@
 #include <LibGfx/StandardCursor.h>
 #include <LibSyntax/Highlighter.h>
 #include <LibUnicode/Segmentation.h>
-#include <fcntl.h>
 #include <stdio.h>
-#include <unistd.h>
 
 REGISTER_WIDGET(GUI, TextEditor)
 

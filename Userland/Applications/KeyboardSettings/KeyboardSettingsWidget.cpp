@@ -7,7 +7,6 @@
  */
 
 #include "KeyboardSettingsWidget.h"
-#include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <Applications/KeyboardSettings/KeyboardWidgetGML.h>
 #include <Applications/KeyboardSettings/KeymapDialogGML.h>
@@ -25,7 +24,6 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <LibKeyboard/CharacterMap.h>
 #include <spawn.h>
 
 class KeymapSelectionDialog final : public GUI::Dialog {

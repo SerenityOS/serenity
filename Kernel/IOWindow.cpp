@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/IOWindow.h>
 
 namespace Kernel {

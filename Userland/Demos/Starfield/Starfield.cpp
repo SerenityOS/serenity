@@ -11,12 +11,10 @@
 #include <LibDesktop/Screensaver.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 #include <time.h>
 
 struct Coordinate {

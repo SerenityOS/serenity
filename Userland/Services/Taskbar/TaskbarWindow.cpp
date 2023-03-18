@@ -10,9 +10,6 @@
 #include "QuickLaunchWidget.h"
 #include "TaskbarButton.h"
 #include <AK/Debug.h>
-#include <AK/Error.h>
-#include <AK/String.h>
-#include <LibCore/StandardPaths.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ConnectionToWindowManagerServer.h>
@@ -25,7 +22,6 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
-#include <serenity.h>
 #include <stdio.h>
 
 class TaskbarWidget final : public GUI::Widget {

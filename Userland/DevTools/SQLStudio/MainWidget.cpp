@@ -18,20 +18,15 @@
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/JsonArrayModel.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/TextDocument.h>
-#include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGUI/ToolbarContainer.h>
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/SQLClient.h>
-#include <LibSQL/Value.h>
 
 #include "MainWidget.h"
 #include "ScriptEditor.h"

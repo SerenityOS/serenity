@@ -10,12 +10,10 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Queue.h>
-#include <AK/StringView.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 #include <stdio.h>
-#include <unistd.h>
 
 static void print_help_and_exit()
 {

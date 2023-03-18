@@ -6,9 +6,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/x86_64/CPUID.h>
 #include <Kernel/Arch/x86_64/ProcessorInfo.h>
 
 namespace Kernel {

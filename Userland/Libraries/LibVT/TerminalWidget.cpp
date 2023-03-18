@@ -6,15 +6,10 @@
  */
 
 #include "TerminalWidget.h"
-#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
-#include <AK/StdLibExtras.h>
-#include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
 #include <LibConfig/Client.h>
-#include <LibCore/ConfigFile.h>
 #include <LibCore/MimeData.h>
 #include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>

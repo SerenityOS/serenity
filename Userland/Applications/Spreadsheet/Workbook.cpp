@@ -8,8 +8,6 @@
 #include "ExportDialog.h"
 #include "ImportDialog.h"
 #include "JSIntegration.h"
-#include <AK/ByteBuffer.h>
-#include <AK/StringView.h>
 #include <LibCore/MimeData.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/TextBox.h>

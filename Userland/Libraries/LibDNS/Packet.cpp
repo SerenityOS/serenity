@@ -10,7 +10,6 @@
 #include "PacketHeader.h"
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
-#include <AK/StringBuilder.h>
 #include <arpa/inet.h>
 
 namespace DNS {

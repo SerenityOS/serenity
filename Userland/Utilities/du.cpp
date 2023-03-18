@@ -7,14 +7,12 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NumberFormat.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <limits.h>
 #include <string.h>
 
 struct DuOption {

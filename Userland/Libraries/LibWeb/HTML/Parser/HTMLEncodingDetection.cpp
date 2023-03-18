@@ -6,7 +6,6 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
-#include <AK/StringView.h>
 #include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Attr.h>

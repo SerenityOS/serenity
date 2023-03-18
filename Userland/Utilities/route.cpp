@@ -9,18 +9,14 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
-#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <net/if.h>
 #include <net/route.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

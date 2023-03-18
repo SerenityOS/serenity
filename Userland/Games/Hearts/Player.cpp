@@ -7,7 +7,6 @@
 #include "Player.h"
 #include "Helpers.h"
 #include <AK/Debug.h>
-#include <AK/QuickSort.h>
 
 namespace Hearts {
 

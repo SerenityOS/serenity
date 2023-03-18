@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Runtime/Array.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/ListFormat.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/ThrowableStringBuilder.h>

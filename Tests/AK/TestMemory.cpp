@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
 

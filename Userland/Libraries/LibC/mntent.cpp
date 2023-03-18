@@ -5,7 +5,6 @@
  */
 
 #include <AK/Format.h>
-#include <assert.h>
 #include <mntent.h>
 
 extern "C" {

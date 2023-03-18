@@ -12,7 +12,6 @@
 #include <LibGUI/ListView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Scrollbar.h>
-#include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Window.h>
 

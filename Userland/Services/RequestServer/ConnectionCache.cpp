@@ -6,7 +6,6 @@
 
 #include "ConnectionCache.h"
 #include <AK/Debug.h>
-#include <AK/Find.h>
 #include <LibCore/EventLoop.h>
 
 namespace RequestServer::ConnectionCache {

@@ -10,7 +10,6 @@
 #include <LibSoftGPU/Image.h>
 #include <LibSoftGPU/SIMD.h>
 #include <LibSoftGPU/Sampler.h>
-#include <math.h>
 
 namespace SoftGPU {
 

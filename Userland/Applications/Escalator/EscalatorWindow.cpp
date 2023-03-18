@@ -6,7 +6,6 @@
  */
 
 #include "EscalatorWindow.h"
-#include <AK/Assertions.h>
 #include <Applications/Escalator/EscalatorGML.h>
 #include <LibCore/SecretString.h>
 #include <LibCore/System.h>

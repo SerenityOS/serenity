@@ -11,10 +11,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/MemoryStream.h>
-#include <AK/StringBuilder.h>
-#include <AK/Try.h>
-#include <AK/Utf8View.h>
-#include <AK/Vector.h>
 
 TEST_CASE(construct_empty)
 {

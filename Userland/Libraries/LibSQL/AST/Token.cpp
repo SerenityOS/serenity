@@ -5,8 +5,6 @@
  */
 
 #include "Token.h"
-#include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
 #include <stdlib.h>
 
 namespace SQL::AST {

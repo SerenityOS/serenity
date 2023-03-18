@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <math.h>
 #include <unistd.h>

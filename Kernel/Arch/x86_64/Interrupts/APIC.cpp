@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Singleton.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
@@ -17,12 +16,7 @@
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Panic.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
 
 #define IRQ_APIC_TIMER (0xfc - IRQ_VECTOR_BASE)
 #define IRQ_APIC_IPI (0xfd - IRQ_VECTOR_BASE)

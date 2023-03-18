@@ -12,9 +12,6 @@
 #include "FileUtils.h"
 #include "PropertiesWindow.h"
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
-#include <AK/Try.h>
-#include <AK/URL.h>
 #include <Applications/FileManager/FileManagerWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
@@ -46,9 +43,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>

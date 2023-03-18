@@ -5,12 +5,8 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
-#include <AK/Variant.h>
 #include <LibRegex/Regex.h>
-#include <ctype.h>
 #include <regex.h>
-#include <stdio.h>
 #include <string.h>
 
 #ifndef AK_OS_SERENITY

@@ -19,8 +19,6 @@
 #include <LibGfx/TGALoader.h>
 #include <LibGfx/WebPLoader.h>
 #include <LibTest/TestCase.h>
-#include <stdio.h>
-#include <string.h>
 
 #ifdef AK_OS_SERENITY
 #    define TEST_INPUT(x) ("/usr/Tests/LibGfx/test-inputs/" x)

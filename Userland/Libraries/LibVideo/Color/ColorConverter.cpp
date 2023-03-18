@@ -5,7 +5,6 @@
  */
 
 #include <AK/Math.h>
-#include <AK/StdLibExtras.h>
 #include <LibGfx/Matrix4x4.h>
 #include <LibVideo/Color/ColorPrimaries.h>
 #include <LibVideo/Color/TransferCharacteristics.h>

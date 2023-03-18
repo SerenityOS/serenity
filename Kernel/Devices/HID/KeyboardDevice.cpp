@@ -10,7 +10,6 @@
 #include <AK/Types.h>
 #include <Kernel/API/Ioctl.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
-#include <Kernel/Sections.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
 namespace Kernel {

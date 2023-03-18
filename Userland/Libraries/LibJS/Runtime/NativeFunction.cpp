@@ -6,7 +6,6 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Realm.h>

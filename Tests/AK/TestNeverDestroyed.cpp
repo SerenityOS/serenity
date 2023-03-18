@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/NeverDestroyed.h>
-#include <AK/StdLibExtras.h>
 
 struct Counter {
     Counter() = default;

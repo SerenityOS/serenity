@@ -11,7 +11,6 @@
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 

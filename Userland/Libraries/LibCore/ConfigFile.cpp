@@ -7,12 +7,9 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/StandardPaths.h>
-#include <LibCore/System.h>
-#include <pwd.h>
 #include <sys/types.h>
 
 namespace Core {

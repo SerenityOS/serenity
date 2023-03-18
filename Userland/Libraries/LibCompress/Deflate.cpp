@@ -6,7 +6,6 @@
  */
 
 #include <AK/Array.h>
-#include <AK/Assertions.h>
 #include <AK/BinaryHeap.h>
 #include <AK/BinarySearch.h>
 #include <AK/BitStream.h>

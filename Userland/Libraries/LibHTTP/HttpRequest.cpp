@@ -6,7 +6,6 @@
  */
 
 #include <AK/Base64.h>
-#include <AK/StringBuilder.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/Job.h>
 

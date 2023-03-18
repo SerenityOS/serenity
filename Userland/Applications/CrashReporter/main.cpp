@@ -7,8 +7,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
@@ -37,10 +35,7 @@
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 #include <LibThreading/BackgroundAction.h>
-#include <serenity.h>
-#include <spawn.h>
 #include <string.h>
-#include <unistd.h>
 
 struct TitleAndText {
     DeprecatedString title;

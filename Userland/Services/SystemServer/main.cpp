@@ -6,8 +6,6 @@
  */
 
 #include "Service.h"
-#include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/String.h>
 #include <Kernel/API/DeviceEvent.h>
@@ -15,7 +13,6 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
-#include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>

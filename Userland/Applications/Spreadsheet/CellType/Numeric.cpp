@@ -5,10 +5,8 @@
  */
 
 #include "Numeric.h"
-#include "../Cell.h"
 #include "../Spreadsheet.h"
 #include "Format.h"
-#include <AK/ScopeGuard.h>
 
 namespace Spreadsheet {
 

@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/Directory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Devices/Graphics/DisplayConnector/Directory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

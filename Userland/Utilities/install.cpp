@@ -5,7 +5,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>

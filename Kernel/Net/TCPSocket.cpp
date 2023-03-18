@@ -8,8 +8,6 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/RandomDevice.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/Locking/MutexProtected.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -17,7 +15,6 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {

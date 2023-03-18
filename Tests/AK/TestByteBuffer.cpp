@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/ByteBuffer.h>
 #include <AK/Vector.h>
 
 TEST_CASE(equality_operator)

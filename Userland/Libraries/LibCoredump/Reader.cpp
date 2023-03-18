@@ -8,7 +8,6 @@
 #include <AK/ByteReader.h>
 #include <AK/HashTable.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/DeprecatedFile.h>

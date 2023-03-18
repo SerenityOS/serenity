@@ -6,12 +6,7 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/ByteBuffer.h>
-#include <AK/Concepts.h>
 #include <AK/FlyString.h>
-#include <AK/String.h>
-#include <AK/StringUtils.h>
-#include <AK/Vector.h>
 
 TEST_CASE(hash_compatible)
 {

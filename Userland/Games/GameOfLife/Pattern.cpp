@@ -6,9 +6,6 @@
  */
 
 #include "Pattern.h"
-#include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
 #include <LibGUI/Action.h>
 #include <stdio.h>
 

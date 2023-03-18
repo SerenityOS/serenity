@@ -20,9 +20,7 @@
 #    include <crypt.h>
 #    include <shadow.h>
 #endif
-#include <stdio.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace Core {

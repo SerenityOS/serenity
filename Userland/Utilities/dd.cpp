@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
 #include <ctype.h>

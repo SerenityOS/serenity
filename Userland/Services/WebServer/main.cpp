@@ -10,15 +10,12 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibMain/Main.h>
 #include <WebServer/Client.h>
 #include <WebServer/Configuration.h>
-#include <stdio.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

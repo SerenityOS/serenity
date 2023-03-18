@@ -6,7 +6,6 @@
 
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CapsLockRemap.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

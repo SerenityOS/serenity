@@ -6,12 +6,9 @@
  */
 
 #include "Field.h"
-#include <AK/Assertions.h>
-#include <AK/HashTable.h>
 #include <AK/NumberFormat.h>
 #include <AK/Queue.h>
 #include <AK/Random.h>
-#include <AK/Types.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>

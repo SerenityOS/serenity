@@ -10,7 +10,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/String.h>
 #include <AK/Utf16View.h>
-#include <AK/Utf8View.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 

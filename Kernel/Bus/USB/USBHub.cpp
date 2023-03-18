@@ -11,7 +11,6 @@
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/BusDirectory.h>
 #include <Kernel/IOWindow.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

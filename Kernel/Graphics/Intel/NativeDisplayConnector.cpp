@@ -6,13 +6,10 @@
 
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/DisplayConnectorGroup.h>
-#include <Kernel/Graphics/Intel/NativeDisplayConnector.h>
-#include <Kernel/Memory/Region.h>
 
 namespace Kernel {
 

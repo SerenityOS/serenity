@@ -7,8 +7,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
-#include <AK/Optional.h>
 #include <AK/Vector.h>
 
 TEST_CASE(basic_optional)

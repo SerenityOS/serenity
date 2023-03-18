@@ -7,7 +7,6 @@
 #include "PolygonalSelectTool.h"
 #include "../ImageEditor.h"
 #include "../Layer.h"
-#include <AK/Queue.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
@@ -15,7 +14,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/ValueSlider.h>
 
 namespace PixelPaint {
 

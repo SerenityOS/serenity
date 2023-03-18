@@ -9,8 +9,6 @@
 #include "Layer.h"
 #include "Image.h"
 #include "Selection.h"
-#include <AK/RefPtr.h>
-#include <AK/Try.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Painter.h>
 

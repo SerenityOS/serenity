@@ -5,7 +5,6 @@
  */
 
 #include "BacktraceModel.h"
-#include "Debugger.h"
 #include <LibDebug/StackFrameUtils.h>
 
 namespace HackStudio {

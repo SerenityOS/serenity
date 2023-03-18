@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StringView.h>
 #include <AK/Time.h>
 #include <LibTimeZone/TimeZone.h>
 

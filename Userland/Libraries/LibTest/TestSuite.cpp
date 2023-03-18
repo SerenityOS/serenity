@@ -7,7 +7,6 @@
 
 #include <LibTest/Macros.h> // intentionally first -- we redefine VERIFY and friends in here
 
-#include <AK/Function.h>
 #include <LibCore/ArgsParser.h>
 #include <LibTest/TestSuite.h>
 #include <math.h>

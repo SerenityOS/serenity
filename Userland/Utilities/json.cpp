@@ -8,11 +8,6 @@
 #include <AK/Assertions.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Types.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>

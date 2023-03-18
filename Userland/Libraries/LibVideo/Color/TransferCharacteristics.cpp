@@ -6,7 +6,6 @@
 
 #include <AK/Format.h>
 #include <AK/Math.h>
-#include <AK/StdLibExtras.h>
 
 #include "TransferCharacteristics.h"
 

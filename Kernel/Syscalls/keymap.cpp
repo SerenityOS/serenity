@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Process.h>
 
 namespace Kernel {
 

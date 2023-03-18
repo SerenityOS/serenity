@@ -7,8 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <cstring>
 

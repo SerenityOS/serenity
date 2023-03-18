@@ -8,10 +8,8 @@
 #define __USE_MISC
 #define TTYDEFCHARS
 #include <AK/DeprecatedString.h>
-#include <AK/Optional.h>
 #include <AK/Result.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>

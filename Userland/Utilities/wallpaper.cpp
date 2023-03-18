@@ -7,7 +7,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/Random.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>

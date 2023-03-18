@@ -6,7 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
 #include <AK/ReverseIterator.h>
 #include <AK/Vector.h>

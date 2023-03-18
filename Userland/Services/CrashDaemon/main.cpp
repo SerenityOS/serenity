@@ -5,16 +5,13 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <serenity.h>
-#include <spawn.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 
 static void wait_until_coredump_is_ready(DeprecatedString const& coredump_path)

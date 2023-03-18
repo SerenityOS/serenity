@@ -5,10 +5,7 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/Error.h>
-#include <AK/IterationDecision.h>
 #include <AK/MemoryStream.h>
-#include <AK/StringView.h>
 #include <LibDeviceTree/FlattenedDeviceTree.h>
 
 namespace DeviceTree {

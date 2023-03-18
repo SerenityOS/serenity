@@ -9,7 +9,6 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibJS/AST.h>
-#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>

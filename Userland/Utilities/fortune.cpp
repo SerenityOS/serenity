@@ -6,18 +6,13 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/Optional.h>
 #include <AK/Random.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 class Quote {
 public:

@@ -5,7 +5,6 @@
  */
 
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
-#include <LibCrypto/Checksum/Adler32.h>
 #include <LibCrypto/Cipher/AES.h>
 #include <LibTest/TestCase.h>
 #include <cstring>

@@ -6,8 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
-#include <AK/Span.h>
-#include <AK/Vector.h>
 #include <LibArchive/TarStream.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/ArgsParser.h>
@@ -17,9 +15,7 @@
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 constexpr size_t buffer_size = 4096;
 

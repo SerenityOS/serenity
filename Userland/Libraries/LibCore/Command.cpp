@@ -5,7 +5,6 @@
  */
 
 #include "Command.h"
-#include <AK/Format.h>
 #include <AK/ScopeGuard.h>
 #include <LibCore/DeprecatedFile.h>
 #include <fcntl.h>

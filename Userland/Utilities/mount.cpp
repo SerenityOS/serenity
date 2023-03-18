@@ -6,7 +6,6 @@
 
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -14,7 +13,6 @@
 #include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 static int parse_options(StringView options)

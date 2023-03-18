@@ -27,7 +27,6 @@
 #include "Tools/ZoomTool.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
 #include <LibGUI/Toolbar.h>
 
 REGISTER_WIDGET(PixelPaint, ToolboxWidget);

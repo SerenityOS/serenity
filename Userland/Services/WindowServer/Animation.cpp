@@ -6,7 +6,6 @@
 
 #include "Animation.h"
 #include "Compositor.h"
-#include <AK/Badge.h>
 
 namespace WindowServer {
 

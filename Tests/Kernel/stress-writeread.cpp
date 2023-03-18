@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <inttypes.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 bool verify_block(int fd, int seed, off_t block, AK::ByteBuffer& buffer);

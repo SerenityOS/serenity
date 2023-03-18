@@ -6,12 +6,6 @@
 
 #include <LibTest/TestSuite.h>
 
-#include <AK/Optional.h>
-#include <AK/StdLibExtras.h>
-#include <AK/StringView.h>
-#include <AK/Variant.h>
-#include <AK/Vector.h>
-
 TEST_CASE(mix)
 {
     double a = 1.0;

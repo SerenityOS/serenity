@@ -6,7 +6,6 @@
  */
 
 #include "StylePropertiesModel.h"
-#include <AK/QuickSort.h>
 
 namespace WebView {
 

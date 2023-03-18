@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/Types.h>
 #include <pthread.h>
 #include <serenity.h>
 

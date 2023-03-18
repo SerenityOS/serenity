@@ -6,28 +6,19 @@
 
 #include <AK/Format.h>
 #include <AK/RefPtr.h>
-#include <AK/Types.h>
 
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
-#include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 
-#include <Kernel/Arch/CPU.h>
 #include <Kernel/Arch/PageFault.h>
-#include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/RegisterState.h>
-#include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Arch/x86_64/ISRStubs.h>
 

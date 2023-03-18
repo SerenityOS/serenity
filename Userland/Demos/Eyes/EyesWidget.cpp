@@ -6,7 +6,6 @@
  */
 
 #include "EyesWidget.h"
-#include <AK/Math.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Palette.h>

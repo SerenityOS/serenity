@@ -8,7 +8,6 @@
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
-#include <LibJS/Runtime/DeclarativeEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/ModuleNamespaceObject.h>
 #include <LibJS/Runtime/NativeFunction.h>

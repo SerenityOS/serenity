@@ -5,7 +5,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/StringView.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Fonts/PDFFont.h>

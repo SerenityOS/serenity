@@ -6,7 +6,6 @@
  */
 
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/URLParser.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/Runtime/Completion.h>

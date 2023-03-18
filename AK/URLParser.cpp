@@ -7,12 +7,8 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
-#include <AK/Optional.h>
 #include <AK/SourceLocation.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
 #include <AK/URLParser.h>
-#include <AK/Utf8View.h>
 
 namespace AK {
 

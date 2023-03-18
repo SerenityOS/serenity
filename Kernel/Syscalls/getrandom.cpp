@@ -6,7 +6,6 @@
 
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
 

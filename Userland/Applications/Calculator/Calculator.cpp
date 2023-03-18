@@ -6,8 +6,6 @@
  */
 
 #include "Calculator.h"
-#include <AK/Assertions.h>
-#include <AK/Math.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 
 Optional<Crypto::BigFraction> Calculator::operation_with_literal_argument(Operation operation, Crypto::BigFraction argument)

@@ -5,7 +5,6 @@
  */
 
 #include "GridTrackPlacement.h"
-#include <AK/StringBuilder.h>
 
 namespace Web::CSS {
 

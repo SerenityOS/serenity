@@ -7,8 +7,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Queue.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
 #include <AK/TemporaryChange.h>
 #include <LibVT/Color.h>
 #include <LibVT/Terminal.h>

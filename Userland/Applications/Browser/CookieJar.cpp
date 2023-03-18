@@ -8,12 +8,7 @@
 
 #include "CookieJar.h"
 #include "Database.h"
-#include <AK/IPv4Address.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
-#include <AK/Time.h>
 #include <AK/URL.h>
-#include <AK/Vector.h>
 #include <LibCore/Promise.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>

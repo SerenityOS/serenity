@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <AK/Error.h>
 #include <AK/String.h>
-#include <AK/Utf8View.h>
 #include <LibGemini/GeminiResponse.h>
 #include <LibGemini/Job.h>
 #include <unistd.h>

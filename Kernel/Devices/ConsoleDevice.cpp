@@ -6,12 +6,9 @@
 
 #include <AK/Platform.h>
 #if ARCH(X86_64)
-#    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #endif
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Sections.h>
 #include <Kernel/kstdio.h>
 
 namespace Kernel {

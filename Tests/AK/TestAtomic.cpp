@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Atomic.h>
-
 TEST_CASE(construct_empty)
 {
     EXPECT(Atomic<bool>().load() == false);

@@ -11,7 +11,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>

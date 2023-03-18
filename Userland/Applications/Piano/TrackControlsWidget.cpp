@@ -10,10 +10,7 @@
 #include "MainWidget.h"
 #include "ProcessorParameterWidget/ParameterWidget.h"
 #include "TrackManager.h"
-#include <LibDSP/ProcessorParameter.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Label.h>
-#include <LibGfx/Orientation.h>
 
 TrackControlsWidget::TrackControlsWidget(TrackManager& track_manager, MainWidget& main_widget)
     : m_track_manager(track_manager)

@@ -7,12 +7,8 @@
 #include "GalleryWidget.h"
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/Frame.h>
 #include <LibGUI/MessageBox.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

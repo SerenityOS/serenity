@@ -5,7 +5,6 @@
  */
 
 #include <AK/NonnullRefPtr.h>
-#include <AK/RefPtr.h>
 #include <Kernel/Credentials.h>
 
 namespace Kernel {

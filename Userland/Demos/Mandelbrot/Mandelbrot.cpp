@@ -21,7 +21,6 @@
 #include <LibGfx/PNGWriter.h>
 #include <LibGfx/QOIWriter.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 class MandelbrotSet {
 public:

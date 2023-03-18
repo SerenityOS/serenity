@@ -6,8 +6,6 @@
  */
 
 #include "DOMTreeModel.h"
-#include <AK/JsonObject.h>
-#include <AK/StringBuilder.h>
 #include <LibGUI/TreeView.h>
 #include <LibGfx/Palette.h>
 #include <ctype.h>

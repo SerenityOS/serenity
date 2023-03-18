@@ -5,13 +5,11 @@
  */
 
 #include "GoToOffsetDialog.h"
-#include <AK/DeprecatedString.h>
 #include <Applications/HexEditor/GoToOffsetDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TextBox.h>

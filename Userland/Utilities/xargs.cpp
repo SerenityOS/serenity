@@ -5,7 +5,6 @@
  */
 
 #include <AK/Function.h>
-#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>

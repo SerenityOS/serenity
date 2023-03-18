@@ -9,12 +9,7 @@
 
 #include "MainWidget.h"
 #include <AK/LexicalPath.h>
-#include <AK/String.h>
-#include <AK/StringView.h>
-#include <AK/URL.h>
 #include <Applications/Help/HelpWindowGML.h>
-#include <LibCore/ArgsParser.h>
-#include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -30,12 +25,10 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibMain/Main.h>
 #include <LibManual/Node.h>
 #include <LibManual/PageNode.h>
 #include <LibManual/Path.h>
 #include <LibManual/SectionNode.h>
-#include <LibMarkdown/Document.h>
 
 namespace Help {
 

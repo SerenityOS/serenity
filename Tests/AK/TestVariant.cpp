@@ -6,9 +6,6 @@
 
 #include <LibTest/TestSuite.h>
 
-#include <AK/RefPtr.h>
-#include <AK/Variant.h>
-
 namespace {
 
 struct Object : public RefCounted<Object> {

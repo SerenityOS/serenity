@@ -8,14 +8,9 @@
 #include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/Memory.h>
-#include <AK/Platform.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Types.h>
-#include <assert.h>
 #include <ctype.h>
 #include <errno.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

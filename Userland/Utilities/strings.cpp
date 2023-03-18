@@ -5,12 +5,10 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/Forward.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 enum class StringOffsetFormat {
     None = 0,

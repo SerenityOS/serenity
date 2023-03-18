@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
 
 namespace Kernel {
 

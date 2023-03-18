@@ -11,7 +11,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/WorkQueue.h>
 

@@ -7,7 +7,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/Platform.h>
 #include <LibTest/CrashTest.h>
 #include <sys/wait.h>
 #include <unistd.h>

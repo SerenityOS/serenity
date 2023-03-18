@@ -6,9 +6,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/Platform.h>
-#include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibCoredump/Backtrace.h>

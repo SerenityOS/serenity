@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Painting/NestedBrowsingContextPaintable.h>

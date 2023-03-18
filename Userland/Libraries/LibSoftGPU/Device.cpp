@@ -9,7 +9,6 @@
 #include <AK/AnyOf.h>
 #include <AK/Error.h>
 #include <AK/Math.h>
-#include <AK/NumericLimits.h>
 #include <AK/SIMDExtras.h>
 #include <AK/SIMDMath.h>
 #include <AK/String.h>

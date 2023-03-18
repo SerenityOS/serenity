@@ -7,7 +7,6 @@
 
 #include <Kernel/Bus/VirtIO/Console.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Sections.h>
 #include <Kernel/WorkQueue.h>
 
 namespace Kernel::VirtIO {

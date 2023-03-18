@@ -7,8 +7,6 @@
 #include <AK/HashTable.h>
 #include <AK/Singleton.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

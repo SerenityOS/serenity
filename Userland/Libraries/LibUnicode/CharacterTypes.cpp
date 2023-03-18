@@ -5,9 +5,7 @@
  */
 
 #include <AK/CharacterTypes.h>
-#include <AK/Platform.h>
 #include <AK/StringBuilder.h>
-#include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/UnicodeUtils.h>

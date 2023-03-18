@@ -5,7 +5,6 @@
  */
 
 #include <AK/Span.h>
-#include <AK/Types.h>
 #include <LibCrypto/Checksum/Adler32.h>
 
 namespace Crypto::Checksum {

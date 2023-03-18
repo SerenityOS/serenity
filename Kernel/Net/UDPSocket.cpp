@@ -10,7 +10,6 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/UDP.h>
 #include <Kernel/Net/UDPSocket.h>
-#include <Kernel/Process.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {

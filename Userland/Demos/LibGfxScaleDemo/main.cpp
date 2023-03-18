@@ -15,14 +15,12 @@
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/Path.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibGfx/WindowTheme.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 int const WIDTH = 300;
 int const HEIGHT = 200;

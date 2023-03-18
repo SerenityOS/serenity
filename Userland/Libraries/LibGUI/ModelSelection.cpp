@@ -5,7 +5,6 @@
  */
 
 #include <LibGUI/AbstractView.h>
-#include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
 
 namespace GUI {

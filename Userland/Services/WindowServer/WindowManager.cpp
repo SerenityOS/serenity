@@ -11,8 +11,6 @@
 #include "Screen.h"
 #include "Window.h"
 #include <AK/Debug.h>
-#include <AK/StdLibExtras.h>
-#include <AK/Vector.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font/Font.h>
@@ -23,7 +21,6 @@
 #include <WindowServer/Button.h>
 #include <WindowServer/ConnectionFromClient.h>
 #include <WindowServer/Cursor.h>
-#include <WindowServer/WindowClientEndpoint.h>
 
 namespace WindowServer {
 

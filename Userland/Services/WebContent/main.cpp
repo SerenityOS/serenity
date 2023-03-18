@@ -7,7 +7,6 @@
 #include "ImageCodecPluginSerenity.h"
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibIPC/SingleServer.h>

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Error.h>
-#include <AK/Try.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/FileSystem/SysFS/Component.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.h>

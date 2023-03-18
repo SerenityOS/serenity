@@ -7,7 +7,6 @@
 #include <AK/Variant.h>
 #include <LibJS/Runtime/Intl/PluralRules.h>
 #include <math.h>
-#include <stdlib.h>
 
 namespace JS::Intl {
 

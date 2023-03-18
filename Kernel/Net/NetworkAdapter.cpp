@@ -10,7 +10,6 @@
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel {
 

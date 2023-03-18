@@ -7,9 +7,7 @@
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceAttribute.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceExpansionROM.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

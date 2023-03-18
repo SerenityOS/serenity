@@ -6,7 +6,6 @@
 
 #include <errno.h>
 #include <stdarg.h>
-#include <stdio.h>
 #include <sys/prctl.h>
 #include <syscall.h>
 

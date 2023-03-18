@@ -5,7 +5,6 @@
  */
 
 #include "Effects.h"
-#include <AK/FixedArray.h>
 #include <math.h>
 
 namespace DSP::Effects {

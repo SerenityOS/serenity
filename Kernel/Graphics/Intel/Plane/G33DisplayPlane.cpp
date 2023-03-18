@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Graphics/Intel/Plane/G33DisplayPlane.h>
-#include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
 

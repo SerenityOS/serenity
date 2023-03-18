@@ -9,7 +9,6 @@
 #include "ProcessModel.h"
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/HeaderView.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/Widget.h>

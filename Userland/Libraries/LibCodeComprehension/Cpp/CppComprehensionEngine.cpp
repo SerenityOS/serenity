@@ -5,10 +5,6 @@
  */
 
 #include "CppComprehensionEngine.h"
-#include <AK/Assertions.h>
-#include <AK/HashTable.h>
-#include <AK/OwnPtr.h>
-#include <AK/ScopeGuard.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCpp/AST.h>

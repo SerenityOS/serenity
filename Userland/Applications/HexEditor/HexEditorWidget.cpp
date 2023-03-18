@@ -12,9 +12,6 @@
 #include "GoToOffsetDialog.h"
 #include "SearchResultsModel.h"
 #include "ValueInspectorModel.h"
-#include <AK/Forward.h>
-#include <AK/Optional.h>
-#include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -24,7 +21,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/InputBox.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Model.h>

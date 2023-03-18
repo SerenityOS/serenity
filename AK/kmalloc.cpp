@@ -9,8 +9,6 @@
 
 #if defined(AK_OS_SERENITY) && !defined(KERNEL)
 
-#    include <AK/Assertions.h>
-
 // However deceptively simple these functions look, they must not be inlined.
 // Memory allocated in one translation unit has to be deallocatable in another
 // translation unit, so these functions must be the same everywhere.

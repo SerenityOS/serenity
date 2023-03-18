@@ -6,9 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/TypedTransfer.h>
-
 struct NonPrimitiveIntWrapper {
     NonPrimitiveIntWrapper(int value)
         : m_value(value)

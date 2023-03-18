@@ -7,7 +7,6 @@
 
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
-#include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Object.h>
@@ -15,7 +14,6 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <LibGfx/StylePainter.h>
 
 REGISTER_WIDGET(SystemMonitor, MemoryStatsWidget)
 

@@ -7,13 +7,11 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 struct Options {
     DeprecatedString data;

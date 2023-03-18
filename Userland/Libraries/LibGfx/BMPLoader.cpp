@@ -8,9 +8,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
-#include <AK/Error.h>
 #include <AK/Function.h>
-#include <AK/Try.h>
 #include <AK/Vector.h>
 #include <LibGfx/BMPLoader.h>
 

@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/MACAddress.h>
-#include <AK/Types.h>
 
 TEST_CASE(should_default_construct)
 {

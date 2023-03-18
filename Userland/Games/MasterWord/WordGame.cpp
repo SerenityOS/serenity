@@ -7,7 +7,6 @@
 #include "WordGame.h"
 #include <AK/QuickSort.h>
 #include <AK/Random.h>
-#include <AK/StringView.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Application.h>

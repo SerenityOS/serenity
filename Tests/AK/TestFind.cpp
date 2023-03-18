@@ -6,9 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/Array.h>
-#include <AK/Find.h>
-
 TEST_CASE(should_return_end_if_not_in_container)
 {
     constexpr Array<int, 10> a {};

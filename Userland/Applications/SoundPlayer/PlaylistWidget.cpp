@@ -6,7 +6,6 @@
 
 #include "PlaylistWidget.h"
 #include "Player.h"
-#include <AK/LexicalPath.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Model.h>

@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>

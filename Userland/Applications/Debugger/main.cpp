@@ -8,9 +8,7 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
-#include <AK/Platform.h>
 #include <AK/StringBuilder.h>
-#include <AK/Try.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDebug/DebugInfo.h>
@@ -20,10 +18,8 @@
 #include <LibX86/Disassembler.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <sys/arch/regs.h>
-#include <unistd.h>
 
 RefPtr<Line::Editor> editor;
 

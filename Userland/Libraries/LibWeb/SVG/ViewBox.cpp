@@ -6,8 +6,6 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
-#include <AK/Optional.h>
-#include <AK/StringView.h>
 #include <LibWeb/SVG/ViewBox.h>
 
 namespace Web::SVG {

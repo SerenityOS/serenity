@@ -6,7 +6,6 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/Storage/DiskPartition.h>
 
 namespace Kernel {

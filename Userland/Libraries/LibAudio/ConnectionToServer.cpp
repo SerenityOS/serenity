@@ -9,7 +9,6 @@
 #include <AK/Format.h>
 #include <AK/OwnPtr.h>
 #include <AK/Time.h>
-#include <AK/Types.h>
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/Queue.h>
 #include <LibAudio/UserSampleQueue.h>

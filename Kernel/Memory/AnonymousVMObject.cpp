@@ -8,8 +8,6 @@
 #include <Kernel/Arch/SmapDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Memory/PhysicalPage.h>
 #include <Kernel/Process.h>
 
 namespace Kernel::Memory {

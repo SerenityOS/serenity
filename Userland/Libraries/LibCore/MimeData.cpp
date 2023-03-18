@@ -5,7 +5,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/MimeData.h>
 
 namespace Core {

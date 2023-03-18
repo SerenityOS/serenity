@@ -17,7 +17,6 @@
 #include <LibJS/Runtime/VM.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
-#include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>

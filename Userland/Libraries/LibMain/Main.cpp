@@ -5,7 +5,6 @@
  */
 
 #include <AK/Format.h>
-#include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibMain/Main.h>
 #include <string.h>

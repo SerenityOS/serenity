@@ -9,7 +9,6 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/MimeSniff/MimeType.h>

@@ -6,7 +6,6 @@
 
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Memory/RingBuffer.h>
-#include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel::Memory {
 

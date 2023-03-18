@@ -5,9 +5,7 @@
  */
 
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
 #include <LibUnicode/UnicodeUtils.h>
 
 // This file contains definitions of AK::String methods which require UCD data.

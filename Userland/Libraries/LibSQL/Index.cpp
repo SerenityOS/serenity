@@ -6,7 +6,6 @@
 
 #include <LibSQL/Heap.h>
 #include <LibSQL/Index.h>
-#include <LibSQL/Meta.h>
 #include <LibSQL/TupleDescriptor.h>
 
 namespace SQL {

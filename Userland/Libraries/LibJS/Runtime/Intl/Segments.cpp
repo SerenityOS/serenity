@@ -6,7 +6,6 @@
 
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Intl/Segments.h>
-#include <LibJS/Runtime/Intl/SegmentsPrototype.h>
 
 namespace JS::Intl {
 

@@ -6,7 +6,6 @@
 
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
-#include <AK/DeprecatedString.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
@@ -17,7 +16,6 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Font/FontDatabase.h>
-#include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Crypto/Crypto.h>
 

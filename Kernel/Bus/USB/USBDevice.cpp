@@ -5,14 +5,10 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/USB/USBController.h>
-#include <Kernel/Bus/USB/USBDescriptors.h>
-#include <Kernel/Bus/USB/USBDevice.h>
 #include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/USB/DeviceInformation.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel::USB {
 

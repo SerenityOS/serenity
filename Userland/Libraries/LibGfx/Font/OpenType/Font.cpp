@@ -10,7 +10,6 @@
 #include <AK/Checked.h>
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
-#include <AK/Try.h>
 #include <LibCore/MappedFile.h>
 #include <LibGfx/Font/OpenType/Cmap.h>
 #include <LibGfx/Font/OpenType/Font.h>
@@ -18,8 +17,6 @@
 #include <LibGfx/Font/OpenType/Tables.h>
 #include <LibGfx/PNGLoader.h>
 #include <LibTextCodec/Decoder.h>
-#include <math.h>
-#include <sys/mman.h>
 
 namespace OpenType {
 

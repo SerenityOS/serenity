@@ -7,7 +7,6 @@
 #include "Format.h"
 #include <AK/DeprecatedString.h>
 #include <AK/PrintfImplementation.h>
-#include <AK/StringBuilder.h>
 
 namespace Spreadsheet {
 

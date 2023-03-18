@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Profile.h>
 #include <Kernel/PerformanceEventBuffer.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

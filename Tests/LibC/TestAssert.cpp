@@ -7,7 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #undef NDEBUG
-#include <assert.h>
 #include <signal.h>
 
 TEST_CASE(assert)
@@ -23,7 +22,6 @@ TEST_CASE(assert)
 }
 
 #define NDEBUG
-#include <assert.h>
 
 TEST_CASE(assert_reinclude)
 {
@@ -34,7 +32,6 @@ TEST_CASE(assert_reinclude)
 }
 
 #undef NDEBUG
-#include <assert.h>
 
 TEST_CASE(assert_rereinclude)
 {

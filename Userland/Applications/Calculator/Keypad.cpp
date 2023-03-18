@@ -7,7 +7,6 @@
  */
 
 #include "Keypad.h"
-#include <AK/StringBuilder.h>
 #include <LibCrypto/BigFraction/BigFraction.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>

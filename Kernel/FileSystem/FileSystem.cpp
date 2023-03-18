@@ -6,12 +6,9 @@
 
 #include <AK/HashMap.h>
 #include <AK/Singleton.h>
-#include <AK/StringView.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/InterruptDisabler.h>
-#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Net/LocalSocket.h>
 
 namespace Kernel {

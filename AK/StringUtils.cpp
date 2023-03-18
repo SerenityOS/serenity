@@ -7,12 +7,7 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/MemMem.h>
-#include <AK/Optional.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
-#include <AK/StringView.h>
-#include <AK/Vector.h>
 
 #ifdef KERNEL
 #    include <Kernel/StdLib.h>

@@ -6,11 +6,9 @@
 
 #include <AK/CharacterTypes.h>
 #include <AK/RefPtr.h>
-#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
-#include <unistd.h>
 
 static ErrorOr<void> write_line_content(StringView line, size_t count, bool duplicates_only, bool print_count, Core::File& outfile)
 {

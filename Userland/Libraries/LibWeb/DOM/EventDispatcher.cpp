@@ -6,7 +6,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/TypeCasts.h>
-#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/DOM/Document.h>

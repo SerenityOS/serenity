@@ -7,7 +7,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VMWare/Console.h>
-#include <Kernel/Graphics/VMWare/DisplayConnector.h>
 
 namespace Kernel {
 

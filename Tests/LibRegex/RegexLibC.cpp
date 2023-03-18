@@ -6,10 +6,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <regex.h>
-#include <stdio.h>
 
 TEST_CASE(catch_all)
 {

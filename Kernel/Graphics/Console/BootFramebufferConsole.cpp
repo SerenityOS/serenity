@@ -5,8 +5,6 @@
  */
 
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
-#include <Kernel/Locking/Spinlock.h>
-#include <Kernel/Memory/MemoryManager.h>
 
 namespace Kernel::Graphics {
 

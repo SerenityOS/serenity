@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Optional.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibMain/Main.h>
 #include <unistd.h>

@@ -6,11 +6,9 @@
 
 #include "Service.h"
 #include <AK/Debug.h>
-#include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>

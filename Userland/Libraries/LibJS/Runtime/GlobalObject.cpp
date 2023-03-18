@@ -11,7 +11,6 @@
 #include <AK/Hex.h>
 #include <AK/UnicodeUtils.h>
 #include <AK/Utf16View.h>
-#include <AK/Utf8View.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -21,7 +20,6 @@
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/AsyncFunctionConstructor.h>
 #include <LibJS/Runtime/AsyncGeneratorFunctionConstructor.h>
-#include <LibJS/Runtime/AsyncGeneratorPrototype.h>
 #include <LibJS/Runtime/AtomicsObject.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
 #include <LibJS/Runtime/BooleanConstructor.h>

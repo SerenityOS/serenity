@@ -8,8 +8,6 @@
 #include <AK/Math.h>
 #include <AK/Random.h>
 #include <AK/RefPtr.h>
-#include <AK/StdLibExtras.h>
-#include <LibAudio/Sample.h>
 #include <LibDSP/Envelope.h>
 #include <LibDSP/Music.h>
 #include <LibDSP/Processor.h>

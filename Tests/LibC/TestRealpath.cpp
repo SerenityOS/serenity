@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <errno.h>
 #include <limits.h>
 #include <stdio.h>

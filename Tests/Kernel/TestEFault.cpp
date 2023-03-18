@@ -7,7 +7,6 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
-#include <AK/Types.h>
 #include <LibTest/TestCase.h>
 #include <errno.h>
 #include <fcntl.h>

@@ -6,7 +6,6 @@
 
 #include <AK/ByteReader.h>
 #include <AK/Debug.h>
-#include <AK/Types.h>
 #include <LibCrypto/Authentication/GHash.h>
 
 namespace {

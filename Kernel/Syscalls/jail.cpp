@@ -5,10 +5,8 @@
  */
 
 #include <AK/Userspace.h>
-#include <Kernel/API/Ioctl.h>
 #include <Kernel/Jail.h>
 #include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
 
 namespace Kernel {
 

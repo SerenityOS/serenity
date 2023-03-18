@@ -7,8 +7,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <stdlib.h>
 #include <string.h>
 

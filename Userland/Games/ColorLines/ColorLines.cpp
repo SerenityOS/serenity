@@ -9,7 +9,6 @@
 #include "HueFilter.h"
 #include "Marble.h"
 #include "MarbleBoard.h"
-#include <AK/String.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>

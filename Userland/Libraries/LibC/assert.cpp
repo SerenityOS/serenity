@@ -7,12 +7,10 @@
 #include <AK/Format.h>
 #include <Kernel/API/prctl_numbers.h>
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/internals.h>
 #include <syscall.h>
-#include <unistd.h>
 
 extern "C" {
 

@@ -4,11 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Types.h>
-#include <assert.h>
 #include <errno.h>
 #include <sys/internals.h>
-#include <unistd.h>
 
 extern "C" {
 

@@ -8,7 +8,6 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/UDP.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

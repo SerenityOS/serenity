@@ -6,7 +6,6 @@
 
 #include <Kernel/Coredump.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/CoredumpDirectory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

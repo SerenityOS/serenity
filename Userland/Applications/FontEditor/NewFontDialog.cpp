@@ -5,7 +5,6 @@
  */
 
 #include "NewFontDialog.h"
-#include <AK/StringBuilder.h>
 #include <Applications/FontEditor/NewFontDialogPage1GML.h>
 #include <Applications/FontEditor/NewFontDialogPage2GML.h>
 #include <LibGUI/Button.h>

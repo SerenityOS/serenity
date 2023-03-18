@@ -12,13 +12,9 @@
 #endif
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/IDs.h>
-#include <Kernel/Graphics/Bochs/Definitions.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
 #include <Kernel/Graphics/Bochs/QEMUDisplayConnector.h>
-#include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

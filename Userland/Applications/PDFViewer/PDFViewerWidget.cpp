@@ -6,17 +6,10 @@
  */
 
 #include "PDFViewerWidget.h"
-#include <AK/Assertions.h>
-#include <AK/DeprecatedString.h>
-#include <AK/Format.h>
-#include <AK/HashMap.h>
-#include <AK/HashTable.h>
-#include <AK/Variant.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/Forward.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
@@ -25,7 +18,6 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/Splitter.h>
-#include <LibGUI/TableView.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibPDF/Document.h>

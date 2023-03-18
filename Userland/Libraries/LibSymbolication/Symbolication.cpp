@@ -8,7 +8,6 @@
 #include <AK/Checked.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>

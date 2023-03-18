@@ -9,7 +9,6 @@
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/BusDirectory.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Bus/PCI/DeviceDirectory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

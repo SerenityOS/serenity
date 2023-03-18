@@ -8,7 +8,6 @@
 
 #include <AK/StringBuilder.h>
 #include <AK/Utf16View.h>
-#include <AK/Utf8View.h>
 #include <LibTextCodec/Decoder.h>
 
 namespace TextCodec {

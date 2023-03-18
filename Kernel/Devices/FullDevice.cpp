@@ -7,7 +7,6 @@
 #include <Kernel/API/POSIX/errno.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

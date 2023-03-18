@@ -6,7 +6,6 @@
  */
 
 #include "SignedBigInteger.h"
-#include <AK/StringBuilder.h>
 #include <math.h>
 
 namespace Crypto {

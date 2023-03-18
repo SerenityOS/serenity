@@ -7,7 +7,6 @@
 #include <AK/BumpAllocator.h>
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <LibRegex/RegexMatcher.h>
 #include <LibRegex/RegexParser.h>
 

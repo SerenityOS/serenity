@@ -6,9 +6,7 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/StandardPaths.h>

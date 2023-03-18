@@ -8,8 +8,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>

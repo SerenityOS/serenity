@@ -6,7 +6,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/QuickSort.h>
-#include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>

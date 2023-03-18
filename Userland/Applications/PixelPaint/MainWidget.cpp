@@ -15,7 +15,6 @@
 #include "FilterParams.h"
 #include "LevelsDialog.h"
 #include "ResizeImageDialog.h"
-#include <AK/String.h>
 #include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/Debounce.h>

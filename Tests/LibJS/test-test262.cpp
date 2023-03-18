@@ -5,17 +5,14 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
-#include <LibCore/Process.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 #include <LibTest/TestRunnerUtil.h>

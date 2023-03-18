@@ -7,7 +7,6 @@
 #include <AK/Debug.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibJS/Interpreter.h>
-#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>

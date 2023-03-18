@@ -5,7 +5,6 @@
  */
 
 #include "TimeZoneSettingsWidget.h"
-#include <AK/Time.h>
 #include <Applications/ClockSettings/TimeZoneSettingsWidgetGML.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
@@ -21,8 +20,6 @@
 #include <LibLocale/Locale.h>
 #include <LibTimeZone/TimeZone.h>
 #include <math.h>
-#include <spawn.h>
-#include <unistd.h>
 
 using StringViewListModel = GUI::ItemListModel<StringView, ReadonlySpan<StringView>>;
 

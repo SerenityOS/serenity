@@ -9,13 +9,10 @@
 
 #include "PaletteWidget.h"
 #include "ImageEditor.h"
-#include <AK/Result.h>
-#include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/ColorPicker.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Palette.h>
-#include <string.h>
 
 REGISTER_WIDGET(PixelPaint, PaletteWidget);
 

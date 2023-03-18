@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Constants/ConstantInformation.h>
 #include <Kernel/Process.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

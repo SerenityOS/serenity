@@ -9,12 +9,9 @@
 #include <AK/ScopeGuard.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ECMAScriptFunctionObject.h>
-#include <LibJS/Runtime/FunctionEnvironment.h>
 #include <LibJS/Runtime/GlobalEnvironment.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/Value.h>
 

@@ -7,7 +7,6 @@
 
 #include "CharacterMapWidget.h"
 #include "CharacterSearchWidget.h"
-#include <AK/StringUtils.h>
 #include <Applications/CharacterMap/CharacterMapWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
@@ -20,7 +19,6 @@
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/ListView.h>
-#include <LibGUI/Menu.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
 #include <LibUnicode/CharacterTypes.h>

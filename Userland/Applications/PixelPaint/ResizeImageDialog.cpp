@@ -10,7 +10,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/SpinBox.h>
 

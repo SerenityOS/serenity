@@ -6,9 +6,7 @@
 
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Random.h>
-#include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>

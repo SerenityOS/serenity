@@ -7,7 +7,6 @@
 #include "Job.h"
 #include "AST.h"
 #include "Shell.h"
-#include <inttypes.h>
 #include <stdio.h>
 #include <sys/wait.h>
 

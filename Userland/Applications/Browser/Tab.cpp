@@ -17,8 +17,6 @@
 #include "History/HistoryWidget.h"
 #include "InspectorWidget.h"
 #include "StorageWidget.h"
-#include <AK/StringBuilder.h>
-#include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
 #include <LibConfig/Client.h>
 #include <LibGUI/Action.h>

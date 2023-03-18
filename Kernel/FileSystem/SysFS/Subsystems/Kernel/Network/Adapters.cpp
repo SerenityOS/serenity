@@ -7,7 +7,6 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/Adapters.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

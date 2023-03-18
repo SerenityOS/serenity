@@ -5,7 +5,6 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/Types.h>
 #include <bits/dlfcn_integration.h>
 #include <dlfcn.h>
 #include <string.h>

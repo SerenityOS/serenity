@@ -7,7 +7,6 @@
 
 #include <AK/Utf16View.h>
 #include <AK/Utf32View.h>
-#include <AK/Utf8View.h>
 #include <LibUnicode/CharacterTypes.h>
 #include <LibUnicode/Segmentation.h>
 

@@ -9,7 +9,6 @@
 #include "Debugger.h"
 #include "RegistersModel.h"
 #include "VariablesModel.h"
-#include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/InputBox.h>

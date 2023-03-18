@@ -7,7 +7,6 @@
 #include <LibCore/SessionManagement.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <signal.h>
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {

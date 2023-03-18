@@ -8,7 +8,6 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>

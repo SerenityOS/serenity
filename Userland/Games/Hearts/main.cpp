@@ -13,7 +13,6 @@
 #include <Games/Hearts/HeartsGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
-#include <LibCore/Timer.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -25,7 +24,6 @@
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
-#include <stdio.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

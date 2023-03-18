@@ -11,8 +11,6 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/MultiView.h>
 #include <LibGUI/Window.h>
-#include <stdio.h>
-#include <unistd.h>
 
 REGISTER_WIDGET(GUI, MultiView)
 

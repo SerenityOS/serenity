@@ -6,14 +6,12 @@
  */
 
 #include "DisassemblyModel.h"
-#include <AK/StringBuilder.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugSession.h>
 #include <LibELF/Image.h>
 #include <LibSymbolication/Symbolication.h>
 #include <LibX86/Disassembler.h>
 #include <LibX86/ELFSymbolProvider.h>
-#include <stdio.h>
 
 namespace HackStudio {
 

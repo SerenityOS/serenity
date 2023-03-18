@@ -8,7 +8,6 @@
 
 #include "LayerListWidget.h"
 #include "Image.h"
-#include "ImageEditor.h"
 #include "Layer.h"
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>

@@ -5,7 +5,6 @@
  */
 
 #include <AK/Bitmap.h>
-#include <AK/Checked.h>
 #include <AK/Debug.h>
 #include <AK/Format.h>
 #include <AK/NeverDestroyed.h>
@@ -14,7 +13,6 @@
 #include <mallocdefs.h>
 #include <pthread.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/internals.h>
 #include <sys/mman.h>

@@ -15,7 +15,6 @@
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Storage/ATA/AHCI/Port.h>
 #include <Kernel/Storage/ATA/ATADiskDevice.h>
-#include <Kernel/Storage/ATA/Definitions.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <Kernel/WorkQueue.h>
 

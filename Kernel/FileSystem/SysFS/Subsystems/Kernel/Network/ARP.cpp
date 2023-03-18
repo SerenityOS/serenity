@@ -8,7 +8,6 @@
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Network/ARP.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/Routing.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

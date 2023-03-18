@@ -7,12 +7,10 @@
 #include <AK/DeprecatedString.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/Vector.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/CommonLocationsProvider.h>
-#include <unistd.h>
 
 namespace GUI {
 

@@ -6,7 +6,6 @@
 
 #include <AK/DeprecatedString.h>
 #include <AK/GenericLexer.h>
-#include <AK/Optional.h>
 #include <LibCore/ArgsParser.h>
 #include <LibMain/Main.h>
 #include <ctype.h>

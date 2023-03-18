@@ -11,12 +11,8 @@
 #include <Kernel/Arch/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
-#include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Time/TimeManagement.h>
 #include <Kernel/kstdio.h>
 
 namespace Kernel {

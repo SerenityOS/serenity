@@ -9,7 +9,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <math.h>
 
 namespace AK {
 

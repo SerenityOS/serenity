@@ -6,7 +6,6 @@
 
 #include <Kernel/Debug.h>
 #include <Kernel/FutexQueue.h>
-#include <Kernel/Thread.h>
 
 namespace Kernel {
 

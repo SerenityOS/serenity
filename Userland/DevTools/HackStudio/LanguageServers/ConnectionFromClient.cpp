@@ -7,7 +7,6 @@
 
 #include "ConnectionFromClient.h"
 #include <AK/Debug.h>
-#include <AK/HashMap.h>
 #include <LibGUI/TextDocument.h>
 
 namespace LanguageServers {

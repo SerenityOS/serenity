@@ -13,13 +13,9 @@
 #include "VirtualScreenBackend.h"
 #include "WindowManager.h"
 #include <AK/Debug.h>
-#include <AK/Format.h>
 #include <Kernel/API/Graphics.h>
 #include <Kernel/API/MousePacket.h>
-#include <fcntl.h>
 #include <stdio.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
 namespace WindowServer {
 

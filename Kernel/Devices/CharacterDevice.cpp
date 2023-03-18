@@ -5,7 +5,6 @@
  */
 
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/CharacterDevicesDirectory.h>
 
 namespace Kernel {
 

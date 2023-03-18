@@ -6,7 +6,6 @@
 
 #include <LibGfx/Font/OpenType/Font.h>
 #include <stddef.h>
-#include <stdint.h>
 
 extern "C" int LLVMFuzzerTestOneInput(u8 const* data, size_t size)
 {

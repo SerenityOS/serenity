@@ -5,9 +5,7 @@
  */
 
 #include "Preprocessor.h"
-#include <AK/Assertions.h>
 #include <AK/GenericLexer.h>
-#include <AK/StringBuilder.h>
 #include <LibCpp/Lexer.h>
 #include <ctype.h>
 

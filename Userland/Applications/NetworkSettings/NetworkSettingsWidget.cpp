@@ -6,7 +6,6 @@
 
 #include "NetworkSettingsWidget.h"
 
-#include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
 #include <AK/JsonParser.h>
 #include <Applications/NetworkSettings/NetworkSettingsGML.h>

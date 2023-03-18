@@ -5,8 +5,6 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Types.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/mman.h>

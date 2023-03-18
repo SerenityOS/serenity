@@ -6,8 +6,6 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/BitCast.h>
-
 template<typename A, typename B>
 void check_cast_both_ways(A const& a, B const& b)
 {

@@ -5,7 +5,6 @@
  */
 
 #include <AK/FixedArray.h>
-#include <AK/QuickSort.h>
 #include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
@@ -20,7 +19,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/CheckBox.h>
-#include <LibGUI/ComboBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/ItemListModel.h>
@@ -41,9 +39,7 @@
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 

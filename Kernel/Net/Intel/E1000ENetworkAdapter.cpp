@@ -9,7 +9,6 @@
 #include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Net/Intel/E1000ENetworkAdapter.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

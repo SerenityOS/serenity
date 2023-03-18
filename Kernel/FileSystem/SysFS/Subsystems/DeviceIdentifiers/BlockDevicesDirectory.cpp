@@ -6,7 +6,6 @@
 
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/BlockDevicesDirectory.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

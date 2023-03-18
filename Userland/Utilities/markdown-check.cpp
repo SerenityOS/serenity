@@ -13,11 +13,9 @@
 
 #include <AK/Format.h>
 #include <AK/HashMap.h>
-#include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/RecursionDecision.h>
 #include <AK/URL.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>

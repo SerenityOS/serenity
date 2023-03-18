@@ -5,7 +5,6 @@
  */
 
 #include "MainWidget.h"
-#include <AK/URL.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>

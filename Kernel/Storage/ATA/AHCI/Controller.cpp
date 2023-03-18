@@ -7,7 +7,6 @@
 #include <AK/Atomic.h>
 #include <AK/BuiltinWrappers.h>
 #include <AK/OwnPtr.h>
-#include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>

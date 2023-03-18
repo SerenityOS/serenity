@@ -9,9 +9,6 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/Console.h>
 #include <Kernel/Graphics/VirtIOGPU/GPU3DDevice.h>
-#include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/Graphics/VirtIOGPU/Protocol.h>
-#include <Kernel/Random.h>
 
 namespace Kernel {
 

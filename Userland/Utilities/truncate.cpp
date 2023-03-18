@@ -10,7 +10,6 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <unistd.h>
 
 enum TruncateOperation {
     OP_Set,

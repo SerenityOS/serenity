@@ -6,7 +6,6 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/StringView.h>
 
 #include "Database.h"
 

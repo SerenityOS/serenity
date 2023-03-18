@@ -19,7 +19,6 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
 #include <LibMain/Main.h>
-#include <unistd.h>
 
 int const WIDTH = 780;
 int const HEIGHT = 600;

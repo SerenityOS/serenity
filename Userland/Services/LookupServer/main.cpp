@@ -6,7 +6,6 @@
 
 #include "LookupServer.h"
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
 

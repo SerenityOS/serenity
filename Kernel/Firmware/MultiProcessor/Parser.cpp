@@ -11,8 +11,6 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Firmware/BIOS.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {

@@ -6,7 +6,6 @@
 
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/InodeVMObject.h>
-#include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {

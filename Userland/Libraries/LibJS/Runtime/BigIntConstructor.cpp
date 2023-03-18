@@ -8,9 +8,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/BigIntConstructor.h>
-#include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {

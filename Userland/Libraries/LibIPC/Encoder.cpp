@@ -10,8 +10,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/DeprecatedString.h>
 #include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/NumericLimits.h>
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <AK/URL.h>

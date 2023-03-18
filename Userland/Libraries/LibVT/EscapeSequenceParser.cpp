@@ -5,7 +5,6 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Types.h>
 #include <LibVT/EscapeSequenceParser.h>
 #include <LibVT/EscapeSequenceStateMachine.h>
 

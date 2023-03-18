@@ -5,13 +5,11 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <stdio.h>
 #include <sys/utsname.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

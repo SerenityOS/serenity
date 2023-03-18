@@ -11,7 +11,6 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Label.h>
-#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 
 WaveEditor::WaveEditor(TrackManager& track_manager)

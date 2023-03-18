@@ -7,8 +7,6 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/FlyString.h>
-#include <AK/String.h>
-#include <AK/Try.h>
 
 TEST_CASE(empty_string)
 {

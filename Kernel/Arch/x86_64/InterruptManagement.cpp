@@ -9,15 +9,12 @@
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/x86_64/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
-#include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Firmware/MultiProcessor/Parser.h>
 #include <Kernel/InterruptDisabler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
-#include <Kernel/Memory/TypedMapping.h>
-#include <Kernel/Sections.h>
 
 #define PCAT_COMPAT_FLAG 0x1
 

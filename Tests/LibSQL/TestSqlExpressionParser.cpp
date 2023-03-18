@@ -7,11 +7,8 @@
 
 #include <LibTest/TestCase.h>
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Result.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringView.h>
 #include <AK/TypeCasts.h>
 #include <LibSQL/AST/Lexer.h>
 #include <LibSQL/AST/Parser.h>

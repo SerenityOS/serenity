@@ -5,8 +5,6 @@
  */
 
 #include "ShutdownDialog.h"
-#include <AK/DeprecatedString.h>
-#include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ImageWidget.h>

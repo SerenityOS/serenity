@@ -10,20 +10,16 @@
 #include <AK/JsonObject.h>
 #include <AK/MACAddress.h>
 #include <AK/QuickSort.h>
-#include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
-#include <arpa/inet.h>
 #include <net/if_arp.h>
-#include <net/route.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

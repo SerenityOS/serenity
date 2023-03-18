@@ -5,7 +5,6 @@
  */
 
 #include <AK/OwnPtr.h>
-#include <AK/Types.h>
 #include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Storage/Ramdisk/Controller.h>
 

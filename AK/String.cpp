@@ -7,11 +7,8 @@
 #include <AK/Array.h>
 #include <AK/Checked.h>
 #include <AK/FlyString.h>
-#include <AK/Format.h>
 #include <AK/MemMem.h>
 #include <AK/Stream.h>
-#include <AK/String.h>
-#include <AK/Vector.h>
 #include <stdlib.h>
 
 namespace AK {

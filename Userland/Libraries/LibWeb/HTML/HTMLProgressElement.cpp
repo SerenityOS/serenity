@@ -8,7 +8,6 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLProgressElement.h>
-#include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/Progress.h>
 

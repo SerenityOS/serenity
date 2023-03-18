@@ -5,22 +5,15 @@
  */
 
 #include <AK/Singleton.h>
-#include <Kernel/Arch/Delay.h>
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/Hypervisor/BochsDisplayConnector.h>
 #endif
 #include <Kernel/Bus/PCI/API.h>
-#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Graphics/Bochs/GraphicsAdapter.h>
-#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Graphics/VMWare/GraphicsAdapter.h>
-#include <Kernel/Graphics/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/Memory/AnonymousVMObject.h>
-#include <Kernel/Multiboot.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

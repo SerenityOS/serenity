@@ -5,7 +5,6 @@
  */
 
 #include <LibTest/TestCase.h>
-#include <errno.h>
 #include <sys/mman.h>
 
 TEST_CASE(munmap_zero_page)

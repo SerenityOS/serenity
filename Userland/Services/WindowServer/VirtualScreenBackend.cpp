@@ -7,8 +7,6 @@
 
 #include "VirtualScreenBackend.h"
 #include "ScreenBackend.h"
-#include <AK/Try.h>
-#include <AK/kmalloc.h>
 #include <LibGfx/Color.h>
 
 namespace WindowServer {

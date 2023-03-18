@@ -6,7 +6,6 @@
 
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Node.h>
-#include <LibWeb/Dump.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>

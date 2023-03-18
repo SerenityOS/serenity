@@ -6,7 +6,6 @@
  */
 
 #include <AK/URL.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>

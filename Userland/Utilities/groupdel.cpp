@@ -12,7 +12,6 @@
 #include <LibMain/Main.h>
 #include <grp.h>
 #include <pwd.h>
-#include <unistd.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

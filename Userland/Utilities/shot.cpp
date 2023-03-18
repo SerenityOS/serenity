@@ -7,7 +7,6 @@
  */
 
 #include <AK/Format.h>
-#include <AK/Optional.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>

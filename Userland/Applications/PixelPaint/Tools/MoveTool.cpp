@@ -8,8 +8,6 @@
 #include "MoveTool.h"
 #include "../Image.h"
 #include "../ImageEditor.h"
-#include "../Layer.h"
-#include <AK/String.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Label.h>

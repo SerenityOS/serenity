@@ -6,7 +6,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/StringView.h>
 #include <LibRegex/Regex.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Methods.h>
 #include <LibWeb/Infra/ByteSequences.h>

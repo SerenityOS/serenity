@@ -10,7 +10,6 @@
 #include <AK/StringBuilder.h>
 #include <LibLocale/DateTimeFormat.h>
 #include <LibLocale/Locale.h>
-#include <LibUnicode/CharacterTypes.h>
 
 namespace Locale {
 

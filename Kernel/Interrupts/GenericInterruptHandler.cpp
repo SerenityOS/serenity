@@ -6,8 +6,6 @@
 
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Interrupts.h>
-#include <Kernel/Assertions.h>
-#include <Kernel/Interrupts/GenericInterruptHandler.h>
 
 namespace Kernel {
 GenericInterruptHandler& GenericInterruptHandler::from(u8 interrupt_number)

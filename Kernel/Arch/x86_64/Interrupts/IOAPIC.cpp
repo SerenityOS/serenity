@@ -7,10 +7,8 @@
 #include <AK/Optional.h>
 #include <Kernel/Arch/x86_64/InterruptManagement.h>
 #include <Kernel/Arch/x86_64/Interrupts/APIC.h>
-#include <Kernel/Arch/x86_64/Interrupts/IOAPIC.h>
 #include <Kernel/Debug.h>
 #include <Kernel/InterruptDisabler.h>
-#include <Kernel/Sections.h>
 
 #define IOAPIC_REDIRECTION_ENTRY_OFFSET 0x10
 namespace Kernel {

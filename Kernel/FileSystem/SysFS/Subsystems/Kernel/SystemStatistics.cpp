@@ -7,8 +7,6 @@
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/SystemStatistics.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/Sections.h>
-#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 

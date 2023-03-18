@@ -10,8 +10,6 @@
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <AK/ScopeGuard.h>
-#include <AK/StringBuilder.h>
-#include <AK/StringUtils.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>

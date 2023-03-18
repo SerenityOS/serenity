@@ -5,7 +5,6 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font/Font.h>
 #include <LibGfx/StylePainter.h>
 #include <WindowServer/Compositor.h>
 #include <WindowServer/Event.h>

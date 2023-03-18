@@ -11,9 +11,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
-#include <LibGUI/Label.h>
-#include <LibGfx/Font/Font.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 namespace HackStudio {

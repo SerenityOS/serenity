@@ -6,13 +6,11 @@
 
 #include "ContentFilterSettingsWidget.h"
 
-#include <AK/NonnullRefPtr.h>
 #include <Applications/BrowserSettings/ContentFilterSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
-#include <LibGUI/Forward.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>

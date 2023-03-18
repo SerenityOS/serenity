@@ -7,7 +7,6 @@
 #include <AK/Assertions.h>
 #include <AK/DeprecatedString.h>
 #include <AK/FloatingPointStringConversions.h>
-#include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/SystemTheme.h>

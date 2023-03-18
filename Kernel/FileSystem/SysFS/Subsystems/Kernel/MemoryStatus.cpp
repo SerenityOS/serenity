@@ -6,8 +6,6 @@
 
 #include <AK/JsonObjectSerializer.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/MemoryStatus.h>
-#include <Kernel/Memory/MemoryManager.h>
-#include <Kernel/Sections.h>
 
 namespace Kernel {
 

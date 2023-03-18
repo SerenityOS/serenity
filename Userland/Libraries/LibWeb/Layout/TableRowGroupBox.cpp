@@ -5,7 +5,6 @@
  */
 
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Layout/TableCellBox.h>
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
 

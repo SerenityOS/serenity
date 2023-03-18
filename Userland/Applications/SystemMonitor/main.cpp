@@ -8,7 +8,6 @@
 
 #include "GraphWidget.h"
 #include "MemoryStatsWidget.h"
-#include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessModel.h"
@@ -20,7 +19,6 @@
 #include <Applications/SystemMonitor/SystemMonitorGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
 #include <LibCore/System.h>
 #include <LibCore/Timer.h>
@@ -39,7 +37,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Process.h>
-#include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Statusbar.h>
@@ -47,14 +44,11 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
-#include <LibThreading/BackgroundAction.h>
 #include <serenity.h>
 #include <signal.h>
 #include <spawn.h>
-#include <stdio.h>
 #include <unistd.h>
 
 static ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t);

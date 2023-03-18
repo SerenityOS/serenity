@@ -8,7 +8,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
 

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
 #include <Shell/Shell.h>
 #include <stddef.h>
 #include <stdint.h>

@@ -6,14 +6,11 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
-#include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
-#include <AK/Try.h>
-#include <AK/Vector.h>
 #include <LibGfx/JPEGLoader.h>
 
 #define JPEG_INVALID 0X0000
