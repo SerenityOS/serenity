@@ -1,57 +1,42 @@
 /*
- * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2020-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "TempFile.h"
-#include <AK/Random.h>
 #include <LibCore/DeprecatedFile.h>
-#include <fcntl.h>
-#include <stdlib.h>
-#include <sys/stat.h>
+#include <LibCore/System.h>
 
 namespace Core {
 
-NonnullOwnPtr<TempFile> TempFile::create(Type type)
+ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_directory()
 {
-    return adopt_own(*new TempFile(type));
+    char pattern[] = "/tmp/tmp.XXXXXX";
+
+    auto path = TRY(Core::System::mkdtemp(pattern));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::Directory, path));
 }
 
-DeprecatedString TempFile::create_temp(Type type)
+ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_file()
 {
-    char name_template[] = "/tmp/tmp.XXXXXX";
-    switch (type) {
-    case Type::File: {
-        auto fd = mkstemp(name_template);
-        VERIFY(fd >= 0);
-        close(fd);
-        break;
-    }
-    case Type::Directory: {
-        auto fd = mkdtemp(name_template);
-        VERIFY(fd != nullptr);
-        break;
-    }
-    }
-    return DeprecatedString { name_template };
-}
+    char file_path[] = "/tmp/tmp.XXXXXX";
+    TRY(Core::System::mkstemp(file_path));
 
-TempFile::TempFile(Type type)
-    : m_type(type)
-    , m_path(create_temp(type))
-{
+    auto string = TRY(String::from_utf8({ file_path, sizeof file_path }));
+    return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::File, string));
 }
 
 TempFile::~TempFile()
 {
-    DeprecatedFile::RecursionMode recursion_allowed { DeprecatedFile::RecursionMode::Disallowed };
+    // Temporary files aren't removed by anyone else, so we must do it ourselves.
+    auto recursion_mode = DeprecatedFile::RecursionMode::Disallowed;
     if (m_type == Type::Directory)
-        recursion_allowed = DeprecatedFile::RecursionMode::Allowed;
+        recursion_mode = DeprecatedFile::RecursionMode::Allowed;
 
-    auto rc = DeprecatedFile::remove(m_path, recursion_allowed);
-    if (rc.is_error()) {
-        warnln("File::remove failed: {}", rc.error().string_literal());
+    auto result = DeprecatedFile::remove(m_path, recursion_mode);
+    if (result.is_error()) {
+        warnln("Removal of temporary file failed: {}", result.error().string_literal());
     }
 }
 
