@@ -117,8 +117,15 @@ bool Node::establishes_stacking_context() const
 
     if (!has_style())
         return false;
-    if (is_root_element() || dom_node() == &document().root())
+
+    // We make a stacking context for the viewport. Painting and hit testing starts from here.
+    if (is_viewport())
         return true;
+
+    // Root element of the document (<html>).
+    if (is_root_element())
+        return true;
+
     auto position = computed_values().position();
 
     // Element with a position value absolute or relative and z-index value other than auto.
