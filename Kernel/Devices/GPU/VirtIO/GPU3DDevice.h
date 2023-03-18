@@ -9,7 +9,7 @@
 #include <AK/DistinctNumeric.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/Protocol.h>
+#include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 

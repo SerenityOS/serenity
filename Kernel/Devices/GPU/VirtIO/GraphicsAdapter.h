@@ -11,7 +11,7 @@
 #include <Kernel/Bus/VirtIO/Device.h>
 #include <Kernel/Bus/VirtIO/Queue.h>
 #include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/Protocol.h>
+#include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 
 namespace Kernel {
 

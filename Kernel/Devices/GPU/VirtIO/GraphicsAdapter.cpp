@@ -11,10 +11,10 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Console/GenericFramebufferConsole.h>
 #include <Kernel/Devices/GPU/Management.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/Console.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/GPU3DDevice.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/Console.h>
+#include <Kernel/Devices/GPU/VirtIO/DisplayConnector.h>
+#include <Kernel/Devices/GPU/VirtIO/GPU3DDevice.h>
+#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 
 namespace Kernel {
 

@@ -17,7 +17,7 @@
 #include <Kernel/Devices/GPU/DisplayConnector.h>
 #include <Kernel/Devices/GPU/Generic/DisplayConnector.h>
 #include <Kernel/Devices/GPU/GenericGraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Library/NonnullLockRefPtr.h>
 #include <Kernel/Memory/Region.h>
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/GPU/VirtIOGPU/Console.h>
+#include <Kernel/Devices/GPU/VirtIO/Console.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/WorkQueue.h>
 

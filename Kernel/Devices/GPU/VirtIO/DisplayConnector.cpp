@@ -7,10 +7,10 @@
 #include <Kernel/API/VirGL.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/GPU/Management.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/Console.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/Protocol.h>
+#include <Kernel/Devices/GPU/VirtIO/Console.h>
+#include <Kernel/Devices/GPU/VirtIO/DisplayConnector.h>
+#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {

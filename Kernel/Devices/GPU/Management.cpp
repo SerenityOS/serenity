@@ -17,7 +17,7 @@
 #include <Kernel/Devices/GPU/Intel/NativeGraphicsAdapter.h>
 #include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/GPU/VMWare/GraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Sections.h>

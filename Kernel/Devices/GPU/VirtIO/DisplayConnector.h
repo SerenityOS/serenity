@@ -11,8 +11,8 @@
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Devices/GPU/DisplayConnector.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/GraphicsAdapter.h>
-#include <Kernel/Devices/GPU/VirtIOGPU/Protocol.h>
+#include <Kernel/Devices/GPU/VirtIO/GraphicsAdapter.h>
+#include <Kernel/Devices/GPU/VirtIO/Protocol.h>
 #include <Kernel/Memory/Region.h>
 #include <LibEDID/EDID.h>
 

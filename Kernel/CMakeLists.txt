@@ -87,10 +87,10 @@ set(KERNEL_SOURCES
     Devices/GPU/VMWare/Console.cpp
     Devices/GPU/VMWare/GraphicsAdapter.cpp
     Devices/GPU/VMWare/DisplayConnector.cpp
-    Devices/GPU/VirtIOGPU/DisplayConnector.cpp
-    Devices/GPU/VirtIOGPU/Console.cpp
-    Devices/GPU/VirtIOGPU/GPU3DDevice.cpp
-    Devices/GPU/VirtIOGPU/GraphicsAdapter.cpp
+    Devices/GPU/VirtIO/DisplayConnector.cpp
+    Devices/GPU/VirtIO/Console.cpp
+    Devices/GPU/VirtIO/GPU3DDevice.cpp
+    Devices/GPU/VirtIO/GraphicsAdapter.cpp
     IOWindow.cpp
     Jail.cpp
     SanCov.cpp
