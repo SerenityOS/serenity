@@ -375,6 +375,14 @@ CSS::TransformOrigin StyleProperties::transform_origin() const
     return { x_value.value(), y_value.value() };
 }
 
+Optional<Color> StyleProperties::accent_color(Layout::NodeWithStyle const& node) const
+{
+    auto value = property(CSS::PropertyID::AccentColor);
+    if (value->has_color())
+        return value->to_color(node);
+    return {};
+}
+
 Optional<CSS::AlignContent> StyleProperties::align_content() const
 {
     auto value = property(CSS::PropertyID::AlignContent);
