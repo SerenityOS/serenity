@@ -102,7 +102,7 @@ private:
         auto mime_type = resource()->mime_type();
         if (mime_type == "font/ttf"sv || mime_type == "application/x-font-ttf"sv)
             return TRY(OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
-        if (mime_type == "font/woff"sv)
+        if (mime_type == "font/woff"sv || mime_type == "application/font-woff"sv)
             return TRY(WOFF::Font::try_load_from_externally_owned_memory(resource()->encoded_data()));
         auto ttf = OpenType::Font::try_load_from_externally_owned_memory(resource()->encoded_data());
         if (!ttf.is_error())
