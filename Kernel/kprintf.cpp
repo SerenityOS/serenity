@@ -13,9 +13,9 @@
 #endif
 #include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
+#include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/PCISerialDevice.h>
-#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>

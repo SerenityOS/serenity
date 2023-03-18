@@ -20,6 +20,9 @@
 #include <Kernel/Devices/DeviceControlDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
+#include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
+#include <Kernel/Devices/GPU/Console/VGATextModeConsole.h>
+#include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/MemoryDevice.h>
@@ -34,9 +37,6 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Firmware/ACPI/Initialize.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
-#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
-#include <Kernel/Graphics/Console/VGATextModeConsole.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>

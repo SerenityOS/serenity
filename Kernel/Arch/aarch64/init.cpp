@@ -24,8 +24,8 @@
 #include <Kernel/Arch/aarch64/TrapFrame.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/GPU/Console/BootFramebufferConsole.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/MemoryManager.h>
 #include <Kernel/Panic.h>

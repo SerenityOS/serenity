@@ -13,8 +13,8 @@
 #endif
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/GPU/Management.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>

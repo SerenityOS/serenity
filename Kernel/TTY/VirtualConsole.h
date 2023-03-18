@@ -11,8 +11,8 @@
 #include <AK/Vector.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/ConsoleDevice.h>
+#include <Kernel/Devices/GPU/Console/Console.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibVT/Attribute.h>
 #include <LibVT/Color.h>

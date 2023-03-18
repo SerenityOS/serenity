@@ -66,31 +66,31 @@ set(KERNEL_SOURCES
     Devices/HID/HIDManagement.cpp
     Devices/HID/KeyboardDevice.cpp
     Devices/HID/MouseDevice.cpp
-    Graphics/Bochs/GraphicsAdapter.cpp
-    Graphics/Bochs/QEMUDisplayConnector.cpp
-    Graphics/Console/BootFramebufferConsole.cpp
-    Graphics/Console/GenericFramebufferConsole.cpp
-    Graphics/Console/ContiguousFramebufferConsole.cpp
-    Graphics/Console/VGATextModeConsole.cpp
-    Graphics/DisplayConnector.cpp
-    Graphics/Generic/DisplayConnector.cpp
-    Graphics/GraphicsManagement.cpp
-    Graphics/Intel/Auxiliary/GMBusConnector.cpp
-    Graphics/Intel/Plane/DisplayPlane.cpp
-    Graphics/Intel/Plane/G33DisplayPlane.cpp
-    Graphics/Intel/Transcoder/AnalogDisplayTranscoder.cpp
-    Graphics/Intel/Transcoder/DisplayTranscoder.cpp
-    Graphics/Intel/Transcoder/PLL.cpp
-    Graphics/Intel/DisplayConnectorGroup.cpp
-    Graphics/Intel/NativeDisplayConnector.cpp
-    Graphics/Intel/NativeGraphicsAdapter.cpp
-    Graphics/VMWare/Console.cpp
-    Graphics/VMWare/GraphicsAdapter.cpp
-    Graphics/VMWare/DisplayConnector.cpp
-    Graphics/VirtIOGPU/DisplayConnector.cpp
-    Graphics/VirtIOGPU/Console.cpp
-    Graphics/VirtIOGPU/GPU3DDevice.cpp
-    Graphics/VirtIOGPU/GraphicsAdapter.cpp
+    Devices/GPU/Bochs/GraphicsAdapter.cpp
+    Devices/GPU/Bochs/QEMUDisplayConnector.cpp
+    Devices/GPU/Console/BootFramebufferConsole.cpp
+    Devices/GPU/Console/GenericFramebufferConsole.cpp
+    Devices/GPU/Console/ContiguousFramebufferConsole.cpp
+    Devices/GPU/Console/VGATextModeConsole.cpp
+    Devices/GPU/DisplayConnector.cpp
+    Devices/GPU/Generic/DisplayConnector.cpp
+    Devices/GPU/Management.cpp
+    Devices/GPU/Intel/Auxiliary/GMBusConnector.cpp
+    Devices/GPU/Intel/Plane/DisplayPlane.cpp
+    Devices/GPU/Intel/Plane/G33DisplayPlane.cpp
+    Devices/GPU/Intel/Transcoder/AnalogDisplayTranscoder.cpp
+    Devices/GPU/Intel/Transcoder/DisplayTranscoder.cpp
+    Devices/GPU/Intel/Transcoder/PLL.cpp
+    Devices/GPU/Intel/DisplayConnectorGroup.cpp
+    Devices/GPU/Intel/NativeDisplayConnector.cpp
+    Devices/GPU/Intel/NativeGraphicsAdapter.cpp
+    Devices/GPU/VMWare/Console.cpp
+    Devices/GPU/VMWare/GraphicsAdapter.cpp
+    Devices/GPU/VMWare/DisplayConnector.cpp
+    Devices/GPU/VirtIOGPU/DisplayConnector.cpp
+    Devices/GPU/VirtIOGPU/Console.cpp
+    Devices/GPU/VirtIOGPU/GPU3DDevice.cpp
+    Devices/GPU/VirtIOGPU/GraphicsAdapter.cpp
     IOWindow.cpp
     Jail.cpp
     SanCov.cpp
