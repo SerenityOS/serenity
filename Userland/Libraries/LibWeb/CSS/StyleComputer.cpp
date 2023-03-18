@@ -44,13 +44,12 @@ StyleComputer::~StyleComputer() = default;
 
 class StyleComputer::FontLoader : public ResourceClient {
 public:
-    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, AK::URL url)
+    explicit FontLoader(StyleComputer& style_computer, FlyString family_name, Vector<AK::URL> urls)
         : m_style_computer(style_computer)
         , m_family_name(move(family_name))
+        , m_urls(move(urls))
     {
-        LoadRequest request;
-        request.set_url(move(url));
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+        start_loading_next_url();
     }
 
     virtual ~FontLoader() override { }
@@ -59,7 +58,7 @@ public:
     {
         auto result = try_load_font();
         if (result.is_error())
-            return;
+            return start_loading_next_url();
         m_vector_font = result.release_value();
         m_style_computer.did_load_font(m_family_name);
     }
@@ -88,6 +87,15 @@ public:
     }
 
 private:
+    void start_loading_next_url()
+    {
+        if (m_urls.is_empty())
+            return;
+        LoadRequest request;
+        request.set_url(m_urls.take_first());
+        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    }
+
     ErrorOr<NonnullRefPtr<Gfx::VectorFont>> try_load_font()
     {
         // FIXME: This could maybe use the format() provided in @font-face as well, since often the mime type is just application/octet-stream and we have to try every format
@@ -108,6 +116,7 @@ private:
     StyleComputer& m_style_computer;
     FlyString m_family_name;
     RefPtr<Gfx::VectorFont> m_vector_font;
+    Vector<AK::URL> m_urls;
 
     HashMap<float, NonnullRefPtr<Gfx::ScaledFont>> mutable m_cached_fonts;
 };
@@ -1596,32 +1605,16 @@ void StyleComputer::load_fonts_from_sheet(CSSStyleSheet const& sheet)
         if (m_loaded_fonts.contains(font_face.font_family()))
             continue;
 
-        // NOTE: This is rather ad-hoc, we just look for the first valid
-        //       source URL that's either a WOFF or OpenType file and try loading that.
-        // FIXME: Find out exactly which resources we need to load and how.
-        Optional<AK::URL> candidate_url;
+        Vector<AK::URL> urls;
         for (auto& source : font_face.sources()) {
-            if (!source.url.is_valid())
-                continue;
-
-            if (source.url.scheme() != "data") {
-                auto path = source.url.path();
-                if (!path.ends_with(".woff"sv, AK::CaseSensitivity::CaseInsensitive)
-                    && !path.ends_with(".ttf"sv, AK::CaseSensitivity::CaseInsensitive)) {
-                    continue;
-                }
-            }
-
-            candidate_url = source.url;
-            break;
+            // FIXME: These should be loaded relative to the stylesheet URL instead of the document URL.
+            urls.append(m_document->parse_url(source.url.to_deprecated_string()));
         }
 
-        if (!candidate_url.has_value())
+        if (urls.is_empty())
             continue;
 
-        LoadRequest request;
-        auto url = m_document->parse_url(candidate_url.value().to_deprecated_string());
-        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(url));
+        auto loader = make<FontLoader>(const_cast<StyleComputer&>(*this), font_face.font_family(), move(urls));
         const_cast<StyleComputer&>(*this).m_loaded_fonts.set(font_face.font_family().to_string(), move(loader));
     }
 }
