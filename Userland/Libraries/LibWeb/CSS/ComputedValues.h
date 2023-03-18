@@ -168,6 +168,7 @@ public:
     float flex_grow() const { return m_noninherited.flex_grow; }
     float flex_shrink() const { return m_noninherited.flex_shrink; }
     int order() const { return m_noninherited.order; }
+    Optional<Color> accent_color() const { return m_inherited.accent_color; }
     CSS::AlignContent align_content() const { return m_noninherited.align_content; }
     CSS::AlignItems align_items() const { return m_noninherited.align_items; }
     CSS::AlignSelf align_self() const { return m_noninherited.align_self; }
@@ -244,6 +245,7 @@ protected:
         int font_weight { InitialValues::font_weight() };
         CSS::FontVariant font_variant { InitialValues::font_variant() };
         Color color { InitialValues::color() };
+        Optional<Color> accent_color {};
         CSS::Cursor cursor { InitialValues::cursor() };
         CSS::ImageRendering image_rendering { InitialValues::image_rendering() };
         CSS::PointerEvents pointer_events { InitialValues::pointer_events() };
@@ -382,6 +384,7 @@ public:
     void set_flex_grow(float value) { m_noninherited.flex_grow = value; }
     void set_flex_shrink(float value) { m_noninherited.flex_shrink = value; }
     void set_order(int value) { m_noninherited.order = value; }
+    void set_accent_color(Color value) { m_inherited.accent_color = value; }
     void set_align_content(CSS::AlignContent value) { m_noninherited.align_content = value; }
     void set_align_items(CSS::AlignItems value) { m_noninherited.align_items = value; }
     void set_align_self(CSS::AlignSelf value) { m_noninherited.align_self = value; }

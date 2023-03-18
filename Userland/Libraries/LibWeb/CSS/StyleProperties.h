@@ -68,6 +68,7 @@ public:
     float flex_grow() const;
     float flex_shrink() const;
     int order() const;
+    Optional<Color> accent_color(Layout::NodeWithStyle const&) const;
     Optional<CSS::AlignContent> align_content() const;
     Optional<CSS::AlignItems> align_items() const;
     Optional<CSS::AlignSelf> align_self() const;
