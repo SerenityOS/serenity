@@ -688,6 +688,10 @@ Optional<HitTestResult> PaintableBox::hit_test(CSSPixelPoint position, HitTestTy
             continue;
         return result;
     }
+
+    if (!visible_for_hit_testing())
+        return {};
+
     return HitTestResult { const_cast<PaintableBox&>(*this) };
 }
 
