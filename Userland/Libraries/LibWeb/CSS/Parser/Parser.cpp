@@ -5435,6 +5435,10 @@ Vector<FontFace::Source> Parser::parse_font_face_src(TokenStream<ComponentValue>
         // FIXME: Implement optional tech() function from CSS-Fonts-4.
         if (auto maybe_url = parse_url_function(first, AllowedDataUrlType::Font); maybe_url.has_value()) {
             auto url = maybe_url.release_value();
+            if (!url.is_valid()) {
+                continue;
+            }
+
             Optional<FlyString> format;
 
             source_tokens.skip_whitespace();
