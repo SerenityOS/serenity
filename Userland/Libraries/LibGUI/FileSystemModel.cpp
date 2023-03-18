@@ -699,12 +699,8 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
     auto const action = [path](auto&) {
         return render_thumbnail(path);
     };
-    auto const on_complete = [path, weak_this](auto thumbnail) -> ErrorOr<void> {
-        s_thumbnail_cache.with_locked([path, thumbnail](auto& cache) {
-            cache.thumbnail_cache.set(path, thumbnail);
-            cache.loading_thumbnails.remove(path);
-        });
 
+    auto const update_progress = [weak_this](bool with_success) {
         if (auto strong_this = weak_this.strong_ref(); !strong_this.is_null()) {
             strong_this->m_thumbnail_progress++;
             if (strong_this->on_thumbnail_progress)
@@ -714,12 +710,23 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
                 strong_this->m_thumbnail_progress_total = 0;
             }
 
-            strong_this->did_update(UpdateFlag::DontInvalidateIndices);
+            if (with_success)
+                strong_this->did_update(UpdateFlag::DontInvalidateIndices);
         }
+    };
+
+    auto const on_complete = [path, update_progress](auto thumbnail) -> ErrorOr<void> {
+        s_thumbnail_cache.with_locked([path, thumbnail](auto& cache) {
+            cache.thumbnail_cache.set(path, thumbnail);
+            cache.loading_thumbnails.remove(path);
+        });
+
+        update_progress(true);
+
         return {};
     };
 
-    auto const on_error = [path](Error error) -> void {
+    auto const on_error = [path, update_progress](Error error) -> void {
         // Note: We need to defer that to avoid the function removing its last reference
         //       i.e. trying to destroy itself, which is prohibited.
         Core::EventLoop::current().deferred_invoke([&] {
@@ -731,6 +738,8 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
                 cache.loading_thumbnails.remove(path);
             });
         });
+
+        update_progress(false);
     };
 
     s_thumbnail_cache.with_locked([path, action, on_complete, on_error](auto& cache) {
