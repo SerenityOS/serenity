@@ -29,6 +29,7 @@
 #include <LibWeb/Layout/SVGBox.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/Painting/TextPaintable.h>
 #include <stdio.h>
 
 namespace Web {
@@ -676,6 +677,53 @@ ErrorOr<void> dump_sheet(StringBuilder& builder, CSS::StyleSheet const& sheet)
     for (auto& rule : css_stylesheet.rules())
         TRY(dump_rule(builder, rule));
     return {};
+}
+
+void dump_tree(Painting::Paintable const& paintable)
+{
+    StringBuilder builder;
+    dump_tree(builder, paintable, true);
+    dbgln("{}", builder.string_view());
+}
+
+void dump_tree(StringBuilder& builder, Painting::Paintable const& paintable, bool colorize, int indent)
+{
+    for (int i = 0; i < indent; ++i)
+        builder.append("  "sv);
+
+    StringView paintable_with_lines_color_on = ""sv;
+    StringView paintable_box_color_on = ""sv;
+    StringView text_paintable_color_on = ""sv;
+    StringView paintable_color_on = ""sv;
+    StringView color_off = ""sv;
+
+    if (colorize) {
+        paintable_with_lines_color_on = "\033[34m"sv;
+        paintable_box_color_on = "\033[33m"sv;
+        text_paintable_color_on = "\033[35m"sv;
+        paintable_color_on = "\033[32m"sv;
+        color_off = "\033[0m"sv;
+    }
+
+    if (is<Painting::PaintableWithLines>(paintable))
+        builder.append(paintable_with_lines_color_on);
+    else if (is<Painting::PaintableBox>(paintable))
+        builder.append(paintable_box_color_on);
+    else if (is<Painting::TextPaintable>(paintable))
+        builder.append(text_paintable_color_on);
+    else
+        builder.append(paintable_color_on);
+
+    builder.appendff("{}{} ({})", paintable.class_name(), color_off, paintable.layout_node().debug_description());
+
+    if (paintable.layout_node().is_box()) {
+        auto const& paint_box = static_cast<Painting::PaintableBox const&>(paintable);
+        builder.appendff(" {}", paint_box.absolute_border_box_rect());
+    }
+    builder.append("\n"sv);
+    for (auto const* child = paintable.first_child(); child; child = child->next_sibling()) {
+        dump_tree(builder, *child, colorize, indent + 1);
+    }
 }
 
 }

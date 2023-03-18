@@ -341,6 +341,13 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
         }
     }
 
+    if (request == "dump-paint-tree") {
+        if (auto* doc = page().top_level_browsing_context().active_document()) {
+            if (auto* paintable = doc->paintable())
+                Web::dump_tree(*paintable);
+        }
+    }
+
     if (request == "dump-stacking-context-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             if (auto* viewport = doc->layout_node()) {

@@ -176,6 +176,12 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
         debug_request("dump-layout-tree");
     });
 
+    auto* dump_paint_tree_action = new QAction("Dump Paint Tree", this);
+    debug_menu->addAction(dump_paint_tree_action);
+    QObject::connect(dump_paint_tree_action, &QAction::triggered, this, [this] {
+        debug_request("dump-paint-tree");
+    });
+
     auto* dump_stacking_context_tree_action = new QAction("Dump Stacking Context Tree", this);
     dump_stacking_context_tree_action->setIcon(QIcon(QString("%1/res/icons/16x16/layers.png").arg(s_serenity_resource_root.characters())));
     debug_menu->addAction(dump_stacking_context_tree_action);

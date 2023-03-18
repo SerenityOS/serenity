@@ -365,6 +365,11 @@ void BrowserWindow::build_menus()
         },
         this));
     debug_menu.add_action(GUI::Action::create(
+        "Dump &Paint Tree", g_icon_bag.layout, [this](auto&) {
+            active_tab().view().debug_request("dump-paint-tree");
+        },
+        this));
+    debug_menu.add_action(GUI::Action::create(
         "Dump S&tacking Context Tree", g_icon_bag.layers, [this](auto&) {
             active_tab().view().debug_request("dump-stacking-context-tree");
         },
