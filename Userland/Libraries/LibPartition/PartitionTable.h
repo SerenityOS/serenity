@@ -10,7 +10,7 @@
 #include <LibPartition/DiskPartitionMetadata.h>
 
 #ifdef KERNEL
-#    include <Kernel/Storage/StorageDevice.h>
+#    include <Kernel/Devices/Storage/StorageDevice.h>
 #else
 #    include <LibCore/Forward.h>
 #endif
