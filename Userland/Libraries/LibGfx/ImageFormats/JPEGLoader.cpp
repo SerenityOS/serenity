@@ -321,6 +321,17 @@ static inline i32* get_component(Macroblock& block, unsigned component)
     }
 }
 
+static ErrorOr<void> refine_coefficient(Scan& scan, i32& coefficient)
+{
+    // G.1.2.3 - Coding model for subsequent scans of successive approximation
+    // See the correction bit from rule b.
+    u8 const bit = TRY(read_huffman_bits(scan.huffman_stream, 1));
+    if (bit == 1)
+        coefficient |= 1 << scan.successive_approximation_low;
+
+    return {};
+}
+
 static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.dc_tables.get(scan_component.dc_destination_id);
@@ -331,6 +342,14 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
 
     auto& dc_table = maybe_table.value();
     auto& scan = context.current_scan;
+
+    auto* select_component = get_component(macroblock, scan_component.component.index);
+    auto& coefficient = select_component[0];
+
+    if (context.current_scan.successive_approximation_high > 0) {
+        TRY(refine_coefficient(scan, coefficient));
+        return {};
+    }
 
     // For DC coefficients, symbol encodes the length of the coefficient.
     auto dc_length = TRY(get_next_symbol(scan.huffman_stream, dc_table));
@@ -346,9 +365,9 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
         dc_diff -= (1 << dc_length) - 1;
 
-    auto* select_component = get_component(macroblock, scan_component.component.index);
     auto& previous_dc = context.previous_dc_values[scan_component.component.index];
-    select_component[0] = previous_dc += dc_diff;
+    previous_dc += dc_diff;
+    coefficient = previous_dc << scan.successive_approximation_low;
 
     return {};
 }
@@ -375,6 +394,14 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
     return false;
 }
 
+static bool is_progressive(StartOfFrame::FrameType frame_type)
+{
+    return frame_type == StartOfFrame::FrameType::Progressive_DCT
+        || frame_type == StartOfFrame::FrameType::Progressive_DCT_Arithmetic
+        || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT
+        || frame_type == StartOfFrame::FrameType::Differential_Progressive_DCT_Arithmetic;
+}
+
 static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock, ScanComponent const& scan_component)
 {
     auto maybe_table = context.ac_tables.get(scan_component.ac_destination_id);
@@ -395,9 +422,12 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
 
     u32 to_skip = 0;
     Optional<u8> saved_symbol;
+    Optional<u8> saved_bit_for_rule_a;
     bool in_zrl = false;
 
     for (int j = first_coefficient; j <= scan.spectral_selection_end; ++j) {
+        auto& coefficient = select_component[zigzag_map[j]];
+
         // AC symbols encode 2 pieces of information, the high 4 bits represent
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
@@ -412,7 +442,18 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
                     to_skip++;
                     saved_symbol.clear();
                 }
+
+                if (!in_zrl && is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
+                    // G.1.2.3 - Coding model for subsequent scans of successive approximation
+                    // Bit sign from rule a
+                    saved_bit_for_rule_a = TRY(read_huffman_bits(scan.huffman_stream, 1));
+                }
             }
+        }
+
+        if (coefficient != 0) {
+            TRY(refine_coefficient(scan, coefficient));
+            continue;
         }
 
         if (to_skip > 0) {
@@ -425,18 +466,31 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         if (scan.end_of_bands_run_count > 0)
             continue;
 
-        u8 coeff_length = *saved_symbol & 0x0F;
-        if (coeff_length > 10) {
-            dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
-            return Error::from_string_literal("AC coefficient too long");
-        }
+        if (is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
+            // G.1.2.3 - Coding model for subsequent scans of successive approximation
+            if (auto const low_bits = *saved_symbol & 0x0F; low_bits != 1) {
+                dbgln_if(JPEG_DEBUG, "AC coefficient low bits isn't equal to 1: {}!", low_bits);
+                return Error::from_string_literal("AC coefficient low bits isn't equal to 1");
+            }
 
-        if (coeff_length != 0) {
-            i32 ac_coefficient = TRY(read_huffman_bits(scan.huffman_stream, coeff_length));
-            if (ac_coefficient < (1 << (coeff_length - 1)))
-                ac_coefficient -= (1 << coeff_length) - 1;
+            coefficient = (*saved_bit_for_rule_a == 0 ? -1 : 1) << scan.successive_approximation_low;
+            saved_bit_for_rule_a.clear();
+        } else {
+            // F.1.2.2 - Huffman encoding of AC coefficients
+            u8 const coeff_length = *saved_symbol & 0x0F;
 
-            select_component[zigzag_map[j]] = ac_coefficient;
+            if (coeff_length > 10) {
+                dbgln_if(JPEG_DEBUG, "AC coefficient too long: {}!", coeff_length);
+                return Error::from_string_literal("AC coefficient too long");
+            }
+
+            if (coeff_length != 0) {
+                i32 ac_coefficient = TRY(read_huffman_bits(scan.huffman_stream, coeff_length));
+                if (ac_coefficient < (1 << (coeff_length - 1)))
+                    ac_coefficient -= (1 << coeff_length) - 1;
+
+                coefficient = ac_coefficient * (1 << scan.successive_approximation_low);
+            }
         }
 
         saved_symbol.clear();
