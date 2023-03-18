@@ -6,6 +6,7 @@
  */
 
 #include <AK/CharacterTypes.h>
+#include <AK/FlyString.h>
 #include <AK/Utf16View.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -186,6 +187,11 @@ NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, String string)
     auto new_string = vm.heap().allocate_without_realm<PrimitiveString>(string);
     string_cache.set(move(string), new_string);
     return *new_string;
+}
+
+NonnullGCPtr<PrimitiveString> PrimitiveString::create(VM& vm, FlyString const& string)
+{
+    return create(vm, string.to_string());
 }
 
 ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> PrimitiveString::create(VM& vm, StringView string)

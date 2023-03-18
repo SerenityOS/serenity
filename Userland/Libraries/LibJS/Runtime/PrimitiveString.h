@@ -25,6 +25,7 @@ class PrimitiveString final : public Cell {
 public:
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, Utf16String);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, String);
+    [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, FlyString const&);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedString);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, DeprecatedFlyString const&);
     [[nodiscard]] static NonnullGCPtr<PrimitiveString> create(VM&, PrimitiveString&, PrimitiveString&);
