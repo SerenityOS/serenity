@@ -72,6 +72,27 @@ set(KERNEL_SOURCES
     Devices/Generic/RandomDevice.cpp
     Devices/Generic/SelfTTYDevice.cpp
     Devices/Generic/ZeroDevice.cpp
+    Devices/Storage/ATA/AHCI/Controller.cpp
+    Devices/Storage/ATA/AHCI/Port.cpp
+    Devices/Storage/ATA/AHCI/InterruptHandler.cpp
+    Devices/Storage/ATA/GenericIDE/Controller.cpp
+    Devices/Storage/ATA/GenericIDE/Channel.cpp
+    Devices/Storage/ATA/ATAController.cpp
+    Devices/Storage/ATA/ATADevice.cpp
+    Devices/Storage/ATA/ATADiskDevice.cpp
+    Devices/Storage/ATA/ATAPort.cpp
+    Devices/Storage/NVMe/NVMeController.cpp
+    Devices/Storage/NVMe/NVMeNameSpace.cpp
+    Devices/Storage/NVMe/NVMeInterruptQueue.cpp
+    Devices/Storage/NVMe/NVMePollQueue.cpp
+    Devices/Storage/NVMe/NVMeQueue.cpp
+    Devices/Storage/SD/PCISDHostController.cpp
+    Devices/Storage/SD/SDHostController.cpp
+    Devices/Storage/SD/SDMemoryCard.cpp
+    Devices/Storage/DiskPartition.cpp
+    Devices/Storage/StorageController.cpp
+    Devices/Storage/StorageDevice.cpp
+    Devices/Storage/StorageManagement.cpp
     Graphics/Bochs/GraphicsAdapter.cpp
     Graphics/Bochs/QEMUDisplayConnector.cpp
     Graphics/Console/BootFramebufferConsole.cpp
@@ -100,27 +121,6 @@ set(KERNEL_SOURCES
     IOWindow.cpp
     Jail.cpp
     SanCov.cpp
-    Storage/ATA/AHCI/Controller.cpp
-    Storage/ATA/AHCI/Port.cpp
-    Storage/ATA/AHCI/InterruptHandler.cpp
-    Storage/ATA/GenericIDE/Controller.cpp
-    Storage/ATA/GenericIDE/Channel.cpp
-    Storage/ATA/ATAController.cpp
-    Storage/ATA/ATADevice.cpp
-    Storage/ATA/ATADiskDevice.cpp
-    Storage/ATA/ATAPort.cpp
-    Storage/NVMe/NVMeController.cpp
-    Storage/NVMe/NVMeNameSpace.cpp
-    Storage/NVMe/NVMeInterruptQueue.cpp
-    Storage/NVMe/NVMePollQueue.cpp
-    Storage/NVMe/NVMeQueue.cpp
-    Storage/SD/PCISDHostController.cpp
-    Storage/SD/SDHostController.cpp
-    Storage/SD/SDMemoryCard.cpp
-    Storage/DiskPartition.cpp
-    Storage/StorageController.cpp
-    Storage/StorageDevice.cpp
-    Storage/StorageManagement.cpp
     DoubleBuffer.cpp
     FileSystem/AnonymousFile.cpp
     FileSystem/BlockBasedFileSystem.cpp
