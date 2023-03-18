@@ -42,9 +42,9 @@ for cmd in \
     fi
 done
 
-if [ -x ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter ]; then
+if [ -x ./Build/lagom/bin/IPCMagicLinter ]; then
     echo "Running IPCMagicLinter"
-    if time { git ls-files '*.ipc' | xargs ./Build/lagom/Tools/IPCMagicLinter/IPCMagicLinter; }; then
+    if time { git ls-files '*.ipc' | xargs ./Build/lagom/bin/IPCMagicLinter; }; then
         echo -e "[${GREEN}OK${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"
     else
         echo -e "[${RED}FAIL${NC}]: IPCMagicLinter (in Meta/lint-ci.sh)"

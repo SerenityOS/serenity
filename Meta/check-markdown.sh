@@ -10,12 +10,12 @@ if [ -z "${MARKDOWN_CHECK_BINARY:-}" ] ; then
         echo "Directory Build/lagom/ does not exist. Skipping markdown check."
         exit 0
     fi
-    if ! [ -r Build/lagom/markdown-check ] ; then
+    if ! [ -r Build/lagom/bin/markdown-check ] ; then
         echo "Lagom executable markdown-check was not built. Skipping markdown check."
         echo "To enable this check, you may need to run './Meta/serenity.sh build lagom' first."
         exit 0
     fi
-    MARKDOWN_CHECK_BINARY="Build/lagom/markdown-check"
+    MARKDOWN_CHECK_BINARY="Build/lagom/bin/markdown-check"
 fi
 
 if [ -z "$SERENITY_SOURCE_DIR" ] ; then

@@ -90,8 +90,8 @@ jobs:
       - name: "Prepare updated REPL data"
         if: github.ref == 'refs/heads/master'
         run: |
-          cp ${{ github.workspace }}/Build/wasm/libjs.js libjs-website/repl/libjs.js
-          cp ${{ github.workspace }}/Build/wasm/libjs.wasm libjs-website/repl/libjs.wasm
+          cp ${{ github.workspace }}/Build/wasm/bin/libjs.js libjs-website/repl/libjs.js
+          cp ${{ github.workspace }}/Build/wasm/bin/libjs.wasm libjs-website/repl/libjs.wasm
           echo 'Module.SERENITYOS_COMMIT = "${{ github.sha }}";' >> libjs-website/repl/libjs.js
 
       - name: "Deploy to GitHub Pages"
