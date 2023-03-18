@@ -131,12 +131,12 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<VirtualConsole> VirtualConsole::create_with_p
 
 UNMAP_AFTER_INIT void VirtualConsole::initialize()
 {
-    VERIFY(GraphicsManagement::the().console());
-    set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
-    m_console_impl.set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
+    VERIFY(GPUManagement::the().console());
+    set_size(GPUManagement::the().console()->max_column(), GPUManagement::the().console()->max_row());
+    m_console_impl.set_size(GPUManagement::the().console()->max_column(), GPUManagement::the().console()->max_row());
 
     // Allocate twice of the max row * max column * sizeof(Cell) to ensure we can have some sort of history mechanism...
-    auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
+    auto size = GPUManagement::the().console()->max_column() * GPUManagement::the().console()->max_row() * sizeof(Cell) * 2;
     m_cells = MM.allocate_kernel_region(Memory::page_round_up(size).release_value_but_fixme_should_propagate_errors(), "Virtual Console Cells"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
 
     // Add the lines, so we also ensure they will be flushed now
@@ -150,12 +150,12 @@ void VirtualConsole::refresh_after_resolution_change()
 {
     auto old_rows_count = rows();
     auto old_columns_count = columns();
-    set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
-    m_console_impl.set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
+    set_size(GPUManagement::the().console()->max_column(), GPUManagement::the().console()->max_row());
+    m_console_impl.set_size(GPUManagement::the().console()->max_column(), GPUManagement::the().console()->max_row());
 
     // Note: From now on, columns() and rows() are updated with the new settings.
 
-    auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
+    auto size = GPUManagement::the().console()->max_column() * GPUManagement::the().console()->max_row() * sizeof(Cell) * 2;
     auto new_cells = MM.allocate_kernel_region(Memory::page_round_up(size).release_value_but_fixme_should_propagate_errors(), "Virtual Console Cells"sv, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow).release_value();
 
     if (rows() < old_rows_count) {
@@ -300,8 +300,8 @@ void VirtualConsole::flush_dirty_lines()
 {
     if (!m_active)
         return;
-    VERIFY(GraphicsManagement::is_initialized());
-    VERIFY(GraphicsManagement::the().console());
+    VERIFY(GPUManagement::is_initialized());
+    VERIFY(GPUManagement::the().console());
     for (u16 visual_row = 0; visual_row < rows(); ++visual_row) {
         auto& line = m_lines[visual_row];
         if (!line.dirty && !m_console_impl.m_need_full_flush)
@@ -312,7 +312,7 @@ void VirtualConsole::flush_dirty_lines()
             auto foreground_color = terminal_to_standard_color(cell.attribute.effective_foreground_color());
             if (has_flag(cell.attribute.flags, VT::Attribute::Flags::Bold))
                 foreground_color = (Graphics::Console::Color)((u8)foreground_color | 0x08);
-            GraphicsManagement::the().console()->write(column,
+            GPUManagement::the().console()->write(column,
                 visual_row,
                 ((u8)cell.ch < 128 ? cell.ch : '?'),
                 terminal_to_standard_color(cell.attribute.effective_background_color()),
@@ -320,7 +320,7 @@ void VirtualConsole::flush_dirty_lines()
         }
         line.dirty = false;
     }
-    GraphicsManagement::the().console()->set_cursor(m_console_impl.cursor_column(), m_console_impl.cursor_row());
+    GPUManagement::the().console()->set_cursor(m_console_impl.cursor_column(), m_console_impl.cursor_row());
     m_console_impl.m_need_full_flush = false;
 }
 

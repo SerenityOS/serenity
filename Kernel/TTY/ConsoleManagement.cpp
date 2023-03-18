@@ -85,10 +85,10 @@ void ConsoleManagement::switch_to(unsigned index)
     // in between.
     if (m_active_console->is_graphical() && !was_graphical) {
         m_active_console->set_active(true);
-        GraphicsManagement::the().activate_graphical_mode();
+        GPUManagement::the().activate_graphical_mode();
         return;
     } else if (!m_active_console->is_graphical() && was_graphical) {
-        GraphicsManagement::the().deactivate_graphical_mode();
+        GPUManagement::the().deactivate_graphical_mode();
     }
     m_active_console->set_active(true);
 }

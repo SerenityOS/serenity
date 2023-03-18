@@ -36,7 +36,7 @@ ErrorOr<void> QEMUDisplayConnector::create_attached_framebuffer_console()
 {
     // We assume safe resolution is 1024x768x32
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), 1024, 768, 1024 * sizeof(u32));
-    GraphicsManagement::the().set_console(*m_framebuffer_console);
+    GPUManagement::the().set_console(*m_framebuffer_console);
     return {};
 }
 

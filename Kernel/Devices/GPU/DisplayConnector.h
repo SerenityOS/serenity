@@ -14,9 +14,9 @@
 
 namespace Kernel {
 
-class GraphicsManagement;
+class GPUManagement;
 class DisplayConnector : public CharacterDevice {
-    friend class GraphicsManagement;
+    friend class GPUManagement;
     friend class DeviceManagement;
 
 public:
@@ -98,7 +98,7 @@ public:
     virtual ErrorOr<void> set_y_offset(size_t y) = 0;
     virtual ErrorOr<void> unblank() = 0;
 
-    void set_display_mode(Badge<GraphicsManagement>, DisplayMode);
+    void set_display_mode(Badge<GPUManagement>, DisplayMode);
 
     Memory::Region const& framebuffer_region() const { return *m_framebuffer_region; }
 

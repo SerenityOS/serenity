@@ -90,14 +90,14 @@ enum VGAColor : u8 {
 void VGATextModeConsole::set_cursor(size_t x, size_t y)
 {
     SpinlockLocker lock(m_vga_lock);
-    GraphicsManagement::the().set_vga_text_mode_cursor(width(), x, y);
+    GPUManagement::the().set_vga_text_mode_cursor(width(), x, y);
     m_x = x;
     m_y = y;
 }
 void VGATextModeConsole::hide_cursor()
 {
     SpinlockLocker lock(m_vga_lock);
-    GraphicsManagement::the().disable_vga_text_mode_console_cursor();
+    GPUManagement::the().disable_vga_text_mode_console_cursor();
 }
 void VGATextModeConsole::show_cursor()
 {
@@ -124,7 +124,7 @@ void VGATextModeConsole::write(size_t x, size_t y, char ch, Color background, Co
     // because there's no other responsible object to do that in the print call path
     if (critical && (ch == '\r' || ch == '\n')) {
         // Disable hardware VGA cursor
-        GraphicsManagement::the().disable_vga_text_mode_console_cursor();
+        GPUManagement::the().disable_vga_text_mode_console_cursor();
 
         m_x = 0;
         m_y += 1;

@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-NonnullOwnPtr<VGAIOArbiter> VGAIOArbiter::must_create(Badge<GraphicsManagement>)
+NonnullOwnPtr<VGAIOArbiter> VGAIOArbiter::must_create(Badge<GPUManagement>)
 {
     return MUST(adopt_nonnull_own_or_enomem(new (nothrow) VGAIOArbiter()));
 }
@@ -20,7 +20,7 @@ NonnullOwnPtr<VGAIOArbiter> VGAIOArbiter::must_create(Badge<GraphicsManagement>)
 VGAIOArbiter::~VGAIOArbiter() = default;
 VGAIOArbiter::VGAIOArbiter() = default;
 
-void VGAIOArbiter::disable_vga_emulation_access_permanently(Badge<GraphicsManagement>)
+void VGAIOArbiter::disable_vga_emulation_access_permanently(Badge<GPUManagement>)
 {
     SpinlockLocker locker(m_main_vga_lock);
     disable_vga_text_mode_console_cursor();
@@ -31,7 +31,7 @@ void VGAIOArbiter::disable_vga_emulation_access_permanently(Badge<GraphicsManage
     m_vga_access_is_disabled = true;
 }
 
-void VGAIOArbiter::enable_vga_text_mode_console_cursor(Badge<GraphicsManagement>)
+void VGAIOArbiter::enable_vga_text_mode_console_cursor(Badge<GPUManagement>)
 {
     enable_vga_text_mode_console_cursor();
 }
@@ -45,7 +45,7 @@ void VGAIOArbiter::enable_vga_text_mode_console_cursor()
     IO::out8(0x3D5, 0);
 }
 
-void VGAIOArbiter::disable_vga_text_mode_console_cursor(Badge<GraphicsManagement>)
+void VGAIOArbiter::disable_vga_text_mode_console_cursor(Badge<GPUManagement>)
 {
     disable_vga_text_mode_console_cursor();
 }
@@ -59,7 +59,7 @@ void VGAIOArbiter::disable_vga_text_mode_console_cursor()
     IO::out8(0x3D5, 0x20);
 }
 
-void VGAIOArbiter::unblank_screen(Badge<GraphicsManagement>)
+void VGAIOArbiter::unblank_screen(Badge<GPUManagement>)
 {
     SpinlockLocker locker(m_main_vga_lock);
     if (m_vga_access_is_disabled)
@@ -67,7 +67,7 @@ void VGAIOArbiter::unblank_screen(Badge<GraphicsManagement>)
     IO::out8(0x3c0, 0x20);
 }
 
-void VGAIOArbiter::set_vga_text_mode_cursor(Badge<GraphicsManagement>, size_t console_width, size_t x, size_t y)
+void VGAIOArbiter::set_vga_text_mode_cursor(Badge<GPUManagement>, size_t console_width, size_t x, size_t y)
 {
     SpinlockLocker locker(m_main_vga_lock);
     if (m_vga_access_is_disabled)

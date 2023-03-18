@@ -13,17 +13,17 @@
 
 namespace Kernel {
 
-class GraphicsManagement;
+class GPUManagement;
 class VGAIOArbiter {
 public:
-    static NonnullOwnPtr<VGAIOArbiter> must_create(Badge<GraphicsManagement>);
+    static NonnullOwnPtr<VGAIOArbiter> must_create(Badge<GPUManagement>);
 
-    void disable_vga_emulation_access_permanently(Badge<GraphicsManagement>);
-    void enable_vga_text_mode_console_cursor(Badge<GraphicsManagement>);
-    void disable_vga_text_mode_console_cursor(Badge<GraphicsManagement>);
-    void set_vga_text_mode_cursor(Badge<GraphicsManagement>, size_t console_width, size_t x, size_t y);
+    void disable_vga_emulation_access_permanently(Badge<GPUManagement>);
+    void enable_vga_text_mode_console_cursor(Badge<GPUManagement>);
+    void disable_vga_text_mode_console_cursor(Badge<GPUManagement>);
+    void set_vga_text_mode_cursor(Badge<GPUManagement>, size_t console_width, size_t x, size_t y);
 
-    void unblank_screen(Badge<GraphicsManagement>);
+    void unblank_screen(Badge<GPUManagement>);
 
     ~VGAIOArbiter();
 

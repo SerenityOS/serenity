@@ -24,25 +24,25 @@
 
 namespace Kernel {
 
-static Singleton<GraphicsManagement> s_the;
+static Singleton<GPUManagement> s_the;
 
 extern Atomic<Graphics::Console*> g_boot_console;
 
-GraphicsManagement& GraphicsManagement::the()
+GPUManagement& GPUManagement::the()
 {
     return *s_the;
 }
 
-bool GraphicsManagement::is_initialized()
+bool GPUManagement::is_initialized()
 {
     return s_the.is_initialized();
 }
 
-UNMAP_AFTER_INIT GraphicsManagement::GraphicsManagement()
+UNMAP_AFTER_INIT GPUManagement::GPUManagement()
 {
 }
 
-void GraphicsManagement::disable_vga_emulation_access_permanently()
+void GPUManagement::disable_vga_emulation_access_permanently()
 {
 #if ARCH(X86_64)
     if (!m_vga_arbiter)
@@ -51,7 +51,7 @@ void GraphicsManagement::disable_vga_emulation_access_permanently()
 #endif
 }
 
-void GraphicsManagement::enable_vga_text_mode_console_cursor()
+void GPUManagement::enable_vga_text_mode_console_cursor()
 {
 #if ARCH(X86_64)
     if (!m_vga_arbiter)
@@ -60,7 +60,7 @@ void GraphicsManagement::enable_vga_text_mode_console_cursor()
 #endif
 }
 
-void GraphicsManagement::disable_vga_text_mode_console_cursor()
+void GPUManagement::disable_vga_text_mode_console_cursor()
 {
 #if ARCH(X86_64)
     if (!m_vga_arbiter)
@@ -69,7 +69,7 @@ void GraphicsManagement::disable_vga_text_mode_console_cursor()
 #endif
 }
 
-void GraphicsManagement::set_vga_text_mode_cursor([[maybe_unused]] size_t console_width, [[maybe_unused]] size_t x, [[maybe_unused]] size_t y)
+void GPUManagement::set_vga_text_mode_cursor([[maybe_unused]] size_t console_width, [[maybe_unused]] size_t x, [[maybe_unused]] size_t y)
 {
 #if ARCH(X86_64)
     if (!m_vga_arbiter)
@@ -78,14 +78,14 @@ void GraphicsManagement::set_vga_text_mode_cursor([[maybe_unused]] size_t consol
 #endif
 }
 
-void GraphicsManagement::deactivate_graphical_mode()
+void GPUManagement::deactivate_graphical_mode()
 {
     return m_display_connector_nodes.with([&](auto& display_connectors) {
         for (auto& connector : display_connectors)
             connector.set_display_mode({}, DisplayConnector::DisplayMode::Console);
     });
 }
-void GraphicsManagement::activate_graphical_mode()
+void GPUManagement::activate_graphical_mode()
 {
     return m_display_connector_nodes.with([&](auto& display_connectors) {
         for (auto& connector : display_connectors)
@@ -93,13 +93,13 @@ void GraphicsManagement::activate_graphical_mode()
     });
 }
 
-void GraphicsManagement::attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
+void GPUManagement::attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
 {
     return m_display_connector_nodes.with([&](auto& display_connectors) {
         display_connectors.append(connector);
     });
 }
-void GraphicsManagement::detach_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
+void GPUManagement::detach_display_connector(Badge<DisplayConnector>, DisplayConnector& connector)
 {
     return m_display_connector_nodes.with([&](auto& display_connectors) {
         display_connectors.remove(connector);
@@ -132,7 +132,7 @@ static constexpr PCIGraphicsDriverInitializer s_initializers[] = {
     { VMWareGraphicsAdapter::probe, VMWareGraphicsAdapter::create },
 };
 
-UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
+UNMAP_AFTER_INIT ErrorOr<void> GPUManagement::determine_and_initialize_graphics_device(PCI::DeviceIdentifier const& device_identifier)
 {
     VERIFY(is_vga_compatible_pci_device(device_identifier) || is_display_controller_pci_device(device_identifier));
     for (auto& initializer : s_initializers) {
@@ -151,7 +151,7 @@ UNMAP_AFTER_INIT ErrorOr<void> GraphicsManagement::determine_and_initialize_grap
     return {};
 }
 
-UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_display_connector()
+UNMAP_AFTER_INIT void GPUManagement::initialize_preset_resolution_generic_display_connector()
 {
     VERIFY(!multiboot_framebuffer_addr.is_null());
     VERIFY(multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB);
@@ -163,7 +163,7 @@ UNMAP_AFTER_INIT void GraphicsManagement::initialize_preset_resolution_generic_d
         multiboot_framebuffer_pitch);
 }
 
-UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
+UNMAP_AFTER_INIT bool GPUManagement::initialize()
 {
 
     /* Explanation on the flow here:
@@ -257,7 +257,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
     return true;
 }
 
-void GraphicsManagement::set_console(Graphics::Console& console)
+void GPUManagement::set_console(Graphics::Console& console)
 {
     m_console = console;
 

@@ -20,7 +20,7 @@ class BochsDisplayConnector
     : public DisplayConnector {
     friend class BochsGraphicsAdapter;
     friend class DeviceManagement;
-    friend class GraphicsManagement;
+    friend class GPUManagement;
 
 public:
     AK_TYPEDEF_DISTINCT_ORDERED_ID(u16, IndexID);

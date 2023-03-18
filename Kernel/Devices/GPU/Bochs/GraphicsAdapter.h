@@ -16,12 +16,12 @@
 
 namespace Kernel {
 
-class GraphicsManagement;
+class GPUManagement;
 struct BochsDisplayMMIORegisters;
 
 class BochsGraphicsAdapter final : public GenericGraphicsAdapter
     , public PCI::Device {
-    friend class GraphicsManagement;
+    friend class GPUManagement;
 
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);

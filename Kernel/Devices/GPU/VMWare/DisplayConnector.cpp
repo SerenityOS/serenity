@@ -22,7 +22,7 @@ NonnullLockRefPtr<VMWareDisplayConnector> VMWareDisplayConnector::must_create(VM
 ErrorOr<void> VMWareDisplayConnector::create_attached_framebuffer_console()
 {
     m_framebuffer_console = VMWareFramebufferConsole::initialize(*this);
-    GraphicsManagement::the().set_console(*m_framebuffer_console);
+    GPUManagement::the().set_console(*m_framebuffer_console);
     return {};
 }
 

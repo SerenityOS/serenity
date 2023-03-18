@@ -36,7 +36,7 @@ ErrorOr<void> GenericDisplayConnector::create_attached_framebuffer_console()
     auto pitch = m_current_mode_setting.horizontal_stride;
 
     m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(m_framebuffer_address.value(), width, height, pitch);
-    GraphicsManagement::the().set_console(*m_framebuffer_console);
+    GPUManagement::the().set_console(*m_framebuffer_console);
     return {};
 }
 

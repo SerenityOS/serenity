@@ -35,7 +35,7 @@ VirtIODisplayConnector::VirtIODisplayConnector(VirtIOGraphicsAdapter& graphics_a
 void VirtIODisplayConnector::initialize_console(Badge<VirtIOGraphicsAdapter>)
 {
     m_console = Kernel::Graphics::VirtIOGPU::Console::initialize(*this);
-    GraphicsManagement::the().set_console(*m_console);
+    GPUManagement::the().set_console(*m_console);
 }
 
 void VirtIODisplayConnector::set_safe_mode_setting_after_initialization(Badge<VirtIOGraphicsAdapter>)

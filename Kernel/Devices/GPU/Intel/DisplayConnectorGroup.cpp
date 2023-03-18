@@ -217,7 +217,7 @@ bool IntelDisplayConnectorGroup::set_crt_resolution(DisplayConnector::ModeSettin
     VERIFY(m_modeset_lock.is_locked());
 
     // Note: Just in case we still allow access to VGA IO ports, disable it now.
-    GraphicsManagement::the().disable_vga_emulation_access_permanently();
+    GPUManagement::the().disable_vga_emulation_access_permanently();
 
     auto dac_multiplier = compute_dac_multiplier(mode_setting.pixel_clock_in_khz);
     auto pll_settings = create_pll_settings(m_generation, (1000 * mode_setting.pixel_clock_in_khz * dac_multiplier), 96'000'000);

@@ -23,15 +23,15 @@
 
 namespace Kernel {
 
-class GraphicsManagement {
+class GPUManagement {
 
 public:
-    static GraphicsManagement& the();
+    static GPUManagement& the();
     static bool is_initialized();
     bool initialize();
 
     unsigned allocate_minor_device_number() { return m_current_minor_number++; };
-    GraphicsManagement();
+    GPUManagement();
 
     void attach_new_display_connector(Badge<DisplayConnector>, DisplayConnector&);
     void detach_display_connector(Badge<DisplayConnector>, DisplayConnector&);

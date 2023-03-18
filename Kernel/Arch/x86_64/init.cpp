@@ -319,7 +319,7 @@ void init_stage2(void*)
     VMWareBackdoor::the(); // don't wait until first mouse packet
     MUST(HIDManagement::initialize());
 
-    GraphicsManagement::the().initialize();
+    GPUManagement::the().initialize();
     ConsoleManagement::the().initialize();
 
     SyncTask::spawn();

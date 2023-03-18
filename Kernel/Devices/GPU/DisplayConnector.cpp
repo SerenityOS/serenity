@@ -15,7 +15,7 @@
 namespace Kernel {
 
 DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t framebuffer_resource_size, bool enable_write_combine_optimization)
-    : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    : CharacterDevice(226, GPUManagement::the().allocate_minor_device_number())
     , m_enable_write_combine_optimization(enable_write_combine_optimization)
     , m_framebuffer_at_arbitrary_physical_range(false)
     , m_framebuffer_address(framebuffer_address)
@@ -24,7 +24,7 @@ DisplayConnector::DisplayConnector(PhysicalAddress framebuffer_address, size_t f
 }
 
 DisplayConnector::DisplayConnector(size_t framebuffer_resource_size, bool enable_write_combine_optimization)
-    : CharacterDevice(226, GraphicsManagement::the().allocate_minor_device_number())
+    : CharacterDevice(226, GPUManagement::the().allocate_minor_device_number())
     , m_enable_write_combine_optimization(enable_write_combine_optimization)
     , m_framebuffer_at_arbitrary_physical_range(true)
     , m_framebuffer_address({})
@@ -53,7 +53,7 @@ ErrorOr<size_t> DisplayConnector::write(OpenFileDescription&, u64, UserOrKernelB
 
 void DisplayConnector::will_be_destroyed()
 {
-    GraphicsManagement::the().detach_display_connector({}, *this);
+    GPUManagement::the().detach_display_connector({}, *this);
 
     // NOTE: We check if m_symlink_sysfs_component is not null, because if we failed
     // at some point in DisplayConnector::after_inserting(), then that method will tear down
@@ -132,7 +132,7 @@ ErrorOr<void> DisplayConnector::after_inserting()
     clean_from_sysfs_display_connector_device_directory.disarm();
     clean_symlink_to_device_identifier_directory.disarm();
 
-    GraphicsManagement::the().attach_new_display_connector({}, *this);
+    GPUManagement::the().attach_new_display_connector({}, *this);
     if (m_enable_write_combine_optimization) {
         [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
     }
@@ -145,7 +145,7 @@ bool DisplayConnector::console_mode() const
     return m_console_mode;
 }
 
-void DisplayConnector::set_display_mode(Badge<GraphicsManagement>, DisplayMode mode)
+void DisplayConnector::set_display_mode(Badge<GPUManagement>, DisplayMode mode)
 {
     SpinlockLocker locker(m_control_lock);
 
