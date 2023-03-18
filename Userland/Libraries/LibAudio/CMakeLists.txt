@@ -1,4 +1,5 @@
 set(SOURCES
+    GenericTypes.cpp
     SampleFormats.cpp
     Loader.cpp
     WavLoader.cpp

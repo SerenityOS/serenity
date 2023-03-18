@@ -19,6 +19,7 @@
 #include <AK/UFixedBigInt.h>
 #include <LibAudio/FlacLoader.h>
 #include <LibAudio/FlacTypes.h>
+#include <LibAudio/GenericTypes.h>
 #include <LibAudio/LoaderError.h>
 #include <LibAudio/Resampler.h>
 #include <LibAudio/VorbisComment.h>
@@ -203,12 +204,19 @@ MaybeLoaderError FlacLoaderPlugin::load_seektable(FlacRawMetadataBlock& block)
     BigEndianInputBitStream seektable_bytes { MaybeOwned<Stream>(memory_stream) };
     for (size_t i = 0; i < block.length / 18; ++i) {
         // 11.14. SEEKPOINT
-        FlacSeekPoint seekpoint {
-            .sample_index = LOADER_TRY(seektable_bytes.read_bits<u64>(64)),
-            .byte_offset = LOADER_TRY(seektable_bytes.read_bits<u64>(64)),
-            .num_samples = LOADER_TRY(seektable_bytes.read_bits<u16>(16))
+        u64 sample_index = LOADER_TRY(seektable_bytes.read_bits<u64>(64));
+        u64 byte_offset = LOADER_TRY(seektable_bytes.read_bits<u64>(64));
+        // The sample count of a seek point is not relevant to us.
+        [[maybe_unused]] u16 sample_count = LOADER_TRY(seektable_bytes.read_bits<u16>(16));
+        // Placeholder, to be ignored.
+        if (sample_index == 0xFFFFFFFFFFFFFFFF)
+            continue;
+
+        SeekPoint seekpoint {
+            .sample_index = sample_index,
+            .byte_offset = byte_offset,
         };
-        m_seektable.append(seekpoint);
+        TRY(m_seektable.insert_seek_point(seekpoint));
     }
     dbgln_if(AFLACLOADER_DEBUG, "Loaded seektable of size {}", m_seektable.size());
     return {};
@@ -268,39 +276,55 @@ MaybeLoaderError FlacLoaderPlugin::seek(int int_sample_index)
     if (sample_index == m_loaded_samples)
         return {};
 
-    auto maybe_target_seekpoint = m_seektable.last_matching([sample_index](auto& seekpoint) { return seekpoint.sample_index <= sample_index; });
+    auto maybe_target_seekpoint = m_seektable.seek_point_before(sample_index);
+    auto const seek_tolerance = (seek_tolerance_ms * m_sample_rate) / 1000;
     // No seektable or no fitting entry: Perform normal forward read
     if (!maybe_target_seekpoint.has_value()) {
         if (sample_index < m_loaded_samples) {
             LOADER_TRY(m_stream->seek(m_data_start_location, SeekMode::SetPosition));
             m_loaded_samples = 0;
         }
-        auto to_read = sample_index - m_loaded_samples;
-        if (to_read == 0)
+        if (sample_index - m_loaded_samples == 0)
             return {};
-        dbgln_if(AFLACLOADER_DEBUG, "Seeking {} samples manually", to_read);
-        (void)TRY(load_chunks(to_read));
+        dbgln_if(AFLACLOADER_DEBUG, "Seeking {} samples manually", sample_index - m_loaded_samples);
     } else {
         auto target_seekpoint = maybe_target_seekpoint.release_value();
 
         // When a small seek happens, we may already be closer to the target than the seekpoint.
         if (sample_index - target_seekpoint.sample_index > sample_index - m_loaded_samples) {
-            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target: seeking {} samples manually", sample_index - m_loaded_samples);
-            (void)TRY(load_chunks(sample_index - m_loaded_samples));
+            dbgln_if(AFLACLOADER_DEBUG, "Close enough to target ({} samples): not seeking", sample_index - m_loaded_samples);
             return {};
         }
 
-        dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}, sample count {}", target_seekpoint.sample_index, target_seekpoint.byte_offset, target_seekpoint.num_samples);
+        dbgln_if(AFLACLOADER_DEBUG, "Seeking to seektable: sample index {}, byte offset {}", target_seekpoint.sample_index, target_seekpoint.byte_offset);
         auto position = target_seekpoint.byte_offset + m_data_start_location;
         if (m_stream->seek(static_cast<i64>(position), SeekMode::SetPosition).is_error())
             return LoaderError { LoaderError::Category::IO, m_loaded_samples, DeprecatedString::formatted("Invalid seek position {}", position) };
-
-        auto remaining_samples_after_seekpoint = sample_index - m_data_start_location;
-        if (remaining_samples_after_seekpoint > 0)
-            (void)TRY(load_chunks(remaining_samples_after_seekpoint));
         m_loaded_samples = target_seekpoint.sample_index;
     }
+
+    // Skip frames until we're within the seek tolerance.
+    while (sample_index - m_loaded_samples > seek_tolerance) {
+        (void)TRY(next_frame());
+        m_loaded_samples += m_current_frame->sample_count;
+    }
+
     return {};
+}
+
+bool FlacLoaderPlugin::should_insert_seekpoint_at(u64 sample_index) const
+{
+    auto const max_seekpoint_distance = (maximum_seekpoint_distance_ms * m_sample_rate) / 1000;
+    auto const seek_tolerance = (seek_tolerance_ms * m_sample_rate) / 1000;
+    auto const current_seekpoint_distance = m_seektable.seek_point_sample_distance_around(sample_index).value_or(NumericLimits<u64>::max());
+    auto const distance_to_previous_seekpoint = sample_index - m_seektable.seek_point_before(sample_index).value_or({ 0, 0 }).sample_index;
+
+    // We insert a seekpoint only under two conditions:
+    // - The seek points around us are spaced too far for what the loader recommends.
+    //   Prevents inserting too many seek points between pre-loaded seek points.
+    // - We are so far away from the previous seek point that seeking will become too imprecise if we don't insert a seek point at least here.
+    //   Prevents inserting too many seek points at the end of files without pre-loaded seek points.
+    return current_seekpoint_distance >= max_seekpoint_distance && distance_to_previous_seekpoint >= seek_tolerance;
 }
 
 ErrorOr<Vector<FixedArray<Sample>>, LoaderError> FlacLoaderPlugin::load_chunks(size_t samples_to_read_from_input)
@@ -332,6 +356,16 @@ LoaderSamples FlacLoaderPlugin::next_frame()
             return LoaderError { category, static_cast<size_t>(m_current_sample_or_frame), DeprecatedString::formatted("FLAC header: {}", msg) }; \
         }                                                                                                                                         \
     } while (0)
+
+    auto frame_byte_index = TRY(m_stream->tell());
+    auto sample_index = m_loaded_samples;
+    // Insert a new seek point if we don't have enough here.
+    if (should_insert_seekpoint_at(sample_index)) {
+        dbgln_if(AFLACLOADER_DEBUG, "Inserting ad-hoc seek point for sample {} at byte {:x} (seekpoint spacing {} samples)", sample_index, frame_byte_index, m_seektable.seek_point_sample_distance_around(sample_index).value_or(NumericLimits<u64>::max()));
+        auto maybe_error = m_seektable.insert_seek_point({ .sample_index = sample_index, .byte_offset = frame_byte_index - m_data_start_location });
+        if (maybe_error.is_error())
+            dbgln("FLAC Warning: Inserting seek point for sample {} failed: {}", sample_index, maybe_error.release_error());
+    }
 
     BigEndianInputBitStream bit_stream { MaybeOwned<Stream>(*m_stream) };
 
