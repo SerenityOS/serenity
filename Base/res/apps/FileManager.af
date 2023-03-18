@@ -2,3 +2,6 @@
 Name=File Manager
 Executable=/bin/FileManager
 Category=Utilities
+
+[Launcher]
+FileTypes=zip

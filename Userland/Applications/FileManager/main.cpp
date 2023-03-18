@@ -23,6 +23,7 @@
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
+#include <LibCore/TempFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
@@ -105,12 +106,39 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // 3. the user's home directory
     // 4. the root directory
 
+    LexicalPath path(initial_location);
     if (!initial_location.is_empty()) {
         if (!ignore_path_resolution)
             initial_location = Core::DeprecatedFile::real_path_for(initial_location);
 
-        if (!Core::DeprecatedFile::is_directory(initial_location))
+        if (!Core::DeprecatedFile::is_directory(initial_location)) {
+            // We want to extract zips to a temporary directory when FileManager is launched with a .zip file as its first argument
+            if (path.has_extension(".zip"sv)) {
+                auto temp_directory = Core::TempFile::create_temp_directory();
+                if (temp_directory.is_error()) {
+                    dbgln("Failed to create temporary directory during zip extraction: {}", temp_directory.error());
+
+                    GUI::MessageBox::show_error(app->active_window(), "Failed to create temporary directory!"sv);
+                    return -1;
+                }
+
+                auto temp_directory_path = temp_directory.value()->path();
+                auto result = Core::Process::spawn("/bin/unzip"sv, Array { "-d"sv, temp_directory_path, initial_location });
+
+                if (result.is_error()) {
+                    dbgln("Failed to extract {} to {}: {}", initial_location, temp_directory_path, result.error());
+
+                    auto message = TRY(String::formatted("Failed to extract {} to {}", initial_location, temp_directory_path));
+                    GUI::MessageBox::show_error(app->active_window(), message);
+
+                    return -1;
+                }
+
+                return run_in_windowed_mode(temp_directory_path.to_deprecated_string(), path.basename());
+            }
+
             is_selection_mode = true;
+        }
     }
 
     if (initial_location.is_empty())
@@ -124,7 +152,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     DeprecatedString focused_entry;
     if (is_selection_mode) {
-        LexicalPath path(initial_location);
         initial_location = path.dirname();
         focused_entry = path.basename();
     }
