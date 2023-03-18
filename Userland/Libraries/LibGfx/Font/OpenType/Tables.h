@@ -559,7 +559,7 @@ struct Lookup {
     BigEndian<u16> lookup_type;
     BigEndian<u16> lookup_flag;
     BigEndian<u16> subtable_count;
-    BigEndian<u16> subtable_offsets[];
+    Offset16 subtable_offsets[];
 };
 
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#lookup-list-table
