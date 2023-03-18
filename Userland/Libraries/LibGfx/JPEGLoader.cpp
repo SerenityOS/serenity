@@ -232,8 +232,7 @@ struct JPEGLoadingContext {
     };
 
     State state { State::NotDecoded };
-    u8 const* data { nullptr };
-    size_t data_size { 0 };
+
     u32 luma_table[64] = { 0 };
     u32 chroma_table[64] = { 0 };
     StartOfFrame frame;
@@ -623,7 +622,7 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
     }
 
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
     u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
@@ -690,7 +689,7 @@ static ErrorOr<void> read_restart_interval(AK::SeekableStream& stream, JPEGLoadi
 static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
         HuffmanTableSpec table;
@@ -844,7 +843,7 @@ static ErrorOr<void> read_colour_encoding(SeekableStream& stream, [[maybe_unused
 static ErrorOr<void> read_app_marker(SeekableStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
 
     if (bytes_to_read <= 2)
         return Error::from_string_literal("app marker size too small");
@@ -913,7 +912,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
 
     bytes_to_read -= 2;
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
 
     context.frame.precision = TRY(stream.read_value<u8>());
     if (context.frame.precision != 8) {
@@ -985,7 +984,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
 static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, context.data_size));
+    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
     while (bytes_to_read > 0) {
         u8 info_byte = TRY(stream.read_value<u8>());
         u8 element_unit_hint = info_byte >> 4;
@@ -1472,8 +1471,6 @@ static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, HuffmanStre
 static ErrorOr<void> decode_header(JPEGLoadingContext& context)
 {
     if (context.state < JPEGLoadingContext::State::HeaderDecoded) {
-        context.stream = TRY(try_make<FixedMemoryStream>(ReadonlyBytes { context.data, context.data_size }));
-
         if (auto result = parse_header(*context.stream, context); result.is_error()) {
             context.state = JPEGLoadingContext::State::Error;
             return result.release_error();
@@ -1532,11 +1529,10 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     return {};
 }
 
-JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(u8 const* data, size_t size)
+JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
 {
     m_context = make<JPEGLoadingContext>();
-    m_context->data = data;
-    m_context->data_size = size;
+    m_context->stream = move(stream);
 }
 
 JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
@@ -1579,7 +1575,8 @@ bool JPEGImageDecoderPlugin::sniff(ReadonlyBytes data)
 
 ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> JPEGImageDecoderPlugin::create(ReadonlyBytes data)
 {
-    return adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(data.data(), data.size()));
+    auto stream = TRY(try_make<FixedMemoryStream>(data));
+    return adopt_nonnull_own_or_enomem(new (nothrow) JPEGImageDecoderPlugin(move(stream)));
 }
 
 bool JPEGImageDecoderPlugin::is_animated()
