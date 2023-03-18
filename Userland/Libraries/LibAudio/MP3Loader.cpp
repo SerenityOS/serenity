@@ -75,12 +75,10 @@ MaybeLoaderError MP3LoaderPlugin::reset()
 
 MaybeLoaderError MP3LoaderPlugin::seek(int const position)
 {
-    for (auto const& seek_entry : m_seek_table) {
-        if (seek_entry.get<1>() >= position) {
-            LOADER_TRY(m_stream->seek(seek_entry.get<0>(), SeekMode::SetPosition));
-            m_loaded_samples = seek_entry.get<1>();
-            break;
-        }
+    auto seek_entry = m_seek_table.seek_point_before(position);
+    if (seek_entry.has_value()) {
+        LOADER_TRY(m_stream->seek(seek_entry->byte_offset, SeekMode::SetPosition));
+        m_loaded_samples = seek_entry->sample_index;
     }
     m_current_frame = {};
     m_synthesis_buffer = {};
@@ -135,7 +133,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
 {
     int sample_count = 0;
     size_t frame_count = 0;
-    m_seek_table.clear();
+    m_seek_table = {};
 
     m_bitstream->align_to_byte_boundary();
 
@@ -150,7 +148,7 @@ MaybeLoaderError MP3LoaderPlugin::build_seek_table()
         sample_count += MP3::frame_size;
 
         if (frame_count % 10 == 0)
-            m_seek_table.append({ frame_pos, sample_count });
+            LOADER_TRY(m_seek_table.insert_seek_point({ static_cast<u64>(sample_count), frame_pos }));
 
         LOADER_TRY(m_stream->seek(error_or_header.value().frame_size - 6, SeekMode::FromCurrentPosition));
 
