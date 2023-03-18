@@ -395,20 +395,30 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
 
     u32 to_skip = 0;
     Optional<u8> saved_symbol;
+    bool in_zrl = false;
+
     for (int j = first_coefficient; j <= scan.spectral_selection_end; ++j) {
         // AC symbols encode 2 pieces of information, the high 4 bits represent
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
-        if (scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
+        if (!in_zrl && scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
             saved_symbol = TRY(get_next_symbol(scan.huffman_stream, ac_table));
 
             if (!TRY(read_eob(scan, *saved_symbol))) {
                 to_skip = *saved_symbol >> 4;
+
+                in_zrl = *saved_symbol == JPEG_ZRL;
+                if (in_zrl) {
+                    to_skip++;
+                    saved_symbol.clear();
+                }
             }
         }
 
         if (to_skip > 0) {
             --to_skip;
+            if (to_skip == 0)
+                in_zrl = false;
             continue;
         }
 
