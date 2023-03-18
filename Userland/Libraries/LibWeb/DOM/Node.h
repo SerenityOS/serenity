@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/DeprecatedString.h>
+#include <AK/FlyString.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/RefPtr.h>
 #include <AK/TypeCasts.h>
@@ -227,7 +228,7 @@ public:
 
     void add_registered_observer(RegisteredObserver& registered_observer) { m_registered_observer_list.append(registered_observer); }
 
-    void queue_mutation_record(DeprecatedFlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling) const;
+    void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling) const;
 
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>
