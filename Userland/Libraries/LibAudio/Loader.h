@@ -32,6 +32,13 @@ static constexpr StringView no_plugin_error = "No loader plugin available"sv;
 // There was no intensive fine-tuning done to determine this value, so improvements may definitely be possible.
 constexpr size_t const loader_buffer_size = 8 * KiB;
 
+// Two seek points should ideally not be farther apart than this.
+// This variable is a heuristic for seek table-constructing loaders.
+constexpr u64 const maximum_seekpoint_distance_ms = 1000;
+// Seeking should be at least as precise as this.
+// That means: The actual achieved seek position must not be more than this amount of time before the requested seek position.
+constexpr u64 const seek_tolerance_ms = 5000;
+
 using LoaderSamples = ErrorOr<FixedArray<Sample>, LoaderError>;
 using MaybeLoaderError = ErrorOr<void, LoaderError>;
 

@@ -91,11 +91,4 @@ struct FlacSubframeHeader {
     u8 bits_per_sample;
 };
 
-// 11.14. SEEKPOINT
-struct FlacSeekPoint {
-    u64 sample_index;
-    u64 byte_offset;
-    u16 num_samples;
-};
-
 }

@@ -51,4 +51,28 @@ struct PictureData {
     Vector<u8> data;
 };
 
+// A generic sample seek point within a file.
+struct SeekPoint {
+    u64 sample_index;
+    u64 byte_offset;
+};
+
+class SeekTable {
+public:
+    Optional<SeekPoint const&> seek_point_before(u64 sample_index) const;
+    // Returns the distance between the closest two seek points around the sample index.
+    // The lower seek point may be exactly at the sample index, but the upper seek point must be after the sample index.
+    Optional<u64> seek_point_sample_distance_around(u64 sample_index) const;
+
+    size_t size() const;
+    ReadonlySpan<SeekPoint> seek_points() const;
+
+    ErrorOr<void> insert_seek_point(SeekPoint);
+
+private:
+    // Invariant: The list of seek points is always sorted.
+    // This makes all operations, such as inserting and searching, faster.
+    Vector<SeekPoint> m_seek_points;
+};
+
 }

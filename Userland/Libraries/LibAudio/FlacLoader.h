@@ -87,6 +87,8 @@ private:
     ALWAYS_INLINE ErrorOr<u32, LoaderError> convert_sample_rate_code(u8 sample_rate_code);
     ALWAYS_INLINE ErrorOr<PcmSampleFormat, LoaderError> convert_bit_depth_code(u8 bit_depth_code);
 
+    bool should_insert_seekpoint_at(u64 sample_index) const;
+
     // Data obtained directly from the FLAC metadata: many values have specific bit counts
     u32 m_sample_rate { 0 };         // 20 bit
     u8 m_num_channels { 0 };         // 3 bit
@@ -105,7 +107,7 @@ private:
     u64 m_data_start_location { 0 };
     Optional<FlacFrameHeader> m_current_frame;
     u64 m_current_sample_or_frame { 0 };
-    Vector<FlacSeekPoint> m_seektable;
+    SeekTable m_seektable;
 };
 
 }
