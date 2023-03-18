@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/DeviceControlDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Generic/DeviceControlDevice.h>
 
 namespace Kernel {
 

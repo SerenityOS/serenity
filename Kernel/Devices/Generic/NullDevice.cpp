@@ -6,7 +6,7 @@
 
 #include <AK/Singleton.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/Generic/NullDevice.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

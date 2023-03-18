@@ -11,8 +11,8 @@
 #if ARCH(X86_64)
 #    include <Kernel/Arch/x86_64/BochsDebugOutput.h>
 #endif
-#include <Kernel/Devices/ConsoleDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Devices/Generic/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Graphics/Console/BootFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>

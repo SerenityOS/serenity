@@ -5,7 +5,7 @@
  */
 
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/Devices/MemoryDevice.h>
+#include <Kernel/Devices/Generic/MemoryDevice.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
 #include <Kernel/Memory/TypedMapping.h>
 #include <Kernel/Sections.h>
