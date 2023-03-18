@@ -19,16 +19,25 @@
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowExposedInterfaces.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/MutationType.h>
+#include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/Fetching.h>
+#include <LibWeb/HTML/TagNames.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
+#include <LibWeb/SVG/AttributeNames.h>
+#include <LibWeb/SVG/TagNames.h>
+#include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/XHR/EventNames.h>
 
 namespace Web::Bindings {
 
@@ -63,6 +72,17 @@ ErrorOr<void> initialize_main_thread_vm()
     // NOTE: We intentionally leak the main thread JavaScript VM.
     //       This avoids doing an exhaustive garbage collection on process exit.
     s_main_thread_vm->ref();
+
+    // These strings could potentially live on the VM similar to CommonPropertyNames.
+    TRY(DOM::MutationType::initialize_strings());
+    TRY(HTML::AttributeNames::initialize_strings());
+    TRY(HTML::EventNames::initialize_strings());
+    TRY(HTML::TagNames::initialize_strings());
+    TRY(Namespace::initialize_strings());
+    TRY(SVG::AttributeNames::initialize_strings());
+    TRY(SVG::TagNames::initialize_strings());
+    TRY(UIEvents::EventNames::initialize_strings());
+    TRY(XHR::EventNames::initialize_strings());
 
     static_cast<WebEngineCustomData*>(s_main_thread_vm->custom_data())->event_loop.set_vm(*s_main_thread_vm);
 

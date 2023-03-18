@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web::XHR::EventNames {
 
@@ -23,5 +24,7 @@ namespace Web::XHR::EventNames {
 #define __ENUMERATE_XHR_EVENT(name) extern DeprecatedFlyString name;
 ENUMERATE_XHR_EVENTS
 #undef __ENUMERATE_XHR_EVENT
+
+ErrorOr<void> initialize_strings();
 
 }

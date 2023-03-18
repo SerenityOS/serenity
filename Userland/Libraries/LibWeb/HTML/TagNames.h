@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web::HTML::TagNames {
 
@@ -155,5 +156,7 @@ namespace Web::HTML::TagNames {
 #define __ENUMERATE_HTML_TAG(name) extern DeprecatedFlyString name;
 ENUMERATE_HTML_TAGS
 #undef __ENUMERATE_HTML_TAG
+
+ErrorOr<void> initialize_strings();
 
 }

@@ -12,11 +12,10 @@ namespace Web::UIEvents::EventNames {
 ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 
-[[gnu::constructor]] static void initialize()
+ErrorOr<void> initialize_strings()
 {
     static bool s_initialized = false;
-    if (s_initialized)
-        return;
+    VERIFY(!s_initialized);
 
 #define __ENUMERATE_UI_EVENT(name) \
     name = #name;
@@ -24,6 +23,7 @@ ENUMERATE_UI_EVENTS
 #undef __ENUMERATE_UI_EVENT
 
     s_initialized = true;
+    return {};
 }
 
 }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
+#include <AK/Error.h>
 
 namespace Web::HTML::EventNames {
 
@@ -63,5 +64,7 @@ namespace Web::HTML::EventNames {
 #define __ENUMERATE_HTML_EVENT(name) extern DeprecatedFlyString name;
 ENUMERATE_HTML_EVENTS
 #undef __ENUMERATE_HTML_EVENT
+
+ErrorOr<void> initialize_strings();
 
 }
