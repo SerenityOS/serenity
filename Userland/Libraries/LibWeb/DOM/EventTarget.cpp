@@ -162,7 +162,7 @@ void EventTarget::add_an_event_listener(DOMEventListener& listener)
     //    and capture is listener’s capture, then append listener to eventTarget’s event listener list.
     auto it = m_event_listener_list.find_if([&](auto& entry) {
         return entry->type == listener.type
-            && &entry->callback->callback().callback == &listener.callback->callback().callback
+            && entry->callback->callback().callback == listener.callback->callback().callback
             && entry->capture == listener.capture;
     });
     if (it == m_event_listener_list.end())
@@ -191,7 +191,7 @@ void EventTarget::remove_event_listener(DeprecatedFlyString const& type, IDLEven
             return true;
         if (!entry.callback || !callback)
             return false;
-        return &entry.callback->callback().callback == &callback->callback().callback;
+        return entry.callback->callback().callback == callback->callback().callback;
     };
     auto it = m_event_listener_list.find_if([&](auto& entry) {
         return entry->type == type
