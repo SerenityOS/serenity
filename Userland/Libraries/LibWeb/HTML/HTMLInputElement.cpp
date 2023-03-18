@@ -394,7 +394,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
     auto element = document().create_element(HTML::TagNames::div).release_value();
-    MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px"));
+    MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px; height: 1lh;"));
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);
     m_text_node->set_owner_input_element({}, *this);
