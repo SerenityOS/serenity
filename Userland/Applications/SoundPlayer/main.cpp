@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2021-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -48,7 +48,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     // start in advanced view by default
-    Player* player = TRY(window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client));
+    Player* player = TRY(window->set_main_widget<SoundPlayerWidgetAdvancedView>(window, audio_client, decoder_client));
 
     if (!file_path.is_empty()) {
         player->play_file_path(file_path);
@@ -134,23 +134,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     visualization_actions.add_action(samples);
 
     auto album_cover_visualization = GUI::Action::create_checkable("&Album Cover", [&](auto&) {
-        auto get_image_from_music_file = [&player, &decoder_client]() -> RefPtr<Gfx::Bitmap> {
-            auto const& pictures = player->pictures();
-
-            if (pictures.is_empty())
-                return {};
-
-            // FIXME: We randomly select the first picture available for the track,
-            //        We might want to hardcode or let the user set a preference.
-            auto decoded_image_or_error = decoder_client->decode_image(pictures[0].data);
-            if (!decoded_image_or_error.has_value())
-                return {};
-
-            auto const decoded_image = decoded_image_or_error.release_value();
-            return decoded_image.frames[0].bitmap;
-        };
-
-        static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<AlbumCoverVisualizationWidget>(get_image_from_music_file);
+        auto* view = static_cast<SoundPlayerWidgetAdvancedView*>(player);
+        view->set_visualization<AlbumCoverVisualizationWidget>([&view]() {
+            return view->get_image_from_music_file();
+        });
     });
     TRY(visualization_menu->try_add_action(album_cover_visualization));
     visualization_actions.add_action(album_cover_visualization);
