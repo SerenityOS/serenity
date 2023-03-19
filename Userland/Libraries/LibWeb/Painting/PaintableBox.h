@@ -98,7 +98,7 @@ public:
         return m_overflow_data->scrollable_overflow_rect;
     }
 
-    Optional<CSSPixelRect> clip_rect() const;
+    Optional<CSSPixelRect> calculate_overflow_clipped_rect() const;
 
     void set_overflow_data(Optional<OverflowData> data) { m_overflow_data = move(data); }
     void set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate>);
