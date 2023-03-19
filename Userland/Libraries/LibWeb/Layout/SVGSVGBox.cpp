@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
 #include <LibWeb/Painting/SVGSVGPaintable.h>
@@ -27,14 +27,14 @@ void SVGSVGBox::prepare_for_replaced_layout()
     if (dom_node().has_attribute(HTML::AttributeNames::width) && dom_node().has_attribute(HTML::AttributeNames::height)) {
         Optional<CSSPixels> w;
         Optional<CSSPixels> h;
-        if (auto width = HTML::parse_dimension_value(dom_node().attribute(HTML::AttributeNames::width))) {
-            if (width->has_length())
-                w = width->to_length().to_px(*this);
-        }
-        if (auto height = HTML::parse_dimension_value(dom_node().attribute(HTML::AttributeNames::height))) {
-            if (height->has_length())
-                h = height->to_length().to_px(*this);
-        }
+        auto parsing_context = CSS::Parser::ParsingContext { document() };
+        auto width = parse_css_value(parsing_context, dom_node().attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width);
+        if (!width.is_null() && width->has_length())
+            w = width->to_length().to_px(*this);
+
+        auto height = parse_css_value(parsing_context, dom_node().attribute((HTML::AttributeNames::height)), CSS::PropertyID::Height);
+        if (!height.is_null() && height->has_length())
+            h = height->to_length().to_px(*this);
         if (w.has_value() && h.has_value()) {
             set_intrinsic_width(*w);
             set_intrinsic_height(*h);

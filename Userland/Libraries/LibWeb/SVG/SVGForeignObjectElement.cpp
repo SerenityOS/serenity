@@ -6,7 +6,7 @@
 
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/Intrinsics.h>
-#include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/SVGAnimatedLength.h>
@@ -63,11 +63,11 @@ JS::GCPtr<Layout::Node> SVGForeignObjectElement::create_layout_node(NonnullRefPt
 void SVGForeignObjectElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     Base::apply_presentational_hints(style);
-
-    if (auto width_value = HTML::parse_dimension_value(attribute(SVG::AttributeNames::width)))
+    auto parsing_context = CSS::Parser::ParsingContext { document() };
+    if (auto width_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width))
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
 
-    if (auto height_value = HTML::parse_dimension_value(attribute(SVG::AttributeNames::height)))
+    if (auto height_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height))
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
 }
 
