@@ -61,7 +61,7 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<S
     server->listen(*m_web_content_socket_path);
 
     server->on_accept = [this, promise](auto client_socket) {
-        auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket), m_client, session_id()));
+        auto maybe_connection = adopt_nonnull_ref_or_enomem(new (nothrow) WebContentConnection(move(client_socket)));
         if (maybe_connection.is_error()) {
             // Use of MUST in this function is safe, as our promise callback can never error out.
             MUST(promise->resolve(maybe_connection.release_error()));
@@ -72,6 +72,12 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<S
         auto web_content_connection = maybe_connection.release_value();
 
         auto window_handle = web_content_connection->get_window_handle();
+        web_content_connection->on_close = [this, window_handle]() {
+            dbgln_if(WEBDRIVER_DEBUG, "Window {} was closed remotely.", window_handle);
+            m_windows.remove(window_handle);
+            if (m_windows.is_empty())
+                m_client->close_session(session_id());
+        };
         m_windows.set(window_handle, Session::Window { window_handle, move(web_content_connection) });
 
         if (m_current_window_handle.is_empty())

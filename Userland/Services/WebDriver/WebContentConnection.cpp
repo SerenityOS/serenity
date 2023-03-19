@@ -9,17 +9,15 @@
 
 namespace WebDriver {
 
-WebContentConnection::WebContentConnection(NonnullOwnPtr<Core::LocalSocket> socket, NonnullRefPtr<Client> client, unsigned session_id)
+WebContentConnection::WebContentConnection(NonnullOwnPtr<Core::LocalSocket> socket)
     : IPC::ConnectionFromClient<WebDriverClientEndpoint, WebDriverServerEndpoint>(*this, move(socket), 1)
-    , m_client(move(client))
-    , m_session_id(session_id)
 {
 }
 
 void WebContentConnection::die()
 {
-    dbgln_if(WEBDRIVER_DEBUG, "Session {} was closed remotely. Shutting down...", m_session_id);
-    m_client->close_session(m_session_id);
+    if (on_close)
+        on_close();
 }
 
 }
