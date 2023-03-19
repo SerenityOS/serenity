@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/Painter.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
@@ -38,7 +37,8 @@ JS::GCPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::Sty
 void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     auto width_attribute = attribute(SVG::AttributeNames::width);
-    if (auto width_value = HTML::parse_dimension_value(width_attribute)) {
+    auto parsing_context = CSS::Parser::ParsingContext { document() };
+    if (auto width_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
     } else if (width_attribute == "") {
         // If the `width` attribute is an empty string, it defaults to 100%.
@@ -49,7 +49,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 
     // Height defaults to 100%
     auto height_attribute = attribute(SVG::AttributeNames::height);
-    if (auto height_value = HTML::parse_dimension_value(height_attribute)) {
+    if (auto height_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height)) {
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
     } else if (height_attribute == "") {
         // If the `height` attribute is an empty string, it defaults to 100%.
