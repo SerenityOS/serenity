@@ -788,7 +788,7 @@ String Window::name() const
         return String {};
 
     // 2. Return this's navigable's target name.
-    return String::from_deprecated_string(browsing_context()->name()).release_value_but_fixme_should_propagate_errors();
+    return browsing_context()->name();
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#apis-for-creating-and-navigating-browsing-contexts-by-name:dom-name
@@ -799,7 +799,7 @@ void Window::set_name(String const& name)
         return;
 
     // 2. Set this's navigable's active session history entry's document state's navigable target name to the given value.
-    browsing_context()->set_name(name.to_deprecated_string());
+    browsing_context()->set_name(name);
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#dom-location

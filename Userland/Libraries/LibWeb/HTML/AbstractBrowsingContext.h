@@ -22,8 +22,8 @@ public:
     virtual HTML::WindowProxy* window_proxy() = 0;
     virtual HTML::WindowProxy const* window_proxy() const = 0;
 
-    DeprecatedString const& name() const { return m_name; }
-    void set_name(DeprecatedString const& name) { m_name = name; }
+    String const& name() const { return m_name; }
+    void set_name(String const& name) { m_name = name; }
 
     JS::GCPtr<BrowsingContext> opener_browsing_context() const { return m_opener_browsing_context; }
     void set_opener_browsing_context(JS::GCPtr<BrowsingContext> browsing_context) { m_opener_browsing_context = browsing_context; }
@@ -45,7 +45,7 @@ public:
     virtual void set_window_handle(String handle) = 0;
 
 protected:
-    DeprecatedString m_name;
+    String m_name;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
     TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
