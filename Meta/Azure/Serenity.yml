@@ -42,6 +42,7 @@ jobs:
       displayName: 'Create Build Directory'
 
     - script: |
+        set -e
         cmake -S Meta/CMake/Superbuild -B Build/superbuild -GNinja \
           -DSERENITY_ARCH=${{ parameters.arch }} \
           -DSERENITY_TOOLCHAIN=Clang \
@@ -58,6 +59,7 @@ jobs:
         CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - script: |
+        set -e
         cmake --build ./Build/superbuild
       displayName: 'Build'
       workingDirectory: $(Build.SourcesDirectory)
@@ -65,11 +67,13 @@ jobs:
         CCACHE_DIR: '$(SERENITY_CCACHE_DIR)'
 
     - script: |
+        set -e
         ninja install && ninja qemu-image
       displayName: 'Create RootFS'
       workingDirectory: $(Build.SourcesDirectory)/Build/${{ parameters.arch }}clang
 
     - script: |
+        set -e
         ninja run
 
         echo "##[group]Verify Output File"
@@ -102,6 +106,7 @@ jobs:
 
     - ${{ if eq(parameters.coverage, 'ON') }}:
       - script: |
+          set -e
           ./Meta/analyze-qemu-coverage.sh
         displayName: 'Aggregate Coverage Results'
         workingDirectory: $(Build.SourcesDirectory)

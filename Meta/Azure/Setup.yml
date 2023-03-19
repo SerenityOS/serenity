@@ -7,6 +7,7 @@ steps:
 
   - ${{ if eq(parameters.os, 'Serenity') }}:
     - script: |
+        set -e
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
         sudo apt-get update
@@ -15,6 +16,7 @@ steps:
 
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
+        set -e
         sudo apt-get purge -y clang-12 gcc-10
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-13 main'
@@ -34,12 +36,14 @@ steps:
   - ${{ if eq(parameters.os, 'macOS') }}:
     # macOS ships an ancient Bash 3.x by default
     - script: |
+        set -e
         brew update
         brew install bash ninja wabt ccache unzip qt llvm@15
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Android') }}:
     - script: |
+        set -e
         sudo apt-get install ccache gcc-12 g++-12 libstdc++-12-dev ninja-build unzip
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
