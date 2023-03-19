@@ -16,6 +16,7 @@
 #include <LibGUI/Slider.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
+#include <LibImageDecoderClient/Client.h>
 
 class SoundPlayerWidgetAdvancedView final : public GUI::Widget
     , public Player {
@@ -24,6 +25,7 @@ class SoundPlayerWidgetAdvancedView final : public GUI::Widget
 public:
     void set_nonlinear_volume_slider(bool nonlinear);
     void set_playlist_visible(bool visible);
+    RefPtr<Gfx::Bitmap> get_image_from_music_file();
 
     template<typename T, typename... Args>
     void set_visualization(Args... args)
@@ -53,13 +55,14 @@ protected:
     void keydown_event(GUI::KeyEvent&) override;
 
 private:
-    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionToServer&);
+    SoundPlayerWidgetAdvancedView(GUI::Window&, Audio::ConnectionToServer&, ImageDecoderClient::Client&);
 
     void sync_previous_next_actions();
 
     void drag_enter_event(GUI::DragEvent& event) override;
     void drop_event(GUI::DropEvent& event) override;
     GUI::Window& m_window;
+    ImageDecoderClient::Client& m_image_decoder_client;
 
     RefPtr<GUI::HorizontalSplitter> m_splitter;
     RefPtr<GUI::Widget> m_player_view;

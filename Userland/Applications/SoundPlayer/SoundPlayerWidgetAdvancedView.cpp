@@ -6,9 +6,11 @@
  */
 
 #include "SoundPlayerWidgetAdvancedView.h"
+#include "AlbumCoverVisualizationWidget.h"
 #include "BarsVisualizationWidget.h"
 #include "M3UParser.h"
 #include "PlaybackManager.h"
+#include "SampleWidget.h"
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/SIMD.h>
@@ -24,9 +26,10 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
 
-SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ConnectionToServer& connection)
+SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window, Audio::ConnectionToServer& connection, ImageDecoderClient::Client& image_decoder_client)
     : Player(connection)
     , m_window(window)
+    , m_image_decoder_client(image_decoder_client)
 {
     window.resize(455, 350);
     window.set_resizable(true);
@@ -171,6 +174,22 @@ void SoundPlayerWidgetAdvancedView::set_playlist_visible(bool visible)
     } else if (!m_playlist_widget->parent()) {
         m_player_view->parent_widget()->add_child(*m_playlist_widget);
     }
+}
+
+RefPtr<Gfx::Bitmap> SoundPlayerWidgetAdvancedView::get_image_from_music_file()
+{
+    auto const& pictures = this->pictures();
+    if (pictures.is_empty())
+        return {};
+
+    // FIXME: We randomly select the first picture available for the track,
+    //        We might want to hardcode or let the user set a preference.
+    auto decoded_image_or_error = m_image_decoder_client.decode_image(pictures[0].data);
+    if (!decoded_image_or_error.has_value())
+        return {};
+
+    auto const decoded_image = decoded_image_or_error.release_value();
+    return decoded_image.frames[0].bitmap;
 }
 
 void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
