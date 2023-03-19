@@ -314,7 +314,7 @@ BorderRadiiData PaintableBox::normalized_border_radii_data(ShrinkRadiiForBorders
     return border_radius_data;
 }
 
-Optional<CSSPixelRect> PaintableBox::clip_rect() const
+Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
 {
     if (!m_clip_rect.has_value()) {
         // NOTE: stacking context should not be crossed while aggregating rectangle to
@@ -323,7 +323,7 @@ Optional<CSSPixelRect> PaintableBox::clip_rect() const
         // TODO: figure out if there are cases when stacking context should be
         // crossed to calculate correct clip rect
         if (!stacking_context() && containing_block() && containing_block()->paint_box()) {
-            m_clip_rect = containing_block()->paint_box()->clip_rect();
+            m_clip_rect = containing_block()->paint_box()->calculate_overflow_clipped_rect();
         }
 
         auto overflow_x = computed_values().overflow_x();
@@ -347,7 +347,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         return;
 
     // FIXME: Support more overflow variations.
-    auto clip_rect = this->clip_rect();
+    auto clip_rect = this->calculate_overflow_clipped_rect();
     auto overflow_x = computed_values().overflow_x();
     auto overflow_y = computed_values().overflow_y();
 
