@@ -363,7 +363,7 @@ void PaintableBox::apply_clip_overflow_rect(PaintContext& context, PaintPhase ph
         clip_overflow();
     }
 
-    if (overflow_y == CSS::Overflow::Hidden || overflow_x == CSS::Overflow::Hidden) {
+    if (overflow_y == CSS::Overflow::Hidden && overflow_x == CSS::Overflow::Hidden) {
         auto border_radii_data = normalized_border_radii_data(ShrinkRadiiForBorders::Yes);
         if (border_radii_data.has_any_radius()) {
             auto corner_clipper = BorderRadiusCornerClipper::create(context, context.rounded_device_rect(*clip_rect), border_radii_data, CornerClip::Outside, BorderRadiusCornerClipper::UseCachedBitmap::No);
