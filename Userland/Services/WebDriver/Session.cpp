@@ -26,10 +26,29 @@ Session::Session(unsigned session_id, NonnullRefPtr<Client> client, Web::WebDriv
 {
 }
 
+// https://w3c.github.io/webdriver/#dfn-close-the-session
 Session::~Session()
 {
-    if (auto error = stop(); error.is_error())
-        warnln("Failed to stop session {}: {}", m_id, error.error());
+    if (!m_started)
+        return;
+
+    // 1. Perform the following substeps based on the remote end’s type:
+    // NOTE: We perform the "Remote end is an endpoint node" steps in the WebContent process.
+    web_content_connection().close_session();
+
+    // 2. Remove the current session from active sessions.
+    // NOTE: We are in a session destruction which means it is already removed
+    // from active sessions
+
+    // 3. Perform any implementation-specific cleanup steps.
+    if (m_browser_pid.has_value()) {
+        MUST(Core::System::kill(*m_browser_pid, SIGTERM));
+        m_browser_pid = {};
+    }
+    if (m_web_content_socket_path.has_value()) {
+        MUST(Core::System::unlink(*m_web_content_socket_path));
+        m_web_content_socket_path = {};
+    }
 }
 
 ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<ServerPromise> promise)
@@ -86,35 +105,6 @@ ErrorOr<void> Session::start(LaunchBrowserCallbacks const& callbacks)
     return {};
 }
 
-// https://w3c.github.io/webdriver/#dfn-close-the-session
-Web::WebDriver::Response Session::stop()
-{
-    if (!m_started)
-        return JsonValue {};
-
-    // 1. Perform the following substeps based on the remote end’s type:
-    // NOTE: We perform the "Remote end is an endpoint node" steps in the WebContent process.
-    web_content_connection().close_session();
-
-    // 2. Remove the current session from active sessions.
-    m_client->close_session(session_id());
-
-    // 3. Perform any implementation-specific cleanup steps.
-    if (m_browser_pid.has_value()) {
-        MUST(Core::System::kill(*m_browser_pid, SIGTERM));
-        m_browser_pid = {};
-    }
-    if (m_web_content_socket_path.has_value()) {
-        MUST(Core::System::unlink(*m_web_content_socket_path));
-        m_web_content_socket_path = {};
-    }
-
-    m_started = false;
-
-    // 4. If an error has occurred in any of the steps above, return the error, otherwise return success with data null.
-    return JsonValue {};
-}
-
 // 11.2 Close Window, https://w3c.github.io/webdriver/#dfn-close-window
 Web::WebDriver::Response Session::close_window()
 {
@@ -127,7 +117,7 @@ Web::WebDriver::Response Session::close_window()
 
         // 4. If there are no more open top-level browsing contexts, then close the session.
         if (m_windows.size() == 1)
-            TRY(stop());
+            m_client->close_session(session_id());
     }
 
     // 5. Return the result of running the remote end steps for the Get Window Handles command.
