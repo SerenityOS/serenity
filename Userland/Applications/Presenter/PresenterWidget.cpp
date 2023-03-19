@@ -83,8 +83,9 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
             update_slides_actions();
         }
     });
-    m_full_screen_action = GUI::Action::create("&Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
-        this->window()->set_fullscreen(true);
+    m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
+        auto* window = this->window();
+        window->set_fullscreen(!window->is_fullscreen());
     });
     m_present_from_first_slide_action = GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
         if (m_current_presentation) {
