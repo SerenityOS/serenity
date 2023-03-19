@@ -60,38 +60,51 @@ struct Options {
     Vector<DeprecatedString> files;
 };
 
-static ErrorOr<void> load_file(Options options, StringView filename, Vector<Line>& lines, HashTable<Line>& seen)
+static Vector<Line> parse_lines(Options const& options, Vector<ByteBuffer> const& file_list)
 {
-    auto file = TRY(Core::BufferedFile::create(
-        TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read))));
+    HashTable<Line> seen;
+    Vector<Line> lines;
 
-    // FIXME: Unlimited line length
-    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
-    while (TRY(file->can_read_line())) {
-        DeprecatedString line = TRY(file->read_line(buffer));
+    for (auto const& file : file_list) {
+        StringView file_string_view { file.bytes() };
+        for (auto line : file_string_view.lines(true)) {
+            StringView key = line;
+            if (options.key_field != 0) {
+                auto split = (options.separator[0])
+                    ? line.split_view(options.separator[0])
+                    : line.split_view_if(isspace);
 
-        StringView key = line;
-        if (options.key_field != 0) {
-            auto split = (options.separator[0])
-                ? line.split_view(options.separator[0])
-                : line.split_view(isspace);
-            if (options.key_field - 1 >= split.size()) {
-                key = ""sv;
-            } else {
-                key = split[options.key_field - 1];
+                if (options.key_field - 1 >= split.size()) {
+                    key = ""sv;
+                } else {
+                    key = split[options.key_field - 1];
+                }
             }
-        }
 
-        Line l = { key, key.to_int().value_or(0), line, options.numeric };
+            Line l = { key, key.to_int().value_or(0), line, options.numeric };
 
-        if (!options.unique || !seen.contains(l)) {
-            lines.append(l);
-            if (options.unique)
-                seen.set(l);
+            if (!options.unique || !seen.contains(l)) {
+                lines.append(l);
+                if (options.unique)
+                    seen.set(l);
+            }
         }
     }
 
-    return {};
+    return lines;
+}
+
+static ErrorOr<Vector<ByteBuffer>> read_files(Vector<StringView> const& file_paths)
+{
+    Vector<ByteBuffer> file_list;
+    for (auto const& filename : file_paths) {
+        auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
+        auto file_buffer = TRY(file->read_until_eof());
+
+        TRY(file_list.try_append(file_buffer));
+    }
+
+    return file_list;
 }
 
 ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
@@ -109,16 +122,11 @@ ErrorOr<int> serenity_main([[maybe_unused]] Main::Arguments arguments)
     args_parser.add_positional_argument(options.files, "Files to sort", "file", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
-    Vector<Line> lines;
-    HashTable<Line> seen;
+    if (options.files.is_empty())
+        options.files.append("-"sv);
 
-    if (options.files.size() == 0) {
-        TRY(load_file(options, "-"sv, lines, seen));
-    } else {
-        for (auto& file : options.files) {
-            TRY(load_file(options, file, lines, seen));
-        }
-    }
+    auto file_list = TRY(read_files(options.files));
+    auto lines = parse_lines(options, file_list);
 
     quick_sort(lines);
 
