@@ -266,6 +266,10 @@ ErrorOr<void, Client::WrappedError> Client::handle_request(JsonValue body)
 
 ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue result)
 {
+    bool keep_alive = false;
+    if (auto it = m_request->headers().find_if([](auto& header) { return header.name.equals_ignoring_ascii_case("Connection"sv); }); !it.is_end())
+        keep_alive = it->value.trim_whitespace().equals_ignoring_ascii_case("keep-alive"sv);
+
     result = make_success_response(move(result));
     auto content = result.serialized<StringBuilder>();
 
@@ -275,6 +279,8 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
     builder.append("X-Frame-Options: SAMEORIGIN\r\n"sv);
     builder.append("X-Content-Type-Options: nosniff\r\n"sv);
     builder.append("Pragma: no-cache\r\n"sv);
+    if (keep_alive)
+        builder.append("Connection: keep-alive\r\n"sv);
     builder.append("Content-Type: application/json; charset=utf-8\r\n"sv);
     builder.appendff("Content-Length: {}\r\n", content.length());
     builder.append("\r\n"sv);
@@ -286,10 +292,6 @@ ErrorOr<void, Client::WrappedError> Client::send_success_response(JsonValue resu
         auto bytes_sent = TRY(m_socket->write_some(content.bytes()));
         content = content.substring_view(bytes_sent);
     }
-
-    bool keep_alive = false;
-    if (auto it = m_request->headers().find_if([](auto& header) { return header.name.equals_ignoring_ascii_case("Connection"sv); }); !it.is_end())
-        keep_alive = it->value.trim_whitespace().equals_ignoring_ascii_case("keep-alive"sv);
 
     if (!keep_alive)
         die();
