@@ -93,8 +93,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 
         path = new_path;
     }
-
-    if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
+    if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0 && path.segments().size() > 2) {
         // We need to fill the path before applying the stroke, however the filled
         // path must be closed, whereas the stroke path may not necessary be closed.
         // Copy the path and close it for filling, but use the previous path for stroke
