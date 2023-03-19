@@ -83,10 +83,6 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
             update_slides_actions();
         }
     });
-    m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
-        auto* window = this->window();
-        window->set_fullscreen(!window->is_fullscreen());
-    });
     m_present_from_first_slide_action = GUI::Action::create("Present From First &Slide", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->go_to_first_slide();
@@ -97,8 +93,15 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 
     TRY(presentation_menu->try_add_action(*m_next_slide_action));
     TRY(presentation_menu->try_add_action(*m_previous_slide_action));
-    TRY(presentation_menu->try_add_action(*m_full_screen_action));
     TRY(presentation_menu->try_add_action(*m_present_from_first_slide_action));
+
+    auto view_menu = TRY(window->try_add_menu("&View"));
+    m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
+        auto* window = this->window();
+        window->set_fullscreen(!window->is_fullscreen());
+    });
+
+    TRY(view_menu->try_add_action(*m_full_screen_action));
 
     update_slides_actions();
 
