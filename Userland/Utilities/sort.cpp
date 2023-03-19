@@ -5,9 +5,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
@@ -18,7 +18,7 @@
 struct Line {
     StringView key;
     long int numeric_key;
-    DeprecatedString line;
+    StringView line;
     bool numeric;
 
     bool operator<(Line const& other) const
@@ -57,7 +57,7 @@ struct Options {
     bool numeric { false };
     bool reverse { false };
     StringView separator { "\0", 1 };
-    Vector<DeprecatedString> files;
+    Vector<StringView> files;
 };
 
 static Vector<Line> parse_lines(Options const& options, Vector<ByteBuffer> const& file_list)
