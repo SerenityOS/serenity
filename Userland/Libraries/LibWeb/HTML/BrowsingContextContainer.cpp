@@ -58,7 +58,7 @@ void BrowsingContextContainer::create_new_nested_browsing_context()
 
     // 4. If element has a name attribute, then set browsingContext's name to the value of this attribute.
     if (auto name = attribute(HTML::AttributeNames::name); !name.is_empty())
-        m_nested_browsing_context->set_name(name);
+        m_nested_browsing_context->set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#concept-bcc-content-document
