@@ -49,7 +49,6 @@ public:
     }
 
     ErrorOr<void> start(LaunchBrowserCallbacks const&);
-    Web::WebDriver::Response stop();
     Web::WebDriver::Response close_window();
     Web::WebDriver::Response switch_to_window(StringView);
     Web::WebDriver::Response get_window_handles() const;
