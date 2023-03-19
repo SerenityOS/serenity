@@ -12,6 +12,7 @@
 #include "SoundPlayerWidgetAdvancedView.h"
 #include <LibAudio/ConnectionToServer.h>
 #include <LibAudio/FlacLoader.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibGUI/Action.h>
@@ -38,6 +39,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app = TRY(GUI::Application::try_create(arguments));
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
+
+    Config::pledge_domain("SoundPlayer");
+    app->set_config_domain(TRY("SoundPlayer"_string));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread proc"));
 
@@ -120,15 +124,20 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup visualization_actions;
     visualization_actions.set_exclusive(true);
 
+    auto set_selected_visualization_in_config = [](StringView name) {
+        Config::write_string("SoundPlayer"sv, "Preferences"sv, "Visualization"sv, name);
+    };
+
     auto bars = GUI::Action::create_checkable("&Bars", [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<BarsVisualizationWidget>();
+        set_selected_visualization_in_config("bars"sv);
     });
-    bars->set_checked(true);
     TRY(visualization_menu->try_add_action(bars));
     visualization_actions.add_action(bars);
 
     auto samples = GUI::Action::create_checkable("&Samples", [&](auto&) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_visualization<SampleWidget>();
+        set_selected_visualization_in_config("samples"sv);
     });
     TRY(visualization_menu->try_add_action(samples));
     visualization_actions.add_action(samples);
@@ -138,9 +147,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view->set_visualization<AlbumCoverVisualizationWidget>([&view]() {
             return view->get_image_from_music_file();
         });
+
+        set_selected_visualization_in_config("album_cover"sv);
     });
     TRY(visualization_menu->try_add_action(album_cover_visualization));
     visualization_actions.add_action(album_cover_visualization);
+
+    auto selected_visualization_widget = bars;
+    auto visualization = Config::read_string("SoundPlayer"sv, "Preferences"sv, "Visualization"sv, "bars"sv);
+
+    if (visualization == "samples")
+        selected_visualization_widget = samples;
+    else if (visualization == "album_cover")
+        selected_visualization_widget = album_cover_visualization;
+
+    selected_visualization_widget->set_checked(true);
 
     auto help_menu = TRY(window->try_add_menu("&Help"));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));

@@ -14,6 +14,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/SIMD.h>
+#include <LibConfig/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -53,7 +54,16 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     m_volume_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-medium.png"sv).release_value_but_fixme_should_propagate_errors();
     m_muted_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/audio-volume-muted.png"sv).release_value_but_fixme_should_propagate_errors();
 
-    m_visualization = m_player_view->add<BarsVisualizationWidget>();
+    auto visualization = Config::read_string("SoundPlayer"sv, "Preferences"sv, "Visualization"sv, "bars"sv);
+    if (visualization == "samples") {
+        m_visualization = m_player_view->add<SampleWidget>();
+    } else if (visualization == "album_cover") {
+        m_visualization = m_player_view->add<AlbumCoverVisualizationWidget>([this]() {
+            return get_image_from_music_file();
+        });
+    } else {
+        m_visualization = m_player_view->add<BarsVisualizationWidget>();
+    }
 
     m_playback_progress_slider = m_player_view->add<GUI::HorizontalSlider>();
     m_playback_progress_slider->set_fixed_height(20);
