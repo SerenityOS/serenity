@@ -100,8 +100,17 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         auto* window = this->window();
         window->set_fullscreen(!window->is_fullscreen());
     });
+    m_resize_to_fit_content_action = GUI::Action::create("Resize to Fit &Content", { KeyModifier::Mod_Alt, KeyCode::Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)), [this](auto&) {
+        if (m_current_presentation) {
+            auto presentation_size = m_current_presentation->normative_size();
+            auto* window = this->window();
+
+            window->resize(window->size().match_aspect_ratio(presentation_size.aspect_ratio(), Orientation::Horizontal));
+        }
+    });
 
     TRY(view_menu->try_add_action(*m_full_screen_action));
+    TRY(view_menu->try_add_action(*m_resize_to_fit_content_action));
 
     update_slides_actions();
 
