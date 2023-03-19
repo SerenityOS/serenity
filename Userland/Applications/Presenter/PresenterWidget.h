@@ -46,6 +46,7 @@ private:
     OwnPtr<Presentation> m_current_presentation;
     RefPtr<GUI::Action> m_next_slide_action;
     RefPtr<GUI::Action> m_previous_slide_action;
-    RefPtr<GUI::Action> m_full_screen_action;
     RefPtr<GUI::Action> m_present_from_first_slide_action;
+
+    RefPtr<GUI::Action> m_full_screen_action;
 };
