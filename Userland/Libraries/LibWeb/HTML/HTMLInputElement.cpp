@@ -71,7 +71,12 @@ JS::GCPtr<Layout::Node> HTMLInputElement::create_layout_node(NonnullRefPtr<CSS::
     if (type_state() == TypeAttributeState::RadioButton)
         return heap().allocate_without_realm<Layout::RadioButton>(document(), *this, move(style));
 
-    return heap().allocate_without_realm<Layout::BlockContainer>(document(), this, move(style));
+    // AD-HOC: We rewrite `display: inline` to `display: inline-block`.
+    //         This is required for the internal shadow tree to work correctly in layout.
+    if (style->display().is_inline_outside() && style->display().is_flow_inside())
+        style->set_property(CSS::PropertyID::Display, CSS::IdentifierStyleValue::create(CSS::ValueID::InlineBlock));
+
+    return Element::create_layout_node_for_display_type(document(), style->display(), style, this);
 }
 
 void HTMLInputElement::set_checked(bool checked, ChangeSource change_source)
