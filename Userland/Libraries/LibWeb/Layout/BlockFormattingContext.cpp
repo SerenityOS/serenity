@@ -38,6 +38,11 @@ BlockFormattingContext::~BlockFormattingContext()
     }
 }
 
+CSSPixels BlockFormattingContext::automatic_content_width() const
+{
+    return greatest_child_width(root());
+}
+
 CSSPixels BlockFormattingContext::automatic_content_height() const
 {
     return compute_auto_height_for_block_formatting_context_root(root());
@@ -925,7 +930,7 @@ BlockFormattingContext::SpaceUsedByFloats BlockFormattingContext::space_used_by_
     return space_used_by_floats;
 }
 
-CSSPixels BlockFormattingContext::greatest_child_width(Box const& box)
+CSSPixels BlockFormattingContext::greatest_child_width(Box const& box) const
 {
     // Similar to FormattingContext::greatest_child_width()
     // but this one takes floats into account!

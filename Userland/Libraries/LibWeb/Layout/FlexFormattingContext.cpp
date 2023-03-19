@@ -75,9 +75,14 @@ FlexFormattingContext::FlexFormattingContext(LayoutState& state, Box const& flex
 
 FlexFormattingContext::~FlexFormattingContext() = default;
 
+CSSPixels FlexFormattingContext::automatic_content_width() const
+{
+    return m_flex_container_state.content_width();
+}
+
 CSSPixels FlexFormattingContext::automatic_content_height() const
 {
-    return m_state.get(flex_container()).content_height();
+    return m_flex_container_state.content_height();
 }
 
 void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace const& available_content_space)

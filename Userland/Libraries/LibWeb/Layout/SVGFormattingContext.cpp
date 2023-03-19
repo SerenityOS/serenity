@@ -21,6 +21,11 @@ SVGFormattingContext::SVGFormattingContext(LayoutState& state, Box const& box, F
 
 SVGFormattingContext::~SVGFormattingContext() = default;
 
+CSSPixels SVGFormattingContext::automatic_content_width() const
+{
+    return 0;
+}
+
 CSSPixels SVGFormattingContext::automatic_content_height() const
 {
     return 0;

@@ -1901,6 +1901,11 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     m_automatic_content_height = total_y;
 }
 
+CSSPixels GridFormattingContext::automatic_content_width() const
+{
+    return greatest_child_width(context_box());
+}
+
 CSSPixels GridFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;

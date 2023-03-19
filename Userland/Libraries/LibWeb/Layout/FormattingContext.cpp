@@ -127,7 +127,8 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
                 : FormattingContext(Type::Block, state, box)
             {
             }
-            virtual CSSPixels automatic_content_height() const override { return 0; };
+            virtual CSSPixels automatic_content_width() const override { return 0; }
+            virtual CSSPixels automatic_content_height() const override { return 0; }
             virtual void run(Box const&, LayoutMode, AvailableSpace const&) override { }
         };
         return make<ReplacedFormattingContext>(state, child_box);
@@ -170,7 +171,8 @@ OwnPtr<FormattingContext> FormattingContext::create_independent_formatting_conte
                 : FormattingContext(Type::Block, state, box)
             {
             }
-            virtual CSSPixels automatic_content_height() const override { return 0; };
+            virtual CSSPixels automatic_content_width() const override { return 0; }
+            virtual CSSPixels automatic_content_height() const override { return 0; }
             virtual void run(Box const&, LayoutMode, AvailableSpace const&) override { }
         };
         return make<DummyFormattingContext>(state, child_box);
@@ -208,7 +210,7 @@ OwnPtr<FormattingContext> FormattingContext::layout_inside(Box const& child_box,
     return independent_formatting_context;
 }
 
-CSSPixels FormattingContext::greatest_child_width(Box const& box)
+CSSPixels FormattingContext::greatest_child_width(Box const& box) const
 {
     CSSPixels max_width = 0;
     if (box.children_are_inline()) {
@@ -1093,11 +1095,7 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
     auto available_height = AvailableSize::make_indefinite();
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
-    if (context->type() == FormattingContext::Type::Flex) {
-        cache.min_content_width = box_state.content_width();
-    } else {
-        cache.min_content_width = context->greatest_child_width(box).value();
-    }
+    cache.min_content_width = context->automatic_content_width();
 
     if (!isfinite(cache.min_content_width->value())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.
@@ -1131,11 +1129,7 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
     auto available_height = AvailableSize::make_indefinite();
     context->run(box, LayoutMode::IntrinsicSizing, AvailableSpace(available_width, available_height));
 
-    if (context->type() == FormattingContext::Type::Flex) {
-        cache.max_content_width = box_state.content_width();
-    } else {
-        cache.max_content_width = context->greatest_child_width(box).value();
-    }
+    cache.max_content_width = context->automatic_content_width();
 
     if (!isfinite(cache.max_content_width->value())) {
         // HACK: If layout calculates a non-finite result, something went wrong. Force it to zero and log a little whine.

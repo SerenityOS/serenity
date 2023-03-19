@@ -22,6 +22,7 @@ public:
     ~BlockFormattingContext();
 
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) override;
+    virtual CSSPixels automatic_content_width() const override;
     virtual CSSPixels automatic_content_height() const override;
 
     auto const& left_side_floats() const { return m_left_floats; }
@@ -40,7 +41,7 @@ public:
 
     SpaceUsedByFloats space_used_by_floats(CSSPixels y) const;
 
-    virtual CSSPixels greatest_child_width(Box const&) override;
+    virtual CSSPixels greatest_child_width(Box const&) const override;
 
     void layout_floating_box(Box const& child, BlockContainer const& containing_block, LayoutMode, AvailableSpace const&, CSSPixels y, LineBuilder* = nullptr);
 

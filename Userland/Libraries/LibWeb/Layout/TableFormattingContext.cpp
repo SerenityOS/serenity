@@ -542,6 +542,11 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     m_automatic_content_height = total_content_height;
 }
 
+CSSPixels TableFormattingContext::automatic_content_width() const
+{
+    return greatest_child_width(context_box());
+}
+
 CSSPixels TableFormattingContext::automatic_content_height() const
 {
     return m_automatic_content_height;

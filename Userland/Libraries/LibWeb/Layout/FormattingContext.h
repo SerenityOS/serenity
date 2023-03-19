@@ -29,7 +29,7 @@ public:
     virtual void run(Box const&, LayoutMode, AvailableSpace const&) = 0;
 
     // This function returns the automatic content height of the context's root box.
-    virtual CSSPixels automatic_content_width() const { return 0; }
+    virtual CSSPixels automatic_content_width() const = 0;
 
     // This function returns the automatic content height of the context's root box.
     virtual CSSPixels automatic_content_height() const = 0;
@@ -64,7 +64,7 @@ public:
     CSS::Length calculate_inner_width(Layout::Box const&, AvailableSize const&, CSS::Size const& width) const;
     CSS::Length calculate_inner_height(Layout::Box const&, AvailableSize const&, CSS::Size const& height) const;
 
-    virtual CSSPixels greatest_child_width(Box const&);
+    virtual CSSPixels greatest_child_width(Box const&) const;
 
     CSSPixels containing_block_width_for(Box const& box) const { return containing_block_width_for(box, m_state); }
     CSSPixels containing_block_height_for(Box const& box) const { return containing_block_height_for(box, m_state); }
