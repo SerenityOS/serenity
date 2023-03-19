@@ -183,6 +183,8 @@ public:
 
     CSS::CSSStyleDeclaration* style_for_bindings();
 
+    CSS::StyleSheetList& document_or_shadow_root_style_sheets();
+
     WebIDL::ExceptionOr<String> inner_html() const;
     WebIDL::ExceptionOr<void> set_inner_html(StringView);
 

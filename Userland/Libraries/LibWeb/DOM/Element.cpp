@@ -2380,4 +2380,13 @@ auto Element::ensure_custom_element_reaction_queue() -> CustomElementReactionQue
     return *m_custom_element_reaction_queue;
 }
 
+CSS::StyleSheetList& Element::document_or_shadow_root_style_sheets()
+{
+    auto& root_node = root();
+    if (is<DOM::ShadowRoot>(root_node))
+        return static_cast<DOM::ShadowRoot&>(root_node).style_sheets();
+
+    return document().style_sheets();
+}
+
 }

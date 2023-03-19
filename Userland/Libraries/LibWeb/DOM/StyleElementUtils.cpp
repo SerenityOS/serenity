@@ -33,7 +33,7 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
     // 2. If element has an associated CSS style sheet, remove the CSS style sheet in question.
 
     if (m_associated_css_style_sheet) {
-        remove_a_css_style_sheet(style_element.document(), *m_associated_css_style_sheet);
+        remove_a_css_style_sheet(style_element.document_or_shadow_root_style_sheets(), *m_associated_css_style_sheet);
 
         // FIXME: This should probably be handled by StyleSheet::set_owner_node().
         m_associated_css_style_sheet = nullptr;
@@ -61,7 +61,7 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
 
     // 6. Create a CSS style sheet with the following properties...
     create_a_css_style_sheet(
-        style_element.document(),
+        style_element.document_or_shadow_root_style_sheets(),
         "text/css"_string,
         &style_element,
         style_element.attribute(HTML::AttributeNames::media).value_or({}),
@@ -77,10 +77,10 @@ void StyleElementUtils::update_a_style_block(DOM::Element& style_element)
 }
 
 // https://www.w3.org/TR/cssom/#remove-a-css-style-sheet
-void StyleElementUtils::remove_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& sheet)
+void StyleElementUtils::remove_a_css_style_sheet(CSS::StyleSheetList& style_sheets, CSS::CSSStyleSheet& sheet)
 {
     // 1. Remove the CSS style sheet from the list of document or shadow root CSS style sheets.
-    document.style_sheets().remove_sheet(sheet);
+    style_sheets.remove_sheet(sheet);
 
     // 2. Set the CSS style sheet’s parent CSS style sheet, owner node and owner CSS rule to null.
     sheet.set_parent_css_style_sheet(nullptr);
@@ -89,7 +89,7 @@ void StyleElementUtils::remove_a_css_style_sheet(DOM::Document& document, CSS::C
 }
 
 // https://www.w3.org/TR/cssom/#create-a-css-style-sheet
-void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, Optional<String> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
+void StyleElementUtils::create_a_css_style_sheet(CSS::StyleSheetList& style_sheets, String type, DOM::Element* owner_node, String media, String title, bool alternate, bool origin_clean, Optional<String> location, CSS::CSSStyleSheet* parent_style_sheet, CSS::CSSRule* owner_rule, CSS::CSSStyleSheet& sheet)
 {
     // 1. Create a new CSS style sheet object and set its properties as specified.
     // FIXME: We receive `sheet` from the caller already. This is weird.
@@ -105,14 +105,14 @@ void StyleElementUtils::create_a_css_style_sheet(DOM::Document& document, String
     sheet.set_location(move(location));
 
     // 2. Then run the add a CSS style sheet steps for the newly created CSS style sheet.
-    add_a_css_style_sheet(document, sheet);
+    add_a_css_style_sheet(style_sheets, sheet);
 }
 
 // https://www.w3.org/TR/cssom/#add-a-css-style-sheet
-void StyleElementUtils::add_a_css_style_sheet(DOM::Document& document, CSS::CSSStyleSheet& sheet)
+void StyleElementUtils::add_a_css_style_sheet(CSS::StyleSheetList& style_sheets, CSS::CSSStyleSheet& sheet)
 {
     // 1. Add the CSS style sheet to the list of document or shadow root CSS style sheets at the appropriate location. The remainder of these steps deal with the disabled flag.
-    document.style_sheets().add_sheet(sheet);
+    style_sheets.add_sheet(sheet);
 
     // 2. If the disabled flag is set, then return.
     if (sheet.disabled())
