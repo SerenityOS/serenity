@@ -11,4 +11,5 @@ set(SOURCES
 )
 
 serenity_lib(LibCrypt crypt)
+serenity_install_headers("")
 target_link_libraries(LibCrypt PRIVATE LibCryptSHA2)
