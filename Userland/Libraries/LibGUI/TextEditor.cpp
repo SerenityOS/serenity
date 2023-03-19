@@ -2043,11 +2043,13 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
         }
 
         visual_data->visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
+        visual_data->visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
     };
 
     auto wrap_visual_lines_at_words = [&]() {
         size_t last_boundary = 0;
         size_t start_of_visual_line = 0;
+        int longest_word_width_in_line = 0;
 
         Unicode::for_each_word_segmentation_boundary(line.view(), [&](auto boundary) {
             if (boundary == 0)
@@ -2065,16 +2067,21 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
             line_width_so_far += word_width + glyph_spacing;
             last_boundary = boundary;
 
+            if (word_width + glyph_spacing > longest_word_width_in_line)
+                longest_word_width_in_line = word_width + glyph_spacing;
+
             return IterationDecision::Continue;
         });
 
         visual_data->visual_lines.append(line.view().substring_view(start_of_visual_line, line.view().length() - start_of_visual_line));
+        visual_data->visual_rect = { m_horizontal_content_padding, 0, longest_word_width_in_line, line_height() };
     };
 
     if (line_is_visible) {
         switch (wrapping_mode()) {
         case WrappingMode::NoWrap:
             visual_data->visual_lines.append(line.view());
+            visual_data->visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
             break;
         case WrappingMode::WrapAnywhere:
             wrap_visual_lines_anywhere();
@@ -2084,11 +2091,6 @@ void TextEditor::recompute_visual_lines(size_t line_index, Vector<TextDocumentFo
             break;
         }
     }
-
-    if (is_wrapping_enabled())
-        visual_data->visual_rect = { m_horizontal_content_padding, 0, available_width, static_cast<int>(visual_data->visual_lines.size()) * line_height() };
-    else
-        visual_data->visual_rect = { m_horizontal_content_padding, 0, text_width_for_font(line.view(), font()), line_height() };
 }
 
 template<typename Callback>
@@ -2127,7 +2129,7 @@ void TextEditor::set_wrapping_mode(WrappingMode mode)
         return;
 
     m_wrapping_mode = mode;
-    horizontal_scrollbar().set_visible(m_wrapping_mode == WrappingMode::NoWrap);
+    horizontal_scrollbar().set_visible(m_wrapping_mode != WrappingMode::WrapAnywhere);
     update_content_size();
     recompute_all_visual_lines();
     update();
