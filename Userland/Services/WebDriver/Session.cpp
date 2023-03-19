@@ -34,7 +34,9 @@ Session::~Session()
 
     // 1. Perform the following substeps based on the remote end’s type:
     // NOTE: We perform the "Remote end is an endpoint node" steps in the WebContent process.
-    web_content_connection().close_session();
+    for (auto& it : m_windows) {
+        it.value.web_content_connection->close_session();
+    }
 
     // 2. Remove the current session from active sessions.
     // NOTE: We are in a session destruction which means it is already removed
