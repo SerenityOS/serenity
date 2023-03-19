@@ -20,7 +20,18 @@
 
 namespace Web::CSS {
 
+// https://www.w3.org/TR/css-cascade/#origin
+enum class CascadeOrigin {
+    Author,
+    User,
+    UserAgent,
+    Animation,
+    Transition,
+};
+
 struct MatchingRule {
+    CascadeOrigin cascade_origin;
+    JS::GCPtr<DOM::ShadowRoot const> shadow_root;
     JS::GCPtr<CSSStyleRule const> rule;
     JS::GCPtr<CSSStyleSheet const> sheet;
     size_t style_sheet_index { 0 };
@@ -54,15 +65,6 @@ public:
 
     NonnullRefPtr<StyleProperties> compute_style(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type> = {}) const;
     RefPtr<StyleProperties> compute_pseudo_element_style_if_needed(DOM::Element&, Optional<CSS::Selector::PseudoElement::Type>) const;
-
-    // https://www.w3.org/TR/css-cascade/#origin
-    enum class CascadeOrigin {
-        Author,
-        User,
-        UserAgent,
-        Animation,
-        Transition,
-    };
 
     Vector<MatchingRule> collect_matching_rules(DOM::Element const&, CascadeOrigin, Optional<CSS::Selector::PseudoElement::Type>) const;
 
