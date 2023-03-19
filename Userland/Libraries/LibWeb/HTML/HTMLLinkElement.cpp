@@ -14,6 +14,7 @@
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/Fetch/Fetching/Fetching.h>
 #include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
@@ -112,7 +113,7 @@ void HTMLLinkElement::attribute_changed(FlyString const& name, Optional<String> 
     // FIXME: Handle alternate stylesheets properly
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         if (name == HTML::AttributeNames::disabled && m_loaded_style_sheet)
-            document().style_sheets().remove_sheet(*m_loaded_style_sheet);
+            document_or_shadow_root_style_sheets().remove_sheet(*m_loaded_style_sheet);
 
         // https://html.spec.whatwg.org/multipage/links.html#link-type-stylesheet:fetch-and-process-the-linked-resource
         // The appropriate times to fetch and process this type of link are:
@@ -311,7 +312,7 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
 
     // 3. If el has an associated CSS style sheet, remove the CSS style sheet.
     if (m_loaded_style_sheet) {
-        document().style_sheets().remove_sheet(*m_loaded_style_sheet);
+        document_or_shadow_root_style_sheets().remove_sheet(*m_loaded_style_sheet);
         m_loaded_style_sheet = nullptr;
     }
 
