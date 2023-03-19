@@ -105,4 +105,16 @@ WebIDL::ExceptionOr<void> ShadowRoot::set_adopted_style_sheets(JS::Value new_val
     return {};
 }
 
+void ShadowRoot::for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& callback) const
+{
+    for (auto& style_sheet : style_sheets().sheets())
+        callback(*style_sheet);
+
+    if (m_adopted_style_sheets) {
+        m_adopted_style_sheets->for_each<CSS::CSSStyleSheet>([&](auto& style_sheet) {
+            callback(style_sheet);
+        });
+    }
+}
+
 }

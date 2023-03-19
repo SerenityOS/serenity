@@ -42,6 +42,8 @@ public:
     JS::NonnullGCPtr<WebIDL::ObservableArray> adopted_style_sheets() const;
     WebIDL::ExceptionOr<void> set_adopted_style_sheets(JS::Value);
 
+    void for_each_css_style_sheet(Function<void(CSS::CSSStyleSheet&)>&& callback) const;
+
     virtual void finalize() override;
 
 protected:

@@ -63,6 +63,7 @@
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
+#include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/HTML/HTMLBRElement.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/HTML/Scripting/TemporaryExecutionContext.h>
@@ -255,19 +256,25 @@ template<typename Callback>
 void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
     if (cascade_origin == CascadeOrigin::UserAgent) {
-        callback(default_stylesheet(document()));
+        callback(default_stylesheet(document()), {});
         if (document().in_quirks_mode())
-            callback(quirks_mode_stylesheet(document()));
-        callback(mathml_stylesheet(document()));
-        callback(svg_stylesheet(document()));
+            callback(quirks_mode_stylesheet(document()), {});
+        callback(mathml_stylesheet(document()), {});
+        callback(svg_stylesheet(document()), {});
     }
     if (cascade_origin == CascadeOrigin::User) {
         if (m_user_style_sheet)
-            callback(*m_user_style_sheet);
+            callback(*m_user_style_sheet, {});
     }
     if (cascade_origin == CascadeOrigin::Author) {
         document().for_each_css_style_sheet([&](CSSStyleSheet& sheet) {
-            callback(sheet);
+            callback(sheet, {});
+        });
+
+        const_cast<DOM::Document&>(document()).for_each_shadow_root([&](DOM::ShadowRoot& shadow_root) {
+            shadow_root.for_each_css_style_sheet([&](CSSStyleSheet& sheet) {
+                callback(sheet, &shadow_root);
+            });
         });
     }
 }
@@ -298,6 +305,9 @@ StyleComputer::RuleCache const& StyleComputer::rule_cache_for_cascade_origin(Cas
 
 Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& element, CascadeOrigin cascade_origin, Optional<CSS::Selector::PseudoElement::Type> pseudo_element) const
 {
+    auto const& root_node = element.root();
+    auto shadow_root = is<DOM::ShadowRoot>(root_node) ? static_cast<DOM::ShadowRoot const*>(&root_node) : nullptr;
+
     auto const& rule_cache = rule_cache_for_cascade_origin(cascade_origin);
 
     Vector<MatchingRule> rules_to_run;
@@ -331,6 +341,12 @@ Vector<MatchingRule> StyleComputer::collect_matching_rules(DOM::Element const& e
     Vector<MatchingRule> matching_rules;
     matching_rules.ensure_capacity(rules_to_run.size());
     for (auto const& rule_to_run : rules_to_run) {
+        // FIXME: This needs to be revised when adding support for the :host and ::shadow selectors, which transition shadow tree boundaries
+        auto rule_root = rule_to_run.shadow_root;
+        auto from_user_agent_or_user_stylesheet = rule_to_run.cascade_origin == CascadeOrigin::UserAgent || rule_to_run.cascade_origin == CascadeOrigin::User;
+        if (rule_root != shadow_root && !from_user_agent_or_user_stylesheet)
+            continue;
+
         auto const& selector = rule_to_run.rule->selectors()[rule_to_run.selector_index];
         if (SelectorEngine::matches(selector, *rule_to_run.sheet, element, pseudo_element))
             matching_rules.append(rule_to_run);
@@ -2275,12 +2291,14 @@ NonnullOwnPtr<StyleComputer::RuleCache> StyleComputer::make_rule_cache_for_casca
 
     Vector<MatchingRule> matching_rules;
     size_t style_sheet_index = 0;
-    for_each_stylesheet(cascade_origin, [&](auto& sheet) {
+    for_each_stylesheet(cascade_origin, [&](auto& sheet, JS::GCPtr<DOM::ShadowRoot> shadow_root) {
         size_t rule_index = 0;
         sheet.for_each_effective_style_rule([&](auto const& rule) {
             size_t selector_index = 0;
             for (CSS::Selector const& selector : rule.selectors()) {
                 MatchingRule matching_rule {
+                    cascade_origin,
+                    shadow_root,
                     &rule,
                     sheet,
                     style_sheet_index,
