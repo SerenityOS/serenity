@@ -17,6 +17,7 @@ endpoint WebDriverClient {
     get_title() => (Web::WebDriver::Response response)
     get_window_handle() => (String handle)
     close_window() => (Web::WebDriver::Response response)
+    switch_to_window() => (Web::WebDriver::Response response)
     new_window(JsonValue payload) => (Web::WebDriver::Response response)
     get_window_rect() => (Web::WebDriver::Response response)
     set_window_rect(JsonValue payload) => (Web::WebDriver::Response response)

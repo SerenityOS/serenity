@@ -144,8 +144,9 @@ Web::WebDriver::Response Session::switch_to_window(StringView handle)
     else
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::NoSuchWindow, "Window not found");
 
-    // FIXME: 5. Update any implementation-specific state that would result from the user selecting the current
-    //          browsing context for interaction, without altering OS-level focus.
+    // 5. Update any implementation-specific state that would result from the user selecting the current
+    //    browsing context for interaction, without altering OS-level focus.
+    TRY(web_content_connection().switch_to_window());
 
     // 6. Return success with data null.
     return JsonValue {};
