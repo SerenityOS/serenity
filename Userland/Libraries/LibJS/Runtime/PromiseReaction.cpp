@@ -24,7 +24,7 @@ PromiseReaction::PromiseReaction(Type type, GCPtr<PromiseCapability> capability,
 
 void PromiseReaction::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_capability);
 }
 

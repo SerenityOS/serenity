@@ -19,6 +19,8 @@ enum class OperationReturnsPromise {
 
 // https://webidl.spec.whatwg.org/#idl-callback-interface
 class CallbackType final : public JS::Cell {
+    JS_CELL(CallbackType, JS::Cell);
+
 public:
     CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context, OperationReturnsPromise = OperationReturnsPromise::No);
 
@@ -31,7 +33,6 @@ public:
     OperationReturnsPromise operation_returns_promise;
 
 private:
-    virtual StringView class_name() const override;
     virtual void visit_edges(Cell::Visitor&) override;
 };
 
