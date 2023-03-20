@@ -1042,111 +1042,163 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
         dbgln_if(OPENTYPE_GPOS_DEBUG, "  subtableCount: {}", lookup.subtable_count);
 
         for (size_t j = 0; j < lookup.subtable_count; ++j) {
-            auto subtable_offset = lookup.subtable_offsets[j];
-            auto subtable_slice = lookup_slice.slice(subtable_offset);
+            auto pair_pos_format_offset = lookup.subtable_offsets[j];
+            auto pair_pos_format_slice = lookup_slice.slice(pair_pos_format_offset);
 
-            auto const& pair_pos_format = *bit_cast<BigEndian<u16> const*>(subtable_slice.data());
+            auto const& pair_pos_format = *bit_cast<BigEndian<u16> const*>(pair_pos_format_slice.data());
 
             dbgln_if(OPENTYPE_GPOS_DEBUG, "PairPosFormat{}", pair_pos_format);
 
             if (pair_pos_format == 1) {
-                dbgln_if(OPENTYPE_GPOS_DEBUG, "FIXME: Implement PairPosFormat1");
-                continue;
-            }
-            auto const& pair_pos_format2 = *bit_cast<GPOS::PairPosFormat2 const*>(subtable_slice.data());
+                auto const& pair_pos_format1 = *bit_cast<GPOS::PairPosFormat1 const*>(pair_pos_format_slice.data());
 
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "   posFormat: {}", pair_pos_format2.pos_format);
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat1: {}", pair_pos_format2.value_format1);
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat2: {}", pair_pos_format2.value_format2);
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "   class1Count: {}", pair_pos_format2.class1_count);
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "   class2Count: {}", pair_pos_format2.class2_count);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   posFormat: {}", pair_pos_format1.pos_format);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat1: {}", pair_pos_format1.value_format1);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat2: {}", pair_pos_format1.value_format2);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   pairSetCount: {}", pair_pos_format1.pair_set_count);
 
-            auto get_class = [&](u16 glyph_id, Offset16 glyph_def_offset) -> Optional<u16> {
-                auto class_def_format_slice = subtable_slice.slice(glyph_def_offset);
+                if (pair_pos_format1.value_format1 == 0)
+                    continue;
 
-                auto const& class_def_format = *bit_cast<BigEndian<u16> const*>(class_def_format_slice.data());
-                if (class_def_format == 1) {
-                    dbgln_if(OPENTYPE_GPOS_DEBUG, "FIXME: Implement ClassDefFormat1");
+                auto get_coverage_index = [&](u16 glyph_id, Offset16 coverage_format_offset) -> Optional<u16> {
+                    auto coverage_format_slice = pair_pos_format_slice.slice(coverage_format_offset);
+                    auto const& coverage_format = *bit_cast<BigEndian<u16> const*>(coverage_format_slice.data());
+
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "Coverage table format: {}", coverage_format);
+
+                    if (coverage_format == 1) {
+                        auto const& coverage_format1 = *bit_cast<CoverageFormat1 const*>(coverage_format_slice.data());
+
+                        for (size_t k = 0; k < coverage_format1.glyph_count; ++k)
+                            if (coverage_format1.glyph_array[k] == glyph_id)
+                                return k;
+
+                        dbgln_if(OPENTYPE_GPOS_DEBUG, "Glyph ID {} not covered", glyph_id);
+                        return {};
+                    }
+
+                    else if (coverage_format == 2) {
+                        auto const& coverage_format2 = *bit_cast<CoverageFormat2 const*>(coverage_format_slice.data());
+
+                        for (size_t k = 0; k < coverage_format2.range_count; ++k) {
+                            auto range_record = coverage_format2.range_records[k];
+                            if ((range_record.start_glyph_id <= glyph_id) && (glyph_id <= range_record.end_glyph_id))
+                                return range_record.start_coverage_index + glyph_id - range_record.start_glyph_id;
+                        }
+                        dbgln_if(OPENTYPE_GPOS_DEBUG, "Glyph ID {} not covered", glyph_id);
+                        return {};
+                    }
+
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "No valid coverage table for format {}", coverage_format);
+                    return {};
+                };
+
+                auto coverage_index = get_coverage_index(left_glyph_id, pair_pos_format1.coverage_offset);
+
+                if (!coverage_index.has_value()) {
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "Glyph ID not covered by table");
                     return {};
                 }
 
-                auto const& class_def_format2 = *bit_cast<ClassDefFormat2 const*>(class_def_format_slice.data());
-                dbgln_if(OPENTYPE_GPOS_DEBUG, "ClassDefFormat2:");
-                dbgln_if(OPENTYPE_GPOS_DEBUG, "  classFormat: {}", class_def_format2.class_format);
-                dbgln_if(OPENTYPE_GPOS_DEBUG, "  classRangeCount: {}", class_def_format2.class_range_count);
+                auto pair_set_offset = pair_pos_format1.pair_set_offsets[coverage_index.value()];
+                auto pair_set_slice = pair_pos_format_slice.slice(pair_set_offset);
 
-                for (size_t i = 0; i < class_def_format2.class_range_count; ++i) {
-                    auto const& range = class_def_format2.class_range_records[i];
-                    if (glyph_id >= range.start_glyph_id && glyph_id <= range.end_glyph_id) {
-                        dbgln_if(OPENTYPE_GPOS_DEBUG, "Found class {} for glyph ID {}", range.class_, glyph_id);
-                        return range.class_;
+                auto const& pair_set = *bit_cast<GPOS::PairSet const*>(pair_set_slice.data());
+
+                for (size_t k = 0; k < pair_set.pair_value_count; ++k) {
+                    auto pair_value_record = pair_set.pair_value_records[k];
+                    if (right_glyph_id == pair_value_record.second_glyph) {
+                        dbgln_if(OPENTYPE_GPOS_DEBUG, "Returning x advance {}", pair_value_record.value_record1.x_advance);
+                        return pair_value_record.value_record1.x_advance;
                     }
                 }
-
-                dbgln_if(OPENTYPE_GPOS_DEBUG, "No class found for glyph {}", glyph_id);
-                return {};
-            };
-
-            auto left_class = get_class(left_glyph_id, pair_pos_format2.class_def1_offset);
-            auto right_class = get_class(right_glyph_id, pair_pos_format2.class_def2_offset);
-
-            if (!left_class.has_value() || !right_class.has_value()) {
-                dbgln_if(OPENTYPE_GPOS_DEBUG, "Need glyph class for both sides");
-                return {};
             }
 
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "Classes: {}, {}", left_class.value(), right_class.value());
+            else if (pair_pos_format == 2) {
+                auto const& pair_pos_format2 = *bit_cast<GPOS::PairPosFormat2 const*>(pair_pos_format_slice.data());
 
-            size_t value1_size = popcount(static_cast<u32>(pair_pos_format2.value_format1 & 0xff)) * sizeof(u16);
-            size_t value2_size = popcount(static_cast<u32>(pair_pos_format2.value_format2 & 0xff)) * sizeof(u16);
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "ValueSizes: {}, {}", value1_size, value2_size);
-            size_t class2_record_size = value1_size + value2_size;
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "Class2RecordSize: {}", class2_record_size);
-            size_t class1_record_size = pair_pos_format2.class2_count * class2_record_size;
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "Class1RecordSize: {}", class1_record_size);
-            size_t item_offset = (left_class.value() * class1_record_size) + (right_class.value() * class2_record_size);
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "Item offset: {}", item_offset);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   posFormat: {}", pair_pos_format2.pos_format);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat1: {}", pair_pos_format2.value_format1);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat2: {}", pair_pos_format2.value_format2);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   class1Count: {}", pair_pos_format2.class1_count);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "   class2Count: {}", pair_pos_format2.class2_count);
 
-            auto item_slice = subtable_slice.slice(sizeof(PairPosFormat2) + item_offset);
-            FixedMemoryStream stream(item_slice);
+                auto get_class = [&](u16 glyph_id, Offset16 glyph_def_offset) -> Optional<u16> {
+                    auto class_def_format_slice = pair_pos_format_slice.slice(glyph_def_offset);
 
-            struct ValueRecord {
-                i16 x_placement = 0;
-                i16 y_placement = 0;
-                i16 x_advance = 0;
-                i16 y_advance = 0;
-                i16 x_placement_device = 0;
-                i16 y_placement_device = 0;
-                i16 x_advance_device = 0;
-                i16 y_advance_device = 0;
-            };
+                    auto const& class_def_format = *bit_cast<BigEndian<u16> const*>(class_def_format_slice.data());
+                    if (class_def_format == 1) {
+                        dbgln_if(OPENTYPE_GPOS_DEBUG, "FIXME: Implement ClassDefFormat1");
+                        return {};
+                    }
 
-            auto read_value_record = [&](u16 value_format) -> ValueRecord {
-                ValueRecord value_record;
-                if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT))
-                    value_record.x_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT))
-                    value_record.y_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE))
-                    value_record.x_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE))
-                    value_record.y_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT_DEVICE))
-                    value_record.x_placement_device = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT_DEVICE))
-                    value_record.y_placement_device = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE_DEVICE))
-                    value_record.x_advance_device = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE_DEVICE))
-                    value_record.y_advance_device = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                return value_record;
-            };
+                    auto const& class_def_format2 = *bit_cast<ClassDefFormat2 const*>(class_def_format_slice.data());
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "ClassDefFormat2:");
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "  classFormat: {}", class_def_format2.class_format);
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "  classRangeCount: {}", class_def_format2.class_range_count);
 
-            [[maybe_unused]] auto value_record1 = read_value_record(pair_pos_format2.value_format1);
-            [[maybe_unused]] auto value_record2 = read_value_record(pair_pos_format2.value_format2);
+                    for (size_t i = 0; i < class_def_format2.class_range_count; ++i) {
+                        auto const& range = class_def_format2.class_range_records[i];
+                        if (glyph_id >= range.start_glyph_id && glyph_id <= range.end_glyph_id) {
+                            dbgln_if(OPENTYPE_GPOS_DEBUG, "Found class {} for glyph ID {}", range.class_, glyph_id);
+                            return range.class_;
+                        }
+                    }
 
-            dbgln_if(OPENTYPE_GPOS_DEBUG, "Returning x advance {}", value_record1.x_advance);
-            return value_record1.x_advance;
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "No class found for glyph {}", glyph_id);
+                    return {};
+                };
+
+                auto left_class = get_class(left_glyph_id, pair_pos_format2.class_def1_offset);
+                auto right_class = get_class(right_glyph_id, pair_pos_format2.class_def2_offset);
+
+                if (!left_class.has_value() || !right_class.has_value()) {
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "Need glyph class for both sides");
+                    return {};
+                }
+
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "Classes: {}, {}", left_class.value(), right_class.value());
+
+                size_t value1_size = popcount(static_cast<u32>(pair_pos_format2.value_format1 & 0xff)) * sizeof(u16);
+                size_t value2_size = popcount(static_cast<u32>(pair_pos_format2.value_format2 & 0xff)) * sizeof(u16);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "ValueSizes: {}, {}", value1_size, value2_size);
+                size_t class2_record_size = value1_size + value2_size;
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "Class2RecordSize: {}", class2_record_size);
+                size_t class1_record_size = pair_pos_format2.class2_count * class2_record_size;
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "Class1RecordSize: {}", class1_record_size);
+                size_t item_offset = (left_class.value() * class1_record_size) + (right_class.value() * class2_record_size);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "Item offset: {}", item_offset);
+
+                auto item_slice = pair_pos_format_slice.slice(sizeof(PairPosFormat2) + item_offset);
+                FixedMemoryStream stream(item_slice);
+
+                auto read_value_record = [&](u16 value_format) -> ValueRecord {
+                    ValueRecord value_record;
+                    if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT))
+                        value_record.x_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT))
+                        value_record.y_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE))
+                        value_record.x_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE))
+                        value_record.y_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT_DEVICE))
+                        value_record.x_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT_DEVICE))
+                        value_record.y_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE_DEVICE))
+                        value_record.x_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+                    if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE_DEVICE))
+                        value_record.y_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+                    return value_record;
+                };
+
+                [[maybe_unused]] auto value_record1 = read_value_record(pair_pos_format2.value_format1);
+                [[maybe_unused]] auto value_record2 = read_value_record(pair_pos_format2.value_format2);
+
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "Returning x advance {}", value_record1.x_advance);
+                return value_record1.x_advance;
+            }
         }
     }
 
