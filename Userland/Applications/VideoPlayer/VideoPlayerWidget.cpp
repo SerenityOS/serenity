@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/FilePicker.h>
@@ -263,6 +264,26 @@ void VideoPlayerWidget::event(Core::Event& event)
     }
 
     Widget::event(event);
+}
+
+void VideoPlayerWidget::drop_event(GUI::DropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.mime_data().has_urls()) {
+        auto urls = event.mime_data().urls();
+        if (urls.is_empty())
+            return;
+        if (urls.size() > 1) {
+            GUI::MessageBox::show_error(window(), "VideoPlayer can only view one clip at a time!"sv);
+            return;
+        }
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().path());
+        if (response.is_error())
+            return;
+        open_file(response.value().filename());
+    }
 }
 
 void VideoPlayerWidget::cycle_sizing_modes()
