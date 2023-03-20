@@ -13,6 +13,7 @@
 #include <LibConfig/Listener.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Window.h>
+#include <LibWeb/HTML/ActivateTab.h>
 
 namespace Browser {
 
@@ -28,7 +29,7 @@ public:
 
     GUI::TabWidget& tab_widget();
     Tab& active_tab();
-    Tab& create_new_tab(URL, bool activate);
+    Tab& create_new_tab(URL, Web::HTML::ActivateTab activate);
     void create_new_window(URL);
 
     GUI::Action& go_back_action() { return *m_go_back_action; }

@@ -615,7 +615,7 @@ JS::GCPtr<DOM::Node> BrowsingContext::currently_focused_area()
 }
 
 // https://html.spec.whatwg.org/#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_context(StringView name, bool no_opener)
+BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_context(StringView name, bool no_opener, ActivateTab activate_tab)
 {
     // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
     // a boolean noopener are as follows:
@@ -699,7 +699,7 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
 
             // 3. If noopener is true, then set chosen to the result of creating a new top-level browsing context.
             if (no_opener) {
-                auto handle = m_page->client().page_did_request_new_tab();
+                auto handle = m_page->client().page_did_request_new_tab(activate_tab);
                 chosen = RemoteBrowsingContext::create_a_new_remote_browsing_context(handle);
             }
 

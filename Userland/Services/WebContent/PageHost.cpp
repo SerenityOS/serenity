@@ -377,9 +377,9 @@ void PageHost::page_did_update_resource_count(i32 count_waiting)
     m_client.async_did_update_resource_count(count_waiting);
 }
 
-String PageHost::page_did_request_new_tab()
+String PageHost::page_did_request_new_tab(Web::HTML::ActivateTab activate_tab)
 {
-    return m_client.did_request_new_tab();
+    return m_client.did_request_new_tab(activate_tab);
 }
 
 void PageHost::page_did_close_browsing_context(Web::HTML::BrowsingContext const&)

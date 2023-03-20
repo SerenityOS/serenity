@@ -102,7 +102,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     };
 
     m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), true);
+        create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), Web::HTML::ActivateTab::Yes);
     };
 
     m_window_actions.on_create_new_window = [this] {
@@ -148,7 +148,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
 
     build_menus();
 
-    create_new_tab(move(url), true);
+    create_new_tab(move(url), Web::HTML::ActivateTab::Yes);
 }
 
 void BrowserWindow::build_menus()
@@ -570,7 +570,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
     set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_deprecated_string() : title));
 }
 
-Tab& BrowserWindow::create_new_tab(URL url, bool activate)
+Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
 {
     auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this);
 
@@ -587,7 +587,7 @@ Tab& BrowserWindow::create_new_tab(URL url, bool activate)
     };
 
     new_tab.on_tab_open_request = [this](auto& url) {
-        create_new_tab(url, true);
+        create_new_tab(url, Web::HTML::ActivateTab::Yes);
     };
 
     new_tab.on_tab_close_request = [this](auto& tab) {
@@ -655,7 +655,7 @@ Tab& BrowserWindow::create_new_tab(URL url, bool activate)
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
 
-    if (activate)
+    if (activate == Web::HTML::ActivateTab::Yes)
         m_tab_widget->set_active_widget(&new_tab);
 
     return new_tab;

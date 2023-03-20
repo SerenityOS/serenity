@@ -25,6 +25,7 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/Loader/FileRequest.h>
 #include <LibWeb/PixelUnits.h>
 
@@ -201,7 +202,7 @@ public:
     virtual void page_did_set_cookie(const AK::URL&, Cookie::ParsedCookie const&, Cookie::Source) { }
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
-    virtual String page_did_request_new_tab() { return {}; }
+    virtual String page_did_request_new_tab(HTML::ActivateTab) { return {}; }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
     virtual void request_file(FileRequest) = 0;

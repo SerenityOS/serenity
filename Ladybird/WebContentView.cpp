@@ -970,23 +970,22 @@ void WebContentView::notify_server_did_set_cookie(Badge<WebContentClient>, AK::U
         on_set_cookie(url, cookie, source);
 }
 
+void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
+{
+    if (on_update_cookie)
+        on_update_cookie(cookie);
+}
+
 void WebContentView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
 {
     emit close();
 }
 
-String WebContentView::notify_request_open_new_tab(Badge<WebContentClient>)
+String WebContentView::notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab)
 {
     if (on_new_tab)
-        return on_new_tab();
-
+        return on_new_tab(activate_tab);
     return {};
-}
-
-void WebContentView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
-{
-    if (on_update_cookie)
-        on_update_cookie(cookie);
 }
 
 void WebContentView::notify_server_did_update_resource_count(i32 count_waiting)
