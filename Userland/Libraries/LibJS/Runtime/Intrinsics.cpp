@@ -345,6 +345,7 @@ JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
 
 void Intrinsics::visit_edges(Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_realm);
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);

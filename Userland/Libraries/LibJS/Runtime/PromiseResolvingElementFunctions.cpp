@@ -15,7 +15,7 @@ namespace JS {
 
 void PromiseValueList::visit_edges(Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     for (auto& val : m_values)
         visitor.visit(val);
 }

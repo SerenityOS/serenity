@@ -114,7 +114,7 @@ Shape::Shape(Shape& previous_shape, Object* new_prototype)
 
 void Shape::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_realm);
     visitor.visit(m_prototype);
     visitor.visit(m_previous);

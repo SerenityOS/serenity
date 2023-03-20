@@ -16,6 +16,8 @@ namespace Web::DOM {
 // https://dom.spec.whatwg.org/#concept-event-listener
 // NOTE: The spec calls this "event listener", and it's *importantly* not the same as "EventListener"
 class DOMEventListener : public JS::Cell {
+    JS_CELL(DOMEventListener, JS::Cell);
+
 public:
     DOMEventListener();
     ~DOMEventListener();
@@ -43,7 +45,6 @@ public:
 
 private:
     virtual void visit_edges(Cell::Visitor&) override;
-    virtual StringView class_name() const override { return "DOMEventListener"sv; }
 };
 
 }

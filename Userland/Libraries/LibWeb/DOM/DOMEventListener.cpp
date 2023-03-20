@@ -15,7 +15,7 @@ DOMEventListener::~DOMEventListener() = default;
 
 void DOMEventListener::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(callback.ptr());
     visitor.visit(signal.ptr());
 }

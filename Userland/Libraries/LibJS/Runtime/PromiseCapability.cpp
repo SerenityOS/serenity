@@ -25,6 +25,7 @@ PromiseCapability::PromiseCapability(GCPtr<Object> promise, GCPtr<FunctionObject
 
 void PromiseCapability::visit_edges(Cell::Visitor& visitor)
 {
+    Base::visit_edges(visitor);
     visitor.visit(m_promise);
     visitor.visit(m_resolve);
     visitor.visit(m_reject);

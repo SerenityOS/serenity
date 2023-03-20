@@ -47,7 +47,7 @@ bool PrivateName::operator==(PrivateName const& rhs) const
 
 void PrivateEnvironment::visit_edges(Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_outer_environment);
 }
 
