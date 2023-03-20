@@ -79,13 +79,13 @@ private:
         HTML::Origin origin;
         // environment
         //      An environment
-        HTML::EnvironmentSettingsObject* environment;
+        JS::GCPtr<HTML::EnvironmentSettingsObject> environment;
         // policy container
         //      A policy container
         HTML::PolicyContainer policy_container;
         // document (default null)
         //      Null or a Document
-        Web::DOM::Document* document { nullptr };
+        JS::GCPtr<Web::DOM::Document> document;
         // FIXME: on document ready (default null)
         //          Null or an algorithm accepting a Document
     };
