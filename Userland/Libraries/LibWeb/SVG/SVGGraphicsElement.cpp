@@ -75,16 +75,22 @@ Optional<float> SVGGraphicsElement::stroke_width() const
     if (auto width = layout_node()->computed_values().stroke_width(); width.has_value()) {
         // Resolved relative to the "Scaled viewport size": https://www.w3.org/TR/2017/WD-fill-stroke-3-20170413/#scaled-viewport-size
         // FIXME: This isn't right, but it's something.
-        CSSPixels viewport_width = 0;
-        CSSPixels viewport_height = 0;
-        if (auto* svg_svg_element = first_ancestor_of_type<SVGSVGElement>()) {
-            if (auto* svg_svg_layout_node = svg_svg_element->layout_node()) {
-                viewport_width = svg_svg_layout_node->computed_values().width().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
-                viewport_height = svg_svg_layout_node->computed_values().height().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
-            }
+        auto const* svg_svg_element = first_ancestor_of_type<SVGSVGElement>();
+        auto const* svg_svg_layout_node = svg_svg_element->layout_node();
+        auto viewport_width = svg_svg_layout_node->computed_values().width().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
+        auto viewport_height = svg_svg_layout_node->computed_values().height().resolved(*svg_svg_layout_node, CSS::Length::make_px(0)).to_px(*svg_svg_layout_node);
+
+        auto scaled_svg_viewport_size = sqrtf((viewport_width * viewport_height).value());
+        float scaled_view_box_size = 0;
+
+        if (svg_svg_element->view_box().has_value()) {
+            scaled_view_box_size = sqrtf(svg_svg_element->view_box()->height * svg_svg_element->view_box()->width);
         }
-        auto scaled_viewport_size = CSS::Length::make_px(sqrtf((viewport_width * viewport_height).value()));
-        return width->resolved(*layout_node(), scaled_viewport_size).to_px(*layout_node()).value();
+        if (scaled_svg_viewport_size == 0 || scaled_view_box_size == 0) {
+            return width->resolved(*layout_node(), CSS::Length::make_px(scaled_svg_viewport_size)).to_px(*layout_node()).value();
+        }
+        auto ratio = scaled_svg_viewport_size / scaled_view_box_size;
+        return width->resolved(*layout_node(), CSS::Length::make_px(scaled_svg_viewport_size)).to_px(*layout_node()).value() * ratio;
     }
     return {};
 }
