@@ -447,6 +447,8 @@ Parser::ParseErrorOr<Selector::SimpleSelector> Parser::parse_pseudo_simple_selec
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Active);
         if (pseudo_name.equals_ignoring_ascii_case("checked"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Checked);
+        if (pseudo_name.equals_ignoring_ascii_case("indeterminate"sv))
+            return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Indeterminate);
         if (pseudo_name.equals_ignoring_ascii_case("disabled"sv))
             return make_pseudo_class_selector(Selector::SimpleSelector::PseudoClass::Type::Disabled);
         if (pseudo_name.equals_ignoring_ascii_case("empty"sv))

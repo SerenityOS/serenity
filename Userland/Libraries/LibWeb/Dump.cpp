@@ -441,6 +441,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
                     pseudo_class_description = "Checked";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
+                    pseudo_class_description = "Indeterminate";
+                    break;
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Not:
                     pseudo_class_description = "Not";
                     break;
