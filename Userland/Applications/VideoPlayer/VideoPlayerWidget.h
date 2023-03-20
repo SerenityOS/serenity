@@ -53,6 +53,8 @@ private:
 
     void event(Core::Event&) override;
 
+    virtual void drop_event(GUI::DropEvent&) override;
+
     DeprecatedString m_path;
 
     RefPtr<VideoFrameWidget> m_video_display;
