@@ -1066,6 +1066,56 @@ ErrorOr<void> utime(StringView path, Optional<struct utimbuf> maybe_buf)
 #endif
 }
 
+ErrorOr<void> utimensat(int fd, StringView path, struct timespec const times[2], int flag)
+{
+    if (path.is_null())
+        return Error::from_errno(EFAULT);
+
+#ifdef AK_OS_SERENITY
+    // POSIX allows AT_SYMLINK_NOFOLLOW flag or no flags.
+    if (flag & ~AT_SYMLINK_NOFOLLOW)
+        return Error::from_errno(EINVAL);
+
+    // Return early without error since both changes are to be omitted.
+    if (times && times[0].tv_nsec == UTIME_OMIT && times[1].tv_nsec == UTIME_OMIT)
+        return {};
+
+    // According to POSIX, when times is a nullptr, it's equivalent to setting
+    // both last access time and last modification time to the current time.
+    // Setting the times argument to nullptr if it matches this case prevents
+    // the need to copy it in the kernel.
+    if (times && times[0].tv_nsec == UTIME_NOW && times[1].tv_nsec == UTIME_NOW)
+        times = nullptr;
+
+    if (times) {
+        for (int i = 0; i < 2; ++i) {
+            if ((times[i].tv_nsec != UTIME_NOW && times[i].tv_nsec != UTIME_OMIT)
+                && (times[i].tv_nsec < 0 || times[i].tv_nsec >= 1'000'000'000L)) {
+                return Error::from_errno(EINVAL);
+            }
+        }
+    }
+
+    Syscall::SC_utimensat_params params {
+        .dirfd = fd,
+        .path = { path.characters_without_null_termination(), path.length() },
+        .times = times,
+        .flag = flag,
+    };
+    int rc = syscall(SC_utimensat, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("utimensat", rc, {});
+#else
+    auto builder = TRY(StringBuilder::create());
+    TRY(builder.try_append(path));
+    TRY(builder.try_append('\0'));
+
+    // Note the explicit null terminators above.
+    if (::utimensat(fd, builder.string_view().characters_without_null_termination(), times, flag) < 0)
+        return Error::from_syscall("utimensat"sv, -errno);
+    return {};
+#endif
+}
+
 ErrorOr<struct utsname> uname()
 {
     struct utsname uts;
