@@ -83,12 +83,11 @@ ThrowCompletionOr<void> ArrayPrototype::initialize(Realm& realm)
     // Use define_direct_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
-    // 23.1.3.36 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
+    // 23.1.3.40 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
     define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
-    // 23.1.3.37 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
+    // 23.1.3.41 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
-    // With change array by copy proposal, https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype-@@unscopables
     auto unscopable_list = Object::create(realm, nullptr);
     MUST(unscopable_list->create_data_property_or_throw(vm.names.at, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.copyWithin, Value(true)));
@@ -1558,7 +1557,6 @@ ThrowCompletionOr<void> array_merge_sort(VM& vm, Function<ThrowCompletionOr<doub
 }
 
 // 23.1.3.30 Array.prototype.sort ( comparefn ), https://tc39.es/ecma262/#sec-array.prototype.sort
-// 1.1.1.1 Array.prototype.sort ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.sort
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
 {
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
@@ -1578,31 +1576,31 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
         return TRY(compare_array_elements(vm, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
     };
 
-    // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, true).
-    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, true));
+    // 5. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, skip-holes).
+    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, Holes::SkipHoles));
 
-    // 7. Let itemCount be the number of elements in sortedList.
+    // 6. Let itemCount be the number of elements in sortedList.
     auto item_count = sorted_list.size();
 
-    // 8. Let j be 0.
+    // 7. Let j be 0.
     size_t j = 0;
 
-    // 9. Repeat, while j < itemCount,
+    // 8. Repeat, while j < itemCount,
     for (; j < item_count; ++j) {
         // a. Perform ? Set(obj, ! ToString(𝔽(j)), sortedList[j], true).
         TRY(object->set(j, sorted_list[j], Object::ShouldThrowExceptions::Yes));
         // b. Set j to j + 1.
     }
 
-    // 10. NOTE: The call to SortIndexedProperties in step 6 has the skipHoles parameter set to true. The remaining indexes are deleted to preserve the number of holes that were detected and excluded from the sort.
-    // 11. Repeat, while j < len,
+    // 9. NOTE: The call to SortIndexedProperties in step 5 uses skip-holes. The remaining indices are deleted to preserve the number of holes that were detected and excluded from the sort.
+    // 10. Repeat, while j < len,
     for (; j < length; ++j) {
         // a. Perform ? DeletePropertyOrThrow(obj, ! ToString(𝔽(j))).
         TRY(object->delete_property_or_throw(j));
         // b. Set j to j + 1.
     }
 
-    // 12. Return obj.
+    // 11. Return obj.
     return object;
 }
 
@@ -1748,7 +1746,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_locale_string)
     return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
-// 1.1.1.4 Array.prototype.toReversed ( ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toReversed
+// 23.1.3.33 Array.prototype.toReversed ( ), https://tc39.es/ecma262/#sec-array.prototype.toreversed
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
 {
     auto& realm = *vm.current_realm();
@@ -1784,7 +1782,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_reversed)
     return array;
 }
 
-// 1.1.1.5 Array.prototype.toSorted ( comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSorted
+// 23.1.3.34 Array.prototype.toSorted ( comparefn ), https://tc39.es/ecma262/#sec-array.prototype.tosorted
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
 {
     auto& realm = *vm.current_realm();
@@ -1810,8 +1808,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
         return TRY(compare_array_elements(vm, x, y, comparefn.is_undefined() ? nullptr : &comparefn.as_function()));
     };
 
-    // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, false).
-    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, false));
+    // 6. Let sortedList be ? SortIndexedProperties(obj, len, SortCompare, read-through-holes).
+    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, Holes::ReadThroughHoles));
 
     // 7. Let j be 0.
     // 8. Repeat, while j < len,
@@ -1826,13 +1824,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_sorted)
     return array;
 }
 
-// 1.1.1.6 Array.prototype.toSpliced ( start, deleteCount, ...items ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.toSpliced
+// 23.1.3.35 Array.prototype.toSpliced ( start, skipCount, ...items ), https://tc39.es/ecma262/#sec-array.prototype.tospliced
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
 {
     auto& realm = *vm.current_realm();
 
     auto start = vm.argument(0);
-    auto delete_count = vm.argument(1);
+    auto skip_count = vm.argument(1);
 
     // 1. Let O be ? ToObject(this value).
     auto* object = TRY(vm.this_value().to_object(vm));
@@ -1861,32 +1859,32 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     // 7. Let insertCount be the number of elements in items.
     auto insert_count = vm.argument_count() >= 2 ? vm.argument_count() - 2 : 0;
 
-    size_t actual_delete_count;
+    size_t actual_skip_count;
 
     // 8. If start is not present, then
     if (vm.argument_count() == 0) {
-        // a. Let actualDeleteCount be 0.
-        actual_delete_count = 0;
+        // a. Let actualSkipCount be 0.
+        actual_skip_count = 0;
     }
     // 9. Else if deleteCount is not present, then
     else if (vm.argument_count() == 1) {
-        // a. Let actualDeleteCount be len - actualStart.
-        actual_delete_count = length - actual_start;
+        // a. Let actualSkipCount be len - actualStart.
+        actual_skip_count = length - actual_start;
     }
     // 10. Else,
     else {
-        // a. Let dc be ? ToIntegerOrInfinity(deleteCount).
-        auto dc = TRY(delete_count.to_integer_or_infinity(vm));
+        // a. Let sc be ? ToIntegerOrInfinity(skipCount).
+        auto sc = TRY(skip_count.to_integer_or_infinity(vm));
 
-        // b. Let actualDeleteCount be the result of clamping dc between 0 and len - actualStart.
-        actual_delete_count = static_cast<size_t>(clamp(dc, 0, static_cast<double>(length - actual_start)));
+        // b. Let actualSkipCount be the result of clamping sc between 0 and len - actualStart.
+        actual_skip_count = static_cast<size_t>(clamp(sc, 0, static_cast<double>(length - actual_start)));
     }
 
     // Sanity check
-    VERIFY(actual_delete_count <= (length - actual_start));
+    VERIFY(actual_skip_count <= (length - actual_start));
 
-    // 11. Let newLen be len + insertCount - actualDeleteCount.
-    auto new_length_double = static_cast<double>(length) + static_cast<double>(insert_count) - static_cast<double>(actual_delete_count);
+    // 11. Let newLen be len + insertCount - actualSkipCount.
+    auto new_length_double = static_cast<double>(length) + static_cast<double>(insert_count) - static_cast<double>(actual_skip_count);
 
     // 12. If newLen > 2^53 - 1, throw a TypeError exception.
     if (new_length_double > MAX_ARRAY_LIKE_INDEX)
@@ -1900,8 +1898,8 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     // 14. Let i be 0.
     size_t i = 0;
 
-    // 15. Let r be actualStart + actualDeleteCount.
-    auto r = actual_start + actual_delete_count;
+    // 15. Let r be actualStart + actualSkipCount.
+    auto r = actual_start + actual_skip_count;
 
     // 16. Repeat, while i < actualStart,
     while (i < actual_start) {
@@ -1957,7 +1955,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_spliced)
     return array;
 }
 
-// 23.1.3.33 Array.prototype.toString ( ), https://tc39.es/ecma262/#sec-array.prototype.tostring
+// 23.1.3.36 Array.prototype.toString ( ), https://tc39.es/ecma262/#sec-array.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
 {
     auto& realm = *vm.current_realm();
@@ -1976,7 +1974,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::to_string)
     return TRY(call(vm, func.as_function(), array));
 }
 
-// 23.1.3.34 Array.prototype.unshift ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.unshift
+// 23.1.3.37 Array.prototype.unshift ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.unshift
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 {
     auto* this_object = TRY(vm.this_value().to_object(vm));
@@ -2008,7 +2006,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
     return Value(new_length);
 }
 
-// 23.1.3.35 Array.prototype.values ( ), https://tc39.es/ecma262/#sec-array.prototype.values
+// 23.1.3.38 Array.prototype.values ( ), https://tc39.es/ecma262/#sec-array.prototype.values
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
 {
     auto& realm = *vm.current_realm();
@@ -2018,7 +2016,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
     return ArrayIterator::create(realm, this_object, Object::PropertyKind::Value);
 }
 
-// 1.1.1.7 Array.prototype.with ( index, value ), https://tc39.es/proposal-change-array-by-copy/#sec-array.prototype.with
+// 23.1.3.39 Array.prototype.with ( index, value ), https://tc39.es/ecma262/#sec-array.prototype.with
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::with)
 {
     auto& realm = *vm.current_realm();

@@ -27,7 +27,7 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM& vm, Value typed_array_va
     return static_cast<TypedArrayBase*>(this_object);
 }
 
-// 23.2.4.3 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray
+// 23.2.4.4 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray
 ThrowCompletionOr<void> validate_typed_array(VM& vm, TypedArrayBase& typed_array)
 {
     // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
@@ -340,25 +340,24 @@ ThrowCompletionOr<TypedArrayBase*> typed_array_create(VM& vm, FunctionObject& co
     return &typed_array;
 }
 
-// 1.2.1.1 TypedArrayCreateSameType ( exemplar, argumentList ) https://tc39.es/proposal-change-array-by-copy/#typedarray-create-same-type
+// 23.2.4.3 TypedArrayCreateSameType ( exemplar, argumentList ), https://tc39.es/ecma262/#sec-typedarray-create-same-type
 ThrowCompletionOr<TypedArrayBase*> typed_array_create_same_type(VM& vm, TypedArrayBase const& exemplar, MarkedVector<Value> arguments)
 {
     auto& realm = *vm.current_realm();
 
-    // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
-    // 2. Let constructor be the intrinsic object listed in column one of Table 63 (points to Table 72) for exemplar.[[TypedArrayName]].
+    // 1. Let constructor be the intrinsic object associated with the constructor name exemplar.[[TypedArrayName]] in Table 68.
     auto* constructor = (realm.intrinsics().*exemplar.intrinsic_constructor())();
 
-    // 3. Let result be ? TypedArrayCreate(constructor, argumentList).
+    // 2. Let result be ? TypedArrayCreate(constructor, argumentList).
     auto* result = TRY(typed_array_create(vm, *constructor, move(arguments)));
 
-    // 4. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
-    // 5. Assert: result.[[ContentType]] is exemplar.[[ContentType]].
-    // 6. Return result.
+    // 3. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
+    // 4. Assert: result.[[ContentType]] is exemplar.[[ContentType]].
+    // 5. Return result.
     return result;
 }
 
-// 1.2.2.1.2 CompareTypedArrayElements ( x, y, comparefn ), https://tc39.es/proposal-change-array-by-copy/#sec-comparetypedarrayelements
+// 23.2.4.7 CompareTypedArrayElements ( x, y, comparefn ), https://tc39.es/ecma262/#sec-typedarray-create-same-type
 ThrowCompletionOr<double> compare_typed_array_elements(VM& vm, Value x, Value y, FunctionObject* comparefn)
 {
     // 1. Assert: x is a Number and y is a Number, or x is a BigInt and y is a BigInt.
