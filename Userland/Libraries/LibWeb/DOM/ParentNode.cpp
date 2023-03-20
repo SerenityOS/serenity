@@ -50,19 +50,28 @@ WebIDL::ExceptionOr<JS::GCPtr<Element>> ParentNode::query_selector(StringView se
     return result;
 }
 
+// https://dom.spec.whatwg.org/#dom-parentnode-queryselectorall
 WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeList>> ParentNode::query_selector_all(StringView selector_text)
 {
+    // The querySelectorAll(selectors) method steps are to return the static result of running scope-match a selectors string selectors against this.
+
+    // https://dom.spec.whatwg.org/#scope-match-a-selectors-string
+    // To scope-match a selectors string selectors against a node, run these steps:
+    // 1. Let s be the result of parse a selector selectors.
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(*this), selector_text);
+
+    // 2. If s is failure, then throw a "SyntaxError" DOMException.
     if (!maybe_selectors.has_value())
         return WebIDL::SyntaxError::create(realm(), "Failed to parse selector");
 
     auto selectors = maybe_selectors.value();
 
+    // 3. Return the result of match a selector against a tree with s and node’s root using scoping root node.
     Vector<JS::Handle<Node>> elements;
     // FIXME: This should be shadow-including. https://drafts.csswg.org/selectors-4/#match-a-selector-against-a-tree
     for_each_in_subtree_of_type<Element>([&](auto& element) {
         for (auto& selector : selectors) {
-            if (SelectorEngine::matches(selector, element)) {
+            if (SelectorEngine::matches(selector, element, {}, this)) {
                 elements.append(&element);
             }
         }
