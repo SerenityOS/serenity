@@ -105,6 +105,7 @@ public:
                 Disabled,
                 Enabled,
                 Checked,
+                Indeterminate,
                 Is,
                 Not,
                 Where,
@@ -275,6 +276,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "enabled"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Checked:
         return "checked"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
+        return "indeterminate"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Active:
         return "active"sv;
     case Selector::SimpleSelector::PseudoClass::Type::NthChild:

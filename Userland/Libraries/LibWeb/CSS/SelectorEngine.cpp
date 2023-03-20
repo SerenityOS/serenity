@@ -19,6 +19,7 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/HTMLOptGroupElement.h>
 #include <LibWeb/HTML/HTMLOptionElement.h>
+#include <LibWeb/HTML/HTMLProgressElement.h>
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/Infra/Strings.h>
@@ -92,6 +93,28 @@ static inline bool matches_checked_pseudo_class(DOM::Element const& element)
     // - option elements whose selectedness is true
     if (is<HTML::HTMLOptionElement>(element)) {
         return static_cast<HTML::HTMLOptionElement const&>(element).selected();
+    }
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/semantics-other.html#selector-indeterminate
+static inline bool matches_indeterminate_pseudo_class(DOM::Element const& element)
+{
+    // The :indeterminate pseudo-class must match any element falling into one of the following categories:
+    // - input elements whose type attribute is in the Checkbox state and whose indeterminate IDL attribute is set to true
+    // FIXME: - input elements whose type attribute is in the Radio Button state and whose radio button group contains no input elements whose checkedness state is true.
+    if (is<HTML::HTMLInputElement>(element)) {
+        auto const& input_element = static_cast<HTML::HTMLInputElement const&>(element);
+        switch (input_element.type_state()) {
+        case HTML::HTMLInputElement::TypeAttributeState::Checkbox:
+            return input_element.indeterminate();
+        default:
+            return false;
+        }
+    }
+    // - progress elements with no value content attribute
+    if (is<HTML::HTMLProgressElement>(element)) {
+        return !element.has_attribute(HTML::AttributeNames::value);
     }
     return false;
 }
@@ -241,6 +264,8 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
             && !element.is_actually_disabled();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Checked:
         return matches_checked_pseudo_class(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
+        return matches_indeterminate_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
         for (auto& selector : pseudo_class.argument_selector_list) {
