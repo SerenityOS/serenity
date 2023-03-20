@@ -70,6 +70,8 @@ input[type=checkbox] {
     height: 12px;
     margin: 2px;
     border: 1px solid -libweb-palette-threed-shadow1;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 input[type=checkbox]:checked {
