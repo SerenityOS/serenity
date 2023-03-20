@@ -122,12 +122,19 @@ void AttributeParser::parse_drawto()
     }
 }
 
+// https://www.w3.org/TR/SVG2/paths.html#PathDataMovetoCommands
 void AttributeParser::parse_moveto()
 {
     bool absolute = consume() == 'M';
     parse_whitespace();
-    for (auto& pair : parse_coordinate_pair_sequence())
-        m_instructions.append({ PathInstructionType::Move, absolute, pair });
+    auto coordinate_pairs = parse_coordinate_pair_sequence();
+    for (size_t i = 0; i < coordinate_pairs.size(); i++) {
+        if (i == 0) {
+            m_instructions.append({ PathInstructionType::Move, absolute, coordinate_pairs[i] });
+        } else {
+            m_instructions.append({ PathInstructionType::Line, absolute, coordinate_pairs[i] });
+        }
+    }
 }
 
 void AttributeParser::parse_closepath()
