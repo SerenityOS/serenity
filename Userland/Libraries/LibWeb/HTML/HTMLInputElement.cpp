@@ -107,6 +107,13 @@ void HTMLInputElement::set_checked_binding(bool checked)
     }
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#dom-input-indeterminate
+void HTMLInputElement::set_indeterminate(bool value)
+{
+    // On setting, it must be set to the new value. It has no effect except for changing the appearance of checkbox controls.
+    m_indeterminate = value;
+}
+
 // https://html.spec.whatwg.org/multipage/input.html#dom-input-files
 JS::GCPtr<FileAPI::FileList> HTMLInputElement::files()
 {
@@ -797,14 +804,15 @@ void HTMLInputElement::set_checked_within_group()
 void HTMLInputElement::legacy_pre_activation_behavior()
 {
     m_before_legacy_pre_activation_behavior_checked = checked();
+    m_before_legacy_pre_activation_behavior_indeterminate = indeterminate();
 
     // 1. If this element's type attribute is in the Checkbox state, then set
     // this element's checkedness to its opposite value (i.e. true if it is
     // false, false if it is true) and set this element's indeterminate IDL
     // attribute to false.
-    // FIXME: Set indeterminate to false when that exists.
     if (type_state() == TypeAttributeState::Checkbox) {
         set_checked(!checked(), ChangeSource::User);
+        set_indeterminate(false);
     }
 
     // 2. If this element's type attribute is in the Radio Button state, then
@@ -834,6 +842,7 @@ void HTMLInputElement::legacy_cancelled_activation_behavior()
     // to the values they had before the legacy-pre-activation behavior was run.
     if (type_state() == TypeAttributeState::Checkbox) {
         set_checked(m_before_legacy_pre_activation_behavior_checked, ChangeSource::Programmatic);
+        set_indeterminate(m_before_legacy_pre_activation_behavior_indeterminate);
     }
 
     // 2. If this element 's type attribute is in the Radio Button state, then

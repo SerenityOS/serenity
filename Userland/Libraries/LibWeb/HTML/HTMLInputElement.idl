@@ -22,6 +22,7 @@ interface HTMLInputElement : HTMLElement {
     [Reflect=value] attribute DOMString defaultValue;
 
     attribute DOMString type;
+    attribute boolean indeterminate;
 
     [LegacyNullToEmptyString] attribute DOMString value;
 
