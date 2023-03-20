@@ -83,6 +83,12 @@ input[type=checkbox]:checked {
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAABHNCSVQICAgIfAhkiAAAAEhJREFUKFNjYBgs4D/MIYxEuAiuGKiWkZAGFMUgw5mQbECWBAljKAYJwmxAl0Tnw81FdhK6DcgGYtWA0xlw1TgY2GzCoZQWwgCU1woFwvnCFQAAAABJRU5ErkJggg==);
 }
 
+input[type=checkbox]:indeterminate {
+    image-rendering: pixelated;
+    /* FIXME: Eventually respect the `accent-color` property here. */
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAAXNSR0IArs4c6QAAACZJREFUKFNjZCARMJKonmGQa/hPwD9g5yP7gWQNRAXYIA8lovwAAHYYAg3vRihbAAAAAElFTkSuQmCC);
+}
+
 option {
     display: none;
 }
