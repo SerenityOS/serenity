@@ -25,7 +25,7 @@ RefPtr<Core::ConfigFile> g_config;
 
 ErrorOr<int> serenity_main(Main::Arguments)
 {
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction exec tty"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc getkeymap sigaction exec tty"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp", "cw"));
     TRY(Core::System::unveil("/etc/WindowServer.ini", "rwc"));
@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
     act.sa_flags = SA_NOCLDWAIT;
     act.sa_handler = SIG_IGN;
     TRY(Core::System::sigaction(SIGCHLD, &act, nullptr));
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec tty"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc getkeymap exec tty"));
 
     WindowServer::g_config = TRY(Core::ConfigFile::open("/etc/WindowServer.ini", Core::ConfigFile::AllowWriting::Yes));
     auto theme_name = WindowServer::g_config->read_entry("Theme", "Name", "Default");
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments)
 
     WindowServer::EventLoop loop;
 
-    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc exec"));
+    TRY(Core::System::pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc getkeymap exec"));
 
     // First check which screens are explicitly configured
     {
