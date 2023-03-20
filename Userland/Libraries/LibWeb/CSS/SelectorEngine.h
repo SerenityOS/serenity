@@ -11,6 +11,6 @@
 
 namespace Web::SelectorEngine {
 
-bool matches(CSS::Selector const&, DOM::Element const&, Optional<CSS::Selector::PseudoElement> = {});
+bool matches(CSS::Selector const&, DOM::Element const&, Optional<CSS::Selector::PseudoElement> = {}, JS::GCPtr<DOM::ParentNode const> scope = {});
 
 }
