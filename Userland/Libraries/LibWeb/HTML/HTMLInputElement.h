@@ -78,6 +78,9 @@ public:
     bool checked_binding() const { return checked(); }
     void set_checked_binding(bool);
 
+    bool indeterminate() const { return m_indeterminate; };
+    void set_indeterminate(bool);
+
     void did_edit_text_node(Badge<BrowsingContext>);
 
     JS::GCPtr<FileAPI::FileList> files();
@@ -156,6 +159,9 @@ private:
     JS::GCPtr<DOM::Text> m_text_node;
     bool m_checked { false };
 
+    // https://html.spec.whatwg.org/multipage/input.html#dom-input-indeterminate
+    bool m_indeterminate { false };
+
     // https://html.spec.whatwg.org/multipage/input.html#concept-input-checked-dirty-flag
     bool m_dirty_checkedness { false };
 
@@ -164,6 +170,7 @@ private:
 
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:legacy-pre-activation-behavior
     bool m_before_legacy_pre_activation_behavior_checked { false };
+    bool m_before_legacy_pre_activation_behavior_indeterminate { false };
     JS::GCPtr<HTMLInputElement> m_legacy_pre_activation_behavior_checked_element_in_group;
 
     // https://html.spec.whatwg.org/multipage/input.html#concept-input-type-file-selected
