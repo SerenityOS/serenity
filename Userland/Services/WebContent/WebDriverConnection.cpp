@@ -545,6 +545,16 @@ Messages::WebDriverClient::CloseWindowResponse WebDriverConnection::close_window
     return JsonValue {};
 }
 
+// 11.3 Switch to Window, https://w3c.github.io/webdriver/#dfn-switch-to-window
+Messages::WebDriverClient::SwitchToWindowResponse WebDriverConnection::switch_to_window()
+{
+    // 5. Update any implementation-specific state that would result from the user selecting the current
+    //    browsing context for interaction, without altering OS-level focus.
+    m_page_client.page_did_request_activate_tab();
+
+    return JsonValue {};
+}
+
 // 11.5 New Window, https://w3c.github.io/webdriver/#dfn-new-window
 Messages::WebDriverClient::NewWindowResponse WebDriverConnection::new_window(JsonValue const&)
 {
