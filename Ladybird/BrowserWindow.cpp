@@ -401,6 +401,11 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
     return *tab_ptr;
 }
 
+void BrowserWindow::activate_tab(int index)
+{
+    m_tabs_container->setCurrentIndex(index);
+}
+
 void BrowserWindow::close_tab(int index)
 {
     auto* tab = m_tabs_container->widget(index);

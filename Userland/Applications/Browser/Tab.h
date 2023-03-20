@@ -62,6 +62,7 @@ public:
 
     Function<void(DeprecatedString const&)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
+    Function<void(Tab&)> on_activate_tab_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(Tab&)> on_tab_close_other_request;
     Function<void(const URL&)> on_window_open_request;

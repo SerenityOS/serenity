@@ -245,6 +245,11 @@ Messages::WebContentClient::DidRequestNewTabResponse WebContentClient::did_reque
     return m_view.notify_server_did_request_new_tab({}, activate_tab);
 }
 
+void WebContentClient::did_request_activate_tab()
+{
+    m_view.notify_server_did_request_activate_tab({});
+}
+
 void WebContentClient::did_close_browsing_context()
 {
     m_view.notify_server_did_close_browsing_context({});

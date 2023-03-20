@@ -71,6 +71,7 @@ private:
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
     virtual void did_update_cookie(Web::Cookie::Cookie const&) override;
     virtual Messages::WebContentClient::DidRequestNewTabResponse did_request_new_tab(Web::HTML::ActivateTab const& activate_tab) override;
+    virtual void did_request_activate_tab() override;
     virtual void did_close_browsing_context() override;
     virtual void did_update_resource_count(i32 count_waiting) override;
     virtual void did_request_restore_window() override;

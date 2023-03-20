@@ -473,6 +473,10 @@ Tab::Tab(BrowserWindow& window)
         return tab.view().handle();
     };
 
+    view().on_activate_tab = [this]() {
+        on_activate_tab_request(*this);
+    };
+
     view().on_close = [this] {
         on_tab_close_request(*this);
     };

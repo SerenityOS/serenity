@@ -988,6 +988,11 @@ String WebContentView::notify_server_did_request_new_tab(Badge<WebContentClient>
     return {};
 }
 
+void WebContentView::notify_server_did_request_activate_tab(Badge<WebContentClient>)
+{
+    emit activate_tab();
+}
+
 void WebContentView::notify_server_did_update_resource_count(i32 count_waiting)
 {
     // FIXME

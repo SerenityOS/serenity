@@ -48,6 +48,7 @@ endpoint WebContentClient
     did_update_cookie(Web::Cookie::Cookie cookie) =|
     did_update_resource_count(i32 count_waiting) =|
     did_request_new_tab(Web::HTML::ActivateTab activate_tab) => (String handle)
+    did_request_activate_tab() =|
     did_close_browsing_context() =|
     did_request_restore_window() =|
     did_request_reposition_window(Gfx::IntPoint position) => (Gfx::IntPoint window_position)

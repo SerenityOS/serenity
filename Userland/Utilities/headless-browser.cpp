@@ -134,6 +134,7 @@ private:
     void notify_server_did_set_cookie(Badge<WebView::WebContentClient>, const URL&, Web::Cookie::ParsedCookie const&, Web::Cookie::Source) override { }
     void notify_server_did_update_cookie(Badge<WebView::WebContentClient>, Web::Cookie::Cookie const&) override { }
     String notify_server_did_request_new_tab(Badge<WebView::WebContentClient>, Web::HTML::ActivateTab) override { return {}; }
+    void notify_server_did_request_activate_tab(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_close_browsing_context(Badge<WebView::WebContentClient>) override { }
     void notify_server_did_update_resource_count(i32) override { }
     void notify_server_did_request_restore_window() override { }

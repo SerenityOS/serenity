@@ -590,6 +590,10 @@ Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
         create_new_tab(url, Web::HTML::ActivateTab::Yes);
     };
 
+    new_tab.on_activate_tab_request = [this](auto& tab) {
+        m_tab_widget->set_active_widget(&tab);
+    };
+
     new_tab.on_tab_close_request = [this](auto& tab) {
         m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_tab(tab);

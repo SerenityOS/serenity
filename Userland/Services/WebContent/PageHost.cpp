@@ -382,6 +382,11 @@ String PageHost::page_did_request_new_tab(Web::HTML::ActivateTab activate_tab)
     return m_client.did_request_new_tab(activate_tab);
 }
 
+void PageHost::page_did_request_activate_tab()
+{
+    m_client.async_did_request_activate_tab();
+}
+
 void PageHost::page_did_close_browsing_context(Web::HTML::BrowsingContext const&)
 {
     m_client.async_did_close_browsing_context();

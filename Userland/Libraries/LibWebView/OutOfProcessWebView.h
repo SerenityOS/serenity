@@ -59,6 +59,7 @@ public:
     void set_content_scales_to_viewport(bool);
 
     Function<String(Web::HTML::ActivateTab)> on_new_tab;
+    Function<void()> on_activate_tab;
     Function<void()> on_close;
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
@@ -164,6 +165,7 @@ private:
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override;
     virtual void notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie) override;
     virtual String notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab) override;
+    virtual void notify_server_did_request_activate_tab(Badge<WebContentClient>) override;
     virtual void notify_server_did_close_browsing_context(Badge<WebContentClient>) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
     virtual void notify_server_did_request_restore_window() override;
