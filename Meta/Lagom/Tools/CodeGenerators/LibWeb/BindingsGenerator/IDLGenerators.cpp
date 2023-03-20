@@ -2571,7 +2571,6 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 }
 )~~~");
         } else if (auto put_forwards_identifier = attribute.extended_attributes.get("PutForwards"sv); put_forwards_identifier.has_value()) {
-            attribute_generator.set("attribute.name", attribute.name.to_snakecase());
             attribute_generator.set("put_forwards_identifier"sv, *put_forwards_identifier);
 
             attribute_generator.append(R"~~~(
@@ -2580,7 +2579,7 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     auto* impl = TRY(impl_from(vm));
     auto value = vm.argument(0);
 
-    auto receiver = TRY(throw_dom_exception_if_needed(vm, [&]() { return impl->@attribute.name@(); }));
+    auto receiver = TRY(throw_dom_exception_if_needed(vm, [&]() { return impl->@attribute.cpp_name@(); }));
     TRY(receiver->set(JS::PropertyKey { "@put_forwards_identifier@" }, value, JS::Object::ShouldThrowExceptions::Yes));
 
     return JS::js_undefined();
