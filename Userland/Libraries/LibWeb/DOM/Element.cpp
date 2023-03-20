@@ -551,19 +551,25 @@ WebIDL::ExceptionOr<bool> Element::matches(StringView selectors) const
 // https://dom.spec.whatwg.org/#dom-element-closest
 WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) const
 {
+    // 1. Let s be the result of parse a selector from selectors.
     auto maybe_selectors = parse_selector(CSS::Parser::ParsingContext(static_cast<ParentNode&>(const_cast<Element&>(*this))), selectors);
+
+    // 2. If s is failure, then throw a "SyntaxError" DOMException.
     if (!maybe_selectors.has_value())
         return WebIDL::SyntaxError::create(realm(), "Failed to parse selector");
 
-    auto matches_selectors = [](CSS::SelectorList const& selector_list, Element const* element) {
+    auto matches_selectors = [this](CSS::SelectorList const& selector_list, Element const* element) {
+        // 4. For each element in elements, if match a selector against an element, using s, element, and scoping root this, returns success, return element.
         for (auto& selector : selector_list) {
-            if (!SelectorEngine::matches(selector, *element))
+            if (!SelectorEngine::matches(selector, *element, {}, this))
                 return false;
         }
         return true;
     };
 
     auto const selector_list = maybe_selectors.release_value();
+
+    // 3. Let elements be this’s inclusive ancestors that are elements, in reverse tree order.
     for (auto* element = this; element; element = element->parent_element()) {
         if (!matches_selectors(selector_list, element))
             continue;
@@ -571,6 +577,7 @@ WebIDL::ExceptionOr<DOM::Element const*> Element::closest(StringView selectors) 
         return element;
     }
 
+    // 5. Return null.
     return nullptr;
 }
 
