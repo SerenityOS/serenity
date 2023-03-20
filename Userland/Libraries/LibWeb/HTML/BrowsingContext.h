@@ -17,6 +17,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/HTML/AbstractBrowsingContext.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Origin.h>
@@ -171,7 +172,7 @@ public:
         WindowType window_type;
     };
 
-    ChosenBrowsingContext choose_a_browsing_context(StringView name, bool no_opener);
+    ChosenBrowsingContext choose_a_browsing_context(StringView name, bool no_opener, ActivateTab = ActivateTab::Yes);
 
     size_t document_tree_child_browsing_context_count() const;
 

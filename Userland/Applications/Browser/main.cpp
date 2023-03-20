@@ -175,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     for (size_t i = 1; i < specified_urls.size(); ++i)
-        window->create_new_tab(url_from_argument_string(specified_urls[i]), false);
+        window->create_new_tab(url_from_argument_string(specified_urls[i]), Web::HTML::ActivateTab::No);
 
     window->show();
 

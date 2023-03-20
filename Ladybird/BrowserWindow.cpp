@@ -313,7 +313,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     });
 
     QObject::connect(new_tab_action, &QAction::triggered, this, [this] {
-        new_tab(s_settings->new_tab_page(), Activate::Yes);
+        new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
     });
     QObject::connect(settings_action, &QAction::triggered, this, [this] {
         new SettingsDialog(this);
@@ -327,7 +327,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
 
-    new_tab(s_settings->new_tab_page(), Activate::Yes);
+    new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
 
     setCentralWidget(m_tabs_container);
 }
@@ -339,7 +339,7 @@ void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedStr
     m_current_tab->debug_request(request, argument);
 }
 
-Tab& BrowserWindow::new_tab(QString const& url, Activate activate)
+Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_tab)
 {
     auto tab = make<Tab>(this, m_webdriver_content_ipc_path);
     auto tab_ptr = tab.ptr();
@@ -350,7 +350,7 @@ Tab& BrowserWindow::new_tab(QString const& url, Activate activate)
     }
 
     m_tabs_container->addTab(tab_ptr, "New Tab");
-    if (activate == Activate::Yes)
+    if (activate_tab == Web::HTML::ActivateTab::Yes)
         m_tabs_container->setCurrentWidget(tab_ptr);
 
     QObject::connect(tab_ptr, &Tab::title_changed, this, &BrowserWindow::tab_title_changed);
@@ -361,11 +361,11 @@ Tab& BrowserWindow::new_tab(QString const& url, Activate activate)
         m_current_tab->navigate(urls[0].toString());
 
         for (qsizetype i = 1; i < urls.size(); ++i)
-            new_tab(urls[i].toString(), Activate::No);
+            new_tab(urls[i].toString(), Web::HTML::ActivateTab::No);
     });
 
-    tab_ptr->view().on_new_tab = [this]() {
-        auto& tab = new_tab("about:blank", Activate::Yes);
+    tab_ptr->view().on_new_tab = [this](auto activate_tab) {
+        auto& tab = new_tab("about:blank", activate_tab);
         return tab.view().handle();
     };
 

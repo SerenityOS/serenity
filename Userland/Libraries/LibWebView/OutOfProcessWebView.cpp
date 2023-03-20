@@ -59,14 +59,6 @@ void OutOfProcessWebView::handle_web_content_process_crash()
     load_html(builder.to_deprecated_string(), m_url);
 }
 
-String OutOfProcessWebView::notify_request_open_new_tab(Badge<WebContentClient>)
-{
-    if (on_new_tab)
-        return on_new_tab();
-
-    return {};
-}
-
 void OutOfProcessWebView::create_client()
 {
     m_client_state = {};
@@ -475,16 +467,23 @@ void OutOfProcessWebView::notify_server_did_set_cookie(Badge<WebContentClient>, 
         on_set_cookie(url, cookie, source);
 }
 
-void OutOfProcessWebView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
-{
-    if (on_close)
-        on_close();
-}
-
 void OutOfProcessWebView::notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie)
 {
     if (on_update_cookie)
         on_update_cookie(cookie);
+}
+
+String OutOfProcessWebView::notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab)
+{
+    if (on_new_tab)
+        return on_new_tab(activate_tab);
+    return {};
+}
+
+void OutOfProcessWebView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
+{
+    if (on_close)
+        on_close();
 }
 
 void OutOfProcessWebView::notify_server_did_update_resource_count(i32 count_waiting)

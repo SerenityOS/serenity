@@ -9,6 +9,7 @@
 
 #include "Tab.h"
 #include <LibCore/Forward.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <QIcon>
 #include <QLineEdit>
 #include <QMainWindow>
@@ -31,15 +32,10 @@ public:
 
     int tab_index(Tab*);
 
-    enum class Activate {
-        Yes,
-        No,
-    };
-
 public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
-    Tab& new_tab(QString const&, Activate);
+    Tab& new_tab(QString const&, Web::HTML::ActivateTab);
     void close_tab(int index);
     void close_current_tab();
     void open_next_tab();

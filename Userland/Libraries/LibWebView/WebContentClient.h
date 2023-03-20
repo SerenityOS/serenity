@@ -8,6 +8,7 @@
 
 #include <AK/HashMap.h>
 #include <LibIPC/ConnectionToServer.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <WebContent/WebContentClientEndpoint.h>
 #include <WebContent/WebContentServerEndpoint.h>
 
@@ -69,6 +70,7 @@ private:
     virtual Messages::WebContentClient::DidRequestCookieResponse did_request_cookie(AK::URL const&, u8) override;
     virtual void did_set_cookie(AK::URL const&, Web::Cookie::ParsedCookie const&, u8) override;
     virtual void did_update_cookie(Web::Cookie::Cookie const&) override;
+    virtual Messages::WebContentClient::DidRequestNewTabResponse did_request_new_tab(Web::HTML::ActivateTab const& activate_tab) override;
     virtual void did_close_browsing_context() override;
     virtual void did_update_resource_count(i32 count_waiting) override;
     virtual void did_request_restore_window() override;
@@ -79,7 +81,6 @@ private:
     virtual Messages::WebContentClient::DidRequestFullscreenWindowResponse did_request_fullscreen_window() override;
     virtual void did_request_file(DeprecatedString const& path, i32) override;
     virtual void did_finish_handling_input_event(bool event_was_accepted) override;
-    virtual Messages::WebContentClient::DidRequestNewTabResponse did_request_new_tab() override;
 
     ViewImplementation& m_view;
 };

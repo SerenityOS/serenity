@@ -12,6 +12,7 @@
 #include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Widget.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWebView/ViewImplementation.h>
 
@@ -57,7 +58,7 @@ public:
     // In practice, this means that OOPWV may render scaled stale versions of the content while resizing.
     void set_content_scales_to_viewport(bool);
 
-    Function<String()> on_new_tab;
+    Function<String(Web::HTML::ActivateTab)> on_new_tab;
     Function<void()> on_close;
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;
@@ -162,7 +163,7 @@ private:
     virtual DeprecatedString notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) override;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) override;
     virtual void notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie) override;
-    virtual String notify_request_open_new_tab(Badge<WebContentClient>) override;
+    virtual String notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab) override;
     virtual void notify_server_did_close_browsing_context(Badge<WebContentClient>) override;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) override;
     virtual void notify_server_did_request_restore_window() override;

@@ -12,6 +12,7 @@
 #include <LibGfx/Forward.h>
 #include <LibGfx/StandardCursor.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <LibWebView/Forward.h>
 #include <LibWebView/WebContentClient.h>
 
@@ -98,7 +99,7 @@ public:
     virtual DeprecatedString notify_server_did_request_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::Source source) = 0;
     virtual void notify_server_did_set_cookie(Badge<WebContentClient>, const AK::URL& url, Web::Cookie::ParsedCookie const& cookie, Web::Cookie::Source source) = 0;
     virtual void notify_server_did_update_cookie(Badge<WebContentClient>, Web::Cookie::Cookie const& cookie) = 0;
-    virtual String notify_request_open_new_tab(Badge<WebContentClient>) = 0;
+    virtual String notify_server_did_request_new_tab(Badge<WebContentClient>, Web::HTML::ActivateTab activate_tab) = 0;
     virtual void notify_server_did_close_browsing_context(Badge<WebContentClient>) = 0;
     virtual void notify_server_did_update_resource_count(i32 count_waiting) = 0;
     virtual void notify_server_did_request_restore_window() = 0;
