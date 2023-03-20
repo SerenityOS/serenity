@@ -19,6 +19,7 @@
 #include <LibCore/Account.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <LibCore/SessionManagement.h>
+#include <LibKeyboard/CharacterMap.h>
 
 namespace WindowServer {
 
@@ -516,20 +517,32 @@ void Window::handle_keydown_event(KeyEvent const& event)
         return;
     }
     if (event.modifiers() == Mod_Alt && event.code_point() && m_menubar.has_menus()) {
-        Menu* menu_to_open = nullptr;
-        m_menubar.for_each_menu([&](Menu& menu) {
-            if (to_ascii_lowercase(menu.alt_shortcut_character()) == to_ascii_lowercase(event.code_point())) {
-                menu_to_open = &menu;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
+        // When handling alt shortcuts, we only care about the key that has been pressed in addition
+        // to alt, not the code point that has been mapped to alt+[key], so we have to look up the
+        // scancode directly from the "unmodified" character map.
+        auto character_map_or_error = Keyboard::CharacterMap::fetch_system_map();
+        if (!character_map_or_error.is_error()) {
+            auto& character_map = character_map_or_error.value();
 
-        if (menu_to_open) {
-            frame().open_menubar_menu(*menu_to_open);
-            if (!menu_to_open->is_empty())
-                menu_to_open->set_hovered_index(0);
-            return;
+            // The lowest byte serves as our index into the character table.
+            auto index = event.scancode() & 0xff;
+            u32 character = to_ascii_lowercase(character_map.character_map_data().map[index]);
+
+            Menu* menu_to_open = nullptr;
+            m_menubar.for_each_menu([&](Menu& menu) {
+                if (to_ascii_lowercase(menu.alt_shortcut_character()) == character) {
+                    menu_to_open = &menu;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+
+            if (menu_to_open) {
+                frame().open_menubar_menu(*menu_to_open);
+                if (!menu_to_open->is_empty())
+                    menu_to_open->set_hovered_index(0);
+                return;
+            }
         }
     }
     m_client->async_key_down(m_window_id, (u32)event.code_point(), (u32)event.key(), event.modifiers(), (u32)event.scancode());
