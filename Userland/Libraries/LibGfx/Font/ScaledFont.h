@@ -45,6 +45,7 @@ public:
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
     virtual float glyph_left_bearing(u32 code_point) const override;
+    virtual float glyph_ascender(u32 code_point) const override;
     virtual Glyph glyph(u32 code_point, GlyphSubpixelOffset) const override;
     virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual float glyph_width(u32 code_point) const override;

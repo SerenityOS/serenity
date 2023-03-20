@@ -178,6 +178,7 @@ public:
     virtual bool contains_glyph(u32 code_point) const = 0;
 
     virtual float glyph_left_bearing(u32 code_point) const = 0;
+    virtual float glyph_ascender(u32 code_point) const = 0;
     virtual float glyph_width(u32 code_point) const = 0;
     virtual float glyph_or_emoji_width(Utf8CodePointIterator&) const = 0;
     virtual float glyph_or_emoji_width(Utf32CodePointIterator&) const = 0;

@@ -59,6 +59,7 @@ public:
     Glyph glyph(u32 code_point, GlyphSubpixelOffset) const override { return glyph(code_point); }
 
     float glyph_left_bearing(u32) const override { return 0; }
+    float glyph_ascender(u32) const override { return 0; }
 
     Glyph raw_glyph(u32 code_point) const;
     bool contains_glyph(u32 code_point) const override;

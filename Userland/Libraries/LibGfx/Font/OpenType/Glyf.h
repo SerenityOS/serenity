@@ -57,13 +57,13 @@ public:
             }
         }
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> rasterize(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize(float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset, GlyphCb glyph_callback) const
         {
             switch (m_type) {
             case Type::Simple:
-                return rasterize_simple(font_ascender, font_descender, x_scale, y_scale, subpixel_offset);
+                return rasterize_simple(x_scale, y_scale, subpixel_offset);
             case Type::Composite:
-                return rasterize_composite(font_ascender, font_descender, x_scale, y_scale, subpixel_offset, glyph_callback);
+                return rasterize_composite(x_scale, y_scale, subpixel_offset, glyph_callback);
             }
             VERIFY_NOT_REACHED();
         }
@@ -98,7 +98,7 @@ public:
         };
 
         void rasterize_impl(Gfx::PathRasterizer&, Gfx::AffineTransform const&) const;
-        RefPtr<Gfx::Bitmap> rasterize_simple(i16 ascender, i16 descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset) const;
+        RefPtr<Gfx::Bitmap> rasterize_simple(float x_scale, float y_scale, Gfx::GlyphSubpixelOffset) const;
 
         template<typename GlyphCb>
         void rasterize_composite_loop(Gfx::PathRasterizer& rasterizer, Gfx::AffineTransform const& transform, GlyphCb glyph_callback) const
@@ -124,15 +124,15 @@ public:
         }
 
         template<typename GlyphCb>
-        RefPtr<Gfx::Bitmap> rasterize_composite(i16 font_ascender, i16 font_descender, float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset, GlyphCb glyph_callback) const
+        RefPtr<Gfx::Bitmap> rasterize_composite(float x_scale, float y_scale, Gfx::GlyphSubpixelOffset subpixel_offset, GlyphCb glyph_callback) const
         {
-            u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 1;
-            u32 height = (u32)(ceilf((font_ascender - font_descender) * y_scale)) + 1;
+            u32 width = (u32)(ceilf((m_xmax - m_xmin) * x_scale)) + 2;
+            u32 height = (u32)(ceilf((m_ymax - m_ymin) * y_scale)) + 2;
             Gfx::PathRasterizer rasterizer(Gfx::IntSize(width, height));
             auto affine = Gfx::AffineTransform()
                               .translate(subpixel_offset.to_float_point())
                               .scale(x_scale, -y_scale)
-                              .translate(-m_xmin, -font_ascender);
+                              .translate(-m_xmin, -m_ymax);
 
             rasterize_composite_loop(rasterizer, affine, glyph_callback);
 
