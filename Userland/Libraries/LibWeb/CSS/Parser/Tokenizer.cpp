@@ -534,10 +534,11 @@ Number Tokenizer::consume_a_number()
     // U+0065 LATIN SMALL LETTER E (e), optionally followed by U+002D HYPHEN-MINUS (-)
     // or U+002B PLUS SIGN (+), followed by a digit, then:
     auto maybe_exp = peek_triplet();
-    if (is_E(maybe_exp.first) || is_e(maybe_exp.first)) {
+    if ((is_E(maybe_exp.first) || is_e(maybe_exp.first))
+        && (((is_plus_sign(maybe_exp.second) || is_hyphen_minus(maybe_exp.second)) && is_ascii_digit(maybe_exp.third))
+            || (is_ascii_digit(maybe_exp.second)))) {
         // 1. Consume them.
         // 2. Append them to repr.
-        // FIXME: These conditions should be part of step 5 above.
         if (is_plus_sign(maybe_exp.second) || is_hyphen_minus(maybe_exp.second)) {
             if (is_ascii_digit(maybe_exp.third)) {
                 repr.append_code_point(next_code_point());
