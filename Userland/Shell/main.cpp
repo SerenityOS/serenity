@@ -232,8 +232,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 shell->run_file(file_path, false);
             }
         };
-        run_rc_file(Shell::Shell::global_init_file_path);
-        run_rc_file(Shell::Shell::local_init_file_path);
+        if (posix_mode) {
+            run_rc_file(Shell::Shell::global_posix_init_file_path);
+            run_rc_file(Shell::Shell::local_posix_init_file_path);
+        } else {
+            run_rc_file(Shell::Shell::global_init_file_path);
+            run_rc_file(Shell::Shell::local_init_file_path);
+        }
         shell->cache_path();
     }
 

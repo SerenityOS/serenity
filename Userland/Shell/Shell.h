@@ -92,6 +92,8 @@ class Shell : public Core::Object {
 public:
     constexpr static auto local_init_file_path = "~/.shellrc";
     constexpr static auto global_init_file_path = "/etc/shellrc";
+    constexpr static auto local_posix_init_file_path = "~/.posixshrc";
+    constexpr static auto global_posix_init_file_path = "/etc/posixshrc";
 
     bool should_format_live() const { return m_should_format_live; }
     void set_live_formatting(bool value) { m_should_format_live = value; }
