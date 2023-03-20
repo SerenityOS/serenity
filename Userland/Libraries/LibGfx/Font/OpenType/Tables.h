@@ -568,6 +568,27 @@ struct LookupList {
     Offset16 lookup_offsets[];
 };
 
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-1
+struct CoverageFormat1 {
+    BigEndian<u16> coverage_format;
+    BigEndian<u16> glyph_count;
+    BigEndian<u16> glyph_array[];
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-2
+struct RangeRecord {
+    BigEndian<u16> start_glyph_id;
+    BigEndian<u16> end_glyph_id;
+    BigEndian<u16> start_coverage_index;
+};
+
+// https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#coverage-format-2
+struct CoverageFormat2 {
+    BigEndian<u16> coverage_format;
+    BigEndian<u16> range_count;
+    RangeRecord range_records[];
+};
+
 // https://learn.microsoft.com/en-us/typography/opentype/spec/chapter2#class-definition-table-format-2
 struct ClassRangeRecord {
     BigEndian<u16> start_glyph_id;
@@ -592,6 +613,41 @@ public:
         Offset16 script_list_offset;
         Offset16 feature_list_offset;
         Offset16 lookup_list_offset;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
+    struct PairPosFormat1 {
+        BigEndian<u16> pos_format;
+        Offset16 coverage_offset;
+        BigEndian<u16> value_format1;
+        BigEndian<u16> value_format2;
+        BigEndian<u16> pair_set_count;
+        Offset16 pair_set_offsets[];
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#value-record
+    struct ValueRecord {
+        BigEndian<i16> x_placement;
+        BigEndian<i16> y_placement;
+        BigEndian<i16> x_advance;
+        BigEndian<i16> y_advance;
+        Offset16 x_placement_device_offset;
+        Offset16 y_placement_device_offset;
+        Offset16 x_advance_device_offset;
+        Offset16 y_advance_device_offset;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
+    struct PairValueRecord {
+        BigEndian<u16> second_glyph;
+        ValueRecord value_record1;
+        ValueRecord value_record2;
+    };
+
+    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
+    struct PairSet {
+        BigEndian<u16> pair_value_count;
+        PairValueRecord pair_value_records[];
     };
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
