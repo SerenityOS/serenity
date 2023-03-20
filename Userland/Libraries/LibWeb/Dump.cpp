@@ -456,6 +456,9 @@ void dump_selector(StringBuilder& builder, CSS::Selector const& selector)
                 case CSS::Selector::SimpleSelector::PseudoClass::Type::Lang:
                     pseudo_class_description = "Lang";
                     break;
+                case CSS::Selector::SimpleSelector::PseudoClass::Type::Scope:
+                    pseudo_class_description = "Scope";
+                    break;
                 }
 
                 builder.appendff(" pseudo_class={}", pseudo_class_description);

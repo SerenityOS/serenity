@@ -202,7 +202,7 @@ static inline DOM::Element const* next_sibling_with_same_tag_name(DOM::Element c
     return nullptr;
 }
 
-static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element)
+static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoClass const& pseudo_class, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     switch (pseudo_class.type) {
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Link:
@@ -245,6 +245,8 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     }
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Root:
         return is<HTML::HTMLHtmlElement>(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Scope:
+        return scope ? &element == scope : is<HTML::HTMLHtmlElement>(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::FirstOfType:
         return !previous_sibling_with_same_tag_name(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::LastOfType:
@@ -373,7 +375,7 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
     return false;
 }
 
-static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element)
+static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     switch (component.type) {
     case CSS::Selector::SimpleSelector::Type::Universal:
@@ -390,7 +392,7 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     case CSS::Selector::SimpleSelector::Type::Attribute:
         return matches_attribute(component.attribute(), element);
     case CSS::Selector::SimpleSelector::Type::PseudoClass:
-        return matches_pseudo_class(component.pseudo_class(), element);
+        return matches_pseudo_class(component.pseudo_class(), element, scope);
     case CSS::Selector::SimpleSelector::Type::PseudoElement:
         // Pseudo-element matching/not-matching is handled in the top level matches().
         return true;
@@ -399,11 +401,11 @@ static inline bool matches(CSS::Selector::SimpleSelector const& component, DOM::
     }
 }
 
-static inline bool matches(CSS::Selector const& selector, int component_list_index, DOM::Element const& element)
+static inline bool matches(CSS::Selector const& selector, int component_list_index, DOM::Element const& element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     auto& relative_selector = selector.compound_selectors()[component_list_index];
     for (auto& simple_selector : relative_selector.simple_selectors) {
-        if (!matches(simple_selector, element))
+        if (!matches(simple_selector, element, scope))
             return false;
     }
     switch (relative_selector.combinator) {
@@ -414,7 +416,7 @@ static inline bool matches(CSS::Selector const& selector, int component_list_ind
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<DOM::Element>(*ancestor))
                 continue;
-            if (matches(selector, component_list_index - 1, static_cast<DOM::Element const&>(*ancestor)))
+            if (matches(selector, component_list_index - 1, static_cast<DOM::Element const&>(*ancestor), scope))
                 return true;
         }
         return false;
@@ -422,16 +424,16 @@ static inline bool matches(CSS::Selector const& selector, int component_list_ind
         VERIFY(component_list_index != 0);
         if (!element.parent() || !is<DOM::Element>(*element.parent()))
             return false;
-        return matches(selector, component_list_index - 1, static_cast<DOM::Element const&>(*element.parent()));
+        return matches(selector, component_list_index - 1, static_cast<DOM::Element const&>(*element.parent()), scope);
     case CSS::Selector::Combinator::NextSibling:
         VERIFY(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())
-            return matches(selector, component_list_index - 1, *sibling);
+            return matches(selector, component_list_index - 1, *sibling, scope);
         return false;
     case CSS::Selector::Combinator::SubsequentSibling:
         VERIFY(component_list_index != 0);
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
-            if (matches(selector, component_list_index - 1, *sibling))
+            if (matches(selector, component_list_index - 1, *sibling, scope))
                 return true;
         }
         return false;
@@ -441,14 +443,14 @@ static inline bool matches(CSS::Selector const& selector, int component_list_ind
     VERIFY_NOT_REACHED();
 }
 
-bool matches(CSS::Selector const& selector, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element)
+bool matches(CSS::Selector const& selector, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> pseudo_element, JS::GCPtr<DOM::ParentNode const> scope)
 {
     VERIFY(!selector.compound_selectors().is_empty());
     if (pseudo_element.has_value() && selector.pseudo_element() != pseudo_element)
         return false;
     if (!pseudo_element.has_value() && selector.pseudo_element().has_value())
         return false;
-    return matches(selector, selector.compound_selectors().size() - 1, element);
+    return matches(selector, selector.compound_selectors().size() - 1, element, scope);
 }
 
 }

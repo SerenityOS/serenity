@@ -111,6 +111,7 @@ public:
                 Where,
                 Active,
                 Lang,
+                Scope,
             };
             Type type;
 
@@ -292,6 +293,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "where"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Lang:
         return "lang"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Scope:
+        return "scope"sv;
     }
     VERIFY_NOT_REACHED();
 }
