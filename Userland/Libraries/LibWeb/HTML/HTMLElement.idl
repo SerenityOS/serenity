@@ -1,3 +1,4 @@
+#import <CSS/ElementCSSInlineStyle.idl>
 #import <HTML/DOMStringMap.idl>
 #import <DOM/EventHandler.idl>
 
@@ -37,3 +38,5 @@ interface mixin HTMLOrSVGElement {
     [CEReactions, Reflect] attribute boolean autofocus;
     [CEReactions] attribute long tabIndex;
 };
+
+HTMLElement includes ElementCSSInlineStyle;

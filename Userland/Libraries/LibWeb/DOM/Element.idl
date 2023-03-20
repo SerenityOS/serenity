@@ -1,5 +1,4 @@
 #import <ARIA/ARIAMixin.idl>
-#import <CSS/CSSStyleDeclaration.idl>
 #import <DOM/Attr.idl>
 #import <DOM/ChildNode.idl>
 #import <DOM/DOMTokenList.idl>
@@ -61,8 +60,6 @@ interface Element : Node {
 
     readonly attribute Element? nextElementSibling;
     readonly attribute Element? previousElementSibling;
-
-    [ImplementedAs=style_for_bindings] readonly attribute CSSStyleDeclaration style;
 
     DOMRect getBoundingClientRect();
     DOMRectList getClientRects();
