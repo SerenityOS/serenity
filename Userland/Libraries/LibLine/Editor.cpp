@@ -1709,6 +1709,8 @@ void Style::unify_with(Style const& other, bool prefer_other)
     // Unify links.
     if (prefer_other || m_hyperlink.is_empty())
         m_hyperlink = other.hyperlink();
+
+    m_is_empty &= other.m_is_empty;
 }
 
 DeprecatedString Style::to_deprecated_string() const
