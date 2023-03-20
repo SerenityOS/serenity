@@ -89,8 +89,10 @@ static inline bool matches_checked_pseudo_class(DOM::Element const& element)
         }
     }
 
-    // FIXME: - option elements whose selectedness is true
-
+    // - option elements whose selectedness is true
+    if (is<HTML::HTMLOptionElement>(element)) {
+        return static_cast<HTML::HTMLOptionElement const&>(element).selected();
+    }
     return false;
 }
 
