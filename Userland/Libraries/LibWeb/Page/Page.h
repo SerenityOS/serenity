@@ -203,6 +203,7 @@ public:
     virtual void page_did_update_cookie(Web::Cookie::Cookie) { }
     virtual void page_did_update_resource_count(i32) { }
     virtual String page_did_request_new_tab(HTML::ActivateTab) { return {}; }
+    virtual void page_did_request_activate_tab() { }
     virtual void page_did_close_browsing_context(HTML::BrowsingContext const&) { }
 
     virtual void request_file(FileRequest) = 0;

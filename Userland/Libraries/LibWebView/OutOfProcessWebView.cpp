@@ -480,6 +480,12 @@ String OutOfProcessWebView::notify_server_did_request_new_tab(Badge<WebContentCl
     return {};
 }
 
+void OutOfProcessWebView::notify_server_did_request_activate_tab(Badge<WebContentClient>)
+{
+    if (on_activate_tab)
+        on_activate_tab();
+}
+
 void OutOfProcessWebView::notify_server_did_close_browsing_context(Badge<WebContentClient>)
 {
     if (on_close)

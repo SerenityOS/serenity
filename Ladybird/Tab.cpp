@@ -64,6 +64,10 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
 
+    QObject::connect(m_view, &WebContentView::activate_tab, [this] {
+        m_window->activate_tab(tab_index());
+    });
+
     QObject::connect(m_view, &WebContentView::close, [this] {
         m_window->close_tab(tab_index());
     });

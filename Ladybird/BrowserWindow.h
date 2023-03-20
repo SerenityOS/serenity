@@ -36,6 +36,7 @@ public slots:
     void tab_title_changed(int index, QString const&);
     void tab_favicon_changed(int index, QIcon icon);
     Tab& new_tab(QString const&, Web::HTML::ActivateTab);
+    void activate_tab(int index);
     void close_tab(int index);
     void close_current_tab();
     void open_next_tab();
