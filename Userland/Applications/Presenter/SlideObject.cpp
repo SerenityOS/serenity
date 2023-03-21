@@ -145,12 +145,15 @@ ErrorOr<void> HTMLElement::serialize(StringBuilder& builder) const
         // FIXME: Escape the value string as necessary.
         TRY(builder.try_appendff(" {}='{}'", key, value));
     }
-    TRY(builder.try_append(" style=\""sv));
-    for (auto const& [key, value] : style) {
-        // FIXME: Escape the value string as necessary.
-        TRY(builder.try_appendff(" {}: {};", key, value));
+    if (!style.is_empty()) {
+        TRY(builder.try_append(" style=\""sv));
+        for (auto const& [key, value] : style) {
+            // FIXME: Escape the value string as necessary.
+            TRY(builder.try_appendff(" {}: {};", key, value));
+        }
+        TRY(builder.try_append("\""sv));
     }
-    TRY(builder.try_append("\">"sv));
+    TRY(builder.try_append(">"sv));
     if (!inner_text.is_empty())
         TRY(builder.try_append(inner_text));
     for (auto const& child : children) {
