@@ -9,7 +9,7 @@
 
 #include "ImageCodecPluginLadybird.h"
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <QImage>
 
 namespace Ladybird {

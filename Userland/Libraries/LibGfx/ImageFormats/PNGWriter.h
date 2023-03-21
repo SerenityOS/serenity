@@ -10,7 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/Vector.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/PNGShared.h>
+#include <LibGfx/ImageFormats/PNGShared.h>
 
 namespace Gfx {
 

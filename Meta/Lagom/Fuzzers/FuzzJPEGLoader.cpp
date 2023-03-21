@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/JPEGLoader.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <stddef.h>
 #include <stdint.h>
 

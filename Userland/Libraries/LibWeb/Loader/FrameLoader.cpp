@@ -9,7 +9,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/SourceGenerator.h>
 #include <LibGemini/Document.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
 

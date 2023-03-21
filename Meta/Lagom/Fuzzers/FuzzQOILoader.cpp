@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/QOILoader.h>
+#include <LibGfx/ImageFormats/QOILoader.h>
 #include <stddef.h>
 #include <stdint.h>
 

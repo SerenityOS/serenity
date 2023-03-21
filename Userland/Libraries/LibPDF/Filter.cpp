@@ -6,7 +6,7 @@
 
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
-#include <LibGfx/JPEGLoader.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 

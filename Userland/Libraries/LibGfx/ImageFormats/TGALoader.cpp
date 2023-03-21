@@ -7,7 +7,7 @@
 #include <AK/Span.h>
 #include <AK/StdLibExtraDetails.h>
 #include <AK/String.h>
-#include <LibGfx/TGALoader.h>
+#include <LibGfx/ImageFormats/TGALoader.h>
 
 namespace Gfx {
 

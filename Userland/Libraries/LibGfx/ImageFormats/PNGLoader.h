@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2022, Tom Needham <06needhamt@gmail.com>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
 
-struct TGALoadingContext;
+struct PNGLoadingContext;
 
-class TGAImageDecoderPlugin final : public ImageDecoderPlugin {
+class PNGImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
-    static ErrorOr<bool> validate_before_create(ReadonlyBytes);
+    static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    virtual ~TGAImageDecoderPlugin() override;
-    TGAImageDecoderPlugin(u8 const*, size_t);
+    virtual ~PNGImageDecoderPlugin() override;
 
     virtual IntSize size() override;
     virtual void set_volatile() override;
@@ -31,8 +30,9 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    bool decode_tga_header();
-    OwnPtr<TGALoadingContext> m_context;
+    PNGImageDecoderPlugin(u8 const*, size_t);
+
+    OwnPtr<PNGLoadingContext> m_context;
 };
 
 }

@@ -7,7 +7,7 @@
 #include <AK/Endian.h>
 #include <AK/MemoryStream.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/QOILoader.h>
+#include <LibGfx/ImageFormats/QOILoader.h>
 
 namespace Gfx {
 

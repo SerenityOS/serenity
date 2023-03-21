@@ -13,7 +13,7 @@
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Try.h>
-#include <LibGfx/GIFLoader.h>
+#include <LibGfx/ImageFormats/GIFLoader.h>
 #include <string.h>
 
 namespace Gfx {

@@ -20,7 +20,7 @@
 #include <LibCore/MimeData.h>
 #include <LibCore/System.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ShareableBitmap.h>
 #include <errno.h>
 #include <fcntl.h>

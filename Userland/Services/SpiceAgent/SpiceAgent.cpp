@@ -7,11 +7,11 @@
 #include "SpiceAgent.h"
 #include "ConnectionToClipboardServer.h"
 #include <AK/DeprecatedString.h>
-#include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/JPEGLoader.h>
-#include <LibGfx/PNGLoader.h>
-#include <LibGfx/PNGWriter.h>
+#include <LibGfx/ImageFormats/BMPLoader.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <memory.h>
 #include <unistd.h>
 

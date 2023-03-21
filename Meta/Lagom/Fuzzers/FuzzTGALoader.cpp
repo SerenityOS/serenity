@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/TGALoader.h>
+#include <LibGfx/ImageFormats/TGALoader.h>
 #include <stddef.h>
 #include <stdint.h>
 

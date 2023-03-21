@@ -1,24 +1,26 @@
 /*
- * Copyright (c) 2020, Paul Roukema <roukemap@gmail.com>
+ * Copyright (c) 2020, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <LibGfx/ImageDecoder.h>
+#include <AK/MemoryStream.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
 
-struct ICOLoadingContext;
+struct JPEGLoadingContext;
 
-class ICOImageDecoderPlugin final : public ImageDecoderPlugin {
+// For the specification, see: https://www.w3.org/Graphics/JPEG/itu-t81.pdf
+
+class JPEGImageDecoderPlugin : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    virtual ~ICOImageDecoderPlugin() override;
-
+    virtual ~JPEGImageDecoderPlugin() override;
     virtual IntSize size() override;
     virtual void set_volatile() override;
     [[nodiscard]] virtual bool set_nonvolatile(bool& was_purged) override;
@@ -30,10 +32,9 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    ICOImageDecoderPlugin(u8 const*, size_t);
-    static ErrorOr<void> load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index);
+    JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream>);
 
-    OwnPtr<ICOLoadingContext> m_context;
+    OwnPtr<JPEGLoadingContext> m_context;
 };
 
 }

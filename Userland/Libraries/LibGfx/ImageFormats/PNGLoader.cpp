@@ -9,8 +9,8 @@
 #include <AK/Endian.h>
 #include <AK/Vector.h>
 #include <LibCompress/Zlib.h>
-#include <LibGfx/PNGLoader.h>
-#include <LibGfx/PNGShared.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/PNGShared.h>
 #include <string.h>
 
 namespace Gfx {

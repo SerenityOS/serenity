@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/BMPLoader.h>
+#include <LibGfx/ImageFormats/BMPLoader.h>
 #include <stdio.h>
 
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)

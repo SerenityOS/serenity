@@ -6,18 +6,19 @@
 
 #pragma once
 
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/Bitmap.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
 
-struct PNGLoadingContext;
+struct GIFLoadingContext;
 
-class PNGImageDecoderPlugin final : public ImageDecoderPlugin {
+class GIFImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    virtual ~PNGImageDecoderPlugin() override;
+    virtual ~GIFImageDecoderPlugin() override;
 
     virtual IntSize size() override;
     virtual void set_volatile() override;
@@ -30,9 +31,9 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    PNGImageDecoderPlugin(u8 const*, size_t);
+    GIFImageDecoderPlugin(u8 const*, size_t);
 
-    OwnPtr<PNGLoadingContext> m_context;
+    OwnPtr<GIFLoadingContext> m_context;
 };
 
 }

@@ -11,7 +11,7 @@
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/PortableImageLoaderCommon.h>
+#include <LibGfx/ImageFormats/PortableImageLoaderCommon.h>
 
 namespace Gfx {
 

@@ -11,7 +11,7 @@
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/QOIWriter.h>
+#include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibTest/TestCase.h>
 
 #ifdef AK_OS_SERENITY
