@@ -108,6 +108,7 @@ std::vector<clang::QualType> get_all_qualified_types(clang::QualType const& type
 struct FieldValidationResult {
     bool is_valid { false };
     bool is_wrapped_in_gcptr { false };
+    bool needs_visiting { false };
 };
 
 FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
@@ -124,6 +125,7 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
                 if (record_inherits_from_cell(*pointee)) {
                     result.is_valid = false;
                     result.is_wrapped_in_gcptr = false;
+                    result.needs_visiting = true;
                     return result;
                 }
             }
@@ -132,6 +134,7 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
                 if (record_inherits_from_cell(*pointee)) {
                     result.is_valid = false;
                     result.is_wrapped_in_gcptr = false;
+                    result.needs_visiting = true;
                     return result;
                 }
             }
@@ -154,6 +157,7 @@ FieldValidationResult validate_field(clang::FieldDecl const* field_decl)
 
             result.is_wrapped_in_gcptr = true;
             result.is_valid = record_inherits_from_cell(*record_decl);
+            result.needs_visiting = true;
         }
     }
 
@@ -168,7 +172,13 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
     if (!record || !record->isCompleteDefinition() || (!record->isClass() && !record->isStruct()))
         return;
 
+    // Cell triggers a bunch of warnings for its empty visit_edges implementation, but
+    // it doesn't have any members anyways so it's fine to just ignore.
+    if (record->getQualifiedNameAsString() == "JS::Cell")
+        return;
+
     auto& diag_engine = result.Context->getDiagnostics();
+    std::vector<clang::FieldDecl const*> fields_that_need_visiting;
 
     for (clang::FieldDecl const* field : record->fields()) {
         auto validation_results = validate_field(field);
@@ -187,6 +197,8 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
                             << "JS::GCPtr";
                 }
             }
+        } else if (validation_results.needs_visiting) {
+            fields_that_need_visiting.push_back(field);
         }
     }
 
@@ -225,5 +237,36 @@ void CollectCellsHandler::run(clang::ast_matchers::MatchFinder::MatchResult cons
     if (!call_to_base_visit_edges_found) {
         auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Missing call to Base::visit_edges");
         diag_engine.Report(visit_edges_method->getBeginLoc(), diag_id);
+    }
+
+    // Search for uses of all fields that need visiting. We don't ensure they are _actually_ visited
+    // with a call to visitor.visit(...), as that is too complex. Instead, we just assume that if the
+    // field is accessed at all, then it is visited.
+
+    if (fields_that_need_visiting.empty())
+        return;
+
+    MatchFinder field_access_finder;
+    SimpleCollectMatchesCallback<clang::MemberExpr> field_access_callback("member-expr");
+
+    auto field_access_matcher = memberExpr(
+        hasAncestor(cxxMethodDecl(hasName("visit_edges"))),
+        hasObjectExpression(hasType(pointsTo(cxxRecordDecl(hasName(record->getName()))))))
+                                    .bind("member-expr");
+
+    field_access_finder.addMatcher(field_access_matcher, &field_access_callback);
+    field_access_finder.matchAST(visit_edges_method->getASTContext());
+
+    std::unordered_set<std::string> fields_that_are_visited;
+    for (auto const* member_expr : field_access_callback.matches())
+        fields_that_are_visited.insert(member_expr->getMemberNameInfo().getAsString());
+
+    auto diag_id = diag_engine.getCustomDiagID(clang::DiagnosticsEngine::Warning, "GC-allocated member is not visited in %0::visit_edges");
+
+    for (auto const* field : fields_that_need_visiting) {
+        if (!fields_that_are_visited.contains(field->getNameAsString())) {
+            auto builder = diag_engine.Report(field->getBeginLoc(), diag_id);
+            builder << record->getName();
+        }
     }
 }
