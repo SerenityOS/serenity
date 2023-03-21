@@ -22,7 +22,14 @@ void Request::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_header_list);
-    for (auto pending_response : m_pending_responses)
+    visitor.visit(m_client);
+    m_reserved_client.visit(
+        [&](JS::GCPtr<HTML::EnvironmentSettingsObject> const& value) { visitor.visit(value); },
+        [](auto const&) {});
+    m_window.visit(
+        [&](JS::GCPtr<HTML::EnvironmentSettingsObject> const& value) { visitor.visit(value); },
+        [](auto const&) {});
+    for (auto const& pending_response : m_pending_responses)
         visitor.visit(pending_response);
 }
 

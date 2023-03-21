@@ -355,6 +355,17 @@ void Intrinsics::visit_edges(Visitor& visitor)
     visitor.visit(m_async_generator_prototype);
     visitor.visit(m_generator_prototype);
     visitor.visit(m_intl_segments_prototype);
+    visitor.visit(m_eval_function);
+    visitor.visit(m_is_finite_function);
+    visitor.visit(m_is_nan_function);
+    visitor.visit(m_parse_float_function);
+    visitor.visit(m_parse_int_function);
+    visitor.visit(m_decode_uri_function);
+    visitor.visit(m_decode_uri_component_function);
+    visitor.visit(m_encode_uri_function);
+    visitor.visit(m_encode_uri_component_function);
+    visitor.visit(m_escape_function);
+    visitor.visit(m_unescape_function);
     visitor.visit(m_array_prototype_values_function);
     visitor.visit(m_date_constructor_now_function);
     visitor.visit(m_eval_function);
