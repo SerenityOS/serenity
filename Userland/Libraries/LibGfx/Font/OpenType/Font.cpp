@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
  * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2023, Lukas Affolter <git@lukasach.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -988,6 +989,27 @@ RefPtr<Gfx::Bitmap> Font::color_bitmap(u32 glyph_id) const
 
 Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 {
+    auto read_value_record = [&](u16 value_format, FixedMemoryStream& stream) -> ValueRecord {
+        ValueRecord value_record;
+        if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT))
+            value_record.x_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT))
+            value_record.y_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE))
+            value_record.x_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE))
+            value_record.y_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT_DEVICE))
+            value_record.x_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT_DEVICE))
+            value_record.y_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE_DEVICE))
+            value_record.x_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+        if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE_DEVICE))
+            value_record.y_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
+        return value_record;
+    };
+
     auto const& header = this->header();
     dbgln_if(OPENTYPE_GPOS_DEBUG, "GPOS header:");
     dbgln_if(OPENTYPE_GPOS_DEBUG, "   Version: {}.{}", header.major_version, header.minor_version);
@@ -1178,29 +1200,8 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
                 auto item_slice = pair_pos_format_slice.slice(sizeof(PairPosFormat2) + item_offset);
                 FixedMemoryStream stream(item_slice);
 
-                auto read_value_record = [&](u16 value_format) -> ValueRecord {
-                    ValueRecord value_record;
-                    if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT))
-                        value_record.x_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT))
-                        value_record.y_placement = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE))
-                        value_record.x_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE))
-                        value_record.y_advance = stream.read_value<BigEndian<i16>>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::X_PLACEMENT_DEVICE))
-                        value_record.x_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::Y_PLACEMENT_DEVICE))
-                        value_record.y_placement_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::X_ADVANCE_DEVICE))
-                        value_record.x_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-                    if (value_format & static_cast<i16>(ValueFormat::Y_ADVANCE_DEVICE))
-                        value_record.y_advance_device_offset = stream.read_value<Offset16>().release_value_but_fixme_should_propagate_errors();
-                    return value_record;
-                };
-
-                [[maybe_unused]] auto value_record1 = read_value_record(pair_pos_format2.value_format1);
-                [[maybe_unused]] auto value_record2 = read_value_record(pair_pos_format2.value_format2);
+                [[maybe_unused]] auto value_record1 = read_value_record(pair_pos_format2.value_format1, stream);
+                [[maybe_unused]] auto value_record2 = read_value_record(pair_pos_format2.value_format2, stream);
 
                 dbgln_if(OPENTYPE_GPOS_DEBUG, "Returning x advance {}", value_record1.x_advance);
                 return value_record1.x_advance;
