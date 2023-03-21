@@ -280,7 +280,9 @@ Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& st
 {
     unsigned format_pos = 0;
     unsigned string_pos = 0;
+
     struct tm tm = {};
+    tm.tm_isdst = -1;
 
     auto parsing_failed = false;
     auto tm_represents_utc_time = false;
@@ -549,4 +551,5 @@ Optional<DateTime> DateTime::parse(StringView format, DeprecatedString const& st
 
     return DateTime::from_timestamp(mktime(&tm));
 }
+
 }
