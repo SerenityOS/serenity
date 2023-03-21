@@ -104,21 +104,8 @@ int DeprecatedFile::leak_fd()
 
 bool DeprecatedFile::is_device() const
 {
-    return is_device(fd());
-}
-
-bool DeprecatedFile::is_device(DeprecatedString const& filename)
-{
     struct stat st;
-    if (stat(filename.characters(), &st) < 0)
-        return false;
-    return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
-}
-
-bool DeprecatedFile::is_device(int fd)
-{
-    struct stat st;
-    if (fstat(fd, &st) < 0)
+    if (fstat(fd(), &st) < 0)
         return false;
     return S_ISBLK(st.st_mode) || S_ISCHR(st.st_mode);
 }
@@ -131,14 +118,6 @@ bool DeprecatedFile::is_block_device() const
     return S_ISBLK(stat.st_mode);
 }
 
-bool DeprecatedFile::is_block_device(DeprecatedString const& filename)
-{
-    struct stat st;
-    if (stat(filename.characters(), &st) < 0)
-        return false;
-    return S_ISBLK(st.st_mode);
-}
-
 bool DeprecatedFile::is_char_device() const
 {
     struct stat stat;
@@ -147,31 +126,10 @@ bool DeprecatedFile::is_char_device() const
     return S_ISCHR(stat.st_mode);
 }
 
-bool DeprecatedFile::is_char_device(DeprecatedString const& filename)
-{
-    struct stat st;
-    if (stat(filename.characters(), &st) < 0)
-        return false;
-    return S_ISCHR(st.st_mode);
-}
-
 bool DeprecatedFile::is_directory() const
 {
-    return is_directory(fd());
-}
-
-bool DeprecatedFile::is_directory(DeprecatedString const& filename)
-{
     struct stat st;
-    if (stat(filename.characters(), &st) < 0)
-        return false;
-    return S_ISDIR(st.st_mode);
-}
-
-bool DeprecatedFile::is_directory(int fd)
-{
-    struct stat st;
-    if (fstat(fd, &st) < 0)
+    if (fstat(fd(), &st) < 0)
         return false;
     return S_ISDIR(st.st_mode);
 }
@@ -184,62 +142,9 @@ bool DeprecatedFile::is_link() const
     return S_ISLNK(stat.st_mode);
 }
 
-bool DeprecatedFile::is_link(DeprecatedString const& filename)
-{
-    struct stat st;
-    if (lstat(filename.characters(), &st) < 0)
-        return false;
-    return S_ISLNK(st.st_mode);
-}
-
 bool DeprecatedFile::looks_like_shared_library() const
 {
-    return DeprecatedFile::looks_like_shared_library(m_filename);
-}
-
-bool DeprecatedFile::looks_like_shared_library(DeprecatedString const& filename)
-{
-    return filename.ends_with(".so"sv) || filename.contains(".so."sv);
-}
-
-bool DeprecatedFile::can_delete_or_move(StringView path)
-{
-    VERIFY(!path.is_empty());
-    auto directory = LexicalPath::dirname(path);
-    auto directory_has_write_access = !Core::System::access(directory, W_OK).is_error();
-    if (!directory_has_write_access)
-        return false;
-
-    auto stat_or_empty = [](StringView path) {
-        auto stat_or_error = Core::System::stat(path);
-        if (stat_or_error.is_error()) {
-            struct stat stat { };
-            return stat;
-        }
-        return stat_or_error.release_value();
-    };
-
-    auto directory_stat = stat_or_empty(directory);
-    bool is_directory_sticky = directory_stat.st_mode & S_ISVTX;
-    if (!is_directory_sticky)
-        return true;
-
-    // Directory is sticky, only the file owner, directory owner, and root can modify (rename, remove) it.
-    auto user_id = geteuid();
-    return user_id == 0 || directory_stat.st_uid == user_id || stat_or_empty(path).st_uid == user_id;
-}
-
-bool DeprecatedFile::exists(StringView filename)
-{
-    return !Core::System::stat(filename).is_error();
-}
-
-ErrorOr<size_t> DeprecatedFile::size(DeprecatedString const& filename)
-{
-    struct stat st;
-    if (stat(filename.characters(), &st) < 0)
-        return Error::from_errno(errno);
-    return st.st_size;
+    return m_filename.ends_with(".so"sv) || m_filename.contains(".so."sv);
 }
 
 DeprecatedString DeprecatedFile::real_path_for(DeprecatedString const& filename)
@@ -268,7 +173,7 @@ DeprecatedString DeprecatedFile::current_working_directory()
 
 DeprecatedString DeprecatedFile::absolute_path(DeprecatedString const& path)
 {
-    if (DeprecatedFile::exists(path))
+    if (!Core::System::stat(path).is_error())
         return DeprecatedFile::real_path_for(path);
 
     if (path.starts_with("/"sv))
@@ -557,41 +462,6 @@ ErrorOr<void, DeprecatedFile::CopyError> DeprecatedFile::copy_directory(Deprecat
         };
         if (utimensat(AT_FDCWD, dst_path.characters(), times, 0) < 0)
             return CopyError { errno, false };
-    }
-
-    return {};
-}
-
-ErrorOr<void> DeprecatedFile::link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path)
-{
-    int duplicate_count = 0;
-    while (access(get_duplicate_name(dst_path, duplicate_count).characters(), F_OK) == 0) {
-        ++duplicate_count;
-    }
-    if (duplicate_count != 0) {
-        return link_file(get_duplicate_name(dst_path, duplicate_count), src_path);
-    }
-    if (symlink(src_path.characters(), dst_path.characters()) < 0)
-        return Error::from_errno(errno);
-    return {};
-}
-
-ErrorOr<void> DeprecatedFile::remove(StringView path, RecursionMode mode)
-{
-    auto path_stat = TRY(Core::System::lstat(path));
-
-    if (S_ISDIR(path_stat.st_mode) && mode == RecursionMode::Allowed) {
-        auto di = DirIterator(path, DirIterator::SkipParentAndBaseDir);
-        if (di.has_error())
-            return di.error();
-
-        while (di.has_next()) {
-            TRY(remove(di.next_full_path(), RecursionMode::Allowed));
-        }
-
-        TRY(Core::System::rmdir(path));
-    } else {
-        TRY(Core::System::unlink(path));
     }
 
     return {};
