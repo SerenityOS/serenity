@@ -1122,7 +1122,7 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 
                 if (!coverage_index.has_value()) {
                     dbgln_if(OPENTYPE_GPOS_DEBUG, "Glyph ID not covered by table");
-                    return {};
+                    continue;
                 }
 
                 size_t value1_size = popcount(static_cast<u32>(pair_pos_format1.value_format1 & 0xff)) * sizeof(u16);
@@ -1202,7 +1202,7 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
 
                 if (!left_class.has_value() || !right_class.has_value()) {
                     dbgln_if(OPENTYPE_GPOS_DEBUG, "Need glyph class for both sides");
-                    return {};
+                    continue;
                 }
 
                 dbgln_if(OPENTYPE_GPOS_DEBUG, "Classes: {}, {}", left_class.value(), right_class.value());
