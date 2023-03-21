@@ -349,6 +349,11 @@ Optional<Certificate> Certificate::parse_asn1(ReadonlyBytes buffer, bool)
             return {};
     }
 
+    // self issued
+    {
+        certificate.is_self_issued = certificate.issuer_identifier_string() == certificate.subject_identifier_string();
+    }
+
     // extensions
     {
         if (certificate.version == 2) {

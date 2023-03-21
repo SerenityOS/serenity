@@ -60,9 +60,11 @@ public:
     bool is_allowed_to_sign_certificate { false };
     bool is_certificate_authority { false };
     Optional<size_t> path_length_constraint {};
+    bool is_self_issued { false };
 
     static Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false);
 
+    bool is_self_signed();
     bool is_valid() const;
 
     DeprecatedString subject_identifier_string() const
@@ -124,6 +126,9 @@ public:
         }
         return cert_name.to_deprecated_string();
     }
+
+private:
+    Optional<bool> m_is_self_signed;
 };
 
 class DefaultRootCACertificates {

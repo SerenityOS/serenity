@@ -115,6 +115,23 @@ bool Certificate::is_valid() const
     return true;
 }
 
+// https://www.ietf.org/rfc/rfc5280.html#page-12
+bool Certificate::is_self_signed()
+{
+    if (m_is_self_signed.has_value())
+        return *m_is_self_signed;
+
+    // Self-signed certificates are self-issued certificates where the digital
+    // signature may be verified by the public key bound into the certificate.
+    if (!this->is_self_issued)
+        m_is_self_signed.emplace(false);
+
+    // FIXME: Actually check if we sign ourself
+
+    m_is_self_signed.emplace(true);
+    return *m_is_self_signed;
+}
+
 void TLSv12::try_disambiguate_error() const
 {
     dbgln("Possible failure cause(s): ");
