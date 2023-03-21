@@ -15,5 +15,6 @@ namespace Web::HTML::TokenizedFeature {
     }
 
 TOKENIZED_FEATURE(NoOpener);
+TOKENIZED_FEATURE(NoReferrer);
 
 }
