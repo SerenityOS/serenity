@@ -157,7 +157,7 @@ public:
     using OriginType = Variant<Origin, HTML::Origin>;
     using PolicyContainerType = Variant<PolicyContainer, HTML::PolicyContainer>;
     using ReferrerType = Variant<Referrer, AK::URL>;
-    using ReservedClientType = Variant<Empty, JS::GCPtr<HTML::Environment>, JS::GCPtr<HTML::EnvironmentSettingsObject>>;
+    using ReservedClientType = Variant<Empty, HTML::Environment*, JS::GCPtr<HTML::EnvironmentSettingsObject>>;
     using WindowType = Variant<Window, JS::GCPtr<HTML::EnvironmentSettingsObject>>;
 
     [[nodiscard]] static JS::NonnullGCPtr<Request> create(JS::VM&);
