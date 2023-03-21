@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Srimanta Barua <srimanta.barua1@gmail.com>
  * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2023, Lukas Affolter <git@lukasach.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -635,19 +636,6 @@ public:
         Offset16 y_placement_device_offset;
         Offset16 x_advance_device_offset;
         Offset16 y_advance_device_offset;
-    };
-
-    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
-    struct PairValueRecord {
-        BigEndian<u16> second_glyph;
-        ValueRecord value_record1;
-        ValueRecord value_record2;
-    };
-
-    // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-1-adjustments-for-glyph-pairs
-    struct PairSet {
-        BigEndian<u16> pair_value_count;
-        PairValueRecord pair_value_records[];
     };
 
     // https://learn.microsoft.com/en-us/typography/opentype/spec/gpos#pair-adjustment-positioning-format-2-class-pair-adjustment
