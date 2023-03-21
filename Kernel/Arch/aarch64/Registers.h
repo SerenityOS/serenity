@@ -1346,16 +1346,16 @@ static_assert(sizeof(PMCCNTR_EL0) == 8);
 
 // D17.2.30 CPACR_EL1, Architectural Feature Access Control Register
 struct alignas(u64) CPACR_EL1 {
-    int _reserved0 : 16 = 0;
-    int ZEN : 2;
-    int _reserved18 : 2 = 0;
-    int FPEN : 2;
-    int _reserved22 : 2 = 0;
-    int SMEN : 2;
-    int _reserved26 : 2 = 0;
-    int TTA : 1;
-    int _reserved29 : 3 = 0;
-    int _reserved32 : 32 = 0;
+    u64 _reserved0 : 16 = 0;
+    u64 ZEN : 2;
+    u64 _reserved18 : 2 = 0;
+    u64 FPEN : 2;
+    u64 _reserved22 : 2 = 0;
+    u64 SMEN : 2;
+    u64 _reserved26 : 2 = 0;
+    u64 TTA : 1;
+    u64 _reserved29 : 3 = 0;
+    u64 _reserved32 : 32 = 0;
 
     static inline void write(CPACR_EL1 cpacr_el1)
     {
