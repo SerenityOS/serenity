@@ -212,12 +212,12 @@ void AntiAliasingPainter::draw_line(FloatPoint actual_from, FloatPoint actual_to
 
 void AntiAliasingPainter::fill_path(Path const& path, Color color, Painter::WindingRule rule)
 {
-    m_underlying_painter.antialiased_fill_path(path, color, rule, m_transform.translation());
+    m_underlying_painter.antialiased_fill_path(path, color, rule, m_transform);
 }
 
 void AntiAliasingPainter::fill_path(Path const& path, PaintStyle const& paint_style, Painter::WindingRule rule)
 {
-    m_underlying_painter.antialiased_fill_path(path, paint_style, rule, m_transform.translation());
+    m_underlying_painter.antialiased_fill_path(path, paint_style, rule, m_transform);
 }
 
 void AntiAliasingPainter::stroke_path(Path const& path, Color color, float thickness)

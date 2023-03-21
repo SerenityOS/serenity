@@ -110,19 +110,15 @@ ALWAYS_INLINE void Painter::draw_scanline_for_fill_path(int y, T x_start, T x_en
 }
 
 template<Painter::FillPathMode fill_path_mode, typename ColorOrFunction>
-void Painter::fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset)
+void Painter::fill_path_impl(Path const& unscaled_path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<AffineTransform> const& maybe_transform)
 {
+    auto const transform = maybe_transform.value_or({});
+    auto path = unscaled_path.copy_transformed(transform);
     using GridCoordinateType = Conditional<fill_path_mode == FillPathMode::PlaceOnIntGrid, int, float>;
     using PointType = Point<GridCoordinateType>;
 
     auto draw_scanline = [&](int y, GridCoordinateType x1, GridCoordinateType x2) {
-        const auto draw_offset = offset.value_or({ 0, 0 });
-        const auto draw_origin = (path.bounding_box().top_left() + draw_offset).to_type<int>();
-        // FIMXE: Offset is added here to handle floating point translations in the AA painter,
-        // really this should be done there but this function is a bit too specialised.
-        y = floorf(y + draw_offset.y());
-        x1 += draw_offset.x();
-        x2 += draw_offset.x();
+        const auto draw_origin = (path.bounding_box().top_left()).to_type<int>();
         if (x1 > x2)
             swap(x1, x2);
         if constexpr (IsSameIgnoringCV<ColorOrFunction, Color>) {
@@ -282,17 +278,17 @@ void Painter::fill_path(Path const& path, PaintStyle const& paint_style, Painter
     });
 }
 
-void Painter::antialiased_fill_path(Path const& path, Color color, WindingRule rule, FloatPoint translation)
+void Painter::antialiased_fill_path(Path const& path, Color color, WindingRule rule, AffineTransform transform)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
-    fill_path_impl<FillPathMode::AllowFloatingPoints>(path, color, rule, translation);
+    fill_path_impl<FillPathMode::AllowFloatingPoints>(path, color, rule, transform);
 }
 
-void Painter::antialiased_fill_path(Path const& path, PaintStyle const& paint_style, WindingRule rule, FloatPoint translation)
+void Painter::antialiased_fill_path(Path const& path, PaintStyle const& paint_style, WindingRule rule, AffineTransform transform)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
     paint_style.paint(enclosing_int_rect(path.bounding_box()), [&](PaintStyle::SamplerFunction sampler) {
-        fill_path_impl<FillPathMode::AllowFloatingPoints>(path, move(sampler), rule, translation);
+        fill_path_impl<FillPathMode::AllowFloatingPoints>(path, move(sampler), rule, transform);
     });
 }
 

@@ -44,6 +44,7 @@ public:
 
     void translate(float dx, float dy) { m_transform.translate(dx, dy); }
     void translate(FloatPoint delta) { m_transform.translate(delta); }
+    void set_transform(AffineTransform transform) { m_transform = transform; }
 
     void draw_ellipse(IntRect const& a_rect, Color, int thickness);
 

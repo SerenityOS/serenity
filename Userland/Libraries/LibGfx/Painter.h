@@ -218,8 +218,8 @@ private:
     template<typename DrawGlyphFunction>
     void do_draw_text(FloatRect const&, Utf8View const& text, Font const&, TextAlignment, TextElision, TextWrapping, DrawGlyphFunction);
 
-    void antialiased_fill_path(Path const&, Color, WindingRule rule, FloatPoint translation);
-    void antialiased_fill_path(Path const&, PaintStyle const& paint_style, WindingRule rule, FloatPoint translation);
+    void antialiased_fill_path(Path const&, Color, WindingRule rule, AffineTransform transform);
+    void antialiased_fill_path(Path const&, PaintStyle const& paint_style, WindingRule rule, AffineTransform transform);
     enum class FillPathMode {
         PlaceOnIntGrid,
         AllowFloatingPoints,
@@ -227,7 +227,7 @@ private:
     template<typename T, typename TColorOrFunction>
     void draw_scanline_for_fill_path(int y, T x_start, T x_end, TColorOrFunction color);
     template<FillPathMode fill_path_mode, typename ColorOrFunction>
-    void fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<FloatPoint> offset = {});
+    void fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Painter::WindingRule winding_rule, Optional<AffineTransform> const& maybe_transform = {});
 };
 
 class PainterStateSaver {
