@@ -1085,9 +1085,6 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
                 dbgln_if(OPENTYPE_GPOS_DEBUG, "   valueFormat2: {}", pair_pos_format1.value_format2);
                 dbgln_if(OPENTYPE_GPOS_DEBUG, "   pairSetCount: {}", pair_pos_format1.pair_set_count);
 
-                if (pair_pos_format1.value_format1 == 0)
-                    continue;
-
                 auto get_coverage_index = [&](u16 glyph_id, Offset16 coverage_format_offset) -> Optional<u16> {
                     auto coverage_format_slice = pair_pos_format_slice.slice(coverage_format_offset);
                     auto const& coverage_format = *bit_cast<BigEndian<u16> const*>(coverage_format_slice.data());
@@ -1128,18 +1125,41 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
                     return {};
                 }
 
+                size_t value1_size = popcount(static_cast<u32>(pair_pos_format1.value_format1 & 0xff)) * sizeof(u16);
+                size_t value2_size = popcount(static_cast<u32>(pair_pos_format1.value_format2 & 0xff)) * sizeof(u16);
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "ValueSizes: {}, {}", value1_size, value2_size);
+
+                // Manually iterate over the PairSet table, as the size of each PairValueRecord is not known at compile time.
                 auto pair_set_offset = pair_pos_format1.pair_set_offsets[coverage_index.value()];
                 auto pair_set_slice = pair_pos_format_slice.slice(pair_set_offset);
 
-                auto const& pair_set = *bit_cast<GPOS::PairSet const*>(pair_set_slice.data());
+                FixedMemoryStream stream(pair_set_slice);
 
-                for (size_t k = 0; k < pair_set.pair_value_count; ++k) {
-                    auto pair_value_record = pair_set.pair_value_records[k];
-                    if (right_glyph_id == pair_value_record.second_glyph) {
-                        dbgln_if(OPENTYPE_GPOS_DEBUG, "Returning x advance {}", pair_value_record.value_record1.x_advance);
-                        return pair_value_record.value_record1.x_advance;
+                auto pair_value_count = stream.read_value<BigEndian<u16>>().release_value_but_fixme_should_propagate_errors();
+
+                bool found_matching_glyph = false;
+                for (size_t k = 0; k < pair_value_count; ++k) {
+                    auto second_glyph = stream.read_value<BigEndian<u16>>().release_value_but_fixme_should_propagate_errors();
+
+                    if (right_glyph_id == second_glyph) {
+                        dbgln_if(OPENTYPE_GPOS_DEBUG, "Found matching second glyph {}", second_glyph);
+                        found_matching_glyph = true;
+                        break;
                     }
+
+                    (void)stream.discard(value1_size + value2_size).release_value_but_fixme_should_propagate_errors();
                 }
+
+                if (!found_matching_glyph) {
+                    dbgln_if(OPENTYPE_GPOS_DEBUG, "Did not find second glyph matching {}", right_glyph_id);
+                    continue;
+                }
+
+                [[maybe_unused]] auto value_record1 = read_value_record(pair_pos_format1.value_format1, stream);
+                [[maybe_unused]] auto value_record2 = read_value_record(pair_pos_format1.value_format2, stream);
+
+                dbgln_if(OPENTYPE_GPOS_DEBUG, "Returning x advance {}", value_record1.x_advance);
+                return value_record1.x_advance;
             }
 
             else if (pair_pos_format == 2) {
