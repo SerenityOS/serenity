@@ -577,7 +577,7 @@ Messages::WebDriverClient::NewWindowResponse WebDriverConnection::new_window(Jso
     //    created browsing context should be in a new OS window. In all other cases the details of how the browsing
     //    context is presented to the user are implementation defined.
     // FIXME: Reuse code of window.open() instead of calling choose_a_browsing_context
-    auto [browsing_context, window_type] = m_page_client.page().top_level_browsing_context().choose_a_browsing_context("_blank"sv, true, Web::HTML::ActivateTab::No);
+    auto [browsing_context, window_type] = m_page_client.page().top_level_browsing_context().choose_a_browsing_context("_blank"sv, Web::HTML::TokenizedFeature::NoOpener::Yes, Web::HTML::ActivateTab::No);
 
     // 6. Let handle be the associated window handle of the newly created window.
     auto handle = browsing_context->window_handle();

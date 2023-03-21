@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/VisibilityState.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
@@ -172,7 +173,7 @@ public:
         WindowType window_type;
     };
 
-    ChosenBrowsingContext choose_a_browsing_context(StringView name, bool no_opener, ActivateTab = ActivateTab::Yes);
+    ChosenBrowsingContext choose_a_browsing_context(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab = ActivateTab::Yes);
 
     size_t document_tree_child_browsing_context_count() const;
 

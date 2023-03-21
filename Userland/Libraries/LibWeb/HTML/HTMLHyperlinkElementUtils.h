@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 
 namespace Web::HTML {
 
@@ -66,7 +67,7 @@ private:
     void update_href();
     bool cannot_navigate() const;
     DeprecatedString get_an_elements_target() const;
-    bool get_an_elements_noopener(StringView target) const;
+    TokenizedFeature::NoOpener get_an_elements_noopener(StringView target) const;
 
     Optional<AK::URL> m_url;
 };

@@ -43,6 +43,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Storage.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
@@ -223,6 +224,33 @@ static bool parse_boolean_feature(StringView value)
     return *parsed != 0;
 }
 
+// https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-window-open-features-parse-boolean
+template<Enum T>
+static T parse_boolean_feature(StringView value)
+{
+    // 1. If value is the empty string, then return true.
+    if (value.is_empty())
+        return T::Yes;
+
+    // 2. If value is "yes", then return true.
+    if (value == "yes"sv)
+        return T::Yes;
+
+    // 3. If value is "true", then return true.
+    if (value == "true"sv)
+        return T::Yes;
+
+    // 4. Let parsed be the result of parsing value as an integer.
+    auto parsed = value.to_int<i64>();
+
+    // 5. If parsed is an error, then set it to 0.
+    if (!parsed.has_value())
+        parsed = 0;
+
+    // 6. Return false if parsed is 0, and true otherwise.
+    return parsed == 0 ? T::No : T::Yes;
+}
+
 //  https://html.spec.whatwg.org/multipage/window-object.html#popup-window-is-requested
 static bool check_if_a_popup_window_is_requested(OrderedHashMap<DeprecatedString, DeprecatedString> const& tokenized_features)
 {
@@ -307,13 +335,13 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
     auto tokenized_features = tokenize_open_features(features);
 
     // 5. Let noopener and noreferrer be false.
-    auto no_opener = false;
+    auto no_opener = TokenizedFeature::NoOpener::No;
     auto no_referrer = false;
 
     // 6. If tokenizedFeatures["noopener"] exists, then:
     if (auto no_opener_feature = tokenized_features.get("noopener"sv); no_opener_feature.has_value()) {
         // 1. Set noopener to the result of parsing tokenizedFeatures["noopener"] as a boolean feature.
-        no_opener = parse_boolean_feature(*no_opener_feature);
+        no_opener = parse_boolean_feature<TokenizedFeature::NoOpener>(*no_opener_feature);
 
         // 2. Remove tokenizedFeatures["noopener"].
         tokenized_features.remove("noopener"sv);
@@ -330,7 +358,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
 
     // 8. If noreferrer is true, then set noopener to true.
     if (no_referrer)
-        no_opener = true;
+        no_opener = TokenizedFeature::NoOpener::Yes;
 
     // 9. Let target browsing context and windowType be the result of applying the rules for choosing a browsing context given target, source browsing context, and noopener.
     auto [target_browsing_context, window_type] = source_browsing_context->choose_a_browsing_context(target, no_opener);
@@ -399,12 +427,12 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
         }
 
         // 2. If noopener is false, then set target browsing context's opener browsing context to source browsing context.
-        if (!no_opener)
+        if (no_opener == TokenizedFeature::NoOpener::No)
             target_browsing_context->set_opener_browsing_context(source_browsing_context);
     }
 
     // 13. If noopener is true or windowType is "new with no opener", then return null.
-    if (no_opener || window_type == BrowsingContext::WindowType::NewWithNoOpener)
+    if (no_opener == TokenizedFeature::NoOpener::Yes || window_type == BrowsingContext::WindowType::NewWithNoOpener)
         return nullptr;
 
     // 14. Return target browsing context's WindowProxy object.
