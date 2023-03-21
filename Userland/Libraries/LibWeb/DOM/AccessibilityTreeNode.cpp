@@ -74,9 +74,9 @@ void AccessibilityTreeNode::serialize_tree_as_json(JsonObjectSerializer<StringBu
 void AccessibilityTreeNode::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(value());
-    for (auto child : children())
-        child->visit_edges(visitor);
+    visitor.visit(m_value);
+    for (auto const& child : m_children)
+        visitor.visit(child);
 }
 
 }

@@ -25,7 +25,8 @@ void CyclicModule::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_cycle_root);
-    for (auto module : m_async_parent_modules)
+    visitor.visit(m_top_level_capability);
+    for (auto const& module : m_async_parent_modules)
         visitor.visit(module);
 }
 
