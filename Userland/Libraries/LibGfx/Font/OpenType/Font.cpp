@@ -1041,6 +1041,12 @@ Optional<i16> GPOS::glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
         dbgln_if(OPENTYPE_GPOS_DEBUG, "  lookupFlag: {}", lookup.lookup_flag);
         dbgln_if(OPENTYPE_GPOS_DEBUG, "  subtableCount: {}", lookup.subtable_count);
 
+        // NOTE: We only support lookup type 2 (Pair adjustment) at the moment.
+        if (lookup.lookup_type != 2) {
+            dbgln_if(OPENTYPE_GPOS_DEBUG, "FIXME: Implement GPOS lookup type {}", lookup.lookup_type);
+            continue;
+        }
+
         for (size_t j = 0; j < lookup.subtable_count; ++j) {
             auto pair_pos_format_offset = lookup.subtable_offsets[j];
             auto pair_pos_format_slice = lookup_slice.slice(pair_pos_format_offset);
