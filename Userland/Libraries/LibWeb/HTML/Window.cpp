@@ -199,32 +199,6 @@ static OrderedHashMap<DeprecatedString, DeprecatedString> tokenize_open_features
 }
 
 // https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-window-open-features-parse-boolean
-static bool parse_boolean_feature(StringView value)
-{
-    // 1. If value is the empty string, then return true.
-    if (value.is_empty())
-        return true;
-
-    // 2. If value is "yes", then return true.
-    if (value == "yes"sv)
-        return true;
-
-    // 3. If value is "true", then return true.
-    if (value == "true"sv)
-        return true;
-
-    // 4. Let parsed be the result of parsing value as an integer.
-    auto parsed = value.to_int<i64>();
-
-    // 5. If parsed is an error, then set it to 0.
-    if (!parsed.has_value())
-        parsed = 0;
-
-    // 6. Return false if parsed is 0, and true otherwise.
-    return *parsed != 0;
-}
-
-// https://html.spec.whatwg.org/multipage/nav-history-apis.html#concept-window-open-features-parse-boolean
 template<Enum T>
 static T parse_boolean_feature(StringView value)
 {
@@ -252,66 +226,66 @@ static T parse_boolean_feature(StringView value)
 }
 
 //  https://html.spec.whatwg.org/multipage/window-object.html#popup-window-is-requested
-static bool check_if_a_popup_window_is_requested(OrderedHashMap<DeprecatedString, DeprecatedString> const& tokenized_features)
+static TokenizedFeature::Popup check_if_a_popup_window_is_requested(OrderedHashMap<DeprecatedString, DeprecatedString> const& tokenized_features)
 {
     // 1. If tokenizedFeatures is empty, then return false.
     if (tokenized_features.is_empty())
-        return false;
+        return TokenizedFeature::Popup::No;
 
     // 2. If tokenizedFeatures["popup"] exists, then return the result of parsing tokenizedFeatures["popup"] as a boolean feature.
     if (auto popup_feature = tokenized_features.get("popup"sv); popup_feature.has_value())
-        return parse_boolean_feature(*popup_feature);
+        return parse_boolean_feature<TokenizedFeature::Popup>(*popup_feature);
 
     // https://html.spec.whatwg.org/multipage/window-object.html#window-feature-is-set
-    auto check_if_a_window_feature_is_set = [&](StringView feature_name, bool default_value) {
+    auto check_if_a_window_feature_is_set = [&]<Enum T>(StringView feature_name, T default_value) {
         // 1. If tokenizedFeatures[featureName] exists, then return the result of parsing tokenizedFeatures[featureName] as a boolean feature.
         if (auto feature = tokenized_features.get(feature_name); feature.has_value())
-            return parse_boolean_feature(*feature);
+            return parse_boolean_feature<T>(*feature);
 
         // 2. Return defaultValue.
         return default_value;
     };
 
     // 3. Let location be the result of checking if a window feature is set, given tokenizedFeatures, "location", and false.
-    auto location = check_if_a_window_feature_is_set("location"sv, false);
+    auto location = check_if_a_window_feature_is_set("location"sv, TokenizedFeature::Location::No);
 
     // 4. Let toolbar be the result of checking if a window feature is set, given tokenizedFeatures, "toolbar", and false.
-    auto toolbar = check_if_a_window_feature_is_set("toolbar"sv, false);
+    auto toolbar = check_if_a_window_feature_is_set("toolbar"sv, TokenizedFeature::Toolbar::No);
 
     // 5. If location and toolbar are both false, then return true.
-    if (!location && !toolbar)
-        return true;
+    if (location == TokenizedFeature::Location::No && toolbar == TokenizedFeature::Toolbar::No)
+        return TokenizedFeature::Popup::Yes;
 
     // 6. Let menubar be the result of checking if a window feature is set, given tokenizedFeatures, menubar", and false.
-    auto menubar = check_if_a_window_feature_is_set("menubar"sv, false);
+    auto menubar = check_if_a_window_feature_is_set("menubar"sv, TokenizedFeature::Menubar::No);
 
     // 7. If menubar is false, then return true.
-    if (!menubar)
-        return true;
+    if (menubar == TokenizedFeature::Menubar::No)
+        return TokenizedFeature::Popup::Yes;
 
     // 8. Let resizable be the result of checking if a window feature is set, given tokenizedFeatures, "resizable", and true.
-    auto resizable = check_if_a_window_feature_is_set("resizable"sv, true);
+    auto resizable = check_if_a_window_feature_is_set("resizable"sv, TokenizedFeature::Resizable::Yes);
 
     // 9. If resizable is false, then return true.
-    if (!resizable)
-        return true;
+    if (resizable == TokenizedFeature::Resizable::No)
+        return TokenizedFeature::Popup::Yes;
 
     // 10. Let scrollbars be the result of checking if a window feature is set, given tokenizedFeatures, "scrollbars", and false.
-    auto scrollbars = check_if_a_window_feature_is_set("scrollbars"sv, false);
+    auto scrollbars = check_if_a_window_feature_is_set("scrollbars"sv, TokenizedFeature::Scrollbars::No);
 
     // 11. If scrollbars is false, then return true.
-    if (!scrollbars)
-        return true;
+    if (scrollbars == TokenizedFeature::Scrollbars::No)
+        return TokenizedFeature::Popup::Yes;
 
     // 12. Let status be the result of checking if a window feature is set, given tokenizedFeatures, "status", and false.
-    auto status = check_if_a_window_feature_is_set("status"sv, false);
+    auto status = check_if_a_window_feature_is_set("status"sv, TokenizedFeature::Status::No);
 
     // 13. If status is false, then return true.
-    if (!status)
-        return true;
+    if (status == TokenizedFeature::Status::No)
+        return TokenizedFeature::Popup::Yes;
 
     // 14. Return false.
-    return false;
+    return TokenizedFeature::Popup::No;
 }
 
 // FIXME: This is based on the old 'browsing context' concept, which was replaced with 'navigable'
