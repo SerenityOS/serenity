@@ -206,7 +206,7 @@ i16 Kern::get_glyph_kerning(u16 left_glyph_id, u16 right_glyph_id) const
         auto const& subtable_header = *bit_cast<SubtableHeader const*>(subtable_slice.data());
 
         auto version = subtable_header.version;
-        auto length = subtable_header.version;
+        auto length = subtable_header.length;
         auto coverage = subtable_header.coverage;
 
         if (version != 0) {
