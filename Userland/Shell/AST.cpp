@@ -3802,7 +3802,10 @@ ErrorOr<String> SimpleVariableValue::resolve_as_string(RefPtr<Shell> shell)
         return resolve_slices(shell, TRY(value->resolve_as_string(shell)), m_slices);
 
     auto name = m_name.to_deprecated_string();
-    char* env_value = getenv(name.characters());
+    char const* env_value = getenv(name.characters());
+    if (!env_value)
+        env_value = "";
+
     return resolve_slices(shell, TRY(String::from_utf8(StringView { env_value, strlen(env_value) })), m_slices);
 }
 
