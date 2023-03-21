@@ -115,6 +115,8 @@ struct Macroblock {
         i32 cr[64] = { 0 };
         i32 b[64];
     };
+
+    i32 k[64] = { 0 };
 };
 
 struct MacroblockMeta {
@@ -197,7 +199,7 @@ struct ICCMultiChunkState {
 
 struct Scan {
     // B.2.3 - Scan header syntax
-    Vector<ScanComponent, 3> components;
+    Vector<ScanComponent, 4> components;
 
     u8 spectral_selection_start {};      // Ss
     u8 spectral_selection_end {};        // Se
@@ -242,12 +244,12 @@ struct JPEGLoadingContext {
 
     Scan current_scan;
 
-    Vector<Component, 3> components;
+    Vector<Component, 4> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_restart_interval { 0 };
     HashMap<u8, HuffmanTableSpec> dc_tables;
     HashMap<u8, HuffmanTableSpec> ac_tables;
-    Array<i32, 3> previous_dc_values {};
+    Array<i32, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
     OwnPtr<FixedMemoryStream> stream;
 
@@ -316,8 +318,12 @@ static inline i32* get_component(Macroblock& block, unsigned component)
         return block.y;
     case 1:
         return block.cb;
-    default:
+    case 2:
         return block.cr;
+    case 3:
+        return block.k;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
@@ -1020,7 +1026,7 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
     set_macroblock_metadata(context);
 
     auto component_count = TRY(stream.read_value<u8>());
-    if (component_count != 1 && component_count != 3) {
+    if (component_count != 1 && component_count != 3 && component_count != 4) {
         dbgln_if(JPEG_DEBUG, "Unsupported number of components in SOF: {}!", component_count);
         return Error::from_string_literal("Unsupported number of components in SOF");
     }
