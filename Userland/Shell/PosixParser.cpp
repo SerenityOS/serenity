@@ -115,7 +115,8 @@ ErrorOr<void> Parser::fill_token_buffer(Optional<Reduction> starting_reduction)
         for (auto& exp : token->resolved_expansions)
             exp.visit(
                 [&](ResolvedParameterExpansion& x) { expansions = DeprecatedString::formatted("{}param({}),", expansions, x.to_deprecated_string()); },
-                [&](ResolvedCommandExpansion& x) { expansions = DeprecatedString::formatted("{}command({:p})", expansions, x.command.ptr()); });
+                [&](ResolvedCommandExpansion& x) { expansions = DeprecatedString::formatted("{}command({:p})", expansions, x.command.ptr()); },
+                [&](ResolvedArithmeticExpansion& x) { expansions = DeprecatedString::formatted("{}arith({})", expansions, x.source_expression); });
         DeprecatedString rexpansions = "";
         for (auto& exp : token->expansions)
             exp.visit(
@@ -531,14 +532,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                     };
                 },
                 [&](ArithmeticExpansion const& expansion) -> ResolvedExpansion {
-                    error(token, "Arithmetic expansion is not supported");
-                    return ResolvedParameterExpansion {
-                        .parameter = {},
-                        .argument = {},
-                        .range = expansion.range,
-                        .op = ResolvedParameterExpansion::Op::StringLength,
-                        .expand = ResolvedParameterExpansion::Expand::Nothing,
-                    };
+                    return ResolvedArithmeticExpansion { expansion.expression, expansion.range };
                 },
                 [&](CommandExpansion const& expansion) -> ResolvedExpansion {
                     Parser parser { expansion.command.string_view() };
@@ -1483,6 +1477,42 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
         return {};
     };
 
+    auto append_arithmetic_expansion = [&](ResolvedArithmeticExpansion const& x) -> ErrorOr<void> {
+        auto node = make_ref_counted<AST::ImmediateExpression>(
+            token.position.value_or(empty_position()),
+            AST::NameWithPosition {
+                TRY("math"_string),
+                token.position.value_or(empty_position()),
+            },
+            Vector<NonnullRefPtr<AST::Node>> {
+                make_ref_counted<AST::ImmediateExpression>(
+                    token.position.value_or(empty_position()),
+                    AST::NameWithPosition {
+                        TRY("reexpand"_string),
+                        token.position.value_or(empty_position()),
+                    },
+                    Vector<NonnullRefPtr<AST::Node>> {
+                        make_ref_counted<AST::StringLiteral>(
+                            token.position.value_or(empty_position()),
+                            TRY(String::from_utf8(x.source_expression)),
+                            AST::StringLiteral::EnclosureType::DoubleQuotes),
+                    },
+                    Optional<AST::Position> {}) },
+            Optional<AST::Position> {});
+
+        if (word) {
+            word = make_ref_counted<AST::Juxtaposition>(
+                word->position().with_end(token.position.value_or(empty_position())),
+                *word,
+                move(node),
+                AST::Juxtaposition::Mode::StringExpand);
+        } else {
+            word = move(node);
+        }
+
+        return {};
+    };
+
     auto append_parameter_expansion = [&](ResolvedParameterExpansion const& x) -> ErrorOr<void> {
         StringView immediate_function_name;
         RefPtr<AST::Node> node;
@@ -1724,6 +1754,19 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
                 }
                 current_offset += x.range.length;
                 return append_parameter_expansion(x);
+            },
+            [&](ResolvedArithmeticExpansion const& x) -> ErrorOr<void> {
+                if (x.range.start >= value_bytes.length()) {
+                    dbgln("Parameter expansion range {}-{} is out of bounds for '{}'", x.range.start, x.range.length, value_bytes);
+                    return {};
+                }
+
+                if (x.range.start != current_offset) {
+                    TRY(append_string(value_bytes.substring_view(current_offset, x.range.start - current_offset)));
+                    current_offset = x.range.start;
+                }
+                current_offset += x.range.length;
+                return append_arithmetic_expansion(x);
             },
             [&](ResolvedCommandExpansion const& x) -> ErrorOr<void> {
                 if (x.range.start >= value_bytes.length()) {

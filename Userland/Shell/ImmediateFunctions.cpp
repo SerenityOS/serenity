@@ -7,6 +7,7 @@
 #include "Formatter.h"
 #include "Shell.h"
 #include <LibRegex/Regex.h>
+#include <math.h>
 
 namespace Shell {
 
@@ -610,6 +611,761 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_length_of_variable(AST::ImmediateExp
         invoking_node,
         { move(variable) },
         false);
+}
+
+namespace Arithmetic {
+struct BinaryOperationNode;
+struct UnaryOperationNode;
+struct TernaryOperationNode;
+struct ErrorNode;
+
+struct Node {
+    Variant<String, i64, NonnullOwnPtr<BinaryOperationNode>, NonnullOwnPtr<UnaryOperationNode>, NonnullOwnPtr<TernaryOperationNode>, NonnullOwnPtr<ErrorNode>> value;
+};
+
+struct ErrorNode {
+    String error;
+};
+
+enum class Operator {
+    Add,                  // +
+    Subtract,             // -
+    Multiply,             // *
+    Quotient,             // /
+    Remainder,            // %
+    Power,                // **
+    Equal,                // ==
+    GreaterThan,          // >
+    LessThan,             // <
+    NotEqual,             // !=
+    GreaterThanOrEqual,   // >=
+    LessThanOrEqual,      // <=
+    BitwiseAnd,           // &
+    BitwiseOr,            // |
+    BitwiseXor,           // ^
+    ShiftLeft,            // <<
+    ShiftRight,           // >>
+    ArithmeticAnd,        // &&
+    ArithmeticOr,         // ||
+    Comma,                // ,
+    Negate,               // !
+    BitwiseNegate,        // ~
+    TernaryQuestion,      // ?
+    TernaryColon,         // :
+    Assignment,           // =
+    PlusAssignment,       // +=
+    MinusAssignment,      // -=
+    MultiplyAssignment,   // *=
+    DivideAssignment,     // /=
+    ModuloAssignment,     // %=
+    AndAssignment,        // &=
+    OrAssignment,         // |=
+    XorAssignment,        // ^=
+    LeftShiftAssignment,  // <<=
+    RightShiftAssignment, // >>=
+
+    OpenParen,  // (
+    CloseParen, // )
+};
+
+static Operator assignment_operation_of(Operator op)
+{
+    switch (op) {
+    case Operator::PlusAssignment:
+        return Operator::Add;
+    case Operator::MinusAssignment:
+        return Operator::Subtract;
+    case Operator::MultiplyAssignment:
+        return Operator::Multiply;
+    case Operator::DivideAssignment:
+        return Operator::Quotient;
+    case Operator::ModuloAssignment:
+        return Operator::Remainder;
+    case Operator::AndAssignment:
+        return Operator::BitwiseAnd;
+    case Operator::OrAssignment:
+        return Operator::BitwiseOr;
+    case Operator::XorAssignment:
+        return Operator::BitwiseXor;
+    case Operator::LeftShiftAssignment:
+        return Operator::ShiftLeft;
+    case Operator::RightShiftAssignment:
+        return Operator::ShiftRight;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+static bool is_assignment_operator(Operator op)
+{
+    switch (op) {
+    case Operator::Assignment:
+    case Operator::PlusAssignment:
+    case Operator::MinusAssignment:
+    case Operator::MultiplyAssignment:
+    case Operator::DivideAssignment:
+    case Operator::ModuloAssignment:
+    case Operator::AndAssignment:
+    case Operator::OrAssignment:
+    case Operator::XorAssignment:
+    case Operator::LeftShiftAssignment:
+    case Operator::RightShiftAssignment:
+        return true;
+    default:
+        return false;
+    }
+}
+
+using Token = Variant<String, i64, Operator>;
+
+struct BinaryOperationNode {
+    BinaryOperationNode(Operator op, Node lhs, Node rhs)
+        : op(op)
+        , lhs(move(lhs))
+        , rhs(move(rhs))
+    {
+    }
+
+    Operator op;
+    Node lhs;
+    Node rhs;
+};
+
+struct UnaryOperationNode {
+    UnaryOperationNode(Operator op, Node rhs)
+        : op(op)
+        , rhs(move(rhs))
+    {
+    }
+
+    Operator op;
+    Node rhs;
+};
+
+struct TernaryOperationNode {
+    TernaryOperationNode(Node condition, Node true_value, Node false_value)
+        : condition(move(condition))
+        , true_value(move(true_value))
+        , false_value(move(false_value))
+    {
+    }
+
+    Node condition;
+    Node true_value;
+    Node false_value;
+};
+
+static ErrorOr<Node> parse_expression(Span<Token>);
+static ErrorOr<Node> parse_assignment_expression(Span<Token>&);
+static ErrorOr<Node> parse_comma_expression(Span<Token>&);
+static ErrorOr<Node> parse_ternary_expression(Span<Token>&);
+static ErrorOr<Node> parse_logical_or_expression(Span<Token>&);
+static ErrorOr<Node> parse_logical_and_expression(Span<Token>&);
+static ErrorOr<Node> parse_bitwise_or_expression(Span<Token>&);
+static ErrorOr<Node> parse_bitwise_xor_expression(Span<Token>&);
+static ErrorOr<Node> parse_bitwise_and_expression(Span<Token>&);
+static ErrorOr<Node> parse_equality_expression(Span<Token>&);
+static ErrorOr<Node> parse_comparison_expression(Span<Token>&);
+static ErrorOr<Node> parse_shift_expression(Span<Token>&);
+static ErrorOr<Node> parse_additive_expression(Span<Token>&);
+static ErrorOr<Node> parse_multiplicative_expression(Span<Token>&);
+static ErrorOr<Node> parse_exponential_expression(Span<Token>&);
+static ErrorOr<Node> parse_unary_expression(Span<Token>&);
+static ErrorOr<Node> parse_primary_expression(Span<Token>&);
+template<size_t N>
+static ErrorOr<Node> parse_binary_expression_using_operators(Span<Token>&, Array<Operator, N>, Function<ErrorOr<Node>(Span<Token>&)> const& parse_rhs);
+static ErrorOr<Node> parse_binary_expression_using_operator(Span<Token>& tokens, Operator op, Function<ErrorOr<Node>(Span<Token>&)> const& parse_rhs)
+{
+    return parse_binary_expression_using_operators(tokens, Array { op }, parse_rhs);
+}
+
+static bool next_token_is_operator(Span<Token>& tokens, Operator op)
+{
+    if (tokens.is_empty())
+        return false;
+    return tokens.first().has<Operator>() && tokens.first().get<Operator>() == op;
+}
+
+ErrorOr<Node> parse_expression(Span<Token> tokens)
+{
+    return parse_comma_expression(tokens);
+}
+
+ErrorOr<Node> parse_comma_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operator(tokens, Operator::Comma, &parse_assignment_expression);
+}
+
+ErrorOr<Node> parse_assignment_expression(Span<Token>& tokens)
+{
+    auto lhs = TRY(parse_ternary_expression(tokens));
+    if (tokens.is_empty())
+        return lhs;
+
+    auto is_assignment_operator = [](Operator op) {
+        return op == Operator::Assignment
+            || op == Operator::PlusAssignment
+            || op == Operator::MinusAssignment
+            || op == Operator::MultiplyAssignment
+            || op == Operator::DivideAssignment
+            || op == Operator::ModuloAssignment
+            || op == Operator::AndAssignment
+            || op == Operator::OrAssignment
+            || op == Operator::XorAssignment
+            || op == Operator::LeftShiftAssignment
+            || op == Operator::RightShiftAssignment;
+    };
+
+    auto& token = tokens.first();
+    if (auto op = token.get_pointer<Operator>(); op && is_assignment_operator(*op)) {
+        if (!lhs.value.has<String>()) {
+            return Node {
+                make<ErrorNode>(TRY("Left-hand side of assignment must be a variable"_string))
+            };
+        }
+
+        tokens = tokens.slice(1);
+        auto rhs = TRY(parse_assignment_expression(tokens));
+        return Node {
+            make<BinaryOperationNode>(*op, move(lhs), move(rhs))
+        };
+    }
+
+    return lhs;
+}
+
+ErrorOr<Node> parse_ternary_expression(Span<Token>& tokens)
+{
+    auto condition = TRY(parse_logical_or_expression(tokens));
+    if (!next_token_is_operator(tokens, Operator::TernaryQuestion))
+        return condition;
+
+    tokens = tokens.slice(1);
+
+    auto true_value = TRY(parse_comma_expression(tokens));
+
+    if (!next_token_is_operator(tokens, Operator::TernaryColon)) {
+        return Node {
+            make<ErrorNode>(TRY("Expected ':' after true value in ternary expression"_string))
+        };
+    }
+
+    tokens = tokens.slice(1);
+
+    auto false_value = TRY(parse_ternary_expression(tokens));
+
+    return Node {
+        make<TernaryOperationNode>(move(condition), move(true_value), move(false_value))
+    };
+}
+
+ErrorOr<Node> parse_logical_or_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operator(tokens, Operator::ArithmeticOr, &parse_logical_and_expression);
+}
+
+ErrorOr<Node> parse_logical_and_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operator(tokens, Operator::ArithmeticAnd, &parse_bitwise_or_expression);
+}
+
+ErrorOr<Node> parse_bitwise_or_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operator(tokens, Operator::BitwiseOr, &parse_bitwise_xor_expression);
+}
+
+ErrorOr<Node> parse_bitwise_xor_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operator(tokens, Operator::BitwiseXor, &parse_bitwise_and_expression);
+}
+
+ErrorOr<Node> parse_bitwise_and_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operator(tokens, Operator::BitwiseAnd, &parse_equality_expression);
+}
+
+ErrorOr<Node> parse_equality_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operators(tokens, Array { Operator::Equal, Operator::NotEqual }, &parse_comparison_expression);
+}
+
+ErrorOr<Node> parse_comparison_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operators(tokens, Array { Operator::LessThan, Operator::GreaterThan, Operator::LessThanOrEqual, Operator::GreaterThanOrEqual }, &parse_shift_expression);
+}
+
+ErrorOr<Node> parse_shift_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operators(tokens, Array { Operator::ShiftLeft, Operator::ShiftRight }, &parse_additive_expression);
+}
+
+ErrorOr<Node> parse_additive_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operators(tokens, Array { Operator::Add, Operator::Subtract }, &parse_multiplicative_expression);
+}
+
+ErrorOr<Node> parse_multiplicative_expression(Span<Token>& tokens)
+{
+    return parse_binary_expression_using_operators(tokens, Array { Operator::Multiply, Operator::Quotient, Operator::Remainder }, &parse_exponential_expression);
+}
+
+ErrorOr<Node> parse_exponential_expression(Span<Token>& tokens)
+{
+    auto lhs = TRY(parse_unary_expression(tokens));
+    if (!next_token_is_operator(tokens, Operator::Power))
+        return lhs;
+
+    tokens = tokens.slice(1);
+    auto rhs = TRY(parse_exponential_expression(tokens));
+
+    return Node {
+        make<BinaryOperationNode>(Operator::Power, move(lhs), move(rhs))
+    };
+}
+
+ErrorOr<Node> parse_unary_expression(Span<Token>& tokens)
+{
+    if (tokens.is_empty()) {
+        return Node {
+            make<ErrorNode>(TRY("Expected expression, got end of input"_string))
+        };
+    }
+
+    auto& token = tokens.first();
+    if (auto op = token.get_pointer<Operator>()) {
+        if (*op == Operator::Add || *op == Operator::Subtract || *op == Operator::Negate || *op == Operator::BitwiseNegate) {
+            tokens = tokens.slice(1);
+            auto rhs = TRY(parse_unary_expression(tokens));
+            return Node {
+                make<UnaryOperationNode>(*op, move(rhs))
+            };
+        }
+    }
+
+    return parse_primary_expression(tokens);
+}
+
+ErrorOr<Node> parse_primary_expression(Span<Token>& tokens)
+{
+    if (tokens.is_empty())
+        return Node { make<ErrorNode>(TRY("Expected expression, got end of input"_string)) };
+
+    auto& token = tokens.first();
+    return token.visit(
+        [&](String const& var) -> ErrorOr<Node> {
+            tokens = tokens.slice(1);
+            return Node { var };
+        },
+        [&](i64 value) -> ErrorOr<Node> {
+            tokens = tokens.slice(1);
+            return Node { value };
+        },
+        [&](Operator op) -> ErrorOr<Node> {
+            switch (op) {
+            case Operator::OpenParen: {
+                tokens = tokens.slice(1);
+                auto value = TRY(parse_expression(tokens));
+                if (!next_token_is_operator(tokens, Operator::CloseParen)) {
+                    return Node {
+                        make<ErrorNode>(TRY("Expected ')' after expression in parentheses"_string))
+                    };
+                }
+                tokens = tokens.slice(1);
+                return value;
+            }
+            default:
+                return Node {
+                    make<ErrorNode>(TRY("Expected expression, got operator"_string))
+                };
+            }
+        });
+}
+
+template<size_t N>
+ErrorOr<Node> parse_binary_expression_using_operators(Span<Token>& tokens, Array<Operator, N> operators, Function<ErrorOr<Node>(Span<Token>&)> const& parse_rhs)
+{
+    auto lhs = TRY(parse_rhs(tokens));
+    for (;;) {
+        Optional<Operator> op;
+        for (auto candidate : operators) {
+            if (next_token_is_operator(tokens, candidate)) {
+                op = candidate;
+                break;
+            }
+        }
+
+        if (!op.has_value())
+            return lhs;
+
+        tokens = tokens.slice(1);
+        auto rhs = TRY(parse_rhs(tokens));
+        lhs = Node {
+            make<BinaryOperationNode>(*op, move(lhs), move(rhs))
+        };
+    }
+}
+
+}
+
+ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)
+{
+    if (arguments.size() != 1) {
+        raise_error(ShellError::EvaluatedSyntaxError, "Expected exactly 1 argument to math", invoking_node.position());
+        return nullptr;
+    }
+
+    auto expression_parts = TRY(TRY(const_cast<AST::Node&>(*arguments.first()).run(*this))->resolve_as_list(*this));
+    auto expression = TRY(String::join(' ', expression_parts));
+
+    using Arithmetic::Operator;
+    using Arithmetic::Token;
+
+    Vector<Token> tokens;
+
+    auto view = expression.code_points();
+    Optional<size_t> integer_or_word_start_offset;
+    for (auto it = view.begin(); it != view.end(); ++it) {
+        auto code_point = *it;
+        if (is_ascii_alphanumeric(code_point) || code_point == U'_') {
+            if (!integer_or_word_start_offset.has_value())
+                integer_or_word_start_offset = view.byte_offset_of(it);
+            continue;
+        }
+
+        if (integer_or_word_start_offset.has_value()) {
+            auto integer_or_word = view.substring_view(
+                *integer_or_word_start_offset,
+                view.byte_offset_of(it) - *integer_or_word_start_offset);
+
+            if (all_of(integer_or_word, is_ascii_digit))
+                tokens.append(*integer_or_word.as_string().to_int());
+            else
+                tokens.append(TRY(expression.substring_from_byte_offset_with_shared_superstring(*integer_or_word_start_offset, integer_or_word.length())));
+
+            integer_or_word_start_offset.clear();
+        }
+
+        switch (code_point) {
+        case U'!':
+            if (it.peek(1) == U'=') {
+                ++it;
+                tokens.append(Operator::NotEqual);
+            } else {
+                tokens.append(Operator::Negate);
+            }
+            break;
+        case U'=':
+            if (it.peek(1) == U'=') {
+                ++it;
+                tokens.append(Operator::Equal);
+            } else {
+                tokens.append(Operator::Assignment);
+            }
+            break;
+        case U'~':
+            tokens.append(Operator::BitwiseNegate);
+            break;
+        case U'(':
+            tokens.append(Operator::OpenParen);
+            break;
+        case U')':
+            tokens.append(Operator::CloseParen);
+            break;
+        case U'&':
+            switch (it.peek(1).value_or(0)) {
+            case U'&':
+                ++it;
+                tokens.append(Operator::ArithmeticAnd);
+                break;
+            case U'=':
+                ++it;
+                tokens.append(Operator::AndAssignment);
+                break;
+            default:
+                tokens.append(Operator::BitwiseAnd);
+                break;
+            }
+            break;
+        case U'|':
+            switch (it.peek(1).value_or(0)) {
+            case U'|':
+                ++it;
+                tokens.append(Operator::ArithmeticOr);
+                break;
+            case U'=':
+                ++it;
+                tokens.append(Operator::OrAssignment);
+                break;
+            default:
+                tokens.append(Operator::BitwiseOr);
+                break;
+            }
+            break;
+        case U'^':
+            if (it.peek(1) == U'=') {
+                ++it;
+                tokens.append(Operator::XorAssignment);
+            } else {
+                tokens.append(Operator::BitwiseXor);
+            }
+            break;
+        case U',':
+            tokens.append(Operator::Comma);
+            break;
+        case U'?':
+            tokens.append(Operator::TernaryQuestion);
+            break;
+        case U':':
+            tokens.append(Operator::TernaryColon);
+            break;
+        case U'+':
+            switch (it.peek(1).value_or(0)) {
+            case U'=':
+                ++it;
+                tokens.append(Operator::PlusAssignment);
+                break;
+            default:
+                tokens.append(Operator::Add);
+                break;
+            }
+            break;
+        case U'-':
+            switch (it.peek(1).value_or(0)) {
+            case U'=':
+                ++it;
+                tokens.append(Operator::MinusAssignment);
+                break;
+            default:
+                tokens.append(Operator::Subtract);
+                break;
+            }
+            break;
+        case U'*':
+            switch (it.peek(1).value_or(0)) {
+            case U'=':
+                ++it;
+                tokens.append(Operator::MultiplyAssignment);
+                break;
+            case U'*':
+                ++it;
+                tokens.append(Operator::Power);
+                break;
+            default:
+                tokens.append(Operator::Multiply);
+                break;
+            }
+            break;
+        case U'/':
+            if (it.peek(1) == U'=') {
+                ++it;
+                tokens.append(Operator::DivideAssignment);
+            } else {
+                tokens.append(Operator::Quotient);
+            }
+            break;
+        case U'%':
+            if (it.peek(1) == U'=') {
+                ++it;
+                tokens.append(Operator::ModuloAssignment);
+            } else {
+                tokens.append(Operator::Remainder);
+            }
+            break;
+        case U'<':
+            switch (it.peek(1).value_or(0)) {
+            case U'<':
+                ++it;
+                if (it.peek(1) == U'=') {
+                    ++it;
+                    tokens.append(Operator::LeftShiftAssignment);
+                } else {
+                    tokens.append(Operator::ShiftLeft);
+                }
+                break;
+            case U'=':
+                ++it;
+                tokens.append(Operator::LessThanOrEqual);
+                break;
+            default:
+                tokens.append(Operator::LessThan);
+                break;
+            }
+            break;
+        case U'>':
+            switch (it.peek(1).value_or(0)) {
+            case U'>':
+                ++it;
+                if (it.peek(1) == U'=') {
+                    ++it;
+                    tokens.append(Operator::RightShiftAssignment);
+                } else {
+                    tokens.append(Operator::ShiftRight);
+                }
+                break;
+            case U'=':
+                ++it;
+                tokens.append(Operator::GreaterThanOrEqual);
+                break;
+            default:
+                tokens.append(Operator::GreaterThan);
+                break;
+            }
+            break;
+        case U' ':
+        case U'\t':
+        case U'\n':
+        case U'\r':
+            break;
+        default:
+            raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Unexpected character '{:c}' in math expression", code_point), arguments.first()->position());
+            return nullptr;
+        }
+    }
+    if (integer_or_word_start_offset.has_value()) {
+        auto integer_or_word = view.substring_view(*integer_or_word_start_offset);
+
+        if (all_of(integer_or_word, is_ascii_digit))
+            tokens.append(*integer_or_word.as_string().to_int());
+        else
+            tokens.append(TRY(expression.substring_from_byte_offset_with_shared_superstring(*integer_or_word_start_offset, integer_or_word.length())));
+
+        integer_or_word_start_offset.clear();
+    }
+
+    auto ast = TRY(Arithmetic::parse_expression(tokens));
+
+    // Now interpret that.
+    Function<ErrorOr<i64>(Arithmetic::Node const&)> interpret = [&](Arithmetic::Node const& node) -> ErrorOr<i64> {
+        return node.value.visit(
+            [&](String const& name) -> ErrorOr<i64> {
+                size_t resolution_attempts_remaining = 100;
+                for (auto resolved_name = name; resolution_attempts_remaining > 0; --resolution_attempts_remaining) {
+                    auto value = TRY(lookup_local_variable(resolved_name.bytes_as_string_view()));
+                    if (!value)
+                        break;
+
+                    StringBuilder builder;
+                    builder.join(' ', TRY(const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this))));
+                    resolved_name = TRY(builder.to_string());
+
+                    auto integer = resolved_name.bytes_as_string_view().to_int<i64>();
+                    if (integer.has_value())
+                        return *integer;
+                }
+
+                if (resolution_attempts_remaining == 0)
+                    raise_error(ShellError::EvaluatedSyntaxError, DeprecatedString::formatted("Too many indirections when resolving variable '{}'", name), arguments.first()->position());
+
+                return 0;
+            },
+            [&](i64 value) -> ErrorOr<i64> {
+                return value;
+            },
+            [&](NonnullOwnPtr<Arithmetic::BinaryOperationNode> const& node) -> ErrorOr<i64> {
+                if (Arithmetic::is_assignment_operator(node->op)) {
+                    // lhs must be a variable name.
+                    auto name = node->lhs.value.get_pointer<String>();
+                    if (!name) {
+                        raise_error(ShellError::EvaluatedSyntaxError, "Invalid left-hand side of assignment", arguments.first()->position());
+                        return 0;
+                    }
+
+                    auto rhs = TRY(interpret(node->rhs));
+
+                    if (node->op != Arithmetic::Operator::Assignment) {
+                        // Evaluate the new value
+                        rhs = TRY(interpret(Arithmetic::Node {
+                            .value = make<Arithmetic::BinaryOperationNode>(
+                                Arithmetic::assignment_operation_of(node->op),
+                                Arithmetic::Node { *name },
+                                Arithmetic::Node { rhs }),
+                        }));
+                    }
+
+                    set_local_variable(name->to_deprecated_string(), make_ref_counted<AST::StringValue>(TRY(String::number(rhs))));
+                    return rhs;
+                }
+
+                auto lhs = TRY(interpret(node->lhs));
+                auto rhs = TRY(interpret(node->rhs));
+
+                using Arithmetic::Operator;
+                switch (node->op) {
+                case Operator::Add:
+                    return lhs + rhs;
+                case Operator::Subtract:
+                    return lhs - rhs;
+                case Operator::Multiply:
+                    return lhs * rhs;
+                case Operator::Quotient:
+                    return lhs / rhs;
+                case Operator::Remainder:
+                    return lhs % rhs;
+                case Operator::ShiftLeft:
+                    return lhs << rhs;
+                case Operator::ShiftRight:
+                    return lhs >> rhs;
+                case Operator::BitwiseAnd:
+                    return lhs & rhs;
+                case Operator::BitwiseOr:
+                    return lhs | rhs;
+                case Operator::BitwiseXor:
+                    return lhs ^ rhs;
+                case Operator::ArithmeticAnd:
+                    return lhs != 0 && rhs != 0;
+                case Operator::ArithmeticOr:
+                    return lhs != 0 || rhs != 0;
+                case Operator::LessThan:
+                    return lhs < rhs;
+                case Operator::LessThanOrEqual:
+                    return lhs <= rhs;
+                case Operator::GreaterThan:
+                    return lhs > rhs;
+                case Operator::GreaterThanOrEqual:
+                    return lhs >= rhs;
+                case Operator::Equal:
+                    return lhs == rhs;
+                case Operator::NotEqual:
+                    return lhs != rhs;
+                case Operator::Power:
+                    return trunc(pow(static_cast<double>(lhs), static_cast<double>(rhs)));
+                case Operator::Comma:
+                    return rhs;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            },
+            [&](NonnullOwnPtr<Arithmetic::UnaryOperationNode> const& node) -> ErrorOr<i64> {
+                auto value = TRY(interpret(node->rhs));
+
+                switch (node->op) {
+                case Arithmetic::Operator::Negate:
+                    return value == 0;
+                case Arithmetic::Operator::BitwiseNegate:
+                    return ~value;
+                case Arithmetic::Operator::Add:
+                    return value;
+                case Arithmetic::Operator::Subtract:
+                    return -value;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+            },
+            [&](NonnullOwnPtr<Arithmetic::TernaryOperationNode> const& node) -> ErrorOr<i64> {
+                auto condition = TRY(interpret(node->condition));
+                if (condition != 0)
+                    return TRY(interpret(node->true_value));
+                return TRY(interpret(node->false_value));
+            },
+            [&](NonnullOwnPtr<Arithmetic::ErrorNode> const& node) -> ErrorOr<i64> {
+                raise_error(ShellError::EvaluatedSyntaxError, node->error.to_deprecated_string(), arguments.first()->position());
+                return 0;
+            });
+    };
+
+    auto result = TRY(interpret(ast));
+
+    return make_ref_counted<AST::StringLiteral>(arguments.first()->position(), TRY(String::number(result)), AST::StringLiteral::EnclosureType::None);
 }
 
 ErrorOr<RefPtr<AST::Node>> Shell::run_immediate_function(StringView str, AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const& arguments)
