@@ -15,6 +15,7 @@
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Gradients.h>
+#include <LibGfx/GrayscaleBitmap.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
@@ -113,6 +114,7 @@ public:
     void draw_glyph_or_emoji(FloatPoint, u32, Font const&, Color);
     void draw_glyph_or_emoji(FloatPoint, Utf8CodePointIterator&, Font const&, Color);
     void draw_circle_arc_intersecting(IntRect const&, IntPoint, int radius, Color, int thickness);
+    void draw_signed_distance_field(IntRect const& dst_rect, Color, Gfx::GrayscaleBitmap const&, float smoothing);
 
     // Streamlined text drawing routine that does no wrapping/elision/alignment.
     void draw_text_run(IntPoint baseline_start, Utf8View const&, Font const&, Color);
