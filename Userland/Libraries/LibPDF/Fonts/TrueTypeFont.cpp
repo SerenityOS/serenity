@@ -23,7 +23,7 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
             auto font_file_stream = TRY(descriptor->get_stream(document, CommonNames::FontFile2));
             auto ttf_font = TRY(OpenType::Font::try_load_from_externally_owned_memory(font_file_stream->bytes()));
             float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
-            m_font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, font_size, point_size));
+            m_font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
         }
     }
 
