@@ -72,8 +72,11 @@ Vector<Certificate> load_certificates()
             continue;
         }
         auto certificate = certificate_result.release_value();
-        if (certificate.is_certificate_authority)
+        if (certificate.is_certificate_authority && certificate.is_self_signed()) {
             certificates.append(move(certificate));
+        } else {
+            dbgln("Skipped '{}' because it is not a valid root CA", certificate.subject_identifier_string());
+        }
     }
 
     return certificates;
