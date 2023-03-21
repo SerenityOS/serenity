@@ -28,5 +28,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(WebContent)
-target_link_libraries(WebContent PRIVATE LibCore LibIPC LibGfx LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain)
+target_link_libraries(WebContent PRIVATE LibCore LibFileSystem LibIPC LibGfx LibImageDecoderClient LibJS LibWebView LibWeb LibLocale LibMain)
 link_with_locale_data(WebContent)

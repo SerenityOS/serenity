@@ -6,10 +6,10 @@
 
 #include <AK/Base64.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibTLS/TLSv12.h>
 #include <LibTest/TestCase.h>
 
@@ -28,11 +28,11 @@ DeprecatedString locate_ca_certs_file();
 
 DeprecatedString locate_ca_certs_file()
 {
-    if (Core::DeprecatedFile::exists(ca_certs_file)) {
+    if (FileSystem::exists(ca_certs_file)) {
         return ca_certs_file;
     }
     auto on_target_path = DeprecatedString("/etc/cacert.pem");
-    if (Core::DeprecatedFile::exists(on_target_path)) {
+    if (FileSystem::exists(on_target_path)) {
         return on_target_path;
     }
     return "";

@@ -10,8 +10,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -34,7 +34,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     if (!filename.is_empty()) {
-        if (!Core::DeprecatedFile::exists(filename) || Core::DeprecatedFile::is_directory(filename)) {
+        if (!FileSystem::exists(filename) || FileSystem::is_directory(filename)) {
             warnln("File does not exist or is a directory: {}", filename);
             return 1;
         }

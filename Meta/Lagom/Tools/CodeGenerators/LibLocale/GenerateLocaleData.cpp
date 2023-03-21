@@ -19,8 +19,8 @@
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
+#include <LibFileSystem/FileSystem.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
 {
@@ -913,7 +913,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
 {
     LexicalPath core_supplemental_path(core_path);
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
+    VERIFY(FileSystem::is_directory(core_supplemental_path.string()));
 
     TRY(parse_core_aliases(core_supplemental_path.string(), cldr));
     TRY(parse_likely_subtags(core_supplemental_path.string(), cldr));

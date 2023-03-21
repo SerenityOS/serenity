@@ -16,6 +16,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibMain/Main.h>
 #include <LibSQL/SQLClient.h>
@@ -76,7 +77,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto get_formatted_url = [&](StringView const& raw_url) -> URL {
         URL url = raw_url;
-        if (Core::DeprecatedFile::exists(raw_url))
+        if (FileSystem::exists(raw_url))
             url = URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(raw_url));
         else if (!url.is_valid())
             url = DeprecatedString::formatted("http://{}", raw_url);

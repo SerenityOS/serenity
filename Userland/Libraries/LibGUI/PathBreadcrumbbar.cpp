@@ -9,8 +9,8 @@
 
 #include "PathBreadcrumbbar.h"
 #include <AK/LexicalPath.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Breadcrumbbar.h>
 #include <LibGUI/FileIconProvider.h>
@@ -49,7 +49,7 @@ PathBreadcrumbbar::PathBreadcrumbbar(NonnullRefPtr<GUI::TextBox> location_text_b
     };
 
     m_location_text_box->on_return_pressed = [&] {
-        if (Core::DeprecatedFile::is_directory(m_location_text_box->text())) {
+        if (FileSystem::is_directory(m_location_text_box->text())) {
             set_current_path(m_location_text_box->text());
             hide_location_text_box();
         }
@@ -104,7 +104,7 @@ void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
         // If the path change was because the directory we were in was deleted,
         // remove the breadcrumbs for it.
         if ((new_segment_index + 1 < m_breadcrumbbar->segment_count())
-            && !Core::DeprecatedFile::is_directory(m_breadcrumbbar->segment_data(new_segment_index + 1))) {
+            && !FileSystem::is_directory(m_breadcrumbbar->segment_data(new_segment_index + 1))) {
             m_breadcrumbbar->remove_end_segments(new_segment_index + 1);
         }
     } else {

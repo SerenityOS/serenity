@@ -9,7 +9,7 @@
 #include "Utilities.h"
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <QCoreApplication>
 
 DeprecatedString s_serenity_resource_root;
@@ -49,7 +49,7 @@ void platform_init()
         auto* home = getenv("XDG_CONFIG_HOME") ?: getenv("HOME");
         VERIFY(home);
         auto home_lagom = DeprecatedString::formatted("{}/.lagom", home);
-        if (Core::DeprecatedFile::is_directory(home_lagom))
+        if (FileSystem::is_directory(home_lagom))
             return home_lagom;
         auto app_dir = ak_deprecated_string_from_qstring(QCoreApplication::applicationDirPath());
         return LexicalPath(app_dir).parent().append("share"sv).string();

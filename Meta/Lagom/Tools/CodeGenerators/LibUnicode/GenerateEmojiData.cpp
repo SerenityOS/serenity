@@ -12,8 +12,8 @@
 #include <AK/StringUtils.h>
 #include <AK/Types.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibUnicode/Emoji.h>
 
 struct Emoji {
@@ -47,7 +47,7 @@ static void set_image_path_for_emoji(StringView emoji_resource_path, EmojiData& 
 
     auto file = DeprecatedString::formatted("{}.png", builder.to_deprecated_string());
     auto path = DeprecatedString::formatted("{}/{}", emoji_resource_path, file);
-    if (!Core::DeprecatedFile::exists(path))
+    if (!FileSystem::exists(path))
         return;
 
     emoji.image_path = emoji_data.unique_strings.ensure(move(file));
@@ -396,7 +396,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(emoji_resource_path, "Path to the /res/emoji directory", "emoji-resource-path", 'r', "emoji-resource-path");
     args_parser.parse(arguments);
 
-    VERIFY(!emoji_resource_path.is_empty() && Core::DeprecatedFile::exists(emoji_resource_path));
+    VERIFY(!emoji_resource_path.is_empty() && FileSystem::exists(emoji_resource_path));
 
     auto emoji_test_file = TRY(open_file(emoji_test_path, Core::File::OpenMode::Read));
 

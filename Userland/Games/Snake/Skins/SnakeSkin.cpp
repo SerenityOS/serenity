@@ -8,7 +8,7 @@
 #include "ClassicSkin.h"
 #include "ImageSkin.h"
 #include <AK/String.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 
 namespace Snake {
 
@@ -18,7 +18,7 @@ ErrorOr<NonnullOwnPtr<SnakeSkin>> SnakeSkin::create(StringView skin_name, Color 
         return try_make<ClassicSkin>(color);
 
     // Try to find an image-based skin matching the name.
-    if (Core::DeprecatedFile::exists(TRY(String::formatted("/res/graphics/snake/skins/{}", skin_name))))
+    if (FileSystem::exists(TRY(String::formatted("/res/graphics/snake/skins/{}", skin_name))))
         return ImageSkin::create(skin_name);
 
     // Fall-back on classic

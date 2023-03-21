@@ -24,6 +24,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font/FontDatabase.h>
 #include <LibGfx/PNGWriter.h>
@@ -164,8 +165,8 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
     // FIXME: Allow passing the output path as an argument.
     static constexpr auto output_file_path = "output.png"sv;
 
-    if (Core::DeprecatedFile::exists(output_file_path))
-        TRY(Core::DeprecatedFile::remove(output_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
+    if (FileSystem::exists(output_file_path))
+        TRY(FileSystem::remove(output_file_path, FileSystem::RecursionMode::Disallowed));
 
     outln("Taking screenshot after {} seconds", screenshot_timeout);
 
@@ -191,7 +192,7 @@ static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Cor
 
 static ErrorOr<URL> format_url(StringView url)
 {
-    if (Core::DeprecatedFile::exists(url))
+    if (FileSystem::exists(url))
         return URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(url));
 
     URL formatted_url { url };

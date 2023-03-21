@@ -14,6 +14,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
@@ -204,7 +205,7 @@ void DirectoryView::setup_model()
 
         while (model_root.string() != "/") {
             model_root = model_root.parent();
-            if (Core::DeprecatedFile::is_directory(model_root.string()))
+            if (FileSystem::is_directory(model_root.string()))
                 break;
         }
 
@@ -406,7 +407,7 @@ void DirectoryView::add_path_to_history(DeprecatedString path)
 bool DirectoryView::open(DeprecatedString const& path)
 {
     auto real_path = Core::DeprecatedFile::real_path_for(path);
-    if (real_path.is_null() || !Core::DeprecatedFile::is_directory(path))
+    if (real_path.is_null() || !FileSystem::is_directory(path))
         return false;
 
     if (chdir(real_path.characters()) < 0) {
@@ -555,7 +556,7 @@ bool DirectoryView::can_modify_current_selection()
     // FIXME: remove once Clang formats this properly.
     // clang-format off
     return selections.first_matching([&](auto& index) {
-        return Core::DeprecatedFile::can_delete_or_move(node(index).full_path());
+        return FileSystem::can_delete_or_move(node(index).full_path());
     }).has_value();
     // clang-format on
 }

@@ -265,4 +265,4 @@ set(SOURCES
 )
 
 serenity_lib(LibJS js)
-target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibRegex LibSyntax LibLocale LibUnicode)
+target_link_libraries(LibJS PRIVATE LibCore LibCrypto LibFileSystem LibRegex LibSyntax LibLocale LibUnicode)

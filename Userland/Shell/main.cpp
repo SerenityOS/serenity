@@ -11,6 +11,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <signal.h>
 #include <stdio.h>
@@ -227,7 +228,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             DeprecatedString file_path = name;
             if (file_path.starts_with('~'))
                 file_path = shell->expand_tilde(file_path);
-            if (Core::DeprecatedFile::exists(file_path)) {
+            if (FileSystem::exists(file_path)) {
                 shell->run_file(file_path, false);
             }
         };

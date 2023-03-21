@@ -22,7 +22,7 @@ public:
         __Count,
     };
 
-    static NonnullRefPtr<PartitionModel> create() { return adopt_ref(*new PartitionModel()); }
+    static NonnullRefPtr<PartitionModel> create();
     virtual ~PartitionModel() override = default;
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_partition_table->partitions_count(); }

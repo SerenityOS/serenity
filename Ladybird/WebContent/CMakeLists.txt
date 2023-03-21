@@ -22,4 +22,4 @@ qt_add_executable(WebContent ${WEBCONTENT_SOURCES})
 
 target_include_directories(WebContent PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(WebContent PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(WebContent PRIVATE Qt::Core Qt::Gui Qt::Network LibCore LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket)
+target_link_libraries(WebContent PRIVATE Qt::Core Qt::Gui Qt::Network LibCore LibFileSystem LibGfx LibIPC LibJS LibMain LibWeb LibWebSocket)

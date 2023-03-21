@@ -12,8 +12,8 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
+#include <LibFileSystem/FileSystem.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -676,7 +676,7 @@ ErrorOr<void> BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& 
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         }
     }
-    if (Core::DeprecatedFile::exists(m_text)) {
+    if (FileSystem::exists(m_text)) {
         auto realpath = shell.resolve_path(m_text.bytes_as_string_view());
         auto url = URL::create_with_file_scheme(realpath);
         url.set_host(shell.hostname);
@@ -3209,7 +3209,7 @@ ErrorOr<void> Juxtaposition::highlight_in_editor(Line::Editor& editor, Shell& sh
         path_builder.append(bareword_value);
         auto path = path_builder.to_deprecated_string();
 
-        if (Core::DeprecatedFile::exists(path)) {
+        if (FileSystem::exists(path)) {
             auto realpath = shell.resolve_path(path);
             auto url = URL::create_with_file_scheme(realpath);
             url.set_host(shell.hostname);

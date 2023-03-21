@@ -143,4 +143,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibGUI gui)
-target_link_libraries(LibGUI PRIVATE LibCore LibGfx LibIPC LibThreading LibRegex LibSyntax LibConfig LibUnicode)
+target_link_libraries(LibGUI PRIVATE LibCore LibFileSystem LibGfx LibIPC LibThreading LibRegex LibSyntax LibConfig LibUnicode)

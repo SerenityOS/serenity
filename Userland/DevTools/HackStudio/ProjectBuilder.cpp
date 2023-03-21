@@ -7,7 +7,7 @@
 #include "ProjectBuilder.h"
 #include <AK/LexicalPath.h>
 #include <LibCore/Command.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibRegex/Regex.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -124,15 +124,15 @@ ErrorOr<DeprecatedString> ProjectBuilder::component_name(StringView cmake_file_p
 
 ErrorOr<void> ProjectBuilder::initialize_build_directory()
 {
-    if (!Core::DeprecatedFile::exists(build_directory())) {
+    if (!FileSystem::exists(build_directory())) {
         if (mkdir(LexicalPath::join(build_directory()).string().characters(), 0700)) {
             return Error::from_errno(errno);
         }
     }
 
     auto cmake_file_path = LexicalPath::join(build_directory(), "CMakeLists.txt"sv).string();
-    if (Core::DeprecatedFile::exists(cmake_file_path))
-        MUST(Core::DeprecatedFile::remove(cmake_file_path, Core::DeprecatedFile::RecursionMode::Disallowed));
+    if (FileSystem::exists(cmake_file_path))
+        MUST(FileSystem::remove(cmake_file_path, FileSystem::RecursionMode::Disallowed));
 
     auto cmake_file = TRY(Core::File::open(cmake_file_path, Core::File::OpenMode::Write));
     TRY(cmake_file->write_until_depleted(generate_cmake_file_content().bytes()));
@@ -150,7 +150,7 @@ Optional<DeprecatedString> ProjectBuilder::find_cmake_file_for(StringView file_p
     auto directory = LexicalPath::dirname(file_path);
     while (!directory.is_empty()) {
         auto cmake_path = LexicalPath::join(m_project_root, directory, "CMakeLists.txt"sv);
-        if (Core::DeprecatedFile::exists(cmake_path.string()))
+        if (FileSystem::exists(cmake_path.string()))
             return cmake_path.string();
         directory = LexicalPath::dirname(directory);
     }

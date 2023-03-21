@@ -13,6 +13,11 @@
 
 namespace PartitionEditor {
 
+NonnullRefPtr<PartitionModel> PartitionModel::create()
+{
+    return adopt_ref(*new PartitionModel);
+}
+
 DeprecatedString PartitionModel::column_name(int column) const
 {
     switch (column) {

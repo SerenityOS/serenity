@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -69,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::pledge("stdio rpath wpath cpath fattr"));
     }
 
-    bool destination_is_existing_dir = Core::DeprecatedFile::is_directory(destination);
+    bool destination_is_existing_dir = FileSystem::is_directory(destination);
 
     for (auto& source : sources) {
         auto destination_path = destination_is_existing_dir

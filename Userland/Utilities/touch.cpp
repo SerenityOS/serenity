@@ -9,8 +9,8 @@
 #include <AK/GenericLexer.h>
 #include <AK/Time.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibTimeZone/TimeZone.h>
 #include <ctype.h>
@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         atime.tv_nsec = UTIME_OMIT;
 
     for (auto path : paths) {
-        if (Core::DeprecatedFile::exists(path)) {
+        if (FileSystem::exists(path)) {
             if (utimensat(AT_FDCWD, path.characters(), times, 0) == -1)
                 err("failed to touch '{}': {}", path, strerror(errno));
         } else if (!no_create_file) {

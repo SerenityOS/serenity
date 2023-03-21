@@ -10,6 +10,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibRegex/Regex.h>
 #include <LibTest/TestRunner.h>
@@ -365,7 +366,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     } else {
         test_root = "/usr/Tests";
     }
-    if (!Core::DeprecatedFile::is_directory(test_root)) {
+    if (!FileSystem::is_directory(test_root)) {
         warnln("Test root is not a directory: {}", test_root);
         return 1;
     }

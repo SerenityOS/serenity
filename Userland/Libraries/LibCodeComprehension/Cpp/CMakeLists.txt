@@ -17,4 +17,4 @@ set(SOURCES
 
 serenity_bin(CppComprehensionTests)
 
-target_link_libraries(CppComprehensionTests PRIVATE LibCodeComprehension LibCore LibCpp LibRegex LibMain)
+target_link_libraries(CppComprehensionTests PRIVATE LibCodeComprehension LibCore LibCpp LibFileSystem LibRegex LibMain)

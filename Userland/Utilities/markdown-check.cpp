@@ -21,6 +21,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibMarkdown/Document.h>
 #include <LibMarkdown/Visitor.h>
@@ -293,7 +294,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             } else {
                 pointee_file = LexicalPath::absolute_path(file_dir, file_link.file_path);
             }
-            if (!Core::DeprecatedFile::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
+            if (!FileSystem::exists(pointee_file) && !is_missing_file_acceptable(pointee_file)) {
                 outln("File '{}' points to '{}' (label '{}'), but '{}' does not exist!",
                     file_item.key, file_link.file_path, file_link.label, pointee_file);
                 any_problems = true;

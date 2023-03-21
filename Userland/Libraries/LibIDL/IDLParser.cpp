@@ -13,6 +13,7 @@
 #include <AK/QuickSort.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
+#include <LibFileSystem/FileSystem.h>
 
 [[noreturn]] static void report_parsing_error(StringView message, StringView filename, StringView input, size_t offset)
 {
@@ -138,7 +139,7 @@ static HashTable<DeprecatedString> import_stack;
 Optional<Interface&> Parser::resolve_import(auto path)
 {
     auto include_path = LexicalPath::join(import_base_path, path).string();
-    if (!Core::DeprecatedFile::exists(include_path))
+    if (!FileSystem::exists(include_path))
         report_parsing_error(DeprecatedString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
     auto real_path = Core::DeprecatedFile::real_path_for(include_path);

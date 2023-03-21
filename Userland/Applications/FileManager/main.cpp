@@ -25,6 +25,7 @@
 #include <LibCore/System.h>
 #include <LibCore/TempFile.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -111,7 +112,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!ignore_path_resolution)
             initial_location = Core::DeprecatedFile::real_path_for(initial_location);
 
-        if (!Core::DeprecatedFile::is_directory(initial_location)) {
+        if (!FileSystem::is_directory(initial_location)) {
             // We want to extract zips to a temporary directory when FileManager is launched with a .zip file as its first argument
             if (path.has_extension(".zip"sv)) {
                 auto temp_directory = Core::TempFile::create_temp_directory();
@@ -215,7 +216,7 @@ void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Wi
 {
     auto path = selected_file_paths.first();
     auto destination = DeprecatedString::formatted("{}/{}", Core::StandardPaths::desktop_directory(), LexicalPath::basename(path));
-    if (auto result = Core::DeprecatedFile::link_file(destination, path); result.is_error()) {
+    if (auto result = FileSystem::link_file(destination, path); result.is_error()) {
         GUI::MessageBox::show(window, DeprecatedString::formatted("Could not create desktop shortcut:\n{}", result.error()), "File Manager"sv,
             GUI::MessageBox::Type::Error);
     }
@@ -483,7 +484,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
 
         for (auto& path : paths) {
-            if (Core::DeprecatedFile::is_directory(path))
+            if (FileSystem::is_directory(path))
                 Desktop::Launcher::open(URL::create_with_file_scheme(path));
         }
     });
@@ -496,7 +497,7 @@ ErrorOr<int> run_in_desktop_mode()
         }
 
         for (auto& path : paths) {
-            if (Core::DeprecatedFile::is_directory(path)) {
+            if (FileSystem::is_directory(path)) {
                 spawn_terminal(path);
             }
         }
@@ -821,7 +822,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                     paths = directory_view->selected_file_paths();
 
                 for (auto& path : paths) {
-                    if (Core::DeprecatedFile::is_directory(path))
+                    if (FileSystem::is_directory(path))
                         Desktop::Launcher::open(URL::create_with_file_scheme(path));
                 }
             },
@@ -840,7 +841,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
                     paths = directory_view->selected_file_paths();
 
                 for (auto& path : paths) {
-                    if (Core::DeprecatedFile::is_directory(path)) {
+                    if (FileSystem::is_directory(path)) {
                         spawn_terminal(path);
                     }
                 }
@@ -1092,7 +1093,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     (void)TRY(main_toolbar.try_add_action(directory_view->view_as_columns_action()));
 
     breadcrumbbar.on_path_change = [&](auto selected_path) {
-        if (Core::DeprecatedFile::is_directory(selected_path)) {
+        if (FileSystem::is_directory(selected_path)) {
             directory_view->open(selected_path);
         } else {
             dbgln("Breadcrumb path '{}' doesn't exist", selected_path);

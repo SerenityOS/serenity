@@ -14,6 +14,7 @@
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/FileIconProvider.h>
@@ -212,7 +213,7 @@ bool PropertiesWindow::apply_changes()
         DeprecatedString new_name = m_name_box->text();
         DeprecatedString new_file = make_full_path(new_name).characters();
 
-        if (Core::DeprecatedFile::exists(new_file)) {
+        if (FileSystem::exists(new_file)) {
             GUI::MessageBox::show(this, DeprecatedString::formatted("A file \"{}\" already exists!", new_name), "Error"sv, GUI::MessageBox::Type::Error);
             return false;
         }

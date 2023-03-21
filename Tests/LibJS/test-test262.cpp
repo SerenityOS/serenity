@@ -13,10 +13,10 @@
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <LibTest/TestRunnerUtil.h>
 #include <spawn.h>
@@ -322,7 +322,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Normalize the path to ensure filenames are consistent
     Vector<DeprecatedString> paths;
 
-    if (!Core::DeprecatedFile::is_directory(test_directory)) {
+    if (!FileSystem::is_directory(test_directory)) {
         paths.append(test_directory);
     } else {
         Test::iterate_directory_recursively(LexicalPath::canonicalized_path(test_directory), [&](DeprecatedString const& file_path) {

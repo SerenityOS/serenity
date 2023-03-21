@@ -97,7 +97,7 @@ set(SOURCES
 qt_add_executable(ladybird ${SOURCES}
     MANUAL_FINALIZATION
 )
-target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
+target_link_libraries(ladybird PRIVATE Qt::Core Qt::Gui Qt::Network Qt::Widgets LibCore LibFileSystem LibGfx LibGUI LibIPC LibJS LibMain LibWeb LibWebView LibSQL)
 
 target_include_directories(ladybird PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(ladybird PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Applications/)
@@ -110,7 +110,7 @@ qt_add_executable(headless-browser
     Utilities.cpp)
 
 target_include_directories(headless-browser PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
+target_link_libraries(headless-browser PRIVATE Qt::Core LibWeb LibWebView LibWebSocket LibCrypto LibFileSystem LibGemini LibHTTP LibJS LibGfx LibMain LibTLS LibIPC LibJS)
 
 set_target_properties(ladybird PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER org.serenityos.ladybird

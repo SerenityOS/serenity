@@ -9,6 +9,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <string.h>
@@ -69,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             new_path = combined_new_path.characters();
         }
 
-        if (no_clobber && Core::DeprecatedFile::exists(new_path))
+        if (no_clobber && FileSystem::exists(new_path))
             continue;
 
         rc = rename(old_path.characters(), new_path.characters());

@@ -18,6 +18,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
 #include <dirent.h>
@@ -164,7 +165,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     for (size_t i = 0; i < files.size(); i++) {
         auto path = files[i].name;
 
-        if (flag_recursive && Core::DeprecatedFile::is_directory(path)) {
+        if (flag_recursive && FileSystem::is_directory(path)) {
             size_t subdirs = 0;
             Core::DirIterator di(path, Core::DirIterator::SkipParentAndBaseDir);
 
@@ -175,7 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             while (di.has_next()) {
                 DeprecatedString directory = di.next_full_path();
-                if (Core::DeprecatedFile::is_directory(directory) && !Core::DeprecatedFile::is_link(directory)) {
+                if (FileSystem::is_directory(directory) && !FileSystem::is_link(directory)) {
                     ++subdirs;
                     FileMetadata new_file;
                     new_file.name = move(directory);
@@ -184,7 +185,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
         }
 
-        bool show_dir_separator = files.size() > 1 && Core::DeprecatedFile::is_directory(path) && !flag_list_directories_only;
+        bool show_dir_separator = files.size() > 1 && FileSystem::is_directory(path) && !flag_list_directories_only;
         if (show_dir_separator) {
             printf("%s:\n", path.characters());
         }

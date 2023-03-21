@@ -16,6 +16,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <LibFileSystem/FileSystem.h>
 #include <sys/stat.h>
 
 static ErrorOr<void> adjust_modification_time(Archive::ZipMember const& zip_member)
@@ -94,7 +95,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member, bool quiet)
 
     if (checksum.digest() != zip_member.crc32) {
         warnln("Failed decompressing file {}: CRC32 mismatch", zip_member.name);
-        MUST(Core::DeprecatedFile::remove(zip_member.name, Core::DeprecatedFile::RecursionMode::Disallowed));
+        MUST(FileSystem::remove(zip_member.name, FileSystem::RecursionMode::Disallowed));
         return false;
     }
 
