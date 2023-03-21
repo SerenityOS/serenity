@@ -615,7 +615,7 @@ JS::GCPtr<DOM::Node> BrowsingContext::currently_focused_area()
 }
 
 // https://html.spec.whatwg.org/#the-rules-for-choosing-a-browsing-context-given-a-browsing-context-name
-BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_context(StringView name, bool no_opener, ActivateTab activate_tab)
+BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_context(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab activate_tab)
 {
     // The rules for choosing a browsing context, given a browsing context name name, a browsing context current, and
     // a boolean noopener are as follows:
@@ -691,14 +691,14 @@ BrowsingContext::ChosenBrowsingContext BrowsingContext::choose_a_browsing_contex
                 // 2. If currentDocument's origin is not same origin with currentDocument's relevant settings object's
                 //    top-level origin, then set noopener to true, name to "_blank", and windowType to "new with no opener".
                 if (!current_document->origin().is_same_origin(current_document->relevant_settings_object().top_level_origin)) {
-                    no_opener = true;
+                    no_opener = TokenizedFeature::NoOpener::Yes;
                     name = "_blank"sv;
                     window_type = WindowType::NewWithNoOpener;
                 }
             }
 
             // 3. If noopener is true, then set chosen to the result of creating a new top-level browsing context.
-            if (no_opener) {
+            if (no_opener == TokenizedFeature::NoOpener::Yes) {
                 auto handle = m_page->client().page_did_request_new_tab(activate_tab);
                 chosen = RemoteBrowsingContext::create_a_new_remote_browsing_context(handle);
             }

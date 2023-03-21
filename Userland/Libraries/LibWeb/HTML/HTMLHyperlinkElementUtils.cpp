@@ -490,7 +490,7 @@ void HTMLHyperlinkElementUtils::follow_the_hyperlink(Optional<DeprecatedString> 
     DeprecatedString target_attribute_value = get_an_elements_target();
 
     // 6. Let noopener be the result of getting an element's noopener with subject and targetAttributeValue.
-    bool noopener = get_an_elements_noopener(target_attribute_value);
+    auto noopener = get_an_elements_noopener(target_attribute_value);
 
     // 7. Let target be the first return value of applying the rules for
     // choosing a browsing context given targetAttributeValue, source, and
@@ -558,7 +558,7 @@ DeprecatedString HTMLHyperlinkElementUtils::get_an_elements_target() const
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#get-an-element's-noopener
-bool HTMLHyperlinkElementUtils::get_an_elements_noopener(StringView target) const
+TokenizedFeature::NoOpener HTMLHyperlinkElementUtils::get_an_elements_noopener(StringView target) const
 {
     // To get an element's noopener, given an a, area, or form element element and a string target:
     auto rel = hyperlink_element_utils_rel().to_lowercase();
@@ -566,15 +566,15 @@ bool HTMLHyperlinkElementUtils::get_an_elements_noopener(StringView target) cons
 
     // 1. If element's link types include the noopener or noreferrer keyword, then return true.
     if (link_types.contains_slow("noopener"sv) || link_types.contains_slow("noreferrer"sv))
-        return true;
+        return TokenizedFeature::NoOpener::Yes;
 
     // 2. If element's link types do not include the opener keyword and
     //    target is an ASCII case-insensitive match for "_blank", then return true.
     if (!link_types.contains_slow("opener"sv) && Infra::is_ascii_case_insensitive_match(target, "_blank"sv))
-        return true;
+        return TokenizedFeature::NoOpener::Yes;
 
     // 3. Return false.
-    return false;
+    return TokenizedFeature::NoOpener::No;
 }
 
 }
