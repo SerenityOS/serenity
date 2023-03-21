@@ -30,7 +30,6 @@ set(SOURCES
     System.cpp
     SystemServerTakeover.cpp
     TCPServer.cpp
-    TempFile.cpp
     Timer.cpp
     UDPServer.cpp
     Version.cpp

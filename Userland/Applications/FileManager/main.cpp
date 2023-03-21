@@ -23,9 +23,9 @@
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
-#include <LibCore/TempFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibFileSystem/FileSystem.h>
+#include <LibFileSystem/TempFile.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -115,7 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!FileSystem::is_directory(initial_location)) {
             // We want to extract zips to a temporary directory when FileManager is launched with a .zip file as its first argument
             if (path.has_extension(".zip"sv)) {
-                auto temp_directory = Core::TempFile::create_temp_directory();
+                auto temp_directory = FileSystem::TempFile::create_temp_directory();
                 if (temp_directory.is_error()) {
                     dbgln("Failed to create temporary directory during zip extraction: {}", temp_directory.error());
 
