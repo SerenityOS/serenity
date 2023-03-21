@@ -14,7 +14,7 @@
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
 template<class T>

@@ -1,24 +1,23 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Nico Weber <thakis@chromium.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
 
-struct GIFLoadingContext;
+struct WebPLoadingContext;
 
-class GIFImageDecoderPlugin final : public ImageDecoderPlugin {
+class WebPImageDecoderPlugin final : public ImageDecoderPlugin {
 public:
     static bool sniff(ReadonlyBytes);
     static ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> create(ReadonlyBytes);
 
-    virtual ~GIFImageDecoderPlugin() override;
+    virtual ~WebPImageDecoderPlugin() override;
 
     virtual IntSize size() override;
     virtual void set_volatile() override;
@@ -31,9 +30,9 @@ public:
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
 private:
-    GIFImageDecoderPlugin(u8 const*, size_t);
+    WebPImageDecoderPlugin(ReadonlyBytes, OwnPtr<WebPLoadingContext>);
 
-    OwnPtr<GIFLoadingContext> m_context;
+    OwnPtr<WebPLoadingContext> m_context;
 };
 
 }

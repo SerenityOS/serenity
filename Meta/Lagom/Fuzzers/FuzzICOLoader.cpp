@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/ICOLoader.h>
+#include <LibGfx/ImageFormats/ICOLoader.h>
 #include <stddef.h>
 #include <stdint.h>
 

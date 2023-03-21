@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "PGMLoader.h"
-#include "PortableImageLoaderCommon.h"
-#include "Streamer.h"
 #include <AK/Endian.h>
+#include <LibGfx/ImageFormats/PGMLoader.h>
+#include <LibGfx/ImageFormats/PortableImageLoaderCommon.h>
+#include <LibGfx/Streamer.h>
 #include <string.h>
 
 namespace Gfx {

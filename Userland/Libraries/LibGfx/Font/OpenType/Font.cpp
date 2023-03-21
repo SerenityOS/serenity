@@ -17,7 +17,7 @@
 #include <LibGfx/Font/OpenType/Font.h>
 #include <LibGfx/Font/OpenType/Glyf.h>
 #include <LibGfx/Font/OpenType/Tables.h>
-#include <LibGfx/PNGLoader.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibTextCodec/Decoder.h>
 #include <math.h>
 #include <sys/mman.h>

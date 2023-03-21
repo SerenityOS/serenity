@@ -12,7 +12,7 @@
 #include <AK/Function.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
-#include <LibGfx/BMPLoader.h>
+#include <LibGfx/ImageFormats/BMPLoader.h>
 
 namespace Gfx {
 

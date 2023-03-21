@@ -13,7 +13,7 @@
 #include <LibCompress/Zlib.h>
 #include <LibCrypto/Checksum/CRC32.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/PNGWriter.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 
 #pragma GCC diagnostic ignored "-Wpsabi"
 

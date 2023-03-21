@@ -8,8 +8,8 @@
 #pragma once
 
 #include <AK/StringView.h>
-#include <LibGfx/ImageDecoder.h>
-#include <LibGfx/PortableImageMapLoader.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/PortableImageMapLoader.h>
 
 namespace Gfx {
 

@@ -9,7 +9,7 @@
 
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace GUI {
 

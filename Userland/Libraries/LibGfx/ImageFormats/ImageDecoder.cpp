@@ -5,19 +5,19 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <LibGfx/BMPLoader.h>
-#include <LibGfx/DDSLoader.h>
-#include <LibGfx/GIFLoader.h>
-#include <LibGfx/ICOLoader.h>
-#include <LibGfx/ImageDecoder.h>
-#include <LibGfx/JPEGLoader.h>
-#include <LibGfx/PBMLoader.h>
-#include <LibGfx/PGMLoader.h>
-#include <LibGfx/PNGLoader.h>
-#include <LibGfx/PPMLoader.h>
-#include <LibGfx/QOILoader.h>
-#include <LibGfx/TGALoader.h>
-#include <LibGfx/WebPLoader.h>
+#include <LibGfx/ImageFormats/BMPLoader.h>
+#include <LibGfx/ImageFormats/DDSLoader.h>
+#include <LibGfx/ImageFormats/GIFLoader.h>
+#include <LibGfx/ImageFormats/ICOLoader.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibGfx/ImageFormats/PBMLoader.h>
+#include <LibGfx/ImageFormats/PGMLoader.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/PPMLoader.h>
+#include <LibGfx/ImageFormats/QOILoader.h>
+#include <LibGfx/ImageFormats/TGALoader.h>
+#include <LibGfx/ImageFormats/WebPLoader.h>
 
 namespace Gfx {
 

@@ -9,9 +9,9 @@
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/WellKnownProfiles.h>
-#include <LibGfx/JPEGLoader.h>
-#include <LibGfx/PNGLoader.h>
-#include <LibGfx/WebPLoader.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
+#include <LibGfx/ImageFormats/WebPLoader.h>
 #include <LibTest/TestCase.h>
 
 #ifdef AK_OS_SERENITY

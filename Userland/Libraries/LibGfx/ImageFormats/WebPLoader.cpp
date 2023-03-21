@@ -8,7 +8,7 @@
 #include <AK/Endian.h>
 #include <AK/Format.h>
 #include <AK/Vector.h>
-#include <LibGfx/WebPLoader.h>
+#include <LibGfx/ImageFormats/WebPLoader.h>
 
 // Overview: https://developers.google.com/speed/webp/docs/compression
 // Container: https://developers.google.com/speed/webp/docs/riff_container

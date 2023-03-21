@@ -14,7 +14,7 @@
 #include <LibCore/System.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibMain/Main.h>
 #include <stdio.h>
 #include <sys/stat.h>

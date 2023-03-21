@@ -8,7 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibGfx/Forward.h>
-#include <LibGfx/ImageDecoder.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
 
 namespace Gfx {
 

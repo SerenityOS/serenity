@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibGfx/PBMLoader.h>
+#include <LibGfx/ImageFormats/PBMLoader.h>
 #include <stddef.h>
 #include <stdint.h>
 

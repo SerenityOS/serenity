@@ -12,10 +12,10 @@
 #include <AK/Base64.h>
 #include <AK/JsonObject.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/PNGWriter.h>
-#include <LibGfx/QOIWriter.h>
+#include <LibGfx/ImageFormats/BMPWriter.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibGfx/ImageFormats/QOIWriter.h>
 #include <LibImageDecoderClient/Client.h>
 #include <stdio.h>
 

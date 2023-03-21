@@ -7,11 +7,11 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
-#include <LibGfx/BMPWriter.h>
-#include <LibGfx/ImageDecoder.h>
-#include <LibGfx/PNGWriter.h>
-#include <LibGfx/PortableFormatWriter.h>
-#include <LibGfx/QOIWriter.h>
+#include <LibGfx/ImageFormats/BMPWriter.h>
+#include <LibGfx/ImageFormats/ImageDecoder.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
+#include <LibGfx/ImageFormats/PortableFormatWriter.h>
+#include <LibGfx/ImageFormats/QOIWriter.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {

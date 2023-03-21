@@ -14,7 +14,7 @@
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
-#include <LibGfx/JPEGLoader.h>
+#include <LibGfx/ImageFormats/JPEGLoader.h>
 
 #define JPEG_INVALID 0X0000
 

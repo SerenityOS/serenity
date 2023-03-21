@@ -1,15 +1,12 @@
 set(SOURCES
     AffineTransform.cpp
     AntiAliasingPainter.cpp
-    BMPLoader.cpp
-    BMPWriter.cpp
     Bitmap.cpp
     BitmapMixer.cpp
     ClassicStylePainter.cpp
     ClassicWindowTheme.cpp
     Color.cpp
     CursorParams.cpp
-    DDSLoader.cpp
     FillPathImplementation.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp
@@ -28,27 +25,32 @@ set(SOURCES
     Font/Typeface.cpp
     Font/WOFF/Font.cpp
     GradientPainting.cpp
-    GIFLoader.cpp
     ICC/BinaryWriter.cpp
     ICC/Profile.cpp
     ICC/Tags.cpp
     ICC/TagTypes.cpp
     ICC/WellKnownProfiles.cpp
-    ICOLoader.cpp
-    ImageDecoder.cpp
-    JPEGLoader.cpp
-    PBMLoader.cpp
-    PGMLoader.cpp
-    PNGLoader.cpp
-    PNGWriter.cpp
-    PortableFormatWriter.cpp
-    PPMLoader.cpp
+    ImageFormats/BMPLoader.cpp
+    ImageFormats/BMPWriter.cpp
+    ImageFormats/DDSLoader.cpp
+    ImageFormats/GIFLoader.cpp
+    ImageFormats/ICOLoader.cpp
+    ImageFormats/ImageDecoder.cpp
+    ImageFormats/JPEGLoader.cpp
+    ImageFormats/PBMLoader.cpp
+    ImageFormats/PGMLoader.cpp
+    ImageFormats/PNGLoader.cpp
+    ImageFormats/PNGWriter.cpp
+    ImageFormats/PortableFormatWriter.cpp
+    ImageFormats/PPMLoader.cpp
+    ImageFormats/QOILoader.cpp
+    ImageFormats/QOIWriter.cpp
+    ImageFormats/TGALoader.cpp
+    ImageFormats/WebPLoader.cpp
     Painter.cpp
     Palette.cpp
     Path.cpp
     Point.cpp
-    QOILoader.cpp
-    QOIWriter.cpp
     Rect.cpp
     ShareableBitmap.cpp
     Size.cpp
@@ -56,9 +58,7 @@ set(SOURCES
     SystemTheme.cpp
     TextDirection.cpp
     TextLayout.cpp
-    TGALoader.cpp
     Triangle.cpp
-    WebPLoader.cpp
     WindowTheme.cpp
 )
 

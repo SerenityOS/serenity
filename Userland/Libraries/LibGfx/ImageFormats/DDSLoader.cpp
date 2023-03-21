@@ -12,7 +12,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
-#include <LibGfx/DDSLoader.h>
+#include <LibGfx/ImageFormats/DDSLoader.h>
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>

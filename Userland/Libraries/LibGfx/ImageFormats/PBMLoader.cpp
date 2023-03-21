@@ -6,9 +6,9 @@
  */
 
 #include "PBMLoader.h"
+#include "AK/Endian.h"
 #include "PortableImageLoaderCommon.h"
-#include "Streamer.h"
-#include <AK/Endian.h>
+#include "Userland/Libraries/LibGfx/Streamer.h"
 #include <string.h>
 
 namespace Gfx {

@@ -8,9 +8,9 @@
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
 #include <AK/Types.h>
-#include <LibGfx/BMPLoader.h>
-#include <LibGfx/ICOLoader.h>
-#include <LibGfx/PNGLoader.h>
+#include <LibGfx/ImageFormats/BMPLoader.h>
+#include <LibGfx/ImageFormats/ICOLoader.h>
+#include <LibGfx/ImageFormats/PNGLoader.h>
 #include <string.h>
 
 namespace Gfx {

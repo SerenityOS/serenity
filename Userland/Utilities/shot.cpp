@@ -19,7 +19,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/PNGWriter.h>
+#include <LibGfx/ImageFormats/PNGWriter.h>
 #include <LibGfx/Palette.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
