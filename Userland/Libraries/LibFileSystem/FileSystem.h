@@ -1,0 +1,79 @@
+/*
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/Error.h>
+#include <AK/String.h>
+#include <AK/StringView.h>
+#include <LibCore/File.h>
+#include <sys/stat.h>
+
+namespace FileSystem {
+
+#define DEFAULT_PATH "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"
+#define DEFAULT_PATH_SV "/usr/local/sbin:/usr/local/bin:/usr/bin:/bin"sv
+
+ErrorOr<String> current_working_directory();
+ErrorOr<String> absolute_path(StringView path);
+ErrorOr<String> real_path(StringView path);
+
+bool exists(StringView path);
+bool exists(int fd);
+
+bool is_directory(StringView path);
+bool is_directory(int fd);
+
+bool is_device(StringView path);
+bool is_device(int fd);
+
+bool is_block_device(StringView path);
+bool is_block_device(int fd);
+
+bool is_char_device(StringView path);
+bool is_char_device(int fd);
+
+bool is_link(StringView path);
+bool is_link(int fd);
+
+enum class RecursionMode {
+    Allowed,
+    Disallowed
+};
+
+enum class LinkMode {
+    Allowed,
+    Disallowed
+};
+
+enum class AddDuplicateFileMarker {
+    Yes,
+    No,
+};
+
+enum class PreserveMode {
+    Nothing = 0,
+    Permissions = (1 << 0),
+    Ownership = (1 << 1),
+    Timestamps = (1 << 2),
+};
+AK_ENUM_BITWISE_OPERATORS(PreserveMode);
+
+ErrorOr<void> copy_file(StringView destination_path, StringView source_path, struct stat const& source_stat, Core::File& source, PreserveMode = PreserveMode::Nothing);
+ErrorOr<void> copy_directory(StringView destination_path, StringView source_path, struct stat const& source_stat, LinkMode = LinkMode::Disallowed, PreserveMode = PreserveMode::Nothing);
+ErrorOr<void> copy_file_or_directory(StringView destination_path, StringView source_path, RecursionMode = RecursionMode::Allowed, LinkMode = LinkMode::Disallowed, AddDuplicateFileMarker = AddDuplicateFileMarker::Yes, PreserveMode = PreserveMode::Nothing);
+ErrorOr<void> remove(StringView path, RecursionMode);
+ErrorOr<size_t> size(StringView path);
+bool can_delete_or_move(StringView path);
+
+ErrorOr<String> read_link(StringView link_path);
+ErrorOr<void> link_file(StringView destination_path, StringView source_path);
+
+ErrorOr<String> resolve_executable_from_environment(StringView filename);
+bool looks_like_shared_library(StringView path);
+
+}
