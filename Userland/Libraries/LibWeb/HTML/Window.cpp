@@ -336,7 +336,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
 
     // 5. Let noopener and noreferrer be false.
     auto no_opener = TokenizedFeature::NoOpener::No;
-    auto no_referrer = false;
+    auto no_referrer = TokenizedFeature::NoReferrer::No;
 
     // 6. If tokenizedFeatures["noopener"] exists, then:
     if (auto no_opener_feature = tokenized_features.get("noopener"sv); no_opener_feature.has_value()) {
@@ -350,14 +350,14 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
     // 7. If tokenizedFeatures["noreferrer"] exists, then:
     if (auto no_referrer_feature = tokenized_features.get("noreferrer"sv); no_referrer_feature.has_value()) {
         // 1. Set noreferrer to the result of parsing tokenizedFeatures["noreferrer"] as a boolean feature.
-        no_referrer = parse_boolean_feature(*no_referrer_feature);
+        no_referrer = parse_boolean_feature<TokenizedFeature::NoReferrer>(*no_referrer_feature);
 
         // 2. Remove tokenizedFeatures["noreferrer"].
         tokenized_features.remove("noreferrer"sv);
     }
 
     // 8. If noreferrer is true, then set noopener to true.
-    if (no_referrer)
+    if (no_referrer == TokenizedFeature::NoReferrer::Yes)
         no_opener = TokenizedFeature::NoOpener::Yes;
 
     // 9. Let target browsing context and windowType be the result of applying the rules for choosing a browsing context given target, source browsing context, and noopener.
@@ -394,7 +394,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
             request->set_url(url_record);
 
             // 2. If noreferrer is true, then set request's referrer to "no-referrer".
-            if (no_referrer)
+            if (no_referrer == TokenizedFeature::NoReferrer::Yes)
                 request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
 
             // 3. Navigate target browsing context to request, with exceptionsEnabled set to true and the source browsing context set to source browsing context.
@@ -419,7 +419,7 @@ WebIDL::ExceptionOr<JS::GCPtr<WindowProxy>> Window::open_impl(StringView url, St
             request->set_url(url_record);
 
             // 4. If noreferrer is true, then set request's referrer to "noreferrer".
-            if (no_referrer)
+            if (no_referrer == TokenizedFeature::NoReferrer::Yes)
                 request->set_referrer(Fetch::Infrastructure::Request::Referrer::NoReferrer);
 
             // 5. Navigate target browsing context to request, with exceptionsEnabled set to true and the source browsing context set to source browsing context.
