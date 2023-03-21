@@ -41,14 +41,20 @@ StringView Presentation::author() const
     return "Unknown Author"sv;
 }
 
-bool Presentation::has_a_next_frame() const
+bool Presentation::has_next_frame() const
 {
-    return m_current_slide < u32(m_slides.size() > 1 ? m_slides.size() - 1 : 0);
+    if (m_slides.is_empty())
+        return false;
+    if (m_current_slide.value() < m_slides.size() - 1)
+        return true;
+    return m_current_frame_in_slide < m_slides[m_current_slide.value()].frame_count() - 1;
 }
 
-bool Presentation::has_a_previous_frame() const
+bool Presentation::has_previous_frame() const
 {
-    return m_current_slide > 0u;
+    if (m_current_slide > 0u)
+        return true;
+    return m_current_frame_in_slide > 0u;
 }
 
 void Presentation::next_frame()
@@ -65,7 +71,7 @@ void Presentation::previous_frame()
     m_current_frame_in_slide.sub(1);
     if (m_current_frame_in_slide.has_overflow()) {
         m_current_slide.saturating_sub(1);
-        m_current_frame_in_slide = m_current_slide == 0u ? 0 : current_slide().frame_count() - 1;
+        m_current_frame_in_slide = current_slide().frame_count() - 1;
     }
 }
 
@@ -108,13 +114,15 @@ ErrorOr<NonnullOwnPtr<Presentation>> Presentation::load_from_file(StringView fil
     auto presentation = Presentation::construct(size, metadata);
 
     auto const& slides = maybe_slides.value();
+    unsigned i = 0;
     for (auto const& maybe_slide : slides.values()) {
         if (!maybe_slide.is_object())
             return Error::from_string_view("Slides must be objects"sv);
         auto const& slide_object = maybe_slide.as_object();
 
-        auto slide = TRY(Slide::parse_slide(slide_object));
+        auto slide = TRY(Slide::parse_slide(slide_object, i));
         presentation->append_slide(move(slide));
+        i++;
     }
 
     return presentation;
@@ -163,9 +171,8 @@ ErrorOr<DeprecatedString> Presentation::render()
     for (size_t i = 0; i < m_slides.size(); ++i) {
         HTMLElement slide_div;
         slide_div.tag_name = "div"sv;
-        TRY(slide_div.style.try_set("display"sv, "none"sv));
         TRY(slide_div.attributes.try_set("id"sv, DeprecatedString::formatted("slide{}", i)));
-        TRY(slide_div.attributes.try_set("class"sv, "slide"));
+        TRY(slide_div.attributes.try_set("class"sv, "slide hidden"sv));
         auto& slide = m_slides[i];
         TRY(slide_div.children.try_append(TRY(slide.render(*this))));
         main_element.children.append(move(slide_div));
@@ -181,18 +188,29 @@ ErrorOr<DeprecatedString> Presentation::render()
         width: 100%;
         height: 100%;
     }
+    .hidden {
+        display: none;
+    }
 </style><script>
     function goto(slideIndex, frameIndex) {
-        // FIXME: Honor the frameIndex.
-        let slide;
-        for (slide of document.getElementsByClassName("slide")) {
-            slide.style.display = "none";
+        for (const slide of document.getElementsByClassName("slide")) {
+          slide.classList.add("hidden");
         }
-        if (slide = document.getElementById(`slide${slideIndex}`))
-            slide.style.display = "block";
+        for (const frame of document.getElementsByClassName("frame")) {
+          frame.classList.add("hidden");
+        }
+
+        const slide = document.getElementById(`slide${slideIndex}`);
+        if (slide) slide.classList.remove("hidden");
+
+        for (let i = 0; i <= frameIndex; i++) {
+          for (const frame of document.getElementsByClassName(`slide${slideIndex}-frame${i}`)) {
+            if (frame) frame.classList.remove("hidden");
+          }
+        }
     }
     window.onload = function() { goto(0, 0) }
-</script><body>
+</script></head><body>
 )"sv));
     TRY(main_element.serialize(builder));
     TRY(builder.try_append("</body></html>"sv));

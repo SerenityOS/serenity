@@ -128,8 +128,8 @@ void PresenterWidget::update_web_view()
 void PresenterWidget::update_slides_actions()
 {
     if (m_current_presentation) {
-        m_next_slide_action->set_enabled(m_current_presentation->has_a_next_frame());
-        m_previous_slide_action->set_enabled(m_current_presentation->has_a_previous_frame());
+        m_next_slide_action->set_enabled(m_current_presentation->has_next_frame());
+        m_previous_slide_action->set_enabled(m_current_presentation->has_previous_frame());
         m_full_screen_action->set_enabled(true);
         m_present_from_first_slide_action->set_enabled(true);
     } else {
