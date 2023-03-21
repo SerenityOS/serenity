@@ -80,7 +80,8 @@
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(error_if_unset)               \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(null_if_unset_or_alternative) \
     __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(length_of_variable)           \
-    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(reexpand)
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(reexpand)                     \
+    __ENUMERATE_SHELL_IMMEDIATE_FUNCTION(math)
 
 namespace Shell {
 

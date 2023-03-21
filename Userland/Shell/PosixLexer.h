@@ -179,7 +179,12 @@ struct ResolvedCommandExpansion {
     ExpansionRange range;
 };
 
-using ResolvedExpansion = Variant<ResolvedParameterExpansion, ResolvedCommandExpansion>;
+struct ResolvedArithmeticExpansion {
+    String source_expression;
+    ExpansionRange range;
+};
+
+using ResolvedExpansion = Variant<ResolvedParameterExpansion, ResolvedCommandExpansion, ResolvedArithmeticExpansion>;
 
 struct HeredocEntry {
     String key;
