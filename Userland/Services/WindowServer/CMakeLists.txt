@@ -45,5 +45,5 @@ set(GENERATED_SOURCES
 )
 
 serenity_bin(WindowServer)
-target_link_libraries(WindowServer PRIVATE LibCore LibGfx LibThreading LibIPC LibMain)
+target_link_libraries(WindowServer PRIVATE LibCore LibFileSystem LibGfx LibThreading LibIPC LibMain)
 serenity_install_headers(Services/WindowServer)

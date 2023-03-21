@@ -15,4 +15,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(PartitionEditor ICON app-partition-editor)
-target_link_libraries(PartitionEditor PRIVATE LibCore LibGfx LibMain LibGUI LibPartition)
+target_link_libraries(PartitionEditor PRIVATE LibCore LibFileSystem LibGfx LibMain LibGUI LibPartition)

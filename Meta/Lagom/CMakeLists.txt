@@ -251,7 +251,7 @@ function(lagom_test source)
     cmake_parse_arguments(LAGOM_TEST "" "WORKING_DIRECTORY" "LIBS" ${ARGN})
     get_filename_component(name ${source} NAME_WE)
     add_executable(${name} ${source})
-    target_link_libraries(${name} PRIVATE LibCore LibTest LibTestMain ${LAGOM_TEST_LIBS})
+    target_link_libraries(${name} PRIVATE LibCore LibFileSystem LibTest LibTestMain ${LAGOM_TEST_LIBS})
     add_test(
         NAME ${name}
         COMMAND ${name}
@@ -345,6 +345,10 @@ target_sources(LibCore PRIVATE ${AK_SOURCES})
 
 # LibMain
 add_serenity_subdirectory(Userland/Libraries/LibMain)
+
+# LibFileSystem
+# This is needed even if Lagom is not enabled because it is depended upon by code generators.
+add_serenity_subdirectory(Userland/Libraries/LibFileSystem)
 
 # LibTimeZone
 # This is needed even if Lagom is not enabled because it is depended upon by code generators.
@@ -524,7 +528,7 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
-        target_link_libraries(markdown-check LibMarkdown LibMain)
+        target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain)
 
         if (NOT EMSCRIPTEN)
             add_executable(ntpquery ../../Userland/Utilities/ntpquery.cpp)
@@ -532,10 +536,10 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(sql ../../Userland/Utilities/sql.cpp)
-        target_link_libraries(sql LibCore LibIPC LibLine LibMain LibSQL)
+        target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
 
         add_executable(test262-runner ../../Tests/LibJS/test262-runner.cpp)
-        target_link_libraries(test262-runner LibJS LibCore)
+        target_link_libraries(test262-runner LibJS LibCore LibFileSystem)
 
         if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
             include(CheckCSourceCompiles)
@@ -554,7 +558,7 @@ if (BUILD_LAGOM)
         endif()
 
         add_executable(wasm ../../Userland/Utilities/wasm.cpp)
-        target_link_libraries(wasm LibCore LibWasm LibLine LibMain LibJS)
+        target_link_libraries(wasm LibCore LibFileSystem LibWasm LibLine LibMain LibJS)
 
         add_executable(xml ../../Userland/Utilities/xml.cpp)
         target_link_libraries(xml LibCore LibXML LibMain)
@@ -567,7 +571,7 @@ if (BUILD_LAGOM)
             LibTest
             ${LIBTEST_SOURCES}
         )
-        target_link_libraries(LibTest PRIVATE LibCore)
+        target_link_libraries(LibTest PRIVATE LibCore LibFileSystem)
         set_target_properties(LibTest PROPERTIES OUTPUT_NAME lagom-test)
         add_library(
             LibTestMain
@@ -622,7 +626,7 @@ if (BUILD_LAGOM)
         add_executable(test-js
             ../../Tests/LibJS/test-js.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-js LibCore LibTest LibJS)
+        target_link_libraries(test-js LibCore LibFileSystem LibTest LibJS)
         add_test(
             NAME JS
             COMMAND test-js --show-progress=false
@@ -638,7 +642,7 @@ if (BUILD_LAGOM)
         add_executable(test-spreadsheet
                 ../../Tests/Spreadsheet/test-spreadsheet.cpp
                 ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-spreadsheet LibCore LibTest LibJS)
+        target_link_libraries(test-spreadsheet LibCore LibFileSystem LibTest LibJS)
         add_test(
                 NAME Spreadsheet
                 COMMAND test-spreadsheet --show-progress=false
@@ -649,7 +653,7 @@ if (BUILD_LAGOM)
         add_executable(test-wasm
             ../../Tests/LibWasm/test-wasm.cpp
             ../../Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp)
-        target_link_libraries(test-wasm LibCore LibTest LibWasm LibJS)
+        target_link_libraries(test-wasm LibCore LibFileSystem LibTest LibWasm LibJS)
         add_test(
             NAME WasmParser
             COMMAND test-wasm --show-progress=false ${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries/LibWasm/Tests

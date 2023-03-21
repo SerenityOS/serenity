@@ -11,4 +11,4 @@ qt_add_executable(SQLServer ${SQL_SERVER_SOURCES})
 
 target_include_directories(SQLServer PRIVATE ${SERENITY_SOURCE_DIR}/Userland/Services/)
 target_include_directories(SQLServer PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/..)
-target_link_libraries(SQLServer PRIVATE Qt::Core Qt::Gui Qt::Network LibCore LibIPC LibSQL LibMain)
+target_link_libraries(SQLServer PRIVATE Qt::Core Qt::Gui Qt::Network LibCore LibFileSystem LibIPC LibSQL LibMain)

@@ -8,6 +8,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <signal.h>
 #include <stdio.h>
@@ -158,7 +159,7 @@ int main(int argc, char** argv)
         common_path = DeprecatedString::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
 #endif
     }
-    if (!Core::DeprecatedFile::is_directory(test_root)) {
+    if (!FileSystem::is_directory(test_root)) {
         warnln("Test root is not a directory: {}", test_root);
         return 1;
     }

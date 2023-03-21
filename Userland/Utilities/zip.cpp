@@ -10,11 +10,11 @@
 #include <LibCompress/Deflate.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
 #include <LibCrypto/Checksum/CRC32.h>
+#include <LibFileSystem/FileSystem.h>
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     DeprecatedString zip_file_path { zip_path };
-    if (Core::DeprecatedFile::exists(zip_file_path)) {
+    if (FileSystem::exists(zip_file_path)) {
         if (force) {
             outln("{} already exists, overwriting...", zip_file_path);
         } else {
@@ -107,9 +107,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
         while (it.has_next()) {
             auto child_path = it.next_full_path();
-            if (Core::DeprecatedFile::is_link(child_path))
+            if (FileSystem::is_link(child_path))
                 return {};
-            if (!Core::DeprecatedFile::is_directory(child_path)) {
+            if (!FileSystem::is_directory(child_path)) {
                 auto result = add_file(child_path);
                 if (result.is_error())
                     warnln("Couldn't add file '{}': {}", child_path, result.error());
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     for (auto const& source_path : source_paths) {
-        if (Core::DeprecatedFile::is_directory(source_path)) {
+        if (FileSystem::is_directory(source_path)) {
             auto result = add_directory(source_path, add_directory);
             if (result.is_error())
                 warnln("Couldn't add directory '{}': {}", source_path, result.error());

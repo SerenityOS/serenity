@@ -16,11 +16,11 @@
 #include <LibCMake/CMakeCache/SyntaxHighlighter.h>
 #include <LibCMake/SyntaxHighlighter.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Timer.h>
 #include <LibCpp/SemanticSyntaxHighlighter.h>
 #include <LibCpp/SyntaxHighlighter.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/GML/AutocompleteProvider.h>
@@ -424,7 +424,7 @@ static HashMap<DeprecatedString, DeprecatedString>& include_paths()
         Core::DirIterator it(recursive.value_or(base), Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
             auto path = it.next_full_path();
-            if (!Core::DeprecatedFile::is_directory(path)) {
+            if (!FileSystem::is_directory(path)) {
                 auto key = path.substring(base.length() + 1, path.length() - base.length() - 1);
                 dbgln_if(EDITOR_DEBUG, "Adding header \"{}\" in path \"{}\"", key, path);
                 paths.set(key, path);

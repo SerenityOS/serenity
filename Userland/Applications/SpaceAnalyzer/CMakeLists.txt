@@ -17,4 +17,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(SpaceAnalyzer ICON app-space-analyzer)
-target_link_libraries(SpaceAnalyzer PRIVATE LibCore LibDesktop LibGfx LibGUI LibIPC LibMain)
+target_link_libraries(SpaceAnalyzer PRIVATE LibCore LibDesktop LibFileSystem LibGfx LibGUI LibIPC LibMain)

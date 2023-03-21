@@ -6,13 +6,14 @@
  */
 
 #include <AK/ByteReader.h>
+#include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <LibCompress/Gzip.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCoredump/Reader.h>
+#include <LibFileSystem/FileSystem.h>
 #include <signal.h>
 #include <string.h>
 #include <unistd.h>
@@ -297,7 +298,7 @@ DeprecatedString Reader::resolve_object_path(StringView name) const
     //       (e.g. UserspaceEmulator, LibSymbolication, Profiler, and DynamicLinker itself)
     //       We should consider creating unified implementation in the future.
 
-    if (name.starts_with('/') || !Core::DeprecatedFile::looks_like_shared_library(name)) {
+    if (name.starts_with('/') || !FileSystem::looks_like_shared_library(name)) {
         return name;
     }
 

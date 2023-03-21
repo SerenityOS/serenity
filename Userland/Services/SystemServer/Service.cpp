@@ -12,11 +12,11 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/SocketAddress.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <fcntl.h>
 #include <sched.h>
 #include <stdio.h>
@@ -123,7 +123,7 @@ ErrorOr<void> Service::activate()
 
 ErrorOr<void> Service::spawn(int socket_fd)
 {
-    if (!Core::DeprecatedFile::exists(m_executable_path)) {
+    if (!FileSystem::exists(m_executable_path)) {
         dbgln("{}: binary \"{}\" does not exist, skipping service.", name(), m_executable_path);
         return Error::from_errno(ENOENT);
     }

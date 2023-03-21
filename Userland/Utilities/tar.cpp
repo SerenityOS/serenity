@@ -17,6 +17,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -278,9 +279,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Core::DirIterator it(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
             while (it.has_next()) {
                 auto child_path = it.next_full_path();
-                if (!dereference && Core::DeprecatedFile::is_link(child_path)) {
+                if (!dereference && FileSystem::is_link(child_path)) {
                     TRY(add_link(child_path));
-                } else if (!Core::DeprecatedFile::is_directory(child_path)) {
+                } else if (!FileSystem::is_directory(child_path)) {
                     TRY(add_file(child_path));
                 } else {
                     TRY(handle_directory(child_path, handle_directory));
@@ -291,7 +292,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         };
 
         for (auto const& path : paths) {
-            if (Core::DeprecatedFile::is_directory(path)) {
+            if (FileSystem::is_directory(path)) {
                 TRY(add_directory(path, add_directory));
             } else {
                 TRY(add_file(path));

@@ -10,8 +10,8 @@
 #include "SubsectionNode.h"
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibFileSystem/FileSystem.h>
 
 namespace Manual {
 
@@ -54,7 +54,7 @@ ErrorOr<void> SectionNode::reify_if_needed() const
     while (dir_iter.has_next()) {
         LexicalPath lexical_path(dir_iter.next_path());
         if (lexical_path.extension() != "md") {
-            if (Core::DeprecatedFile::is_directory(LexicalPath::absolute_path(own_path.to_deprecated_string(), lexical_path.string()))) {
+            if (FileSystem::is_directory(LexicalPath::absolute_path(own_path.to_deprecated_string(), lexical_path.string()))) {
                 dbgln("Found subsection {}", lexical_path);
                 children.append({ .node = TRY(try_make_ref_counted<SubsectionNode>(*this, lexical_path.title())),
                     .name_for_sorting = TRY(String::from_utf8(lexical_path.title())) });

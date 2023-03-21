@@ -34,6 +34,7 @@
 #include <LibCore/System.h>
 #include <LibDebug/DebugSession.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -311,7 +312,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
     if (full_filename.starts_with(project().root_path())) {
         filename = LexicalPath::relative_path(full_filename, project().root_path());
     }
-    if (Core::DeprecatedFile::is_directory(filename) || !Core::DeprecatedFile::exists(filename))
+    if (FileSystem::is_directory(filename) || !FileSystem::exists(filename))
         return false;
 
     auto editor_wrapper_or_none = m_all_editor_wrappers.first_matching([&](auto& wrapper) {
@@ -533,13 +534,13 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Dep
         DeprecatedString filepath;
 
         if (!path_to_selected.is_empty()) {
-            VERIFY(Core::DeprecatedFile::exists(path_to_selected.first()));
+            VERIFY(FileSystem::exists(path_to_selected.first()));
 
             LexicalPath selected(path_to_selected.first());
 
             DeprecatedString dir_path;
 
-            if (Core::DeprecatedFile::is_directory(selected.string()))
+            if (FileSystem::is_directory(selected.string()))
                 dir_path = selected.string();
             else
                 dir_path = selected.dirname();
@@ -573,7 +574,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_actio
 
             DeprecatedString dir_path;
 
-            if (Core::DeprecatedFile::is_directory(selected.string()))
+            if (FileSystem::is_directory(selected.string()))
                 dir_path = selected.string();
             else
                 dir_path = selected.dirname();
@@ -681,7 +682,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             }
 
             bool is_directory = S_ISDIR(st.st_mode);
-            if (auto result = Core::DeprecatedFile::remove(file, Core::DeprecatedFile::RecursionMode::Allowed); result.is_error()) {
+            if (auto result = FileSystem::remove(file, FileSystem::RecursionMode::Allowed); result.is_error()) {
                 auto& error = result.error();
                 if (is_directory) {
                     GUI::MessageBox::show(window(),
@@ -1001,7 +1002,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_debug_action()
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/debug-run.png"sv));
     return GUI::Action::create("&Debug", icon, [this](auto&) {
-        if (!Core::DeprecatedFile::exists(get_project_executable_path())) {
+        if (!FileSystem::exists(get_project_executable_path())) {
             GUI::MessageBox::show(window(), DeprecatedString::formatted("Could not find file: {}. (did you build the project?)", get_project_executable_path()), "Error"sv, GUI::MessageBox::Type::Error);
             return;
         }
@@ -1249,7 +1250,7 @@ void HackStudioWidget::configure_project_tree_view()
 
         auto selections = m_project_tree_view->selection().indices();
         auto it = selections.find_if([&](auto selected_file) {
-            return Core::DeprecatedFile::can_delete_or_move(m_project->model().full_path(selected_file));
+            return FileSystem::can_delete_or_move(m_project->model().full_path(selected_file));
         });
         bool has_permissions = it != selections.end();
         m_tree_view_rename_action->set_enabled(has_permissions);
@@ -1794,10 +1795,10 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_config
 
         DeprecatedString formatted_error_string_holder;
         auto save_configuration_or_error = [&]() -> ErrorOr<void> {
-            if (Core::DeprecatedFile::exists(absolute_config_file_path))
+            if (FileSystem::exists(absolute_config_file_path))
                 return {};
 
-            if (Core::DeprecatedFile::exists(parent_directory) && !Core::DeprecatedFile::is_directory(parent_directory)) {
+            if (FileSystem::exists(parent_directory) && !FileSystem::is_directory(parent_directory)) {
                 formatted_error_string_holder = DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory);
                 return Error::from_string_view(formatted_error_string_holder);
             }

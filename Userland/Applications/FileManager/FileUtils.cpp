@@ -8,9 +8,9 @@
 #include "FileUtils.h"
 #include "FileOperationProgressWidget.h"
 #include <AK/LexicalPath.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/MessageBox.h>
 #include <unistd.h>
@@ -124,7 +124,7 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
 
     auto const target = LexicalPath::canonicalized_path(destination);
 
-    if (!Core::DeprecatedFile::is_directory(target))
+    if (!FileSystem::is_directory(target))
         return has_accepted_drop;
 
     Vector<DeprecatedString> paths_to_copy;

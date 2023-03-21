@@ -11,6 +11,7 @@
 #include <AK/Optional.h>
 #include <AK/Platform.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -487,7 +488,7 @@ void DebugSession::update_loaded_libs()
             return IterationDecision::Continue;
 
         DeprecatedString lib_name = object_path.value();
-        if (Core::DeprecatedFile::looks_like_shared_library(lib_name))
+        if (FileSystem::looks_like_shared_library(lib_name))
             lib_name = LexicalPath::basename(object_path.value());
 
         FlatPtr base_address = entry.as_object().get_addr("address"sv).value_or(0);

@@ -19,4 +19,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(Snake ICON app-snake)
-target_link_libraries(Snake PRIVATE LibCore LibGfx LibGUI LibConfig LibMain LibDesktop)
+target_link_libraries(Snake PRIVATE LibCore LibFileSystem LibGfx LibGUI LibConfig LibMain LibDesktop)

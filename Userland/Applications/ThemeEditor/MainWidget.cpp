@@ -15,7 +15,7 @@
 #include <Applications/ThemeEditor/MetricPropertyGML.h>
 #include <Applications/ThemeEditor/PathPropertyGML.h>
 #include <Applications/ThemeEditor/ThemeEditorGML.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/BoxLayout.h>
@@ -591,8 +591,8 @@ void MainWidget::show_path_picker_dialog(StringView property_display_name, GUI::
     bool open_folder = path_picker_target == PathPickerTarget::Folder;
     auto window_title = DeprecatedString::formatted(open_folder ? "Select {} folder"sv : "Select {} file"sv, property_display_name);
     auto target_path = path_input.text();
-    if (Core::DeprecatedFile::exists(target_path)) {
-        if (!Core::DeprecatedFile::is_directory(target_path))
+    if (FileSystem::exists(target_path)) {
+        if (!FileSystem::is_directory(target_path))
             target_path = LexicalPath::dirname(target_path);
     } else {
         target_path = "/res/icons";

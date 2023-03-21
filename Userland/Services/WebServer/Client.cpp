@@ -19,6 +19,7 @@
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
 #include <WebServer/Client.h>
@@ -133,7 +134,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
     path_builder.append(requested_path);
     auto real_path = TRY(path_builder.to_string());
 
-    if (Core::DeprecatedFile::is_directory(real_path.bytes_as_string_view())) {
+    if (FileSystem::is_directory(real_path.bytes_as_string_view())) {
         if (!resource_decoded.ends_with('/')) {
             StringBuilder red;
 
@@ -148,7 +149,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
         index_html_path_builder.append(real_path);
         index_html_path_builder.append("/index.html"sv);
         auto index_html_path = TRY(index_html_path_builder.to_string());
-        if (!Core::DeprecatedFile::exists(index_html_path)) {
+        if (!FileSystem::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
         }
@@ -170,7 +171,7 @@ ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 
     auto const info = ContentInfo {
         .type = TRY(String::from_utf8(Core::guess_mime_type_based_on_filename(real_path.bytes_as_string_view()))),
-        .length = TRY(Core::DeprecatedFile::size(real_path.bytes_as_string_view()))
+        .length = TRY(FileSystem::size(real_path.bytes_as_string_view()))
     };
     TRY(send_response(*stream, request, move(info)));
     return true;

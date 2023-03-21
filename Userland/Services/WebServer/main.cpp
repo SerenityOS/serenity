@@ -13,6 +13,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibMain/Main.h>
 #include <WebServer/Client.h>
@@ -57,7 +58,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }
 
     auto real_document_root_path = Core::DeprecatedFile::real_path_for(document_root_path);
-    if (!Core::DeprecatedFile::exists(real_document_root_path)) {
+    if (!FileSystem::exists(real_document_root_path)) {
         warnln("Root path does not exist: '{}'", document_root_path);
         return 1;
     }

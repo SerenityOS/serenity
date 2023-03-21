@@ -14,8 +14,8 @@
 #include <AK/StringBuilder.h>
 #include <AK/Variant.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibLocale/PluralRules.h>
 
 static DeprecatedString format_identifier(StringView owner, DeprecatedString identifier)
@@ -396,7 +396,7 @@ static ErrorOr<void> parse_all_locales(DeprecatedString core_path, DeprecatedStr
 {
     LexicalPath core_supplemental_path(move(core_path));
     core_supplemental_path = core_supplemental_path.append("supplemental"sv);
-    VERIFY(Core::DeprecatedFile::is_directory(core_supplemental_path.string()));
+    VERIFY(FileSystem::is_directory(core_supplemental_path.string()));
 
     auto remove_variants_from_path = [&](DeprecatedString path) -> ErrorOr<DeprecatedString> {
         auto parsed_locale = TRY(CanonicalLanguageID::parse(cldr.unique_strings, LexicalPath::basename(path)));

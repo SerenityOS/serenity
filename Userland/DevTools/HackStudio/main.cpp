@@ -13,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -140,7 +141,7 @@ static Optional<DeprecatedString> last_opened_project_path()
     if (projects.size() == 0)
         return {};
 
-    if (!Core::DeprecatedFile::exists(projects[0]))
+    if (!FileSystem::exists(projects[0]))
         return {};
 
     return { projects[0] };

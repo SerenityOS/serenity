@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -854,18 +855,18 @@ static DeprecatedString resolve_module_filename(StringView filename, StringView 
     auto extensions = Vector<StringView, 2> { "js"sv, "mjs"sv };
     if (module_type == "json"sv)
         extensions = { "json"sv };
-    if (!Core::DeprecatedFile::exists(filename)) {
+    if (!FileSystem::exists(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo.ext"
             auto resolved_filepath = DeprecatedString::formatted("{}.{}", filename, extension);
-            if (Core::DeprecatedFile::exists(resolved_filepath))
+            if (FileSystem::exists(resolved_filepath))
                 return resolved_filepath;
         }
-    } else if (Core::DeprecatedFile::is_directory(filename)) {
+    } else if (FileSystem::is_directory(filename)) {
         for (auto extension : extensions) {
             // import "./foo" -> import "./foo/index.ext"
             auto resolved_filepath = LexicalPath::join(filename, DeprecatedString::formatted("index.{}", extension)).string();
-            if (Core::DeprecatedFile::exists(resolved_filepath))
+            if (FileSystem::exists(resolved_filepath))
                 return resolved_filepath;
         }
     }

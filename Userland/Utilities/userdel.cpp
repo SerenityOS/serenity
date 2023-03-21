@@ -10,6 +10,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <unistd.h>
 
@@ -54,7 +55,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 12;
         }
 
-        if (auto result = Core::DeprecatedFile::remove(real_path, Core::DeprecatedFile::RecursionMode::Allowed); result.is_error()) {
+        if (auto result = FileSystem::remove(real_path, FileSystem::RecursionMode::Allowed); result.is_error()) {
             warnln("{}", result.release_error());
             return 12;
         }

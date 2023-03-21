@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(WebServer)
-target_link_libraries(WebServer PRIVATE LibCore LibHTTP LibMain)
+target_link_libraries(WebServer PRIVATE LibCore LibFileSystem LibHTTP LibMain)

@@ -27,6 +27,6 @@ serenity_component(
         TARGETS test-test262
 )
 add_executable(test-test262 test-test262.cpp)
-target_link_libraries(test-test262 PRIVATE LibMain LibCore)
+target_link_libraries(test-test262 PRIVATE LibMain LibCore LibFileSystem)
 serenity_set_implicit_links(test-test262)
 install(TARGETS test-test262 RUNTIME DESTINATION bin OPTIONAL)

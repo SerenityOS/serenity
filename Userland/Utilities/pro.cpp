@@ -13,9 +13,9 @@
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibMain/Main.h>
 #include <LibProtocol/Request.h>
@@ -337,7 +337,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                         if (i > -1)
                             output_name = DeprecatedString::formatted("{}.{}", output_name, i);
                         ++i;
-                    } while (Core::DeprecatedFile::exists(output_name));
+                    } while (FileSystem::exists(output_name));
                 }
 
                 int target_file_fd = open(output_name.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0644);

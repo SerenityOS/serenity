@@ -6,7 +6,7 @@
 
 #include "Project.h"
 #include "HackStudio.h"
-#include <LibCore/DeprecatedFile.h>
+#include <LibFileSystem/FileSystem.h>
 
 namespace HackStudio {
 
@@ -18,7 +18,7 @@ Project::Project(DeprecatedString const& root_path)
 
 OwnPtr<Project> Project::open_with_root_path(DeprecatedString const& root_path)
 {
-    if (!Core::DeprecatedFile::is_directory(root_path))
+    if (!FileSystem::is_directory(root_path))
         return {};
     return adopt_own(*new Project(root_path));
 }

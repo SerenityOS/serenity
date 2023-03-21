@@ -9,12 +9,12 @@
 #include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>
 #include <LibELF/Core.h>
 #include <LibELF/Image.h>
+#include <LibFileSystem/FileSystem.h>
 
 namespace Coredump {
 
@@ -26,7 +26,7 @@ ELFObjectInfo const* Backtrace::object_info_for_region(Reader const& coredump, M
     if (maybe_ptr.has_value())
         return *maybe_ptr;
 
-    if (!Core::DeprecatedFile::exists(path))
+    if (!FileSystem::exists(path))
         return nullptr;
 
     auto file_or_error = Core::MappedFile::map(path);

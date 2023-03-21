@@ -6,9 +6,9 @@
 
 #include <Applications/PartitionEditor/PartitionEditorWindowGML.h>
 #include <Applications/PartitionEditor/PartitionModel.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
@@ -23,7 +23,7 @@ static Vector<DeprecatedString> get_device_paths()
     // FIXME: Propagate errors.
     (void)Core::Directory::for_each_entry("/dev"sv, Core::DirIterator::Flags::SkipParentAndBaseDir, [&](auto const& entry, auto const& directory) -> ErrorOr<IterationDecision> {
         auto full_path = LexicalPath::join(directory.path().string(), entry.name).string();
-        if (Core::DeprecatedFile::is_block_device(full_path))
+        if (FileSystem::is_block_device(full_path))
             device_paths.append(full_path);
         return IterationDecision::Continue;
     });

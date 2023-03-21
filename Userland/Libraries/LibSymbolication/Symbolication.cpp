@@ -13,6 +13,7 @@
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibSymbolication/Symbolication.h>
 
 namespace Symbolication {
@@ -65,7 +66,7 @@ Optional<Symbol> symbolicate(DeprecatedString const& path, FlatPtr address, Incl
         bool found = false;
         for (auto& search_path : search_paths) {
             full_path = LexicalPath::join(search_path, path).string();
-            if (Core::DeprecatedFile::exists(full_path)) {
+            if (FileSystem::exists(full_path)) {
                 found = true;
                 break;
             }

@@ -6,9 +6,9 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibMain/Main.h>
 #include <string.h>
 #include <strings.h>
@@ -68,7 +68,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return false;
         }
 
-        if (path != "-" && Core::DeprecatedFile::is_directory(path)) {
+        if (path != "-" && FileSystem::is_directory(path)) {
             warnln("Failed to open file{} '{}': is a directory", file_number, path);
             return false;
         }

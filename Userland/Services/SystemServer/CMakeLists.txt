@@ -10,4 +10,4 @@ set(SOURCES
 )
 
 serenity_bin(SystemServer)
-target_link_libraries(SystemServer PRIVATE LibCore LibMain)
+target_link_libraries(SystemServer PRIVATE LibCore LibFileSystem LibMain)

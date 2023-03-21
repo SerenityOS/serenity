@@ -12,13 +12,13 @@
 #include <AK/URL.h>
 #include <Applications/CrashReporter/CrashReporterWindowGML.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
 #include <LibCoredump/Backtrace.h>
 #include <LibCoredump/Reader.h>
 #include <LibDesktop/AppFile.h>
 #include <LibDesktop/Launcher.h>
 #include <LibELF/Core.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -131,7 +131,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 
 static void unlink_coredump(StringView coredump_path)
 {
-    if (Core::DeprecatedFile::remove(coredump_path, Core::DeprecatedFile::RecursionMode::Disallowed).is_error())
+    if (FileSystem::remove(coredump_path, FileSystem::RecursionMode::Disallowed).is_error())
         dbgln("Failed deleting coredump file");
 }
 
