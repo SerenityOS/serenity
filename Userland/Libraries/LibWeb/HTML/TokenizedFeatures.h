@@ -14,7 +14,14 @@ namespace Web::HTML::TokenizedFeature {
         No,                        \
     }
 
+TOKENIZED_FEATURE(Location);
+TOKENIZED_FEATURE(Menubar);
 TOKENIZED_FEATURE(NoOpener);
 TOKENIZED_FEATURE(NoReferrer);
+TOKENIZED_FEATURE(Popup);
+TOKENIZED_FEATURE(Resizable);
+TOKENIZED_FEATURE(Scrollbars);
+TOKENIZED_FEATURE(Status);
+TOKENIZED_FEATURE(Toolbar);
 
 }

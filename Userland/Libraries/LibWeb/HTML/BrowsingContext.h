@@ -317,9 +317,6 @@ private:
     // https://html.spec.whatwg.org/multipage/browsers.html#tlbc-group
     JS::GCPtr<BrowsingContextGroup> m_group;
 
-    // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
-    bool m_is_popup { false };
-
     // https://html.spec.whatwg.org/multipage/interaction.html#system-visibility-state
     VisibilityState m_system_visibility_state { VisibilityState::Hidden };
 

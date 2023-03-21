@@ -10,6 +10,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/PolicyContainers.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 #include <LibWeb/HTML/WindowProxy.h>
 
 namespace Web::HTML {
@@ -38,7 +39,7 @@ public:
         Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {})
         = 0;
 
-    void set_is_popup(bool is_popup) { m_is_popup = is_popup; }
+    void set_is_popup(TokenizedFeature::Popup is_popup) { m_is_popup = is_popup; }
 
     virtual String const& window_handle() const = 0;
     virtual void set_window_handle(String handle) = 0;
@@ -47,7 +48,7 @@ protected:
     DeprecatedString m_name;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#is-popup
-    bool m_is_popup { false };
+    TokenizedFeature::Popup m_is_popup { TokenizedFeature::Popup::No };
 
     // https://html.spec.whatwg.org/multipage/browsers.html#opener-browsing-context
     JS::GCPtr<BrowsingContext> m_opener_browsing_context;
