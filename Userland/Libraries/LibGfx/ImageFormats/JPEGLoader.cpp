@@ -247,7 +247,7 @@ struct JPEGLoadingContext {
     u16 dc_restart_interval { 0 };
     HashMap<u8, HuffmanTableSpec> dc_tables;
     HashMap<u8, HuffmanTableSpec> ac_tables;
-    i32 previous_dc_values[3] = { 0 };
+    Array<i32, 3> previous_dc_values {};
     MacroblockMeta mblock_meta;
     OwnPtr<FixedMemoryStream> stream;
 
@@ -579,9 +579,7 @@ static void reset_decoder(JPEGLoadingContext& context)
 
     // E.2.4 Control procedure for decoding a restart interval
     if (is_dct_based(context.frame.type)) {
-        context.previous_dc_values[0] = 0;
-        context.previous_dc_values[1] = 0;
-        context.previous_dc_values[2] = 0;
+        context.previous_dc_values = {};
         return;
     }
 
