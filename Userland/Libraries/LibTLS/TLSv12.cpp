@@ -522,12 +522,11 @@ void DefaultRootCACertificates::reload_certificates(ByteBuffer& data)
             continue;
         }
         auto certificate = certificate_result.release_value();
-        // FIXME: We might want to check additional things here to make sure we only load root CAs:
-        //        - Root certificates are self-signed
-        //        - Either it has matched Authority Key Identifier with Subject Key Identifier,
-        //        - in some cases there is no Authority Key identifier, then Issuer string should match with Subject string
-        if (certificate.is_certificate_authority)
+        if (certificate.is_certificate_authority && certificate.is_self_signed()) {
             m_ca_certificates.append(move(certificate));
+        } else {
+            dbgln("Skipped '{}' because it is not a valid root CA", certificate.subject_identifier_string());
+        }
     }
 
     dbgln("Loaded {} of {} ({:.2}%) provided CA Certificates", m_ca_certificates.size(), certs.size(), (m_ca_certificates.size() * 100.0) / certs.size());
