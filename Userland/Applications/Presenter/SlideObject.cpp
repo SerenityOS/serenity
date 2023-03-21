@@ -17,8 +17,9 @@ static DeprecatedString to_css_length(float design_value, Presentation const& pr
     return DeprecatedString::formatted("{}vw", length_in_vw);
 }
 
-ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json)
+ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject const& slide_object_json, unsigned slide_index)
 {
+    auto frame = slide_object_json.get_u32("frame"sv).value_or(0);
     auto maybe_type = slide_object_json.get_deprecated_string("type"sv);
     if (!maybe_type.has_value())
         return Error::from_string_view("Slide object must have a type"sv);
@@ -26,9 +27,9 @@ ErrorOr<NonnullRefPtr<SlideObject>> SlideObject::parse_slide_object(JsonObject c
     auto type = maybe_type.value();
     RefPtr<SlideObject> object;
     if (type == "text"sv)
-        object = TRY(try_make_ref_counted<Text>());
+        object = TRY(try_make_ref_counted<Text>(Index { slide_index, frame }));
     else if (type == "image"sv)
-        object = TRY(try_make_ref_counted<Image>());
+        object = TRY(try_make_ref_counted<Image>(Index { slide_index, frame }));
     else
         return Error::from_string_view("Unsupported slide object type"sv);
 
@@ -97,6 +98,7 @@ ErrorOr<HTMLElement> Text::render(Presentation const& presentation) const
 {
     HTMLElement div;
     div.tag_name = "div"sv;
+    TRY(div.attributes.try_set("class"sv, DeprecatedString::formatted("frame slide{}-frame{}", m_slide_index, m_frame_index)));
     div.style.set("color"sv, m_color.to_deprecated_string());
     div.style.set("font-family"sv, DeprecatedString::formatted("'{}'", m_font_family));
     div.style.set("font-size"sv, to_css_length(m_font_size_in_pt * 1.33333333f, presentation));
@@ -125,6 +127,7 @@ ErrorOr<HTMLElement> Image::render(Presentation const& presentation) const
 
     HTMLElement image_wrapper;
     image_wrapper.tag_name = "div"sv;
+    TRY(image_wrapper.attributes.try_set("class"sv, DeprecatedString::formatted("frame slide{}-frame{}", m_slide_index, m_frame_index)));
     image_wrapper.children.append(move(img));
     image_wrapper.style.set("position"sv, "absolute"sv);
     image_wrapper.style.set("left"sv, to_css_length(m_rect.left(), presentation));

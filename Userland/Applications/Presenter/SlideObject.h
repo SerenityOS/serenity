@@ -21,19 +21,29 @@ struct HTMLElement {
 
     ErrorOr<void> serialize(StringBuilder&) const;
 };
+struct Index {
+    unsigned slide;
+    unsigned frame;
+};
 
 // Anything that can be on a slide.
 class SlideObject : public RefCounted<SlideObject> {
 public:
     virtual ~SlideObject() = default;
-    static ErrorOr<NonnullRefPtr<SlideObject>> parse_slide_object(JsonObject const& slide_object_json);
+    static ErrorOr<NonnullRefPtr<SlideObject>> parse_slide_object(JsonObject const& slide_object_json, unsigned slide_index);
     virtual ErrorOr<HTMLElement> render(Presentation const&) const = 0;
 
 protected:
-    SlideObject() = default;
+    SlideObject(Index index)
+        : m_frame_index(index.frame)
+        , m_slide_index(index.slide)
+    {
+    }
 
     virtual void set_property(StringView name, JsonValue);
 
+    unsigned m_frame_index;
+    unsigned m_slide_index;
     HashMap<DeprecatedString, JsonValue> m_properties;
     Gfx::IntRect m_rect;
 };
@@ -44,7 +54,10 @@ public:
     virtual ~GraphicsObject() = default;
 
 protected:
-    GraphicsObject() = default;
+    GraphicsObject(Index index)
+        : SlideObject(index)
+    {
+    }
     virtual void set_property(StringView name, JsonValue) override;
 
     // FIXME: Change the default color based on the color scheme
@@ -53,7 +66,10 @@ protected:
 
 class Text final : public GraphicsObject {
 public:
-    Text() = default;
+    Text(Index index)
+        : GraphicsObject(index)
+    {
+    }
     virtual ~Text() = default;
 
 private:
@@ -69,7 +85,10 @@ private:
 
 class Image final : public SlideObject {
 public:
-    Image() = default;
+    Image(Index index)
+        : SlideObject(index)
+    {
+    }
     virtual ~Image() = default;
 
 private:

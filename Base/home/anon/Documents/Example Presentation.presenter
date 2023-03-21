@@ -11,8 +11,10 @@
     "slides": [
         {
             "title": "Introduction",
+            "frame_count": 2,
             "objects": [
                 {
+                    "frame": 0,
                     "type": "text",
 
                     "text": "Welcome to Presenter!",
@@ -25,6 +27,7 @@
                     "text-alignment": "Center"
                 },
                 {
+                    "frame": 1,
                     "type": "text",
 
                     "text": "This program is very cool. It supports:\n  - Scaling properly to the window\n  - Text\n  - Switching between slides\n  - that's all for now lol",
@@ -40,8 +43,10 @@
         },
         {
             "title": "The Second Slide",
+            "frame_count": 2,
             "objects": [
                 {
+                    "frame": 0,
                     "type": "text",
                     "text": "CatDog likes this program!",
 
@@ -53,6 +58,7 @@
                     "text-alignment": "Center"
                 },
                 {
+                    "frame": 1,
                     "type": "image",
 
                     "rect": [50, 50, 200, 100],
