@@ -692,19 +692,13 @@ bool DocumentParser::navigate_to_before_eof_marker()
     m_reader.set_reading_backwards();
 
     while (!m_reader.done()) {
+        m_reader.consume_eol();
+        if (m_reader.matches("%%EOF")) {
+            m_reader.move_by(5);
+            return true;
+        }
+
         m_reader.move_until([&](auto) { return m_reader.matches_eol(); });
-        if (m_reader.done())
-            return false;
-
-        m_reader.consume_eol();
-        if (!m_reader.matches("%%EOF"))
-            continue;
-
-        m_reader.move_by(5);
-        if (!m_reader.matches_eol())
-            continue;
-        m_reader.consume_eol();
-        return true;
     }
 
     return false;
