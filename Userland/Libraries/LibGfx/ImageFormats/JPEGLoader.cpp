@@ -1356,6 +1356,100 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
     }
 }
 
+static void invert_colors_for_adobe_images(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    if (!context.color_transform.has_value())
+        return;
+
+    // From libjpeg-turbo's libjpeg.txt:
+    // https://github.com/libjpeg-turbo/libjpeg-turbo/blob/main/libjpeg.txt
+    // CAUTION: it appears that Adobe Photoshop writes inverted data in CMYK JPEG
+    // files: 0 represents 100% ink coverage, rather than 0% ink as you'd expect.
+    // This is arguably a bug in Photoshop, but if you need to work with Photoshop
+    // CMYK files, you will have to deal with it in your application.
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
+                            macroblocks[mb_index].r[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].r[i * 8 + j];
+                            macroblocks[mb_index].g[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].g[i * 8 + j];
+                            macroblocks[mb_index].b[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].b[i * 8 + j];
+                            macroblocks[mb_index].k[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].k[i * 8 + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void cmyk_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    invert_colors_for_adobe_images(context, macroblocks);
+
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+            for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
+                for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
+                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
+                    i32* c = macroblocks[mb_index].y;
+                    i32* m = macroblocks[mb_index].cb;
+                    i32* y = macroblocks[mb_index].cr;
+                    i32* k = macroblocks[mb_index].k;
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
+                            u8 const pixel = i * 8 + j;
+
+                            static constexpr auto max_value = NumericLimits<u8>::max();
+
+                            auto const black_component = max_value - k[pixel];
+                            int const r = ((max_value - c[pixel]) * black_component) / max_value;
+                            int const g = ((max_value - m[pixel]) * black_component) / max_value;
+                            int const b = ((max_value - y[pixel]) * black_component) / max_value;
+
+                            c[pixel] = clamp(r, 0, max_value);
+                            m[pixel] = clamp(g, 0, max_value);
+                            y[pixel] = clamp(b, 0, max_value);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+static void ycck_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
+{
+    // 7 - Conversions between colour encodings
+    // YCCK is obtained from CMYK by converting the CMY channels to YCC channel.
+
+    // To convert back into RGB, we only need the 3 first components, which are baseline YCbCr
+    ycbcr_to_rgb(context, macroblocks);
+
+    // RGB to CMYK, as mentioned in https://www.smcm.iqfr.csic.es/docs/intel/ipp/ipp_manual/IPPI/ippi_ch15/functn_YCCKToCMYK_JPEG.htm#functn_YCCKToCMYK_JPEG
+    for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
+        for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
+            for (u8 vfactor_i = 0; vfactor_i < context.vsample_factor; ++vfactor_i) {
+                for (u8 hfactor_i = 0; hfactor_i < context.hsample_factor; ++hfactor_i) {
+                    u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
+                    for (u8 i = 0; i < 8; ++i) {
+                        for (u8 j = 0; j < 8; ++j) {
+                            macroblocks[mb_index].r[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].r[i * 8 + j];
+                            macroblocks[mb_index].g[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].g[i * 8 + j];
+                            macroblocks[mb_index].b[i * 8 + j] = NumericLimits<u8>::max() - macroblocks[mb_index].b[i * 8 + j];
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    cmyk_to_rgb(context, macroblocks);
+}
+
 static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
 {
     if (context.color_transform.has_value()) {
@@ -1365,8 +1459,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
         switch (*context.color_transform) {
         case ColorTransform::CmykOrRgb:
             if (context.components.size() == 4) {
-                // FIXME: implement CMYK
-                dbgln("CMYK isn't supported yet");
+                cmyk_to_rgb(context, macroblocks);
             } else if (context.components.size() == 3) {
                 // Note: components.size() == 3 means that we have an RGB image, so no color transformation is needed.
             } else {
@@ -1377,8 +1470,7 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
             ycbcr_to_rgb(context, macroblocks);
             break;
         case ColorTransform::YCCK:
-            // FIXME: implement YCCK
-            dbgln("YCCK isn't supported yet");
+            ycck_to_rgb(context, macroblocks);
             break;
         }
 
@@ -1389,10 +1481,8 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
     //      - 1 components means grayscale
     //      - 3 components means YCbCr
     //      - 4 components means CMYK
-    if (context.components.size() == 4) {
-        // FIXME: implement CMYK
-        dbgln("CMYK isn't supported yet");
-    }
+    if (context.components.size() == 4)
+        cmyk_to_rgb(context, macroblocks);
     if (context.components.size() == 3)
         ycbcr_to_rgb(context, macroblocks);
 
