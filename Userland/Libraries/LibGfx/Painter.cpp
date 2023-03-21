@@ -2566,4 +2566,49 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
     }
 }
 
+void Painter::draw_signed_distance_field(IntRect const& dst_rect, Color color, Gfx::GrayscaleBitmap const& sdf, float smoothing)
+{
+    auto target_rect = dst_rect.translated(translation());
+    auto clipped_rect = target_rect.intersected(clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    target_rect *= scale();
+    clipped_rect *= scale();
+    auto start_offset = clipped_rect.location() - target_rect.location();
+    auto x_ratio = static_cast<float>(sdf.width() - 1) / (dst_rect.width() - 1);
+    auto y_ratio = static_cast<float>(sdf.height() - 1) / (dst_rect.height() - 1);
+
+    auto smooth_step = [](auto edge0, auto edge1, auto x) {
+        x = clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+        return x * x * (3 - 2 * x);
+    };
+
+    for (int i = 0; i < clipped_rect.height(); ++i) {
+        for (int j = 0; j < clipped_rect.width(); ++j) {
+            auto point = IntPoint { j, i };
+            auto sample_point = point + start_offset;
+            auto target_x = static_cast<int>(x_ratio * sample_point.x());
+            auto target_y = static_cast<int>(y_ratio * sample_point.y());
+            auto target_fraction_x = (x_ratio * sample_point.x()) - target_x;
+            auto target_fraction_y = (y_ratio * sample_point.y()) - target_y;
+
+            auto x2 = min(target_x + 1, sdf.width() - 1);
+            auto y2 = min(target_y + 1, sdf.height() - 1);
+            auto a = sdf.pixel_at(target_x, target_y);
+            auto b = sdf.pixel_at(x2, target_y);
+            auto c = sdf.pixel_at(target_x, y2);
+            auto d = sdf.pixel_at(x2, y2);
+
+            float distance = (a * (1 - target_fraction_x) * (1 - target_fraction_y)
+                                 + b * target_fraction_x * (1 - target_fraction_y)
+                                 + c * (1 - target_fraction_x) * target_fraction_y
+                                 + d * target_fraction_x * target_fraction_y)
+                / 255.0f;
+
+            u8 alpha = (1 - clamp(smooth_step(0.5f - smoothing, 0.5f + smoothing, distance), 0.0f, 1.0f)) * 255;
+            set_physical_pixel(point + clipped_rect.location(), color.with_alpha(alpha), true);
+        }
+    }
+}
+
 }
