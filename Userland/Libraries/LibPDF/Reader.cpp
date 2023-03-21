@@ -46,8 +46,11 @@ bool Reader::consume_eol()
         consume(2);
         return true;
     }
-    auto consumed = consume();
-    return consumed == 0xd || consumed == 0xa;
+    if (matches_eol()) {
+        consume();
+        return true;
+    }
+    return false;
 }
 
 bool Reader::consume_whitespace()
