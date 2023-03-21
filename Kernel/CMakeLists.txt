@@ -108,8 +108,6 @@ set(KERNEL_SOURCES
     Storage/NVMe/NVMeInterruptQueue.cpp
     Storage/NVMe/NVMePollQueue.cpp
     Storage/NVMe/NVMeQueue.cpp
-    Storage/Ramdisk/Controller.cpp
-    Storage/Ramdisk/Device.cpp
     Storage/SD/SDHostController.cpp
     Storage/SD/SDMemoryCard.cpp
     Storage/DiskPartition.cpp
