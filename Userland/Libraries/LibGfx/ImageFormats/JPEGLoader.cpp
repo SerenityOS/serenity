@@ -1306,8 +1306,9 @@ static ErrorOr<void> handle_color_transform(JPEGLoadingContext const& context, V
         ycbcr_to_rgb(context, macroblocks);
 
     if (context.components.size() == 1) {
-        // FIXME: This is what we used to do for grayscale,
-        //        we should at least document it and maybe change it.
+        // With Cb and Cr being equal to zero, this function assign the Y
+        // value (luminosity) to R, G and B. Providing a proper conversion
+        // from grayscale to RGB.
         ycbcr_to_rgb(context, macroblocks);
     }
 
