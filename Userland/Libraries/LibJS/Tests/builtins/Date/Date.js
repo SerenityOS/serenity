@@ -14,16 +14,14 @@ test("timestamp constructor", () => {
     // The timestamp constructor takes a timestamp in milliseconds since the start of the epoch, in UTC.
 
     // 50 days and 1234 milliseconds after the start of the epoch.
-    // Most Date methods return values in local time, but since timezone offsets are less than 17 days,
-    // these checks will pass in all timezones.
     let timestamp = 50 * 24 * 60 * 60 * 1000 + 1234;
 
     let date = new Date(timestamp);
     expect(date.getTime()).toBe(timestamp); // getTime() returns the timestamp in UTC.
-    expect(date.getMilliseconds()).toBe(234);
-    expect(date.getSeconds()).toBe(1);
-    expect(date.getFullYear()).toBe(1970);
-    expect(date.getMonth()).toBe(1); // Feb
+    expect(date.getUTCMilliseconds()).toBe(234);
+    expect(date.getUTCSeconds()).toBe(1);
+    expect(date.getUTCFullYear()).toBe(1970);
+    expect(date.getUTCMonth()).toBe(1); // Feb
 
     date = new Date(NaN);
     expect(date.getTime()).toBe(NaN);
