@@ -1,16 +1,16 @@
 /*
  * Copyright (c) 2020-2023, the SerenityOS developers.
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/Error.h>
-#include <AK/NonnullOwnPtr.h>
+#include <AK/Forward.h>
 #include <AK/String.h>
 
-namespace Core {
+namespace FileSystem {
 
 class TempFile {
 

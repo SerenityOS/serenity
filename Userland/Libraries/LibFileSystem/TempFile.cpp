@@ -1,14 +1,27 @@
 /*
  * Copyright (c) 2020-2023, the SerenityOS developers.
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "TempFile.h"
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
+#include <LibFileSystem/TempFile.h>
 
-namespace Core {
+namespace FileSystem {
+
+TempFile::~TempFile()
+{
+    // Temporary files aren't removed by anyone else, so we must do it ourselves.
+    auto recursion_mode = RecursionMode::Disallowed;
+    if (m_type == Type::Directory)
+        recursion_mode = RecursionMode::Allowed;
+
+    auto result = FileSystem::remove(m_path, recursion_mode);
+    if (result.is_error())
+        warnln("Removal of temporary file failed '{}': {}", m_path, result.error().string_literal());
+}
 
 ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_directory()
 {
@@ -25,19 +38,6 @@ ErrorOr<NonnullOwnPtr<TempFile>> TempFile::create_temp_file()
 
     auto string = TRY(String::from_utf8({ file_path, sizeof file_path }));
     return adopt_nonnull_own_or_enomem(new (nothrow) TempFile(Type::File, string));
-}
-
-TempFile::~TempFile()
-{
-    // Temporary files aren't removed by anyone else, so we must do it ourselves.
-    auto recursion_mode = DeprecatedFile::RecursionMode::Disallowed;
-    if (m_type == Type::Directory)
-        recursion_mode = DeprecatedFile::RecursionMode::Allowed;
-
-    auto result = DeprecatedFile::remove(m_path, recursion_mode);
-    if (result.is_error()) {
-        warnln("Removal of temporary file failed: {}", result.error().string_literal());
-    }
 }
 
 }

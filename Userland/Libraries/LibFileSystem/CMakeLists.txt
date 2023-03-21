@@ -1,5 +1,6 @@
 set(SOURCES
     FileSystem.cpp
+    TempFile.cpp
 )
 
 serenity_lib(LibFileSystem filesystem)

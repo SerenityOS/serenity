@@ -10,7 +10,6 @@
 #include "TerminalWrapper.h"
 #include <AK/Error.h>
 #include <AK/Noncopyable.h>
-#include <LibCore/TempFile.h>
 
 namespace HackStudio {
 class ProjectBuilder {
