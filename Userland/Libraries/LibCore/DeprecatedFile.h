@@ -32,28 +32,14 @@ public:
     void set_filename(const DeprecatedString filename) { m_filename = move(filename); }
 
     bool is_directory() const;
-    static bool is_directory(DeprecatedString const& filename);
-    static bool is_directory(int fd);
-
     bool is_device() const;
-    static bool is_device(DeprecatedString const& filename);
-    static bool is_device(int fd);
     bool is_block_device() const;
-    static bool is_block_device(DeprecatedString const& filename);
     bool is_char_device() const;
-    static bool is_char_device(DeprecatedString const& filename);
-
     bool is_link() const;
-    static bool is_link(DeprecatedString const& filename);
-
     bool looks_like_shared_library() const;
-    static bool looks_like_shared_library(DeprecatedString const& filename);
 
-    static bool exists(StringView filename);
-    static ErrorOr<size_t> size(DeprecatedString const& filename);
     static DeprecatedString current_working_directory();
     static DeprecatedString absolute_path(DeprecatedString const& path);
-    static bool can_delete_or_move(StringView path);
 
     enum class RecursionMode {
         Allowed,
@@ -92,9 +78,6 @@ public:
 
     static DeprecatedString real_path_for(DeprecatedString const& filename);
     static ErrorOr<DeprecatedString> read_link(DeprecatedString const& link_path);
-    static ErrorOr<void> link_file(DeprecatedString const& dst_path, DeprecatedString const& src_path);
-
-    static ErrorOr<void> remove(StringView path, RecursionMode);
 
     virtual bool open(OpenMode) override;
 
