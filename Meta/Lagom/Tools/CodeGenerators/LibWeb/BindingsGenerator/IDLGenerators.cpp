@@ -44,6 +44,7 @@ static bool is_platform_object(Type const& type)
         "NamedNodeMap"sv,
         "Node"sv,
         "Path2D"sv,
+        "PerformanceEntry"sv,
         "Range"sv,
         "ReadableStream"sv,
         "Request"sv,
@@ -3145,6 +3146,7 @@ using namespace Web::Geometry;
 using namespace Web::HighResolutionTime;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
+using namespace Web::PerformanceTimeline;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
@@ -3377,6 +3379,7 @@ using namespace Web::HighResolutionTime;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
 using namespace Web::NavigationTiming;
+using namespace Web::PerformanceTimeline;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
@@ -3506,6 +3509,7 @@ using namespace Web::HighResolutionTime;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
 using namespace Web::NavigationTiming;
+using namespace Web::PerformanceTimeline;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;
@@ -3636,6 +3640,7 @@ using namespace Web::HighResolutionTime;
 using namespace Web::HTML;
 using namespace Web::IntersectionObserver;
 using namespace Web::NavigationTiming;
+using namespace Web::PerformanceTimeline;
 using namespace Web::RequestIdleCallback;
 using namespace Web::ResizeObserver;
 using namespace Web::Selection;

@@ -1,12 +1,21 @@
 #import <DOM/EventTarget.idl>
 #import <HighResolutionTime/DOMHighResTimeStamp.idl>
 #import <NavigationTiming/PerformanceTiming.idl>
+#import <PerformanceTimeline/PerformanceEntry.idl>
+
+// https://www.w3.org/TR/performance-timeline/#dom-performanceentrylist
+typedef sequence<PerformanceEntry> PerformanceEntryList;
 
 // https://w3c.github.io/hr-time/#sec-performance
-[Exposed=(Window, Worker)]
+[Exposed=(Window, Worker), UseNewAKString]
 interface Performance : EventTarget {
     DOMHighResTimeStamp now();
     readonly attribute DOMHighResTimeStamp timeOrigin;
 
     readonly attribute PerformanceTiming timing;
+    // https://www.w3.org/TR/performance-timeline/#extensions-to-the-performance-interface
+    // "Performance Timeline" extensions to the Performance interface
+    PerformanceEntryList getEntries();
+    PerformanceEntryList getEntriesByType(DOMString type);
+    PerformanceEntryList getEntriesByName(DOMString name, optional DOMString type);
 };

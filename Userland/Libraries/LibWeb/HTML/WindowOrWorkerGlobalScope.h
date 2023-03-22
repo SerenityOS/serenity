@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <AK/FlyString.h>
 #include <AK/Forward.h>
 #include <AK/HashMap.h>
 #include <AK/IDAllocator.h>
@@ -14,6 +16,8 @@
 #include <LibWeb/Fetch/Request.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/MessagePort.h>
+#include <LibWeb/PerformanceTimeline/PerformanceEntry.h>
+#include <LibWeb/PerformanceTimeline/PerformanceEntryTuple.h>
 
 namespace Web::HTML {
 
@@ -43,6 +47,8 @@ public:
     void clear_timeout(i32);
     void clear_interval(i32);
 
+    ErrorOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> filter_buffer_map_by_name_and_type(Optional<String> name, Optional<String> type) const;
+
 protected:
     void visit_edges(JS::Cell::Visitor&);
 
@@ -55,6 +61,16 @@ private:
 
     IDAllocator m_timer_id_allocator;
     HashMap<int, JS::NonnullGCPtr<Timer>> m_timers;
+
+    // https://www.w3.org/TR/performance-timeline/#performance-timeline
+    // Each global object has:
+    // FIXME: - a performance observer task queued flag
+    // FIXME: - a list of registered performance observer objects that is initially empty
+
+    // https://www.w3.org/TR/performance-timeline/#dfn-performance-entry-buffer-map
+    // a performance entry buffer map map, keyed on a DOMString, representing the entry type to which the buffer belongs. The map's value is the following tuple:
+    // NOTE: See the PerformanceEntryTuple struct above for the map's value tuple.
+    OrderedHashMap<FlyString, PerformanceTimeline::PerformanceEntryTuple> m_performance_entry_buffer_map;
 };
 
 }

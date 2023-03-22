@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 2022, Andrew Kaster <akaster@serenityos.org>
  * Copyright (c) 2023, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Base64.h>
+#include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -262,6 +264,83 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
 
     // 14. Return id.
     return id;
+}
+
+// https://www.w3.org/TR/performance-timeline/#dfn-filter-buffer-by-name-and-type
+static ErrorOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> filter_buffer_by_name_and_type(Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>> const& buffer, Optional<String> name, Optional<String> type)
+{
+    // 1. Let result be an initially empty list.
+    Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>> result;
+
+    // 2. For each PerformanceEntry entry in buffer, run the following steps:
+    for (auto const& entry : buffer) {
+        // 1. If type is not null and if type is not identical to entry's entryType attribute, continue to next entry.
+        if (type.has_value() && type.value() != entry->entry_type())
+            continue;
+
+        // 2. If name is not null and if name is not identical to entry's name attribute, continue to next entry.
+        if (name.has_value() && name.value() != entry->name())
+            continue;
+
+        // 3. append entry to result.
+        TRY(result.try_append(entry));
+    }
+
+    // 3. Sort results's entries in chronological order with respect to startTime
+    quick_sort(result, [](auto const& left_entry, auto const& right_entry) {
+        return left_entry->start_time() < right_entry->start_time();
+    });
+
+    // 4. Return result.
+    return result;
+}
+
+// https://www.w3.org/TR/performance-timeline/#dfn-filter-buffer-map-by-name-and-type
+ErrorOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> WindowOrWorkerGlobalScopeMixin::filter_buffer_map_by_name_and_type(Optional<String> name, Optional<String> type) const
+{
+    // 1. Let result be an initially empty list.
+    Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>> result;
+
+    // 2. Let map be the performance entry buffer map associated with the relevant global object of this.
+    auto const& map = m_performance_entry_buffer_map;
+
+    // 3. Let tuple list be an empty list.
+    Vector<PerformanceTimeline::PerformanceEntryTuple const&> tuple_list;
+
+    // 4. If type is not null, append the result of getting the value of entry on map given type as key to tuple list.
+    //    Otherwise, assign the result of get the values on map to tuple list.
+    if (type.has_value()) {
+        auto maybe_tuple = map.get(type.value());
+        if (maybe_tuple.has_value())
+            TRY(tuple_list.try_append(maybe_tuple.release_value()));
+    } else {
+        for (auto const& it : map)
+            TRY(tuple_list.try_append(it.value));
+    }
+
+    // 5. For each tuple in tuple list, run the following steps:
+    for (auto const& tuple : tuple_list) {
+        // 1. Let buffer be tuple's performance entry buffer.
+        auto const& buffer = tuple.performance_entry_buffer;
+
+        // 2. If tuple's availableFromTimeline is false, continue to the next tuple.
+        if (tuple.available_from_timeline == PerformanceTimeline::AvailableFromTimeline::No)
+            continue;
+
+        // 3. Let entries be the result of running filter buffer by name and type with buffer, name and type as inputs.
+        auto entries = TRY(filter_buffer_by_name_and_type(buffer, name, type));
+
+        // 4. For each entry in entries, append entry to result.
+        TRY(result.try_extend(entries));
+    }
+
+    // 6. Sort results's entries in chronological order with respect to startTime
+    quick_sort(result, [](auto const& left_entry, auto const& right_entry) {
+        return left_entry->start_time() < right_entry->start_time();
+    });
+
+    // 7. Return result.
+    return result;
 }
 
 }
