@@ -690,10 +690,21 @@ static void measure_scrollable_overflow(LayoutState const& state, Box const& box
     if (box.computed_values().overflow_x() == CSS::Overflow::Hidden && box.computed_values().overflow_y() == CSS::Overflow::Hidden)
         return;
 
-    box.for_each_child_of_type<Box>([&](Box const& child) {
-        measure_scrollable_overflow(state, child, bottom_edge, right_edge);
-        return IterationDecision::Continue;
-    });
+    if (box.children_are_inline()) {
+        if (!child_state.line_boxes.is_empty()) {
+            bottom_edge = max(bottom_edge, child_rect.y() + child_state.line_boxes.last().bottom());
+            for (auto& line_box : child_state.line_boxes) {
+                if (line_box.fragments().is_empty())
+                    continue;
+                right_edge = max(right_edge, child_rect.x() + line_box.fragments().last().width());
+            }
+        }
+    } else {
+        box.for_each_child_of_type<Box>([&](Box const& child) {
+            measure_scrollable_overflow(state, child, bottom_edge, right_edge);
+            return IterationDecision::Continue;
+        });
+    }
 }
 
 void BlockFormattingContext::layout_viewport(LayoutMode layout_mode, AvailableSpace const& available_space)
