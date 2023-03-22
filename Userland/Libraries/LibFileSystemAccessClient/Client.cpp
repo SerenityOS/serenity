@@ -129,13 +129,13 @@ void Client::handle_prompt_end(i32 request_id, i32 error, Optional<IPC::File> co
         return;
     }
 
-    if (FileSystem::is_device(*chosen_file)) {
+    if (FileSystem::is_device(ipc_file->fd())) {
         GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open device files", *chosen_file));
         request_data.promise->resolve(Error::from_string_literal("Cannot open device files")).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
-    if (FileSystem::is_directory(*chosen_file)) {
+    if (FileSystem::is_directory(ipc_file->fd())) {
         GUI::MessageBox::show_error(request_data.parent_window, DeprecatedString::formatted("Opening \"{}\" failed: Cannot open directory", *chosen_file));
         request_data.promise->resolve(Error::from_errno(EISDIR)).release_value_but_fixme_should_propagate_errors();
         return;
