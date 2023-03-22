@@ -192,7 +192,11 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
 
     m_path = Core::DeprecatedFile::real_path_for(path);
     GUI::Application::the()->set_most_recently_open_file(String::from_utf8(path).release_value_but_fixme_should_propagate_errors());
-    reset_view();
+
+    if (scaled_for_first_image())
+        scale_image_for_window();
+    else
+        reset_view();
 }
 
 void ViewWidget::drag_enter_event(GUI::DragEvent& event)
