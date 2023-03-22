@@ -387,6 +387,10 @@ struct BorderRadiiData;
 struct LinearGradientData;
 }
 
+namespace Web::PerformanceTimeline {
+class PerformanceEntry;
+}
+
 namespace Web::Platform {
 class Timer;
 }

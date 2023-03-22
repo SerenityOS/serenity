@@ -371,6 +371,7 @@ set(SOURCES
     Loader/ResourceLoader.cpp
     MimeSniff/MimeType.cpp
     Namespace.cpp
+    NavigationTiming/EntryNames.cpp
     NavigationTiming/PerformanceTiming.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
@@ -400,6 +401,8 @@ set(SOURCES
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     Painting/TextPaintable.cpp
+    PerformanceTimeline/EntryTypes.cpp
+    PerformanceTimeline/PerformanceEntry.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp
     Platform/FontPlugin.cpp

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -21,6 +22,10 @@ public:
     double time_origin() const;
 
     JS::GCPtr<NavigationTiming::PerformanceTiming> timing();
+
+    WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries() const;
+    WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries_by_type(String const& type) const;
+    WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries_by_name(String const& name, Optional<String> type) const;
 
 private:
     explicit Performance(HTML::Window&);
