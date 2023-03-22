@@ -48,19 +48,13 @@ void ViewWidget::clear()
 void ViewWidget::flip(Gfx::Orientation orientation)
 {
     m_bitmap = m_bitmap->flipped(orientation).release_value_but_fixme_should_propagate_errors();
-    set_original_rect(m_bitmap->rect());
-    set_scale(scale());
-
-    resize_window();
+    scale_image_for_window();
 }
 
 void ViewWidget::rotate(Gfx::RotationDirection rotation_direction)
 {
     m_bitmap = m_bitmap->rotated(rotation_direction).release_value_but_fixme_should_propagate_errors();
-    set_original_rect(m_bitmap->rect());
-    set_scale(scale());
-
-    resize_window();
+    scale_image_for_window();
 }
 
 bool ViewWidget::is_next_available() const
@@ -213,6 +207,12 @@ void ViewWidget::drop_event(GUI::DropEvent& event)
     event.accept();
     if (on_drop)
         on_drop(event);
+}
+
+void ViewWidget::scale_image_for_window()
+{
+    set_original_rect(m_bitmap->rect());
+    fit_content_to_view(GUI::AbstractZoomPanWidget::FitType::Both);
 }
 
 void ViewWidget::resize_window()
