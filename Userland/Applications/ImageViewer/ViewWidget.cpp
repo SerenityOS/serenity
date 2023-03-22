@@ -226,8 +226,6 @@ void ViewWidget::resize_window()
 
     auto absolute_bitmap_rect = content_rect();
     absolute_bitmap_rect.translate_by(window()->rect().top_left());
-    if (window()->rect().contains(absolute_bitmap_rect))
-        return;
 
     if (!m_bitmap)
         return;
@@ -239,8 +237,14 @@ void ViewWidget::resize_window()
     if (new_size.height() < 200)
         new_size.set_height(200);
 
+    if (new_size.width() > 500)
+        new_size = { 500, 500 * absolute_bitmap_rect.height() / absolute_bitmap_rect.width() };
+    if (new_size.height() > 500)
+        new_size = { 500 * absolute_bitmap_rect.width() / absolute_bitmap_rect.height(), 500 };
+
     new_size.set_height(new_size.height() + m_toolbar_height);
     window()->resize(new_size);
+    scale_image_for_window();
 }
 
 void ViewWidget::set_bitmap(Gfx::Bitmap const* bitmap)
