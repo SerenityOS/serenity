@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Dex♪ <dexes.ttp@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/JsonObject.h>
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/MimeData.h>
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Loader/ContentFilter.h>
@@ -268,7 +269,14 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             }
             auto data = maybe_data.release_value();
             log_success(request);
-            success_callback(data, {}, {});
+
+            // NOTE: For file:// URLs, we have to guess the MIME type, since there's no HTTP header to tell us what this is.
+            //       We insert a fake Content-Type header here, so that clients can use it to learn the MIME type.
+            HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
+            auto mime_type = Core::guess_mime_type_based_on_filename(request.url().path());
+            response_headers.set("Content-Type"sv, mime_type);
+
+            success_callback(data, response_headers, {});
         });
 
         m_page->client().request_file(move(file_request));
