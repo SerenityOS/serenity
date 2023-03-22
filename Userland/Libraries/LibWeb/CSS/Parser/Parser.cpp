@@ -3394,20 +3394,6 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
             || component_value.is(Token::Type::Whitespace);
     };
 
-    auto representation_of = [](ComponentValue const& component_value) {
-        // FIXME: This should use the "representation", that is, the original text that produced the token.
-        //        See: https://www.w3.org/TR/css-syntax-3/#representation
-        //        We don't have a way to get that, so instead, we're relying on Token::to_string(), and
-        //        handling specific cases where that's not enough.
-        // Integers like `+34` get serialized as `34`, so manually include the `+` sign.
-        if (component_value.is(Token::Type::Number) && component_value.token().number().is_integer_with_explicit_sign()) {
-            auto int_value = component_value.token().number().integer_value();
-            return DeprecatedString::formatted("{:+}", int_value);
-        }
-
-        return component_value.to_string().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
-    };
-
     auto create_unicode_range = [&](StringView text, auto& local_transaction) -> Optional<UnicodeRange> {
         auto maybe_unicode_range = parse_unicode_range(text);
         if (maybe_unicode_range.has_value()) {
@@ -3431,13 +3417,13 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
     if (second_token.is(Token::Type::Delim) && second_token.token().delim() == '+') {
         auto local_transaction = tokens.begin_transaction();
         StringBuilder string_builder;
-        string_builder.append(representation_of(second_token));
+        string_builder.append(second_token.token().representation());
 
         auto const& third_token = tokens.next_token();
         if (third_token.is(Token::Type::Ident) || is_question_mark(third_token)) {
-            string_builder.append(representation_of(third_token));
+            string_builder.append(third_token.token().representation());
             while (is_question_mark(tokens.peek_token()))
-                string_builder.append(representation_of(tokens.next_token()));
+                string_builder.append(tokens.next_token().token().representation());
             if (is_ending_token(tokens.peek_token()))
                 return create_unicode_range(string_builder.string_view(), local_transaction);
         }
@@ -3447,9 +3433,9 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
     if (second_token.is(Token::Type::Dimension)) {
         auto local_transaction = tokens.begin_transaction();
         StringBuilder string_builder;
-        string_builder.append(representation_of(second_token));
+        string_builder.append(second_token.token().representation());
         while (is_question_mark(tokens.peek_token()))
-            string_builder.append(representation_of(tokens.next_token()));
+            string_builder.append(tokens.next_token().token().representation());
         if (is_ending_token(tokens.peek_token()))
             return create_unicode_range(string_builder.string_view(), local_transaction);
     }
@@ -3460,22 +3446,24 @@ Optional<UnicodeRange> Parser::parse_unicode_range(TokenStream<ComponentValue>& 
     if (second_token.is(Token::Type::Number)) {
         auto local_transaction = tokens.begin_transaction();
         StringBuilder string_builder;
-        string_builder.append(representation_of(second_token));
+        string_builder.append(second_token.token().representation());
 
         if (is_ending_token(tokens.peek_token()))
             return create_unicode_range(string_builder.string_view(), local_transaction);
 
         auto const& third_token = tokens.next_token();
-        string_builder.append(representation_of(third_token));
         if (is_question_mark(third_token)) {
+            string_builder.append(third_token.token().representation());
             while (is_question_mark(tokens.peek_token()))
-                string_builder.append(representation_of(tokens.next_token()));
+                string_builder.append(tokens.next_token().token().representation());
             if (is_ending_token(tokens.peek_token()))
                 return create_unicode_range(string_builder.string_view(), local_transaction);
         } else if (third_token.is(Token::Type::Dimension)) {
+            string_builder.append(third_token.token().representation());
             if (is_ending_token(tokens.peek_token()))
                 return create_unicode_range(string_builder.string_view(), local_transaction);
         } else if (third_token.is(Token::Type::Number)) {
+            string_builder.append(third_token.token().representation());
             if (is_ending_token(tokens.peek_token()))
                 return create_unicode_range(string_builder.string_view(), local_transaction);
         }
