@@ -121,7 +121,7 @@ MainWidget::MainWidget()
                 return;
             }
             auto maybe_path = maybe_page.value()->path();
-            if (!maybe_path.is_error())
+            if (maybe_path.is_error())
                 return;
             open_page(maybe_path.release_value());
         } else {
