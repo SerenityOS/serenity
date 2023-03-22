@@ -213,6 +213,12 @@ void ViewWidget::drop_event(GUI::DropEvent& event)
         on_drop(event);
 }
 
+void ViewWidget::resize_event(GUI::ResizeEvent& event)
+{
+    event.accept();
+    scale_image_for_window();
+}
+
 void ViewWidget::scale_image_for_window()
 {
     set_original_rect(m_bitmap->rect());
