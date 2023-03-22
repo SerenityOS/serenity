@@ -68,6 +68,9 @@ private:
 
     [[nodiscard]] ErrorOr<Vector<Token>> tokenize();
 
+    size_t current_byte_offset() const;
+    ErrorOr<String> input_since(size_t offset) const;
+
     [[nodiscard]] u32 next_code_point();
     [[nodiscard]] u32 peek_code_point(size_t offset = 0) const;
     [[nodiscard]] U32Twin peek_twin() const;
@@ -77,8 +80,8 @@ private:
     [[nodiscard]] U32Triplet start_of_input_stream_triplet();
 
     [[nodiscard]] static Token create_new_token(Token::Type);
-    [[nodiscard]] static Token create_value_token(Token::Type, FlyString&& value);
-    [[nodiscard]] static Token create_value_token(Token::Type, u32 value);
+    [[nodiscard]] static Token create_value_token(Token::Type, FlyString&& value, String&& representation);
+    [[nodiscard]] static Token create_value_token(Token::Type, u32 value, String&& representation);
     [[nodiscard]] ErrorOr<Token> consume_a_token();
     [[nodiscard]] ErrorOr<Token> consume_string_token(u32 ending_code_point);
     [[nodiscard]] ErrorOr<Token> consume_a_numeric_token();
