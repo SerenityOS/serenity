@@ -37,6 +37,7 @@ public:
     void set_scaled_for_first_image(bool val) { m_scaled_for_first_image = val; }
     void set_path(DeprecatedString const& path);
     void resize_window();
+    void scale_image_for_window();
     void set_scaling_mode(Gfx::Painter::ScalingMode);
 
     bool is_next_available() const;
