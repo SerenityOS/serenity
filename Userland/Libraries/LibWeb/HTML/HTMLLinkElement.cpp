@@ -294,9 +294,49 @@ void HTMLLinkElement::default_fetch_and_process_linked_resource()
                     // 2. If either of the following conditions are met:
                     // - bodyBytes is null or failure; or
                     // - response's status is not an ok status,
+                    // then set success to false.
                     // NOTE: content-specific errors, e.g., CSS parse errors or PNG decoding errors, do not affect success.
-                    if (body_bytes.template has<Empty>() || body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
-                        // then set success to false.
+                    if (body_bytes.template has<Empty>()) {
+                        // CORS cross-origin responses in the No CORS request mode provide an opaque filtered response, which is the original response
+                        // with certain attributes removed/changed.
+
+                        // The relevant effect it has is setting the body to `null`, which means `body_bytes` has `Empty` here. This effectively
+                        // disables cross-origin linked resources (e.g. stylesheets).
+
+                        // However, the web actually depends on this, especially for stylesheets retrieved from a cross-origin CDN. For example,
+                        // Shopify websites request stylesheets from `cdn.shopify.com` and Substack websites request stylesheets from `substackcdn.com`.
+
+                        // This makes this a specification bug, as this code was written from it.
+
+                        // The workaround is to read the actual body from the unfiltered response and then call `process_linked_resource` from there.
+
+                        // This _should_ be safe to do, as linked resource fetches do not include credentials (i.e. cookies and the Authorization
+                        // header), so it cannot provide personalized responses.
+
+                        // FIXME: Replace this workaround with a proper fix that has landed in the specification.
+                        //        See: https://github.com/whatwg/html/issues/9066
+                        if (is<Fetch::Infrastructure::OpaqueFilteredResponse>(response.ptr())) {
+                            auto unsafe_response = static_cast<Fetch::Infrastructure::OpaqueFilteredResponse const&>(*response).internal_response();
+                            if (unsafe_response->body().has_value()) {
+                                // NOTE: `this` and `unsafe_response` are protected by `fully_read` using JS::SafeFunction.
+                                auto process_body = [this, unsafe_response](ByteBuffer bytes) {
+                                    process_linked_resource(true, unsafe_response, bytes);
+                                };
+
+                                // NOTE: `this` and `unsafe_response` are protected by `fully_read` using JS::SafeFunction.
+                                auto process_body_error = [this, unsafe_response](auto&) {
+                                    process_linked_resource(false, unsafe_response, Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag {});
+                                };
+
+                                unsafe_response->body()->fully_read(realm(), move(process_body), move(process_body_error), JS::NonnullGCPtr { realm().global_object() }).release_value_but_fixme_should_propagate_errors();
+                                return;
+                            } else {
+                                success = false;
+                            }
+                        } else {
+                            success = false;
+                        }
+                    } else if (body_bytes.template has<Fetch::Infrastructure::FetchAlgorithms::ConsumeBodyFailureTag>() || !Fetch::Infrastructure::is_ok_status(response->status())) {
                         success = false;
                     }
                     // FIXME: 3. Otherwise, wait for the link resource's critical subresources to finish loading.
