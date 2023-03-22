@@ -9,6 +9,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
+#include <limits.h>
 
 #ifdef AK_OS_SERENITY
 #    include <serenity.h>
@@ -46,13 +47,14 @@ ErrorOr<String> real_path(StringView path)
     if (path.is_null())
         return Error::from_errno(ENOENT);
 
+    char buffer[PATH_MAX];
     DeprecatedString dep_path = path;
-    auto* real_path = realpath(dep_path.characters(), nullptr);
+    auto* real_path = realpath(dep_path.characters(), buffer);
 
     if (!real_path)
         return Error::from_syscall("realpath"sv, -errno);
 
-    return TRY(String::from_deprecated_string({ real_path }));
+    return TRY(String::from_utf8({ real_path, strlen(real_path) }));
 }
 
 bool exists(StringView path)
