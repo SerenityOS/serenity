@@ -1122,9 +1122,36 @@ int Element::scroll_width() const
     return 0;
 }
 
+// https://w3c.github.io/csswg-drafts/cssom-view/#dom-element-scrollheight
 int Element::scroll_height() const
 {
-    dbgln("FIXME: Implement Element::scroll_height() (called on element: {})", debug_description());
+    // 1. Let document be the element’s node document.
+    auto& document = this->document();
+
+    // 2. If document is not the active document, return zero and terminate these steps.
+    if (!document.is_active())
+        return 0;
+
+    // 3. Let viewport height be the height of the viewport excluding the height of the scroll bar, if any, or zero if there is no viewport.
+    auto viewport_height = document.browsing_context()->viewport_rect().height().value();
+    if (paint_box()) {
+        viewport_height -= paint_box()->absolute_padding_box_rect().height().value();
+    }
+
+    // 4. If the element is the root element and document is not in quirks mode return max(viewport scrolling area height, viewport height).
+    if (document.document_element() == this && !document.in_quirks_mode())
+        return AK::max(document.browsing_context()->viewport_rect().height().value(), viewport_height);
+
+    // 5. If the element is the body element, document is in quirks mode and the element is not potentially scrollable, return max(viewport scrolling area height, viewport height).
+    if (document.body() == this && document.in_quirks_mode() && !is_potentially_scrollable())
+        return AK::max(document.browsing_context()->viewport_rect().height().value(), viewport_height);
+
+    // 6. If the element does not have any associated box return zero and terminate these steps.
+    if (!layout_node() || !is<Layout::Box>(layout_node()))
+        return 0;
+
+    // TODO:
+    // 7. Return the height of the element’s scrolling area.
     return 0;
 }
 
