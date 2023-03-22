@@ -729,7 +729,7 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
     auto const on_error = [path, update_progress](Error error) -> void {
         // Note: We need to defer that to avoid the function removing its last reference
         //       i.e. trying to destroy itself, which is prohibited.
-        Core::EventLoop::current().deferred_invoke([&] {
+        Core::EventLoop::current().deferred_invoke([path, error = Error::copy(error)]() mutable {
             s_thumbnail_cache.with_locked([path, error = move(error)](auto& cache) {
                 if (error != Error::from_errno(ECANCELED)) {
                     cache.thumbnail_cache.set(path, nullptr);
