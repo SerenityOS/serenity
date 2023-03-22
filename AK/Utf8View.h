@@ -38,6 +38,8 @@ public:
         return m_ptr - other.m_ptr;
     }
 
+    u8 const* ptr() const { return m_ptr; }
+
     // Note : These methods return the information about the underlying UTF-8 bytes.
     // If the UTF-8 string encoding is not valid at the iterator's position, then the underlying bytes might be different from the
     // decoded character's re-encoded bytes (which will be an `0xFFFD REPLACEMENT CHARACTER` with an UTF-8 length of three bytes).
