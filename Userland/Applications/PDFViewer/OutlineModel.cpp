@@ -130,8 +130,8 @@ GUI::ModelIndex OutlineModel::parent_index(const GUI::ModelIndex& index) const
 GUI::ModelIndex OutlineModel::index(int row, int column, const GUI::ModelIndex& parent) const
 {
     if (!parent.is_valid())
-        return create_index(row, column, &m_outline->children[row]);
+        return create_index(row, column, m_outline->children[row].ptr());
 
     auto parent_outline_item = static_cast<PDF::OutlineItem*>(parent.internal_data());
-    return create_index(row, column, &parent_outline_item->children[row]);
+    return create_index(row, column, parent_outline_item->children[row].ptr());
 }
