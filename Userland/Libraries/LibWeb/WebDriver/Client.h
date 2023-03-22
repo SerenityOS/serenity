@@ -109,7 +109,7 @@ protected:
     Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::Object* parent);
 
 private:
-    using WrappedError = Variant<AK::Error, WebDriver::Error>;
+    using WrappedError = Variant<AK::Error, HTTP::HttpRequest::ParseError, WebDriver::Error>;
 
     void die();
     ErrorOr<void, WrappedError> on_ready_to_read();

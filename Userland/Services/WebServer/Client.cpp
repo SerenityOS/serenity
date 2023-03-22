@@ -97,7 +97,7 @@ void Client::start()
 ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
 {
     auto request_or_error = HTTP::HttpRequest::from_raw_request(raw_request);
-    if (!request_or_error.has_value())
+    if (request_or_error.is_error())
         return false;
     auto& request = request_or_error.value();
     auto resource_decoded = URL::percent_decode(request.resource());

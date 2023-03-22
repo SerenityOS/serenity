@@ -75,7 +75,7 @@ ErrorOr<ByteBuffer> HttpRequest::to_raw_request() const
     return builder.to_byte_buffer();
 }
 
-Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
+ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
 {
     enum class State {
         InMethod,
@@ -118,7 +118,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
     while (index < raw_request.size()) {
         // FIXME: Figure out what the appropriate limitations should be.
         if (buffer.size() > 65536)
-            return {};
+            return ParseError::RequestTooLarge;
         switch (state) {
         case State::InMethod:
             if (peek() == ' ') {
@@ -178,9 +178,10 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
             if (index == raw_request.size()) {
                 // End of data, so store the body
                 auto maybe_body = ByteBuffer::copy(buffer);
-                // FIXME: Propagate this error somehow.
-                if (maybe_body.is_error())
-                    return {};
+                if (maybe_body.is_error()) {
+                    VERIFY(maybe_body.error().code() == ENOMEM);
+                    return ParseError::OutOfMemory;
+                }
                 body = maybe_body.release_value();
                 buffer.clear();
             }
@@ -208,7 +209,7 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
     else if (method == "PUT")
         request.set_method(HTTP::HttpRequest::Method::PUT);
     else
-        return {};
+        return ParseError::UnsupportedMethod;
 
     request.m_headers = move(headers);
     auto url_parts = resource.split_limit('?', 2, SplitBehavior::KeepEmpty);
