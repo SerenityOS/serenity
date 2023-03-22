@@ -11,7 +11,7 @@
 extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
 {
     auto request_wrapper = HTTP::HttpRequest::from_raw_request(ReadonlyBytes { data, size });
-    if (!request_wrapper.has_value())
+    if (!request_wrapper.is_error())
         return 0;
 
     auto& request = request_wrapper.value();

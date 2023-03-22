@@ -182,6 +182,9 @@ Client::Client(NonnullOwnPtr<Core::BufferedTCPSocket> socket, Core::Object* pare
                 [](AK::Error const& error) {
                     warnln("Internal error: {}", error);
                 },
+                [](HTTP::HttpRequest::ParseError const& error) {
+                    warnln("HTTP request parsing error: {}", HTTP::HttpRequest::parse_error_to_string(error));
+                },
                 [this](WebDriver::Error const& error) {
                     if (send_error_response(error).is_error())
                         warnln("Could not send error response");
@@ -221,9 +224,7 @@ ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
             break;
     }
 
-    m_request = HTTP::HttpRequest::from_raw_request(TRY(builder.to_byte_buffer()));
-    if (!m_request.has_value())
-        return {};
+    m_request = TRY(HTTP::HttpRequest::from_raw_request(TRY(builder.to_byte_buffer())));
 
     auto body = TRY(read_body_as_json());
     TRY(handle_request(move(body)));
