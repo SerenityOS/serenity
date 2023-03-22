@@ -16,7 +16,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/URL.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
@@ -49,9 +49,9 @@ Sheet::Sheet(Workbook& workbook)
 
     // Sadly, these have to be evaluated once per sheet.
     constexpr auto runtime_file_path = "/res/js/Spreadsheet/runtime.js"sv;
-    auto file_or_error = Core::DeprecatedFile::open(runtime_file_path, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(runtime_file_path, Core::File::OpenMode::Read);
     if (!file_or_error.is_error()) {
-        auto buffer = file_or_error.value()->read_all();
+        auto buffer = file_or_error.value()->read_until_eof().release_value_but_fixme_should_propagate_errors();
         auto script_or_error = JS::Script::parse(buffer, interpreter().realm(), runtime_file_path);
         if (script_or_error.is_error()) {
             warnln("Spreadsheet: Failed to parse runtime code");
