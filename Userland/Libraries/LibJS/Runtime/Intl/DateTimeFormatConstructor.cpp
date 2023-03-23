@@ -234,7 +234,7 @@ ThrowCompletionOr<DateTimeFormat*> initialize_date_time_format(VM& vm, DateTimeF
             return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, time_zone, vm.names.timeZone);
         }
 
-        // c. Set timeZone to ! CanonicalizeTimeZoneName(timeZone).
+        // c. Set timeZone to CanonicalizeTimeZoneName(timeZone).
         time_zone = MUST_OR_THROW_OOM(Temporal::canonicalize_time_zone_name(vm, time_zone));
     }
 
