@@ -86,7 +86,17 @@ test("mm/dd/yy hh:mm timezone-offset extension", () => {
 });
 
 test("yy{/,-}mm{/,-}dd hh:mm extension", () => {
+    function expectStringToGiveDate(input, fullYear, month, dayInMonth, hours, minutes) {
+        // Since the timezone is not specified we just say it has to equal the date parts.
+        const date = new Date(Date.parse(input));
+        expect(date.getFullYear()).toBe(fullYear);
+        expect(date.getMonth() + 1).toBe(month);
+        expect(date.getDate()).toBe(dayInMonth);
+        expect(date.getHours()).toBe(hours);
+        expect(date.getMinutes()).toBe(minutes);
+    }
+
     // Example from a UK news website.
-    expect(Date.parse("2014/11/14 13:05")).toBe(1415970300000);
-    expect(Date.parse("2014-11-14 13:05")).toBe(1415970300000);
+    expectStringToGiveDate("2014/11/14 13:05", 2014, 11, 14, 13, 5);
+    expectStringToGiveDate("2014-11-14 13:05", 2014, 11, 14, 13, 5);
 });
