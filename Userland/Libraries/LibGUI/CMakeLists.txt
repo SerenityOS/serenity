@@ -32,6 +32,7 @@ set(SOURCES
     CommonActions.cpp
     CommonLocationsProvider.cpp
     CommonMenus.cpp
+    ConnectionToPreviewServer.cpp
     ConnectionToWindowManagerServer.cpp
     ConnectionToWindowServer.cpp
     Desktop.cpp
@@ -123,6 +124,7 @@ set(SOURCES
     Wizards/CoverWizardPage.cpp
     Wizards/WizardDialog.cpp
     Wizards/WizardPage.cpp
+    ../../Services/PreviewServer/Error.cpp
 )
 
 set(GENERATED_SOURCES
@@ -130,6 +132,8 @@ set(GENERATED_SOURCES
     ../../Services/Clipboard/ClipboardServerEndpoint.h
     ../../Services/NotificationServer/NotificationClientEndpoint.h
     ../../Services/NotificationServer/NotificationServerEndpoint.h
+    ../../Services/PreviewServer/PreviewClientEndpoint.h
+    ../../Services/PreviewServer/PreviewServerEndpoint.h
     ../../Services/WindowServer/WindowClientEndpoint.h
     ../../Services/WindowServer/WindowManagerClientEndpoint.h
     ../../Services/WindowServer/WindowManagerServerEndpoint.h
