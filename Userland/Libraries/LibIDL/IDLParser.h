@@ -47,7 +47,7 @@ private:
     void parse_interface_mixin(Interface&);
     void parse_dictionary(Interface&);
     void parse_callback_function(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
-    void parse_constructor(Interface&);
+    void parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
     void parse_getter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
     void parse_setter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);
     void parse_deleter(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface&);

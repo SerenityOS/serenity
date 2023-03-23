@@ -164,6 +164,7 @@ struct Function {
 struct Constructor {
     DeprecatedString name;
     Vector<Parameter> parameters;
+    HashMap<DeprecatedString, DeprecatedString> extended_attributes;
 
     size_t shortest_length() const { return get_function_shortest_length(*this); }
 };
