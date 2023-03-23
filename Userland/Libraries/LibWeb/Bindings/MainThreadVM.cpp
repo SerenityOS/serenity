@@ -32,6 +32,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/Namespace.h>
+#include <LibWeb/NavigationTiming/EntryNames.h>
 #include <LibWeb/PerformanceTimeline/EntryTypes.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/SVG/AttributeNames.h>
@@ -80,6 +81,7 @@ ErrorOr<void> initialize_main_thread_vm()
     TRY(HTML::EventNames::initialize_strings());
     TRY(HTML::TagNames::initialize_strings());
     TRY(Namespace::initialize_strings());
+    TRY(NavigationTiming::EntryNames::initialize_strings());
     TRY(PerformanceTimeline::EntryTypes::initialize_strings());
     TRY(SVG::AttributeNames::initialize_strings());
     TRY(SVG::TagNames::initialize_strings());
