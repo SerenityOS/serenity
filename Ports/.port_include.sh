@@ -356,7 +356,7 @@ fetch() {
                 if [ "$calc_sum" != "$auth_sum" ]; then
                     # remove downloaded file to re-download on next run
                     rm -f "${PORT_META_DIR}/${filename}"
-                    echo "${auth_type}sums mismatching, removed erronous download."
+                    echo "${auth_type}sums mismatching, removed erroneous download."
                     if [ $tried_download_again -eq 1 ]; then
                         echo "Please run script again."
                         exit 1
