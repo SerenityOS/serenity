@@ -57,6 +57,8 @@ ErrorOr<NonnullRefPtr<Core::LocalServer>> Session::create_server(NonnullRefPtr<S
 {
     dbgln("Listening for WebDriver connection on {}", *m_web_content_socket_path);
 
+    (void)Core::System::unlink(*m_web_content_socket_path);
+
     auto server = TRY(Core::LocalServer::try_create());
     server->listen(*m_web_content_socket_path);
 
