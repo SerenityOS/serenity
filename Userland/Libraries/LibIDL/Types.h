@@ -43,6 +43,7 @@ struct CppType {
 
 class ParameterizedType;
 class UnionType;
+class Interface;
 
 class Type : public RefCounted<Type> {
 public:
@@ -135,6 +136,8 @@ public:
     // https://webidl.spec.whatwg.org/#dfn-distinguishable
     bool is_distinguishable_from(Type const& other) const;
 
+    bool is_json(Interface const&) const;
+
 private:
     Kind m_kind;
     DeprecatedString m_name;
@@ -217,8 +220,6 @@ struct CallbackFunction {
     Vector<Parameter> parameters;
     bool is_legacy_treat_non_object_as_null { false };
 };
-
-class Interface;
 
 class ParameterizedType : public Type {
 public:
