@@ -23,6 +23,7 @@
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
+#include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1023,11 +1024,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductP
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
-}
-
-ErrorOr<String> FontStyleValue::to_string() const
-{
-    return String::formatted("{} {} {} / {} {}", TRY(m_properties.font_style->to_string()), TRY(m_properties.font_weight->to_string()), TRY(m_properties.font_size->to_string()), TRY(m_properties.line_height->to_string()), TRY(m_properties.font_families->to_string()));
 }
 
 ErrorOr<String> GridTrackPlacementShorthandStyleValue::to_string() const
