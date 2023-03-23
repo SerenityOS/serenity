@@ -3012,6 +3012,15 @@ JS::ThrowCompletionOr<JS::NonnullGCPtr<JS::Object>> @constructor_class@::constru
         generator.append(R"~~~(
     return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@namespaced_name@");
 )~~~");
+    } else if (interface.constructors.find_if([](auto const& x) { return x.extended_attributes.contains("HTMLConstructor"); }) != interface.constructors.end()) {
+        // https://html.spec.whatwg.org/multipage/dom.html#htmlconstructor
+        VERIFY(interface.constructors.size() == 1);
+
+        // FIXME: Properly implement HTMLConstructor extended attribute once custom elements are implemented
+        generator.set("constructor.length", "0");
+        generator.append(R"~~~(
+    return vm().throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, "@namespaced_name@");
+)~~~");
     } else if (interface.constructors.size() == 1) {
         // Single constructor
 
