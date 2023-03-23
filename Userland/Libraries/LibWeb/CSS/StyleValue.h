@@ -661,35 +661,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class FlexFlowStyleValue final : public StyleValueWithDefaultOperators<FlexFlowStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<FlexFlowStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)
-    {
-        return adopt_ref(*new FlexFlowStyleValue(move(flex_direction), move(flex_wrap)));
-    }
-    virtual ~FlexFlowStyleValue() override = default;
-
-    ValueComparingNonnullRefPtr<StyleValue> flex_direction() const { return m_properties.flex_direction; }
-    ValueComparingNonnullRefPtr<StyleValue> flex_wrap() const { return m_properties.flex_wrap; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(FlexFlowStyleValue const& other) const { return m_properties == other.m_properties; };
-
-private:
-    FlexFlowStyleValue(ValueComparingNonnullRefPtr<StyleValue> flex_direction, ValueComparingNonnullRefPtr<StyleValue> flex_wrap)
-        : StyleValueWithDefaultOperators(Type::FlexFlow)
-        , m_properties { .flex_direction = move(flex_direction), .flex_wrap = move(flex_wrap) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<StyleValue> flex_direction;
-        ValueComparingNonnullRefPtr<StyleValue> flex_wrap;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class FontStyleValue final : public StyleValueWithDefaultOperators<FontStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<FontStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> font_stretch, ValueComparingNonnullRefPtr<StyleValue> font_style, ValueComparingNonnullRefPtr<StyleValue> font_weight, ValueComparingNonnullRefPtr<StyleValue> font_size, ValueComparingNonnullRefPtr<StyleValue> line_height, ValueComparingNonnullRefPtr<StyleValue> font_families)
