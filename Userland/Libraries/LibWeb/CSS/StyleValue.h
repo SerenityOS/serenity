@@ -713,28 +713,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class ColorStyleValue : public StyleValueWithDefaultOperators<ColorStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<ColorStyleValue> create(Color color);
-    virtual ~ColorStyleValue() override = default;
-
-    Color color() const { return m_color; }
-    virtual ErrorOr<String> to_string() const override;
-    virtual bool has_color() const override { return true; }
-    virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
-
-    bool properties_equal(ColorStyleValue const& other) const { return m_color == other.m_color; };
-
-private:
-    explicit ColorStyleValue(Color color)
-        : StyleValueWithDefaultOperators(Type::Color)
-        , m_color(color)
-    {
-    }
-
-    Color m_color;
-};
-
 class ContentStyleValue final : public StyleValueWithDefaultOperators<ContentStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<ContentStyleValue> create(ValueComparingNonnullRefPtr<StyleValueList> content, ValueComparingRefPtr<StyleValueList> alt_text)

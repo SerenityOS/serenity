@@ -18,6 +18,7 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1018,11 +1019,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductP
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
-}
-
-ErrorOr<String> ColorStyleValue::to_string() const
-{
-    return serialize_a_srgb_value(m_color);
 }
 
 ErrorOr<String> ContentStyleValue::to_string() const
@@ -2086,26 +2082,6 @@ ErrorOr<String> StyleValueList::to_string() const
             TRY(builder.try_append(separator));
     }
     return builder.to_string();
-}
-
-ValueComparingNonnullRefPtr<ColorStyleValue> ColorStyleValue::create(Color color)
-{
-    if (color.value() == 0) {
-        static auto transparent = adopt_ref(*new ColorStyleValue(color));
-        return transparent;
-    }
-
-    if (color == Color::from_rgb(0x000000)) {
-        static auto black = adopt_ref(*new ColorStyleValue(color));
-        return black;
-    }
-
-    if (color == Color::from_rgb(0xffffff)) {
-        static auto white = adopt_ref(*new ColorStyleValue(color));
-        return white;
-    }
-
-    return adopt_ref(*new ColorStyleValue(color));
 }
 
 ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
