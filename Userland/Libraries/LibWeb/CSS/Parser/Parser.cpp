@@ -30,6 +30,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
