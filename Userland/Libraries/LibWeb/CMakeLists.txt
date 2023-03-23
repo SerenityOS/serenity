@@ -66,6 +66,7 @@ set(SOURCES
     CSS/StyleValue.cpp
     CSS/StyleValues/AngleStyleValue.cpp
     CSS/StyleValues/BackgroundRepeatStyleValue.cpp
+    CSS/StyleValues/BackgroundSizeStyleValue.cpp
     CSS/StyleValues/BackgroundStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp

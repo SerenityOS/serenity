@@ -502,36 +502,6 @@ struct StyleValueWithDefaultOperators : public StyleValue {
     }
 };
 
-// NOTE: This is not used for identifier sizes, like `cover` and `contain`.
-class BackgroundSizeStyleValue final : public StyleValueWithDefaultOperators<BackgroundSizeStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<BackgroundSizeStyleValue> create(LengthPercentage size_x, LengthPercentage size_y)
-    {
-        return adopt_ref(*new BackgroundSizeStyleValue(size_x, size_y));
-    }
-    virtual ~BackgroundSizeStyleValue() override = default;
-
-    LengthPercentage size_x() const { return m_properties.size_x; }
-    LengthPercentage size_y() const { return m_properties.size_y; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(BackgroundSizeStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    BackgroundSizeStyleValue(LengthPercentage size_x, LengthPercentage size_y)
-        : StyleValueWithDefaultOperators(Type::BackgroundSize)
-        , m_properties { .size_x = size_x, .size_y = size_y }
-    {
-    }
-
-    struct Properties {
-        LengthPercentage size_x;
-        LengthPercentage size_y;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class BorderStyleValue final : public StyleValueWithDefaultOperators<BorderStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<BorderStyleValue> create(
