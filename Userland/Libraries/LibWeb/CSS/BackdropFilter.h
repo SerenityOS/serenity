@@ -8,6 +8,7 @@
 
 #include <AK/Variant.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 
 namespace Web::CSS {
 
