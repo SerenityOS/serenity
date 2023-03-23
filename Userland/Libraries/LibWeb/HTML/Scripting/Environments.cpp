@@ -37,6 +37,7 @@ void EnvironmentSettingsObject::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(target_browsing_context);
+    visitor.ignore(m_outstanding_rejected_promises_weak_set);
 }
 
 JS::ExecutionContext& EnvironmentSettingsObject::realm_execution_context()

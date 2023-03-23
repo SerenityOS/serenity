@@ -123,6 +123,7 @@ void Shape::visit_edges(Cell::Visitor& visitor)
         for (auto& it : *m_property_table)
             it.key.visit_edges(visitor);
     }
+    visitor.ignore(m_prototype_transitions);
 }
 
 Optional<PropertyMetadata> Shape::lookup(StringOrSymbol const& property_key) const

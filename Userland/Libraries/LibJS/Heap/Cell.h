@@ -80,6 +80,13 @@ public:
                 visit_impl(value.as_cell());
         }
 
+        // Allow explicitly ignoring a GC-allocated member in a visit_edges implementation instead
+        // of just not using it.
+        template<typename T>
+        void ignore(T const&)
+        {
+        }
+
     protected:
         virtual void visit_impl(Cell&) = 0;
         virtual ~Visitor() = default;
