@@ -79,11 +79,13 @@ private:
             auto result = m_action(*this);
             // The event loop cancels the promise when it exits.
             m_canceled |= m_promise->is_canceled();
+            auto callback_scheduled = false;
             // All of our work was successful and we weren't cancelled; resolve the event loop's promise.
             if (!m_canceled && !result.is_error()) {
                 m_result = result.release_value();
                 // If there is no completion callback, we don't rely on the user keeping around the event loop.
                 if (m_on_complete) {
+                    callback_scheduled = true;
                     origin_event_loop->deferred_invoke([this] {
                         // Our promise's resolution function will never error.
                         (void)m_promise->resolve(*this);
@@ -99,14 +101,17 @@ private:
 
                 m_promise->cancel(Error::from_errno(ECANCELED));
                 if (m_on_error) {
+                    callback_scheduled = true;
                     origin_event_loop->deferred_invoke([this, error = move(error)]() mutable {
                         m_on_error(move(error));
+                        remove_from_parent();
                     });
                     origin_event_loop->wake();
                 }
-
-                remove_from_parent();
             }
+
+            if (!callback_scheduled)
+                remove_from_parent();
         });
     }
 
