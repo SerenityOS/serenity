@@ -1435,9 +1435,6 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
     };
 
     auto append_string_literal = [&](StringView string) -> ErrorOr<void> {
-        if (string.is_empty())
-            return {};
-
         auto node = make_ref_counted<AST::StringLiteral>(
             token.position.value_or(empty_position()),
             TRY(String::from_utf8(string)),
@@ -1457,9 +1454,6 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
     };
 
     auto append_string_part = [&](StringView string) -> ErrorOr<void> {
-        if (string.is_empty())
-            return {};
-
         auto node = make_ref_counted<AST::StringLiteral>(
             token.position.value_or(empty_position()),
             TRY(String::from_utf8(string)),
