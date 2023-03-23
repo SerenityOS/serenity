@@ -102,6 +102,7 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
 
     Vector<u8, 256> buffer;
 
+    Optional<unsigned> content_length;
     DeprecatedString method;
     DeprecatedString resource;
     DeprecatedString protocol;
@@ -168,6 +169,10 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
                 }
 
                 commit_and_advance_to(current_header.value, next_state);
+
+                if (current_header.name.equals_ignoring_ascii_case("Content-Length"sv))
+                    content_length = current_header.value.to_uint();
+
                 headers.append(move(current_header));
                 break;
             }
@@ -188,6 +193,12 @@ ErrorOr<HttpRequest, HttpRequest::ParseError> HttpRequest::from_raw_request(Read
             break;
         }
     }
+
+    if (state != State::InBody)
+        return ParseError::RequestIncomplete;
+
+    if (content_length.has_value() && content_length.value() != body.size())
+        return ParseError::RequestIncomplete;
 
     HttpRequest request;
     if (method == "GET")
