@@ -121,6 +121,7 @@ private:
 
     NonnullOwnPtr<Core::BufferedTCPSocket> m_socket;
     Optional<HTTP::HttpRequest> m_request;
+    StringBuilder m_remaining_request;
 };
 
 }
