@@ -713,35 +713,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class ContentStyleValue final : public StyleValueWithDefaultOperators<ContentStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<ContentStyleValue> create(ValueComparingNonnullRefPtr<StyleValueList> content, ValueComparingRefPtr<StyleValueList> alt_text)
-    {
-        return adopt_ref(*new ContentStyleValue(move(content), move(alt_text)));
-    }
-
-    StyleValueList const& content() const { return *m_properties.content; }
-    bool has_alt_text() const { return !m_properties.alt_text.is_null(); }
-    StyleValueList const* alt_text() const { return m_properties.alt_text; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(ContentStyleValue const& other) const { return m_properties == other.m_properties; };
-
-private:
-    ContentStyleValue(ValueComparingNonnullRefPtr<StyleValueList> content, ValueComparingRefPtr<StyleValueList> alt_text)
-        : StyleValueWithDefaultOperators(Type::Content)
-        , m_properties { .content = move(content), .alt_text = move(alt_text) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<StyleValueList> content;
-        ValueComparingRefPtr<StyleValueList> alt_text;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class FilterValueListStyleValue final : public StyleValueWithDefaultOperators<FilterValueListStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<FilterValueListStyleValue> create(

@@ -19,6 +19,7 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1019,13 +1020,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductP
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
-}
-
-ErrorOr<String> ContentStyleValue::to_string() const
-{
-    if (has_alt_text())
-        return String::formatted("{} / {}", TRY(m_properties.content->to_string()), TRY(m_properties.alt_text->to_string()));
-    return m_properties.content->to_string();
 }
 
 float Filter::Blur::resolved_radius(Layout::Node const& node) const
