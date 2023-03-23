@@ -502,43 +502,6 @@ struct StyleValueWithDefaultOperators : public StyleValue {
     }
 };
 
-class BorderStyleValue final : public StyleValueWithDefaultOperators<BorderStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<BorderStyleValue> create(
-        ValueComparingNonnullRefPtr<StyleValue> border_width,
-        ValueComparingNonnullRefPtr<StyleValue> border_style,
-        ValueComparingNonnullRefPtr<StyleValue> border_color)
-    {
-        return adopt_ref(*new BorderStyleValue(move(border_width), move(border_style), move(border_color)));
-    }
-    virtual ~BorderStyleValue() override = default;
-
-    ValueComparingNonnullRefPtr<StyleValue> border_width() const { return m_properties.border_width; }
-    ValueComparingNonnullRefPtr<StyleValue> border_style() const { return m_properties.border_style; }
-    ValueComparingNonnullRefPtr<StyleValue> border_color() const { return m_properties.border_color; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(BorderStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    BorderStyleValue(
-        ValueComparingNonnullRefPtr<StyleValue> border_width,
-        ValueComparingNonnullRefPtr<StyleValue> border_style,
-        ValueComparingNonnullRefPtr<StyleValue> border_color)
-        : StyleValueWithDefaultOperators(Type::Border)
-        , m_properties { .border_width = move(border_width), .border_style = move(border_style), .border_color = move(border_color) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<StyleValue> border_width;
-        ValueComparingNonnullRefPtr<StyleValue> border_style;
-        ValueComparingNonnullRefPtr<StyleValue> border_color;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class BorderRadiusStyleValue final : public StyleValueWithDefaultOperators<BorderRadiusStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<BorderRadiusStyleValue> create(LengthPercentage const& horizontal_radius, LengthPercentage const& vertical_radius)
