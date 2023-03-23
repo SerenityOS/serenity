@@ -96,7 +96,7 @@ public:
         if (!can_enqueue())
             return QueueStatus::Full;
         auto our_tail = m_queue->m_queue->m_tail.load() % Size;
-        m_queue->m_queue->m_data[our_tail] = to_insert;
+        m_queue->m_queue->m_data[our_tail] = move(to_insert);
         m_queue->m_queue->m_tail.fetch_add(1);
 
         return {};
@@ -112,7 +112,7 @@ public:
     {
         ErrorOr<void, QueueStatus> result;
         while (true) {
-            result = enqueue(to_insert);
+            result = enqueue(move(to_insert));
             if (!result.is_error())
                 break;
             if (result.error() != QueueStatus::Full)
