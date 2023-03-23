@@ -4,6 +4,6 @@
 [Exposed=Window]
 interface HTMLMeterElement : HTMLElement {
 
-
+    [HTMLConstructor] constructor();
 
 };

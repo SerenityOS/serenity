@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLLabelElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect=for] attribute DOMString htmlFor;
 
 };

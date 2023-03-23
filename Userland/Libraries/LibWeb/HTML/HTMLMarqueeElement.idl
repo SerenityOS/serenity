@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLMarqueeElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString behavior;
     [Reflect=bgcolor] attribute DOMString bgColor;
     [Reflect] attribute DOMString direction;

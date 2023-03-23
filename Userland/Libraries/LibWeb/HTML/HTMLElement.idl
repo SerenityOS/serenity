@@ -6,6 +6,8 @@
 [Exposed=Window]
 interface HTMLElement : Element {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString title;
     [Reflect] attribute DOMString lang;
     attribute DOMString dir;

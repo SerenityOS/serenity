@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLTextAreaElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString placeholder;
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString wrap;

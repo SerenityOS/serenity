@@ -5,7 +5,7 @@
 // https://html.spec.whatwg.org/multipage/semantics.html#htmlstyleelement
 [Exposed=Window]
 interface HTMLStyleElement : HTMLElement {
-    // FIXME: [HTMLConstructor] constructor();
+    [HTMLConstructor] constructor();
 
     // FIXME: attribute boolean disabled;
     [Reflect] attribute DOMString media;

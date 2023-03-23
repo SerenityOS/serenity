@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLTimeElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect=datetime] attribute DOMString dateTime;
 
 };

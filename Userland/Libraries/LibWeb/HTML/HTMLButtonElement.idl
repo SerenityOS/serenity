@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLButtonElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect=formnovalidate] attribute boolean formNoValidate;
     [Reflect=formtarget] attribute DOMString formTarget;
     [Reflect] attribute DOMString name;

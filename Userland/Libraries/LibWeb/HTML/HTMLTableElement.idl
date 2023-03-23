@@ -8,6 +8,8 @@
 [Exposed=Window]
 interface HTMLTableElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     attribute HTMLTableCaptionElement? caption;
     HTMLTableCaptionElement createCaption();
     undefined deleteCaption();

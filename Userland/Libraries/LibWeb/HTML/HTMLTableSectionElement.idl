@@ -6,6 +6,8 @@
 [Exposed=Window]
 interface HTMLTableSectionElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString align;
     [Reflect=char] attribute DOMString ch;
     [Reflect=charoff] attribute DOMString chOff;

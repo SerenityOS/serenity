@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLFrameElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString scrolling;
     [Reflect] attribute DOMString src;

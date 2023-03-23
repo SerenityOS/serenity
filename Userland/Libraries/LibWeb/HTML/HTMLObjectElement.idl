@@ -5,6 +5,8 @@
 [Exposed=Window]
 interface HTMLObjectElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [CEReactions] attribute DOMString data;
     [Reflect] attribute DOMString type;
     [Reflect] attribute DOMString name;

@@ -6,6 +6,8 @@
 [Exposed=Window]
 interface HTMLInputElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     readonly attribute HTMLFormElement? form;
     attribute FileList? files;
 

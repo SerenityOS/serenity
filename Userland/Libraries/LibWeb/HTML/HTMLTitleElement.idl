@@ -4,6 +4,6 @@
 [Exposed=Window]
 interface HTMLTitleElement : HTMLElement {
 
-
+    [HTMLConstructor] constructor();
 
 };

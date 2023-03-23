@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLParamElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString value;
 

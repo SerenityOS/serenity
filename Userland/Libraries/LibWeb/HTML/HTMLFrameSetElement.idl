@@ -5,6 +5,8 @@
 [Exposed=Window]
 interface HTMLFrameSetElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString cols;
     [Reflect] attribute DOMString rows;
 

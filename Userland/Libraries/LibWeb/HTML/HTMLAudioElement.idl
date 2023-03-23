@@ -2,5 +2,5 @@
 
 [Exposed=Window, LegacyFactoryFunction=Audio(optional DOMString src)]
 interface HTMLAudioElement : HTMLMediaElement {
-    // FIXME: [HTMLConstructor] constructor();
+    [HTMLConstructor] constructor();
 };

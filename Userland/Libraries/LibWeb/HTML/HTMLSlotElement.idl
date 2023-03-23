@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLSlotElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString name;
 
 };

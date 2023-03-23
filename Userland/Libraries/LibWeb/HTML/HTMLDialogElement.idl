@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLDialogElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute boolean open;
 
 };
