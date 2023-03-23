@@ -14,11 +14,12 @@
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Painting/CheckBoxPaintable.h>
+#include <LibWeb/Painting/InputColors.h>
 
 namespace Web::Painting {
 
 // A 16x16 signed distance field for the checkbox's tick (slightly rounded):
-static Array<u8, 16 * 16> s_check_mark_sdf {
+static constexpr Array<u8, 16 * 16> s_check_mark_sdf {
     254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 251, 254, 254, 254,
     254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 231, 194, 189, 218, 254, 254,
     254, 254, 254, 254, 254, 254, 254, 254, 254, 245, 193, 142, 131, 165, 205, 254,
@@ -40,7 +41,7 @@ static Array<u8, 16 * 16> s_check_mark_sdf {
 // A 16x16 signed distance field for an indeterminate checkbox (rounded line)
 // Note: We could use the AA fill_rect_with_rounded_corners() for this in future,
 // though right now it can't draw at subpixel accuracy (so is misaligned and jitters when scaling).
-static Array<u8, 16 * 16> s_check_indeterminate {
+static constexpr Array<u8, 16 * 16> s_check_indeterminate {
     254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254,
     254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254,
     254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254,
@@ -109,7 +110,7 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto& palette = context.palette();
 
     auto shade = [&](Color color, float amount) {
-        return color.mixed_with(palette.is_dark() ? Color::Black : Color::White, amount);
+        return InputColors::get_shade(color, amount, palette.is_dark());
     };
 
     auto modify_color = [&](Color color) {
@@ -118,13 +119,7 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
         return color;
     };
 
-    auto base_text_color = palette.color(ColorRole::BaseText);
-    auto accent = computed_values().accent_color().value_or(palette.color(ColorRole::Accent));
-    auto base = shade(base_text_color.inverted(), 0.8f);
-    auto dark_gray = shade(base_text_color, 0.3f);
-    auto gray = shade(dark_gray, 0.4f);
-    auto mid_gray = shade(gray, 0.3f);
-    auto light_gray = shade(mid_gray, 0.3f);
+    auto input_colors = compute_input_colors(palette, computed_values().accent_color());
 
     auto increase_contrast = [&](Color color, Color background) {
         auto constexpr min_contrast = 2;
@@ -139,20 +134,20 @@ void CheckBoxPaintable::paint(PaintContext& context, PaintPhase phase) const
     // Little heuristic that smaller things look better with more smoothness.
     float smoothness = 1.0f / (max(checkbox_rect.width(), checkbox_rect.height()) / 2);
     if (checkbox.checked() && !checkbox.indeterminate()) {
-        auto background_color = enabled ? accent : mid_gray;
+        auto background_color = enabled ? input_colors.accent : input_colors.mid_gray;
         painter.fill_rect_with_rounded_corners(checkbox_rect, modify_color(background_color), checkbox_radius);
-        auto tick_color = increase_contrast(base, background_color);
+        auto tick_color = increase_contrast(input_colors.base, background_color);
         if (!enabled)
             tick_color = shade(tick_color, 0.5f);
         context.painter().draw_signed_distance_field(checkbox_rect, tick_color, check_mark_sdf(), smoothness);
     } else {
-        auto background_color = enabled ? base : light_gray;
+        auto background_color = input_colors.background_color(enabled);
         auto border_thickness = max(1, checkbox_rect.width() / 10);
-        painter.fill_rect_with_rounded_corners(checkbox_rect, modify_color(enabled ? gray : mid_gray), checkbox_radius);
+        painter.fill_rect_with_rounded_corners(checkbox_rect, modify_color(input_colors.border_color(enabled)), checkbox_radius);
         painter.fill_rect_with_rounded_corners(checkbox_rect.shrunken(border_thickness, border_thickness, border_thickness, border_thickness),
-            enabled ? base : light_gray, max(0, checkbox_radius - border_thickness));
+            background_color, max(0, checkbox_radius - border_thickness));
         if (checkbox.indeterminate()) {
-            auto dash_color = increase_contrast(dark_gray, background_color);
+            auto dash_color = increase_contrast(input_colors.dark_gray, background_color);
             context.painter().draw_signed_distance_field(checkbox_rect,
                 modify_color(enabled ? dash_color : shade(dash_color, 0.3f)), check_indeterminate_sdf(), smoothness);
         }
