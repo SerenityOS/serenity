@@ -57,6 +57,8 @@ private:
     }
     bool currently_active_command_uses_transfer_complete_interrupt();
 
+    ErrorOr<u32> calculate_sd_clock_divisor(u32 sd_clock_frequency, u32 frequency);
+    bool is_sd_clock_enabled();
     ErrorOr<void> sd_clock_supply(u32 frequency);
     void sd_clock_stop();
     ErrorOr<void> sd_clock_frequency_change(u32 frequency);

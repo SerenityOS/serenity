@@ -7,6 +7,7 @@
 #include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Devices/DeviceManagement.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Storage/SD/Commands.h>
 #include <Kernel/Storage/SD/SDHostController.h>
 #include <Kernel/Storage/StorageManagement.h>
@@ -74,7 +75,7 @@ ErrorOr<void> SDHostController::initialize()
     if (!m_registers)
         return EIO;
 
-    if (host_version() != SD::HostVersion::Version3)
+    if (host_version() != SD::HostVersion::Version3 && host_version() != SD::HostVersion::Version2)
         return ENOTSUP;
 
     TRY(reset_host_controller());
@@ -99,6 +100,10 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
 
     // PLSS 4.2: "Card Identification Mode"
     // "After power-on ...the cards are initialized with ... 400KHz clock frequency."
+
+    // NOTE: The SDHC might already have been initialized (e.g. by the bootloader), let's reset it to a known configuration
+    if (is_sd_clock_enabled())
+        sd_clock_stop();
     TRY(sd_clock_supply(400000));
 
     // PLSS 4.2.3: "Card Initialization and Identification Process"
@@ -321,6 +326,74 @@ ErrorOr<SDHostController::Response> SDHostController::wait_for_response()
     return { r };
 }
 
+bool SDHostController::is_sd_clock_enabled()
+{
+    return m_registers->host_configuration_1 & sd_clock_enable;
+}
+
+ErrorOr<u32> SDHostController::calculate_sd_clock_divisor(u32 sd_clock_frequency, u32 frequency)
+{
+    // SDHC 2.2.14: "Clock Control Register"
+
+    // (1) 10-bit Divisor Mode
+    // This mode is supported by the Host Controller Version 1.00 and 2.00.
+    // The frequency is not programmed directly; rather this register holds the divisor of
+    // the Base Clock Frequency For SD Clock in the Capabilities register. Only
+    // the following settings are allowed.
+    //
+    //     +-----+---------------------------+
+    //     | 80h | base clock divided by 256 |
+    //     | 40h | base clock divided by 128 |
+    //     | 20h | base clock divided by 64  |
+    //     | 10h | base clock divided by 32  |
+    //     | 08h | base clock divided by 16  |
+    //     | 04h | base clock divided by 8   |
+    //     | 02h | base clock divided by 4   |
+    //     | 01h | base clock divided by 2   |
+    //     | 00h | Base clock (10MHz-63MHz)  |
+    //     +-----+---------------------------+
+    //
+    if (host_version() == SD::HostVersion::Version2 || host_version() == SD::HostVersion::Version1) {
+        for (u32 divisor = 1; divisor <= 256; divisor *= 2) {
+            if (sd_clock_frequency / divisor <= frequency)
+                return divisor >> 1;
+        }
+
+        dmesgln("SDHostController: Could not find a suitable divisor for the requested frequency");
+        return ENOTSUP;
+    }
+
+    // (2) 10-bit Divided Clock Mode
+    // Host Controller Version 3.00 supports this mandatory mode instead of the
+    // 8-bit Divided Clock Mode. The length of divider is extended to 10 bits and all
+    // divider values shall be supported.
+    //
+    //     +------+-------------------------------+
+    //     | 3FFh | 1/2046 Divided Clock          |
+    //     | .... | ............................. |
+    //     |  N   | 1/2N Divided Clock (Duty 50%) |
+    //     | .... | ............................. |
+    //     | 002h | 1/4 Divided Clock             |
+    //     | 001h | 1/2 Divided Clock             |
+    //     | 000h | Base Clock (10MHz-255MHz)     |
+    //     +------+-------------------------------+
+    //
+    if (host_version() == SD::HostVersion::Version3) {
+        if (frequency == sd_clock_frequency)
+            return 0;
+
+        auto divisor = AK::ceil_div(sd_clock_frequency, 2 * frequency);
+        if (divisor > 0x3ff) {
+            dmesgln("SDHostController: Cannot represent the divisor for the requested frequency");
+            return ENOTSUP;
+        }
+
+        return divisor;
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
 {
     // SDHC 3.2.1: "SD Clock Supply Sequence"
@@ -329,16 +402,15 @@ ErrorOr<void> SDHostController::sd_clock_supply(u32 frequency)
 
     // 1. Find out the divisor to determine the SD Clock Frequency
     const u32 sd_clock_frequency = TRY(retrieve_sd_clock_frequency());
-
-    // FIXME: The way the SD Clock is to be calculated is different for other versions
-    if (host_version() != SD::HostVersion::Version3)
-        TODO();
-    u32 divisor = AK::max(AK::ceil_div(sd_clock_frequency, frequency), 2);
+    u32 divisor = TRY(calculate_sd_clock_divisor(sd_clock_frequency, frequency));
 
     // 2. Set Internal Clock Enable and SDCLK Frequency Select in the Clock Control register
-    const u32 two_upper_bits_of_sdclk_frequency_select = (divisor >> 8 & 0x3) << 6;
     const u32 eight_lower_bits_of_sdclk_frequency_select = (divisor & 0xff) << 8;
-    const u32 sdclk_frequency_select = two_upper_bits_of_sdclk_frequency_select | eight_lower_bits_of_sdclk_frequency_select;
+    u32 sdclk_frequency_select = eight_lower_bits_of_sdclk_frequency_select;
+    if (host_version() == SD::HostVersion::Version3) {
+        const u32 two_upper_bits_of_sdclk_frequency_select = (divisor >> 8 & 0x3) << 6;
+        sdclk_frequency_select |= two_upper_bits_of_sdclk_frequency_select;
+    }
     m_registers->host_configuration_1 = m_registers->host_configuration_1 | internal_clock_enable | sdclk_frequency_select;
 
     // 3. Check Internal Clock Stable in the Clock Control register until it is 1
