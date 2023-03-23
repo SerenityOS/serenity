@@ -24,6 +24,8 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowOrWorkerGlobalScope.h>
 #include <LibWeb/Infra/Base64.h>
+#include <LibWeb/PerformanceTimeline/EntryTypes.h>
+#include <LibWeb/UserTiming/PerformanceMark.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
@@ -31,6 +33,27 @@
 namespace Web::HTML {
 
 WindowOrWorkerGlobalScopeMixin::~WindowOrWorkerGlobalScopeMixin() = default;
+
+// Please keep these in alphabetical order based on the entry type :^)
+#define ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES \
+    __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(PerformanceTimeline::EntryTypes::mark, UserTiming::PerformanceMark)
+
+JS::ThrowCompletionOr<void> WindowOrWorkerGlobalScopeMixin::initialize(JS::Realm& realm)
+{
+    auto& vm = realm.vm();
+
+#define __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES(entry_type, cpp_class)                                                                     \
+    TRY_OR_THROW_OOM(vm, m_performance_entry_buffer_map.try_set(entry_type, PerformanceTimeline::PerformanceEntryTuple {                         \
+                                                                                .performance_entry_buffer = {},                                  \
+                                                                                .max_buffer_size = cpp_class::max_buffer_size(),                 \
+                                                                                .available_from_timeline = cpp_class::available_from_timeline(), \
+                                                                                .dropped_entries_count = 0,                                      \
+                                                                            }));
+    ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES
+#undef __ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES
+
+    return {};
+}
 
 void WindowOrWorkerGlobalScopeMixin::visit_edges(JS::Cell::Visitor& visitor)
 {
@@ -264,6 +287,72 @@ i32 WindowOrWorkerGlobalScopeMixin::run_timer_initialization_steps(TimerHandler 
 
     // 14. Return id.
     return id;
+}
+
+// 1. https://www.w3.org/TR/performance-timeline/#dfn-relevant-performance-entry-tuple
+PerformanceTimeline::PerformanceEntryTuple& WindowOrWorkerGlobalScopeMixin::relevant_performance_entry_tuple(FlyString const& entry_type)
+{
+    // 1. Let map be the performance entry buffer map associated with globalObject.
+    // 2. Return the result of getting the value of an entry from map, given entryType as the key.
+    auto tuple = m_performance_entry_buffer_map.get(entry_type);
+
+    // This shouldn't be called with entry types that aren't in `ENUMERATE_SUPPORTED_PERFORMANCE_ENTRY_TYPES`.
+    VERIFY(tuple.has_value());
+    return tuple.value();
+}
+
+// https://www.w3.org/TR/performance-timeline/#dfn-queue-a-performanceentry
+WebIDL::ExceptionOr<void> WindowOrWorkerGlobalScopeMixin::queue_performance_entry(JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry> new_entry)
+{
+    auto& vm = new_entry->vm();
+
+    // FIXME: 1. Let interested observers be an initially empty set of PerformanceObserver objects.
+
+    // 2. Let entryType be newEntry’s entryType value.
+    auto const& entry_type = new_entry->entry_type();
+
+    // 3. Let relevantGlobal be newEntry's relevant global object.
+    // NOTE: Already is `this`.
+
+    // FIXME: 4. For each registered performance observer regObs in relevantGlobal's list of registered performance observer
+    //           objects:
+    //           1. If regObs's options list contains a PerformanceObserverInit options whose entryTypes member includes entryType
+    //              or whose type member equals to entryType:
+    //              1. If should add entry with newEntry and options returns true, append regObs's observer to interested observers.
+
+    // FIXME: 5. For each observer in interested observers:
+    //           1. Append newEntry to observer's observer buffer.
+
+    // 6. Let tuple be the relevant performance entry tuple of entryType and relevantGlobal.
+    auto& tuple = relevant_performance_entry_tuple(entry_type);
+
+    // 7. Let isBufferFull be the return value of the determine if a performance entry buffer is full algorithm with tuple
+    //    as input.
+    bool is_buffer_full = tuple.is_full();
+
+    // 8. Let shouldAdd be the result of should add entry with newEntry as input.
+    auto should_add = new_entry->should_add_entry();
+
+    // 9. If isBufferFull is false and shouldAdd is true, append newEntry to tuple's performance entry buffer.
+    if (!is_buffer_full && should_add == PerformanceTimeline::ShouldAddEntry::Yes)
+        TRY_OR_THROW_OOM(vm, tuple.performance_entry_buffer.try_append(JS::make_handle(new_entry)));
+
+    // FIXME: 10. Queue the PerformanceObserver task with relevantGlobal as input.
+    return {};
+}
+
+void WindowOrWorkerGlobalScopeMixin::clear_performance_entry_buffer(Badge<HighResolutionTime::Performance>, FlyString const& entry_type)
+{
+    auto& tuple = relevant_performance_entry_tuple(entry_type);
+    tuple.performance_entry_buffer.clear();
+}
+
+void WindowOrWorkerGlobalScopeMixin::remove_entries_from_performance_entry_buffer(Badge<HighResolutionTime::Performance>, FlyString const& entry_type, String entry_name)
+{
+    auto& tuple = relevant_performance_entry_tuple(entry_type);
+    tuple.performance_entry_buffer.remove_all_matching([&entry_name](JS::Handle<PerformanceTimeline::PerformanceEntry> const& entry) {
+        return entry->name() == entry_name;
+    });
 }
 
 // https://www.w3.org/TR/performance-timeline/#dfn-filter-buffer-by-name-and-type

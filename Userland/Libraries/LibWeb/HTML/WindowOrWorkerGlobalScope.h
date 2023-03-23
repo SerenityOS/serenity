@@ -47,9 +47,15 @@ public:
     void clear_timeout(i32);
     void clear_interval(i32);
 
+    PerformanceTimeline::PerformanceEntryTuple& relevant_performance_entry_tuple(FlyString const& entry_type);
+    WebIDL::ExceptionOr<void> queue_performance_entry(JS::NonnullGCPtr<PerformanceTimeline::PerformanceEntry> new_entry);
+    void clear_performance_entry_buffer(Badge<HighResolutionTime::Performance>, FlyString const& entry_type);
+    void remove_entries_from_performance_entry_buffer(Badge<HighResolutionTime::Performance>, FlyString const& entry_type, String entry_name);
+
     ErrorOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> filter_buffer_map_by_name_and_type(Optional<String> name, Optional<String> type) const;
 
 protected:
+    JS::ThrowCompletionOr<void> initialize(JS::Realm&);
     void visit_edges(JS::Cell::Visitor&);
 
 private:

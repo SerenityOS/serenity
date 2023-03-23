@@ -747,6 +747,7 @@ WebIDL::ExceptionOr<void> Window::initialize_web_interfaces(Badge<WindowEnvironm
     Object::set_prototype(&Bindings::ensure_web_prototype<Bindings::WindowPrototype>(realm, "Window"));
 
     MUST_OR_THROW_OOM(Bindings::WindowGlobalMixin::initialize(realm, *this));
+    MUST_OR_THROW_OOM(WindowOrWorkerGlobalScopeMixin::initialize(realm));
 
     return {};
 }

@@ -9,6 +9,7 @@
 
 #include <LibCore/ElapsedTimer.h>
 #include <LibWeb/DOM/EventTarget.h>
+#include <LibWeb/UserTiming/PerformanceMark.h>
 
 namespace Web::HighResolutionTime {
 
@@ -22,6 +23,9 @@ public:
     double time_origin() const;
 
     JS::GCPtr<NavigationTiming::PerformanceTiming> timing();
+
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMark>> mark(String const& mark_name, UserTiming::PerformanceMarkOptions const& mark_options = {});
+    void clear_marks(Optional<String> mark_name);
 
     WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries() const;
     WebIDL::ExceptionOr<Vector<JS::Handle<PerformanceTimeline::PerformanceEntry>>> get_entries_by_type(String const& type) const;

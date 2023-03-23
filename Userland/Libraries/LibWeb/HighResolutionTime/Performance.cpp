@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/NavigationTiming/PerformanceTiming.h>
+#include <LibWeb/PerformanceTimeline/EntryTypes.h>
 
 namespace Web::HighResolutionTime {
 
@@ -48,6 +49,44 @@ JS::GCPtr<NavigationTiming::PerformanceTiming> Performance::timing()
 double Performance::time_origin() const
 {
     return static_cast<double>(m_timer.origin_time().to_milliseconds());
+}
+
+// https://w3c.github.io/user-timing/#mark-method
+WebIDL::ExceptionOr<JS::NonnullGCPtr<UserTiming::PerformanceMark>> Performance::mark(String const& mark_name, UserTiming::PerformanceMarkOptions const& mark_options)
+{
+    auto& realm = this->realm();
+
+    // 1. Run the PerformanceMark constructor and let entry be the newly created object.
+    auto entry = TRY(UserTiming::PerformanceMark::construct_impl(realm, mark_name, mark_options));
+
+    // 2. Queue entry.
+    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
+    VERIFY(window_or_worker);
+    TRY(window_or_worker->queue_performance_entry(entry));
+
+    // 3. Add entry to the performance entry buffer.
+    // FIXME: This seems to be a holdover from moving to the `queue` structure for PerformanceObserver, as this would cause a double append.
+
+    // 4. Return entry.
+    return entry;
+}
+
+void Performance::clear_marks(Optional<String> mark_name)
+{
+    auto& realm = this->realm();
+    auto* window_or_worker = dynamic_cast<HTML::WindowOrWorkerGlobalScopeMixin*>(&realm.global_object());
+    VERIFY(window_or_worker);
+
+    // 1. If markName is omitted, remove all PerformanceMark objects from the performance entry buffer.
+    if (!mark_name.has_value()) {
+        window_or_worker->clear_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::mark);
+        return;
+    }
+
+    // 2. Otherwise, remove all PerformanceMark objects listed in the performance entry buffer whose name is markName.
+    window_or_worker->remove_entries_from_performance_entry_buffer({}, PerformanceTimeline::EntryTypes::mark, mark_name.value());
+
+    // 3. Return undefined.
 }
 
 // https://www.w3.org/TR/performance-timeline/#getentries-method
