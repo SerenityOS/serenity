@@ -11,6 +11,7 @@
 #include <LibGfx/Palette.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>

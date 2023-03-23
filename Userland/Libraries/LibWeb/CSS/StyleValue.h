@@ -502,30 +502,6 @@ struct StyleValueWithDefaultOperators : public StyleValue {
     }
 };
 
-class AngleStyleValue : public StyleValueWithDefaultOperators<AngleStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<AngleStyleValue> create(Angle angle)
-    {
-        return adopt_ref(*new AngleStyleValue(move(angle)));
-    }
-    virtual ~AngleStyleValue() override { }
-
-    Angle const& angle() const { return m_angle; }
-
-    virtual ErrorOr<String> to_string() const override { return m_angle.to_string(); }
-
-    bool properties_equal(AngleStyleValue const& other) const { return m_angle == other.m_angle; }
-
-private:
-    explicit AngleStyleValue(Angle angle)
-        : StyleValueWithDefaultOperators(Type::Angle)
-        , m_angle(move(angle))
-    {
-    }
-
-    Angle m_angle;
-};
-
 class BackgroundStyleValue final : public StyleValueWithDefaultOperators<BackgroundStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<BackgroundStyleValue> create(
