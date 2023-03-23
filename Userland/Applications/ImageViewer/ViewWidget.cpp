@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Mohsan Ali <mohsan0073@gmail.com>
  * Copyright (c) 2022, Mustafa Quraish <mustafa@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2023, Caoimhe Byrne <caoimhebyrne06@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,6 +17,7 @@
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/Timer.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGfx/Bitmap.h>
@@ -71,6 +73,13 @@ bool ViewWidget::is_previous_available() const
     return false;
 }
 
+// FIXME: Convert to `String` & use LibFileSystemAccessClient + `Core::System::unveil(nullptr, nullptr)`
+//        - Converting to String is not super-trivial due to the LexicalPath usage, while we can do a bunch of
+//          String::from_deprecated_string() and String.to_deprecated_string(), it is quite ugly to read and
+//          probably not the best approach.
+//
+//        - If we go full-unveil (`Core::System::unveil(nullptr, nullptr)`) this functionality does not work,
+//          we can not access the list of contents of a directory through LibFileSystemAccessClient at the moment.
 Vector<DeprecatedString> ViewWidget::load_files_from_directory(DeprecatedString const& path) const
 {
     Vector<DeprecatedString> files_in_directory;
@@ -86,11 +95,11 @@ Vector<DeprecatedString> ViewWidget::load_files_from_directory(DeprecatedString 
     return files_in_directory;
 }
 
-void ViewWidget::set_path(DeprecatedString const& path)
+void ViewWidget::set_path(String const& path)
 {
     m_path = path;
-    m_files_in_same_dir = load_files_from_directory(path);
-    m_current_index = m_files_in_same_dir.find_first_index(path);
+    m_files_in_same_dir = load_files_from_directory(path.to_deprecated_string());
+    m_current_index = m_files_in_same_dir.find_first_index(path.to_deprecated_string());
 }
 
 void ViewWidget::navigate(Directions direction)
@@ -110,8 +119,14 @@ void ViewWidget::navigate(Directions direction)
         index = m_files_in_same_dir.size() - 1;
     }
 
+    auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), m_files_in_same_dir.at(index));
+    if (result.is_error())
+        return;
+
     m_current_index = index;
-    this->load_from_file(m_files_in_same_dir.at(index));
+
+    auto value = result.release_value();
+    open_file(value.filename(), value.stream());
 }
 
 void ViewWidget::doubleclick_event(GUI::MouseEvent&)
@@ -147,39 +162,34 @@ void ViewWidget::mouseup_event(GUI::MouseEvent& event)
     GUI::AbstractZoomPanWidget::mouseup_event(event);
 }
 
-void ViewWidget::load_from_file(DeprecatedString const& path)
+void ViewWidget::open_file(String const& path, Core::File& file)
 {
-    auto show_error = [&] {
-        GUI::MessageBox::show(window(), DeprecatedString::formatted("Failed to open {}", path), "Cannot open image"sv, GUI::MessageBox::Type::Error);
-    };
+    auto open_result = try_open_file(path, file);
+    if (open_result.is_error()) {
+        auto error = open_result.release_error();
+        auto user_error_message = String::formatted("Failed to open the image: {}.", error).release_value_but_fixme_should_propagate_errors();
 
-    auto file_or_error = Core::MappedFile::map(path);
-    if (file_or_error.is_error()) {
-        show_error();
-        return;
+        GUI::MessageBox::show_error(nullptr, user_error_message);
     }
+}
 
-    auto& mapped_file = *file_or_error.value();
-
+ErrorOr<void> ViewWidget::try_open_file(String const& path, Core::File& file)
+{
     // Spawn a new ImageDecoder service process and connect to it.
-    auto client = ImageDecoderClient::Client::try_create().release_value_but_fixme_should_propagate_errors();
+    auto client = TRY(ImageDecoderClient::Client::try_create());
     auto mime_type = Core::guess_mime_type_based_on_filename(path);
-    auto decoded_image_or_error = client->decode_image(mapped_file.bytes(), mime_type);
-    if (!decoded_image_or_error.has_value()) {
-        show_error();
-        return;
+    auto decoded_image_or_none = client->decode_image(TRY(file.read_until_eof()), mime_type);
+    if (!decoded_image_or_none.has_value()) {
+        return Error::from_string_literal("Failed to decode image");
     }
 
-    m_decoded_image = decoded_image_or_error.release_value();
+    m_decoded_image = decoded_image_or_none.release_value();
     m_bitmap = m_decoded_image->frames[0].bitmap;
     if (m_bitmap.is_null()) {
-        show_error();
-        return;
+        return Error::from_string_literal("Image didn't contain a bitmap");
     }
 
     set_original_rect(m_bitmap->rect());
-    if (on_image_change)
-        on_image_change(m_bitmap);
 
     if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
         auto const& first_frame = m_decoded_image->frames[0];
@@ -190,13 +200,18 @@ void ViewWidget::load_from_file(DeprecatedString const& path)
         m_timer->stop();
     }
 
-    m_path = Core::DeprecatedFile::real_path_for(path);
-    GUI::Application::the()->set_most_recently_open_file(String::from_utf8(path).release_value_but_fixme_should_propagate_errors());
+    set_path(path);
+    GUI::Application::the()->set_most_recently_open_file(path);
+
+    if (on_image_change)
+        on_image_change(m_bitmap);
 
     if (scaled_for_first_image())
         scale_image_for_window();
     else
         reset_view();
+
+    return {};
 }
 
 void ViewWidget::drag_enter_event(GUI::DragEvent& event)

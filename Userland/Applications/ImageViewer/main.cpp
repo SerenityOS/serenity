@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Mohsan Ali <mohsan0073@gmail.com>
+ * Copyright (c) 2023, Caoimhe Byrne <caoimhebyrne06@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -49,6 +51,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::add_allowed_handler_with_only_specific_urls("/bin/Help", { URL::create_with_file_scheme("/usr/share/man/man1/ImageViewer.md") }));
     TRY(Desktop::Launcher::seal_allowlist());
 
+    // FIXME: Use unveil when we solve the issue with ViewWidget::load_files_from_directory, an explanation is given in ViewWidget.cpp
+    // TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    // TRY(Core::System::unveil("/tmp/session/%sid/portal/image", "rw"));
+    // TRY(Core::System::unveil("/res", "r"));
+    // TRY(Core::System::unveil(nullptr, nullptr));
+
     auto app_icon = GUI::Icon::default_icon("filetype-image"sv);
 
     StringView path;
@@ -68,9 +76,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto main_toolbar = TRY(toolbar_container->try_add<GUI::Toolbar>());
 
     auto widget = TRY(root_widget->try_add<ViewWidget>());
-    if (!path.is_empty()) {
-        widget->set_path(path);
-    }
     widget->on_scale_change = [&](float scale) {
         if (!widget->bitmap()) {
             window->set_title("Image Viewer");
@@ -96,8 +101,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->move_to_front();
 
         auto path = urls.first().path();
-        widget->set_path(path);
-        widget->load_from_file(path);
+        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
+        if (result.is_error())
+            return;
+
+        auto value = result.release_value();
+        widget->open_file(value.filename(), value.stream());
 
         for (size_t i = 1; i < urls.size(); ++i) {
             Desktop::Launcher::open(URL::create_with_file_scheme(urls[i].path().characters()), "/bin/ImageViewer");
@@ -112,11 +121,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            auto path = GUI::FilePicker::get_open_filepath(window, "Open Image");
-            if (path.has_value()) {
-                widget->set_path(path.value());
-                widget->load_from_file(path.value());
-            }
+            auto result = FileSystemAccessClient::Client::the().open_file(window, "Open Image");
+            if (result.is_error())
+                return;
+
+            auto value = result.release_value();
+            widget->open_file(value.filename(), value.stream());
         });
 
     auto delete_action = GUI::CommonActions::make_delete_action(
@@ -294,8 +304,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(file_menu->add_recent_files_list([&](auto& action) {
         auto path = action.text();
-        widget->set_path(path);
-        widget->load_from_file(path);
+        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
+        if (result.is_error())
+            return;
+
+        auto value = result.release_value();
+        widget->open_file(value.filename(), value.stream());
     }));
 
     TRY(file_menu->try_add_action(quit_action));
@@ -346,13 +360,19 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     })));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window)));
 
+    window->show();
+
+    // We must do this here and not any earlier, as we need a visible window to call FileSystemAccessClient::Client::request_file_read_only_approved();
     if (path != nullptr) {
-        widget->load_from_file(path);
+        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
+        if (result.is_error())
+            return 1;
+
+        auto value = result.release_value();
+        widget->open_file(value.filename(), value.stream());
     } else {
         widget->clear();
     }
-
-    window->show();
 
     return app->exec();
 }
