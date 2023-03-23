@@ -778,19 +778,16 @@ void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
 
 void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
 {
-    // FIXME
-    (void)url;
-    (void)target;
-    (void)modifiers;
-    // if (on_link_click)
-    // on_link_click(url, target, modifiers);
+    if (on_link_click) {
+        on_link_click(url, target, modifiers);
+    }
 }
 
 void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
 {
-    (void)url;
-    (void)target;
-    (void)modifiers;
+    if (on_link_middle_click) {
+        on_link_middle_click(url, target, modifiers);
+    }
 }
 
 void WebContentView::notify_server_did_start_loading(Badge<WebContentClient>, AK::URL const& url, bool is_redirect)
