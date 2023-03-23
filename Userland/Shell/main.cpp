@@ -60,7 +60,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         editor = Line::Editor::construct(move(configuration));
         editor->initialize();
 
-        shell = Shell::Shell::construct(*editor, attempt_interactive, posix_mode || LexicalPath::basename(arguments.strings[0]) == "sh"sv);
+        shell = Shell::Shell::construct(*editor, attempt_interactive, posix_mode);
         s_shell = shell.ptr();
 
         s_shell->setup_signals();
@@ -171,7 +171,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView format;
     bool should_format_live = false;
     bool keep_open = false;
-    bool posix_mode = false;
+    bool posix_mode = (LexicalPath::basename(arguments.strings[0]) == "sh"sv);
 
     Core::ArgsParser parser;
     parser.add_option(command_to_run, "String to read commands from", "command-string", 'c', "command-string");
