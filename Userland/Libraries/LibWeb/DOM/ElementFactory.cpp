@@ -7,6 +7,7 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
+#include <LibWeb/HTML/CustomElements/CustomElementName.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLAreaElement.h>
 #include <LibWeb/HTML/HTMLAudioElement.h>
@@ -291,8 +292,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(Document& document
     if (lowercase_tag_name == SVG::TagNames::text)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGTextContentElement>(realm, document, move(qualified_name)));
 
-    // FIXME: If name is a valid custom element name, then return HTMLElement.
-
+    // If name is a valid custom element name, then return HTMLElement.
+    if (HTML::is_valid_custom_element_name(local_name)) {
+        return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLElement>(realm, document, move(qualified_name)));
+    }
     return MUST_OR_THROW_OOM(realm.heap().allocate<HTML::HTMLUnknownElement>(realm, document, move(qualified_name)));
 }
 
