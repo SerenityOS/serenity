@@ -23,6 +23,7 @@
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/CustomElements/CustomElementName.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
@@ -485,9 +486,10 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
         return WebIDL::NotSupportedError::create(realm(), "Element's namespace is not the HTML namespace"sv);
 
     // 2. If this’s local name is not one of the following:
-    //    FIXME: - a valid custom element name
+    //    - a valid custom element name
     //    - "article", "aside", "blockquote", "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "main", "nav", "p", "section", or "span"
-    if (!local_name().is_one_of("article", "aside", "blockquote", "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "main", "nav", "p", "section", "span")) {
+    if (!HTML::is_valid_custom_element_name(local_name())
+        && !local_name().is_one_of("article", "aside", "blockquote", "body", "div", "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "main", "nav", "p", "section", "span")) {
         // then throw a "NotSupportedError" DOMException.
         return WebIDL::NotSupportedError::create(realm(), DeprecatedString::formatted("Element '{}' cannot be a shadow host", local_name()));
     }
