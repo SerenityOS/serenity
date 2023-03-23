@@ -366,7 +366,7 @@ Function Parser::parse_function(HashMap<DeprecatedString, DeprecatedString>& ext
     return function;
 }
 
-void Parser::parse_constructor(Interface& interface)
+void Parser::parse_constructor(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
 {
     assert_string("constructor"sv);
     consume_whitespace();
@@ -376,7 +376,7 @@ void Parser::parse_constructor(Interface& interface)
     consume_whitespace();
     assert_specific(';');
 
-    interface.constructors.append(Constructor { interface.name, move(parameters) });
+    interface.constructors.append(Constructor { interface.name, move(parameters), move(extended_attributes) });
 }
 
 void Parser::parse_stringifier(HashMap<DeprecatedString, DeprecatedString>& extended_attributes, Interface& interface)
@@ -551,7 +551,7 @@ void Parser::parse_interface(Interface& interface)
         }
 
         if (lexer.next_is("constructor")) {
-            parse_constructor(interface);
+            parse_constructor(extended_attributes, interface);
             continue;
         }
 
