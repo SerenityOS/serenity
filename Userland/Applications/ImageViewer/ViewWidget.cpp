@@ -221,6 +221,9 @@ void ViewWidget::resize_event(GUI::ResizeEvent& event)
 
 void ViewWidget::scale_image_for_window()
 {
+    if (!m_bitmap)
+        return;
+
     set_original_rect(m_bitmap->rect());
     fit_content_to_view(GUI::AbstractZoomPanWidget::FitType::Both);
 }
