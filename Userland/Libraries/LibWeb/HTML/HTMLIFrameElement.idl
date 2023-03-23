@@ -5,6 +5,8 @@
 [Exposed=Window]
 interface HTMLIFrameElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString srcdoc;
     [Reflect] attribute DOMString name;

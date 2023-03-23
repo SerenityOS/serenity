@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLDivElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString align;
 
 };

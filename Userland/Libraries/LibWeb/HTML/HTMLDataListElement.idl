@@ -4,6 +4,6 @@
 [Exposed=Window]
 interface HTMLDataListElement : HTMLElement {
 
-
+    [HTMLConstructor] constructor();
 
 };

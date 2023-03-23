@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLDetailsElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute boolean open;
 
 };

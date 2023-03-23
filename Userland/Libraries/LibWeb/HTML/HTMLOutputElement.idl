@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLOutputElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     readonly attribute DOMString type;
 
 };

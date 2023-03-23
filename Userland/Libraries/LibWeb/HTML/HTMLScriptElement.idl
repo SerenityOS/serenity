@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLScriptElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString type;
     [Reflect=nomodule] attribute boolean noModule;

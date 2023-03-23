@@ -4,7 +4,8 @@
 // https://html.spec.whatwg.org/multipage/text-level-semantics.html#htmlanchorelement
 [Exposed=Window]
 interface HTMLAnchorElement : HTMLElement {
-    // FIXME: [HTMLConstructor] constructor();
+
+    [HTMLConstructor] constructor();
 
     [Reflect] attribute DOMString target;
     [Reflect] attribute DOMString download;
@@ -20,6 +21,7 @@ interface HTMLAnchorElement : HTMLElement {
     [Reflect] attribute DOMString name;
     [Reflect] attribute DOMString rev;
     [Reflect] attribute DOMString shape;
+
 };
 
 HTMLAnchorElement includes HTMLHyperlinkElementUtils;

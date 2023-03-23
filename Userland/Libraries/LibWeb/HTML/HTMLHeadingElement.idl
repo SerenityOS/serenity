@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLHeadingElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString align;
 
 };

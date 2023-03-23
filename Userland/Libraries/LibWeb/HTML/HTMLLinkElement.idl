@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLLinkElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString href;
     [Reflect] attribute DOMString hreflang;
     [Reflect] attribute DOMString integrity;

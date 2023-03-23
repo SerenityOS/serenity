@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLOListElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute boolean reversed;
     [Reflect] attribute DOMString type;
 

@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLEmbedElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString type;
     [Reflect] attribute DOMString width;

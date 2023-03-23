@@ -4,6 +4,8 @@
 [Exposed=Window, LegacyFactoryFunction=Image(optional unsigned long width, optional unsigned long height)]
 interface HTMLImageElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString alt;
     [Reflect] attribute DOMString srcset;

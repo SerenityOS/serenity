@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLTableCellElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     attribute unsigned long colSpan;
     attribute unsigned long rowSpan;
     [Reflect] attribute DOMString headers;

@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLFieldSetElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     readonly attribute DOMString type;
 
 };

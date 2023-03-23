@@ -4,7 +4,8 @@
 // https://html.spec.whatwg.org/multipage/image-maps.html#htmlareaelement
 [Exposed=Window]
 interface HTMLAreaElement : HTMLElement {
-    // FIXME: [HTMLConstructor] constructor();
+
+    [HTMLConstructor] constructor();
 
     // FIXME: [CEReactions] attribute DOMString alt;
     // FIXME: [CEReactions] attribute DOMString coords;
@@ -18,6 +19,7 @@ interface HTMLAreaElement : HTMLElement {
 
     // Obsolete
     [Reflect=nohref] attribute boolean noHref;
+
 };
 
 HTMLAreaElement includes HTMLHyperlinkElementUtils;

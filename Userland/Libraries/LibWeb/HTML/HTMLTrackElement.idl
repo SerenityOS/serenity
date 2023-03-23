@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLTrackElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString srclang;
     [Reflect] attribute DOMString label;

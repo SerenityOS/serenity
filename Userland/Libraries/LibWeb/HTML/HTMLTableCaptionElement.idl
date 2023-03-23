@@ -4,6 +4,8 @@
 [Exposed=Window]
 interface HTMLTableCaptionElement : HTMLElement {
 
+    [HTMLConstructor] constructor();
+
     [Reflect] attribute DOMString align;
 
 };
