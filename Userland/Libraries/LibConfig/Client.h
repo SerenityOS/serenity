@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <ConfigServer/ConfigClientEndpoint.h>
-#include <ConfigServer/ConfigServerEndpoint.h>
 #include <LibCore/Promise.h>
 #include <LibCore/StandardPaths.h>
 #include <LibIPC/ConnectionToServer.h>
+#include <Userland/Services/ConfigServer/ConfigClientEndpoint.h>
+#include <Userland/Services/ConfigServer/ConfigServerEndpoint.h>
 
 namespace Config {
 
