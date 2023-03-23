@@ -2583,6 +2583,13 @@ void Painter::draw_signed_distance_field(IntRect const& dst_rect, Color color, G
         return x * x * (3 - 2 * x);
     };
 
+    auto pixel_at = [&](unsigned x, unsigned y) -> u8 {
+        // Returning 255 means this pixel is outside the shape.
+        if (x >= sdf.width() || y >= sdf.height())
+            return 255;
+        return sdf.pixel_at(x, y);
+    };
+
     for (int i = 0; i < clipped_rect.height(); ++i) {
         for (int j = 0; j < clipped_rect.width(); ++j) {
             auto point = IntPoint { j, i };
@@ -2592,12 +2599,10 @@ void Painter::draw_signed_distance_field(IntRect const& dst_rect, Color color, G
             auto target_fraction_x = (x_ratio * sample_point.x()) - target_x;
             auto target_fraction_y = (y_ratio * sample_point.y()) - target_y;
 
-            auto x2 = min(target_x + 1, sdf.width() - 1);
-            auto y2 = min(target_y + 1, sdf.height() - 1);
-            auto a = sdf.pixel_at(target_x, target_y);
-            auto b = sdf.pixel_at(x2, target_y);
-            auto c = sdf.pixel_at(target_x, y2);
-            auto d = sdf.pixel_at(x2, y2);
+            auto a = pixel_at(target_x, target_y);
+            auto b = pixel_at(target_x + 1, target_y);
+            auto c = pixel_at(target_x, target_y + 1);
+            auto d = pixel_at(target_x + 1, target_y + 1);
 
             float distance = (a * (1 - target_fraction_x) * (1 - target_fraction_y)
                                  + b * target_fraction_x * (1 - target_fraction_y)
