@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -291,11 +292,6 @@ StyleValueList const& StyleValue::as_value_list() const
 {
     VERIFY(is_value_list());
     return static_cast<StyleValueList const&>(*this);
-}
-
-ErrorOr<String> BackgroundSizeStyleValue::to_string() const
-{
-    return String::formatted("{} {}", TRY(m_properties.size_x.to_string()), TRY(m_properties.size_y.to_string()));
 }
 
 ErrorOr<String> BorderStyleValue::to_string() const
