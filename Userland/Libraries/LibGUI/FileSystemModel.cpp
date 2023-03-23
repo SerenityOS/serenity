@@ -15,6 +15,7 @@
 #include <LibCore/StandardPaths.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibGUI/AbstractView.h>
+#include <LibGUI/ConnectionToPreviewServer.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
@@ -643,62 +644,36 @@ Icon FileSystemModel::icon_for(Node const& node) const
     return FileIconProvider::icon_for_path(node.full_path(), node.mode);
 }
 
-using BitmapBackgroundAction = Threading::BackgroundAction<NonnullRefPtr<Gfx::Bitmap>>;
-
-// Mutex protected thumbnail cache data shared between threads.
-struct ThumbnailCache {
-    // Null pointers indicate an image that couldn't be loaded due to errors.
-    HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> thumbnail_cache {};
-    HashMap<DeprecatedString, NonnullRefPtr<BitmapBackgroundAction>> loading_thumbnails {};
-};
-
-static Threading::MutexProtected<ThumbnailCache> s_thumbnail_cache {};
-
-static ErrorOr<NonnullRefPtr<Gfx::Bitmap>> render_thumbnail(StringView path)
-{
-    auto bitmap = TRY(Gfx::Bitmap::load_from_file(path));
-    auto thumbnail = TRY(Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { 32, 32 }));
-
-    double scale = min(32 / (double)bitmap->width(), 32 / (double)bitmap->height());
-    auto destination = Gfx::IntRect(0, 0, (int)(bitmap->width() * scale), (int)(bitmap->height() * scale)).centered_within(thumbnail->rect());
-
-    Painter painter(thumbnail);
-    painter.draw_scaled_bitmap(destination, *bitmap, bitmap->rect());
-    return thumbnail;
-}
+static HashMap<DeprecatedString, RefPtr<Gfx::Bitmap>> s_thumbnail_cache {};
+static RefPtr<ConnectionToPreviewServer> s_preview_client;
 
 bool FileSystemModel::fetch_thumbnail_for(Node const& node)
 {
+    if (!s_preview_client)
+        s_preview_client = MUST(ConnectionToPreviewServer::try_create());
+
     auto path = node.full_path();
 
     // See if we already have the thumbnail we're looking for in the cache.
-    auto was_in_cache = s_thumbnail_cache.with_locked([&](auto& cache) {
-        auto it = cache.thumbnail_cache.find(path);
-        if (it != cache.thumbnail_cache.end()) {
-            // Loading was unsuccessful.
-            if (!(*it).value)
-                return TriState::False;
-            // Loading was successful.
-            node.thumbnail = (*it).value;
-            return TriState::True;
-        }
-        // Loading is in progress.
-        if (cache.loading_thumbnails.contains(path))
-            return TriState::False;
-        return TriState::Unknown;
-    });
-    if (was_in_cache != TriState::Unknown)
-        return was_in_cache == TriState::True;
+    auto it = s_thumbnail_cache.find(path);
+    if (it != s_thumbnail_cache.end()) {
+        // Loading was unsuccessful.
+        if (!(*it).value)
+            return false;
+        // Loading was successful.
+        node.thumbnail = (*it).value;
+        return true;
+    }
+
+    // Loading is in progress.
+    if (s_preview_client->is_preview_requested(MUST(String::from_deprecated_string(path))))
+        return false;
 
     // Otherwise, arrange to render the thumbnail in background and make it available later.
 
     m_thumbnail_progress_total++;
 
     auto weak_this = make_weak_ptr();
-
-    auto const action = [path](auto&) {
-        return render_thumbnail(path);
-    };
 
     auto const update_progress = [weak_this](bool with_success) {
         if (auto strong_this = weak_this.strong_ref(); !strong_this.is_null()) {
@@ -715,36 +690,24 @@ bool FileSystemModel::fetch_thumbnail_for(Node const& node)
         }
     };
 
-    auto const on_complete = [path, update_progress](auto thumbnail) -> ErrorOr<void> {
-        s_thumbnail_cache.with_locked([path, thumbnail](auto& cache) {
-            cache.thumbnail_cache.set(path, thumbnail);
-            cache.loading_thumbnails.remove(path);
+    auto on_complete = [update_progress](auto const& file_name, auto thumbnail) {
+        Core::EventLoop::current().deferred_invoke([=] {
+            s_thumbnail_cache.set(file_name.to_deprecated_string(), thumbnail);
+            update_progress(true);
         });
-
-        update_progress(true);
-
-        return {};
     };
 
-    auto const on_error = [path, update_progress](Error error) -> void {
+    auto on_error = [update_progress](auto const& file_name, auto const& error) {
         // Note: We need to defer that to avoid the function removing its last reference
         //       i.e. trying to destroy itself, which is prohibited.
-        Core::EventLoop::current().deferred_invoke([path, error = Error::copy(error)]() mutable {
-            s_thumbnail_cache.with_locked([path, error = move(error)](auto& cache) {
-                if (error != Error::from_errno(ECANCELED)) {
-                    cache.thumbnail_cache.set(path, nullptr);
-                    dbgln("Failed to load thumbnail for {}: {}", path, error);
-                }
-                cache.loading_thumbnails.remove(path);
-            });
+        Core::EventLoop::current().deferred_invoke([=] {
+            s_thumbnail_cache.set(file_name.to_deprecated_string(), nullptr);
+            dbgln("Failed to load thumbnail for {}: {}", file_name, PreviewServer::from_preview_server_error(error));
+            update_progress(false);
         });
-
-        update_progress(false);
     };
 
-    s_thumbnail_cache.with_locked([path, action, on_complete, on_error](auto& cache) {
-        cache.loading_thumbnails.set(path, BitmapBackgroundAction::construct(move(action), move(on_complete), move(on_error)));
-    });
+    s_preview_client->get_preview_for(MUST(String::from_deprecated_string(path)), move(on_complete), move(on_error));
 
     return false;
 }
