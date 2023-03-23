@@ -20,6 +20,7 @@ class HttpRequest {
 public:
     enum class ParseError {
         RequestTooLarge,
+        RequestIncomplete,
         OutOfMemory,
         UnsupportedMethod
     };
@@ -29,6 +30,8 @@ public:
         switch (error) {
         case ParseError::RequestTooLarge:
             return "Request too large"sv;
+        case ParseError::RequestIncomplete:
+            return "Request is incomplete"sv;
         case ParseError::OutOfMemory:
             return "Out of memory"sv;
         case ParseError::UnsupportedMethod:
