@@ -21,6 +21,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
+#include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -1022,11 +1023,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductP
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
-}
-
-ErrorOr<String> FlexFlowStyleValue::to_string() const
-{
-    return String::formatted("{} {}", TRY(m_properties.flex_direction->to_string()), TRY(m_properties.flex_wrap->to_string()));
 }
 
 ErrorOr<String> FontStyleValue::to_string() const
