@@ -1112,11 +1112,11 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_errors()
 
     // 3. Otherwise, if xhr’s response’s aborted flag is set, run the request error steps for xhr, abort, and "AbortError" DOMException.
     if (m_response->aborted())
-        return TRY(request_error_steps(EventNames::abort, WebIDL::TimeoutError::create(realm(), "Aborted"sv)));
+        return TRY(request_error_steps(EventNames::abort, WebIDL::AbortError::create(realm(), "Aborted"sv)));
 
     // 4. Otherwise, if xhr’s response is a network error, then run the request error steps for xhr, error, and "NetworkError" DOMException.
     if (m_response->is_network_error())
-        return TRY(request_error_steps(EventNames::error, WebIDL::TimeoutError::create(realm(), "Network error"sv)));
+        return TRY(request_error_steps(EventNames::error, WebIDL::NetworkError::create(realm(), "Network error"sv)));
 
     return {};
 }
