@@ -502,35 +502,6 @@ struct StyleValueWithDefaultOperators : public StyleValue {
     }
 };
 
-class BackgroundRepeatStyleValue final : public StyleValueWithDefaultOperators<BackgroundRepeatStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<BackgroundRepeatStyleValue> create(Repeat repeat_x, Repeat repeat_y)
-    {
-        return adopt_ref(*new BackgroundRepeatStyleValue(repeat_x, repeat_y));
-    }
-    virtual ~BackgroundRepeatStyleValue() override = default;
-
-    Repeat repeat_x() const { return m_properties.repeat_x; }
-    Repeat repeat_y() const { return m_properties.repeat_y; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(BackgroundRepeatStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    BackgroundRepeatStyleValue(Repeat repeat_x, Repeat repeat_y)
-        : StyleValueWithDefaultOperators(Type::BackgroundRepeat)
-        , m_properties { .repeat_x = repeat_x, .repeat_y = repeat_y }
-    {
-    }
-
-    struct Properties {
-        Repeat repeat_x;
-        Repeat repeat_y;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 // NOTE: This is not used for identifier sizes, like `cover` and `contain`.
 class BackgroundSizeStyleValue final : public StyleValueWithDefaultOperators<BackgroundSizeStyleValue> {
 public:
