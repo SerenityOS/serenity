@@ -325,6 +325,7 @@ pushd "$DIR/Local/clang/bin/"
     for arch in $ARCHS; do
         ln -s clang "$arch"-pc-serenity-clang
         ln -s clang++ "$arch"-pc-serenity-clang++
+        ln -s llvm-nm "$arch"-pc-serenity-nm
         echo "--sysroot=$BUILD/${arch}clang/Root" > "$arch"-pc-serenity.cfg
     done
 popd
