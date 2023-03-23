@@ -107,6 +107,11 @@ public:
         return ((head() - 1) % Size) != (m_queue->m_queue->m_tail.load() % Size);
     }
 
+    ALWAYS_INLINE bool can_dequeue() const
+    {
+        return m_queue->m_queue->m_tail.load() > head();
+    }
+
     // Repeatedly try to enqueue, using the wait_function to wait if it's not possible
     ErrorOr<void> blocking_enqueue(ValueType to_insert, Function<void()> wait_function)
     {
