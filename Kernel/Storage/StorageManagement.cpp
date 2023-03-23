@@ -28,6 +28,7 @@
 #include <Kernel/Storage/ATA/AHCI/Controller.h>
 #include <Kernel/Storage/ATA/GenericIDE/Controller.h>
 #include <Kernel/Storage/NVMe/NVMeController.h>
+#include <Kernel/Storage/SD/PCISDHostController.h>
 #include <Kernel/Storage/SD/SDHostController.h>
 #include <Kernel/Storage/StorageManagement.h>
 #include <LibPartition/EBRPartitionTable.h>
@@ -88,7 +89,6 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
 {
     VERIFY(m_controllers.is_empty());
 
-    using SubclassID = PCI::MassStorage::SubclassID;
     if (!kernel_command_line().disable_physical_storage()) {
         // NOTE: Search for VMD devices before actually searching for storage controllers
         // because the VMD device is only a bridge to such (NVMe) controllers.
@@ -100,10 +100,8 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
             }
         }));
 
-        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
-            if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::MassStorage)) {
-                return;
-            }
+        auto const& handle_mass_storage_device = [&](PCI::DeviceIdentifier const& device_identifier) {
+            using SubclassID = PCI::MassStorage::SubclassID;
 
             auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
 #if ARCH(X86_64)
@@ -134,6 +132,30 @@ UNMAP_AFTER_INIT void StorageManagement::enumerate_pci_controllers(bool force_pi
                 } else {
                     m_controllers.append(controller.release_value());
                 }
+            }
+        };
+
+        auto const& handle_base_device = [&](PCI::DeviceIdentifier const& device_identifier) {
+            using SubclassID = PCI::Base::SubclassID;
+
+            auto subclass_code = static_cast<SubclassID>(device_identifier.subclass_code().value());
+            if (subclass_code == SubclassID::SDHostController) {
+
+                auto sdhc_or_error = PCISDHostController::try_initialize(device_identifier);
+                if (sdhc_or_error.is_error()) {
+                    dmesgln("PCI: Failed to initialize SD Host Controller ({} - {}): {}", device_identifier.address(), device_identifier.hardware_id(), sdhc_or_error.error());
+                } else {
+                    m_controllers.append(sdhc_or_error.release_value());
+                }
+            }
+        };
+
+        MUST(PCI::enumerate([&](PCI::DeviceIdentifier const& device_identifier) -> void {
+            auto class_code = device_identifier.class_code().value();
+            if (class_code == to_underlying(PCI::ClassID::MassStorage)) {
+                handle_mass_storage_device(device_identifier);
+            } else if (class_code == to_underlying(PCI::ClassID::Base)) {
+                handle_base_device(device_identifier);
             }
         }));
     }

@@ -84,6 +84,7 @@ enum class ClassID {
     MassStorage = 0x1,
     Multimedia = 0x4,
     Bridge = 0x6,
+    Base = 0x8,
 };
 
 namespace MassStorage {
@@ -112,6 +113,14 @@ namespace Bridge {
 
 enum class SubclassID {
     PCI_TO_PCI = 0x4,
+};
+
+}
+
+namespace Base {
+
+enum class SubclassID {
+    SDHostController = 0x5,
 };
 
 }
