@@ -177,7 +177,7 @@ Optional<StringView> canonicalize_time_zone(StringView time_zone)
         return {};
 
     auto canonical_time_zone = time_zone_to_string(*maybe_time_zone);
-    if (canonical_time_zone.is_one_of("Etc/UTC"sv, "Etc/GMT"sv))
+    if (canonical_time_zone.is_one_of("Etc/UTC"sv, "Etc/GMT"sv, "GMT"sv))
         return "UTC"sv;
 
     return canonical_time_zone;

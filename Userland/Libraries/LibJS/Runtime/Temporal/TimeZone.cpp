@@ -40,6 +40,7 @@ bool is_available_time_zone_name(StringView time_zone)
     return ::TimeZone::time_zone_from_string(time_zone).has_value();
 }
 
+// 6.4.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/ecma402/#sec-canonicalizetimezonename
 // 11.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sec-canonicalizetimezonename
 // 15.1.2 CanonicalizeTimeZoneName ( timeZone ), https://tc39.es/proposal-temporal/#sup-canonicalizetimezonename
 ThrowCompletionOr<String> canonicalize_time_zone_name(VM& vm, StringView time_zone)
@@ -48,7 +49,7 @@ ThrowCompletionOr<String> canonicalize_time_zone_name(VM& vm, StringView time_zo
     // 2. If ianaTimeZone is a Link name, let ianaTimeZone be the String value of the corresponding Zone name as specified in the file backward of the IANA Time Zone Database.
     auto iana_time_zone = ::TimeZone::canonicalize_time_zone(time_zone);
 
-    // 3. If ianaTimeZone is "Etc/UTC" or "Etc/GMT", return "UTC".
+    // 3. If ianaTimeZone is one of "Etc/UTC", "Etc/GMT", or "GMT", return "UTC".
     // NOTE: This is already done in canonicalize_time_zone().
 
     // 4. Return ianaTimeZone.
