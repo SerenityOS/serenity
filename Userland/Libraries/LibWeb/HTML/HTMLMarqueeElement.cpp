@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/HTML/HTMLMarqueeElement.h>
 
 namespace Web::HTML {
