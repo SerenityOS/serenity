@@ -690,7 +690,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_list()
             start_position.start_offset,
             end_position.end_offset,
             start_position.start_line,
-            start_position.end_line,
+            end_position.end_line,
         },
         move(nodes),
         move(positions));
