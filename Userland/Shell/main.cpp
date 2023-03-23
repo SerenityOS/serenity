@@ -186,6 +186,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.set_stop_on_first_non_option(true);
     parser.parse(arguments);
 
+    if (!file_to_read_from.is_null())
+        skip_rc_files = true;
+
     if (!format.is_empty()) {
         auto file = TRY(Core::DeprecatedFile::open(format, Core::OpenMode::ReadOnly));
 
