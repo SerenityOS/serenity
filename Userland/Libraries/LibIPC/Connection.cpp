@@ -64,7 +64,14 @@ ErrorOr<void> ConnectionBase::post_message(MessageBuffer buffer)
     TRY(buffer.data.try_prepend(reinterpret_cast<u8 const*>(&message_size), sizeof(message_size)));
 
     for (auto& fd : buffer.fds) {
-        if (auto result = fd_passing_socket().send_fd(fd->value()); result.is_error()) {
+        auto result = fd_passing_socket().send_fd(fd->value());
+        // Don't crash on a full file descriptor queue.
+        // FIXME: As below with message data, this is a hacky way to at least not crash on large fd amounts.
+        while (result.is_error() && result.error().code() == EBUSY) {
+            sched_yield();
+            result = fd_passing_socket().send_fd(fd->value());
+        }
+        if (result.is_error()) {
             shutdown_with_error(result.error());
             return result;
         }
