@@ -76,6 +76,7 @@ set(SOURCES
     CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/StyleValues/FlexFlowStyleValue.cpp
     CSS/StyleValues/FlexStyleValue.cpp
+    CSS/StyleValues/FontStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
