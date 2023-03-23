@@ -175,6 +175,7 @@ set(SOURCES
     HTML/CORSSettingAttribute.cpp
     HTML/CrossOrigin/AbstractOperations.cpp
     HTML/CrossOrigin/Reporting.cpp
+    HTML/CustomElements/CustomElementName.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
     HTML/ErrorEvent.cpp
