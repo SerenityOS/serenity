@@ -73,6 +73,7 @@ set(SOURCES
     CSS/StyleValues/BorderStyleValue.cpp
     CSS/StyleValues/ColorStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
+    CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
