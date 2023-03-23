@@ -162,6 +162,12 @@ public:
     {
     }
 
+    ErrorOr copy() const
+    requires(Detail::IsCopyConstructible<T> && requires { E::copy(declval<E const&>()); })
+    {
+        return m_value_or_error.visit([](T const& t) { return ErrorOr(t); }, [](E const& e) { return ErrorOr(E::copy(e)); });
+    }
+
 #ifdef AK_OS_SERENITY
     ErrorOr(ErrnoCode code)
         : m_value_or_error(Error::from_errno(code))
