@@ -519,6 +519,10 @@ class URLSearchParams;
 class URLSearchParamsIterator;
 }
 
+namespace Web::UserTiming {
+class PerformanceMark;
+}
+
 namespace Web::Bindings {
 class Intrinsics;
 class OptionConstructor;

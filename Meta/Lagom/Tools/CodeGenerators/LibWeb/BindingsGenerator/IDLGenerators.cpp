@@ -45,6 +45,7 @@ static bool is_platform_object(Type const& type)
         "Node"sv,
         "Path2D"sv,
         "PerformanceEntry"sv,
+        "PerformanceMark"sv,
         "Range"sv,
         "ReadableStream"sv,
         "Request"sv,
@@ -3152,6 +3153,7 @@ using namespace Web::ResizeObserver;
 using namespace Web::Selection;
 using namespace Web::Streams;
 using namespace Web::UIEvents;
+using namespace Web::UserTiming;
 using namespace Web::URL;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
@@ -3387,6 +3389,7 @@ using namespace Web::Streams;
 using namespace Web::SVG;
 using namespace Web::UIEvents;
 using namespace Web::URL;
+using namespace Web::UserTiming;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
 using namespace Web::WebAssembly;
@@ -3516,6 +3519,7 @@ using namespace Web::Selection;
 using namespace Web::XHR;
 using namespace Web::UIEvents;
 using namespace Web::URL;
+using namespace Web::UserTiming;
 using namespace Web::WebGL;
 using namespace Web::WebIDL;
 
@@ -3648,6 +3652,7 @@ using namespace Web::Streams;
 using namespace Web::SVG;
 using namespace Web::UIEvents;
 using namespace Web::URL;
+using namespace Web::UserTiming;
 using namespace Web::WebSockets;
 using namespace Web::XHR;
 using namespace Web::WebGL;

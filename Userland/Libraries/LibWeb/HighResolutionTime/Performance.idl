@@ -2,6 +2,7 @@
 #import <HighResolutionTime/DOMHighResTimeStamp.idl>
 #import <NavigationTiming/PerformanceTiming.idl>
 #import <PerformanceTimeline/PerformanceEntry.idl>
+#import <UserTiming/PerformanceMark.idl>
 
 // https://www.w3.org/TR/performance-timeline/#dom-performanceentrylist
 typedef sequence<PerformanceEntry> PerformanceEntryList;
@@ -13,6 +14,14 @@ interface Performance : EventTarget {
     readonly attribute DOMHighResTimeStamp timeOrigin;
 
     readonly attribute PerformanceTiming timing;
+
+    // https://w3c.github.io/user-timing/#extensions-performance-interface
+    // "User Timing" extensions to the Performance interface
+    PerformanceMark mark(DOMString markName, optional PerformanceMarkOptions markOptions = {});
+    undefined clearMarks(optional DOMString markName);
+    // FIXME: PerformanceMeasure measure(DOMString measureName, optional (DOMString or PerformanceMeasureOptions) startOrMeasureOptions = {}, optional DOMString endMark);
+    // FIXME: undefined clearMeasures(optional DOMString measureName);
+
     // https://www.w3.org/TR/performance-timeline/#extensions-to-the-performance-interface
     // "Performance Timeline" extensions to the Performance interface
     PerformanceEntryList getEntries();
