@@ -1,0 +1,6 @@
+#include <AK/String.h>
+
+endpoint PreviewServer
+{
+    preview_for(String path) =|
+}

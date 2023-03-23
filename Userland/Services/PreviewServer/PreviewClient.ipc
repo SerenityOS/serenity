@@ -1,0 +1,9 @@
+#include <AK/String.h>
+#include <Services/PreviewServer/Error.h>
+#include <LibGfx/ShareableBitmap.h>
+
+endpoint PreviewClient
+{
+    preview_rendered(String requested_path, Gfx::ShareableBitmap preview) =|
+    preview_failed(String requested_path, PreviewServer::Error reason) =|
+}
