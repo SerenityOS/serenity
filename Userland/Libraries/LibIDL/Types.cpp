@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -184,6 +185,112 @@ bool Type::is_distinguishable_from(IDL::Type const& other) const
     }
 
     return table[to_underlying(this_distinguishability)][to_underlying(other_distinguishability)];
+}
+
+// https://webidl.spec.whatwg.org/#dfn-json-types
+bool Type::is_json(Interface const& interface) const
+{
+    // The JSON types are:
+    // - numeric types,
+    if (is_numeric())
+        return true;
+
+    // - boolean,
+    if (is_boolean())
+        return true;
+
+    // - string types,
+    if (is_string() || interface.enumerations.find(m_name) != interface.enumerations.end())
+        return true;
+
+    // - object,
+    if (is_object())
+        return true;
+
+    // - nullable types whose inner type is a JSON type,
+    // - annotated types whose inner type is a JSON type,
+    // NOTE: We don't separate nullable and annotated into separate types.
+
+    // - union types whose member types are JSON types,
+    if (is_union()) {
+        auto const& union_type = as_union();
+
+        for (auto const& type : union_type.member_types()) {
+            if (!type->is_json(interface))
+                return false;
+        }
+
+        return true;
+    }
+
+    // - typedefs whose type being given a new name is a JSON type,
+    auto typedef_iterator = interface.typedefs.find(m_name);
+    if (typedef_iterator != interface.typedefs.end())
+        return typedef_iterator->value.type->is_json(interface);
+
+    // - sequence types whose parameterized type is a JSON type,
+    // - frozen array types whose parameterized type is a JSON type,
+    // - records where all of their values are JSON types,
+    if (is_parameterized() && m_name.is_one_of("sequence", "FrozenArray", "record")) {
+        auto const& parameterized_type = as_parameterized();
+
+        for (auto const& parameter : parameterized_type.parameters()) {
+            if (!parameter->is_json(interface))
+                return false;
+        }
+
+        return true;
+    }
+
+    // - dictionary types where the types of all members declared on the dictionary and all its inherited dictionaries are JSON types,
+    auto dictionary_iterator = interface.dictionaries.find(m_name);
+    if (dictionary_iterator != interface.dictionaries.end()) {
+        auto const& dictionary = dictionary_iterator->value;
+        for (auto const& member : dictionary.members) {
+            if (!member.type->is_json(interface))
+                return false;
+        }
+
+        return true;
+    }
+
+    // - interface types that have a toJSON operation declared on themselves or one of their inherited interfaces.
+    Optional<Interface const&> current_interface_for_to_json;
+    if (m_name == interface.name) {
+        current_interface_for_to_json = interface;
+    } else {
+        // NOTE: Interface types must have the IDL file of their interface imported.
+        //       Though the type name may not refer to an interface, so we don't assert this here.
+        auto imported_interface_iterator = interface.imported_modules.find_if([this](IDL::Interface const& imported_interface) {
+            return imported_interface.name == m_name;
+        });
+
+        if (imported_interface_iterator != interface.imported_modules.end())
+            current_interface_for_to_json = *imported_interface_iterator;
+    }
+
+    while (current_interface_for_to_json.has_value()) {
+        auto to_json_iterator = current_interface_for_to_json->functions.find_if([](IDL::Function const& function) {
+            return function.name == "toJSON"sv;
+        });
+
+        if (to_json_iterator != current_interface_for_to_json->functions.end())
+            return true;
+
+        if (interface.parent_name.is_empty())
+            break;
+
+        auto imported_interface_iterator = interface.imported_modules.find_if([&current_interface_for_to_json](IDL::Interface const& imported_interface) {
+            return imported_interface.name == current_interface_for_to_json->parent_name;
+        });
+
+        // Inherited interfaces must have their IDL files imported.
+        VERIFY(imported_interface_iterator != interface.imported_modules.end());
+
+        current_interface_for_to_json = *imported_interface_iterator;
+    }
+
+    return false;
 }
 
 // https://webidl.spec.whatwg.org/#dfn-distinguishing-argument-index
