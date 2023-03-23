@@ -57,7 +57,7 @@ interface DOMMatrixReadOnly {
     // FIXME: [NewObject] Float64Array toFloat64Array();
 
     [Exposed=Window] stringifier;
-    // FIXME: [Default] object toJSON();
+    [Default] object toJSON();
 };
 
 dictionary DOMMatrix2DInit {
