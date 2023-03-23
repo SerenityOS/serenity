@@ -14,7 +14,7 @@ interface DOMPointReadOnly {
 
     // FIXME: DOMPoint matrixTransform(optional DOMMatrixInit matrix = {});
 
-    // FIXME: [Default] object toJSON();
+    [Default] object toJSON();
 };
 
 dictionary DOMPointInit {
