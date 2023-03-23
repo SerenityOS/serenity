@@ -84,3 +84,9 @@ test("mm/dd/yy hh:mm timezone-offset extension", () => {
     expect(Date.parse("12/05/2022 10:00 -0800")).toBe(1670263200000);
     expect(Date.parse("01/03/2023 10:00 -0800")).toBe(1672768800000);
 });
+
+test("yy{/,-}mm{/,-}dd hh:mm extension", () => {
+    // Example from a UK news website.
+    expect(Date.parse("2014/11/14 13:05")).toBe(1415970300000);
+    expect(Date.parse("2014-11-14 13:05")).toBe(1415970300000);
+});
