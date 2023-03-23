@@ -1210,6 +1210,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_if_clause()
             active_node->false_branch() = make_ref_counted<AST::SyntaxError>(empty_position(), "Expected compound list after 'else'"_string.release_value_but_fixme_should_propagate_errors());
         break;
     case Token::Type::Fi:
+        skip();
         needs_fi = false;
         break;
     default:
