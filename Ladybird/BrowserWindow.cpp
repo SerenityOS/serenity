@@ -369,6 +369,11 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
         return tab.view().handle();
     };
 
+    tab_ptr->view().on_open_url_in_new_tab = [this](auto url, auto activate_tab) {
+        auto& tab = new_tab(qstring_from_ak_deprecated_string(url.to_deprecated_string()), activate_tab);
+        return tab.view().handle();
+    };
+
     tab_ptr->view().on_get_all_cookies = [this](auto const& url) {
         return m_cookie_jar.get_all_cookies(url);
     };

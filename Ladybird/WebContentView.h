@@ -51,6 +51,7 @@ public:
     virtual ~WebContentView() override;
 
     Function<String(Web::HTML::ActivateTab)> on_new_tab;
+    Function<String(const AK::URL&, Web::HTML::ActivateTab)> on_open_url_in_new_tab;
     Function<void()> on_close;
     Function<void(Gfx::IntPoint screen_position)> on_context_menu_request;
     Function<void(const AK::URL&, DeprecatedString const& target, unsigned modifiers)> on_link_click;

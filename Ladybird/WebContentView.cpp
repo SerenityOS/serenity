@@ -778,12 +778,10 @@ void WebContentView::notify_server_did_unhover_link(Badge<WebContentClient>)
 
 void WebContentView::notify_server_did_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
 {
-    // FIXME
-    (void)url;
-    (void)target;
+    if (on_open_url_in_new_tab && target == "_blank") {
+        on_open_url_in_new_tab(url, Web::HTML::ActivateTab::Yes);
+    }
     (void)modifiers;
-    // if (on_link_click)
-    // on_link_click(url, target, modifiers);
 }
 
 void WebContentView::notify_server_did_middle_click_link(Badge<WebContentClient>, AK::URL const& url, DeprecatedString const& target, unsigned int modifiers)
