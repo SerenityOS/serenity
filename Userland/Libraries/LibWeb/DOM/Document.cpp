@@ -1882,14 +1882,17 @@ static inline bool is_valid_name_character(u32 code_point)
 
 bool Document::is_valid_name(DeprecatedString const& name)
 {
-    if (name.is_empty())
+    auto code_points = Utf8View { name };
+    auto it = code_points.begin();
+    if (code_points.is_empty())
         return false;
 
-    if (!is_valid_name_start_character(name[0]))
+    if (!is_valid_name_start_character(*it))
         return false;
+    ++it;
 
-    for (size_t i = 1; i < name.length(); ++i) {
-        if (!is_valid_name_character(name[i]))
+    for (; it != code_points.end(); ++it) {
+        if (!is_valid_name_character(*it))
             return false;
     }
 
