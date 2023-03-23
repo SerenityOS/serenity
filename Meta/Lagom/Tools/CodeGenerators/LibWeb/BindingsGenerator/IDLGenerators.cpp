@@ -2276,6 +2276,164 @@ inline ErrorOr<String> idl_enum_to_string(@enum.type.name@ value) {
     }
 }
 
+// https://webidl.spec.whatwg.org/#create-an-inheritance-stack
+static Vector<Interface const&> create_an_inheritance_stack(IDL::Interface const& start_interface)
+{
+    // 1. Let stack be a new stack.
+    Vector<Interface const&> inheritance_chain;
+
+    // 2. Push I onto stack.
+    inheritance_chain.append(start_interface);
+
+    // 3. While I inherits from an interface,
+    auto const* current_interface = &start_interface;
+    while (current_interface && !current_interface->parent_name.is_empty()) {
+        // 1. Let I be that interface.
+        auto imported_interface_iterator = start_interface.imported_modules.find_if([&current_interface](IDL::Interface const& imported_interface) {
+            return imported_interface.name == current_interface->parent_name;
+        });
+
+        // Inherited interfaces must have their IDL files imported.
+        VERIFY(imported_interface_iterator != start_interface.imported_modules.end());
+
+        // 2. Push I onto stack.
+        inheritance_chain.append(*imported_interface_iterator);
+    }
+
+    // 4. Return stack.
+    return inheritance_chain;
+}
+
+// https://webidl.spec.whatwg.org/#collect-attribute-values-of-an-inheritance-stack
+static void collect_attribute_values_of_an_inheritance_stack(SourceGenerator& function_generator, Vector<Interface const&> const& inheritance_chain)
+{
+    // 1. Let I be the result of popping from stack.
+    // 3. If stack is not empty, then invoke collect attribute values of an inheritance stack given object, stack, and map.
+    for (auto const& interface_in_chain : inheritance_chain.in_reverse()) {
+        // 2. Invoke collect attribute values given object, I, and map.
+        // https://webidl.spec.whatwg.org/#collect-attribute-values
+        // 1. If a toJSON operation with a [Default] extended attribute is declared on I, then for each exposed regular attribute attr that is an interface member of I, in order:
+        auto to_json_iterator = interface_in_chain.functions.find_if([](IDL::Function const& function) {
+            return function.name == "toJSON" && function.extended_attributes.contains("Default");
+        });
+
+        if (to_json_iterator == interface_in_chain.functions.end())
+            continue;
+
+        // FIXME: Check if the attributes are exposed.
+
+        // 1. Let id be the identifier of attr.
+        // 2. Let value be the result of running the getter steps of attr with object as this.
+
+        // 3. If value is a JSON type, then set map[id] to value.
+        // Since we are flatly generating the attributes, the consequent is replaced with these steps from "default toJSON steps":
+        // 5. For each key → value of map,
+        //    1. Let k be key converted to an ECMAScript value.
+        //    2. Let v be value converted to an ECMAScript value.
+        //    3. Perform ! CreateDataProperty(result, k, v).
+
+        // NOTE: Functions, constructors and static functions cannot be JSON types, so they're not checked here.
+
+        for (auto& attribute : interface_in_chain.attributes) {
+            if (!attribute.type->is_json(interface_in_chain))
+                continue;
+
+            auto attribute_generator = function_generator.fork();
+            auto return_value_name = DeprecatedString::formatted("{}_retval", attribute.name.to_snakecase());
+
+            attribute_generator.set("attribute.name", attribute.name);
+            attribute_generator.set("attribute.return_value_name", return_value_name);
+
+            if (attribute.extended_attributes.contains("ImplementedAs")) {
+                auto implemented_as = attribute.extended_attributes.get("ImplementedAs").value();
+                attribute_generator.set("attribute.cpp_name", implemented_as);
+            } else {
+                attribute_generator.set("attribute.cpp_name", attribute.name.to_snakecase());
+            }
+
+            if (attribute.extended_attributes.contains("Reflect")) {
+                auto attribute_name = attribute.extended_attributes.get("Reflect").value();
+                if (attribute_name.is_null())
+                    attribute_name = attribute.name;
+                attribute_name = make_input_acceptable_cpp(attribute_name);
+
+                attribute_generator.set("attribute.reflect_name", attribute_name);
+            } else {
+                attribute_generator.set("attribute.reflect_name", attribute.name.to_snakecase());
+            }
+
+            if (attribute.extended_attributes.contains("Reflect")) {
+                if (attribute.type->name() != "boolean") {
+                    attribute_generator.append(R"~~~(
+    auto @attribute.return_value_name@ = impl->attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+                } else {
+                    attribute_generator.append(R"~~~(
+    auto @attribute.return_value_name@ = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
+)~~~");
+                }
+            } else {
+                attribute_generator.append(R"~~~(
+    auto @attribute.return_value_name@ = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_name@(); }));
+)~~~");
+            }
+
+            generate_wrap_statement(attribute_generator, return_value_name, attribute.type, interface_in_chain, DeprecatedString::formatted("auto {}_wrapped =", return_value_name));
+
+            attribute_generator.append(R"~~~(
+    MUST_OR_THROW_OOM(result->create_data_property("@attribute.name@", @attribute.return_value_name@_wrapped));
+)~~~");
+        }
+
+        for (auto& constant : interface_in_chain.constants) {
+            auto constant_generator = function_generator.fork();
+            constant_generator.set("constant.name", constant.name);
+
+            generate_wrap_statement(constant_generator, constant.value, constant.type, interface_in_chain, DeprecatedString::formatted("auto constant_{}_value =", constant.name));
+
+            constant_generator.append(R"~~~(
+    MUST_OR_THROW_OOM(result->create_data_property("@constant.name@", constant_@constant.name@_value));
+)~~~");
+        }
+    }
+}
+
+// https://webidl.spec.whatwg.org/#default-tojson-steps
+static void generate_default_to_json_function(SourceGenerator& generator, DeprecatedString const& class_name, IDL::Interface const& start_interface)
+{
+    // NOTE: This is done heavily out of order since the spec mixes parse time and run time type information together.
+
+    auto function_generator = generator.fork();
+    function_generator.set("class_name", class_name);
+
+    // 4. Let result be OrdinaryObjectCreate(%Object.prototype%).
+    function_generator.append(R"~~~(
+JS_DEFINE_NATIVE_FUNCTION(@class_name@::to_json)
+{
+    auto& realm = *vm.current_realm();
+    auto* impl = TRY(impl_from(vm));
+
+    auto result = JS::Object::create(realm, realm.intrinsics().object_prototype());
+)~~~");
+
+    // 1. Let map be a new ordered map.
+    // NOTE: Instead of making a map, we flatly generate the attributes.
+
+    // 2. Let stack be the result of creating an inheritance stack for interface I.
+    auto inheritance_chain = create_an_inheritance_stack(start_interface);
+
+    // 3. Invoke collect attribute values of an inheritance stack given this, stack, and map.
+    collect_attribute_values_of_an_inheritance_stack(function_generator, inheritance_chain);
+
+    // NOTE: Step 5 is done as part of collect_attribute_values_of_an_inheritance_stack, due to us flatly generating the attributes.
+
+    // 6. Return result.
+    function_generator.append(R"~~~(
+    return result;
+}
+)~~~");
+}
+
 static void generate_prototype_or_global_mixin_definitions(IDL::Interface const& interface, StringBuilder& builder)
 {
     SourceGenerator generator { builder };
@@ -2589,8 +2747,20 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
     }
 
     // Implementation: Functions
-    for (auto& function : interface.functions)
+    for (auto& function : interface.functions) {
+        if (function.extended_attributes.contains("Default")) {
+            if (function.name == "toJSON"sv && function.return_type->name() == "object"sv) {
+                generate_default_to_json_function(generator, class_name, interface);
+                continue;
+            }
+
+            dbgln("Unknown default operation: {} {}()", function.return_type->name(), function.name);
+            VERIFY_NOT_REACHED();
+        }
+
         generate_function(generator, function, StaticFunction::No, class_name, interface.fully_qualified_name, interface);
+    }
+
     for (auto const& overload_set : interface.overload_sets) {
         if (overload_set.value.size() == 1)
             continue;
