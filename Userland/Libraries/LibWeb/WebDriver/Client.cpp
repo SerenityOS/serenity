@@ -211,20 +211,32 @@ ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
 {
     // FIXME: All this should be moved to LibHTTP and be made spec compliant.
     auto buffer = TRY(ByteBuffer::create_uninitialized(m_socket->buffer_size()));
-    StringBuilder builder;
 
     for (;;) {
         if (!TRY(m_socket->can_read_without_blocking()))
             break;
 
         auto data = TRY(m_socket->read_some(buffer));
-        TRY(builder.try_append(StringView { data }));
+        TRY(m_remaining_request.try_append(StringView { data }));
 
         if (m_socket->is_eof())
             break;
     }
 
-    m_request = TRY(HTTP::HttpRequest::from_raw_request(TRY(builder.to_byte_buffer())));
+    if (m_remaining_request.is_empty())
+        return {};
+
+    auto maybe_parsed_request = HTTP::HttpRequest::from_raw_request(TRY(m_remaining_request.to_byte_buffer()));
+    if (maybe_parsed_request.is_error()) {
+        if (maybe_parsed_request.error() == HTTP::HttpRequest::ParseError::RequestIncomplete) {
+            // If request is not complete we need to wait for more data to arrive
+            return {};
+        }
+        return maybe_parsed_request.error();
+    }
+
+    m_remaining_request.clear();
+    m_request = maybe_parsed_request.value();
 
     auto body = TRY(read_body_as_json());
     TRY(handle_request(move(body)));
