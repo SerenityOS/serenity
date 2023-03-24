@@ -15,6 +15,7 @@ namespace Web::UIEvents::EventNames {
 // FIXME: This is not all of the events
 
 #define ENUMERATE_UI_EVENTS          \
+    __ENUMERATE_UI_EVENT(auxclick)   \
     __ENUMERATE_UI_EVENT(click)      \
     __ENUMERATE_UI_EVENT(dblclick)   \
     __ENUMERATE_UI_EVENT(keydown)    \
