@@ -10,6 +10,7 @@
 #include <AK/Error.h>
 #include <AK/Forward.h>
 #include <AK/Optional.h>
+#include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -118,6 +119,10 @@ public:
 
     [[nodiscard]] bool is_cors_cross_origin() const;
 
+    [[nodiscard]] bool is_fresh() const;
+    [[nodiscard]] bool is_stale_while_revalidate() const;
+    [[nodiscard]] bool is_stale() const;
+
     // Non-standard
     [[nodiscard]] Optional<StringView> network_error_message() const;
 
@@ -186,7 +191,14 @@ private:
     // A response has an associated has-cross-origin-redirects (a boolean), which is initially false.
     bool m_has_cross_origin_redirects { false };
 
+    // FIXME is the type correct?
+    u64 current_age() const;
+    u64 freshness_lifetime() const;
+    u64 stale_while_revalidate_lifetime() const;
+
     // Non-standard
+    UnixDateTime m_response_time;
+
     Optional<Variant<String, StringView>> m_network_error_message;
 };
 
