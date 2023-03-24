@@ -661,26 +661,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class GridTemplateAreaStyleValue final : public StyleValueWithDefaultOperators<GridTemplateAreaStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> create(Vector<Vector<String>> grid_template_area);
-    virtual ~GridTemplateAreaStyleValue() override = default;
-
-    Vector<Vector<String>> const& grid_template_area() const { return m_grid_template_area; }
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(GridTemplateAreaStyleValue const& other) const { return m_grid_template_area == other.m_grid_template_area; };
-
-private:
-    explicit GridTemplateAreaStyleValue(Vector<Vector<String>> grid_template_area)
-        : StyleValueWithDefaultOperators(Type::GridTemplateArea)
-        , m_grid_template_area(grid_template_area)
-    {
-    }
-
-    Vector<Vector<String>> m_grid_template_area;
-};
-
 class GridTrackPlacementStyleValue final : public StyleValueWithDefaultOperators<GridTrackPlacementStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> create(CSS::GridTrackPlacement grid_track_placement);

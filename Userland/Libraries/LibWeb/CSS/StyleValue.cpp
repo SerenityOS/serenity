@@ -25,6 +25,7 @@
 #include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1053,21 +1054,6 @@ ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
     return m_grid_track_placement.to_string();
 }
 
-ErrorOr<String> GridTemplateAreaStyleValue::to_string() const
-{
-    StringBuilder builder;
-    for (size_t y = 0; y < m_grid_template_area.size(); ++y) {
-        for (size_t x = 0; x < m_grid_template_area[y].size(); ++x) {
-            TRY(builder.try_appendff("{}", m_grid_template_area[y][x]));
-            if (x < m_grid_template_area[y].size() - 1)
-                TRY(builder.try_append(" "sv));
-        }
-        if (y < m_grid_template_area.size() - 1)
-            TRY(builder.try_append(", "sv));
-    }
-    return builder.to_string();
-}
-
 ErrorOr<String> GridTrackSizeStyleValue::to_string() const
 {
     return m_grid_track_size_list.to_string();
@@ -1955,11 +1941,6 @@ ErrorOr<String> StyleValueList::to_string() const
             TRY(builder.try_append(separator));
     }
     return builder.to_string();
-}
-
-ValueComparingNonnullRefPtr<GridTemplateAreaStyleValue> GridTemplateAreaStyleValue::create(Vector<Vector<String>> grid_template_area)
-{
-    return adopt_ref(*new GridTemplateAreaStyleValue(grid_template_area));
 }
 
 ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement grid_track_placement)
