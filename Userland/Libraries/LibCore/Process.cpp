@@ -21,7 +21,19 @@
 #    include <syscall.h>
 #endif
 
-extern char** environ;
+#if defined(AK_OS_MACOS)
+#    include <crt_externs.h>
+#endif
+
+static char** environment()
+{
+#if defined(AK_OS_MACOS)
+    return *_NSGetEnviron();
+#else
+    extern char** environ;
+    return environ;
+#endif
+}
 
 namespace Core {
 
@@ -65,11 +77,11 @@ struct ArgvList {
         if (!m_working_directory.is_empty())
             posix_spawn_file_actions_addchdir(&spawn_actions, m_working_directory.characters());
 
-        auto pid = TRY(System::posix_spawn(m_path.view(), &spawn_actions, nullptr, const_cast<char**>(get().data()), environ));
+        auto pid = TRY(System::posix_spawn(m_path.view(), &spawn_actions, nullptr, const_cast<char**>(get().data()), environment()));
         if (keep_as_child == Process::KeepAsChild::No)
             TRY(System::disown(pid));
 #else
-        auto pid = TRY(System::posix_spawn(m_path.view(), nullptr, nullptr, const_cast<char**>(get().data()), environ));
+        auto pid = TRY(System::posix_spawn(m_path.view(), nullptr, nullptr, const_cast<char**>(get().data()), environment()));
         // FIXME: Support keep_as_child outside Serenity.
         (void)keep_as_child;
 #endif
