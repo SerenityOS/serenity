@@ -12,6 +12,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Directory.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
 #include <LibCore/TCPServer.h>
@@ -19,31 +20,16 @@
 #include <QCoreApplication>
 #include <WebDriver/Client.h>
 
-#if defined(AK_OS_MACOS)
-#    include <crt_externs.h>
-#endif
-
 extern DeprecatedString s_serenity_resource_root;
 
-static char** environment()
-{
-#if defined(AK_OS_MACOS)
-    return *_NSGetEnviron();
-#else
-    extern char** environ;
-    return environ;
-#endif
-}
-
-static ErrorOr<pid_t> launch_process(StringView application, char const* argv[])
+static ErrorOr<pid_t> launch_process(StringView application, ReadonlySpan<char const*> arguments)
 {
     auto paths = TRY(get_paths_for_helper_process(application));
 
     ErrorOr<pid_t> result = -1;
     for (auto const& path : paths) {
         auto path_view = path.bytes_as_string_view();
-        argv[0] = path_view.characters_without_null_termination();
-        result = Core::System::posix_spawn(path_view, nullptr, nullptr, const_cast<char**>(argv), environment());
+        result = Core::Process::spawn(path_view, arguments, {}, Core::Process::KeepAsChild::Yes);
         if (!result.is_error())
             break;
     }
@@ -52,31 +38,24 @@ static ErrorOr<pid_t> launch_process(StringView application, char const* argv[])
 
 static ErrorOr<pid_t> launch_browser(DeprecatedString const& socket_path)
 {
-    char const* argv[] = {
-        "ladybird",
-        "--webdriver-content-path",
-        socket_path.characters(),
-        nullptr,
-    };
-
-    return launch_process("ladybird"sv, argv);
+    return launch_process("ladybird"sv,
+        Array {
+            "--webdriver-content-path",
+            socket_path.characters(),
+        });
 }
 
 static ErrorOr<pid_t> launch_headless_browser(DeprecatedString const& socket_path)
 {
     auto resources = DeprecatedString::formatted("{}/res", s_serenity_resource_root);
-
-    char const* argv[] = {
-        "headless-browser",
-        "--resources",
-        resources.characters(),
-        "--webdriver-ipc-path",
-        socket_path.characters(),
-        "about:blank",
-        nullptr,
-    };
-
-    return launch_process("headless-browser"sv, argv);
+    return launch_process("headless-browser"sv,
+        Array {
+            "--resources",
+            resources.characters(),
+            "--webdriver-ipc-path",
+            socket_path.characters(),
+            "about:blank",
+        });
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
