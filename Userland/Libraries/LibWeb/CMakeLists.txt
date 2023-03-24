@@ -79,6 +79,7 @@ set(SOURCES
     CSS/StyleValues/FontStyleValue.cpp
     CSS/StyleValues/GridAreaShorthandStyleValue.cpp
     CSS/StyleValues/GridTemplateAreaStyleValue.cpp
+    CSS/StyleValues/GridTrackPlacementShorthandStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp

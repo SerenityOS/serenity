@@ -27,6 +27,7 @@
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1027,13 +1028,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductP
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
-}
-
-ErrorOr<String> GridTrackPlacementShorthandStyleValue::to_string() const
-{
-    if (m_properties.end->grid_track_placement().is_auto())
-        return String::formatted("{}", TRY(m_properties.start->grid_track_placement().to_string()));
-    return String::formatted("{} / {}", TRY(m_properties.start->grid_track_placement().to_string()), TRY(m_properties.end->grid_track_placement().to_string()));
 }
 
 ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
