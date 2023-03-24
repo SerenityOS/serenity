@@ -661,35 +661,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class IdentifierStyleValue final : public StyleValueWithDefaultOperators<IdentifierStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<IdentifierStyleValue> create(CSS::ValueID id)
-    {
-        return adopt_ref(*new IdentifierStyleValue(id));
-    }
-    virtual ~IdentifierStyleValue() override = default;
-
-    CSS::ValueID id() const { return m_id; }
-
-    virtual bool has_auto() const override { return m_id == ValueID::Auto; }
-    virtual bool has_identifier() const override { return true; }
-    virtual CSS::ValueID to_identifier() const override { return m_id; }
-    virtual bool has_color() const override;
-    virtual Color to_color(Layout::NodeWithStyle const& node) const override;
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(IdentifierStyleValue const& other) const { return m_id == other.m_id; }
-
-private:
-    explicit IdentifierStyleValue(CSS::ValueID id)
-        : StyleValueWithDefaultOperators(Type::Identifier)
-        , m_id(id)
-    {
-    }
-
-    CSS::ValueID m_id { CSS::ValueID::Invalid };
-};
-
 class AbstractImageStyleValue : public StyleValue {
 public:
     using StyleValue::StyleValue;
