@@ -622,30 +622,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class TimeStyleValue : public StyleValueWithDefaultOperators<TimeStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<TimeStyleValue> create(Time time)
-    {
-        return adopt_ref(*new TimeStyleValue(move(time)));
-    }
-    virtual ~TimeStyleValue() override { }
-
-    Time const& time() const { return m_time; }
-
-    virtual ErrorOr<String> to_string() const override { return m_time.to_string(); }
-
-    bool properties_equal(TimeStyleValue const& other) const { return m_time == other.m_time; }
-
-private:
-    explicit TimeStyleValue(Time time)
-        : StyleValueWithDefaultOperators(Type::Time)
-        , m_time(move(time))
-    {
-    }
-
-    Time m_time;
-};
-
 class UnresolvedStyleValue final : public StyleValue {
 public:
     static ValueComparingNonnullRefPtr<UnresolvedStyleValue> create(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)
