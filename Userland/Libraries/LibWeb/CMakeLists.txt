@@ -81,6 +81,7 @@ set(SOURCES
     CSS/StyleValues/GridTemplateAreaStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementShorthandStyleValue.cpp
+    CSS/StyleValues/GridTrackSizeStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
