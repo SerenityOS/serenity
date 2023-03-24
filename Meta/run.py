@@ -692,7 +692,7 @@ def set_up_kernel(config: Configuration):
     elif config.architecture == Arch.RISCV64:
         config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel.bin"]
     elif config.architecture == Arch.x86_64:
-        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Prekernel/Prekernel", "-initrd", "Kernel/Kernel"]
+        config.kernel_and_initrd_arguments = ["-kernel", "Kernel/Kernel"]
 
 
 def set_up_machine_devices(config: Configuration):
