@@ -33,6 +33,7 @@
 #include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1053,110 +1054,6 @@ static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto cons
         first = false;
     }
     return {};
-}
-
-ErrorOr<String> LinearGradientStyleValue::to_string() const
-{
-    StringBuilder builder;
-    auto side_or_corner_to_string = [](SideOrCorner value) {
-        switch (value) {
-        case SideOrCorner::Top:
-            return "top"sv;
-        case SideOrCorner::Bottom:
-            return "bottom"sv;
-        case SideOrCorner::Left:
-            return "left"sv;
-        case SideOrCorner::Right:
-            return "right"sv;
-        case SideOrCorner::TopLeft:
-            return "top left"sv;
-        case SideOrCorner::TopRight:
-            return "top right"sv;
-        case SideOrCorner::BottomLeft:
-            return "bottom left"sv;
-        case SideOrCorner::BottomRight:
-            return "bottom right"sv;
-        default:
-            VERIFY_NOT_REACHED();
-        }
-    };
-
-    if (m_properties.gradient_type == GradientType::WebKit)
-        TRY(builder.try_append("-webkit-"sv));
-    if (is_repeating())
-        TRY(builder.try_append("repeating-"sv));
-    TRY(builder.try_append("linear-gradient("sv));
-    TRY(m_properties.direction.visit(
-        [&](SideOrCorner side_or_corner) -> ErrorOr<void> {
-            return builder.try_appendff("{}{}, "sv, m_properties.gradient_type == GradientType::Standard ? "to "sv : ""sv, side_or_corner_to_string(side_or_corner));
-        },
-        [&](Angle const& angle) -> ErrorOr<void> {
-            return builder.try_appendff("{}, "sv, TRY(angle.to_string()));
-        }));
-
-    TRY(serialize_color_stop_list(builder, m_properties.color_stop_list));
-    TRY(builder.try_append(")"sv));
-    return builder.to_string();
-}
-
-bool LinearGradientStyleValue::equals(StyleValue const& other_) const
-{
-    if (type() != other_.type())
-        return false;
-    auto& other = other_.as_linear_gradient();
-    return m_properties == other.m_properties;
-}
-
-float LinearGradientStyleValue::angle_degrees(CSSPixelSize gradient_size) const
-{
-    auto corner_angle_degrees = [&] {
-        return static_cast<float>(atan2(gradient_size.height().value(), gradient_size.width().value())) * 180 / AK::Pi<float>;
-    };
-    return m_properties.direction.visit(
-        [&](SideOrCorner side_or_corner) {
-            auto angle = [&] {
-                switch (side_or_corner) {
-                case SideOrCorner::Top:
-                    return 0.0f;
-                case SideOrCorner::Bottom:
-                    return 180.0f;
-                case SideOrCorner::Left:
-                    return 270.0f;
-                case SideOrCorner::Right:
-                    return 90.0f;
-                case SideOrCorner::TopRight:
-                    return corner_angle_degrees();
-                case SideOrCorner::BottomLeft:
-                    return corner_angle_degrees() + 180.0f;
-                case SideOrCorner::TopLeft:
-                    return -corner_angle_degrees();
-                case SideOrCorner::BottomRight:
-                    return -(corner_angle_degrees() + 180.0f);
-                default:
-                    VERIFY_NOT_REACHED();
-                }
-            }();
-            // Note: For unknowable reasons the angles are opposite on the -webkit- version
-            if (m_properties.gradient_type == GradientType::WebKit)
-                return angle + 180.0f;
-            return angle;
-        },
-        [&](Angle const& angle) {
-            return angle.to_degrees();
-        });
-}
-
-void LinearGradientStyleValue::resolve_for_size(Layout::Node const& node, CSSPixelSize size) const
-{
-    if (m_resolved.has_value() && m_resolved->size == size)
-        return;
-    m_resolved = ResolvedData { Painting::resolve_linear_gradient_data(node, size, *this), size };
-}
-
-void LinearGradientStyleValue::paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering) const
-{
-    VERIFY(m_resolved.has_value());
-    Painting::paint_linear_gradient(context, dest_rect, m_resolved->data);
 }
 
 CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect const& rect) const

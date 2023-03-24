@@ -63,18 +63,6 @@ enum class FlexBasis {
     Auto,
 };
 
-// Note: The sides must be before the corners in this enum (as this order is used in parsing).
-enum class SideOrCorner {
-    Top,
-    Bottom,
-    Left,
-    Right,
-    TopLeft,
-    TopRight,
-    BottomLeft,
-    BottomRight
-};
-
 template<typename TPosition>
 struct ColorStopListElement {
     using PositionType = TPosition;
@@ -754,62 +742,6 @@ private:
         Painting::RadialGradientData data;
         Gfx::FloatSize gradient_size;
         Gfx::FloatPoint center;
-    };
-
-    mutable Optional<ResolvedData> m_resolved;
-};
-
-class LinearGradientStyleValue final : public AbstractImageStyleValue {
-public:
-    using GradientDirection = Variant<Angle, SideOrCorner>;
-
-    enum class GradientType {
-        Standard,
-        WebKit
-    };
-
-    static ValueComparingNonnullRefPtr<LinearGradientStyleValue> create(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
-    {
-        VERIFY(color_stop_list.size() >= 2);
-        return adopt_ref(*new LinearGradientStyleValue(direction, move(color_stop_list), type, repeating));
-    }
-
-    virtual ErrorOr<String> to_string() const override;
-    virtual ~LinearGradientStyleValue() override = default;
-    virtual bool equals(StyleValue const& other) const override;
-
-    Vector<LinearColorStopListElement> const& color_stop_list() const
-    {
-        return m_properties.color_stop_list;
-    }
-
-    bool is_repeating() const { return m_properties.repeating == GradientRepeating::Yes; }
-
-    float angle_degrees(CSSPixelSize gradient_size) const;
-
-    void resolve_for_size(Layout::Node const&, CSSPixelSize) const override;
-
-    bool is_paintable() const override { return true; }
-    void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const override;
-
-private:
-    LinearGradientStyleValue(GradientDirection direction, Vector<LinearColorStopListElement> color_stop_list, GradientType type, GradientRepeating repeating)
-        : AbstractImageStyleValue(Type::LinearGradient)
-        , m_properties { .direction = direction, .color_stop_list = move(color_stop_list), .gradient_type = type, .repeating = repeating }
-    {
-    }
-
-    struct Properties {
-        GradientDirection direction;
-        Vector<LinearColorStopListElement> color_stop_list;
-        GradientType gradient_type;
-        GradientRepeating repeating;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-
-    struct ResolvedData {
-        Painting::LinearGradientData data;
-        CSSPixelSize size;
     };
 
     mutable Optional<ResolvedData> m_resolved;
