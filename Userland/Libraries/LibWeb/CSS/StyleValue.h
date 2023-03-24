@@ -627,35 +627,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class OverflowStyleValue final : public StyleValueWithDefaultOperators<OverflowStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<OverflowStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> overflow_x, ValueComparingNonnullRefPtr<StyleValue> overflow_y)
-    {
-        return adopt_ref(*new OverflowStyleValue(move(overflow_x), move(overflow_y)));
-    }
-    virtual ~OverflowStyleValue() override = default;
-
-    ValueComparingNonnullRefPtr<StyleValue> overflow_x() const { return m_properties.overflow_x; }
-    ValueComparingNonnullRefPtr<StyleValue> overflow_y() const { return m_properties.overflow_y; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(OverflowStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    OverflowStyleValue(ValueComparingNonnullRefPtr<StyleValue> overflow_x, ValueComparingNonnullRefPtr<StyleValue> overflow_y)
-        : StyleValueWithDefaultOperators(Type::Overflow)
-        , m_properties { .overflow_x = move(overflow_x), .overflow_y = move(overflow_y) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<StyleValue> overflow_x;
-        ValueComparingNonnullRefPtr<StyleValue> overflow_y;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class PercentageStyleValue final : public StyleValueWithDefaultOperators<PercentageStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<PercentageStyleValue> create(Percentage percentage)

@@ -40,6 +40,7 @@
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
+#include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -1135,11 +1136,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
             return builder.try_append(TRY(length_percentage.to_string()));
         }));
     return {};
-}
-
-ErrorOr<String> OverflowStyleValue::to_string() const
-{
-    return String::formatted("{} {}", TRY(m_properties.overflow_x->to_string()), TRY(m_properties.overflow_y->to_string()));
 }
 
 ErrorOr<String> PercentageStyleValue::to_string() const
