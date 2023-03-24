@@ -31,6 +31,9 @@ void GlyphEditorWidget::set_glyph(int glyph)
 
 void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
 {
+    if (!m_font)
+        return;
+
     GUI::Frame::paint_event(event);
 
     GUI::Painter painter(*this);
