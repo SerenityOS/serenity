@@ -14,6 +14,7 @@ namespace PDF {
 
 class Type1Font : public SimpleFont {
 public:
+    float get_glyph_width(u8 char_code) const override;
     void draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float width, u8 char_code, Color color) override;
     Type type() const override { return PDFFont::Type::Type1; }
 

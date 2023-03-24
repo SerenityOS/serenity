@@ -45,17 +45,18 @@ PDFErrorOr<void> SimpleFont::initialize(Document* document, NonnullRefPtr<DictOb
     return {};
 }
 
-float SimpleFont::get_char_width(u8 char_code) const
-{
-    return static_cast<float>(m_widths.get(char_code).value_or(m_missing_width)) / 1000.0f;
-}
-
 PDFErrorOr<Gfx::FloatPoint> SimpleFont::draw_string(Gfx::Painter& painter, Gfx::FloatPoint glyph_position, DeprecatedString const& string, Color const& paint_color, float font_size, float character_spacing, float horizontal_scaling)
 {
     auto so = make_object<StringObject>(string, true);
     for (auto char_code : string.bytes()) {
-        auto char_width = get_char_width(char_code);
-        auto glyph_width = char_width * font_size;
+        // Use the width specified in the font's dictionary if available,
+        // and use the default width for the given font otherwise.
+        float glyph_width;
+        if (auto width = m_widths.get(char_code); width.has_value())
+            glyph_width = font_size * width.value() / 1000.0f;
+        else
+            glyph_width = get_glyph_width(char_code);
+
         draw_glyph(painter, glyph_position, glyph_width, char_code, paint_color);
         auto tx = glyph_width;
         tx += character_spacing;

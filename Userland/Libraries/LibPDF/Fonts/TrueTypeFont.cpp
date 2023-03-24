@@ -30,11 +30,13 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
     return {};
 }
 
+float TrueTypeFont::get_glyph_width(u8 char_code) const
+{
+    return m_font->glyph_width(char_code);
+}
+
 void TrueTypeFont::draw_glyph(Gfx::Painter& painter, Gfx::FloatPoint point, float, u8 char_code, Color color)
 {
-    if (!m_font)
-        return;
-
     // Account for the reversed font baseline
     auto position = point.translated(0, -m_font->baseline());
     painter.draw_glyph(position, char_code, *m_font, color);
