@@ -147,7 +147,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (tree_map_widget.viewpoint() == 0)
                     window->set_title("/ - SpaceAnalyzer");
 
-                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
+                breadcrumbbar.append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/");
                 continue;
             }
 

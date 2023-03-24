@@ -9,7 +9,6 @@
 #include "WavefrontOBJLoader.h"
 #include <AK/FixedArray.h>
 #include <AK/String.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <stdlib.h>
 

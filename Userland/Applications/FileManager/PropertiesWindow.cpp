@@ -10,7 +10,6 @@
 #include <AK/NumberFormat.h>
 #include <Applications/FileManager/DirectoryView.h>
 #include <Applications/FileManager/PropertiesWindowGeneralTabGML.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
@@ -102,11 +101,11 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     type->set_text(get_description(m_mode));
 
     if (S_ISLNK(m_mode)) {
-        auto link_destination_or_error = Core::DeprecatedFile::read_link(m_path);
+        auto link_destination_or_error = FileSystem::read_link(m_path);
         if (link_destination_or_error.is_error()) {
             perror("readlink");
         } else {
-            auto link_destination = link_destination_or_error.release_value();
+            auto link_destination = link_destination_or_error.release_value().to_deprecated_string();
             auto* link_location = general_tab->find_descendant_of_type_named<GUI::LinkLabel>("link_location");
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {
