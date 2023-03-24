@@ -5,6 +5,7 @@
  */
 
 #include <LibWeb/Bindings/Intrinsics.h>
+#include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/HTML/HTMLHeadingElement.h>
 
 namespace Web::HTML {
