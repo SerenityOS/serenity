@@ -10,6 +10,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Window.h>
@@ -26,7 +27,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Desktop::Launcher::seal_allowlist());
 
     Config::pledge_domain("FontEditor");
-    TRY(Core::System::pledge("stdio recvfd sendfd thread rpath cpath wpath"));
+
+    TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
+    TRY(Core::System::unveil("/res", "r"));
+    TRY(Core::System::unveil(nullptr, nullptr));
 
     StringView path;
     Core::ArgsParser args_parser;
@@ -42,13 +46,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto font_editor = TRY(window->set_main_widget<FontEditor::MainWidget>());
     TRY(font_editor->initialize_menubar(*window));
 
-    if (!path.is_empty()) {
-        TRY(font_editor->open_file(path));
-    } else {
-        auto mutable_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file("/res/fonts/KaticaRegular10.font"))->unmasked_character_set());
-        TRY(font_editor->initialize({}, move(mutable_font)));
-    }
-
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
         if (font_editor->request_close())
             return GUI::Window::CloseRequestDecision::Close;
@@ -56,6 +53,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     window->show();
+
+    auto path_to_load = path.is_empty() ? "/res/fonts/KaticaRegular10.font"sv : path;
+    auto file = TRY(FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path_to_load));
+
+    if (!path.is_empty()) {
+        TRY(font_editor->open_file(file.filename(), file.release_stream()));
+    } else {
+        auto mapped_file = TRY(Core::MappedFile::map_from_file(file.release_stream(), path_to_load));
+        auto mutable_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file))->unmasked_character_set());
+        TRY(font_editor->initialize({}, move(mutable_font)));
+    }
 
     return app->exec();
 }

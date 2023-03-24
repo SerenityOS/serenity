@@ -37,8 +37,8 @@ public:
     ErrorOr<void> initialize(DeprecatedString const& path, RefPtr<Gfx::BitmapFont>&&);
     ErrorOr<void> initialize_menubar(GUI::Window&);
 
-    ErrorOr<void> open_file(DeprecatedString const&);
-    ErrorOr<void> save_file(DeprecatedString const&);
+    ErrorOr<void> open_file(StringView, NonnullOwnPtr<Core::File>);
+    ErrorOr<void> save_file(DeprecatedString const&, NonnullOwnPtr<Core::File>);
     bool request_close();
     void update_title();
 

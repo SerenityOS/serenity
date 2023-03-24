@@ -15,6 +15,7 @@
 #include <Applications/FontEditor/FontPreviewWindowGML.h>
 #include <LibConfig/Client.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
@@ -110,26 +111,36 @@ ErrorOr<void> MainWidget::create_actions()
     m_open_action = GUI::CommonActions::make_open_action([&](auto&) {
         if (!request_close())
             return;
-        Optional<DeprecatedString> open_path = GUI::FilePicker::get_open_filepath(window(), {}, "/res/fonts/"sv);
-        if (!open_path.has_value())
+
+        auto result = FileSystemAccessClient::Client::the().open_file(window(), "Open font file", "/res/fonts"sv);
+        if (result.is_error())
             return;
-        if (auto result = open_file(open_path.value()); result.is_error())
-            show_error(result.release_error(), "Opening"sv, LexicalPath { open_path.value() }.basename());
+
+        auto file = result.release_value();
+        if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
+            show_error(result.release_error(), "Opening"sv, LexicalPath { file.filename().to_deprecated_string() }.basename());
     });
 
     m_save_action = GUI::CommonActions::make_save_action([&](auto&) {
         if (m_path.is_empty())
             return m_save_as_action->activate();
-        if (auto result = save_file(m_path); result.is_error())
+
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), m_path, Core::File::OpenMode::Truncate | Core::File::OpenMode::Write);
+        if (response.is_error())
+            return;
+
+        if (auto result = save_file(m_path, response.value().release_stream()); result.is_error())
             show_error(result.release_error(), "Saving"sv, LexicalPath { m_path }.basename());
     });
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         LexicalPath lexical_path(m_path.is_empty() ? "Untitled.font" : m_path);
-        Optional<DeprecatedString> save_path = GUI::FilePicker::get_save_filepath(window(), lexical_path.title(), lexical_path.extension());
-        if (!save_path.has_value())
+
+        auto response = FileSystemAccessClient::Client::the().save_file(window(), lexical_path.title(), lexical_path.extension());
+        if (response.is_error())
             return;
-        if (auto result = save_file(save_path.value()); result.is_error())
+
+        if (auto result = save_file(lexical_path.string(), response.value().release_stream()); result.is_error())
             show_error(result.release_error(), "Saving"sv, lexical_path.basename());
     });
 
@@ -724,10 +735,11 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     return {};
 }
 
-ErrorOr<void> MainWidget::save_file(DeprecatedString const& path)
+ErrorOr<void> MainWidget::save_file(DeprecatedString const& path, NonnullOwnPtr<Core::File> file)
 {
     auto masked_font = TRY(m_edited_font->masked_character_set());
-    TRY(masked_font->write_to_file(path));
+    TRY(masked_font->write_to_file(move(file)));
+
     m_path = path;
     m_undo_stack->set_current_unmodified();
     window()->set_modified(false);
@@ -781,10 +793,11 @@ void MainWidget::set_show_system_emoji(bool show)
     m_glyph_map_widget->set_show_system_emoji(show);
 }
 
-ErrorOr<void> MainWidget::open_file(DeprecatedString const& path)
+ErrorOr<void> MainWidget::open_file(StringView path, NonnullOwnPtr<Core::File> file)
 {
-    auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_file(path))->unmasked_character_set());
-    TRY(initialize(path, move(unmasked_font)));
+    auto mapped_file = TRY(Core::MappedFile::map_from_file(move(file), path));
+    auto unmasked_font = TRY(TRY(Gfx::BitmapFont::try_load_from_mapped_file(mapped_file))->unmasked_character_set());
+    TRY(initialize(path.to_deprecated_string(), move(unmasked_font)));
     return {};
 }
 
@@ -976,8 +989,13 @@ void MainWidget::drop_event(GUI::DropEvent& event)
             return;
 
         auto file_path = urls.first().serialize_path();
-        if (auto result = open_file(file_path); result.is_error())
-            show_error(result.release_error(), "Opening"sv, LexicalPath { file_path }.basename());
+        auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), file_path);
+        if (result.is_error())
+            return;
+
+        auto file = result.release_value();
+        if (auto result = open_file(file.filename(), file.release_stream()); result.is_error())
+            show_error(result.release_error(), "Opening"sv, LexicalPath { file.filename().to_deprecated_string() }.basename());
     }
 }
 
