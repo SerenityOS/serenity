@@ -29,6 +29,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1031,11 +1032,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
     return value->resolve(layout_node, percentage_basis);
 }
 
-ErrorOr<String> GridTrackSizeStyleValue::to_string() const
-{
-    return m_grid_track_size_list.to_string();
-}
-
 ErrorOr<String> IdentifierStyleValue::to_string() const
 {
     return String::from_utf8(CSS::string_from_value_id(m_id));
@@ -1920,16 +1916,6 @@ ErrorOr<String> StyleValueList::to_string() const
     return builder.to_string();
 }
 
-
-ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(CSS::GridTrackSizeList grid_track_size_list)
-{
-    return adopt_ref(*new GridTrackSizeStyleValue(grid_track_size_list));
-}
-
-ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::make_auto()
-{
-    return adopt_ref(*new GridTrackSizeStyleValue(CSS::GridTrackSizeList()));
-}
 
 ValueComparingNonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
 {
