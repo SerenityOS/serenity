@@ -233,9 +233,14 @@ RefPtr<BitmapFont> BitmapFont::load_from_file(DeprecatedString const& path)
 
 ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_file(DeprecatedString const& path)
 {
-    auto file = TRY(Core::MappedFile::map(path));
-    auto font = TRY(load_from_memory((u8 const*)file->data()));
-    font->m_mapped_file = file;
+    auto mapped_file = TRY(Core::MappedFile::map(path));
+    return try_load_from_mapped_file(move(mapped_file));
+}
+
+ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(RefPtr<Core::MappedFile> const& mapped_file)
+{
+    auto font = TRY(load_from_memory((u8 const*)mapped_file->data()));
+    font->m_mapped_file = mapped_file;
     return font;
 }
 
