@@ -8,6 +8,7 @@
  */
 
 #include "GridTrackPlacementShorthandStyleValue.h"
+#include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 
 namespace Web::CSS {
 
