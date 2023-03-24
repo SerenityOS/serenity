@@ -627,43 +627,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class ListStyleStyleValue final : public StyleValueWithDefaultOperators<ListStyleStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<ListStyleStyleValue> create(
-        ValueComparingNonnullRefPtr<StyleValue> position,
-        ValueComparingNonnullRefPtr<StyleValue> image,
-        ValueComparingNonnullRefPtr<StyleValue> style_type)
-    {
-        return adopt_ref(*new ListStyleStyleValue(move(position), move(image), move(style_type)));
-    }
-    virtual ~ListStyleStyleValue() override = default;
-
-    ValueComparingNonnullRefPtr<StyleValue> position() const { return m_properties.position; }
-    ValueComparingNonnullRefPtr<StyleValue> image() const { return m_properties.image; }
-    ValueComparingNonnullRefPtr<StyleValue> style_type() const { return m_properties.style_type; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(ListStyleStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    ListStyleStyleValue(
-        ValueComparingNonnullRefPtr<StyleValue> position,
-        ValueComparingNonnullRefPtr<StyleValue> image,
-        ValueComparingNonnullRefPtr<StyleValue> style_type)
-        : StyleValueWithDefaultOperators(Type::ListStyle)
-        , m_properties { .position = move(position), .image = move(image), .style_type = move(style_type) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<StyleValue> position;
-        ValueComparingNonnullRefPtr<StyleValue> image;
-        ValueComparingNonnullRefPtr<StyleValue> style_type;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class NumericStyleValue : public StyleValueWithDefaultOperators<NumericStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<NumericStyleValue> create_float(float value)

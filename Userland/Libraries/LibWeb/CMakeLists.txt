@@ -87,6 +87,7 @@ set(SOURCES
     CSS/StyleValues/ImageStyleValue.cpp
     CSS/StyleValues/LengthStyleValue.cpp
     CSS/StyleValues/LinearGradientStyleValue.cpp
+    CSS/StyleValues/ListStyleStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp

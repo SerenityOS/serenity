@@ -38,6 +38,7 @@
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -1133,11 +1134,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
             return builder.try_append(TRY(length_percentage.to_string()));
         }));
     return {};
-}
-
-ErrorOr<String> ListStyleStyleValue::to_string() const
-{
-    return String::formatted("{} {} {}", TRY(m_properties.position->to_string()), TRY(m_properties.image->to_string()), TRY(m_properties.style_type->to_string()));
 }
 
 ErrorOr<String> NumericStyleValue::to_string() const
