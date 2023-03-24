@@ -12,7 +12,6 @@
 #include "ViewWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/MimeData.h>

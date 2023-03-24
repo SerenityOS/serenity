@@ -11,7 +11,6 @@
 #include <AK/NumberFormat.h>
 #include <AK/StringBuilder.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MimeData.h>
 #include <LibCore/StandardPaths.h>
 #include <LibFileSystem/FileSystem.h>
@@ -406,18 +405,21 @@ void DirectoryView::add_path_to_history(DeprecatedString path)
 
 bool DirectoryView::open(DeprecatedString const& path)
 {
-    auto real_path = Core::DeprecatedFile::real_path_for(path);
-    if (real_path.is_null() || !FileSystem::is_directory(path))
+    auto error_or_real_path = FileSystem::real_path(path);
+    if (error_or_real_path.is_error() || !FileSystem::is_directory(path))
         return false;
 
-    if (chdir(real_path.characters()) < 0) {
+    auto real_path = error_or_real_path.release_value();
+    if (Core::System::chdir(real_path).is_error()) {
         perror("chdir");
+        return false;
     }
-    if (model().root_path() == real_path) {
+
+    if (model().root_path() == real_path.to_deprecated_string()) {
         refresh();
     } else {
         set_active_widget(&current_view());
-        model().set_root_path(real_path);
+        model().set_root_path(real_path.to_deprecated_string());
     }
     return true;
 }

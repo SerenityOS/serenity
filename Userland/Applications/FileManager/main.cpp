@@ -19,7 +19,6 @@
 #include <LibConfig/Client.h>
 #include <LibConfig/Listener.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Process.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
@@ -109,8 +108,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     LexicalPath path(initial_location);
     if (!initial_location.is_empty()) {
-        if (!ignore_path_resolution)
-            initial_location = Core::DeprecatedFile::real_path_for(initial_location);
+        if (auto error_or_path = FileSystem::real_path(initial_location); !ignore_path_resolution && !error_or_path.is_error())
+            initial_location = error_or_path.release_value().to_deprecated_string();
 
         if (!FileSystem::is_directory(initial_location)) {
             // We want to extract zips to a temporary directory when FileManager is launched with a .zip file as its first argument
@@ -142,8 +141,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    if (initial_location.is_empty())
-        initial_location = Core::DeprecatedFile::current_working_directory();
+    if (auto error_or_cwd = FileSystem::current_working_directory(); initial_location.is_empty() && !error_or_cwd.is_error())
+        initial_location = error_or_cwd.release_value().to_deprecated_string();
 
     if (initial_location.is_empty())
         initial_location = Core::StandardPaths::home_directory();

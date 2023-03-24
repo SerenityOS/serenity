@@ -14,7 +14,6 @@
 #include <Applications/Browser/WindowActions.h>
 #include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/FileWatcher.h>
 #include <LibCore/StandardPaths.h>
 #include <LibCore/System.h>
@@ -131,16 +130,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     }
 
-    auto url_from_argument_string = [](DeprecatedString const& string) -> URL {
+    auto url_from_argument_string = [](DeprecatedString const& string) -> ErrorOr<URL> {
         if (FileSystem::exists(string)) {
-            return URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(string));
+            return URL::create_with_file_scheme(TRY(FileSystem::real_path(string)).to_deprecated_string());
         }
         return Browser::url_from_user_input(string);
     };
 
     URL first_url = Browser::url_from_user_input(Browser::g_home_url);
     if (!specified_urls.is_empty())
-        first_url = url_from_argument_string(specified_urls.first());
+        first_url = TRY(url_from_argument_string(specified_urls.first()));
 
     auto cookie_jar = TRY(Browser::CookieJar::create(*database));
     auto window = Browser::BrowserWindow::construct(cookie_jar, first_url);
@@ -176,7 +175,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     for (size_t i = 1; i < specified_urls.size(); ++i)
-        window->create_new_tab(url_from_argument_string(specified_urls[i]), Web::HTML::ActivateTab::No);
+        window->create_new_tab(TRY(url_from_argument_string(specified_urls[i])), Web::HTML::ActivateTab::No);
 
     window->show();
 

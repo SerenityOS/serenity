@@ -9,8 +9,8 @@
 #include <AK/DeprecatedString.h>
 #include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/MessageBox.h>
@@ -33,8 +33,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    auto executable_path = Core::DeprecatedFile::resolve_executable_from_environment(command[0]);
-    if (!executable_path.has_value()) {
+    auto executable_path = FileSystem::resolve_executable_from_environment(command[0]);
+    if (executable_path.is_error()) {
         GUI::MessageBox::show_error(nullptr, DeprecatedString::formatted("Could not execute command {}: Command not found.", command[0]));
         return 127;
     }
