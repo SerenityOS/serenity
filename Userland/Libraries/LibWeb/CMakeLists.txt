@@ -77,6 +77,7 @@ set(SOURCES
     CSS/StyleValues/FlexFlowStyleValue.cpp
     CSS/StyleValues/FlexStyleValue.cpp
     CSS/StyleValues/FontStyleValue.cpp
+    CSS/StyleValues/GridTemplateAreaStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
