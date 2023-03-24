@@ -86,6 +86,7 @@ set(SOURCES
     CSS/StyleValues/IdentifierStyleValue.cpp
     CSS/StyleValues/ImageStyleValue.cpp
     CSS/StyleValues/LinearGradientStyleValue.cpp
+    CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
