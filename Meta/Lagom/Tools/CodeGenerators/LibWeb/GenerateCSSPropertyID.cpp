@@ -155,6 +155,7 @@ ErrorOr<void> generate_implementation_file(JsonObject& properties, Core::File& f
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/Infra/Strings.h>
 
 namespace Web::CSS {

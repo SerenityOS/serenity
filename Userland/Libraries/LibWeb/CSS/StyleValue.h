@@ -627,31 +627,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class PercentageStyleValue final : public StyleValueWithDefaultOperators<PercentageStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<PercentageStyleValue> create(Percentage percentage)
-    {
-        return adopt_ref(*new PercentageStyleValue(move(percentage)));
-    }
-    virtual ~PercentageStyleValue() override = default;
-
-    Percentage const& percentage() const { return m_percentage; }
-    Percentage& percentage() { return m_percentage; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(PercentageStyleValue const& other) const { return m_percentage == other.m_percentage; }
-
-private:
-    PercentageStyleValue(Percentage&& percentage)
-        : StyleValueWithDefaultOperators(Type::Percentage)
-        , m_percentage(percentage)
-    {
-    }
-
-    Percentage m_percentage;
-};
-
 class PositionStyleValue final : public StyleValueWithDefaultOperators<PositionStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
