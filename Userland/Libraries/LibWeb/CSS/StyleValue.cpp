@@ -47,6 +47,7 @@
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
+#include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1146,11 +1147,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
 ErrorOr<String> RectStyleValue::to_string() const
 {
     return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
-}
-
-ErrorOr<String> TextDecorationStyleValue::to_string() const
-{
-    return String::formatted("{} {} {} {}", TRY(m_properties.line->to_string()), TRY(m_properties.thickness->to_string()), TRY(m_properties.style->to_string()), TRY(m_properties.color->to_string()));
 }
 
 ErrorOr<String> TransformationStyleValue::to_string() const
