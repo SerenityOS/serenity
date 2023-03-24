@@ -570,13 +570,10 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_fdt(MemoryManager::GlobalD
 UNMAP_AFTER_INIT void MemoryManager::parse_memory_map_multiboot(MemoryManager::GlobalData& global_data)
 {
     // Register used memory regions that we know of.
-    if (multiboot_flags & 0x4) {
-        auto* bootmods_start = multiboot_copy_boot_modules_array;
-        auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
-
-        for (auto* bootmod = bootmods_start; bootmod < bootmods_end; bootmod++) {
-            global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end) });
-        }
+    if (multiboot_flags & 0x4 && !multiboot_module_physical_ptr.is_null()) {
+        dmesgln("MM: Multiboot module @ {}, length={}", multiboot_module_physical_ptr, multiboot_module_length);
+        VERIFY(multiboot_module_length != 0);
+        global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, multiboot_module_physical_ptr, multiboot_module_physical_ptr.offset(multiboot_module_length) });
     }
 
     auto* mmap_begin = multiboot_memory_map;

@@ -64,7 +64,7 @@ exec $SERENITY_KERNEL_DEBUGGER \
     -ex "file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Prekernel/$prekernel_image" \
     -ex "set confirm off" \
     -ex "directory $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/" \
-    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Kernel -o $kernel_base" \
+    -ex "add-symbol-file $SCRIPT_DIR/../Build/${SERENITY_ARCH:-x86_64}$toolchain_suffix/Kernel/Kernel_shared_object -o $kernel_base" \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
     -ex "set print frame-arguments none" \

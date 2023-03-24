@@ -8,14 +8,21 @@ set(SOURCES
     )
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(PREKERNEL_TARGET Prekernel64)
+    set(PREKERNEL_TARGET kernel_x86-64)
 elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
     message(SEND_ERROR "Prekernel is not needed on aarch64 and should not be compiled!")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static")
 
-add_executable(${PREKERNEL_TARGET} ${SOURCES})
+add_library(KernelObject OBJECT IMPORTED)
+
+set_property(TARGET KernelObject PROPERTY
+    IMPORTED_OBJECTS ${CMAKE_CURRENT_BINARY_DIR}/../Kernel.o
+)
+
+add_executable(${PREKERNEL_TARGET} ${SOURCES} $<TARGET_OBJECTS:KernelObject>)
+add_dependencies(${PREKERNEL_TARGET} Kernel)
 add_dependencies(${PREKERNEL_TARGET} install_libc_headers)
 target_compile_options(${PREKERNEL_TARGET} PRIVATE -no-pie -fno-pic -fno-threadsafe-statics)
 
@@ -31,11 +38,11 @@ endif()
 
 add_custom_command(
     TARGET ${PREKERNEL_TARGET} POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY} -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${PREKERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Prekernel
+    COMMAND ${CMAKE_OBJCOPY} -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${PREKERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/../Kernel
     BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Prekernel
 )
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Prekernel" DESTINATION boot)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/../Kernel" DESTINATION boot)
 
 # Remove options which the Prekernel environment doesn't support.
 get_target_property(PREKERNEL_TARGET_OPTIONS ${PREKERNEL_TARGET} COMPILE_OPTIONS)

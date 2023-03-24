@@ -27,6 +27,9 @@ extern "C" [[noreturn]] void __stack_chk_fail();
 extern "C" u8 start_of_prekernel_image[];
 extern "C" u8 end_of_prekernel_image[];
 
+extern "C" u8 _binary_Kernel_standalone_start[];
+extern "C" u8 end_of_prekernel_image_after_kernel_image[];
+
 extern "C" u8 gdt64ptr[];
 extern "C" u16 code64_sel;
 extern "C" u64 boot_pml4t[512];
@@ -92,12 +95,20 @@ static void memmove_virt(void* dest_virt, FlatPtr dest_phys, void* src, size_t n
 
 extern "C" [[noreturn]] void init()
 {
-    if (multiboot_info_ptr->mods_count < 1)
-        halt();
+    u32 initrd_module_start = 0;
+    u32 initrd_module_end = 0;
+    if (multiboot_info_ptr->mods_count > 0) {
+        // We only consider the first specified multiboot module, and ignore
+        // the rest of the modules.
+        multiboot_module_entry_t* initrd_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
+        if (initrd_module->start > initrd_module->end)
+            halt();
 
-    multiboot_module_entry_t* kernel_module = (multiboot_module_entry_t*)(FlatPtr)multiboot_info_ptr->mods_addr;
+        initrd_module_start = initrd_module->start;
+        initrd_module_end = initrd_module->end;
+    }
 
-    u8* kernel_image = (u8*)(FlatPtr)kernel_module->start;
+    u8* kernel_image = _binary_Kernel_standalone_start;
     // copy the ELF header and program headers because we might end up overwriting them
     Elf_Ehdr kernel_elf_header = *(Elf_Ehdr*)kernel_image;
     Elf_Phdr kernel_program_headers[16];
@@ -105,8 +116,8 @@ extern "C" [[noreturn]] void init()
         halt();
     __builtin_memcpy(kernel_program_headers, kernel_image + kernel_elf_header.e_phoff, sizeof(Elf_Phdr) * kernel_elf_header.e_phnum);
 
-    FlatPtr kernel_physical_base = 0x200000;
-    FlatPtr default_kernel_load_base = KERNEL_MAPPING_BASE + 0x200000;
+    FlatPtr kernel_physical_base = (FlatPtr)kernel_image;
+    FlatPtr default_kernel_load_base = KERNEL_MAPPING_BASE + kernel_physical_base;
 
     FlatPtr kernel_load_base = default_kernel_load_base;
 
@@ -179,9 +190,6 @@ extern "C" [[noreturn]] void init()
     // overwriting mbi end as to avoid to check whether it's mapped after reloading page tables.
     BootInfo info {};
 
-    multiboot_info_ptr->mods_count--;
-    multiboot_info_ptr->mods_addr += sizeof(multiboot_module_entry_t);
-
     auto adjust_by_mapping_base = [kernel_mapping_base](auto ptr) {
         return (decltype(ptr))((FlatPtr)ptr + kernel_mapping_base);
     };
@@ -189,8 +197,12 @@ extern "C" [[noreturn]] void init()
     info.multiboot_flags = multiboot_info_ptr->flags;
     info.multiboot_memory_map = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mmap_addr);
     info.multiboot_memory_map_count = multiboot_info_ptr->mmap_length / sizeof(multiboot_memory_map_t);
-    info.multiboot_modules = adjust_by_mapping_base((FlatPtr)multiboot_info_ptr->mods_addr);
-    info.multiboot_modules_count = multiboot_info_ptr->mods_count;
+
+    if (initrd_module_start != 0 && initrd_module_end != 0) {
+        info.multiboot_module_physical_ptr = initrd_module_start;
+        info.multiboot_module_length = initrd_module_end - initrd_module_start;
+    }
+
     if ((multiboot_info_ptr->flags & MULTIBOOT_INFO_FRAMEBUFFER_INFO) != 0) {
         info.multiboot_framebuffer_addr = multiboot_info_ptr->framebuffer_addr;
         info.multiboot_framebuffer_pitch = multiboot_info_ptr->framebuffer_pitch;
