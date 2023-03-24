@@ -12,6 +12,7 @@
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 
 namespace Web::CSS {
 

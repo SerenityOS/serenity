@@ -8,30 +8,8 @@
  */
 
 #include "LinearGradientStyleValue.h"
-#include <LibWeb/CSS/Serialize.h>
 
 namespace Web::CSS {
-
-// FIXME: Temporary until AbstractImageStyleValue.h exists. (And the Serialize.h include above.)
-static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
-{
-    bool first = true;
-    for (auto const& element : color_stop_list) {
-        if (!first)
-            TRY(builder.try_append(", "sv));
-
-        if (element.transition_hint.has_value())
-            TRY(builder.try_appendff("{}, "sv, TRY(element.transition_hint->value.to_string())));
-
-        TRY(serialize_a_srgb_value(builder, element.color_stop.color));
-        for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
-            if (position->has_value())
-                TRY(builder.try_appendff(" {}"sv, TRY((*position)->to_string())));
-        }
-        first = false;
-    }
-    return {};
-}
 
 ErrorOr<String> LinearGradientStyleValue::to_string() const
 {

@@ -10,7 +10,7 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 
 namespace Web::CSS {
 
