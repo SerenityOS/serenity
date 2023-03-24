@@ -95,6 +95,7 @@ set(SOURCES
     CSS/StyleValues/ShadowStyleValue.cpp
     CSS/StyleValues/TextDecorationStyleValue.cpp
     CSS/StyleValues/TransformationStyleValue.cpp
+    CSS/StyleValues/UnresolvedStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp
