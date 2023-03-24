@@ -118,3 +118,19 @@ TEST_CASE(moved_fly_string_becomes_empty)
     EXPECT_EQ(fly1, "thisisdefinitelymorethan7bytes"sv);
     EXPECT_EQ(FlyString::number_of_fly_strings(), 1u);
 }
+
+TEST_CASE(is_one_of)
+{
+    auto foo = MUST(FlyString::from_utf8("foo"sv));
+    auto bar = MUST(FlyString::from_utf8("bar"sv));
+
+    EXPECT(foo.is_one_of(foo));
+    EXPECT(foo.is_one_of(foo, bar));
+    EXPECT(foo.is_one_of(bar, foo));
+    EXPECT(!foo.is_one_of(bar));
+
+    EXPECT(!bar.is_one_of("foo"sv));
+    EXPECT(bar.is_one_of("foo"sv, "bar"sv));
+    EXPECT(bar.is_one_of("bar"sv, "foo"sv));
+    EXPECT(bar.is_one_of("bar"sv));
+}
