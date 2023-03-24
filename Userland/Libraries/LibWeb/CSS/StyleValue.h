@@ -681,39 +681,6 @@ private:
     CSS::GridTrackPlacement m_grid_track_placement;
 };
 
-class GridTrackPlacementShorthandStyleValue final : public StyleValueWithDefaultOperators<GridTrackPlacementShorthandStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> end)
-    {
-        return adopt_ref(*new GridTrackPlacementShorthandStyleValue(move(start), move(end)));
-    }
-    static ValueComparingNonnullRefPtr<GridTrackPlacementShorthandStyleValue> create(GridTrackPlacement start)
-    {
-        return adopt_ref(*new GridTrackPlacementShorthandStyleValue(GridTrackPlacementStyleValue::create(start), GridTrackPlacementStyleValue::create(GridTrackPlacement::make_auto())));
-    }
-    virtual ~GridTrackPlacementShorthandStyleValue() override = default;
-
-    auto start() const { return m_properties.start; }
-    auto end() const { return m_properties.end; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(GridTrackPlacementShorthandStyleValue const& other) const { return m_properties == other.m_properties; };
-
-private:
-    GridTrackPlacementShorthandStyleValue(ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> start, ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> end)
-        : StyleValueWithDefaultOperators(Type::GridTrackPlacementShorthand)
-        , m_properties { .start = move(start), .end = move(end) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> start;
-        ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> end;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class GridTrackSizeStyleValue final : public StyleValueWithDefaultOperators<GridTrackSizeStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
