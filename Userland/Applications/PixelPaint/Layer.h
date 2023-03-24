@@ -102,6 +102,8 @@ public:
 
     Gfx::Bitmap& currently_edited_bitmap();
 
+    ErrorOr<NonnullRefPtr<Layer>> duplicate(DeprecatedString name);
+
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, DeprecatedString name);
 

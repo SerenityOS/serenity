@@ -724,6 +724,28 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             }
         })));
 
+    TRY(m_layer_menu->try_add_action(GUI::Action::create(
+        "Duplicate Layer", { Mod_Ctrl | Mod_Shift, Key_D }, g_icon_bag.new_layer, [&](auto&) {
+            auto* editor = current_image_editor();
+            VERIFY(editor);
+            auto* active_layer = editor->active_layer();
+            if (!active_layer)
+                return;
+
+            auto layer_index = editor->image().index_of(*active_layer);
+            auto new_layer_name = editor->generate_unique_layer_name(active_layer->name());
+            auto duplicated_layer_or_error = active_layer->duplicate(new_layer_name);
+            if (duplicated_layer_or_error.is_error()) {
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Unable to create duplicate layer: {}", duplicated_layer_or_error.release_error())));
+                return;
+            }
+            auto duplicated_layer = duplicated_layer_or_error.release_value();
+            editor->image().insert_layer(duplicated_layer, layer_index + 1);
+            editor->image().select_layer(duplicated_layer);
+            editor->layers_did_change();
+            editor->did_complete_action("Duplicate Layer"sv);
+        })));
+
     m_layer_via_copy = GUI::Action::create(
         "Layer via Copy", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.new_layer, [&](auto&) {
             auto add_layer_success = current_image_editor()->add_new_layer_from_selection();

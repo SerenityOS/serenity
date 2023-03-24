@@ -405,4 +405,12 @@ Optional<Gfx::IntRect> Layer::nonempty_content_bounding_rect() const
     };
 }
 
+ErrorOr<NonnullRefPtr<Layer>> Layer::duplicate(DeprecatedString name)
+{
+    auto duplicated_layer = TRY(Layer::create_snapshot(m_image, *this));
+    duplicated_layer->m_name = move(name);
+    duplicated_layer->m_selected = false;
+    return duplicated_layer;
+}
+
 }
