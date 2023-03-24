@@ -44,4 +44,13 @@ SECTIONS
     } :bss
 
     end_of_prekernel_image = .;
+
+    .Kernel_image ALIGN(4K) : AT (ADDR(.Kernel_image))
+    {
+        _binary_Kernel_standalone_start = .;
+        KEEP(*(.Kernel_image))
+    }
+
+    end_of_prekernel_image_after_kernel_image = .;
+
 }

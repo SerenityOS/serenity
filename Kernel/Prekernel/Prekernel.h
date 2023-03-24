@@ -41,8 +41,11 @@ struct [[gnu::packed]] BootInfo {
     u32 multiboot_flags;
     u64 multiboot_memory_map;
     u32 multiboot_memory_map_count;
-    u64 multiboot_modules;
+    u64 multiboot_modules_physical_ptr;
     u32 multiboot_modules_count;
+    u32 multiboot_module_ramdisk_physical_start;
+    u32 multiboot_module_ramdisk_physical_end;
+    u32 multiboot_module_ramdisk_physical_string_addr;
     u64 multiboot_framebuffer_addr;
     u32 multiboot_framebuffer_pitch;
     u32 multiboot_framebuffer_width;
