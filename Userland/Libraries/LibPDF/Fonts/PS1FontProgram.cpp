@@ -108,7 +108,7 @@ PDFErrorOr<Vector<ByteBuffer>> PS1FontProgram::parse_subroutines(Reader& reader)
         return error("Expected array length");
 
     auto length = TRY(parse_int(reader));
-    VERIFY(length <= 1024);
+    VERIFY(length > 0);
 
     Vector<ByteBuffer> array;
     TRY(array.try_resize(length));
