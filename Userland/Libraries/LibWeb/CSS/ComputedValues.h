@@ -13,6 +13,7 @@
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 
 namespace Web::CSS {
 

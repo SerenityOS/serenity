@@ -45,6 +45,7 @@
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
+#include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1146,15 +1147,6 @@ ErrorOr<String> RectStyleValue::to_string() const
     return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
 }
 
-ErrorOr<String> ShadowStyleValue::to_string() const
-{
-    StringBuilder builder;
-    TRY(builder.try_appendff("{} {} {} {} {}", m_properties.color.to_deprecated_string(), TRY(m_properties.offset_x.to_string()), TRY(m_properties.offset_y.to_string()), TRY(m_properties.blur_radius.to_string()), TRY(m_properties.spread_distance.to_string())));
-    if (m_properties.placement == ShadowPlacement::Inner)
-        TRY(builder.try_append(" inset"sv));
-    return builder.to_string();
-}
-
 ErrorOr<String> TextDecorationStyleValue::to_string() const
 {
     return String::formatted("{} {} {} {}", TRY(m_properties.line->to_string()), TRY(m_properties.thickness->to_string()), TRY(m_properties.style->to_string()), TRY(m_properties.color->to_string()));
@@ -1244,15 +1236,6 @@ Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect
 ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels, CSSPixels, CSSPixels) const
 {
     return *this;
-}
-
-ValueComparingNonnullRefPtr<StyleValue const> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
-{
-    auto absolutized_offset_x = absolutized_length(m_properties.offset_x, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.offset_x);
-    auto absolutized_offset_y = absolutized_length(m_properties.offset_y, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.offset_y);
-    auto absolutized_blur_radius = absolutized_length(m_properties.blur_radius, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.blur_radius);
-    auto absolutized_spread_distance = absolutized_length(m_properties.spread_distance, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.spread_distance);
-    return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
 }
 
 bool CalculatedStyleValue::contains_percentage() const
