@@ -6,7 +6,6 @@
  */
 
 #include <AK/LexicalPath.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ConnectionToWindowServer.h>
@@ -42,7 +41,7 @@ Result Client::request_file_read_only_approved(GUI::Window* parent_window, Depre
     if (path.starts_with('/')) {
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, path);
     } else {
-        auto full_path = LexicalPath::join(Core::DeprecatedFile::current_working_directory(), path).string();
+        auto full_path = LexicalPath::join(TRY(FileSystem::current_working_directory()), path).string();
         async_request_file_read_only_approved(id, parent_window_server_client_id, parent_window_id, full_path);
     }
 
@@ -67,7 +66,7 @@ Result Client::request_file(GUI::Window* parent_window, DeprecatedString const& 
     if (path.starts_with('/')) {
         async_request_file(id, parent_window_server_client_id, parent_window_id, path, mode);
     } else {
-        auto full_path = LexicalPath::join(Core::DeprecatedFile::current_working_directory(), path).string();
+        auto full_path = LexicalPath::join(TRY(FileSystem::current_working_directory()), path).string();
         async_request_file(id, parent_window_server_client_id, parent_window_id, full_path, mode);
     }
 

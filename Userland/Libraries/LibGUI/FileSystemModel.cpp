@@ -11,9 +11,9 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/StandardPaths.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/FileSystemModel.h>
@@ -63,11 +63,11 @@ bool FileSystemModel::Node::fetch_data(DeprecatedString const& full_path, bool i
     mtime = st.st_mtime;
 
     if (S_ISLNK(mode)) {
-        auto sym_link_target_or_error = Core::DeprecatedFile::read_link(full_path);
+        auto sym_link_target_or_error = FileSystem::read_link(full_path);
         if (sym_link_target_or_error.is_error())
             perror("readlink");
         else {
-            symlink_target = sym_link_target_or_error.release_value();
+            symlink_target = sym_link_target_or_error.release_value().to_deprecated_string();
             if (symlink_target.is_null())
                 perror("readlink");
         }
@@ -613,7 +613,7 @@ Variant FileSystemModel::data(ModelIndex const& index, ModelRole role) const
 Icon FileSystemModel::icon_for(Node const& node) const
 {
     if (node.full_path() == "/")
-        return FileIconProvider::icon_for_path("/");
+        return FileIconProvider::icon_for_path("/"sv);
 
     if (Gfx::Bitmap::is_path_a_supported_image_format(node.name)) {
         if (!node.thumbnail) {

@@ -110,7 +110,7 @@ void PathBreadcrumbbar::set_current_path(DeprecatedString const& new_path)
     } else {
         m_breadcrumbbar->clear_segments();
 
-        m_breadcrumbbar->append_segment("/", GUI::FileIconProvider::icon_for_path("/").bitmap_for_size(16), "/", "/");
+        m_breadcrumbbar->append_segment("/", GUI::FileIconProvider::icon_for_path("/"sv).bitmap_for_size(16), "/", "/");
         StringBuilder builder;
 
         for (auto& part : lexical_path.parts()) {

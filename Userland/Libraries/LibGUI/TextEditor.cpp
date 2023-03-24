@@ -12,7 +12,6 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/AutocompleteProvider.h>

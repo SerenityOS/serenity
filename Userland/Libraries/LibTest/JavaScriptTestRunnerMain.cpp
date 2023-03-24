@@ -7,7 +7,6 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibTest/JavaScriptTestRunner.h>
 #include <signal.h>
@@ -177,8 +176,19 @@ int main(int argc, char** argv)
 #endif
     }
 
-    test_root = Core::DeprecatedFile::real_path_for(test_root);
-    common_path = Core::DeprecatedFile::real_path_for(common_path);
+    auto test_root_or_error = FileSystem::real_path(test_root);
+    if (test_root_or_error.is_error()) {
+        warnln("Failed to resolve test root: {}", test_root_or_error.error());
+        return 1;
+    }
+    test_root = test_root_or_error.release_value().to_deprecated_string();
+
+    auto common_path_or_error = FileSystem::real_path(common_path);
+    if (common_path_or_error.is_error()) {
+        warnln("Failed to resolve common path: {}", common_path_or_error.error());
+        return 1;
+    }
+    common_path = common_path_or_error.release_value().to_deprecated_string();
 
     if (chdir(test_root.characters()) < 0) {
         auto saved_errno = errno;
