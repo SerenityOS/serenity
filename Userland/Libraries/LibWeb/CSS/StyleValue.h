@@ -627,26 +627,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class InitialStyleValue final : public StyleValueWithDefaultOperators<InitialStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<InitialStyleValue> the()
-    {
-        static ValueComparingNonnullRefPtr<InitialStyleValue> instance = adopt_ref(*new InitialStyleValue);
-        return instance;
-    }
-    virtual ~InitialStyleValue() override = default;
-
-    ErrorOr<String> to_string() const override { return "initial"_string; }
-
-    bool properties_equal(InitialStyleValue const&) const { return true; }
-
-private:
-    InitialStyleValue()
-        : StyleValueWithDefaultOperators(Type::Initial)
-    {
-    }
-};
-
 class LengthStyleValue : public StyleValueWithDefaultOperators<LengthStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<LengthStyleValue> create(Length const&);
