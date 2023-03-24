@@ -299,7 +299,7 @@ void Renderer::end_path_paint()
 RENDERER_HANDLER(path_stroke)
 {
     begin_path_paint();
-    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().ctm.x_scale() * state().line_width);
     end_path_paint();
     return {};
 }
@@ -334,13 +334,13 @@ RENDERER_HANDLER(path_fill_evenodd)
 
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
-    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().ctm.x_scale() * state().line_width);
     return handle_path_fill_nonzero(args);
 }
 
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
-    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_anti_aliasing_painter.stroke_path(m_current_path, state().stroke_color, state().ctm.x_scale() * state().line_width);
     return handle_path_fill_evenodd(args);
 }
 
