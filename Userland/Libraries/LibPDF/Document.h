@@ -30,7 +30,7 @@ struct Rectangle {
 
 struct Page {
     NonnullRefPtr<DictObject> resources;
-    NonnullRefPtr<Object> contents;
+    RefPtr<Object> contents;
     Rectangle media_box;
     Rectangle crop_box;
     float user_unit;
