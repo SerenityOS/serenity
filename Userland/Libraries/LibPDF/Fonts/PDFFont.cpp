@@ -85,7 +85,7 @@ PDFErrorOr<NonnullRefPtr<Gfx::Font>> PDFFont::replacement_for(StringView name, f
     float point_size = (font_size * POINTS_PER_INCH) / DEFAULT_DPI;
     auto font = Gfx::FontDatabase::the().get(font_family, font_variant, point_size);
     if (!font)
-        Error::internal_error("Failed to load {} {} at {}pt", font_family, font_variant, point_size);
+        return Error::internal_error("Failed to load {} {} at {}pt", font_family, font_variant, point_size);
     return font.release_nonnull();
 }
 
