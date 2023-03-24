@@ -646,35 +646,6 @@ private:
     Time m_time;
 };
 
-class TransformationStyleValue final : public StyleValueWithDefaultOperators<TransformationStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<TransformationStyleValue> create(CSS::TransformFunction transform_function, StyleValueVector&& values)
-    {
-        return adopt_ref(*new TransformationStyleValue(transform_function, move(values)));
-    }
-    virtual ~TransformationStyleValue() override = default;
-
-    CSS::TransformFunction transform_function() const { return m_properties.transform_function; }
-    StyleValueVector values() const { return m_properties.values; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(TransformationStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    TransformationStyleValue(CSS::TransformFunction transform_function, StyleValueVector&& values)
-        : StyleValueWithDefaultOperators(Type::Transformation)
-        , m_properties { .transform_function = transform_function, .values = move(values) }
-    {
-    }
-
-    struct Properties {
-        CSS::TransformFunction transform_function;
-        StyleValueVector values;
-        bool operator==(Properties const& other) const;
-    } m_properties;
-};
-
 class UnresolvedStyleValue final : public StyleValue {
 public:
     static ValueComparingNonnullRefPtr<UnresolvedStyleValue> create(Vector<Parser::ComponentValue>&& values, bool contains_var_or_attr)

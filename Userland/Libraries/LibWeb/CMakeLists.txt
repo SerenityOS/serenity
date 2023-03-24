@@ -94,6 +94,7 @@ set(SOURCES
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/ShadowStyleValue.cpp
     CSS/StyleValues/TextDecorationStyleValue.cpp
+    CSS/StyleValues/TransformationStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp
     CSS/Time.cpp

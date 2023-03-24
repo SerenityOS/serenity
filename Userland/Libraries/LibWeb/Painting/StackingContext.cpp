@@ -13,6 +13,7 @@
 #include <LibGfx/Matrix4x4.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Rect.h>
+#include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/Layout/Box.h>
 #include <LibWeb/Layout/ReplacedBox.h>
 #include <LibWeb/Layout/Viewport.h>
