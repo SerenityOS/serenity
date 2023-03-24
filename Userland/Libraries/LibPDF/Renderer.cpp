@@ -197,7 +197,7 @@ RENDERER_HANDLER(set_dash_pattern)
     Vector<int> pattern;
     for (auto& element : *dash_array)
         pattern.append(element.to_int());
-    state().line_dash_pattern = LineDashPattern { pattern, args[1].get<int>() };
+    state().line_dash_pattern = LineDashPattern { pattern, args[1].to_int() };
     return {};
 }
 
