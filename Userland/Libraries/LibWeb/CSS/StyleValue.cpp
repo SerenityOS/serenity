@@ -36,6 +36,7 @@
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
+#include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/DOM/Document.h>
@@ -1265,25 +1266,6 @@ ValueComparingNonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect
     return adopt_ref(*new RectStyleValue(rect));
 }
 
-ValueComparingNonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
-{
-    if (length.is_auto()) {
-        static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_auto()));
-        return value;
-    }
-    if (length.is_px()) {
-        if (length.raw_value() == 0) {
-            static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_px(0)));
-            return value;
-        }
-        if (length.raw_value() == 1) {
-            static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_px(1)));
-            return value;
-        }
-    }
-    return adopt_ref(*new LengthStyleValue(length));
-}
-
 Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height)
 {
     if (length.is_px())
@@ -1297,13 +1279,6 @@ Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect
 
 ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels, CSSPixels, CSSPixels) const
 {
-    return *this;
-}
-
-ValueComparingNonnullRefPtr<StyleValue const> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
-{
-    if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height); length.has_value())
-        return LengthStyleValue::create(length.release_value());
     return *this;
 }
 

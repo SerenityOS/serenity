@@ -85,6 +85,7 @@ set(SOURCES
     CSS/StyleValues/GridTrackSizeStyleValue.cpp
     CSS/StyleValues/IdentifierStyleValue.cpp
     CSS/StyleValues/ImageStyleValue.cpp
+    CSS/StyleValues/LengthStyleValue.cpp
     CSS/StyleValues/LinearGradientStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/Supports.cpp
