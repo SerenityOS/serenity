@@ -627,30 +627,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class ResolutionStyleValue : public StyleValueWithDefaultOperators<ResolutionStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<ResolutionStyleValue> create(Resolution resolution)
-    {
-        return adopt_ref(*new ResolutionStyleValue(move(resolution)));
-    }
-    virtual ~ResolutionStyleValue() override { }
-
-    Resolution const& resolution() const { return m_resolution; }
-
-    virtual ErrorOr<String> to_string() const override { return m_resolution.to_string(); }
-
-    bool properties_equal(ResolutionStyleValue const& other) const { return m_resolution == other.m_resolution; }
-
-private:
-    explicit ResolutionStyleValue(Resolution resolution)
-        : StyleValueWithDefaultOperators(Type::Resolution)
-        , m_resolution(move(resolution))
-    {
-    }
-
-    Resolution m_resolution;
-};
-
 class ShadowStyleValue final : public StyleValueWithDefaultOperators<ShadowStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<ShadowStyleValue>
