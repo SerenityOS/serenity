@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -68,13 +69,17 @@ inline void SHA1::transform(u8 const* data)
 
 void SHA1::update(u8 const* message, size_t length)
 {
-    for (size_t i = 0; i < length; ++i) {
+    while (length > 0) {
+        size_t copy_bytes = AK::min(length, BlockSize - m_data_length);
+        __builtin_memcpy(m_data_buffer + m_data_length, message, copy_bytes);
+        message += copy_bytes;
+        length -= copy_bytes;
+        m_data_length += copy_bytes;
         if (m_data_length == BlockSize) {
             transform(m_data_buffer);
-            m_bit_length += 512;
+            m_bit_length += BlockSize * 8;
             m_data_length = 0;
         }
-        m_data_buffer[m_data_length++] = message[i];
     }
 }
 
@@ -95,13 +100,6 @@ SHA1::DigestType SHA1::peek()
     u32 state[5];
     __builtin_memcpy(data, m_data_buffer, m_data_length);
     __builtin_memcpy(state, m_state, 20);
-
-    if (BlockSize == m_data_length) {
-        transform(m_data_buffer);
-        m_bit_length += BlockSize * 8;
-        m_data_length = 0;
-        i = 0;
-    }
 
     if (m_data_length < FinalBlockDataSize) {
         m_data_buffer[i++] = 0x80;

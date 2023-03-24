@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -65,16 +66,28 @@ inline void SHA256::transform(u8 const* data)
     m_state[7] += h;
 }
 
+template<size_t BlockSize, typename Callback>
+void update_buffer(u8* buffer, u8 const* input, size_t length, size_t& data_length, Callback callback)
+{
+    while (length > 0) {
+        size_t copy_bytes = AK::min(length, BlockSize - data_length);
+        __builtin_memcpy(buffer + data_length, input, copy_bytes);
+        input += copy_bytes;
+        length -= copy_bytes;
+        data_length += copy_bytes;
+        if (data_length == BlockSize) {
+            callback();
+            data_length = 0;
+        }
+    }
+}
+
 void SHA256::update(u8 const* message, size_t length)
 {
-    for (size_t i = 0; i < length; ++i) {
-        if (m_data_length == BlockSize) {
-            transform(m_data_buffer);
-            m_bit_length += 512;
-            m_data_length = 0;
-        }
-        m_data_buffer[m_data_length++] = message[i];
-    }
+    update_buffer<BlockSize>(m_data_buffer, message, length, m_data_length, [&]() {
+        transform(m_data_buffer);
+        m_bit_length += BlockSize * 8;
+    });
 }
 
 SHA256::DigestType SHA256::digest()
@@ -89,18 +102,10 @@ SHA256::DigestType SHA256::peek()
     DigestType digest;
     size_t i = m_data_length;
 
-    if (BlockSize == m_data_length) {
-        transform(m_data_buffer);
-        m_bit_length += BlockSize * 8;
-        m_data_length = 0;
-        i = 0;
-    }
-
-    if (m_data_length < FinalBlockDataSize) {
+    if (i < FinalBlockDataSize) {
         m_data_buffer[i++] = 0x80;
         while (i < FinalBlockDataSize)
             m_data_buffer[i++] = 0x00;
-
     } else {
         // First, complete a block with some padding.
         m_data_buffer[i++] = 0x80;
@@ -185,14 +190,10 @@ inline void SHA384::transform(u8 const* data)
 
 void SHA384::update(u8 const* message, size_t length)
 {
-    for (size_t i = 0; i < length; ++i) {
-        if (m_data_length == BlockSize) {
-            transform(m_data_buffer);
-            m_bit_length += 1024;
-            m_data_length = 0;
-        }
-        m_data_buffer[m_data_length++] = message[i];
-    }
+    update_buffer<BlockSize>(m_data_buffer, message, length, m_data_length, [&]() {
+        transform(m_data_buffer);
+        m_bit_length += BlockSize * 8;
+    });
 }
 
 SHA384::DigestType SHA384::digest()
@@ -207,18 +208,10 @@ SHA384::DigestType SHA384::peek()
     DigestType digest;
     size_t i = m_data_length;
 
-    if (BlockSize == m_data_length) {
-        transform(m_data_buffer);
-        m_bit_length += BlockSize * 8;
-        m_data_length = 0;
-        i = 0;
-    }
-
-    if (m_data_length < FinalBlockDataSize) {
+    if (i < FinalBlockDataSize) {
         m_data_buffer[i++] = 0x80;
         while (i < FinalBlockDataSize)
             m_data_buffer[i++] = 0x00;
-
     } else {
         // First, complete a block with some padding.
         m_data_buffer[i++] = 0x80;
@@ -309,14 +302,10 @@ inline void SHA512::transform(u8 const* data)
 
 void SHA512::update(u8 const* message, size_t length)
 {
-    for (size_t i = 0; i < length; ++i) {
-        if (m_data_length == BlockSize) {
-            transform(m_data_buffer);
-            m_bit_length += 1024;
-            m_data_length = 0;
-        }
-        m_data_buffer[m_data_length++] = message[i];
-    }
+    update_buffer<BlockSize>(m_data_buffer, message, length, m_data_length, [&]() {
+        transform(m_data_buffer);
+        m_bit_length += BlockSize * 8;
+    });
 }
 
 SHA512::DigestType SHA512::digest()
@@ -331,18 +320,10 @@ SHA512::DigestType SHA512::peek()
     DigestType digest;
     size_t i = m_data_length;
 
-    if (BlockSize == m_data_length) {
-        transform(m_data_buffer);
-        m_bit_length += BlockSize * 8;
-        m_data_length = 0;
-        i = 0;
-    }
-
-    if (m_data_length < FinalBlockDataSize) {
+    if (i < FinalBlockDataSize) {
         m_data_buffer[i++] = 0x80;
         while (i < FinalBlockDataSize)
             m_data_buffer[i++] = 0x00;
-
     } else {
         // First, complete a block with some padding.
         m_data_buffer[i++] = 0x80;
