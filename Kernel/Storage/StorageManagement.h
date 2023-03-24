@@ -54,6 +54,7 @@ private:
     void determine_boot_device_with_logical_unit_number();
     void determine_block_boot_device();
     void determine_nvme_boot_device();
+    void determine_sd_boot_device();
     void determine_ata_boot_device();
     void determine_hardware_relative_boot_device(StringView relative_hardware_prefix, Function<bool(StorageDevice const&)> filter_device_callback);
     Array<unsigned, 3> extract_boot_device_address_parameters(StringView device_prefix);
