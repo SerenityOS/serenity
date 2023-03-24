@@ -49,6 +49,7 @@ void GlyphMapWidget::Selection::extend_to(int glyph)
 }
 
 GlyphMapWidget::GlyphMapWidget()
+    : AbstractScrollableWidget()
 {
     set_focus_policy(FocusPolicy::StrongFocus);
     horizontal_scrollbar().set_visible(false);
@@ -145,7 +146,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
                 painter.draw_emoji(inner_rect.location(), *emoji, font());
         } else if (font().contains_glyph(glyph)) {
             if (m_highlight_modifications && m_modified_glyphs.contains(glyph)) {
-                if (m_original_font->contains_glyph(glyph)) {
+                if (m_original_font && m_original_font->contains_glyph(glyph)) {
                     // Modified
                     if (palette().is_dark())
                         painter.fill_rect(outer_rect, Gfx::Color { 0, 65, 159 });
@@ -165,7 +166,7 @@ void GlyphMapWidget::paint_event(PaintEvent& event)
         } else if (auto* emoji = Gfx::Emoji::emoji_for_code_point(glyph); emoji && m_show_system_emoji) {
             painter.draw_emoji(inner_rect.location(), *emoji, font());
         } else {
-            if (m_highlight_modifications && m_original_font->contains_glyph(glyph)) {
+            if (m_highlight_modifications && m_original_font && m_original_font->contains_glyph(glyph)) {
                 // Deleted
                 if (palette().is_dark())
                     painter.fill_rect(outer_rect, Gfx::Color { 127, 0, 0 });
