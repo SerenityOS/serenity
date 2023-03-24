@@ -661,26 +661,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class GridTrackPlacementStyleValue final : public StyleValueWithDefaultOperators<GridTrackPlacementStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> create(CSS::GridTrackPlacement grid_track_placement);
-    virtual ~GridTrackPlacementStyleValue() override = default;
-
-    CSS::GridTrackPlacement const& grid_track_placement() const { return m_grid_track_placement; }
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(GridTrackPlacementStyleValue const& other) const { return m_grid_track_placement == other.m_grid_track_placement; };
-
-private:
-    explicit GridTrackPlacementStyleValue(CSS::GridTrackPlacement grid_track_placement)
-        : StyleValueWithDefaultOperators(Type::GridTrackPlacement)
-        , m_grid_track_placement(grid_track_placement)
-    {
-    }
-
-    CSS::GridTrackPlacement m_grid_track_placement;
-};
-
 class GridTrackSizeStyleValue final : public StyleValueWithDefaultOperators<GridTrackSizeStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);

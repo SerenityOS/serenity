@@ -28,6 +28,7 @@
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1030,11 +1031,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
     return value->resolve(layout_node, percentage_basis);
 }
 
-ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
-{
-    return m_grid_track_placement.to_string();
-}
-
 ErrorOr<String> GridTrackSizeStyleValue::to_string() const
 {
     return m_grid_track_size_list.to_string();
@@ -1924,10 +1920,6 @@ ErrorOr<String> StyleValueList::to_string() const
     return builder.to_string();
 }
 
-ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue> GridTrackPlacementStyleValue::create(CSS::GridTrackPlacement grid_track_placement)
-{
-    return adopt_ref(*new GridTrackPlacementStyleValue(grid_track_placement));
-}
 
 ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> GridTrackSizeStyleValue::create(CSS::GridTrackSizeList grid_track_size_list)
 {
