@@ -48,6 +48,7 @@
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1147,26 +1148,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
 ErrorOr<String> RectStyleValue::to_string() const
 {
     return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
-}
-
-ErrorOr<String> TransformationStyleValue::to_string() const
-{
-    StringBuilder builder;
-    TRY(builder.try_append(CSS::to_string(m_properties.transform_function)));
-    TRY(builder.try_append('('));
-    for (size_t i = 0; i < m_properties.values.size(); ++i) {
-        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
-        if (i != m_properties.values.size() - 1)
-            TRY(builder.try_append(", "sv));
-    }
-    TRY(builder.try_append(')'));
-
-    return builder.to_string();
-}
-
-bool TransformationStyleValue::Properties::operator==(Properties const& other) const
-{
-    return transform_function == other.transform_function && values.span() == other.values.span();
 }
 
 ErrorOr<String> UnresolvedStyleValue::to_string() const
