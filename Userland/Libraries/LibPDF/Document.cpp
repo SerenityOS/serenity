@@ -158,8 +158,9 @@ PDFErrorOr<Page> Document::get_page(u32 index)
         user_unit = raw_page_object->get_value(CommonNames::UserUnit).to_float();
 
     int rotate = 0;
-    if (raw_page_object->contains(CommonNames::Rotate)) {
-        rotate = raw_page_object->get_value(CommonNames::Rotate).get<int>();
+    auto maybe_rotate = TRY(get_inheritable_value(CommonNames::Rotate, raw_page_object));
+    if (maybe_rotate.has_value()) {
+        rotate = maybe_rotate.value().to_int();
         VERIFY(rotate % 90 == 0);
     }
 
@@ -337,6 +338,17 @@ PDFErrorOr<Optional<NonnullRefPtr<Object>>> Document::get_inheritable_object(Dep
         return get_inheritable_object(name, parent);
     }
     return TRY(object->get_object(this, name));
+}
+
+PDFErrorOr<Optional<Value>> Document::get_inheritable_value(DeprecatedFlyString const& name, NonnullRefPtr<DictObject> object)
+{
+    if (!object->contains(name)) {
+        if (!object->contains(CommonNames::Parent))
+            return { OptionalNone() };
+        auto parent = TRY(object->get_dict(this, CommonNames::Parent));
+        return get_inheritable_value(name, parent);
+    }
+    return object->get(name);
 }
 
 PDFErrorOr<Destination> Document::create_destination_from_dictionary_entry(NonnullRefPtr<Object> const& entry, HashMap<u32, u32> const& page_number_by_index_ref)
