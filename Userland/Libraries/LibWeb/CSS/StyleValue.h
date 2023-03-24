@@ -63,28 +63,6 @@ enum class FlexBasis {
     Auto,
 };
 
-template<typename TPosition>
-struct ColorStopListElement {
-    using PositionType = TPosition;
-    struct ColorHint {
-        TPosition value;
-        inline bool operator==(ColorHint const&) const = default;
-    };
-
-    Optional<ColorHint> transition_hint;
-    struct ColorStop {
-        Color color;
-        Optional<TPosition> position;
-        Optional<TPosition> second_position = {};
-        inline bool operator==(ColorStop const&) const = default;
-    } color_stop;
-
-    inline bool operator==(ColorStopListElement const&) const = default;
-};
-
-using LinearColorStopListElement = ColorStopListElement<LengthPercentage>;
-using AngularColorStopListElement = ColorStopListElement<AnglePercentage>;
-
 // FIXME: Named PositionValue to avoid conflicts with enums, but this represents a <position>
 struct PositionValue {
     enum class HorizontalPreset {
@@ -647,25 +625,6 @@ private:
 
     ResolvedType m_resolved_type;
     NonnullOwnPtr<CalcSum> m_expression;
-};
-
-class AbstractImageStyleValue : public StyleValue {
-public:
-    using StyleValue::StyleValue;
-
-    virtual Optional<CSSPixels> natural_width() const { return {}; }
-    virtual Optional<CSSPixels> natural_height() const { return {}; }
-
-    virtual void load_any_resources(DOM::Document&) {};
-    virtual void resolve_for_size(Layout::Node const&, CSSPixelSize) const {};
-
-    virtual bool is_paintable() const = 0;
-    virtual void paint(PaintContext& context, DevicePixelRect const& dest_rect, CSS::ImageRendering image_rendering) const = 0;
-};
-
-enum class GradientRepeating {
-    Yes,
-    No
 };
 
 class InheritStyleValue final : public StyleValueWithDefaultOperators<InheritStyleValue> {

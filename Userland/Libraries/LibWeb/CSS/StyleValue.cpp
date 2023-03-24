@@ -11,6 +11,7 @@
 #include <LibGfx/Palette.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
@@ -1035,26 +1036,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductP
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
-}
-
-static ErrorOr<void> serialize_color_stop_list(StringBuilder& builder, auto const& color_stop_list)
-{
-    bool first = true;
-    for (auto const& element : color_stop_list) {
-        if (!first)
-            TRY(builder.try_append(", "sv));
-
-        if (element.transition_hint.has_value())
-            TRY(builder.try_appendff("{}, "sv, TRY(element.transition_hint->value.to_string())));
-
-        TRY(serialize_a_srgb_value(builder, element.color_stop.color));
-        for (auto position : Array { &element.color_stop.position, &element.color_stop.second_position }) {
-            if (position->has_value())
-                TRY(builder.try_appendff(" {}"sv, TRY((*position)->to_string())));
-        }
-        first = false;
-    }
-    return {};
 }
 
 CSSPixelPoint PositionValue::resolved(Layout::Node const& node, CSSPixelRect const& rect) const
