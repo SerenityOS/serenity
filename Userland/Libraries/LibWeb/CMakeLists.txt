@@ -72,6 +72,7 @@ set(SOURCES
     CSS/StyleValues/BorderRadiusStyleValue.cpp
     CSS/StyleValues/BorderStyleValue.cpp
     CSS/StyleValues/ColorStyleValue.cpp
+    CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
     CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/StyleValues/FlexFlowStyleValue.cpp
