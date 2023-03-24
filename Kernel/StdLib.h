@@ -156,7 +156,7 @@ template<typename T>
 }
 
 template<typename T>
-[[nodiscard]] inline ErrorOr<void> try_copy_n_to_user(Userspace<T*> dest, T const* src, size_t count)
+[[nodiscard]] inline ErrorOr<void> copy_n_to_user(Userspace<T*> dest, T const* src, size_t count)
 {
     static_assert(IsTriviallyCopyable<T>);
     Checked<size_t> size = sizeof(T);
