@@ -56,29 +56,33 @@ PDFErrorOr<ByteBuffer> Filter::decode(ReadonlyBytes bytes, DeprecatedFlyString c
 
 PDFErrorOr<ByteBuffer> Filter::decode_ascii_hex(ReadonlyBytes bytes)
 {
-    if (bytes.size() % 2 == 0)
-        return TRY(decode_hex(bytes));
+    ByteBuffer output;
 
-    // FIXME: Integrate this padding into AK/Hex?
-
-    auto output = TRY(ByteBuffer::create_zeroed(bytes.size() / 2 + 1));
-
-    for (size_t i = 0; i < bytes.size() / 2; ++i) {
-        auto const c1 = decode_hex_digit(static_cast<char>(bytes[i * 2]));
-        if (c1 >= 16)
-            return AK::Error::from_string_literal("Hex string contains invalid digit");
-
-        auto const c2 = decode_hex_digit(static_cast<char>(bytes[i * 2 + 1]));
-        if (c2 >= 16)
-            return AK::Error::from_string_literal("Hex string contains invalid digit");
-
-        output[i] = (c1 << 4) + c2;
+    bool have_read_high_nibble = false;
+    u8 high_nibble = 0;
+    for (u8 byte : bytes) {
+        // 3.3.1 ASCIIHexDecode Filter
+        // All white-space characters [...] are ignored.
+        // FIXME: Any other characters cause an error.
+        if (is_ascii_hex_digit(byte)) {
+            u8 hex_digit = decode_hex_digit(byte);
+            if (have_read_high_nibble) {
+                u8 full_byte = (high_nibble << 4) | hex_digit;
+                TRY(output.try_append(full_byte));
+                have_read_high_nibble = false;
+            } else {
+                high_nibble = hex_digit;
+                have_read_high_nibble = true;
+            }
+        }
     }
 
-    // Process last byte with a padded zero
-    output[output.size() - 1] = decode_hex_digit(static_cast<char>(bytes[bytes.size() - 1])) * 16;
+    // If the filter encounters the EOD marker after reading an odd number
+    // of hexadecimal digits, it behaves as if a 0 followed the last digit.
+    if (have_read_high_nibble)
+        TRY(output.try_append(high_nibble << 4));
 
-    return { move(output) };
+    return output;
 };
 
 PDFErrorOr<ByteBuffer> Filter::decode_ascii85(ReadonlyBytes bytes)
