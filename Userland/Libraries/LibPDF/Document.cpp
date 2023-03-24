@@ -109,26 +109,46 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     auto page_object = TRY(get_or_load_value(page_object_index));
     auto raw_page_object = TRY(resolve_to<DictObject>(page_object));
 
-    auto resources = TRY(get_inheritable_object(CommonNames::Resources, raw_page_object))->cast<DictObject>();
+    RefPtr<DictObject> resources;
+    auto maybe_resources_object = TRY(get_inheritable_object(CommonNames::Resources, raw_page_object));
+    if (maybe_resources_object.has_value())
+        resources = maybe_resources_object.value()->cast<DictObject>();
+    else
+        resources = adopt_ref(*new DictObject({}));
+
     auto contents = TRY(raw_page_object->get_object(this, CommonNames::Contents));
 
-    auto media_box_array = TRY(get_inheritable_object(CommonNames::MediaBox, raw_page_object))->cast<ArrayObject>();
-    auto media_box = Rectangle {
-        media_box_array->at(0).to_float(),
-        media_box_array->at(1).to_float(),
-        media_box_array->at(2).to_float(),
-        media_box_array->at(3).to_float(),
-    };
+    Rectangle media_box;
+    auto maybe_media_box_object = TRY(get_inheritable_object(CommonNames::MediaBox, raw_page_object));
+    if (maybe_media_box_object.has_value()) {
+        auto media_box_array = maybe_media_box_object.value()->cast<ArrayObject>();
+        media_box = Rectangle {
+            media_box_array->at(0).to_float(),
+            media_box_array->at(1).to_float(),
+            media_box_array->at(2).to_float(),
+            media_box_array->at(3).to_float(),
+        };
+    } else {
+        // As most other libraries seem to do, we default to the standard
+        // US letter size of 8.5" x 11" (612 x 792 Postscript units).
+        media_box = Rectangle {
+            0, 0,
+            612, 792
+        };
+    }
 
-    auto crop_box = media_box;
-    if (raw_page_object->contains(CommonNames::CropBox)) {
-        auto crop_box_array = TRY(raw_page_object->get_array(this, CommonNames::CropBox));
+    Rectangle crop_box;
+    auto maybe_crop_box_object = TRY(get_inheritable_object(CommonNames::CropBox, raw_page_object));
+    if (maybe_crop_box_object.has_value()) {
+        auto crop_box_array = maybe_crop_box_object.value()->cast<ArrayObject>();
         crop_box = Rectangle {
             crop_box_array->at(0).to_float(),
             crop_box_array->at(1).to_float(),
             crop_box_array->at(2).to_float(),
             crop_box_array->at(3).to_float(),
         };
+    } else {
+        crop_box = media_box;
     }
 
     float user_unit = 1.0f;
@@ -141,7 +161,7 @@ PDFErrorOr<Page> Document::get_page(u32 index)
         VERIFY(rotate % 90 == 0);
     }
 
-    Page page { move(resources), move(contents), media_box, crop_box, user_unit, rotate };
+    Page page { resources.release_nonnull(), move(contents), media_box, crop_box, user_unit, rotate };
     m_pages.set(index, page);
     return page;
 }
@@ -306,13 +326,15 @@ PDFErrorOr<Destination> Document::create_destination_from_parameters(NonnullRefP
     return Destination { type, page_number_by_index_ref.get(page_ref.as_ref_index()), parameters };
 }
 
-PDFErrorOr<NonnullRefPtr<Object>> Document::get_inheritable_object(DeprecatedFlyString const& name, NonnullRefPtr<DictObject> object)
+PDFErrorOr<Optional<NonnullRefPtr<Object>>> Document::get_inheritable_object(DeprecatedFlyString const& name, NonnullRefPtr<DictObject> object)
 {
     if (!object->contains(name)) {
+        if (!object->contains(CommonNames::Parent))
+            return { OptionalNone() };
         auto parent = TRY(object->get_dict(this, CommonNames::Parent));
         return get_inheritable_object(name, parent);
     }
-    return object->get_object(this, name);
+    return TRY(object->get_object(this, name));
 }
 
 PDFErrorOr<Destination> Document::create_destination_from_dictionary_entry(NonnullRefPtr<Object> const& entry, HashMap<u32, u32> const& page_number_by_index_ref)
