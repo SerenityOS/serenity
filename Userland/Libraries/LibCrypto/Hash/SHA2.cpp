@@ -42,7 +42,7 @@ inline void SHA256::transform(u8 const* data)
          e = m_state[4], f = m_state[5],
          g = m_state[6], h = m_state[7];
 
-    for (size_t i = 0; i < Rounds; ++i) {
+    for (i = 0; i < Rounds; ++i) {
         auto temp0 = h + EP1(e) + CH(e, f, g) + SHA256Constants::RoundConstants[i] + m[i];
         auto temp1 = EP0(a) + MAJ(a, b, c);
         h = g;
@@ -128,7 +128,7 @@ SHA256::DigestType SHA256::peek()
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
     //        but that doesn't support shifting operations
-    for (size_t i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         digest.data[i + 0] = (m_state[0] >> (24 - i * 8)) & 0x000000ff;
         digest.data[i + 4] = (m_state[1] >> (24 - i * 8)) & 0x000000ff;
         digest.data[i + 8] = (m_state[2] >> (24 - i * 8)) & 0x000000ff;
@@ -159,7 +159,7 @@ inline void SHA384::transform(u8 const* data)
          e = m_state[4], f = m_state[5],
          g = m_state[6], h = m_state[7];
 
-    for (size_t i = 0; i < Rounds; ++i) {
+    for (i = 0; i < Rounds; ++i) {
         // Note : SHA384 uses the SHA512 constants.
         auto temp0 = h + EP1(e) + CH(e, f, g) + SHA512Constants::RoundConstants[i] + m[i];
         auto temp1 = EP0(a) + MAJ(a, b, c);
@@ -255,7 +255,7 @@ SHA384::DigestType SHA384::peek()
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
     //        but that doesn't support shifting operations
-    for (size_t i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         digest.data[i + 0] = (m_state[0] >> (56 - i * 8)) & 0x000000ff;
         digest.data[i + 8] = (m_state[1] >> (56 - i * 8)) & 0x000000ff;
         digest.data[i + 16] = (m_state[2] >> (56 - i * 8)) & 0x000000ff;
@@ -284,7 +284,7 @@ inline void SHA512::transform(u8 const* data)
          e = m_state[4], f = m_state[5],
          g = m_state[6], h = m_state[7];
 
-    for (size_t i = 0; i < Rounds; ++i) {
+    for (i = 0; i < Rounds; ++i) {
         auto temp0 = h + EP1(e) + CH(e, f, g) + SHA512Constants::RoundConstants[i] + m[i];
         auto temp1 = EP0(a) + MAJ(a, b, c);
         h = g;
@@ -379,7 +379,7 @@ SHA512::DigestType SHA512::peek()
     // SHA uses big-endian and we assume little-endian
     // FIXME: looks like a thing for AK::NetworkOrdered,
     //        but that doesn't support shifting operations
-    for (size_t i = 0; i < 8; ++i) {
+    for (i = 0; i < 8; ++i) {
         digest.data[i + 0] = (m_state[0] >> (56 - i * 8)) & 0x000000ff;
         digest.data[i + 8] = (m_state[1] >> (56 - i * 8)) & 0x000000ff;
         digest.data[i + 16] = (m_state[2] >> (56 - i * 8)) & 0x000000ff;

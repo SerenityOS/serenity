@@ -132,7 +132,7 @@ SHA1::DigestType SHA1::peek()
 
     transform(m_data_buffer);
 
-    for (size_t i = 0; i < 4; ++i) {
+    for (i = 0; i < 4; ++i) {
         digest.data[i + 0] = (m_state[0] >> (24 - i * 8)) & 0x000000ff;
         digest.data[i + 4] = (m_state[1] >> (24 - i * 8)) & 0x000000ff;
         digest.data[i + 8] = (m_state[2] >> (24 - i * 8)) & 0x000000ff;
