@@ -90,6 +90,7 @@ set(SOURCES
     CSS/StyleValues/ListStyleStyleValue.cpp
     CSS/StyleValues/NumericStyleValue.cpp
     CSS/StyleValues/OverflowStyleValue.cpp
+    CSS/StyleValues/PositionStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp

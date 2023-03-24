@@ -42,6 +42,7 @@
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -1137,25 +1138,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
             return builder.try_append(TRY(length_percentage.to_string()));
         }));
     return {};
-}
-
-ErrorOr<String> PositionStyleValue::to_string() const
-{
-    auto to_string = [](PositionEdge edge) {
-        switch (edge) {
-        case PositionEdge::Left:
-            return "left";
-        case PositionEdge::Right:
-            return "right";
-        case PositionEdge::Top:
-            return "top";
-        case PositionEdge::Bottom:
-            return "bottom";
-        }
-        VERIFY_NOT_REACHED();
-    };
-
-    return String::formatted("{} {} {} {}", to_string(m_properties.edge_x), TRY(m_properties.offset_x.to_string()), to_string(m_properties.edge_y), TRY(m_properties.offset_y.to_string()));
 }
 
 ErrorOr<String> RectStyleValue::to_string() const
