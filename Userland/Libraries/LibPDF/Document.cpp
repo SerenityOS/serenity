@@ -116,7 +116,9 @@ PDFErrorOr<Page> Document::get_page(u32 index)
     else
         resources = adopt_ref(*new DictObject({}));
 
-    auto contents = TRY(raw_page_object->get_object(this, CommonNames::Contents));
+    RefPtr<Object> contents;
+    if (raw_page_object->contains(CommonNames::Contents))
+        contents = TRY(raw_page_object->get_object(this, CommonNames::Contents));
 
     Rectangle media_box;
     auto maybe_media_box_object = TRY(get_inheritable_object(CommonNames::MediaBox, raw_page_object));

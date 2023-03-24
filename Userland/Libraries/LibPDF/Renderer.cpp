@@ -85,6 +85,9 @@ Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitm
 
 PDFErrorsOr<void> Renderer::render()
 {
+    if (m_page.contents.is_null())
+        return {};
+
     // Use our own vector, as the /Content can be an array with multiple
     // streams which gets concatenated
     // FIXME: Text operators are supposed to only have effects on the current
