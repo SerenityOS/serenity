@@ -914,4 +914,37 @@ void ImageEditor::set_appended_status_info(DeprecatedString new_status_info)
         on_appended_status_info_change(m_appended_status_info);
 }
 
+DeprecatedString ImageEditor::generate_unique_layer_name(DeprecatedString const& original_layer_name)
+{
+    constexpr StringView copy_string_view = " copy"sv;
+    auto copy_suffix_index = original_layer_name.find_last(copy_string_view);
+    if (!copy_suffix_index.has_value())
+        return DeprecatedString::formatted("{}{}", original_layer_name, copy_string_view);
+
+    auto after_copy_suffix_view = original_layer_name.substring_view(copy_suffix_index.value() + copy_string_view.length());
+    if (!after_copy_suffix_view.is_empty()) {
+        auto after_copy_suffix_number = after_copy_suffix_view.trim_whitespace().to_int();
+        if (!after_copy_suffix_number.has_value())
+            return DeprecatedString::formatted("{}{}", original_layer_name, copy_string_view);
+    }
+
+    auto layer_with_name_exists = [this](auto name) {
+        for (size_t i = 0; i < image().layer_count(); ++i) {
+            if (image().layer(i).name() == name)
+                return true;
+        }
+        return false;
+    };
+
+    auto base_layer_name = original_layer_name.substring_view(0, copy_suffix_index.value());
+    StringBuilder new_layer_name;
+    auto duplicate_name_count = 0;
+    do {
+        new_layer_name.clear();
+        new_layer_name.appendff("{}{} {}", base_layer_name, copy_string_view, ++duplicate_name_count);
+    } while (layer_with_name_exists(new_layer_name.string_view()));
+
+    return new_layer_name.to_deprecated_string();
+}
+
 }

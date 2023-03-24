@@ -200,17 +200,28 @@ ErrorOr<void> Image::export_qoi_to_file(NonnullOwnPtr<Stream> stream) const
     return {};
 }
 
-void Image::add_layer(NonnullRefPtr<Layer> layer)
+void Image::insert_layer(NonnullRefPtr<Layer> layer, size_t index)
 {
+    VERIFY(index <= m_layers.size());
+
     for (auto& existing_layer : m_layers) {
         VERIFY(existing_layer != layer);
     }
-    m_layers.append(move(layer));
+
+    if (index == m_layers.size())
+        m_layers.append(move(layer));
+    else
+        m_layers.insert(index, move(layer));
 
     for (auto* client : m_clients)
-        client->image_did_add_layer(m_layers.size() - 1);
+        client->image_did_add_layer(index);
 
     did_modify_layer_stack();
+}
+
+void Image::add_layer(NonnullRefPtr<Layer> layer)
+{
+    insert_layer(move(layer), m_layers.size());
 }
 
 ErrorOr<NonnullRefPtr<Image>> Image::take_snapshot() const
