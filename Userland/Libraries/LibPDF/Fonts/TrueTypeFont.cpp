@@ -17,6 +17,7 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
 {
     TRY(SimpleFont::initialize(document, dict, font_size));
 
+    // If there's an embedded font program we use that; otherwise we try to find a replacement font
     if (dict->contains(CommonNames::FontDescriptor)) {
         auto descriptor = MUST(dict->get_dict(document, CommonNames::FontDescriptor));
         if (descriptor->contains(CommonNames::FontFile2)) {
@@ -26,7 +27,11 @@ PDFErrorOr<void> TrueTypeFont::initialize(Document* document, NonnullRefPtr<Dict
             m_font = adopt_ref(*new Gfx::ScaledFont(*ttf_font, point_size, point_size));
         }
     }
+    if (!m_font) {
+        m_font = TRY(replacement_for(base_font_name().to_lowercase(), font_size));
+    }
 
+    VERIFY(m_font);
     return {};
 }
 
