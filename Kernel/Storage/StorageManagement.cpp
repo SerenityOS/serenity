@@ -54,6 +54,7 @@ static constexpr StringView block_device_prefix = "block"sv;
 static constexpr StringView ata_device_prefix = "ata"sv;
 static constexpr StringView nvme_device_prefix = "nvme"sv;
 static constexpr StringView logical_unit_number_device_prefix = "lun"sv;
+static constexpr StringView sd_device_prefix = "sd"sv;
 
 UNMAP_AFTER_INIT StorageManagement::StorageManagement()
 {
@@ -324,6 +325,13 @@ UNMAP_AFTER_INIT void StorageManagement::determine_nvme_boot_device()
     });
 }
 
+UNMAP_AFTER_INIT void StorageManagement::determine_sd_boot_device()
+{
+    determine_hardware_relative_boot_device(sd_device_prefix, [](StorageDevice const& device) -> bool {
+        return device.command_set() == StorageDevice::CommandSet::SD;
+    });
+}
+
 UNMAP_AFTER_INIT void StorageManagement::determine_block_boot_device()
 {
     VERIFY(m_boot_argument.starts_with(block_device_prefix));
@@ -385,6 +393,11 @@ UNMAP_AFTER_INIT void StorageManagement::determine_boot_device()
 
     if (m_boot_argument.starts_with(nvme_device_prefix)) {
         determine_nvme_boot_device();
+        return;
+    }
+
+    if (m_boot_argument.starts_with(sd_device_prefix)) {
+        determine_sd_boot_device();
         return;
     }
     PANIC("StorageManagement: Invalid root boot parameter.");
