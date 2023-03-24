@@ -11,7 +11,6 @@
 #include <AK/Assertions.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibFileSystem/FileSystem.h>
 
@@ -142,7 +141,11 @@ Optional<Interface&> Parser::resolve_import(auto path)
     if (!FileSystem::exists(include_path))
         report_parsing_error(DeprecatedString::formatted("{}: No such file or directory", include_path), filename, input, lexer.tell());
 
-    auto real_path = Core::DeprecatedFile::real_path_for(include_path);
+    auto real_path_error_or = FileSystem::real_path(include_path);
+    if (real_path_error_or.is_error())
+        report_parsing_error(DeprecatedString::formatted("Failed to resolve path {}: {}", include_path, real_path_error_or.error()), filename, input, lexer.tell());
+    auto real_path = real_path_error_or.release_value().to_deprecated_string();
+
     if (top_level_resolved_imports().contains(real_path))
         return *top_level_resolved_imports().find(real_path)->value;
 
@@ -925,7 +928,12 @@ void resolve_function_typedefs(Interface& interface, FunctionType& function)
 
 Interface& Parser::parse()
 {
-    auto this_module = Core::DeprecatedFile::real_path_for(filename);
+    auto this_module_or_error = FileSystem::real_path(filename);
+    if (this_module_or_error.is_error()) {
+        report_parsing_error(DeprecatedString::formatted("Failed to resolve path '{}': {}", filename, this_module_or_error.error()), filename, input, 0);
+        VERIFY_NOT_REACHED();
+    }
+    auto this_module = this_module_or_error.release_value().to_deprecated_string();
 
     auto interface_ptr = make<Interface>();
     auto& interface = *interface_ptr;

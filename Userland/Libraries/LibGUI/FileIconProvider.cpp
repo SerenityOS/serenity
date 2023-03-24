@@ -9,10 +9,11 @@
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/MappedFile.h>
 #include <LibCore/StandardPaths.h>
+#include <LibCore/System.h>
 #include <LibELF/Image.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Painter.h>
@@ -145,12 +146,12 @@ Icon FileIconProvider::filetype_image_icon()
     return s_filetype_image_icon;
 }
 
-Icon FileIconProvider::icon_for_path(DeprecatedString const& path)
+Icon FileIconProvider::icon_for_path(StringView path)
 {
-    struct stat stat;
-    if (::stat(path.characters(), &stat) < 0)
+    auto stat_or_error = Core::System::stat(path);
+    if (stat_or_error.is_error())
         return s_file_icon;
-    return icon_for_path(path, stat.st_mode);
+    return icon_for_path(path, stat_or_error.release_value().st_mode);
 }
 
 Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
@@ -238,7 +239,7 @@ Icon FileIconProvider::icon_for_executable(DeprecatedString const& path)
     return icon;
 }
 
-Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
+Icon FileIconProvider::icon_for_path(StringView path, mode_t mode)
 {
     initialize_if_needed();
     if (path == "/")
@@ -248,26 +249,27 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
             return s_home_directory_icon;
         if (path == Core::StandardPaths::desktop_directory())
             return s_desktop_directory_icon;
-        if (access(path.characters(), R_OK | X_OK) < 0)
+        if (Core::System::access(path, R_OK | X_OK).is_error())
             return s_inaccessible_directory_icon;
         if (path.ends_with(".git"sv))
             return s_git_directory_icon;
         return s_directory_icon;
     }
     if (S_ISLNK(mode)) {
-        auto raw_symlink_target_or_error = Core::DeprecatedFile::read_link(path);
+        auto raw_symlink_target_or_error = FileSystem::read_link(path);
         if (raw_symlink_target_or_error.is_error())
             return s_symlink_icon;
-
         auto raw_symlink_target = raw_symlink_target_or_error.release_value();
-        if (raw_symlink_target.is_null())
-            return s_symlink_icon;
 
-        DeprecatedString target_path;
+        String target_path;
         if (raw_symlink_target.starts_with('/')) {
             target_path = raw_symlink_target;
         } else {
-            target_path = Core::DeprecatedFile::real_path_for(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
+            auto error_or_path = FileSystem::real_path(DeprecatedString::formatted("{}/{}", LexicalPath::dirname(path), raw_symlink_target));
+            if (error_or_path.is_error())
+                return s_symlink_icon;
+
+            target_path = error_or_path.release_value();
         }
         auto target_icon = icon_for_path(target_path);
 
@@ -295,7 +297,7 @@ Icon FileIconProvider::icon_for_path(DeprecatedString const& path, mode_t mode)
     if (mode & (S_IXUSR | S_IXGRP | S_IXOTH))
         return icon_for_executable(path);
 
-    if (Gfx::Bitmap::is_path_a_supported_image_format(path.view()))
+    if (Gfx::Bitmap::is_path_a_supported_image_format(path))
         return s_filetype_image_icon;
 
     for (auto& filetype : s_filetype_icons.keys()) {
