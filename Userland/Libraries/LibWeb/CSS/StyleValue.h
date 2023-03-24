@@ -622,26 +622,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class UnsetStyleValue final : public StyleValueWithDefaultOperators<UnsetStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<UnsetStyleValue> the()
-    {
-        static ValueComparingNonnullRefPtr<UnsetStyleValue> instance = adopt_ref(*new UnsetStyleValue);
-        return instance;
-    }
-    virtual ~UnsetStyleValue() override = default;
-
-    ErrorOr<String> to_string() const override { return "unset"_string; }
-
-    bool properties_equal(UnsetStyleValue const&) const { return true; }
-
-private:
-    UnsetStyleValue()
-        : StyleValueWithDefaultOperators(Type::Unset)
-    {
-    }
-};
-
 class StyleValueList final : public StyleValueWithDefaultOperators<StyleValueList> {
 public:
     enum class Separator {
