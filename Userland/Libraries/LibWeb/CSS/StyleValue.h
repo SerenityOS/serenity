@@ -622,47 +622,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class TextDecorationStyleValue final : public StyleValueWithDefaultOperators<TextDecorationStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<TextDecorationStyleValue> create(
-        ValueComparingNonnullRefPtr<StyleValue> line,
-        ValueComparingNonnullRefPtr<StyleValue> thickness,
-        ValueComparingNonnullRefPtr<StyleValue> style,
-        ValueComparingNonnullRefPtr<StyleValue> color)
-    {
-        return adopt_ref(*new TextDecorationStyleValue(move(line), move(thickness), move(style), move(color)));
-    }
-    virtual ~TextDecorationStyleValue() override = default;
-
-    ValueComparingNonnullRefPtr<StyleValue> line() const { return m_properties.line; }
-    ValueComparingNonnullRefPtr<StyleValue> thickness() const { return m_properties.thickness; }
-    ValueComparingNonnullRefPtr<StyleValue> style() const { return m_properties.style; }
-    ValueComparingNonnullRefPtr<StyleValue> color() const { return m_properties.color; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(TextDecorationStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    TextDecorationStyleValue(
-        ValueComparingNonnullRefPtr<StyleValue> line,
-        ValueComparingNonnullRefPtr<StyleValue> thickness,
-        ValueComparingNonnullRefPtr<StyleValue> style,
-        ValueComparingNonnullRefPtr<StyleValue> color)
-        : StyleValueWithDefaultOperators(Type::TextDecoration)
-        , m_properties { .line = move(line), .thickness = move(thickness), .style = move(style), .color = move(color) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<StyleValue> line;
-        ValueComparingNonnullRefPtr<StyleValue> thickness;
-        ValueComparingNonnullRefPtr<StyleValue> style;
-        ValueComparingNonnullRefPtr<StyleValue> color;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class TimeStyleValue : public StyleValueWithDefaultOperators<TimeStyleValue> {
 public:
     static ValueComparingNonnullRefPtr<TimeStyleValue> create(Time time)
