@@ -428,7 +428,7 @@ ErrorOr<FlatPtr> Process::sys$socketpair(Userspace<Syscall::SC_socketpair_params
         setup_socket_fd(fds, allocated_fds[0], pair.description0, params.type);
         setup_socket_fd(fds, allocated_fds[1], pair.description1, params.type);
 
-        if (copy_to_user(params.sv, allocated_fds, sizeof(allocated_fds)).is_error()) {
+        if (copy_n_to_user(params.sv, allocated_fds, 2).is_error()) {
             // Avoid leaking both file descriptors on error.
             fds[allocated_fds[0]] = {};
             fds[allocated_fds[1]] = {};

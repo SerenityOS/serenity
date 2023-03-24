@@ -83,7 +83,7 @@ ErrorOr<FlatPtr> Process::sys$getgroups(size_t count, Userspace<GroupID*> user_g
         return credentials->extra_gids().size();
     if (count != credentials->extra_gids().size())
         return EINVAL;
-    TRY(copy_to_user(user_gids, credentials->extra_gids().data(), sizeof(GroupID) * count));
+    TRY(copy_n_to_user(user_gids, credentials->extra_gids().data(), count));
     return 0;
 }
 

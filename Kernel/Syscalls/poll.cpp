@@ -131,7 +131,7 @@ ErrorOr<FlatPtr> Process::sys$poll(Userspace<Syscall::SC_poll_params const*> use
     }
 
     if (params.nfds > 0)
-        TRY(copy_to_user(&params.fds[0], fds_copy.data(), params.nfds * sizeof(pollfd)));
+        TRY(copy_n_to_user(&params.fds[0], fds_copy.data(), params.nfds));
 
     return fds_with_revents;
 }

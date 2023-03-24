@@ -43,7 +43,8 @@ ErrorOr<FlatPtr> Process::sys$pipe(Userspace<int*> pipefd, int flags)
             reader_fd_allocation.fd,
             writer_fd_allocation.fd,
         };
-        if (copy_to_user(pipefd, fds_for_userspace, sizeof(fds_for_userspace)).is_error()) {
+        if (copy_n_to_user(pipefd, fds_for_userspace, 2).is_error()) {
+            // Avoid leaking both file descriptors on error.
             fds[reader_fd_allocation.fd] = {};
             fds[writer_fd_allocation.fd] = {};
             return EFAULT;
