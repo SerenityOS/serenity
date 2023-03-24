@@ -25,6 +25,7 @@
 #include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FontStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FrequencyStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -1033,20 +1034,6 @@ ErrorOr<String> GridTrackPlacementShorthandStyleValue::to_string() const
     if (m_properties.end->grid_track_placement().is_auto())
         return String::formatted("{}", TRY(m_properties.start->grid_track_placement().to_string()));
     return String::formatted("{} / {}", TRY(m_properties.start->grid_track_placement().to_string()), TRY(m_properties.end->grid_track_placement().to_string()));
-}
-
-ErrorOr<String> GridAreaShorthandStyleValue::to_string() const
-{
-    StringBuilder builder;
-    if (!m_properties.row_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff("{}", TRY(m_properties.row_start->as_grid_track_placement().grid_track_placement().to_string())));
-    if (!m_properties.column_start->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_properties.column_start->as_grid_track_placement().grid_track_placement().to_string())));
-    if (!m_properties.row_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_properties.row_end->as_grid_track_placement().grid_track_placement().to_string())));
-    if (!m_properties.column_end->as_grid_track_placement().grid_track_placement().is_auto())
-        TRY(builder.try_appendff(" / {}", TRY(m_properties.column_end->as_grid_track_placement().grid_track_placement().to_string())));
-    return builder.to_string();
 }
 
 ErrorOr<String> GridTrackPlacementStyleValue::to_string() const
