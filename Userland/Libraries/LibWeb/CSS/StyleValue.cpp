@@ -50,6 +50,7 @@
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/Loader/LoadRequest.h>
@@ -1149,22 +1150,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
 ErrorOr<String> RectStyleValue::to_string() const
 {
     return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
-}
-
-ErrorOr<String> UnresolvedStyleValue::to_string() const
-{
-    StringBuilder builder;
-    for (auto& value : m_values)
-        TRY(builder.try_append(TRY(value.to_string())));
-    return builder.to_string();
-}
-
-bool UnresolvedStyleValue::equals(StyleValue const& other) const
-{
-    if (type() != other.type())
-        return false;
-    // This is a case where comparing the strings actually makes sense.
-    return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
 bool StyleValueList::Properties::operator==(Properties const& other) const
