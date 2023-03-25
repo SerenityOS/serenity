@@ -11,6 +11,7 @@
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
+#include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
@@ -18,6 +19,7 @@
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/HTML/NavigationParams.h>
+#include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
@@ -171,8 +173,11 @@ static bool build_gemini_document(DOM::Document& document, ByteBuffer const& dat
 
 static bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
 {
-
-    XML::Parser parser(data, { .resolve_external_resource = resolve_xml_resource });
+    auto encoding = HTML::run_encoding_sniffing_algorithm(document, data);
+    auto decoder = TextCodec::decoder_for(encoding);
+    VERIFY(decoder.has_value());
+    auto source = decoder->to_utf8(data).release_value_but_fixme_should_propagate_errors();
+    XML::Parser parser(source, { .resolve_external_resource = resolve_xml_resource });
     XMLDocumentBuilder builder { document };
     auto result = parser.parse_with_listener(builder);
     return !result.is_error() && !builder.has_error();
