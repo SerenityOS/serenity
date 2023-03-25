@@ -156,13 +156,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto image_result = PixelPaint::Image::create_with_size(dialog->image_size());
                 if (image_result.is_error()) {
-                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image with size {}, error: {}", dialog->image_size(), image_result.error()));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create image with size {}, error: {}", dialog->image_size(), image_result.release_error())));
                     return;
                 }
                 auto image = image_result.release_value();
                 auto bg_layer_result = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
                 if (bg_layer_result.is_error()) {
-                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer with size {}, error: {}", image->size(), bg_layer_result.error()));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer with size {}, error: {}", image->size(), bg_layer_result.release_error())));
                     return;
                 }
                 auto bg_layer = bg_layer_result.release_value();
@@ -187,7 +187,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "&New Image from Clipboard", { Mod_Ctrl | Mod_Shift, Key_V }, g_icon_bag.new_clipboard, [&](auto&) {
             auto result = create_image_from_clipboard();
             if (result.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image from clipboard: {}", result.error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create image from clipboard: {}", result.release_error())));
             }
         });
 
@@ -229,7 +229,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
                 auto result = editor->image().export_bmp_to_file(response.value().release_stream(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
-                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to BMP failed: {}", result.error()));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Export to BMP failed: {}", result.release_error())));
             })));
 
     TRY(m_export_submenu->try_add_action(
@@ -244,7 +244,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 auto preserve_alpha_channel = GUI::MessageBox::show(&window, "Do you wish to preserve transparency?"sv, "Preserve transparency?"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
                 auto result = editor->image().export_png_to_file(response.value().release_stream(), preserve_alpha_channel == GUI::MessageBox::ExecResult::Yes);
                 if (result.is_error())
-                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to PNG failed: {}", result.error()));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Export to PNG failed: {}", result.release_error())));
             })));
 
     TRY(m_export_submenu->try_add_action(
@@ -257,7 +257,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                     return;
                 auto result = editor->image().export_qoi_to_file(response.value().release_stream());
                 if (result.is_error())
-                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Export to QOI failed: {}", result.error()));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Export to QOI failed: {}", result.release_error())));
             })));
 
     m_export_submenu->set_icon(g_icon_bag.file_export);
@@ -343,7 +343,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         if (!editor) {
             auto result = create_image_from_clipboard();
             if (result.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create image from clipboard: {}", result.error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create image from clipboard: {}", result.release_error())));
             }
             return;
         }
@@ -355,7 +355,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
         auto layer_result = PixelPaint::Layer::create_with_bitmap(editor->image(), *bitmap, "Pasted layer");
         if (layer_result.is_error()) {
-            GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Could not create bitmap when pasting: {}", layer_result.error()));
+            GUI::MessageBox::show_error(&window, MUST(String::formatted("Could not create bitmap when pasting: {}", layer_result.release_error())));
             return;
         }
         auto layer = layer_result.release_value();
@@ -456,7 +456,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
             auto result = PixelPaint::PaletteWidget::load_palette_file(response.release_value().release_stream());
             if (result.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Loading color palette failed: {}", result.error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Loading color palette failed: {}", result.release_error())));
                 return;
             }
 
@@ -470,7 +470,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
             auto result = PixelPaint::PaletteWidget::save_palette_file(m_palette_widget->colors(), response.release_value().release_stream());
             if (result.is_error())
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Writing color palette failed: {}", result.error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Writing color palette failed: {}", result.release_error())));
         })));
 
     m_view_menu = TRY(window.try_add_menu("&View"));
@@ -714,7 +714,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
                 auto layer_or_error = PixelPaint::Layer::create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
                 if (layer_or_error.is_error()) {
-                    GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Unable to create layer with size {}", dialog->size()));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Unable to create layer with size {}", dialog->size())));
                     return;
                 }
                 editor->image().add_layer(layer_or_error.release_value());
@@ -794,7 +794,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         "Add M&ask", { Mod_Ctrl | Mod_Shift, Key_M }, g_icon_bag.add_mask, create_layer_mask_callback("Add Mask", [&](Layer* active_layer) {
             VERIFY(!active_layer->is_masked());
             if (auto maybe_error = active_layer->create_mask(); maybe_error.is_error())
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to create layer mask: {}", maybe_error.release_error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer mask: {}", maybe_error.release_error())));
         }));
     TRY(m_layer_menu->try_add_action(*m_add_mask_action));
 
@@ -888,7 +888,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             } else {
                 auto layer_result = PixelPaint::Layer::create_with_size(editor->image(), editor->image().size(), "Background");
                 if (layer_result.is_error()) {
-                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer with size {}, error: {}", editor->image().size(), layer_result.error())));
+                    GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to create layer with size {}, error: {}", editor->image().size(), layer_result.release_error())));
                     return;
                 }
                 auto layer = layer_result.release_value();
@@ -907,7 +907,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             if (auto maybe_error = editor->image().flatten_all_layers(); maybe_error.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to flatten all layers: {}", maybe_error.release_error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to flatten all layers: {}", maybe_error.release_error())));
                 return;
             }
             editor->did_complete_action("Flatten Image"sv);
@@ -918,7 +918,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             auto* editor = current_image_editor();
             VERIFY(editor);
             if (auto maybe_error = editor->image().merge_visible_layers(); maybe_error.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge visible layers: {}", maybe_error.release_error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to merge visible layers: {}", maybe_error.release_error())));
                 return;
             }
             editor->did_complete_action("Merge Visible"sv);
@@ -933,7 +933,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
 
             if (auto maybe_error = editor->image().merge_active_layer_up(*active_layer); maybe_error.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge active layer up: {}", maybe_error.release_error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to merge active layer up: {}", maybe_error.release_error())));
                 return;
             }
             editor->did_complete_action("Merge Active Layer Up"sv);
@@ -948,7 +948,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 return;
 
             if (auto maybe_error = editor->image().merge_active_layer_down(*active_layer); maybe_error.is_error()) {
-                GUI::MessageBox::show_error(&window, DeprecatedString::formatted("Failed to merge active layer down: {}", maybe_error.release_error()));
+                GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to merge active layer down: {}", maybe_error.release_error())));
                 return;
             }
             editor->did_complete_action("Merge Active Layer Down"sv);
@@ -1194,7 +1194,7 @@ void MainWidget::open_image(FileSystemAccessClient::File file)
 {
     auto try_load = m_loader.load_from_file(file.release_stream());
     if (try_load.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Unable to open file: {}, {}", file.filename(), try_load.error()));
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Unable to open file: {}, {}", file.filename(), try_load.release_error())));
         return;
     }
 

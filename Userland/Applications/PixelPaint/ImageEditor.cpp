@@ -753,7 +753,7 @@ void ImageEditor::save_project()
         return;
     auto result = save_project_to_file(response.value().release_stream());
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", path(), result.error()));
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Could not save {}: {}", path(), result.release_error())));
         return;
     }
     set_unmodified();
@@ -767,7 +767,7 @@ void ImageEditor::save_project_as()
     auto file = response.release_value();
     auto result = save_project_to_file(file.release_stream());
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Could not save {}: {}", file.filename(), result.error()));
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Could not save {}: {}", file.filename(), result.release_error())));
         return;
     }
     set_path(file.filename().to_deprecated_string());
