@@ -130,7 +130,7 @@ PaletteWidget::PaletteWidget()
 
     auto result = load_palette_path("/res/color-palettes/default.palette");
     if (result.is_error()) {
-        GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Loading default palette failed: {}", result.error()));
+        GUI::MessageBox::show_error(window(), MUST(String::formatted("Loading default palette failed: {}", result.release_error())));
         display_color_list(fallback_colors());
 
         return;
