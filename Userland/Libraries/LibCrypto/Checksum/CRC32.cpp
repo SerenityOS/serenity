@@ -11,6 +11,22 @@
 
 namespace Crypto::Checksum {
 
+#if defined(__aarch64__) && defined(__ARM_FEATURE_CRC32)
+
+void CRC32::update(ReadonlyBytes data)
+{
+    // FIXME: Does this require runtime checking on rpi?
+    //        (Maybe the instruction is present on the rpi4 but not on the rpi3?)
+
+    // FIXME: Use __builtin_arm_crc32d() for aligned middle part.
+    for (size_t i = 0; i < data.size(); i++)
+        m_state = __builtin_arm_crc32b(m_state, data.at(i));
+};
+
+    // FIXME: On Intel, use _mm_crc32_u8 / _mm_crc32_u64 if available (SSE 4.2).
+
+#else
+
 static constexpr auto generate_table()
 {
     Array<u32, 256> data {};
@@ -38,6 +54,8 @@ void CRC32::update(ReadonlyBytes data)
         m_state = table[(m_state ^ data.at(i)) & 0xFF] ^ (m_state >> 8);
     }
 };
+
+#endif
 
 u32 CRC32::digest()
 {
