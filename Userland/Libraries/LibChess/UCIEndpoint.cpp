@@ -9,10 +9,11 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <LibCore/EventLoop.h>
+#include <AK/Stream.h>
 
 namespace Chess::UCI {
 
-Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
+Endpoint::Endpoint(NonnullRefPtr<AK::Stream> in, NonnullRefPtr<AK::Stream> out)
     : m_in(in)
     , m_out(out)
     , m_in_notifier(Core::Notifier::construct(in->fd(), Core::Notifier::Read))

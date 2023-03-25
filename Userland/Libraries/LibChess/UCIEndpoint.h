@@ -10,6 +10,7 @@
 #include <LibCore/IODevice.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
+#include <AK/Stream.h>
 
 namespace Chess::UCI {
 
@@ -35,26 +36,26 @@ public:
 
     virtual void event(Core::Event&) override;
 
-    Core::IODevice& in() { return *m_in; }
-    Core::IODevice& out() { return *m_out; }
+    AK::Stream& in() { return *m_in; }
+    AK::Stream& out() { return *m_out; }
 
-    void set_in(RefPtr<Core::IODevice> in)
+    void set_in(RefPtr<AK::Stream> in)
     {
         m_in = in;
         set_in_notifier();
     }
-    void set_out(RefPtr<Core::IODevice> out) { m_out = out; }
+    void set_out(RefPtr<AK::Stream> out) { m_out = out; }
 
 protected:
     Endpoint() = default;
-    Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
+    Endpoint(NonnullRefPtr<AK::Stream> in, NonnullRefPtr<AK::Stream> out);
 
 private:
     void set_in_notifier();
     NonnullOwnPtr<Command> read_command();
 
-    RefPtr<Core::IODevice> m_in;
-    RefPtr<Core::IODevice> m_out;
+    RefPtr<AK::Stream> m_in;
+    RefPtr<AK::Stream> m_out;
     RefPtr<Core::Notifier> m_in_notifier;
 };
 
