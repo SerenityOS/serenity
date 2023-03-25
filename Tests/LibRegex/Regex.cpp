@@ -624,6 +624,8 @@ TEST_CASE(ECMA262_parse)
 
 TEST_CASE(ECMA262_match)
 {
+    constexpr auto global_multiline = ECMAScriptFlags::Global | ECMAScriptFlags::Multiline;
+
     struct _test {
         StringView pattern;
         StringView subject;
@@ -698,6 +700,9 @@ TEST_CASE(ECMA262_match)
         { "^[a-sy-z]$"sv, "y"sv, true, ECMAScriptFlags::Insensitive },
         { "^[a-sy-z]$"sv, "u"sv, false, ECMAScriptFlags::Insensitive },
         { "."sv, "\n\r\u2028\u2029"sv, false }, // Dot should not match any of CR/LF/LS/PS in ECMA262 mode without DotAll.
+        { "a$"sv, "a\r\n"sv, true, global_multiline.value() }, // $ should accept all LineTerminators in ECMA262 mode with Multiline.
+        { "^a"sv, "\ra"sv, true, global_multiline.value() },
+        { "^(.*?):[ \\t]*([^\\r\\n]*)$"sv, "content-length: 488\r\ncontent-type: application/json; charset=utf-8\r\n"sv, true, global_multiline.value() },
     };
     // clang-format on
 

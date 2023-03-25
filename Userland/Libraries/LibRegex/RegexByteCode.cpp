@@ -11,6 +11,11 @@
 #include <AK/StringBuilder.h>
 #include <LibUnicode/CharacterTypes.h>
 
+// U+2028 LINE SEPARATOR
+constexpr static u32 const LineSeparator { 0x2028 };
+// U+2029 PARAGRAPH SEPARATOR
+constexpr static u32 const ParagraphSeparator { 0x2029 };
+
 namespace regex {
 
 StringView OpCode::name(OpCodeId opcode_id)
@@ -277,7 +282,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckBegin::execute(MatchInput const& input
 
         if (input.regex_options.has_flag_set(AllFlags::Multiline) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline)) {
             auto input_view = input.view.substring_view(state.string_position - 1, 1)[0];
-            return input_view == '\n';
+            return input_view == '\r' || input_view == '\n' || input_view == LineSeparator || input_view == ParagraphSeparator;
         }
 
         return false;
@@ -330,7 +335,7 @@ ALWAYS_INLINE ExecutionResult OpCode_CheckEnd::execute(MatchInput const& input, 
 
         if (input.regex_options.has_flag_set(AllFlags::Multiline) && input.regex_options.has_flag_set(AllFlags::Internal_ConsiderNewline)) {
             auto input_view = input.view.substring_view(state.string_position, 1)[0];
-            return input_view == '\n';
+            return input_view == '\r' || input_view == '\n' || input_view == LineSeparator || input_view == ParagraphSeparator;
         }
 
         return false;
@@ -498,11 +503,6 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(MatchInput const& input, M
             // We want to compare a string that is definitely longer than the available string
             if (input.view.length() <= state.string_position)
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
-
-            // U+2028 LINE SEPARATOR
-            constexpr static u32 const LineSeparator { 0x2028 };
-            // U+2029 PARAGRAPH SEPARATOR
-            constexpr static u32 const ParagraphSeparator { 0x2029 };
 
             auto input_view = input.view.substring_view(state.string_position, 1)[0];
             auto is_equivalent_to_newline = input_view == '\n'
