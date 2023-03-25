@@ -244,7 +244,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view->on_load_finish = [&](auto const&) {
             auto layout_tree = view->dump_layout_tree().release_value_but_fixme_should_propagate_errors();
 
-            outln("{}", layout_tree);
+            out("{}", layout_tree);
             fflush(stdout);
 
             event_loop.quit(0);
