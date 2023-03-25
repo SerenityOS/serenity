@@ -92,6 +92,7 @@ set(SOURCES
     CSS/StyleValues/OverflowStyleValue.cpp
     CSS/StyleValues/PositionStyleValue.cpp
     CSS/StyleValues/RadialGradientStyleValue.cpp
+    CSS/StyleValues/RectStyleValue.cpp
     CSS/StyleValues/ShadowStyleValue.cpp
     CSS/StyleValues/TextDecorationStyleValue.cpp
     CSS/StyleValues/TransformationStyleValue.cpp
