@@ -660,9 +660,12 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     auto height_of_containing_block = available_space.height.to_px();
     auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
-    auto solve_for = [&](CSS::Length length) {
-        return CSS::Length::make_px(
-            height_of_containing_block
+    enum class ClampToZero {
+        No,
+        Yes,
+    };
+    auto solve_for = [&](CSS::Length length, ClampToZero clamp_to_zero = ClampToZero::No) {
+        auto unclamped_value = height_of_containing_block
             - top.resolved(box, height_of_containing_block_as_length).to_px(box)
             - margin_top.resolved(box, width_of_containing_block_as_length).to_px(box)
             - box.computed_values().border_top().width
@@ -672,7 +675,10 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
             - box.computed_values().border_bottom().width
             - margin_bottom.resolved(box, width_of_containing_block_as_length).to_px(box)
             - bottom.resolved(box, height_of_containing_block_as_length).to_px(box)
-            + length.to_px(box));
+            + length.to_px(box);
+        if (clamp_to_zero == ClampToZero::Yes)
+            return CSS::Length::make_px(max(CSSPixels(0), unclamped_value));
+        return CSS::Length::make_px(unclamped_value);
     };
 
     auto solve_for_top = [&] {
@@ -684,7 +690,7 @@ void FormattingContext::compute_height_for_absolutely_positioned_non_replaced_el
     };
 
     auto solve_for_height = [&] {
-        height = CSS::Size::make_length(solve_for(height.resolved(box, height_of_containing_block_as_length)));
+        height = CSS::Size::make_length(solve_for(height.resolved(box, height_of_containing_block_as_length), ClampToZero::Yes));
     };
 
     auto solve_for_margin_top = [&] {
