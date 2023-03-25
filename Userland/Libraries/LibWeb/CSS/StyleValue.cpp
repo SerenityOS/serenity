@@ -44,6 +44,7 @@
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
+#include <LibWeb/CSS/StyleValues/RectStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
@@ -1148,11 +1149,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
     return {};
 }
 
-ErrorOr<String> RectStyleValue::to_string() const
-{
-    return String::formatted("rect({} {} {} {})", m_rect.top_edge, m_rect.right_edge, m_rect.bottom_edge, m_rect.left_edge);
-}
-
 bool StyleValueList::Properties::operator==(Properties const& other) const
 {
     return separator == other.separator && values.span() == other.values.span();
@@ -1179,12 +1175,6 @@ ErrorOr<String> StyleValueList::to_string() const
             TRY(builder.try_append(separator));
     }
     return builder.to_string();
-}
-
-
-ValueComparingNonnullRefPtr<RectStyleValue> RectStyleValue::create(EdgeRect rect)
-{
-    return adopt_ref(*new RectStyleValue(rect));
 }
 
 Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height)
