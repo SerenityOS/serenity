@@ -326,12 +326,22 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
 
 void LayoutState::UsedValues::set_content_width(CSSPixels width)
 {
+    if (width < 0) {
+        // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
+        dbgln("FIXME: Layout calculated a negative width for {}: {}", m_node->debug_description(), width);
+        width = 0;
+    }
     m_content_width = width;
     m_has_definite_width = true;
 }
 
 void LayoutState::UsedValues::set_content_height(CSSPixels height)
 {
+    if (height < 0) {
+        // Negative heights are not allowed in CSS. We have a bug somewhere! Clamp to 0 to avoid doing too much damage.
+        dbgln("FIXME: Layout calculated a negative height for {}: {}", m_node->debug_description(), height);
+        height = 0;
+    }
     m_content_height = height;
     m_has_definite_height = true;
 }
