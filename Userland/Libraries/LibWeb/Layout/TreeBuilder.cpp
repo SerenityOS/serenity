@@ -89,12 +89,22 @@ static Layout::Node& insertion_parent_for_block_node(Layout::NodeWithStyle& layo
         return layout_parent;
     }
 
+    bool is_out_of_flow = layout_node.is_absolutely_positioned() || layout_node.is_floating();
+
+    if (is_out_of_flow
+        && layout_parent.last_child()->is_anonymous()
+        && layout_parent.last_child()->children_are_inline()) {
+        // Block is out-of-flow & previous sibling was wrapped in an anonymous block.
+        // Join the previous sibling inside the anonymous block.
+        return *layout_parent.last_child();
+    }
+
     if (!layout_parent.children_are_inline()) {
         // Parent block has block-level children, insert this block into parent.
         return layout_parent;
     }
 
-    if (layout_node.is_absolutely_positioned() || layout_node.is_floating()) {
+    if (is_out_of_flow) {
         // Block is out-of-flow, it can have inline siblings if necessary.
         return layout_parent;
     }
