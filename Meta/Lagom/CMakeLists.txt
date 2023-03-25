@@ -502,6 +502,12 @@ if (BUILD_LAGOM)
         add_executable(gml-format ../../Userland/Utilities/gml-format.cpp)
         target_link_libraries(gml-format LibCore LibGUI LibMain)
 
+        add_executable(gunzip ../../Userland/Utilities/gunzip.cpp)
+        target_link_libraries(gunzip LibCompress LibCore LibMain)
+
+        add_executable(gzip ../../Userland/Utilities/gzip.cpp)
+        target_link_libraries(gzip LibCompress LibCore LibMain)
+
         if (ENABLE_LAGOM_LADYBIRD)
             add_serenity_subdirectory(Ladybird)
         endif()
