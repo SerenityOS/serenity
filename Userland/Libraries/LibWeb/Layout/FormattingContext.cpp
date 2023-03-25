@@ -515,7 +515,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_non_replaced_ele
         };
 
         auto solve_for_width = [&] {
-            return CSS::Length::make_px(width_of_containing_block - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left - padding_right - border_right - margin_right.to_px(box) - right.to_px(box));
+            return CSS::Length::make_px(max(CSSPixels(0), width_of_containing_block - left.to_px(box) - margin_left.to_px(box) - border_left - padding_left - padding_right - border_right - margin_right.to_px(box) - right.to_px(box)));
         };
 
         auto solve_for_right = [&] {
