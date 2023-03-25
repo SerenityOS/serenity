@@ -368,9 +368,6 @@ if ("${SERENITY_ARCH}" STREQUAL "x86_64")
 
         Arch/x86_64/CurrentTime.cpp
 
-        Arch/x86_64/Hypervisor/BochsDisplayConnector.cpp
-        Arch/x86_64/Hypervisor/VMWareBackdoor.cpp
-
         Arch/x86_64/I8042Reboot.cpp
         Arch/x86_64/Interrupts/APIC.cpp
         Arch/x86_64/Interrupts/IOAPIC.cpp
