@@ -622,41 +622,6 @@ private:
     NonnullOwnPtr<CalcSum> m_expression;
 };
 
-class StyleValueList final : public StyleValueWithDefaultOperators<StyleValueList> {
-public:
-    enum class Separator {
-        Space,
-        Comma,
-    };
-    static ValueComparingNonnullRefPtr<StyleValueList> create(StyleValueVector&& values, Separator separator) { return adopt_ref(*new StyleValueList(move(values), separator)); }
-
-    size_t size() const { return m_properties.values.size(); }
-    StyleValueVector const& values() const { return m_properties.values; }
-    ValueComparingNonnullRefPtr<StyleValue const> value_at(size_t i, bool allow_loop) const
-    {
-        if (allow_loop)
-            return m_properties.values[i % size()];
-        return m_properties.values[i];
-    }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(StyleValueList const& other) const { return m_properties == other.m_properties; }
-
-private:
-    StyleValueList(StyleValueVector&& values, Separator separator)
-        : StyleValueWithDefaultOperators(Type::ValueList)
-        , m_properties { .separator = separator, .values = move(values) }
-    {
-    }
-
-    struct Properties {
-        Separator separator;
-        StyleValueVector values;
-        bool operator==(Properties const&) const;
-    } m_properties;
-};
-
 }
 
 template<>

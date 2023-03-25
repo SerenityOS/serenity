@@ -94,6 +94,7 @@ set(SOURCES
     CSS/StyleValues/RadialGradientStyleValue.cpp
     CSS/StyleValues/RectStyleValue.cpp
     CSS/StyleValues/ShadowStyleValue.cpp
+    CSS/StyleValues/StyleValueList.cpp
     CSS/StyleValues/TextDecorationStyleValue.cpp
     CSS/StyleValues/TransformationStyleValue.cpp
     CSS/StyleValues/UnresolvedStyleValue.cpp
