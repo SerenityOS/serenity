@@ -15,6 +15,7 @@
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -300,11 +301,6 @@ ErrorOr<String> BorderRadiusStyleValue::to_string() const
     if (m_properties.horizontal_radius == m_properties.vertical_radius)
         return m_properties.horizontal_radius.to_string();
     return String::formatted("{} / {}", TRY(m_properties.horizontal_radius.to_string()), TRY(m_properties.vertical_radius.to_string()));
-}
-
-ErrorOr<String> BorderRadiusShorthandStyleValue::to_string() const
-{
-    return String::formatted("{} {} {} {} / {} {} {} {}", TRY(m_properties.top_left->horizontal_radius().to_string()), TRY(m_properties.top_right->horizontal_radius().to_string()), TRY(m_properties.bottom_right->horizontal_radius().to_string()), TRY(m_properties.bottom_left->horizontal_radius().to_string()), TRY(m_properties.top_left->vertical_radius().to_string()), TRY(m_properties.top_right->vertical_radius().to_string()), TRY(m_properties.bottom_right->vertical_radius().to_string()), TRY(m_properties.bottom_left->vertical_radius().to_string()));
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)

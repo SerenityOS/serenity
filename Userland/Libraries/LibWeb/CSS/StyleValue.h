@@ -535,47 +535,6 @@ private:
     } m_properties;
 };
 
-class BorderRadiusShorthandStyleValue final : public StyleValueWithDefaultOperators<BorderRadiusShorthandStyleValue> {
-public:
-    static ValueComparingNonnullRefPtr<BorderRadiusShorthandStyleValue> create(
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> top_left,
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> top_right,
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> bottom_right,
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> bottom_left)
-    {
-        return adopt_ref(*new BorderRadiusShorthandStyleValue(move(top_left), move(top_right), move(bottom_right), move(bottom_left)));
-    }
-    virtual ~BorderRadiusShorthandStyleValue() override = default;
-
-    auto top_left() const { return m_properties.top_left; }
-    auto top_right() const { return m_properties.top_right; }
-    auto bottom_right() const { return m_properties.bottom_right; }
-    auto bottom_left() const { return m_properties.bottom_left; }
-
-    virtual ErrorOr<String> to_string() const override;
-
-    bool properties_equal(BorderRadiusShorthandStyleValue const& other) const { return m_properties == other.m_properties; }
-
-private:
-    BorderRadiusShorthandStyleValue(
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> top_left,
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> top_right,
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> bottom_right,
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> bottom_left)
-        : StyleValueWithDefaultOperators(Type::BorderRadiusShorthand)
-        , m_properties { .top_left = move(top_left), .top_right = move(top_right), .bottom_right = move(bottom_right), .bottom_left = move(bottom_left) }
-    {
-    }
-
-    struct Properties {
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> top_left;
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> top_right;
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> bottom_right;
-        ValueComparingNonnullRefPtr<BorderRadiusStyleValue const> bottom_left;
-        bool operator==(Properties const&) const = default;
-    } m_properties;
-};
-
 class CalculatedStyleValue : public StyleValue {
 public:
     enum class ResolvedType {
