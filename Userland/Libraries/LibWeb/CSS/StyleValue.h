@@ -11,7 +11,6 @@
 
 #include <AK/Concepts.h>
 #include <AK/DeprecatedString.h>
-#include <AK/Function.h>
 #include <AK/GenericShorthands.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>
@@ -22,27 +21,17 @@
 #include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/Color.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/CSS/Angle.h>
-#include <LibWeb/CSS/Display.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Frequency.h>
-#include <LibWeb/CSS/GridTrackPlacement.h>
-#include <LibWeb/CSS/GridTrackSize.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Number.h>
-#include <LibWeb/CSS/Parser/ComponentValue.h>
 #include <LibWeb/CSS/Percentage.h>
-#include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/Resolution.h>
 #include <LibWeb/CSS/Time.h>
-#include <LibWeb/CSS/TransformFunctions.h>
 #include <LibWeb/CSS/ValueID.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Loader/ImageResource.h>
-#include <LibWeb/Painting/GradientPainting.h>
 
 namespace Web::CSS {
 

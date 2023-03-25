@@ -10,6 +10,7 @@
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/HTML/Scripting/Script.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web::HTML {
 

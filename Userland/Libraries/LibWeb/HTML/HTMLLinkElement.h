@@ -14,6 +14,7 @@
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <LibWeb/Loader/Resource.h>
 
 namespace Web::HTML {
 
