@@ -28,7 +28,7 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize suggested_size, GUI::Win
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_name_textbox = main_widget->add<GUI::TextBox>();
-    m_name_textbox->set_text("Layer"sv);
+    m_name_textbox->set_text(default_layer_name);
     m_name_textbox->select_all();
     m_name_textbox->on_change = [this] {
         m_layer_name = m_name_textbox->text();
