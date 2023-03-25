@@ -48,6 +48,7 @@
 #include <LibWeb/CSS/StyleValues/ResolutionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StringStyleValue.h>
+#include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
@@ -1147,34 +1148,6 @@ ErrorOr<void> PositionValue::serialize(StringBuilder& builder) const
             return builder.try_append(TRY(length_percentage.to_string()));
         }));
     return {};
-}
-
-bool StyleValueList::Properties::operator==(Properties const& other) const
-{
-    return separator == other.separator && values.span() == other.values.span();
-}
-
-ErrorOr<String> StyleValueList::to_string() const
-{
-    auto separator = ""sv;
-    switch (m_properties.separator) {
-    case Separator::Space:
-        separator = " "sv;
-        break;
-    case Separator::Comma:
-        separator = ", "sv;
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-    StringBuilder builder;
-    for (size_t i = 0; i < m_properties.values.size(); ++i) {
-        TRY(builder.try_append(TRY(m_properties.values[i]->to_string())));
-        if (i != m_properties.values.size() - 1)
-            TRY(builder.try_append(separator));
-    }
-    return builder.to_string();
 }
 
 Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height)

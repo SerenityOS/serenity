@@ -8,6 +8,7 @@
  */
 
 #include "BackgroundStyleValue.h"
+#include <LibWeb/CSS/StyleValues/StyleValueList.h>
 
 namespace Web::CSS {
 
