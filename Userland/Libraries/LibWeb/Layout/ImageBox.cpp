@@ -63,8 +63,6 @@ void ImageBox::prepare_for_replaced_layout()
         auto& image_element = verify_cast<HTML::HTMLImageElement>(dom_node());
         auto& font = Platform::FontPlugin::the().default_font();
         auto alt = image_element.alt();
-        if (alt.is_empty())
-            alt = image_element.src();
 
         CSSPixels alt_text_width = 0;
         if (!m_cached_alt_text_width.has_value())
