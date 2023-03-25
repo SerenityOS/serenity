@@ -9,11 +9,15 @@
 #include <AK/Optional.h>
 #include <LibWeb/CSS/BackdropFilter.h>
 #include <LibWeb/CSS/Clip.h>
+#include <LibWeb/CSS/Display.h>
+#include <LibWeb/CSS/GridTrackPlacement.h>
+#include <LibWeb/CSS/GridTrackSize.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/Size.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ShadowStyleValue.h>
+#include <LibWeb/CSS/TransformFunctions.h>
 
 namespace Web::CSS {
 

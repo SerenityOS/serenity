@@ -12,6 +12,7 @@
 #include <AK/URL.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web::CSS {
 

@@ -9,6 +9,7 @@
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/CSS/ComputedValues.h>
+#include <LibWeb/Painting/PaintContext.h>
 
 namespace Web::Painting {
 

@@ -11,6 +11,7 @@
 
 #include <AK/Vector.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/Painting/GradientPainting.h>
 
 namespace Web::CSS {
 
