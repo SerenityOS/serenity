@@ -69,6 +69,7 @@ set(SOURCES
     CSS/StyleValues/BackgroundSizeStyleValue.cpp
     CSS/StyleValues/BackgroundStyleValue.cpp
     CSS/StyleValues/BorderRadiusShorthandStyleValue.cpp
+    CSS/StyleValues/BorderRadiusStyleValue.cpp
     CSS/StyleValues/BorderStyleValue.cpp
     CSS/Supports.cpp
     CSS/SyntaxHighlighter/SyntaxHighlighter.cpp

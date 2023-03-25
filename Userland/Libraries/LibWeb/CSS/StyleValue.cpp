@@ -16,6 +16,7 @@
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -294,13 +295,6 @@ StyleValueList const& StyleValue::as_value_list() const
 {
     VERIFY(is_value_list());
     return static_cast<StyleValueList const&>(*this);
-}
-
-ErrorOr<String> BorderRadiusStyleValue::to_string() const
-{
-    if (m_properties.horizontal_radius == m_properties.vertical_radius)
-        return m_properties.horizontal_radius.to_string();
-    return String::formatted("{} / {}", TRY(m_properties.horizontal_radius.to_string()), TRY(m_properties.vertical_radius.to_string()));
 }
 
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
@@ -2158,7 +2152,7 @@ ValueComparingNonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length co
     return adopt_ref(*new LengthStyleValue(length));
 }
 
-static Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height)
+Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height)
 {
     if (length.is_px())
         return {};
@@ -2188,19 +2182,6 @@ ValueComparingNonnullRefPtr<StyleValue const> ShadowStyleValue::absolutized(CSSP
     auto absolutized_blur_radius = absolutized_length(m_properties.blur_radius, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.blur_radius);
     auto absolutized_spread_distance = absolutized_length(m_properties.spread_distance, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.spread_distance);
     return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
-}
-
-ValueComparingNonnullRefPtr<StyleValue const> BorderRadiusStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
-{
-    if (m_properties.horizontal_radius.is_percentage() && m_properties.vertical_radius.is_percentage())
-        return *this;
-    auto absolutized_horizontal_radius = m_properties.horizontal_radius;
-    auto absolutized_vertical_radius = m_properties.vertical_radius;
-    if (!m_properties.horizontal_radius.is_percentage())
-        absolutized_horizontal_radius = absolutized_length(m_properties.horizontal_radius.length(), viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.horizontal_radius.length());
-    if (!m_properties.vertical_radius.is_percentage())
-        absolutized_vertical_radius = absolutized_length(m_properties.vertical_radius.length(), viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.vertical_radius.length());
-    return BorderRadiusStyleValue::create(absolutized_horizontal_radius, absolutized_vertical_radius);
 }
 
 bool CalculatedStyleValue::contains_percentage() const
