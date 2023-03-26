@@ -40,6 +40,7 @@ public:
     void zoom_in();
     void zoom_out();
     void reset_zoom();
+    float zoom_level() const { return m_zoom_level; }
 
     void set_preferred_color_scheme(Web::CSS::PreferredColorScheme);
 
