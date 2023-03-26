@@ -34,7 +34,7 @@ nix-shell ladybird.nix
 
 On macOS:
 
-Note that XCode 13.x does not have sufficient C++20 support to build ladybird. XCode 14.x or clang from homebrew may be required to successfully build ladybird.
+Note that Xcode 13.x does not have sufficient C++20 support to build ladybird. Xcode 14.x or clang from homebrew may be required to successfully build ladybird.
 
 ```
 xcode-select --install
@@ -118,6 +118,30 @@ To run without ninja rule:
 export SERENITY_SOURCE_DIR=$(realpath ../)
 ./Build/ladybird/ladybird # or, in macOS: open ./Build/ladybird/ladybird.app
 ```
+
+### Debugging with Xcode on macOS
+
+The `serenity.sh` build script does not know how to generate Xcode projects, so creating the project must be done manually.
+To be compatible with the script, a few extra options are required. If there is a previous Lagom build directory, CMake will likely complain that the generator has changed.
+
+```
+cmake -GXcode -S Meta/Lagom -B Build/lagom -DBUILD_LAGOM=ON -DENABLE_LAGOM_LADBIRD=ON
+```
+
+Alternatively, if you don't need your ladybird build to be compatible with `serenity.sh`, you can use Ladybird as the source directory like so:
+
+```
+cmake -GXcode -S Ladybird -B Build/ladybird
+```
+
+After generating an Xcode project into the specified build directory, you can open `ladbyird.xcodeproj` in Xcode. The project has a ton of targets, many of which are generated code.
+The only target that needs a scheme is the ladybird app bundle.
+
+In order for the application to launch properly through Xcode, the `SERENITY_SOURCE_DIR` environment variable must be set to your serenity checkout in the ladybird scheme, per the
+screenshot below. The same is true for profiling the application in Instruments. Future updates might fill out the application bundle such that the environment variable is not required.
+
+![Modify Scheme...](Xcode_ladybird_Scheme.png)
+
 
 ### Building on OpenIndiana
 
