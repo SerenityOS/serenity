@@ -389,8 +389,12 @@ void BrowsingContext::set_needs_display(CSSPixelRect const& rect)
 
 void BrowsingContext::scroll_to(CSSPixelPoint position)
 {
-    if (active_document())
-        active_document()->force_layout();
+    // NOTE: Scrolling to a position requires up-to-date layout *unless* we're scrolling to (0, 0)
+    //       as (0, 0) is always guaranteed to be a valid scroll position.
+    if (!position.is_zero()) {
+        if (active_document())
+            active_document()->update_layout();
+    }
 
     if (m_page)
         m_page->client().page_did_request_scroll_to(position);
@@ -416,7 +420,7 @@ void BrowsingContext::scroll_to_anchor(DeprecatedString const& fragment)
     if (!element)
         return;
 
-    document->force_layout();
+    document->update_layout();
 
     if (!element->layout_node())
         return;
