@@ -42,6 +42,8 @@ public:
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 
+    bool is_scroll_container() const;
+
     bool is_scrollable() const;
     CSSPixelPoint scroll_offset() const { return m_scroll_offset; }
     void set_scroll_offset(CSSPixelPoint);

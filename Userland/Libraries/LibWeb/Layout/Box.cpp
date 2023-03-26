@@ -29,6 +29,27 @@ Box::~Box()
 {
 }
 
+// https://www.w3.org/TR/css-overflow-3/#overflow-control
+bool overflow_value_makes_box_a_scroll_container(CSS::Overflow overflow)
+{
+    switch (overflow) {
+    case CSS::Overflow::Clip:
+    case CSS::Overflow::Visible:
+        return false;
+    case CSS::Overflow::Auto:
+    case CSS::Overflow::Hidden:
+    case CSS::Overflow::Scroll:
+        return true;
+    }
+}
+
+// https://www.w3.org/TR/css-overflow-3/#scroll-container
+bool Box::is_scroll_container() const
+{
+    return overflow_value_makes_box_a_scroll_container(computed_values().overflow_x())
+        || overflow_value_makes_box_a_scroll_container(computed_values().overflow_y());
+}
+
 bool Box::is_scrollable() const
 {
     // FIXME: Support horizontal scroll as well (overflow-x)
