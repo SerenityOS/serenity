@@ -275,7 +275,6 @@ bool BookmarksBarWidget::contains_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
         auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
         if (item_url == url) {
             return true;
@@ -288,7 +287,6 @@ bool BookmarksBarWidget::remove_bookmark(DeprecatedString const& url)
 {
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
 
-        auto item_title = model()->index(item_index, 0).data().to_deprecated_string();
         auto item_url = model()->index(item_index, 1).data().to_deprecated_string();
         if (item_url == url) {
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
