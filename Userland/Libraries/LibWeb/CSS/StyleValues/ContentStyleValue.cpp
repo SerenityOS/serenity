@@ -19,6 +19,4 @@ ErrorOr<String> ContentStyleValue::to_string() const
     return m_properties.content->to_string();
 }
 
-bool ContentStyleValue::Properties::operator==(ContentStyleValue::Properties const&) const = default;
-
 }
