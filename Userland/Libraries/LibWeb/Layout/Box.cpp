@@ -30,7 +30,7 @@ Box::~Box()
 }
 
 // https://www.w3.org/TR/css-overflow-3/#overflow-control
-bool overflow_value_makes_box_a_scroll_container(CSS::Overflow overflow)
+static bool overflow_value_makes_box_a_scroll_container(CSS::Overflow overflow)
 {
     switch (overflow) {
     case CSS::Overflow::Clip:
