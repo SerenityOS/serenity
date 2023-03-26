@@ -752,6 +752,11 @@ void Menu::set_hovered_index(int index, bool make_input)
         redraw(*old_hovered_item);
 }
 
+void Menu::set_name(DeprecatedString name)
+{
+    m_name = move(name);
+}
+
 bool Menu::is_open() const
 {
     return MenuManager::the().is_open(*this);

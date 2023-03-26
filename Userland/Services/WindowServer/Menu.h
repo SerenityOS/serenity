@@ -59,6 +59,7 @@ public:
     void add_item(NonnullOwnPtr<MenuItem>);
 
     DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString);
 
     template<typename Callback>
     IterationDecision for_each_item(Callback callback)
