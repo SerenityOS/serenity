@@ -96,6 +96,27 @@ void ConnectionFromClient::create_menu(i32 menu_id, DeprecatedString const& name
     m_menus.set(menu_id, move(menu));
 }
 
+void ConnectionFromClient::set_menu_name(i32 menu_id, DeprecatedString const& name)
+{
+    auto it = m_menus.find(menu_id);
+    if (it == m_menus.end()) {
+        did_misbehave("DestroyMenu: Bad menu ID");
+        return;
+    }
+    auto& menu = *it->value;
+    menu.set_name(name);
+    for (auto& it : m_windows) {
+        auto& window = *it.value;
+        window.menubar().for_each_menu([&](Menu& other_menu) {
+            if (&menu == &other_menu) {
+                window.invalidate_menubar();
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    }
+}
+
 void ConnectionFromClient::destroy_menu(i32 menu_id)
 {
     auto it = m_menus.find(menu_id);
