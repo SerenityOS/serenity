@@ -794,6 +794,9 @@ void HTMLInputElement::form_associated_element_was_inserted()
 // https://html.spec.whatwg.org/multipage/input.html#radio-button-group
 static bool is_in_same_radio_button_group(HTML::HTMLInputElement const& a, HTML::HTMLInputElement const& b)
 {
+    auto non_empty_equals = [](auto const& value_a, auto const& value_b) {
+        return !value_a.is_empty() && value_a == value_b;
+    };
     // The radio button group that contains an input element a also contains all the
     // other input elements b that fulfill all of the following conditions:
     return (
@@ -807,7 +810,7 @@ static bool is_in_same_radio_button_group(HTML::HTMLInputElement const& a, HTML:
         // value of a's name attribute equals the value of b's name attribute.
         && a.has_attribute(HTML::AttributeNames::name)
         && b.has_attribute(HTML::AttributeNames::name)
-        && a.name() == b.name());
+        && non_empty_equals(a.name(), b.name()));
 }
 
 // https://html.spec.whatwg.org/multipage/input.html#radio-button-state-(type=radio)
