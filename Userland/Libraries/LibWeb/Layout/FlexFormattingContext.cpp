@@ -713,8 +713,12 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
 // https://drafts.csswg.org/css-flexbox-1/#min-size-auto
 CSSPixels FlexFormattingContext::automatic_minimum_size(FlexItem const& item) const
 {
-    // FIXME: Deal with scroll containers.
-    return content_based_minimum_size(item);
+    // To provide a more reasonable default minimum size for flex items,
+    // the used value of a main axis automatic minimum size on a flex item that is not a scroll container is its content-based minimum size;
+    // for scroll containers the automatic minimum size is zero, as usual.
+    if (!item.box->is_scroll_container())
+        return content_based_minimum_size(item);
+    return 0;
 }
 
 // https://drafts.csswg.org/css-flexbox-1/#specified-size-suggestion
