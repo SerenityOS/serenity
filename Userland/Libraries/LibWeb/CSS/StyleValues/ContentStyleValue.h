@@ -39,7 +39,7 @@ private:
     struct Properties {
         ValueComparingNonnullRefPtr<StyleValueList> content;
         ValueComparingRefPtr<StyleValueList> alt_text;
-        bool operator==(Properties const&) const;
+        bool operator==(Properties const&) const = default;
     } m_properties;
 };
 

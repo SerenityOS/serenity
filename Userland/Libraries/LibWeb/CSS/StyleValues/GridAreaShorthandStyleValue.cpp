@@ -40,6 +40,4 @@ ErrorOr<String> GridAreaShorthandStyleValue::to_string() const
     return builder.to_string();
 }
 
-bool GridAreaShorthandStyleValue::Properties::operator==(GridAreaShorthandStyleValue::Properties const&) const = default;
-
 }

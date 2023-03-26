@@ -44,7 +44,7 @@ private:
         ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> column_start;
         ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> row_end;
         ValueComparingNonnullRefPtr<GridTrackPlacementStyleValue const> column_end;
-        bool operator==(Properties const&) const;
+        bool operator==(Properties const&) const = default;
     } m_properties;
 };
 
