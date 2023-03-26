@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/AtomicRefCounted.h>
+#include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Bus/PCI/Device.h>
@@ -26,6 +27,13 @@ struct DoorbellRegister {
 };
 
 class AsyncBlockDeviceRequest;
+
+struct NVMeIO {
+    RefPtr<AsyncBlockDeviceRequest> request;
+    bool used = false;
+    Function<void(u16 status)> end_io_handler;
+};
+
 class NVMeQueue : public AtomicRefCounted<NVMeQueue> {
 public:
     static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
@@ -60,7 +68,7 @@ protected:
 private:
     bool cqe_available();
     void update_cqe_head();
-    virtual void complete_current_request(u16 status) = 0;
+    virtual void complete_current_request(u16 cmdid, u16 status) = 0;
     void update_cq_doorbell()
     {
         m_db_regs->cq_head = m_cq_head;
@@ -68,7 +76,7 @@ private:
 
 protected:
     Spinlock<LockRank::Interrupts> m_cq_lock {};
-    LockRefPtr<AsyncBlockDeviceRequest> m_current_request;
+    HashMap<u16, NVMeIO> m_requests;
     NonnullOwnPtr<Memory::Region> m_rw_dma_region;
     Spinlock<LockRank::None> m_request_lock {};
 

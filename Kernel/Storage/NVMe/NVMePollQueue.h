@@ -17,6 +17,6 @@ public:
     virtual ~NVMePollQueue() override {};
 
 private:
-    virtual void complete_current_request(u16 status) override;
+    virtual void complete_current_request(u16 cmdid, u16 status) override;
 };
 }
