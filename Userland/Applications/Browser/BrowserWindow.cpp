@@ -84,6 +84,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         auto& tab = static_cast<Browser::Tab&>(active_widget);
         set_window_title_for_tab(tab);
         tab.did_become_active();
+        update_zoom_menu_text();
     };
 
     m_tab_widget->on_middle_click = [](auto& clicked_widget) {
@@ -172,22 +173,26 @@ void BrowserWindow::build_menus()
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
-    view_menu.add_action(GUI::CommonActions::make_zoom_in_action(
+    m_zoom_menu = view_menu.add_submenu("&Zoom");
+    m_zoom_menu->add_action(GUI::CommonActions::make_zoom_in_action(
         [this](auto&) {
             auto& tab = active_tab();
             tab.view().zoom_in();
+            update_zoom_menu_text();
         },
         this));
-    view_menu.add_action(GUI::CommonActions::make_zoom_out_action(
+    m_zoom_menu->add_action(GUI::CommonActions::make_zoom_out_action(
         [this](auto&) {
             auto& tab = active_tab();
             tab.view().zoom_out();
+            update_zoom_menu_text();
         },
         this));
-    view_menu.add_action(GUI::CommonActions::make_reset_zoom_action(
+    m_zoom_menu->add_action(GUI::CommonActions::make_reset_zoom_action(
         [this](auto&) {
             auto& tab = active_tab();
             tab.view().reset_zoom();
+            update_zoom_menu_text();
         },
         this));
     view_menu.add_separator();
@@ -789,6 +794,13 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
     TRY(screenshot_file->write_until_depleted(encoded));
 
     return {};
+}
+
+void BrowserWindow::update_zoom_menu_text()
+{
+    VERIFY(m_zoom_menu);
+    auto zoom_level_text = DeprecatedString::formatted("&Zoom ({}%)", round_to<int>(active_tab().view().zoom_level() * 100));
+    m_zoom_menu->set_name(zoom_level_text);
 }
 
 }
