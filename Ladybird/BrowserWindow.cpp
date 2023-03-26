@@ -83,23 +83,23 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 
     view_menu->addSeparator();
 
-    auto* zoom_menu = view_menu->addMenu("&Zoom");
+    m_zoom_menu = view_menu->addMenu("&Zoom");
 
     auto* zoom_in_action = new QAction("Zoom &In", this);
     auto zoom_in_shortcuts = QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomIn);
     zoom_in_shortcuts.append(QKeySequence(Qt::CTRL | Qt::Key_Equal));
     zoom_in_action->setShortcuts(zoom_in_shortcuts);
-    zoom_menu->addAction(zoom_in_action);
+    m_zoom_menu->addAction(zoom_in_action);
     QObject::connect(zoom_in_action, &QAction::triggered, this, &BrowserWindow::zoom_in);
 
     auto* zoom_out_action = new QAction("Zoom &Out", this);
     zoom_out_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::ZoomOut));
-    zoom_menu->addAction(zoom_out_action);
+    m_zoom_menu->addAction(zoom_out_action);
     QObject::connect(zoom_out_action, &QAction::triggered, this, &BrowserWindow::zoom_out);
 
     auto* reset_zoom_action = new QAction("&Reset Zoom", this);
     reset_zoom_action->setShortcut(QKeySequence(Qt::CTRL | Qt::Key_0));
-    zoom_menu->addAction(reset_zoom_action);
+    m_zoom_menu->addAction(reset_zoom_action);
     QObject::connect(reset_zoom_action, &QAction::triggered, this, &BrowserWindow::reset_zoom);
 
     view_menu->addSeparator();
@@ -322,7 +322,7 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     QObject::connect(m_tabs_container, &QTabWidget::currentChanged, [this](int index) {
         setWindowTitle(QString("%1 - Ladybird").arg(m_tabs_container->tabText(index)));
         setWindowIcon(m_tabs_container->tabIcon(index));
-        m_current_tab = verify_cast<Tab>(m_tabs_container->widget(index));
+        set_current_tab(verify_cast<Tab>(m_tabs_container->widget(index)));
     });
     QObject::connect(m_tabs_container, &QTabWidget::tabCloseRequested, this, &BrowserWindow::close_tab);
     QObject::connect(close_current_tab_action, &QAction::triggered, this, &BrowserWindow::close_current_tab);
@@ -330,6 +330,12 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
     new_tab(s_settings->new_tab_page(), Web::HTML::ActivateTab::Yes);
 
     setCentralWidget(m_tabs_container);
+}
+
+void BrowserWindow::set_current_tab(Tab* tab)
+{
+    m_current_tab = tab;
+    update_zoom_menu_text();
 }
 
 void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
@@ -346,7 +352,7 @@ Tab& BrowserWindow::new_tab(QString const& url, Web::HTML::ActivateTab activate_
     m_tabs.append(std::move(tab));
 
     if (m_current_tab == nullptr) {
-        m_current_tab = tab_ptr;
+        set_current_tab(tab_ptr);
     }
 
     m_tabs_container->addTab(tab_ptr, "New Tab");
@@ -513,26 +519,39 @@ void BrowserWindow::enable_dark_color_scheme()
 
 void BrowserWindow::zoom_in()
 {
-    if (m_current_tab)
-        m_current_tab->view().zoom_in();
+    if (!m_current_tab)
+        return;
+    m_current_tab->view().zoom_in();
+    update_zoom_menu_text();
 }
 
 void BrowserWindow::zoom_out()
 {
-    if (m_current_tab)
-        m_current_tab->view().zoom_out();
+    if (!m_current_tab)
+        return;
+    m_current_tab->view().zoom_out();
+    update_zoom_menu_text();
 }
 
 void BrowserWindow::reset_zoom()
 {
-    if (m_current_tab)
-        m_current_tab->view().reset_zoom();
+    if (!m_current_tab)
+        return;
+    m_current_tab->view().reset_zoom();
+    update_zoom_menu_text();
 }
 
 void BrowserWindow::select_all()
 {
     if (auto* tab = m_current_tab)
         tab->view().select_all();
+}
+
+void BrowserWindow::update_zoom_menu_text()
+{
+    VERIFY(m_zoom_menu && m_current_tab);
+    auto zoom_level_text = MUST(String::formatted("&Zoom ({}%)", round_to<int>(m_current_tab->view().zoom_level() * 100)));
+    m_zoom_menu->setTitle(qstring_from_ak_string(zoom_level_text));
 }
 
 void BrowserWindow::copy_selected_text()

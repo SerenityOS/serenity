@@ -59,9 +59,13 @@ private:
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
+    void set_current_tab(Tab* tab);
+    void update_zoom_menu_text();
+
     QTabWidget* m_tabs_container { nullptr };
     Vector<NonnullOwnPtr<Tab>> m_tabs;
     Tab* m_current_tab { nullptr };
+    QMenu* m_zoom_menu { nullptr };
 
     Browser::CookieJar& m_cookie_jar;
 
