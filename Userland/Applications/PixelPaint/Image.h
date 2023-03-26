@@ -125,8 +125,6 @@ private:
     ErrorOr<void> merge_layers(LayerMergeMode);
     ErrorOr<void> merge_active_layer(NonnullRefPtr<Layer> const&, LayerMergeDirection);
 
-    DeprecatedString generate_unique_layer_name(DeprecatedString const& original_name);
-
     Gfx::IntSize m_size;
     Vector<NonnullRefPtr<Layer>> m_layers;
 
