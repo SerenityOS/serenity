@@ -15,6 +15,7 @@
 #    include <LibCore/StandardPaths.h>
 #    include <LibCore/System.h>
 #    include <LibFileSystem/FileSystem.h>
+#    include <signal.h>
 #endif
 
 namespace SQL {
@@ -58,9 +59,14 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
         return server_fd_or_error.release_error();
     }
     auto server_fd = server_fd_or_error.value();
+    sigset_t original_set;
+    sigset_t setting_set;
+    sigfillset(&setting_set);
+    (void)pthread_sigmask(SIG_BLOCK, &setting_set, &original_set);
     auto server_pid = TRY(Core::System::fork());
 
     if (server_pid == 0) {
+        (void)pthread_sigmask(SIG_SETMASK, &original_set, nullptr);
         TRY(Core::System::setsid());
         TRY(Core::System::signal(SIGCHLD, SIG_IGN));
         server_pid = TRY(Core::System::fork());
@@ -95,8 +101,12 @@ static ErrorOr<void> launch_server(DeprecatedString const& socket_path, Deprecat
 
         VERIFY_NOT_REACHED();
     }
+    VERIFY(server_pid > 0);
 
-    TRY(Core::System::waitpid(server_pid));
+    auto wait_err = Core::System::waitpid(server_pid);
+    (void)pthread_sigmask(SIG_SETMASK, &original_set, nullptr);
+    if (wait_err.is_error())
+        return wait_err.release_error();
     return {};
 }
 
