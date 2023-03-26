@@ -791,16 +791,40 @@ void HTMLInputElement::form_associated_element_was_inserted()
     create_shadow_tree_if_needed();
 }
 
+// https://html.spec.whatwg.org/multipage/input.html#radio-button-group
+static bool is_in_same_radio_button_group(HTML::HTMLInputElement const& a, HTML::HTMLInputElement const& b)
+{
+    // The radio button group that contains an input element a also contains all the
+    // other input elements b that fulfill all of the following conditions:
+    return (
+        // - Both a and b are in the same tree.
+        // - The input element b's type attribute is in the Radio Button state.
+        a.type_state() == b.type_state()
+        && b.type_state() == HTMLInputElement::TypeAttributeState::RadioButton
+        // - Either a and b have the same form owner, or they both have no form owner.
+        && a.form() == b.form()
+        // - They both have a name attribute, their name attributes are not empty, and the
+        // value of a's name attribute equals the value of b's name attribute.
+        && a.has_attribute(HTML::AttributeNames::name)
+        && b.has_attribute(HTML::AttributeNames::name)
+        && a.name() == b.name());
+}
+
+// https://html.spec.whatwg.org/multipage/input.html#radio-button-state-(type=radio)
 void HTMLInputElement::set_checked_within_group()
 {
     if (checked())
         return;
 
     set_checked(true, ChangeSource::User);
-    DeprecatedString name = this->name();
+
+    // No point iterating the tree if we have an empty name.
+    auto name = this->name();
+    if (name.is_empty())
+        return;
 
     document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
-        if (element.checked() && &element != this && element.name() == name)
+        if (element.checked() && &element != this && is_in_same_radio_button_group(*this, element))
             element.set_checked(false, ChangeSource::User);
         return IterationDecision::Continue;
     });
@@ -829,7 +853,7 @@ void HTMLInputElement::legacy_pre_activation_behavior()
         DeprecatedString name = this->name();
 
         document().for_each_in_inclusive_subtree_of_type<HTML::HTMLInputElement>([&](auto& element) {
-            if (element.checked() && element.name() == name) {
+            if (element.checked() && is_in_same_radio_button_group(*this, element)) {
                 m_legacy_pre_activation_behavior_checked_element_in_group = &element;
                 return IterationDecision::Break;
             }
@@ -860,11 +884,10 @@ void HTMLInputElement::legacy_cancelled_activation_behavior()
     // group, or if this element no longer has a radio button group, setting
     // this element's checkedness to false.
     if (type_state() == TypeAttributeState::RadioButton) {
-        DeprecatedString name = this->name();
         bool did_reselect_previous_element = false;
         if (m_legacy_pre_activation_behavior_checked_element_in_group) {
             auto& element_in_group = *m_legacy_pre_activation_behavior_checked_element_in_group;
-            if (name == element_in_group.name()) {
+            if (is_in_same_radio_button_group(*this, element_in_group)) {
                 element_in_group.set_checked_within_group();
                 did_reselect_previous_element = true;
             }
