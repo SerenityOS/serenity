@@ -78,7 +78,7 @@ static void load_fpu_state(FPUState* fpu_state)
         "\n" ::[fpu_state] "r"(fpu_state));
 }
 
-void Processor::install(u32 cpu)
+void Processor::early_initialize(u32 cpu)
 {
     VERIFY(g_current_processor == nullptr);
     m_cpu = cpu;
@@ -89,7 +89,7 @@ void Processor::install(u32 cpu)
     g_current_processor = this;
 }
 
-void Processor::initialize()
+void Processor::initialize(u32)
 {
     dmesgln("CPU[{}]: Supports {}", m_cpu, build_cpu_feature_names(m_features));
     dmesgln("CPU[{}]: Physical address bit width: {}", m_cpu, m_physical_address_bit_width);

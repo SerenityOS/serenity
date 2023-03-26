@@ -121,7 +121,7 @@ extern "C" [[noreturn]] void init()
     CommandLine::early_initialize("");
 
     new (&bootstrap_processor()) Processor();
-    bootstrap_processor().install(0);
+    bootstrap_processor().early_initialize(0);
 
     // We call the constructors of kmalloc.cpp separately, because other constructors in the Kernel
     // might rely on being able to call new/kmalloc in the constructor. We do have to run the
@@ -130,7 +130,7 @@ extern "C" [[noreturn]] void init()
         (*ctor)();
     kmalloc_init();
 
-    bootstrap_processor().initialize();
+    bootstrap_processor().initialize(0);
 
     load_kernel_symbol_table();
 
