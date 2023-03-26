@@ -73,6 +73,37 @@ void Menu::remove_all_actions()
     m_items.clear();
 }
 
+void Menu::update_parent_menu_item()
+{
+    if (auto parent = m_parent_menu.strong_ref()) {
+        auto const& parent_items = parent->items();
+        if (m_index_in_parent_menu >= 0 && static_cast<unsigned>(m_index_in_parent_menu) < parent_items.size()) {
+            auto& item = *parent_items[m_index_in_parent_menu];
+            if (item.submenu() == this)
+                item.update_from_menu(Badge<Menu> {});
+            return;
+        }
+        // Parent has since been cleared/repopulated:
+        parent = nullptr;
+        m_index_in_parent_menu = -1;
+    }
+}
+
+void Menu::set_name(DeprecatedString name)
+{
+    m_name = move(name);
+    if (m_menu_id != -1) {
+        ConnectionToWindowServer::the().async_set_menu_name(m_menu_id, m_name);
+        update_parent_menu_item();
+    }
+}
+
+void Menu::set_parent(Menu& menu, int submenu_index)
+{
+    m_parent_menu = menu;
+    m_index_in_parent_menu = submenu_index;
+}
+
 ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(DeprecatedString name)
 {
     // NOTE: We grow the vector first, to get allocation failure handled immediately.
@@ -81,6 +112,8 @@ ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(DeprecatedString name)
     auto submenu = TRY(Menu::try_create(name));
 
     auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, submenu)));
+    submenu->set_parent(*this, m_items.size());
+
     if (m_menu_id != -1)
         realize_menu_item(*item, m_items.size());
 
