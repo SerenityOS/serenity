@@ -125,7 +125,7 @@ void FlexFormattingContext::run(Box const& run_box, LayoutMode, AvailableSpace c
             for (auto& item : m_flex_items) {
                 if (!flex_item_is_stretched(item))
                     continue;
-                auto item_min_cross_size = has_cross_min_size(item.box) ? specified_cross_min_size(item.box) : automatic_minimum_size(item);
+                auto item_min_cross_size = has_cross_min_size(item.box) ? specified_cross_min_size(item.box) : 0;
                 auto item_max_cross_size = has_cross_max_size(item.box) ? specified_cross_max_size(item.box) : INFINITY;
                 auto item_preferred_outer_cross_size = css_clamp(flex_container_inner_cross_size, item_min_cross_size, item_max_cross_size);
                 auto item_inner_cross_size = item_preferred_outer_cross_size - item.margins.cross_before - item.margins.cross_after - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after;
