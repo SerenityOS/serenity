@@ -29,34 +29,54 @@ void NVMeInterruptQueue::submit_sqe(NVMeSubmission& sub)
     NVMeQueue::submit_sqe(sub);
 }
 
-void NVMeInterruptQueue::complete_current_request(u16 status)
+void NVMeInterruptQueue::complete_current_request(u16 cmdid, u16 status)
 {
-    VERIFY(m_request_lock.is_locked());
-
-    auto work_item_creation_result = g_io_work->try_queue([this, status]() {
+    auto work_item_creation_result = g_io_work->try_queue([this, cmdid, status]() {
         SpinlockLocker lock(m_request_lock);
-        auto current_request = m_current_request;
-        m_current_request.clear();
-        if (status) {
+        auto& request_pdu = m_requests.get(cmdid).release_value();
+        auto current_request = request_pdu.request;
+        AsyncDeviceRequest::RequestResult req_result = AsyncDeviceRequest::Success;
+
+        ScopeGuard guard = [req_result, status, &request_pdu, &lock] {
+            // FIXME: We should unlock at the end of this function to make sure no new requests is inserted
+            //  before we complete the request and calling end_io_handler but that results in a deadlock
+            //  For now this is avoided by asserting the `used` field while inserting.
             lock.unlock();
-            current_request->complete(AsyncBlockDeviceRequest::Failure);
+            if (request_pdu.request)
+                request_pdu.request->complete(req_result);
+            if (request_pdu.end_io_handler)
+                request_pdu.end_io_handler(status);
+            request_pdu.used = false;
+        };
+
+        // There can be submission without any request associated with it such as with
+        // admin queue commands during init. If there is no request, we are done
+        if (!current_request)
+            return;
+
+        if (status) {
+            req_result = AsyncBlockDeviceRequest::Failure;
             return;
         }
+
         if (current_request->request_type() == AsyncBlockDeviceRequest::RequestType::Read) {
             if (auto result = current_request->write_to_buffer(current_request->buffer(), m_rw_dma_region->vaddr().as_ptr(), current_request->buffer_size()); result.is_error()) {
-                lock.unlock();
-                current_request->complete(AsyncDeviceRequest::MemoryFault);
+                req_result = AsyncBlockDeviceRequest::MemoryFault;
                 return;
             }
         }
-        lock.unlock();
-        current_request->complete(AsyncDeviceRequest::Success);
         return;
     });
+
     if (work_item_creation_result.is_error()) {
-        auto current_request = m_current_request;
-        m_current_request.clear();
+        SpinlockLocker lock(m_request_lock);
+        auto& request_pdu = m_requests.get(cmdid).release_value();
+        auto current_request = request_pdu.request;
+
         current_request->complete(AsyncDeviceRequest::OutOfMemory);
+        if (request_pdu.end_io_handler)
+            request_pdu.end_io_handler(status);
+        request_pdu.used = false;
     }
 }
 }
