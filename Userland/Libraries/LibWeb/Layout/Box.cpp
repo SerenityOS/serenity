@@ -41,6 +41,7 @@ bool overflow_value_makes_box_a_scroll_container(CSS::Overflow overflow)
     case CSS::Overflow::Scroll:
         return true;
     }
+    VERIFY_NOT_REACHED();
 }
 
 // https://www.w3.org/TR/css-overflow-3/#scroll-container
