@@ -90,9 +90,9 @@ void ConnectionFromClient::notify_about_new_screen_rects()
     async_screen_rects_changed(Screen::rects(), Screen::main().index(), wm.window_stack_rows(), wm.window_stack_columns());
 }
 
-void ConnectionFromClient::create_menu(i32 menu_id, DeprecatedString const& menu_title)
+void ConnectionFromClient::create_menu(i32 menu_id, DeprecatedString const& name)
 {
-    auto menu = Menu::construct(this, menu_id, menu_title);
+    auto menu = Menu::construct(this, menu_id, name);
     m_menus.set(menu_id, move(menu));
 }
 
