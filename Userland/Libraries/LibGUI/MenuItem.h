@@ -56,6 +56,7 @@ public:
     void set_identifier(Badge<Menu>, unsigned identifier);
 
     void update_from_action(Badge<Action>) { update_window_server(); }
+    void update_from_menu(Badge<Menu>) { update_window_server(); }
 
 private:
     void update_window_server();

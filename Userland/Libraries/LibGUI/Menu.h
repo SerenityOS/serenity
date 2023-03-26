@@ -33,6 +33,8 @@ public:
     int menu_id() const { return m_menu_id; }
 
     DeprecatedString const& name() const { return m_name; }
+    void set_name(DeprecatedString);
+
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     void set_icon(Gfx::Bitmap const*);
 
@@ -73,12 +75,17 @@ private:
 
     void realize_menu_item(MenuItem&, int item_id);
 
+    void set_parent(Menu& menu, int submenu_index);
+    void update_parent_menu_item();
+
     int m_menu_id { -1 };
     DeprecatedString m_name;
     RefPtr<Gfx::Bitmap const> m_icon;
     Vector<NonnullOwnPtr<MenuItem>> m_items;
     WeakPtr<Action> m_current_default_action;
     bool m_visible { false };
+    WeakPtr<Menu> m_parent_menu;
+    int m_index_in_parent_menu { -1 };
 
     Function<void(Action&)> m_recent_files_callback;
 };
