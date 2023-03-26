@@ -61,4 +61,5 @@ private:
 template<>
 inline bool Node::fast_is<Box>() const { return is_box(); }
 
+
 }
