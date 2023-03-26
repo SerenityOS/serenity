@@ -1758,16 +1758,6 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_containe
         // NOTE: We fall through to the ad-hoc section below.
     }
 
-    // HACK: We run steps 5, 7, 9 and 11 from the main algorithm. This gives us *some* cross size information to work with.
-    m_flex_lines.clear();
-    collect_flex_items_into_flex_lines();
-
-    for (auto& item : m_flex_items) {
-        determine_hypothetical_cross_size_of_item(item, false);
-    }
-    calculate_cross_size_of_each_flex_line();
-    determine_used_cross_size_of_each_flex_item();
-
     CSSPixels sum_of_flex_line_cross_sizes = 0;
     for (auto& flex_line : m_flex_lines) {
         sum_of_flex_line_cross_sizes += flex_line.cross_size;
