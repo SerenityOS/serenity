@@ -62,6 +62,8 @@ private:
 
     virtual void event(Core::Event&) override;
 
+    void update_zoom_menu_text();
+
     enum class ScreenshotType {
         Visible,
         Full,
@@ -79,6 +81,8 @@ private:
     RefPtr<GUI::Action> m_inspect_dom_node_action;
     RefPtr<GUI::Action> m_take_visible_screenshot_action;
     RefPtr<GUI::Action> m_take_full_screenshot_action;
+
+    RefPtr<GUI::Menu> m_zoom_menu;
 
     CookieJar& m_cookie_jar;
     WindowActions m_window_actions;
