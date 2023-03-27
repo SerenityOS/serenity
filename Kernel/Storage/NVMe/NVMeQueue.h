@@ -95,6 +95,7 @@ private:
     OwnPtr<Memory::Region> m_sq_dma_region;
     Vector<NonnullRefPtr<Memory::PhysicalPage>> m_sq_dma_page;
     Span<NVMeCompletion> m_cqe_array;
+    WaitQueue m_sync_wait_queue;
     Memory::TypedMapping<DoorbellRegister volatile> m_db_regs;
     NonnullRefPtr<Memory::PhysicalPage const> m_rw_dma_page;
 };
