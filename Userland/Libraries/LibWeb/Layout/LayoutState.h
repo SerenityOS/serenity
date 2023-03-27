@@ -53,6 +53,9 @@ struct LayoutState {
         void set_content_width(CSSPixels);
         void set_content_height(CSSPixels);
 
+        void set_indefinite_content_width();
+        void set_indefinite_content_height();
+
         // NOTE: These are used by FlexFormattingContext to assign a temporary main size to items
         //       early on, so that descendants have something to resolve percentages against.
         void set_temporary_content_width(CSSPixels);

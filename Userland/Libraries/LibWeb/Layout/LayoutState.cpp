@@ -416,4 +416,14 @@ void LayoutState::UsedValues::set_content_y(CSSPixels y)
     offset.set_y(y);
 }
 
+void LayoutState::UsedValues::set_indefinite_content_width()
+{
+    m_has_definite_width = false;
+}
+
+void LayoutState::UsedValues::set_indefinite_content_height()
+{
+    m_has_definite_height = false;
+}
+
 }
