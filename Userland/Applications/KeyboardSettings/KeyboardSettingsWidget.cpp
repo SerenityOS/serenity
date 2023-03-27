@@ -13,8 +13,8 @@
 #include <Applications/KeyboardSettings/KeyboardWidgetGML.h>
 #include <Applications/KeyboardSettings/KeymapDialogGML.h>
 #include <LibConfig/Client.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/Directory.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Dialog.h>
@@ -152,12 +152,10 @@ private:
 KeyboardSettingsWidget::KeyboardSettingsWidget()
 {
     load_from_gml(keyboard_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto proc_keymap = MUST(Core::File::open("/sys/kernel/keymap"sv, Core::File::OpenMode::Read));
 
-    auto proc_keymap = Core::DeprecatedFile::construct("/sys/kernel/keymap");
-    if (!proc_keymap->open(Core::OpenMode::ReadOnly))
-        VERIFY_NOT_REACHED();
-
-    auto json = JsonValue::from_string(proc_keymap->read_all()).release_value_but_fixme_should_propagate_errors();
+    auto keymap = proc_keymap->read_until_eof().release_value_but_fixme_should_propagate_errors();
+    auto json = JsonValue::from_string(keymap).release_value_but_fixme_should_propagate_errors();
     auto const& keymap_object = json.as_object();
     VERIFY(keymap_object.has("keymap"sv));
     m_initial_active_keymap = keymap_object.get_deprecated_string("keymap"sv).value();
