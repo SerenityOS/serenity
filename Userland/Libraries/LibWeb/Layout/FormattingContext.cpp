@@ -1093,6 +1093,8 @@ CSSPixels FormattingContext::calculate_min_content_width(Layout::Box const& box)
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.width_constraint = SizeConstraint::MinContent;
+    box_state.set_indefinite_content_width();
+    box_state.set_indefinite_content_height();
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
@@ -1127,6 +1129,8 @@ CSSPixels FormattingContext::calculate_max_content_width(Layout::Box const& box)
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.width_constraint = SizeConstraint::MaxContent;
+    box_state.set_indefinite_content_width();
+    box_state.set_indefinite_content_height();
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
@@ -1177,6 +1181,9 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.height_constraint = SizeConstraint::MinContent;
+    box_state.set_indefinite_content_height();
+    if (available_width.is_definite())
+        box_state.set_content_width(available_width.to_px());
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
@@ -1222,6 +1229,9 @@ CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box
 
     auto& box_state = throwaway_state.get_mutable(box);
     box_state.height_constraint = SizeConstraint::MaxContent;
+    box_state.set_indefinite_content_height();
+    if (available_width.is_definite())
+        box_state.set_content_width(available_width.to_px());
 
     auto context = const_cast<FormattingContext*>(this)->create_independent_formatting_context_if_needed(throwaway_state, box);
     VERIFY(context);
