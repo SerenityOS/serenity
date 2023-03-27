@@ -156,7 +156,6 @@ private:
 
     void determine_available_space_for_items(AvailableSpace const&);
 
-    CSSPixels calculate_indefinite_main_size(FlexItem const&);
     void determine_flex_base_size_and_hypothetical_main_size(FlexItem&);
 
     void determine_main_size_of_flex_container();
