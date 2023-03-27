@@ -40,46 +40,9 @@ DeprecatedString locate_ca_certs_file()
 
 Vector<Certificate> load_certificates()
 {
-    Vector<Certificate> certificates;
-
-    auto cacert_result = Core::File::open(locate_ca_certs_file(), Core::File::OpenMode::Read);
-    if (cacert_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", cacert_result.error());
-        return certificates;
-    }
-    auto cacert_file = cacert_result.release_value();
-    auto data_result = cacert_file->read_until_eof();
-    if (data_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", data_result.error());
-        return certificates;
-    }
-    auto data = data_result.release_value();
-
-    auto decode_result = Crypto::decode_pems(data);
-    if (decode_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", decode_result.error());
-        return certificates;
-    }
-    auto certs = decode_result.release_value();
-
-    for (auto& cert : certs) {
-        auto certificate_result = Certificate::parse_asn1(cert.bytes());
-        // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
-        // supported right now. It might make sense to cleanup cacert.pem before adding it to the system.
-        if (!certificate_result.has_value()) {
-            // FIXME: It would be nice to have more informations about the certificate we failed to parse.
-            //        Like: Issuer, Algorithm, CN, etc
-            continue;
-        }
-        auto certificate = certificate_result.release_value();
-        if (certificate.is_certificate_authority && certificate.is_self_signed()) {
-            certificates.append(move(certificate));
-        } else {
-            dbgln("Skipped '{}' because it is not a valid root CA", certificate.subject_identifier_string());
-        }
-    }
-
-    return certificates;
+    auto cacert_file = MUST(Core::File::open(locate_ca_certs_file(), Core::File::OpenMode::Read));
+    auto data = MUST(cacert_file->read_until_eof());
+    return MUST(DefaultRootCACertificates::the().reload_certificates(data));
 }
 
 static Vector<Certificate> s_root_ca_certificates = load_certificates();

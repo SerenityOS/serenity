@@ -137,7 +137,7 @@ public:
 
     Vector<Certificate> const& certificates() const { return m_ca_certificates; }
 
-    void reload_certificates(ByteBuffer&);
+    ErrorOr<Vector<Certificate>> reload_certificates(ByteBuffer&);
 
     static DefaultRootCACertificates& the() { return s_the; }
 
