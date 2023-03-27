@@ -47,6 +47,8 @@ public:
 
     DeprecatedString to_deprecated_string() const;
 
+    bool operator==(AvailableSize const& other) const = default;
+
 private:
     AvailableSize(Type type, CSSPixels);
 
@@ -61,6 +63,8 @@ public:
         , height(move(h))
     {
     }
+
+    bool operator==(AvailableSpace const& other) const = default;
 
     AvailableSize width;
     AvailableSize height;
