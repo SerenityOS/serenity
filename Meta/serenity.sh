@@ -315,7 +315,7 @@ ensure_toolchain() {
     if [ "$TOOLCHAIN_TYPE" = "GNU" ]; then
         local ld_version
         ld_version="$("$TOOLCHAIN_DIR"/bin/"$TARGET"-pc-serenity-ld -v)"
-        local expected_version="GNU ld (GNU Binutils) 2.39"
+        local expected_version="GNU ld (GNU Binutils) 2.40"
         if [ "$ld_version" != "$expected_version" ]; then
             echo "Your toolchain has an old version of binutils installed."
             echo "    installed version: \"$ld_version\""
