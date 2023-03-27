@@ -499,18 +499,21 @@ DefaultRootCACertificates::DefaultRootCACertificates()
         return;
     }
     auto data = data_result.release_value();
-    reload_certificates(data);
-}
 
-void DefaultRootCACertificates::reload_certificates(ByteBuffer& data)
-{
-    auto decode_result = Crypto::decode_pems(data);
-    if (decode_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", decode_result.error());
+    auto reload_result = reload_certificates(data);
+    if (reload_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", reload_result.error());
         return;
     }
-    m_ca_certificates.clear();
-    auto certs = decode_result.release_value();
+
+    m_ca_certificates = reload_result.release_value();
+}
+
+ErrorOr<Vector<Certificate>> DefaultRootCACertificates::reload_certificates(ByteBuffer& data)
+{
+    Vector<Certificate> certificates;
+
+    auto certs = TRY(Crypto::decode_pems(data));
 
     for (auto& cert : certs) {
         auto certificate_result = Certificate::parse_asn1(cert.bytes());
@@ -523,12 +526,14 @@ void DefaultRootCACertificates::reload_certificates(ByteBuffer& data)
         }
         auto certificate = certificate_result.release_value();
         if (certificate.is_certificate_authority && certificate.is_self_signed()) {
-            m_ca_certificates.append(move(certificate));
+            TRY(certificates.try_append(move(certificate)));
         } else {
             dbgln("Skipped '{}' because it is not a valid root CA", certificate.subject_identifier_string());
         }
     }
 
-    dbgln("Loaded {} of {} ({:.2}%) provided CA Certificates", m_ca_certificates.size(), certs.size(), (m_ca_certificates.size() * 100.0) / certs.size());
+    dbgln("Loaded {} of {} ({:.2}%) provided CA Certificates", certificates.size(), certs.size(), (certificates.size() * 100.0) / certs.size());
+
+    return certificates;
 }
 }
