@@ -5,8 +5,6 @@
 Include ar.h for serenity as well
 
 
-## `0002-Stub-getdtablesize-for-serenity.patch`
+## `0002-Hardcode-default-path-because-is-missing.patch`
 
-Stub getdtablesize() for serenity
-
-
+Hardcode default path because `confstr` is missing
