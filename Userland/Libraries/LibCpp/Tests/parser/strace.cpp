@@ -20,7 +20,12 @@ int main(int argc, char** argv)
     Vector<const char*> child_argv;
 
     const char* output_filename = nullptr;
-    auto trace_file = Core::DeprecatedFile::standard_error();
+    auto trace_file_or_error = Core::File::standard_error();
+    if (trace_file_or_error.is_error()) {
+        outln(stderr, "Failed to open stderr: {}", trace_file_or_error.error());
+        return 1;
+    }
+    auto trace_file = trace_file_or_error.release_value();
 
     Core::ArgsParser parser;
     parser.set_general_help(
@@ -32,12 +37,12 @@ int main(int argc, char** argv)
     parser.parse(argc, argv);
 
     if (output_filename != nullptr) {
-        auto open_result = Core::DeprecatedFile::open(output_filename, Core::OpenMode::WriteOnly);
+        auto open_result = Core::File::open(output_filename, Core::File::OpenMode::Write);
         if (open_result.is_error()) {
             outln(stderr, "Failed to open output file: {}", open_result.error());
             return 1;
         }
-        trace_file = open_result.value();
+        trace_file = open_result.release_value();
     }
 
     if (pledge("stdio proc exec ptrace sigaction", nullptr) < 0) {
@@ -135,8 +140,9 @@ int main(int argc, char** argv)
             arg3,
             res);
 
-        if (!trace_file->write(string)) {
-            warnln("write: {}", trace_file->error_string());
+        auto result = trace_file->write_value(string);
+        if (result.is_error()) {
+            warnln("write: {}", result->error());
             return 1;
         }
     }
