@@ -45,61 +45,60 @@ void Client::die()
 void Client::start()
 {
     m_socket->on_ready_to_read = [this] {
-        StringBuilder builder;
+        if (auto result = on_ready_to_read(); result.is_error()) {
+            result.error().visit(
+                [](AK::Error const& error) {
+                    warnln("Internal error: {}", error);
+                },
+                [](HTTP::HttpRequest::ParseError const& error) {
+                    warnln("HTTP request parsing error: {}", HTTP::HttpRequest::parse_error_to_string(error));
+                });
 
-        auto maybe_buffer = ByteBuffer::create_uninitialized(m_socket->buffer_size());
-        if (maybe_buffer.is_error()) {
-            warnln("Could not create buffer for client: {}", maybe_buffer.error());
             die();
-            return;
         }
-
-        auto buffer = maybe_buffer.release_value();
-        for (;;) {
-            auto maybe_can_read = m_socket->can_read_without_blocking();
-            if (maybe_can_read.is_error()) {
-                warnln("Failed to get the blocking status for the socket: {}", maybe_can_read.error());
-                die();
-                return;
-            }
-
-            if (!maybe_can_read.value())
-                break;
-
-            auto maybe_bytes_read = m_socket->read_until_any_of(buffer, Array { "\r"sv, "\n"sv, "\r\n"sv });
-            if (maybe_bytes_read.is_error()) {
-                warnln("Failed to read a line from the request: {}", maybe_bytes_read.error());
-                die();
-                return;
-            }
-
-            if (m_socket->is_eof()) {
-                die();
-                break;
-            }
-
-            builder.append(StringView { maybe_bytes_read.value() });
-            builder.append("\r\n"sv);
-        }
-
-        auto request = builder.to_byte_buffer().release_value_but_fixme_should_propagate_errors();
-        dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", DeprecatedString::copy(request));
-
-        auto maybe_did_handle = handle_request(request);
-        if (maybe_did_handle.is_error()) {
-            warnln("Failed to handle the request: {}", maybe_did_handle.error());
-        }
-
-        die();
     };
 }
 
-ErrorOr<bool> Client::handle_request(ReadonlyBytes raw_request)
+ErrorOr<void, Client::WrappedError> Client::on_ready_to_read()
 {
-    auto request_or_error = HTTP::HttpRequest::from_raw_request(raw_request);
-    if (request_or_error.is_error())
-        return false;
-    auto& request = request_or_error.value();
+    // FIXME: Mostly copied from LibWeb/WebDriver/Client.cpp. As noted there, this should be move the LibHTTP and made spec compliant.
+    auto buffer = TRY(ByteBuffer::create_uninitialized(m_socket->buffer_size()));
+
+    for (;;) {
+        if (!TRY(m_socket->can_read_without_blocking()))
+            break;
+
+        auto data = TRY(m_socket->read_some(buffer));
+        TRY(m_remaining_request.try_append(StringView { data }));
+
+        if (m_socket->is_eof())
+            break;
+    }
+
+    if (m_remaining_request.is_empty())
+        return {};
+
+    auto request = TRY(m_remaining_request.to_byte_buffer());
+    dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", DeprecatedString::copy(request));
+
+    auto maybe_parsed_request = HTTP::HttpRequest::from_raw_request(TRY(m_remaining_request.to_byte_buffer()));
+    if (maybe_parsed_request.is_error()) {
+        if (maybe_parsed_request.error() == HTTP::HttpRequest::ParseError::RequestIncomplete) {
+            // If request is not complete we need to wait for more data to arrive
+            return {};
+        }
+        return maybe_parsed_request.error();
+    }
+
+    m_remaining_request.clear();
+
+    TRY(handle_request(maybe_parsed_request.value()));
+
+    return {};
+}
+
+ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
+{
     auto resource_decoded = URL::percent_decode(request.resource());
 
     if constexpr (WEBSERVER_DEBUG) {
