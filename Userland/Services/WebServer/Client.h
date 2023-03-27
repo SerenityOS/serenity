@@ -24,12 +24,15 @@ public:
 private:
     Client(NonnullOwnPtr<Core::BufferedTCPSocket>, Core::Object* parent);
 
+    using WrappedError = Variant<AK::Error, HTTP::HttpRequest::ParseError>;
+
     struct ContentInfo {
         String type;
         size_t length {};
     };
 
-    ErrorOr<bool> handle_request(ReadonlyBytes);
+    ErrorOr<void, WrappedError> on_ready_to_read();
+    ErrorOr<bool> handle_request(HTTP::HttpRequest const&);
     ErrorOr<void> send_response(Stream&, HTTP::HttpRequest const&, ContentInfo);
     ErrorOr<void> send_redirect(StringView redirect, HTTP::HttpRequest const&);
     ErrorOr<void> send_error_response(unsigned code, HTTP::HttpRequest const&, Vector<String> const& headers = {});
@@ -39,6 +42,7 @@ private:
     bool verify_credentials(Vector<HTTP::HttpRequest::Header> const&);
 
     NonnullOwnPtr<Core::BufferedTCPSocket> m_socket;
+    StringBuilder m_remaining_request;
 };
 
 }
