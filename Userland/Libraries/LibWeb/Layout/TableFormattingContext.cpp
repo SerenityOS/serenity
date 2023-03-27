@@ -521,7 +521,7 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     // Compute the minimum width of each column.
     compute_table_measures();
 
-    if (available_space.width.is_intrinsic_sizing_constraint()) {
+    if (available_space.width.is_intrinsic_sizing_constraint() && !available_space.height.is_intrinsic_sizing_constraint()) {
         determine_intrisic_size_of_table_container(available_space);
         return;
     }
