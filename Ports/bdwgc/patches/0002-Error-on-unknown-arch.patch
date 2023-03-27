@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
-Date: Thu, 24 Feb 2022 01:50:40 +0330
+Date: Mon, 27 Mar 2023 20:04:41 +1100
 Subject: [PATCH] Error on unknown arch
 
 ---
@@ -8,10 +8,10 @@ Subject: [PATCH] Error on unknown arch
  1 file changed, 2 insertions(+)
 
 diff --git a/include/private/gcconfig.h b/include/private/gcconfig.h
-index e9d1d42..8e48b66 100644
+index 2126a12..7b8b86f 100644
 --- a/include/private/gcconfig.h
 +++ b/include/private/gcconfig.h
-@@ -358,6 +358,8 @@ EXTERN_C_BEGIN
+@@ -344,6 +344,8 @@ EXTERN_C_BEGIN
  #        define I386
  #    elif defined(__x86_64__)
  #        define X86_64
@@ -19,4 +19,4 @@ index e9d1d42..8e48b66 100644
 +#        error "Invalid arch for serenity"
  #    endif
  #endif
- # if defined(__HAIKU__) && (defined(__amd64__) || defined(__x86_64__))
+ # if (defined(__BEOS__) || defined(__HAIKU__)) && defined(_X86_)

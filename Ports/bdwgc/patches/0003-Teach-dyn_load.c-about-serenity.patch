@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
-Date: Thu, 24 Feb 2022 01:54:50 +0330
+Date: Mon, 27 Mar 2023 20:07:46 +1100
 Subject: [PATCH] Teach dyn_load.c about serenity
 
 ---
@@ -8,27 +8,27 @@ Subject: [PATCH] Teach dyn_load.c about serenity
  1 file changed, 20 insertions(+), 3 deletions(-)
 
 diff --git a/dyn_load.c b/dyn_load.c
-index d857246..734643d 100644
+index 46c53af..9026932 100644
 --- a/dyn_load.c
 +++ b/dyn_load.c
-@@ -60,7 +60,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
-     && !(defined(FREEBSD) && defined(__ELF__)) \
-     && !((defined(LINUX) || defined(NACL)) && defined(__ELF__)) \
+@@ -63,7 +63,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
      && !(defined(NETBSD) && defined(__ELF__)) \
--    && !defined(HAIKU) && !defined(HURD) \
-+    && !defined(HAIKU) && !defined(HURD) && !defined(SERENITY) \
      && !(defined(OPENBSD) && (defined(__ELF__) || defined(M68K))) \
-     && !defined(CPPCHECK)
+     && !defined(HAIKU) && !defined(HURD) && !defined(NACL) \
+-    && !defined(CPPCHECK)
++    && !defined(CPPCHECK) && !defined(SERENITY)
  # error We only know how to find data segments of dynamic libraries for above.
-@@ -88,7 +88,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
+ # error Additional SVR4 variants might not be too hard to add.
+ #endif
+@@ -89,7 +89,7 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
  # endif
  #endif /* OPENBSD */
  
--#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) \
-+#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(SERENITY) \
+-#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(NACL) \
++#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(NACL) || defined(SERENITY) \
      || (defined(__ELF__) && (defined(LINUX) || defined(FREEBSD) \
-                              || defined(NACL) || defined(NETBSD) \
-                              || defined(OPENBSD)))
+                              || defined(NETBSD) || defined(OPENBSD)))
+ # include <stddef.h>
 @@ -98,6 +98,23 @@ STATIC GC_has_static_roots_func GC_has_static_roots = 0;
      /* Exclude Android because linker.h below includes its own version. */
  #   include <elf.h>
@@ -53,12 +53,12 @@ index d857246..734643d 100644
  # ifdef HOST_ANDROID
      /* If you don't need the "dynamic loading" feature, you may build   */
      /* the collector with -D IGNORE_DYNAMIC_LOADING.                    */
-@@ -259,7 +276,7 @@ GC_INNER void GC_register_dynamic_libraries(void)
+@@ -261,7 +278,7 @@ GC_INNER void GC_register_dynamic_libraries(void)
  # endif /* !USE_PROC ... */
  # endif /* SOLARISDL */
  
--#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) \
-+#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(SERENITY) \
+-#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(NACL) \
++#if defined(SCO_ELF) || defined(DGUX) || defined(HURD) || defined(NACL) || defined(SERENITY) \
      || (defined(__ELF__) && (defined(LINUX) || defined(FREEBSD) \
-                              || defined(NACL) || defined(NETBSD) \
-                              || defined(OPENBSD)))
+                              || defined(NETBSD) || defined(OPENBSD)))
+ 
