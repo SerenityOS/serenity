@@ -65,11 +65,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return;
         DeprecatedString error;
         wav_writer.with_locked([&](auto& wav_writer) {
-            wav_writer.set_file(save_path.value());
-            if (wav_writer.has_error()) {
-                error = DeprecatedString::formatted("Failed to export WAV file: {}", wav_writer.error_string());
-                wav_writer.clear_error();
-            }
+            auto error_or_void = wav_writer.set_file(save_path.value());
+            if (error_or_void.is_error())
+                error = DeprecatedString::formatted("Failed to export WAV file: {}", error_or_void.error());
         });
         if (!error.is_empty()) {
             GUI::MessageBox::show_error(window, error);
