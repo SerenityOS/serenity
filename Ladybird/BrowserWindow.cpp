@@ -335,7 +335,8 @@ BrowserWindow::BrowserWindow(Browser::CookieJar& cookie_jar, StringView webdrive
 void BrowserWindow::set_current_tab(Tab* tab)
 {
     m_current_tab = tab;
-    update_zoom_menu_text();
+    if (tab)
+        update_zoom_menu_text();
 }
 
 void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
