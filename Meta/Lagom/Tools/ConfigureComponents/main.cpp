@@ -12,7 +12,6 @@
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibFileSystem/FileSystem.h>
 #include <spawn.h>
 #include <sys/ioctl.h>
@@ -232,10 +231,10 @@ int main()
         return 1;
     }
 
-    auto current_working_directory = Core::DeprecatedFile::current_working_directory();
-    if (current_working_directory.is_null())
+    auto current_working_directory = FileSystem::current_working_directory();
+    if (current_working_directory.is_error())
         return 1;
-    auto lexical_cwd = LexicalPath(current_working_directory);
+    auto lexical_cwd = LexicalPath(current_working_directory.release_value().to_deprecated_string());
     auto& parts = lexical_cwd.parts_view();
     if (parts.size() < 2 || parts[parts.size() - 2] != "Build") {
         warnln("\e[31mError:\e[0m This program needs to be executed from inside 'Build/*'.");
