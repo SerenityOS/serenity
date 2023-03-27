@@ -13,7 +13,6 @@
 #include <Browser/CookieJar.h>
 #include <Browser/Database.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
@@ -75,10 +74,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(webdriver_content_ipc_path, "Path to WebDriver IPC for WebContent", "webdriver-content-path", 0, "path");
     args_parser.parse(arguments);
 
-    auto get_formatted_url = [&](StringView const& raw_url) -> URL {
+    auto get_formatted_url = [&](StringView const& raw_url) -> ErrorOr<URL> {
         URL url = raw_url;
         if (FileSystem::exists(raw_url))
-            url = URL::create_with_file_scheme(Core::DeprecatedFile::real_path_for(raw_url));
+            url = URL::create_with_file_scheme(TRY(FileSystem::real_path(raw_url)).to_deprecated_string());
         else if (!url.is_valid())
             url = DeprecatedString::formatted("http://{}", raw_url);
         return url;
@@ -96,11 +95,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window.resize(800, 600);
     window.show();
 
-    if (auto url = get_formatted_url(raw_url); url.is_valid()) {
+    if (auto url = TRY(get_formatted_url(raw_url)); url.is_valid()) {
         window.view().load(url);
     } else if (!s_settings->homepage().isEmpty()) {
         auto home_url = TRY(ak_string_from_qstring(s_settings->homepage()));
-        window.view().load(get_formatted_url(home_url.bytes_as_string_view()));
+        window.view().load(TRY(get_formatted_url(home_url.bytes_as_string_view())));
     }
 
     return app.exec();
