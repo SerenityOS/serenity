@@ -88,4 +88,23 @@
             }
         }
     }
+
+    @GUI::GroupBox {
+        title: "Certificates"
+        shrink_to_fit: true
+        layout: @GUI::VerticalBoxLayout {
+            margins: [10]
+        }
+
+        @GUI::Widget {
+            layout: @GUI::HorizontalBoxLayout {}
+            preferred_height: 20
+
+            @GUI::Button {
+                text: "Certificate Store"
+                fixed_width: 100
+                name: "cert_store_button"
+            }
+        }
+    }
 }

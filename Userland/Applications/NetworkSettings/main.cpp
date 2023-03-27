@@ -25,6 +25,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));
     TRY(Core::System::unveil("/tmp/portal/window", "rw"));
+    TRY(Core::System::unveil("/etc/cacert.pem", "r"));
+    TRY(Core::System::unveil("/etc/timezone", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
     DeprecatedString adapter;

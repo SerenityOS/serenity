@@ -5,6 +5,7 @@
  */
 
 #include "NetworkSettingsWidget.h"
+#include "CertStoreDialog.h"
 
 #include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
@@ -58,6 +59,12 @@ NetworkSettingsWidget::NetworkSettingsWidget()
     m_default_gateway_textbox->on_change = [&]() {
         m_current_adapter_data->default_gateway = m_default_gateway_textbox->text();
         set_modified(true);
+    };
+
+    m_cert_store_button = *find_descendant_of_type_named<GUI::Button>("cert_store_button");
+    m_cert_store_button->on_click = [&](auto) {
+        auto dialog = CertStoreDialog::try_create(window()).release_value_but_fixme_should_propagate_errors();
+        dialog->open_cert_store();
     };
 
     auto config_file = Core::ConfigFile::open_for_system("Network").release_value_but_fixme_should_propagate_errors();

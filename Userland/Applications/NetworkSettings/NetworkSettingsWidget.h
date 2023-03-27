@@ -43,6 +43,7 @@ private:
     RefPtr<GUI::TextBox> m_ip_address_textbox;
     RefPtr<GUI::SpinBox> m_cidr_spinbox;
     RefPtr<GUI::TextBox> m_default_gateway_textbox;
+    RefPtr<GUI::Button> m_cert_store_button;
 };
 
 }
