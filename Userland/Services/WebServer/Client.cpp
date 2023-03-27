@@ -128,26 +128,15 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
     auto requested_path = TRY(String::from_deprecated_string(LexicalPath::join("/"sv, resource_decoded).string()));
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
-    StringBuilder path_builder;
-    path_builder.append(Configuration::the().document_root_path());
-    path_builder.append(requested_path);
-    auto real_path = TRY(path_builder.to_string());
+    auto real_path = TRY(String::formatted("{}{}", Configuration::the().document_root_path(), requested_path));
 
     if (FileSystem::is_directory(real_path.bytes_as_string_view())) {
         if (!resource_decoded.ends_with('/')) {
-            StringBuilder red;
-
-            red.append(requested_path);
-            red.append("/"sv);
-
-            TRY(send_redirect(red.to_deprecated_string(), request));
+            TRY(send_redirect(TRY(String::formatted("{}/", requested_path)), request));
             return true;
         }
 
-        StringBuilder index_html_path_builder;
-        index_html_path_builder.append(real_path);
-        index_html_path_builder.append("/index.html"sv);
-        auto index_html_path = TRY(index_html_path_builder.to_string());
+        auto index_html_path = TRY(String::formatted("{}/index.html", real_path));
         if (!FileSystem::exists(index_html_path)) {
             TRY(handle_directory_listing(requested_path, real_path, request));
             return true;
@@ -179,17 +168,17 @@ ErrorOr<bool> Client::handle_request(HTTP::HttpRequest const& request)
 ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& request, ContentInfo content_info)
 {
     StringBuilder builder;
-    builder.append("HTTP/1.0 200 OK\r\n"sv);
-    builder.append("Server: WebServer (SerenityOS)\r\n"sv);
-    builder.append("X-Frame-Options: SAMEORIGIN\r\n"sv);
-    builder.append("X-Content-Type-Options: nosniff\r\n"sv);
-    builder.append("Pragma: no-cache\r\n"sv);
+    TRY(builder.try_append("HTTP/1.0 200 OK\r\n"sv));
+    TRY(builder.try_append("Server: WebServer (SerenityOS)\r\n"sv));
+    TRY(builder.try_append("X-Frame-Options: SAMEORIGIN\r\n"sv));
+    TRY(builder.try_append("X-Content-Type-Options: nosniff\r\n"sv));
+    TRY(builder.try_append("Pragma: no-cache\r\n"sv));
     if (content_info.type == "text/plain")
-        builder.appendff("Content-Type: {}; charset=utf-8\r\n", content_info.type);
+        TRY(builder.try_appendff("Content-Type: {}; charset=utf-8\r\n", content_info.type));
     else
-        builder.appendff("Content-Type: {}\r\n", content_info.type);
-    builder.appendff("Content-Length: {}\r\n", content_info.length);
-    builder.append("\r\n"sv);
+        TRY(builder.try_appendff("Content-Type: {}\r\n", content_info.type));
+    TRY(builder.try_appendff("Content-Length: {}\r\n", content_info.length));
+    TRY(builder.try_append("\r\n"sv));
 
     auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write_until_depleted(builder_contents));
@@ -227,11 +216,11 @@ ErrorOr<void> Client::send_response(Stream& response, HTTP::HttpRequest const& r
 ErrorOr<void> Client::send_redirect(StringView redirect_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
-    builder.append("HTTP/1.0 301 Moved Permanently\r\n"sv);
-    builder.append("Location: "sv);
-    builder.append(redirect_path);
-    builder.append("\r\n"sv);
-    builder.append("\r\n"sv);
+    TRY(builder.try_append("HTTP/1.0 301 Moved Permanently\r\n"sv));
+    TRY(builder.try_append("Location: "sv));
+    TRY(builder.try_append(redirect_path));
+    TRY(builder.try_append("\r\n"sv));
+    TRY(builder.try_append("\r\n"sv));
 
     auto builder_contents = TRY(builder.to_byte_buffer());
     TRY(m_socket->write_until_depleted(builder_contents));
@@ -266,41 +255,41 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 {
     StringBuilder builder;
 
-    builder.append("<!DOCTYPE html>\n"sv);
-    builder.append("<html>\n"sv);
-    builder.append("<head><meta charset=\"utf-8\">\n"sv);
-    builder.append("<title>Index of "sv);
-    builder.append(escape_html_entities(requested_path));
-    builder.append("</title><style>\n"sv);
-    builder.append(".folder { width: 16px; height: 16px; background-image: url('data:image/png;base64,"sv);
-    builder.append(folder_image_data());
-    builder.append("'); }\n"sv);
-    builder.append(".file { width: 16px; height: 16px; background-image: url('data:image/png;base64,"sv);
-    builder.append(file_image_data());
-    builder.append("'); }\n"sv);
-    builder.append("</style></head><body>\n"sv);
-    builder.append("<h1>Index of "sv);
-    builder.append(escape_html_entities(requested_path));
-    builder.append("</h1>\n"sv);
-    builder.append("<hr>\n"sv);
-    builder.append("<code><table>\n"sv);
+    TRY(builder.try_append("<!DOCTYPE html>\n"sv));
+    TRY(builder.try_append("<html>\n"sv));
+    TRY(builder.try_append("<head><meta charset=\"utf-8\">\n"sv));
+    TRY(builder.try_append("<title>Index of "sv));
+    TRY(builder.try_append(escape_html_entities(requested_path)));
+    TRY(builder.try_append("</title><style>\n"sv));
+    TRY(builder.try_append(".folder { width: 16px; height: 16px; background-image: url('data:image/png;base64,"sv));
+    TRY(builder.try_append(folder_image_data()));
+    TRY(builder.try_append("'); }\n"sv));
+    TRY(builder.try_append(".file { width: 16px; height: 16px; background-image: url('data:image/png;base64,"sv));
+    TRY(builder.try_append(file_image_data()));
+    TRY(builder.try_append("'); }\n"sv));
+    TRY(builder.try_append("</style></head><body>\n"sv));
+    TRY(builder.try_append("<h1>Index of "sv));
+    TRY(builder.try_append(escape_html_entities(requested_path)));
+    TRY(builder.try_append("</h1>\n"sv));
+    TRY(builder.try_append("<hr>\n"sv));
+    TRY(builder.try_append("<code><table>\n"sv));
 
     Core::DirIterator dt(real_path.bytes_as_string_view());
     Vector<DeprecatedString> names;
     while (dt.has_next())
-        names.append(dt.next_path());
+        TRY(names.try_append(dt.next_path()));
     quick_sort(names);
 
     for (auto& name : names) {
         StringBuilder path_builder;
-        path_builder.append(real_path);
-        path_builder.append('/');
+        TRY(path_builder.try_append(real_path));
+        TRY(path_builder.try_append('/'));
         // NOTE: In the root directory of the webserver, ".." should be equal to ".", since we don't want
         //       the user to see e.g. the size of the parent directory (and it isn't unveiled, so stat fails).
         if (requested_path == "/" && name == "..")
-            path_builder.append("."sv);
+            TRY(path_builder.try_append("."sv));
         else
-            path_builder.append(name);
+            TRY(path_builder.try_append(name));
 
         struct stat st;
         memset(&st, 0, sizeof(st));
@@ -311,30 +300,30 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
         bool is_directory = S_ISDIR(st.st_mode);
 
-        builder.append("<tr>"sv);
-        builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
-        builder.append("<td><a href=\"./"sv);
-        builder.append(URL::percent_encode(name));
+        TRY(builder.try_append("<tr>"sv));
+        TRY(builder.try_appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file"));
+        TRY(builder.try_append("<td><a href=\"./"sv));
+        TRY(builder.try_append(URL::percent_encode(name)));
         // NOTE: For directories, we append a slash so we don't always hit the redirect case,
         //       which adds a slash anyways.
         if (is_directory)
-            builder.append('/');
-        builder.append("\">"sv);
-        builder.append(escape_html_entities(name));
-        builder.append("</a></td><td>&nbsp;</td>"sv);
+            TRY(builder.try_append('/'));
+        TRY(builder.try_append("\">"sv));
+        TRY(builder.try_append(escape_html_entities(name)));
+        TRY(builder.try_append("</a></td><td>&nbsp;</td>"sv));
 
-        builder.appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size);
-        builder.append("<td>"sv);
-        builder.append(Core::DateTime::from_timestamp(st.st_mtime).to_deprecated_string());
-        builder.append("</td>"sv);
-        builder.append("</tr>\n"sv);
+        TRY(builder.try_appendff("<td>{:10}</td><td>&nbsp;</td>", st.st_size));
+        TRY(builder.try_append("<td>"sv));
+        TRY(builder.try_append(TRY(Core::DateTime::from_timestamp(st.st_mtime).to_string())));
+        TRY(builder.try_append("</td>"sv));
+        TRY(builder.try_append("</tr>\n"sv));
     }
 
-    builder.append("</table></code>\n"sv);
-    builder.append("<hr>\n"sv);
-    builder.append("<i>Generated by WebServer (SerenityOS)</i>\n"sv);
-    builder.append("</body>\n"sv);
-    builder.append("</html>\n"sv);
+    TRY(builder.try_append("</table></code>\n"sv));
+    TRY(builder.try_append("<hr>\n"sv));
+    TRY(builder.try_append("<i>Generated by WebServer (SerenityOS)</i>\n"sv));
+    TRY(builder.try_append("</body>\n"sv));
+    TRY(builder.try_append("</html>\n"sv));
 
     auto response = builder.to_deprecated_string();
     FixedMemoryStream stream { response.bytes() };
@@ -346,23 +335,23 @@ ErrorOr<void> Client::send_error_response(unsigned code, HTTP::HttpRequest const
     auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
 
     StringBuilder content_builder;
-    content_builder.append("<!DOCTYPE html><html><body><h1>"sv);
-    content_builder.appendff("{} ", code);
-    content_builder.append(reason_phrase);
-    content_builder.append("</h1></body></html>"sv);
+    TRY(content_builder.try_append("<!DOCTYPE html><html><body><h1>"sv));
+    TRY(content_builder.try_appendff("{} ", code));
+    TRY(content_builder.try_append(reason_phrase));
+    TRY(content_builder.try_append("</h1></body></html>"sv));
 
     StringBuilder header_builder;
-    header_builder.appendff("HTTP/1.0 {} ", code);
-    header_builder.append(reason_phrase);
-    header_builder.append("\r\n"sv);
+    TRY(header_builder.try_appendff("HTTP/1.0 {} ", code));
+    TRY(header_builder.try_append(reason_phrase));
+    TRY(header_builder.try_append("\r\n"sv));
 
     for (auto& header : headers) {
-        header_builder.append(header);
-        header_builder.append("\r\n"sv);
+        TRY(header_builder.try_append(header));
+        TRY(header_builder.try_append("\r\n"sv));
     }
-    header_builder.append("Content-Type: text/html; charset=UTF-8\r\n"sv);
-    header_builder.appendff("Content-Length: {}\r\n", content_builder.length());
-    header_builder.append("\r\n"sv);
+    TRY(header_builder.try_append("Content-Type: text/html; charset=UTF-8\r\n"sv));
+    TRY(header_builder.try_appendff("Content-Length: {}\r\n", content_builder.length()));
+    TRY(header_builder.try_append("\r\n"sv));
     TRY(m_socket->write_until_depleted(TRY(header_builder.to_byte_buffer())));
     TRY(m_socket->write_until_depleted(TRY(content_builder.to_byte_buffer())));
 
