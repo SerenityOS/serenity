@@ -313,7 +313,7 @@ ErrorOr<void> Client::handle_directory_listing(String const& requested_path, Str
 
         builder.append("<tr>"sv);
         builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
-        builder.append("<td><a href=\""sv);
+        builder.append("<td><a href=\"./"sv);
         builder.append(URL::percent_encode(name));
         // NOTE: For directories, we append a slash so we don't always hit the redirect case,
         //       which adds a slash anyways.
