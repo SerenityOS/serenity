@@ -105,7 +105,7 @@ void NVMeQueue::submit_sqe(NVMeSubmission& sub)
 u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
 {
     // For now let's use sq tail as a unique command id.
-    u16 cqe_cid;
+    u16 cmd_status;
     u16 cid = get_request_cid();
     sub.cmdid = cid;
 
@@ -114,24 +114,14 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
 
         if (m_requests.contains(sub.cmdid) && m_requests.get(sub.cmdid).release_value().used)
             VERIFY_NOT_REACHED();
-        m_requests.set(sub.cmdid, { nullptr, true, nullptr });
+        m_requests.set(sub.cmdid, { nullptr, true, [this, &cmd_status](u16 status) mutable { cmd_status = status; m_sync_wait_queue.wake_all(); } });
     }
-
     submit_sqe(sub);
-    do {
-        int index;
-        {
-            SpinlockLocker lock(m_cq_lock);
-            index = m_cq_head - 1;
-            if (index < 0)
-                index = m_qdepth - 1;
-        }
-        cqe_cid = m_cqe_array[index].command_id;
-        microseconds_delay(1);
-    } while (cid != cqe_cid);
 
-    auto status = CQ_STATUS_FIELD(m_cqe_array[m_cq_head].status);
-    return status;
+    // FIXME: Only sync submissions (usually used for admin commands) use a WaitQueue based IO. Eventually we need to
+    //  move this logic into the block layer instead of sprinkling them in the driver code.
+    m_sync_wait_queue.wait_forever("NVMe sync submit"sv);
+    return cmd_status;
 }
 
 void NVMeQueue::read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count)
