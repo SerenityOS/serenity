@@ -34,25 +34,6 @@ index 89447a50838562795bb80172db8102ff7a42e91b..3552e1807860b30eb18366487e547634
  }
  
  static void finish_early_output(struct rev_info *rev)
-diff --git a/git-compat-util.h b/git-compat-util.h
-index a76d0526f79266e1dc512072a4236876df8f8726..596ac243f673d30748e3792d7926ea1b22d4911e 100644
---- a/git-compat-util.h
-+++ b/git-compat-util.h
-@@ -1471,14 +1471,6 @@ int open_nofollow(const char *path, int flags);
- #endif
- 
- #ifndef _POSIX_THREAD_SAFE_FUNCTIONS
--static inline void flockfile(FILE *fh UNUSED)
--{
--	; /* nothing */
--}
--static inline void funlockfile(FILE *fh UNUSED)
--{
--	; /* nothing */
--}
- #define getc_unlocked(fh) getc(fh)
- #endif
- 
 diff --git a/progress.c b/progress.c
 index 0cdd875d37f166bedbbeb5f0e889046674ed58be..4b7f5b0b5a48b1b895befef12217e5822d118563 100644
 --- a/progress.c
