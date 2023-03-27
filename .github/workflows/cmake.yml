@@ -82,11 +82,21 @@ jobs:
           message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildIt.sh') }}")
           message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/Patches/gcc/*.patch', 'Toolchain/BuildIt.sh') }}")
 
-      - name: Toolchain cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-        env:
-          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+      # Only restore the cache if we're a PR
+      - name: Toolchain cache (PR)
+        uses: actions/cache/restore@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          path: ${{ github.workspace }}/Toolchain/Cache/
+          # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
+          # This is wrong, and causes more Toolchain rebuilds than necessary.
+          # However, we want to avoid false cache hits at all costs.
+          key: ${{ runner.os }}-toolchain-${{ matrix.arch }}-${{ steps.stamps.outputs.libc_headers }}
+
+      # If we're a push to master, we want to restore the cache, but also save it.
+      - name: Toolchain cache (master)
+        uses: actions/cache@v3
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         with:
           path: ${{ github.workspace }}/Toolchain/Cache/
           # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
@@ -97,12 +107,27 @@ jobs:
       - name: Restore or regenerate Toolchain
         run: TRY_USE_LOCAL_TOOLCHAIN=y ARCH="${{ matrix.arch }}" ${{ github.workspace }}/Toolchain/BuildIt.sh
 
-      - name: ccache(1) cache
+      # Only restore the cache if we're a PR
+      - name: ccache(1) cache (PR)
         # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
-        env:
-          CACHE_SKIP_SAVE: ${{ github.event_name == 'pull_request' }}
+        uses: actions/cache/restore@v3
+        if: ${{ github.event_name == 'pull_request' }}
+        with:
+          path: ${{ github.workspace }}/.ccache
+          # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
+          # We want to always reuse the last cache, but upload a new one.
+          # This is achieved by using the "prefix-timestamp" format,
+          # and permitting the restore-key "prefix-" without specifying a timestamp.
+          # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
+          key: ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-${{ matrix.arch }}-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
+
+      # If we're a push to master, we want to restore the cache, but also save it.
+      - name: ccache(1) cache (master)
+        # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
+        uses: actions/cache@v3
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
         with:
           path: ${{ github.workspace }}/.ccache
           # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
@@ -131,20 +156,17 @@ jobs:
           mkdir -p ${{ github.workspace }}/Build/caches/UCD
           mkdir -p ${{ github.workspace }}/Build/caches/CLDR
       - name: TimeZoneData cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Build/caches/TZDB
           key: TimeZoneData-${{ hashFiles('Meta/CMake/time_zone_data.cmake') }}
       - name: UnicodeData cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Build/caches/UCD
           key: UnicodeData-${{ hashFiles('Meta/CMake/unicode_data.cmake') }}
       - name: UnicodeLocale Cache
-        # TODO: Change the version to the released version when https://github.com/actions/cache/pull/489 (or 571) is merged.
-        uses: actions/cache@03e00da99d75a2204924908e1cca7902cafce66b
+        uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/Build/caches/CLDR
           key: UnicodeLocale-${{ hashFiles('Meta/CMake/locale_data.cmake') }}
