@@ -22,13 +22,7 @@ Teach bdwgc about serenity signals
 Serenity doesn't have the realtime POSIX signals, so use SIGXCPU and
 SIGXFSZ instead.
 
-## `0005-Explicitly-link-with-pthread.patch`
-
-Explicitly link with pthread
-
-The cmakelists was using the wrong variable to link against pthread.
-
-## `0006-Make-the-collector-build-with-threads.patch`
+## `0005-Make-the-collector-build-with-threads.patch`
 
 Make the collector build with threads
 
@@ -42,8 +36,6 @@ In an extremely limited way for now:
 - No fork handling
     Seems borked for unknown reasons.
 
-## `0007-Add-serenity-to-the-conigure-list-of-pthread-unixes.patch`
+## `0006-Add-serenity-to-the-conigure-list-of-pthread-unixes.patch`
 
 Add serenity to the conigure list of pthread unixes
-
-

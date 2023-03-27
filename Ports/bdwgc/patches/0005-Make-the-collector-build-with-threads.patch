@@ -1,6 +1,6 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Ali Mohammad Pur <ali.mpfard@gmail.com>
-Date: Fri, 25 Feb 2022 04:53:53 +0330
+Date: Mon, 27 Mar 2023 20:14:33 +1100
 Subject: [PATCH] Make the collector build with threads
 
 In an extremely limited way for now:
@@ -18,32 +18,32 @@ In an extremely limited way for now:
  2 files changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index e9c52f1..7c9daad 100644
+index 50dba74..6fcb550 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -56,7 +56,11 @@ IF(enable_threads)
-         MESSAGE("Libs: ${LIBS}" )
- ENDIF(enable_threads)
- 
--OPTION(enable_handle_fork "Attempt to ensure a usable collector after fork()" ON)
+@@ -77,7 +77,11 @@ option(enable_register_main_static_data "Perform the initial guess of data root
+ option(enable_checksums "Report erroneously cleared dirty bits" OFF)
+ option(enable_werror "Pass -Werror to the C compiler (treat warnings as errors)" OFF)
+ option(enable_single_obj_compilation "Compile all libgc source files into single .o" OFF)
+-option(enable_handle_fork "Attempt to ensure a usable collector after fork()" ON)
 +IF(DEBUG_THREADS)
 +        ADD_DEFINITIONS("-DDEBUG_THREADS")
 +ENDIF()
 +
 +OPTION(enable_handle_fork "Attempt to ensure a usable collector after fork()" OFF)
- 
- OPTION(enable_thread_local_alloc "Turn on thread-local allocation optimization" ON)
- 
+ option(disable_handle_fork "Prohibit installation of pthread_atfork() handlers" OFF)
+ option(install_headers "Install header and pkg-config metadata files" ON)
+ option(without_libatomic_ops "Use atomic_ops.h in libatomic_ops/src" OFF)
 diff --git a/tests/test.c b/tests/test.c
-index 8e2e3a6..f38fb22 100644
+index b41a300..0ad4ea5 100644
 --- a/tests/test.c
 +++ b/tests/test.c
-@@ -40,7 +40,7 @@
+@@ -43,7 +43,7 @@
  #include "gc.h"
  
  #ifndef NTHREADS /* Number of additional threads to fork. */
--#  define NTHREADS 5 /* excludes main thread, which also runs a test. */
-+#  define NTHREADS 0 /* excludes main thread, which also runs a test. */
+-# define NTHREADS 5 /* Excludes main thread, which also runs a test. */
++# define NTHREADS 0 /* Excludes main thread, which also runs a test. */
+         /* In the single-threaded case, the number of times to rerun it. */
          /* Not respected by PCR test. */
  #endif
- 
