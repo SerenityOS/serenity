@@ -1,13 +1,9 @@
 # Patches for git on SerenityOS
 
-## `0001-Remove-some-unimplemented-function-calls.patch`
+## `0001-Remove-unimplemented-setitimer-calls.patch`
 
-Remove some unimplemented function calls
-
-i.e. f(un)lockfile stubs and setitimer.
+Remove unimplemented setitimer function calls
 
 ## `0002-Remove-uname-detection-in-config.mak.uname.patch`
 
 Remove uname detection in config.mak.uname
-
-
