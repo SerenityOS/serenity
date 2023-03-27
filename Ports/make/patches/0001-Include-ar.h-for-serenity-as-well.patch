@@ -8,7 +8,7 @@ Subject: [PATCH] Include ar.h for serenity as well
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/src/arscan.c b/src/arscan.c
-index 3ce21db..c48a569 100644
+index b6ed45a87754085aa1776c85e0181ba6edb0d7e6..2ae76f8134a581f3607a7d0c507d1d2e21dc3abc 100644
 --- a/src/arscan.c
 +++ b/src/arscan.c
 @@ -331,7 +331,7 @@ ar_scan (const char *archive, ar_member_func_t function, const void *varg)
