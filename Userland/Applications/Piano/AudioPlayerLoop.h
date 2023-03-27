@@ -34,7 +34,7 @@ private:
 
     intptr_t pipeline_thread_main();
     ErrorOr<void> send_audio_to_server();
-    void write_wav_if_needed();
+    ErrorOr<void> write_wav_if_needed();
 
     TrackManager& m_track_manager;
     FixedArray<DSP::Sample> m_buffer;
