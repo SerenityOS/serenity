@@ -473,9 +473,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return StyleValueList::create(move(values), StyleValueList::Separator::Space);
     }
     case CSS::PropertyID::PaddingBottom:
+        return style_value_for_length_percentage(layout_node.computed_values().padding().bottom());
     case CSS::PropertyID::PaddingLeft:
         return style_value_for_length_percentage(layout_node.computed_values().padding().left());
-        return style_value_for_length_percentage(layout_node.computed_values().padding().bottom());
     case CSS::PropertyID::PaddingRight:
         return style_value_for_length_percentage(layout_node.computed_values().padding().right());
     case CSS::PropertyID::PaddingTop:
