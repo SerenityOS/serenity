@@ -591,8 +591,8 @@ Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
         m_tab_widget->set_tab_icon(new_tab, &bitmap);
     };
 
-    new_tab.on_tab_open_request = [this](auto& url) {
-        create_new_tab(url, Web::HTML::ActivateTab::Yes);
+    new_tab.on_tab_open_request = [this](auto& url, auto& activate) {
+        create_new_tab(url, activate);
     };
 
     new_tab.on_activate_tab_request = [this](auto& tab) {
