@@ -699,8 +699,15 @@ RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_s
     if (glyph_id >= glyph_count()) {
         glyph_id = 0;
     }
-    auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
-    auto glyph = m_glyf->glyph(glyph_offset);
+
+    auto glyph_offset0 = m_loca->get_glyph_offset(glyph_id);
+    auto glyph_offset1 = m_loca->get_glyph_offset(glyph_id + 1);
+
+    // If a glyph has no outline, then loca[n] = loca [n+1].
+    if (glyph_offset0 == glyph_offset1)
+        return nullptr;
+
+    auto glyph = m_glyf->glyph(glyph_offset0);
 
     i16 ascender = 0;
     i16 descender = 0;
