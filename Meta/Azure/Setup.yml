@@ -17,14 +17,14 @@ steps:
   - ${{ if eq(parameters.os, 'Linux') }}:
     - script: |
         set -e
-        sudo apt-get purge -y clang-12 gcc-10
+        sudo apt-get purge -y clang-12 clang-13 clang-14 gcc-10
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-13 main'
+        sudo add-apt-repository 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-15 main'
         sudo apt-get update
-        sudo apt-get install ccache gcc-12 g++-12 clang-13 libstdc++-12-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libgl1-mesa-dev
+        sudo apt-get install ccache gcc-12 g++-12 clang-15 libstdc++-12-dev ninja-build unzip qt6-base-dev qt6-tools-dev-tools libgl1-mesa-dev
 
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-13 100
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-13 100
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100
         sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 100
         sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 100
 
