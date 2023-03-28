@@ -58,7 +58,7 @@ public:
 private:
     class Member {
     public:
-        static ErrorOr<NonnullOwnPtr<Member>> construct(BlockHeader header, Stream&);
+        static ErrorOr<NonnullOwnPtr<Member>> construct(BlockHeader header, LittleEndianInputBitStream&);
 
         BlockHeader m_header;
         NonnullOwnPtr<DeflateDecompressor> m_stream;
@@ -72,7 +72,7 @@ private:
     Member const& current_member() const { return *m_current_member; }
     Member& current_member() { return *m_current_member; }
 
-    NonnullOwnPtr<Stream> m_input_stream;
+    NonnullOwnPtr<LittleEndianInputBitStream> m_input_stream;
     u8 m_partial_header[sizeof(BlockHeader)];
     size_t m_partial_header_offset { 0 };
     OwnPtr<Member> m_current_member {};

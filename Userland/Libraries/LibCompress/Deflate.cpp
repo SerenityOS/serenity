@@ -189,14 +189,14 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(MaybeOwned<Stream> stream)
+ErrorOr<NonnullOwnPtr<DeflateDecompressor>> DeflateDecompressor::construct(MaybeOwned<LittleEndianInputBitStream> stream)
 {
     auto output_buffer = TRY(CircularBuffer::create_empty(32 * KiB));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) DeflateDecompressor(move(stream), move(output_buffer))));
 }
 
-DeflateDecompressor::DeflateDecompressor(MaybeOwned<Stream> stream, CircularBuffer output_buffer)
-    : m_input_stream(make<LittleEndianInputBitStream>(move(stream)))
+DeflateDecompressor::DeflateDecompressor(MaybeOwned<LittleEndianInputBitStream> stream, CircularBuffer output_buffer)
+    : m_input_stream(move(stream))
     , m_output_buffer(move(output_buffer))
 {
 }
@@ -317,7 +317,7 @@ void DeflateDecompressor::close()
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
     auto memory_stream = TRY(try_make<FixedMemoryStream>(bytes));
-    auto deflate_stream = TRY(DeflateDecompressor::construct(move(memory_stream)));
+    auto deflate_stream = TRY(DeflateDecompressor::construct(make<LittleEndianInputBitStream>(move(memory_stream))));
     AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));

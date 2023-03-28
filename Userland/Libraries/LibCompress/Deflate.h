@@ -76,7 +76,7 @@ public:
     friend CompressedBlock;
     friend UncompressedBlock;
 
-    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(MaybeOwned<Stream> stream);
+    static ErrorOr<NonnullOwnPtr<DeflateDecompressor>> construct(MaybeOwned<LittleEndianInputBitStream> stream);
     ~DeflateDecompressor();
 
     virtual ErrorOr<Bytes> read_some(Bytes) override;
@@ -88,7 +88,7 @@ public:
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
 
 private:
-    DeflateDecompressor(MaybeOwned<Stream> stream, CircularBuffer buffer);
+    DeflateDecompressor(MaybeOwned<LittleEndianInputBitStream> stream, CircularBuffer buffer);
 
     ErrorOr<u32> decode_length(u32);
     ErrorOr<u32> decode_distance(u32);

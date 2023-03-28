@@ -7,6 +7,7 @@
 
 #include <LibCompress/Gzip.h>
 
+#include <AK/BitStream.h>
 #include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
@@ -38,9 +39,9 @@ bool BlockHeader::supported_by_implementation() const
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, Stream& stream)
+ErrorOr<NonnullOwnPtr<GzipDecompressor::Member>> GzipDecompressor::Member::construct(BlockHeader header, LittleEndianInputBitStream& stream)
 {
-    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<Stream>(stream)));
+    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<LittleEndianInputBitStream>(stream)));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) Member(header, move(deflate_stream))));
 }
 
@@ -51,7 +52,7 @@ GzipDecompressor::Member::Member(BlockHeader header, NonnullOwnPtr<DeflateDecomp
 }
 
 GzipDecompressor::GzipDecompressor(NonnullOwnPtr<Stream> stream)
-    : m_input_stream(move(stream))
+    : m_input_stream(make<LittleEndianInputBitStream>(move(stream)))
 {
 }
 
