@@ -628,13 +628,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
                 //  MATCH/LITERAL symbol."
                 update_state_after_short_rep();
 
-                u8 byte;
-                auto read_bytes = TRY(m_dictionary->read_with_seekback({ &byte, sizeof(byte) }, m_rep0 + 1));
-                VERIFY(read_bytes.size() == sizeof(byte));
-
-                auto written_bytes = m_dictionary->write({ &byte, sizeof(byte) });
-                VERIFY(written_bytes == sizeof(byte));
-                m_total_decoded_bytes++;
+                TRY(copy_match_to_buffer(1));
 
                 continue;
             }
