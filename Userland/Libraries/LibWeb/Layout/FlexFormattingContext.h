@@ -207,6 +207,8 @@ private:
     [[nodiscard]] CSSPixels calculate_fit_content_main_size(FlexItem const&) const;
     [[nodiscard]] CSSPixels calculate_fit_content_cross_size(FlexItem const&) const;
 
+    CSSPixels calculate_clamped_fit_content_width(Box const&, AvailableSpace const&) const;
+
     virtual void parent_context_did_dimension_child_root_box() override;
 
     CSS::FlexBasisData used_flex_basis_for_item(FlexItem const&) const;

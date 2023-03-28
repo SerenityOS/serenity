@@ -1840,6 +1840,16 @@ CSSPixels FlexFormattingContext::calculate_cross_max_content_contribution(FlexIt
     return item.add_cross_margin_box_sizes(clamped_inner_size);
 }
 
+CSSPixels FlexFormattingContext::calculate_clamped_fit_content_width(Box const& box, AvailableSpace const& available_space) const
+{
+    auto const& computed_min_size = box.computed_values().min_width();
+    auto const& computed_max_size = box.computed_values().max_width();
+    auto clamp_min = (!computed_min_size.is_auto() && (!computed_min_size.contains_percentage())) ? specified_cross_min_size(box) : 0;
+    auto clamp_max = (!computed_max_size.is_none() && (!computed_max_size.contains_percentage())) ? specified_cross_max_size(box) : NumericLimits<float>::max();
+    auto size = FormattingContext::calculate_fit_content_width(box, available_space);
+    return css_clamp(size, clamp_min, clamp_max);
+}
+
 CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const& item) const
 {
     if (is_row_layout()) {
@@ -1847,7 +1857,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_main_size(FlexItem const&
     }
     auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space);
     if (available_space.width.is_indefinite()) {
-        available_space.width = AvailableSize::make_definite(calculate_fit_content_width(item.box, m_available_space_for_items->space));
+        available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
     }
     return calculate_min_content_height(item.box, available_space.width);
 }
@@ -1859,7 +1869,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_main_size(FlexItem const&
     }
     auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_items->space);
     if (available_space.width.is_indefinite()) {
-        available_space.width = AvailableSize::make_definite(calculate_fit_content_width(item.box, m_available_space_for_items->space));
+        available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
     }
     return calculate_max_content_height(item.box, available_space.width);
 }
@@ -1883,7 +1893,7 @@ CSSPixels FlexFormattingContext::calculate_min_content_cross_size(FlexItem const
     if (is_row_layout()) {
         auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
         if (available_space.width.is_indefinite()) {
-            available_space.width = AvailableSize::make_definite(calculate_fit_content_width(item.box, m_available_space_for_items->space));
+            available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
         }
         return calculate_min_content_height(item.box, available_space.width);
     }
@@ -1895,7 +1905,7 @@ CSSPixels FlexFormattingContext::calculate_max_content_cross_size(FlexItem const
     if (is_row_layout()) {
         auto available_space = m_state.get(item.box).available_inner_space_or_constraints_from(m_available_space_for_flex_container->space);
         if (available_space.width.is_indefinite()) {
-            available_space.width = AvailableSize::make_definite(calculate_fit_content_width(item.box, m_available_space_for_items->space));
+            available_space.width = AvailableSize::make_definite(calculate_clamped_fit_content_width(item.box, m_available_space_for_items->space));
         }
         return calculate_max_content_height(item.box, available_space.width);
     }
