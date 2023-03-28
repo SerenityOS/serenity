@@ -8,6 +8,8 @@ Graphical Unix-like operating system for x86-64 computers.
 [![Sonar Cube Static Analysis](https://sonarcloud.io/api/project_badges/measure?project=SerenityOS_serenity&metric=ncloc)](https://sonarcloud.io/dashboard?id=SerenityOS_serenity)
 [![Discord](https://img.shields.io/discord/830522505605283862.svg?logo=discord&logoColor=white&logoWidth=20&labelColor=7289DA&label=Discord&color=17cf48)](https://discord.gg/serenityos)
 
+[FAQ](Documentation/FAQ.md) | [Documentation](#how-do-i-read-the-documentation) | [Build Instructions](#how-do-i-build-and-run-this)
+
 ## About
 
 SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
@@ -19,8 +21,6 @@ You can watch videos of the system being developed on YouTube:
 * [Andreas Kling's channel](https://youtube.com/andreaskling)
 * [Linus Groh's channel](https://youtube.com/linusgroh)
 * [kleines Filmröllchen's channel](https://www.youtube.com/c/kleinesfilmroellchen)
-
-**FAQ**: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
 
 ## Screenshot
 
