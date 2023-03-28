@@ -174,7 +174,9 @@ int TestSuite::run(Vector<NonnullRefPtr<TestCase>> const& tests)
         m_testtime,
         m_benchtime,
         global_timer.elapsed_milliseconds() - (m_testtime + m_benchtime));
-    dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_count - test_failed_count, test_failed_count);
+
+    if (test_count != 0)
+        dbgln("Out of {} tests, {} passed and {} failed.", test_count, test_count - test_failed_count, test_failed_count);
 
     return (int)test_failed_count;
 }
