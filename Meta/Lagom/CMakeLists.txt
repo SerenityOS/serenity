@@ -533,6 +533,9 @@ if (BUILD_LAGOM)
                     -sENVIRONMENT=web)
         endif()
 
+        add_executable(lzcat ../../Userland/Utilities/lzcat.cpp)
+        target_link_libraries(lzcat LibCompress LibCore LibMain)
+
         add_executable(markdown-check ../../Userland/Utilities/markdown-check.cpp)
         target_link_libraries(markdown-check LibFileSystem LibMarkdown LibMain)
 
@@ -543,6 +546,9 @@ if (BUILD_LAGOM)
 
         add_executable(sql ../../Userland/Utilities/sql.cpp)
         target_link_libraries(sql LibCore LibFileSystem LibIPC LibLine LibMain LibSQL)
+
+        add_executable(tar ../../Userland/Utilities/tar.cpp)
+        target_link_libraries(tar LibArchive LibCompress LibCore LibFileSystem LibMain)
 
         add_executable(test262-runner ../../Tests/LibJS/test262-runner.cpp)
         target_link_libraries(test262-runner LibJS LibCore LibFileSystem)
@@ -568,6 +574,9 @@ if (BUILD_LAGOM)
 
         add_executable(xml ../../Userland/Utilities/xml.cpp)
         target_link_libraries(xml LibCore LibXML LibMain)
+
+        add_executable(xzcat ../../Userland/Utilities/xzcat.cpp)
+        target_link_libraries(xzcat LibCompress LibCore LibMain)
 
         enable_testing()
         # LibTest
