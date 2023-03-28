@@ -63,13 +63,25 @@ Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
             last_non_zero = i;
         }
     }
+
     if (non_zero_symbols == 1) { // special case - only 1 symbol
-        code.m_symbol_codes.append(0b10);
-        code.m_symbol_values.append(last_non_zero);
+        code.m_prefix_table[0] = PrefixTableEntry { static_cast<u16>(last_non_zero), 1u };
+        code.m_prefix_table[1] = code.m_prefix_table[0];
+        code.m_max_prefixed_code_length = 1;
+
         code.m_bit_codes[last_non_zero] = 0;
         code.m_bit_code_lengths[last_non_zero] = 1;
+
         return code;
     }
+
+    struct PrefixCode {
+        u16 symbol_code { 0 };
+        u16 symbol_value { 0 };
+        u16 code_length { 0 };
+    };
+    Array<PrefixCode, 1 << CanonicalCode::max_allowed_prefixed_code_length> prefix_codes;
+    size_t number_of_prefix_codes = 0;
 
     auto next_code = 0;
     for (size_t code_length = 1; code_length <= 15; ++code_length) {
@@ -83,8 +95,18 @@ Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
             if (next_code > start_bit)
                 return {};
 
-            code.m_symbol_codes.append(start_bit | next_code);
-            code.m_symbol_values.append(symbol);
+            if (code_length <= CanonicalCode::max_allowed_prefixed_code_length) {
+                auto& prefix_code = prefix_codes[number_of_prefix_codes++];
+                prefix_code.symbol_code = next_code;
+                prefix_code.symbol_value = symbol;
+                prefix_code.code_length = code_length;
+
+                code.m_max_prefixed_code_length = code_length;
+            } else {
+                code.m_symbol_codes.append(start_bit | next_code);
+                code.m_symbol_values.append(symbol);
+            }
+
             code.m_bit_codes[symbol] = fast_reverse16(start_bit | next_code, code_length); // DEFLATE writes huffman encoded symbols as lsb-first
             code.m_bit_code_lengths[symbol] = code_length;
 
@@ -96,24 +118,44 @@ Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
         return {};
     }
 
+    for (auto [symbol_code, symbol_value, code_length] : prefix_codes) {
+        if (code_length == 0 || code_length > CanonicalCode::max_allowed_prefixed_code_length)
+            break;
+
+        auto shift = code.m_max_prefixed_code_length - code_length;
+        symbol_code <<= shift;
+
+        for (size_t j = 0; j < (1u << shift); ++j) {
+            auto index = fast_reverse16(symbol_code + j, code.m_max_prefixed_code_length);
+            code.m_prefix_table[index] = PrefixTableEntry { symbol_value, code_length };
+        }
+    }
+
     return code;
 }
 
 ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& stream) const
 {
-    u32 code_bits = 1;
+    auto prefix = TRY(stream.peek_bits<size_t>(m_max_prefixed_code_length));
 
-    for (;;) {
-        code_bits = code_bits << 1 | TRY(stream.read_bit());
-        if (code_bits >= (1 << 16))
-            return Error::from_string_literal("Symbol exceeds maximum symbol number");
+    if (auto [symbol_value, code_length] = m_prefix_table[prefix]; code_length != 0) {
+        stream.discard_previously_peeked_bits(code_length);
+        return symbol_value;
+    }
 
-        // FIXME: This is very inefficient and could greatly be improved by implementing this
-        //        algorithm: https://www.hanshq.net/zip.html#huffdec
+    auto code_bits = TRY(stream.read_bits<u16>(m_max_prefixed_code_length));
+    code_bits = fast_reverse16(code_bits, m_max_prefixed_code_length);
+    code_bits |= 1 << m_max_prefixed_code_length;
+
+    for (size_t i = m_max_prefixed_code_length; i < 16; ++i) {
         size_t index;
         if (binary_search(m_symbol_codes.span(), code_bits, &index))
             return m_symbol_values[index];
+
+        code_bits = code_bits << 1 | TRY(stream.read_bit());
     }
+
+    return Error::from_string_literal("Symbol exceeds maximum symbol number");
 }
 
 ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& stream, u32 symbol) const

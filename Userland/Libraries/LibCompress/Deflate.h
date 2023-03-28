@@ -30,9 +30,19 @@ public:
     static Optional<CanonicalCode> from_bytes(ReadonlyBytes);
 
 private:
+    static constexpr size_t max_allowed_prefixed_code_length = 8;
+
+    struct PrefixTableEntry {
+        u16 symbol_value { 0 };
+        u16 code_length { 0 };
+    };
+
     // Decompression - indexed by code
     Vector<u16> m_symbol_codes;
     Vector<u16> m_symbol_values;
+
+    Array<PrefixTableEntry, 1 << max_allowed_prefixed_code_length> m_prefix_table {};
+    size_t m_max_prefixed_code_length { 0 };
 
     // Compression - indexed by symbol
     Array<u16, 288> m_bit_codes {}; // deflate uses a maximum of 288 symbols (maximum of 32 for distances)
