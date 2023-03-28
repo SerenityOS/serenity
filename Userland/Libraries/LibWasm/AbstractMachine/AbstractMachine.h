@@ -398,7 +398,12 @@ public:
     auto& data() const { return m_data; }
     auto& data() { return m_data; }
 
-    bool grow(size_t size_to_grow)
+    enum class InhibitGrowCallback {
+        No,
+        Yes,
+    };
+
+    bool grow(size_t size_to_grow, InhibitGrowCallback inhibit_callback = InhibitGrowCallback::No)
     {
         if (size_to_grow == 0)
             return true;
@@ -416,8 +421,16 @@ public:
         m_size = new_size;
         // The spec requires that we zero out everything on grow
         __builtin_memset(m_data.offset_pointer(previous_size), 0, size_to_grow);
+
+        // NOTE: This exists because wasm-js-api wants to execute code after a successful grow,
+        //       See [this issue](https://github.com/WebAssembly/spec/issues/1635) for more details.
+        if (inhibit_callback == InhibitGrowCallback::No && successful_grow_hook)
+            successful_grow_hook();
+
         return true;
     }
+
+    Function<void()> successful_grow_hook;
 
 private:
     explicit MemoryInstance(MemoryType const& type)
