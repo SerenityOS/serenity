@@ -11,7 +11,7 @@
 #include <LibMain/Main.h>
 #include <unistd.h>
 
-static ErrorOr<void> decompress_file(NonnullOwnPtr<Core::File> input_stream, Stream& output_stream)
+static ErrorOr<void> decompress_file(NonnullOwnPtr<Stream> input_stream, Stream& output_stream)
 {
     auto gzip_stream = Compress::GzipDecompressor { move(input_stream) };
 
@@ -51,10 +51,12 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             output_filename = filename;
         }
 
-        auto input_stream_result = TRY(Core::File::open(input_filename, Core::File::OpenMode::Read));
+        auto input_file = TRY(Core::File::open(input_filename, Core::File::OpenMode::Read));
+        auto buffered_input_file = TRY(Core::BufferedFile::create(move(input_file)));
+
         auto output_stream = write_to_stdout ? TRY(Core::File::standard_output()) : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));
 
-        TRY(decompress_file(move(input_stream_result), *output_stream));
+        TRY(decompress_file(move(buffered_input_file), *output_stream));
 
         if (!keep_input_files)
             TRY(Core::System::unlink(input_filename));
