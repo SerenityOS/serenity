@@ -90,6 +90,8 @@ public:
     void show_storage_inspector();
     void show_history_inspector();
 
+    void update_reset_zoom_button();
+
     DeprecatedString const& title() const { return m_title; }
     Gfx::Bitmap const* icon() const { return m_icon; }
 
@@ -124,6 +126,7 @@ private:
     RefPtr<WebView::OutOfProcessWebView> m_web_content_view;
 
     RefPtr<GUI::UrlBox> m_location_box;
+    RefPtr<GUI::Button> m_reset_zoom_button;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<InspectorWidget> m_dom_inspector_widget;
     RefPtr<ConsoleWidget> m_console_widget;

@@ -62,7 +62,7 @@ private:
 
     virtual void event(Core::Event&) override;
 
-    void update_zoom_menu_text();
+    void update_displayed_zoom_level();
 
     enum class ScreenshotType {
         Visible,
