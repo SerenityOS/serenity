@@ -84,7 +84,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
         auto& tab = static_cast<Browser::Tab&>(active_widget);
         set_window_title_for_tab(tab);
         tab.did_become_active();
-        update_zoom_menu_text();
+        update_displayed_zoom_level();
     };
 
     m_tab_widget->on_middle_click = [](auto& clicked_widget) {
@@ -178,21 +178,21 @@ void BrowserWindow::build_menus()
         [this](auto&) {
             auto& tab = active_tab();
             tab.view().zoom_in();
-            update_zoom_menu_text();
+            update_displayed_zoom_level();
         },
         this));
     m_zoom_menu->add_action(GUI::CommonActions::make_zoom_out_action(
         [this](auto&) {
             auto& tab = active_tab();
             tab.view().zoom_out();
-            update_zoom_menu_text();
+            update_displayed_zoom_level();
         },
         this));
     m_zoom_menu->add_action(GUI::CommonActions::make_reset_zoom_action(
         [this](auto&) {
             auto& tab = active_tab();
             tab.view().reset_zoom();
-            update_zoom_menu_text();
+            update_displayed_zoom_level();
         },
         this));
     view_menu.add_separator();
@@ -796,11 +796,12 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
     return {};
 }
 
-void BrowserWindow::update_zoom_menu_text()
+void BrowserWindow::update_displayed_zoom_level()
 {
     VERIFY(m_zoom_menu);
     auto zoom_level_text = DeprecatedString::formatted("&Zoom ({}%)", round_to<int>(active_tab().view().zoom_level() * 100));
     m_zoom_menu->set_name(zoom_level_text);
+    active_tab().update_reset_zoom_button();
 }
 
 }

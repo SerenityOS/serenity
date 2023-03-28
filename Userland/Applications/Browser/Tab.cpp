@@ -201,6 +201,15 @@ Tab::Tab(BrowserWindow& window)
         },
         this);
 
+    m_reset_zoom_button = toolbar.add<GUI::Button>();
+    m_reset_zoom_button->on_click = [&](auto) {
+        view().reset_zoom();
+        update_reset_zoom_button();
+    };
+    m_reset_zoom_button->set_button_style(Gfx::ButtonStyle::Coolbar);
+    m_reset_zoom_button->set_visible(false);
+    m_reset_zoom_button->set_preferred_width(GUI::SpecialDimension::Shrink);
+
     m_bookmark_button = toolbar.add<GUI::Button>();
     m_bookmark_button->set_action(bookmark_action);
     m_bookmark_button->set_button_style(Gfx::ButtonStyle::Coolbar);
@@ -512,6 +521,17 @@ Tab::Tab(BrowserWindow& window)
     view().on_context_menu_request = [&](auto screen_position) {
         m_page_context_menu->popup(screen_position);
     };
+}
+
+void Tab::update_reset_zoom_button()
+{
+    auto zoom_level = view().zoom_level();
+    if (zoom_level != 1.0f) {
+        m_reset_zoom_button->set_text(MUST(String::formatted("{}%", round_to<int>(zoom_level * 100))));
+        m_reset_zoom_button->set_visible(true);
+    } else {
+        m_reset_zoom_button->set_visible(false);
+    }
 }
 
 Optional<URL> Tab::url_from_location_bar(MayAppendTLD may_append_tld)
