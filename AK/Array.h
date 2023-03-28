@@ -13,6 +13,16 @@
 
 namespace AK {
 
+namespace Detail {
+// This type serves as the storage of 0-sized `AK::Array`s. While zero-length `T[0]`
+// is accepted as a GNU extension, it causes problems with UBSan in Clang 16.
+template<typename T>
+struct EmptyArrayStorage {
+    T& operator[](size_t) const { VERIFY_NOT_REACHED(); }
+    constexpr operator T*() const { return nullptr; }
+};
+}
+
 template<typename T, size_t Size>
 struct Array {
     using ValueType = T;
@@ -109,7 +119,7 @@ struct Array {
         return value;
     }
 
-    T __data[Size];
+    Conditional<Size == 0, Detail::EmptyArrayStorage<T>, T[Size]> __data;
 };
 
 template<typename T, typename... Types>
