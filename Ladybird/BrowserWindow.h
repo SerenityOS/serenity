@@ -60,7 +60,7 @@ private:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument = "");
 
     void set_current_tab(Tab* tab);
-    void update_zoom_menu_text();
+    void update_displayed_zoom_level();
 
     QTabWidget* m_tabs_container { nullptr };
     Vector<NonnullOwnPtr<Tab>> m_tabs;

@@ -336,7 +336,7 @@ void BrowserWindow::set_current_tab(Tab* tab)
 {
     m_current_tab = tab;
     if (tab)
-        update_zoom_menu_text();
+        update_displayed_zoom_level();
 }
 
 void BrowserWindow::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
@@ -523,7 +523,7 @@ void BrowserWindow::zoom_in()
     if (!m_current_tab)
         return;
     m_current_tab->view().zoom_in();
-    update_zoom_menu_text();
+    update_displayed_zoom_level();
 }
 
 void BrowserWindow::zoom_out()
@@ -531,7 +531,7 @@ void BrowserWindow::zoom_out()
     if (!m_current_tab)
         return;
     m_current_tab->view().zoom_out();
-    update_zoom_menu_text();
+    update_displayed_zoom_level();
 }
 
 void BrowserWindow::reset_zoom()
@@ -539,7 +539,7 @@ void BrowserWindow::reset_zoom()
     if (!m_current_tab)
         return;
     m_current_tab->view().reset_zoom();
-    update_zoom_menu_text();
+    update_displayed_zoom_level();
 }
 
 void BrowserWindow::select_all()
@@ -548,11 +548,12 @@ void BrowserWindow::select_all()
         tab->view().select_all();
 }
 
-void BrowserWindow::update_zoom_menu_text()
+void BrowserWindow::update_displayed_zoom_level()
 {
     VERIFY(m_zoom_menu && m_current_tab);
     auto zoom_level_text = MUST(String::formatted("&Zoom ({}%)", round_to<int>(m_current_tab->view().zoom_level() * 100)));
     m_zoom_menu->setTitle(qstring_from_ak_string(zoom_level_text));
+    m_current_tab->update_reset_zoom_button();
 }
 
 void BrowserWindow::copy_selected_text()
