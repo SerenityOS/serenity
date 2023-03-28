@@ -1874,9 +1874,40 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@function.name:snakecase@@overload_suffi
     function_generator.set(".arguments", arguments_builder.string_view());
 
     if (is_static_function == StaticFunction::No) {
-        function_generator.append(R"~~~(
+        // For [CEReactions]: https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions
+
+        if (function.extended_attributes.contains("CEReactions")) {
+            // 1. Push a new element queue onto this object's relevant agent's custom element reactions stack.
+            function_generator.append(R"~~~(
+    auto& relevant_agent = HTML::relevant_agent(*impl);
+    auto* custom_data = verify_cast<Bindings::WebEngineCustomData>(relevant_agent.custom_data());
+    auto& reactions_stack = custom_data->custom_element_reactions_stack;
+    reactions_stack.element_queue_stack.append({});
+)~~~");
+        }
+
+        if (!function.extended_attributes.contains("CEReactions")) {
+            function_generator.append(R"~~~(
     [[maybe_unused]] auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@function.cpp_name@(@.arguments@); }));
 )~~~");
+        } else {
+            // 2. Run the originally-specified steps for this construct, catching any exceptions. If the steps return a value, let value be the returned value. If they throw an exception, let exception be the thrown exception.
+            // 3. Let queue be the result of popping from this object's relevant agent's custom element reactions stack.
+            // 4. Invoke custom element reactions in queue.
+            // 5. If an exception exception was thrown by the original steps, rethrow exception.
+            // 6. If a value value was returned from the original steps, return value.
+            function_generator.append(R"~~~(
+    auto retval_or_exception = throw_dom_exception_if_needed(vm, [&] { return impl->@function.cpp_name@(@.arguments@); });
+
+    auto queue = reactions_stack.element_queue_stack.take_last();
+    Bindings::invoke_custom_element_reactions(queue);
+
+    if (retval_or_exception.is_error())
+        return retval_or_exception.release_error();
+
+    [[maybe_unused]] auto retval = retval_or_exception.release_value();
+)~~~");
+        }
     } else {
         // Make sure first argument for static functions is the Realm.
         if (arguments_builder.is_empty())
@@ -2671,12 +2702,24 @@ static JS::ThrowCompletionOr<@fully_qualified_name@*> impl_from(JS::VM& vm)
             attribute_generator.set("attribute.reflect_name", attribute.name.to_snakecase());
         }
 
+        // For [CEReactions]: https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions
+
         attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 {
     [[maybe_unused]] auto& realm = *vm.current_realm();
     auto* impl = TRY(impl_from(vm));
 )~~~");
+
+        if (attribute.extended_attributes.contains("CEReactions")) {
+            // 1. Push a new element queue onto this object's relevant agent's custom element reactions stack.
+            attribute_generator.append(R"~~~(
+    auto& relevant_agent = HTML::relevant_agent(*impl);
+    auto* custom_data = verify_cast<Bindings::WebEngineCustomData>(relevant_agent.custom_data());
+    auto& reactions_stack = custom_data->custom_element_reactions_stack;
+    reactions_stack.element_queue_stack.append({});
+)~~~");
+        }
 
         if (attribute.extended_attributes.contains("Reflect")) {
             if (attribute.type->name() != "boolean") {
@@ -2688,10 +2731,41 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
     auto retval = impl->has_attribute(HTML::AttributeNames::@attribute.reflect_name@);
 )~~~");
             }
+
+            if (attribute.extended_attributes.contains("CEReactions")) {
+                // 2. Run the originally-specified steps for this construct, catching any exceptions. If the steps return a value, let value be the returned value. If they throw an exception, let exception be the thrown exception.
+                // 3. Let queue be the result of popping from this object's relevant agent's custom element reactions stack.
+                // 4. Invoke custom element reactions in queue.
+                // 5. If an exception exception was thrown by the original steps, rethrow exception.
+                // 6. If a value value was returned from the original steps, return value.
+                attribute_generator.append(R"~~~(
+    auto queue = reactions_stack.element_queue_stack.take_last();
+    Bindings::invoke_custom_element_reactions(queue);
+)~~~");
+            }
         } else {
-            attribute_generator.append(R"~~~(
+            if (!attribute.extended_attributes.contains("CEReactions")) {
+                attribute_generator.append(R"~~~(
     auto retval = TRY(throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_name@(); }));
 )~~~");
+            } else {
+                // 2. Run the originally-specified steps for this construct, catching any exceptions. If the steps return a value, let value be the returned value. If they throw an exception, let exception be the thrown exception.
+                // 3. Let queue be the result of popping from this object's relevant agent's custom element reactions stack.
+                // 4. Invoke custom element reactions in queue.
+                // 5. If an exception exception was thrown by the original steps, rethrow exception.
+                // 6. If a value value was returned from the original steps, return value.
+                attribute_generator.append(R"~~~(
+    auto retval_or_exception = throw_dom_exception_if_needed(vm, [&] { return impl->@attribute.cpp_name@(); });
+
+    auto queue = reactions_stack.element_queue_stack.take_last();
+    Bindings::invoke_custom_element_reactions(queue);
+
+    if (retval_or_exception.is_error())
+        return retval_or_exception.release_error();
+
+    auto retval = retval_or_exception.release_value();
+)~~~");
+            }
         }
 
         generate_return_statement(generator, *attribute.type, interface);
@@ -2701,6 +2775,8 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.getter_callback@)
 )~~~");
 
         if (!attribute.readonly) {
+            // For [CEReactions]: https://html.spec.whatwg.org/multipage/custom-elements.html#cereactions
+
             attribute_generator.append(R"~~~(
 JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 {
@@ -2709,6 +2785,16 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
 
     auto value = vm.argument(0);
 )~~~");
+
+            if (attribute.extended_attributes.contains("CEReactions")) {
+                // 1. Push a new element queue onto this object's relevant agent's custom element reactions stack.
+                attribute_generator.append(R"~~~(
+    auto& relevant_agent = HTML::relevant_agent(*impl);
+    auto* custom_data = verify_cast<Bindings::WebEngineCustomData>(relevant_agent.custom_data());
+    auto& reactions_stack = custom_data->custom_element_reactions_stack;
+    reactions_stack.element_queue_stack.append({});
+)~~~");
+            }
 
             generate_to_cpp(generator, attribute, "value", "", "cpp_value", interface, attribute.extended_attributes.contains("LegacyNullToEmptyString"));
 
@@ -2725,10 +2811,39 @@ JS_DEFINE_NATIVE_FUNCTION(@class_name@::@attribute.setter_callback@)
         MUST(impl->set_attribute(HTML::AttributeNames::@attribute.reflect_name@, DeprecatedString::empty()));
 )~~~");
                 }
+
+                if (attribute.extended_attributes.contains("CEReactions")) {
+                    // 2. Run the originally-specified steps for this construct, catching any exceptions. If the steps return a value, let value be the returned value. If they throw an exception, let exception be the thrown exception.
+                    // 3. Let queue be the result of popping from this object's relevant agent's custom element reactions stack.
+                    // 4. Invoke custom element reactions in queue.
+                    // 5. If an exception exception was thrown by the original steps, rethrow exception.
+                    // 6. If a value value was returned from the original steps, return value.
+                    attribute_generator.append(R"~~~(
+    auto queue = reactions_stack.element_queue_stack.take_last();
+    Bindings::invoke_custom_element_reactions(queue);
+)~~~");
+                }
             } else {
-                attribute_generator.append(R"~~~(
+                if (!attribute.extended_attributes.contains("CEReactions")) {
+                    attribute_generator.append(R"~~~(
     TRY(throw_dom_exception_if_needed(vm, [&] { return impl->set_@attribute.cpp_name@(cpp_value); }));
 )~~~");
+                } else {
+                    // 2. Run the originally-specified steps for this construct, catching any exceptions. If the steps return a value, let value be the returned value. If they throw an exception, let exception be the thrown exception.
+                    // 3. Let queue be the result of popping from this object's relevant agent's custom element reactions stack.
+                    // 4. Invoke custom element reactions in queue.
+                    // 5. If an exception exception was thrown by the original steps, rethrow exception.
+                    // 6. If a value value was returned from the original steps, return value.
+                    attribute_generator.append(R"~~~(
+    auto maybe_exception = throw_dom_exception_if_needed(vm, [&] { return impl->set_@attribute.cpp_name@(cpp_value); });
+
+    auto queue = reactions_stack.element_queue_stack.take_last();
+    Bindings::invoke_custom_element_reactions(queue);
+
+    if (maybe_exception.is_error())
+        return maybe_exception.release_error();
+)~~~");
+                }
             }
 
             attribute_generator.append(R"~~~(
@@ -3377,6 +3492,38 @@ void generate_prototype_implementation(IDL::Interface const& interface, StringBu
 #endif
 
 )~~~");
+
+    bool has_ce_reactions = false;
+    for (auto const& function : interface.functions) {
+        if (function.extended_attributes.contains("CEReactions")) {
+            has_ce_reactions = true;
+            break;
+        }
+    }
+
+    if (!has_ce_reactions) {
+        for (auto const& attribute : interface.attributes) {
+            if (attribute.extended_attributes.contains("CEReactions")) {
+                has_ce_reactions = true;
+                break;
+            }
+        }
+    }
+
+    if (!has_ce_reactions && interface.indexed_property_setter.has_value() && interface.indexed_property_setter->extended_attributes.contains("CEReactions"))
+        has_ce_reactions = true;
+
+    if (!has_ce_reactions && interface.named_property_setter.has_value() && interface.named_property_setter->extended_attributes.contains("CEReactions"))
+        has_ce_reactions = true;
+
+    if (!has_ce_reactions && interface.named_property_deleter.has_value() && interface.named_property_deleter->extended_attributes.contains("CEReactions"))
+        has_ce_reactions = true;
+
+    if (has_ce_reactions) {
+        generator.append(R"~~~(
+#include <LibWeb/Bindings/MainThreadVM.h>
+)~~~");
+    }
 
     for (auto& path : interface.required_imported_paths)
         generate_include_for(generator, path);
