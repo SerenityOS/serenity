@@ -38,7 +38,11 @@ private:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
+    WebIDL::ExceptionOr<void> reset_the_memory_buffer();
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::ArrayBuffer>> create_a_memory_buffer(JS::VM&, JS::Realm&, Wasm::MemoryAddress);
+
     Wasm::MemoryAddress m_address;
+    mutable JS::GCPtr<JS::ArrayBuffer> m_buffer;
 };
 
 }
