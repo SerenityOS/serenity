@@ -16,6 +16,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QToolBar>
+#include <QToolButton>
 #include <QWidget>
 
 class BrowserWindow;
@@ -34,6 +35,8 @@ public:
     void navigate(QString, LoadType = LoadType::Normal);
 
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
+
+    void update_reset_zoom_button();
 
 public slots:
     void focus_location_editor();
@@ -56,6 +59,8 @@ private:
 
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
+    QToolButton* m_reset_zoom_button { nullptr };
+    QAction* m_reset_zoom_button_action { nullptr };
     LocationEdit* m_location_edit { nullptr };
     WebContentView* m_view { nullptr };
     BrowserWindow* m_window { nullptr };

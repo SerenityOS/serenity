@@ -31,6 +31,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_view = new WebContentView(webdriver_content_ipc_path);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
+    m_reset_zoom_button = new QToolButton(m_toolbar);
 
     m_hover_label = new QLabel(this);
     m_hover_label->hide();
@@ -63,6 +64,17 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_toolbar->addAction(m_reload_action);
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
+    m_reset_zoom_button_action = m_toolbar->addWidget(m_reset_zoom_button);
+    m_reset_zoom_button_action->setVisible(false);
+
+    QObject::connect(m_reset_zoom_button, &QAbstractButton::clicked, [this] {
+        view().reset_zoom();
+        update_reset_zoom_button();
+    });
+
+    QObject::connect(m_view, &WebContentView::link_unhovered, [this] {
+        m_hover_label->hide();
+    });
 
     QObject::connect(m_view, &WebContentView::activate_tab, [this] {
         m_window->activate_tab(tab_index());
@@ -153,6 +165,18 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
         m_window->showFullScreen();
         return Gfx::IntRect { m_window->x(), m_window->y(), m_window->width(), m_window->height() };
     });
+}
+
+void Tab::update_reset_zoom_button()
+{
+    auto zoom_level = view().zoom_level();
+    if (zoom_level != 1.0f) {
+        auto zoom_level_text = MUST(String::formatted("{}%", round_to<int>(zoom_level * 100)));
+        m_reset_zoom_button->setText(qstring_from_ak_string(zoom_level_text));
+        m_reset_zoom_button_action->setVisible(true);
+    } else {
+        m_reset_zoom_button_action->setVisible(false);
+    }
 }
 
 void Tab::focus_location_editor()
