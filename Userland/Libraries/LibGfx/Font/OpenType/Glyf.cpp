@@ -208,7 +208,8 @@ Optional<Loca> Loca::from_slice(ReadonlyBytes slice, u32 num_glyphs, IndexToLocF
 
 u32 Loca::get_glyph_offset(u32 glyph_id) const
 {
-    VERIFY(glyph_id < m_num_glyphs);
+    // NOTE: The value of n is numGlyphs + 1.
+    VERIFY(glyph_id <= m_num_glyphs);
     switch (m_index_to_loc_format) {
     case IndexToLocFormat::Offset16:
         return ((u32)be_u16(m_slice.offset_pointer(glyph_id * 2))) * 2;
