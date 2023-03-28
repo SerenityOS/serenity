@@ -1,0 +1,4 @@
+buildconfig = "//Meta/gn/build/BUILDCONFIG.gn"
+exec_script_whitelist = []
+script_executable = "python3"
+secondary_source = "//Meta/gn/secondary/"
