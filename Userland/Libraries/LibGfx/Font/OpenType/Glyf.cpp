@@ -367,8 +367,10 @@ RefPtr<Gfx::Bitmap> Glyf::Glyph::rasterize_simple(i16 font_ascender, i16 font_de
     return rasterizer.accumulate();
 }
 
-Glyf::Glyph Glyf::glyph(u32 offset) const
+Optional<Glyf::Glyph> Glyf::glyph(u32 offset) const
 {
+    if (offset + sizeof(GlyphHeader) > m_slice.size())
+        return {};
     VERIFY(m_slice.size() >= offset + sizeof(GlyphHeader));
     auto const& glyph_header = *bit_cast<GlyphHeader const*>(m_slice.offset_pointer(offset));
     i16 num_contours = glyph_header.number_of_contours;

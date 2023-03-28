@@ -664,9 +664,11 @@ Gfx::ScaledGlyphMetrics Font::glyph_metrics(u32 glyph_id, float x_scale, float y
     auto horizontal_metrics = m_hmtx.get_glyph_horizontal_metrics(glyph_id);
     auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
     auto glyph = m_glyf->glyph(glyph_offset);
+    if (!glyph.has_value())
+        return {};
     return Gfx::ScaledGlyphMetrics {
-        .ascender = static_cast<float>(glyph.ascender()) * y_scale,
-        .descender = static_cast<float>(glyph.descender()) * y_scale,
+        .ascender = static_cast<float>(glyph->ascender()) * y_scale,
+        .descender = static_cast<float>(glyph->descender()) * y_scale,
         .advance_width = static_cast<float>(horizontal_metrics.advance_width) * x_scale,
         .left_side_bearing = static_cast<float>(horizontal_metrics.left_side_bearing) * x_scale,
     };
@@ -708,6 +710,8 @@ RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_s
         return nullptr;
 
     auto glyph = m_glyf->glyph(glyph_offset0);
+    if (!glyph.has_value())
+        return nullptr;
 
     i16 ascender = 0;
     i16 descender = 0;
@@ -720,7 +724,7 @@ RefPtr<Gfx::Bitmap> Font::rasterize_glyph(u32 glyph_id, float x_scale, float y_s
         descender = m_hhea.descender();
     }
 
-    return glyph.rasterize(ascender, descender, x_scale, y_scale, subpixel_offset, [&](u16 glyph_id) {
+    return glyph->rasterize(ascender, descender, x_scale, y_scale, subpixel_offset, [&](u16 glyph_id) {
         if (glyph_id >= glyph_count()) {
             glyph_id = 0;
         }
@@ -857,7 +861,9 @@ Optional<ReadonlyBytes> Font::glyph_program(u32 glyph_id) const
 
     auto glyph_offset = m_loca->get_glyph_offset(glyph_id);
     auto glyph = m_glyf->glyph(glyph_offset);
-    return glyph.program();
+    if (!glyph.has_value())
+        return {};
+    return glyph->program();
 }
 
 u32 Font::glyph_id_for_code_point(u32 code_point) const

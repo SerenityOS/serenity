@@ -113,12 +113,14 @@ public:
                 auto item = opt_item.value();
                 Gfx::AffineTransform affine_here { transform };
                 affine_here.multiply(item.affine);
-                Glyph glyph = glyph_callback(item.glyph_id);
+                auto glyph = glyph_callback(item.glyph_id);
+                if (!glyph.has_value())
+                    continue;
 
-                if (glyph.m_type == Type::Simple) {
-                    glyph.rasterize_impl(rasterizer, affine_here);
+                if (glyph->m_type == Type::Simple) {
+                    glyph->rasterize_impl(rasterizer, affine_here);
                 } else {
-                    glyph.rasterize_composite_loop(rasterizer, transform, glyph_callback);
+                    glyph->rasterize_composite_loop(rasterizer, transform, glyph_callback);
                 }
             }
         }
@@ -152,7 +154,7 @@ public:
         : m_slice(slice)
     {
     }
-    Glyph glyph(u32 offset) const;
+    Optional<Glyph> glyph(u32 offset) const;
 
 private:
     // https://learn.microsoft.com/en-us/typography/opentype/spec/glyf#glyph-headers
