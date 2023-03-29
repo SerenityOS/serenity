@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -237,6 +237,62 @@ JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Valu
     completion = call_result.value();
 
     return clean_up_on_return(stored_settings, relevant_settings, completion);
+}
+
+JS::Completion construct(WebIDL::CallbackType& callback, JS::MarkedVector<JS::Value> args)
+{
+    // 1. Let completion be an uninitialized variable.
+    JS::Completion completion;
+
+    // 2. Let F be the ECMAScript object corresponding to callable.
+    auto& function_object = callback.callback;
+
+    // 4. Let realm be F’s associated Realm.
+    auto& realm = function_object->shape().realm();
+
+    // 3. If IsConstructor(F) is false, throw a TypeError exception.
+    if (!JS::Value(function_object).is_constructor())
+        return realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAConstructor, TRY_OR_THROW_OOM(realm.vm(), JS::Value(function_object).to_string_without_side_effects()));
+
+    // 5. Let relevant settings be realm’s settings object.
+    auto& relevant_settings = Bindings::host_defined_environment_settings_object(realm);
+
+    // 6. Let stored settings be callable’s callback context.
+    auto& stored_settings = callback.callback_context;
+
+    // 7. Prepare to run script with relevant settings.
+    relevant_settings.prepare_to_run_script();
+
+    // 8. Prepare to run a callback with stored settings.
+    stored_settings->prepare_to_run_callback();
+
+    // FIXME: 9. Let esArgs be the result of converting args to an ECMAScript arguments list. If this throws an exception, set completion to the completion value representing the thrown exception and jump to the step labeled return.
+    //        For simplicity, we currently make the caller do this. However, this means we can't throw exceptions at this point like the spec wants us to.
+
+    // 10. Let callResult be Completion(Construct(F, esArgs)).
+    auto& vm = function_object->vm();
+    auto call_result = JS::construct(vm, verify_cast<JS::FunctionObject>(*function_object), move(args));
+
+    // 11. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
+    if (call_result.is_throw_completion()) {
+        completion = call_result.throw_completion();
+    }
+
+    // 12. Set completion to the result of converting callResult.[[Value]] to an IDL value of the same type as the operation’s return type.
+    else {
+        // FIXME: This does no conversion.
+        completion = JS::Value(call_result.value());
+    }
+
+    // 13. Return: at this point completion will be set to an ECMAScript completion value.
+    // 1. Clean up after running a callback with stored settings.
+    stored_settings->clean_up_after_running_callback();
+
+    // 2. Clean up after running script with relevant settings.
+    relevant_settings.clean_up_after_running_script();
+
+    // 3. Return completion.
+    return completion;
 }
 
 }
