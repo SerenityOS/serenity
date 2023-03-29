@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -45,6 +45,20 @@ JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Valu
     (arguments_list.append(forward<Args>(args)), ...);
 
     return invoke_callback(callback, move(this_argument), move(arguments_list));
+}
+
+JS::Completion construct(WebIDL::CallbackType& callback, JS::MarkedVector<JS::Value> args);
+
+// https://webidl.spec.whatwg.org/#construct-a-callback-function
+template<typename... Args>
+JS::Completion construct(WebIDL::CallbackType& callback, Args&&... args)
+{
+    auto& function_object = callback.callback;
+
+    JS::MarkedVector<JS::Value> arguments_list { function_object->heap() };
+    (arguments_list.append(forward<Args>(args)), ...);
+
+    return construct(callback, move(arguments_list));
 }
 
 }
