@@ -81,6 +81,7 @@ ErrorOr<LzmaDecompressorOptions> LzmaHeader::as_decompressor_options() const
         .position_bits = model_properties.position_bits,
         .dictionary_size = dictionary_size(),
         .uncompressed_size = uncompressed_size(),
+        .reject_end_of_stream_marker = false,
     };
 }
 
@@ -457,17 +458,15 @@ ErrorOr<u32> LzmaDecompressor::decode_normalized_match_distance(u16 normalized_m
 ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 {
     while (m_dictionary->used_space() < bytes.size() && m_dictionary->empty_space() != 0) {
-        if (m_found_end_of_stream_marker) {
-            if (m_options.uncompressed_size.has_value() && m_total_decoded_bytes < m_options.uncompressed_size.value())
-                return Error::from_string_literal("Found end-of-stream marker earlier than expected");
-
+        if (m_found_end_of_stream_marker)
             break;
-        }
 
         if (has_reached_expected_data_size()) {
-            // FIXME: This should validate that either EOF or the 'end of stream' marker follow immediately.
-            //        Both of those cases count as the 'end of stream' marker being found and should check for a clean decoder state.
-            break;
+            // If the decoder is in a clean state, we assume that this is fine.
+            if (is_range_decoder_in_clean_state())
+                break;
+
+            // Otherwise, we give it one last try to find the end marker in the remaining data.
         }
 
         // "The decoder calculates "state2" variable value to select exact variable from
@@ -543,6 +542,10 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
         //  IsMatch[state2] decode
         //   0 - the Literal"
         if (TRY(decode_bit_with_probability(m_is_match_probabilities[state2])) == 0) {
+            // If we are already past the expected uncompressed size, we are already in "look for EOS only" mode.
+            if (has_reached_expected_data_size())
+                return Error::from_string_literal("Found literal after reaching expected uncompressed size");
+
             // "At first the LZMA decoder must check that it doesn't exceed
             //  specified uncompressed size."
             // This is already checked for at the beginning of the loop.
@@ -577,10 +580,19 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             //  "End of stream" marker, so we can stop decoding and check finishing
             //  condition in Range Decoder"
             if (m_rep0 == 0xFFFFFFFF) {
+                // If we should reject end-of-stream markers, do so now.
+                // Note that this is not part of LZMA, as LZMA allows end-of-stream markers in all contexts, so pure LZMA should never set this option.
+                if (m_options.reject_end_of_stream_marker)
+                    return Error::from_string_literal("An end-of-stream marker was found, but the LZMA stream is configured to reject them");
+
                 // The range decoder condition is checked after breaking out of the loop.
                 m_found_end_of_stream_marker = true;
                 continue;
             }
+
+            // If we are looking for EOS, but haven't found it here, the stream is corrupted.
+            if (has_reached_expected_data_size())
+                return Error::from_string_literal("First simple match after the expected uncompressed size is not the EOS marker");
 
             // "If uncompressed size is defined, LZMA decoder must check that it doesn't
             //  exceed that specified uncompressed size."
@@ -597,6 +609,10 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 
             continue;
         }
+
+        // If we are looking for EOS, but find another match type, the stream is also corrupted.
+        if (has_reached_expected_data_size())
+            return Error::from_string_literal("First match type after the expected uncompressed size is not a simple match");
 
         // "     1 - Rep Match
         //         IsRepG0[state] decode
@@ -666,7 +682,10 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
         TRY(copy_match_to_buffer(normalized_length + normalized_to_real_match_length_offset));
     }
 
-    if (m_found_end_of_stream_marker) {
+    if (m_found_end_of_stream_marker || has_reached_expected_data_size()) {
+        if (m_options.uncompressed_size.has_value() && m_total_decoded_bytes < m_options.uncompressed_size.value())
+            return Error::from_string_literal("Found end-of-stream marker earlier than expected");
+
         if (!is_range_decoder_in_clean_state())
             return Error::from_string_literal("LZMA stream ends in an unclean state");
     }

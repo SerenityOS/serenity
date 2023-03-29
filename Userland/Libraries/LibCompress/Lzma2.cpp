@@ -106,6 +106,9 @@ ErrorOr<Bytes> Lzma2Decompressor::read_some(Bytes bytes)
                     .position_bits = properties.position_bits,
                     .dictionary_size = static_cast<u32>(dictionary_size),
                     .uncompressed_size = uncompressed_size,
+
+                    // Note: This is not specified anywhere. However, it is apparently tested by bad-1-lzma2-7.xz from the XZ utils test files.
+                    .reject_end_of_stream_marker = true,
                 };
                 [[fallthrough]];
             }
