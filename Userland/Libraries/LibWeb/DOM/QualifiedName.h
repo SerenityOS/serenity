@@ -32,6 +32,8 @@ public:
         DeprecatedString as_string;
     };
 
+    void set_prefix(DeprecatedFlyString const& value);
+
 private:
     NonnullRefPtr<Impl> m_impl;
 };

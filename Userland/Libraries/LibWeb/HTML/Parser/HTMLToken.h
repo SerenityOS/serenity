@@ -247,7 +247,7 @@ public:
         }
     }
 
-    StringView attribute(DeprecatedFlyString const& attribute_name)
+    StringView attribute(DeprecatedFlyString const& attribute_name) const
     {
         VERIFY(is_start_tag() || is_end_tag());
 

@@ -241,6 +241,10 @@ public:
 
     void queue_mutation_record(FlyString const& type, DeprecatedString attribute_name, DeprecatedString attribute_namespace, DeprecatedString old_value, JS::NonnullGCPtr<NodeList> added_nodes, JS::NonnullGCPtr<NodeList> removed_nodes, Node* previous_sibling, Node* next_sibling) const;
 
+    // https://dom.spec.whatwg.org/#concept-shadow-including-inclusive-descendant
+    template<typename Callback>
+    IterationDecision for_each_shadow_including_inclusive_descendant(Callback);
+
     // https://dom.spec.whatwg.org/#concept-shadow-including-descendant
     template<typename Callback>
     IterationDecision for_each_shadow_including_descendant(Callback);

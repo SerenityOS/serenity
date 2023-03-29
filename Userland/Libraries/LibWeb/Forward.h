@@ -246,6 +246,8 @@ class ClassicScript;
 class CloseEvent;
 struct CrossOriginOpenerPolicy;
 struct CrossOriginOpenerPolicyEnforcementResult;
+class CustomElementDefinition;
+class CustomElementRegistry;
 class DOMParser;
 class DOMStringMap;
 struct Environment;

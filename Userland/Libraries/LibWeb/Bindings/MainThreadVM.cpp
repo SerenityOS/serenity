@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
  * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
@@ -21,6 +21,8 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/MutationType.h>
 #include <LibWeb/HTML/AttributeNames.h>
+#include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
+#include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/PromiseRejectionEvent.h>
@@ -78,6 +80,7 @@ ErrorOr<void> initialize_main_thread_vm()
     // These strings could potentially live on the VM similar to CommonPropertyNames.
     TRY(DOM::MutationType::initialize_strings());
     TRY(HTML::AttributeNames::initialize_strings());
+    TRY(HTML::CustomElementReactionNames::initialize_strings());
     TRY(HTML::EventNames::initialize_strings());
     TRY(HTML::TagNames::initialize_strings());
     TRY(Namespace::initialize_strings());
@@ -497,6 +500,44 @@ NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Fu
 void WebEngineCustomData::spin_event_loop_until(Function<bool()> goal_condition)
 {
     Platform::EventLoopPlugin::the().spin_until(move(goal_condition));
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#invoke-custom-element-reactions
+void invoke_custom_element_reactions(Vector<JS::Handle<DOM::Element>>& element_queue)
+{
+    // 1. While queue is not empty:
+    while (!element_queue.is_empty()) {
+        // 1. Let element be the result of dequeuing from queue.
+        auto element = element_queue.take_first();
+
+        // 2. Let reactions be element's custom element reaction queue.
+        auto& reactions = element->custom_element_reaction_queue();
+
+        // 3. Repeat until reactions is empty:
+        while (!reactions.is_empty()) {
+            // 1. Remove the first element of reactions, and let reaction be that element. Switch on reaction's type:
+            auto reaction = reactions.take_first();
+
+            auto maybe_exception = reaction.visit(
+                [&](DOM::CustomElementUpgradeReaction const& custom_element_upgrade_reaction) -> JS::ThrowCompletionOr<void> {
+                    // -> upgrade reaction
+                    //      Upgrade element using reaction's custom element definition.
+                    return element->upgrade_element(*custom_element_upgrade_reaction.custom_element_definition);
+                },
+                [&](DOM::CustomElementCallbackReaction& custom_element_callback_reaction) -> JS::ThrowCompletionOr<void> {
+                    // -> callback reaction
+                    //      Invoke reaction's callback function with reaction's arguments, and with element as the callback this value.
+                    auto result = WebIDL::invoke_callback(*custom_element_callback_reaction.callback, element.ptr(), custom_element_callback_reaction.arguments);
+                    if (result.is_abrupt())
+                        return result.release_error();
+                    return {};
+                });
+
+            // If this throws an exception, catch it, and report the exception.
+            if (maybe_exception.is_throw_completion())
+                HTML::report_exception(maybe_exception, element->realm());
+        }
+    }
 }
 
 }

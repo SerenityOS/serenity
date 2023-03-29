@@ -23,6 +23,7 @@
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/ImageCodecPlugin.h>
 #include <LibWeb/XML/XMLDocumentBuilder.h>
@@ -104,21 +105,21 @@ static bool build_markdown_document(DOM::Document& document, ByteBuffer const& d
 
 static bool build_text_document(DOM::Document& document, ByteBuffer const& data)
 {
-    auto html_element = document.create_element("html").release_value();
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document.append_child(html_element));
 
-    auto head_element = document.create_element("head").release_value();
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
-    auto title_element = document.create_element("title").release_value();
+    auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
     auto title_text = document.create_text_node(document.url().basename());
     MUST(title_element->append_child(title_text));
 
-    auto body_element = document.create_element("body").release_value();
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
-    auto pre_element = document.create_element("pre").release_value();
+    auto pre_element = DOM::create_element(document, HTML::TagNames::pre, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(body_element->append_child(pre_element));
 
     MUST(pre_element->append_child(document.create_text_node(DeprecatedString::copy(data))));
@@ -135,22 +136,22 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     if (!bitmap)
         return false;
 
-    auto html_element = document.create_element("html").release_value();
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(document.append_child(html_element));
 
-    auto head_element = document.create_element("head").release_value();
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(head_element));
-    auto title_element = document.create_element("title").release_value();
+    auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
     auto basename = LexicalPath::basename(document.url().path());
     auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, DeprecatedString::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())).release_allocated_value_but_fixme_should_propagate_errors();
     MUST(title_element->append_child(*title_text));
 
-    auto body_element = document.create_element("body").release_value();
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(html_element->append_child(body_element));
 
-    auto image_element = document.create_element("img").release_value();
+    auto image_element = DOM::create_element(document, HTML::TagNames::img, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(image_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
     MUST(body_element->append_child(image_element));
 

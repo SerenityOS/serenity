@@ -186,6 +186,8 @@ public:
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> crypto();
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomElementRegistry>> custom_elements();
+
 private:
     explicit Window(JS::Realm&);
 
@@ -215,6 +217,10 @@ private:
     JS::GCPtr<CSS::Screen> m_screen;
     JS::GCPtr<Navigator> m_navigator;
     JS::GCPtr<Location> m_location;
+
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-elements-api
+    // Each Window object is associated with a unique instance of a CustomElementRegistry object, allocated when the Window object is created.
+    JS::GCPtr<CustomElementRegistry> m_custom_element_registry;
 
     AnimationFrameCallbackDriver m_animation_frame_callback_driver;
 

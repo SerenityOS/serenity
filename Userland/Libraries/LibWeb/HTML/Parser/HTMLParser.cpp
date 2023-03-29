@@ -19,6 +19,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ProcessingInstruction.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLFormElement.h>
@@ -629,18 +630,36 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
     // 4. Let local name be the tag name of the token.
     auto local_name = token.tag_name();
 
-    // FIXME: 5. Let is be the value of the "is" attribute in the given token, if such an attribute exists, or null otherwise.
-    // FIXME: 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
-    // FIXME: 7. If definition is non-null and the parser was not created as part of the HTML fragment parsing algorithm, then let will execute script be true. Otherwise, let it be false.
-    // FIXME: 8. If will execute script is true, then:
-    // FIXME:    1. Increment document's throw-on-dynamic-markup-insertion counter.
-    // FIXME:    2. If the JavaScript execution context stack is empty, then perform a microtask checkpoint.
-    // FIXME:    3. Push a new element queue onto document's relevant agent's custom element reactions stack.
+    // 5. Let is be the value of the "is" attribute in the given token, if such an attribute exists, or null otherwise.
+    auto is_value_deprecated_string = token.attribute(AttributeNames::is);
+    Optional<String> is_value;
+    if (!is_value_deprecated_string.is_null())
+        is_value = String::from_utf8(is_value_deprecated_string).release_value_but_fixme_should_propagate_errors();
+
+    // 6. Let definition be the result of looking up a custom element definition given document, given namespace, local name, and is.
+    auto definition = document->lookup_custom_element_definition(namespace_, local_name, is_value);
+
+    // 7. If definition is non-null and the parser was not created as part of the HTML fragment parsing algorithm, then let will execute script be true. Otherwise, let it be false.
+    bool will_execute_script = definition && !m_parsing_fragment;
+
+    // 8. If will execute script is true, then:
+    if (will_execute_script) {
+        // 1. Increment document's throw-on-dynamic-markup-insertion counter.
+        document->increment_throw_on_dynamic_markup_insertion_counter({});
+
+        // 2. If the JavaScript execution context stack is empty, then perform a microtask checkpoint.
+        auto& vm = main_thread_event_loop().vm();
+        if (vm.execution_context_stack().is_empty())
+            perform_a_microtask_checkpoint();
+
+        // 3. Push a new element queue onto document's relevant agent's custom element reactions stack.
+        auto& custom_data = verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data());
+        custom_data.custom_element_reactions_stack.element_queue_stack.append({});
+    }
 
     // 9. Let element be the result of creating an element given document, localName, given namespace, null, and is.
-    // FIXME: If will execute script is true, set the synchronous custom elements flag; otherwise, leave it unset.
-    // FIXME: Pass in `null` and `is`.
-    auto element = create_element(*document, local_name, namespace_).release_value_but_fixme_should_propagate_errors();
+    //    If will execute script is true, set the synchronous custom elements flag; otherwise, leave it unset.
+    auto element = create_element(*document, local_name, namespace_, {}, is_value, will_execute_script).release_value_but_fixme_should_propagate_errors();
 
     // 10. Append each attribute in the given token to element.
     // FIXME: This isn't the exact `append` the spec is talking about.
@@ -649,10 +668,19 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::create_element_for(HTMLToken const& t
         return IterationDecision::Continue;
     });
 
-    // FIXME: 11. If will execute script is true, then:
-    // FIXME:     1. Let queue be the result of popping from document's relevant agent's custom element reactions stack. (This will be the same element queue as was pushed above.)
-    // FIXME:     2. Invoke custom element reactions in queue.
-    // FIXME:     3. Decrement document's throw-on-dynamic-markup-insertion counter.
+    // 11. If will execute script is true, then:
+    if (will_execute_script) {
+        // 1. Let queue be the result of popping from document's relevant agent's custom element reactions stack. (This will be the same element queue as was pushed above.)
+        auto& vm = main_thread_event_loop().vm();
+        auto& custom_data = verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data());
+        auto queue = custom_data.custom_element_reactions_stack.element_queue_stack.take_last();
+
+        // 2. Invoke custom element reactions in queue.
+        Bindings::invoke_custom_element_reactions(queue);
+
+        // 3. Decrement document's throw-on-dynamic-markup-insertion counter.
+        document->decrement_throw_on_dynamic_markup_insertion_counter({});
+    }
 
     // FIXME: 12. If element has an xmlns attribute in the XMLNS namespace whose value is not exactly the same as the element's namespace, that is a parse error.
     //            Similarly, if element has an xmlns:xlink attribute in the XMLNS namespace whose value is not the XLink Namespace, that is a parse error.
@@ -694,14 +722,22 @@ JS::NonnullGCPtr<DOM::Element> HTMLParser::insert_foreign_element(HTMLToken cons
 
     // NOTE: If it's not possible to insert the element at the adjusted insertion location, the element is simply dropped.
     if (!pre_insertion_validity.is_exception()) {
+        // 1. If the parser was not created as part of the HTML fragment parsing algorithm, then push a new element queue onto element's relevant agent's custom element reactions stack.
         if (!m_parsing_fragment) {
-            // FIXME: push a new element queue onto element's relevant agent's custom element reactions stack.
+            auto& vm = main_thread_event_loop().vm();
+            auto& custom_data = verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data());
+            custom_data.custom_element_reactions_stack.element_queue_stack.append({});
         }
 
+        // 2. Insert element at the adjusted insertion location.
         adjusted_insertion_location.parent->insert_before(*element, adjusted_insertion_location.insert_before_sibling);
 
+        // 3. If the parser was not created as part of the HTML fragment parsing algorithm, then pop the element queue from element's relevant agent's custom element reactions stack, and invoke custom element reactions in that queue.
         if (!m_parsing_fragment) {
-            // FIXME: pop the element queue from element's relevant agent's custom element reactions stack, and invoke custom element reactions in that queue.
+            auto& vm = main_thread_event_loop().vm();
+            auto& custom_data = verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data());
+            auto queue = custom_data.custom_element_reactions_stack.element_queue_stack.take_last();
+            Bindings::invoke_custom_element_reactions(queue);
         }
     }
 
@@ -2269,6 +2305,12 @@ void HTMLParser::handle_text(HTMLToken& token)
         // Non-standard: Make sure the <script> element has up-to-date text content before preparing the script.
         flush_character_insertions();
 
+        // If the active speculative HTML parser is null and the JavaScript execution context stack is empty, then perform a microtask checkpoint.
+        // FIXME: If the active speculative HTML parser is null
+        auto& vm = main_thread_event_loop().vm();
+        if (vm.execution_context_stack().is_empty())
+            perform_a_microtask_checkpoint();
+
         // Let script be the current node (which will be a script element).
         JS::NonnullGCPtr<HTMLScriptElement> script = verify_cast<HTMLScriptElement>(current_node());
 
@@ -3634,9 +3676,14 @@ DeprecatedString HTMLParser::serialize_html_fragment(DOM::Node const& node)
             builder.append('<');
             builder.append(tag_name);
 
-            // FIXME: 3. If current node's is value is not null, and the element does not have an is attribute in its attribute list,
-            //           then append the string " is="", followed by current node's is value escaped as described below in attribute mode,
-            //           followed by a U+0022 QUOTATION MARK character (").
+            // 3. If current node's is value is not null, and the element does not have an is attribute in its attribute list,
+            //    then append the string " is="", followed by current node's is value escaped as described below in attribute mode,
+            //    followed by a U+0022 QUOTATION MARK character (").
+            if (element.is_value().has_value() && !element.has_attribute(AttributeNames::is)) {
+                builder.append(" is=\""sv);
+                builder.append(escape_string(element.is_value().value(), AttributeMode::Yes));
+                builder.append('"');
+            }
 
             // 4. For each attribute that the element has, append a U+0020 SPACE character, the attribute's serialized name as described below, a U+003D EQUALS SIGN character (=),
             //    a U+0022 QUOTATION MARK character ("), the attribute's value, escaped as described below in attribute mode, and a second U+0022 QUOTATION MARK character (").

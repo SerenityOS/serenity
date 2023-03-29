@@ -56,7 +56,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> DOMImplementation::create_docume
     JS::GCPtr<Element> element;
 
     if (!qualified_name.is_empty())
-        element = TRY(xml_document->create_element_ns(namespace_, qualified_name /* FIXME: and an empty dictionary */));
+        element = TRY(xml_document->create_element_ns(namespace_, qualified_name, ElementCreationOptions {}));
 
     if (doctype)
         TRY(xml_document->append_child(*doctype));

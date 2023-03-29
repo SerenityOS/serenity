@@ -9,6 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/Bindings/ElementPrototype.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/ResolvedCSSStyleDeclaration.h>
@@ -23,7 +24,10 @@
 #include <LibWeb/Geometry/DOMRect.h>
 #include <LibWeb/Geometry/DOMRectList.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
 #include <LibWeb/HTML/CustomElements/CustomElementName.h>
+#include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
+#include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/HTMLBodyElement.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
@@ -36,6 +40,7 @@
 #include <LibWeb/HTML/HTMLSelectElement.h>
 #include <LibWeb/HTML/HTMLTextAreaElement.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
+#include <LibWeb/HTML/Window.h>
 #include <LibWeb/Infra/CharacterTypes.h>
 #include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Layout/BlockContainer.h>
@@ -50,6 +55,7 @@
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Painting/PaintableBox.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -83,6 +89,7 @@ void Element::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_inline_style.ptr());
     visitor.visit(m_class_list.ptr());
     visitor.visit(m_shadow_root.ptr());
+    visitor.visit(m_custom_element_definition.ptr());
     for (auto& pseudo_element_layout_node : m_pseudo_element_nodes)
         visitor.visit(pseudo_element_layout_node);
 }
@@ -494,7 +501,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
         return WebIDL::NotSupportedError::create(realm(), DeprecatedString::formatted("Element '{}' cannot be a shadow host", local_name()));
     }
 
-    // FIXME: 3. If this’s local name is a valid custom element name, or this’s is value is not null, then: ...
+    // 3. If this’s local name is a valid custom element name, or this’s is value is not null, then:
+    if (HTML::is_valid_custom_element_name(local_name()) || m_is_value.has_value()) {
+        // 1. Let definition be the result of looking up a custom element definition given this’s node document, its namespace, its local name, and its is value.
+        auto definition = document().lookup_custom_element_definition(namespace_(), local_name(), m_is_value);
+
+        // 2. If definition is not null and definition’s disable shadow is true, then throw a "NotSupportedError" DOMException.
+        if (definition && definition->disable_shadow())
+            return WebIDL::NotSupportedError::create(realm(), "Cannot attach a shadow root to a custom element that has disabled shadow roots"sv);
+    }
 
     // 4. If this is a shadow host, then throw an "NotSupportedError" DOMException.
     if (is_shadow_host())
@@ -506,7 +521,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ShadowRoot>> Element::attach_shadow(ShadowR
     // 6. Set shadow’s delegates focus to init["delegatesFocus"].
     shadow->set_delegates_focus(init.delegates_focus);
 
-    // FIXME: 7. If this’s custom element state is "precustomized" or "custom", then set shadow’s available to element internals to true.
+    // 7. If this’s custom element state is "precustomized" or "custom", then set shadow’s available to element internals to true.
+    if (m_custom_element_state == CustomElementState::Precustomized || m_custom_element_state == CustomElementState::Custom)
+        shadow->set_available_to_element_internals(true);
 
     // FIXME: 8. Set shadow’s slot assignment to init["slotAssignment"].
 
@@ -1422,6 +1439,228 @@ bool Element::include_in_accessibility_tree() const
     // TODO: Elements that are not hidden and have an ID that is referenced by another element via a WAI-ARIA property.
 
     return false;
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-an-element-on-the-appropriate-element-queue
+void Element::enqueue_an_element_on_the_appropriate_element_queue()
+{
+    // 1. Let reactionsStack be element's relevant agent's custom element reactions stack.
+    auto& relevant_agent = HTML::relevant_agent(*this);
+    auto* custom_data = verify_cast<Bindings::WebEngineCustomData>(relevant_agent.custom_data());
+    auto& reactions_stack = custom_data->custom_element_reactions_stack;
+
+    // 2. If reactionsStack is empty, then:
+    if (reactions_stack.element_queue_stack.is_empty()) {
+        // 1. Add element to reactionsStack's backup element queue.
+        reactions_stack.backup_element_queue.append(*this);
+
+        // 2. If reactionsStack's processing the backup element queue flag is set, then return.
+        if (reactions_stack.processing_the_backup_element_queue)
+            return;
+
+        // 3. Set reactionsStack's processing the backup element queue flag.
+        reactions_stack.processing_the_backup_element_queue = true;
+
+        // 4. Queue a microtask to perform the following steps:
+        // NOTE: `this` is protected by JS::SafeFunction
+        HTML::queue_a_microtask(&document(), [this]() {
+            auto& relevant_agent = HTML::relevant_agent(*this);
+            auto* custom_data = verify_cast<Bindings::WebEngineCustomData>(relevant_agent.custom_data());
+            auto& reactions_stack = custom_data->custom_element_reactions_stack;
+
+            // 1. Invoke custom element reactions in reactionsStack's backup element queue.
+            Bindings::invoke_custom_element_reactions(reactions_stack.backup_element_queue);
+
+            // 2. Unset reactionsStack's processing the backup element queue flag.
+            reactions_stack.processing_the_backup_element_queue = false;
+        });
+
+        return;
+    }
+
+    // 3. Otherwise, add element to element's relevant agent's current element queue.
+    custom_data->current_element_queue().append(*this);
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#enqueue-a-custom-element-upgrade-reaction
+void Element::enqueue_a_custom_element_upgrade_reaction(HTML::CustomElementDefinition& custom_element_definition)
+{
+    // 1. Add a new upgrade reaction to element's custom element reaction queue, with custom element definition definition.
+    m_custom_element_reaction_queue.append(CustomElementUpgradeReaction { .custom_element_definition = custom_element_definition });
+
+    // 2. Enqueue an element on the appropriate element queue given element.
+    enqueue_an_element_on_the_appropriate_element_queue();
+}
+
+void Element::enqueue_a_custom_element_callback_reaction(FlyString const& callback_name, JS::MarkedVector<JS::Value> arguments)
+{
+    // 1. Let definition be element's custom element definition.
+    auto& definition = m_custom_element_definition;
+
+    // 2. Let callback be the value of the entry in definition's lifecycle callbacks with key callbackName.
+    auto callback_iterator = definition->lifecycle_callbacks().find(callback_name);
+
+    // 3. If callback is null, then return.
+    if (callback_iterator == definition->lifecycle_callbacks().end())
+        return;
+
+    if (callback_iterator->value.is_null())
+        return;
+
+    // 4. If callbackName is "attributeChangedCallback", then:
+    if (callback_name == HTML::CustomElementReactionNames::attributeChangedCallback) {
+        // 1. Let attributeName be the first element of args.
+        VERIFY(!arguments.is_empty());
+        auto& attribute_name_value = arguments.first();
+        VERIFY(attribute_name_value.is_string());
+        auto attribute_name = attribute_name_value.as_string().utf8_string().release_allocated_value_but_fixme_should_propagate_errors();
+
+        // 2. If definition's observed attributes does not contain attributeName, then return.
+        if (!definition->observed_attributes().contains_slow(attribute_name))
+            return;
+    }
+
+    // 5. Add a new callback reaction to element's custom element reaction queue, with callback function callback and arguments args.
+    m_custom_element_reaction_queue.append(CustomElementCallbackReaction { .callback = callback_iterator->value, .arguments = move(arguments) });
+
+    // 6. Enqueue an element on the appropriate element queue given element.
+    enqueue_an_element_on_the_appropriate_element_queue();
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#concept-upgrade-an-element
+JS::ThrowCompletionOr<void> Element::upgrade_element(JS::NonnullGCPtr<HTML::CustomElementDefinition> custom_element_definition)
+{
+    auto& realm = this->realm();
+    auto& vm = this->vm();
+
+    // 1. If element's custom element state is not "undefined" or "uncustomized", then return.
+    if (m_custom_element_state != CustomElementState::Undefined && m_custom_element_state != CustomElementState::Uncustomized)
+        return {};
+
+    // 2. Set element's custom element definition to definition.
+    m_custom_element_definition = custom_element_definition;
+
+    // 3. Set element's custom element state to "failed".
+    m_custom_element_state = CustomElementState::Failed;
+
+    // 4. For each attribute in element's attribute list, in order, enqueue a custom element callback reaction with element, callback name "attributeChangedCallback",
+    //    and an argument list containing attribute's local name, null, attribute's value, and attribute's namespace.
+    for (size_t attribute_index = 0; attribute_index < m_attributes->length(); ++attribute_index) {
+        auto const* attribute = m_attributes->item(attribute_index);
+        VERIFY(attribute);
+
+        JS::MarkedVector<JS::Value> arguments { vm.heap() };
+
+        arguments.append(JS::PrimitiveString::create(vm, attribute->local_name()));
+        arguments.append(JS::js_null());
+        arguments.append(JS::PrimitiveString::create(vm, attribute->value()));
+        arguments.append(JS::PrimitiveString::create(vm, attribute->namespace_uri()));
+
+        enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));
+    }
+
+    // 5. If element is connected, then enqueue a custom element callback reaction with element, callback name "connectedCallback", and an empty argument list.
+    if (is_connected()) {
+        JS::MarkedVector<JS::Value> empty_arguments { vm.heap() };
+        enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::connectedCallback, move(empty_arguments));
+    }
+
+    // 6. Add element to the end of definition's construction stack.
+    custom_element_definition->construction_stack().append(JS::make_handle(this));
+
+    // 7. Let C be definition's constructor.
+    auto& constructor = custom_element_definition->constructor();
+
+    // 8. Run the following substeps while catching any exceptions:
+    auto attempt_to_construct_custom_element = [&]() -> JS::ThrowCompletionOr<void> {
+        // 1. If definition's disable shadow is true and element's shadow root is non-null, then throw a "NotSupportedError" DOMException.
+        if (custom_element_definition->disable_shadow() && shadow_root())
+            return JS::throw_completion(WebIDL::NotSupportedError::create(realm, "Custom element definition disables shadow DOM and the custom element has a shadow root"sv));
+
+        // 2. Set element's custom element state to "precustomized".
+        m_custom_element_state = CustomElementState::Precustomized;
+
+        // 3. Let constructResult be the result of constructing C, with no arguments.
+        auto construct_result_optional = TRY(WebIDL::construct(constructor));
+        VERIFY(construct_result_optional.has_value());
+        auto construct_result = construct_result_optional.release_value();
+
+        // 4. If SameValue(constructResult, element) is false, then throw a TypeError.
+        if (!JS::same_value(construct_result, this))
+            return vm.throw_completion<JS::TypeError>("Constructing the custom element returned a different element from the custom element"sv);
+
+        return {};
+    };
+
+    auto maybe_exception = attempt_to_construct_custom_element();
+
+    // Then, perform the following substep, regardless of whether the above steps threw an exception or not:
+    // 1. Remove the last entry from the end of definition's construction stack.
+    (void)custom_element_definition->construction_stack().take_last();
+
+    // Finally, if the above steps threw an exception, then:
+    if (maybe_exception.is_throw_completion()) {
+        // 1. Set element's custom element definition to null.
+        m_custom_element_definition = nullptr;
+
+        // 2. Empty element's custom element reaction queue.
+        m_custom_element_reaction_queue.clear();
+
+        // 3. Rethrow the exception (thus terminating this algorithm).
+        return maybe_exception.release_error();
+    }
+
+    // FIXME: 9. If element is a form-associated custom element, then:
+    //           1. Reset the form owner of element. If element is associated with a form element, then enqueue a custom element callback reaction with element, callback name "formAssociatedCallback", and « the associated form ».
+    //           2. If element is disabled, then enqueue a custom element callback reaction with element, callback name "formDisabledCallback" and « true ».
+
+    // 10. Set element's custom element state to "custom".
+    m_custom_element_state = CustomElementState::Custom;
+
+    return {};
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#concept-try-upgrade
+void Element::try_to_upgrade()
+{
+    // 1. Let definition be the result of looking up a custom element definition given element's node document, element's namespace, element's local name, and element's is value.
+    auto definition = document().lookup_custom_element_definition(namespace_(), local_name(), m_is_value);
+
+    // 2. If definition is not null, then enqueue a custom element upgrade reaction given element and definition.
+    if (definition)
+        enqueue_a_custom_element_upgrade_reaction(*definition);
+}
+
+// https://dom.spec.whatwg.org/#concept-element-defined
+bool Element::is_defined() const
+{
+    // An element whose custom element state is "uncustomized" or "custom" is said to be defined.
+    return m_custom_element_state == CustomElementState::Uncustomized || m_custom_element_state == CustomElementState::Custom;
+}
+
+// https://dom.spec.whatwg.org/#concept-element-custom
+bool Element::is_custom() const
+{
+    // An element whose custom element state is "custom" is said to be custom.
+    return m_custom_element_state == CustomElementState::Custom;
+}
+
+// https://html.spec.whatwg.org/multipage/dom.html#html-element-constructors
+void Element::setup_custom_element_from_constructor(HTML::CustomElementDefinition& custom_element_definition, Optional<String> const& is_value)
+{
+    // 7.6. Set element's custom element state to "custom".
+    m_custom_element_state = CustomElementState::Custom;
+
+    // 7.7. Set element's custom element definition to definition.
+    m_custom_element_definition = custom_element_definition;
+
+    // 7.8. Set element's is value to is value.
+    m_is_value = is_value;
+}
+
+void Element::set_prefix(DeprecatedFlyString const& value)
+{
+    m_qualified_name.set_prefix(value);
 }
 
 }
