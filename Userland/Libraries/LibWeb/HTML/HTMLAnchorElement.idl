@@ -7,20 +7,20 @@ interface HTMLAnchorElement : HTMLElement {
 
     [HTMLConstructor] constructor();
 
-    [Reflect] attribute DOMString target;
-    [Reflect] attribute DOMString download;
-    [Reflect] attribute DOMString ping;
-    [Reflect] attribute DOMString rel;
+    [CEReactions, Reflect] attribute DOMString target;
+    [CEReactions, Reflect] attribute DOMString download;
+    [CEReactions, Reflect] attribute DOMString ping;
+    [CEReactions, Reflect] attribute DOMString rel;
     // FIXME: [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;
-    [Reflect] attribute DOMString hreflang;
-    [Reflect] attribute DOMString type;
+    [CEReactions, Reflect] attribute DOMString hreflang;
+    [CEReactions, Reflect] attribute DOMString type;
 
     // Obsolete
-    [Reflect] attribute DOMString coords;
-    [Reflect] attribute DOMString charset;
-    [Reflect] attribute DOMString name;
-    [Reflect] attribute DOMString rev;
-    [Reflect] attribute DOMString shape;
+    [CEReactions, Reflect] attribute DOMString coords;
+    [CEReactions, Reflect] attribute DOMString charset;
+    [CEReactions, Reflect] attribute DOMString name;
+    [CEReactions, Reflect] attribute DOMString rev;
+    [CEReactions, Reflect] attribute DOMString shape;
 
 };
 
