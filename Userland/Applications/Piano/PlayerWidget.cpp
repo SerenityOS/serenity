@@ -53,7 +53,7 @@ ErrorOr<void> PlayerWidget::initialize()
     m_track_dropdown->set_model_column(0);
     m_track_dropdown->set_selected_index(0);
     m_track_dropdown->on_change = [this]([[maybe_unused]] auto name, GUI::ModelIndex model_index) {
-        m_track_manager.set_current_track(model_index.row());
+        m_track_manager.set_current_track(static_cast<size_t>(model_index.row()));
     };
 
     m_add_track_button = TRY(try_add<GUI::Button>());

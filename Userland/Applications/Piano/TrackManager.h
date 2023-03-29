@@ -27,10 +27,10 @@ public:
     ~TrackManager() = default;
 
     NonnullRefPtr<DSP::NoteTrack> current_track() { return *m_tracks[m_current_track]; }
-    int track_count() { return m_tracks.size(); };
+    size_t track_count() { return m_tracks.size(); };
     void set_current_track(size_t track_index)
     {
-        VERIFY((int)track_index < track_count());
+        VERIFY(track_index < track_count());
         m_current_track = track_index;
     }
 
