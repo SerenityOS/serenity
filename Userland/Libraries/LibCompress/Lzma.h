@@ -29,6 +29,7 @@ struct LzmaDecompressorOptions {
     u8 position_bits { 0 };
     u32 dictionary_size { 0 };
     Optional<u64> uncompressed_size;
+    bool reject_end_of_stream_marker { false };
 };
 
 // Described in section "lzma file format".

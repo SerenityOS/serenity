@@ -166,7 +166,6 @@ TEST_CASE(specification_bad_incorrect_size_lzma_decompress)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::LzmaDecompressor::create_from_container(move(stream)));
-    // FIXME: This should detect that there is still remaining (non-'end of stream') data after the expected data and reject the last read.
-    //        As of now, this test accepts any result, except for crashes.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
