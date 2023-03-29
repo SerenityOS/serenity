@@ -68,6 +68,58 @@ TEST_CASE(lzma2_compressed_without_settings_after_uncompressed)
     EXPECT_EQ("\x00\x00\x00"sv.bytes(), buffer.span());
 }
 
+TEST_CASE(lzma2_uncompressed_size_overflow)
+{
+    Array<u8, 48> const compressed {
+        // Stream Header
+        0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00, // Magic
+        0x00, 0x00,                         // Stream Flags (Check: None)
+        0xFF, 0x12, 0xD9, 0x41,             // CRC32
+
+        // Block Header
+        0x02, // Block Header Size [(0x02 + 1) * 4, i.e. 12 bytes]
+        0x00, // Block Flags (one filter, no compressed or uncompressed size present)
+        //   Filter 0 Flags
+        0x21,                   // Filter ID (0x21 for LZMA2, encoded as a multibyte integer)
+        0x01,                   // Size of Properties (0x01, encoded as a multibyte integer)
+        0x00,                   // Filter Properties (LZMA2 encoded dictionary size byte; 0x00 = 4 KiB)
+        0x00, 0x00, 0x00,       // Header Padding
+        0x37, 0x27, 0x97, 0xD6, // CRC32
+
+        // Compressed Data (LZMA2)
+        //  Uncompressed chunk with dictionary reset
+        0x01,       // Control Byte
+        0xFF, 0xFF, // 16-bit data size minus one (big-endian)
+                    // Note: The following data should be handled as verbatim data if handled correctly.
+                    //       If the size overflows, no bytes will be copied and it will be interpreted as the remainder of the XZ stream.
+        //  End of LZMA2 stream
+        0x00,
+
+        // Index
+        0x00, // Index Indicator
+        0x01, // Number of Records (multibyte integer)
+        //   Record 0
+        0x10, // Unpadded Size (multibyte integer)
+        0x00, // Uncompressed Size (multibyte integer)
+        //   CRC32
+        0x7A, 0xA7, 0x44, 0x6A,
+
+        // Stream Footer
+        0x06, 0x72, 0x9E, 0x7A, // CRC32
+        0x01, 0x00, 0x00, 0x00, // Backward Size
+        0x00, 0x00,             // Stream Flags
+        0x59, 0x5A,             // Footer Magic Bytes
+    };
+
+    auto stream = MUST(try_make<FixedMemoryStream>(compressed));
+    auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+
+    // If the size overflows (and the uncompressed size being 0 doesn't get caught otherwise), the data payload will be interpreted as stream metadata, resulting in a valid stream.
+    // If the size doesn't overflow, the stream ends in the middle unexpectedly, which should result in an error.
+    EXPECT(buffer_or_error.is_error());
+}
+
 // The following tests are based on test files from the XZ utils package, which have been placed in the public domain:
 // https://tukaani.org/xz/xz-5.4.1.tar.xz (subdirectory /xz-5.4.1/tests/files)
 // Test descriptions have been taken from the README file in the test files directory.

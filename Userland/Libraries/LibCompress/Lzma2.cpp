@@ -54,7 +54,7 @@ ErrorOr<Bytes> Lzma2Decompressor::read_some(Bytes bytes)
             // "Uncompressed chunks consist of:
             //   - A 16-bit big-endian value encoding the data size minus one
             //   - The data to be copied verbatim into the dictionary and the output"
-            u16 data_size = TRY(m_stream->read_value<BigEndian<u16>>()) + 1;
+            u32 data_size = TRY(m_stream->read_value<BigEndian<u16>>()) + 1;
 
             m_in_uncompressed_chunk = true;
             m_current_chunk_stream = TRY(try_make<ConstrainedStream>(MaybeOwned { *m_stream }, data_size));
