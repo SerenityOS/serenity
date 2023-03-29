@@ -17,6 +17,8 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#readablestreamgenericreader
 class ReadableStreamGenericReaderMixin {
 public:
+    virtual ~ReadableStreamGenericReaderMixin() = default;
+
     WebIDL::ExceptionOr<JS::GCPtr<JS::Promise>> closed();
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> cancel(JS::Value reason);
@@ -26,6 +28,8 @@ public:
 
     JS::GCPtr<WebIDL::Promise> closed_promise_capability() { return m_closed_promise; }
     void set_closed_promise_capability(JS::GCPtr<WebIDL::Promise> promise) { m_closed_promise = promise; }
+
+    virtual bool is_default_reader() const { return false; }
 
 protected:
     void visit_edges(JS::Cell::Visitor&);

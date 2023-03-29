@@ -7,6 +7,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
+#include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
 namespace Web::Streams {
@@ -37,6 +38,7 @@ void ReadableStream::visit_edges(Cell::Visitor& visitor)
     Base::visit_edges(visitor);
     visitor.visit(m_controller);
     visitor.visit(m_stored_error);
+    visitor.visit(m_reader);
 }
 
 // https://streams.spec.whatwg.org/#readablestream-locked
