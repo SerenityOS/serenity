@@ -36,7 +36,6 @@ void ReadableStream::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_controller);
-    visitor.visit(m_reader);
     visitor.visit(m_stored_error);
 }
 

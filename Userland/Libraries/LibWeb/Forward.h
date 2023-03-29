@@ -418,6 +418,7 @@ class Selection;
 
 namespace Web::Streams {
 class ReadableStream;
+class ReadableStreamGenericReaderMixin;
 }
 
 namespace Web::SVG {

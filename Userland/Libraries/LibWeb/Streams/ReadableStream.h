@@ -29,7 +29,7 @@ public:
     virtual ~ReadableStream() override;
 
     JS::GCPtr<JS::Object> controller() const { return m_controller; }
-    JS::GCPtr<JS::Object> reader() const { return m_reader; }
+    ReadableStreamGenericReaderMixin* reader() const { return m_reader; }
     JS::Value stored_error() const { return m_stored_error; }
 
     bool is_readable() const;
@@ -37,6 +37,9 @@ public:
     bool is_errored() const;
     bool is_locked() const;
     bool is_disturbed() const;
+
+    void set_disturbed(bool value) { m_disturbed = value; }
+    void set_stream_state(State value) { m_state = value; }
 
 private:
     explicit ReadableStream(JS::Realm&);
@@ -58,7 +61,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestream-reader
     // A ReadableStreamDefaultReader or ReadableStreamBYOBReader instance, if the stream is locked to a reader, or undefined if it is not
-    JS::GCPtr<JS::Object> m_reader;
+    ReadableStreamGenericReaderMixin* m_reader;
 
     // https://streams.spec.whatwg.org/#readablestream-state
     // A string containing the stream’s current state, used internally; one of "readable", "closed", or "errored"
