@@ -120,6 +120,64 @@ TEST_CASE(lzma2_uncompressed_size_overflow)
     EXPECT(buffer_or_error.is_error());
 }
 
+TEST_CASE(lzma2_literal_context_bits_after_state_reset)
+{
+    Array<u8, 72> const compressed {
+        // Stream Header
+        0xFD, 0x37, 0x7A, 0x58, 0x5A, 0x00, // Magic
+        0x00, 0x00,                         // Stream Flags (Check: None)
+        0xFF, 0x12, 0xD9, 0x41,             // CRC32
+
+        // Block Header
+        0x02, // Block Header Size [(0x02 + 1) * 4, i.e. 12 bytes]
+        0x00, // Block Flags (one filter, no compressed or uncompressed size present)
+        //   Filter 0 Flags
+        0x21,                   // Filter ID (0x21 for LZMA2, encoded as a multibyte integer)
+        0x01,                   // Size of Properties (0x01, encoded as a multibyte integer)
+        0x00,                   // Filter Properties (LZMA2 encoded dictionary size byte; 0x00 = 4 KiB)
+        0x00, 0x00, 0x00,       // Header Padding
+        0x37, 0x27, 0x97, 0xD6, // CRC32
+
+        // Compressed Data (LZMA2)
+        //  LZMA chunk with dictionary reset
+        0xE0,       // Control Byte
+        0x00, 0x00, // Low 16 bits of uncompressed size minus one (big-endian)
+        0x00, 0x05, // Compressed size minus one (big-endian)
+        0x01,       // LZMA properties byte (lc = 1; lp = 0; pb = 0)
+        0x00, 0x3F, 0xFF, 0xFC, 0x00, 0x00,
+        //  LZMA chunk with state reset
+        0xA0,       // Control Byte
+        0x00, 0x01, // Low 16 bits of uncompressed size minus one (big-endian)
+        0x00, 0x06, // Compressed size minus one (big-endian)
+        0x00, 0x40, 0x1F, 0xF4, 0x00, 0x00, 0x00,
+        //  End of LZMA2 stream
+        0x00,
+
+        // Block Padding
+        0x00, 0x00, 0x00,
+
+        // Index
+        0x00, // Index Indicator
+        0x01, // Number of Records (multibyte integer)
+        //   Record 0
+        0x25, // Unpadded Size (multibyte integer)
+        0x03, // Uncompressed Size (multibyte integer)
+        //   CRC32
+        0x76, 0x34, 0x7C, 0x51,
+
+        // Stream Footer
+        0x06, 0x72, 0x9E, 0x7A, // CRC32
+        0x01, 0x00, 0x00, 0x00, // Backward Size
+        0x00, 0x00,             // Stream Flags
+        0x59, 0x5A,             // Footer Magic Bytes
+    };
+
+    auto stream = MUST(try_make<FixedMemoryStream>(compressed));
+    auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
+    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    EXPECT_EQ("\x80\x80\x80"sv.bytes(), buffer.span());
+}
+
 // The following tests are based on test files from the XZ utils package, which have been placed in the public domain:
 // https://tukaani.org/xz/xz-5.4.1.tar.xz (subdirectory /xz-5.4.1/tests/files)
 // Test descriptions have been taken from the README file in the test files directory.
