@@ -23,6 +23,9 @@ public:
     DeprecatedString target() const { return attribute(HTML::AttributeNames::target); }
     DeprecatedString download() const { return attribute(HTML::AttributeNames::download); }
 
+    DeprecatedString text() const;
+    void set_text(DeprecatedString const&);
+
     // ^EventTarget
     // https://html.spec.whatwg.org/multipage/interaction.html#the-tabindex-attribute:the-a-element
     virtual bool is_focusable() const override { return has_attribute(HTML::AttributeNames::href); }

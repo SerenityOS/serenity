@@ -100,4 +100,18 @@ Optional<ARIA::Role> HTMLAnchorElement::default_role() const
     return ARIA::Role::generic;
 }
 
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text
+DeprecatedString HTMLAnchorElement::text() const
+{
+    // The text attribute's getter must return this element's descendant text content.
+    return descendant_text_content();
+}
+
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-text
+void HTMLAnchorElement::set_text(DeprecatedString const& text)
+{
+    // The text attribute's setter must string replace all with the given value within this element.
+    string_replace_all(text);
+}
+
 }
