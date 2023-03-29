@@ -13,6 +13,8 @@
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
+#include <LibWeb/Streams/UnderlyingSource.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -599,6 +601,122 @@ bool readable_stream_default_controller_can_close_or_enqueue(ReadableStreamDefau
     // 2. If controller.[[closeRequested]] is false and state is "readable", return true.
     // 3. Otherwise, return false.
     return !controller.close_requested() && controller.stream()->is_readable();
+}
+
+// https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller
+WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStream& stream, ReadableStreamDefaultController& controller, StartAlgorithm&& start_algorithm, PullAlgorithm&& pull_algorithm, CancelAlgorithm&& cancel_algorithm, double high_water_mark, SizeAlgorithm&& size_algorithm)
+{
+    auto& realm = stream.realm();
+
+    // 1. Assert: stream.[[controller]] is undefined.
+    VERIFY(!stream.controller());
+
+    // 2. Set controller.[[stream]] to stream.
+    controller.set_stream(stream);
+
+    // 3. Perform ! ResetQueue(controller).
+    reset_queue(controller);
+
+    // 4. Set controller.[[started]], controller.[[closeRequested]], controller.[[pullAgain]], and controller.[[pulling]] to false.
+    controller.set_started(false);
+    controller.set_close_requested(false);
+    controller.set_pull_again(false);
+    controller.set_pulling(false);
+
+    // 5. Set controller.[[strategySizeAlgorithm]] to sizeAlgorithm and controller.[[strategyHWM]] to highWaterMark.
+    controller.set_strategy_size_algorithm(move(size_algorithm));
+    controller.set_strategy_hwm(high_water_mark);
+
+    // 6. Set controller.[[pullAlgorithm]] to pullAlgorithm.
+    controller.set_pull_algorithm(move(pull_algorithm));
+
+    // 7. Set controller.[[cancelAlgorithm]] to cancelAlgorithm.
+    controller.set_cancel_algorithm(move(cancel_algorithm));
+
+    // 8. Set stream.[[controller]] to controller.
+    stream.set_controller(controller);
+
+    // 9. Let startResult be the result of performing startAlgorithm. (This might throw an exception.)
+    auto start_result = TRY(start_algorithm());
+
+    // 10. Let startPromise be a promise resolved with startResult.
+    auto start_promise = WebIDL::create_resolved_promise(realm, start_result ? start_result->promise() : JS::js_undefined());
+
+    // 11. Upon fulfillment of startPromise,
+    WebIDL::upon_fulfillment(start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Set controller.[[started]] to true.
+        controller.set_started(true);
+
+        // 2. Assert: controller.[[pulling]] is false.
+        VERIFY(!controller.pulling());
+
+        // 3. Assert: controller.[[pullAgain]] is false.
+        VERIFY(!controller.pull_again());
+
+        // 4. Perform ! ReadableStreamDefaultControllerCallPullIfNeeded(controller).
+        TRY(readable_stream_default_controller_can_pull_if_needed(controller));
+
+        return JS::js_undefined();
+    });
+
+    // 12. Upon rejection of startPromise with reason r,
+    WebIDL::upon_rejection(start_promise, [&](auto const& r) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Perform ! ReadableStreamDefaultControllerError(controller, r).
+        readable_stream_default_controller_error(controller, r);
+
+        return JS::js_undefined();
+    });
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#set-up-readable-stream-default-controller-from-underlying-source
+WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream& stream, JS::Value underlying_source_value, UnderlyingSource underlying_source, double high_water_mark, SizeAlgorithm&& size_algorithm)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let controller be a new ReadableStreamDefaultController.
+    auto controller = MUST_OR_THROW_OOM(stream.heap().allocate<ReadableStreamDefaultController>(realm, realm));
+
+    // 2. Let startAlgorithm be an algorithm that returns undefined.
+    StartAlgorithm start_algorithm = [] { return JS::GCPtr<WebIDL::Promise> {}; };
+
+    // 3. Let pullAlgorithm be an algorithm that returns a promise resolved with undefined.
+    PullAlgorithm pull_algorithm = [&realm]() {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 4. Let cancelAlgorithm be an algorithm that returns a promise resolved with undefined.
+    CancelAlgorithm cancel_algorithm = [&realm](auto const&) {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 5. If underlyingSourceDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["start"] with argument list « controller » and callback this value underlyingSource.
+    if (underlying_source.start) {
+        start_algorithm = [&, start = underlying_source.start]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*start, underlying_source_value, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
+    if (underlying_source.pull) {
+        pull_algorithm = [&, pull = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*pull, underlying_source_value, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
+    if (underlying_source.cancel) {
+        cancel_algorithm = [&, cancel = underlying_source.cancel](auto const& reason) -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*cancel, underlying_source_value, reason)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 8. Perform ? SetUpReadableStreamDefaultController(stream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark, sizeAlgorithm).
+    return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
 }
 
 }

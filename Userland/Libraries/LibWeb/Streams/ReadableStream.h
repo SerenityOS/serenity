@@ -32,7 +32,7 @@ public:
         Errored,
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> construct_impl(JS::Realm&);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> construct_impl(JS::Realm&, Optional<JS::Handle<JS::Object>> const& underlying_source);
 
     virtual ~ReadableStream() override;
 
