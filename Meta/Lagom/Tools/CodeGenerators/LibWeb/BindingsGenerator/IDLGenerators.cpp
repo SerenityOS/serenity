@@ -122,6 +122,9 @@ CppType idl_type_name_to_cpp_type(Type const& type, Interface const& interface)
     if (is_platform_object(type))
         return { .name = DeprecatedString::formatted("JS::Handle<{}>", type.name()), .sequence_storage_type = SequenceStorageType::MarkedVector };
 
+    if (interface.callback_functions.contains(type.name()))
+        return { .name = "JS::Handle<WebIDL::CallbackType>", .sequence_storage_type = SequenceStorageType::MarkedVector };
+
     if (type.is_string()) {
         if (interface.extended_attributes.contains("UseNewAKString"))
             return { .name = "String", .sequence_storage_type = SequenceStorageType::Vector };
