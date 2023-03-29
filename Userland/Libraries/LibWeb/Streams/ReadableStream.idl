@@ -1,8 +1,17 @@
-// Dummy definition so we can use ReadableStream as a type in Fetch.
+#import <Streams/ReadableStreamDefaultReader.idl>
 
 // https://streams.spec.whatwg.org/#readablestream
 [Exposed=*, Transferable]
 interface ReadableStream {
     // FIXME: optional QueuingStrategy strategy = {}
     constructor(optional object underlyingSource);
+
+    readonly attribute boolean locked;
+
+    Promise<undefined> cancel(optional any reason);
+    // FIXME: optional ReadableStreamGetReaderOptions options = {}
+    ReadableStreamReader getReader();
 };
+
+// FIXME: typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;
+typedef ReadableStreamDefaultReader ReadableStreamReader;
