@@ -17,6 +17,8 @@ interface HTMLAnchorElement : HTMLElement {
 
     [CEReactions] attribute DOMString text;
 
+    [CEReactions] attribute DOMString referrerPolicy;
+
     // Obsolete
     [CEReactions, Reflect] attribute DOMString coords;
     [CEReactions, Reflect] attribute DOMString charset;

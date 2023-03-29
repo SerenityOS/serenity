@@ -7,6 +7,7 @@
 #include <LibWeb/ARIA/Roles.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
 namespace Web::HTML {
 
@@ -112,6 +113,24 @@ void HTMLAnchorElement::set_text(DeprecatedString const& text)
 {
     // The text attribute's setter must string replace all with the given value within this element.
     string_replace_all(text);
+}
+
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-referrerpolicy
+DeprecatedString HTMLAnchorElement::referrer_policy() const
+{
+    // The IDL attribute referrerPolicy must reflect the referrerpolicy content attribute, limited to only known values.
+    auto policy_string = attribute(HTML::AttributeNames::referrerpolicy);
+    auto maybe_policy = ReferrerPolicy::from_string(policy_string);
+    if (maybe_policy.has_value())
+        return ReferrerPolicy::to_string(maybe_policy.value());
+    return "";
+}
+
+// https://html.spec.whatwg.org/multipage/text-level-semantics.html#dom-a-referrerpolicy
+WebIDL::ExceptionOr<void> HTMLAnchorElement::set_referrer_policy(DeprecatedString const& referrer_policy)
+{
+    // The IDL attribute referrerPolicy must reflect the referrerpolicy content attribute, limited to only known values.
+    return set_attribute(HTML::AttributeNames::referrerpolicy, referrer_policy);
 }
 
 }
