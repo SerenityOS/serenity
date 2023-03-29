@@ -72,11 +72,20 @@ void LassoSelectTool::on_mouseup(Layer*, MouseEvent&)
     m_selecting = false;
     m_top_left.translate_by(-1);
 
+    auto image_rect = m_editor->image().rect();
+    auto lasso_rect = Gfx::IntRect::from_two_points(m_top_left, m_bottom_right);
+    if (!lasso_rect.intersects(image_rect)) {
+        m_editor->image().selection().merge(Gfx::IntRect {}, m_merge_mode);
+        return;
+    }
+
     if (m_path_points.last() != m_start_position)
         m_path_points.append(m_start_position);
 
     // We create a bitmap that is bigger by 1 pixel on each side
-    auto lasso_bitmap_rect = Gfx::IntRect::from_two_points(m_top_left, m_bottom_right).inflated(2, 2);
+    auto lasso_bitmap_rect = lasso_rect.inflated(2, 2);
+    // FIXME: It should be possible to limit the size of the lasso bitmap to the size of the canvas, as that is
+    //        the maximum possible size of the selection.
     auto lasso_bitmap_or_error = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, lasso_bitmap_rect.size());
     if (lasso_bitmap_or_error.is_error())
         return;
@@ -97,9 +106,13 @@ void LassoSelectTool::flood_lasso_selection(Gfx::Bitmap& lasso_bitmap)
     VERIFY(lasso_bitmap.bpp() == 32);
 
     // Create Mask which will track already-processed pixels
-    auto selection_mask = Mask::full({ m_top_left, lasso_bitmap.size() });
+    auto mask_rect = Gfx::IntRect(m_top_left, lasso_bitmap.size()).intersected(m_editor->image().rect());
+    auto selection_mask = Mask::full(mask_rect);
+
     auto pixel_reached = [&](Gfx::IntPoint location) {
-        selection_mask.set(Gfx::IntPoint(m_top_left.x() + location.x(), m_top_left.y() + location.y()), 0);
+        auto point_to_set = location.translated(m_top_left);
+        if (mask_rect.contains(point_to_set))
+            selection_mask.set(point_to_set, 0);
     };
 
     lasso_bitmap.flood_visit_from_point({ 0, 0 }, 0, move(pixel_reached));

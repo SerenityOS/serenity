@@ -62,7 +62,8 @@ void RectangleSelectTool::on_mouseup(Layer*, MouseEvent& event)
 
     m_editor->update();
 
-    auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
+    auto rect_in_image = selection_rect();
+
     auto mask = Mask::full(rect_in_image);
 
     auto feathering = ((mask.bounding_rect().size().to_type<float>() * .5f) * m_edge_feathering).to_type<int>();
@@ -141,7 +142,10 @@ void RectangleSelectTool::on_second_paint(Layer const*, GUI::PaintEvent& event)
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
 
-    auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
+    auto rect_in_image = selection_rect();
+    if (rect_in_image.is_empty())
+        return;
+
     auto rect_in_editor = m_editor->content_to_frame_rect(rect_in_image);
 
     m_editor->draw_marching_ants(painter, rect_in_editor.to_rounded<int>());
@@ -221,6 +225,16 @@ ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
 Gfx::IntPoint RectangleSelectTool::point_position_to_preferred_cell(Gfx::FloatPoint position) const
 {
     return position.to_rounded<int>();
+}
+
+Gfx::IntRect RectangleSelectTool::selection_rect() const
+{
+    auto image_rect = m_editor->image().rect();
+    auto unconstrained_selection_rect = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
+    if (!unconstrained_selection_rect.intersects(image_rect))
+        return {};
+
+    return unconstrained_selection_rect.intersected(image_rect);
 }
 
 }

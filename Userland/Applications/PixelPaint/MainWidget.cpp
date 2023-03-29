@@ -418,7 +418,8 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         VERIFY(editor);
         if (!editor->active_layer())
             return;
-        editor->image().selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
+        auto layer_rect = editor->active_layer()->relative_rect();
+        editor->image().selection().merge(layer_rect.intersected(editor->image().rect()), PixelPaint::Selection::MergeMode::Set);
         editor->did_complete_action("Select All"sv);
     })));
     TRY(m_edit_menu->try_add_action(GUI::Action::create(
@@ -660,6 +661,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                     GUI::MessageBox::show_error(&window, MUST(String::formatted("Failed to resize image: {}", image_resize_or_error.release_error())));
                     return;
                 }
+                // FIXME: We should ensure the selection is within the bounds of the image here.
                 editor->did_complete_action("Resize Image"sv);
             }
         })));

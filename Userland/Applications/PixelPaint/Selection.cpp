@@ -31,6 +31,8 @@ void Selection::invert()
 
 void Selection::merge(Mask const& mask, MergeMode mode)
 {
+    VERIFY(m_image.rect().contains(mask.bounding_rect()));
+
     switch (mode) {
     case MergeMode::Set:
         m_mask = mask;
