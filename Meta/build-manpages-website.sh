@@ -94,8 +94,10 @@ echo 'Generating main pages'
 pandoc -f gfm -t html5 -s \
     -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
     --metadata title="SerenityOS man pages" \
+    --lua-filter=Meta/convert-markdown-links.lua \
     -o output/index.html \
-    Meta/Websites/man.serenityos.org/index.md &
+    Base/usr/share/man/man7/Help-index.md \
+    Meta/Websites/man.serenityos.org/sections.md &
 pandoc -f gfm -t html5 -s \
     -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
     --metadata title="Can't run applications" \

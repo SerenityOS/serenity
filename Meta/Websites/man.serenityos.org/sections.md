@@ -1,3 +1,5 @@
+### Sections
+
 - [Section 1: User Programs (applets, applications, utilities, etc.)](man1/index.html)
 - [Section 2: System Calls (getuid, mount, pledge, sendfd, etc.)](man2/index.html)
 - [Section 3: Library Functions (basename, isatty, POSIX functions, etc.)](man3/index.html)
