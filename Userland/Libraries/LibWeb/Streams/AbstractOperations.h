@@ -9,6 +9,7 @@
 
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Streams/QueueOperations.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::Streams {
