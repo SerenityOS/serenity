@@ -1584,6 +1584,12 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
         @result_expression@ JS::js_null();
     } else {
 )~~~");
+        } else if (type.is_primitive()) {
+            scoped_generator.append(R"~~~(
+    if (!@value@.has_value()) {
+        @result_expression@ JS::js_null();
+    } else {
+)~~~");
         } else {
             scoped_generator.append(R"~~~(
     if (!@value@) {
@@ -1643,9 +1649,15 @@ static void generate_wrap_statement(SourceGenerator& generator, DeprecatedString
     @result_expression@ new_array@recursion_depth@;
 )~~~");
     } else if (type.name() == "boolean" || type.name() == "double" || type.name() == "float") {
-        scoped_generator.append(R"~~~(
+        if (type.is_nullable()) {
+            scoped_generator.append(R"~~~(
+    @result_expression@ JS::Value(@value@.release_value());
+)~~~");
+        } else {
+            scoped_generator.append(R"~~~(
     @result_expression@ JS::Value(@value@);
 )~~~");
+        }
     } else if (type.name() == "short" || type.name() == "long" || type.name() == "unsigned short") {
         scoped_generator.append(R"~~~(
     @result_expression@ JS::Value((i32)@value@);
