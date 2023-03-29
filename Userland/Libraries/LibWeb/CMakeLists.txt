@@ -215,6 +215,8 @@ set(SOURCES
     HTML/CrossOrigin/AbstractOperations.cpp
     HTML/CrossOrigin/Reporting.cpp
     HTML/CustomElements/CustomElementName.cpp
+    HTML/CustomElements/CustomElementReactionNames.cpp
+    HTML/CustomElements/CustomElementRegistry.cpp
     HTML/DOMParser.cpp
     HTML/DOMStringMap.cpp
     HTML/ErrorEvent.cpp

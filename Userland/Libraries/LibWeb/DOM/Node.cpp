@@ -30,6 +30,7 @@
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/StaticNodeList.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
+#include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
 #include <LibWeb/HTML/Origin.h>
@@ -438,18 +439,29 @@ void Node::insert_before(JS::NonnullGCPtr<Node> node, JS::GCPtr<Node> child, boo
         // FIXME: 5. If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
         // FIXME: 6. Run assign slottables for a tree with node’s root.
 
-        // FIXME: This should be shadow-including.
         // 7. For each shadow-including inclusive descendant inclusiveDescendant of node, in shadow-including tree order:
-        node_to_insert->for_each_in_inclusive_subtree([&](Node& inclusive_descendant) {
+        node_to_insert->for_each_shadow_including_inclusive_descendant([&](Node& inclusive_descendant) {
             // 1. Run the insertion steps with inclusiveDescendant.
             inclusive_descendant.inserted();
 
             // 2. If inclusiveDescendant is connected, then:
-            if (inclusive_descendant.is_connected()) {
-                // FIXME: 1. If inclusiveDescendant is custom, then enqueue a custom element callback reaction with inclusiveDescendant, callback name "connectedCallback", and an empty argument list.
+            // NOTE: This is not specified here in the spec, but these steps can only be performed on an element.
+            if (inclusive_descendant.is_connected() && is<DOM::Element>(inclusive_descendant)) {
+                auto& element = static_cast<DOM::Element&>(inclusive_descendant);
 
-                // FIXME: 2. Otherwise, try to upgrade inclusiveDescendant.
-                // NOTE: If this successfully upgrades inclusiveDescendant, its connectedCallback will be enqueued automatically during the upgrade an element algorithm.
+                // 1. If inclusiveDescendant is custom, then enqueue a custom element callback reaction with inclusiveDescendant,
+                //    callback name "connectedCallback", and an empty argument list.
+                if (element.is_custom()) {
+                    JS::MarkedVector<JS::Value> empty_arguments { vm().heap() };
+                    element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::connectedCallback, move(empty_arguments));
+                }
+
+                // 2. Otherwise, try to upgrade inclusiveDescendant.
+                // NOTE: If this successfully upgrades inclusiveDescendant, its connectedCallback will be enqueued automatically during
+                //       the upgrade an element algorithm.
+                else {
+                    element.try_to_upgrade();
+                }
             }
 
             return IterationDecision::Continue;
@@ -579,20 +591,37 @@ void Node::remove(bool suppress_observers)
     // 15. Run the removing steps with node and parent.
     removed_from(parent);
 
-    // FIXME: 16. Let isParentConnected be parent’s connected. (Currently unused so not included)
+    // 16. Let isParentConnected be parent’s connected.
+    bool is_parent_connected = parent->is_connected();
 
-    // FIXME: 17. If node is custom and isParentConnected is true, then enqueue a custom element callback reaction with node,
-    //        callback name "disconnectedCallback", and an empty argument list.
-    // NOTE: It is intentional for now that custom elements do not get parent passed. This might change in the future if there is a need.
+    // 17. If node is custom and isParentConnected is true, then enqueue a custom element callback reaction with node,
+    //     callback name "disconnectedCallback", and an empty argument list.
+    // Spec Note: It is intentional for now that custom elements do not get parent passed.
+    //            This might change in the future if there is a need.
+    if (is<DOM::Element>(*this)) {
+        auto& element = static_cast<DOM::Element&>(*this);
 
-    // FIXME: This should be shadow-including.
+        if (element.is_custom() && is_parent_connected) {
+            JS::MarkedVector<JS::Value> empty_arguments { vm().heap() };
+            element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::disconnectedCallback, move(empty_arguments));
+        }
+    }
+
     // 18. For each shadow-including descendant descendant of node, in shadow-including tree order, then:
-    for_each_in_subtree([&](Node& descendant) {
+    for_each_shadow_including_descendant([&](Node& descendant) {
         // 1. Run the removing steps with descendant
         descendant.removed_from(nullptr);
 
-        //  FIXME: 2. If descendant is custom and isParentConnected is true, then enqueue a custom element callback reaction with descendant,
-        //        callback name "disconnectedCallback", and an empty argument list.
+        // 2. If descendant is custom and isParentConnected is true, then enqueue a custom element callback reaction with descendant,
+        //    callback name "disconnectedCallback", and an empty argument list.
+        if (is<DOM::Element>(descendant)) {
+            auto& element = static_cast<DOM::Element&>(descendant);
+
+            if (element.is_custom() && is_parent_connected) {
+                JS::MarkedVector<JS::Value> empty_arguments { vm().heap() };
+                element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::disconnectedCallback, move(empty_arguments));
+            }
+        }
 
         return IterationDecision::Continue;
     });
@@ -727,7 +756,7 @@ JS::NonnullGCPtr<Node> Node::clone_node(Document* document, bool clone_children)
     if (is<Element>(this)) {
         // 1. Let copy be the result of creating an element, given document, node’s local name, node’s namespace, node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset.
         auto& element = *verify_cast<Element>(this);
-        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_() /* FIXME: node’s namespace prefix, and node’s is value, with the synchronous custom elements flag unset */).release_value_but_fixme_should_propagate_errors();
+        auto element_copy = DOM::create_element(*document, element.local_name(), element.namespace_(), element.prefix(), element.is_value(), false).release_value_but_fixme_should_propagate_errors();
 
         // 2. For each attribute in node’s attribute list:
         element.for_each_attribute([&](auto& name, auto& value) {

@@ -70,4 +70,9 @@ void QualifiedName::Impl::make_internal_string()
     as_string = DeprecatedString::formatted("{}:{}", prefix, local_name);
 }
 
+void QualifiedName::set_prefix(DeprecatedFlyString const& value)
+{
+    m_impl->prefix = value;
+}
+
 }

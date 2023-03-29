@@ -6,6 +6,7 @@
 
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/HTMLCollection.h>
 #include <LibWeb/DOM/Range.h>
@@ -27,6 +28,7 @@
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Layout/Viewport.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/URL/URL.h>
 
@@ -191,9 +193,9 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     document->set_is_initial_about_blank(true);
 
     // 18. Ensure that document has a single child html node, which itself has two empty child nodes: a head element, and a body element.
-    auto html_node = document->create_element(HTML::TagNames::html).release_value();
-    MUST(html_node->append_child(document->create_element(HTML::TagNames::head).release_value()));
-    MUST(html_node->append_child(document->create_element(HTML::TagNames::body).release_value()));
+    auto html_node = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(html_node->append_child(DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors()));
+    MUST(html_node->append_child(DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors()));
     MUST(document->append_child(html_node));
 
     // 19. Set the active document of browsingContext to document.

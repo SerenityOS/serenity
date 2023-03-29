@@ -8,6 +8,7 @@
 
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/ShadowRoot.h>
 #include <LibWeb/DOM/Text.h>
@@ -21,6 +22,7 @@
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/RadioButton.h>
+#include <LibWeb/Namespace.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 
@@ -408,7 +410,7 @@ void HTMLInputElement::create_shadow_tree_if_needed()
     auto initial_value = m_value;
     if (initial_value.is_null())
         initial_value = DeprecatedString::empty();
-    auto element = document().create_element(HTML::TagNames::div).release_value();
+    auto element = DOM::create_element(document(), HTML::TagNames::div, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(element->set_attribute(HTML::AttributeNames::style, "white-space: pre; padding-top: 1px; padding-bottom: 1px; padding-left: 2px; padding-right: 2px; height: 1lh;"));
     m_text_node = heap().allocate<DOM::Text>(realm(), document(), initial_value).release_allocated_value_but_fixme_should_propagate_errors();
     m_text_node->set_always_editable(m_type != TypeAttributeState::FileUpload);

@@ -83,6 +83,7 @@ namespace AttributeNames {
     __ENUMERATE_HTML_ATTRIBUTE(imagesrcset)                \
     __ENUMERATE_HTML_ATTRIBUTE(inert)                      \
     __ENUMERATE_HTML_ATTRIBUTE(integrity)                  \
+    __ENUMERATE_HTML_ATTRIBUTE(is)                         \
     __ENUMERATE_HTML_ATTRIBUTE(ismap)                      \
     __ENUMERATE_HTML_ATTRIBUTE(itemscope)                  \
     __ENUMERATE_HTML_ATTRIBUTE(label)                      \

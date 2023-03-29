@@ -74,8 +74,8 @@ interface Document : Node {
     // FIXME: Should return an HTMLAllCollection
     readonly attribute HTMLCollection all;
 
-    Element createElement(DOMString tagName);
-    Element createElementNS(DOMString? namespace, DOMString qualifiedName);
+    Element createElement(DOMString tagName, optional (DOMString or ElementCreationOptions) options = {});
+    Element createElementNS(DOMString? namespace, DOMString qualifiedName, optional (DOMString or ElementCreationOptions) options = {});
     DocumentFragment createDocumentFragment();
     Text createTextNode(DOMString data);
     Comment createComment(DOMString data);
@@ -114,5 +114,8 @@ interface Document : Node {
     Selection? getSelection();
 };
 
+dictionary ElementCreationOptions {
+    DOMString is;
+};
 Document includes ParentNode;
 Document includes GlobalEventHandlers;

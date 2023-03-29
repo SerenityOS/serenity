@@ -32,6 +32,7 @@
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/Focus.h>
@@ -104,6 +105,7 @@ void Window::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_location);
     visitor.visit(m_crypto);
     visitor.visit(m_navigator);
+    visitor.visit(m_custom_element_registry);
     for (auto& plugin_object : m_pdf_viewer_plugin_objects)
         visitor.visit(plugin_object);
     for (auto& mime_type_object : m_pdf_viewer_mime_type_objects)
@@ -1323,6 +1325,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Crypto::Crypto>> Window::crypto()
     if (!m_crypto)
         m_crypto = MUST_OR_THROW_OOM(heap().allocate<Crypto::Crypto>(realm, realm));
     return JS::NonnullGCPtr { *m_crypto };
+}
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#dom-window-customelements
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomElementRegistry>> Window::custom_elements()
+{
+    auto& realm = this->realm();
+
+    // The customElements attribute of the Window interface must return the CustomElementRegistry object for that Window object.
+    if (!m_custom_element_registry)
+        m_custom_element_registry = MUST_OR_THROW_OOM(heap().allocate<CustomElementRegistry>(realm, realm));
+    return JS::NonnullGCPtr { *m_custom_element_registry };
 }
 
 // https://html.spec.whatwg.org/multipage/window-object.html#number-of-document-tree-child-browsing-contexts

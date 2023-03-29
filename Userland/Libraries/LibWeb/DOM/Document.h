@@ -70,6 +70,10 @@ struct DocumentUnloadTimingInfo {
     double unload_event_end_time { 0 };
 };
 
+struct ElementCreationOptions {
+    DeprecatedString is;
+};
+
 class Document
     : public ParentNode
     , public NonElementParentNode<Document>
@@ -221,8 +225,8 @@ public:
 
     JS::Value run_javascript(StringView source, StringView filename = "(unknown)"sv);
 
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(DeprecatedFlyString const& local_name);
-    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element(DeprecatedString const& local_name, Variant<DeprecatedString, ElementCreationOptions> const& options);
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, Variant<DeprecatedString, ElementCreationOptions> const& options);
     JS::NonnullGCPtr<DocumentFragment> create_document_fragment();
     JS::NonnullGCPtr<Text> create_text_node(DeprecatedString const& data);
     JS::NonnullGCPtr<Comment> create_comment(DeprecatedString const& data);
@@ -398,6 +402,11 @@ public:
 
     bool has_active_favicon() const { return m_active_favicon; }
     void check_favicon_after_loading_link_resource();
+
+    JS::GCPtr<HTML::CustomElementDefinition> lookup_custom_element_definition(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& local_name, Optional<String> const& is) const;
+
+    void increment_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>);
+    void decrement_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>);
 
     // https://html.spec.whatwg.org/multipage/dom.html#is-initial-about:blank
     bool is_initial_about_blank() const { return m_is_initial_about_blank; }

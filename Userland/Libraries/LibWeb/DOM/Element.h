@@ -41,6 +41,29 @@ struct ScrollIntoViewOptions : public HTML::ScrollOptions {
     Bindings::ScrollLogicalPosition inline_ { Bindings::ScrollLogicalPosition::Nearest };
 };
 
+// https://html.spec.whatwg.org/multipage/custom-elements.html#upgrade-reaction
+// An upgrade reaction, which will upgrade the custom element and contains a custom element definition; or
+struct CustomElementUpgradeReaction {
+    JS::Handle<HTML::CustomElementDefinition> custom_element_definition;
+};
+
+// https://html.spec.whatwg.org/multipage/custom-elements.html#callback-reaction
+// A callback reaction, which will call a lifecycle callback, and contains a callback function as well as a list of arguments.
+struct CustomElementCallbackReaction {
+    JS::Handle<WebIDL::CallbackType> callback;
+    JS::MarkedVector<JS::Value> arguments;
+};
+
+// https://dom.spec.whatwg.org/#concept-element-custom-element-state
+// An element’s custom element state is one of "undefined", "failed", "uncustomized", "precustomized", or "custom".
+enum class CustomElementState {
+    Undefined,
+    Failed,
+    Uncustomized,
+    Precustomized,
+    Custom,
+};
+
 class Element
     : public ParentNode
     , public ChildNode<Element>
@@ -60,6 +83,8 @@ public:
     DeprecatedString const& tag_name() const { return html_uppercased_qualified_name(); }
 
     DeprecatedFlyString const& prefix() const { return m_qualified_name.prefix(); }
+    void set_prefix(DeprecatedFlyString const& value);
+
     DeprecatedFlyString const& namespace_() const { return m_qualified_name.namespace_(); }
 
     // NOTE: This is for the JS bindings
@@ -259,6 +284,24 @@ public:
 
     virtual bool include_in_accessibility_tree() const override;
 
+    void enqueue_a_custom_element_upgrade_reaction(HTML::CustomElementDefinition& custom_element_definition);
+    void enqueue_a_custom_element_callback_reaction(FlyString const& callback_name, JS::MarkedVector<JS::Value> arguments);
+
+    Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>>& custom_element_reaction_queue() { return m_custom_element_reaction_queue; }
+    Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>> const& custom_element_reaction_queue() const { return m_custom_element_reaction_queue; }
+
+    JS::ThrowCompletionOr<void> upgrade_element(JS::NonnullGCPtr<HTML::CustomElementDefinition> custom_element_definition);
+    void try_to_upgrade();
+
+    bool is_defined() const;
+    bool is_custom() const;
+
+    Optional<String> const& is_value() const { return m_is_value; }
+    void set_is_value(Optional<String> const& is) { m_is_value = is; }
+
+    void set_custom_element_state(CustomElementState value) { m_custom_element_state = value; }
+    void setup_custom_element_from_constructor(HTML::CustomElementDefinition& custom_element_definition, Optional<String> const& is_value);
+
 protected:
     Element(Document&, DOM::QualifiedName);
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
@@ -275,6 +318,8 @@ private:
 
     WebIDL::ExceptionOr<JS::GCPtr<Node>> insert_adjacent(DeprecatedString const& where, JS::NonnullGCPtr<Node> node);
 
+    void enqueue_an_element_on_the_appropriate_element_queue();
+
     QualifiedName m_qualified_name;
     DeprecatedString m_html_uppercased_qualified_name;
 
@@ -289,6 +334,20 @@ private:
     Vector<FlyString> m_classes;
 
     Array<JS::GCPtr<Layout::Node>, to_underlying(CSS::Selector::PseudoElement::PseudoElementCount)> m_pseudo_element_nodes;
+
+    // https://html.spec.whatwg.org/multipage/custom-elements.html#custom-element-reaction-queue
+    // All elements have an associated custom element reaction queue, initially empty. Each item in the custom element reaction queue is of one of two types:
+    // NOTE: See the structs at the top of this header.
+    Vector<Variant<CustomElementUpgradeReaction, CustomElementCallbackReaction>> m_custom_element_reaction_queue;
+
+    // https://dom.spec.whatwg.org/#concept-element-custom-element-state
+    CustomElementState m_custom_element_state { CustomElementState::Undefined };
+
+    // https://dom.spec.whatwg.org/#concept-element-custom-element-definition
+    JS::GCPtr<HTML::CustomElementDefinition> m_custom_element_definition;
+
+    // https://dom.spec.whatwg.org/#concept-element-is-value
+    Optional<String> m_is_value;
 };
 
 template<>

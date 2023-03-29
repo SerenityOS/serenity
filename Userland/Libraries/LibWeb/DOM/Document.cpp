@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
- * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
+ * Copyright (c) 2021-2023, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -37,6 +37,9 @@
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/AttributeNames.h>
 #include <LibWeb/HTML/BrowsingContext.h>
+#include <LibWeb/HTML/CustomElements/CustomElementDefinition.h>
+#include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
+#include <LibWeb/HTML/CustomElements/CustomElementRegistry.h>
 #include <LibWeb/HTML/EventLoop/EventLoop.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
@@ -680,7 +683,7 @@ void Document::set_title(DeprecatedString const& title)
 
     JS::GCPtr<HTML::HTMLTitleElement> title_element = head_element->first_child_of_type<HTML::HTMLTitleElement>();
     if (!title_element) {
-        title_element = &static_cast<HTML::HTMLTitleElement&>(*create_element(HTML::TagNames::title).release_value());
+        title_element = &static_cast<HTML::HTMLTitleElement&>(*DOM::create_element(*this, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors());
         MUST(head_element->append_child(*title_element));
     }
 
@@ -1190,8 +1193,10 @@ JS::Value Document::run_javascript(StringView source, StringView filename)
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelement
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(DeprecatedFlyString const& a_local_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(DeprecatedString const& a_local_name, Variant<DeprecatedString, ElementCreationOptions> const& options)
 {
+    auto& vm = this->vm();
+
     auto local_name = a_local_name;
 
     // 1. If localName does not match the Name production, then throw an "InvalidCharacterError" DOMException.
@@ -1202,8 +1207,15 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
     if (document_type() == Type::HTML)
         local_name = local_name.to_lowercase();
 
-    // FIXME: 3. Let is be null.
-    // FIXME: 4. If options is a dictionary and options["is"] exists, then set is to it.
+    // 3. Let is be null.
+    Optional<String> is_value;
+
+    // 4. If options is a dictionary and options["is"] exists, then set is to it.
+    if (options.has<ElementCreationOptions>()) {
+        auto const& element_creation_options = options.get<ElementCreationOptions>();
+        if (!element_creation_options.is.is_null())
+            is_value = TRY_OR_THROW_OOM(vm, String::from_utf8(element_creation_options.is));
+    }
 
     // 5. Let namespace be the HTML namespace, if this is an HTML document or this’s content type is "application/xhtml+xml"; otherwise null.
     DeprecatedFlyString namespace_;
@@ -1211,22 +1223,30 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element(Deprecat
         namespace_ = Namespace::HTML;
 
     // 6. Return the result of creating an element given this, localName, namespace, null, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, local_name, namespace_));
+    return TRY(DOM::create_element(*this, local_name, namespace_, {}, move(is_value), true));
 }
 
 // https://dom.spec.whatwg.org/#dom-document-createelementns
 // https://dom.spec.whatwg.org/#internal-createelementns-steps
-// FIXME: This only implements step 4 of the algorithm and does not take in options.
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Element>> Document::create_element_ns(DeprecatedString const& namespace_, DeprecatedString const& qualified_name, Variant<DeprecatedString, ElementCreationOptions> const& options)
 {
+    auto& vm = this->vm();
+
     // 1. Let namespace, prefix, and localName be the result of passing namespace and qualifiedName to validate and extract.
     auto extracted_qualified_name = TRY(validate_and_extract(realm(), namespace_, qualified_name));
 
-    // FIXME: 2. Let is be null.
-    // FIXME: 3. If options is a dictionary and options["is"] exists, then set is to it.
+    // 2. Let is be null.
+    Optional<String> is_value;
+
+    // 3. If options is a dictionary and options["is"] exists, then set is to it.
+    if (options.has<ElementCreationOptions>()) {
+        auto const& element_creation_options = options.get<ElementCreationOptions>();
+        if (!element_creation_options.is.is_null())
+            is_value = TRY_OR_THROW_OOM(vm, String::from_utf8(element_creation_options.is));
+    }
 
     // 4. Return the result of creating an element given document, localName, namespace, prefix, is, and with the synchronous custom elements flag set.
-    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix()));
+    return TRY(DOM::create_element(*this, extracted_qualified_name.local_name(), extracted_qualified_name.namespace_(), extracted_qualified_name.prefix(), move(is_value), true));
 }
 
 JS::NonnullGCPtr<DocumentFragment> Document::create_document_fragment()
@@ -1393,22 +1413,49 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Node>> Document::import_node(JS::NonnullGCP
 // https://dom.spec.whatwg.org/#concept-node-adopt
 void Document::adopt_node(Node& node)
 {
+    // 1. Let oldDocument be node’s node document.
     auto& old_document = node.document();
+
+    // 2. If node’s parent is non-null, then remove node.
     if (node.parent())
         node.remove();
 
+    // 3. If document is not oldDocument, then:
     if (&old_document != this) {
-        node.for_each_shadow_including_descendant([&](auto& inclusive_descendant) {
+        // 1. For each inclusiveDescendant in node’s shadow-including inclusive descendants:
+        node.for_each_shadow_including_inclusive_descendant([&](DOM::Node& inclusive_descendant) {
+            // 1. Set inclusiveDescendant’s node document to document.
             inclusive_descendant.set_document({}, *this);
-            // FIXME: If inclusiveDescendant is an element, then set the node document of each attribute in inclusiveDescendant’s attribute list to document.
+
+            // FIXME: 2. If inclusiveDescendant is an element, then set the node document of each attribute in inclusiveDescendant’s
+            //           attribute list to document.
             return IterationDecision::Continue;
         });
 
-        // FIXME: For each inclusiveDescendant in node’s shadow-including inclusive descendants that is custom,
-        //        enqueue a custom element callback reaction with inclusiveDescendant, callback name "adoptedCallback",
-        //        and an argument list containing oldDocument and document.
+        // 2. For each inclusiveDescendant in node’s shadow-including inclusive descendants that is custom,
+        //    enqueue a custom element callback reaction with inclusiveDescendant, callback name "adoptedCallback",
+        //    and an argument list containing oldDocument and document.
+        node.for_each_shadow_including_inclusive_descendant([&](DOM::Node& inclusive_descendant) {
+            if (!is<DOM::Element>(inclusive_descendant))
+                return IterationDecision::Continue;
 
-        node.for_each_shadow_including_descendant([&](auto& inclusive_descendant) {
+            auto& element = static_cast<DOM::Element&>(inclusive_descendant);
+            if (element.is_custom()) {
+                auto& vm = this->vm();
+
+                JS::MarkedVector<JS::Value> arguments { vm.heap() };
+                arguments.append(&old_document);
+                arguments.append(this);
+
+                element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::adoptedCallback, move(arguments));
+            }
+
+            return IterationDecision::Continue;
+        });
+
+        // 3. For each inclusiveDescendant in node’s shadow-including inclusive descendants, in shadow-including tree order,
+        //    run the adopting steps with inclusiveDescendant and oldDocument.
+        node.for_each_shadow_including_inclusive_descendant([&](auto& inclusive_descendant) {
             inclusive_descendant.adopted_from(old_document);
             return IterationDecision::Continue;
         });
@@ -2049,6 +2096,36 @@ void Document::set_window(Badge<HTML::BrowsingContext>, HTML::Window& window)
     m_window = &window;
 }
 
+// https://html.spec.whatwg.org/multipage/custom-elements.html#look-up-a-custom-element-definition
+JS::GCPtr<HTML::CustomElementDefinition> Document::lookup_custom_element_definition(DeprecatedFlyString const& namespace_, DeprecatedFlyString const& local_name, Optional<String> const& is) const
+{
+    // 1. If namespace is not the HTML namespace, return null.
+    if (namespace_ != Namespace::HTML)
+        return nullptr;
+
+    // 2. If document's browsing context is null, return null.
+    if (!browsing_context())
+        return nullptr;
+
+    // 3. Let registry be document's relevant global object's CustomElementRegistry object.
+    auto registry = window().custom_elements().release_value_but_fixme_should_propagate_errors();
+
+    // 4. If there is custom element definition in registry with name and local name both equal to localName, return that custom element definition.
+    auto converted_local_name = String::from_utf8(local_name).release_value_but_fixme_should_propagate_errors();
+    auto maybe_definition = registry->get_definition_with_name_and_local_name(converted_local_name, converted_local_name);
+    if (maybe_definition)
+        return maybe_definition;
+
+    // 5. If there is a custom element definition in registry with name equal to is and local name equal to localName, return that custom element definition.
+    // 6. Return null.
+
+    // NOTE: If `is` has no value, it can never match as custom element definitions always have a name and localName (i.e. not stored as Optional<String>)
+    if (!is.has_value())
+        return nullptr;
+
+    return registry->get_definition_with_name_and_local_name(is.value(), converted_local_name);
+}
+
 CSS::StyleSheetList& Document::style_sheets()
 {
     if (!m_style_sheets)
@@ -2331,6 +2408,17 @@ bool Document::query_command_supported(DeprecatedString const& command) const
 {
     dbgln("(STUBBED) Document::query_command_supported(command='{}')", command);
     return false;
+}
+
+void Document::increment_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>)
+{
+    ++m_throw_on_dynamic_markup_insertion_counter;
+}
+
+void Document::decrement_throw_on_dynamic_markup_insertion_counter(Badge<HTML::HTMLParser>)
+{
+    VERIFY(m_throw_on_dynamic_markup_insertion_counter);
+    --m_throw_on_dynamic_markup_insertion_counter;
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#appropriate-template-contents-owner-document
