@@ -27,7 +27,7 @@ public:
     virtual Gfx::IntPoint point_position_to_preferred_cell(Gfx::FloatPoint position) const override;
 
 private:
-    virtual void flood_polygon_selection(Gfx::Bitmap&, Gfx::IntPoint);
+    virtual void flood_polygon_selection(Gfx::Bitmap&, Gfx::IntPoint polygon_delta);
     virtual void process_polygon();
     virtual StringView tool_name() const override { return "Polygonal Select Tool"sv; }
 

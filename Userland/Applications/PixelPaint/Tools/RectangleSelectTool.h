@@ -47,6 +47,8 @@ private:
     MovingMode m_moving_mode { MovingMode::None };
     Gfx::IntPoint m_selection_start;
     Gfx::IntPoint m_selection_end;
+
+    Gfx::IntRect selection_rect() const;
 };
 
 }
