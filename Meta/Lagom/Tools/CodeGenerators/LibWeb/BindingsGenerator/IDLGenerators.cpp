@@ -46,6 +46,7 @@ static bool is_platform_object(Type const& type)
         "Path2D"sv,
         "PerformanceEntry"sv,
         "PerformanceMark"sv,
+        "ReadableStreamDefaultReader"sv,
         "Range"sv,
         "ReadableStream"sv,
         "Request"sv,

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
@@ -59,6 +60,37 @@ ReadableStream::ReadableStream(JS::Realm& realm)
 }
 
 ReadableStream::~ReadableStream() = default;
+
+// https://streams.spec.whatwg.org/#rs-locked
+bool ReadableStream::locked()
+{
+    // 1. Return ! IsReadableStreamLocked(this).
+    return is_readable_stream_locked(*this);
+}
+
+// https://streams.spec.whatwg.org/#rs-cancel
+WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> ReadableStream::cancel(JS::Value reason)
+{
+    // 1. If ! IsReadableStreamLocked(this) is true, return a promise rejected with a TypeError exception.
+    if (is_readable_stream_locked(*this)) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm(), "Cannot cancel a locked stream"sv));
+        return WebIDL::create_rejected_promise(realm(), JS::Value { exception })->promise();
+    }
+
+    // 2. Return ! ReadableStreamCancel(this, reason).
+    return TRY(readable_stream_cancel(*this, reason))->promise();
+}
+
+// https://streams.spec.whatwg.org/#rs-get-reader
+WebIDL::ExceptionOr<ReadableStreamReader> ReadableStream::get_reader()
+{
+    // FIXME:
+    // 1. If options["mode"] does not exist, return ? AcquireReadableStreamDefaultReader(this).
+    // 2. Assert: options["mode"] is "byob".
+    // 3. Return ? AcquireReadableStreamBYOBReader(this).
+
+    return TRY(acquire_readable_stream_default_reader(*this));
+}
 
 JS::ThrowCompletionOr<void> ReadableStream::initialize(JS::Realm& realm)
 {

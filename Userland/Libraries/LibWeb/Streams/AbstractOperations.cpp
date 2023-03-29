@@ -20,6 +20,21 @@
 
 namespace Web::Streams {
 
+// https://streams.spec.whatwg.org/#acquire-readable-stream-reader
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_readable_stream_default_reader(ReadableStream& stream)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let reader be a new ReadableStreamDefaultReader.
+    auto reader = TRY(realm.heap().allocate<ReadableStreamDefaultReader>(realm, realm));
+
+    // 2. Perform ? SetUpReadableStreamDefaultReader(reader, stream).
+    TRY(set_up_readable_stream_default_reader(reader, stream));
+
+    // 3. Return reader.
+    return reader;
+}
+
 // https://streams.spec.whatwg.org/#is-readable-stream-locked
 bool is_readable_stream_locked(ReadableStream const& stream)
 {

@@ -19,6 +19,7 @@ using PullAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Pro
 using CancelAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
 using StartAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_readable_stream_default_reader(ReadableStream&);
 bool is_readable_stream_locked(ReadableStream const&);
 
 void readable_stream_close(ReadableStream&);
