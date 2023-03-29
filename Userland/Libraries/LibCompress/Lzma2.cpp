@@ -39,6 +39,10 @@ ErrorOr<Bytes> Lzma2Decompressor::read_some(Bytes bytes)
             // " - 1 denotes a dictionary reset followed by an uncompressed chunk"
             m_dictionary.clear();
             m_dictionary_initialized = true;
+
+            // The XZ utils test files (bad-1-lzma2-8.xz) check that the decompressor
+            // requires a new set of properties after a dictionary reset.
+            m_last_lzma_options = {};
         }
 
         if (control_byte == 1 || control_byte == 2) {
@@ -51,9 +55,6 @@ ErrorOr<Bytes> Lzma2Decompressor::read_some(Bytes bytes)
             //   - A 16-bit big-endian value encoding the data size minus one
             //   - The data to be copied verbatim into the dictionary and the output"
             u16 data_size = TRY(m_stream->read_value<BigEndian<u16>>()) + 1;
-
-            // The test files denote an LZMA chunk without its own settings following an uncompressed chunk as invalid.
-            m_last_lzma_options = {};
 
             m_in_uncompressed_chunk = true;
             m_current_chunk_stream = TRY(try_make<ConstrainedStream>(MaybeOwned { *m_stream }, data_size));
