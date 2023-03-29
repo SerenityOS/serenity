@@ -295,7 +295,7 @@ ErrorOr<u16> LzmaDecompressor::decode_symbol_using_reverse_bit_tree(size_t bit_c
 ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
 {
     u8 previous_byte = 0;
-    if (m_total_decoded_bytes > 0) {
+    if (m_dictionary->seekback_limit() > 0) {
         auto read_bytes = MUST(m_dictionary->read_with_seekback({ &previous_byte, sizeof(previous_byte) }, 1));
         VERIFY(read_bytes.size() == sizeof(previous_byte));
     }
