@@ -199,11 +199,17 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
 
         auto const distance = TRY(m_decompressor.decode_distance(distance_symbol));
 
-        for (size_t idx = 0; idx < length; ++idx) {
-            u8 byte = 0;
-            TRY(m_decompressor.m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, distance));
+        if (distance < length) {
+            for (size_t idx = 0; idx < length; ++idx) {
+                u8 byte = 0;
+                TRY(m_decompressor.m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, distance));
 
-            m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
+                m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
+            }
+        } else {
+            Array<u8, DeflateDecompressor::max_back_reference_length> buffer;
+            auto bytes = TRY(m_decompressor.m_output_buffer.read_with_seekback({ buffer.data(), length }, distance));
+            m_decompressor.m_output_buffer.write(bytes);
         }
 
         return true;
@@ -386,7 +392,7 @@ ErrorOr<u32> DeflateDecompressor::decode_length(u32 symbol)
     }
 
     if (symbol == 285)
-        return 258;
+        return DeflateDecompressor::max_back_reference_length;
 
     VERIFY_NOT_REACHED();
 }
