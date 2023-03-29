@@ -321,7 +321,7 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
     //       Testing `(State > 7)` with actual test files yields errors, so the reference implementation appears to be the correct one.
     if (m_state >= 7) {
         u8 matched_byte = 0;
-        auto read_bytes = TRY(m_dictionary->read_with_seekback({ &matched_byte, sizeof(matched_byte) }, m_rep0 + 1));
+        auto read_bytes = TRY(m_dictionary->read_with_seekback({ &matched_byte, sizeof(matched_byte) }, current_repetition_offset()));
         VERIFY(read_bytes.size() == sizeof(matched_byte));
 
         do {
@@ -455,6 +455,16 @@ ErrorOr<u32> LzmaDecompressor::decode_normalized_match_distance(u16 normalized_m
     return (distance_prefix << number_of_alignment_bits) | TRY(decode_symbol_using_reverse_bit_tree(number_of_alignment_bits, m_alignment_bit_probabilities));
 }
 
+u32 LzmaDecompressor::current_repetition_offset() const
+{
+    // LZMA never needs to read at offset 0 (i.e. the actual read head of the buffer).
+    // Instead, the values are remapped so that the rep-value n starts reading n + 1 bytes back.
+    // The special rep-value 0xFFFFFFFF is reserved for marking the end of the stream,
+    // so this should never overflow.
+    VERIFY(m_rep0 < NumericLimits<u32>::max());
+    return m_rep0 + 1;
+}
+
 ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 {
     while (m_dictionary->used_space() < bytes.size() && m_dictionary->empty_space() != 0) {
@@ -517,7 +527,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
                 }
 
                 u8 byte;
-                auto read_bytes = TRY(m_dictionary->read_with_seekback({ &byte, sizeof(byte) }, m_rep0 + 1));
+                auto read_bytes = TRY(m_dictionary->read_with_seekback({ &byte, sizeof(byte) }, current_repetition_offset()));
                 VERIFY(read_bytes.size() == sizeof(byte));
 
                 auto written_bytes = m_dictionary->write({ &byte, sizeof(byte) });
@@ -600,7 +610,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 
             // "Also the decoder must check that "rep0" value is not larger than dictionary size
             //  and is not larger than the number of already decoded bytes."
-            if (m_rep0 > m_dictionary->seekback_limit())
+            if (current_repetition_offset() > m_dictionary->seekback_limit())
                 return Error::from_string_literal("rep0 value is larger than the possible lookback size");
 
             // "Then the decoder must copy match bytes as described in

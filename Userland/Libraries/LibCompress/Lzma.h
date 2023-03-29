@@ -147,6 +147,7 @@ private:
     u32 m_rep1 { 0 };
     u32 m_rep2 { 0 };
     u32 m_rep3 { 0 };
+    u32 current_repetition_offset() const;
 
     static constexpr size_t maximum_number_of_position_bits = 4;
     static constexpr size_t number_of_states = 12;
