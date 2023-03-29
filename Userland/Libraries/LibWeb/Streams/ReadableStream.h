@@ -13,6 +13,10 @@
 
 namespace Web::Streams {
 
+// FIXME: Variant<DefaultReader, ByteStreamReader>
+// https://streams.spec.whatwg.org/#typedefdef-readablestreamreader
+using ReadableStreamReader = JS::GCPtr<ReadableStreamDefaultReader>;
+
 // https://streams.spec.whatwg.org/#readablestream
 class ReadableStream final : public Bindings::PlatformObject {
     WEB_PLATFORM_OBJECT(ReadableStream, Bindings::PlatformObject);
@@ -29,8 +33,10 @@ public:
     virtual ~ReadableStream() override;
 
     JS::GCPtr<JS::Object> controller() const { return m_controller; }
-    ReadableStreamGenericReaderMixin* reader() const { return m_reader; }
     JS::Value stored_error() const { return m_stored_error; }
+
+    ReadableStreamReader reader() const { return m_reader; }
+    void set_reader(ReadableStreamReader value) { m_reader = value; }
 
     bool is_readable() const;
     bool is_closed() const;
@@ -61,7 +67,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestream-reader
     // A ReadableStreamDefaultReader or ReadableStreamBYOBReader instance, if the stream is locked to a reader, or undefined if it is not
-    ReadableStreamGenericReaderMixin* m_reader;
+    ReadableStreamReader m_reader;
 
     // https://streams.spec.whatwg.org/#readablestream-state
     // A string containing the stream’s current state, used internally; one of "readable", "closed", or "errored"
