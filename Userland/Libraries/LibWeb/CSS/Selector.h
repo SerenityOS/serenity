@@ -112,6 +112,7 @@ public:
                 Active,
                 Lang,
                 Scope,
+                Defined,
             };
             Type type;
 
@@ -295,6 +296,8 @@ constexpr StringView pseudo_class_name(Selector::SimpleSelector::PseudoClass::Ty
         return "lang"sv;
     case Selector::SimpleSelector::PseudoClass::Type::Scope:
         return "scope"sv;
+    case Selector::SimpleSelector::PseudoClass::Type::Defined:
+        return "defined"sv;
     }
     VERIFY_NOT_REACHED();
 }

@@ -268,6 +268,8 @@ static inline bool matches_pseudo_class(CSS::Selector::SimpleSelector::PseudoCla
         return matches_checked_pseudo_class(element);
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Indeterminate:
         return matches_indeterminate_pseudo_class(element);
+    case CSS::Selector::SimpleSelector::PseudoClass::Type::Defined:
+        return element.is_defined();
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Is:
     case CSS::Selector::SimpleSelector::PseudoClass::Type::Where:
         for (auto& selector : pseudo_class.argument_selector_list) {
