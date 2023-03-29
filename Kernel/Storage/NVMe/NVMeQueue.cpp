@@ -75,8 +75,6 @@ u32 NVMeQueue::process_cq()
         if (m_admin_queue == false) {
             // As the block layer calls are now sync (as we wait on each requests),
             // everything is operated on a single request similar to BMIDE driver.
-            // TODO: Remove this constraint eventually.
-            VERIFY(cmdid == m_prev_sq_tail);
             if (m_current_request) {
                 complete_current_request(status);
             }
@@ -92,9 +90,6 @@ u32 NVMeQueue::process_cq()
 void NVMeQueue::submit_sqe(NVMeSubmission& sub)
 {
     SpinlockLocker lock(m_sq_lock);
-    // For now let's use sq tail as a unique command id.
-    sub.cmdid = m_sq_tail;
-    m_prev_sq_tail = m_sq_tail;
 
     memcpy(&m_sqe_array[m_sq_tail], &sub, sizeof(NVMeSubmission));
     {
@@ -114,7 +109,8 @@ u16 NVMeQueue::submit_sync_sqe(NVMeSubmission& sub)
 {
     // For now let's use sq tail as a unique command id.
     u16 cqe_cid;
-    u16 cid = m_sq_tail;
+    u16 cid = get_request_cid();
+    sub.cmdid = cid;
 
     submit_sqe(sub);
     do {
@@ -145,6 +141,7 @@ void NVMeQueue::read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 
     // No. of lbas is 0 based
     sub.rw.length = AK::convert_between_host_and_little_endian((count - 1) & 0xFFFF);
     sub.rw.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_rw_dma_page->paddr().as_ptr()));
+    sub.cmdid = get_request_cid();
 
     full_memory_barrier();
     submit_sqe(sub);
@@ -166,6 +163,7 @@ void NVMeQueue::write(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32
     // No. of lbas is 0 based
     sub.rw.length = AK::convert_between_host_and_little_endian((count - 1) & 0xFFFF);
     sub.rw.data_ptr.prp1 = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(m_rw_dma_page->paddr().as_ptr()));
+    sub.cmdid = get_request_cid();
 
     full_memory_barrier();
     submit_sqe(sub);
