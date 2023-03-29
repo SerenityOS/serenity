@@ -81,6 +81,8 @@ private:
     MaybeOwned<CircularBuffer> m_dictionary;
     u64 m_total_decoded_bytes { 0 };
     bool m_found_end_of_stream_marker { false };
+    bool is_range_decoder_in_clean_state() const;
+    bool has_reached_expected_data_size() const;
     Optional<u16> m_leftover_match_length;
 
     // Range decoder state (initialized with stream data in LzmaDecompressor::create).

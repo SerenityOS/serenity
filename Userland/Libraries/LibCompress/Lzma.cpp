@@ -140,6 +140,19 @@ LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOp
     initialize_to_default_probability(m_is_rep0_long_probabilities);
 }
 
+bool LzmaDecompressor::is_range_decoder_in_clean_state() const
+{
+    return m_range_decoder_code == 0;
+}
+
+bool LzmaDecompressor::has_reached_expected_data_size() const
+{
+    if (!m_options.uncompressed_size.has_value())
+        return false;
+
+    return m_total_decoded_bytes >= m_options.uncompressed_size.value();
+}
+
 ErrorOr<void> LzmaDecompressor::initialize_range_decoder()
 {
     // "The LZMA Encoder always writes ZERO in initial byte of compressed stream.
@@ -451,7 +464,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             break;
         }
 
-        if (m_options.uncompressed_size.has_value() && m_total_decoded_bytes >= m_options.uncompressed_size.value()) {
+        if (has_reached_expected_data_size()) {
             // FIXME: This should validate that either EOF or the 'end of stream' marker follow immediately.
             //        Both of those cases count as the 'end of stream' marker being found and should check for a clean decoder state.
             break;
@@ -654,7 +667,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
     }
 
     if (m_found_end_of_stream_marker) {
-        if (m_range_decoder_code != 0)
+        if (!is_range_decoder_in_clean_state())
             return Error::from_string_literal("LZMA stream ends in an unclean state");
     }
 
@@ -671,8 +684,8 @@ bool LzmaDecompressor::is_eof() const
     if (m_dictionary->used_space() > 0)
         return false;
 
-    if (m_options.uncompressed_size.has_value())
-        return m_total_decoded_bytes >= m_options.uncompressed_size.value();
+    if (has_reached_expected_data_size())
+        return true;
 
     return m_found_end_of_stream_marker;
 }
