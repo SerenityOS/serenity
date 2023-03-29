@@ -120,6 +120,15 @@ private:
 /// A stream wrapper class that allows you to read arbitrary amounts of bits
 /// in little-endian order from another stream.
 class LittleEndianInputBitStream : public Stream {
+    template<Unsigned T>
+    static constexpr T lsb_mask(T bits)
+    {
+        constexpr auto max = NumericLimits<T>::max();
+        constexpr auto digits = NumericLimits<T>::digits();
+
+        return bits == 0 ? 0 : max >> (digits - bits);
+    }
+
 public:
     explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream)
         : m_stream(move(stream))
@@ -213,15 +222,6 @@ public:
 
 private:
     using BufferType = u64;
-
-    template<Unsigned T>
-    static constexpr T lsb_mask(T bits)
-    {
-        constexpr auto max = NumericLimits<T>::max();
-        constexpr auto digits = NumericLimits<T>::digits();
-
-        return bits == 0 ? 0 : max >> (digits - bits);
-    }
 
     ALWAYS_INLINE BufferType lsb_aligned_buffer() const
     {
