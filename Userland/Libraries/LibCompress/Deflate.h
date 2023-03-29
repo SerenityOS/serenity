@@ -104,6 +104,8 @@ private:
     ErrorOr<u32> decode_distance(u32);
     ErrorOr<void> decode_codes(CanonicalCode& literal_code, Optional<CanonicalCode>& distance_code);
 
+    static constexpr u16 max_back_reference_length = 258;
+
     bool m_read_final_bock { false };
 
     State m_state { State::Idle };
