@@ -3,4 +3,6 @@
 // https://streams.spec.whatwg.org/#readablestream
 [Exposed=*, Transferable]
 interface ReadableStream {
+    // FIXME: optional QueuingStrategy strategy = {}
+    constructor(optional object underlyingSource);
 };
