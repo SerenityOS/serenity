@@ -456,6 +456,7 @@ set(SOURCES
     SecureContexts/AbstractOperations.cpp
     Streams/AbstractOperations.cpp
     Streams/ReadableStream.cpp
+    Streams/ReadableStreamGenericReader.cpp
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
