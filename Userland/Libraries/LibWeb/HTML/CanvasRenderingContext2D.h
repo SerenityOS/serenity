@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/Canvas/CanvasDrawPath.h>
 #include <LibWeb/HTML/Canvas/CanvasFillStrokeStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasImageData.h>
+#include <LibWeb/HTML/Canvas/CanvasImageSmoothing.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
 #include <LibWeb/HTML/Canvas/CanvasPathDrawingStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
@@ -48,6 +49,7 @@ class CanvasRenderingContext2D
     , public CanvasText
     , public CanvasDrawImage
     , public CanvasImageData
+    , public CanvasImageSmoothing
     , public CanvasPathDrawingStyles<CanvasRenderingContext2D> {
 
     WEB_PLATFORM_OBJECT(CanvasRenderingContext2D, Bindings::PlatformObject);
@@ -83,6 +85,11 @@ public:
     virtual JS::NonnullGCPtr<TextMetrics> measure_text(DeprecatedString const& text) override;
 
     virtual void clip() override;
+
+    virtual bool image_smoothing_enabled() const override;
+    virtual void set_image_smoothing_enabled(bool) override;
+    virtual Bindings::ImageSmoothingQuality image_smoothing_quality() const override;
+    virtual void set_image_smoothing_quality(Bindings::ImageSmoothingQuality) override;
 
 private:
     explicit CanvasRenderingContext2D(JS::Realm&, HTMLCanvasElement&);

@@ -11,6 +11,7 @@
 #include <LibGfx/Quad.h>
 #include <LibGfx/Rect.h>
 #include <LibUnicode/Segmentation.h>
+#include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/HTML/CanvasRenderingContext2D.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
@@ -173,7 +174,12 @@ WebIDL::ExceptionOr<void> CanvasRenderingContext2D::draw_image_internal(CanvasIm
     if (!painter)
         return {};
 
-    painter->draw_scaled_bitmap_with_transform(destination_rect.to_rounded<int>(), *bitmap, source_rect, drawing_state().transform, 1.0f, Gfx::Painter::ScalingMode::BilinearBlend);
+    auto scaling_mode = Gfx::Painter::ScalingMode::NearestNeighbor;
+    if (drawing_state().image_smoothing_enabled) {
+        // FIXME: Honor drawing_state().image_smoothing_quality
+        scaling_mode = Gfx::Painter::ScalingMode::BilinearBlend;
+    }
+    painter->draw_scaled_bitmap_with_transform(destination_rect.to_rounded<int>(), *bitmap, source_rect, drawing_state().transform, 1.0f, scaling_mode);
 
     // 7. If image is not origin-clean, then set the CanvasRenderingContext2D's origin-clean flag to false.
     if (image_is_not_origin_clean(image))
@@ -558,6 +564,26 @@ bool image_is_not_origin_clean(CanvasImageSource const& image)
             // FIXME: image's bitmap's origin-clean flag is false.
             return false;
         });
+}
+
+bool CanvasRenderingContext2D::image_smoothing_enabled() const
+{
+    return drawing_state().image_smoothing_enabled;
+}
+
+void CanvasRenderingContext2D::set_image_smoothing_enabled(bool enabled)
+{
+    drawing_state().image_smoothing_enabled = enabled;
+}
+
+Bindings::ImageSmoothingQuality CanvasRenderingContext2D::image_smoothing_quality() const
+{
+    return drawing_state().image_smoothing_quality;
+}
+
+void CanvasRenderingContext2D::set_image_smoothing_quality(Bindings::ImageSmoothingQuality quality)
+{
+    drawing_state().image_smoothing_quality = quality;
 }
 
 }

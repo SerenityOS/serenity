@@ -3,12 +3,15 @@
 #import <HTML/Canvas/CanvasDrawPath.idl>
 #import <HTML/Canvas/CanvasFillStrokeStyles.idl>
 #import <HTML/Canvas/CanvasImageData.idl>
+#import <HTML/Canvas/CanvasImageSmoothing.idl>
 #import <HTML/Canvas/CanvasPath.idl>
 #import <HTML/Canvas/CanvasPathDrawingStyles.idl>
 #import <HTML/Canvas/CanvasRect.idl>
 #import <HTML/Canvas/CanvasState.idl>
 #import <HTML/Canvas/CanvasText.idl>
 #import <HTML/Canvas/CanvasTransform.idl>
+
+enum ImageSmoothingQuality { "low", "medium", "high" };
 
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2d
 [Exposed=Window]
@@ -19,7 +22,7 @@ interface CanvasRenderingContext2D {
 CanvasRenderingContext2D includes CanvasState;
 CanvasRenderingContext2D includes CanvasTransform;
 // FIXME: CanvasRenderingContext2D includes CanvasCompositing;
-// FIXME: CanvasRenderingContext2D includes CanvasImageSmoothing;
+CanvasRenderingContext2D includes CanvasImageSmoothing;
 CanvasRenderingContext2D includes CanvasFillStrokeStyles;
 // FIXME: CanvasRenderingContext2D includes CanvasShadowStyles;
 // FIXME: CanvasRenderingContext2D includes CanvasFilters;

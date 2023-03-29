@@ -530,6 +530,7 @@ enum class CanPlayTypeResult;
 enum class CanvasFillRule;
 enum class EndingType;
 enum class DOMParserSupportedType;
+enum class ImageSmoothingQuality;
 enum class ReferrerPolicy;
 enum class RequestDestination;
 enum class RequestMode;
