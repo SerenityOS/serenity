@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <Applications/PixelPaint/BaseConvolutionParamsWidget.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -83,12 +84,13 @@ private:
         auto& norm_checkbox = main_widget->template add<GUI::CheckBox>("Normalize"_string.release_value_but_fixme_should_propagate_errors());
         norm_checkbox.set_checked(false);
 
-        auto& wrap_checkbox = main_widget->template add<GUI::CheckBox>("Wrap"_short_string);
-        wrap_checkbox.set_checked(m_should_wrap);
+        auto& base_params_widget = main_widget->template add<BaseConvolutionParamsWidget>();
+        base_params_widget.on_wrap_around_checked = [&](bool checked) {
+            m_should_wrap = checked;
+        };
 
         auto& button = main_widget->template add<GUI::Button>("Done"_short_string);
         button.on_click = [&](auto) {
-            m_should_wrap = wrap_checkbox.is_checked();
             if (norm_checkbox.is_checked())
                 normalize(m_matrix);
             done(ExecResult::OK);
@@ -101,7 +103,7 @@ private:
 
 template<size_t N>
 struct FilterParameters<Gfx::SpatialGaussianBlurFilter<N>> {
-    static OwnPtr<typename Gfx::SpatialGaussianBlurFilter<N>::Parameters> get()
+    static OwnPtr<typename Gfx::SpatialGaussianBlurFilter<N>::Parameters> get(Gfx::ConvolutionFilterOptions options)
     {
         constexpr static ssize_t offset = N / 2;
         Matrix<N, float> kernel;
@@ -117,26 +119,26 @@ struct FilterParameters<Gfx::SpatialGaussianBlurFilter<N>> {
 
         normalize(kernel);
 
-        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(kernel);
+        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(kernel, options);
     }
 };
 
 template<>
 struct FilterParameters<Gfx::SharpenFilter> {
-    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get()
+    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get(Gfx::ConvolutionFilterOptions options)
     {
-        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(0, -1, 0, -1, 5, -1, 0, -1, 0));
+        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(0, -1, 0, -1, 5, -1, 0, -1, 0), options);
     }
 };
 
 template<>
 struct FilterParameters<Gfx::LaplacianFilter> {
-    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get(bool diagonal)
+    static OwnPtr<Gfx::GenericConvolutionFilter<3>::Parameters> get(bool diagonal, Gfx::ConvolutionFilterOptions options)
     {
         if (diagonal)
-            return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(-1, -1, -1, -1, 8, -1, -1, -1, -1));
+            return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(-1, -1, -1, -1, 8, -1, -1, -1, -1), options);
 
-        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(0, -1, 0, -1, 4, -1, 0, -1, 0));
+        return make<Gfx::GenericConvolutionFilter<3>::Parameters>(Matrix<3, float>(0, -1, 0, -1, 4, -1, 0, -1, 0), options);
     }
 };
 
@@ -147,7 +149,7 @@ struct FilterParameters<Gfx::GenericConvolutionFilter<N>> {
         auto input = GenericConvolutionFilterInputDialog<N>::construct(parent_window);
         input->exec();
         if (input->result() == GUI::Dialog::ExecResult::OK)
-            return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(input->matrix(), input->should_wrap());
+            return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(input->matrix(), Gfx::ConvolutionFilterOptions { input->should_wrap() });
 
         return {};
     }
@@ -155,7 +157,7 @@ struct FilterParameters<Gfx::GenericConvolutionFilter<N>> {
 
 template<size_t N>
 struct FilterParameters<Gfx::BoxBlurFilter<N>> {
-    static OwnPtr<typename Gfx::GenericConvolutionFilter<N>::Parameters> get()
+    static OwnPtr<typename Gfx::GenericConvolutionFilter<N>::Parameters> get(Gfx::ConvolutionFilterOptions options)
     {
         Matrix<N, float> kernel;
 
@@ -167,7 +169,7 @@ struct FilterParameters<Gfx::BoxBlurFilter<N>> {
 
         normalize(kernel);
 
-        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(kernel);
+        return make<typename Gfx::GenericConvolutionFilter<N>::Parameters>(kernel, options);
     }
 };
 

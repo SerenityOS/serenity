@@ -19,6 +19,7 @@ set(SOURCES
     FilterGallery.cpp
     FilterTreeModel.cpp
     FilterPreviewWidget.cpp
+    BaseConvolutionParamsWidget.cpp
     Filters/Bloom.cpp
     Filters/BoxBlur3.cpp
     Filters/BoxBlur5.cpp
@@ -34,6 +35,7 @@ set(SOURCES
     Filters/Median.cpp
     Filters/Sepia.cpp
     Filters/Sharpen.cpp
+    Filters/ConvolutionFilter.cpp
     HistogramWidget.cpp
     IconBag.cpp
     Image.cpp
