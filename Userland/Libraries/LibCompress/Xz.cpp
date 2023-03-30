@@ -177,14 +177,61 @@ XzDecompressor::XzDecompressor(NonnullOwnPtr<CountingStream> stream)
 
 ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 {
-    if (m_found_stream_footer)
+    if (m_found_last_stream_footer)
         return bytes.trim(0);
 
     if (!m_stream_flags.has_value()) {
-        auto stream_header = TRY(m_stream->read_value<XzStreamHeader>());
+        // This assumes that we can just read the Stream Header into memory as-is. Check that this still holds up for good measure.
+        static_assert(AK::Traits<XzStreamHeader>::is_trivially_serializable());
+
+        XzStreamHeader stream_header {};
+        Bytes stream_header_bytes { &stream_header, sizeof(stream_header) };
+
+        if (m_found_first_stream_header) {
+            // 2.2. Stream Padding:
+            // "Stream Padding MUST contain only null bytes. To preserve the
+            //  four-byte alignment of consecutive Streams, the size of Stream
+            //  Padding MUST be a multiple of four bytes. Empty Stream Padding
+            //  is allowed. If these requirements are not met, the decoder MUST
+            //  indicate an error."
+
+            VERIFY(m_stream->read_bytes() % 4 == 0);
+
+            while (true) {
+                // Read the first byte until we either get a non-null byte or reach EOF.
+                auto byte_or_error = m_stream->read_value<u8>();
+
+                if (byte_or_error.is_error() && m_stream->is_eof())
+                    break;
+
+                auto byte = TRY(byte_or_error);
+
+                if (byte != 0) {
+                    stream_header_bytes[0] = byte;
+                    stream_header_bytes = stream_header_bytes.slice(1);
+                    break;
+                }
+            }
+
+            // If we aren't at EOF we already read the potential first byte of the header, so we need to subtract that.
+            auto end_of_padding_offset = m_stream->read_bytes();
+            if (!m_stream->is_eof())
+                end_of_padding_offset -= 1;
+
+            if (end_of_padding_offset % 4 != 0)
+                return Error::from_string_literal("XZ Stream Padding is not aligned to 4 bytes");
+
+            if (m_stream->is_eof()) {
+                m_found_last_stream_footer = true;
+                return bytes.trim(0);
+            }
+        }
+
+        TRY(m_stream->read_until_filled(stream_header_bytes));
         TRY(stream_header.validate());
 
         m_stream_flags = stream_header.flags;
+        m_found_first_stream_header = true;
     }
 
     if (!m_current_block_stream.has_value() || (*m_current_block_stream)->is_eof()) {
@@ -335,7 +382,8 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             if (Bytes { &*m_stream_flags, sizeof(XzStreamFlags) } != Bytes { &stream_footer.flags, sizeof(stream_footer.flags) })
                 return Error::from_string_literal("XZ stream header flags don't match the stream footer");
 
-            m_found_stream_footer = true;
+            // Another XZ Stream might follow, so we just unset the current information and continue on the next read.
+            m_stream_flags.clear();
             return bytes.trim(0);
         }
 
@@ -462,7 +510,7 @@ ErrorOr<size_t> XzDecompressor::write_some(ReadonlyBytes)
 
 bool XzDecompressor::is_eof() const
 {
-    return m_found_stream_footer;
+    return m_found_last_stream_footer;
 }
 
 bool XzDecompressor::is_open() const

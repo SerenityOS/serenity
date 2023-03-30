@@ -39,8 +39,8 @@ TEST_CASE(xz_utils_bad_0cat_alone)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: We currently don't support XZ files with multiple concatenated streams, so we don't check for trailing garbage either.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_0cat_header_magic)
@@ -56,8 +56,8 @@ TEST_CASE(xz_utils_bad_0cat_header_magic)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: We currently don't support XZ files with multiple concatenated streams, so we don't check for the second header magic.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_0catpad_empty)
@@ -74,8 +74,8 @@ TEST_CASE(xz_utils_bad_0catpad_empty)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: We currently don't support XZ files with multiple concatenated streams, so we don't check for the stream padding.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_0_empty_truncated)
@@ -151,8 +151,8 @@ TEST_CASE(xz_utils_bad_0pad_empty)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: We currently don't support XZ files with multiple concatenated streams, so we don't check for the stream padding.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_1_block_header_1)
