@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibWeb/CSS/Percentage.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include "PercentageOr.h"
 
 namespace Web::CSS {
 

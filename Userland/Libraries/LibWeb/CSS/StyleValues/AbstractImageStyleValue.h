@@ -10,6 +10,7 @@
 #pragma once
 
 #include <LibWeb/CSS/Enums.h>
+#include <LibWeb/CSS/PercentageOr.h>
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>
 

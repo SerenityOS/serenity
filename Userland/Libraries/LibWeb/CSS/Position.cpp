@@ -7,7 +7,6 @@
 #include "Position.h"
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
-#include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
 

@@ -1073,9 +1073,4 @@ bool CalculatedStyleValue::CalcValue::contains_percentage() const
         [](auto const&) { return false; });
 }
 
-bool calculated_style_value_contains_percentage(CalculatedStyleValue const& value)
-{
-    return value.contains_percentage();
-}
-
 }

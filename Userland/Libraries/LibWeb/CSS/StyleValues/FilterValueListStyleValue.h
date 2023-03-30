@@ -12,8 +12,7 @@
 #include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Number.h>
-#include <LibWeb/CSS/Percentage.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/PercentageOr.h>
 
 namespace Web::CSS {
 
