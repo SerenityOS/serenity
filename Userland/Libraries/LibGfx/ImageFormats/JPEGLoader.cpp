@@ -102,21 +102,21 @@ using Marker = u16;
  */
 struct Macroblock {
     union {
-        i32 y[64] = { 0 };
-        i32 r[64];
+        i16 y[64] = { 0 };
+        i16 r[64];
     };
 
     union {
-        i32 cb[64] = { 0 };
-        i32 g[64];
+        i16 cb[64] = { 0 };
+        i16 g[64];
     };
 
     union {
-        i32 cr[64] = { 0 };
-        i32 b[64];
+        i16 cr[64] = { 0 };
+        i16 b[64];
     };
 
-    i32 k[64] = { 0 };
+    i16 k[64] = { 0 };
 };
 
 struct MacroblockMeta {
@@ -311,7 +311,7 @@ static ErrorOr<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec
     return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
 }
 
-static inline i32* get_component(Macroblock& block, unsigned component)
+static inline auto* get_component(Macroblock& block, unsigned component)
 {
     switch (component) {
     case 0:
@@ -327,7 +327,7 @@ static inline i32* get_component(Macroblock& block, unsigned component)
     }
 }
 
-static ErrorOr<void> refine_coefficient(Scan& scan, i32& coefficient)
+static ErrorOr<void> refine_coefficient(Scan& scan, auto& coefficient)
 {
     // G.1.2.3 - Coding model for subsequent scans of successive approximation
     // See the correction bit from rule b.
@@ -1123,7 +1123,7 @@ static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblo
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[macroblock_index];
-                        int* block_component = get_component(block, i);
+                        auto* block_component = get_component(block, i);
                         for (u32 k = 0; k < 64; k++)
                             block_component[k] *= table[k];
                     }
@@ -1158,7 +1158,7 @@ static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& m
                     for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[macroblock_index];
-                        i32* block_component = get_component(block, component_i);
+                        auto* block_component = get_component(block, component_i);
                         for (u32 k = 0; k < 8; ++k) {
                             float const g0 = block_component[0 * 8 + k] * s0;
                             float const g1 = block_component[4 * 8 + k] * s4;
@@ -1333,9 +1333,9 @@ static void ycbcr_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& 
             for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
                 for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
                     u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    i32* y = macroblocks[macroblock_index].y;
-                    i32* cb = macroblocks[macroblock_index].cb;
-                    i32* cr = macroblocks[macroblock_index].cr;
+                    auto* y = macroblocks[macroblock_index].y;
+                    auto* cb = macroblocks[macroblock_index].cb;
+                    auto* cr = macroblocks[macroblock_index].cr;
                     for (u8 i = 7; i < 8; --i) {
                         for (u8 j = 7; j < 8; --j) {
                             const u8 pixel = i * 8 + j;
@@ -1395,10 +1395,10 @@ static void cmyk_to_rgb(JPEGLoadingContext const& context, Vector<Macroblock>& m
             for (u8 vfactor_i = context.vsample_factor - 1; vfactor_i < context.vsample_factor; --vfactor_i) {
                 for (u8 hfactor_i = context.hsample_factor - 1; hfactor_i < context.hsample_factor; --hfactor_i) {
                     u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hcursor + hfactor_i);
-                    i32* c = macroblocks[mb_index].y;
-                    i32* m = macroblocks[mb_index].cb;
-                    i32* y = macroblocks[mb_index].cr;
-                    i32* k = macroblocks[mb_index].k;
+                    auto* c = macroblocks[mb_index].y;
+                    auto* m = macroblocks[mb_index].cb;
+                    auto* y = macroblocks[mb_index].cr;
+                    auto* k = macroblocks[mb_index].k;
                     for (u8 i = 0; i < 8; ++i) {
                         for (u8 j = 0; j < 8; ++j) {
                             u8 const pixel = i * 8 + j;
