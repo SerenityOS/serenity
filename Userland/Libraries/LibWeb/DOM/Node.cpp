@@ -927,16 +927,6 @@ void Node::remove_all_children(bool suppress_observers)
 // https://dom.spec.whatwg.org/#dom-node-comparedocumentposition
 u16 Node::compare_document_position(JS::GCPtr<Node> other)
 {
-    enum Position : u16 {
-        DOCUMENT_POSITION_EQUAL = 0,
-        DOCUMENT_POSITION_DISCONNECTED = 1,
-        DOCUMENT_POSITION_PRECEDING = 2,
-        DOCUMENT_POSITION_FOLLOWING = 4,
-        DOCUMENT_POSITION_CONTAINS = 8,
-        DOCUMENT_POSITION_CONTAINED_BY = 16,
-        DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC = 32,
-    };
-
     // 1. If this is other, then return zero.
     if (this == other.ptr())
         return DOCUMENT_POSITION_EQUAL;
