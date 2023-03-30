@@ -27,6 +27,7 @@ public:
     size_t write(ReadonlyBytes bytes);
     Bytes read(Bytes bytes);
     ErrorOr<void> discard(size_t discarded_bytes);
+    ErrorOr<size_t> fill_from_stream(Stream&);
 
     /// Compared to `read()`, this starts reading from an offset that is `distance` bytes
     /// before the current write pointer and allows for reading already-read data.
