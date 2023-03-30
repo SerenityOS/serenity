@@ -234,19 +234,10 @@ private:
         size_t bytes_to_read = bits_to_read / bits_per_byte;
 
         BufferType buffer = 0;
-
-        Bytes bytes { &buffer, bytes_to_read };
-        size_t bytes_read = 0;
-
-        // FIXME: When the underlying stream is buffered, `read_some` seems to stop before EOF.
-        do {
-            auto result = TRY(m_stream->read_some(bytes));
-            bytes = bytes.slice(result.size());
-            bytes_read += result.size();
-        } while (!bytes.is_empty() && !m_stream->is_eof());
+        auto bytes = TRY(m_stream->read_some({ &buffer, bytes_to_read }));
 
         m_bit_buffer = (buffer << m_bit_count) | lsb_aligned_buffer();
-        m_bit_count += bytes_read * bits_per_byte;
+        m_bit_count += bytes.size() * bits_per_byte;
         m_bit_offset = 0;
 
         return {};
