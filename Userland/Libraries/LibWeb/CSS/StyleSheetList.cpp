@@ -15,9 +15,25 @@ namespace Web::CSS {
 void StyleSheetList::add_sheet(CSSStyleSheet& sheet)
 {
     sheet.set_style_sheet_list({}, this);
-    m_sheets.append(sheet);
 
-    sort_sheets();
+    if (m_sheets.is_empty()) {
+        // This is the first sheet, append it to the list.
+        m_sheets.append(sheet);
+    } else {
+        // We have sheets from before. Insert the new sheet in the correct position (DOM tree order).
+        bool did_insert = false;
+        for (ssize_t i = m_sheets.size() - 1; i >= 0; --i) {
+            auto& existing_sheet = *m_sheets[i];
+            auto position = existing_sheet.owner_node()->compare_document_position(sheet.owner_node());
+            if (position & DOM::Node::DocumentPosition::DOCUMENT_POSITION_FOLLOWING) {
+                m_sheets.insert(i + 1, sheet);
+                did_insert = true;
+                break;
+            }
+        }
+        if (!did_insert)
+            m_sheets.prepend(sheet);
+    }
 
     if (sheet.rules().length() == 0) {
         // NOTE: If the added sheet has no rules, we don't have to invalidate anything.
