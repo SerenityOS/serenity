@@ -12,7 +12,7 @@ $ netstat [--all] [--list] [--tcp] [--udp] [--numeric] [--program] [--wide]
 
 Display network connections
 
-## Options:
+## Options
 
 * `-a`, `--all`: Display both listening and non-listening sockets
 * `-l`, `--list`: Display only listening sockets

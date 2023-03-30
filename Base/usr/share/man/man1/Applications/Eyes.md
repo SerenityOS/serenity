@@ -10,7 +10,7 @@
 $ Eyes [--num-eyes number] [--max-in-row number] [--grid-rows number] [--grid-cols number]
 ```
 
-## Options:
+## Options
 
 * `--help`: Display help message and exit
 * `--version`: Print version

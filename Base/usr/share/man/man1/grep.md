@@ -8,7 +8,7 @@ grep
 $ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
 ```
 
-## Options:
+## Options
 
 * `-r`, `--recursive`: Recursively scan files
 * `-E`, `--extended-regexp`: Extended regular expressions
@@ -25,7 +25,7 @@ $ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-
 * `--color WHEN`: When to use colored output for the matching text ([auto], never, always)
 * `-c`, `--count`: Output line count instead of line contents
 
-## Arguments:
+## Arguments
 
 * `file`: File(s) to process
 

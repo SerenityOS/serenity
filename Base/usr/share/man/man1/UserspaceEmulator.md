@@ -8,7 +8,7 @@ UserspaceEmulator
 $ UserspaceEmulator [--report-to-debug] [--pause] [--profile] [--profile-interval num_instructions] [--profile-file path] [--roi] <command...>
 ```
 
-## Options:
+## Options
 
 * `--report-to-debug`: Write reports to the debug log
 * `-p`, `--pause`: Pause on startup
@@ -17,7 +17,7 @@ $ UserspaceEmulator [--report-to-debug] [--pause] [--profile] [--profile-interva
 * `--profile-file path`: File path for profile dump
 * `--roi`: Enable Region-of-Interest mode for profiling
 
-## Arguments:
+## Arguments
 
 * `command`: Command to emulate
 

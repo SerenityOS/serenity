@@ -13,7 +13,7 @@ $ usermod [--uid uid] [--gid gid] [--lock] [--unlock] [--home new-home] [--move]
 This program modifies an existing user account.
 This program must be run as root.
 
-## Options:
+## Options
 
 * `--help`: Display help message and exit
 * `--version`: Print version
@@ -26,7 +26,7 @@ This program must be run as root.
 * `-s path-to-shell`, `--shell path-to-shell`: The name of the user's new login shell
 * `-n general-info`, `--gecos general-info`: Change the GECOS field of the user
 
-## Arguments:
+## Arguments
 
 * `username`: Username of the account to modify
 

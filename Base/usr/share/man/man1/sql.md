@@ -12,7 +12,7 @@ $ sql [--database database] [--read file] [--source file] [--no-sqlrc]
 
 This is a client for the SerenitySQL database server.
 
-## Options:
+## Options
 
 * `-d database`, `--database database`: Database to connect to
 * `-r file`, `--read file`: File to read
