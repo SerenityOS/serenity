@@ -947,6 +947,10 @@ ThrowCompletionOr<i32> Value::to_i32(VM& vm) const
 // 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
 ThrowCompletionOr<u32> Value::to_u32(VM& vm) const
 {
+    // OPTIMIZATION: If this value is encoded as a positive i32, return it directly.
+    if (is_int32() && as_i32() >= 0)
+        return as_i32();
+
     // 1. Let number be ? ToNumber(argument).
     double number = TRY(to_number(vm)).as_double();
 
