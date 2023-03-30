@@ -436,7 +436,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
     // Next we extract the code lengths of the code that was used to encode the block.
 
-    Vector<u8> code_lengths;
+    Vector<u8, 286> code_lengths;
     while (code_lengths.size() < literal_code_count + distance_code_count) {
         auto symbol = TRY(code_length_code.read_symbol(*m_input_stream));
 

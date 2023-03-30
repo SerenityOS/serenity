@@ -38,8 +38,8 @@ private:
     };
 
     // Decompression - indexed by code
-    Vector<u16> m_symbol_codes;
-    Vector<u16> m_symbol_values;
+    Vector<u16, 286> m_symbol_codes;
+    Vector<u16, 286> m_symbol_values;
 
     Array<PrefixTableEntry, 1 << max_allowed_prefixed_code_length> m_prefix_table {};
     size_t m_max_prefixed_code_length { 0 };

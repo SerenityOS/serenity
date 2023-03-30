@@ -15,7 +15,7 @@ static ErrorOr<void> decompress_file(NonnullOwnPtr<Stream> input_stream, Stream&
 {
     auto gzip_stream = Compress::GzipDecompressor { move(input_stream) };
 
-    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(256 * KiB));
     while (!gzip_stream.is_eof()) {
         auto span = TRY(gzip_stream.read_some(buffer));
         TRY(output_stream.write_until_depleted(span));
@@ -52,7 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         }
 
         auto input_file = TRY(Core::File::open(input_filename, Core::File::OpenMode::Read));
-        auto buffered_input_file = TRY(Core::BufferedFile::create(move(input_file)));
+        auto buffered_input_file = TRY(Core::BufferedFile::create(move(input_file), 256 * KiB));
 
         auto output_stream = write_to_stdout ? TRY(Core::File::standard_output()) : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));
 
