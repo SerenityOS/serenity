@@ -250,6 +250,16 @@ struct ZipMember {
     DOSPackedDate modification_date;
 };
 
+struct ZipMemberFromFileResult {
+    String canonicalized_path;
+    int deflated_amount;
+};
+
+enum class RecurseThroughDirectories {
+    Yes,
+    No
+};
+
 class Zip {
 public:
     static Optional<Zip> try_create(ReadonlyBytes buffer);
@@ -271,9 +281,16 @@ private:
 
 class ZipOutputStream {
 public:
-    ZipOutputStream(NonnullOwnPtr<Stream>);
+    using AddMemberCallback = Function<void(ZipMemberFromFileResult const&)>;
 
-    ErrorOr<void> add_member(ZipMember const&);
+    ZipOutputStream(NonnullOwnPtr<Stream> stream);
+
+    ErrorOr<void> add_member(ZipMember const& member);
+
+    ErrorOr<void> add_member_from_path(StringView path, RecurseThroughDirectories recurse_through_directories, AddMemberCallback const& callback);
+    ErrorOr<void> add_directory_from_path(StringView path, RecurseThroughDirectories recurse_through_directories, AddMemberCallback const& callback);
+    ErrorOr<ZipMemberFromFileResult> add_file_from_path(StringView path);
+
     ErrorOr<void> finish();
 
 private:

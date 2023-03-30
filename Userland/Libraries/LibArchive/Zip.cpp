@@ -1,11 +1,18 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
- * Copyright (c) 2022, the SerenityOS developers.
+ * Copyright (c) 2022-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/LexicalPath.h>
 #include <LibArchive/Zip.h>
+#include <LibCompress/Deflate.h>
+#include <LibCore/DateTime.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/System.h>
+#include <LibCrypto/Checksum/CRC32.h>
+#include <LibFileSystem/FileSystem.h>
 
 namespace Archive {
 
@@ -136,6 +143,92 @@ ErrorOr<void> ZipOutputStream::add_member(ZipMember const& member)
         .compressed_data = member.compressed_data.data(),
     };
     return local_file_header.write(*m_stream);
+}
+
+ErrorOr<void> ZipOutputStream::add_member_from_path(StringView path, RecurseThroughDirectories recurse_through_directories, AddMemberCallback const& callback)
+{
+    if (FileSystem::is_directory(path)) {
+        return add_directory_from_path(path, recurse_through_directories, callback);
+    }
+
+    auto result = TRY(add_file_from_path(path));
+    callback(result);
+
+    return {};
+}
+
+ErrorOr<ZipMemberFromFileResult> ZipOutputStream::add_file_from_path(StringView path)
+{
+    auto file = TRY(Core::File::open(path, Core::File::OpenMode::Read));
+    auto file_buffer = TRY(file->read_until_eof());
+    auto canonicalized_path = TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(path)));
+
+    auto stat = TRY(Core::System::fstat(file->fd()));
+    auto modification_date = Core::DateTime::from_timestamp(stat.st_mtime);
+    auto checksum = Crypto::Checksum::CRC32 { file_buffer.bytes() };
+
+    ZipMember member = {};
+    member.name = canonicalized_path;
+    member.uncompressed_size = (u32)file_buffer.size();
+    member.crc32 = checksum.digest();
+    member.is_directory = false;
+    member.modification_time = to_packed_dos_time(modification_date.hour(), modification_date.minute(), modification_date.second());
+    member.modification_date = to_packed_dos_date(modification_date.year(), modification_date.month(), modification_date.day());
+
+    auto deflated_amount = 0;
+    auto deflate_buffer = Compress::DeflateCompressor::compress_all(file_buffer);
+    if (!deflate_buffer.is_error() && deflate_buffer.value().size() < file_buffer.size()) {
+        member.compressed_data = deflate_buffer.value().bytes();
+        member.compression_method = ZipCompressionMethod::Deflate;
+
+        auto compression_ratio = (double)deflate_buffer.value().size() / (double)file_buffer.size();
+        deflated_amount = (int)(compression_ratio * 100);
+    } else {
+        member.compressed_data = file_buffer.bytes();
+        member.compression_method = ZipCompressionMethod::Store;
+    }
+
+    TRY(add_member(member));
+    return ZipMemberFromFileResult {
+        .canonicalized_path = canonicalized_path,
+        .deflated_amount = deflated_amount
+    };
+}
+
+ErrorOr<void> ZipOutputStream::add_directory_from_path(StringView path, RecurseThroughDirectories recurse_through_directories, AddMemberCallback const& callback)
+{
+    auto canonicalized_path = TRY(String::formatted("{}/", LexicalPath::canonicalized_path(path)));
+    auto stat = TRY(Core::System::stat(canonicalized_path));
+    auto modification_date = Core::DateTime::from_timestamp(stat.st_mtime);
+
+    auto member = ZipMember {
+        .name = canonicalized_path,
+        .compressed_data = {},
+        .compression_method = ZipCompressionMethod::Store,
+        .uncompressed_size = 0,
+        .crc32 = 0,
+        .is_directory = true,
+        .modification_time = to_packed_dos_time(modification_date.hour(), modification_date.minute(), modification_date.second()),
+        .modification_date = to_packed_dos_date(modification_date.year(), modification_date.month(), modification_date.day()),
+    };
+
+    TRY(add_member(member));
+    callback(ZipMemberFromFileResult { .canonicalized_path = canonicalized_path, .deflated_amount = 0 });
+
+    // Some users of this utility may not want us to automatically handle directories, so we can return early here.
+    if (recurse_through_directories == RecurseThroughDirectories::No)
+        return {};
+
+    auto iterator = Core::DirIterator(path, Core::DirIterator::Flags::SkipParentAndBaseDir);
+    while (iterator.has_next()) {
+        auto child_path = iterator.next_full_path();
+        if (FileSystem::is_link(child_path))
+            continue;
+
+        TRY(add_member_from_path(child_path, recurse_through_directories, callback));
+    }
+
+    return {};
 }
 
 ErrorOr<void> ZipOutputStream::finish()
