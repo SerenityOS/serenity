@@ -17,8 +17,9 @@ Filter out repeated adjacent lines from INPUT (or standard input) and write to O
 * `-c`, `--count`: Precede each line with its number of occurrences.
 * `-d`, `--repeated`: Only print repeated lines.
 * `-u`, `--unique`: Only print unique lines (default).
+* `-i`, `--ignore-case`: Ignore case when comparing lines.
 * `-f N`, `--skip-fields N`: Skip first N fields of each line before comparing.
-* `-c N`, `--skip-chars N`: Skip first N chars of each line before comparing.
+* `-s N`, `--skip-chars N`: Skip first N chars of each line before comparing.
 * `--help`: Display help message and exit.
 * `--version`: Print version.
 

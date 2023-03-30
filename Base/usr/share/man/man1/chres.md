@@ -12,6 +12,10 @@ $ chres <width> <height> [scale factor]
 
 `chres` changes the display resolution to <width>x<height>@<scale factor>x.
 
+## Options
+
+* `-s`, `--screen`: Screen
+
 ## Examples
 
 ```sh

@@ -17,7 +17,7 @@ standard input.
 
 ## Options
 
-* `--html`: Render the document into HTML.
+* `-H`, `--html`: Render the document into HTML.
 
 ## Examples
 

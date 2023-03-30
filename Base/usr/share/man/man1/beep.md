@@ -14,7 +14,7 @@ beep allows the user to beep the PC speaker.
 
 ## Options
 
-* `-f|--beep-tone`: Beep tone (frequency in Hz)
+* `-f frequency`, `--beep-tone frequency`: Beep tone (frequency in Hz)
 
 ## Notes
 

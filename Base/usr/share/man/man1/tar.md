@@ -22,6 +22,8 @@ Files may also be compressed and decompressed using GNU Zip (GZIP) compression.
 * `-t`, `--list`: List contents
 * `-v`, `--verbose`: Print paths
 * `-z`, `--gzip`: Compress or decompress file using gzip
+* `--lzma`: Compress or decompress file using lzma
+* `-J`, `--xz`: Compress or decompress file using xz
 * `--no-auto-compress`: Do not use the archive suffix to select the compression algorithm
 * `-C DIRECTORY`, `--directory DIRECTORY`: Directory to extract to/create from
 * `-f FILE`, `--file FILE`: Archive file

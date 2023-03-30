@@ -24,7 +24,13 @@ You can disable output from `dbgln()` calls by setting the `DISABLE_DBG_OUTPUT` 
 ## Options
 
 * `-t`, `--show-time`: Show duration of each test
+* `-p`, `--show-progress`: Show progress with OSC 9 (true, false)
+* `-j`, `--json`: Show results as JSON
+* `--per-file`: Show detailed per-file results as JSON (implies -j)
 * `-g`, `--collect-often`: Collect garbage after every allocation
+* `-b`, `--run-bytecode`: Use the bytecode interpreter
+* `-d`, `--dump-bytecode`: Dump the bytecode
+* `-f glob`, `--filter glob`: Only run tests matching the given glob
 * `--test262-parser-tests`: Run test262 parser tests
 
 ## Examples

@@ -15,9 +15,10 @@ aggregated error code.
 
 ## Options
 
-* '-n': Interval between executions, in seconds. By default, the program is run every 2 seconds.
-* '-t': Don't print the title bar.
-* '-b': Beep each time the command exits with a non-zero status
+* `-n seconds`: Interval between executions, in seconds. By default, the program is run every 2 seconds.
+* `-t`, `--no-title`: Don't print the title bar.
+* `-b`, `--beep`: Beep each time the command exits with a non-zero status.
+* `-f file`, `--file file`: Run command whenever this file changes. Can be used multiple times.
 
 ## Exit Values
 

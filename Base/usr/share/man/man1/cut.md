@@ -24,7 +24,6 @@ With no FILE, or when FILE is -, read standard input.
 * `-f` `--fields=list`: select only these fields; also print any line that contains no delimiter character
 * `-d` `--delimiter=delim`: use `delim` instead of `tab` for field delimiter
 
-
 ## Examples
 
 ```sh

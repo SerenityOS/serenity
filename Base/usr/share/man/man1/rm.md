@@ -19,6 +19,7 @@ If a directory is specified in `path`, the `-r` (recursive) flag is required. Ot
 * `-r`, `--recursive`: Remove files and directories recursively
 * `-f`, `--force`: Do not prompt before removing
 * `-v`, `--verbose`: Display what files are removed
+* `--no-preserve-root`: Do not treat '/' specially
 
 ## Examples
 

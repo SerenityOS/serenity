@@ -5,7 +5,7 @@ basename - strip directory names from path
 ## Synopsis
 
 ```**sh
-$ basename <path>
+$ basename <path> [suffix]
 ```
 
 ## Description
@@ -15,6 +15,7 @@ $ basename <path>
 ## Arguments
 
 * `path`: The path which we want to get basename of
+* `suffix`: Suffix to strip from name
 
 ## Examples
 

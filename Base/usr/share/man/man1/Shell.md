@@ -28,6 +28,8 @@ The `Shell` utility does not promise POSIX `sh` interoperability.
 * `--skip-shellrc`: Skips running the initialization file (at `~/.shellrc`)
 * `--format`: Format shell code from the given file and print the result to standard output
 * `-f`, `--live-formatting`: Enable live formatting of the line editor buffer (in REPL mode)
+* `--keep-open`: Keep the shell open after running the specified command or file
+* `--posix`: Behave like a POSIX-compatible shell
 
 ## Examples
 

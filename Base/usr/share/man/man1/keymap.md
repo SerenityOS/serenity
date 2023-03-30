@@ -14,6 +14,11 @@ The `keymap` utility can be used to configure the list of selected keyboard layo
 
 Layouts loaded from `/res/keymaps/*.json`.
 
+## Options
+
+* `-m keymap`, `--set-keymap keymap`: The mapping to be used
+* `-s keymaps`, `--set-keymaps keymaps`: Comma separated list of enabled mappings
+
 ## Examples
 
 Get name of the currently set keymap:
