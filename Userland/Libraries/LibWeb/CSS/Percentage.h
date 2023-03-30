@@ -83,8 +83,10 @@ public:
     {
         return m_value.visit(
             [&](T const& t) {
-                if (t.is_calculated())
-                    return calculated_style_value_contains_percentage(*t.calculated_style_value());
+                if constexpr (requires { t.is_calculated(); }) {
+                    if (t.is_calculated())
+                        return calculated_style_value_contains_percentage(*t.calculated_style_value());
+                }
                 return false;
             },
             [&](Percentage const&) {
@@ -116,8 +118,11 @@ public:
     {
         return m_value.visit(
             [&](T const& t) {
-                if (t.is_calculated())
-                    return resolve_calculated(t.calculated_style_value(), layout_node, reference_value);
+                if constexpr (requires { t.is_calculated(); }) {
+                    if (t.is_calculated())
+                        return resolve_calculated(t.calculated_style_value(), layout_node, reference_value);
+                }
+
                 return t;
             },
             [&](Percentage const& percentage) {

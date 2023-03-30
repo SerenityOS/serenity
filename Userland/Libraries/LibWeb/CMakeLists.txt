@@ -16,6 +16,7 @@ set(SOURCES
     Crypto/Crypto.cpp
     Crypto/SubtleCrypto.cpp
     CSS/Angle.cpp
+    CSS/CalculatedOr.cpp
     CSS/Clip.cpp
     CSS/CSS.cpp
     CSS/CSSConditionRule.cpp
