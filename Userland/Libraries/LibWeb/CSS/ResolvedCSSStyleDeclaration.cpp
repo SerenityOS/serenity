@@ -70,6 +70,19 @@ DeprecatedString ResolvedCSSStyleDeclaration::item(size_t index) const
     return {};
 }
 
+static NonnullRefPtr<StyleValue const> style_value_for_background_property(Layout::NodeWithStyle const& layout_node, Function<NonnullRefPtr<StyleValue const>(BackgroundLayerData const&)> callback, Function<NonnullRefPtr<StyleValue const>()> default_value)
+{
+    auto const& background_layers = layout_node.background_layers();
+    if (background_layers.is_empty())
+        return default_value();
+    if (background_layers.size() == 1)
+        return callback(background_layers.first());
+    StyleValueVector values;
+    for (auto const& layer : background_layers)
+        values.append(callback(layer));
+    return StyleValueList::create(move(values), StyleValueList::Separator::Comma);
+}
+
 static RefPtr<StyleValue> style_value_for_display(CSS::Display display)
 {
     if (display.is_none())
@@ -203,8 +216,43 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
             value_or_default(maybe_background_origin, IdentifierStyleValue::create(CSS::ValueID::PaddingBox)),
             value_or_default(maybe_background_clip, IdentifierStyleValue::create(CSS::ValueID::BorderBox)));
     }
+    case CSS::PropertyID::BackgroundAttachment:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.attachment)); },
+            [] { return IdentifierStyleValue::create(CSS::ValueID::Scroll); });
+    case CSS::PropertyID::BackgroundClip:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.clip)); },
+            [] { return IdentifierStyleValue::create(CSS::ValueID::BorderBox); });
     case PropertyID::BackgroundColor:
         return ColorStyleValue::create(layout_node.computed_values().background_color());
+    case CSS::PropertyID::BackgroundImage:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) -> NonnullRefPtr<StyleValue const> {
+                if (layer.background_image)
+                    return *layer.background_image;
+                return IdentifierStyleValue::create(CSS::ValueID::None);
+            },
+            [] { return IdentifierStyleValue::create(CSS::ValueID::None); });
+    case CSS::PropertyID::BackgroundOrigin:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) { return IdentifierStyleValue::create(to_value_id(layer.origin)); },
+            [] { return IdentifierStyleValue::create(CSS::ValueID::PaddingBox); });
+    case CSS::PropertyID::BackgroundRepeat:
+        return style_value_for_background_property(
+            layout_node,
+            [](auto& layer) {
+                StyleValueVector repeat {
+                    IdentifierStyleValue::create(to_value_id(layer.repeat_x)),
+                    IdentifierStyleValue::create(to_value_id(layer.repeat_y)),
+                };
+                return StyleValueList::create(move(repeat), StyleValueList::Separator::Space);
+            },
+            [] { return BackgroundRepeatStyleValue::create(CSS::Repeat::Repeat, CSS::Repeat::Repeat); });
     case CSS::PropertyID::BorderBottom: {
         auto border = layout_node.computed_values().border_bottom();
         auto width = LengthStyleValue::create(Length::make_px(border.width));
