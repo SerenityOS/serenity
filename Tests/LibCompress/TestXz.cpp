@@ -118,8 +118,9 @@ TEST_CASE(xz_utils_bad_0_header_magic)
     };
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
-    auto decompressor_or_error = Compress::XzDecompressor::create(move(stream));
-    EXPECT(decompressor_or_error.is_error());
+    auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_0_nonempty_index)
@@ -695,8 +696,9 @@ TEST_CASE(xz_utils_bad_1_stream_flags_2)
     };
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
-    auto decompressor_or_error = Compress::XzDecompressor::create(move(stream));
-    EXPECT(decompressor_or_error.is_error());
+    auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_1_stream_flags_3)

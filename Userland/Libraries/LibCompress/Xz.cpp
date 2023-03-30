@@ -165,17 +165,13 @@ ErrorOr<NonnullOwnPtr<XzDecompressor>> XzDecompressor::create(MaybeOwned<Stream>
 {
     auto counting_stream = TRY(try_make<CountingStream>(move(stream)));
 
-    auto stream_header = TRY(counting_stream->read_value<XzStreamHeader>());
-    TRY(stream_header.validate());
-
-    auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) XzDecompressor(move(counting_stream), stream_header.flags)));
+    auto decompressor = TRY(adopt_nonnull_own_or_enomem(new (nothrow) XzDecompressor(move(counting_stream))));
 
     return decompressor;
 }
 
-XzDecompressor::XzDecompressor(NonnullOwnPtr<CountingStream> stream, XzStreamFlags stream_flags)
+XzDecompressor::XzDecompressor(NonnullOwnPtr<CountingStream> stream)
     : m_stream(move(stream))
-    , m_stream_flags(stream_flags)
 {
 }
 
@@ -183,6 +179,13 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 {
     if (m_found_stream_footer)
         return bytes.trim(0);
+
+    if (!m_stream_flags.has_value()) {
+        auto stream_header = TRY(m_stream->read_value<XzStreamHeader>());
+        TRY(stream_header.validate());
+
+        m_stream_flags = stream_header.flags;
+    }
 
     if (!m_current_block_stream.has_value() || (*m_current_block_stream)->is_eof()) {
         if (m_current_block_stream.has_value()) {
@@ -212,7 +215,7 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             //  indicate a warning or error."
             // TODO: Block content checks are currently unimplemented as a whole, independent of the check type.
             //       For now, we only make sure to remove the correct amount of bytes from the stream.
-            switch (m_stream_flags.check_type) {
+            switch (m_stream_flags->check_type) {
             case XzStreamCheckType::None:
                 break;
             case XzStreamCheckType::CRC32:
@@ -329,7 +332,7 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             //  when parsing the Stream backwards. The decoder MUST compare
             //  the Stream Flags fields in both Stream Header and Stream
             //  Footer, and indicate an error if they are not identical."
-            if (Bytes { &m_stream_flags, sizeof(m_stream_flags) } != Bytes { &stream_footer.flags, sizeof(stream_footer.flags) })
+            if (Bytes { &*m_stream_flags, sizeof(XzStreamFlags) } != Bytes { &stream_footer.flags, sizeof(stream_footer.flags) })
                 return Error::from_string_literal("XZ stream header flags don't match the stream footer");
 
             m_found_stream_footer = true;
