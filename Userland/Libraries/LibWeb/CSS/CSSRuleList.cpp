@@ -128,7 +128,7 @@ void CSSRuleList::for_each_effective_style_rule(Function<void(CSSStyleRule const
             break;
         case CSSRule::Type::Import: {
             auto const& import_rule = static_cast<CSSImportRule const&>(*rule);
-            if (import_rule.has_import_result() && import_rule.loaded_style_sheet())
+            if (import_rule.loaded_style_sheet())
                 import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
             break;
         }
@@ -155,7 +155,7 @@ bool CSSRuleList::evaluate_media_queries(HTML::Window const& window)
             break;
         case CSSRule::Type::Import: {
             auto& import_rule = verify_cast<CSSImportRule>(*rule);
-            if (import_rule.has_import_result() && import_rule.loaded_style_sheet() && import_rule.loaded_style_sheet()->evaluate_media_queries(window))
+            if (import_rule.loaded_style_sheet() && import_rule.loaded_style_sheet()->evaluate_media_queries(window))
                 any_media_queries_changed_match_state = true;
             break;
         }
