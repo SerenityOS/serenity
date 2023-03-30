@@ -79,7 +79,7 @@ CSS::Size StyleProperties::size_value(CSS::PropertyID id) const
     }
 
     if (value->is_calculated())
-        return CSS::Size::make_length(CSS::Length::make_calculated(const_cast<CalculatedStyleValue&>(value->as_calculated())));
+        return CSS::Size::make_calculated(const_cast<CalculatedStyleValue&>(value->as_calculated()));
 
     if (value->is_percentage())
         return CSS::Size::make_percentage(value->as_percentage().percentage());

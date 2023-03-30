@@ -41,6 +41,11 @@ Size Size::make_percentage(Percentage percentage)
     return Size { Type::Percentage, move(percentage) };
 }
 
+Size Size::make_calculated(NonnullRefPtr<Web::CSS::CalculatedStyleValue> calculated)
+{
+    return Size { Type::Calculated, move(calculated) };
+}
+
 Size Size::make_min_content()
 {
     return Size { Type::MinContent, Length::make_auto() };
@@ -79,6 +84,7 @@ ErrorOr<String> Size::to_string() const
     switch (m_type) {
     case Type::Auto:
         return "auto"_string;
+    case Type::Calculated:
     case Type::Length:
     case Type::Percentage:
         return m_length_percentage.to_string();
