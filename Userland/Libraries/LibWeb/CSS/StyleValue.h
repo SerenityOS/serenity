@@ -36,12 +36,6 @@
 
 namespace Web::CSS {
 
-enum class BackgroundSize {
-    Contain,
-    Cover,
-    LengthPercentage,
-};
-
 // FIXME: Named PositionValue to avoid conflicts with enums, but this represents a <position>
 struct PositionValue {
     enum class HorizontalPreset {
