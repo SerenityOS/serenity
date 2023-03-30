@@ -554,15 +554,6 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
     return {};
 }
 
-static inline ErrorOr<void> ensure_bounds_okay(const size_t cursor, const size_t delta, const size_t bound)
-{
-    if (Checked<size_t>::addition_would_overflow(delta, cursor))
-        return Error::from_string_literal("Bounds are not ok: addition would overflow");
-    if (delta + cursor >= bound)
-        return Error::from_string_literal("Bounds are not ok");
-    return {};
-}
-
 static bool is_frame_marker(Marker const marker)
 {
     // B.1.1.3 - Marker assignments
@@ -633,8 +624,7 @@ static ErrorOr<void> read_start_of_scan(AK::SeekableStream& stream, JPEGLoadingC
         return Error::from_string_literal("SOS found before reading a SOF");
     }
 
-    u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
+    [[maybe_unused]] u16 const bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
@@ -711,7 +701,6 @@ static ErrorOr<void> read_restart_interval(AK::SeekableStream& stream, JPEGLoadi
 static ErrorOr<void> read_huffman_table(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
     bytes_to_read -= 2;
     while (bytes_to_read > 0) {
         HuffmanTableSpec table;
@@ -865,7 +854,6 @@ static ErrorOr<void> read_colour_encoding(SeekableStream& stream, [[maybe_unused
 static ErrorOr<void> read_app_marker(SeekableStream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
 
     if (bytes_to_read <= 2)
         return Error::from_string_literal("app marker size too small");
@@ -931,10 +919,7 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
         return Error::from_string_literal("SOF repeated");
     }
 
-    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
-
-    bytes_to_read -= 2;
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
+    [[maybe_unused]] u16 const bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
 
     context.frame.precision = TRY(stream.read_value<u8>());
     if (context.frame.precision != 8) {
@@ -1006,7 +991,6 @@ static ErrorOr<void> read_start_of_frame(AK::SeekableStream& stream, JPEGLoading
 static ErrorOr<void> read_quantization_table(AK::SeekableStream& stream, JPEGLoadingContext& context)
 {
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
-    TRY(ensure_bounds_okay(TRY(stream.tell()), bytes_to_read, TRY(stream.size())));
     while (bytes_to_read > 0) {
         u8 info_byte = TRY(stream.read_value<u8>());
         u8 element_unit_hint = info_byte >> 4;
