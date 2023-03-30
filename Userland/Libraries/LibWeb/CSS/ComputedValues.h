@@ -160,6 +160,22 @@ struct BorderRadiusData {
     CSS::LengthPercentage vertical_radius { InitialValues::border_radius() };
 };
 
+// FIXME: Find a better place for this helper.
+inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
+{
+    switch (css_value) {
+    case CSS::ImageRendering::Auto:
+    case CSS::ImageRendering::HighQuality:
+    case CSS::ImageRendering::Smooth:
+        return Gfx::Painter::ScalingMode::BilinearBlend;
+    case CSS::ImageRendering::CrispEdges:
+        return Gfx::Painter::ScalingMode::NearestNeighbor;
+    case CSS::ImageRendering::Pixelated:
+        return Gfx::Painter::ScalingMode::SmoothPixels;
+    }
+    VERIFY_NOT_REACHED();
+}
+
 class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
