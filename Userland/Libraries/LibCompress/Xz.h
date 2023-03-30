@@ -108,10 +108,10 @@ public:
     virtual void close() override;
 
 private:
-    XzDecompressor(NonnullOwnPtr<CountingStream>, XzStreamFlags);
+    XzDecompressor(NonnullOwnPtr<CountingStream>);
 
     NonnullOwnPtr<CountingStream> m_stream;
-    XzStreamFlags m_stream_flags;
+    Optional<XzStreamFlags> m_stream_flags;
     bool m_found_stream_footer { false };
 
     Optional<MaybeOwned<Stream>> m_current_block_stream {};
