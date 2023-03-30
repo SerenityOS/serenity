@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/CSS/Percentage.h>
+#include <LibWeb/CSS/PercentageOr.h>
 
 namespace Web::CSS {
 

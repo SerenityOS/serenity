@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <LibWeb/CSS/Angle.h>
 #include <LibWeb/CSS/Position.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
 #include <LibWeb/Painting/GradientPainting.h>

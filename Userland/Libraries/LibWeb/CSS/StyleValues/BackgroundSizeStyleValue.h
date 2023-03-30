@@ -10,7 +10,7 @@
 #pragma once
 
 #include <LibWeb/CSS/Length.h>
-#include <LibWeb/CSS/Percentage.h>
+#include <LibWeb/CSS/PercentageOr.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {

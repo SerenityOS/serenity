@@ -11,9 +11,10 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
 #include <LibWeb/CSS/GeneralEnclosed.h>
+#include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/MediaFeatureID.h>
 #include <LibWeb/CSS/Ratio.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/Resolution.h>
 
 namespace Web::CSS {
 

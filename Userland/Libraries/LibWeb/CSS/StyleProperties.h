@@ -13,7 +13,6 @@
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/PropertyID.h>
-#include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
 

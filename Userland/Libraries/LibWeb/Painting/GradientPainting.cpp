@@ -6,7 +6,6 @@
 
 #include <AK/Math.h>
 #include <LibGfx/Gradients.h>
-#include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LinearGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/RadialGradientStyleValue.h>
