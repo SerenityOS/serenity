@@ -105,7 +105,7 @@ public:
     float width { 0 };
 };
 
-using TransformValue = Variant<CSS::Angle, CSS::LengthPercentage, float>;
+using TransformValue = Variant<CSS::AngleOrCalculated, CSS::LengthPercentage, float>;
 
 struct Transformation {
     CSS::TransformFunction function;
