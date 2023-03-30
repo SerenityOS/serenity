@@ -82,6 +82,12 @@ public:
     static Vector<Vector<String>> grid_template_areas() { return {}; }
 };
 
+enum class BackgroundSize {
+    Contain,
+    Cover,
+    LengthPercentage,
+};
+
 struct BackgroundLayerData {
     RefPtr<CSS::AbstractImageStyleValue const> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
