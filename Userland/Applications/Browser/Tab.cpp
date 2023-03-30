@@ -606,7 +606,6 @@ void Tab::bookmark_current_url()
     } else {
         BookmarksBarWidget::the().add_bookmark(url, m_title);
     }
-    update_bookmark_button(url);
 }
 
 void Tab::update_bookmark_button(DeprecatedString const& url)
@@ -635,10 +634,8 @@ void Tab::did_become_active()
         m_statusbar->set_text(url);
     };
 
-    BookmarksBarWidget::the().on_bookmark_add = [this](auto& url) {
-        auto current_url = this->url().to_deprecated_string();
-        if (current_url == url)
-            update_bookmark_button(current_url);
+    BookmarksBarWidget::the().on_bookmark_change = [this]() {
+        update_bookmark_button(url().to_deprecated_string());
     };
 
     BookmarksBarWidget::the().remove_from_parent();
