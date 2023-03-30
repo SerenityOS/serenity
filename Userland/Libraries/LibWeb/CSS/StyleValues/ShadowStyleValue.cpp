@@ -22,10 +22,10 @@ ErrorOr<String> ShadowStyleValue::to_string() const
 
 ValueComparingNonnullRefPtr<StyleValue const> ShadowStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
 {
-    auto absolutized_offset_x = absolutized_length(m_properties.offset_x, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.offset_x);
-    auto absolutized_offset_y = absolutized_length(m_properties.offset_y, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.offset_y);
-    auto absolutized_blur_radius = absolutized_length(m_properties.blur_radius, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.blur_radius);
-    auto absolutized_spread_distance = absolutized_length(m_properties.spread_distance, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(m_properties.spread_distance);
+    auto absolutized_offset_x = m_properties.offset_x.absolutized(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+    auto absolutized_offset_y = m_properties.offset_y.absolutized(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+    auto absolutized_blur_radius = m_properties.blur_radius.absolutized(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+    auto absolutized_spread_distance = m_properties.spread_distance.absolutized(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
     return ShadowStyleValue::create(m_properties.color, absolutized_offset_x, absolutized_offset_y, absolutized_blur_radius, absolutized_spread_distance, m_properties.placement);
 }
 

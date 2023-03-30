@@ -193,4 +193,20 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
     return {};
 }
 
+Optional<Length> Length::absolutize(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+{
+    if (is_px())
+        return {};
+    if (is_absolute() || is_relative()) {
+        auto px = to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+        return CSS::Length::make_px(px);
+    }
+    return {};
+}
+
+Length Length::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+{
+    return absolutize(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(*this);
+}
+
 }
