@@ -117,6 +117,12 @@ struct TransformOrigin {
     CSS::LengthPercentage y { Percentage(50) };
 };
 
+enum class FlexBasis {
+    Content,
+    LengthPercentage,
+    Auto,
+};
+
 struct FlexBasisData {
     CSS::FlexBasis type { CSS::FlexBasis::Auto };
     Optional<CSS::LengthPercentage> length_percentage;

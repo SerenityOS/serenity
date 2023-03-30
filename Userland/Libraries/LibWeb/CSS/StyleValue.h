@@ -42,12 +42,6 @@ enum class BackgroundSize {
     LengthPercentage,
 };
 
-enum class FlexBasis {
-    Content,
-    LengthPercentage,
-    Auto,
-};
-
 // FIXME: Named PositionValue to avoid conflicts with enums, but this represents a <position>
 struct PositionValue {
     enum class HorizontalPreset {
