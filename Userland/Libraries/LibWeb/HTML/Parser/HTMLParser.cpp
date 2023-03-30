@@ -957,7 +957,6 @@ void HTMLParser::flush_character_insertions()
     if (m_character_insertion_builder.is_empty())
         return;
     m_character_insertion_node->set_data(m_character_insertion_builder.to_deprecated_string());
-    m_character_insertion_node->parent()->children_changed();
     m_character_insertion_builder.clear();
 }
 
