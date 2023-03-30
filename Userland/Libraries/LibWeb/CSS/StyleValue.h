@@ -36,22 +36,6 @@
 
 namespace Web::CSS {
 
-// FIXME: Find a better place for this helper.
-inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
-{
-    switch (css_value) {
-    case CSS::ImageRendering::Auto:
-    case CSS::ImageRendering::HighQuality:
-    case CSS::ImageRendering::Smooth:
-        return Gfx::Painter::ScalingMode::BilinearBlend;
-    case CSS::ImageRendering::CrispEdges:
-        return Gfx::Painter::ScalingMode::NearestNeighbor;
-    case CSS::ImageRendering::Pixelated:
-        return Gfx::Painter::ScalingMode::SmoothPixels;
-    }
-    VERIFY_NOT_REACHED();
-}
-
 template<typename T>
 struct ValueComparingNonnullRefPtr : public NonnullRefPtr<T> {
     using NonnullRefPtr<T>::NonnullRefPtr;
