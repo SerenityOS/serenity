@@ -22,6 +22,7 @@
 #include <LibWeb/CSS/Parser/Rule.h>
 #include <LibWeb/CSS/Parser/TokenStream.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
+#include <LibWeb/CSS/Position.h>
 #include <LibWeb/CSS/PropertyID.h>
 #include <LibWeb/CSS/Ratio.h>
 #include <LibWeb/CSS/Selector.h>
