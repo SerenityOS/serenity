@@ -23,6 +23,10 @@ The letters `[rwx]` controls which permission will be changes: `r` is read, `w` 
 
 A numeric mode is combination of 1 to 4 numbers. Omitted digits are assumed to be leading zeros. The first digit select the set user ID (4), set group ID (2) and restricted deletion / sticky (1) attributes. The second, third and fourth digit controls permissions of each user group: owner, owning group and others (not owner or owning group), respectively: read (4), write (2) and execute (1).
 
+## Options
+
+* `-R`, `--recursive`: Change file modes recursively
+
 ## Examples
 
 ```sh

@@ -1,6 +1,6 @@
 ## Name
 
-arp - display ARP cache
+arp - Display or modify the system ARP cache
 
 ## Synopsis
 
@@ -13,6 +13,17 @@ arp - display ARP cache
 This program run as root displays IP and MAC addresses of devices in local network.
 
 ARP stands for Address Resolution Protocol, which is used to find devices in local network.
+
+## Options
+
+* `-s`, `--set`: Set an ARP table entry
+* `-d`, `--delete`: Delete an ARP table entry
+* `-n`, `--numeric`: Display numerical addresses. Don't resolve hostnames
+
+## Arguments
+
+* `address`: IPv4 protocol address
+* `hwaddress`: Hardware address
 
 ## Examples
 

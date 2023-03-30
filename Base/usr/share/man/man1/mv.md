@@ -16,6 +16,7 @@ $ mv [options...] <source...> <destination>
 ## Options
 
 * `-f`, `--force`: Do not prompt before overwriting (not implemented for now)
+* `-n`, `--no-clobber`: Do not overwrite existing files
 * `-v`, `--verbose`: Display all moved files
 
 ## Examples

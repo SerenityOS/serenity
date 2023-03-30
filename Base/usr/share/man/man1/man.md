@@ -15,6 +15,10 @@ $ man section page
 or man pages for short, from the SerenityOS manual. You're reading
 the manual page for `man` program itself right now.
 
+## Options
+
+* `-P pager`, `--pager pager`: Pager to pipe the man page to
+
 ## Examples
 
 To open documentation for the `echo` command:

@@ -30,6 +30,7 @@ If no *path* argument is provided the current working directory is used.
 * `-n`, `--numeric-uid-gid`: In long format, display numeric UID/GID
 * `-o`, In long format, do not show group information
 * `-h`, `--human-readable`: Print human-readable sizes
+* `--si`: Print human-readable sizes in SI units
 * `-K`, `--no-hyperlinks`: Disable hyperlinks
 * `-R`, `--recursive`: List subdirectories recursively
 * `-1`: List one file per line

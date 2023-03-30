@@ -18,6 +18,7 @@ system call.
 * `-s`: Print the system name
 * `-n`: Print the node name (hostname)
 * `-r`: Print the system release version
+* `-v`: Print the version of the release
 * `-m`: Print the machine type
 * `-a`: Print all of the above
 

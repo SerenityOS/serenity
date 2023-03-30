@@ -17,6 +17,7 @@ list available wallpapers in the `/res/wallpapers/` directory.
 
 * `-a`, `--show-all`: Show all wallpapers
 * `-c`, `--show-current`: Show current wallpaper
+* `-r`, `--set-random`: Set random wallpaper
 
 ## Examples
 
