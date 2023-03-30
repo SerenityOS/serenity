@@ -32,7 +32,7 @@ ValueComparingNonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length co
 
 ValueComparingNonnullRefPtr<StyleValue const> LengthStyleValue::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
 {
-    if (auto length = absolutized_length(m_length, viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height); length.has_value())
+    if (auto length = m_length.absolutize(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height); length.has_value())
         return LengthStyleValue::create(length.release_value());
     return *this;
 }

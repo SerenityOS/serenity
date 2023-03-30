@@ -90,8 +90,6 @@ private:
 
 using StyleValueVector = Vector<ValueComparingNonnullRefPtr<StyleValue const>>;
 
-Optional<CSS::Length> absolutized_length(CSS::Length const&, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const&, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height);
-
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue() = default;

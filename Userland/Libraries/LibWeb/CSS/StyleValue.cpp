@@ -1021,17 +1021,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
     return value->resolve(layout_node, percentage_basis);
 }
 
-Optional<CSS::Length> absolutized_length(CSS::Length const& length, CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height)
-{
-    if (length.is_px())
-        return {};
-    if (length.is_absolute() || length.is_relative()) {
-        auto px = length.to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
-        return CSS::Length::make_px(px);
-    }
-    return {};
-}
-
 ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels, CSSPixels, CSSPixels) const
 {
     return *this;
