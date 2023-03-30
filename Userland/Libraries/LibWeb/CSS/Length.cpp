@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobyase@serenityos.org>
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,17 +40,8 @@ Length Length::make_px(CSSPixels value)
     return Length(value.value(), Type::Px);
 }
 
-Length Length::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_style_value)
-{
-    Length length { 0, Type::Calculated };
-    length.m_calculated_style = move(calculated_style_value);
-    return length;
-}
-
 Length Length::percentage_of(Percentage const& percentage) const
 {
-    VERIFY(!is_calculated());
-
     if (is_auto()) {
         dbgln("Attempting to get percentage of an auto length, this seems wrong? But for now we just return the original length.");
         return *this;
@@ -61,8 +52,6 @@ Length Length::percentage_of(Percentage const& percentage) const
 
 Length Length::resolved(Layout::Node const& layout_node) const
 {
-    if (is_calculated())
-        return m_calculated_style->resolve_length(layout_node).release_value();
     if (is_relative())
         return make_px(to_px(layout_node));
     if (!isfinite(m_value))
@@ -101,9 +90,6 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::
 
 CSSPixels Length::to_px(Layout::Node const& layout_node) const
 {
-    if (is_calculated())
-        return m_calculated_style->resolve_length(layout_node)->to_px(layout_node);
-
     if (is_absolute())
         return absolute_length_to_px();
 
@@ -118,8 +104,6 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
 
 ErrorOr<String> Length::to_string() const
 {
-    if (is_calculated())
-        return m_calculated_style->to_string();
     if (is_auto())
         return "auto"_string;
     return String::formatted("{}{}", m_value, unit_name());
@@ -164,8 +148,6 @@ char const* Length::unit_name() const
         return "lh";
     case Type::Rlh:
         return "rlh";
-    case Type::Calculated:
-        return "calculated";
     }
     VERIFY_NOT_REACHED();
 }
@@ -209,19 +191,6 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
     }
 
     return {};
-}
-
-NonnullRefPtr<CalculatedStyleValue> Length::calculated_style_value() const
-{
-    VERIFY(!m_calculated_style.is_null());
-    return *m_calculated_style;
-}
-
-bool Length::operator==(Length const& other) const
-{
-    if (is_calculated())
-        return m_calculated_style == other.m_calculated_style;
-    return m_type == other.m_type && m_value == other.m_value;
 }
 
 }

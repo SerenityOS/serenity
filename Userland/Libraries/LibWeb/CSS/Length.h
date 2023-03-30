@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
@@ -18,7 +17,6 @@ namespace Web::CSS {
 class Length {
 public:
     enum class Type {
-        Calculated,
         Auto,
         Cm,
         In,
@@ -49,13 +47,11 @@ public:
 
     static Length make_auto();
     static Length make_px(CSSPixels value);
-    static Length make_calculated(NonnullRefPtr<CalculatedStyleValue>);
     Length percentage_of(Percentage const&) const;
 
     Length resolved(Layout::Node const& layout_node) const;
 
     bool is_auto() const { return m_type == Type::Auto; }
-    bool is_calculated() const { return m_type == Type::Calculated; }
     bool is_px() const { return m_type == Type::Px; }
 
     bool is_absolute() const
@@ -84,7 +80,6 @@ public:
     }
 
     float raw_value() const { return m_value; }
-    NonnullRefPtr<CalculatedStyleValue> calculated_style_value() const;
 
     CSSPixels to_px(Layout::Node const&) const;
 
@@ -94,8 +89,6 @@ public:
             return 0;
         if (is_relative())
             return relative_length_to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
-        if (is_calculated())
-            VERIFY_NOT_REACHED(); // We can't resolve a calculated length from here. :^(
         return absolute_length_to_px();
     }
 
@@ -125,9 +118,10 @@ public:
 
     ErrorOr<String> to_string() const;
 
-    // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
-    // this file already. To break the cyclic dependency, we must move all method definitions out.
-    bool operator==(Length const& other) const;
+    bool operator==(Length const& other) const
+    {
+        return m_type == other.m_type && m_value == other.m_value;
+    }
 
     CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
 
@@ -136,8 +130,6 @@ private:
 
     Type m_type;
     float m_value { 0 };
-
-    RefPtr<CalculatedStyleValue> m_calculated_style;
 };
 
 }
