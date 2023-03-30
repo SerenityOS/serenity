@@ -67,7 +67,7 @@ public:
             return buffer;
 
         // Fill the internal buffer if it has run dry.
-        if (m_buffer.used_space() == 0)
+        if (m_buffer.used_space() < buffer.size())
             TRY(populate_read_buffer());
 
         // Let's try to take all we can from the buffer first.
