@@ -11,7 +11,7 @@
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/CSS/Percentage.h>
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/Time.h>
 
 namespace Web::CSS {

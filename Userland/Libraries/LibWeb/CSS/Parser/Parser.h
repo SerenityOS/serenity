@@ -28,6 +28,7 @@
 #include <LibWeb/CSS/Selector.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/CSS/StyleValues/AbstractImageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/Supports.h>
 #include <LibWeb/CSS/UnicodeRange.h>
 #include <LibWeb/Forward.h>
