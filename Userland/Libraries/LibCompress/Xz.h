@@ -112,7 +112,8 @@ private:
 
     NonnullOwnPtr<CountingStream> m_stream;
     Optional<XzStreamFlags> m_stream_flags;
-    bool m_found_stream_footer { false };
+    bool m_found_first_stream_header { false };
+    bool m_found_last_stream_footer { false };
 
     Optional<MaybeOwned<Stream>> m_current_block_stream {};
     Optional<u64> m_current_block_uncompressed_size {};
