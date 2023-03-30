@@ -162,19 +162,6 @@ static CSSStyleSheet& quirks_mode_stylesheet(DOM::Document const& document)
     return *sheet;
 }
 
-static void collect_style_sheets(CSSStyleSheet const& sheet, Vector<JS::NonnullGCPtr<CSSStyleSheet const>>& sheets)
-{
-    sheets.append(sheet);
-    for (auto const& rule : sheet.rules()) {
-        if (rule->type() == CSSRule::Type::Import) {
-            auto const& import_rule = static_cast<CSSImportRule const&>(*rule);
-            if (auto const* imported_sheet = import_rule.loaded_style_sheet()) {
-                collect_style_sheets(*imported_sheet, sheets);
-            }
-        }
-    }
-}
-
 template<typename Callback>
 void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback callback) const
 {
@@ -184,10 +171,7 @@ void StyleComputer::for_each_stylesheet(CascadeOrigin cascade_origin, Callback c
             callback(quirks_mode_stylesheet(document()));
     }
     if (cascade_origin == CascadeOrigin::Author) {
-        Vector<JS::NonnullGCPtr<CSSStyleSheet const>> sheets;
         for (auto const& sheet : document().style_sheets().sheets())
-            collect_style_sheets(sheet, sheets);
-        for (auto const& sheet : sheets)
             callback(*sheet);
     }
 }
