@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Time.h"
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/Percentage.h>
 
 namespace Web::CSS {
 
@@ -21,13 +21,6 @@ Time::Time(float value, Type type)
 {
 }
 
-Time Time::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_style_value)
-{
-    Time frequency { 0, Type::Calculated };
-    frequency.m_calculated_style = move(calculated_style_value);
-    return frequency;
-}
-
 Time Time::make_seconds(float value)
 {
     return { value, Type::S };
@@ -35,23 +28,17 @@ Time Time::make_seconds(float value)
 
 Time Time::percentage_of(Percentage const& percentage) const
 {
-    VERIFY(!is_calculated());
-
     return Time { percentage.as_fraction() * m_value, m_type };
 }
 
 ErrorOr<String> Time::to_string() const
 {
-    if (is_calculated())
-        return m_calculated_style->to_string();
     return String::formatted("{}{}", m_value, unit_name());
 }
 
 float Time::to_seconds() const
 {
     switch (m_type) {
-    case Type::Calculated:
-        return m_calculated_style->resolve_time()->to_seconds();
     case Type::S:
         return m_value;
     case Type::Ms:
@@ -63,8 +50,6 @@ float Time::to_seconds() const
 StringView Time::unit_name() const
 {
     switch (m_type) {
-    case Type::Calculated:
-        return "calculated"sv;
     case Type::S:
         return "s"sv;
     case Type::Ms:
@@ -81,12 +66,6 @@ Optional<Time::Type> Time::unit_from_name(StringView name)
         return Type::Ms;
     }
     return {};
-}
-
-NonnullRefPtr<CalculatedStyleValue> Time::calculated_style_value() const
-{
-    VERIFY(!m_calculated_style.is_null());
-    return *m_calculated_style;
 }
 
 }
