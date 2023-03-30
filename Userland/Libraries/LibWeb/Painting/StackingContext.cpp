@@ -239,8 +239,8 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
 
                 return value.length().to_px(m_box).value();
             },
-            [](CSS::Angle const& value) {
-                return value.to_degrees() * static_cast<float>(M_DEG2RAD);
+            [this](CSS::AngleOrCalculated const& value) {
+                return value.resolved(m_box).to_degrees() * static_cast<float>(M_DEG2RAD);
             },
             [](float value) {
                 return value;

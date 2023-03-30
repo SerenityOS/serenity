@@ -23,6 +23,7 @@
 #include <AK/WeakPtr.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/CSS/Angle.h>
+#include <LibWeb/CSS/CalculatedOr.h>
 #include <LibWeb/CSS/Enums.h>
 #include <LibWeb/CSS/Frequency.h>
 #include <LibWeb/CSS/Length.h>
