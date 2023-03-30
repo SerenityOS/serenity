@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <LibWeb/CSS/EdgeRect.h>
 #include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
@@ -21,7 +22,6 @@ public:
     EdgeRect rect() const { return m_rect; }
     virtual ErrorOr<String> to_string() const override;
     virtual bool has_rect() const override { return true; }
-    virtual EdgeRect to_rect() const override { return m_rect; }
 
     bool properties_equal(RectStyleValue const& other) const { return m_rect == other.m_rect; }
 

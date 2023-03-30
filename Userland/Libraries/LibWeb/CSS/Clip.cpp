@@ -5,7 +5,6 @@
  */
 
 #include "Clip.h"
-#include <LibWeb/CSS/StyleValue.h>
 
 namespace Web::CSS {
 

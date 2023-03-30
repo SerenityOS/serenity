@@ -31,6 +31,7 @@ set(SOURCES
     CSS/CSSStyleSheet.cpp
     CSS/CSSSupportsRule.cpp
     CSS/Display.cpp
+    CSS/EdgeRect.cpp
     CSS/FontFace.cpp
     CSS/Frequency.cpp
     CSS/GridTrackPlacement.cpp

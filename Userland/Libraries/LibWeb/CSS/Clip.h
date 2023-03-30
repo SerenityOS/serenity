@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/EdgeRect.h>
 
 namespace Web::CSS {
 
