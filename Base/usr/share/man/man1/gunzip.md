@@ -8,12 +8,12 @@ gunzip
 $ gunzip [--keep] [--stdout] <FILE...>
 ```
 
-## Options:
+## Options
 
 * `-k`, `--keep`: Keep (don't delete) input files
 * `-c`, `--stdout`: Write to stdout, keep original files unchanged
 
-## Arguments:
+## Arguments
 
 * `FILE`: File to decompress
 

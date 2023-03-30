@@ -12,7 +12,7 @@ $ nc [--listen] [--verbose] [--udp] [-N] [--length ] <target> <port>
 
 Network cat: Connect to network sockets as if it were a file.
 
-## Options:
+## Options
 
 * `-l`, `--listen`: Listen instead of connecting
 * `-v`, `--verbose`: Log everything that's happening
@@ -20,7 +20,7 @@ Network cat: Connect to network sockets as if it were a file.
 * `-N`: Close connection after reading stdin to the end
 * `-I`, `--length`: Set maximum tcp receive buffer size
 
-## Arguments:
+## Arguments
 
 * `target`: Address to listen on, or the address or hostname to connect to
 * `port`: Port to connect to or listen on

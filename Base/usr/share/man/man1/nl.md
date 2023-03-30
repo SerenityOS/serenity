@@ -8,7 +8,7 @@ nl
 $ nl [--body-numbering style] [--increment number] [--separator string] [--startnum number] [--width number] [file...]
 ```
 
-## Options:
+## Options
 
 * `-b style`, `--body-numbering style`: Line numbering style: 't' for non-empty lines, 'a' for all lines, 'n' for no lines
 * `-i number`, `--increment number`: Line count increment
@@ -16,7 +16,7 @@ $ nl [--body-numbering style] [--increment number] [--separator string] [--start
 * `-v number`, `--startnum number`: Initial line number
 * `-w number`, `--width number`: Number width
 
-## Arguments:
+## Arguments
 
 * `file`: Files to process
 

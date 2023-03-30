@@ -12,13 +12,13 @@ $ passwd [--delete] [--lock] [--unlock] [username]
 
 Modify an account password.
 
-## Options:
+## Options
 
 * `-d`, `--delete`: Delete password
 * `-l`, `--lock`: Lock password
 * `-u`, `--unlock`: Unlock password
 
-## Arguments:
+## Arguments
 
 * `username`: Username
 

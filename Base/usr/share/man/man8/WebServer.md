@@ -8,7 +8,7 @@ WebServer - Serenity web server
 $ WebServer [--listen-address listen_address] [--port port] [--user username] [--pass password] [path]
 ```
 
-## Options:
+## Options
 
 * `--help`: Display help message and exit
 * `--version`: Print version
@@ -17,7 +17,7 @@ $ WebServer [--listen-address listen_address] [--port port] [--user username] [-
 * `-U username`, `--user username`: HTTP basic authentication username
 * `-P password`, `--pass password`: HTTP basic authentication password
 
-## Arguments:
+## Arguments
 
 * `path`: Path to serve the contents of
 

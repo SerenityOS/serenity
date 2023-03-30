@@ -12,7 +12,7 @@ $ ifconfig [--ipv4 ip] [--adapter adapter] [--mask mask]
 
 Display or modify the configuration of each network interface.
 
-## Options:
+## Options
 
 * `-i ip`, `--ipv4 ip`: Set the IP address of the selected network
 * `-a adapter`, `--adapter adapter`: Select a specific network adapter to configure

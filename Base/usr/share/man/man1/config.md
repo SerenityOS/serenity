@@ -12,11 +12,11 @@ $ config [--remove] <domain> <group> [key] [value]
 
 Show or modify values in the configuration files through ConfigServer.
 
-## Options:
+## Options
 
 * `-r`, `--remove`: Remove group or key
 
-## Arguments:
+## Arguments
 
 * `domain`: Config domain
 * `group`: Group name

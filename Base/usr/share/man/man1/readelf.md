@@ -8,7 +8,7 @@ readelf
 $ readelf [--all] [--file-header] [--program-headers] [--section-headers] [--headers] [--syms] [--dyn-syms] [--dynamic] [--notes] [--relocs] [--unwind] [--checksec] [--string-dump section-name] <path>
 ```
 
-## Options:
+## Options
 
 * `-a`, `--all`: Display all
 * `-h`, `--file-header`: Display ELF header
@@ -24,7 +24,7 @@ $ readelf [--all] [--file-header] [--program-headers] [--section-headers] [--hea
 * `-c`, `--checksec`: Display security hardening info
 * `-p section-name`, `--string-dump section-name`: Display the contents of a section as strings
 
-## Arguments:
+## Arguments
 
 * `path`: ELF path
 
