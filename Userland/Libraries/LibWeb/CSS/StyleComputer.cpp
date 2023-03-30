@@ -1212,17 +1212,14 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             maybe_length = font_size->to_length();
 
         } else if (font_size->is_calculated()) {
-            maybe_length = Length::make_calculated(const_cast<CalculatedStyleValue&>(font_size->as_calculated()));
-        }
-        if (maybe_length.has_value()) {
             // FIXME: Support font-size: calc(...)
             //        Theoretically we can do this now, but to resolve it we need a layout_node which we might not have. :^(
-            if (!maybe_length->is_calculated()) {
-                auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
-                auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size, parent_line_height, root_line_height).value();
-                if (px != 0)
-                    font_size_in_px = px;
-            }
+        }
+        if (maybe_length.has_value()) {
+            auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
+            auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size, parent_line_height, root_line_height).value();
+            if (px != 0)
+                font_size_in_px = px;
         }
     }
 

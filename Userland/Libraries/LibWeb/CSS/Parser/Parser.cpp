@@ -5794,7 +5794,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             }
             case TransformFunctionParameterType::Length: {
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
-                    values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));
+                    values.append(maybe_calc_value.release_nonnull());
                 } else {
                     auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value)
@@ -5809,7 +5809,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             }
             case TransformFunctionParameterType::LengthPercentage: {
                 if (maybe_calc_value && maybe_calc_value->resolves_to_length()) {
-                    values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));
+                    values.append(maybe_calc_value.release_nonnull());
                 } else {
                     auto dimension_value = parse_dimension_value(value);
                     if (!dimension_value)
@@ -5824,7 +5824,7 @@ RefPtr<StyleValue> Parser::parse_transform_value(Vector<ComponentValue> const& c
             }
             case TransformFunctionParameterType::Number: {
                 if (maybe_calc_value && maybe_calc_value->resolves_to_number()) {
-                    values.append(LengthStyleValue::create(Length::make_calculated(maybe_calc_value.release_nonnull())));
+                    values.append(maybe_calc_value.release_nonnull());
                 } else {
                     auto number = parse_numeric_value(value);
                     if (!number)

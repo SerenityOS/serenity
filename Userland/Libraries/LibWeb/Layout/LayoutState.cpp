@@ -263,24 +263,22 @@ void LayoutState::UsedValues::set_node(NodeWithStyleAndBoxModelMetrics& node, Us
             return false;
         }
 
-        if (size.is_length() && size.length().is_calculated()) {
-            if (size.length().calculated_style_value()->contains_percentage()) {
+        if (size.is_calculated()) {
+            if (size.calculated().contains_percentage()) {
                 if (!containing_block_has_definite_size)
                     return false;
-                auto& calc_value = *size.length().calculated_style_value();
                 auto containing_block_size_as_length = width
                     ? CSS::Length::make_px(containing_block_used_values->content_width())
                     : CSS::Length::make_px(containing_block_used_values->content_height());
-                resolved_definite_size = calc_value.resolve_length_percentage(node, containing_block_size_as_length).value_or(CSS::Length::make_auto()).to_px(node);
+                resolved_definite_size = size.calculated().resolve_length_percentage(node, containing_block_size_as_length).value_or(CSS::Length::make_auto()).to_px(node);
                 return true;
             }
-            resolved_definite_size = size.length().to_px(node);
+            resolved_definite_size = size.calculated().resolve_length(node)->to_px(node);
             return true;
         }
 
         if (size.is_length()) {
-            VERIFY(!size.is_auto());                // This should have been covered by the Size::is_auto() branch above.
-            VERIFY(!size.length().is_calculated()); // Covered above.
+            VERIFY(!size.is_auto()); // This should have been covered by the Size::is_auto() branch above.
             resolved_definite_size = size.length().to_px(node);
             return true;
         }

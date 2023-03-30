@@ -603,7 +603,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
             auto resolve_border_width = [&]() {
                 auto value = computed_style.property(width_property);
                 if (value->is_calculated())
-                    return CSS::Length::make_calculated(const_cast<CSS::CalculatedStyleValue&>(value->as_calculated())).to_px(*this).value();
+                    return value->as_calculated().resolve_length(*this)->to_px(*this).value();
                 if (value->has_length())
                     return value->to_length().to_px(*this).value();
                 if (value->is_identifier()) {

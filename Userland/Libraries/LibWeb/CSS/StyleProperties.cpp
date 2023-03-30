@@ -203,7 +203,7 @@ CSSPixels StyleProperties::line_height(Layout::Node const& layout_node) const
     }
 
     if (line_height->is_calculated())
-        return CSS::Length::make_calculated(const_cast<CalculatedStyleValue&>(line_height->as_calculated())).to_px(layout_node);
+        return line_height->as_calculated().resolve_length(layout_node)->to_px(layout_node);
 
     return layout_node.font().pixel_metrics().line_spacing();
 }

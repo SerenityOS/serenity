@@ -57,14 +57,13 @@ size_t GridFormattingContext::count_of_gap_rows()
 
 CSSPixels GridFormattingContext::resolve_size(CSS::Size const& size, AvailableSize const& available_size, Box const& box)
 {
-    if (size.is_length() && size.length().is_calculated()) {
-        if (size.length().calculated_style_value()->contains_percentage()) {
+    if (size.is_calculated()) {
+        if (size.calculated().contains_percentage()) {
             if (!available_size.is_definite())
                 return 0;
-            auto& calc_value = *size.length().calculated_style_value();
-            return calc_value.resolve_length_percentage(box, CSS::Length::make_px(available_size.to_px())).value_or(CSS::Length::make_auto()).to_px(box);
+            return size.calculated().resolve_length_percentage(box, CSS::Length::make_px(available_size.to_px())).value_or(CSS::Length::make_auto()).to_px(box);
         }
-        return size.length().to_px(box);
+        return size.calculated().resolve_length(box)->to_px(box);
     }
     if (size.is_length()) {
         return size.length().to_px(box);
