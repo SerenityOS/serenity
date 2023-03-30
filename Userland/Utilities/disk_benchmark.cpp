@@ -68,8 +68,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         block_sizes = { 8192, 32768, 65536 };
     }
 
-    umask(0644);
-
     auto filename = DeprecatedString::formatted("{}/disk_benchmark.tmp", directory);
 
     for (auto file_size : file_sizes) {
