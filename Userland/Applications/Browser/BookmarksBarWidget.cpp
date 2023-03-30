@@ -292,10 +292,15 @@ bool BookmarksBarWidget::remove_bookmark(DeprecatedString const& url)
             auto& json_model = *static_cast<GUI::JsonArrayModel*>(model());
 
             auto const item_removed = json_model.remove(item_index);
-            if (item_removed)
-                json_model.store();
+            if (!item_removed)
+                return false;
 
-            return item_removed;
+            json_model.store();
+
+            if (on_bookmark_change)
+                on_bookmark_change();
+
+            return true;
         }
     }
 
@@ -315,8 +320,8 @@ bool BookmarksBarWidget::add_bookmark(DeprecatedString const& url, DeprecatedStr
     if (!was_bookmark_added)
         return false;
 
-    if (on_bookmark_add)
-        on_bookmark_add(url);
+    if (on_bookmark_change)
+        on_bookmark_change();
 
     if (edit_bookmark(url, PerformEditOn::NewBookmark))
         return true;
@@ -333,9 +338,14 @@ bool BookmarksBarWidget::edit_bookmark(DeprecatedString const& url, PerformEditO
 
         if (item_url == url) {
             auto values = BookmarkEditor::edit_bookmark(window(), item_title, item_url, perform_edit_on);
-            return update_model(values, [item_index](auto& model, auto&& values) {
+            auto was_bookmark_changed = update_model(values, [item_index](auto& model, auto&& values) {
                 return model.set(item_index, move(values));
             });
+
+            if (was_bookmark_changed && on_bookmark_change)
+                on_bookmark_change();
+
+            return was_bookmark_changed;
         }
     }
 

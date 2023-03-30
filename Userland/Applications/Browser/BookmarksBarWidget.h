@@ -34,7 +34,7 @@ public:
 
     Function<void(DeprecatedString const& url, Open)> on_bookmark_click;
     Function<void(DeprecatedString const&, DeprecatedString const&)> on_bookmark_hover;
-    Function<void(DeprecatedString const& url)> on_bookmark_add;
+    Function<void()> on_bookmark_change;
 
     bool contains_bookmark(DeprecatedString const& url);
     bool remove_bookmark(DeprecatedString const& url);
