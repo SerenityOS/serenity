@@ -1,11 +1,11 @@
 /*
- * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2022-2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Frequency.h"
-#include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/Percentage.h>
 
 namespace Web::CSS {
 
@@ -21,13 +21,6 @@ Frequency::Frequency(float value, Type type)
 {
 }
 
-Frequency Frequency::make_calculated(NonnullRefPtr<CalculatedStyleValue> calculated_style_value)
-{
-    Frequency frequency { 0, Type::Calculated };
-    frequency.m_calculated_style = move(calculated_style_value);
-    return frequency;
-}
-
 Frequency Frequency::make_hertz(float value)
 {
     return { value, Type::Hz };
@@ -35,23 +28,17 @@ Frequency Frequency::make_hertz(float value)
 
 Frequency Frequency::percentage_of(Percentage const& percentage) const
 {
-    VERIFY(!is_calculated());
-
     return Frequency { percentage.as_fraction() * m_value, m_type };
 }
 
 ErrorOr<String> Frequency::to_string() const
 {
-    if (is_calculated())
-        return m_calculated_style->to_string();
     return String::formatted("{}{}", m_value, unit_name());
 }
 
 float Frequency::to_hertz() const
 {
     switch (m_type) {
-    case Type::Calculated:
-        return m_calculated_style->resolve_frequency()->to_hertz();
     case Type::Hz:
         return m_value;
     case Type::kHz:
@@ -63,8 +50,6 @@ float Frequency::to_hertz() const
 StringView Frequency::unit_name() const
 {
     switch (m_type) {
-    case Type::Calculated:
-        return "calculated"sv;
     case Type::Hz:
         return "hz"sv;
     case Type::kHz:
@@ -81,12 +66,6 @@ Optional<Frequency::Type> Frequency::unit_from_name(StringView name)
         return Type::kHz;
     }
     return {};
-}
-
-NonnullRefPtr<CalculatedStyleValue> Frequency::calculated_style_value() const
-{
-    VERIFY(!m_calculated_style.is_null());
-    return *m_calculated_style;
 }
 
 }
