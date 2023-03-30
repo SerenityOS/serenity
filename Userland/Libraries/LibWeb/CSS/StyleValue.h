@@ -75,15 +75,6 @@ struct PositionValue {
     bool operator==(PositionValue const&) const = default;
 };
 
-struct EdgeRect {
-    Length top_edge;
-    Length right_edge;
-    Length bottom_edge;
-    Length left_edge;
-    Gfx::FloatRect resolved(Layout::Node const&, Gfx::FloatRect) const;
-    bool operator==(EdgeRect const&) const = default;
-};
-
 // FIXME: Find a better place for this helper.
 inline Gfx::Painter::ScalingMode to_gfx_scaling_mode(CSS::ImageRendering css_value)
 {
@@ -357,7 +348,6 @@ public:
     virtual ValueComparingNonnullRefPtr<StyleValue const> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
 
     virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
-    virtual EdgeRect to_rect() const { VERIFY_NOT_REACHED(); }
     virtual CSS::ValueID to_identifier() const { return ValueID::Invalid; }
     virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual float to_number() const { return 0; }
