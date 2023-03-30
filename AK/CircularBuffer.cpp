@@ -6,6 +6,7 @@
 
 #include <AK/CircularBuffer.h>
 #include <AK/MemMem.h>
+#include <AK/Stream.h>
 
 namespace AK {
 
@@ -187,6 +188,22 @@ ErrorOr<void> CircularBuffer::discard(size_t discarding_size)
     m_reading_head = (m_reading_head + discarding_size) % capacity();
 
     return {};
+}
+
+ErrorOr<size_t> CircularBuffer::fill_from_stream(Stream& stream)
+{
+    auto next_span = next_write_span();
+    if (next_span.size() == 0)
+        return 0;
+
+    auto bytes = TRY(stream.read_some(next_span));
+    m_used_space += bytes.size();
+
+    m_seekback_limit += bytes.size();
+    if (m_seekback_limit > capacity())
+        m_seekback_limit = capacity();
+
+    return bytes.size();
 }
 
 }
