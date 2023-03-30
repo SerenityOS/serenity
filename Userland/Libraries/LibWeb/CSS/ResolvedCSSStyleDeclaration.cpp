@@ -168,6 +168,8 @@ static NonnullRefPtr<StyleValue const> style_value_for_size(CSS::Size const& siz
         return LengthStyleValue::create(size.length());
     if (size.is_auto())
         return IdentifierStyleValue::create(ValueID::Auto);
+    if (size.is_calculated())
+        return size.calculated();
     if (size.is_min_content())
         return IdentifierStyleValue::create(ValueID::MinContent);
     if (size.is_max_content())
