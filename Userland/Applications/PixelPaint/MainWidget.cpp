@@ -202,12 +202,16 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project_as();
+        auto path_string = String::from_deprecated_string(editor->path()).release_value_but_fixme_should_propagate_errors();
+        GUI::Application::the()->set_most_recently_open_file(path_string);
     });
 
     m_save_image_action = GUI::CommonActions::make_save_action([&](auto&) {
         auto* editor = current_image_editor();
         VERIFY(editor);
         editor->save_project();
+        auto path_string = String::from_deprecated_string(editor->path()).release_value_but_fixme_should_propagate_errors();
+        GUI::Application::the()->set_most_recently_open_file(path_string);
     });
 
     TRY(file_menu->try_add_action(*m_new_image_action));
