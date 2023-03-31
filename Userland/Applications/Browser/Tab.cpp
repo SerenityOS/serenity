@@ -202,6 +202,7 @@ Tab::Tab(BrowserWindow& window)
         this);
 
     m_reset_zoom_button = toolbar.add<GUI::Button>();
+    m_reset_zoom_button->set_tooltip("Reset zoom level");
     m_reset_zoom_button->on_click = [&](auto) {
         view().reset_zoom();
         update_reset_zoom_button();
