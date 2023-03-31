@@ -64,6 +64,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_toolbar->addAction(m_reload_action);
     m_toolbar->addAction(m_home_action);
     m_toolbar->addWidget(m_location_edit);
+    m_reset_zoom_button->setToolTip("Reset zoom level");
     m_reset_zoom_button_action = m_toolbar->addWidget(m_reset_zoom_button);
     m_reset_zoom_button_action->setVisible(false);
 
