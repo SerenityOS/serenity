@@ -52,6 +52,8 @@ public:
     virtual void close() override {};
 
     static ErrorOr<ByteBuffer> decompress_all(ReadonlyBytes);
+    static ErrorOr<void> decompress_file(StringView input_file, NonnullOwnPtr<Stream> output_stream);
+
     static Optional<DeprecatedString> describe_header(ReadonlyBytes);
     static bool is_likely_compressed(ReadonlyBytes bytes);
 
