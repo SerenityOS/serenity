@@ -5,7 +5,7 @@ grep
 ## Synopsis
 
 ```sh
-$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
+$ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [--file File] [-i] [--line-numbers] [--invert-match] [--quiet] [--no-messages] [--binary-mode ] [--text] [-I] [--color WHEN] [--count] [file...]
 ```
 
 ## Options
@@ -14,6 +14,7 @@ $ grep [--recursive] [--extended-regexp] [--fixed-strings] [--regexp Pattern] [-
 * `-E`, `--extended-regexp`: Extended regular expressions
 * `-F`, `--fixed-strings`: Treat pattern as a string, not a regexp
 * `-e Pattern`, `--regexp Pattern`: Pattern
+* `-f File`, `--file File`: Read patterns from a file
 * `-i`: Make matches case-insensitive
 * `-n`, `--line-numbers`: Output line-numbers
 * `-v`, `--invert-match`: Select non-matching lines
