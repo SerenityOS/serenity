@@ -710,11 +710,6 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartW
     return value->resolve(layout_node, percentage_basis);
 }
 
-ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels, CSSPixels, CSSPixels) const
-{
-    return *this;
-}
-
 bool CalculatedStyleValue::contains_percentage() const
 {
     return m_expression->contains_percentage();
