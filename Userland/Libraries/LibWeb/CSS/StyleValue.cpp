@@ -331,4 +331,9 @@ StyleValueList const& StyleValue::as_value_list() const
     return static_cast<StyleValueList const&>(*this);
 }
 
+ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels, CSSPixels, CSSPixels) const
+{
+    return *this;
+}
+
 }
