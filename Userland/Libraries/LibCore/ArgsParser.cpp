@@ -326,7 +326,7 @@ void ArgsParser::print_usage_markdown(FILE* file, StringView argv0)
     }
 
     if (options_to_display > 0)
-        outln(file, "\n## Options:\n");
+        outln(file, "\n## Options\n");
     for (auto& opt : m_options) {
         if (!should_display_option(opt))
             continue;
@@ -359,7 +359,7 @@ void ArgsParser::print_usage_markdown(FILE* file, StringView argv0)
     }
 
     if (!m_positional_args.is_empty())
-        outln(file, "\n## Arguments:\n");
+        outln(file, "\n## Arguments\n");
 
     for (auto& arg : m_positional_args) {
         out(file, "* `{}`", arg.name);
