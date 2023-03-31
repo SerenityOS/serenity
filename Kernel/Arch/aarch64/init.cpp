@@ -47,7 +47,6 @@ READONLY_AFTER_INIT bool g_in_early_boot;
 
 namespace Kernel {
 
-static void draw_logo(u8* framebuffer_data);
 static u32 query_firmware_version();
 
 extern "C" [[noreturn]] void halt();
@@ -148,10 +147,12 @@ extern "C" [[noreturn]] void init()
     for (ctor_func_t* ctor = start_ctors; ctor < end_ctors; ctor++)
         (*ctor)();
 
+    RPi::Framebuffer::initialize();
+
     auto& framebuffer = RPi::Framebuffer::the();
     if (framebuffer.initialized()) {
         g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(PhysicalAddress((PhysicalPtr)framebuffer.gpu_buffer()), framebuffer.width(), framebuffer.height(), framebuffer.pitch()).value().leak_ref();
-        draw_logo(static_cast<Graphics::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
+        framebuffer.draw_logo(static_cast<Graphics::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
     }
 
     initialize_interrupts();
@@ -202,60 +203,6 @@ static u32 query_firmware_version()
     }
 
     return message_queue.query_firmware_version.version;
-}
-
-extern "C" const u32 serenity_boot_logo_start;
-extern "C" const u32 serenity_boot_logo_size;
-
-static void draw_logo(u8* framebuffer_data)
-{
-    BootPPMParser logo_parser(reinterpret_cast<u8 const*>(&serenity_boot_logo_start), serenity_boot_logo_size);
-    if (!logo_parser.parse()) {
-        dbgln("Failed to parse boot logo.");
-        return;
-    }
-
-    dbgln("Boot logo size: {} ({} x {})", serenity_boot_logo_size, logo_parser.image.width, logo_parser.image.height);
-
-    auto& framebuffer = RPi::Framebuffer::the();
-    auto fb_ptr = framebuffer_data;
-    auto image_left = (framebuffer.width() - logo_parser.image.width) / 2;
-    auto image_right = image_left + logo_parser.image.width;
-    auto image_top = (framebuffer.height() - logo_parser.image.height) / 2;
-    auto image_bottom = image_top + logo_parser.image.height;
-    auto logo_pixels = logo_parser.image.pixel_data;
-
-    for (u32 y = 0; y < framebuffer.height(); y++) {
-        for (u32 x = 0; x < framebuffer.width(); x++) {
-            if (x >= image_left && x < image_right && y >= image_top && y < image_bottom) {
-                switch (framebuffer.pixel_order()) {
-                case RPi::Framebuffer::PixelOrder::RGB:
-                    fb_ptr[0] = logo_pixels[0];
-                    fb_ptr[1] = logo_pixels[1];
-                    fb_ptr[2] = logo_pixels[2];
-                    break;
-                case RPi::Framebuffer::PixelOrder::BGR:
-                    fb_ptr[0] = logo_pixels[2];
-                    fb_ptr[1] = logo_pixels[1];
-                    fb_ptr[2] = logo_pixels[0];
-                    break;
-                default:
-                    dbgln("Unsupported pixel format");
-                    VERIFY_NOT_REACHED();
-                }
-
-                logo_pixels += 3;
-            } else {
-                fb_ptr[0] = 0xBD;
-                fb_ptr[1] = 0xBD;
-                fb_ptr[2] = 0xBD;
-            }
-
-            fb_ptr[3] = 0xFF;
-            fb_ptr += 4;
-        }
-        fb_ptr += framebuffer.pitch() - framebuffer.width() * 4;
-    }
 }
 
 }
