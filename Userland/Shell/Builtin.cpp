@@ -1314,6 +1314,10 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
     Vector<StringView> descriptors;
     Variant<Core::ArgsParser::Option, Core::ArgsParser::Arg, Empty> current;
+    DeprecatedString help_string_storage;
+    DeprecatedString long_name_storage;
+    DeprecatedString value_name_storage;
+    DeprecatedString name_storage;
     DeprecatedString current_variable;
     // if max > 1 or min < 1, or explicit `--list`.
     bool treat_arg_as_list = false;
@@ -1521,6 +1525,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
             return true;
         },
     });
+
     parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Set the help string of the option or argument being defined",
@@ -1533,8 +1538,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                     return false;
                 },
                 [&](auto& option) {
-                    VERIFY(value.length() == strlen(value.characters_without_null_termination()));
-                    option.help_string = value.characters_without_null_termination();
+                    help_string_storage = value;
+                    option.help_string = help_string_storage.characters();
                     return true;
                 });
         },
@@ -1554,8 +1559,9 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                 warnln("Repeated application of --long-name is not allowed, current option has long name set to \"{}\"", option->long_name);
                 return false;
             }
-            VERIFY(value.length() == strlen(value.characters_without_null_termination()));
-            option->long_name = value.characters_without_null_termination();
+
+            long_name_storage = value;
+            option->long_name = long_name_storage.characters();
             return true;
         },
     });
@@ -1603,8 +1609,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         return false;
                     }
 
-                    VERIFY(value.length() == strlen(value.characters_without_null_termination()));
-                    option.value_name = value.characters_without_null_termination();
+                    value_name_storage = value;
+                    option.value_name = value_name_storage.characters();
                     return true;
                 },
                 [&](Core::ArgsParser::Arg& arg) {
@@ -1613,8 +1619,8 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
                         return false;
                     }
 
-                    VERIFY(value.length() == strlen(value.characters_without_null_termination()));
-                    arg.name = value.characters_without_null_termination();
+                    name_storage = value;
+                    arg.name = name_storage.characters();
                     return true;
                 });
         },
