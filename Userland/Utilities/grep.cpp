@@ -62,6 +62,7 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     bool use_ere = (program_name == "egrep"sv);
     bool fixed_strings = (program_name == "fgrep"sv);
     Vector<DeprecatedString> patterns;
+    StringView pattern_file;
     BinaryFileMode binary_mode { BinaryFileMode::Binary };
     bool case_insensitive = false;
     bool line_numbers = false;
@@ -85,6 +86,17 @@ ErrorOr<int> serenity_main(Main::Arguments args)
         .value_name = "Pattern",
         .accept_value = [&](StringView str) {
             patterns.append(str);
+            return true;
+        },
+    });
+    args_parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Read patterns from a file",
+        .long_name = "file",
+        .short_name = 'f',
+        .value_name = "File",
+        .accept_value = [&](StringView str) {
+            pattern_file = str;
             return true;
         },
     });
@@ -148,6 +160,20 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     args_parser.add_option(count_lines, "Output line count instead of line contents", "count", 'c');
     args_parser.add_positional_argument(files, "File(s) to process", "file", Core::ArgsParser::Required::No);
     args_parser.parse(args);
+
+    if (!pattern_file.is_empty()) {
+        auto file = TRY(Core::File::open(pattern_file, Core::File::OpenMode::Read));
+        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+        Array<u8, PAGE_SIZE> buffer;
+        while (!buffered_file->is_eof()) {
+            auto next_pattern = TRY(buffered_file->read_line(buffer));
+            // Empty lines represent a valid pattern, but the trailing newline
+            // should be ignored.
+            if (next_pattern.is_empty() && buffered_file->is_eof())
+                break;
+            patterns.append(next_pattern.to_deprecated_string());
+        }
+    }
 
     // mock grep behavior: if -e is omitted, use first positional argument as pattern
     if (patterns.size() == 0 && files.size())
