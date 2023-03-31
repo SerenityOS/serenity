@@ -327,13 +327,8 @@ private:
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<ComponentValue>&);
     OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(TokenStream<ComponentValue>&);
     Optional<CalculatedStyleValue::CalcValue> parse_calc_value(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberSum> parse_calc_number_sum(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberProduct> parse_calc_number_product(TokenStream<ComponentValue>&);
-    Optional<CalculatedStyleValue::CalcNumberValue> parse_calc_number_value(TokenStream<ComponentValue>&);
     OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(TokenStream<ComponentValue>&);
     OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> parse_calc_number_product_part_with_operator(TokenStream<ComponentValue>& tokens);
-    OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> parse_calc_number_sum_part_with_operator(TokenStream<ComponentValue>&);
     OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<ComponentValue> const&);
 
     ParseErrorOr<NonnullRefPtr<Selector>> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);

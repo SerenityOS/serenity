@@ -64,17 +64,6 @@ public:
     struct CalcSumPartWithOperator;
     struct CalcProduct;
     struct CalcProductPartWithOperator;
-    struct CalcNumberSum;
-    struct CalcNumberSumPartWithOperator;
-    struct CalcNumberProduct;
-    struct CalcNumberProductPartWithOperator;
-
-    struct CalcNumberValue {
-        Variant<Number, NonnullOwnPtr<CalcNumberSum>> value;
-        ErrorOr<String> to_string() const;
-        Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
-    };
 
     struct CalcValue {
         Variant<Number, Angle, Frequency, Length, Percentage, Time, NonnullOwnPtr<CalcSum>> value;
@@ -98,19 +87,6 @@ public:
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
 
         bool contains_percentage() const;
-    };
-
-    struct CalcNumberSum {
-        CalcNumberSum(NonnullOwnPtr<CalcNumberProduct> first_calc_number_product, Vector<NonnullOwnPtr<CalcNumberSumPartWithOperator>> additional)
-            : first_calc_number_product(move(first_calc_number_product))
-            , zero_or_more_additional_calc_number_products(move(additional)) {};
-
-        NonnullOwnPtr<CalcNumberProduct> first_calc_number_product;
-        Vector<NonnullOwnPtr<CalcNumberSumPartWithOperator>> zero_or_more_additional_calc_number_products;
-
-        ErrorOr<String> to_string() const;
-        Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     struct CalcProduct {
@@ -139,44 +115,13 @@ public:
 
     struct CalcProductPartWithOperator {
         ProductOperation op;
-        Variant<CalcValue, CalcNumberValue> value;
+        CalcValue value;
 
         ErrorOr<String> to_string() const;
         Optional<ResolvedType> resolved_type() const;
         CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
 
         bool contains_percentage() const;
-    };
-
-    struct CalcNumberProduct {
-        CalcNumberValue first_calc_number_value;
-        Vector<NonnullOwnPtr<CalcNumberProductPartWithOperator>> zero_or_more_additional_calc_number_values;
-
-        ErrorOr<String> to_string() const;
-        Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
-    };
-
-    struct CalcNumberProductPartWithOperator {
-        ProductOperation op;
-        CalcNumberValue value;
-
-        ErrorOr<String> to_string() const;
-        Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
-    };
-
-    struct CalcNumberSumPartWithOperator {
-        CalcNumberSumPartWithOperator(SumOperation op, NonnullOwnPtr<CalcNumberProduct> calc_number_product)
-            : op(op)
-            , value(move(calc_number_product)) {};
-
-        SumOperation op;
-        NonnullOwnPtr<CalcNumberProduct> value;
-
-        ErrorOr<String> to_string() const;
-        Optional<ResolvedType> resolved_type() const;
-        CalculationResult resolve(Layout::Node const*, PercentageBasis const& percentage_basis) const;
     };
 
     static ValueComparingNonnullRefPtr<CalculatedStyleValue> create(NonnullOwnPtr<CalcSum> calc_sum, ResolvedType resolved_type)
