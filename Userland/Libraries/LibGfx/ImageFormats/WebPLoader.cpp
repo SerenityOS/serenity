@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
+#include <AK/MemoryStream.h>
 #include <AK/Vector.h>
 #include <LibGfx/ImageFormats/WebPLoader.h>
 
@@ -271,16 +273,19 @@ static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(WebPLoadingContext& con
     if (vp8l_chunk.data.size() < 5)
         return context.error("WebPImageDecoderPlugin: VP8L chunk too small");
 
-    u8 const* data = vp8l_chunk.data.data();
-    u8 signature = data[0];
+    FixedMemoryStream memory_stream { vp8l_chunk.data.trim(5) };
+    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+
+    u8 signature = TRY(bit_stream.read_bits(8));
     if (signature != 0x2f)
         return context.error("WebPImageDecoderPlugin: VP8L chunk invalid signature");
 
     // 14 bits width-1, 14 bits height-1, 1 bit alpha hint, 3 bit version_number.
-    u16 width = (data[1] | ((data[2] & 0x3f) << 8)) + 1;
-    u16 height = ((data[2] >> 6) | (data[3] << 2) | ((data[4] & 0xf) << 12)) + 1;
-    bool is_alpha_used = (data[4] & 0x10) != 0;
-    u8 version_number = (data[4] & 0xe0) >> 5;
+    u16 width = TRY(bit_stream.read_bits(14)) + 1;
+    u16 height = TRY(bit_stream.read_bits(14)) + 1;
+    bool is_alpha_used = TRY(bit_stream.read_bits(1)) != 0;
+    u8 version_number = TRY(bit_stream.read_bits(3));
+    VERIFY(bit_stream.is_eof());
 
     dbgln_if(WEBP_DEBUG, "width {}, height {}, is_alpha_used {}, version_number {}",
         width, height, is_alpha_used, version_number);
