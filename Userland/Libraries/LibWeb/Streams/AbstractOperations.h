@@ -51,6 +51,11 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source_value, UnderlyingSource, double high_water_mark, SizeAlgorithm&&);
 
 bool is_writable_stream_locked(WritableStream const&);
+WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDefaultWriter&, WritableStream&);
+
+bool writable_stream_close_queued_or_in_flight(WritableStream const&);
+
+Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
 
 JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key);
 

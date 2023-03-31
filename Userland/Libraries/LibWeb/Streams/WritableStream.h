@@ -72,8 +72,8 @@ public:
     JS::Value stored_error() const { return m_stored_error; }
     void set_stored_error(JS::Value value) { m_stored_error = value; }
 
-    JS::GCPtr<JS::Object const> writer() const { return m_writer; }
-    void set_writer(JS::GCPtr<JS::Object> value) { m_writer = value; }
+    JS::GCPtr<WritableStreamDefaultWriter const> writer() const { return m_writer; }
+    void set_writer(JS::GCPtr<WritableStreamDefaultWriter> value) { m_writer = value; }
 
     SinglyLinkedList<JS::NonnullGCPtr<WebIDL::Promise>>& write_requests() { return m_write_requests; }
 
@@ -122,7 +122,7 @@ private:
 
     // https://streams.spec.whatwg.org/#writablestream-writer
     // A WritableStreamDefaultWriter instance, if the stream is locked to a writer, or undefined if it is not
-    JS::GCPtr<JS::Object> m_writer;
+    JS::GCPtr<WritableStreamDefaultWriter> m_writer;
 
     // https://streams.spec.whatwg.org/#writablestream-writerequests
     // A list of promises representing the stream’s internal queue of write requests not yet processed by the underlying sink

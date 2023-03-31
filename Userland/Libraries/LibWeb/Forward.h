@@ -429,6 +429,7 @@ class ReadRequest;
 struct UnderlyingSink;
 struct UnderlyingSource;
 class WritableStream;
+class WritableStreamDefaultWriter;
 }
 
 namespace Web::SVG {

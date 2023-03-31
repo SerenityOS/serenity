@@ -16,6 +16,7 @@
 #include <LibWeb/Streams/UnderlyingSink.h>
 #include <LibWeb/Streams/UnderlyingSource.h>
 #include <LibWeb/Streams/WritableStream.h>
+#include <LibWeb/Streams/WritableStreamDefaultWriter.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
@@ -745,6 +746,113 @@ bool is_writable_stream_locked(WritableStream const& stream)
 
     // 2. Return true.
     return true;
+}
+
+// https://streams.spec.whatwg.org/#set-up-writable-stream-default-writer
+WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDefaultWriter& writer, WritableStream& stream)
+{
+    auto& realm = writer.realm();
+
+    // 1. If ! IsWritableStreamLocked(stream) is true, throw a TypeError exception.
+    if (is_writable_stream_locked(stream))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Stream is locked"sv };
+
+    // 2. Set writer.[[stream]] to stream.
+    writer.set_stream(stream);
+
+    // 3. Set stream.[[writer]] to writer.
+    stream.set_writer(writer);
+
+    // 4. Let state be stream.[[state]].
+    auto state = stream.state();
+
+    // 5. If state is "writable",
+    if (state == WritableStream::State::Writable) {
+        // 1. If ! WritableStreamCloseQueuedOrInFlight(stream) is false and stream.[[backpressure]] is true, set writer.[[readyPromise]] to a new promise.
+        if (!writable_stream_close_queued_or_in_flight(stream) && stream.backpressure()) {
+            writer.set_ready_promise(WebIDL::create_promise(realm));
+        }
+        // 2. Otherwise, set writer.[[readyPromise]] to a promise resolved with undefined.
+        else {
+            writer.set_ready_promise(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
+        }
+
+        // 3. Set writer.[[closedPromise]] to a new promise.
+        writer.set_closed_promise(WebIDL::create_promise(realm));
+    }
+    // 6. Otherwise, if state is "erroring",
+    else if (state == WritableStream::State::Erroring) {
+        // 1. Set writer.[[readyPromise]] to a promise rejected with stream.[[storedError]].
+        writer.set_ready_promise(WebIDL::create_rejected_promise(realm, stream.stored_error()));
+
+        // 2. Set writer.[[readyPromise]].[[PromiseIsHandled]] to true.
+        WebIDL::mark_promise_as_handled(*writer.ready_promise());
+
+        // 3. Set writer.[[closedPromise]] to a new promise.
+        writer.set_closed_promise(WebIDL::create_promise(realm));
+    }
+    // 7. Otherwise, if state is "closed",
+    else if (state == WritableStream::State::Closed) {
+        // 1. Set writer.[[readyPromise]] to a promise resolved with undefined.
+        writer.set_ready_promise(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
+
+        // 2. Set writer.[[closedPromise]] to a promise resolved with undefined.
+        writer.set_closed_promise(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
+    }
+    // 8. Otherwise,
+    else {
+        // 1. Assert: state is "errored".
+        VERIFY(state == WritableStream::State::Errored);
+
+        // 2. Let storedError be stream.[[storedError]].
+        auto stored_error = stream.stored_error();
+
+        // 3. Set writer.[[readyPromise]] to a promise rejected with storedError.
+        writer.set_ready_promise(WebIDL::create_rejected_promise(realm, stored_error));
+
+        // 4. Set writer.[[readyPromise]].[[PromiseIsHandled]] to true.
+        WebIDL::mark_promise_as_handled(*writer.ready_promise());
+
+        // 5. Set writer.[[closedPromise]] to a promise rejected with storedError.
+        writer.set_closed_promise(WebIDL::create_rejected_promise(realm, stored_error));
+
+        // 6. Set writer.[[closedPromise]].[[PromiseIsHandled]] to true.
+        WebIDL::mark_promise_as_handled(*writer.closed_promise());
+    }
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-close-queued-or-in-flight
+bool writable_stream_close_queued_or_in_flight(WritableStream const& stream)
+{
+    // 1. If stream.[[closeRequest]] is undefined and stream.[[inFlightCloseRequest]] is undefined, return false.
+    if (!stream.close_request() && !stream.in_flight_write_request())
+        return false;
+
+    // 2. Return true.
+    return true;
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-get-desired-size
+Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const& writer)
+{
+    // 1. Let stream be writer.[[stream]].
+    auto stream = writer.stream();
+
+    // 2. Let state be stream.[[state]].
+    auto state = stream->state();
+
+    // 3. If state is "errored" or "erroring", return null.
+    if (state == WritableStream::State::Errored || state == WritableStream::State::Erroring)
+        return {};
+
+    // 4. If state is "closed", return 0.
+    if (state == WritableStream::State::Closed)
+        return 0.0;
+
+    // FIXME: 5. Return ! WritableStreamDefaultControllerGetDesiredSize(stream.[[controller]]).
+    return 0.0;
 }
 
 // Non-standard function to aid in converting a user-provided function into a WebIDL::Callback. This is essentially

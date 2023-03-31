@@ -57,6 +57,7 @@ static bool is_platform_object(Type const& type)
         "URLSearchParams"sv,
         "WebGLRenderingContext"sv,
         "Window"sv,
+        "WritableStream"sv,
     };
     if (type.name().ends_with("Element"sv))
         return true;

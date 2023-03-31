@@ -465,6 +465,7 @@ set(SOURCES
     Streams/UnderlyingSink.cpp
     Streams/UnderlyingSource.cpp
     Streams/WritableStream.cpp
+    Streams/WritableStreamDefaultWriter.cpp
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
