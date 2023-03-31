@@ -27,12 +27,19 @@ ArgsParser::ArgsParser()
 
 bool ArgsParser::parse(Span<StringView> arguments, FailureBehavior failure_behavior)
 {
-    auto fail = [this, name = arguments[0], failure_behavior] {
+    auto fail_impl = [this, failure_behavior](StringView name) {
         if (failure_behavior == FailureBehavior::PrintUsage || failure_behavior == FailureBehavior::PrintUsageAndExit)
             print_usage(stderr, name);
         if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
             exit(1);
     };
+
+    if (arguments.is_empty()) {
+        fail_impl("<exe>"sv);
+        return false;
+    }
+
+    auto fail = [name = arguments[0], &fail_impl] { fail_impl(name); };
 
     OptionParser parser;
 
