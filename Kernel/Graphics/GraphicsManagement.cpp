@@ -223,6 +223,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         return true;
     }
 
+#if ARCH(X86_64)
     if (PCI::Access::is_disabled()) {
         dmesgln("Graphics: Using an assumed-to-exist ISA VGA compatible generic adapter");
         return true;
@@ -237,6 +238,7 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         if (auto result = determine_and_initialize_graphics_device(device_identifier); result.is_error())
             dbgln("Failed to initialize device {}, due to {}", device_identifier.address(), result.error());
     }));
+#endif
 
     // Note: If we failed to find any graphics device to be used natively, but the
     // bootloader prepared a framebuffer for us to use, then just create a DisplayConnector
