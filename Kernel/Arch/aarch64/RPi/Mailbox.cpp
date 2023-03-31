@@ -104,4 +104,30 @@ bool Mailbox::send_queue(void* queue, u32 queue_size) const
     return true;
 }
 
+class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
+public:
+    u32 version;
+
+    QueryFirmwareVersionMboxMessage()
+        : RPi::Mailbox::Message(0x0000'0001, 4)
+    {
+        version = 0;
+    }
+};
+
+u32 Mailbox::query_firmware_version()
+{
+    struct __attribute__((aligned(16))) {
+        MessageHeader header;
+        QueryFirmwareVersionMboxMessage query_firmware_version;
+        MessageTail tail;
+    } message_queue;
+
+    if (!the().send_queue(&message_queue, sizeof(message_queue))) {
+        return 0xffff'ffff;
+    }
+
+    return message_queue.query_firmware_version.version;
+}
+
 }

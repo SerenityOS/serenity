@@ -47,8 +47,6 @@ READONLY_AFTER_INIT bool g_in_early_boot;
 
 namespace Kernel {
 
-static u32 query_firmware_version();
-
 extern "C" [[noreturn]] void halt();
 extern "C" [[noreturn]] void init();
 
@@ -68,8 +66,8 @@ void init_stage2(void*)
 {
     Process::register_new(Process::current());
 
-    auto firmware_version = query_firmware_version();
-    dmesgln("Firmware version: {}", firmware_version);
+    auto firmware_version = RPi::Mailbox::the().query_firmware_version();
+    dmesgln("RPi: Firmware version: {}", firmware_version);
 
     VirtualFileSystem::initialize();
 
@@ -177,32 +175,6 @@ extern "C" [[noreturn]] void init()
     Scheduler::start();
 
     VERIFY_NOT_REACHED();
-}
-
-class QueryFirmwareVersionMboxMessage : RPi::Mailbox::Message {
-public:
-    u32 version;
-
-    QueryFirmwareVersionMboxMessage()
-        : RPi::Mailbox::Message(0x0000'0001, 4)
-    {
-        version = 0;
-    }
-};
-
-static u32 query_firmware_version()
-{
-    struct __attribute__((aligned(16))) {
-        RPi::Mailbox::MessageHeader header;
-        QueryFirmwareVersionMboxMessage query_firmware_version;
-        RPi::Mailbox::MessageTail tail;
-    } message_queue;
-
-    if (!RPi::Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
-        return 0xffff'ffff;
-    }
-
-    return message_queue.query_firmware_version.version;
 }
 
 }

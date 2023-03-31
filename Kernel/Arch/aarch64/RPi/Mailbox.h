@@ -49,6 +49,8 @@ public:
 
     // Sends message queue to VideoCore
     bool send_queue(void* queue, u32 queue_size) const;
+
+    u32 query_firmware_version();
 };
 
 }
