@@ -362,8 +362,9 @@ void DeflateDecompressor::close()
 
 ErrorOr<ByteBuffer> DeflateDecompressor::decompress_all(ReadonlyBytes bytes)
 {
-    auto memory_stream = TRY(try_make<FixedMemoryStream>(bytes));
-    auto deflate_stream = TRY(DeflateDecompressor::construct(make<LittleEndianInputBitStream>(move(memory_stream))));
+    FixedMemoryStream memory_stream { bytes };
+    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+    auto deflate_stream = TRY(DeflateDecompressor::construct(MaybeOwned<LittleEndianInputBitStream>(bit_stream)));
     AllocatingMemoryStream output_stream;
 
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
