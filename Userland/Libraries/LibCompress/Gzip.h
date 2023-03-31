@@ -93,6 +93,7 @@ public:
     virtual void close() override;
 
     static ErrorOr<ByteBuffer> compress_all(ReadonlyBytes bytes);
+    static ErrorOr<void> compress_file(StringView input_file, NonnullOwnPtr<Stream> output_stream);
 
 private:
     MaybeOwned<Stream> m_output_stream;
