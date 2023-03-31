@@ -12,6 +12,8 @@
 #include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
+#include <LibCore/MappedFile.h>
+#include <LibCore/System.h>
 
 namespace Compress {
 
@@ -260,6 +262,24 @@ ErrorOr<ByteBuffer> GzipCompressor::compress_all(ReadonlyBytes bytes)
     auto buffer = TRY(ByteBuffer::create_uninitialized(output_stream->used_buffer_size()));
     TRY(output_stream->read_until_filled(buffer.bytes()));
     return buffer;
+}
+
+ErrorOr<void> GzipCompressor::compress_file(StringView input_filename, NonnullOwnPtr<Stream> output_stream)
+{
+    // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
+    // TODO: automatically fallback to buffered streaming for very large files
+    RefPtr<Core::MappedFile> file;
+    ReadonlyBytes input_bytes;
+
+    if (TRY(Core::System::stat(input_filename)).st_size > 0) {
+        file = TRY(Core::MappedFile::map(input_filename));
+        input_bytes = file->bytes();
+    }
+
+    auto output_bytes = TRY(Compress::GzipCompressor::compress_all(input_bytes));
+    TRY(output_stream->write_until_depleted(output_bytes));
+
+    return {};
 }
 
 }
