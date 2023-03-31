@@ -6,14 +6,11 @@
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
-#include <AK/Error.h>
 #include <AK/FixedArray.h>
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
-#include <AK/Try.h>
-#include <AK/Vector.h>
 #include <LibGfx/ImageFormats/JPEGLoader.h>
 
 #define JPEG_INVALID 0X0000
@@ -186,12 +183,6 @@ struct HuffmanTableSpec {
     Vector<u16> codes;
 };
 
-struct HuffmanStreamState {
-    Vector<u8> stream;
-    u8 bit_offset { 0 };
-    size_t byte_offset { 0 };
-};
-
 struct ICCMultiChunkState {
     u8 seen_number_of_icc_chunks { 0 };
     FixedArray<ByteBuffer> chunks;
@@ -205,8 +196,6 @@ struct Scan {
     u8 spectral_selection_end {};        // Se
     u8 successive_approximation_high {}; // Ah
     u8 successive_approximation_low {};  // Al
-
-    HuffmanStreamState huffman_stream;
 
     u64 end_of_bands_run_count { 0 };
 
@@ -225,7 +214,83 @@ enum class ColorTransform {
     YCCK = 2,
 };
 
+class JPEGStream : public Stream {
+    // This class aims to act like BigEndianInputStream but is specialized
+    // to remove byte-stuffing when reading the stream using bit operations.
+public:
+    JPEGStream(NonnullOwnPtr<Stream> stream)
+        : m_stream(move(stream))
+    {
+    }
+
+    // ^Stream
+    virtual ErrorOr<Bytes> read_some(Bytes bytes) override
+    {
+        // fill_buffer will re-align on byte-boundary.
+        TRY(fill_buffer());
+        bytes[0] = m_current_byte.release_value();
+        auto bytes_from_stream = TRY(m_stream->read_some(bytes.slice(1)));
+        return Bytes { bytes.data(), bytes_from_stream.size() + 1 };
+    }
+    virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override { return m_stream->write_some(bytes); }
+    virtual bool is_eof() const override { return m_stream->is_eof() && !m_current_byte.has_value(); }
+    virtual bool is_open() const override { return m_stream->is_open(); }
+    virtual void close() override
+    {
+        m_stream->close();
+    }
+
+    ErrorOr<bool> read_bit()
+    {
+        return read_bits(1);
+    }
+
+    ErrorOr<u16> read_bits(u8 count)
+    {
+        if (count > 11)
+            return Error::from_string_literal("Unexpected count requested");
+
+        u16 result = 0;
+
+        u16 nread = 0;
+        while (nread < count) {
+            if (m_current_byte.has_value() && m_bit_offset < 8) {
+                auto const bit = (m_current_byte.value() >> (7 - m_bit_offset)) & 1;
+                result <<= 1;
+                result |= bit;
+                ++nread;
+                m_bit_offset++;
+            } else {
+                TRY(fill_buffer());
+            }
+        }
+
+        return result;
+    }
+
+private:
+    ErrorOr<void> fill_buffer()
+    {
+        auto const last_byte = m_current_byte.value_or(0);
+        m_current_byte = TRY(m_stream->read_value<u8>());
+        if (last_byte == 0xFF && m_current_byte == 0x00)
+            m_current_byte = TRY(m_stream->read_value<u8>());
+
+        m_bit_offset = 0;
+        return {};
+    }
+
+    Optional<u8> m_current_byte;
+    size_t m_bit_offset { 0 };
+    NonnullOwnPtr<Stream> m_stream;
+};
+
 struct JPEGLoadingContext {
+    JPEGLoadingContext(NonnullOwnPtr<Stream> input)
+        : stream(move(input))
+    {
+    }
+
     enum State {
         NotDecoded = 0,
         Error,
@@ -251,7 +316,8 @@ struct JPEGLoadingContext {
     HashMap<u8, HuffmanTableSpec> ac_tables;
     Array<i32, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
-    OwnPtr<FixedMemoryStream> stream;
+
+    JPEGStream stream;
 
     Optional<ColorTransform> color_transform {};
 
@@ -269,36 +335,12 @@ static void generate_huffman_codes(HuffmanTableSpec& table)
     }
 }
 
-static ErrorOr<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
-{
-    if (count > (8 * sizeof(size_t))) {
-        dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
-        return Error::from_string_literal("Reading too much huffman bits at once");
-    }
-    size_t value = 0;
-    while (count--) {
-        if (hstream.byte_offset >= hstream.stream.size()) {
-            dbgln_if(JPEG_DEBUG, "Huffman stream exhausted. This could be an error!");
-            return Error::from_string_literal("Huffman stream exhausted.");
-        }
-        u8 current_byte = hstream.stream[hstream.byte_offset];
-        u8 current_bit = 1u & (u32)(current_byte >> (7 - hstream.bit_offset)); // MSB first.
-        hstream.bit_offset++;
-        value = (value << 1) | (size_t)current_bit;
-        if (hstream.bit_offset == 8) {
-            hstream.byte_offset++;
-            hstream.bit_offset = 0;
-        }
-    }
-    return value;
-}
-
-static ErrorOr<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec const& table)
+static ErrorOr<u8> get_next_symbol(JPEGStream& stream, HuffmanTableSpec const& table)
 {
     unsigned code = 0;
     size_t code_cursor = 0;
     for (int i = 0; i < 16; i++) { // Codes can't be longer than 16 bits.
-        auto result = TRY(read_huffman_bits(hstream));
+        auto const result = TRY(stream.read_bit());
         code = (code << 1) | (i32)result;
         for (int j = 0; j < table.code_counts[i]; j++) {
             if (code == table.codes[code_cursor])
@@ -327,13 +369,13 @@ static inline i32* get_component(Macroblock& block, unsigned component)
     }
 }
 
-static ErrorOr<void> refine_coefficient(Scan& scan, i32& coefficient)
+static ErrorOr<void> refine_coefficient(JPEGLoadingContext& context, i32& coefficient)
 {
     // G.1.2.3 - Coding model for subsequent scans of successive approximation
     // See the correction bit from rule b.
-    u8 const bit = TRY(read_huffman_bits(scan.huffman_stream, 1));
+    u8 const bit = TRY(context.stream.read_bit());
     if (bit == 1)
-        coefficient |= 1 << scan.successive_approximation_low;
+        coefficient |= 1 << context.current_scan.successive_approximation_low;
 
     return {};
 }
@@ -347,25 +389,24 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     }
 
     auto& dc_table = maybe_table.value();
-    auto& scan = context.current_scan;
 
     auto* select_component = get_component(macroblock, scan_component.component.index);
     auto& coefficient = select_component[0];
 
     if (context.current_scan.successive_approximation_high > 0) {
-        TRY(refine_coefficient(scan, coefficient));
+        TRY(refine_coefficient(context, coefficient));
         return {};
     }
 
     // For DC coefficients, symbol encodes the length of the coefficient.
-    auto dc_length = TRY(get_next_symbol(scan.huffman_stream, dc_table));
+    auto dc_length = TRY(get_next_symbol(context.stream, dc_table));
     if (dc_length > 11) {
         dbgln_if(JPEG_DEBUG, "DC coefficient too long: {}!", dc_length);
         return Error::from_string_literal("DC coefficient too long");
     }
 
     // DC coefficients are encoded as the difference between previous and current DC values.
-    i32 dc_diff = TRY(read_huffman_bits(scan.huffman_stream, dc_length));
+    i32 dc_diff = TRY(context.stream.read_bits(dc_length));
 
     // If MSB in diff is 0, the difference is -ve. Otherwise +ve.
     if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
@@ -373,12 +414,12 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
 
     auto& previous_dc = context.previous_dc_values[scan_component.component.index];
     previous_dc += dc_diff;
-    coefficient = previous_dc << scan.successive_approximation_low;
+    coefficient = previous_dc << context.current_scan.successive_approximation_low;
 
     return {};
 }
 
-static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
+static ErrorOr<bool> read_eob(JPEGLoadingContext& context, u32 symbol)
 {
     // G.1.2.2 - Progressive encoding of AC coefficients with Huffman coding
     // Note: We also use it for non-progressive encoding as it supports both EOB and ZRL
@@ -386,13 +427,13 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
     if (auto const eob = symbol & 0x0F; eob == 0 && symbol != JPEG_ZRL) {
         // We encountered an EOB marker
         auto const eob_base = symbol >> 4;
-        auto const additional_value = TRY(read_huffman_bits(scan.huffman_stream, eob_base));
+        auto const additional_value = TRY(context.stream.read_bits(eob_base));
 
-        scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
+        context.current_scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
 
         // end_of_bands_run_count is decremented at the end of `build_macroblocks`.
         // And we need to now that we reached End of Block in `add_ac`.
-        ++scan.end_of_bands_run_count;
+        ++context.current_scan.end_of_bands_run_count;
 
         return true;
     }
@@ -438,9 +479,9 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
         if (!in_zrl && scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
-            saved_symbol = TRY(get_next_symbol(scan.huffman_stream, ac_table));
+            saved_symbol = TRY(get_next_symbol(context.stream, ac_table));
 
-            if (!TRY(read_eob(scan, *saved_symbol))) {
+            if (!TRY(read_eob(context, *saved_symbol))) {
                 to_skip = *saved_symbol >> 4;
 
                 in_zrl = *saved_symbol == JPEG_ZRL;
@@ -452,13 +493,13 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
                 if (!in_zrl && is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
                     // G.1.2.3 - Coding model for subsequent scans of successive approximation
                     // Bit sign from rule a
-                    saved_bit_for_rule_a = TRY(read_huffman_bits(scan.huffman_stream, 1));
+                    saved_bit_for_rule_a = TRY(context.stream.read_bit());
                 }
             }
         }
 
         if (coefficient != 0) {
-            TRY(refine_coefficient(scan, coefficient));
+            TRY(refine_coefficient(context, coefficient));
             continue;
         }
 
@@ -491,7 +532,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
             }
 
             if (coeff_length != 0) {
-                i32 ac_coefficient = TRY(read_huffman_bits(scan.huffman_stream, coeff_length));
+                i32 ac_coefficient = TRY(context.stream.read_bits(coeff_length));
                 if (ac_coefficient < (1 << (coeff_length - 1)))
                     ac_coefficient -= (1 << coeff_length) - 1;
 
@@ -605,32 +646,24 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
 
-            auto& huffman_stream = context.current_scan.huffman_stream;
-
             if (context.dc_restart_interval > 0) {
                 if (i != 0 && i % (context.dc_restart_interval * context.vsample_factor * context.hsample_factor) == 0) {
                     reset_decoder(context);
 
-                    // Restart markers are stored in byte boundaries. Advance the huffman stream cursor to
-                    //  the 0th bit of the next byte.
-                    if (huffman_stream.byte_offset < huffman_stream.stream.size()) {
-                        if (huffman_stream.bit_offset > 0) {
-                            huffman_stream.bit_offset = 0;
-                            huffman_stream.byte_offset++;
-                        }
+                    // Restart markers are stored in byte boundaries. Fortunately,
+                    // JPEGStream will automatically align when reading a value.
 
-                        // Skip the restart marker (RSTn).
-                        huffman_stream.byte_offset++;
-                    }
+                    // Skip the restart marker (RSTn).
+                    auto const restart_marker = TRY(context.stream.read_value<BigEndian<u16>>());
+                    if (restart_marker < JPEG_RST0 || restart_marker > JPEG_RST7)
+                        dbgln("Marker was not a restart marker: {}", restart_marker);
                 }
             }
 
             if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
-                if constexpr (JPEG_DEBUG) {
+                if constexpr (JPEG_DEBUG)
                     dbgln("Failed to build Macroblock {}: {}", i, result.error());
-                    dbgln("Huffman stream byte offset {}", huffman_stream.byte_offset);
-                    dbgln("Huffman stream bit offset {}", huffman_stream.bit_offset);
-                }
+
                 return result.release_error();
             }
         }
@@ -710,7 +743,6 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
     u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
-    current_scan.huffman_stream.stream.ensure_capacity(50 * KiB);
 
     Optional<u8> last_read;
     u8 component_read = 0;
@@ -1615,45 +1647,10 @@ static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, HuffmanStreamState& huffman_stream)
-{
-    u8 last_byte;
-    u8 current_byte = TRY(stream.read_value<u8>());
-
-    for (;;) {
-        last_byte = current_byte;
-        current_byte = TRY(stream.read_value<u8>());
-
-        if (last_byte == 0xFF) {
-            if (current_byte == 0xFF)
-                continue;
-            if (current_byte == 0x00) {
-                current_byte = TRY(stream.read_value<u8>());
-                huffman_stream.stream.append(last_byte);
-                continue;
-            }
-            Marker marker = 0xFF00 | current_byte;
-            if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
-                huffman_stream.stream.append(marker);
-                current_byte = TRY(stream.read_value<u8>());
-                continue;
-            }
-
-            // Rollback the marker we just read
-            TRY(stream.seek(-2, AK::SeekMode::FromCurrentPosition));
-            return {};
-        } else {
-            huffman_stream.stream.append(last_byte);
-        }
-    }
-
-    VERIFY_NOT_REACHED();
-}
-
 static ErrorOr<void> decode_header(JPEGLoadingContext& context)
 {
     if (context.state < JPEGLoadingContext::State::HeaderDecoded) {
-        if (auto result = parse_header(*context.stream, context); result.is_error()) {
+        if (auto result = parse_header(context.stream, context); result.is_error()) {
             context.state = JPEGLoadingContext::State::Error;
             return result.release_error();
         }
@@ -1680,13 +1677,12 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
     Vector<Macroblock> macroblocks;
     TRY(macroblocks.try_resize(context.mblock_meta.padded_total));
 
-    Marker marker = TRY(read_marker_at_cursor(*context.stream));
+    Marker marker = TRY(read_marker_at_cursor(context.stream));
     while (true) {
         if (is_miscellaneous_or_table_marker(marker)) {
-            TRY(handle_miscellaneous_or_table(*context.stream, context, marker));
+            TRY(handle_miscellaneous_or_table(context.stream, context, marker));
         } else if (marker == JPEG_SOS) {
-            TRY(read_start_of_scan(*context.stream, context));
-            TRY(scan_huffman_stream(*context.stream, context.current_scan.huffman_stream));
+            TRY(read_start_of_scan(context.stream, context));
             TRY(decode_huffman_stream(context, macroblocks));
         } else if (marker == JPEG_EOI) {
             return macroblocks;
@@ -1695,7 +1691,7 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
             return Error::from_string_literal("Unexpected marker");
         }
 
-        marker = TRY(read_marker_at_cursor(*context.stream));
+        marker = TRY(read_marker_at_cursor(context.stream));
     }
 }
 
@@ -1707,14 +1703,12 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
     inverse_dct(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
     TRY(compose_bitmap(context, macroblocks));
-    context.stream.clear();
     return {};
 }
 
 JPEGImageDecoderPlugin::JPEGImageDecoderPlugin(NonnullOwnPtr<FixedMemoryStream> stream)
 {
-    m_context = make<JPEGLoadingContext>();
-    m_context->stream = move(stream);
+    m_context = make<JPEGLoadingContext>(move(stream));
 }
 
 JPEGImageDecoderPlugin::~JPEGImageDecoderPlugin() = default;
