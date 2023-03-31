@@ -214,13 +214,6 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
     return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<String> CalculatedStyleValue::CalcNumberValue::to_string() const
-{
-    return value.visit(
-        [](Number const& number) -> ErrorOr<String> { return String::number(number.value()); },
-        [](NonnullOwnPtr<CalcNumberSum> const& sum) -> ErrorOr<String> { return String::formatted("({})", TRY(sum->to_string())); });
-}
-
 ErrorOr<String> CalculatedStyleValue::CalcValue::to_string() const
 {
     return value.visit(
@@ -234,15 +227,6 @@ ErrorOr<String> CalculatedStyleValue::CalcSum::to_string() const
     StringBuilder builder;
     TRY(builder.try_append(TRY(first_calc_product->to_string())));
     for (auto const& item : zero_or_more_additional_calc_products)
-        TRY(builder.try_append(TRY(item->to_string())));
-    return builder.to_string();
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcNumberSum::to_string() const
-{
-    StringBuilder builder;
-    TRY(builder.try_append(TRY(first_calc_number_product->to_string())));
-    for (auto const& item : zero_or_more_additional_calc_number_products)
         TRY(builder.try_append(TRY(item->to_string())));
     return builder.to_string();
 }
@@ -263,29 +247,7 @@ ErrorOr<String> CalculatedStyleValue::CalcSumPartWithOperator::to_string() const
 
 ErrorOr<String> CalculatedStyleValue::CalcProductPartWithOperator::to_string() const
 {
-    auto value_string = TRY(value.visit(
-        [](CalcValue const& v) { return v.to_string(); },
-        [](CalcNumberValue const& v) { return v.to_string(); }));
-    return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, value_string);
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcNumberProduct::to_string() const
-{
-    StringBuilder builder;
-    TRY(builder.try_append(TRY(first_calc_number_value.to_string())));
-    for (auto const& item : zero_or_more_additional_calc_number_values)
-        TRY(builder.try_append(TRY(item->to_string())));
-    return builder.to_string();
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcNumberProductPartWithOperator::to_string() const
-{
     return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, TRY(value.to_string()));
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcNumberSumPartWithOperator::to_string() const
-{
-    return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, TRY(value->to_string()));
 }
 
 Optional<Angle> CalculatedStyleValue::resolve_angle() const
@@ -466,15 +428,6 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSum::reso
     return resolve_sum_type(type, zero_or_more_additional_calc_products);
 }
 
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSum::resolved_type() const
-{
-    auto maybe_type = first_calc_number_product->resolved_type();
-    if (!maybe_type.has_value())
-        return {};
-    auto type = maybe_type.value();
-    return resolve_sum_type(type, zero_or_more_additional_calc_number_products);
-}
-
 template<typename ProductWithOperator>
 static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(CalculatedStyleValue::ResolvedType first_type, Vector<NonnullOwnPtr<ProductWithOperator>> const& zero_or_more_additional_values)
 {
@@ -532,34 +485,9 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSumPartWi
     return value->resolved_type();
 }
 
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberProduct::resolved_type() const
-{
-    auto maybe_type = first_calc_number_value.resolved_type();
-    if (!maybe_type.has_value())
-        return {};
-    auto type = maybe_type.value();
-    return resolve_product_type(type, zero_or_more_additional_calc_number_values);
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberProductPartWithOperator::resolved_type() const
-{
-    return value.resolved_type();
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberSumPartWithOperator::resolved_type() const
-{
-    return value->resolved_type();
-}
-
 Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProductPartWithOperator::resolved_type() const
 {
-    return value.visit(
-        [](CalcValue const& calc_value) {
-            return calc_value.resolved_type();
-        },
-        [](CalcNumberValue const& calc_number_value) {
-            return calc_number_value.resolved_type();
-        });
+    return value.resolved_type();
 }
 
 Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::resolved_type() const
@@ -574,26 +502,6 @@ Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::re
         [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
         [](Time const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Time }; },
         [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcNumberValue::resolved_type() const
-{
-    return value.visit(
-        [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
-            return { number.is_integer() ? ResolvedType::Integer : ResolvedType::Number };
-        },
-        [](NonnullOwnPtr<CalcNumberSum> const& sum) { return sum->resolved_type(); });
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    return value.visit(
-        [&](Number const& number) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { number };
-        },
-        [&](NonnullOwnPtr<CalcNumberSum> const& sum) -> CalculatedStyleValue::CalculationResult {
-            return sum->resolve(layout_node, percentage_basis);
-        });
 }
 
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
@@ -625,60 +533,20 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(L
     return value;
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSum::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    auto value = first_calc_number_product->resolve(layout_node, percentage_basis);
-
-    for (auto& additional_product : zero_or_more_additional_calc_number_products) {
-        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
-
-        if (additional_product->op == CSS::CalculatedStyleValue::SumOperation::Add)
-            value.add(additional_value, layout_node, percentage_basis);
-        else if (additional_product->op == CalculatedStyleValue::SumOperation::Subtract)
-            value.subtract(additional_value, layout_node, percentage_basis);
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
-}
-
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     auto value = first_calc_value.resolve(layout_node, percentage_basis);
 
     for (auto& additional_value : zero_or_more_additional_calc_values) {
-        additional_value->value.visit(
-            [&](CalculatedStyleValue::CalcValue const& calc_value) {
-                VERIFY(additional_value->op == CalculatedStyleValue::ProductOperation::Multiply);
-                auto resolved_value = calc_value.resolve(layout_node, percentage_basis);
-                value.multiply_by(resolved_value, layout_node);
-            },
-            [&](CalculatedStyleValue::CalcNumberValue const& calc_number_value) {
-                VERIFY(additional_value->op == CalculatedStyleValue::ProductOperation::Divide);
-                auto resolved_calc_number_value = calc_number_value.resolve(layout_node, percentage_basis);
-                // FIXME: Checking for division by 0 should happen during parsing.
-                VERIFY(resolved_calc_number_value.value().get<Number>().value() != 0.0f);
-                value.divide_by(resolved_calc_number_value, layout_node);
-            });
-    }
-
-    return value;
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    auto value = first_calc_number_value.resolve(layout_node, percentage_basis);
-
-    for (auto& additional_number_value : zero_or_more_additional_calc_number_values) {
-        auto additional_value = additional_number_value->resolve(layout_node, percentage_basis);
-
-        if (additional_number_value->op == CalculatedStyleValue::ProductOperation::Multiply)
-            value.multiply_by(additional_value, layout_node);
-        else if (additional_number_value->op == CalculatedStyleValue::ProductOperation::Divide)
-            value.divide_by(additional_value, layout_node);
-        else
-            VERIFY_NOT_REACHED();
+        if (additional_value->op == ProductOperation::Multiply) {
+            auto resolved_value = additional_value->value.resolve(layout_node, percentage_basis);
+            value.multiply_by(resolved_value, layout_node);
+        } else {
+            auto resolved_calc_number_value = additional_value->value.resolve(layout_node, percentage_basis);
+            // FIXME: Return the relevant constant here. (infinity?)
+            VERIFY(resolved_calc_number_value.value().get<Number>().value() != 0.0f);
+            value.divide_by(resolved_calc_number_value, layout_node);
+        }
     }
 
     return value;
@@ -686,26 +554,10 @@ CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProduct:
 
 CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
-    return value.visit(
-        [&](CalcValue const& calc_value) {
-            return calc_value.resolve(layout_node, percentage_basis);
-        },
-        [&](CalcNumberValue const& calc_number_value) {
-            return calc_number_value.resolve(layout_node, percentage_basis);
-        });
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    return value->resolve(layout_node, percentage_basis);
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberProductPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
     return value.resolve(layout_node, percentage_basis);
 }
 
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcNumberSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
+CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
 {
     return value->resolve(layout_node, percentage_basis);
 }
@@ -744,9 +596,7 @@ bool CalculatedStyleValue::CalcProduct::contains_percentage() const
 
 bool CalculatedStyleValue::CalcProductPartWithOperator::contains_percentage() const
 {
-    return value.visit(
-        [](CalcValue const& value) { return value.contains_percentage(); },
-        [](CalcNumberValue const&) { return false; });
+    return value.contains_percentage();
 }
 
 bool CalculatedStyleValue::CalcValue::contains_percentage() const

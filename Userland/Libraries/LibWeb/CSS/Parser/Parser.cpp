@@ -7134,11 +7134,6 @@ Optional<CalculatedStyleValue::CalcValue> Parser::parse_calc_value(TokenStream<C
 
 OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_product_part_with_operator(TokenStream<ComponentValue>& tokens)
 {
-    // Note: The default value is not used or passed around.
-    auto product_with_operator = make<CalculatedStyleValue::CalcProductPartWithOperator>(
-        CalculatedStyleValue::ProductOperation::Multiply,
-        CalculatedStyleValue::CalcNumberValue { Number {} });
-
     tokens.skip_whitespace();
 
     auto const& op_token = tokens.peek_token();
@@ -7146,160 +7141,33 @@ OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> Parser::parse_calc_pro
         return nullptr;
 
     auto op = op_token.token().delim();
-    if (op == '*') {
-        tokens.next_token();
-        tokens.skip_whitespace();
-        product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
-        auto parsed_calc_value = parse_calc_value(tokens);
-        if (!parsed_calc_value.has_value())
-            return nullptr;
-        product_with_operator->value = { parsed_calc_value.release_value() };
-
-    } else if (op == '/') {
-        // FIXME: Detect divide-by-zero if possible
-        tokens.next_token();
-        tokens.skip_whitespace();
-        product_with_operator->op = CalculatedStyleValue::ProductOperation::Divide;
-        auto parsed_calc_number_value = parse_calc_number_value(tokens);
-        if (!parsed_calc_number_value.has_value())
-            return nullptr;
-        product_with_operator->value = { parsed_calc_number_value.release_value() };
-    } else {
+    if (op != '*' && op != '/')
         return nullptr;
-    }
 
-    return product_with_operator;
-}
-
-OwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator> Parser::parse_calc_number_product_part_with_operator(TokenStream<ComponentValue>& tokens)
-{
-    // Note: The default value is not used or passed around.
-    auto number_product_with_operator = make<CalculatedStyleValue::CalcNumberProductPartWithOperator>(
-        CalculatedStyleValue::ProductOperation::Multiply,
-        CalculatedStyleValue::CalcNumberValue { Number {} });
-
+    tokens.next_token();
     tokens.skip_whitespace();
-
-    auto const& op_token = tokens.peek_token();
-    if (!op_token.is(Token::Type::Delim))
-        return nullptr;
-
-    auto op = op_token.token().delim();
-    if (op == '*') {
-        tokens.next_token();
-        tokens.skip_whitespace();
-        number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Multiply;
-    } else if (op == '/') {
-        // FIXME: Detect divide-by-zero if possible
-        tokens.next_token();
-        tokens.skip_whitespace();
-        number_product_with_operator->op = CalculatedStyleValue::ProductOperation::Divide;
-    } else {
-        return nullptr;
-    }
-
-    auto parsed_calc_value = parse_calc_number_value(tokens);
+    auto parsed_calc_value = parse_calc_value(tokens);
     if (!parsed_calc_value.has_value())
         return nullptr;
-    number_product_with_operator->value = parsed_calc_value.release_value();
 
-    return number_product_with_operator;
+    auto operation = op == '*'
+        ? CalculatedStyleValue::ProductOperation::Multiply
+        : CalculatedStyleValue::ProductOperation::Divide;
+    return make<CalculatedStyleValue::CalcProductPartWithOperator>(operation, parsed_calc_value.release_value());
 }
 
-OwnPtr<CalculatedStyleValue::CalcNumberProduct> Parser::parse_calc_number_product(TokenStream<ComponentValue>& tokens)
-{
-    auto calc_number_product = make<CalculatedStyleValue::CalcNumberProduct>(
-        CalculatedStyleValue::CalcNumberValue { Number {} },
-        Vector<NonnullOwnPtr<CalculatedStyleValue::CalcNumberProductPartWithOperator>> {});
-
-    auto first_calc_number_value_or_error = parse_calc_number_value(tokens);
-    if (!first_calc_number_value_or_error.has_value())
-        return nullptr;
-    calc_number_product->first_calc_number_value = first_calc_number_value_or_error.release_value();
-
-    while (tokens.has_next_token()) {
-        auto number_product_with_operator = parse_calc_number_product_part_with_operator(tokens);
-        if (!number_product_with_operator)
-            break;
-        calc_number_product->zero_or_more_additional_calc_number_values.append(number_product_with_operator.release_nonnull());
-    }
-
-    return calc_number_product;
-}
-
-OwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator> Parser::parse_calc_number_sum_part_with_operator(TokenStream<ComponentValue>& tokens)
-{
-    if (!(tokens.peek_token().is(Token::Type::Delim)
-            && (tokens.peek_token().token().delim() == '+' || tokens.peek_token().token().delim() == '-')
-            && tokens.peek_token(1).is(Token::Type::Whitespace)))
-        return nullptr;
-
-    auto const& token = tokens.next_token();
-    tokens.skip_whitespace();
-
-    CalculatedStyleValue::SumOperation op;
-    auto delim = token.token().delim();
-    if (delim == '+')
-        op = CalculatedStyleValue::SumOperation::Add;
-    else if (delim == '-')
-        op = CalculatedStyleValue::SumOperation::Subtract;
-    else
-        return nullptr;
-
-    auto calc_number_product = parse_calc_number_product(tokens);
-    if (!calc_number_product)
-        return nullptr;
-    return make<CalculatedStyleValue::CalcNumberSumPartWithOperator>(op, calc_number_product.release_nonnull());
-}
-
-OwnPtr<CalculatedStyleValue::CalcNumberSum> Parser::parse_calc_number_sum(TokenStream<ComponentValue>& tokens)
-{
-    auto first_calc_number_product_or_error = parse_calc_number_product(tokens);
-    if (!first_calc_number_product_or_error)
-        return nullptr;
-
-    Vector<NonnullOwnPtr<CalculatedStyleValue::CalcNumberSumPartWithOperator>> additional {};
-    while (tokens.has_next_token()) {
-        auto calc_sum_part = parse_calc_number_sum_part_with_operator(tokens);
-        if (!calc_sum_part)
-            return nullptr;
-        additional.append(calc_sum_part.release_nonnull());
-    }
-
-    tokens.skip_whitespace();
-
-    auto calc_number_sum = make<CalculatedStyleValue::CalcNumberSum>(first_calc_number_product_or_error.release_nonnull(), move(additional));
-    return calc_number_sum;
-}
-
-Optional<CalculatedStyleValue::CalcNumberValue> Parser::parse_calc_number_value(TokenStream<ComponentValue>& tokens)
-{
-    auto const& first = tokens.peek_token();
-    if (first.is_block() && first.block().is_paren()) {
-        tokens.next_token();
-        auto block_values = TokenStream(first.block().values());
-        auto calc_number_sum = parse_calc_number_sum(block_values);
-        if (calc_number_sum)
-            return CalculatedStyleValue::CalcNumberValue { calc_number_sum.release_nonnull() };
-    }
-
-    if (!first.is(Token::Type::Number))
-        return {};
-    tokens.next_token();
-
-    return CalculatedStyleValue::CalcNumberValue { first.token().number() };
-}
-
+// https://www.w3.org/TR/css-values-4/#typedef-calc-product
 OwnPtr<CalculatedStyleValue::CalcProduct> Parser::parse_calc_product(TokenStream<ComponentValue>& tokens)
 {
-    auto calc_product = make<CalculatedStyleValue::CalcProduct>(
-        CalculatedStyleValue::CalcValue { Number {} },
-        Vector<NonnullOwnPtr<CalculatedStyleValue::CalcProductPartWithOperator>> {});
+    // `<calc-product> = <calc-value> [ [ '*' | '/' ] <calc-value> ]*`
 
     auto first_calc_value_or_error = parse_calc_value(tokens);
     if (!first_calc_value_or_error.has_value())
         return nullptr;
-    calc_product->first_calc_value = first_calc_value_or_error.release_value();
+
+    auto calc_product = make<CalculatedStyleValue::CalcProduct>(
+        first_calc_value_or_error.release_value(),
+        Vector<NonnullOwnPtr<CalculatedStyleValue::CalcProductPartWithOperator>> {});
 
     while (tokens.has_next_token()) {
         auto product_with_operator = parse_calc_product_part_with_operator(tokens);
@@ -7338,8 +7206,11 @@ OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> Parser::parse_calc_sum_par
     return make<CalculatedStyleValue::CalcSumPartWithOperator>(op, calc_product.release_nonnull());
 };
 
+// https://www.w3.org/TR/css-values-4/#typedef-calc-sum
 OwnPtr<CalculatedStyleValue::CalcSum> Parser::parse_calc_sum(TokenStream<ComponentValue>& tokens)
 {
+    // `<calc-sum> = <calc-product> [ [ '+' | '-' ] <calc-product> ]*`
+
     auto parsed_calc_product = parse_calc_product(tokens);
     if (!parsed_calc_product)
         return nullptr;
