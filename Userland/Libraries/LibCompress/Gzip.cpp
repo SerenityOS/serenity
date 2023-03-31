@@ -11,6 +11,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
 
 namespace Compress {
 
@@ -177,6 +178,22 @@ ErrorOr<ByteBuffer> GzipDecompressor::decompress_all(ReadonlyBytes bytes)
     auto output_buffer = TRY(ByteBuffer::create_uninitialized(output_stream.used_buffer_size()));
     TRY(output_stream.read_until_filled(output_buffer));
     return output_buffer;
+}
+
+ErrorOr<void> GzipDecompressor::decompress_file(StringView input_filename, NonnullOwnPtr<Stream> output_stream)
+{
+    auto input_file = TRY(Core::File::open(input_filename, Core::File::OpenMode::Read));
+    auto input_stream = TRY(Core::BufferedFile::create(move(input_file), 256 * KiB));
+
+    auto gzip_stream = GzipDecompressor { move(input_stream) };
+    auto buffer = TRY(ByteBuffer::create_uninitialized(256 * KiB));
+
+    while (!gzip_stream.is_eof()) {
+        auto span = TRY(gzip_stream.read_some(buffer));
+        TRY(output_stream->write_until_depleted(span));
+    }
+
+    return {};
 }
 
 bool GzipDecompressor::is_eof() const { return m_input_stream->is_eof(); }
