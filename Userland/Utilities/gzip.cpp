@@ -41,27 +41,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             output_filename = DeprecatedString::formatted("{}.gz", input_filename);
         }
 
-        // We map the whole file instead of streaming to reduce size overhead (gzip header) and increase the deflate block size (better compression)
-        // TODO: automatically fallback to buffered streaming for very large files
-        RefPtr<Core::MappedFile> file;
-        ReadonlyBytes input_bytes;
-        if (TRY(Core::System::stat(input_filename)).st_size > 0) {
-            file = TRY(Core::MappedFile::map(input_filename));
-            input_bytes = file->bytes();
-        }
-
-        ByteBuffer output_bytes;
-        if (decompress)
-            output_bytes = TRY(Compress::GzipDecompressor::decompress_all(input_bytes));
-        else
-            output_bytes = TRY(Compress::GzipCompressor::compress_all(input_bytes));
-
         auto output_stream = write_to_stdout ? TRY(Core::File::standard_output()) : TRY(Core::File::open(output_filename, Core::File::OpenMode::Write));
-        TRY(output_stream->write_until_depleted(output_bytes));
+
+        if (decompress)
+            TRY(Compress::GzipDecompressor::decompress_file(input_filename, move(output_stream)));
+        else
+            TRY(Compress::GzipCompressor::compress_file(input_filename, move(output_stream)));
 
         if (!keep_input_files) {
             TRY(Core::System::unlink(input_filename));
         }
     }
+
     return 0;
 }
