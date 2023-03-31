@@ -18,6 +18,7 @@ public:
     };
 
     static Framebuffer& the();
+    static void initialize();
 
     bool initialized() const { return m_initialized; }
     u16 width() const { return m_width; }
@@ -27,6 +28,8 @@ public:
     u32 buffer_size() const { return m_buffer_size; }
     u32 pitch() const { return m_pitch; }
     PixelOrder pixel_order() { return m_pixel_order; }
+
+    void draw_logo(u8* framebuffer_data);
 
 private:
     u16 m_width;
