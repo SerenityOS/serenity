@@ -188,19 +188,24 @@ ErrorOr<MP3::Header, LoaderError> MP3LoaderPlugin::read_header()
     return header;
 }
 
-MaybeLoaderError MP3LoaderPlugin::synchronize()
+MaybeLoaderError MP3LoaderPlugin::synchronize(BigEndianInputBitStream& stream, size_t sample_index)
 {
     size_t one_counter = 0;
-    while (one_counter < 12 && !m_bitstream->is_eof()) {
-        bool const bit = LOADER_TRY(m_bitstream->read_bit());
+    while (one_counter < 12 && !stream.is_eof()) {
+        bool const bit = LOADER_TRY(stream.read_bit());
         one_counter = bit ? one_counter + 1 : 0;
         if (!bit) {
-            m_bitstream->align_to_byte_boundary();
+            stream.align_to_byte_boundary();
         }
     }
     if (one_counter != 12)
-        return LoaderError { LoaderError::Category::Format, m_loaded_samples, "Failed to synchronize." };
+        return LoaderError { LoaderError::Category::Format, sample_index, "Failed to synchronize." };
     return {};
+}
+
+MaybeLoaderError MP3LoaderPlugin::synchronize()
+{
+    return MP3LoaderPlugin::synchronize(*m_bitstream, m_loaded_samples);
 }
 
 ErrorOr<MP3::MP3Frame, LoaderError> MP3LoaderPlugin::read_next_frame()

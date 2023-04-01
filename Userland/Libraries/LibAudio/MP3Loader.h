@@ -41,6 +41,7 @@ public:
 
 private:
     MaybeLoaderError initialize();
+    static MaybeLoaderError synchronize(BigEndianInputBitStream& stream, size_t sample_index);
     MaybeLoaderError synchronize();
     MaybeLoaderError build_seek_table();
     ErrorOr<MP3::Header, LoaderError> read_header();
