@@ -62,3 +62,9 @@ void ChessEngine::handle_go(GoCommand const& command)
 
     m_last_tree = move(best_node);
 }
+
+void ChessEngine::handle_quit()
+{
+    if (on_quit)
+        on_quit(ESUCCESS);
+}

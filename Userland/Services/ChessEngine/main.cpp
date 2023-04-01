@@ -17,5 +17,9 @@ ErrorOr<int> serenity_main(Main::Arguments)
     TRY(Core::System::unveil(nullptr, nullptr));
 
     auto engine = TRY(ChessEngine::try_create(Core::DeprecatedFile::standard_input(), Core::DeprecatedFile::standard_output()));
+    engine->on_quit = [&](auto status_code) {
+        loop.quit(status_code);
+    };
+
     return loop.exec();
 }
