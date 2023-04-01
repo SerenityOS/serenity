@@ -42,7 +42,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix fattr thread ptrace"));
 
     auto app = TRY(GUI::Application::try_create(arguments));
-    Config::pledge_domains({ "HackStudio", "Terminal" });
+    Config::pledge_domains({ "HackStudio", "Terminal", "FileManager" });
 
     auto window = GUI::Window::construct();
     window->resize(840, 600);
