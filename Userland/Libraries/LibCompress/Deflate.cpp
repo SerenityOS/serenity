@@ -29,7 +29,7 @@ CanonicalCode const& CanonicalCode::fixed_literal_codes()
     if (initialized)
         return code;
 
-    code = CanonicalCode::from_bytes(fixed_literal_bit_lengths).value();
+    code = MUST(CanonicalCode::from_bytes(fixed_literal_bit_lengths));
     initialized = true;
 
     return code;
@@ -43,13 +43,13 @@ CanonicalCode const& CanonicalCode::fixed_distance_codes()
     if (initialized)
         return code;
 
-    code = CanonicalCode::from_bytes(fixed_distance_bit_lengths).value();
+    code = MUST(CanonicalCode::from_bytes(fixed_distance_bit_lengths));
     initialized = true;
 
     return code;
 }
 
-Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
+ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
 {
     // FIXME: I can't quite follow the algorithm here, but it seems to work.
 
@@ -93,7 +93,7 @@ Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
                 continue;
 
             if (next_code > start_bit)
-                return {};
+                return Error::from_string_literal("Failed to decode code lengths");
 
             if (code_length <= CanonicalCode::max_allowed_prefixed_code_length) {
                 auto& prefix_code = prefix_codes[number_of_prefix_codes++];
@@ -114,9 +114,8 @@ Optional<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
         }
     }
 
-    if (next_code != (1 << 15)) {
-        return {};
-    }
+    if (next_code != (1 << 15))
+        return Error::from_string_literal("Failed to decode code lengths");
 
     for (auto [symbol_code, symbol_value, code_length] : prefix_codes) {
         if (code_length == 0 || code_length > CanonicalCode::max_allowed_prefixed_code_length)
@@ -428,11 +427,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
     // Now we can extract the code that was used to encode the code lengths of the code that was used to
     // encode the block.
-
-    auto code_length_code_result = CanonicalCode::from_bytes({ code_lengths_code_lengths, sizeof(code_lengths_code_lengths) });
-    if (!code_length_code_result.has_value())
-        return Error::from_string_literal("Failed to decode code length code");
-    auto const code_length_code = code_length_code_result.value();
+    auto const code_length_code = TRY(CanonicalCode::from_bytes({ code_lengths_code_lengths, sizeof(code_lengths_code_lengths) }));
 
     // Next we extract the code lengths of the code that was used to encode the block.
 
@@ -469,11 +464,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
         return Error::from_string_literal("Number of code lengths does not match the sum of codes");
 
     // Now we extract the code that was used to encode literals and lengths in the block.
-
-    auto literal_code_result = CanonicalCode::from_bytes(code_lengths.span().trim(literal_code_count));
-    if (!literal_code_result.has_value())
-        return Error::from_string_literal("Failed to decode the literal code");
-    literal_code = literal_code_result.value();
+    literal_code = TRY(CanonicalCode::from_bytes(code_lengths.span().trim(literal_code_count)));
 
     // Now we extract the code that was used to encode distances in the block.
 
@@ -486,10 +477,7 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
             return Error::from_string_literal("Length for a single distance code is longer than 1");
     }
 
-    auto distance_code_result = CanonicalCode::from_bytes(code_lengths.span().slice(literal_code_count));
-    if (!distance_code_result.has_value())
-        return Error::from_string_literal("Failed to decode the distance code");
-    distance_code = distance_code_result.value();
+    distance_code = TRY(CanonicalCode::from_bytes(code_lengths.span().slice(literal_code_count)));
 
     return {};
 }
@@ -940,11 +928,10 @@ ErrorOr<void> DeflateCompressor::write_dynamic_huffman(CanonicalCode const& lite
         TRY(m_output_stream->write_bits(code_lengths_bit_lengths[code_lengths_code_lengths_order[i]], 3));
     }
 
-    auto code_lengths_code = CanonicalCode::from_bytes(code_lengths_bit_lengths);
-    VERIFY(code_lengths_code.has_value());
+    auto code_lengths_code = MUST(CanonicalCode::from_bytes(code_lengths_bit_lengths));
     for (size_t i = 0; i < encoded_lengths_count; i++) {
         auto encoded_length = encoded_lengths[i];
-        TRY(code_lengths_code->write_symbol(*m_output_stream, encoded_length.symbol));
+        TRY(code_lengths_code.write_symbol(*m_output_stream, encoded_length.symbol));
         if (encoded_length.symbol == deflate_special_code_length_copy) {
             TRY(m_output_stream->write_bits<u8>(encoded_length.count - 3, 2));
         } else if (encoded_length.symbol == deflate_special_code_length_zeros) {
@@ -1037,10 +1024,12 @@ ErrorOr<void> DeflateCompressor::flush()
     } else {
         // dynamic huffman codes
         TRY(m_output_stream->write_bits(0b10u, 2));
-        auto literal_code = CanonicalCode::from_bytes(dynamic_literal_bit_lengths);
-        VERIFY(literal_code.has_value());
-        auto distance_code = CanonicalCode::from_bytes(dynamic_distance_bit_lengths);
-        TRY(write_dynamic_huffman(literal_code.value(), literal_code_count, distance_code, distance_code_count, code_lengths_bit_lengths, code_lengths_count, encoded_lengths, encoded_lengths_count));
+        auto literal_code = MUST(CanonicalCode::from_bytes(dynamic_literal_bit_lengths));
+        auto distance_code_or_error = CanonicalCode::from_bytes(dynamic_distance_bit_lengths);
+        Optional<CanonicalCode> distance_code;
+        if (!distance_code_or_error.is_error())
+            distance_code = distance_code_or_error.release_value();
+        TRY(write_dynamic_huffman(literal_code, literal_code_count, distance_code, distance_code_count, code_lengths_bit_lengths, code_lengths_count, encoded_lengths, encoded_lengths_count));
     }
     if (m_finished)
         TRY(m_output_stream->align_to_byte_boundary());
