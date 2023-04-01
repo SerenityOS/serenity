@@ -17,6 +17,7 @@ set(KERNEL_HEAP_SOURCES
 
 set(KERNEL_SOURCES
     AddressSanitizer.cpp
+    Arch/init.cpp
     Arch/PageFault.cpp
     Arch/DeferredCallPool.cpp
     Bus/PCI/Controller/HostController.cpp
@@ -361,8 +362,6 @@ set(KERNEL_SOURCES
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
     set(KERNEL_SOURCES
         ${KERNEL_SOURCES}
-        Arch/x86_64/init.cpp
-
         Arch/Processor.cpp
 
         Arch/x86_64/CMOS.cpp
@@ -462,7 +461,6 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/CPUID.cpp
         Arch/aarch64/CurrentTime.cpp
         Arch/aarch64/Dummy.cpp
-        Arch/aarch64/init.cpp
         Arch/aarch64/InterruptManagement.cpp
         Arch/aarch64/Interrupts.cpp
         Arch/aarch64/kprintf.cpp

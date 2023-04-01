@@ -7,9 +7,6 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/InterruptManagement.h>
 #include <Kernel/Arch/Processor.h>
-#include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
-#include <Kernel/Arch/x86_64/Interrupts/APIC.h>
-#include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/BootInfo.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Initializer.h>
@@ -59,6 +56,15 @@
 #include <Kernel/WorkQueue.h>
 #include <Kernel/kstdio.h>
 
+#if ARCH(X86_64)
+#    include <Kernel/Arch/x86_64/Hypervisor/VMWareBackdoor.h>
+#    include <Kernel/Arch/x86_64/Interrupts/APIC.h>
+#    include <Kernel/Arch/x86_64/Interrupts/PIC.h>
+#elif ARCH(AARCH64)
+#    include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
+#    include <Kernel/Arch/aarch64/RPi/Mailbox.h>
+#endif
+
 // Defined in the linker script
 typedef void (*ctor_func_t)();
 extern ctor_func_t start_heap_ctors[];
@@ -69,10 +75,12 @@ extern ctor_func_t end_ctors[];
 extern uintptr_t __stack_chk_guard;
 READONLY_AFTER_INIT uintptr_t __stack_chk_guard __attribute__((used));
 
+#if ARCH(X86_64)
 extern "C" u8 start_of_safemem_text[];
 extern "C" u8 end_of_safemem_text[];
 extern "C" u8 start_of_safemem_atomic_text[];
 extern "C" u8 end_of_safemem_atomic_text[];
+#endif
 
 extern "C" u8 end_of_kernel_image[];
 
@@ -141,10 +149,11 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 
 Atomic<Graphics::Console*> g_boot_console;
 
-extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
+extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo const& boot_info)
 {
     g_in_early_boot = true;
 
+#if ARCH(X86_64)
     start_of_prekernel_image = PhysicalAddress { boot_info.start_of_prekernel_image };
     end_of_prekernel_image = PhysicalAddress { boot_info.end_of_prekernel_image };
     physical_to_virtual_offset = boot_info.physical_to_virtual_offset;
@@ -169,6 +178,22 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     multiboot_framebuffer_height = boot_info.multiboot_framebuffer_height;
     multiboot_framebuffer_bpp = boot_info.multiboot_framebuffer_bpp;
     multiboot_framebuffer_type = boot_info.multiboot_framebuffer_type;
+#elif ARCH(AARCH64)
+    // FIXME: For the aarch64 platforms, we should get the information by parsing a device tree instead of using multiboot.
+    multiboot_memory_map_t mmap[] = {
+        { sizeof(struct multiboot_mmap_entry) - sizeof(u32),
+            (u64)0x0,
+            (u64)0x3F000000,
+            MULTIBOOT_MEMORY_AVAILABLE }
+    };
+    multiboot_memory_map = mmap;
+    multiboot_memory_map_count = 1;
+
+    multiboot_module_entry_t modules[] = {};
+    multiboot_modules = modules;
+    multiboot_modules_count = 0;
+    kernel_cmdline = "";
+#endif
 
     setup_serial_debug();
 
@@ -193,12 +218,22 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     CommandLine::initialize();
     Memory::MemoryManager::initialize(0);
 
+#if ARCH(AARCH64)
+    auto firmware_version = RPi::Mailbox::the().query_firmware_version();
+    dmesgln("RPi: Firmware version: {}", firmware_version);
+
+    RPi::Framebuffer::initialize();
+#endif
+
     // NOTE: If the bootloader provided a framebuffer, then set up an initial console.
     // If the bootloader didn't provide a framebuffer, then set up an initial text console.
     // We do so we can see the output on the screen as soon as possible.
     if (!kernel_command_line().is_early_boot_console_disabled()) {
         if (!multiboot_framebuffer_addr.is_null() && multiboot_framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
             g_boot_console = &try_make_lock_ref_counted<Graphics::BootFramebufferConsole>(multiboot_framebuffer_addr, multiboot_framebuffer_width, multiboot_framebuffer_height, multiboot_framebuffer_pitch).value().leak_ref();
+#if ARCH(AARCH64)
+            RPi::Framebuffer::the().draw_logo(static_cast<Graphics::BootFramebufferConsole*>(g_boot_console.load())->unsafe_framebuffer_data());
+#endif
         } else {
             g_boot_console = &Graphics::VGATextModeConsole::initialize().leak_ref();
         }
@@ -213,9 +248,11 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     MM.unmap_prekernel();
 
+#if ARCH(X86_64)
     // Ensure that the safemem sections are not empty. This could happen if the linker accidentally discards the sections.
     VERIFY(+start_of_safemem_text != +end_of_safemem_text);
     VERIFY(+start_of_safemem_atomic_text != +end_of_safemem_atomic_text);
+#endif
 
     // Invoke all static global constructors in the kernel.
     // Note that we want to do this as early as possible.
@@ -234,12 +271,15 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
 
     Scheduler::initialize();
 
+#if ARCH(X86_64)
+    // FIXME: Add an abstraction for the smp related functions, instead of using ifdefs in this file.
     if (APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
         // We must set up the AP boot environment before switching to a kernel process,
         // as pages below address USER_RANGE_BASE are only accessible through the kernel
         // page directory.
         APIC::the().setup_ap_boot_environment();
     }
+#endif
 
     {
         LockRefPtr<Thread> init_stage2_thread;
@@ -253,6 +293,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init(BootInfo const& boot_info)
     VERIFY_NOT_REACHED();
 }
 
+#if ARCH(X86_64)
 //
 // This is where C++ execution begins for APs, after boot.S transfers control here.
 //
@@ -284,6 +325,7 @@ extern "C" UNMAP_AFTER_INIT void init_finished(u32 cpu)
         TimeManagement::initialize(cpu);
     }
 }
+#endif
 
 void init_stage2(void*)
 {
@@ -294,6 +336,7 @@ void init_stage2(void*)
 
     WorkQueue::initialize();
 
+#if ARCH(X86_64)
     if (kernel_command_line().is_smp_enabled() && APIC::initialized() && APIC::the().enabled_processor_count() > 1) {
         // We can't start the APs until we have a scheduler up and running.
         // We need to be able to process ICI messages, otherwise another
@@ -301,6 +344,7 @@ void init_stage2(void*)
         // exhausted
         APIC::the().boot_aps();
     }
+#endif
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     PCI::initialize();
@@ -310,13 +354,17 @@ void init_stage2(void*)
 
     VirtualFileSystem::initialize();
 
+#if ARCH(X86_64)
     if (!is_serial_debug_enabled())
         (void)SerialDevice::must_create(0).leak_ref();
     (void)SerialDevice::must_create(1).leak_ref();
     (void)SerialDevice::must_create(2).leak_ref();
     (void)SerialDevice::must_create(3).leak_ref();
+#endif
 
+#if ARCH(X86_64)
     VMWareBackdoor::the(); // don't wait until first mouse packet
+#endif
     MUST(HIDManagement::initialize());
 
     GraphicsManagement::the().initialize();
