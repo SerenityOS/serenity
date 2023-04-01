@@ -333,4 +333,17 @@ DeprecatedString InfoCommand::to_deprecated_string() const
     return "info";
 }
 
+QuitCommand QuitCommand::from_string([[maybe_unused]] StringView command)
+{
+    auto tokens = command.split_view(' ');
+    VERIFY(tokens[0] == "quit");
+    VERIFY(tokens.size() == 1);
+    return QuitCommand();
+}
+
+DeprecatedString QuitCommand::to_deprecated_string() const
+{
+    return "quit\n";
+}
+
 }

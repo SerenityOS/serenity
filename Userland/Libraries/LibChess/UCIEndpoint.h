@@ -30,6 +30,7 @@ public:
     virtual void handle_readyok() { }
     virtual void handle_bestmove(BestMoveCommand const&) { }
     virtual void handle_info(InfoCommand const&) { }
+    virtual void handle_quit() { }
 
     void send_command(Command const&);
 

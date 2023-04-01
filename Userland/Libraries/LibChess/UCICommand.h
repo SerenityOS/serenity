@@ -268,4 +268,16 @@ public:
     // FIXME: Add additional fields.
 };
 
+class QuitCommand : public Command {
+public:
+    explicit QuitCommand()
+        : Command(Command::Type::Quit)
+    {
+    }
+
+    static QuitCommand from_string(StringView command);
+
+    virtual DeprecatedString to_deprecated_string() const override;
+};
+
 }
