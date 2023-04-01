@@ -614,7 +614,9 @@ void FlexFormattingContext::determine_flex_base_size_and_hypothetical_main_size(
             && item.used_flex_basis.type == CSS::FlexBasis::Content
             && has_definite_cross_size(item.box)) {
             // flex_base_size is calculated from definite cross size and intrinsic aspect ratio
-            return resolved_definite_cross_size(item) * item.box->intrinsic_aspect_ratio().value();
+            if (is_row_layout())
+                return inner_cross_size(item.box) * item.box->intrinsic_aspect_ratio().value();
+            return inner_cross_size(item.box) / item.box->intrinsic_aspect_ratio().value();
         }
 
         // C. If the used flex basis is content or depends on its available space,
@@ -724,7 +726,9 @@ Optional<CSSPixels> FlexFormattingContext::transferred_size_suggestion(FlexItem 
     if (item.box->has_intrinsic_aspect_ratio() && has_definite_cross_size(item.box)) {
         auto aspect_ratio = item.box->intrinsic_aspect_ratio().value();
         // FIXME: Clamp cross size to min/max cross size before this conversion.
-        return resolved_definite_cross_size(item) * aspect_ratio;
+        if (is_row_layout())
+            return resolved_definite_cross_size(item) * aspect_ratio;
+        return resolved_definite_cross_size(item) / aspect_ratio;
     }
 
     // It is otherwise undefined.
