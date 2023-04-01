@@ -1,0 +1,63 @@
+<style>
+  body {
+    font-family: 'SerenitySans';
+  }
+
+  .grid-container {
+    display: grid;
+    background-color: lightsalmon;
+  }
+
+  .grid-item {
+    background-color: lightblue;
+  }
+</style>
+
+<!-- Grid template areas basics -->
+<div class="grid-container" style="
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'left right-top'
+      'left right-bottom';
+  ">
+  <div style="background-color: lightpink; grid-area: right-bottom / right-bottom / right-bottom / right-bottom;">
+    right-bottom</div>
+  <div style="background-color: lightgreen; grid-area: left;">left</div>
+  <div style="background-color: lightgrey; grid-column-end: right-top;">right-top</div>
+</div>
+
+<!-- Grid-lines vs. Grid template areas -->
+<!-- There should be a left-aligned column taking up 1 / 3 of the Grid -->
+<div class="grid-container" style="
+    grid-template-columns: [c] 1fr [b] 1fr [a] 1fr;
+    grid-template-areas: 'a b c';
+    ">
+  <div class="grid-item" style="grid-column-start: a; grid-column-end: a;">1fr</div>
+</div>
+
+<!-- Valid grid areas -->
+<!-- Column taking up 50% width -->
+<div class="grid-container" style="
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-areas: 'one one three two' 'one one four two' 'one one four two';
+    ">
+  <div class="grid-item" style="grid-column-start: one; grid-column-end: one;">1fr</div>
+</div>
+
+<!-- Valid grid areas. This test should ideally fail differently FIXME -->
+<!-- Left-aligned column taking up 25% width -->
+<div class="grid-container" style="
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-areas: 'one one three two' 'one one four one';
+    ">
+  <div class="grid-item" style="grid-column-start: two; grid-column-end: two;">1fr</div>
+</div>
+
+<!-- Valid grid areas. This test should ideally fail differently FIXME -->
+<!-- Left-aligned column taking up 25% width -->
+<div class="grid-container" style="
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-areas: 'one one three two' 'one one four five' 'one one four two';
+    ">
+  <div class="grid-item" style="grid-column-start: two; grid-column-end: two;">1fr</div>
+</div>

@@ -1,0 +1,27 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x33.46875 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x17.46875 children: not-inline
+      Box <div.grid-container> at (8,8) content-size 784x17.46875 children: not-inline
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,8) content-size 93.765625x17.46875 children: inline
+          line 0 width: 93.765625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 11, rect: [8,8 93.765625x17.46875]
+              "min-content"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (101.765625,8) content-size 98.640625x17.46875 children: inline
+          line 0 width: 98.640625, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 11, rect: [101.765625,8 98.640625x17.46875]
+              "max-content"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (200.40625,8) content-size 591.59375x17.46875 children: inline
+          line 0 width: 21.609375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 3, rect: [200.40625,8 21.609375x17.46875]
+              "1fr"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
