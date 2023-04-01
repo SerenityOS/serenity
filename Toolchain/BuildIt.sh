@@ -234,11 +234,13 @@ pushd "$DIR/Tarballs"
                 git init > /dev/null
                 git add . > /dev/null
                 git commit -am "BASE" > /dev/null
-                git apply "$DIR"/Patches/gdb.patch > /dev/null
+                git am "${DIR}"/Patches/gdb/*.patch > /dev/null
             else
-                patch -p1 < "$DIR"/Patches/gdb.patch > /dev/null
+                for patch in "${DIR}"/Patches/gdb/*.patch; do
+                    patch -p1 < "${patch}" > /dev/null
+                done
             fi
-            $MD5SUM "$DIR"/Patches/gdb.patch > .patch.applied
+            $MD5SUM "$DIR"/Patches/gdb/*.patch > .patch.applied
         popd
     fi
 
