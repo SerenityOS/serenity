@@ -53,6 +53,8 @@ void Endpoint::event(Core::Event& event)
         return handle_bestmove(static_cast<BestMoveCommand const&>(event));
     case Command::Type::Info:
         return handle_info(static_cast<InfoCommand const&>(event));
+    case Command::Type::Quit:
+        return handle_quit();
     default:
         break;
     }
@@ -97,6 +99,8 @@ NonnullOwnPtr<Command> Endpoint::read_command()
         return make<BestMoveCommand>(BestMoveCommand::from_string(line));
     } else if (line.starts_with("info"sv)) {
         return make<InfoCommand>(InfoCommand::from_string(line));
+    } else if (line.starts_with("quit"sv)) {
+        return make<QuitCommand>(QuitCommand::from_string(line));
     }
 
     dbgln("command line: {}", line);
