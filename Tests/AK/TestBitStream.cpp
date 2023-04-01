@@ -22,6 +22,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
     {
         MUST(bit_write_stream.write_bits(0b1111u, 4));
         MUST(bit_write_stream.write_bits(0b1111u, 4));
+        MUST(bit_write_stream.flush_buffer_to_stream());
+
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1111u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -30,6 +32,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
     {
         MUST(bit_write_stream.write_bits(0b0000u, 4));
         MUST(bit_write_stream.write_bits(0b0000u, 4));
+        MUST(bit_write_stream.flush_buffer_to_stream());
+
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b0000u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -40,6 +44,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
     {
         MUST(bit_write_stream.write_bits(0b1000u, 4));
         MUST(bit_write_stream.write_bits(0b1000u, 4));
+        MUST(bit_write_stream.flush_buffer_to_stream());
+
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1000u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -50,6 +56,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
     {
         MUST(bit_write_stream.write_bits(0b1000u, 4));
         MUST(bit_write_stream.write_bits(0b0100u, 4));
+        MUST(bit_write_stream.flush_buffer_to_stream());
+
         auto result = MUST(bit_read_stream.read_bits(4));
         EXPECT_EQ(0b1000u, result);
         result = MUST(bit_read_stream.read_bits(4));
@@ -59,6 +67,8 @@ TEST_CASE(little_endian_bit_stream_input_output_match)
     // Test a pattern that spans multiple bytes.
     {
         MUST(bit_write_stream.write_bits(0b1101001000100001u, 16));
+        MUST(bit_write_stream.flush_buffer_to_stream());
+
         auto result = MUST(bit_read_stream.read_bits(16));
         EXPECT_EQ(0b1101001000100001u, result);
     }

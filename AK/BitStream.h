@@ -117,9 +117,18 @@ private:
     MaybeOwned<Stream> m_stream;
 };
 
-/// A stream wrapper class that allows you to read arbitrary amounts of bits
-/// in little-endian order from another stream.
-class LittleEndianInputBitStream : public Stream {
+class LittleEndianBitStream : public Stream {
+protected:
+    using BufferType = u64;
+
+    static constexpr size_t bits_per_byte = 8u;
+    static constexpr size_t bit_buffer_size = sizeof(BufferType) * bits_per_byte;
+
+    explicit LittleEndianBitStream(MaybeOwned<Stream> stream)
+        : m_stream(move(stream))
+    {
+    }
+
     template<Unsigned T>
     static constexpr T lsb_mask(T bits)
     {
@@ -129,9 +138,26 @@ class LittleEndianInputBitStream : public Stream {
         return bits == 0 ? 0 : max >> (digits - bits);
     }
 
+    ALWAYS_INLINE BufferType lsb_aligned_buffer() const
+    {
+        return m_bit_offset == bit_buffer_size ? 0 : m_bit_buffer >> m_bit_offset;
+    }
+
+    ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_count % bits_per_byte == 0; }
+
+    MaybeOwned<Stream> m_stream;
+
+    BufferType m_bit_buffer { 0 };
+    u8 m_bit_offset { 0 };
+    u8 m_bit_count { 0 };
+};
+
+/// A stream wrapper class that allows you to read arbitrary amounts of bits
+/// in little-endian order from another stream.
+class LittleEndianInputBitStream : public LittleEndianBitStream {
 public:
     explicit LittleEndianInputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
+        : LittleEndianBitStream(move(stream))
     {
     }
 
@@ -217,17 +243,7 @@ public:
         return remaining_bits;
     }
 
-    /// Whether we are (accidentally or intentionally) at a byte boundary right now.
-    ALWAYS_INLINE bool is_aligned_to_byte_boundary() const { return m_bit_count % bits_per_byte == 0; }
-
 private:
-    using BufferType = u64;
-
-    ALWAYS_INLINE BufferType lsb_aligned_buffer() const
-    {
-        return m_bit_offset == bit_buffer_size ? 0 : m_bit_buffer >> m_bit_offset;
-    }
-
     ErrorOr<void> refill_buffer_from_stream()
     {
         size_t bits_to_read = bit_buffer_size - m_bit_count;
@@ -242,15 +258,6 @@ private:
 
         return {};
     }
-
-    static constexpr size_t bits_per_byte = 8u;
-    static constexpr size_t bit_buffer_size = sizeof(BufferType) * bits_per_byte;
-
-    MaybeOwned<Stream> m_stream;
-
-    BufferType m_bit_buffer { 0 };
-    u8 m_bit_offset { 0 };
-    u8 m_bit_count { 0 };
 };
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits
@@ -333,10 +340,10 @@ private:
 
 /// A stream wrapper class that allows you to write arbitrary amounts of bits
 /// in little-endian order to another stream.
-class LittleEndianOutputBitStream : public Stream {
+class LittleEndianOutputBitStream : public LittleEndianBitStream {
 public:
     explicit LittleEndianOutputBitStream(MaybeOwned<Stream> stream)
-        : m_stream(move(stream))
+        : LittleEndianBitStream(move(stream))
     {
     }
 
@@ -347,28 +354,52 @@ public:
 
     virtual ErrorOr<size_t> write_some(ReadonlyBytes bytes) override
     {
-        VERIFY(m_bit_offset == 0);
+        VERIFY(is_aligned_to_byte_boundary());
+
+        if (m_bit_count > 0)
+            TRY(flush_buffer_to_stream());
+
         return m_stream->write_some(bytes);
     }
 
     template<Unsigned T>
-    ErrorOr<void> write_bits(T value, size_t bit_count)
+    ErrorOr<void> write_bits(T value, size_t count)
     {
-        VERIFY(m_bit_offset <= 7);
+        if (m_bit_count == bit_buffer_size) {
+            TRY(flush_buffer_to_stream());
+        } else if (auto remaining = bit_buffer_size - m_bit_count; count >= remaining) {
+            m_bit_buffer |= (static_cast<BufferType>(value) & lsb_mask<BufferType>(remaining)) << m_bit_count;
+            m_bit_count = bit_buffer_size;
 
-        size_t input_offset = 0;
-        while (input_offset < bit_count) {
-            u8 next_bit = (value >> input_offset) & 1;
-            input_offset++;
+            if (remaining != sizeof(value) * bits_per_byte)
+                value >>= remaining;
+            count -= remaining;
 
-            m_current_byte |= next_bit << m_bit_offset;
-            m_bit_offset++;
+            TRY(flush_buffer_to_stream());
+        }
 
-            if (m_bit_offset > 7) {
-                TRY(m_stream->write_value(m_current_byte));
-                m_bit_offset = 0;
-                m_current_byte = 0;
-            }
+        if (count == 0)
+            return {};
+
+        m_bit_buffer |= static_cast<BufferType>(value) << m_bit_count;
+        m_bit_count += count;
+
+        return {};
+    }
+
+    ALWAYS_INLINE ErrorOr<void> flush_buffer_to_stream()
+    {
+        auto bytes_to_write = m_bit_count / bits_per_byte;
+        TRY(m_stream->write_until_depleted({ &m_bit_buffer, bytes_to_write }));
+
+        if (m_bit_count == bit_buffer_size) {
+            m_bit_buffer = 0;
+            m_bit_count = 0;
+        } else {
+            auto bits_written = bytes_to_write * bits_per_byte;
+
+            m_bit_buffer >>= bits_written;
+            m_bit_count -= bits_written;
         }
 
         return {};
@@ -390,23 +421,16 @@ public:
 
     size_t bit_offset() const
     {
-        return m_bit_offset;
+        return m_bit_count;
     }
 
     ErrorOr<void> align_to_byte_boundary()
     {
-        if (m_bit_offset == 0)
-            return {};
+        if (auto offset = m_bit_count % bits_per_byte; offset != 0)
+            TRY(write_bits<u8>(0u, bits_per_byte - offset));
 
-        TRY(write_bits(0u, 8 - m_bit_offset));
-        VERIFY(m_bit_offset == 0);
         return {};
     }
-
-private:
-    MaybeOwned<Stream> m_stream;
-    u8 m_current_byte { 0 };
-    size_t m_bit_offset { 0 };
 };
 
 }
