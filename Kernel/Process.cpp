@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Timon Kruiper <timonkruiper@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -411,14 +412,36 @@ void signal_trampoline_dummy()
         : "i"(Syscall::SC_sigreturn),
         "i"(offset_to_first_register_slot));
 #elif ARCH(AARCH64)
+    constexpr static auto offset_to_first_register_slot = align_up_to(sizeof(__ucontext) + sizeof(siginfo) + sizeof(FPUState) + 3 * sizeof(FlatPtr), 16);
     asm(
         ".global asm_signal_trampoline\n"
         "asm_signal_trampoline:\n"
-        // TODO: Implement this when we support userspace for aarch64
-        "wfi\n"
+        // stack state: 0, ucontext, signal_info (alignment = 16), fpu_state (alignment = 16), ucontext*, siginfo*, signal, handler
+
+        // Load the handler address into x3.
+        "ldr x3, [sp, #0]\n"
+        // Store x0 (return value from a syscall) into the register slot, such that we can return the correct value in sys$sigreturn.
+        "str x0, [sp, %[offset_to_first_register_slot]]\n"
+        // Load the signal number into the first argument.
+        "ldr x0, [sp, #8]\n"
+        // Load a pointer to the signal_info structure into the second argument.
+        "ldr x1, [sp, #16]\n"
+        // Load a pointer to the ucontext into the third argument.
+        "ldr x2, [sp, #24]\n"
+        // Pop the values off the stack.
+        "add sp, sp, 32\n"
+        // Call the signal handler.
+        "blr x3\n"
+
+        // Call sys$sigreturn.
+        "mov x8, %[sigreturn_syscall_number]\n"
+        "svc #0\n"
+        // We should never return, so trap if we do return.
+        "brk #0\n"
         "\n"
         ".global asm_signal_trampoline_end\n"
-        "asm_signal_trampoline_end: \n");
+        "asm_signal_trampoline_end: \n" ::[sigreturn_syscall_number] "i"(Syscall::SC_sigreturn),
+        [offset_to_first_register_slot] "i"(offset_to_first_register_slot));
 #else
 #    error Unknown architecture
 #endif
