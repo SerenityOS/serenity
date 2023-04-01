@@ -231,7 +231,8 @@ Time TimeManagement::boot_time()
 #if ARCH(X86_64)
     return RTC::boot_time();
 #elif ARCH(AARCH64)
-    TODO_AARCH64();
+    // FIXME: Return correct boot time
+    return Time::from_seconds(0);
 #else
 #    error Unknown architecture
 #endif
