@@ -185,33 +185,34 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
         u8 byte_symbol = symbol;
         m_decompressor.m_output_buffer.write({ &byte_symbol, sizeof(byte_symbol) });
         return true;
-    } else if (symbol == 256) {
+    }
+
+    if (symbol == 256) {
         m_eof = true;
         return false;
-    } else {
-        if (!m_distance_codes.has_value())
-            return Error::from_string_literal("Distance codes have not been initialized");
-
-        auto const length = TRY(m_decompressor.decode_length(symbol));
-        auto const distance_symbol = TRY(m_distance_codes.value().read_symbol(*m_decompressor.m_input_stream));
-        if (distance_symbol >= 30)
-            return Error::from_string_literal("Invalid deflate distance symbol");
-
-        auto const distance = TRY(m_decompressor.decode_distance(distance_symbol));
-
-        if (distance < length) {
-            for (size_t idx = 0; idx < length; ++idx) {
-                u8 byte = 0;
-                TRY(m_decompressor.m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, distance));
-
-                m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
-            }
-        } else {
-            TRY(m_decompressor.m_output_buffer.copy_from_seekback(distance, length));
-        }
-
-        return true;
     }
+
+    if (!m_distance_codes.has_value())
+        return Error::from_string_literal("Distance codes have not been initialized");
+
+    auto const length = TRY(m_decompressor.decode_length(symbol));
+    auto const distance_symbol = TRY(m_distance_codes.value().read_symbol(*m_decompressor.m_input_stream));
+    if (distance_symbol >= 30)
+        return Error::from_string_literal("Invalid deflate distance symbol");
+
+    auto const distance = TRY(m_decompressor.decode_distance(distance_symbol));
+
+    if (distance < length) {
+        for (size_t idx = 0; idx < length; ++idx) {
+            u8 byte = 0;
+            TRY(m_decompressor.m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, distance));
+            m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
+        }
+    } else {
+        TRY(m_decompressor.m_output_buffer.copy_from_seekback(distance, length));
+    }
+
+    return true;
 }
 
 DeflateDecompressor::UncompressedBlock::UncompressedBlock(DeflateDecompressor& decompressor, size_t length)
