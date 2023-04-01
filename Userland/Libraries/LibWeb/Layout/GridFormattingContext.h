@@ -145,6 +145,8 @@ private:
     void initialize_grid_tracks(Box const&, AvailableSpace const&, int column_count, int row_count);
     void calculate_sizes_of_columns(Box const&, AvailableSpace const&);
     void calculate_sizes_of_rows(Box const&);
+
+    CSSPixels content_based_minimum_height(GridItem const&, Box const& parent_box);
 };
 
 }

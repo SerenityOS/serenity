@@ -1261,7 +1261,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         case CSS::GridSize::Type::MinContent: {
             CSSPixels row_height = 0;
             for (auto& grid_item : grid_items_of_row)
-                row_height = max(row_height, calculate_min_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
+                row_height = max(row_height, content_based_minimum_height(grid_item, box));
             grid_row.base_size = row_height;
         } break;
         // - For max-content minimums:
@@ -1270,7 +1270,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         case CSS::GridSize::Type::MaxContent: {
             CSSPixels row_height = 0;
             for (auto& grid_item : grid_items_of_row)
-                row_height = max(row_height, calculate_max_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
+                row_height = max(row_height, content_based_minimum_height(grid_item, box));
             grid_row.base_size = row_height;
         } break;
         // - For auto minimums:
@@ -1294,7 +1294,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         case CSS::GridSize::Type::FlexibleLength: {
             CSSPixels grid_row_height = 0;
             for (auto& grid_item : grid_items_of_row)
-                grid_row_height = max(grid_row_height, calculate_min_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
+                grid_row_height = max(grid_row_height, content_based_minimum_height(grid_item, box));
             grid_row.base_size = grid_row_height;
         } break;
         default:
@@ -1308,7 +1308,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         case CSS::GridSize::Type::MinContent: {
             CSSPixels row_height = 0;
             for (auto& grid_item : grid_items_of_row)
-                row_height = max(row_height, calculate_max_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
+                row_height = max(row_height, content_based_minimum_height(grid_item, box));
             grid_row.base_size = row_height;
         } break;
         // - For max-content maximums:
@@ -1318,7 +1318,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         case CSS::GridSize::Type::MaxContent: {
             CSSPixels row_height = 0;
             for (auto& grid_item : grid_items_of_row)
-                row_height = max(row_height, calculate_max_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
+                row_height = max(row_height, content_based_minimum_height(grid_item, box));
             grid_row.base_size = row_height;
         } break;
         case CSS::GridSize::Type::Length:
@@ -2054,6 +2054,19 @@ int GridItem::gap_adjusted_row(Box const& parent_box) const
 int GridItem::gap_adjusted_column(Box const& parent_box) const
 {
     return parent_box.computed_values().column_gap().is_auto() ? m_column : m_column * 2;
+}
+
+// https://www.w3.org/TR/css-grid-2/#min-size-auto
+CSSPixels GridFormattingContext::content_based_minimum_height(GridItem const& item, Box const& parent_box)
+{
+    // The content-based minimum size for a grid item in a given dimension is its specified size suggestion if it exists
+    if (!item.box().computed_values().height().is_auto()) {
+        if (item.box().computed_values().height().is_length())
+            return item.box().computed_values().height().length().to_px(item.box());
+    }
+    // FIXME: otherwise its transferred size suggestion if that exists
+    // else its content size suggestion
+    return calculate_min_content_height(item.box(), AvailableSize::make_definite(m_grid_columns[item.gap_adjusted_column(parent_box)].base_size));
 }
 
 }
