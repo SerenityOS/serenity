@@ -27,7 +27,7 @@ public:
     static CanonicalCode const& fixed_literal_codes();
     static CanonicalCode const& fixed_distance_codes();
 
-    static Optional<CanonicalCode> from_bytes(ReadonlyBytes);
+    static ErrorOr<CanonicalCode> from_bytes(ReadonlyBytes);
 
 private:
     static constexpr size_t max_allowed_prefixed_code_length = 8;
