@@ -1,0 +1,83 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x185.875 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x169.875 children: not-inline
+      Box <div.grid-container> at (8,8) content-size 784x17.46875 children: not-inline
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,8) content-size 522.666748x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,8 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (530.666748,8) content-size 261.333496x17.46875 children: inline
+          line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [530.666748,8 8.8125x17.46875]
+              "2"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,25.46875) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container> at (8,25.46875) content-size 784x17.46875 children: not-inline
+        BlockContainer <(anonymous)> at (8,25.46875) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,25.46875) content-size 261.333374x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,25.46875 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,25.46875) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (269.333374,25.46875) content-size 522.66687x17.46875 children: inline
+          line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [269.333374,25.46875 8.8125x17.46875]
+              "2"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,25.46875) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,42.9375) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container> at (8,42.9375) content-size 784x100 children: not-inline
+        BlockContainer <(anonymous)> at (8,42.9375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,42.9375) content-size 784x40 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,42.9375 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,42.9375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,82.9375) content-size 784x60 children: inline
+          line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,82.9375 8.8125x17.46875]
+              "2"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,42.9375) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,142.9375) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container> at (8,142.9375) content-size 784x34.9375 children: not-inline
+        BlockContainer <(anonymous)> at (8,142.9375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,142.9375) content-size 784x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,142.9375 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,142.9375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,160.40625) content-size 392x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,160.40625 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,142.9375) content-size 0x0 children: inline
+          TextNode <#text>

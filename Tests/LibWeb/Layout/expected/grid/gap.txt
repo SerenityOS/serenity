@@ -1,0 +1,102 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x166.8125 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x150.8125 children: not-inline
+      Box <div.grid-container> at (8,8) content-size 784x44.9375 children: not-inline
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,8) content-size 367.140625x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,8 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (425.140625,8) content-size 367x17.46875 children: inline
+          line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [425.140625,8 8.8125x17.46875]
+              "2"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,35.46875) content-size 367.140625x17.46875 children: inline
+          line 0 width: 9.09375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,35.46875 9.09375x17.46875]
+              "3"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (425.140625,35.46875) content-size 367x17.46875 children: inline
+          line 0 width: 7.75, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [425.140625,35.46875 7.75x17.46875]
+              "4"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,8) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,52.9375) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container> at (8,52.9375) content-size 784x50.9375 children: not-inline
+        BlockContainer <(anonymous)> at (8,52.9375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (435.434356,52.9375) content-size 357.800018x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [435.434356,52.9375 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,52.9375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (8,86.40625) content-size 359.034362x17.46875 children: inline
+          line 0 width: 8.8125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [8,86.40625 8.8125x17.46875]
+              "2"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,52.9375) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,103.875) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container> at (8,103.875) content-size 784x17.46875 children: not-inline
+        BlockContainer <(anonymous)> at (8,103.875) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (408,103.875) content-size 384x17.46875 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [408,103.875 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,103.875) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,121.34375) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container> at (8,121.34375) content-size 784x20 children: not-inline
+        BlockContainer <(anonymous)> at (8,121.34375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item> at (408,121.34375) content-size 384x20 children: inline
+          line 0 width: 6.34375, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 1, rect: [408,121.34375 6.34375x17.46875]
+              "1"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,121.34375) content-size 0x0 children: inline
+          TextNode <#text>
+      BlockContainer <(anonymous)> at (8,141.34375) content-size 784x0 children: inline
+        TextNode <#text>
+        TextNode <#text>
+      Box <div.grid-container.with-border> at (8,141.34375) content-size 784x17.46875 children: not-inline
+        BlockContainer <(anonymous)> at (8,141.34375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item.with-border> at (8,141.34375) content-size 387x17.46875 children: inline
+          line 0 width: 104.875, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 14, rect: [8,141.34375 104.875x17.46875]
+              "left side text"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,141.34375) content-size 0x0 children: inline
+          TextNode <#text>
+        BlockContainer <div.grid-item.with-border> at (405,141.34375) content-size 387x17.46875 children: inline
+          line 0 width: 363.203125, height: 17.46875, bottom: 17.46875, baseline: 13.53125
+            frag 0 from TextNode start: 0, length: 47, rect: [405,141.34375 363.203125x17.46875]
+              "right side text right side text right side text"
+          TextNode <#text>
+        BlockContainer <(anonymous)> at (8,141.34375) content-size 0x0 children: inline
+          TextNode <#text>
