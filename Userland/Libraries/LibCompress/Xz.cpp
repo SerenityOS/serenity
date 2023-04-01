@@ -254,11 +254,13 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
         if (m_current_block_stream.has_value()) {
             // We have already processed a block, so we weed to clean up trailing data before the next block starts.
 
+            auto unpadded_size = m_stream->read_bytes() - m_current_block_start_offset;
+
             // 3.3. Block Padding:
             // "Block Padding MUST contain 0-3 null bytes to make the size of
             //  the Block a multiple of four bytes. This can be needed when
             //  the size of Compressed Data is not a multiple of four."
-            while (m_stream->read_bytes() % 4 != 0) {
+            for (size_t i = 0; (unpadded_size + i) % 4 != 0; i++) {
                 auto padding_byte = TRY(m_stream->read_value<u8>());
 
                 // "If any of the bytes in Block Padding are not null bytes, the decoder
@@ -284,12 +286,22 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             // TODO: Block content checks are currently unimplemented as a whole, independent of the check type.
             //       For now, we only make sure to remove the correct amount of bytes from the stream.
             TRY(m_stream->discard(*maybe_check_size));
+            unpadded_size += *maybe_check_size;
+
+            if (m_current_block_expected_uncompressed_size.has_value()) {
+                if (*m_current_block_expected_uncompressed_size != m_current_block_uncompressed_size)
+                    return Error::from_string_literal("Uncompressed size of XZ block does not match the expected value");
+            }
+
+            TRY(m_processed_blocks.try_append({
+                .uncompressed_size = m_current_block_uncompressed_size,
+                .unpadded_size = unpadded_size,
+            }));
         }
 
         auto start_of_current_block = m_stream->read_bytes();
 
         // Ensure that the start of the block is aligned to a multiple of four (in theory, everything in XZ is).
-        // This allows us to make sure that the block padding is correct without having to store the block start offset explicitly.
         VERIFY(start_of_current_block % 4 == 0);
 
         // The first byte between Block Header (3.1.1. Block Header Size) and Index (4.1. Index Indicator) overlap.
@@ -305,6 +317,9 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             //  Stream. The value is stored using the encoding described in
             //  Section 1.2."
             u64 number_of_records = TRY(m_stream->read_value<XzMultibyteInteger>());
+
+            if (m_processed_blocks.size() != number_of_records)
+                return Error::from_string_literal("Number of Records in XZ Index does not match the number of processed Blocks");
 
             // 4.3. List of Records:
             // "List of Records consists of as many Records as indicated by the
@@ -338,9 +353,11 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
                 // "If the decoder has decoded all the Blocks of the Stream, it
                 //  MUST verify that the contents of the Records match the real
                 //  Unpadded Size and Uncompressed Size of the respective Blocks."
-                // TODO: Validation of unpadded and uncompressed size against the actual blocks is currently unimplemented.
-                (void)unpadded_size;
-                (void)uncompressed_size;
+                if (m_processed_blocks[i].uncompressed_size != uncompressed_size)
+                    return Error::from_string_literal("Uncompressed size of XZ Block does not match the Index");
+
+                if (m_processed_blocks[i].unpadded_size != unpadded_size)
+                    return Error::from_string_literal("Unpadded size of XZ Block does not match the Index");
             }
 
             // 4.4. Index Padding:
@@ -391,8 +408,11 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 
             // Another XZ Stream might follow, so we just unset the current information and continue on the next read.
             m_stream_flags.clear();
+            m_processed_blocks.clear();
             return bytes.trim(0);
         }
+
+        m_current_block_start_offset = start_of_current_block;
 
         // 3.1.1. Block Header Size:
         // "This field contains the size of the Block Header field,
@@ -445,9 +465,9 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             // "Uncompressed Size is stored using the encoding described in Section 1.2."
             u64 uncompressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
 
-            m_current_block_uncompressed_size = uncompressed_size;
+            m_current_block_expected_uncompressed_size = uncompressed_size;
         } else {
-            m_current_block_uncompressed_size.clear();
+            m_current_block_expected_uncompressed_size.clear();
         }
 
         // 3.1.5. List of Filter Flags:
@@ -505,9 +525,14 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             return Error::from_string_literal("Stored XZ block header CRC32 does not match the stored CRC32");
 
         m_current_block_stream = move(new_block_stream);
+        m_current_block_uncompressed_size = 0;
     }
 
-    return TRY((*m_current_block_stream)->read_some(bytes));
+    auto result = TRY((*m_current_block_stream)->read_some(bytes));
+
+    m_current_block_uncompressed_size += result.size();
+
+    return result;
 }
 
 ErrorOr<size_t> XzDecompressor::write_some(ReadonlyBytes)

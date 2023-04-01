@@ -14,6 +14,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Stream.h>
+#include <AK/Vector.h>
 
 namespace Compress {
 
@@ -116,7 +117,15 @@ private:
     bool m_found_last_stream_footer { false };
 
     Optional<MaybeOwned<Stream>> m_current_block_stream {};
-    Optional<u64> m_current_block_uncompressed_size {};
+    Optional<u64> m_current_block_expected_uncompressed_size {};
+    u64 m_current_block_uncompressed_size {};
+    u64 m_current_block_start_offset {};
+
+    struct BlockMetadata {
+        u64 uncompressed_size {};
+        u64 unpadded_size {};
+    };
+    Vector<BlockMetadata> m_processed_blocks;
 };
 
 }

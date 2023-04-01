@@ -303,8 +303,8 @@ TEST_CASE(xz_utils_bad_0_nonempty_index)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: The index is currently not checked against the actual blocks.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_0pad_empty)
@@ -963,8 +963,8 @@ TEST_CASE(xz_utils_bad_2_index_1)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: The index is currently not checked against the actual blocks.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_2_index_2)
@@ -981,8 +981,8 @@ TEST_CASE(xz_utils_bad_2_index_2)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: The index is currently not checked against the actual blocks.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 TEST_CASE(xz_utils_bad_2_index_3)
@@ -1060,8 +1060,8 @@ TEST_CASE(xz_utils_bad_3_index_uncomp_overflow)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    // TODO: The index is currently not checked against the actual blocks, so the overflow never occurs in the first place.
-    (void)decompressor->read_until_eof(PAGE_SIZE);
+    auto buffer_or_error = decompressor->read_until_eof(PAGE_SIZE);
+    EXPECT(buffer_or_error.is_error());
 }
 
 auto const xz_utils_hello_world = "Hello\nWorld!\n"sv;
