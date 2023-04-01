@@ -33,6 +33,7 @@ public:
     }
 
 private:
+    void quit();
+
     Function<void(Chess::Move)> m_bestmove_callback;
-    pid_t m_pid { -1 };
 };
