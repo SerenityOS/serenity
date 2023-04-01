@@ -79,7 +79,9 @@ void MarkerPaintable::paint(PaintContext& context, PaintPhase phase) const
     case CSS::ListStyleType::UpperRoman:
         if (layout_box().text().is_null())
             break;
-        context.painter().draw_text(device_enclosing.to_type<int>(), layout_box().text(), Gfx::TextAlignment::Center);
+        // FIXME: This should use proper text layout logic!
+        // This does not line up with the text in the <li> element which looks very sad :(
+        context.painter().draw_text(device_enclosing.to_type<int>(), layout_box().text(), layout_box().scaled_font(context), Gfx::TextAlignment::Center);
         break;
     case CSS::ListStyleType::None:
         return;
