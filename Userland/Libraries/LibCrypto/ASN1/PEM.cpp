@@ -93,4 +93,40 @@ ErrorOr<Vector<ByteBuffer>> decode_pems(ReadonlyBytes data)
     return pems;
 }
 
+ErrorOr<ByteBuffer> encode_pem(ReadonlyBytes data, PEMType type)
+{
+    ByteBuffer encoded;
+    StringView block_start;
+    StringView block_end;
+
+    switch (type) {
+    case Certificate:
+        block_start = "-----BEGIN CERTIFICATE-----\n"sv;
+        block_end = "-----END CERTIFICATE-----\n"sv;
+        break;
+    case PrivateKey:
+        block_start = "-----BEGIN PRIVATE KEY-----\n"sv;
+        block_end = "-----END PRIVATE KEY-----\n"sv;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    auto b64encoded = TRY(encode_base64(data));
+
+    TRY(encoded.try_append(block_start.bytes()));
+
+    size_t to_read = 64;
+    for (size_t i = 0; i < b64encoded.bytes().size(); i += to_read) {
+        if (i + to_read > b64encoded.bytes().size())
+            to_read = b64encoded.bytes().size() - i;
+        TRY(encoded.try_append(b64encoded.bytes().slice(i, to_read)));
+        TRY(encoded.try_append("\n"sv.bytes()));
+    }
+
+    TRY(encoded.try_append(block_end.bytes()));
+
+    return encoded;
+}
+
 }
