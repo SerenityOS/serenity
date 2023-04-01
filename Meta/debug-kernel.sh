@@ -57,6 +57,7 @@ exec $SERENITY_KERNEL_DEBUGGER \
     -ex "set confirm on" \
     -ex "set arch $gdb_arch" \
     -ex "set print frame-arguments none" \
+    -ex "set print asm-demangle on" \
     -ex "target remote ${gdb_host}:1234" \
     -ex "source $SCRIPT_DIR/serenity_gdb.py" \
     -ex "layout asm" \
