@@ -38,7 +38,7 @@ if [ "$SERENITY_ARCH" = "x86_64" ]; then
 elif [ "$SERENITY_ARCH" = "aarch64" ]; then
     gdb_arch=aarch64:armv8-r
     prekernel_image=Prekernel
-    kernel_base=0xc0000000 # FIXME
+    kernel_base=0x0
 fi
 
 # FIXME: This doesn't work when running QEMU inside the WSL2 VM
