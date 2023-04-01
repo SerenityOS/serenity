@@ -16,4 +16,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_app(CertificateSettings ICON certificate)
-target_link_libraries(CertificateSettings PRIVATE LibCore LibCrypto LibGfx LibGUI LibMain LibTLS)
+target_link_libraries(CertificateSettings PRIVATE LibCore LibCrypto LibFileSystem LibFileSystemAccessClient LibGfx LibGUI LibMain LibTLS)

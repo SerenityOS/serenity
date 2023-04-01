@@ -30,6 +30,7 @@ public:
     virtual DeprecatedString column_name(int) const override;
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual ErrorOr<void> load();
+    virtual ErrorOr<size_t> add(Vector<Certificate> const&);
 
 private:
     Vector<Certificate> m_certificates;
@@ -45,8 +46,10 @@ public:
 private:
     CertificateStoreWidget() = default;
     ErrorOr<void> initialize();
+    ErrorOr<void> import_pem();
 
     RefPtr<CertificateStoreModel> m_root_ca_model;
     RefPtr<GUI::TableView> m_root_ca_tableview;
+    RefPtr<GUI::Button> m_import_ca_button;
 };
 }
