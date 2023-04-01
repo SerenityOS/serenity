@@ -1061,6 +1061,7 @@ ErrorOr<void> DeflateCompressor::final_flush()
     VERIFY(!m_finished);
     m_finished = true;
     TRY(flush());
+    TRY(m_output_stream->flush_buffer_to_stream());
     return {};
 }
 
