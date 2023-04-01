@@ -13,8 +13,7 @@
 
 Engine::~Engine()
 {
-    if (m_pid != -1)
-        kill(m_pid, SIGINT);
+    quit();
 }
 
 Engine::Engine(StringView command)
@@ -65,4 +64,9 @@ void Engine::handle_bestmove(Chess::UCI::BestMoveCommand const& command)
         m_bestmove_callback(command.move());
 
     m_bestmove_callback = nullptr;
+}
+
+void Engine::quit()
+{
+    send_command(Chess::UCI::QuitCommand());
 }
