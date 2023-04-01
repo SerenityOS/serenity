@@ -226,8 +226,8 @@ void EventLoop::process()
 
     // FIXME:     2. If there are no tasks in the event loop's task queues and the WorkerGlobalScope object's closing flag is true, then destroy the event loop, aborting these steps, resuming the run a worker steps described in the Web workers section below.
 
-    // If there are tasks in the queue, schedule a new round of processing. :^)
-    if (m_task_queue.has_runnable_tasks() || !m_microtask_queue.is_empty())
+    // If there are eligible tasks in the queue, schedule a new round of processing. :^)
+    if (m_task_queue.has_runnable_tasks() || (!m_microtask_queue.is_empty() && !m_performing_a_microtask_checkpoint))
         schedule();
 }
 
