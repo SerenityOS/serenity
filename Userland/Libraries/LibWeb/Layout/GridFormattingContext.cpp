@@ -260,7 +260,7 @@ void GridFormattingContext::place_item_with_row_and_column_position(Box const& b
 
     // FIXME: If the placement contains only a span for a named line, replace it with a span of 1.
 
-    m_positioned_boxes.append(PositionedBox(child_box, row_start, row_span, column_start, column_span));
+    m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 
     m_occupation_grid.maybe_add_row(row_start + 1);
     m_occupation_grid.maybe_add_column(column_start + 1);
@@ -388,7 +388,7 @@ void GridFormattingContext::place_item_with_row_position(Box const& box, Box con
     }
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
 
-    m_positioned_boxes.append(PositionedBox(child_box, row_start, row_span, column_start, column_span));
+    m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
 void GridFormattingContext::place_item_with_column_position(Box const& box, Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y)
@@ -511,7 +511,7 @@ void GridFormattingContext::place_item_with_column_position(Box const& box, Box 
     // line according to its span from that position.
     m_occupation_grid.set_occupied(column_start, column_start + column_span, auto_placement_cursor_y, auto_placement_cursor_y + row_span);
 
-    m_positioned_boxes.append(PositionedBox(child_box, auto_placement_cursor_y, row_span, column_start, column_span));
+    m_grid_items.append(GridItem(child_box, auto_placement_cursor_y, row_span, column_start, column_span));
 }
 
 void GridFormattingContext::place_item_with_no_declared_position(Box const& child_box, int& auto_placement_cursor_x, int& auto_placement_cursor_y)
@@ -570,7 +570,7 @@ finish:
     }
 
     m_occupation_grid.set_occupied(column_start, column_start + column_span, row_start, row_start + row_span);
-    m_positioned_boxes.append(PositionedBox(child_box, row_start, row_span, column_start, column_span));
+    m_grid_items.append(GridItem(child_box, row_start, row_span, column_start, column_span));
 }
 
 void GridFormattingContext::initialize_grid_tracks(Box const& box, AvailableSpace const& available_space, int column_count, int row_count)
@@ -749,9 +749,9 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
         }
 
         Vector<Box const&> boxes_of_column;
-        for (auto& positioned_box : m_positioned_boxes) {
-            if (positioned_box.gap_adjusted_column(box) == index && positioned_box.raw_column_span() == 1)
-                boxes_of_column.append(positioned_box.box());
+        for (auto& grid_item : m_grid_items) {
+            if (grid_item.gap_adjusted_column(box) == index && grid_item.raw_column_span() == 1)
+                boxes_of_column.append(grid_item.box());
         }
 
         switch (grid_column.min_track_sizing_function.type()) {
@@ -1248,10 +1248,10 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
             continue;
         }
 
-        Vector<PositionedBox&> positioned_boxes_of_row;
-        for (auto& positioned_box : m_positioned_boxes) {
-            if (positioned_box.gap_adjusted_row(box) == index && positioned_box.raw_row_span() == 1)
-                positioned_boxes_of_row.append(positioned_box);
+        Vector<GridItem&> grid_items_of_row;
+        for (auto& grid_item : m_grid_items) {
+            if (grid_item.gap_adjusted_row(box) == index && grid_item.raw_row_span() == 1)
+                grid_items_of_row.append(grid_item);
         }
 
         switch (grid_row.min_track_sizing_function.type()) {
@@ -1260,8 +1260,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // items’ min-content contributions, floored at zero.
         case CSS::GridSize::Type::MinContent: {
             CSSPixels row_height = 0;
-            for (auto& positioned_box : positioned_boxes_of_row)
-                row_height = max(row_height, calculate_min_content_height(positioned_box.box(), AvailableSize::make_definite(m_grid_columns[positioned_box.gap_adjusted_column(box)].base_size)));
+            for (auto& grid_item : grid_items_of_row)
+                row_height = max(row_height, calculate_min_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
             grid_row.base_size = row_height;
         } break;
         // - For max-content minimums:
@@ -1269,8 +1269,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // items’ max-content contributions, floored at zero.
         case CSS::GridSize::Type::MaxContent: {
             CSSPixels row_height = 0;
-            for (auto& positioned_box : positioned_boxes_of_row)
-                row_height = max(row_height, calculate_max_content_height(positioned_box.box(), AvailableSize::make_definite(m_grid_columns[positioned_box.gap_adjusted_column(box)].base_size)));
+            for (auto& grid_item : grid_items_of_row)
+                row_height = max(row_height, calculate_max_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
             grid_row.base_size = row_height;
         } break;
         // - For auto minimums:
@@ -1293,8 +1293,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         case CSS::GridSize::Type::Percentage:
         case CSS::GridSize::Type::FlexibleLength: {
             CSSPixels grid_row_height = 0;
-            for (auto& positioned_box : positioned_boxes_of_row)
-                grid_row_height = max(grid_row_height, calculate_min_content_height(positioned_box.box(), AvailableSize::make_definite(m_grid_columns[positioned_box.gap_adjusted_column(box)].base_size)));
+            for (auto& grid_item : grid_items_of_row)
+                grid_row_height = max(grid_row_height, calculate_min_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
             grid_row.base_size = grid_row_height;
         } break;
         default:
@@ -1307,8 +1307,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // the items’ min-content contributions.
         case CSS::GridSize::Type::MinContent: {
             CSSPixels row_height = 0;
-            for (auto& positioned_box : positioned_boxes_of_row)
-                row_height = max(row_height, calculate_max_content_height(positioned_box.box(), AvailableSize::make_definite(m_grid_columns[positioned_box.gap_adjusted_column(box)].base_size)));
+            for (auto& grid_item : grid_items_of_row)
+                row_height = max(row_height, calculate_max_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
             grid_row.base_size = row_height;
         } break;
         // - For max-content maximums:
@@ -1317,8 +1317,8 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
         // limit by the fit-content() argument.
         case CSS::GridSize::Type::MaxContent: {
             CSSPixels row_height = 0;
-            for (auto& positioned_box : positioned_boxes_of_row)
-                row_height = max(row_height, calculate_max_content_height(positioned_box.box(), AvailableSize::make_definite(m_grid_columns[positioned_box.gap_adjusted_column(box)].base_size)));
+            for (auto& grid_item : grid_items_of_row)
+                row_height = max(row_height, calculate_max_content_height(grid_item.box(), AvailableSize::make_definite(m_grid_columns[grid_item.gap_adjusted_column(box)].base_size)));
             grid_row.base_size = row_height;
         } break;
         case CSS::GridSize::Type::Length:
@@ -1873,25 +1873,25 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
             independent_formatting_context->parent_context_did_dimension_child_root_box();
     };
 
-    for (auto& positioned_box : m_positioned_boxes) {
-        auto resolved_row_span = box.computed_values().row_gap().is_auto() ? positioned_box.raw_row_span() : positioned_box.raw_row_span() * 2;
-        if (!box.computed_values().row_gap().is_auto() && positioned_box.gap_adjusted_row(box) == 0)
+    for (auto& grid_item : m_grid_items) {
+        auto resolved_row_span = box.computed_values().row_gap().is_auto() ? grid_item.raw_row_span() : grid_item.raw_row_span() * 2;
+        if (!box.computed_values().row_gap().is_auto() && grid_item.gap_adjusted_row(box) == 0)
             resolved_row_span -= 1;
-        if (positioned_box.gap_adjusted_row(box) + resolved_row_span > static_cast<int>(m_grid_rows.size()))
-            resolved_row_span = m_grid_rows.size() - positioned_box.gap_adjusted_row(box);
+        if (grid_item.gap_adjusted_row(box) + resolved_row_span > static_cast<int>(m_grid_rows.size()))
+            resolved_row_span = m_grid_rows.size() - grid_item.gap_adjusted_row(box);
 
-        auto resolved_column_span = box.computed_values().column_gap().is_auto() ? positioned_box.raw_column_span() : positioned_box.raw_column_span() * 2;
-        if (!box.computed_values().column_gap().is_auto() && positioned_box.gap_adjusted_column(box) == 0)
+        auto resolved_column_span = box.computed_values().column_gap().is_auto() ? grid_item.raw_column_span() : grid_item.raw_column_span() * 2;
+        if (!box.computed_values().column_gap().is_auto() && grid_item.gap_adjusted_column(box) == 0)
             resolved_column_span -= 1;
-        if (positioned_box.gap_adjusted_column(box) + resolved_column_span > static_cast<int>(m_grid_columns.size()))
-            resolved_column_span = m_grid_columns.size() - positioned_box.gap_adjusted_column(box);
+        if (grid_item.gap_adjusted_column(box) + resolved_column_span > static_cast<int>(m_grid_columns.size()))
+            resolved_column_span = m_grid_columns.size() - grid_item.gap_adjusted_column(box);
 
         layout_box(
-            positioned_box.gap_adjusted_row(box),
-            positioned_box.gap_adjusted_row(box) + resolved_row_span,
-            positioned_box.gap_adjusted_column(box),
-            positioned_box.gap_adjusted_column(box) + resolved_column_span,
-            positioned_box.box());
+            grid_item.gap_adjusted_row(box),
+            grid_item.gap_adjusted_row(box) + resolved_row_span,
+            grid_item.gap_adjusted_column(box),
+            grid_item.gap_adjusted_column(box) + resolved_column_span,
+            grid_item.box());
     }
 
     CSSPixels total_y = 0;
@@ -2046,12 +2046,12 @@ bool OccupationGrid::is_occupied(int column_index, int row_index)
     return m_occupation_grid[row_index][column_index];
 }
 
-int PositionedBox::gap_adjusted_row(Box const& parent_box)
+int GridItem::gap_adjusted_row(Box const& parent_box) const
 {
     return parent_box.computed_values().row_gap().is_auto() ? m_row : m_row * 2;
 }
 
-int PositionedBox::gap_adjusted_column(Box const& parent_box)
+int GridItem::gap_adjusted_column(Box const& parent_box) const
 {
     return parent_box.computed_values().column_gap().is_auto() ? m_column : m_column * 2;
 }

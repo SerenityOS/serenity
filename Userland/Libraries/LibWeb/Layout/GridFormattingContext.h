@@ -29,9 +29,9 @@ private:
     Vector<Vector<bool>> m_occupation_grid;
 };
 
-class PositionedBox {
+class GridItem {
 public:
-    PositionedBox(Box const& box, int row, int row_span, int column, int column_span)
+    GridItem(Box const& box, int row, int row_span, int column, int column_span)
         : m_box(box)
         , m_row(row)
         , m_row_span(row_span)
@@ -40,13 +40,13 @@ public:
     {
     }
 
-    Box const& box() { return m_box; }
+    Box const& box() const { return m_box; }
 
     int raw_row_span() { return m_row_span; }
     int raw_column_span() { return m_column_span; }
 
-    int gap_adjusted_row(Box const& parent_box);
-    int gap_adjusted_column(Box const& parent_box);
+    int gap_adjusted_row(Box const& parent_box) const;
+    int gap_adjusted_column(Box const& parent_box) const;
 
 private:
     JS::NonnullGCPtr<Box const> m_box;
@@ -120,7 +120,7 @@ private:
     Vector<TemporaryTrack> m_grid_columns;
 
     OccupationGrid m_occupation_grid;
-    Vector<PositionedBox> m_positioned_boxes;
+    Vector<GridItem> m_grid_items;
     Vector<JS::NonnullGCPtr<Box const>> m_boxes_to_place;
 
     CSSPixels get_free_space_x(AvailableSpace const& available_space);
