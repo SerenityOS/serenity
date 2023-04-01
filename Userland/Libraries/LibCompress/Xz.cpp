@@ -175,6 +175,22 @@ XzDecompressor::XzDecompressor(NonnullOwnPtr<CountingStream> stream)
 {
 }
 
+static Optional<size_t> size_for_check_type(XzStreamCheckType check_type)
+{
+    switch (check_type) {
+    case XzStreamCheckType::None:
+        return 0;
+    case XzStreamCheckType::CRC32:
+        return 4;
+    case XzStreamCheckType::CRC64:
+        return 8;
+    case XzStreamCheckType::SHA256:
+        return 32;
+    default:
+        return {};
+    }
+}
+
 ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 {
     if (m_found_last_stream_footer)
@@ -260,23 +276,14 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             //  stored one, the decoder MUST indicate an error. If the selected
             //  type of Check is not supported by the decoder, it SHOULD
             //  indicate a warning or error."
+            auto maybe_check_size = size_for_check_type(m_stream_flags->check_type);
+
+            if (!maybe_check_size.has_value())
+                return Error::from_string_literal("XZ stream has an unknown check type");
+
             // TODO: Block content checks are currently unimplemented as a whole, independent of the check type.
             //       For now, we only make sure to remove the correct amount of bytes from the stream.
-            switch (m_stream_flags->check_type) {
-            case XzStreamCheckType::None:
-                break;
-            case XzStreamCheckType::CRC32:
-                TRY(m_stream->discard(4));
-                break;
-            case XzStreamCheckType::CRC64:
-                TRY(m_stream->discard(8));
-                break;
-            case XzStreamCheckType::SHA256:
-                TRY(m_stream->discard(32));
-                break;
-            default:
-                return Error::from_string_literal("XZ stream has an unknown check type");
-            }
+            TRY(m_stream->discard(*maybe_check_size));
         }
 
         auto start_of_current_block = m_stream->read_bytes();
