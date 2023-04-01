@@ -7,6 +7,9 @@
 #include "CertificateStore.h"
 #include <Applications/CertificateSettings/CertificateStoreGML.h>
 #include <LibCrypto/ASN1/PEM.h>
+#include <LibFileSystem/FileSystem.h>
+#include <LibFileSystemAccessClient/Client.h>
+#include <LibGUI/MessageBox.h>
 
 namespace CertificateSettings {
 
@@ -14,9 +17,15 @@ NonnullRefPtr<CertificateStoreModel> CertificateStoreModel::create() { return ad
 
 ErrorOr<void> CertificateStoreModel::load()
 {
-    // FIXME: In the future, we will allow users to import their own certificates. To support this, we would need to change this logic
     auto cacert_file = TRY(Core::File::open("/etc/cacert.pem"sv, Core::File::OpenMode::Read));
     auto data = TRY(cacert_file->read_until_eof());
+
+    auto user_cert_path = TRY(String::formatted("{}/.config/certs.pem", Core::StandardPaths::home_directory()));
+    if (FileSystem::exists(user_cert_path)) {
+        auto user_cert_file = TRY(Core::File::open(user_cert_path, Core::File::OpenMode::Read));
+        TRY(data.try_append(TRY(user_cert_file->read_until_eof())));
+    }
+
     m_certificates = TRY(DefaultRootCACertificates::the().reload_certificates(data));
 
     return {};
@@ -59,6 +68,44 @@ GUI::Variant CertificateStoreModel::data(GUI::ModelIndex const& index, GUI::Mode
     return {};
 }
 
+ErrorOr<size_t> CertificateStoreModel::add(Vector<Certificate> const& certificates)
+{
+    auto size = m_certificates.size();
+    TRY(m_certificates.try_extend(certificates));
+    return m_certificates.size() - size;
+}
+
+ErrorOr<void> CertificateStoreWidget::import_pem()
+{
+    auto fsac_result = FileSystemAccessClient::Client::the().open_file(window(), "Choose PEM to import...");
+    if (fsac_result.is_error())
+        return {};
+
+    auto fsac_file = fsac_result.release_value();
+    auto filename = fsac_file.filename();
+    if (!(filename.ends_with_bytes(".pem"sv) || filename.ends_with_bytes(".crt"sv)))
+        return Error::from_string_view("File is not a .pem or .crt file."sv);
+
+    auto data = TRY(fsac_file.release_stream()->read_until_eof());
+    auto count = TRY(m_root_ca_model->add(TRY(DefaultRootCACertificates::the().reload_certificates(data))));
+
+    if (count == 0) {
+        return Error::from_string_view("No valid CA found to import."sv);
+    }
+
+    auto cert_file = TRY(Core::File::open(TRY(String::formatted("{}/.config/certs.pem", Core::StandardPaths::home_directory())), Core::File::OpenMode::Write | Core::File::OpenMode::Append));
+    TRY(cert_file->write_until_depleted(data.bytes()));
+    cert_file->close();
+
+    m_root_ca_model->invalidate();
+    m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedTo, 150);
+    m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedBy, 150);
+
+    GUI::MessageBox::show(window(), TRY(String::formatted("Successfully imported {} CAs.", count)), "Success"sv);
+
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<CertificateStoreWidget>> CertificateStoreWidget::try_create()
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CertificateStoreWidget()));
@@ -79,6 +126,14 @@ ErrorOr<void> CertificateStoreWidget::initialize()
     m_root_ca_tableview->set_model(m_root_ca_model);
     m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedTo, 150);
     m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedBy, 150);
+
+    m_import_ca_button = find_descendant_of_type_named<GUI::Button>("import_button");
+    m_import_ca_button->on_click = [&](auto) {
+        auto import_result = import_pem();
+        if (import_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", import_result.release_error()));
+        }
+    };
 
     return {};
 }

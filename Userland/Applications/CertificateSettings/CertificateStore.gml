@@ -26,7 +26,6 @@
                 name: "import_button"
                 text: "Import"
                 fixed_width: 80
-                enabled: false
             }
 
             @GUI::Button {
