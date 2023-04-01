@@ -28,6 +28,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
             dispatch_event(DOM::Event::create(this->realm(), EventNames::load).release_value_but_fixme_should_propagate_errors());
+            m_load_event_delayer.clear();
         });
     };
 
@@ -37,6 +38,7 @@ HTMLImageElement::HTMLImageElement(DOM::Document& document, DOM::QualifiedName q
         this->document().set_needs_layout();
         queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
             dispatch_event(DOM::Event::create(this->realm(), EventNames::error).release_value_but_fixme_should_propagate_errors());
+            m_load_event_delayer.clear();
         });
     };
 
@@ -83,8 +85,10 @@ void HTMLImageElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
 {
     HTMLElement::parse_attribute(name, value);
 
-    if (name == HTML::AttributeNames::src && !value.is_empty())
+    if (name == HTML::AttributeNames::src && !value.is_empty()) {
         m_image_loader.load(document().parse_url(value));
+        m_load_event_delayer.emplace(document());
+    }
 
     if (name == HTML::AttributeNames::alt) {
         if (layout_node())

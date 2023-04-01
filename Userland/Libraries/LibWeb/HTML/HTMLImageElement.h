@@ -9,6 +9,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/Loader/ImageLoader.h>
@@ -54,6 +55,8 @@ private:
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
     ImageLoader m_image_loader;
+
+    Optional<DOM::DocumentLoadEventDelayer> m_load_event_delayer;
 };
 
 }
