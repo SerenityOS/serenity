@@ -11,6 +11,7 @@
 #include <LibGfx/Filters/StackBlurFilter.h>
 #include <LibGfx/Painter.h>
 #include <LibWeb/Layout/LineBoxFragment.h>
+#include <LibWeb/Layout/Node.h>
 #include <LibWeb/Painting/BorderPainting.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
 #include <LibWeb/Painting/PaintContext.h>
@@ -369,10 +370,9 @@ void paint_text_shadow(PaintContext& context, Layout::LineBoxFragment const& fra
         auto shadow_bitmap = maybe_shadow_bitmap.release_value();
 
         Gfx::Painter shadow_painter { *shadow_bitmap };
-        shadow_painter.set_font(context.painter().font());
         // FIXME: "Spread" the shadow somehow.
         DevicePixelPoint baseline_start(text_rect.x(), text_rect.y() + context.rounded_device_pixels(fragment.baseline()));
-        shadow_painter.draw_text_run(baseline_start.to_type<int>(), Utf8View(fragment.text()), context.painter().font(), layer.color);
+        shadow_painter.draw_text_run(baseline_start.to_type<int>(), Utf8View(fragment.text()), fragment.layout_node().scaled_font(context), layer.color);
 
         // Blur
         Gfx::StackBlurFilter filter(*shadow_bitmap);
