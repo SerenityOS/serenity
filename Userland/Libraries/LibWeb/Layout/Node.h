@@ -14,6 +14,7 @@
 #include <LibJS/Heap/Handle.h>
 #include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/StyleProperties.h>
+#include <LibWeb/FontCache.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Layout/BoxModelMetrics.h>
 #include <LibWeb/Painting/PaintContext.h>
@@ -117,6 +118,8 @@ public:
     bool can_contain_boxes_with_position_absolute() const;
 
     Gfx::Font const& font() const;
+    Gfx::Font const& scaled_font(PaintContext&) const;
+
     CSS::ImmutableComputedValues const& computed_values() const;
     CSSPixels line_height() const;
 
@@ -235,6 +238,11 @@ inline Gfx::Font const& Node::font() const
     if (m_has_style)
         return static_cast<NodeWithStyle const*>(this)->font();
     return parent()->font();
+}
+
+inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
+{
+    return *FontCache::the().scaled_font(font(), context.device_pixels_per_css_pixel());
 }
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
