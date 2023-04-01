@@ -2001,6 +2001,7 @@ NonnullRefPtr<Expression const> Parser::parse_expression(int min_precedence, Ass
         expression = create_ast_node<TaggedTemplateLiteral>({ m_source_code, rule_start.position(), position() }, move(expression), move(template_literal));
     }
     if (should_continue_parsing) {
+        auto original_forbidden = forbidden;
         while (match_secondary_expression(forbidden)) {
             int new_precedence = g_operator_precedence.get(m_state.current_token.type());
             if (new_precedence < min_precedence)
@@ -2010,7 +2011,7 @@ NonnullRefPtr<Expression const> Parser::parse_expression(int min_precedence, Ass
             check_for_invalid_object_property(expression);
 
             Associativity new_associativity = operator_associativity(m_state.current_token.type());
-            auto result = parse_secondary_expression(move(expression), new_precedence, new_associativity, forbidden);
+            auto result = parse_secondary_expression(move(expression), new_precedence, new_associativity, original_forbidden);
             expression = result.expression;
             forbidden = forbidden.merge(result.forbidden);
             while (match(TokenType::TemplateLiteralStart) && !is<UpdateExpression>(*expression)) {
