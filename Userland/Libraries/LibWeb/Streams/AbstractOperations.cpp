@@ -1334,6 +1334,25 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_w
     return writable_stream_close(*stream);
 }
 
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-ensure-closed-promise-rejected
+void writable_stream_default_writer_ensure_closed_promise_rejected(WritableStreamDefaultWriter& writer, JS::Value error)
+{
+    auto& realm = writer.realm();
+
+    // 1. If writer.[[closedPromise]].[[PromiseState]] is "pending", reject writer.[[closedPromise]] with error.
+    auto& closed_promise = verify_cast<JS::Promise>(*writer.closed_promise()->promise());
+    if (closed_promise.state() == JS::Promise::State::Pending) {
+        WebIDL::reject_promise(realm, *writer.closed_promise(), error);
+    }
+    // 2. Otherwise, set writer.[[closedPromise]] to a promise rejected with error.
+    else {
+        writer.set_closed_promise(WebIDL::create_rejected_promise(realm, error));
+    }
+
+    // 3. Set writer.[[closedPromise]].[[PromiseIsHandled]] to true.
+    WebIDL::mark_promise_as_handled(*writer.closed_promise());
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-ensure-ready-promise-rejected
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter& writer, JS::Value error)
 {
@@ -1372,6 +1391,36 @@ Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamD
 
     // 5. Return ! WritableStreamDefaultControllerGetDesiredSize(stream.[[controller]]).
     return writable_stream_default_controller_get_desired_size(*stream->controller());
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-release
+WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamDefaultWriter& writer)
+{
+    // 1. Let stream be writer.[[stream]].
+    auto stream = writer.stream();
+
+    // 2. Assert: stream is not undefined.
+    VERIFY(stream);
+
+    // 3. Assert: stream.[[writer]] is writer.
+    VERIFY(stream->writer().ptr() == &writer);
+
+    // 4. Let releasedError be a new TypeError.
+    auto released_error = MUST_OR_THROW_OOM(JS::TypeError::create(writer.realm(), "Writer's stream lock has been released"sv));
+
+    // 5. Perform ! WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, releasedError).
+    writable_stream_default_writer_ensure_ready_promise_rejected(writer, released_error);
+
+    // 6. Perform ! WritableStreamDefaultWriterEnsureClosedPromiseRejected(writer, releasedError).
+    writable_stream_default_writer_ensure_closed_promise_rejected(writer, released_error);
+
+    // 7. Set stream.[[writer]] to undefined.
+    stream->set_writer({});
+
+    // 8. Set writer.[[stream]] to undefined.
+    writer.set_stream({});
+
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-advance-queue-if-needed

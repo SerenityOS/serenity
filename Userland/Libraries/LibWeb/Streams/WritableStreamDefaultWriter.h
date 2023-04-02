@@ -29,6 +29,7 @@ public:
     JS::GCPtr<JS::Object> ready();
     WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> abort(JS::Value reason);
     WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> close();
+    WebIDL::ExceptionOr<void> release_lock();
 
     JS::GCPtr<WebIDL::Promise> closed_promise() { return m_closed_promise; }
     void set_closed_promise(JS::GCPtr<WebIDL::Promise> value) { m_closed_promise = value; }
