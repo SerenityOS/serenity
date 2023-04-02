@@ -76,6 +76,13 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::close()
     return TRY(writable_stream_close(*this))->promise();
 }
 
+// https://streams.spec.whatwg.org/#ws-get-writer
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> WritableStream::get_writer()
+{
+    // 1. Return ? AcquireWritableStreamDefaultWriter(this).
+    return acquire_writable_stream_default_writer(*this);
+}
+
 WritableStream::WritableStream(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

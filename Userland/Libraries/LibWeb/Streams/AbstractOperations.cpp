@@ -738,6 +738,21 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
 }
 
+// https://streams.spec.whatwg.org/#acquire-writable-stream-default-writer
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> acquire_writable_stream_default_writer(WritableStream& stream)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let writer be a new WritableStreamDefaultWriter.
+    auto writer = MUST_OR_THROW_OOM(stream.heap().allocate<WritableStreamDefaultWriter>(realm, realm));
+
+    // 2. Perform ? SetUpWritableStreamDefaultWriter(writer, stream).
+    TRY(set_up_writable_stream_default_writer(*writer, stream));
+
+    // 3. Return writer.
+    return writer;
+}
+
 // https://streams.spec.whatwg.org/#is-writable-stream-locked
 bool is_writable_stream_locked(WritableStream const& stream)
 {

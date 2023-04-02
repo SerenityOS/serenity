@@ -1,3 +1,5 @@
+#import <Streams/WritableStreamDefaultWriter.idl>
+
 [Exposed=*, Transferable]
 interface WritableStream {
     // FIXME: optional QueuingStrategy strategy = {}
@@ -7,7 +9,7 @@ interface WritableStream {
 
     // FIXME:
     // Promise<undefined> abort(optional any reason);
-    // WritableStreamDefaultWriter getWriter();
 
     Promise<undefined> close();
+    WritableStreamDefaultWriter getWriter();
 };
