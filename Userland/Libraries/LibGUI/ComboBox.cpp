@@ -257,6 +257,7 @@ void ComboBox::open()
     }
     rect.intersect(desktop);
     m_list_window->set_rect(rect);
+    m_list_view->set_min_size(rect.size());
 
     if (m_selected_index.has_value())
         m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
