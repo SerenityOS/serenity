@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -121,8 +122,8 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     child_first_thread->m_alternative_signal_stack = Thread::current()->m_alternative_signal_stack;
     child_first_thread->m_alternative_signal_stack_size = Thread::current()->m_alternative_signal_stack_size;
 
-#if ARCH(X86_64)
     auto& child_regs = child_first_thread->m_regs;
+#if ARCH(X86_64)
     child_regs.rax = 0; // fork() returns 0 in the child :^)
     child_regs.rbx = regs.rbx;
     child_regs.rcx = regs.rcx;
@@ -146,8 +147,12 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:#04x}:{:p} with stack {:p}, kstack {:p}",
         child_regs.cs, child_regs.rip, child_regs.rsp, child_regs.rsp0);
 #elif ARCH(AARCH64)
-    (void)regs;
-    TODO_AARCH64();
+    child_regs.x[0] = 0; // fork() returns 0 in the child :^)
+    for (size_t i = 1; i < array_size(child_regs.x); ++i)
+        child_regs.x[i] = regs.x[i];
+    child_regs.spsr_el1 = regs.spsr_el1;
+    child_regs.elr_el1 = regs.elr_el1;
+    child_regs.sp_el0 = regs.sp_el0;
 #else
 #    error Unknown architecture
 #endif
