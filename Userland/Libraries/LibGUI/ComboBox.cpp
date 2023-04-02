@@ -271,8 +271,11 @@ void ComboBox::open()
     m_list_window->set_rect(rect);
     m_list_view->set_min_size(rect.size());
 
-    if (m_selected_index.has_value())
-        m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
+    if (m_selected_index.has_value()) {
+        m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set, false);
+        auto index_top = m_list_view->vertical_scrollbar().step() * m_selected_index.value().row();
+        m_list_view->vertical_scrollbar().set_value(index_top);
+    }
 
     m_list_window->show();
 }
