@@ -42,8 +42,45 @@ struct HostControlRegisterMap {
     u32 interrupt_status_enable;
     u32 interrupt_signal_enable;
     u32 host_configuration_2;
-    u32 capabilities_0;
-    u32 capabilities_1;
+    // SDHC 2.2.26 Capabilities Register (Cat.C Offset 040h)
+    struct CapabilitesRegister {
+        u32 timeout_clock_frequency : 6;
+        u32 : 1;
+        u32 timeout_clock_unit : 1;
+        u32 base_clock_frequency : 8;
+        u32 max_block_length : 2;
+        u32 eight_bit_support_for_embedded_devices : 1;
+        u32 adma2 : 1;
+        u32 : 1;
+        u32 high_speed : 1;
+        u32 sdma : 1;
+        u32 suspend_resume : 1;
+        u32 three_point_three_volt : 1;
+        u32 three_point_zero_volt : 1;
+        u32 one_point_eight_volt : 1;
+        u32 dma_64_bit_addressing_v4 : 1;
+        u32 dma_64_bit_addressing_v3 : 1;
+        u32 async_interrupt : 1;
+        u32 slot_type : 2;
+        u32 sdr50 : 1;
+        u32 sdr140 : 1;
+        u32 ddr50 : 1;
+        u32 uhs_ii : 1;
+        u32 driver_type_A : 1;
+        u32 driver_type_C : 1;
+        u32 driver_type_D : 1;
+        u32 : 1;
+        u32 timer_count_for_retuning : 4;
+        u32 : 1;
+        u32 use_tuning_for_sdr50 : 1;
+        u32 retuning_modes : 2;
+        u32 clock_multiplier : 8;
+        u32 : 3;
+        u32 adma3 : 1;
+        u32 one_point_eight_vdd2 : 1;
+        u32 : 3;
+    } capabilities;
+
     u32 maximum_current_capabilities;
     u32 maximum_current_capabilities_reserved;
     u32 force_event_for_auto_cmd_error_status;
