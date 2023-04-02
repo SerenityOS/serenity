@@ -291,8 +291,10 @@ void AbstractView::mousemove_event(MouseEvent& event)
     if (!model())
         return AbstractScrollableWidget::mousemove_event(event);
 
-    auto hovered_index = index_at_event_position(event.position());
-    set_hovered_index(hovered_index);
+    if (widget_inner_rect().contains(event.position())) {
+        auto hovered_index = index_at_event_position(event.position());
+        set_hovered_index(hovered_index);
+    }
 
     auto data_type = m_model->drag_data_type();
     if (data_type.is_null())
