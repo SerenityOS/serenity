@@ -43,7 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    Config::pledge_domain("ImageViewer");
+    Config::pledge_domains({ "ImageViewer", "WindowManager" });
 
     app->set_config_domain(TRY("ImageViewer"_string));
 
