@@ -1308,6 +1308,19 @@ void writable_stream_update_backpressure(WritableStream& stream, bool backpressu
     stream.set_backpressure(backpressure);
 }
 
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-abort
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_abort(WritableStreamDefaultWriter& writer, JS::Value reason)
+{
+    // 1. Let stream be writer.[[stream]].
+    auto stream = writer.stream();
+
+    // 2. Assert: stream is not undefined.
+    VERIFY(stream);
+
+    // 3. Return ! WritableStreamAbort(stream, reason).
+    return writable_stream_abort(*stream, reason);
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-ensure-ready-promise-rejected
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter& writer, JS::Value error)
 {
