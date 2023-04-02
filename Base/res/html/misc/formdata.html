@@ -2,6 +2,14 @@
 <html>
 <head>
   <title>FormData</title>
+  <style>
+    .code-block {
+      background-color: grey;
+      color: lightgrey;
+      border-radius: 2px;
+      padding: 5px;
+    }
+  </style>
   <script>
     function log(s) {
       document.getElementById("out").innerHTML += `${s}\n`;
@@ -41,6 +49,15 @@
         log(`Entry: ${entry[0]}, ${entry[1]}`);
       }
     }
+
+    function postMultipartFormData() {
+      let form = document.getElementById("form1");
+      let formData = new FormData(form);
+      let xhr = new XMLHttpRequest;
+
+      xhr.open("POST", "http://localhost:8000");
+      xhr.send(formData);
+    }
   </script>
 </head>
 <body>
@@ -66,6 +83,10 @@
   </form>
 
   <button onclick="dumpFormContents()">Test FormData Features</button>
+
+  <div style="padding-top: 30px; padding-left: 5px">To test multipart/form-data start a simple echo server:</div>
+  <div style="padding-left: 10px; padding-bottom: 10px"><span class="code-block">while true; do printf 'HTTP/1.1 200 OK\n' | nc -Nl 8000; done</span></div>
+  <button onclick="postMultipartFormData()">Test multipart/form-data</button>
 
   <pre id="out"></pre>
 </body>
