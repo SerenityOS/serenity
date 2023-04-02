@@ -87,6 +87,22 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::close()
     return TRY(writable_stream_default_writer_close(*this))->promise();
 }
 
+// https://streams.spec.whatwg.org/#default-writer-release-lock
+WebIDL::ExceptionOr<void> WritableStreamDefaultWriter::release_lock()
+{
+    // 1. Let stream be this.[[stream]].
+
+    // 2. If stream is undefined, return.
+    if (!m_stream)
+        return {};
+
+    // 3. Assert: stream.[[writer]] is not undefined.
+    VERIFY(m_stream->writer());
+
+    // 4. Perform ! WritableStreamDefaultWriterRelease(this).
+    return writable_stream_default_writer_release(*this);
+}
+
 WritableStreamDefaultWriter::WritableStreamDefaultWriter(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
