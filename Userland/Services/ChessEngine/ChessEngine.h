@@ -19,6 +19,7 @@ public:
     virtual void handle_position(Chess::UCI::PositionCommand const&) override;
     virtual void handle_go(Chess::UCI::GoCommand const&) override;
     virtual void handle_quit() override;
+    virtual void handle_unexpected_eof() override;
 
     Function<void(int)> on_quit;
 
