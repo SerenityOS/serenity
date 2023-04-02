@@ -208,7 +208,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY* tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY* tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -218,7 +218,7 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thre
 
     auto path_string = TRY(KString::try_create(path));
     auto name = TRY(KString::try_create(parts.last()));
-    auto process = TRY(Process::try_create(first_thread, move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
+    auto [process, first_thread] = TRY(Process::create(move(name), uid, gid, ProcessID(0), false, VirtualFileSystem::the().root_custody(), nullptr, tty));
 
     TRY(process->m_fds.with_exclusive([&](auto& fds) -> ErrorOr<void> {
         TRY(fds.try_resize(Process::OpenFileDescriptions::max_open()));
@@ -238,11 +238,7 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thre
 
     Thread* new_main_thread = nullptr;
     InterruptsState previous_interrupts_state = InterruptsState::Enabled;
-    if (auto result = process->exec(move(path_string), move(arguments), move(environment), new_main_thread, previous_interrupts_state); result.is_error()) {
-        dbgln("Failed to exec {}: {}", path, result.error());
-        first_thread = nullptr;
-        return result.release_error();
-    }
+    TRY(process->exec(move(path_string), move(arguments), move(environment), new_main_thread, previous_interrupts_state));
 
     register_new(*process);
 
@@ -254,25 +250,24 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thre
         new_main_thread->set_state(Thread::State::Runnable);
     }
 
-    return process;
+    return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-RefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_kernel_process(NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
-    auto process_or_error = Process::try_create(first_thread, move(name), UserID(0), GroupID(0), ProcessID(0), true);
-    if (process_or_error.is_error())
-        return {};
-    auto process = process_or_error.release_value();
+    auto process_and_first_thread = TRY(Process::create(move(name), UserID(0), GroupID(0), ProcessID(0), true));
+    auto& process = *process_and_first_thread.process;
+    auto& thread = *process_and_first_thread.first_thread;
 
-    first_thread->regs().set_entry_function((FlatPtr)entry, (FlatPtr)entry_data);
+    thread.regs().set_entry_function((FlatPtr)entry, (FlatPtr)entry_data);
 
     if (do_register == RegisterProcess::Yes)
-        register_new(*process);
+        register_new(process);
 
     SpinlockLocker lock(g_scheduler_lock);
-    first_thread->set_affinity(affinity);
-    first_thread->set_state(Thread::State::Runnable);
-    return process;
+    thread.set_affinity(affinity);
+    thread.set_state(Thread::State::Runnable);
+    return process_and_first_thread;
 }
 
 void Process::protect_data()
@@ -289,7 +284,7 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<NonnullRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -303,9 +298,11 @@ ErrorOr<NonnullRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& first_th
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
+
     auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree))));
-    TRY(process->attach_resources(new_address_space.release_nonnull(), first_thread, fork_parent));
-    return process;
+    auto first_thread = TRY(process->attach_resources(new_address_space.release_nonnull(), fork_parent));
+
+    return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
 Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree)
@@ -332,7 +329,7 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
     }
 }
 
-ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, LockRefPtr<Thread>& first_thread, Process* fork_parent)
+ErrorOr<NonnullLockRefPtr<Thread>> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, Process* fork_parent)
 {
     m_space.with([&](auto& space) {
         space = move(preallocated_space);
@@ -347,7 +344,7 @@ ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& pr
         return Thread::try_create(*this);
     };
 
-    first_thread = TRY(create_first_thread());
+    auto first_thread = TRY(create_first_thread());
 
     if (!fork_parent) {
         // FIXME: Figure out if this is really necessary.
@@ -359,7 +356,7 @@ ErrorOr<void> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& pr
     if (fork_parent)
         m_signal_action_data = fork_parent->m_signal_action_data;
 
-    return {};
+    return first_thread;
 }
 
 Process::~Process()

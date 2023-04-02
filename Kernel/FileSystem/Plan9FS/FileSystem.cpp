@@ -353,10 +353,11 @@ void Plan9FS::ensure_thread()
         auto process_name = KString::try_create("Plan9FS"sv);
         if (process_name.is_error())
             TODO();
-        (void)Process::create_kernel_process(m_thread, process_name.release_value(), [&]() {
+        auto [_, thread] = Process::create_kernel_process(process_name.release_value(), [&]() {
             thread_main();
             m_thread_running.store(false, AK::MemoryOrder::memory_order_release);
-        });
+        }).release_value_but_fixme_should_propagate_errors();
+        m_thread = move(thread);
     }
 }
 

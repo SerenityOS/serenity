@@ -14,14 +14,13 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT void SyncTask::spawn()
 {
-    LockRefPtr<Thread> syncd_thread;
-    (void)Process::create_kernel_process(syncd_thread, KString::must_create("VFS Sync Task"sv), [] {
+    MUST(Process::create_kernel_process(KString::must_create("VFS Sync Task"sv), [] {
         dbgln("VFS SyncTask is running");
         for (;;) {
             VirtualFileSystem::sync();
             (void)Thread::current()->sleep(Time::from_seconds(1));
         }
-    });
+    }));
 }
 
 }
