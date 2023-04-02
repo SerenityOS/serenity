@@ -157,7 +157,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
     u8 random_bytes[48];
     size_t bytes = 48;
 
-    fill_with_random(random_bytes, bytes);
+    fill_with_random(random_bytes);
 
     // remove zeros from the random bytes
     for (size_t i = 0; i < bytes; ++i) {

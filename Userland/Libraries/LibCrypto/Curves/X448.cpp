@@ -291,7 +291,7 @@ static void modular_multiply_inverse(u32* state, u32* value)
 ErrorOr<ByteBuffer> X448::generate_private_key()
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(BYTES));
-    fill_with_random(buffer.data(), buffer.size());
+    fill_with_random(buffer);
     return buffer;
 }
 

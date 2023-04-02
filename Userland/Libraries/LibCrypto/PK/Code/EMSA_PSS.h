@@ -39,7 +39,7 @@ public:
         auto em_length = (em_bits + 7) / 8;
         u8 salt[SaltLength];
 
-        fill_with_random(salt, SaltLength);
+        fill_with_random(salt);
 
         if (em_length < hash_length + SaltLength + 2) {
             dbgln("Ooops...encoding error");

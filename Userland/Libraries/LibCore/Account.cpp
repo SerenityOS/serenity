@@ -30,7 +30,7 @@ namespace Core {
 static DeprecatedString get_salt()
 {
     char random_data[12];
-    fill_with_random(random_data, sizeof(random_data));
+    fill_with_random({ random_data, sizeof(random_data) });
 
     StringBuilder builder;
     builder.append("$5$"sv);

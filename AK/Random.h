@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Platform.h>
+#include <AK/Span.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <stdlib.h>
@@ -21,36 +22,32 @@
 
 namespace AK {
 
-inline void fill_with_random([[maybe_unused]] void* buffer, [[maybe_unused]] size_t length)
+inline void fill_with_random([[maybe_unused]] Bytes bytes)
 {
 #if defined(AK_OS_SERENITY) || defined(AK_OS_ANDROID)
-    arc4random_buf(buffer, length);
+    arc4random_buf(bytes.data(), bytes.size());
 #elif defined(OSS_FUZZ)
 #else
     auto fill_with_random_fallback = [&]() {
-        char* char_buffer = static_cast<char*>(buffer);
-        for (size_t i = 0; i < length; i++)
-            char_buffer[i] = rand();
+        for (auto& byte : bytes)
+            byte = rand();
     };
 
 #    if defined(__unix__) or defined(AK_OS_MACOS)
     // The maximum permitted value for the getentropy length argument.
     static constexpr size_t getentropy_length_limit = 256;
-
-    auto iterations = length / getentropy_length_limit;
-    auto remainder = length % getentropy_length_limit;
-    auto address = reinterpret_cast<FlatPtr>(buffer);
+    auto iterations = bytes.size() / getentropy_length_limit;
 
     for (size_t i = 0; i < iterations; ++i) {
-        if (getentropy(reinterpret_cast<void*>(address), getentropy_length_limit) != 0) {
+        if (getentropy(bytes.data(), getentropy_length_limit) != 0) {
             fill_with_random_fallback();
             return;
         }
 
-        address += getentropy_length_limit;
+        bytes = bytes.slice(getentropy_length_limit);
     }
 
-    if (remainder == 0 || getentropy(reinterpret_cast<void*>(address), remainder) == 0)
+    if (bytes.is_empty() || getentropy(bytes.data(), bytes.size()) == 0)
         return;
 #    endif
 
@@ -62,7 +59,7 @@ template<typename T>
 inline T get_random()
 {
     T t;
-    fill_with_random(&t, sizeof(T));
+    fill_with_random({ &t, sizeof(T) });
     return t;
 }
 

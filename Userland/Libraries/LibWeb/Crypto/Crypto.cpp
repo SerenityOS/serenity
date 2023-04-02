@@ -61,7 +61,7 @@ WebIDL::ExceptionOr<JS::Value> Crypto::get_random_values(JS::Value array) const
     // FIXME: Handle SharedArrayBuffers
 
     // 3. Overwrite all elements of array with cryptographically strong random values of the appropriate type.
-    fill_with_random(typed_array.viewed_array_buffer()->buffer().data(), typed_array.viewed_array_buffer()->buffer().size());
+    fill_with_random(typed_array.viewed_array_buffer()->buffer());
 
     // 4. Return array.
     return array;
@@ -88,7 +88,7 @@ ErrorOr<String> generate_random_uuid()
     u8 bytes[16];
 
     // 2. Fill bytes with cryptographically secure random bytes.
-    fill_with_random(bytes, 16);
+    fill_with_random(bytes);
 
     // 3. Set the 4 most significant bits of bytes[6], which represent the UUID version, to 0100.
     bytes[6] &= ~(1 << 7);

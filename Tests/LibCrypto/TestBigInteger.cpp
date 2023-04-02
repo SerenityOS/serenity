@@ -398,7 +398,7 @@ TEST_CASE(test_bigint_import_big_endian_decode_encode_roundtrip)
 {
     u8 random_bytes[128];
     u8 target_buffer[128];
-    fill_with_random(random_bytes, 128);
+    fill_with_random(random_bytes);
     auto encoded = Crypto::UnsignedBigInteger::import_data(random_bytes, 128);
     encoded.export_data({ target_buffer, 128 });
     EXPECT(memcmp(target_buffer, random_bytes, 128) == 0);
