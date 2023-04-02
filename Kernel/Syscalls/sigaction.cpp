@@ -87,14 +87,12 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
     // Stack state (created by the signal trampoline):
     // saved_ax, ucontext, signal_info, fpu_state?.
 
-#if ARCH(X86_64)
     // The FPU state is at the top here, pop it off and restore it.
     // FIXME: The stack alignment is off by 8 bytes here, figure this out and remove this excessively aligned object.
     alignas(alignof(FPUState) * 2) FPUState data {};
     TRY(copy_from_user(&data, bit_cast<FPUState const*>(stack_ptr)));
     Thread::current()->fpu_state() = data;
     stack_ptr += sizeof(FPUState);
-#endif
 
     stack_ptr += sizeof(siginfo); // We don't need this here.
 

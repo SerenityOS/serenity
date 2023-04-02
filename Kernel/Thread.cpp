@@ -1150,10 +1150,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         VERIFY(stack % 16 == 0);
 
-#if ARCH(X86_64)
         // Save the FPU/SSE state
         TRY(copy_value_on_user_stack(stack, fpu_state()));
-#endif
 
         TRY(push_value_on_user_stack(stack, pointer_to_ucontext));
         TRY(push_value_on_user_stack(stack, pointer_to_signal_info));
