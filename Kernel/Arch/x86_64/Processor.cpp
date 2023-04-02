@@ -1569,7 +1569,7 @@ extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
     return Processor::current().init_context(*thread, true);
 }
 
-void Processor::assume_context(Thread& thread, FlatPtr flags)
+void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
     dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
 
@@ -1579,6 +1579,7 @@ void Processor::assume_context(Thread& thread, FlatPtr flags)
     // and then the scheduler lock
     VERIFY(Processor::in_critical() == 2);
 
+    u32 flags = 2 | (new_interrupts_state == InterruptsState::Enabled ? 0x200 : 0);
     do_assume_context(&thread, flags);
 
     VERIFY_NOT_REACHED();

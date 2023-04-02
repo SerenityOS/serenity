@@ -980,15 +980,8 @@ ErrorOr<FlatPtr> Process::sys$execve(Userspace<Syscall::SC_execve_params const*>
         VERIFY(Processor::in_critical() == 1);
         g_scheduler_lock.lock();
         current_thread->set_state(Thread::State::Running);
-#if ARCH(X86_64)
-        FlatPtr prev_flags = previous_interrupts_state == InterruptsState::Enabled ? 0x200 : 0;
-        Processor::assume_context(*current_thread, prev_flags);
+        Processor::assume_context(*current_thread, previous_interrupts_state);
         VERIFY_NOT_REACHED();
-#elif ARCH(AARCH64)
-        TODO_AARCH64();
-#else
-#    error Unknown architecture
-#endif
     }
 
     // NOTE: This code path is taken in the non-syscall case, i.e when the kernel spawns

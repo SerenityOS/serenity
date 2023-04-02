@@ -255,10 +255,10 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
-void Processor::assume_context(Thread& thread, FlatPtr flags)
+void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
     (void)thread;
-    (void)flags;
+    (void)new_interrupts_state;
     TODO_AARCH64();
 }
 
