@@ -644,7 +644,7 @@ public:
             Disowned
         };
 
-        WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
+        WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -660,7 +660,7 @@ public:
 
         int const m_wait_options;
         ErrorOr<siginfo_t>& m_result;
-        Variant<Empty, NonnullRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> const m_waitee;
+        Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> const m_waitee;
         bool m_did_unblock { false };
         bool m_got_sigchild { false };
     };
