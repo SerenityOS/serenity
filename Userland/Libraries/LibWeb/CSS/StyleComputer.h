@@ -111,7 +111,7 @@ private:
         Vector<MatchingRule> author_rules;
     };
 
-    void cascade_declarations(StyleProperties&, DOM::Element&, Vector<MatchingRule> const&, CascadeOrigin, Important important) const;
+    void cascade_declarations(StyleProperties&, DOM::Element&, Optional<CSS::Selector::PseudoElement>, Vector<MatchingRule> const&, CascadeOrigin, Important) const;
 
     void build_rule_cache();
     void build_rule_cache_if_needed() const;

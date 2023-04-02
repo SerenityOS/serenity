@@ -821,7 +821,7 @@ RefPtr<StyleValue> StyleComputer::resolve_unresolved_style_value(DOM::Element& e
     return {};
 }
 
-void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important) const
+void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& element, Optional<CSS::Selector::PseudoElement> pseudo_element, Vector<MatchingRule> const& matching_rules, CascadeOrigin cascade_origin, Important important) const
 {
     for (auto const& match : matching_rules) {
         for (auto const& property : verify_cast<PropertyOwningCSSStyleDeclaration>(match.rule->declaration()).properties()) {
@@ -837,7 +837,7 @@ void StyleComputer::cascade_declarations(StyleProperties& style, DOM::Element& e
         }
     }
 
-    if (cascade_origin == CascadeOrigin::Author) {
+    if (cascade_origin == CascadeOrigin::Author && !pseudo_element.has_value()) {
         if (auto const* inline_style = verify_cast<ElementInlineCSSStyleDeclaration>(element.inline_style())) {
             for (auto const& property : inline_style->properties()) {
                 if (important != property.important)
@@ -907,7 +907,7 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // Then we apply the declarations from the matched rules in cascade order:
 
     // Normal user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::No);
+    cascade_declarations(style, element, pseudo_element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::No);
 
     // FIXME: Normal user declarations
 
@@ -915,17 +915,17 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     element.apply_presentational_hints(style);
 
     // Normal author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
+    cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
 
     // FIXME: Animation declarations [css-animations-1]
 
     // Important author declarations
-    cascade_declarations(style, element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes);
+    cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::Yes);
 
     // FIXME: Important user declarations
 
     // Important user agent declarations
-    cascade_declarations(style, element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes);
+    cascade_declarations(style, element, pseudo_element, matching_rule_set.user_agent_rules, CascadeOrigin::UserAgent, Important::Yes);
 
     // FIXME: Transition declarations [css-transitions-1]
 
