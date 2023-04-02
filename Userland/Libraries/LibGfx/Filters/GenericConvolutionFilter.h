@@ -29,14 +29,20 @@ static constexpr void normalize(Matrix<N, T>& matrix)
     }
 }
 
+struct ConvolutionFilterOptions {
+    bool should_wrap = true;
+};
+
+static constexpr struct ConvolutionFilterOptions default_convolution_filter_options = ConvolutionFilterOptions { true };
+
 template<size_t N>
 class GenericConvolutionFilter : public Filter {
 public:
     class Parameters : public Filter::Parameters {
     public:
-        Parameters(Gfx::Matrix<N, float> const& kernel, bool should_wrap = true)
+        Parameters(Gfx::Matrix<N, float> const& kernel, struct ConvolutionFilterOptions options = default_convolution_filter_options)
             : m_kernel(kernel)
-            , m_should_wrap(should_wrap)
+            , m_should_wrap(options.should_wrap)
 
         {
         }
