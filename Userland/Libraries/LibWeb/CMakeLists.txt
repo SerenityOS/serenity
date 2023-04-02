@@ -462,7 +462,9 @@ set(SOURCES
     Streams/ReadableStreamDefaultController.cpp
     Streams/ReadableStreamDefaultReader.cpp
     Streams/ReadableStreamGenericReader.cpp
+    Streams/UnderlyingSink.cpp
     Streams/UnderlyingSource.cpp
+    Streams/WritableStream.cpp
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp

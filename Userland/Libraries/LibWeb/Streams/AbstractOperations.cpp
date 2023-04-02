@@ -13,7 +13,9 @@
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
+#include <LibWeb/Streams/UnderlyingSink.h>
 #include <LibWeb/Streams/UnderlyingSource.h>
+#include <LibWeb/Streams/WritableStream.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
@@ -732,6 +734,17 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 8. Perform ? SetUpReadableStreamDefaultController(stream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark, sizeAlgorithm).
     return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
+}
+
+// https://streams.spec.whatwg.org/#is-writable-stream-locked
+bool is_writable_stream_locked(WritableStream const& stream)
+{
+    // 1. If stream.[[writer]] is undefined, return false.
+    if (!stream.writer())
+        return false;
+
+    // 2. Return true.
+    return true;
 }
 
 // Non-standard function to aid in converting a user-provided function into a WebIDL::Callback. This is essentially
