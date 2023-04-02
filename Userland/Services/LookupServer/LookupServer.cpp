@@ -204,8 +204,10 @@ ErrorOr<Vector<Answer>> LookupServer::lookup(Name const& name, RecordType record
                 break;
         } while (--retries);
         if (!upstream_answers.is_empty()) {
-            for (auto& answer : upstream_answers)
+            for (auto& answer : upstream_answers) {
                 add_answer(answer);
+                put_in_cache(answer);
+            }
             break;
         } else {
             if (!did_get_response)
