@@ -31,6 +31,7 @@ public:
     virtual void handle_bestmove(BestMoveCommand const&) { }
     virtual void handle_info(InfoCommand const&) { }
     virtual void handle_quit() { }
+    virtual void handle_unexpected_eof() { }
 
     void send_command(Command const&);
 
@@ -49,8 +50,12 @@ public:
 protected:
     Endpoint() = default;
     Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
+    virtual void custom_event(Core::CustomEvent&) override;
 
 private:
+    enum EndpointEventType {
+        UnexpectedEof
+    };
     void set_in_notifier();
     NonnullOwnPtr<Command> read_command();
 
