@@ -48,9 +48,10 @@ public:
 
     virtual void sort(int column, SortOrder) override;
 
-private:
+protected:
     explicit SortingProxyModel(NonnullRefPtr<Model> source);
 
+private:
     // NOTE: The internal_data() of indices points to the corresponding Mapping object for that index.
     struct Mapping {
         Vector<int> source_rows;

@@ -10,10 +10,21 @@
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/SortingProxyModel.h>
 
 namespace CertificateSettings {
 
-NonnullRefPtr<CertificateStoreModel> CertificateStoreModel::create() { return adopt_ref(*new CertificateStoreModel); }
+NonnullRefPtr<CertificateStoreModel> CertificateStoreModel::create()
+{
+    return adopt_ref(*new CertificateStoreModel);
+}
+
+void CertificateStoreProxyModel::sort(int column, GUI::SortOrder sort_order)
+{
+    SortingProxyModel::sort(column, sort_order);
+    m_parent_table_view->set_column_width(CertificateStoreModel::Column::IssuedTo, 150);
+    m_parent_table_view->set_column_width(CertificateStoreModel::Column::IssuedBy, 150);
+}
 
 ErrorOr<void> CertificateStoreModel::load()
 {
@@ -113,8 +124,9 @@ Certificate CertificateStoreModel::get(int index)
 
 ErrorOr<void> CertificateStoreWidget::export_pem()
 {
-    auto index = m_root_ca_tableview->selection().first().row();
-    auto cert = m_root_ca_model->get(index);
+    auto index = m_root_ca_tableview->selection().first();
+    auto real_index = m_root_ca_proxy_model->map_to_source(index);
+    auto cert = m_root_ca_model->get(real_index.row());
 
     auto filename = cert.subject.subject.is_empty() ? cert.subject.unit : cert.subject.subject;
     auto file = FileSystemAccessClient::Client::the().save_file(window(), filename.replace(" "sv, "_"sv), "pem"sv);
@@ -144,8 +156,10 @@ ErrorOr<void> CertificateStoreWidget::initialize()
     m_root_ca_tableview->set_alternating_row_colors(false);
 
     m_root_ca_model = CertificateStoreModel::create();
+    m_root_ca_proxy_model = TRY(CertificateStoreProxyModel::create(*m_root_ca_model, *m_root_ca_tableview));
+    m_root_ca_proxy_model->set_sort_role(GUI::ModelRole::Display);
     TRY(m_root_ca_model->load());
-    m_root_ca_tableview->set_model(m_root_ca_model);
+    m_root_ca_tableview->set_model(m_root_ca_proxy_model);
     m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedTo, 150);
     m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedBy, 150);
 

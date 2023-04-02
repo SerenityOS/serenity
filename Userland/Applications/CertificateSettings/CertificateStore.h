@@ -8,10 +8,27 @@
 
 #include <LibGUI/Model.h>
 #include <LibGUI/SettingsWindow.h>
+#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 #include <LibTLS/Certificate.h>
 
 namespace CertificateSettings {
+
+class CertificateStoreProxyModel : public GUI::SortingProxyModel {
+public:
+    static ErrorOr<NonnullRefPtr<CertificateStoreProxyModel>> create(NonnullRefPtr<Model> source, NonnullRefPtr<GUI::TableView> view)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) CertificateStoreProxyModel(move(source), move(view)));
+    }
+    virtual void sort(int column, GUI::SortOrder) override;
+
+private:
+    CertificateStoreProxyModel(NonnullRefPtr<Model> source, NonnullRefPtr<GUI::TableView> view)
+        : SortingProxyModel(move(source))
+        , m_parent_table_view(move(view)) {};
+
+    NonnullRefPtr<GUI::TableView> m_parent_table_view;
+};
 
 class CertificateStoreModel : public GUI::Model {
 public:
@@ -51,6 +68,7 @@ private:
     ErrorOr<void> export_pem();
 
     RefPtr<CertificateStoreModel> m_root_ca_model;
+    RefPtr<CertificateStoreProxyModel> m_root_ca_proxy_model;
     RefPtr<GUI::TableView> m_root_ca_tableview;
     RefPtr<GUI::Button> m_import_ca_button;
     RefPtr<GUI::Button> m_export_ca_button;
