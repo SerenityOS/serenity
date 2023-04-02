@@ -51,6 +51,9 @@ struct RegisterState {
     }
 };
 
+#define REGISTER_STATE_SIZE (34 * 8)
+static_assert(AssertSize<RegisterState, REGISTER_STATE_SIZE>());
+
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, RegisterState const& kernel_regs)
 {
     (void)ptrace_regs;
