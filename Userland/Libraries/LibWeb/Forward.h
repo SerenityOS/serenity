@@ -422,7 +422,9 @@ class ReadableStreamDefaultController;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReaderMixin;
 class ReadRequest;
+struct UnderlyingSink;
 struct UnderlyingSource;
+class WritableStream;
 }
 
 namespace Web::SVG {
