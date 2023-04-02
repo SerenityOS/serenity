@@ -128,6 +128,44 @@
     ],
     "quirks": [
       "unitless-length"
+    ],
+    "longhands": [
+      "background-position-x",
+      "background-position-y"
+    ]
+  },
+  "background-position-x": {
+    "inherited": false,
+    "affects-layout": false,
+    "initial": "0%",
+    "valid-types": [
+      "length",
+      "percentage"
+    ],
+    "valid-identifiers": [
+      "center",
+      "left",
+      "right"
+    ],
+    "quirks": [
+      "unitless-length"
+    ]
+  },
+  "background-position-y": {
+    "inherited": false,
+    "affects-layout": false,
+    "initial": "0%",
+    "valid-types": [
+      "length",
+      "percentage"
+    ],
+    "valid-identifiers": [
+      "center",
+      "bottom",
+      "top"
+    ],
+    "quirks": [
+      "unitless-length"
     ]
   },
   "background-repeat": {
