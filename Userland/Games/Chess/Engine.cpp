@@ -17,6 +17,11 @@ Engine::~Engine()
 }
 
 Engine::Engine(StringView command)
+    : m_command(command)
+{
+}
+
+void Engine::connect_to_engine_service()
 {
     int wpipefds[2];
     int rpipefds[2];
@@ -35,9 +40,9 @@ Engine::Engine(StringView command)
     posix_spawn_file_actions_adddup2(&file_actions, wpipefds[0], STDIN_FILENO);
     posix_spawn_file_actions_adddup2(&file_actions, rpipefds[1], STDOUT_FILENO);
 
-    DeprecatedString cstr(command);
-    char const* argv[] = { cstr.characters(), nullptr };
-    if (posix_spawnp(&m_pid, cstr.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
+    char const* argv[] = { m_command.characters(), nullptr };
+    pid_t pid = -1;
+    if (posix_spawnp(&pid, m_command.characters(), &file_actions, nullptr, const_cast<char**>(argv), environ) < 0) {
         perror("posix_spawnp");
         VERIFY_NOT_REACHED();
     }
@@ -56,6 +61,7 @@ Engine::Engine(StringView command)
     set_out(outfile);
 
     send_command(Chess::UCI::UCICommand());
+    m_connected = true;
 }
 
 void Engine::handle_bestmove(Chess::UCI::BestMoveCommand const& command)
@@ -68,5 +74,21 @@ void Engine::handle_bestmove(Chess::UCI::BestMoveCommand const& command)
 
 void Engine::quit()
 {
+    if (!m_connected)
+        return;
+
     send_command(Chess::UCI::QuitCommand());
+    m_connected = false;
+}
+
+void Engine::handle_unexpected_eof()
+{
+    m_connected = false;
+    if (m_bestmove_callback)
+        m_bestmove_callback(Error::from_errno(EPIPE));
+
+    m_bestmove_callback = nullptr;
+
+    if (on_connection_lost)
+        on_connection_lost();
 }
