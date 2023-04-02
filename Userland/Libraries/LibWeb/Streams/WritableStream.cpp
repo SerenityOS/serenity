@@ -76,6 +76,21 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::close()
     return TRY(writable_stream_close(*this))->promise();
 }
 
+// https://streams.spec.whatwg.org/#ws-abort
+WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::abort(JS::Value reason)
+{
+    auto& realm = this->realm();
+
+    // 1. If ! IsWritableStreamLocked(this) is true, return a promise rejected with a TypeError exception.
+    if (is_writable_stream_locked(*this)) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot abort a locked stream"sv));
+        return WebIDL::create_rejected_promise(realm, exception)->promise();
+    }
+
+    // 2. Return ! WritableStreamAbort(this, reason).
+    return TRY(writable_stream_abort(*this, reason))->promise();
+}
+
 // https://streams.spec.whatwg.org/#ws-get-writer
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> WritableStream::get_writer()
 {
