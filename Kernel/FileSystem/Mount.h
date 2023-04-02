@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,11 +17,13 @@ namespace Kernel {
 
 class VirtualFileSystem;
 class Mount {
+    AK_MAKE_NONCOPYABLE(Mount);
+    AK_MAKE_NONMOVABLE(Mount);
     friend class VirtualFileSystem;
 
 public:
-    Mount(NonnullRefPtr<FileSystem>, Custody* host_custody, int flags);
-    Mount(Inode& source, Custody& host_custody, int flags);
+    Mount(NonnullRefPtr<FileSystem>, RefPtr<Custody> host_custody, int flags);
+    Mount(NonnullRefPtr<Inode> source, NonnullRefPtr<Custody> host_custody, int flags);
 
     RefPtr<Inode const> host() const;
     RefPtr<Inode> host();
@@ -38,10 +40,10 @@ public:
     void set_flags(int flags) { m_flags = flags; }
 
 private:
-    NonnullRefPtr<Inode> m_guest;
-    NonnullRefPtr<FileSystem> m_guest_fs;
-    SpinlockProtected<RefPtr<Custody>, LockRank::None> m_host_custody;
-    int m_flags;
+    NonnullRefPtr<FileSystem> const m_guest_fs;
+    NonnullRefPtr<Inode> const m_guest;
+    RefPtr<Custody> const m_host_custody;
+    int m_flags { 0 };
 
     IntrusiveListNode<Mount> m_vfs_list_node;
 };
