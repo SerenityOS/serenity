@@ -68,3 +68,9 @@ void ChessEngine::handle_quit()
     if (on_quit)
         on_quit(ESUCCESS);
 }
+
+void ChessEngine::handle_unexpected_eof()
+{
+    if (on_quit)
+        on_quit(EPIPE);
+}
