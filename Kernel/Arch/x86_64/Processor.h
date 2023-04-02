@@ -55,6 +55,7 @@ struct [[gnu::aligned(64), gnu::packed]] FPUState
     u8 ext_save_area[256];
 };
 
+enum class InterruptsState;
 class Processor;
 // Note: We only support 64 processors at most at the moment,
 // so allocate 64 slots of inline capacity in the container.
@@ -414,7 +415,7 @@ public:
 
     [[noreturn]] void initialize_context_switching(Thread& initial_thread);
     NEVER_INLINE void switch_context(Thread*& from_thread, Thread*& to_thread);
-    [[noreturn]] static void assume_context(Thread& thread, FlatPtr flags);
+    [[noreturn]] static void assume_context(Thread& thread, InterruptsState new_interrupts_state);
     FlatPtr init_context(Thread& thread, bool leave_crit);
     static ErrorOr<Vector<FlatPtr, 32>> capture_stack_trace(Thread& thread, size_t max_frames = 0);
 
