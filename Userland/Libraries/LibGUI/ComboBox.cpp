@@ -245,17 +245,29 @@ void ComboBox::open()
 
     auto frame = m_list_view->frame_thickness() * 2;
     auto max_height = min(m_list_view->item_height() * m_max_visible_items, m_list_view->content_height());
-    Gfx::IntSize size { max(width(), m_list_view->content_width() + frame), max_height + frame };
+    auto min_width = m_list_view->content_width() + frame;
+    Gfx::IntSize size { max(width(), min_width), max_height + frame };
     Gfx::IntRect rect { screen_relative_rect().bottom_left(), size };
 
-    auto desktop = Desktop::the().rect().shrunken(0, 0, Desktop::the().taskbar_height(), 0);
+    auto desktop = Desktop::the().rect();
     auto min_height = 5 * m_list_view->item_height() + frame;
     auto go_upwards_instead = rect.bottom() >= desktop.height() && rect.intersected(desktop).height() < min_height;
     if (go_upwards_instead) {
         auto origin = screen_relative_rect().top_left();
         rect = { Gfx::IntPoint { origin.x(), origin.y() - size.height() }, size };
     }
-    rect.intersect(desktop);
+
+    auto intersection = rect.intersected(desktop);
+    rect.set_top(intersection.top());
+    rect.set_bottom(intersection.bottom());
+
+    auto remainder = (rect.height() - frame) % m_list_view->item_height();
+    go_upwards_instead ? rect.take_from_top(remainder) : rect.take_from_bottom(remainder);
+
+    auto scrollbar_width = m_list_view->vertical_scrollbar().width();
+    if (max_height > rect.height() && width() < min_width + scrollbar_width)
+        rect.set_width(rect.width() + scrollbar_width);
+
     m_list_window->set_rect(rect);
     m_list_view->set_min_size(rect.size());
 
