@@ -49,6 +49,21 @@ JS::GCPtr<JS::Object> WritableStreamDefaultWriter::ready()
     return m_ready_promise->promise();
 }
 
+// https://streams.spec.whatwg.org/#default-writer-abort
+WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::abort(JS::Value reason)
+{
+    auto& realm = this->realm();
+
+    // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
+    if (!m_stream) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot abort a writer that has no locked stream"sv));
+        return WebIDL::create_rejected_promise(realm, exception)->promise();
+    }
+
+    // 2. Return ! WritableStreamDefaultWriterAbort(this, reason).
+    return TRY(writable_stream_default_writer_abort(*this, reason))->promise();
+}
+
 WritableStreamDefaultWriter::WritableStreamDefaultWriter(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

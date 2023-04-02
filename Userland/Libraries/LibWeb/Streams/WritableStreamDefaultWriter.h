@@ -27,6 +27,7 @@ public:
     JS::GCPtr<JS::Object> closed();
     WebIDL::ExceptionOr<Optional<double>> desired_size() const;
     JS::GCPtr<JS::Object> ready();
+    WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> abort(JS::Value reason);
 
     JS::GCPtr<WebIDL::Promise> closed_promise() { return m_closed_promise; }
     void set_closed_promise(JS::GCPtr<WebIDL::Promise> value) { m_closed_promise = value; }
