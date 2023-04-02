@@ -202,13 +202,13 @@ void Process::kill_all_threads()
 void Process::register_new(Process& process)
 {
     // Note: this is essentially the same like process->ref()
-    LockRefPtr<Process> new_process = process;
+    NonnullRefPtr<Process> const new_process = process;
     all_instances().with([&](auto& list) {
         list.prepend(process);
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY* tty)
+ErrorOr<NonnullRefPtr<Process>> Process::try_create_user_process(LockRefPtr<Thread>& first_thread, StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY* tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -257,7 +257,7 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create_user_process(LockRefPtr<
     return process;
 }
 
-LockRefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
+RefPtr<Process> Process::create_kernel_process(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data, u32 affinity, RegisterProcess do_register)
 {
     auto process_or_error = Process::try_create(first_thread, move(name), UserID(0), GroupID(0), ProcessID(0), true);
     if (process_or_error.is_error())
@@ -289,7 +289,7 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+ErrorOr<NonnullRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& first_thread, NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -303,7 +303,7 @@ ErrorOr<NonnullLockRefPtr<Process>> Process::try_create(LockRefPtr<Thread>& firs
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
-    auto process = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree))));
+    auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree))));
     TRY(process->attach_resources(new_address_space.release_nonnull(), first_thread, fork_parent));
     return process;
 }
@@ -491,11 +491,11 @@ void Process::crash(int signal, Optional<RegisterState const&> regs, bool out_of
     VERIFY_NOT_REACHED();
 }
 
-LockRefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
+RefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
 {
-    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> LockRefPtr<Process> {
+    return Process::current().m_jail_process_list.with([&](auto const& list_ptr) -> RefPtr<Process> {
         if (list_ptr) {
-            return list_ptr->attached_processes().with([&](auto const& list) -> LockRefPtr<Process> {
+            return list_ptr->attached_processes().with([&](auto const& list) -> RefPtr<Process> {
                 for (auto& process : list) {
                     if (process.pid() == pid) {
                         return process;
@@ -504,7 +504,7 @@ LockRefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
                 return {};
             });
         }
-        return all_instances().with([&](auto const& list) -> LockRefPtr<Process> {
+        return all_instances().with([&](auto const& list) -> RefPtr<Process> {
             for (auto& process : list) {
                 if (process.pid() == pid) {
                     return process;
@@ -515,9 +515,9 @@ LockRefPtr<Process> Process::from_pid_in_same_jail(ProcessID pid)
     });
 }
 
-LockRefPtr<Process> Process::from_pid_ignoring_jails(ProcessID pid)
+RefPtr<Process> Process::from_pid_ignoring_jails(ProcessID pid)
 {
-    return all_instances().with([&](auto const& list) -> LockRefPtr<Process> {
+    return all_instances().with([&](auto const& list) -> RefPtr<Process> {
         for (auto const& process : list) {
             if (process.pid() == pid)
                 return &process;
@@ -812,7 +812,7 @@ void Process::disowned_by_waiter(Process& process)
 
 void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal)
 {
-    LockRefPtr<Process> waiter_process;
+    RefPtr<Process> waiter_process;
     if (auto* my_tracer = tracer())
         waiter_process = Process::from_pid_ignoring_jails(my_tracer->tracer_pid());
     else

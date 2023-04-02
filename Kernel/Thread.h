@@ -67,7 +67,7 @@ public:
         return Processor::current_thread();
     }
 
-    static ErrorOr<NonnullLockRefPtr<Thread>> try_create(NonnullLockRefPtr<Process>);
+    static ErrorOr<NonnullLockRefPtr<Thread>> try_create(NonnullRefPtr<Process>);
     ~Thread();
 
     static LockRefPtr<Thread> from_tid(ThreadID);
@@ -644,7 +644,7 @@ public:
             Disowned
         };
 
-        WaitBlocker(int wait_options, Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
+        WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result);
         virtual StringView state_string() const override { return "Waiting"sv; }
         virtual Type blocker_type() const override { return Type::Wait; }
         virtual void will_unblock_immediately_without_blocking(UnblockImmediatelyReason) override;
@@ -660,7 +660,7 @@ public:
 
         int const m_wait_options;
         ErrorOr<siginfo_t>& m_result;
-        Variant<Empty, NonnullLockRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> m_waitee;
+        Variant<Empty, NonnullRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> const m_waitee;
         bool m_did_unblock { false };
         bool m_got_sigchild { false };
     };
@@ -684,12 +684,12 @@ public:
 
     private:
         struct ProcessBlockInfo {
-            NonnullLockRefPtr<Process> process;
+            NonnullRefPtr<Process> const process;
             WaitBlocker::UnblockFlags flags;
             u8 signal;
             bool was_waited { false };
 
-            explicit ProcessBlockInfo(NonnullLockRefPtr<Process>&&, WaitBlocker::UnblockFlags, u8);
+            explicit ProcessBlockInfo(NonnullRefPtr<Process>&&, WaitBlocker::UnblockFlags, u8);
             ~ProcessBlockInfo();
         };
 
@@ -1083,7 +1083,7 @@ public:
 #endif
 
 private:
-    Thread(NonnullLockRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullLockRefPtr<Timer>, NonnullOwnPtr<KString>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullLockRefPtr<Timer>, NonnullOwnPtr<KString>);
 
     BlockResult block_impl(BlockTimeout const&, Blocker&);
 
@@ -1154,7 +1154,7 @@ private:
 
     mutable RecursiveSpinlock<LockRank::Thread> m_lock {};
     mutable RecursiveSpinlock<LockRank::None> m_block_lock {};
-    NonnullLockRefPtr<Process> m_process;
+    NonnullRefPtr<Process> const m_process;
     ThreadID m_tid { -1 };
     ThreadRegisters m_regs {};
     DebugRegisterState m_debug_register_state {};

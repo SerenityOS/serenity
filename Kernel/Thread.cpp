@@ -39,7 +39,7 @@ SpinlockProtected<Thread::GlobalList, LockRank::None>& Thread::all_instances()
     return *s_list;
 }
 
-ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullLockRefPtr<Process> process)
+ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
 {
     auto kernel_stack_region = TRY(MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     kernel_stack_region->set_stack(true);
@@ -50,7 +50,7 @@ ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullLockRefPtr<Process>
     return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
 }
 
-Thread::Thread(NonnullLockRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullLockRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullLockRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(move(name))
@@ -596,7 +596,7 @@ void Thread::finalize_dying_threads()
         });
     }
     for (auto* thread : dying_threads) {
-        LockRefPtr<Process> process = thread->process();
+        RefPtr<Process> const process = thread->process();
         dbgln_if(PROCESS_DEBUG, "Before finalization, {} has {} refs and its process has {}",
             *thread, thread->ref_count(), thread->process().ref_count());
         thread->finalize();

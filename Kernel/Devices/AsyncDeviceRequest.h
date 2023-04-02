@@ -149,7 +149,7 @@ private:
     AsyncDeviceSubRequestList m_sub_requests_pending;
     AsyncDeviceSubRequestList m_sub_requests_complete;
     WaitQueue m_queue;
-    NonnullLockRefPtr<Process> m_process;
+    NonnullRefPtr<Process> const m_process;
     void* m_private { nullptr };
     mutable Spinlock<LockRank::None> m_lock {};
 };
