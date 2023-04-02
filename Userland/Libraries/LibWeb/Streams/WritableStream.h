@@ -48,6 +48,7 @@ public:
 
     bool locked() const;
     WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> close();
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> get_writer();
 
     bool backpressure() const { return m_backpressure; }
     void set_backpressure(bool value) { m_backpressure = value; }
