@@ -64,8 +64,16 @@ public:
         , m_size(size)
     {
     }
+
     ALWAYS_INLINE Span(void* values, size_t size)
         : m_values(reinterpret_cast<u8*>(values))
+        , m_size(size)
+    {
+    }
+
+    template<size_t size>
+    ALWAYS_INLINE constexpr Span(u8 (&values)[size])
+        : m_values(values)
         , m_size(size)
     {
     }
@@ -85,13 +93,22 @@ public:
         , m_size(size)
     {
     }
+
     ALWAYS_INLINE Span(void const* values, size_t size)
         : m_values(reinterpret_cast<u8 const*>(values))
         , m_size(size)
     {
     }
+
     ALWAYS_INLINE Span(char const* values, size_t size)
         : m_values(reinterpret_cast<u8 const*>(values))
+        , m_size(size)
+    {
+    }
+
+    template<size_t size>
+    ALWAYS_INLINE constexpr Span(u8 const (&values)[size])
+        : m_values(values)
         , m_size(size)
     {
     }
