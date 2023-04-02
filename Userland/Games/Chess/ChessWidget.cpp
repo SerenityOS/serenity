@@ -473,12 +473,14 @@ void ChessWidget::input_engine_move()
         set_drag_enabled(false);
 
     set_override_cursor(Gfx::StandardCursor::Wait);
-    m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](Chess::Move move) {
+    m_engine->get_best_move(board(), 4000, [this, drag_was_enabled](ErrorOr<Chess::Move> move) {
         set_override_cursor(Gfx::StandardCursor::None);
         if (!want_engine_move())
             return;
         set_drag_enabled(drag_was_enabled);
-        VERIFY(board().apply_move(move));
+        if (!move.is_error())
+            VERIFY(board().apply_move(move.release_value()));
+
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
         m_board_markings.clear();

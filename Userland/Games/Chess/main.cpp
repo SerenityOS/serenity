@@ -128,21 +128,31 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
     auto engine_submenu = TRY(engine_menu->try_add_submenu("&Engine"_short_string));
-    for (auto const& engine : { "Human", "ChessEngine" }) {
-        auto action = GUI::Action::create_checkable(engine, [&](auto& action) {
-            if (action.text() == "Human") {
-                widget->set_engine(nullptr);
-            } else {
-                widget->set_engine(Engine::construct(action.text()));
-                widget->input_engine_move();
-            }
-        });
-        engines_action_group.add_action(*action);
-        if (engine == DeprecatedString("Human"))
-            action->set_checked(true);
+    auto human_engine_checkbox = GUI::Action::create_checkable("Human", [&](auto&) {
+        widget->set_engine(nullptr);
+    });
+    human_engine_checkbox->set_checked(true);
+    engines_action_group.add_action(human_engine_checkbox);
+    TRY(engine_submenu->try_add_action(human_engine_checkbox));
 
-        TRY(engine_submenu->try_add_action(*action));
-    }
+    auto action = GUI::Action::create_checkable("ChessEngine", [&](auto& action) {
+        auto new_engine = Engine::construct(action.text());
+        new_engine->on_connection_lost = [&]() {
+            if (!widget->want_engine_move())
+                return;
+
+            auto rc = GUI::MessageBox::show(window, "Connection to the chess engine was lost while waiting for a move. Do you want to try again?"sv, "Chess"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            if (rc == GUI::Dialog::ExecResult::Yes)
+                widget->input_engine_move();
+            else
+                human_engine_checkbox->activate();
+        };
+        widget->set_engine(move(new_engine));
+        widget->input_engine_move();
+    });
+    engines_action_group.add_action(*action);
+
+    TRY(engine_submenu->try_add_action(*action));
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));

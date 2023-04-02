@@ -20,11 +20,17 @@ public:
     Engine(Engine const&) = delete;
     Engine& operator=(Engine const&) = delete;
 
+    Function<void()> on_connection_lost;
+
     virtual void handle_bestmove(Chess::UCI::BestMoveCommand const&) override;
+    virtual void handle_unexpected_eof() override;
 
     template<typename Callback>
     void get_best_move(Chess::Board const& board, int time_limit, Callback&& callback)
     {
+        if (!m_connected)
+            connect_to_engine_service();
+
         send_command(Chess::UCI::PositionCommand({}, board.moves()));
         Chess::UCI::GoCommand go_command;
         go_command.movetime = time_limit;
@@ -34,6 +40,9 @@ public:
 
 private:
     void quit();
+    void connect_to_engine_service();
 
-    Function<void(Chess::Move)> m_bestmove_callback;
+    DeprecatedString m_command;
+    Function<void(ErrorOr<Chess::Move>)> m_bestmove_callback;
+    bool m_connected { false };
 };
