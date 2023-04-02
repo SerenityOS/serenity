@@ -7,6 +7,7 @@ interface WritableStream {
 
     // FIXME:
     // Promise<undefined> abort(optional any reason);
-    // Promise<undefined> close();
     // WritableStreamDefaultWriter getWriter();
+
+    Promise<undefined> close();
 };

@@ -47,11 +47,13 @@ public:
     virtual ~WritableStream() = default;
 
     bool locked() const;
+    WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> close();
 
     bool backpressure() const { return m_backpressure; }
     void set_backpressure(bool value) { m_backpressure = value; }
 
     JS::GCPtr<WebIDL::Promise const> close_request() const { return m_close_request; }
+    JS::GCPtr<WebIDL::Promise> close_request() { return m_close_request; }
     void set_close_request(JS::GCPtr<WebIDL::Promise> value) { m_close_request = value; }
 
     JS::GCPtr<WritableStreamDefaultController const> controller() const { return m_controller; }

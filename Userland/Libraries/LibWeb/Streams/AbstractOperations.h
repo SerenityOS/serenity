@@ -55,21 +55,37 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
 bool is_writable_stream_locked(WritableStream const&);
 WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDefaultWriter&, WritableStream&);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(WritableStream&);
 
 bool writable_stream_close_queued_or_in_flight(WritableStream const&);
+WebIDL::ExceptionOr<void> writable_stream_deal_with_rejection(WritableStream&, JS::Value error);
 WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream&);
+void writable_stream_finish_in_flight_close(WritableStream&);
+WebIDL::ExceptionOr<void> writable_stream_finish_in_flight_close_with_error(WritableStream&, JS::Value error);
+void writable_stream_finish_in_flight_write(WritableStream&);
+WebIDL::ExceptionOr<void> writable_stream_finish_in_flight_write_with_error(WritableStream&, JS::Value error);
 bool writable_stream_has_operation_marked_in_flight(WritableStream const&);
+void writable_stream_mark_close_request_in_flight(WritableStream&);
+void writable_stream_mark_first_write_request_in_flight(WritableStream&);
 void writable_stream_reject_close_and_closed_promise_if_needed(WritableStream&);
 WebIDL::ExceptionOr<void> writable_stream_start_erroring(WritableStream&, JS::Value reason);
+void writable_stream_update_backpressure(WritableStream&, bool backpressure);
 
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
 
+WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_needed(WritableStreamDefaultController&);
 void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController&);
+WebIDL::ExceptionOr<void> writable_stream_default_controller_close(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_error(WritableStreamDefaultController&, JS::Value error);
+bool writable_stream_default_controller_get_backpressure(WritableStreamDefaultController const&);
 double writable_stream_default_controller_get_desired_size(WritableStreamDefaultController const&);
+WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(WritableStreamDefaultController&);
+WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(WritableStreamDefaultController&, JS::Value chunk);
 
+JS::Value create_close_sentinel();
+bool is_close_sentinel(JS::Value);
 JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key);
 
 }

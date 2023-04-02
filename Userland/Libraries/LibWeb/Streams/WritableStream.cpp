@@ -55,6 +55,27 @@ bool WritableStream::locked() const
     return is_writable_stream_locked(*this);
 }
 
+// https://streams.spec.whatwg.org/#ws-close
+WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStream::close()
+{
+    auto& realm = this->realm();
+
+    // 1. If ! IsWritableStreamLocked(this) is true, return a promise rejected with a TypeError exception.
+    if (is_writable_stream_locked(*this)) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close a locked stream"sv));
+        return WebIDL::create_rejected_promise(realm, exception)->promise();
+    }
+
+    // 2. If ! WritableStreamCloseQueuedOrInFlight(this) is true, return a promise rejected with a TypeError exception.
+    if (writable_stream_close_queued_or_in_flight(*this)) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close a stream that is already closed or errored"sv));
+        return WebIDL::create_rejected_promise(realm, exception)->promise();
+    }
+
+    // 3. Return ! WritableStreamClose(this).
+    return TRY(writable_stream_close(*this))->promise();
+}
+
 WritableStream::WritableStream(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
