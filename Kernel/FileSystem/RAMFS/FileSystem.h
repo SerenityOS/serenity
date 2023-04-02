@@ -18,7 +18,7 @@ class RAMFS final : public FileSystem {
 
 public:
     virtual ~RAMFS() override;
-    static ErrorOr<NonnullLockRefPtr<FileSystem>> try_create();
+    static ErrorOr<NonnullRefPtr<FileSystem>> try_create();
     virtual ErrorOr<void> initialize() override;
 
     virtual StringView class_name() const override { return "RAMFS"sv; }

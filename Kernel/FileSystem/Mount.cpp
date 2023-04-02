@@ -11,8 +11,8 @@
 
 namespace Kernel {
 
-Mount::Mount(FileSystem& guest_fs, Custody* host_custody, int flags)
-    : m_guest(guest_fs.root_inode())
+Mount::Mount(NonnullRefPtr<FileSystem> guest_fs, Custody* host_custody, int flags)
+    : m_guest(guest_fs->root_inode())
     , m_guest_fs(guest_fs)
     , m_host_custody(host_custody)
     , m_flags(flags)

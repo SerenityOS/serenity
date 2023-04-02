@@ -446,7 +446,7 @@ u32 StorageManagement::generate_controller_id()
     return s_controller_id.fetch_add(1);
 }
 
-NonnullLockRefPtr<FileSystem> StorageManagement::root_filesystem() const
+NonnullRefPtr<FileSystem> StorageManagement::root_filesystem() const
 {
     auto boot_device_description = boot_block_device();
     if (!boot_device_description) {

@@ -24,8 +24,8 @@ struct FileSystemInitializer {
     bool requires_open_file_description { false };
     bool requires_block_device { false };
     bool requires_seekable_file { false };
-    ErrorOr<NonnullLockRefPtr<FileSystem>> (*create_with_fd)(OpenFileDescription&) = nullptr;
-    ErrorOr<NonnullLockRefPtr<FileSystem>> (*create)(void) = nullptr;
+    ErrorOr<NonnullRefPtr<FileSystem>> (*create_with_fd)(OpenFileDescription&) = nullptr;
+    ErrorOr<NonnullRefPtr<FileSystem>> (*create)(void) = nullptr;
 };
 
 static constexpr FileSystemInitializer s_initializers[] = {
@@ -39,14 +39,14 @@ static constexpr FileSystemInitializer s_initializers[] = {
     { "fat"sv, "FATFS"sv, true, true, true, FATFS::try_create, {} },
 };
 
-static ErrorOr<NonnullLockRefPtr<FileSystem>> find_or_create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
+static ErrorOr<NonnullRefPtr<FileSystem>> find_or_create_filesystem_instance(StringView fs_type, OpenFileDescription* possible_description)
 {
     for (auto& initializer_entry : s_initializers) {
         if (fs_type != initializer_entry.short_name && fs_type != initializer_entry.name)
             continue;
         if (!initializer_entry.requires_open_file_description) {
             VERIFY(initializer_entry.create);
-            NonnullLockRefPtr<FileSystem> fs = TRY(initializer_entry.create());
+            NonnullRefPtr<FileSystem> fs = TRY(initializer_entry.create());
             return fs;
         }
         // Note: If there's an associated file description with the filesystem, we could
@@ -110,7 +110,7 @@ ErrorOr<FlatPtr> Process::sys$mount(Userspace<Syscall::SC_mount_params const*> u
         return 0;
     }
 
-    LockRefPtr<FileSystem> fs;
+    RefPtr<FileSystem> fs;
 
     if (!description_or_error.is_error()) {
         auto description = description_or_error.release_value();

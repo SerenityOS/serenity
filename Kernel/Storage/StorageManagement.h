@@ -27,7 +27,7 @@ public:
     void initialize(StringView boot_argument, bool force_pio, bool nvme_poll);
     static StorageManagement& the();
 
-    NonnullLockRefPtr<FileSystem> root_filesystem() const;
+    NonnullRefPtr<FileSystem> root_filesystem() const;
 
     static MajorNumber storage_type_major_number();
     static MinorNumber generate_storage_minor_number();
