@@ -21,6 +21,7 @@ ListView::ListView()
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
     set_searchable(true);
+    vertical_scrollbar().set_step(item_height());
 }
 
 ListView::~ListView() = default;
