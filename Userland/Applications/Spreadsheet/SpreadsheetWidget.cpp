@@ -485,12 +485,18 @@ void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType 
 
     auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
     if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+        Vector<CellChange> cell_changes;
         for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            auto* cell = current_worksheet_if_available()->at(position);
+            auto previous_type_metadata = cell->type_metadata();
             if (format_type == Spreadsheet::FormatType::Background)
-                current_worksheet_if_available()->at(position)->type_metadata().static_format.background_color = dialog->color();
+                cell->type_metadata().static_format.background_color = dialog->color();
             else
-                current_worksheet_if_available()->at(position)->type_metadata().static_format.foreground_color = dialog->color();
+                cell->type_metadata().static_format.foreground_color = dialog->color();
+            cell_changes.append(CellChange(*cell, previous_type_metadata));
         }
+        undo_stack().push(make<CellsUndoMetadataCommand>(move(cell_changes)));
+        window()->set_modified(true);
     }
 }
 
