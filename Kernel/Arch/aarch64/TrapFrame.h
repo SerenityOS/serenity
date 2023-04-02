@@ -24,4 +24,6 @@ struct TrapFrame {
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 
+extern "C" void exit_trap(TrapFrame*) __attribute__((used));
+
 }
