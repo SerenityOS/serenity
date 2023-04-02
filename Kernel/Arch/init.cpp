@@ -281,13 +281,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     }
 #endif
 
-    {
-        LockRefPtr<Thread> init_stage2_thread;
-        (void)Process::create_kernel_process(init_stage2_thread, KString::must_create("init_stage2"sv), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No);
-        // We need to make sure we drop the reference for init_stage2_thread
-        // before calling into Scheduler::start, otherwise we will have a
-        // dangling Thread that never gets cleaned up
-    }
+    MUST(Process::create_kernel_process(KString::must_create("init_stage2"sv), init_stage2, nullptr, THREAD_AFFINITY_DEFAULT, Process::RegisterProcess::No));
 
     Scheduler::start();
     VERIFY_NOT_REACHED();
@@ -415,17 +409,17 @@ void init_stage2(void*)
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_text_after_init();
 
-    LockRefPtr<Thread> thread;
     auto userspace_init = kernel_command_line().userspace_init();
     auto init_args = kernel_command_line().userspace_init_args();
 
-    auto init_or_error = Process::try_create_user_process(thread, userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
+    auto init_or_error = Process::create_user_process(userspace_init, UserID(0), GroupID(0), move(init_args), {}, tty0);
     if (init_or_error.is_error())
         PANIC("init_stage2: Error spawning init process: {}", init_or_error.error());
 
-    g_init_pid = init_or_error.value()->pid();
+    auto [init_process, init_thread] = init_or_error.release_value();
 
-    thread->set_priority(THREAD_PRIORITY_HIGH);
+    g_init_pid = init_process->pid();
+    init_thread->set_priority(THREAD_PRIORITY_HIGH);
 
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");

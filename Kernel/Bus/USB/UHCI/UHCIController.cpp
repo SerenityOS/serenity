@@ -585,22 +585,20 @@ size_t UHCIController::poll_transfer_queue(QueueHead& transfer_queue)
 
 ErrorOr<void> UHCIController::spawn_port_process()
 {
-    LockRefPtr<Thread> usb_hotplug_thread;
-    (void)Process::create_kernel_process(usb_hotplug_thread, TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
+    TRY(Process::create_kernel_process(TRY(KString::try_create("UHCI Hot Plug Task"sv)), [&] {
         for (;;) {
             if (m_root_hub)
                 m_root_hub->check_for_port_updates();
 
             (void)Thread::current()->sleep(Time::from_seconds(1));
         }
-    });
+    }));
     return {};
 }
 
 ErrorOr<void> UHCIController::spawn_async_poll_process()
 {
-    LockRefPtr<Thread> async_poll_thread;
-    (void)Process::create_kernel_process(async_poll_thread, TRY(KString::try_create("UHCI Async Poll Task"sv)), [&] {
+    TRY(Process::create_kernel_process(TRY(KString::try_create("UHCI Async Poll Task"sv)), [&] {
         u16 poll_interval_ms = 1024;
         for (;;) {
             {
@@ -620,7 +618,7 @@ ErrorOr<void> UHCIController::spawn_async_poll_process()
             }
             (void)Thread::current()->sleep(Time::from_milliseconds(poll_interval_ms));
         }
-    });
+    }));
     return {};
 }
 

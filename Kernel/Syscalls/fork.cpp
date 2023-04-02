@@ -18,19 +18,18 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
-    LockRefPtr<Thread> child_first_thread;
-
-    ArmedScopeGuard thread_finalizer_guard = [&child_first_thread]() {
-        SpinlockLocker lock(g_scheduler_lock);
-        if (child_first_thread) {
-            child_first_thread->detach();
-            child_first_thread->set_state(Thread::State::Dying);
-        }
-    };
 
     auto child_name = TRY(name().with([](auto& name) { return name->try_clone(); }));
     auto credentials = this->credentials();
-    auto child = TRY(Process::try_create(child_first_thread, move(child_name), credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), m_tty, this));
+    auto child_and_first_thread = TRY(Process::create(move(child_name), credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), m_tty, this));
+    auto& child = child_and_first_thread.process;
+    auto& child_first_thread = child_and_first_thread.first_thread;
+
+    ArmedScopeGuard thread_finalizer_guard = [&child_first_thread]() {
+        SpinlockLocker lock(g_scheduler_lock);
+        child_first_thread->detach();
+        child_first_thread->set_state(Thread::State::Dying);
+    };
 
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     child->ref();
