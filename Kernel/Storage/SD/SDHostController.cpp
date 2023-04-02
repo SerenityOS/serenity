@@ -623,7 +623,7 @@ ErrorOr<SD::SDConfigurationRegister> SDHostController::retrieve_sd_configuration
 ErrorOr<u32> SDHostController::retrieve_sd_clock_frequency()
 {
     const i64 one_mhz = 1'000'000;
-    return { ((m_registers->capabilities_0 & 0xff00) >> 8) * one_mhz };
+    return { m_registers->capabilities.base_clock_frequency * one_mhz };
 }
 
 // PLSS Table 4-43 : Card Status Field/Command
