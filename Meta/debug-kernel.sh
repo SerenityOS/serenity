@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 SCRIPT_DIR="$(dirname "${0}")"
 
@@ -9,16 +9,18 @@ fi
 # Set this environment variable to override the default debugger.
 #
 if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
-    if [ "$SERENITY_ARCH" = "aarch64" ]; then
-        # Prepend the toolchain aarch64 bin directory so we pick up GDB from there
-        PATH="$SCRIPT_DIR/../Toolchain/Local/aarch64/bin:$PATH"
-        SERENITY_KERNEL_DEBUGGER="aarch64-pc-serenity-gdb"
+    # Prepend the toolchain bin directory so we pick up GDB from there
+    PATH="$SCRIPT_DIR/../Toolchain/Local/$SERENITY_ARCH/bin:$PATH"
+
+    if command -v "$SERENITY_ARCH-pc-serenity-gdb" >/dev/null; then
+        SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-pc-serenity-gdb"
+    elif command -v "$SERENITY_ARCH-elf-gdb" >/dev/null; then
+        SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-elf-gdb"
+    elif command -v gdb >/dev/null && gdb ex 'set architecture' -ex 'quit' | grep "${SERENITY_ARCH//_/-}"; then
+        SERENITY_KERNEL_DEBUGGER="gdb"
     else
-        if command -v x86_64-elf-gdb >/dev/null 2>&1; then
-            SERENITY_KERNEL_DEBUGGER="x86_64-elf-gdb"
-        else
-            SERENITY_KERNEL_DEBUGGER=gdb
-        fi
+        echo "Error: No suitable GDB installation found." >&2
+        exit 1
     fi
 fi
 
