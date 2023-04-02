@@ -78,6 +78,7 @@ set(SOURCES
     CSS/StyleValues/ColorStyleValue.cpp
     CSS/StyleValues/ConicGradientStyleValue.cpp
     CSS/StyleValues/ContentStyleValue.cpp
+    CSS/StyleValues/EdgeStyleValue.cpp
     CSS/StyleValues/FilterValueListStyleValue.cpp
     CSS/StyleValues/FlexFlowStyleValue.cpp
     CSS/StyleValues/FlexStyleValue.cpp

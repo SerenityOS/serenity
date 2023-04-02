@@ -99,6 +99,7 @@ public:
         Color,
         ConicGradient,
         Content,
+        Edge,
         FilterValueList,
         Flex,
         FlexFlow,
@@ -148,6 +149,7 @@ public:
     bool is_color() const { return type() == Type::Color; }
     bool is_conic_gradient() const { return type() == Type::ConicGradient; }
     bool is_content() const { return type() == Type::Content; }
+    bool is_edge() const { return type() == Type::Edge; }
     bool is_filter_value_list() const { return type() == Type::FilterValueList; }
     bool is_flex() const { return type() == Type::Flex; }
     bool is_flex_flow() const { return type() == Type::FlexFlow; }
@@ -195,6 +197,7 @@ public:
     ColorStyleValue const& as_color() const;
     ConicGradientStyleValue const& as_conic_gradient() const;
     ContentStyleValue const& as_content() const;
+    EdgeStyleValue const& as_edge() const;
     FilterValueListStyleValue const& as_filter_value_list() const;
     FlexFlowStyleValue const& as_flex_flow() const;
     FlexStyleValue const& as_flex() const;
@@ -240,6 +243,7 @@ public:
     ColorStyleValue& as_color() { return const_cast<ColorStyleValue&>(const_cast<StyleValue const&>(*this).as_color()); }
     ConicGradientStyleValue& as_conic_gradient() { return const_cast<ConicGradientStyleValue&>(const_cast<StyleValue const&>(*this).as_conic_gradient()); }
     ContentStyleValue& as_content() { return const_cast<ContentStyleValue&>(const_cast<StyleValue const&>(*this).as_content()); }
+    EdgeStyleValue& as_edge() { return const_cast<EdgeStyleValue&>(const_cast<StyleValue const&>(*this).as_edge()); }
     FilterValueListStyleValue& as_filter_value_list() { return const_cast<FilterValueListStyleValue&>(const_cast<StyleValue const&>(*this).as_filter_value_list()); }
     FlexFlowStyleValue& as_flex_flow() { return const_cast<FlexFlowStyleValue&>(const_cast<StyleValue const&>(*this).as_flex_flow()); }
     FlexStyleValue& as_flex() { return const_cast<FlexStyleValue&>(const_cast<StyleValue const&>(*this).as_flex()); }
