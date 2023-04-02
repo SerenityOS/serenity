@@ -313,16 +313,16 @@ bool property_affects_stacking_context(PropertyID property_id)
 NonnullRefPtr<StyleValue> property_initial_value(JS::Realm& context_realm, PropertyID property_id)
 {
     static Array<RefPtr<StyleValue>, to_underlying(last_property_id) + 1> initial_values;
-    static bool initialized = false;
-    if (!initialized) {
-        initialized = true;
-        Parser::ParsingContext parsing_context(context_realm);
-)~~~");
+    if (auto initial_value = initial_values[to_underlying(property_id)])
+        return initial_value.release_nonnull();
 
-    // NOTE: Parsing a shorthand property requires that its longhands are already available here.
-    //       So, we do this in two passes: First longhands, then shorthands.
-    //       Probably we should build a dependency graph and then handle them in order, but this
-    //       works for now! :^)
+    // Lazily parse initial values as needed.
+    // This ensures the shorthands will always be able to get the initial values of their longhands.
+    // This also now allows a longhand have its own longhand (like background-position-x).
+
+    Parser::ParsingContext parsing_context(context_realm);
+    switch (property_id) {
+)~~~");
 
     auto output_initial_value_code = [&](auto& name, auto& object) {
         if (!object.has("initial"sv)) {
@@ -336,33 +336,27 @@ NonnullRefPtr<StyleValue> property_initial_value(JS::Realm& context_realm, Prope
         auto member_generator = generator.fork();
         member_generator.set("name:titlecase", title_casify(name));
         member_generator.set("initial_value_string", initial_value_string);
-        member_generator.append(R"~~~(
+        member_generator.append(
+            R"~~~(        case PropertyID::@name:titlecase@:
         {
             auto parsed_value = parse_css_value(parsing_context, "@initial_value_string@"sv, PropertyID::@name:titlecase@);
             VERIFY(!parsed_value.is_null());
-            initial_values[to_underlying(PropertyID::@name:titlecase@)] = parsed_value.release_nonnull();
+            auto initial_value = parsed_value.release_nonnull();
+            initial_values[to_underlying(PropertyID::@name:titlecase@)] = initial_value;
+            return initial_value;
         }
 )~~~");
     };
 
     properties.for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
-        if (value.as_object().has("longhands"sv))
-            return;
         output_initial_value_code(name, value.as_object());
     });
 
-    properties.for_each_member([&](auto& name, auto& value) {
-        VERIFY(value.is_object());
-        if (!value.as_object().has("longhands"sv))
-            return;
-        output_initial_value_code(name, value.as_object());
-    });
-
-    generator.append(R"~~~(
+    generator.append(
+        R"~~~(        default: VERIFY_NOT_REACHED();
     }
-
-    return *initial_values[to_underlying(property_id)];
+    VERIFY_NOT_REACHED();
 }
 
 bool property_has_quirk(PropertyID property_id, Quirk quirk)
