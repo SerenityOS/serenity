@@ -734,4 +734,19 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
 }
 
+// Non-standard function to aid in converting a user-provided function into a WebIDL::Callback. This is essentially
+// what the Bindings generator would do at compile time, but at runtime instead.
+JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key)
+{
+    auto property = TRY(value.get(vm, property_key));
+
+    if (property.is_undefined())
+        return JS::Handle<WebIDL::CallbackType> {};
+
+    if (!property.is_function())
+        return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, property.to_string_without_side_effects()));
+
+    return vm.heap().allocate_without_realm<WebIDL::CallbackType>(property.as_object(), HTML::incumbent_settings_object());
+}
+
 }
