@@ -62,6 +62,11 @@ void Cell::set_type(StringView name)
     VERIFY_NOT_REACHED();
 }
 
+void Cell::set_type_metadata(CellTypeMetadata const& metadata)
+{
+    m_type_metadata = metadata;
+}
+
 void Cell::set_type_metadata(CellTypeMetadata&& metadata)
 {
     m_type_metadata = move(metadata);

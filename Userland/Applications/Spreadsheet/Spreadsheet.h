@@ -25,15 +25,20 @@ namespace Spreadsheet {
 class CellChange {
 public:
     CellChange(Cell&, DeprecatedString const&);
+    CellChange(Cell&, CellTypeMetadata const&);
 
     auto& cell() { return m_cell; }
     auto& previous_data() { return m_previous_data; }
     auto& new_data() { return m_new_data; }
+    auto& previous_type_metadata() { return m_previous_type_metadata; }
+    auto& new_type_metadata() { return m_new_type_metadata; }
 
 private:
     Cell& m_cell;
     DeprecatedString m_previous_data;
     DeprecatedString m_new_data;
+    CellTypeMetadata m_previous_type_metadata;
+    CellTypeMetadata m_new_type_metadata;
 };
 
 class Sheet : public Core::Object {
