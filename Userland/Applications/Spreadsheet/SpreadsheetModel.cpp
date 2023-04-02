@@ -221,4 +221,23 @@ void CellsUndoCommand::redo()
     }
 }
 
+CellsUndoMetadataCommand::CellsUndoMetadataCommand(Vector<CellChange> cell_changes)
+{
+    m_cell_changes = move(cell_changes);
+}
+
+void CellsUndoMetadataCommand::undo()
+{
+    for (size_t i = 0; i < m_cell_changes.size(); ++i) {
+        m_cell_changes[i].cell().set_type_metadata(m_cell_changes[i].previous_type_metadata());
+    }
+}
+
+void CellsUndoMetadataCommand::redo()
+{
+    for (size_t i = 0; i < m_cell_changes.size(); ++i) {
+        m_cell_changes[i].cell().set_type_metadata(m_cell_changes[i].new_type_metadata());
+    }
+}
+
 }
