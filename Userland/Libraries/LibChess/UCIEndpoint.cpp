@@ -56,14 +56,27 @@ void Endpoint::event(Core::Event& event)
     case Command::Type::Quit:
         return handle_quit();
     default:
+        Object::event(event);
         break;
     }
+}
+
+void Endpoint::custom_event(Core::CustomEvent& custom_event)
+{
+    if (custom_event.custom_type() == EndpointEventType::UnexpectedEof)
+        handle_unexpected_eof();
 }
 
 void Endpoint::set_in_notifier()
 {
     m_in_notifier = Core::Notifier::construct(m_in->fd(), Core::Notifier::Read);
     m_in_notifier->on_ready_to_read = [this] {
+        if (!m_in->can_read_line()) {
+            Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(EndpointEventType::UnexpectedEof));
+            m_in_notifier->set_enabled(false);
+            return;
+        }
+
         while (m_in->can_read_line())
             Core::EventLoop::current().post_event(*this, read_command());
     };
