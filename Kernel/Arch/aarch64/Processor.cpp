@@ -287,8 +287,13 @@ FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
     RegisterState& eretframe = *reinterpret_cast<RegisterState*>(stack_top);
     memcpy(eretframe.x, thread_regs.x, sizeof(thread_regs.x));
 
-    // x30 is the Link Register for the aarch64 ABI, so this will return to exit_kernel_thread when main thread function returns.
-    eretframe.x[30] = FlatPtr(&exit_kernel_thread);
+    // We don't overwrite the link register if it's not 0, since that means this thread's register state was already initialized with
+    // an existing link register value (e.g. it was fork()'ed), so we assume exit_kernel_thread is already saved as previous LR on the
+    // stack somewhere.
+    if (eretframe.x[30] == 0x0) {
+        // x30 is the Link Register for the aarch64 ABI, so this will return to exit_kernel_thread when main thread function returns.
+        eretframe.x[30] = FlatPtr(&exit_kernel_thread);
+    }
     eretframe.elr_el1 = thread_regs.elr_el1;
     eretframe.sp_el0 = thread_regs.sp_el0;
     eretframe.spsr_el1 = thread_regs.spsr_el1;
