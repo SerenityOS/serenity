@@ -357,7 +357,7 @@ static bool is_point_on_curve(JacobianPoint const& point)
 ErrorOr<ByteBuffer> SECP256r1::generate_private_key()
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(32));
-    fill_with_random(buffer.data(), buffer.size());
+    fill_with_random(buffer);
     return buffer;
 }
 

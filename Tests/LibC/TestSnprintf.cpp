@@ -59,7 +59,7 @@ static bool test_single(Testcase<TArg> const& testcase)
 
     // Setup
     ByteBuffer actual = ByteBuffer::create_uninitialized(SANDBOX_CANARY_SIZE + testcase.dest_n + SANDBOX_CANARY_SIZE).release_value();
-    fill_with_random(actual.data(), actual.size());
+    fill_with_random(actual);
     ByteBuffer expected = actual;
     VERIFY(actual.offset_pointer(0) != expected.offset_pointer(0));
     actual.overwrite(SANDBOX_CANARY_SIZE, testcase.dest, testcase.dest_n);

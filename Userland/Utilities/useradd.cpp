@@ -136,7 +136,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto get_salt = []() -> ErrorOr<DeprecatedString> {
         char random_data[12];
-        fill_with_random(random_data, sizeof(random_data));
+        fill_with_random({ random_data, sizeof(random_data) });
 
         StringBuilder builder;
         builder.append("$5$"sv);

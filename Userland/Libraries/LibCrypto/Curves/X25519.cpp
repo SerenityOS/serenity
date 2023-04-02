@@ -30,7 +30,7 @@ static void conditional_swap(u32* first, u32* second, u32 condition)
 ErrorOr<ByteBuffer> X25519::generate_private_key()
 {
     auto buffer = TRY(ByteBuffer::create_uninitialized(BYTES));
-    fill_with_random(buffer.data(), buffer.size());
+    fill_with_random(buffer);
     return buffer;
 }
 
