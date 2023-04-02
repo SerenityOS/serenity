@@ -187,7 +187,7 @@ public:
 
     struct ProcessAndFirstThread {
         NonnullRefPtr<Process> process;
-        NonnullLockRefPtr<Thread> first_thread;
+        NonnullRefPtr<Thread> first_thread;
     };
 
     template<typename EntryFunction>
@@ -203,7 +203,7 @@ public:
 
     ~Process();
 
-    LockRefPtr<Thread> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
+    ErrorOr<NonnullRefPtr<Thread>> create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity = THREAD_AFFINITY_DEFAULT, bool joinable = true);
 
     bool is_profiling() const { return m_profiling; }
     void set_profiling(bool profiling) { m_profiling = profiling; }
@@ -570,7 +570,7 @@ public:
     ErrorOr<void> set_coredump_property(NonnullOwnPtr<KString> key, NonnullOwnPtr<KString> value);
     ErrorOr<void> try_set_coredump_property(StringView key, StringView value);
 
-    Vector<NonnullLockRefPtr<Thread>> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
+    Vector<NonnullRefPtr<Thread>> const& threads_for_coredump(Badge<Coredump>) const { return m_threads_for_coredump; }
 
     PerformanceEventBuffer* perf_events() { return m_perf_event_buffer; }
     PerformanceEventBuffer const* perf_events() const { return m_perf_event_buffer; }
@@ -600,7 +600,7 @@ private:
 
     Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree);
     static ErrorOr<ProcessAndFirstThread> create(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
-    ErrorOr<NonnullLockRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
+    ErrorOr<NonnullRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
     static ProcessID allocate_pid();
 
     void kill_threads_except_self();
@@ -892,7 +892,7 @@ private:
     };
 
     SpinlockProtected<Array<CoredumpProperty, 4>, LockRank::None> m_coredump_properties {};
-    Vector<NonnullLockRefPtr<Thread>> m_threads_for_coredump;
+    Vector<NonnullRefPtr<Thread>> m_threads_for_coredump;
 
     struct SignalActionData {
         VirtualAddress handler_or_sigaction;

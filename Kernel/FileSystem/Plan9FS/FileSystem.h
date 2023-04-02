@@ -137,7 +137,7 @@ private:
     HashMap<u16, NonnullLockRefPtr<ReceiveCompletion>> m_completions;
 
     Spinlock<LockRank::None> m_thread_lock {};
-    LockRefPtr<Thread> m_thread;
+    RefPtr<Thread> m_thread;
     Atomic<bool> m_thread_running { false };
     Atomic<bool, AK::MemoryOrder::memory_order_relaxed> m_thread_shutdown { false };
 };

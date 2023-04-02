@@ -329,7 +329,7 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
     }
 }
 
-ErrorOr<NonnullLockRefPtr<Thread>> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, Process* fork_parent)
+ErrorOr<NonnullRefPtr<Thread>> Process::attach_resources(NonnullOwnPtr<Memory::AddressSpace>&& preallocated_space, Process* fork_parent)
 {
     m_space.with([&](auto& space) {
         space = move(preallocated_space);
@@ -338,10 +338,10 @@ ErrorOr<NonnullLockRefPtr<Thread>> Process::attach_resources(NonnullOwnPtr<Memor
     auto create_first_thread = [&] {
         if (fork_parent) {
             // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
-            return Thread::current()->try_clone(*this);
+            return Thread::current()->clone(*this);
         }
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
-        return Thread::try_create(*this);
+        return Thread::create(*this);
     };
 
     auto first_thread = TRY(create_first_thread());
@@ -906,17 +906,13 @@ ErrorOr<void> Process::send_signal(u8 signal, Process* sender)
     return ESRCH;
 }
 
-LockRefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity, bool joinable)
+ErrorOr<NonnullRefPtr<Thread>> Process::create_kernel_thread(void (*entry)(void*), void* entry_data, u32 priority, NonnullOwnPtr<KString> name, u32 affinity, bool joinable)
 {
     VERIFY((priority >= THREAD_PRIORITY_MIN) && (priority <= THREAD_PRIORITY_MAX));
 
     // FIXME: Do something with guard pages?
 
-    auto thread_or_error = Thread::try_create(*this);
-    if (thread_or_error.is_error())
-        return {};
-
-    auto thread = thread_or_error.release_value();
+    auto thread = TRY(Thread::create(*this));
     thread->set_name(move(name));
     thread->set_affinity(affinity);
     thread->set_priority(priority);
