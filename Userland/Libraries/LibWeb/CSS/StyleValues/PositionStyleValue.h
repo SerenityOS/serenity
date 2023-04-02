@@ -17,33 +17,29 @@ namespace Web::CSS {
 
 class PositionStyleValue final : public StyleValueWithDefaultOperators<PositionStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<PositionStyleValue> create(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
+    static ValueComparingNonnullRefPtr<PositionStyleValue> create(ValueComparingNonnullRefPtr<StyleValue> egde_x, ValueComparingNonnullRefPtr<StyleValue> edge_y)
     {
-        return adopt_ref(*new PositionStyleValue(edge_x, offset_x, edge_y, offset_y));
+        return adopt_ref(*new PositionStyleValue(move(egde_x), move(edge_y)));
     }
     virtual ~PositionStyleValue() override = default;
 
-    PositionEdge edge_x() const { return m_properties.edge_x; }
-    LengthPercentage const& offset_x() const { return m_properties.offset_x; }
-    PositionEdge edge_y() const { return m_properties.edge_y; }
-    LengthPercentage const& offset_y() const { return m_properties.offset_y; }
+    ValueComparingNonnullRefPtr<StyleValue> edge_x() const { return m_properties.edge_x; }
+    ValueComparingNonnullRefPtr<StyleValue> edge_y() const { return m_properties.edge_y; }
 
     virtual ErrorOr<String> to_string() const override;
 
     bool properties_equal(PositionStyleValue const& other) const { return m_properties == other.m_properties; }
 
 private:
-    PositionStyleValue(PositionEdge edge_x, LengthPercentage const& offset_x, PositionEdge edge_y, LengthPercentage const& offset_y)
+    PositionStyleValue(ValueComparingNonnullRefPtr<StyleValue> edge_x, ValueComparingNonnullRefPtr<StyleValue> edge_y)
         : StyleValueWithDefaultOperators(Type::Position)
-        , m_properties { .edge_x = edge_x, .offset_x = offset_x, .edge_y = edge_y, .offset_y = offset_y }
+        , m_properties { .edge_x = edge_x, .edge_y = edge_y }
     {
     }
 
     struct Properties {
-        PositionEdge edge_x;
-        LengthPercentage offset_x;
-        PositionEdge edge_y;
-        LengthPercentage offset_y;
+        ValueComparingNonnullRefPtr<StyleValue> edge_x;
+        ValueComparingNonnullRefPtr<StyleValue> edge_y;
         bool operator==(Properties const&) const = default;
     } m_properties;
 };

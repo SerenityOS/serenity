@@ -19,6 +19,7 @@
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/CalculatedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
@@ -195,7 +196,7 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return BackgroundStyleValue::create(
             value_or_default(maybe_background_color, InitialStyleValue::the()),
             value_or_default(maybe_background_image, IdentifierStyleValue::create(CSS::ValueID::None)),
-            value_or_default(maybe_background_position, PositionStyleValue::create(PositionEdge::Left, Length::make_px(0), PositionEdge::Top, Length::make_px(0))),
+            value_or_default(maybe_background_position, PositionStyleValue::create(EdgeStyleValue::create(PositionEdge::Left, Length::make_px(0)), EdgeStyleValue::create(PositionEdge::Top, Length::make_px(0)))),
             value_or_default(maybe_background_size, IdentifierStyleValue::create(CSS::ValueID::Auto)),
             value_or_default(maybe_background_repeat, BackgroundRepeatStyleValue::create(CSS::Repeat::Repeat, CSS::Repeat::Repeat)),
             value_or_default(maybe_background_attachment, IdentifierStyleValue::create(CSS::ValueID::Scroll)),

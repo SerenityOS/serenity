@@ -9,7 +9,7 @@
 #include <LibWeb/CSS/StyleValues/BackgroundRepeatStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BackgroundSizeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
-#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
+#include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
@@ -293,7 +293,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         auto clips = computed_style.property(CSS::PropertyID::BackgroundClip);
         auto images = computed_style.property(CSS::PropertyID::BackgroundImage);
         auto origins = computed_style.property(CSS::PropertyID::BackgroundOrigin);
-        auto positions = computed_style.property(CSS::PropertyID::BackgroundPosition);
+        auto x_positions = computed_style.property(CSS::PropertyID::BackgroundPositionX);
+        auto y_positions = computed_style.property(CSS::PropertyID::BackgroundPositionY);
         auto repeats = computed_style.property(CSS::PropertyID::BackgroundRepeat);
         auto sizes = computed_style.property(CSS::PropertyID::BackgroundSize);
 
@@ -315,7 +316,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         layer_count = max(layer_count, count_layers(clips));
         layer_count = max(layer_count, count_layers(images));
         layer_count = max(layer_count, count_layers(origins));
-        layer_count = max(layer_count, count_layers(positions));
+        layer_count = max(layer_count, count_layers(x_positions));
+        layer_count = max(layer_count, count_layers(y_positions));
         layer_count = max(layer_count, count_layers(repeats));
         layer_count = max(layer_count, count_layers(sizes));
 
@@ -369,13 +371,17 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 layer.clip = as_box(clip_value->to_identifier());
             }
 
-            if (auto position_value = value_for_layer(positions, layer_index); position_value && position_value->is_position()) {
-                auto& position = position_value->as_position();
-                layer.position_edge_x = position.edge_x();
-                layer.position_edge_y = position.edge_y();
-                layer.position_offset_x = position.offset_x();
-                layer.position_offset_y = position.offset_y();
+            if (auto position_value = value_for_layer(x_positions, layer_index); position_value && position_value->is_edge()) {
+                auto& position = position_value->as_edge();
+                layer.position_edge_x = position.edge();
+                layer.position_offset_x = position.offset();
             }
+
+            if (auto position_value = value_for_layer(y_positions, layer_index); position_value && position_value->is_edge()) {
+                auto& position = position_value->as_edge();
+                layer.position_edge_y = position.edge();
+                layer.position_offset_y = position.offset();
+            };
 
             if (auto size_value = value_for_layer(sizes, layer_index); size_value) {
                 if (size_value->is_background_size()) {
