@@ -912,7 +912,8 @@ ErrorOr<void> StyleComputer::compute_cascaded_values(StyleProperties& style, DOM
     // FIXME: Normal user declarations
 
     // Author presentational hints (NOTE: The spec doesn't say exactly how to prioritize these.)
-    element.apply_presentational_hints(style);
+    if (!pseudo_element.has_value())
+        element.apply_presentational_hints(style);
 
     // Normal author declarations
     cascade_declarations(style, element, pseudo_element, matching_rule_set.author_rules, CascadeOrigin::Author, Important::No);
