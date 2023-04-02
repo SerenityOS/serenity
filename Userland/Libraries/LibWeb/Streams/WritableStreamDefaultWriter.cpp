@@ -64,6 +64,29 @@ WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::abort(JS
     return TRY(writable_stream_default_writer_abort(*this, reason))->promise();
 }
 
+// https://streams.spec.whatwg.org/#default-writer-close
+WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> WritableStreamDefaultWriter::close()
+{
+    auto& realm = this->realm();
+
+    // 1. Let stream be this.[[stream]].
+
+    // 2. If stream is undefined, return a promise rejected with a TypeError exception.
+    if (!m_stream) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close a writer that has no locked stream"sv));
+        return WebIDL::create_rejected_promise(realm, exception)->promise();
+    }
+
+    // 3. If ! WritableStreamCloseQueuedOrInFlight(stream) is true, return a promise rejected with a TypeError exception.
+    if (writable_stream_close_queued_or_in_flight(*m_stream)) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close a stream that is already closed or errored"sv));
+        return WebIDL::create_rejected_promise(realm, exception)->promise();
+    }
+
+    // 4. Return ! WritableStreamDefaultWriterClose(this).
+    return TRY(writable_stream_default_writer_close(*this))->promise();
+}
+
 WritableStreamDefaultWriter::WritableStreamDefaultWriter(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {
