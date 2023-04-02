@@ -1321,6 +1321,19 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_w
     return writable_stream_abort(*stream, reason);
 }
 
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-close
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_close(WritableStreamDefaultWriter& writer)
+{
+    // 1. Let stream be writer.[[stream]].
+    auto stream = writer.stream();
+
+    // 2. Assert: stream is not undefined.
+    VERIFY(stream);
+
+    // 3. Return ! WritableStreamClose(stream).
+    return writable_stream_close(*stream);
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-ensure-ready-promise-rejected
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter& writer, JS::Value error)
 {

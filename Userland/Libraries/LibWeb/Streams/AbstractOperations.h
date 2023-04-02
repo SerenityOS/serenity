@@ -74,6 +74,7 @@ WebIDL::ExceptionOr<void> writable_stream_start_erroring(WritableStream&, JS::Va
 void writable_stream_update_backpressure(WritableStream&, bool backpressure);
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_abort(WritableStreamDefaultWriter&, JS::Value reason);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_close(WritableStreamDefaultWriter&);
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
 
