@@ -303,7 +303,10 @@ void ImageEditor::second_paint_event(GUI::PaintEvent& event)
 GUI::MouseEvent ImageEditor::event_with_pan_and_scale_applied(GUI::MouseEvent const& event) const
 {
     auto image_position = frame_to_content_position(event.position());
-    auto tool_adjusted_image_position = m_active_tool->point_position_to_preferred_cell(image_position);
+    Gfx::IntPoint tool_adjusted_image_position;
+    if (m_active_tool) {
+        tool_adjusted_image_position = m_active_tool->point_position_to_preferred_cell(image_position);
+    }
 
     return {
         static_cast<GUI::Event::Type>(event.type()),
@@ -322,7 +325,10 @@ GUI::MouseEvent ImageEditor::event_adjusted_for_layer(GUI::MouseEvent const& eve
 {
     auto image_position = frame_to_content_position(event.position());
     image_position.translate_by(-layer.location().x(), -layer.location().y());
-    auto tool_adjusted_image_position = m_active_tool->point_position_to_preferred_cell(image_position);
+    Gfx::IntPoint tool_adjusted_image_position;
+    if (m_active_tool) {
+        tool_adjusted_image_position = m_active_tool->point_position_to_preferred_cell(image_position);
+    }
 
     return {
         static_cast<GUI::Event::Type>(event.type()),
@@ -440,7 +446,9 @@ void ImageEditor::mousemove_event(GUI::MouseEvent& event)
     }
 
     Tool::MouseEvent tool_event(Tool::MouseEvent::Action::MouseDown, layer_event, image_event, event);
-    m_active_tool->on_mousemove(m_active_layer.ptr(), tool_event);
+    if (m_active_tool) {
+        m_active_tool->on_mousemove(m_active_layer.ptr(), tool_event);
+    }
 }
 
 void ImageEditor::mouseup_event(GUI::MouseEvent& event)
