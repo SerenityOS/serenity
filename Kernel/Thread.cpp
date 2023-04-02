@@ -39,7 +39,7 @@ SpinlockProtected<Thread::GlobalList, LockRank::None>& Thread::all_instances()
     return *s_list;
 }
 
-ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> process)
+ErrorOr<NonnullRefPtr<Thread>> Thread::create(NonnullRefPtr<Process> process)
 {
     auto kernel_stack_region = TRY(MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     kernel_stack_region->set_stack(true);
@@ -47,7 +47,7 @@ ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> pro
     auto block_timer = TRY(try_make_lock_ref_counted<Timer>());
 
     auto name = TRY(process->name().with([](auto& name) { return name->try_clone(); }));
-    return adopt_nonnull_lock_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
+    return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
 }
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullLockRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
@@ -1217,9 +1217,9 @@ RegisterState& Thread::get_register_dump_from_stack()
     return *trap->regs;
 }
 
-ErrorOr<NonnullLockRefPtr<Thread>> Thread::try_clone(Process& process)
+ErrorOr<NonnullRefPtr<Thread>> Thread::clone(NonnullRefPtr<Process> process)
 {
-    auto clone = TRY(Thread::try_create(process));
+    auto clone = TRY(Thread::create(move(process)));
     m_signal_action_masks.span().copy_to(clone->m_signal_action_masks);
     clone->m_signal_mask = m_signal_mask;
     clone->m_fpu_state = m_fpu_state;
@@ -1399,9 +1399,9 @@ ErrorOr<void> Thread::make_thread_specific_region(Badge<Process>)
     });
 }
 
-LockRefPtr<Thread> Thread::from_tid(ThreadID tid)
+RefPtr<Thread> Thread::from_tid(ThreadID tid)
 {
-    return Thread::all_instances().with([&](auto& list) -> LockRefPtr<Thread> {
+    return Thread::all_instances().with([&](auto& list) -> RefPtr<Thread> {
         for (Thread& thread : list) {
             if (thread.tid() == tid)
                 return thread;

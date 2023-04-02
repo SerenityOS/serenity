@@ -43,7 +43,7 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
 
     // FIXME: Do something with guard pages?
 
-    auto thread = TRY(Thread::try_create(*this));
+    auto thread = TRY(Thread::create(*this));
 
     // We know this thread is not the main_thread,
     // So give it a unique name until the user calls $set_thread_name on it

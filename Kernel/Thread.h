@@ -67,10 +67,10 @@ public:
         return Processor::current_thread();
     }
 
-    static ErrorOr<NonnullLockRefPtr<Thread>> try_create(NonnullRefPtr<Process>);
+    static ErrorOr<NonnullRefPtr<Thread>> create(NonnullRefPtr<Process>);
     ~Thread();
 
-    static LockRefPtr<Thread> from_tid(ThreadID);
+    static RefPtr<Thread> from_tid(ThreadID);
     static void finalize_dying_threads();
 
     ThreadID tid() const { return m_tid; }
@@ -294,7 +294,7 @@ public:
 
     private:
         BlockerSet* m_blocker_set { nullptr };
-        NonnullLockRefPtr<Thread> m_thread;
+        NonnullRefPtr<Thread> const m_thread;
         u8 m_was_interrupted_by_signal { 0 };
         bool m_is_blocking { false };
         bool m_was_interrupted_by_death { false };
@@ -429,7 +429,7 @@ public:
         bool unblock(void*, bool);
 
     private:
-        NonnullLockRefPtr<Thread> m_joinee;
+        NonnullRefPtr<Thread> const m_joinee;
         void*& m_joinee_exit_value;
         ErrorOr<void>& m_try_join_result;
         bool m_did_unblock { false };
@@ -961,7 +961,7 @@ public:
         return !m_is_joinable;
     }
 
-    ErrorOr<NonnullLockRefPtr<Thread>> try_clone(Process&);
+    ErrorOr<NonnullRefPtr<Thread>> clone(NonnullRefPtr<Process>);
 
     template<IteratorFunction<Thread&> Callback>
     static IterationDecision for_each_in_state(State, Callback);
