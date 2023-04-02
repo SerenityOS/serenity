@@ -10,6 +10,7 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/UnderlyingSink.h>
 #include <LibWeb/Streams/WritableStream.h>
+#include <LibWeb/Streams/WritableStreamDefaultController.h>
 #include <LibWeb/Streams/WritableStreamDefaultWriter.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 

@@ -54,8 +54,9 @@ public:
     JS::GCPtr<WebIDL::Promise const> close_request() const { return m_close_request; }
     void set_close_request(JS::GCPtr<WebIDL::Promise> value) { m_close_request = value; }
 
-    JS::GCPtr<JS::Object> controller() { return m_controller; }
-    void set_controller(JS::GCPtr<JS::Object> value) { m_controller = value; }
+    JS::GCPtr<WritableStreamDefaultController const> controller() const { return m_controller; }
+    JS::GCPtr<WritableStreamDefaultController> controller() { return m_controller; }
+    void set_controller(JS::GCPtr<WritableStreamDefaultController> value) { m_controller = value; }
 
     JS::GCPtr<WebIDL::Promise const> in_flight_write_request() const { return m_in_flight_write_request; }
     void set_in_flight_write_request(JS::GCPtr<WebIDL::Promise> value) { m_in_flight_write_request = value; }
@@ -73,6 +74,7 @@ public:
     void set_stored_error(JS::Value value) { m_stored_error = value; }
 
     JS::GCPtr<WritableStreamDefaultWriter const> writer() const { return m_writer; }
+    JS::GCPtr<WritableStreamDefaultWriter> writer() { return m_writer; }
     void set_writer(JS::GCPtr<WritableStreamDefaultWriter> value) { m_writer = value; }
 
     SinglyLinkedList<JS::NonnullGCPtr<WebIDL::Promise>>& write_requests() { return m_write_requests; }
@@ -94,7 +96,7 @@ private:
 
     // https://streams.spec.whatwg.org/#writablestream-controller
     // A WritableStreamDefaultController created with the ability to control the state and queue of this stream
-    JS::GCPtr<JS::Object> m_controller;
+    JS::GCPtr<WritableStreamDefaultController> m_controller;
 
     // https://streams.spec.whatwg.org/#writablestream-detached
     // A boolean flag set to true when the stream is transferred

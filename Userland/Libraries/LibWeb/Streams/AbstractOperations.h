@@ -18,6 +18,9 @@ using SizeAlgorithm = JS::SafeFunction<JS::Completion(JS::Value)>;
 using PullAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
 using CancelAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
 using StartAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
+using AbortAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
+using CloseAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
+using WriteAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_readable_stream_default_reader(ReadableStream&);
 bool is_readable_stream_locked(ReadableStream const&);
@@ -54,8 +57,18 @@ bool is_writable_stream_locked(WritableStream const&);
 WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDefaultWriter&, WritableStream&);
 
 bool writable_stream_close_queued_or_in_flight(WritableStream const&);
+WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream&);
+bool writable_stream_has_operation_marked_in_flight(WritableStream const&);
+void writable_stream_reject_close_and_closed_promise_if_needed(WritableStream&);
+WebIDL::ExceptionOr<void> writable_stream_start_erroring(WritableStream&, JS::Value reason);
 
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
+void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
+Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
+
+void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController&);
+WebIDL::ExceptionOr<void> writable_stream_default_controller_error(WritableStreamDefaultController&, JS::Value error);
+double writable_stream_default_controller_get_desired_size(WritableStreamDefaultController const&);
 
 JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key);
 
