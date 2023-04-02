@@ -8,6 +8,7 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/IntrusiveList.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/SpinlockProtected.h>
@@ -25,9 +26,9 @@ class ProcessGroup
 public:
     ~ProcessGroup();
 
-    static ErrorOr<NonnullLockRefPtr<ProcessGroup>> try_create(ProcessGroupID);
-    static ErrorOr<NonnullLockRefPtr<ProcessGroup>> try_find_or_create(ProcessGroupID);
-    static LockRefPtr<ProcessGroup> from_pgid(ProcessGroupID);
+    static ErrorOr<NonnullRefPtr<ProcessGroup>> create(ProcessGroupID);
+    static ErrorOr<NonnullRefPtr<ProcessGroup>> find_or_create(ProcessGroupID);
+    static RefPtr<ProcessGroup> from_pgid(ProcessGroupID);
 
     ProcessGroupID const& pgid() const { return m_pgid; }
 

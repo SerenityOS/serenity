@@ -236,7 +236,10 @@ public:
         return with_protected_data([](auto& protected_data) { return protected_data.sid; });
     }
     bool is_session_leader() const { return sid().value() == pid().value(); }
-    ProcessGroupID pgid() const { return m_pg ? m_pg->pgid() : 0; }
+    ProcessGroupID pgid() const
+    {
+        return m_pg.with([&](auto& pg) { return pg ? pg->pgid() : 0; });
+    }
     bool is_group_leader() const { return pgid().value() == pid().value(); }
     ProcessID ppid() const
     {
@@ -622,7 +625,7 @@ private:
     ErrorOr<void> do_killall(int signal);
     ErrorOr<void> do_killself(int signal);
 
-    ErrorOr<siginfo_t> do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, int options);
+    ErrorOr<siginfo_t> do_waitid(Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, int options);
 
     static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<char const*> user_path, size_t path_length);
     static ErrorOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Syscall::StringArgument const&);
@@ -674,7 +677,7 @@ private:
 
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
 
-    LockRefPtr<ProcessGroup> m_pg;
+    SpinlockProtected<RefPtr<ProcessGroup>, LockRank::None> m_pg;
 
     RecursiveSpinlock<LockRank::None> mutable m_protected_data_lock;
     AtomicEdgeAction<u32> m_protected_data_refs;

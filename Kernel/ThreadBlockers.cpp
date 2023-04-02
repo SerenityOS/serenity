@@ -663,7 +663,7 @@ void Thread::WaitBlockerSet::finalize()
     }
 }
 
-Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullLockRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result)
+Thread::WaitBlocker::WaitBlocker(int wait_options, Variant<Empty, NonnullRefPtr<Process>, NonnullRefPtr<ProcessGroup>> waitee, ErrorOr<siginfo_t>& result)
     : m_wait_options(wait_options)
     , m_result(result)
     , m_waitee(move(waitee))
@@ -734,7 +734,7 @@ bool Thread::WaitBlocker::unblock(Process& process, UnblockFlags flags, u8 signa
         [&](NonnullRefPtr<Process> const& waitee_process) {
             return &process != waitee_process;
         },
-        [&](NonnullLockRefPtr<ProcessGroup> const& waitee_process_group) {
+        [&](NonnullRefPtr<ProcessGroup> const& waitee_process_group) {
             return waitee_process_group->pgid() != process.pgid();
         },
         [&](Empty const&) {

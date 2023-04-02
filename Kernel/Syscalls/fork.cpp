@@ -96,7 +96,9 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         });
     }));
 
-    child->m_pg = m_pg;
+    child->m_pg.with([&](auto& child_pg) {
+        child_pg = m_pg.with([&](auto& pg) { return pg; });
+    });
 
     with_protected_data([&](auto& my_protected_data) {
         child->with_mutable_protected_data([&](auto& child_protected_data) {
