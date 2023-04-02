@@ -18,7 +18,7 @@ namespace Kernel {
 
 class Coredump {
 public:
-    static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullLockRefPtr<Process>, StringView output_path);
+    static ErrorOr<NonnullOwnPtr<Coredump>> try_create(NonnullRefPtr<Process>, StringView output_path);
     static SpinlockProtected<OwnPtr<KString>, LockRank::None>& directory_path();
 
     ~Coredump() = default;
@@ -65,7 +65,7 @@ private:
         VirtualAddress m_vaddr;
     };
 
-    Coredump(NonnullLockRefPtr<Process>, NonnullRefPtr<OpenFileDescription>, Vector<FlatRegionData>);
+    Coredump(NonnullRefPtr<Process>, NonnullRefPtr<OpenFileDescription>, Vector<FlatRegionData>);
     static ErrorOr<NonnullRefPtr<OpenFileDescription>> try_create_target_file(Process const&, StringView output_path);
 
     ErrorOr<void> write_elf_header();
@@ -79,7 +79,7 @@ private:
     ErrorOr<void> create_notes_regions_data(auto&) const;
     ErrorOr<void> create_notes_metadata_data(auto&) const;
 
-    NonnullLockRefPtr<Process> m_process;
+    NonnullRefPtr<Process> const m_process;
     NonnullRefPtr<OpenFileDescription> m_description;
     size_t m_num_program_headers { 0 };
     Vector<FlatRegionData> m_regions;

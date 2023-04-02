@@ -288,7 +288,7 @@ static ErrorOr<void> build_from_cached_data(KBufferBuilder& builder, ProcFSInode
     return {};
 }
 
-ErrorOr<void> ProcFSInode::try_fetch_process_property_data(NonnullLockRefPtr<Process> process, KBufferBuilder& builder) const
+ErrorOr<void> ProcFSInode::try_fetch_process_property_data(NonnullRefPtr<Process> process, KBufferBuilder& builder) const
 {
     VERIFY(m_type == Type::ProcessProperty);
     if (m_subdirectory == process_fd_subdirectory_root_entry.subdirectory) {

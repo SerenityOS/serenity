@@ -52,7 +52,7 @@ bool Coredump::FlatRegionData::is_consistent_with_region(Memory::Region const& r
     return true;
 }
 
-ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullLockRefPtr<Process> process, StringView output_path)
+ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullRefPtr<Process> process, StringView output_path)
 {
     if (!process->is_dumpable()) {
         dbgln("Refusing to generate coredump for non-dumpable process {}", process->pid().value());
@@ -74,7 +74,7 @@ ErrorOr<NonnullOwnPtr<Coredump>> Coredump::try_create(NonnullLockRefPtr<Process>
     return adopt_nonnull_own_or_enomem(new (nothrow) Coredump(move(process), move(description), move(regions)));
 }
 
-Coredump::Coredump(NonnullLockRefPtr<Process> process, NonnullRefPtr<OpenFileDescription> description, Vector<FlatRegionData> regions)
+Coredump::Coredump(NonnullRefPtr<Process> process, NonnullRefPtr<OpenFileDescription> description, Vector<FlatRegionData> regions)
     : m_process(move(process))
     , m_description(move(description))
     , m_regions(move(regions))

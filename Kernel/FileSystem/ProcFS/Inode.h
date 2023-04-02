@@ -69,7 +69,7 @@ private:
     virtual ErrorOr<NonnullRefPtr<Inode>> lookup(StringView name) override final;
 
     ErrorOr<void> refresh_process_property_data(OpenFileDescription& description);
-    ErrorOr<void> try_fetch_process_property_data(NonnullLockRefPtr<Process>, KBufferBuilder& builder) const;
+    ErrorOr<void> try_fetch_process_property_data(NonnullRefPtr<Process>, KBufferBuilder& builder) const;
 
     Type m_type;
     Optional<ProcessID> const m_associated_pid {};
