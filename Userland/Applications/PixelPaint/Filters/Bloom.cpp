@@ -16,9 +16,9 @@
 
 namespace PixelPaint::Filters {
 
-void Bloom::apply(Gfx::Bitmap& target_bitmap, Gfx::Bitmap const& source_bitmap) const
+void Bloom::apply(Gfx::Bitmap& target_bitmap) const
 {
-    auto intermediate_bitmap_or_error = source_bitmap.clone();
+    auto intermediate_bitmap_or_error = target_bitmap.clone();
     if (intermediate_bitmap_or_error.is_error())
         return;
 
