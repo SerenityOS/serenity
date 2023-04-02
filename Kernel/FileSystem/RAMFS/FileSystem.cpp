@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<FileSystem>> RAMFS::try_create()
+ErrorOr<NonnullRefPtr<FileSystem>> RAMFS::try_create()
 {
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) RAMFS));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) RAMFS));
 }
 
 RAMFS::RAMFS() = default;

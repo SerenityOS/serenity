@@ -135,7 +135,7 @@ ErrorOr<void> VirtualFileSystem::remount(Custody& mount_point, int new_flags)
 
 void VirtualFileSystem::sync_filesystems()
 {
-    Vector<NonnullLockRefPtr<FileSystem>, 32> file_systems;
+    Vector<NonnullRefPtr<FileSystem>, 32> file_systems;
     m_file_systems_list.with([&](auto const& list) {
         for (auto& fs : list)
             file_systems.append(fs);
@@ -147,7 +147,7 @@ void VirtualFileSystem::sync_filesystems()
 
 void VirtualFileSystem::lock_all_filesystems()
 {
-    Vector<NonnullLockRefPtr<FileSystem>, 32> file_systems;
+    Vector<NonnullRefPtr<FileSystem>, 32> file_systems;
     m_file_systems_list.with([&](auto const& list) {
         for (auto& fs : list)
             file_systems.append(fs);
@@ -334,9 +334,9 @@ ErrorOr<InodeMetadata> VirtualFileSystem::lookup_metadata(Credentials const& cre
     return custody->inode().metadata();
 }
 
-ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&)> callback)
+ErrorOr<NonnullRefPtr<FileBackedFileSystem>> VirtualFileSystem::find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullRefPtr<FileSystem>>(OpenFileDescription&)> callback)
 {
-    return TRY(m_file_backed_file_systems_list.with([&](auto& list) -> ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> {
+    return TRY(m_file_backed_file_systems_list.with([&](auto& list) -> ErrorOr<NonnullRefPtr<FileBackedFileSystem>> {
         for (auto& node : list) {
             if (&node.file_description() == &description) {
                 return node;

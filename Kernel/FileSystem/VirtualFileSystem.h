@@ -19,7 +19,6 @@
 #include <Kernel/FileSystem/Mount.h>
 #include <Kernel/FileSystem/UnveilNode.h>
 #include <Kernel/Forward.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
@@ -82,7 +81,7 @@ public:
 
     ErrorOr<void> for_each_mount(Function<ErrorOr<void>(Mount const&)>) const;
 
-    ErrorOr<NonnullLockRefPtr<FileBackedFileSystem>> find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullLockRefPtr<FileSystem>>(OpenFileDescription&)> callback);
+    ErrorOr<NonnullRefPtr<FileBackedFileSystem>> find_already_existing_or_create_file_backed_file_system(OpenFileDescription& description, Function<ErrorOr<NonnullRefPtr<FileSystem>>(OpenFileDescription&)> callback);
 
     InodeIdentifier root_inode_id() const;
 

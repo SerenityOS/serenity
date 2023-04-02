@@ -10,9 +10,9 @@
 
 namespace Kernel {
 
-ErrorOr<NonnullLockRefPtr<FileSystem>> FATFS::try_create(OpenFileDescription& file_description)
+ErrorOr<NonnullRefPtr<FileSystem>> FATFS::try_create(OpenFileDescription& file_description)
 {
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) FATFS(file_description)));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FATFS(file_description)));
 }
 
 FATFS::FATFS(OpenFileDescription& file_description)

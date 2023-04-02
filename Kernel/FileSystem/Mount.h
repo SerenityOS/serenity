@@ -20,7 +20,7 @@ class Mount {
     friend class VirtualFileSystem;
 
 public:
-    Mount(FileSystem&, Custody* host_custody, int flags);
+    Mount(NonnullRefPtr<FileSystem>, Custody* host_custody, int flags);
     Mount(Inode& source, Custody& host_custody, int flags);
 
     RefPtr<Inode const> host() const;
@@ -39,7 +39,7 @@ public:
 
 private:
     NonnullRefPtr<Inode> m_guest;
-    NonnullLockRefPtr<FileSystem> m_guest_fs;
+    NonnullRefPtr<FileSystem> m_guest_fs;
     SpinlockProtected<RefPtr<Custody>, LockRank::None> m_host_custody;
     int m_flags;
 
