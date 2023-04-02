@@ -433,6 +433,7 @@ class ReadRequest;
 struct UnderlyingSink;
 struct UnderlyingSource;
 class WritableStream;
+class WritableStreamDefaultController;
 class WritableStreamDefaultWriter;
 }
 

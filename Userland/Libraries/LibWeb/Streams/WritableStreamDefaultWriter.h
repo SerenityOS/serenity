@@ -35,6 +35,7 @@ public:
     void set_ready_promise(JS::GCPtr<WebIDL::Promise> value) { m_ready_promise = value; }
 
     JS::GCPtr<WritableStream const> stream() const { return m_stream; }
+    JS::GCPtr<WritableStream> stream() { return m_stream; }
     void set_stream(JS::GCPtr<WritableStream> value) { m_stream = value; }
 
 private:

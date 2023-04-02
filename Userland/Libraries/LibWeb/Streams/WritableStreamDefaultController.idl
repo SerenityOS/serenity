@@ -1,0 +1,7 @@
+#import <DOM/AbortSignal.idl>
+
+[Exposed=*]
+interface WritableStreamDefaultController {
+    readonly attribute AbortSignal signal;
+    undefined error(optional any e);
+};
