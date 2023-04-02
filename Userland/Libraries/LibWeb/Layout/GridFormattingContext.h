@@ -80,6 +80,21 @@ private:
         CSSPixels planned_increase { 0 };
         bool is_gap { false };
 
+        CSSPixels border_left { 0 };
+        CSSPixels border_right { 0 };
+        CSSPixels border_top { 0 };
+        CSSPixels border_bottom { 0 };
+
+        CSSPixels full_horizontal_size() const
+        {
+            return base_size + border_left + border_right;
+        }
+
+        CSSPixels full_vertical_size() const
+        {
+            return base_size + border_top + border_bottom;
+        }
+
         TemporaryTrack(CSS::GridSize min_track_sizing_function, CSS::GridSize max_track_sizing_function)
             : min_track_sizing_function(min_track_sizing_function)
             , max_track_sizing_function(max_track_sizing_function)

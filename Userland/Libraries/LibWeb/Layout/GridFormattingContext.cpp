@@ -743,15 +743,19 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
             ++index;
             continue;
         }
-        if (!grid_column.min_track_sizing_function.is_intrinsic_track_sizing()) {
-            ++index;
-            continue;
-        }
 
         Vector<Box const&> boxes_of_column;
         for (auto& grid_item : m_grid_items) {
-            if (grid_item.gap_adjusted_column(box) == index && grid_item.raw_column_span() == 1)
+            if (grid_item.gap_adjusted_column(box) == index && grid_item.raw_column_span() == 1) {
                 boxes_of_column.append(grid_item.box());
+                grid_column.border_left = max(grid_column.border_left, grid_item.box().computed_values().border_left().width);
+                grid_column.border_right = max(grid_column.border_right, grid_item.box().computed_values().border_right().width);
+            }
+        }
+
+        if (!grid_column.min_track_sizing_function.is_intrinsic_track_sizing()) {
+            ++index;
+            continue;
         }
 
         switch (grid_column.min_track_sizing_function.type()) {
@@ -1243,15 +1247,19 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
             ++index;
             continue;
         }
-        if (!grid_row.min_track_sizing_function.is_intrinsic_track_sizing()) {
-            ++index;
-            continue;
-        }
 
         Vector<GridItem&> grid_items_of_row;
         for (auto& grid_item : m_grid_items) {
-            if (grid_item.gap_adjusted_row(box) == index && grid_item.raw_row_span() == 1)
+            if (grid_item.gap_adjusted_row(box) == index && grid_item.raw_row_span() == 1) {
                 grid_items_of_row.append(grid_item);
+                grid_row.border_top = max(grid_row.border_top, grid_item.box().computed_values().border_top().width);
+                grid_row.border_bottom = max(grid_row.border_bottom, grid_item.box().computed_values().border_bottom().width);
+            }
+        }
+
+        if (!grid_row.min_track_sizing_function.is_intrinsic_track_sizing()) {
+            ++index;
+            continue;
         }
 
         switch (grid_row.min_track_sizing_function.type()) {
@@ -1585,8 +1593,14 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
             count_of_auto_max_row_tracks++;
     }
     for (auto& grid_row : m_grid_rows) {
+        if (grid_row.is_gap)
+            continue;
         if (grid_row.max_track_sizing_function.is_length() && grid_row.max_track_sizing_function.length().is_auto())
             grid_row.base_size = max(grid_row.base_size, remaining_vertical_space / count_of_auto_max_row_tracks);
+        if (grid_row.full_vertical_size() > grid_row.growth_limit && grid_row.growth_limit != -1)
+            grid_row.base_size = max(CSSPixels(0), grid_row.base_size + (grid_row.growth_limit - grid_row.full_vertical_size()));
+        if (grid_row.min_track_sizing_function.is_length() && !grid_row.min_track_sizing_function.length().is_auto() && grid_row.full_vertical_size() > grid_row.min_track_sizing_function.length().to_px(box) && free_space != -1)
+            grid_row.base_size = max(CSSPixels(0), grid_row.base_size + (grid_row.min_track_sizing_function.length().to_px(box) - grid_row.full_vertical_size()));
     }
 }
 
@@ -1851,6 +1865,8 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
     // purpose.
 
     auto layout_box = [&](int row_start, int row_end, int column_start, int column_end, Box const& child_box) -> void {
+        if (column_start < 0 || row_start < 0)
+            return;
         auto& child_box_state = m_state.get_mutable(child_box);
         CSSPixels x_start = 0;
         CSSPixels x_end = 0;
@@ -1861,12 +1877,21 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
         for (int i = 0; i < column_end; i++)
             x_end += m_grid_columns[i].base_size;
         for (int i = 0; i < row_start; i++)
-            y_start += m_grid_rows[i].base_size;
-        for (int i = 0; i < row_end; i++)
-            y_end += m_grid_rows[i].base_size;
-        child_box_state.set_content_width((x_end - x_start));
-        child_box_state.set_content_height((y_end - y_start));
-        child_box_state.offset = { x_start, y_start };
+            y_start += m_grid_rows[i].full_vertical_size();
+        for (int i = 0; i < row_end; i++) {
+            if (i >= row_start)
+                y_end += m_grid_rows[i].base_size;
+            else
+                y_end += m_grid_rows[i].full_vertical_size();
+        }
+        child_box_state.set_content_width(max(CSSPixels(0), x_end - x_start - m_grid_columns[column_start].border_left - m_grid_columns[column_start].border_right));
+        child_box_state.set_content_height(y_end - y_start);
+        child_box_state.offset = { x_start + m_grid_columns[column_start].border_left, y_start + m_grid_rows[row_start].border_top };
+
+        child_box_state.border_left = child_box.computed_values().border_left().width;
+        child_box_state.border_right = child_box.computed_values().border_right().width;
+        child_box_state.border_top = child_box.computed_values().border_top().width;
+        child_box_state.border_bottom = child_box.computed_values().border_bottom().width;
 
         auto available_space_for_children = AvailableSpace(AvailableSize::make_definite(child_box_state.content_width()), AvailableSize::make_definite(child_box_state.content_height()));
         if (auto independent_formatting_context = layout_inside(child_box, LayoutMode::Normal, available_space_for_children))
@@ -1896,7 +1921,7 @@ void GridFormattingContext::run(Box const& box, LayoutMode, AvailableSpace const
 
     CSSPixels total_y = 0;
     for (auto& grid_row : m_grid_rows)
-        total_y += grid_row.base_size;
+        total_y += grid_row.full_vertical_size();
     m_automatic_content_height = total_y;
 }
 
