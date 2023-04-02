@@ -208,5 +208,7 @@ system_error_lower_el:
 
 .global restore_context_and_eret
 restore_context_and_eret:
+    mov x0, sp
+    bl exit_trap
     restore_previous_context
     eret

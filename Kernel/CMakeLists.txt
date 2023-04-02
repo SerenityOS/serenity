@@ -471,6 +471,7 @@ elseif("${SERENITY_ARCH}" STREQUAL "aarch64")
         Arch/aarch64/Processor.cpp
         Arch/aarch64/SafeMem.cpp
         Arch/aarch64/SmapDisabler.cpp
+        Arch/aarch64/TrapFrame.cpp
         Arch/aarch64/vector_table.S
     )
 
