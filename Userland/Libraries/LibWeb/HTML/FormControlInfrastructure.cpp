@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/GenericLexer.h>
 #include <LibWeb/HTML/FormControlInfrastructure.h>
 #include <LibWeb/HTML/FormDataEvent.h>
 #include <LibWeb/HTML/HTMLButtonElement.h>
@@ -173,6 +174,88 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
 
     // 9. Return a clone of entry list.
     return entry_list;
+}
+
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart-form-data
+ErrorOr<SerializedFormData> serialize_to_multipart_form_data(Vector<XHR::FormDataEntry> const& entry_list)
+{
+    auto normalize_line_breaks = [](StringView value) -> ErrorOr<String> {
+        StringBuilder builder;
+        GenericLexer lexer { value };
+        while (!lexer.is_eof()) {
+            TRY(builder.try_append(lexer.consume_until(is_any_of("\r\n"sv))));
+            if ((lexer.peek() == '\r' && lexer.peek(1) != '\n') || lexer.peek() == '\n') {
+                TRY(builder.try_append("\r\n"sv));
+                lexer.ignore(1);
+            } else {
+                lexer.ignore(2);
+            }
+        }
+        return builder.to_string();
+    };
+
+    auto escape_line_feed_carriage_return_double_quote = [](StringView value) -> ErrorOr<String> {
+        StringBuilder builder;
+        GenericLexer lexer { value };
+        while (!lexer.is_eof()) {
+            TRY(builder.try_append(lexer.consume_until(is_any_of("\r\n\""sv))));
+            switch (lexer.peek()) {
+            case '\r':
+                TRY(builder.try_append("%0D"sv));
+                break;
+            case '\n':
+                TRY(builder.try_append("%0A"sv));
+                break;
+            case '\"':
+                TRY(builder.try_append("%22"sv));
+                break;
+            }
+            lexer.ignore(1);
+        }
+        return builder.to_string();
+    };
+
+    // The boundary used by the user agent in generating the return value of this algorithm is the multipart/form-data boundary string.
+    auto boundary = TRY(String::formatted("---------------------------{}", get_random<u64>()));
+    StringBuilder builder;
+    // 1. For each entry of entry list:
+    for (auto const& entry : entry_list) {
+        TRY(builder.try_append(TRY(String::formatted("--{}\r\n"sv, boundary))));
+
+        // Replace every occurrence of U+000D (CR) not followed by U+000A (LF), and every occurrence of U+000A (LF) not preceded by U+000D (CR) by a string consisting of a U+000D (CR) and U+000A (LF).
+        auto normalized_name = TRY(normalize_line_breaks(entry.name));
+        // For field names replace any 0x0A (LF) bytes with the byte sequence `%0A`, 0x0D (CR) with `%0D` and 0x22 (") with `%22`
+        auto escaped_name = TRY(escape_line_feed_carriage_return_double_quote(normalized_name));
+
+        TRY(entry.value.visit(
+            [&](JS::Handle<FileAPI::File> const& file) -> ErrorOr<void> {
+                // For filenames replace any 0x0A (LF) bytes with the byte sequence `%0A`, 0x0D (CR) with `%0D` and 0x22 (") with `%22`
+                auto escaped_filename = TRY(escape_line_feed_carriage_return_double_quote(file->name()));
+                // Add a `Content-Disposition` header with a `name` set to entry's name and `filename` set to entry's filename.
+                TRY(builder.try_append(TRY(String::formatted("Content-Disposition: form-data; name=\"{}\"; filename=\"{}\"\r\n"sv, escaped_name, escaped_filename))));
+                // The parts of the generated multipart/form-data resource that correspond to file fields must have a `Content-Type` header specified.
+                TRY(builder.try_append(TRY(String::formatted("Content-Type: {}\r\n\r\n"sv, file->type()))));
+                // FIXME: Serialize the contents of the file.
+                TRY(builder.try_append(TRY(String::formatted("\r\n"sv))));
+                return {};
+            },
+            [&](String const& string) -> ErrorOr<void> {
+                // Replace every occurrence of U+000D (CR) not followed by U+000A (LF), and every occurrence of U+000A (LF) not preceded by U+000D (CR) by a string consisting of a U+000D (CR) and U+000A (LF).
+                auto normalized_value = TRY(normalize_line_breaks(string));
+                // Add a `Content-Disposition` header with a `name` set to entry's name.
+                TRY(builder.try_append(TRY(String::formatted("Content-Disposition: form-data; name=\"{}\"\r\n\r\n"sv, escaped_name))));
+                TRY(builder.try_append(TRY(String::formatted("{}\r\n", normalized_value))));
+                return {};
+            }));
+    }
+    TRY(builder.try_append(TRY(String::formatted("--{}--\r\n", boundary))));
+
+    // 2. Return the byte sequence resulting from encoding the entry list using the rules described by RFC 7578, Returning Values from Forms: multipart/form-data, given the following conditions: [RFC7578]
+    auto serialized_data = TRY(builder.to_byte_buffer());
+    return SerializedFormData {
+        .boundary = move(boundary),
+        .serialized_data = move(serialized_data)
+    };
 }
 
 }
