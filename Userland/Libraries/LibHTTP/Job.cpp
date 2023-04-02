@@ -416,6 +416,9 @@ void Job::on_socket_connected()
                     auto size_data = maybe_size_data.release_value();
 
                     if (m_should_read_chunk_ending_line) {
+                        // NOTE: Some servers seem to send an extra \r\n here despite there being no size.
+                        //       This makes us tolerate that.
+                        size_data = size_data.trim("\r\n"sv, TrimMode::Right);
                         VERIFY(size_data.is_empty());
                         m_should_read_chunk_ending_line = false;
                         continue;
