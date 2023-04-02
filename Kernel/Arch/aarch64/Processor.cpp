@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, Timon Kruiper <timonkruiper@gmail.com>
+ * Copyright (c) 2023, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,8 +24,10 @@ namespace Kernel {
 
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
+extern "C" void do_assume_context(Thread* thread, u32 new_interrupts_state);
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread) __attribute__((used));
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
+extern "C" FlatPtr do_init_context(Thread* thread, u32 new_interrupts_state) __attribute__((used));
 
 Processor* g_current_processor;
 READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
@@ -255,11 +258,31 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 }
 
+extern "C" FlatPtr do_init_context(Thread* thread, u32 new_interrupts_state)
+{
+    VERIFY_INTERRUPTS_DISABLED();
+
+    Aarch64::SPSR_EL1 spsr_el1 = {};
+    memcpy(&spsr_el1, (u8 const*)&thread->regs().spsr_el1, sizeof(u64));
+    spsr_el1.I = (new_interrupts_state == to_underlying(InterruptsState::Disabled));
+    memcpy((void*)&thread->regs().spsr_el1, &spsr_el1, sizeof(u64));
+
+    return Processor::current().init_context(*thread, true);
+}
+
 void Processor::assume_context(Thread& thread, InterruptsState new_interrupts_state)
 {
-    (void)thread;
-    (void)new_interrupts_state;
-    TODO_AARCH64();
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
+
+    VERIFY_INTERRUPTS_DISABLED();
+    Scheduler::prepare_after_exec();
+    // in_critical() should be 2 here. The critical section in Process::exec
+    // and then the scheduler lock
+    VERIFY(Processor::in_critical() == 2);
+
+    do_assume_context(&thread, to_underlying(new_interrupts_state));
+
+    VERIFY_NOT_REACHED();
 }
 
 FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
@@ -413,6 +436,25 @@ NAKED void thread_context_first_enter(void)
         "add sp, sp, 24 \n"
         "bl context_first_init \n"
         "b restore_context_and_eret \n");
+}
+
+NAKED void do_assume_context(Thread*, u32)
+{
+    // clang-format off
+    asm(
+        "mov x19, x0 \n" // save thread ptr
+        // We're going to call Processor::init_context, so just make sure
+        // we have enough stack space so we don't stomp over it
+        "sub sp, sp, #" __STRINGIFY(8 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) " \n"
+        "bl do_init_context \n"
+        "mov sp, x0 \n"  // move stack pointer to what Processor::init_context set up for us
+        "mov x0, x19 \n" // to_thread
+        "mov x1, x19 \n" // from_thread
+        "sub sp, sp, 24 \n"
+        "stp x19, x19, [sp] \n"                  // to_thread, from_thread (for thread_context_first_enter)
+        "ldr lr, =thread_context_first_enter \n" // should be same as regs.elr_el1
+        "b enter_thread_context \n");
+    // clang-format on
 }
 
 void exit_kernel_thread(void)

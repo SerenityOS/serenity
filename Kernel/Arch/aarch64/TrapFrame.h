@@ -24,6 +24,9 @@ struct TrapFrame {
     TrapFrame& operator=(TrapFrame&&) = delete;
 };
 
+#define TRAP_FRAME_SIZE (2 * 8)
+static_assert(AssertSize<TrapFrame, TRAP_FRAME_SIZE>());
+
 extern "C" void exit_trap(TrapFrame*) __attribute__((used));
 
 }
