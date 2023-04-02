@@ -100,6 +100,21 @@ buildstep() {
     "$@" 2>&1 | sed $'s|^|\x1b[34m['"${NAME}"$']\x1b[39m |'
 }
 
+has_gdb() {
+    ARCH=$1
+    ARCH_DASH="${ARCH//_/-}"
+    if command -v gdb >/dev/null && gdb -ex 'set architecture' -ex 'quit' | grep "$ARCH_DASH"; then
+        return 0
+    else
+        command -v "$ARCH"-elf-gdb >/dev/null
+    fi
+}
+
+NEEDS_GDB=1
+if has_gdb "$ARCH"; then
+    NEEDS_GDB=0
+fi
+
 # === DEPENDENCIES ===
 buildstep dependencies echo "Checking whether 'make' is available..."
 if ! command -v ${MAKE:-make} >/dev/null; then
@@ -182,8 +197,9 @@ popd
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
-    # Build aarch64-gdb for cross-debugging support on x86 systems
-    if [ "$ARCH" = "aarch64" ]; then
+    # Build gdb for cross-debugging support
+    if [ $NEEDS_GDB -eq 1 ]; then
+        echo "GDB not found for $ARCH. Will build it from source."
         md5=""
         if [ -e "$GDB_PKG" ]; then
             md5="$($MD5SUM $GDB_PKG | cut -f1 -d' ')"
@@ -221,7 +237,7 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading gcc"
     fi
 
-    if [ "$ARCH" = "aarch64" ]; then
+    if [ $NEEDS_GDB -eq 1 ]; then
         if [ -d ${GDB_NAME} ]; then
             rm -rf "${GDB_NAME}"
             rm -rf "$DIR/Build/$ARCH/$GDB_NAME"
@@ -319,7 +335,7 @@ mkdir -p "$DIR/Build/$ARCH"
 pushd "$DIR/Build/$ARCH"
     unset PKG_CONFIG_LIBDIR # Just in case
 
-    if [ "$ARCH" = "aarch64" ]; then
+    if [ $NEEDS_GDB -eq 1 ]; then
         rm -rf gdb
         mkdir -p gdb
 
