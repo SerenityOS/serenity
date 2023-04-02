@@ -106,6 +106,28 @@ ErrorOr<void> CertificateStoreWidget::import_pem()
     return {};
 }
 
+Certificate CertificateStoreModel::get(int index)
+{
+    return m_certificates.at(index);
+}
+
+ErrorOr<void> CertificateStoreWidget::export_pem()
+{
+    auto index = m_root_ca_tableview->selection().first().row();
+    auto cert = m_root_ca_model->get(index);
+
+    auto filename = cert.subject.subject.is_empty() ? cert.subject.unit : cert.subject.subject;
+    auto file = FileSystemAccessClient::Client::the().save_file(window(), filename.replace(" "sv, "_"sv), "pem"sv);
+    if (file.is_error())
+        return {};
+
+    auto data = TRY(Crypto::encode_pem(cert.original_asn1));
+
+    TRY(file.release_value().release_stream()->write_until_depleted(data));
+
+    return {};
+}
+
 ErrorOr<NonnullRefPtr<CertificateStoreWidget>> CertificateStoreWidget::try_create()
 {
     auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) CertificateStoreWidget()));
@@ -127,11 +149,23 @@ ErrorOr<void> CertificateStoreWidget::initialize()
     m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedTo, 150);
     m_root_ca_tableview->set_column_width(CertificateStoreModel::Column::IssuedBy, 150);
 
+    m_root_ca_tableview->on_selection_change = [&]() {
+        m_export_ca_button->set_enabled(m_root_ca_tableview->selection().size() == 1);
+    };
+
     m_import_ca_button = find_descendant_of_type_named<GUI::Button>("import_button");
     m_import_ca_button->on_click = [&](auto) {
         auto import_result = import_pem();
         if (import_result.is_error()) {
             GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", import_result.release_error()));
+        }
+    };
+
+    m_export_ca_button = find_descendant_of_type_named<GUI::Button>("export_button");
+    m_export_ca_button->on_click = [&](auto) {
+        auto export_result = export_pem();
+        if (export_result.is_error()) {
+            GUI::MessageBox::show_error(window(), DeprecatedString::formatted("{}", export_result.release_error()));
         }
     };
 

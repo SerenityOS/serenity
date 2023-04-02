@@ -31,6 +31,7 @@ public:
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual ErrorOr<void> load();
     virtual ErrorOr<size_t> add(Vector<Certificate> const&);
+    virtual Certificate get(int index);
 
 private:
     Vector<Certificate> m_certificates;
@@ -47,9 +48,11 @@ private:
     CertificateStoreWidget() = default;
     ErrorOr<void> initialize();
     ErrorOr<void> import_pem();
+    ErrorOr<void> export_pem();
 
     RefPtr<CertificateStoreModel> m_root_ca_model;
     RefPtr<GUI::TableView> m_root_ca_tableview;
     RefPtr<GUI::Button> m_import_ca_button;
+    RefPtr<GUI::Button> m_export_ca_button;
 };
 }
