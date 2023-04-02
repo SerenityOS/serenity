@@ -53,6 +53,7 @@ class CSSStyleRule;
 class CSSStyleSheet;
 class CSSSupportsRule;
 class Display;
+class EdgeStyleValue;
 class ElementInlineCSSStyleDeclaration;
 class ExplicitGridTrack;
 class FilterValueListStyleValue;
