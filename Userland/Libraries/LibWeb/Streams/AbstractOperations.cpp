@@ -8,6 +8,7 @@
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
+#include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
@@ -837,6 +838,59 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDe
     }
 
     return {};
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-abort
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_abort(WritableStream& stream, JS::Value reason)
+{
+    auto& realm = stream.realm();
+
+    // 1. If stream.[[state]] is "closed" or "errored", return a promise resolved with undefined.
+    auto state = stream.state();
+    if (state == WritableStream::State::Closed || state == WritableStream::State::Errored)
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+
+    // 2. Signal abort on stream.[[controller]].[[signal]] with reason.
+    stream.controller()->signal()->signal_abort(reason);
+
+    // 3. Let state be stream.[[state]].
+    state = stream.state();
+
+    // 4. If state is "closed" or "errored", return a promise resolved with undefined.
+    if (state == WritableStream::State::Closed || state == WritableStream::State::Errored)
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+
+    // 5. If stream.[[pendingAbortRequest]] is not undefined, return stream.[[pendingAbortRequest]]'s promise.
+    if (stream.pending_abort_request().has_value())
+        return stream.pending_abort_request()->promise;
+
+    // 6. Assert: state is "writable" or "erroring".
+    VERIFY(state == WritableStream::State::Writable || state == WritableStream::State::Erroring);
+
+    // 7. Let wasAlreadyErroring be false.
+    auto was_already_erroring = false;
+
+    // 8. If state is "erroring",
+    if (state == WritableStream::State::Erroring) {
+        // 1. Set wasAlreadyErroring to true.
+        was_already_erroring = true;
+
+        // 2. Set reason to undefined.
+        reason = JS::js_undefined();
+    }
+
+    // 9. Let promise be a new promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 10. Set stream.[[pendingAbortRequest]] to a new pending abort request whose promise is promise, reason is reason, and was already erroring is wasAlreadyErroring.
+    stream.set_pending_abort_request(PendingAbortRequest { promise, reason, was_already_erroring });
+
+    // 11. If wasAlreadyErroring is false, perform ! WritableStreamStartErroring(stream, reason).
+    if (!was_already_erroring)
+        TRY(writable_stream_start_erroring(stream, reason));
+
+    // 12. Return promise.
+    return promise;
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-close
