@@ -43,6 +43,7 @@
 #include <LibWeb/CSS/StyleValues/NumericStyleValue.h>
 #include <LibWeb/CSS/StyleValues/OverflowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/PercentageStyleValue.h>
+#include <LibWeb/CSS/StyleValues/PositionStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
@@ -451,6 +452,19 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundAttachment, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundOrigin, value, document);
         set_property_expanding_shorthands(style, CSS::PropertyID::BackgroundClip, value, document);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BackgroundPosition) {
+        if (value.is_position()) {
+            auto const& position = value.as_position();
+            style.set_property(CSS::PropertyID::BackgroundPositionX, position.edge_x());
+            style.set_property(CSS::PropertyID::BackgroundPositionY, position.edge_y());
+            return;
+        }
+
+        style.set_property(CSS::PropertyID::BackgroundPositionX, value);
+        style.set_property(CSS::PropertyID::BackgroundPositionY, value);
         return;
     }
 
