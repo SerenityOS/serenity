@@ -9,6 +9,7 @@
 #include "SpreadsheetWidget.h"
 #include <AK/ScopeGuard.h>
 #include <AK/Try.h>
+#include <LibConfig/Client.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/System.h>
 #include <LibFileSystem/FileSystem.h>
@@ -39,6 +40,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
     }
+
+    Config::pledge_domain("Spreadsheet");
+    app->set_config_domain(TRY("Spreadsheet"_string));
 
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/webcontent", "rw"));
