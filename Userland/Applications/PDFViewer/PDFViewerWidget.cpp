@@ -215,6 +215,12 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
             open_file(response.value().filename(), response.value().release_stream());
     }));
     file_menu.add_separator();
+    file_menu.add_recent_files_list([&](auto& action) {
+                 auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+                 if (!response.is_error())
+                     open_file(response.value().filename(), response.value().release_stream());
+             })
+        .release_value_but_fixme_should_propagate_errors();
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
@@ -406,6 +412,8 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
         m_sidebar->set_visible(false);
         m_sidebar_open = false;
     }
+
+    GUI::Application::the()->set_most_recently_open_file(TRY(String::from_utf8(path)));
 
     return {};
 }
