@@ -17,17 +17,7 @@ ErrorOr<FlatPtr> Process::sys$chmod(Userspace<Syscall::SC_chmod_params const*> u
     TRY(require_promise(Pledge::fattr));
     auto params = TRY(copy_typed_from_user(user_params));
     auto path = TRY(get_syscall_path_argument(params.path));
-
-    RefPtr<Custody> base;
-    if (params.dirfd == AT_FDCWD) {
-        base = current_directory();
-    } else {
-        auto base_description = TRY(open_file_description(params.dirfd));
-        if (!base_description->custody())
-            return EINVAL;
-        base = base_description->custody();
-    }
-
+    auto base = TRY(custody_for_dirfd(params.dirfd));
     TRY(VirtualFileSystem::the().chmod(credentials(), path->view(), params.mode, *base, params.follow_symlinks ? 0 : O_NOFOLLOW_NOERROR));
     return 0;
 }
