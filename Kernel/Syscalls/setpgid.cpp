@@ -61,7 +61,7 @@ ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 
 ErrorOr<FlatPtr> Process::sys$getpgrp()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     return pgid().value();
 }
