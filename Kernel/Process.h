@@ -454,7 +454,11 @@ public:
     ErrorOr<FlatPtr> sys$jail_attach(Userspace<Syscall::SC_jail_attach_params const*> user_params);
     ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
 
-    template<bool sockname, typename Params>
+    enum SockOrPeerName {
+        SockName,
+        PeerName,
+    };
+    template<SockOrPeerName, typename Params>
     ErrorOr<void> get_sock_or_peer_name(Params const&);
 
     static void initialize();
