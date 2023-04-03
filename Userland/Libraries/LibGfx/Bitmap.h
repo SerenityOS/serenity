@@ -135,6 +135,9 @@ public:
     [[nodiscard]] ARGB32* scanline(int physical_y);
     [[nodiscard]] ARGB32 const* scanline(int physical_y) const;
 
+    [[nodiscard]] ARGB32* begin();
+    [[nodiscard]] ARGB32* end();
+
     [[nodiscard]] IntRect rect() const { return { {}, m_size }; }
     [[nodiscard]] IntSize size() const { return m_size; }
     [[nodiscard]] int width() const { return m_size.width(); }
@@ -291,6 +294,16 @@ ALWAYS_INLINE ARGB32* Bitmap::scanline(int y)
 ALWAYS_INLINE ARGB32 const* Bitmap::scanline(int y) const
 {
     return reinterpret_cast<ARGB32 const*>(scanline_u8(y));
+}
+
+ALWAYS_INLINE ARGB32* Bitmap::begin()
+{
+    return scanline(0);
+}
+
+ALWAYS_INLINE ARGB32* Bitmap::end()
+{
+    return reinterpret_cast<ARGB32*>(reinterpret_cast<u8*>(m_data) + (m_size.height() * m_pitch));
 }
 
 template<>
