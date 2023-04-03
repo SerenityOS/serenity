@@ -1084,11 +1084,12 @@ ErrorOr<NonnullRefPtr<Custody>> Process::custody_for_dirfd(int dirfd)
 {
     if (dirfd == AT_FDCWD)
         return current_directory();
-
-    auto base_description = TRY(open_file_description(dirfd));
-    if (!base_description->custody())
+    auto description = TRY(open_file_description(dirfd));
+    if (!description->custody())
         return EINVAL;
-    return *base_description->custody();
+    if (!description->is_directory())
+        return ENOTDIR;
+    return *description->custody();
 }
 
 SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> const& Process::name() const
