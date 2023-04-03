@@ -325,7 +325,7 @@ ErrorOr<FlatPtr> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user
     return result.value();
 }
 
-template<bool sockname, typename Params>
+template<Process::SockOrPeerName sock_or_peer_name, typename Params>
 ErrorOr<void> Process::get_sock_or_peer_name(Params const& params)
 {
     socklen_t addrlen_value;
@@ -343,7 +343,7 @@ ErrorOr<void> Process::get_sock_or_peer_name(Params const& params)
 
     sockaddr_un address_buffer {};
     addrlen_value = min(sizeof(sockaddr_un), static_cast<size_t>(addrlen_value));
-    if constexpr (sockname)
+    if constexpr (sock_or_peer_name == SockOrPeerName::SockName)
         socket.get_local_address((sockaddr*)&address_buffer, &addrlen_value);
     else
         socket.get_peer_address((sockaddr*)&address_buffer, &addrlen_value);
@@ -355,7 +355,7 @@ ErrorOr<FlatPtr> Process::sys$getsockname(Userspace<Syscall::SC_getsockname_para
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));
-    TRY(get_sock_or_peer_name<true>(params));
+    TRY(get_sock_or_peer_name<SockOrPeerName::SockName>(params));
     return 0;
 }
 
@@ -363,7 +363,7 @@ ErrorOr<FlatPtr> Process::sys$getpeername(Userspace<Syscall::SC_getpeername_para
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     auto params = TRY(copy_typed_from_user(user_params));
-    TRY(get_sock_or_peer_name<false>(params));
+    TRY(get_sock_or_peer_name<SockOrPeerName::PeerName>(params));
     return 0;
 }
 
