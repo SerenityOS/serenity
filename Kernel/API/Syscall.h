@@ -66,7 +66,7 @@ enum class NeedsBigProcessLock {
     S(create_thread, NeedsBigProcessLock::Yes)              \
     S(dbgputstr, NeedsBigProcessLock::No)                   \
     S(detach_thread, NeedsBigProcessLock::Yes)              \
-    S(disown, NeedsBigProcessLock::Yes)                     \
+    S(disown, NeedsBigProcessLock::No)                      \
     S(dump_backtrace, NeedsBigProcessLock::No)              \
     S(dup2, NeedsBigProcessLock::No)                        \
     S(emuctl, NeedsBigProcessLock::No)                      \
