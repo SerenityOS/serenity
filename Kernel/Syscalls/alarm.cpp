@@ -12,10 +12,10 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$alarm(unsigned seconds)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    unsigned previous_alarm_remaining = 0;
     return m_alarm_timer.with([&](auto& timer) -> ErrorOr<FlatPtr> {
+        unsigned previous_alarm_remaining = 0;
         if (timer) {
             bool was_in_use = false;
             if (TimerQueue::the().cancel_timer(*timer, &was_in_use)) {
