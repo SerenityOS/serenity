@@ -1083,7 +1083,7 @@ public:
 #endif
 
 private:
-    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullLockRefPtr<Timer>, NonnullOwnPtr<KString>);
+    Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Memory::Region>, NonnullRefPtr<Timer>, NonnullOwnPtr<KString>);
 
     BlockResult block_impl(BlockTimeout const&, Blocker&);
 
@@ -1235,7 +1235,7 @@ private:
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
     Atomic<u32> m_nested_profiler_calls { 0 };
 
-    NonnullLockRefPtr<Timer> m_block_timer;
+    NonnullRefPtr<Timer> const m_block_timer;
 
     bool m_is_profiling_suppressed { false };
 

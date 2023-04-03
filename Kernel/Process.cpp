@@ -364,7 +364,6 @@ Process::~Process()
     unprotect_data();
 
     VERIFY(thread_count() == 0); // all threads should have been finalized
-    VERIFY(!m_alarm_timer);
 
     PerformanceManager::add_process_exit_event(*this);
 }
@@ -754,8 +753,10 @@ void Process::finalize()
 
     m_threads_for_coredump.clear();
 
-    if (m_alarm_timer)
-        TimerQueue::the().cancel_timer(m_alarm_timer.release_nonnull());
+    m_alarm_timer.with([&](auto& timer) {
+        if (timer)
+            TimerQueue::the().cancel_timer(timer.release_nonnull());
+    });
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     m_tty = nullptr;
     m_executable.with([](auto& executable) { executable = nullptr; });

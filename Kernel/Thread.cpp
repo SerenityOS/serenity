@@ -44,13 +44,13 @@ ErrorOr<NonnullRefPtr<Thread>> Thread::create(NonnullRefPtr<Process> process)
     auto kernel_stack_region = TRY(MM.allocate_kernel_region(default_kernel_stack_size, {}, Memory::Region::Access::ReadWrite, AllocationStrategy::AllocateNow));
     kernel_stack_region->set_stack(true);
 
-    auto block_timer = TRY(try_make_lock_ref_counted<Timer>());
+    auto block_timer = TRY(try_make_ref_counted<Timer>());
 
     auto name = TRY(process->name().with([](auto& name) { return name->try_clone(); }));
     return adopt_nonnull_ref_or_enomem(new (nothrow) Thread(move(process), move(kernel_stack_region), move(block_timer), move(name)));
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullLockRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Memory::Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer, NonnullOwnPtr<KString> name)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(move(name))
