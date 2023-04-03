@@ -23,6 +23,7 @@ enum class CommandIndex : u8 {
     SelectCard = 7,
     SendIfCond = 8,
     SendCsd = 9,
+    GoInactiveState = 15,
     SetBlockLen = 16,
     ReadSingleBlock = 17,
     ReadMultipleBlock = 18,

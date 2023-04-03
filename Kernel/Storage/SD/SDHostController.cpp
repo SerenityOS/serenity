@@ -33,6 +33,11 @@ static void delay(i64 nanoseconds)
 
 constexpr u32 max_supported_sdsc_frequency = 25000000;
 
+// In "m_registers->host_configuration_0"
+// 2.2.11 Host Control 1 Register
+constexpr u32 dma_select_adma2_32 = 0b10 << 3;
+constexpr u32 dma_select_adma2_64 = 0b11 << 3;
+
 // In "m_registers->host_configuration_1"
 // In sub-register "Clock Control"
 constexpr u32 internal_clock_enable = 1 << 0;
@@ -43,17 +48,17 @@ constexpr u32 sd_clock_enable = 1 << 2;
 constexpr u32 software_reset_for_all = 0x01000000;
 
 // In Interrupt Status Register
-const u32 command_complete = 1 << 0;
-const u32 transfer_complete = 1 << 1;
-const u32 buffer_write_ready = 1 << 4;
-const u32 buffer_read_ready = 1 << 5;
+constexpr u32 command_complete = 1 << 0;
+constexpr u32 transfer_complete = 1 << 1;
+constexpr u32 buffer_write_ready = 1 << 4;
+constexpr u32 buffer_read_ready = 1 << 5;
 
 // PLSS 5.1: all voltage windows
 constexpr u32 acmd41_voltage = 0x00ff8000;
 // PLSS 4.2.3.1: All voltage windows, XPC = 1, SDHC = 1
 constexpr u32 acmd41_arg = 0x50ff8000;
 
-constexpr u32 block_len = 512;
+constexpr size_t block_len = 512;
 
 SDHostController::SDHostController()
     : StorageController(StorageManagement::generate_relative_sd_controller_id({}))
@@ -90,6 +95,34 @@ ErrorOr<void> SDHostController::initialize()
     }
 
     return {};
+}
+
+void SDHostController::try_enable_dma()
+{
+    if (m_registers->capabilities.adma2) {
+        auto maybe_dma_buffer = MM.allocate_dma_buffer_pages(dma_region_size, "SDHC DMA Buffer"sv, Memory::Region::Access::ReadWrite);
+        if (maybe_dma_buffer.is_error()) {
+            dmesgln("Could not allocate DMA pages for SDHC: {}", maybe_dma_buffer.error());
+        } else {
+            m_dma_region = maybe_dma_buffer.release_value();
+            dbgln("Allocated SDHC DMA buffer at {}", m_dma_region->physical_page(0)->paddr());
+            // FIXME: This check does not seem to work, qemu supports 64 bit addressing, but we don't seem to detect it
+            // FIXME: Hardcoding to use the 64 bit mode leads to transfer timeouts, without any errors reported from qemu
+            if (host_version() != SD::HostVersion::Version3 && m_registers->capabilities.dma_64_bit_addressing_v3) {
+                dbgln("Setting SDHostController to operate using ADMA2 with 64 bit addressing");
+                m_mode = OperatingMode::ADMA2_64;
+                m_registers->host_configuration_0 = m_registers->host_configuration_0 | dma_select_adma2_64;
+            } else {
+                // FIXME: Use a way that guarantees memory addresses below the 32 bit threshold
+                VERIFY(m_dma_region->physical_page(0)->paddr().get() >> 32 == 0);
+                VERIFY(m_dma_region->physical_page(dma_region_size / PAGE_SIZE - 1)->paddr().get() >> 32 == 0);
+
+                dbgln("Setting SDHostController to operate using ADMA2 with 32 bit addressing");
+                m_mode = OperatingMode::ADMA2_32;
+                m_registers->host_configuration_0 = m_registers->host_configuration_0 | dma_select_adma2_32;
+            }
+        }
+    }
 }
 
 ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_inserted_card()
@@ -559,49 +592,314 @@ ErrorOr<void> SDHostController::transaction_control_with_data_transfer_using_the
     return {};
 }
 
+u32 SDHostController::make_adma_descriptor_table(u32 block_count)
+{
+    // FIXME: We might be able to write to the destination buffer directly
+    //        Especially with 64 bit addressing enabled
+    //        This might cost us more descriptor entries but avoids the memcpy at the end
+    //        of each read cycle
+
+    FlatPtr adma_descriptor_physical = m_dma_region->physical_page(0)->paddr().get();
+    FlatPtr adma_dma_region_physical = adma_descriptor_physical + PAGE_SIZE;
+
+    FlatPtr adma_descriptor_virtual = m_dma_region->vaddr().get();
+
+    u32 offset = 0;
+    u32 blocks_transferred = 0;
+    u32 blocks_per_descriptor = (1 << 16) / block_len;
+
+    using enum OperatingMode;
+    switch (m_mode) {
+    case ADMA2_32: {
+        u32 i = 0;
+        Array<SD::DMADescriptor64, 64>& command_buffer = *bit_cast<Array<SD::DMADescriptor64, 64>*>(adma_descriptor_virtual);
+        for (; i < 64; ++i) {
+            FlatPtr physical_transfer_address = adma_dma_region_physical + offset;
+            VERIFY(physical_transfer_address >> 32 == 0);
+            // If the remaining block count is less than the maximum addressable blocks
+            // we need to set the actual length and break out of the loop
+            if (block_count - blocks_transferred < blocks_per_descriptor) {
+                u32 blocks_to_transfer = block_count - blocks_transferred;
+                command_buffer[i] = SD::DMADescriptor64 {
+                    .valid = 1,
+                    .end = 1,
+                    .interrupt = 0,
+                    .action = SD::DMAAction::Tran,
+                    .length_upper = 0,
+                    .length_lower = static_cast<u32>(blocks_to_transfer * block_len),
+                    .address = static_cast<u32>(physical_transfer_address),
+                };
+                blocks_transferred += blocks_to_transfer;
+                offset += static_cast<size_t>(blocks_to_transfer) * block_len;
+                break;
+            }
+
+            command_buffer[i] = SD::DMADescriptor64 {
+                .valid = 1,
+                .end = 0,
+                .interrupt = 0,
+                .action = SD::DMAAction::Tran,
+                .length_upper = 0,
+                .length_lower = 0, // length of 0 means 1<<16 bytes
+                .address = static_cast<u32>(physical_transfer_address),
+            };
+
+            blocks_transferred += blocks_per_descriptor;
+            offset += (1 << 16);
+        }
+        command_buffer[min(i, 63)].end = 1;
+        break;
+    }
+    case ADMA2_64: {
+        u32 i = 0;
+        Array<SD::DMADescriptor128, 32>& command_buffer = *bit_cast<Array<SD::DMADescriptor128, 32>*>(adma_descriptor_virtual);
+        for (; i < 32; ++i) {
+            FlatPtr physical_transfer_address = adma_dma_region_physical + offset;
+            VERIFY(physical_transfer_address >> 32 == 0);
+            // If the remaining block count is less than the maximum addressable blocks
+            // we need to set the actual length and break out of the loop
+            if (block_count - blocks_transferred < blocks_per_descriptor) {
+                u32 blocks_to_read = block_count - blocks_transferred;
+                command_buffer[i] = SD::DMADescriptor128 {
+                    .valid = 1,
+                    .end = 1,
+                    .interrupt = 0,
+                    .action = SD::DMAAction::Tran,
+                    .length_upper = 0,
+                    .length_lower = static_cast<u32>(blocks_to_read * block_len),
+                    .address_low = static_cast<u32>((physical_transfer_address + offset) & 0xFFFF'FFFF),
+                    .address_high = static_cast<u32>((physical_transfer_address + offset) >> 32),
+                };
+                blocks_transferred += blocks_to_read;
+                offset += static_cast<size_t>(blocks_to_read) * block_len;
+                break;
+            }
+
+            command_buffer[i] = SD::DMADescriptor128 {
+                .valid = 1,
+                .end = 0,
+                .interrupt = 0,
+                .action = SD::DMAAction::Tran,
+                .length_upper = 0,
+                .length_lower = 0, // length of 0 means 1<<16 bytes
+                .address_low = static_cast<u32>((physical_transfer_address + offset) & 0xFFFF'FFFF),
+                .address_high = static_cast<u32>((physical_transfer_address + offset) >> 32),
+            };
+
+            blocks_transferred += blocks_per_descriptor;
+            offset += (1 << 16);
+        }
+        command_buffer[min(i, 31)].end = 1;
+        break;
+    }
+    case PIO:
+        VERIFY_NOT_REACHED();
+    }
+
+    return blocks_transferred;
+}
+
+ErrorOr<void> SDHostController::transfer_blocks_adma2(u32 block_address, u32 block_count, UserOrKernelBuffer out, SD::DataTransferDirection direction)
+{
+    using enum OperatingMode;
+
+    FlatPtr adma_descriptor_physical = m_dma_region->physical_page(0)->paddr().get();
+
+    FlatPtr adma_descriptor_virtual = m_dma_region->vaddr().get();
+    FlatPtr adma_dma_region_virtual = adma_descriptor_virtual + PAGE_SIZE;
+
+    AK::ArmedScopeGuard abort_guard {
+        [] {
+            dbgln("Aborting SDHC ADMA read");
+            TODO();
+        }
+    };
+
+    // 3.7.2.3 Using ADMA
+    u32 blocks_per_descriptor = (1 << 16) / block_len;
+    u32 addressable_blocks_per_transfer = blocks_per_descriptor * (m_mode == ADMA2_32 ? 64 : 32);
+    size_t host_offset = 0;
+    size_t card_offset = 0;
+    u32 blocks_transferred_total = 0;
+
+    while (blocks_transferred_total < block_count) {
+        // When writing to the card we must prime the transfer buffer with the data we want to write
+        // FIXME: We might be able to transfer to/from the destination/origin buffer directly
+        //        Especially with 64 bit addressing enabled
+        //        This might cost us more descriptor entries, when the physical range is segmented,
+        //        but avoids the memcpy at the end of each transfer cycle
+        if (direction == SD::DataTransferDirection::HostToCard)
+            TRY(out.read(bit_cast<void*>(adma_dma_region_virtual), host_offset, min(block_count - blocks_transferred_total, addressable_blocks_per_transfer) * block_len));
+
+        // (1) Create Descriptor table for ADMA in the system memory
+        u32 blocks_transferred = make_adma_descriptor_table(block_count);
+        card_offset += blocks_transferred * block_len;
+
+        // (2) Set the Descriptor address for ADMA in the ADMA System Address register.
+        m_registers->adma_system_address[0] = static_cast<u32>(adma_descriptor_physical & 0xFFFF'FFFF);
+        if (m_mode == ADMA2_64)
+            m_registers->adma_system_address[1] = static_cast<u32>(adma_descriptor_physical >> 32);
+
+        // (3) Set the value corresponding to the executed data byte length of one block in the Block Size
+        //     register.
+        // (4) Set the value corresponding to the executed data block count in the Block Count register in
+        //     accordance with Table 2-9. Refer to Section 1.15 for more details.
+        // Note: To avoid the restriction of the 16 bit block count we disable the block counter
+        //       and do not set the block count, resulting in an "Infinite Transfer" (SDHC Table 2-9)
+        //       ADMA has its own way of encoding block counts and to signal transfer termination
+        m_registers->block_size_and_block_count = block_len;
+
+        // (5) Set the argument value to the Argument register.
+        m_registers->argument_1 = block_address;
+
+        // (6) Set the value to the Transfer Mode register. The Host Driver determines Multi / Single Block
+        //     Select, Block Count Enable, Data Transfer Direction, Auto CMD12 Enable and DMA
+        //     Enable. Multi / Single Block Select and Block Count Enable are determined according to
+        //     Table 2-9.
+        //     If response check is enabled (Response Error Check Enable =1), set Response Interrupt
+        //     Disable to 1 and select Response Type R1 / R5
+        SD::Command command = {
+            .dma_enable = 1,
+            .block_counter = 0,
+            .auto_command = blocks_transferred > 1 ? SD::SendAutoCommand::Command12 : SD::SendAutoCommand::Disabled,
+            .direction = direction,
+            .multiblock = blocks_transferred > 1,
+            .response_type_r1r5 = 0,
+            .response_error_check = 0,
+            .response_interrupt_disable = 0,
+            .reserved1 = 0,
+            .response_type = SD::ResponseType::ResponseOf48Bits,
+            .sub_command_flag = 0,
+            .crc_enable = 1,
+            .idx_enable = 0,
+            .is_data = 1,
+            .type = SD::CommandType::Normal,
+            .index = direction == SD::DataTransferDirection::HostToCard ? (blocks_transferred > 1 ? SD::CommandIndex::WriteMultipleBlock : SD::CommandIndex::WriteSingleBlock)
+                                                                        : (blocks_transferred > 1 ? SD::CommandIndex::ReadMultipleBlock : SD::CommandIndex::ReadSingleBlock),
+            .reserved3 = 0
+        };
+
+        // (7) Set the value to the Command register.
+        //     Note: When writing to the upper byte [3] of the Command register, the SD command is issued
+        //     and DMA is started.
+        m_registers->transfer_mode_and_command = command.raw;
+
+        // (8) If response check is enabled, go to stop (11) else wait for the Command Complete Interrupt.
+        // Note: We never enabled response checking
+        if (!retry_with_timeout([this]() { return m_registers->interrupt_status.command_complete; })) {
+            dbgln("SDHC: ADMA2 command response timed out");
+        }
+        // (9) Write 1 to the Command Complete in the Normal Interrupt Status register to clear this bit.
+        // Note: We cannot write to the nit field member directly, due to that also possibly
+        //       setting the already completed `transfer_complete` flag, making the next check time out.
+        m_registers->interrupt_status.raw = command_complete;
+        // TODO: (10) Read Response register and get necessary information of the issued command
+
+        // (11) Wait for the Transfer Complete Interrupt and ADMA Error Interrupt.
+        // FIXME: Especially with big transfers this might timeout before the transfer is finished, although
+        //        No error has has happened
+        //        We should set this up so that it actually waits for the interrupts via a designated handler
+        //        Note, that the SDHC has a way to detect transfer timeouts on its own
+        if (!retry_with_timeout([this]() { return m_registers->interrupt_status.transfer_complete || m_registers->interrupt_status.adma_error; })) {
+            dbgln("SDHC: ADMA2 transfer timed out");
+            return EIO;
+        }
+        // (12) If Transfer Complete is set to 1, go to Step (13)
+        if (m_registers->interrupt_status.transfer_complete) {
+            // (13) Write 1 to the Transfer Complete Status in the Normal Interrupt Status register to clear this bit.
+            m_registers->interrupt_status.transfer_complete = 1;
+        }
+        //      else if ADMA Error Interrupt is set to 1, go to Step (14).
+        else if (m_registers->interrupt_status.adma_error) {
+            // (14) Write 1 to the ADMA Error Interrupt Status in the Error Interrupt Status register to clear this bit.
+            m_registers->interrupt_status.adma_error = 1;
+            // (15) Abort ADMA operation. SD card operation should be stopped by issuing abort command. If
+            //      necessary, the Host Driver checks ADMA Error Status register to detect why ADMA error is
+            //      generated
+            dmesgln("SDHC transfer failed, ADMA Error Status: {:2b}", AK::to_underlying(m_registers->adma_error_status.state));
+            // The scope guard will handle the Abort
+            return EIO;
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        // Copy the read data to the correct memory location
+        // FIXME: As described above, we may be able to target the destination buffer directly
+        if (direction == SD::DataTransferDirection::CardToHost)
+            TRY(out.write(bit_cast<void const*>(adma_dma_region_virtual), host_offset, blocks_transferred * block_len));
+
+        blocks_transferred_total += blocks_transferred;
+        host_offset = card_offset;
+        block_address += card_offset;
+        card_offset = 0;
+    }
+
+    abort_guard.disarm();
+    return {};
+}
+
 ErrorOr<void> SDHostController::read_block(Badge<SDMemoryCard>, u32 block_address, u32 block_count, UserOrKernelBuffer out)
 {
     VERIFY(is_card_inserted());
 
-    if (block_count > 1) {
+    using enum OperatingMode;
+    switch (m_mode) {
+    case OperatingMode::ADMA2_32:
+    case OperatingMode::ADMA2_64:
+        return transfer_blocks_adma2(block_address, block_count, out, SD::DataTransferDirection::CardToHost);
+    case PIO: {
+        if (block_count > 1) {
+            return transaction_control_with_data_transfer_using_the_dat_line_without_dma(
+                SD::Commands::read_multiple_block,
+                block_address,
+                block_count,
+                block_len,
+                out,
+                DataTransferType::Read);
+        }
+
         return transaction_control_with_data_transfer_using_the_dat_line_without_dma(
-            SD::Commands::read_multiple_block,
+            SD::Commands::read_single_block,
             block_address,
             block_count,
             block_len,
             out,
             DataTransferType::Read);
     }
-
-    return transaction_control_with_data_transfer_using_the_dat_line_without_dma(
-        SD::Commands::read_single_block,
-        block_address,
-        block_count,
-        block_len,
-        out,
-        DataTransferType::Read);
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 ErrorOr<void> SDHostController::write_block(Badge<SDMemoryCard>, u32 block_address, u32 block_count, UserOrKernelBuffer in)
 {
     VERIFY(is_card_inserted());
-
-    if (block_count > 1) {
+    using enum OperatingMode;
+    switch (m_mode) {
+    case OperatingMode::ADMA2_32:
+    case OperatingMode::ADMA2_64:
+        return transfer_blocks_adma2(block_address, block_count, in, SD::DataTransferDirection::HostToCard);
+    case PIO: {
+        if (block_count > 1) {
+            return transaction_control_with_data_transfer_using_the_dat_line_without_dma(
+                SD::Commands::write_multiple_block,
+                block_address,
+                block_count,
+                block_len,
+                in,
+                DataTransferType::Write);
+        }
         return transaction_control_with_data_transfer_using_the_dat_line_without_dma(
-            SD::Commands::write_multiple_block,
+            SD::Commands::write_single_block,
             block_address,
             block_count,
             block_len,
             in,
             DataTransferType::Write);
     }
-    return transaction_control_with_data_transfer_using_the_dat_line_without_dma(
-        SD::Commands::write_single_block,
-        block_address,
-        block_count,
-        block_len,
-        in,
-        DataTransferType::Write);
+    default:
+        VERIFY_NOT_REACHED();
+    };
 }
 
 ErrorOr<SD::SDConfigurationRegister> SDHostController::retrieve_sd_configuration_register(u32 relative_card_address)
@@ -620,6 +918,11 @@ ErrorOr<SD::SDConfigurationRegister> SDHostController::retrieve_sd_configuration
 
 ErrorOr<u32> SDHostController::retrieve_sd_clock_frequency()
 {
+    if (m_registers->capabilities.base_clock_frequency == 0) {
+        // Spec says:
+        // If these bits are all 0, the Host System has to get information via another method
+        TODO();
+    }
     const i64 one_mhz = 1'000'000;
     return { m_registers->capabilities.base_clock_frequency * one_mhz };
 }

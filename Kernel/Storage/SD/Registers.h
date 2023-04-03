@@ -23,6 +23,13 @@ enum class HostVersion : u8 {
     Unknown
 };
 
+enum class ADMAErrorState : u32 {
+    Stop = 0b00,
+    FetchDescriptor = 0b01,
+    Reserved = 0b10,
+    TransferData = 0b11
+};
+
 // SDHC 2.1.1 "SD Host Control Register Map"
 // NOTE: The registers must be 32 bits, because of a quirk in the RPI.
 struct HostControlRegisterMap {
@@ -117,7 +124,12 @@ struct HostControlRegisterMap {
     u32 maximum_current_capabilities;
     u32 maximum_current_capabilities_reserved;
     u32 force_event_for_auto_cmd_error_status;
-    u32 adma_error_status;
+    struct {
+        ADMAErrorState state : 2;
+        u32 length_mismatch_error : 1;
+        u32 : 5;
+        u32 : 24;
+    } adma_error_status;
     u32 adma_system_address[2];
     u32 preset_value[4];
     u32 reserved_0[28];
@@ -131,6 +143,46 @@ struct HostControlRegisterMap {
     } slot_interrupt_status_and_version;
 };
 static_assert(AssertSize<HostControlRegisterMap, 256>());
+
+// SDHC Figure 1-10 : General Descriptor Table Format
+enum class DMAAction : u8 {
+    // ADMA 2
+    Nop = 0b000,
+    Rsv0 = 0b010,
+    Tran = 0b100,
+    Link = 0b110,
+    // ADMA 3
+    CommandDescriptor_SD = 0b001,
+    CommandDescriptor_UHS_II = 0b011,
+    Rsv1 = 0b101,
+    IntegratedDescriptor = 0b111,
+};
+
+// Both of these represent the ADMA2 version, ADMA3 might have slight differences
+// SDHC 1.13.3.1 ADMA2 Descriptor Format
+struct alignas(4) DMADescriptor64 {
+    u32 valid : 1;
+    u32 end : 1;
+    u32 interrupt : 1;
+    DMAAction action : 3;
+    u32 length_upper : 10; // Version 4.10+ only
+    u32 length_lower : 16;
+    u32 address : 32;
+};
+static_assert(AssertSize<DMADescriptor64, 8>());
+
+struct alignas(8) DMADescriptor128 {
+    u32 valid : 1;
+    u32 end : 1;
+    u32 interrupt : 1;
+    DMAAction action : 3;
+    u32 length_upper : 10; // Version 4.10+ only
+    u32 length_lower : 16;
+    u32 address_low : 32;
+    u32 address_high : 32;
+    u32 : 32;
+};
+static_assert(AssertSize<DMADescriptor128, 16>());
 
 // PLSS 5.1: "OCR Register"
 union OperatingConditionRegister {

@@ -33,6 +33,8 @@ public:
     ErrorOr<void> read_block(Badge<SDMemoryCard>, u32 block_address, u32 block_count, UserOrKernelBuffer out);
     ErrorOr<void> write_block(Badge<SDMemoryCard>, u32 block_address, u32 block_count, UserOrKernelBuffer in);
 
+    void try_enable_dma();
+
 protected:
     virtual SD::HostControlRegisterMap volatile* get_register_map_base_address() = 0;
 
@@ -78,14 +80,34 @@ private:
         Read,
         Write
     };
+    enum class OperatingMode {
+        PIO,
+        ADMA2_32,
+        ADMA2_64
+    };
+
     ErrorOr<void> transaction_control_with_data_transfer_using_the_dat_line_without_dma(SD::Command const&, u32 argument, u32 block_count, u32 block_size, UserOrKernelBuffer, DataTransferType data_transfer_type);
+    ErrorOr<void> transfer_blocks_adma2(u32 block_address, u32 block_count, UserOrKernelBuffer, SD::DataTransferDirection);
     ErrorOr<SD::SDConfigurationRegister> retrieve_sd_configuration_register(u32 relative_card_address);
+
+    u32 make_adma_descriptor_table(u32 block_count);
 
     volatile SD::HostControlRegisterMap* m_registers;
     LockRefPtr<SDMemoryCard> m_card { nullptr };
 
     u32 m_hardware_relative_controller_id { 0 };
+    OperatingMode m_mode { OperatingMode::PIO };
     Mutex m_lock { "SDHostController"sv };
+
+    // For ADMA2
+    // One page of descriptor tables with 16 bit lengths can address writes of
+    // Up to 4 MiB ADMA2_32
+    // Up to 2 MiB ADMA2_64
+    // To not over allocate we use a buffer of just 16 pages
+    // FIXME: Investigate the average usage and adjust this
+    constexpr static size_t dma_rw_buffer_size = 16 * PAGE_SIZE;
+    constexpr static size_t dma_region_size = PAGE_SIZE + dma_rw_buffer_size;
+    OwnPtr<Memory::Region> m_dma_region;
 };
 
 }
