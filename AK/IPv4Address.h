@@ -17,6 +17,7 @@
 #    include <Kernel/KString.h>
 #else
 #    include <AK/DeprecatedString.h>
+#    include <AK/String.h>
 #endif
 
 namespace AK {
@@ -81,6 +82,15 @@ public:
             octet(SubnetClass::C),
             octet(SubnetClass::B),
             octet(SubnetClass::A));
+    }
+
+    ErrorOr<String> to_string() const
+    {
+        return String::formatted("{}.{}.{}.{}",
+            octet(SubnetClass::A),
+            octet(SubnetClass::B),
+            octet(SubnetClass::C),
+            octet(SubnetClass::D));
     }
 #endif
 
