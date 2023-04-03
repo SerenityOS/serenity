@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto spreadsheet_widget = TRY(window->set_main_widget<Spreadsheet::SpreadsheetWidget>(*window, Vector<NonnullRefPtr<Spreadsheet::Sheet>> {}, filename.is_empty()));
 
-    spreadsheet_widget->initialize_menubar(*window);
+    TRY(spreadsheet_widget->initialize_menubar(*window));
     spreadsheet_widget->update_window_title();
 
     window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
