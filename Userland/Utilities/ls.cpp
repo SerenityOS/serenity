@@ -337,7 +337,7 @@ static bool print_filesystem_object(DeprecatedString const& path, DeprecatedStri
     else
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
-    printf(" %3u", st.st_nlink);
+    printf(" %3lu", st.st_nlink);
 
     auto username = users.get(st.st_uid);
     if (!flag_print_numeric && username.has_value()) {
