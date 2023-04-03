@@ -11,12 +11,12 @@
 
 namespace Web::HTML::EventNames {
 
-// FIXME: Add media events https://html.spec.whatwg.org/multipage/media.html#mediaevents
 // FIXME: Add app cache events https://html.spec.whatwg.org/multipage/offline.html#appcacheevents
 // FIXME: Add drag and drop events https://html.spec.whatwg.org/multipage/dnd.html#dndevents
 
 #define ENUMERATE_HTML_EVENTS                        \
     __ENUMERATE_HTML_EVENT(abort)                    \
+    __ENUMERATE_HTML_EVENT(addtrack)                 \
     __ENUMERATE_HTML_EVENT(afterprint)               \
     __ENUMERATE_HTML_EVENT(beforeprint)              \
     __ENUMERATE_HTML_EVENT(beforeunload)             \
@@ -71,6 +71,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(ratechange)               \
     __ENUMERATE_HTML_EVENT(readystatechange)         \
     __ENUMERATE_HTML_EVENT(rejectionhandled)         \
+    __ENUMERATE_HTML_EVENT(removetrack)              \
     __ENUMERATE_HTML_EVENT(reset)                    \
     __ENUMERATE_HTML_EVENT(resize)                   \
     __ENUMERATE_HTML_EVENT(scroll)                   \
