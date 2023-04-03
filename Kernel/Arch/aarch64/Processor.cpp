@@ -156,6 +156,11 @@ u32 Processor::clear_critical()
     return prev_critical;
 }
 
+u64 Processor::time_spent_idle() const
+{
+    return m_idle_thread->time_in_user() + m_idle_thread->time_in_kernel();
+}
+
 u32 Processor::smp_wake_n_idle_processors(u32 wake_count)
 {
     (void)wake_count;
