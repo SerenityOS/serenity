@@ -294,6 +294,8 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
             case Kind::UTCTime:
             case Kind::GeneralizedTime:
             case Kind::IA5String:
+            case Kind::VisibleString:
+            case Kind::BMPString:
             case Kind::PrintableString: {
                 auto value = TRY(decoder.read<StringView>());
                 builder.append(' ');
@@ -310,6 +312,9 @@ ErrorOr<void> pretty_print(Decoder& decoder, Stream& stream, int indent)
             case Kind::Sequence:
             case Kind::Set:
                 return Error::from_string_literal("ASN1::Decoder: Unexpected Primitive");
+            default: {
+                dbgln("PrettyPrint error: Unhandled kind {}", static_cast<u8>(tag.kind));
+            }
             }
         }
 
