@@ -244,11 +244,6 @@ public:
         TODO_AARCH64();
     }
 
-    u64 time_spent_idle() const
-    {
-        TODO_AARCH64();
-    }
-
     static u32 count()
     {
         TODO_AARCH64();
@@ -264,6 +259,8 @@ public:
     {
         TODO_AARCH64();
     }
+
+    u64 time_spent_idle() const;
 
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
