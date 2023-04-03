@@ -103,7 +103,7 @@ enum class NeedsBigProcessLock {
     S(getrandom, NeedsBigProcessLock::No)                   \
     S(getresgid, NeedsBigProcessLock::No)                   \
     S(getresuid, NeedsBigProcessLock::No)                   \
-    S(getrusage, NeedsBigProcessLock::Yes)                  \
+    S(getrusage, NeedsBigProcessLock::No)                   \
     S(getsid, NeedsBigProcessLock::No)                      \
     S(getsockname, NeedsBigProcessLock::Yes)                \
     S(getsockopt, NeedsBigProcessLock::No)                  \
