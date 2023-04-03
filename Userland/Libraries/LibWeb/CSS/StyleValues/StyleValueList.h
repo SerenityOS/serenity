@@ -34,6 +34,8 @@ public:
 
     bool properties_equal(StyleValueList const& other) const { return m_properties == other.m_properties; }
 
+    Separator separator() const { return m_properties.separator; }
+
 private:
     StyleValueList(StyleValueVector&& values, Separator separator)
         : StyleValueWithDefaultOperators(Type::ValueList)
