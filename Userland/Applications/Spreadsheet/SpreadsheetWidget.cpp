@@ -502,6 +502,7 @@ void SpreadsheetWidget::save(String const& filename, Core::File& file)
     }
     undo_stack().set_current_unmodified();
     window()->set_modified(false);
+    GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
 void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
@@ -521,6 +522,7 @@ void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
 
     setup_tabs(m_workbook->sheets());
     update_window_title();
+    GUI::Application::the()->set_most_recently_open_file(filename);
 }
 
 void SpreadsheetWidget::import_sheets(String const& filename, Core::File& file)
@@ -654,6 +656,16 @@ void SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     file_menu.add_separator();
     file_menu.add_action(*m_import_action);
     file_menu.add_separator();
+    file_menu.add_recent_files_list([&](auto& action) {
+                 if (!request_close())
+                     return;
+
+                 auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+                 if (response.is_error())
+                     return;
+                 load_file(response.value().filename(), response.value().stream());
+             })
+        .release_value_but_fixme_should_propagate_errors();
     file_menu.add_action(*m_quit_action);
 
     auto& edit_menu = window.add_menu("&Edit");
