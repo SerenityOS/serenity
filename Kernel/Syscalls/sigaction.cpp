@@ -75,9 +75,9 @@ ErrorOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<sigaction const*> 
     return 0;
 }
 
-ErrorOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
+ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     SmapDisabler disabler;
 
