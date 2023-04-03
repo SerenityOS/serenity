@@ -276,12 +276,12 @@ ErrorOr<SDHostController::Response> SDHostController::wait_for_response()
     // 1. Wait for the Command Complete Interrupt. If the Command Complete
     // Interrupt has occurred, go to step (2).
     if (!retry_with_timeout(
-            [&]() { return m_registers->interrupt_status & command_complete; })) {
+            [&]() { return m_registers->interrupt_status.command_complete; })) {
         return EIO;
     }
 
     // 2. Write 1 to Command Complete in the Normal Interrupt Status register to clear this bit
-    m_registers->interrupt_status = command_complete;
+    m_registers->interrupt_status.raw = command_complete;
 
     // 3. Read the Response register(s) to get the response.
     // NOTE: We read fewer bits than ResponseType because the missing bits are only
@@ -483,14 +483,13 @@ ErrorOr<void> SDHostController::transaction_control_with_data_transfer_using_the
     m_registers->transfer_mode_and_command = command.raw;
 
     // 6. Then, wait for the Command Complete Interrupt.
-    if (!retry_with_timeout(
-            [&]() { return m_registers->interrupt_status & command_complete; })) {
+    if (!retry_with_timeout([&]() { return m_registers->interrupt_status.command_complete; })) {
         return EIO;
     }
 
     // 7. Write 1 to the Command Complete in the Normal Interrupt Status
     // register for clearing this bit.
-    m_registers->interrupt_status = command_complete;
+    m_registers->interrupt_status.raw = command_complete;
 
     // 8. Read Response register and get necessary information of the issued
     // command
@@ -505,13 +504,13 @@ ErrorOr<void> SDHostController::transaction_control_with_data_transfer_using_the
             // 10. Then wait for Buffer Write Ready Interrupt.
             if (!retry_with_timeout(
                     [&]() {
-                        return m_registers->interrupt_status & buffer_write_ready;
+                        return m_registers->interrupt_status.buffer_write_ready;
                     })) {
                 return EIO;
             }
 
             // 11. Write 1 to the Buffer Write Ready in the Normal Interrupt Status register for clearing this bit.
-            m_registers->interrupt_status = buffer_write_ready;
+            m_registers->interrupt_status.raw = buffer_write_ready;
 
             // 12. Write block data (in according to the number of bytes specified at the step (1)) to Buffer Data Port register.
             u32 temp;
@@ -525,13 +524,13 @@ ErrorOr<void> SDHostController::transaction_control_with_data_transfer_using_the
     } else {
         for (u32 i = 0; i < block_count; i++) {
             // 14. Then wait for the Buffer Read Ready Interrupt.
-            if (!retry_with_timeout([&]() { return m_registers->interrupt_status & buffer_read_ready; })) {
+            if (!retry_with_timeout([&]() { return m_registers->interrupt_status.buffer_read_ready; })) {
                 return EIO;
             }
 
             // 15. Write 1 to the Buffer Read Ready in the Normal Interrupt Status
             // register for clearing this bit.
-            m_registers->interrupt_status = buffer_read_ready;
+            m_registers->interrupt_status.raw = buffer_read_ready;
 
             // 16. Read block data (in according to the number of bytes specified at
             // the step (1)) from the Buffer Data Port register
@@ -550,14 +549,13 @@ ErrorOr<void> SDHostController::transaction_control_with_data_transfer_using_the
 
     // 19. Wait for Transfer Complete Interrupt.
     if (!retry_with_timeout(
-            [&]() { return m_registers->interrupt_status & transfer_complete; })) {
+            [&]() { return m_registers->interrupt_status.transfer_complete; })) {
         return EIO;
     }
 
     // 20. Write 1 to the Transfer Complete in the Normal Interrupt Status
     // register for clearing this bit
-    m_registers->interrupt_status = transfer_complete;
-
+    m_registers->interrupt_status.raw = transfer_complete;
     return {};
 }
 

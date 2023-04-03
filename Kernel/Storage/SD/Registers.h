@@ -38,7 +38,40 @@ struct HostControlRegisterMap {
     u32 present_state;
     u32 host_configuration_0;
     u32 host_configuration_1;
-    u32 interrupt_status;
+    union InterruptStatus {
+        struct { // SDHC 2.2.18 Normal Interrupt Status Register (Cat.C Offset 030h)
+            u32 command_complete : 1;
+            u32 transfer_complete : 1;
+            u32 block_gap_event : 1;
+            u32 dma_interrupt : 1;
+            u32 buffer_write_ready : 1;
+            u32 buffer_read_ready : 1;
+            u32 card_insertion : 1;
+            u32 card_removal : 1;
+            u32 card_interrupt : 1;
+            u32 int_a : 1;
+            u32 int_b : 1;
+            u32 int_c : 1;
+            u32 retuning_event : 1;
+            u32 fx_event : 1;
+            u32 : 1;
+            u32 error_interrupt : 1;
+            // SDHC 2.2.19 Error Interrupt Status Register (Cat.C Offset 032
+            u32 command_timeout_error : 1;
+            u32 command_crc_error : 1;
+            u32 cammand_index_error : 1;
+            u32 data_timeout_error : 1;
+            u32 data_crc_error : 1;
+            u32 data_end_bit_error : 1;
+            u32 current_limit_error : 1;
+            u32 auto_cmd_error : 1;
+            u32 adma_error : 1;
+            u32 tuning_error : 1;
+            u32 response_error : 1;
+            u32 vendor_specific_error : 1;
+        };
+        u32 raw;
+    } interrupt_status;
     u32 interrupt_status_enable;
     u32 interrupt_signal_enable;
     u32 host_configuration_2;
