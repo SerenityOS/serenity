@@ -416,7 +416,7 @@ struct SC_chown_params {
 struct SC_mknod_params {
     StringArgument path;
     u16 mode;
-    u32 dev;
+    dev_t dev;
 };
 
 struct SC_symlink_params {
