@@ -16,6 +16,14 @@ class HTMLMediaElement : public HTMLElement {
 public:
     virtual ~HTMLMediaElement() override;
 
+    enum class NetworkState : u16 {
+        Empty,
+        Idle,
+        Loading,
+        NoSource,
+    };
+    NetworkState network_state() const { return m_network_state; }
+
     Bindings::CanPlayTypeResult can_play_type(DeprecatedString const& type) const;
 
     void load() const;
@@ -25,6 +33,10 @@ protected:
     HTMLMediaElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
+private:
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-networkstate
+    NetworkState m_network_state { NetworkState::Empty };
 };
 
 }
