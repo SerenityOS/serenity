@@ -55,18 +55,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
     auto fd_allocation = TRY(allocate_fd());
-    RefPtr<Custody> base;
-    if (dirfd == AT_FDCWD) {
-        base = current_directory();
-    } else {
-        auto base_description = TRY(open_file_description(dirfd));
-        if (!base_description->is_directory())
-            return ENOTDIR;
-        if (!base_description->custody())
-            return EINVAL;
-        base = base_description->custody();
-    }
-
+    auto base = TRY(custody_for_dirfd(dirfd));
     auto description = TRY(VirtualFileSystem::the().open(credentials(), path->view(), options, mode & ~umask(), *base));
 
     if (description->inode() && description->inode()->bound_socket())
