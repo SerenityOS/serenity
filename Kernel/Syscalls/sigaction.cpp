@@ -326,7 +326,7 @@ ErrorOr<FlatPtr> Process::sys$sigtimedwait(Userspace<sigset_t const*> set, Users
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/sigsuspend.html
 ErrorOr<FlatPtr> Process::sys$sigsuspend(Userspace<sigset_t const*> mask)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
 
     auto sigmask = TRY(copy_typed_from_user(mask));
 
