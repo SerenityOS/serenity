@@ -460,11 +460,30 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
             auto const& position = value.as_position();
             style.set_property(CSS::PropertyID::BackgroundPositionX, position.edge_x());
             style.set_property(CSS::PropertyID::BackgroundPositionY, position.edge_y());
-            return;
+        } else if (value.is_value_list()) {
+            // Expand background-position layer list into separate lists for x and y positions:
+            auto const& values_list = value.as_value_list();
+            StyleValueVector x_positions {};
+            StyleValueVector y_positions {};
+            x_positions.ensure_capacity(values_list.size());
+            y_positions.ensure_capacity(values_list.size());
+            for (auto& layer : values_list.values()) {
+                if (layer->is_position()) {
+                    auto const& position = layer->as_position();
+                    x_positions.unchecked_append(position.edge_x());
+                    y_positions.unchecked_append(position.edge_y());
+                } else {
+                    x_positions.unchecked_append(layer);
+                    y_positions.unchecked_append(layer);
+                }
+            }
+            style.set_property(CSS::PropertyID::BackgroundPositionX, StyleValueList::create(move(x_positions), values_list.separator()));
+            style.set_property(CSS::PropertyID::BackgroundPositionY, StyleValueList::create(move(y_positions), values_list.separator()));
+        } else {
+            style.set_property(CSS::PropertyID::BackgroundPositionX, value);
+            style.set_property(CSS::PropertyID::BackgroundPositionY, value);
         }
 
-        style.set_property(CSS::PropertyID::BackgroundPositionX, value);
-        style.set_property(CSS::PropertyID::BackgroundPositionY, value);
         return;
     }
 
