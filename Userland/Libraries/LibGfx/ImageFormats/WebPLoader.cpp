@@ -550,7 +550,6 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
     while (pixel < end) {
         auto symbol = TRY(group[0].read_symbol(bit_stream));
-        dbgln_if(WEBP_DEBUG, "  pixel sym {}", symbol);
         if (symbol >= 256u + 24u + color_cache_size)
             return context.error("WebPImageDecoderPlugin: Symbol out of bounds");
 
@@ -600,8 +599,6 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
             // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#522_lz77_backward_reference
             // "Distance codes larger than 120 denote the pixel-distance in scan-line order, offset by 120."
             // "The smallest distance codes [1..120] are special, and are reserved for a close neighborhood of the current pixel."
-            dbgln_if(WEBP_DEBUG, "  backref L {} D {}", length, distance);
-
             if (distance <= 120) {
                 auto offset = distance_map[distance - 1];
                 distance = offset.x + offset.y * context.size->width();
@@ -610,7 +607,6 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
             } else {
                 distance = distance - 120;
             }
-            dbgln_if(WEBP_DEBUG, "    effective distance {}", distance);
 
             if (pixel - context.bitmap->begin() < distance)
                 return context.error("WebPImageDecoderPlugin: Backward reference distance out of bounds");
@@ -626,7 +622,6 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         else {
             // "a. Use S - (256 + 24) as the index into the color cache."
             unsigned index = symbol - (256 + 24);
-            dbgln_if(WEBP_DEBUG, "  use color cache {}", index);
 
             // "b. Get ARGB color from the color cache at that index."
             if (index >= color_cache_size)
