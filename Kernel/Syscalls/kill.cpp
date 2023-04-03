@@ -102,7 +102,7 @@ ErrorOr<void> Process::do_killself(int signal)
 
 ErrorOr<FlatPtr> Process::sys$kill(pid_t pid_or_pgid, int signal)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     if (pid_or_pgid == pid().value())
         TRY(require_promise(Pledge::stdio));
     else

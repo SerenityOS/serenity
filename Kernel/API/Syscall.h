@@ -115,7 +115,7 @@ enum class NeedsBigProcessLock {
     S(join_thread, NeedsBigProcessLock::Yes)                \
     S(jail_create, NeedsBigProcessLock::No)                 \
     S(jail_attach, NeedsBigProcessLock::No)                 \
-    S(kill, NeedsBigProcessLock::Yes)                       \
+    S(kill, NeedsBigProcessLock::No)                        \
     S(kill_thread, NeedsBigProcessLock::Yes)                \
     S(killpg, NeedsBigProcessLock::Yes)                     \
     S(link, NeedsBigProcessLock::No)                        \
