@@ -17,7 +17,6 @@ namespace Web::HTML::EventNames {
 
 #define ENUMERATE_HTML_EVENTS                        \
     __ENUMERATE_HTML_EVENT(abort)                    \
-    __ENUMERATE_HTML_EVENT(DOMContentLoaded)         \
     __ENUMERATE_HTML_EVENT(afterprint)               \
     __ENUMERATE_HTML_EVENT(beforeprint)              \
     __ENUMERATE_HTML_EVENT(beforeunload)             \
@@ -33,6 +32,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(copy)                     \
     __ENUMERATE_HTML_EVENT(cuechange)                \
     __ENUMERATE_HTML_EVENT(cut)                      \
+    __ENUMERATE_HTML_EVENT(DOMContentLoaded)         \
     __ENUMERATE_HTML_EVENT(drag)                     \
     __ENUMERATE_HTML_EVENT(dragend)                  \
     __ENUMERATE_HTML_EVENT(dragenter)                \
