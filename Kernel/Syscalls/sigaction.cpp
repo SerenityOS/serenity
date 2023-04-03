@@ -13,7 +13,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<sigset_t const*> set, Userspace<sigset_t*> old_set)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::sigaction));
     auto* current_thread = Thread::current();
     u32 previous_signal_mask;
