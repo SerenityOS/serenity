@@ -58,6 +58,25 @@ public:
         ValueType value;
     };
 
+    ErrorOr<void> rewrite_tag(Kind kind)
+    {
+        if (m_stack.is_empty())
+            return Error::from_string_view("Nothing on stack to rewrite"sv);
+
+        if (eof())
+            return Error::from_string_view("Stream is empty"sv);
+
+        if (m_current_tag.has_value()) {
+            m_current_tag->kind = kind;
+            return {};
+        }
+
+        auto tag = TRY(read_tag());
+        m_current_tag = tag;
+        m_current_tag->kind = kind;
+        return {};
+    }
+
     ErrorOr<void> drop()
     {
         if (m_stack.is_empty())
