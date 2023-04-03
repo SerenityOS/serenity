@@ -5,6 +5,7 @@
  */
 
 #include "CertificateStore.h"
+#include <AK/String.h>
 #include <Applications/CertificateSettings/CertificateStoreGML.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibFileSystem/FileSystem.h>
@@ -66,12 +67,24 @@ GUI::Variant CertificateStoreModel::data(GUI::ModelIndex const& index, GUI::Mode
     auto cert = m_certificates.at(index.row());
 
     switch (index.column()) {
-    case Column::IssuedTo:
-        return cert.subject.subject.is_empty() ? cert.subject.unit : cert.subject.subject;
-    case Column::IssuedBy:
-        return cert.issuer.subject.is_empty() ? cert.issuer.unit : cert.issuer.subject;
+    case Column::IssuedTo: {
+        auto issued_to = cert.subject.common_name();
+        if (issued_to.is_empty()) {
+            issued_to = cert.subject.organizational_unit();
+        }
+
+        return issued_to;
+    }
+    case Column::IssuedBy: {
+        auto issued_by = cert.issuer.common_name();
+        if (issued_by.is_empty()) {
+            issued_by = cert.issuer.organizational_unit();
+        }
+
+        return issued_by;
+    }
     case Column::Expire:
-        return cert.not_after.to_deprecated_string("%Y-%m-%d"sv);
+        return cert.validity.not_after.to_deprecated_string("%Y-%m-%d"sv);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -128,8 +141,14 @@ ErrorOr<void> CertificateStoreWidget::export_pem()
     auto real_index = m_root_ca_proxy_model->map_to_source(index);
     auto cert = m_root_ca_model->get(real_index.row());
 
-    auto filename = cert.subject.subject.is_empty() ? cert.subject.unit : cert.subject.subject;
-    auto file = FileSystemAccessClient::Client::the().save_file(window(), filename.replace(" "sv, "_"sv), "pem"sv);
+    String filename = cert.subject.common_name();
+    if (filename.is_empty()) {
+        filename = cert.subject.organizational_unit();
+    }
+
+    filename = TRY(filename.replace(" "sv, "_"sv, ReplaceMode::All));
+
+    auto file = FileSystemAccessClient::Client::the().save_file(window(), filename.to_deprecated_string(), "pem"sv);
     if (file.is_error())
         return {};
 

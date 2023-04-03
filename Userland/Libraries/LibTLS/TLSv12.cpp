@@ -102,13 +102,13 @@ bool Certificate::is_valid() const
 {
     auto now = Core::DateTime::now();
 
-    if (now < not_before) {
-        dbgln("certificate expired (not yet valid, signed for {})", not_before.to_deprecated_string());
+    if (now < validity.not_before) {
+        dbgln("certificate expired (not yet valid, signed for {})", validity.not_before.to_deprecated_string());
         return false;
     }
 
-    if (not_after < now) {
-        dbgln("certificate expired (expiry date {})", not_after.to_deprecated_string());
+    if (validity.not_after < now) {
+        dbgln("certificate expired (expiry date {})", validity.not_after.to_deprecated_string());
         return false;
     }
 
@@ -201,11 +201,12 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
     }
 
     for (auto& cert : certificates) {
-        if (!cert.is_valid())
-            dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject.subject, cert.issuer.subject);
+        if (!cert.is_valid()) {
+            dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject.common_name(), cert.issuer.common_name());
+        }
         // FIXME: Figure out what we should do when our root certs are invalid.
 
-        m_context.root_certificates.set(cert.subject_identifier_string(), cert);
+        m_context.root_certificates.set(MUST(cert.subject.to_string()).to_deprecated_string(), cert);
     }
     dbgln_if(TLS_DEBUG, "{}: Set {} root certificates", this, m_context.root_certificates.size());
 }
@@ -228,7 +229,7 @@ static bool wildcard_matches(StringView host, StringView subject)
 
 static bool certificate_subject_matches_host(Certificate& cert, StringView host)
 {
-    if (wildcard_matches(host, cert.subject.subject))
+    if (wildcard_matches(host, cert.subject.common_name()))
         return true;
 
     for (auto& san : cert.SAN) {
@@ -279,15 +280,15 @@ bool Context::verify_chain(StringView host) const
     for (size_t cert_index = 0; cert_index < local_chain->size(); ++cert_index) {
         auto cert = local_chain->at(cert_index);
 
-        auto subject_string = cert.subject_identifier_string();
-        auto issuer_string = cert.issuer_identifier_string();
+        auto subject_string = MUST(cert.subject.to_string());
+        auto issuer_string = MUST(cert.issuer.to_string());
 
         if (!cert.is_valid()) {
             dbgln("verify_chain: Certificate is not valid {}", subject_string);
             return false;
         }
 
-        auto maybe_root_certificate = root_certificates.get(issuer_string);
+        auto maybe_root_certificate = root_certificates.get(issuer_string.to_deprecated_string());
         if (maybe_root_certificate.has_value()) {
             auto& root_certificate = *maybe_root_certificate;
             auto verification_correct = verify_certificate_pair(cert, root_certificate);
@@ -312,7 +313,7 @@ bool Context::verify_chain(StringView host) const
         }
 
         auto parent_certificate = local_chain->at(cert_index + 1);
-        if (issuer_string != parent_certificate.subject_identifier_string()) {
+        if (issuer_string != MUST(parent_certificate.subject.to_string())) {
             dbgln("verify_chain: Next certificate in the chain is not the issuer of this certificate");
             return false;
         }
@@ -359,7 +360,7 @@ bool Context::verify_certificate_pair(Certificate const& subject, Certificate co
     }
 
     Crypto::PK::RSAPrivateKey dummy_private_key;
-    Crypto::PK::RSAPublicKey public_key_copy { issuer.public_key };
+    Crypto::PK::RSAPublicKey public_key_copy { issuer.public_key.rsa };
     auto rsa = Crypto::PK::RSA(public_key_copy, dummy_private_key);
     auto verification_buffer_result = ByteBuffer::create_uninitialized(subject.signature_value.size());
     if (verification_buffer_result.is_error()) {
@@ -471,8 +472,8 @@ Vector<Certificate> TLSv12::parse_pem_certificate(ReadonlyBytes certificate_pem_
         return {};
     }
 
-    auto maybe_certificate = Certificate::parse_asn1(decoded_certificate);
-    if (!maybe_certificate.has_value()) {
+    auto maybe_certificate = Certificate::parse_certificate(decoded_certificate);
+    if (!maybe_certificate.is_error()) {
         dbgln("Invalid certificate");
         return {};
     }
@@ -516,19 +517,20 @@ ErrorOr<Vector<Certificate>> DefaultRootCACertificates::reload_certificates(Byte
     auto certs = TRY(Crypto::decode_pems(data));
 
     for (auto& cert : certs) {
-        auto certificate_result = Certificate::parse_asn1(cert.bytes());
+        auto certificate_result = Certificate::parse_certificate(cert.bytes());
         // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
         // supported right now. It might make sense to cleanup cacert.pem before adding it to the system.
-        if (!certificate_result.has_value()) {
+        if (certificate_result.is_error()) {
             // FIXME: It would be nice to have more informations about the certificate we failed to parse.
             //        Like: Issuer, Algorithm, CN, etc
+            dbgln("Failed to load certificate: {}", certificate_result.error());
             continue;
         }
         auto certificate = certificate_result.release_value();
         if (certificate.is_certificate_authority && certificate.is_self_signed()) {
             TRY(certificates.try_append(move(certificate)));
         } else {
-            dbgln("Skipped '{}' because it is not a valid root CA", certificate.subject_identifier_string());
+            dbgln("Skipped '{}' because it is not a valid root CA", MUST(certificate.subject.to_string()));
         }
     }
 
