@@ -1,10 +1,9 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 
 namespace Kernel {
@@ -34,8 +33,6 @@ ErrorOr<void> Process::do_kill(Process& process, int signal)
 
 ErrorOr<void> Process::do_killpg(ProcessGroupID pgrp, int signal)
 {
-    InterruptDisabler disabler;
-
     VERIFY(pgrp >= 0);
 
     // Send the signal to all processes in the given group.
@@ -68,8 +65,6 @@ ErrorOr<void> Process::do_killpg(ProcessGroupID pgrp, int signal)
 
 ErrorOr<void> Process::do_killall(int signal)
 {
-    InterruptDisabler disabler;
-
     bool any_succeeded = false;
     ErrorOr<void> error;
 
