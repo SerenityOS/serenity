@@ -188,7 +188,7 @@ enum class NeedsBigProcessLock {
     S(symlink, NeedsBigProcessLock::No)                     \
     S(sync, NeedsBigProcessLock::No)                        \
     S(sysconf, NeedsBigProcessLock::No)                     \
-    S(times, NeedsBigProcessLock::Yes)                      \
+    S(times, NeedsBigProcessLock::No)                       \
     S(umask, NeedsBigProcessLock::No)                       \
     S(umount, NeedsBigProcessLock::Yes)                     \
     S(uname, NeedsBigProcessLock::No)                       \

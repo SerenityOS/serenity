@@ -465,11 +465,10 @@ public:
     const TTY* tty() const { return m_tty; }
     void set_tty(TTY*);
 
-    u32 m_ticks_in_user { 0 };
-    u32 m_ticks_in_kernel { 0 };
-
-    u32 m_ticks_in_user_for_dead_children { 0 };
-    u32 m_ticks_in_kernel_for_dead_children { 0 };
+    clock_t m_ticks_in_user { 0 };
+    clock_t m_ticks_in_kernel { 0 };
+    clock_t m_ticks_in_user_for_dead_children { 0 };
+    clock_t m_ticks_in_kernel_for_dead_children { 0 };
 
     NonnullRefPtr<Custody> current_directory();
     RefPtr<Custody> executable();

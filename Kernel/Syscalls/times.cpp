@@ -11,8 +11,11 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$times(Userspace<tms*> user_times)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
+
+    // There's no lock here, as it seems harmless to report intermediate values
+    // as long as each individual counter is intact.
     tms times = {};
     times.tms_utime = m_ticks_in_user;
     times.tms_stime = m_ticks_in_kernel;
