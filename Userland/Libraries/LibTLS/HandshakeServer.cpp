@@ -362,7 +362,7 @@ ssize_t TLSv12::verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buf
     // RFC5246 section 7.4.2: The sender's certificate MUST come first in the list.
     auto certificate_public_key = m_context.certificates.first().public_key;
     Crypto::PK::RSAPrivateKey dummy_private_key;
-    auto rsa = Crypto::PK::RSA(certificate_public_key, dummy_private_key);
+    auto rsa = Crypto::PK::RSA(certificate_public_key.rsa, dummy_private_key);
 
     auto signature_verify_buffer_result = ByteBuffer::create_uninitialized(signature_length);
     if (signature_verify_buffer_result.is_error()) {
