@@ -63,14 +63,18 @@ union Command {
     u32 raw;
 
     struct {
-        u32 reserved0 : 1;
+        u32 dma_enable : 1;
         u32 block_counter : 1;
         SendAutoCommand auto_command : 2;
         DataTransferDirection direction : 1;
         u32 multiblock : 1;
-        u32 reserved1 : 10;
+        u32 response_type_r1r5 : 1;         // v4.10
+        u32 response_error_check : 1;       // v4.10
+        u32 response_interrupt_disable : 1; // v4.10
+        u32 reserved1 : 7;
+
         ResponseType response_type : 2;
-        u32 reserved2 : 1;
+        u32 sub_command_flag : 1; // v4.10
         u32 crc_enable : 1;
         u32 idx_enable : 1;
         u32 is_data : 1;
@@ -95,14 +99,17 @@ static_assert(AssertSize<Command, 4>());
 namespace Commands {
 
 constexpr Command go_idle_state = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::NoResponse,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 0,
     .idx_enable = 0,
     .is_data = 0,
@@ -112,14 +119,17 @@ constexpr Command go_idle_state = {
 };
 
 constexpr Command all_send_cid = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf136Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
@@ -129,14 +139,17 @@ constexpr Command all_send_cid = {
 };
 
 constexpr Command send_relative_addr = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
@@ -146,14 +159,17 @@ constexpr Command send_relative_addr = {
 };
 
 constexpr Command app_set_bus_width = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
@@ -163,14 +179,17 @@ constexpr Command app_set_bus_width = {
 };
 
 constexpr Command select_card = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48BitsWithBusy,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
@@ -180,14 +199,17 @@ constexpr Command select_card = {
 };
 
 constexpr Command send_if_cond = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
@@ -197,14 +219,17 @@ constexpr Command send_if_cond = {
 };
 
 constexpr Command send_csd = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf136Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
@@ -214,15 +239,18 @@ constexpr Command send_csd = {
 };
 
 constexpr Command set_block_len = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
-    .crc_enable = 1,
+    .sub_command_flag = 0,
+    .crc_enable = 0,
     .idx_enable = 0,
     .is_data = 0,
     .type = CommandType::Normal,
@@ -231,14 +259,17 @@ constexpr Command set_block_len = {
 };
 
 constexpr Command read_single_block = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::CardToHost,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 1,
@@ -248,14 +279,17 @@ constexpr Command read_single_block = {
 };
 
 constexpr Command read_multiple_block = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 1,
     .auto_command = SendAutoCommand::Command12,
     .direction = DataTransferDirection::CardToHost,
     .multiblock = 1,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 1,
@@ -265,14 +299,17 @@ constexpr Command read_multiple_block = {
 };
 
 constexpr Command write_single_block = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 1,
@@ -282,14 +319,17 @@ constexpr Command write_single_block = {
 };
 
 constexpr Command write_multiple_block = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 1,
     .auto_command = SendAutoCommand::Command12,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 1,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 1,
@@ -299,14 +339,17 @@ constexpr Command write_multiple_block = {
 };
 
 constexpr Command app_send_op_cond = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 0,
     .idx_enable = 0,
     .is_data = 0,
@@ -316,14 +359,17 @@ constexpr Command app_send_op_cond = {
 };
 
 constexpr Command app_send_scr = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::CardToHost,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 0,
     .idx_enable = 0,
     .is_data = 1,
@@ -333,14 +379,17 @@ constexpr Command app_send_scr = {
 };
 
 constexpr Command app_cmd = {
-    .reserved0 = 0,
+    .dma_enable = 0,
     .block_counter = 0,
     .auto_command = SendAutoCommand::Disabled,
     .direction = DataTransferDirection::HostToCard,
     .multiblock = 0,
+    .response_type_r1r5 = 0,
+    .response_error_check = 0,
+    .response_interrupt_disable = 0,
     .reserved1 = 0,
     .response_type = ResponseType::ResponseOf48Bits,
-    .reserved2 = 0,
+    .sub_command_flag = 0,
     .crc_enable = 1,
     .idx_enable = 0,
     .is_data = 0,
