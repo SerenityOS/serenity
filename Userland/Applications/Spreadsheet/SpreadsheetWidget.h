@@ -45,7 +45,7 @@ public:
         return current_view()->cursor();
     }
 
-    void initialize_menubar(GUI::Window&);
+    ErrorOr<void> initialize_menubar(GUI::Window&);
 
     void undo();
     void redo();
