@@ -39,7 +39,7 @@ void VMWareFramebufferConsole::flush(size_t, size_t, size_t, size_t)
 
 void VMWareFramebufferConsole::enqueue_refresh_timer()
 {
-    NonnullLockRefPtr<Timer> refresh_timer = adopt_lock_ref(*new (nothrow) Timer());
+    auto refresh_timer = adopt_nonnull_ref_or_enomem(new (nothrow) Timer()).release_value_but_fixme_should_propagate_errors();
     refresh_timer->setup(CLOCK_MONOTONIC, refresh_interval, [this]() {
         if (m_enabled.load() && m_dirty) {
             MUST(g_io_work->try_queue([this]() {

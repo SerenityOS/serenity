@@ -87,8 +87,8 @@ public:
     TimerQueue();
     static TimerQueue& the();
 
-    TimerId add_timer(NonnullLockRefPtr<Timer>&&);
-    bool add_timer_without_id(NonnullLockRefPtr<Timer>, clockid_t, Time const&, Function<void()>&&);
+    TimerId add_timer(NonnullRefPtr<Timer>&&);
+    bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, Time const&, Function<void()>&&);
     bool cancel_timer(Timer& timer, bool* was_in_use = nullptr);
     void fire();
 
@@ -99,7 +99,7 @@ private:
     };
     void remove_timer_locked(Queue&, Timer&);
     void update_next_timer_due(Queue&);
-    void add_timer_locked(NonnullLockRefPtr<Timer>);
+    void add_timer_locked(NonnullRefPtr<Timer>);
 
     Queue& queue_for_timer(Timer& timer)
     {

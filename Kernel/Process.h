@@ -875,7 +875,7 @@ private:
     Mutex m_big_lock { "Process"sv, Mutex::MutexBehavior::BigLock };
     Mutex m_ptrace_lock { "ptrace"sv };
 
-    LockRefPtr<Timer> m_alarm_timer;
+    SpinlockProtected<RefPtr<Timer>, LockRank::None> m_alarm_timer;
 
     SpinlockProtected<UnveilData, LockRank::None> m_unveil_data;
     SpinlockProtected<UnveilData, LockRank::None> m_exec_unveil_data;
