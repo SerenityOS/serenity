@@ -463,12 +463,12 @@ if [[ "$CMD" =~ ^(build|install|image|copy-src|run|gdb|test|rebuild|recreate|kad
             fi
             ;;
         gdb)
-            command -v tmux >/dev/null 2>&1 || die "Please install tmux!"
             if [ "$TARGET" = "lagom" ]; then
                 [ $# -ge 1 ] || usage
                 build_target "$@"
                 run_gdb "${CMD_ARGS[@]}"
             else
+                command -v tmux >/dev/null 2>&1 || die "Please install tmux!"
                 build_target
                 build_target install
                 build_image
