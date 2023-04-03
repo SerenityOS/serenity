@@ -26,20 +26,66 @@ DeprecatedString kind_name(Kind kind)
         return "Null";
     case Kind::ObjectIdentifier:
         return "ObjectIdentifier";
-    case Kind::IA5String:
-        return "IA5String";
-    case Kind::PrintableString:
-        return "PrintableString";
+    case Kind::ObjectDescriptor:
+        return "ObjectDescriptor";
+    case Kind::External:
+        return "External";
+    case Kind::Real:
+        return "Real";
+    case Kind::Enumerated:
+        return "Enumerated";
+    case Kind::EmbeddedPdv:
+        return "EmbeddedPdv";
     case Kind::Utf8String:
-        return "UTF8String";
-    case Kind::UTCTime:
-        return "UTCTime";
-    case Kind::GeneralizedTime:
-        return "GeneralizedTime";
+        return "Utf8String";
+    case Kind::RelativeOid:
+        return "RelativeOid";
+    case Kind::Time:
+        return "Time";
+    case Kind::Reserved:
+        return "Reserved";
     case Kind::Sequence:
         return "Sequence";
     case Kind::Set:
         return "Set";
+    case Kind::NumericString:
+        return "NumericString";
+    case Kind::PrintableString:
+        return "PrintableString";
+    case Kind::T61String:
+        return "T61String";
+    case Kind::VideotexString:
+        return "VideotexString";
+    case Kind::IA5String:
+        return "IA5String";
+    case Kind::UTCTime:
+        return "UTCTime";
+    case Kind::GeneralizedTime:
+        return "GeneralizedTime";
+    case Kind::GraphicString:
+        return "GraphicString";
+    case Kind::VisibleString:
+        return "VisibleString";
+    case Kind::GeneralString:
+        return "GeneralString";
+    case Kind::UniversalString:
+        return "UniversalString";
+    case Kind::CharacterString:
+        return "CharacterString";
+    case Kind::BMPString:
+        return "BMPString";
+    case Kind::Date:
+        return "Date";
+    case Kind::TimeOfDay:
+        return "TimeOfDay";
+    case Kind::DateTime:
+        return "DateTime";
+    case Kind::Duration:
+        return "Duration";
+    case Kind::OidIri:
+        return "OidIri";
+    case Kind::RelativeOidIri:
+        return "RelativeOidIri";
     }
 
     return "InvalidKind";
@@ -190,5 +236,4 @@ done_parsing:;
     // Unceremoniously drop the milliseconds on the floor.
     return Core::DateTime::create(year.value(), month.value(), day.value(), hour.value(), minute.value_or(0), seconds.value_or(0));
 }
-
 }
