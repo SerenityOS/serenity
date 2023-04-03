@@ -12,16 +12,17 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
-    if (pid == 0)
+    if (pid == 0 || pid == this->pid())
         return sid().value();
-    auto process = Process::from_pid_in_same_jail(pid);
-    if (!process)
+    auto peer = Process::from_pid_in_same_jail(pid);
+    if (!peer)
         return ESRCH;
-    if (sid() != process->sid())
+    auto peer_sid = peer->sid();
+    if (sid() != peer_sid)
         return EPERM;
-    return process->sid().value();
+    return peer_sid.value();
 }
 
 ErrorOr<FlatPtr> Process::sys$setsid()
