@@ -463,8 +463,38 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#72_structure_of_transforms
 
     // optional-transform   =  (%b1 transform optional-transform) / %b0
-    if (TRY(bit_stream.read_bits(1)))
-        return context.error("WebPImageDecoderPlugin: VP8L transform handling not yet implemented");
+    while (TRY(bit_stream.read_bits(1))) {
+        // transform            =  predictor-tx / color-tx / subtract-green-tx
+        // transform            =/ color-indexing-tx
+
+        enum TransformType {
+            // predictor-tx         =  %b00 predictor-image
+            PREDICTOR_TRANSFORM = 0,
+
+            // color-tx             =  %b01 color-image
+            COLOR_TRANSFORM = 1,
+
+            // subtract-green-tx    =  %b10
+            SUBTRACT_GREEN_TRANSFORM = 2,
+
+            // color-indexing-tx    =  %b11 color-indexing-image
+            COLOR_INDEXING_TRANSFORM = 3,
+        };
+
+        TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
+        dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
+
+        switch (transform_type) {
+        case PREDICTOR_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L PREDICTOR_TRANSFORM handling not yet implemented");
+        case COLOR_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L COLOR_TRANSFORM handling not yet implemented");
+        case SUBTRACT_GREEN_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L SUBTRACT_GREEN_TRANSFORM handling not yet implemented");
+        case COLOR_INDEXING_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L COLOR_INDEXING_TRANSFORM handling not yet implemented");
+        }
+    }
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
