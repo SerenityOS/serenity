@@ -1205,6 +1205,9 @@ CSSPixels FormattingContext::calculate_min_content_height(Layout::Box const& box
 
 CSSPixels FormattingContext::calculate_max_content_height(Layout::Box const& box, AvailableSize const& available_width) const
 {
+    if (box.has_intrinsic_aspect_ratio() && available_width.is_definite())
+        return available_width.to_px() / *box.intrinsic_aspect_ratio();
+
     if (box.has_intrinsic_height())
         return *box.intrinsic_height();
 
