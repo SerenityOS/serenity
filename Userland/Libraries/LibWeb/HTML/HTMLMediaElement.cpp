@@ -135,6 +135,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
 {
     auto& vm = this->vm();
 
+    m_first_data_load_event_since_load_start = true;
+
     // FIXME: 1. Abort any already-running instance of the resource selection algorithm for this element.
 
     // 2. Let pending tasks be a list of all tasks from the media element's media element event task source in one of the task queues.
@@ -169,7 +171,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
 
         // FIXME: 3. If the media element's assigned media provider object is a MediaSource object, then detach it.
         // FIXME: 4. Forget the media element's media-resource-specific tracks.
-        // FIXME: 5. If readyState is not set to HAVE_NOTHING, then set it to that state.
+
+        // 5. If readyState is not set to HAVE_NOTHING, then set it to that state.
+        if (m_ready_state != ReadyState::HaveNothing)
+            set_ready_state(ReadyState::HaveNothing);
+
         // FIXME: 6. If the paused attribute is false, then:
         //            1. Set the paused attribute to true.
         //            2. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
@@ -603,7 +609,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
             });
         }
 
-        // FIXME: 6. Set the readyState attribute to HAVE_METADATA.
+        // 6. Set the readyState attribute to HAVE_METADATA.
+        set_ready_state(ReadyState::HaveMetadata);
+
         // FIXME: 7. Let jumped be false.
         // FIXME: 8. If the media element's default playback start position is greater than zero, then seek to that time, and let jumped be true.
         // FIXME: 9. Let the media element's default playback start position be zero.
@@ -673,6 +681,91 @@ void HTMLMediaElement::forget_media_resource_specific_tracks()
     // empty the media element's videoTracks attribute's VideoTrackList object. No events (in particular, no removetrack events) are fired as part of
     // this; the error and emptied events, fired by the algorithms that invoke this one, can be used instead.
     m_video_tracks->remove_all_tracks({});
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#ready-states:media-element-3
+void HTMLMediaElement::set_ready_state(ReadyState ready_state)
+{
+    ScopeGuard guard { [&] { m_ready_state = ready_state; } };
+
+    // -> If the previous ready state was HAVE_NOTHING, and the new ready state is HAVE_METADATA
+    if (m_ready_state == ReadyState::HaveNothing && ready_state == ReadyState::HaveMetadata) {
+        // Queue a media element task given the media element to fire an event named loadedmetadata at the element.
+        queue_a_media_element_task([this] {
+            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadedmetadata.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        });
+
+        return;
+    }
+
+    // -> If the previous ready state was HAVE_METADATA and the new ready state is HAVE_CURRENT_DATA or greater
+    if (m_ready_state == ReadyState::HaveMetadata && ready_state >= ReadyState::HaveCurrentData) {
+        // If this is the first time this occurs for this media element since the load() algorithm was last invoked, the user agent must queue a media
+        // element task given the media element to fire an event named loadeddata at the element.
+        if (m_first_data_load_event_since_load_start) {
+            m_first_data_load_event_since_load_start = false;
+
+            queue_a_media_element_task([this] {
+                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadeddata.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            });
+        }
+
+        // If the new ready state is HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, then the relevant steps below must then be run also.
+        if (ready_state != ReadyState::HaveFutureData && ready_state != ReadyState::HaveEnoughData)
+            return;
+    }
+
+    // -> If the previous ready state was HAVE_FUTURE_DATA or more, and the new ready state is HAVE_CURRENT_DATA or less
+    if (m_ready_state >= ReadyState::HaveFutureData && ready_state <= ReadyState::HaveCurrentData) {
+        // FIXME: If the media element was potentially playing before its readyState attribute changed to a value lower than HAVE_FUTURE_DATA, and the element
+        //        has not ended playback, and playback has not stopped due to errors, paused for user interaction, or paused for in-band content, the user agent
+        //        must queue a media element task given the media element to fire an event named timeupdate at the element, and queue a media element task given
+        //        the media element to fire an event named waiting at the element.
+        return;
+    }
+
+    // -> If the previous ready state was HAVE_CURRENT_DATA or less, and the new ready state is HAVE_FUTURE_DATA
+    if (m_ready_state <= ReadyState::HaveCurrentData && ready_state == ReadyState::HaveFutureData) {
+        // The user agent must queue a media element task given the media element to fire an event named canplay at the element.
+        queue_a_media_element_task([this] {
+            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        });
+
+        // FIXME: If the element's paused attribute is false, the user agent must notify about playing for the element.
+        return;
+    }
+
+    // -> If the new ready state is HAVE_ENOUGH_DATA
+    if (ready_state == ReadyState::HaveEnoughData) {
+        // If the previous ready state was HAVE_CURRENT_DATA or less, the user agent must queue a media element task given the media element to fire an event
+        // named canplay at the element, and, if the element's paused attribute is false, notify about playing for the element.
+        if (m_ready_state <= ReadyState::HaveCurrentData) {
+            // FIXME: Handle the paused attribute.
+            queue_a_media_element_task([this] {
+                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            });
+        }
+
+        // The user agent must queue a media element task given the media element to fire an event named canplaythrough at the element.
+        queue_a_media_element_task([this] {
+            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplaythrough.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        });
+
+        // FIXME: If the element is not eligible for autoplay, then the user agent must abort these substeps.
+
+        // FIXME: The user agent may run the following substeps:
+        //            Set the paused attribute to false.
+        //            If the element's show poster flag is true, set it to false and run the time marches on steps.
+        //            Queue a media element task given the element to fire an event named play at the element.
+        //            Notify about playing for the element.
+
+        // FIXME: Alternatively, if the element is a video element, the user agent may start observing whether the element intersects the viewport. When the
+        //        element starts intersecting the viewport, if the element is still eligible for autoplay, run the substeps above. Optionally, when the element
+        //        stops intersecting the viewport, if the can autoplay flag is still true and the autoplay attribute is still specified, run the following substeps:
+        //            Run the internal pause steps and set the can autoplay flag to true.
+        //            Queue a media element task given the element to fire an event named pause at the element.
+        return;
+    }
 }
 
 }

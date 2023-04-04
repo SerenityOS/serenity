@@ -21,6 +21,14 @@ interface HTMLMediaElement : HTMLElement {
     undefined load();
     CanPlayTypeResult canPlayType(DOMString type);
 
+    // ready state
+    const unsigned short HAVE_NOTHING = 0;
+    const unsigned short HAVE_METADATA = 1;
+    const unsigned short HAVE_CURRENT_DATA = 2;
+    const unsigned short HAVE_FUTURE_DATA = 3;
+    const unsigned short HAVE_ENOUGH_DATA = 4;
+    readonly attribute unsigned short readyState;
+
     // playback state
     readonly attribute unrestricted double duration;
     [Reflect, CEReactions] attribute boolean autoplay;
