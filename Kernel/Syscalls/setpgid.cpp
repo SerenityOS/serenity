@@ -28,16 +28,10 @@ ErrorOr<FlatPtr> Process::sys$setsid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
-    bool found_process_with_same_pgid_as_my_pid = false;
-    TRY(Process::for_each_in_pgrp_in_same_jail(pid().value(), [&](auto&) -> ErrorOr<void> {
-        found_process_with_same_pgid_as_my_pid = true;
-        return {};
-    }));
-    if (found_process_with_same_pgid_as_my_pid)
-        return EPERM;
-    // Create a new Session and a new ProcessGroup.
 
-    auto process_group = TRY(ProcessGroup::create(ProcessGroupID(pid().value())));
+    // NOTE: ProcessGroup::create_if_unused_pgid() will fail with EPERM
+    //       if a process group with the same PGID already exists.
+    auto process_group = TRY(ProcessGroup::create_if_unused_pgid(ProcessGroupID(pid().value())));
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         protected_data.tty = nullptr;
         protected_data.process_group = move(process_group);
