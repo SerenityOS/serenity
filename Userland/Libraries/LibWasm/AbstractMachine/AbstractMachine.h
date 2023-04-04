@@ -126,10 +126,12 @@ public:
         Optional<T> result;
         m_value.visit(
             [&](auto value) {
-                if constexpr (IsSame<T, decltype(value)>)
-                    result = value;
-                else if constexpr (!IsFloatingPoint<T> && IsSame<decltype(value), MakeSigned<T>>)
-                    result = value;
+                if constexpr (IsSame<T, decltype(value)> || (!IsFloatingPoint<T> && IsSame<decltype(value), MakeSigned<T>>)) {
+                    result = static_cast<T>(value);
+                } else if constexpr (!IsFloatingPoint<T> && IsConvertible<decltype(value), T>) {
+                    if (AK::is_within_range<T>(value))
+                        result = static_cast<T>(value);
+                }
             },
             [&](Reference const& value) {
                 if constexpr (IsSame<T, Reference>) {
