@@ -38,9 +38,21 @@ DecoderErrorOr<Vector<Track>> MatroskaDemuxer::get_tracks_for_type(TrackType typ
     Vector<Track> tracks;
     TRY(m_reader.for_each_track_of_type(matroska_track_type, [&](TrackEntry const& track_entry) -> DecoderErrorOr<IterationDecision> {
         VERIFY(track_entry.track_type() == matroska_track_type);
-        DECODER_TRY_ALLOC(tracks.try_append(Track(type, track_entry.track_number())));
+        Track track(type, track_entry.track_number());
+
+        switch (type) {
+        case TrackType::Video:
+            if (auto video_track = track_entry.video_track(); video_track.has_value())
+                track.set_video_data({ TRY(duration()), video_track->pixel_width, video_track->pixel_height });
+            break;
+        default:
+            break;
+        }
+
+        DECODER_TRY_ALLOC(tracks.try_append(track));
         return IterationDecision::Continue;
     }));
+
     return tracks;
 }
 
