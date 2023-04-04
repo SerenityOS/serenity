@@ -8,8 +8,10 @@
 
 #include <AK/String.h>
 #include <AK/Time.h>
+#include <LibGfx/Forward.h>
 #include <LibVideo/Containers/Matroska/MatroskaDemuxer.h>
 #include <LibVideo/Track.h>
+#include <LibVideo/VP9/Decoder.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {
@@ -21,6 +23,8 @@ public:
     virtual ~VideoTrack() override;
 
     void set_video_track_list(Badge<VideoTrackList>, JS::GCPtr<VideoTrackList> video_track_list) { m_video_track_list = video_track_list; }
+
+    RefPtr<Gfx::Bitmap> next_frame();
 
     Time duration() const { return m_track.video_data().duration; }
     u64 pixel_width() const { return m_track.video_data().pixel_width; }
@@ -59,6 +63,7 @@ private:
     JS::GCPtr<VideoTrackList> m_video_track_list;
 
     NonnullOwnPtr<Video::Matroska::MatroskaDemuxer> m_demuxer;
+    Video::VP9::Decoder m_decoder;
     Video::Track m_track;
 };
 
