@@ -11,6 +11,7 @@
 #include <LibJS/SafeFunction.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
+#include <math.h>
 
 namespace Web::HTML {
 
@@ -33,6 +34,7 @@ public:
     WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> can_play_type(DeprecatedString const& type) const;
 
     void load() const;
+    double duration() const;
     void pause() const;
 
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
@@ -58,12 +60,16 @@ private:
     WebIDL::ExceptionOr<void> process_media_data(Function<void()> failure_callback);
     WebIDL::ExceptionOr<void> handle_media_source_failure();
     void forget_media_resource_specific_tracks();
+    void set_duration(double);
 
     // https://html.spec.whatwg.org/multipage/media.html#media-element-event-task-source
     UniqueTaskSource m_media_element_event_task_source {};
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-networkstate
     NetworkState m_network_state { NetworkState::Empty };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
+    double m_duration { NAN };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-videotracks
     JS::GCPtr<VideoTrackList> m_video_tracks;

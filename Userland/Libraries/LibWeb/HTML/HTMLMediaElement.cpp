@@ -96,6 +96,34 @@ void HTMLMediaElement::load() const
     dbgln("(STUBBED) HTMLMediaElement::load()");
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
+double HTMLMediaElement::duration() const
+{
+    // The duration attribute must return the time of the end of the media resource, in seconds, on the media timeline. If no media data is available,
+    // then the attributes must return the Not-a-Number (NaN) value. If the media resource is not known to be bounded (e.g. streaming radio, or a live
+    // event with no announced end time), then the attribute must return the positive Infinity value.
+
+    // FIXME: Handle unbounded media resources.
+    return m_duration;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#durationChange
+void HTMLMediaElement::set_duration(double duration)
+{
+    // When the length of the media resource changes to a known value (e.g. from being unknown to known, or from a previously established length to a new
+    // length) the user agent must queue a media element task given the media element to fire an event named durationchange at the media element. (The event
+    // is not fired when the duration is reset as part of loading a new media resource.) If the duration is changed such that the current playback position
+    // ends up being greater than the time of the end of the media resource, then the user agent must also seek to the time of the end of the media resource.
+    if (!isnan(duration)) {
+        // FIXME: Handle seeking to the end of the media resource when needed.
+        queue_a_media_element_task([this] {
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::durationchange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        });
+    }
+
+    m_duration = duration;
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-pause
 void HTMLMediaElement::pause() const
 {
@@ -151,7 +179,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
         //            If this changed the official playback position, then queue a media element task given the media element to fire an
         //            event named timeupdate at the media element.
         // FIXME: 9. Set the timeline offset to Not-a-Number (NaN).
-        // FIXME: 10. Update the duration attribute to Not-a-Number (NaN).
+
+        // 10. Update the duration attribute to Not-a-Number (NaN).
+        set_duration(NAN);
     }
 
     // FIXME: 7. Set the playbackRate attribute to the value of the defaultPlaybackRate attribute.
@@ -558,8 +588,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
         // FIXME: 2. Update the timeline offset to the date and time that corresponds to the zero time in the media timeline established in the previous step,
         //           if any. If no explicit time and date is given by the media resource, the timeline offset must be set to Not-a-Number (NaN).
         // FIXME: 3. Set the current playback position and the official playback position to the earliest possible position.
-        // FIXME: 4. Update the duration attribute with the time of the last frame of the resource, if known, on the media timeline established above. If it is
-        //           not known (e.g. a stream that is in principle infinite), update the duration attribute to the value positive Infinity.
+
+        // 4. Update the duration attribute with the time of the last frame of the resource, if known, on the media timeline established above. If it is
+        //    not known (e.g. a stream that is in principle infinite), update the duration attribute to the value positive Infinity.
+        // FIXME: Handle unbounded media resources.
+        set_duration(static_cast<double>(video_track->duration().to_seconds()));
 
         // 5. For video elements, set the videoWidth and videoHeight attributes, and queue a media element task given the media element to fire an event
         //    named resize at the media element.

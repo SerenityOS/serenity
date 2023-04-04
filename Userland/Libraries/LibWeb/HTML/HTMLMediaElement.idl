@@ -18,15 +18,17 @@ interface HTMLMediaElement : HTMLElement {
     const unsigned short NETWORK_LOADING = 2;
     const unsigned short NETWORK_NO_SOURCE = 3;
     readonly attribute unsigned short networkState;
+    undefined load();
+    CanPlayTypeResult canPlayType(DOMString type);
 
+    // playback state
+    readonly attribute unrestricted double duration;
     [Reflect, CEReactions] attribute boolean autoplay;
     [Reflect, CEReactions] attribute boolean loop;
-
-    [Reflect, CEReactions] attribute boolean controls;
-
-    CanPlayTypeResult canPlayType(DOMString type);
-    undefined load();
     undefined pause();
+
+    // controls
+    [Reflect, CEReactions] attribute boolean controls;
 
     // tracks
     [SameObject] readonly attribute VideoTrackList videoTracks;
