@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/VideoTrackList.idl>
 
 enum CanPlayTypeResult {
     "",
@@ -26,4 +27,7 @@ interface HTMLMediaElement : HTMLElement {
     CanPlayTypeResult canPlayType(DOMString type);
     undefined load();
     undefined pause();
+
+    // tracks
+    [SameObject] readonly attribute VideoTrackList videoTracks;
 };
