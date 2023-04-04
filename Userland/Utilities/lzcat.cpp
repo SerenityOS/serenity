@@ -22,7 +22,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     auto file = TRY(Core::File::open_file_or_standard_stream(filename, Core::File::OpenMode::Read));
-    auto stream = TRY(Compress::LzmaDecompressor::create_from_container(move(file)));
+    auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+    auto stream = TRY(Compress::LzmaDecompressor::create_from_container(move(buffered_file)));
 
     // Arbitrarily chosen buffer size.
     Array<u8, 4096> buffer;
