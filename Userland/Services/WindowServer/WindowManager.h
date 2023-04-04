@@ -340,6 +340,7 @@ public:
 
     u8 last_processed_buttons() { return m_last_processed_buttons; }
 
+    TileWindowOverlay* get_tile_window_overlay(Window&) const;
     void start_tile_window_animation(Gfx::IntRect const&);
     void stop_tile_window_animation();
 

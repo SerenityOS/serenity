@@ -17,7 +17,9 @@
 
 namespace WindowServer {
 
+class Animation;
 class Screen;
+class TileWindowOverlay;
 class Window;
 class WindowStack;
 
@@ -145,12 +147,24 @@ public:
     virtual ZOrder zorder() const override { return ZOrder::WindowGeometry; }
     virtual void render_overlay_bitmap(Gfx::Painter&) override;
 
+    void set_actual_rect();
+    void start_or_stop_move_to_tile_overlay_animation(TileWindowOverlay*);
+
 private:
     void update_rect();
 
     WeakPtr<Window> m_window;
     DeprecatedString m_label;
     Gfx::IntRect m_label_rect;
+    Gfx::IntRect m_ideal_overlay_rect;
+
+    struct {
+        RefPtr<Animation> animation;
+        float progress { 0.0f };
+        Gfx::IntRect tile_overlay_rect_at_start;
+        Gfx::IntRect current_rect;
+        Optional<Gfx::IntRect> starting_rect;
+    } m_move_into_overlay_rect_animation;
 };
 
 class DndOverlay : public BitmapOverlay {
