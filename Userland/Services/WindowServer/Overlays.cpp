@@ -351,4 +351,18 @@ WindowStackSwitchOverlay::WindowStackSwitchOverlay(Screen& screen, WindowStack& 
     set_rect(calculate_frame_rect(Gfx::IntRect({}, m_content_size).inflated(2 * default_screen_rect_margin, 2 * default_screen_rect_margin)).centered_within(screen.rect()));
 }
 
+TileWindowOverlay::TileWindowOverlay(Window& window, Gfx::IntRect const& tiled_frame_rect, Gfx::Palette&& palette)
+    : m_window(window)
+    , m_tiled_frame_rect(tiled_frame_rect)
+    , m_palette(std::move(palette))
+{
+}
+
+void TileWindowOverlay::render(Gfx::Painter& painter, Screen const&)
+{
+    Gfx::IntRect paint_rect { {}, rect().size() };
+    painter.fill_rect(paint_rect, m_palette.rubber_band_fill());
+    painter.draw_rect(paint_rect, m_palette.rubber_band_border());
+}
+
 }

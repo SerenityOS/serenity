@@ -32,7 +32,9 @@ private:
 
     SystemEffects m_system_effects;
     Vector<String> m_geometry_list;
+    Vector<String> m_tile_window_list;
     RefPtr<ComboBox> m_geometry_combobox;
+    RefPtr<ComboBox> m_tile_window_combobox;
 };
 
 }

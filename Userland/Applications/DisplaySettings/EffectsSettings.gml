@@ -122,6 +122,22 @@
                 }
 
                 @GUI::Widget {
+                    layout: @GUI::HorizontalBoxLayout {}
+
+                    @GUI::Label {
+                        text: "Tile Window Behavior:"
+                        autosize: true
+                    }
+
+                    @GUI::Layout::Spacer {}
+
+                    @GUI::ComboBox {
+                        name: "tile_window_combobox"
+                        fixed_width: 130
+                    }
+                }
+
+                @GUI::Widget {
                     fixed_height: 4
                 }
 
