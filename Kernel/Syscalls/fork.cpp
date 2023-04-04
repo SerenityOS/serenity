@@ -103,7 +103,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             child_protected_data.execpromises = my_protected_data.execpromises.load();
             child_protected_data.has_promises = my_protected_data.has_promises.load();
             child_protected_data.has_execpromises = my_protected_data.has_execpromises.load();
-            child_protected_data.sid = my_protected_data.sid;
             child_protected_data.credentials = my_protected_data.credentials;
             child_protected_data.umask = my_protected_data.umask;
             child_protected_data.signal_trampoline = my_protected_data.signal_trampoline;

@@ -114,7 +114,6 @@ class Process final
     public:
         ProcessID pid { 0 };
         ProcessID ppid { 0 };
-        SessionID sid { 0 };
         // FIXME: This should be a NonnullRefPtr
         RefPtr<Credentials> credentials;
         RefPtr<ProcessGroup> process_group;
@@ -233,10 +232,7 @@ public:
     {
         return with_protected_data([](auto& protected_data) { return protected_data.pid; });
     }
-    SessionID sid() const
-    {
-        return with_protected_data([](auto& protected_data) { return protected_data.sid; });
-    }
+    SessionID sid() const { return credentials()->sid(); }
     bool is_session_leader() const { return sid().value() == pid().value(); }
     ProcessGroupID pgid() const
     {
