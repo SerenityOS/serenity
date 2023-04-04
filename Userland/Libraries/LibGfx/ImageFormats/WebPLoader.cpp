@@ -533,14 +533,41 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
         TRY(color_cache.try_resize(color_cache_size));
     }
 
+    int num_prefix_groups = 1;
+    RefPtr<Gfx::Bitmap> entropy_image;
+    int prefix_bits = 0;
     if (image_kind == ImageKind::SpatiallyCoded) {
         // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#622_decoding_of_meta_prefix_codes
+        // In particular, the "Entropy image" subsection.
         // "Meta prefix codes may be used only when the image is being used in the role of an ARGB image."
         // meta-prefix           =  %b0 / (%b1 entropy-image)
         bool has_meta_prefix = TRY(bit_stream.read_bits(1));
         dbgln_if(WEBP_DEBUG, "has_meta_prefix {}", has_meta_prefix);
-        if (has_meta_prefix)
-            return context.error("WebPImageDecoderPlugin: VP8L meta_prefix not yet implemented");
+        if (has_meta_prefix) {
+            prefix_bits = TRY(bit_stream.read_bits(3)) + 2;
+            dbgln_if(WEBP_DEBUG, "prefix_bits {}", prefix_bits);
+            int block_size = 1 << prefix_bits;
+            IntSize prefix_size { ceil_div(size.width(), block_size), ceil_div(size.height(), block_size) };
+
+            entropy_image = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRx8888, prefix_size, bit_stream));
+
+            // A "meta prefix image" or "entropy image" can tell the decoder to use different PrefixCodeGroup for
+            // tiles of the main, spatially coded, image. It's a bit hidden in the spec:
+            //      "The red and green components of a pixel define the meta prefix code used in a particular block of the ARGB image."
+            //      ...
+            //      "The number of prefix code groups in the ARGB image can be obtained by finding the largest meta prefix code from the entropy image"
+            // That is, if a meta prefix image is present, the main image has more than one PrefixCodeGroup,
+            // and the highest value in the meta prefix image determines how many exactly.
+            u16 largest_meta_prefix_code = 0;
+            for (ARGB32& pixel : *entropy_image) {
+                u16 meta_prefix_code = (pixel >> 8) & 0xffff;
+                if (meta_prefix_code > largest_meta_prefix_code)
+                    largest_meta_prefix_code = meta_prefix_code;
+            }
+            dbgln_if(WEBP_DEBUG, "largest meta prefix code {}", largest_meta_prefix_code);
+
+            num_prefix_groups = largest_meta_prefix_code + 1;
+        }
     }
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#52_encoding_of_image_data
@@ -551,7 +578,9 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
     // data                  =  prefix-codes lz77-coded-image
     // prefix-codes          =  prefix-code-group *prefix-codes
 
-    PrefixCodeGroup group = TRY(decode_webp_chunk_VP8L_prefix_code_group(context, color_cache_size, bit_stream));
+    Vector<PrefixCodeGroup, 1> groups;
+    for (int i = 0; i < num_prefix_groups; ++i)
+        TRY(groups.try_append(TRY(decode_webp_chunk_VP8L_prefix_code_group(context, color_cache_size, bit_stream))));
 
     auto bitmap = TRY(Bitmap::create(format, size));
 
@@ -582,8 +611,21 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
     // lz77-coded-image      =
     //     *((argb-pixel / lz77-copy / color-cache-code) lz77-coded-image)
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
-    ARGB32* pixel = bitmap->begin();
+    ARGB32* begin = bitmap->begin();
     ARGB32* end = bitmap->end();
+    ARGB32* pixel = begin;
+
+    auto prefix_group = [prefix_bits, begin, &groups, size, &entropy_image](ARGB32* pixel) {
+        if (!prefix_bits)
+            return groups[0];
+
+        size_t offset = pixel - begin;
+        int x = offset % size.width();
+        int y = offset / size.width();
+
+        int meta_prefix_code = (entropy_image->scanline(y >> prefix_bits)[x >> prefix_bits] >> 8) & 0xffff;
+        return groups[meta_prefix_code];
+    };
 
     auto emit_pixel = [&pixel, &color_cache, color_cache_size, color_cache_code_bits](ARGB32 color) {
         // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
@@ -594,6 +636,8 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
     };
 
     while (pixel < end) {
+        auto const& group = prefix_group(pixel);
+
         auto symbol = TRY(group[0].read_symbol(bit_stream));
         if (symbol >= 256u + 24u + color_cache_size)
             return context.error("WebPImageDecoderPlugin: Symbol out of bounds");
@@ -653,13 +697,13 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
                 distance = distance - 120;
             }
 
-            if (pixel - bitmap->begin() < distance) {
-                dbgln_if(WEBP_DEBUG, "invalid backref, {} < {}", pixel - bitmap->begin(), distance);
+            if (pixel - begin < distance) {
+                dbgln_if(WEBP_DEBUG, "invalid backref, {} < {}", pixel - begin, distance);
                 return context.error("WebPImageDecoderPlugin: Backward reference distance out of bounds");
             }
 
-            if (bitmap->end() - pixel < length) {
-                dbgln_if(WEBP_DEBUG, "invalid length, {} < {}", bitmap->end() - pixel, length);
+            if (end - pixel < length) {
+                dbgln_if(WEBP_DEBUG, "invalid length, {} < {}", end - pixel, length);
                 return context.error("WebPImageDecoderPlugin: Backward reference length out of bounds");
             }
 
