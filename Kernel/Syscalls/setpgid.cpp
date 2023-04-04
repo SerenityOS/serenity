@@ -32,12 +32,26 @@ ErrorOr<FlatPtr> Process::sys$setsid()
     // NOTE: ProcessGroup::create_if_unused_pgid() will fail with EPERM
     //       if a process group with the same PGID already exists.
     auto process_group = TRY(ProcessGroup::create_if_unused_pgid(ProcessGroupID(pid().value())));
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+
+    auto new_sid = SessionID(pid().value());
+    auto credentials = this->credentials();
+    auto new_credentials = TRY(Credentials::create(
+        credentials->uid(),
+        credentials->gid(),
+        credentials->euid(),
+        credentials->egid(),
+        credentials->suid(),
+        credentials->sgid(),
+        credentials->extra_gids(),
+        new_sid,
+        credentials->pgid()));
+
+    with_mutable_protected_data([&](auto& protected_data) {
         protected_data.tty = nullptr;
         protected_data.process_group = move(process_group);
-        protected_data.sid = pid().value();
-        return protected_data.sid.value();
+        protected_data.credentials = move(new_credentials);
     });
+    return new_sid.value();
 }
 
 ErrorOr<FlatPtr> Process::sys$getpgid(pid_t pid)
@@ -114,7 +128,7 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     }
     // FIXME: There are more EPERM conditions to check for here..
     auto process_group = TRY(ProcessGroup::find_or_create(new_pgid));
-    return process->with_mutable_protected_data([&process, &process_group, new_sid, new_pgid](auto& protected_data) -> ErrorOr<FlatPtr> {
+    return process->with_mutable_protected_data([&process, &process_group, new_pgid](auto& protected_data) -> ErrorOr<FlatPtr> {
         auto credentials = process->credentials();
 
         auto new_credentials = TRY(Credentials::create(
@@ -125,7 +139,7 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
             credentials->suid(),
             credentials->sgid(),
             credentials->extra_gids(),
-            new_sid,
+            credentials->sid(),
             new_pgid));
 
         protected_data.credentials = move(new_credentials);
