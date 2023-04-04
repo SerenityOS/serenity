@@ -355,6 +355,8 @@ class Storage;
 class SubmitEvent;
 class TextMetrics;
 class Timer;
+class VideoTrack;
+class VideoTrackList;
 class Window;
 class WindowEnvironmentSettingsObject;
 class WindowProxy;
