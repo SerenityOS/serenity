@@ -25,6 +25,8 @@ for d in "${MAN_DIR}"*/; do
 done
 
 # Convert markdown to html
+custom_template="Meta/Websites/man.serenityos.org/template.html"
+index_template="Meta/Websites/man.serenityos.org/index-template.html"
 
 # If you're here because your local results are different from the website:
 # Check that your pandoc version matches the pandoc-version specified in manpages.yaml.
@@ -39,8 +41,7 @@ for md_file in $(find "${MAN_DIR}" -iname '*.md' | ${SORT}); do
 
     echo "Generating $md_file -> $output_file"
     mkdir -p "$(dirname "${output_file}")"
-    pandoc -f gfm -t html5 -s \
-        -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+    pandoc -f gfm -t html5 -s --template $custom_template \
         --lua-filter=Meta/convert-markdown-links.lua \
         --metadata title="${name}(${section_number}) - SerenityOS man pages" \
         -o "${output_file}" \
@@ -69,8 +70,7 @@ for section_directory in output/*/; do
     output="output/${section}/index.html"
 
     echo "Generating section ${section_number} index -> ${output}"
-    pandoc -f gfm -t html5 -s \
-        -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+    pandoc -f gfm -t html5 -s --template $custom_template \
         --metadata title="Section ${section_number} - ${section_title}" \
         -o "${output}" \
         <(
@@ -91,15 +91,13 @@ done
 
 # Generate main landing page listings through pandoc
 echo 'Generating main pages'
-pandoc -f gfm -t html5 -s \
-    -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+pandoc -f gfm -t html5 -s --template $index_template \
     --metadata title="SerenityOS man pages" \
     --lua-filter=Meta/convert-markdown-links.lua \
     -o output/index.html \
     Base/usr/share/man/man7/Help-index.md \
     Meta/Websites/man.serenityos.org/sections.md &
-pandoc -f gfm -t html5 -s \
-    -B Meta/Websites/man.serenityos.org/banner-preamble.inc \
+pandoc -f gfm -t html5 -s --template $custom_template \
     --metadata title="Can't run applications" \
     -o output/cant-run-application.html \
     Meta/Websites/man.serenityos.org/cant-run-application.md &
