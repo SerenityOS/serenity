@@ -74,7 +74,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (!directory.is_empty())
             TRY(Core::System::chdir(directory));
 
-        NonnullOwnPtr<Stream> input_stream = TRY(Core::File::open_file_or_standard_stream(archive_file, Core::File::OpenMode::Read));
+        NonnullOwnPtr<Stream> input_stream = TRY(Core::BufferedFile::create(TRY(Core::File::open_file_or_standard_stream(archive_file, Core::File::OpenMode::Read))));
 
         if (gzip)
             input_stream = make<Compress::GzipDecompressor>(move(input_stream));
