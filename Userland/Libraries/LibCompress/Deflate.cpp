@@ -437,23 +437,21 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
         if (symbol < deflate_special_code_length_copy) {
             code_lengths.append(static_cast<u8>(symbol));
+        } else if (symbol == deflate_special_code_length_copy) {
+            if (code_lengths.is_empty())
+                return Error::from_string_literal("Found no codes to copy before a copy block");
+            auto nrepeat = 3 + TRY(m_input_stream->read_bits(2));
+            for (size_t j = 0; j < nrepeat; ++j)
+                code_lengths.append(code_lengths.last());
         } else if (symbol == deflate_special_code_length_zeros) {
             auto nrepeat = 3 + TRY(m_input_stream->read_bits(3));
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
-        } else if (symbol == deflate_special_code_length_long_zeros) {
+        } else {
+            VERIFY(symbol == deflate_special_code_length_long_zeros);
             auto nrepeat = 11 + TRY(m_input_stream->read_bits(7));
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
-        } else {
-            VERIFY(symbol == deflate_special_code_length_copy);
-
-            if (code_lengths.is_empty())
-                return Error::from_string_literal("Found no codes to copy before a copy block");
-
-            auto nrepeat = 3 + TRY(m_input_stream->read_bits(2));
-            for (size_t j = 0; j < nrepeat; ++j)
-                code_lengths.append(code_lengths.last());
         }
     }
 
