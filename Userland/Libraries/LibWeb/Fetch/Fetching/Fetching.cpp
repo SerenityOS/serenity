@@ -1668,7 +1668,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> nonstandard_resource_load
             if (status_code.value_or(0) == 0) {
                 response = Infrastructure::Response::network_error(vm, TRY_OR_IGNORE("HTTP request failed"_string));
             } else {
-                response->set_status(status_code.value_or(200));
+                response->set_type(Infrastructure::Response::Type::Error);
+                response->set_status(status_code.value_or(400));
                 // FIXME: Set response status message and body
             }
             pending_response->resolve(response);
