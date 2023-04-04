@@ -244,8 +244,10 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
 
             if (file_or_error.is_error()) {
                 log_failure(request, file_or_error.error());
-                if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", file_or_error.error()), file_or_error.error().code());
+                if (error_callback) {
+                    auto status = file_or_error.error().code() == ENOENT ? 404u : 500u;
+                    error_callback(DeprecatedString::formatted("{}", file_or_error.error()), status);
+                }
                 return;
             }
 
@@ -255,7 +257,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (maybe_file.is_error()) {
                 log_failure(request, maybe_file.error());
                 if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", maybe_file.error()), maybe_file.error().code());
+                    error_callback(DeprecatedString::formatted("{}", maybe_file.error()), 500u);
                 return;
             }
 
@@ -264,7 +266,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             if (maybe_data.is_error()) {
                 log_failure(request, maybe_data.error());
                 if (error_callback)
-                    error_callback(DeprecatedString::formatted("{}", maybe_data.error()), maybe_data.error().code());
+                    error_callback(DeprecatedString::formatted("{}", maybe_data.error()), 500u);
                 return;
             }
             auto data = maybe_data.release_value();
