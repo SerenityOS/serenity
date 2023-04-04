@@ -405,6 +405,7 @@ set(SOURCES
     Layout/TableWrapper.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
+    Layout/VideoBox.cpp
     Loader/ContentFilter.cpp
     Loader/FileRequest.cpp
     Loader/FrameLoader.cpp
@@ -446,6 +447,7 @@ set(SOURCES
     Painting/ShadowPainting.cpp
     Painting/StackingContext.cpp
     Painting/TextPaintable.cpp
+    Painting/VideoPaintable.cpp
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
     Platform/EventLoopPlugin.cpp

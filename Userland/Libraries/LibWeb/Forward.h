@@ -394,6 +394,7 @@ class PaintableBox;
 class PaintableWithLines;
 class StackingContext;
 class TextPaintable;
+class VideoPaintable;
 struct BorderRadiusData;
 struct BorderRadiiData;
 struct LinearGradientData;
@@ -491,6 +492,7 @@ class RadioButton;
 class ReplacedBox;
 class TableWrapper;
 class TextNode;
+class VideoBox;
 }
 
 namespace Web {
