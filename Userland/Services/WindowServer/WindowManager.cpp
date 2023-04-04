@@ -1987,7 +1987,7 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
         || tile_type == WindowTileType::TopRight
         || tile_type == WindowTileType::BottomRight) {
         rect.set_width(rect.width() / 2);
-        rect.set_x(rect.width());
+        rect.set_x(rect.x() + rect.width());
     }
 
     if (tile_type == WindowTileType::Top
@@ -2001,7 +2001,7 @@ Gfx::IntRect WindowManager::tiled_window_rect(Window const& window, WindowTileTy
         || tile_type == WindowTileType::BottomRight) {
         auto half_screen_remainder = rect.height() % 2;
         rect.set_height(rect.height() / 2 + half_screen_remainder);
-        rect.set_y(rect.height() - half_screen_remainder);
+        rect.set_y(rect.y() + rect.height() - half_screen_remainder);
     }
 
     Gfx::IntRect window_rect = window.rect();
