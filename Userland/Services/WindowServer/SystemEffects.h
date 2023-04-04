@@ -12,14 +12,14 @@
 
 namespace WindowServer {
 
-enum ShowGeometry : u8 {
+enum class ShowGeometry : u8 {
     OnMoveAndResize,
     OnMoveOnly,
     OnResizeOnly,
     Never
 };
 
-enum Effects : size_t {
+enum class Effects : size_t {
     AnimateMenus,
     FlashMenus,
     AnimateWindows,
@@ -81,18 +81,28 @@ public:
     ~SystemEffects() = default;
 
     Vector<bool>& effects() { return m_effects; }
-    bool animate_menus() const { return m_effects[AnimateMenus]; }
-    bool flash_menus() const { return m_effects[FlashMenus]; }
-    bool animate_windows() const { return m_effects[AnimateWindows]; }
-    bool smooth_scrolling() const { return m_effects[SmoothScrolling]; }
+    bool set_effect(Effects effect, bool value)
+    {
+        VERIFY(effect < Effects::__Count);
+        auto& effect_value = m_effects[to_underlying(effect)];
+        if (effect_value == value)
+            return false;
+        effect_value = value;
+        return true;
+    }
 
-    bool tab_accents() const { return m_effects[TabAccents]; }
-    bool splitter_knurls() const { return m_effects[SplitterKnurls]; }
-    bool tooltips() const { return m_effects[Tooltips]; }
+    bool animate_menus() const { return m_effects[to_underlying(Effects::AnimateMenus)]; }
+    bool flash_menus() const { return m_effects[to_underlying(Effects::FlashMenus)]; }
+    bool animate_windows() const { return m_effects[to_underlying(Effects::AnimateWindows)]; }
+    bool smooth_scrolling() const { return m_effects[to_underlying(Effects::SmoothScrolling)]; }
 
-    bool menu_shadow() const { return m_effects[MenuShadow]; }
-    bool window_shadow() const { return m_effects[WindowShadow]; }
-    bool tooltip_shadow() const { return m_effects[TooltipShadow]; }
+    bool tab_accents() const { return m_effects[to_underlying(Effects::TabAccents)]; }
+    bool splitter_knurls() const { return m_effects[to_underlying(Effects::SplitterKnurls)]; }
+    bool tooltips() const { return m_effects[to_underlying(Effects::Tooltips)]; }
+
+    bool menu_shadow() const { return m_effects[to_underlying(Effects::MenuShadow)]; }
+    bool window_shadow() const { return m_effects[to_underlying(Effects::WindowShadow)]; }
+    bool tooltip_shadow() const { return m_effects[to_underlying(Effects::TooltipShadow)]; }
 
     void set_geometry(ShowGeometry g) { m_geometry = g; }
     ShowGeometry geometry() const { return m_geometry; }
