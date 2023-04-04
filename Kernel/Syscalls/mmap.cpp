@@ -606,6 +606,7 @@ ErrorOr<FlatPtr> Process::sys$annotate_mapping(Userspace<void*> address, int fla
 
 ErrorOr<FlatPtr> Process::sys$msync(Userspace<void*> address, size_t size, int flags)
 {
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     if ((flags & (MS_SYNC | MS_ASYNC | MS_INVALIDATE)) != flags)
         return EINVAL;
 
