@@ -60,7 +60,7 @@ static DeprecatedString s_last_menu_shadow_path;
 static DeprecatedString s_last_taskbar_shadow_path;
 static DeprecatedString s_last_tooltip_shadow_path;
 
-static Gfx::IntRect frame_rect_for_window(Window& window, Gfx::IntRect const& rect)
+Gfx::IntRect WindowFrame::frame_rect_for_window(Window& window, Gfx::IntRect const& rect)
 {
     if (window.is_frameless())
         return rect;

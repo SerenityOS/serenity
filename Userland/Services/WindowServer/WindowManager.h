@@ -43,6 +43,7 @@ class WindowSwitcher;
 class Button;
 class DndOverlay;
 class WindowGeometryOverlay;
+class TileWindowOverlay;
 
 class WindowManager : public Core::Object {
     C_OBJECT(WindowManager)
@@ -79,7 +80,7 @@ public:
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
 
-    Gfx::IntRect tiled_window_rect(Window const&, WindowTileType tile_type = WindowTileType::Maximized, bool relative_to_window_screen = false) const;
+    Gfx::IntRect tiled_window_rect(Window const&, Optional<Screen const&> = {}, WindowTileType tile_type = WindowTileType::Maximized) const;
 
     ConnectionFromClient const* dnd_client() const { return m_dnd_client.ptr(); }
     Core::MimeData const& dnd_mime_data() const { return *m_dnd_mime_data; }
@@ -115,7 +116,7 @@ public:
 
     void move_to_front_and_make_active(Window&);
 
-    Gfx::IntRect desktop_rect(Screen&) const;
+    Gfx::IntRect desktop_rect(Screen const&) const;
     Gfx::IntRect arena_rect_for_type(Screen&, WindowType) const;
 
     Cursor const& active_cursor() const;
@@ -328,7 +329,7 @@ public:
     bool is_cursor_highlight_enabled() const { return m_cursor_highlight_radius > 0 && m_cursor_highlight_enabled; }
 
     void load_system_effects();
-    void apply_system_effects(Vector<bool>, ShowGeometry);
+    void apply_system_effects(Vector<bool>, ShowGeometry, TileWindow);
     SystemEffects& system_effects() { return m_system_effects; }
 
     RefPtr<KeymapSwitcher> keymap_switcher() { return m_keymap_switcher; }
@@ -338,6 +339,9 @@ public:
     void set_automatic_cursor_tracking_window(Window* window) { m_automatic_cursor_tracking_window = window; }
 
     u8 last_processed_buttons() { return m_last_processed_buttons; }
+
+    void start_tile_window_animation(Gfx::IntRect const&);
+    void stop_tile_window_animation();
 
 private:
     explicit WindowManager(Gfx::PaletteImpl&);
@@ -433,6 +437,8 @@ private:
 
     Gfx::IntPoint to_floating_cursor_position(Gfx::IntPoint) const;
 
+    void show_tile_window_overlay(Window&, Screen const&, WindowTileType);
+
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
@@ -448,7 +454,10 @@ private:
     WeakPtr<Window> m_automatic_cursor_tracking_window;
 
     OwnPtr<WindowGeometryOverlay> m_geometry_overlay;
+    OwnPtr<TileWindowOverlay> m_tile_window_overlay;
+    RefPtr<Animation> m_tile_window_overlay_animation;
     WeakPtr<Window> m_move_window;
+    WindowTileType m_move_window_suggested_tile { WindowTileType::None };
     Gfx::IntPoint m_move_origin;
     Gfx::IntPoint m_move_window_origin;
     Gfx::IntPoint m_move_window_cursor_position;

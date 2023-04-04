@@ -11,6 +11,7 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibGfx/Painter.h>
+#include <LibGfx/Palette.h>
 #include <WindowServer/MultiScaleBitmaps.h>
 #include <WindowServer/Screen.h>
 
@@ -27,6 +28,7 @@ public:
     virtual ~Overlay();
 
     enum class ZOrder {
+        SnapWindow,
         WindowGeometry,
         Dnd,
         WindowStackSwitch,
@@ -190,6 +192,28 @@ private:
     int const m_columns;
     int const m_target_row;
     int const m_target_column;
+};
+
+class TileWindowOverlay : public Overlay {
+public:
+    TileWindowOverlay(Window&, Gfx::IntRect const&, Gfx::Palette&&);
+
+    virtual ZOrder zorder() const override { return ZOrder::SnapWindow; }
+    virtual void render(Gfx::Painter&, Screen const&) override;
+
+    void set_overlay_rect(Gfx::IntRect const& rect)
+    {
+        set_rect(rect);
+    }
+
+    void set_tiled_frame_rect(Gfx::IntRect const& rect) { m_tiled_frame_rect = rect; }
+    Gfx::IntRect const& tiled_frame_rect() const { return m_tiled_frame_rect; }
+    bool is_window(Window& window) const { return &m_window == &window; }
+
+private:
+    Window& m_window;
+    Gfx::IntRect m_tiled_frame_rect;
+    Gfx::Palette m_palette;
 };
 
 }

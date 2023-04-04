@@ -34,6 +34,13 @@ ErrorOr<void> EffectsSettingsWidget::setup_interface()
         set_modified(true);
     };
 
+    m_tile_window_combobox = find_descendant_of_type_named<ComboBox>("tile_window_combobox");
+    m_tile_window_combobox->set_only_allow_values_from_model(true);
+    m_tile_window_combobox->on_change = [this](auto&, auto&) {
+        m_system_effects.set_tile_window(static_cast<WindowServer::TileWindow>(m_tile_window_combobox->selected_index()));
+        set_modified(true);
+    };
+
     if (auto result = load_settings(); result.is_error()) {
         warnln("Failed to load [Effects] from WindowServer.ini");
         return {};
@@ -119,25 +126,36 @@ ErrorOr<void> EffectsSettingsWidget::load_settings()
         ws_config->read_bool_entry("Effects", "TooltipShadow", true),
     };
     auto geometry = WindowServer::ShowGeometryTools::string_to_enum(ws_config->read_entry("Effects", "ShowGeometry", "OnMoveAndResize"));
-    m_system_effects = { effects, geometry };
+    auto tile_window = WindowServer::TileWindowTools::string_to_enum(ws_config->read_entry("Effects", "TileWindow", "ShowTileOverlay"));
+    m_system_effects = { effects, geometry, tile_window };
 
-    static constexpr Array list = {
+    static constexpr Array geometry_list = {
         "On Move and Resize"sv,
         "On Move only"sv,
         "On Resize only"sv,
         "Never"sv
     };
-    for (size_t i = 0; i < list.size(); ++i)
-        TRY(m_geometry_list.try_append(TRY(String::from_utf8(list[i]))));
+    for (size_t i = 0; i < geometry_list.size(); ++i)
+        TRY(m_geometry_list.try_append(TRY(String::from_utf8(geometry_list[i]))));
     m_geometry_combobox->set_model(ItemListModel<String>::create(m_geometry_list));
     m_geometry_combobox->set_selected_index(to_underlying(m_system_effects.geometry()));
+
+    static constexpr Array tile_window_list = {
+        "Tile immediately"sv,
+        "Show tile overlay"sv,
+        "Never"sv
+    };
+    for (size_t i = 0; i < tile_window_list.size(); ++i)
+        TRY(m_tile_window_list.try_append(TRY(String::from_utf8(tile_window_list[i]))));
+    m_tile_window_combobox->set_model(ItemListModel<String>::create(m_tile_window_list));
+    m_tile_window_combobox->set_selected_index(static_cast<size_t>(m_system_effects.tile_window()));
 
     return {};
 }
 
 void EffectsSettingsWidget::apply_settings()
 {
-    ConnectionToWindowServer::the().async_set_system_effects(m_system_effects.effects(), to_underlying(m_system_effects.geometry()));
+    ConnectionToWindowServer::the().async_set_system_effects(m_system_effects.effects(), to_underlying(m_system_effects.geometry()), to_underlying(m_system_effects.tile_window()));
 }
 
 }
