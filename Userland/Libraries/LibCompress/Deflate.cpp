@@ -437,17 +437,14 @@ ErrorOr<void> DeflateDecompressor::decode_codes(CanonicalCode& literal_code, Opt
 
         if (symbol < deflate_special_code_length_copy) {
             code_lengths.append(static_cast<u8>(symbol));
-            continue;
         } else if (symbol == deflate_special_code_length_zeros) {
             auto nrepeat = 3 + TRY(m_input_stream->read_bits(3));
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
-            continue;
         } else if (symbol == deflate_special_code_length_long_zeros) {
             auto nrepeat = 11 + TRY(m_input_stream->read_bits(7));
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
-            continue;
         } else {
             VERIFY(symbol == deflate_special_code_length_copy);
 
