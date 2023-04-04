@@ -110,7 +110,7 @@ ReadonlyBytes CircularBuffer::next_read_span_with_seekback(size_t distance) cons
     // Note: We are adding the capacity once here to ensure that we can wrap around the negative space by using modulo.
     auto read_offset = (capacity() + m_reading_head + m_used_space - distance) % capacity();
 
-    return m_buffer.span().slice(read_offset, min(capacity() - read_offset, m_seekback_limit));
+    return m_buffer.span().slice(read_offset, min(capacity() - read_offset, distance));
 }
 
 size_t CircularBuffer::write(ReadonlyBytes bytes)
