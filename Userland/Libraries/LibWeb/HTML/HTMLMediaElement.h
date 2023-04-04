@@ -30,7 +30,7 @@ public:
     };
     NetworkState network_state() const { return m_network_state; }
 
-    Bindings::CanPlayTypeResult can_play_type(DeprecatedString const& type) const;
+    WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> can_play_type(DeprecatedString const& type) const;
 
     void load() const;
     void pause() const;
