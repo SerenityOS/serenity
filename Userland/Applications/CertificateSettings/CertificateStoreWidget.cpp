@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "CertificateStore.h"
+#include "CertificateStoreWidget.h"
 #include <AK/String.h>
-#include <Applications/CertificateSettings/CertificateStoreGML.h>
+#include <Applications/CertificateSettings/CertificateStoreWidgetGML.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
@@ -168,7 +168,7 @@ ErrorOr<NonnullRefPtr<CertificateStoreWidget>> CertificateStoreWidget::try_creat
 
 ErrorOr<void> CertificateStoreWidget::initialize()
 {
-    TRY(load_from_gml(certificate_store_gml));
+    TRY(load_from_gml(certificate_store_widget_gml));
 
     m_root_ca_tableview = find_descendant_of_type_named<GUI::TableView>("root_ca_tableview");
     m_root_ca_tableview->set_highlight_selected_rows(true);
