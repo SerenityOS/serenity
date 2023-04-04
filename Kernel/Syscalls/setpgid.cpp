@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
 
@@ -29,7 +28,6 @@ ErrorOr<FlatPtr> Process::sys$setsid()
 {
     VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
     TRY(require_promise(Pledge::proc));
-    InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
     TRY(Process::for_each_in_pgrp_in_same_jail(pid().value(), [&](auto&) -> ErrorOr<void> {
         found_process_with_same_pgid_as_my_pid = true;
