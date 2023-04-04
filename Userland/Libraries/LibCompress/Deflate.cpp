@@ -208,7 +208,10 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
             m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
         }
     } else {
-        TRY(m_decompressor.m_output_buffer.copy_from_seekback(distance, length));
+        auto copied_length = TRY(m_decompressor.m_output_buffer.copy_from_seekback(distance, length));
+
+        // TODO: What should we do if the output buffer is full?
+        VERIFY(copied_length == length);
     }
 
     return true;

@@ -213,6 +213,9 @@ ErrorOr<size_t> CircularBuffer::copy_from_seekback(size_t distance, size_t lengt
 
     auto remaining_length = length;
     while (remaining_length > 0) {
+        if (empty_space() == 0)
+            break;
+
         auto next_span = next_read_span_with_seekback(distance);
         if (next_span.size() == 0)
             break;
