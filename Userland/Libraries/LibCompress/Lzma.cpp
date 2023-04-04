@@ -520,22 +520,13 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             if (m_options.uncompressed_size.has_value() && m_options.uncompressed_size.value() < m_total_decoded_bytes + real_length)
                 return Error::from_string_literal("Tried to copy match beyond expected uncompressed file size");
 
-            while (real_length > 0) {
-                if (m_dictionary->empty_space() == 0) {
-                    m_leftover_match_length = real_length;
-                    break;
-                }
+            auto copied_length = TRY(m_dictionary->copy_from_seekback(current_repetition_offset(), real_length));
 
-                u8 byte;
-                auto read_bytes = TRY(m_dictionary->read_with_seekback({ &byte, sizeof(byte) }, current_repetition_offset()));
-                VERIFY(read_bytes.size() == sizeof(byte));
+            m_total_decoded_bytes += copied_length;
+            real_length -= copied_length;
 
-                auto written_bytes = m_dictionary->write({ &byte, sizeof(byte) });
-                VERIFY(written_bytes == sizeof(byte));
-                m_total_decoded_bytes++;
-
-                real_length--;
-            }
+            if (real_length > 0)
+                m_leftover_match_length = real_length;
 
             return {};
         };
