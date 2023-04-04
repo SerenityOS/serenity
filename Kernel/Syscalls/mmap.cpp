@@ -110,7 +110,6 @@ ErrorOr<void> Process::validate_mmap_prot(int prot, bool map_stack, bool map_ano
 
 ErrorOr<void> Process::validate_inode_mmap_prot(int prot, bool readable_description, bool description_writable, bool map_shared) const
 {
-    auto credentials = this->credentials();
     if ((prot & PROT_READ) && !readable_description)
         return EACCES;
 
