@@ -130,7 +130,6 @@ public:
         invalidate_screen();
     }
 
-    void animation_started(Badge<Animation>);
     void invalidate_occlusions() { m_occlusions_dirty = true; }
     void overlay_rects_changed();
 
@@ -223,6 +222,7 @@ private:
     bool m_invalidated_window { false };
     bool m_invalidated_cursor { false };
     bool m_overlay_rects_changed { false };
+    bool m_animations_running { false };
 
     IntrusiveList<&Overlay::m_list_node> m_overlay_list;
     Gfx::DisjointIntRectSet m_overlay_rects;

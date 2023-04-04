@@ -33,18 +33,18 @@ public:
     void set_duration(int duration_in_ms);
     int duration() const { return m_duration; }
 
-    bool update(Badge<Compositor>, Gfx::Painter&, Screen&, Gfx::DisjointIntRectSet& flush_rects);
+    bool update(Gfx::Painter&, Screen&, Gfx::DisjointIntRectSet& flush_rects);
+    void call_stop_handler(Badge<Compositor>);
 
     Function<void(float progress, Gfx::Painter&, Screen&, Gfx::DisjointIntRectSet& flush_rects)> on_update;
     Function<void()> on_stop;
 
 private:
-    Animation();
+    Animation() = default;
 
     Core::ElapsedTimer m_timer;
     int m_duration { 0 };
     bool m_running { false };
-    bool m_was_removed { false };
 };
 
 }

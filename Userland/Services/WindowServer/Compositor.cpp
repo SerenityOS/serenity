@@ -17,6 +17,7 @@
 #include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
+#include <AK/TemporaryChange.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/Font.h>
@@ -1527,43 +1528,45 @@ void Compositor::recompute_occlusions()
 
 void Compositor::register_animation(Badge<Animation>, Animation& animation)
 {
+    VERIFY(!m_animations_running);
     bool was_empty = m_animations.is_empty();
     auto result = m_animations.set(&animation);
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
-    if (was_empty)
+    if (was_empty) {
+        m_invalidated_any = true;
         start_compose_async_timer();
-}
-
-void Compositor::animation_started(Badge<Animation>)
-{
-    m_invalidated_any = true;
-    start_compose_async_timer();
+    }
 }
 
 void Compositor::unregister_animation(Badge<Animation>, Animation& animation)
 {
+    VERIFY(!m_animations_running);
     bool was_removed = m_animations.remove(&animation);
     VERIFY(was_removed);
 }
 
 void Compositor::update_animations(Screen& screen, Gfx::DisjointIntRectSet& flush_rects)
 {
+    Vector<NonnullRefPtr<Animation>, 16> finished_animations;
+    ScopeGuard call_stop_handlers([&] {
+        for (auto& animation : finished_animations)
+            animation->call_stop_handler({});
+    });
+
+    TemporaryChange animations_running(m_animations_running, true);
     auto& painter = *screen.compositor_screen_data().m_back_painter;
     // Iterating over the animations using remove_all_matching we can iterate
     // and immediately remove finished animations without having to keep track
     // of them in a separate container.
     m_animations.remove_all_matching([&](auto* animation) {
-        if (!animation->update({}, painter, screen, flush_rects)) {
+        VERIFY(animation->is_running());
+        if (!animation->update(painter, screen, flush_rects)) {
             // Mark it as removed so that the Animation::on_stop handler doesn't
             // trigger the Animation object from being destroyed, causing it to
             // unregister while we still loop over them.
             animation->was_removed({});
 
-            // Temporarily bump the ref count so that if the Animation::on_stop
-            // handler clears its own reference, it doesn't immediately destroy
-            // itself while we're still in the Function<> call
-            NonnullRefPtr<Animation> protect_animation(*animation);
-            animation->stop();
+            finished_animations.append(*animation);
             return true;
         }
         return false;
