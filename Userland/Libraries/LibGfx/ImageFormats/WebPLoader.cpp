@@ -692,6 +692,237 @@ public:
 
 Transform::~Transform() = default;
 
+// https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#41_predictor_transform
+class PredictorTransform : public Transform {
+public:
+    static ErrorOr<NonnullOwnPtr<PredictorTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, IntSize const& image_size);
+    virtual ErrorOr<void> transform(Bitmap&) override;
+
+private:
+    PredictorTransform(int size_bits, NonnullRefPtr<Bitmap> predictor_bitmap)
+        : m_size_bits(size_bits)
+        , m_predictor_bitmap(move(predictor_bitmap))
+    {
+    }
+
+    // These capitalized functions are all from the spec:
+    static u8 Average2(u8 a, u8 b)
+    {
+        return (a + b) / 2;
+    }
+
+    static u32 Select(u32 L, u32 T, u32 TL)
+    {
+        // "L = left pixel, T = top pixel, TL = top left pixel."
+
+#define ALPHA(x) ((x >> 24) & 0xff)
+#define RED(x) ((x >> 16) & 0xff)
+#define GREEN(x) ((x >> 8) & 0xff)
+#define BLUE(x) (x & 0xff)
+
+        // "ARGB component estimates for prediction."
+        int pAlpha = ALPHA(L) + ALPHA(T) - ALPHA(TL);
+        int pRed = RED(L) + RED(T) - RED(TL);
+        int pGreen = GREEN(L) + GREEN(T) - GREEN(TL);
+        int pBlue = BLUE(L) + BLUE(T) - BLUE(TL);
+
+        // "Manhattan distances to estimates for left and top pixels."
+        int pL = abs(pAlpha - (int)ALPHA(L)) + abs(pRed - (int)RED(L)) + abs(pGreen - (int)GREEN(L)) + abs(pBlue - (int)BLUE(L));
+        int pT = abs(pAlpha - (int)ALPHA(T)) + abs(pRed - (int)RED(T)) + abs(pGreen - (int)GREEN(T)) + abs(pBlue - (int)BLUE(T));
+
+        // "Return either left or top, the one closer to the prediction."
+        if (pL < pT) { // "\[AMENDED\]"
+            return L;
+        } else {
+            return T;
+        }
+
+#undef BLUE
+#undef GREEN
+#undef RED
+#undef ALPHA
+    }
+
+    // "Clamp the input value between 0 and 255."
+    static int Clamp(int a)
+    {
+        return clamp(a, 0, 255);
+    }
+
+    static int ClampAddSubtractFull(int a, int b, int c)
+    {
+        return Clamp(a + b - c);
+    }
+
+    static int ClampAddSubtractHalf(int a, int b)
+    {
+        return Clamp(a + (a - b) / 2);
+    }
+
+    // ...and we're back from the spec!
+    static Color average2(Color a, Color b)
+    {
+        return Color(Average2(a.red(), b.red()),
+            Average2(a.green(), b.green()),
+            Average2(a.blue(), b.blue()),
+            Average2(a.alpha(), b.alpha()));
+    }
+
+    static ARGB32 average2(ARGB32 a, ARGB32 b)
+    {
+        return average2(Color::from_argb(a), Color::from_argb(b)).value();
+    }
+
+    static ErrorOr<ARGB32> predict(u8 predictor, ARGB32 TL, ARGB32 T, ARGB32 TR, ARGB32 L);
+    static ARGB32 inverse_transform(ARGB32 pixel, ARGB32 prediction);
+
+    int m_size_bits;
+    NonnullRefPtr<Bitmap> m_predictor_bitmap;
+};
+
+ErrorOr<NonnullOwnPtr<PredictorTransform>> PredictorTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, IntSize const& image_size)
+{
+    // predictor-image      =  3BIT ; sub-pixel code
+    //                         entropy-coded-image
+    int size_bits = TRY(bit_stream.read_bits(3)) + 2;
+    int block_size = 1 << size_bits;
+    IntSize predictor_image_size { ceil_div(image_size.width(), block_size), ceil_div(image_size.height(), block_size) };
+
+    auto predictor_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRx8888, predictor_image_size, bit_stream));
+
+    return adopt_nonnull_own_or_enomem(new (nothrow) PredictorTransform(size_bits, move(predictor_bitmap)));
+}
+
+ErrorOr<void> PredictorTransform::transform(Bitmap& bitmap)
+{
+    // "There are special handling rules for some border pixels.
+    //  If there is a prediction transform, regardless of the mode [0..13] for these pixels,
+    //  the predicted value for the left-topmost pixel of the image is 0xff000000,
+    bitmap.scanline(0)[0] = inverse_transform(bitmap.scanline(0)[0], 0xff000000);
+
+    //  L-pixel for all pixels on the top row,
+    for (int x = 1; x < bitmap.width(); ++x)
+        bitmap.scanline(0)[x] = inverse_transform(bitmap.scanline(0)[x], bitmap.scanline(0)[x - 1]);
+
+    //  and T-pixel for all pixels on the leftmost column."
+    for (int y = 1; y < bitmap.height(); ++y)
+        bitmap.scanline(y)[0] = inverse_transform(bitmap.scanline(y)[0], bitmap.scanline(y - 1)[0]);
+
+    ARGB32* bitmap_previous_scanline = bitmap.scanline(0);
+    for (int y = 1; y < bitmap.height(); ++y) {
+        ARGB32* bitmap_scanline = bitmap.scanline(y);
+
+        ARGB32 TL = bitmap_previous_scanline[0];
+        ARGB32 T = bitmap_previous_scanline[1];
+        ARGB32 TR = 2 < bitmap.width() ? bitmap_previous_scanline[2] : bitmap_previous_scanline[0];
+
+        ARGB32 L = bitmap_scanline[0];
+
+        int predictor_y = y >> m_size_bits;
+        ARGB32* predictor_scanline = m_predictor_bitmap->scanline(predictor_y);
+
+        for (int x = 1; x < bitmap.width(); ++x) {
+            int predictor_x = x >> m_size_bits;
+
+            // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#51_roles_of_image_data
+            // "The green component of a pixel defines which of the 14 predictors is used within a particular block of the ARGB image."
+            u8 predictor = Color::from_argb(predictor_scanline[predictor_x]).green();
+
+            ARGB32 predicted = TRY(predict(predictor, TL, T, TR, L));
+            bitmap_scanline[x] = inverse_transform(bitmap_scanline[x], predicted);
+
+            TL = T;
+            T = TR;
+
+            // "Addressing the TR-pixel for pixels on the rightmost column is exceptional.
+            //  The pixels on the rightmost column are predicted by using the modes [0..13] just like pixels not on the border,
+            //  but the leftmost pixel on the same row as the current pixel is instead used as the TR-pixel."
+            TR = x + 2 < bitmap.width() ? bitmap_previous_scanline[x + 2] : bitmap_previous_scanline[0];
+
+            L = bitmap_scanline[x];
+        }
+
+        bitmap_previous_scanline = bitmap_scanline;
+    }
+    return {};
+}
+
+ErrorOr<ARGB32> PredictorTransform::predict(u8 predictor, ARGB32 TL, ARGB32 T, ARGB32 TR, ARGB32 L)
+{
+    switch (predictor) {
+    case 0:
+        // "0xff000000 (represents solid black color in ARGB)"
+        return 0xff000000;
+    case 1:
+        // "L"
+        return L;
+    case 2:
+        // "T"
+        return T;
+    case 3:
+        // "TR"
+        return TR;
+    case 4:
+        // "TL"
+        return TL;
+    case 5:
+        // "Average2(Average2(L, TR), T)"
+        return average2(average2(L, TR), T);
+    case 6:
+        // "Average2(L, TL)"
+        return average2(L, TL);
+    case 7:
+        // "Average2(L, T)"
+        return average2(L, T);
+    case 8:
+        // "Average2(TL, T)"
+        return average2(TL, T);
+    case 9:
+        // "Average2(T, TR)"
+        return average2(T, TR);
+    case 10:
+        // "Average2(Average2(L, TL), Average2(T, TR))"
+        return average2(average2(L, TL), average2(T, TR));
+    case 11:
+        // "Select(L, T, TL)"
+        return Select(L, T, TL);
+    case 12: {
+        // "ClampAddSubtractFull(L, T, TL)"
+        auto color_L = Color::from_argb(L);
+        auto color_T = Color::from_argb(T);
+        auto color_TL = Color::from_argb(TL);
+        return Color(ClampAddSubtractFull(color_L.red(), color_T.red(), color_TL.red()),
+            ClampAddSubtractFull(color_L.green(), color_T.green(), color_TL.green()),
+            ClampAddSubtractFull(color_L.blue(), color_T.blue(), color_TL.blue()),
+            ClampAddSubtractFull(color_L.alpha(), color_T.alpha(), color_TL.alpha()))
+            .value();
+    }
+    case 13: {
+        // "ClampAddSubtractHalf(Average2(L, T), TL)"
+        auto color_L = Color::from_argb(L);
+        auto color_T = Color::from_argb(T);
+        auto color_TL = Color::from_argb(TL);
+        return Color(ClampAddSubtractHalf(Average2(color_L.red(), color_T.red()), color_TL.red()),
+            ClampAddSubtractHalf(Average2(color_L.green(), color_T.green()), color_TL.green()),
+            ClampAddSubtractHalf(Average2(color_L.blue(), color_T.blue()), color_TL.blue()),
+            ClampAddSubtractHalf(Average2(color_L.alpha(), color_T.alpha()), color_TL.alpha()))
+            .value();
+    }
+    }
+    return Error::from_string_literal("WebPImageDecoderPlugin: invalid predictor");
+}
+
+ARGB32 PredictorTransform::inverse_transform(ARGB32 pixel, ARGB32 prediction)
+{
+    auto pixel_color = Color::from_argb(pixel);
+    auto prediction_color = Color::from_argb(prediction);
+    return Color(pixel_color.red() + prediction_color.red(),
+        pixel_color.green() + prediction_color.green(),
+        pixel_color.blue() + prediction_color.blue(),
+        pixel_color.alpha() + prediction_color.alpha())
+        .value();
+}
+
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#43_subtract_green_transform
 class SubtractGreenTransform : public Transform {
 public:
@@ -771,7 +1002,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
         switch (transform_type) {
         case PREDICTOR_TRANSFORM:
-            return context.error("WebPImageDecoderPlugin: VP8L PREDICTOR_TRANSFORM handling not yet implemented");
+            TRY(transforms.try_append(TRY(PredictorTransform::read(context, bit_stream, context.size.value()))));
+            break;
         case COLOR_TRANSFORM:
             return context.error("WebPImageDecoderPlugin: VP8L COLOR_TRANSFORM handling not yet implemented");
         case SUBTRACT_GREEN_TRANSFORM:
