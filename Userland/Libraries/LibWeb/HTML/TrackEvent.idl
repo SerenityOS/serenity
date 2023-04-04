@@ -1,0 +1,16 @@
+#import <DOM/Event.idl>
+#import <HTML/VideoTrack.idl>
+
+// https://html.spec.whatwg.org/multipage/media.html#trackevent
+[Exposed=Window, UseNewAKString]
+interface TrackEvent : Event {
+    constructor(DOMString type, optional TrackEventInit eventInitDict = {});
+
+    // FIXME: Should be: (VideoTrack or AudioTrack or TextTrack)?
+    readonly attribute VideoTrack? track;
+};
+
+dictionary TrackEventInit : EventInit {
+    // FIXME: Should be: (VideoTrack or AudioTrack or TextTrack)?
+    VideoTrack? track = null;
+};
