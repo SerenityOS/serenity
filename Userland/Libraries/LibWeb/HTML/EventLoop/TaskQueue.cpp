@@ -53,4 +53,22 @@ void TaskQueue::remove_tasks_matching(Function<bool(HTML::Task const&)> filter)
     });
 }
 
+ErrorOr<Vector<NonnullOwnPtr<Task>>> TaskQueue::take_tasks_matching(Function<bool(HTML::Task const&)> filter)
+{
+    Vector<NonnullOwnPtr<Task>> matching_tasks;
+
+    for (size_t i = 0; i < m_tasks.size();) {
+        auto& task = m_tasks.at(i);
+
+        if (filter(*task)) {
+            TRY(matching_tasks.try_append(move(task)));
+            m_tasks.remove(i);
+        } else {
+            ++i;
+        }
+    }
+
+    return matching_tasks;
+}
+
 }
