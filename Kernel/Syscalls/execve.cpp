@@ -30,7 +30,6 @@ namespace Kernel {
 extern Memory::Region* g_signal_trampoline_region;
 
 struct LoadResult {
-    OwnPtr<Memory::AddressSpace> space;
     FlatPtr load_base { 0 };
     FlatPtr entry_eip { 0 };
     size_t size { 0 };
@@ -261,7 +260,7 @@ enum class ShouldAllowSyscalls {
     Yes,
 };
 
-static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> new_space, OpenFileDescription& object_description,
+static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, OpenFileDescription& object_description,
     FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
 {
     auto& inode = *(object_description.inode());
@@ -290,7 +289,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
     auto elf_name = TRY(object_description.pseudo_path());
     VERIFY(!Processor::in_critical());
 
-    Memory::MemoryManager::enter_address_space(*new_space);
+    Memory::MemoryManager::enter_address_space(new_space);
 
     auto load_tls_section = [&](auto& program_header) -> ErrorOr<void> {
         VERIFY(should_allocate_tls == ShouldAllocateTls::Yes);
@@ -302,7 +301,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         }
 
         auto region_name = TRY(KString::formatted("{} (master-tls)", elf_name));
-        master_tls_region = TRY(new_space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, program_header.size_in_memory(), PAGE_SIZE, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+        master_tls_region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, program_header.size_in_memory(), PAGE_SIZE, region_name->view(), PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
         master_tls_size = program_header.size_in_memory();
         master_tls_alignment = program_header.alignment();
 
@@ -330,7 +329,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
 
-        auto region = TRY(new_space->allocate_region(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), PAGE_SIZE, region_name->view(), prot, AllocationStrategy::Reserve));
+        auto region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), PAGE_SIZE, region_name->view(), prot, AllocationStrategy::Reserve));
 
         // It's not always the case with PIE executables (and very well shouldn't be) that the
         // virtual address in the program header matches the one we end up giving the process.
@@ -365,7 +364,7 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         auto range_base = VirtualAddress { Memory::page_round_down(program_header.vaddr().offset(load_offset).get()) };
         size_t rounded_range_end = TRY(Memory::page_round_up(program_header.vaddr().offset(load_offset).offset(program_header.size_in_memory()).get()));
         auto range_end = VirtualAddress { rounded_range_end };
-        auto region = TRY(new_space->allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), program_header.alignment(), *vmobject, program_header.offset(), elf_name->view(), prot, true));
+        auto region = TRY(new_space.allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, range_base, range_end.get() - range_base.get(), program_header.alignment(), *vmobject, program_header.offset(), elf_name->view(), prot, true));
 
         if (should_allow_syscalls == ShouldAllowSyscalls::Yes)
             region->set_syscall_region(true);
@@ -407,11 +406,10 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
         return ENOEXEC;
     }
 
-    auto* stack_region = TRY(new_space->allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
+    auto* stack_region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
     return LoadResult {
-        move(new_space),
         load_base_address,
         elf_image.entry().offset(load_offset).get(),
         executable_size,
@@ -423,26 +421,20 @@ static ErrorOr<LoadResult> load_elf_object(NonnullOwnPtr<Memory::AddressSpace> n
 }
 
 ErrorOr<LoadResult>
-Process::load(NonnullRefPtr<OpenFileDescription> main_program_description,
+Process::load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription> main_program_description,
     RefPtr<OpenFileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
-    auto new_space = TRY(Memory::AddressSpace::try_create(nullptr));
-
-    ScopeGuard space_guard([&]() {
-        Memory::MemoryManager::enter_process_address_space(*this);
-    });
-
     auto load_offset = TRY(get_load_offset(main_program_header, main_program_description, interpreter_description));
 
     if (interpreter_description.is_null()) {
-        auto load_result = TRY(load_elf_object(move(new_space), main_program_description, load_offset, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No));
+        auto load_result = TRY(load_elf_object(new_space, main_program_description, load_offset, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No));
         m_master_tls_region = load_result.tls_region;
         m_master_tls_size = load_result.tls_size;
         m_master_tls_alignment = load_result.tls_alignment;
         return load_result;
     }
 
-    auto interpreter_load_result = TRY(load_elf_object(move(new_space), *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes));
+    auto interpreter_load_result = TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes));
 
     // TLS allocation will be done in userspace by the loader
     VERIFY(!interpreter_load_result.tls_region);
@@ -496,7 +488,22 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     auto new_process_name = TRY(KString::try_create(last_part));
     auto new_main_thread_name = TRY(new_process_name->try_clone());
 
-    auto load_result = TRY(load(main_program_description, interpreter_description, main_program_header));
+    auto allocated_space = TRY(Memory::AddressSpace::try_create(nullptr));
+    OwnPtr<Memory::AddressSpace> old_space;
+    auto& new_space = m_space.with([&](auto& space) -> Memory::AddressSpace& {
+        old_space = move(space);
+        space = move(allocated_space);
+        return *space;
+    });
+    ArmedScopeGuard space_guard([&]() {
+        // If we failed at any point from now on we have to revert back to the old address space
+        m_space.with([&](auto& space) {
+            space = old_space.release_nonnull();
+        });
+        Memory::MemoryManager::enter_process_address_space(*this);
+    });
+
+    auto load_result = TRY(load(new_space, main_program_description, interpreter_description, main_program_header));
 
     // NOTE: We don't need the interpreter executable description after this point.
     //       We destroy it here to prevent it from getting destroyed when we return from this function.
@@ -505,7 +512,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     bool has_interpreter = interpreter_description;
     interpreter_description = nullptr;
 
-    auto* signal_trampoline_region = TRY(load_result.space->allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, {}, PAGE_SIZE, PAGE_SIZE, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline"sv, PROT_READ | PROT_EXEC, true));
+    auto* signal_trampoline_region = TRY(new_space.allocate_region_with_vmobject(Memory::RandomizeVirtualAddress::Yes, {}, PAGE_SIZE, PAGE_SIZE, g_signal_trampoline_region->vmobject(), 0, "Signal trampoline"sv, PROT_READ | PROT_EXEC, true));
     signal_trampoline_region->set_syscall_region(true);
 
     // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
@@ -552,6 +559,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     }
 
     // We commit to the new executable at this point. There is no turning back!
+    space_guard.disarm();
 
     // Prevent other processes from attaching to us with ptrace while we're doing this.
     MutexLocker ptrace_locker(ptrace_lock());
@@ -567,12 +575,6 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
         protected_data.dumpable = !executable_is_setid;
         protected_data.executable_is_setid = executable_is_setid;
     });
-
-    // We make sure to enter the new address space before destroying the old one.
-    // This ensures that the process always has a valid page directory.
-    Memory::MemoryManager::enter_address_space(*load_result.space);
-
-    m_space.with([&](auto& space) { space = load_result.space.release_nonnull(); });
 
     m_executable.with([&](auto& executable) { executable = main_program_description->custody(); });
     m_arguments = move(arguments);
