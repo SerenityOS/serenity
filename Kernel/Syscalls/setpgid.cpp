@@ -38,9 +38,9 @@ ErrorOr<FlatPtr> Process::sys$setsid()
     // Create a new Session and a new ProcessGroup.
 
     auto process_group = TRY(ProcessGroup::create(ProcessGroupID(pid().value())));
-    m_pg.with([&](auto& pg) { pg = move(process_group); });
     m_tty.with([](auto& tty) { tty = nullptr; });
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+        protected_data.process_group = move(process_group);
         protected_data.sid = pid().value();
         return protected_data.sid.value();
     });
@@ -120,9 +120,8 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     }
     // FIXME: There are more EPERM conditions to check for here..
     auto process_group = TRY(ProcessGroup::find_or_create(new_pgid));
-    process->m_pg.with([&](auto& pg) { pg = move(process_group); });
-    return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
-        auto credentials = this->credentials();
+    return process->with_mutable_protected_data([&process, &process_group, new_sid, new_pgid](auto& protected_data) -> ErrorOr<FlatPtr> {
+        auto credentials = process->credentials();
 
         auto new_credentials = TRY(Credentials::create(
             credentials->uid(),
@@ -136,6 +135,7 @@ ErrorOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
             new_pgid));
 
         protected_data.credentials = move(new_credentials);
+        protected_data.process_group = move(process_group);
         return 0;
     });
 }

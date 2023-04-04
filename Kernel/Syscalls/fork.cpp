@@ -97,10 +97,6 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
         });
     }));
 
-    child->m_pg.with([&](auto& child_pg) {
-        child_pg = m_pg.with([&](auto& pg) { return pg; });
-    });
-
     with_protected_data([&](auto& my_protected_data) {
         child->with_mutable_protected_data([&](auto& child_protected_data) {
             child_protected_data.promises = my_protected_data.promises.load();
@@ -112,6 +108,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
             child_protected_data.umask = my_protected_data.umask;
             child_protected_data.signal_trampoline = my_protected_data.signal_trampoline;
             child_protected_data.dumpable = my_protected_data.dumpable;
+            child_protected_data.process_group = my_protected_data.process_group;
         });
     });
 
