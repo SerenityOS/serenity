@@ -56,11 +56,12 @@ protected:
     virtual void rect_changed(Gfx::IntRect const&) {};
 
 private:
-    void clear_invalidated() { m_invalidated = false; }
-    void did_recompute_occlusions()
+    [[nodiscard]] bool apply_render_rect()
     {
+        bool needs_invalidation = m_invalidated;
         m_invalidated = false;
         m_current_rect = m_rect;
+        return needs_invalidation;
     }
 
     Gfx::IntRect m_rect;

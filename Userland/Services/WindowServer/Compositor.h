@@ -226,6 +226,7 @@ private:
 
     IntrusiveList<&Overlay::m_list_node> m_overlay_list;
     Gfx::DisjointIntRectSet m_overlay_rects;
+    Gfx::DisjointIntRectSet m_last_rendered_overlay_rects;
     Gfx::DisjointIntRectSet m_dirty_screen_rects;
     Gfx::DisjointIntRectSet m_opaque_wallpaper_rects;
     Gfx::DisjointIntRectSet m_transparent_wallpaper_rects;
