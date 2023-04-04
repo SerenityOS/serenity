@@ -35,9 +35,9 @@ bool SlavePTY::unref() const
     return did_hit_zero;
 }
 
-SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
+SlavePTY::SlavePTY(NonnullRefPtr<MasterPTY> master, unsigned index)
     : TTY(201, index)
-    , m_master(master)
+    , m_master(move(master))
     , m_index(index)
 {
     auto& process = Process::current();
