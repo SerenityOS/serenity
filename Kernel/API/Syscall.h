@@ -157,7 +157,7 @@ enum class NeedsBigProcessLock {
     S(scheduler_set_parameters, NeedsBigProcessLock::No)   \
     S(sendfd, NeedsBigProcessLock::No)                     \
     S(sendmsg, NeedsBigProcessLock::Yes)                   \
-    S(set_mmap_name, NeedsBigProcessLock::Yes)             \
+    S(set_mmap_name, NeedsBigProcessLock::No)              \
     S(set_thread_name, NeedsBigProcessLock::No)            \
     S(setegid, NeedsBigProcessLock::No)                    \
     S(seteuid, NeedsBigProcessLock::No)                    \
