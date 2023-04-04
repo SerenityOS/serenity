@@ -151,12 +151,23 @@ public:
     void start_or_stop_move_to_tile_overlay_animation(TileWindowOverlay*);
 
 private:
-    void update_rect();
-
     WeakPtr<Window> m_window;
     DeprecatedString m_label;
     Gfx::IntRect m_label_rect;
     Gfx::IntRect m_ideal_overlay_rect;
+
+    struct UpdateState {
+        Gfx::IntRect geometry;
+        bool is_for_tile_overlay;
+
+        bool operator==(UpdateState const& other) const
+        {
+            if (this == &other)
+                return true;
+            return geometry == other.geometry && is_for_tile_overlay == other.is_for_tile_overlay;
+        }
+    };
+    UpdateState m_last_updated;
 
     struct {
         RefPtr<Animation> animation;
