@@ -12,7 +12,7 @@ namespace Kernel {
 
 ErrorOr<FlatPtr> Process::sys$map_time_page()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto& vmobject = TimeManagement::the().time_page_vmobject();
