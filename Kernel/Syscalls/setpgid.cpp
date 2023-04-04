@@ -26,7 +26,7 @@ ErrorOr<FlatPtr> Process::sys$getsid(pid_t pid)
 
 ErrorOr<FlatPtr> Process::sys$setsid()
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::proc));
 
     // NOTE: ProcessGroup::create_if_unused_pgid() will fail with EPERM
