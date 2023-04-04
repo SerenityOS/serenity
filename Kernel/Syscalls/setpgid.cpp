@@ -39,7 +39,7 @@ ErrorOr<FlatPtr> Process::sys$setsid()
 
     auto process_group = TRY(ProcessGroup::create(ProcessGroupID(pid().value())));
     m_pg.with([&](auto& pg) { pg = move(process_group); });
-    m_tty = nullptr;
+    m_tty.with([](auto& tty) { tty = nullptr; });
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
         protected_data.sid = pid().value();
         return protected_data.sid.value();
