@@ -129,7 +129,7 @@ enum class NeedsBigProcessLock {
     S(mount, NeedsBigProcessLock::Yes)                     \
     S(mprotect, NeedsBigProcessLock::No)                   \
     S(mremap, NeedsBigProcessLock::No)                     \
-    S(msync, NeedsBigProcessLock::Yes)                     \
+    S(msync, NeedsBigProcessLock::No)                      \
     S(munmap, NeedsBigProcessLock::No)                     \
     S(open, NeedsBigProcessLock::No)                       \
     S(perf_event, NeedsBigProcessLock::Yes)                \
