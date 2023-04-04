@@ -443,74 +443,6 @@ static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(WebPLoa
     return group;
 }
 
-
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext&, VP8LHeader const& vp8l_header, LittleEndianInputBitStream&);
-
-// https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
-// https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
-static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
-{
-    VERIFY(context.first_chunk->type == FourCC("VP8L") || context.first_chunk->type == FourCC("VP8X"));
-    VERIFY(vp8l_chunk.type == FourCC("VP8L"));
-
-    auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context, vp8l_chunk));
-
-    // Check that size in VP8X chunk matches dimensions in VP8L chunk if both are present.
-    if (context.first_chunk->type == FourCC("VP8X")) {
-        if (vp8l_header.width != context.vp8x_header.width)
-            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different widths");
-        if (vp8l_header.height != context.vp8x_header.height)
-            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different heights");
-        if (vp8l_header.is_alpha_used != context.vp8x_header.has_alpha)
-            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different alpha");
-    }
-
-    FixedMemoryStream memory_stream { vp8l_chunk.data.slice(5) };
-    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
-
-    // image-stream = optional-transform spatially-coded-image
-
-    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#4_transformations
-    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#72_structure_of_transforms
-
-    // optional-transform   =  (%b1 transform optional-transform) / %b0
-    while (TRY(bit_stream.read_bits(1))) {
-        // transform            =  predictor-tx / color-tx / subtract-green-tx
-        // transform            =/ color-indexing-tx
-
-        enum TransformType {
-            // predictor-tx         =  %b00 predictor-image
-            PREDICTOR_TRANSFORM = 0,
-
-            // color-tx             =  %b01 color-image
-            COLOR_TRANSFORM = 1,
-
-            // subtract-green-tx    =  %b10
-            SUBTRACT_GREEN_TRANSFORM = 2,
-
-            // color-indexing-tx    =  %b11 color-indexing-image
-            COLOR_INDEXING_TRANSFORM = 3,
-        };
-
-        TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
-        dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
-
-        switch (transform_type) {
-        case PREDICTOR_TRANSFORM:
-            return context.error("WebPImageDecoderPlugin: VP8L PREDICTOR_TRANSFORM handling not yet implemented");
-        case COLOR_TRANSFORM:
-            return context.error("WebPImageDecoderPlugin: VP8L COLOR_TRANSFORM handling not yet implemented");
-        case SUBTRACT_GREEN_TRANSFORM:
-            return context.error("WebPImageDecoderPlugin: VP8L SUBTRACT_GREEN_TRANSFORM handling not yet implemented");
-        case COLOR_INDEXING_TRANSFORM:
-            return context.error("WebPImageDecoderPlugin: VP8L COLOR_INDEXING_TRANSFORM handling not yet implemented");
-        }
-    }
-
-    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, vp8l_header, bit_stream));
-    return {};
-}
-
 static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, VP8LHeader const& vp8l_header, LittleEndianInputBitStream& bit_stream)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
@@ -678,6 +610,71 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
     }
 
     return bitmap;
+}
+
+// https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
+// https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
+static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
+{
+    VERIFY(context.first_chunk->type == FourCC("VP8L") || context.first_chunk->type == FourCC("VP8X"));
+    VERIFY(vp8l_chunk.type == FourCC("VP8L"));
+
+    auto vp8l_header = TRY(decode_webp_chunk_VP8L_header(context, vp8l_chunk));
+
+    // Check that size in VP8X chunk matches dimensions in VP8L chunk if both are present.
+    if (context.first_chunk->type == FourCC("VP8X")) {
+        if (vp8l_header.width != context.vp8x_header.width)
+            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different widths");
+        if (vp8l_header.height != context.vp8x_header.height)
+            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different heights");
+        if (vp8l_header.is_alpha_used != context.vp8x_header.has_alpha)
+            return context.error("WebPImageDecoderPlugin: VP8X and VP8L chunks store different alpha");
+    }
+
+    FixedMemoryStream memory_stream { vp8l_chunk.data.slice(5) };
+    LittleEndianInputBitStream bit_stream { MaybeOwned<Stream>(memory_stream) };
+
+    // image-stream = optional-transform spatially-coded-image
+
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#4_transformations
+    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#72_structure_of_transforms
+
+    // optional-transform   =  (%b1 transform optional-transform) / %b0
+    while (TRY(bit_stream.read_bits(1))) {
+        // transform            =  predictor-tx / color-tx / subtract-green-tx
+        // transform            =/ color-indexing-tx
+
+        enum TransformType {
+            // predictor-tx         =  %b00 predictor-image
+            PREDICTOR_TRANSFORM = 0,
+
+            // color-tx             =  %b01 color-image
+            COLOR_TRANSFORM = 1,
+
+            // subtract-green-tx    =  %b10
+            SUBTRACT_GREEN_TRANSFORM = 2,
+
+            // color-indexing-tx    =  %b11 color-indexing-image
+            COLOR_INDEXING_TRANSFORM = 3,
+        };
+
+        TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
+        dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
+
+        switch (transform_type) {
+        case PREDICTOR_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L PREDICTOR_TRANSFORM handling not yet implemented");
+        case COLOR_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L COLOR_TRANSFORM handling not yet implemented");
+        case SUBTRACT_GREEN_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L SUBTRACT_GREEN_TRANSFORM handling not yet implemented");
+        case COLOR_INDEXING_TRANSFORM:
+            return context.error("WebPImageDecoderPlugin: VP8L COLOR_INDEXING_TRANSFORM handling not yet implemented");
+        }
+    }
+
+    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, vp8l_header, bit_stream));
+    return {};
 }
 
 static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
