@@ -443,6 +443,9 @@ static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(WebPLoa
     return group;
 }
 
+
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext&, VP8LHeader const& vp8l_header, LittleEndianInputBitStream&);
+
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
 static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
@@ -504,6 +507,12 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         }
     }
 
+    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, vp8l_header, bit_stream));
+    return {};
+}
+
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, VP8LHeader const& vp8l_header, LittleEndianInputBitStream& bit_stream)
+{
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
     // spatially-coded-image =  color-cache-info meta-prefix data
@@ -546,7 +555,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
     PrefixCodeGroup group = TRY(decode_webp_chunk_VP8L_prefix_code_group(context, color_cache_size, bit_stream));
 
-    context.bitmap = TRY(Bitmap::create(vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, context.size.value()));
+    auto bitmap = TRY(Bitmap::create(vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, context.size.value()));
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#522_lz77_backward_reference
     struct Offset {
@@ -575,8 +584,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     // lz77-coded-image      =
     //     *((argb-pixel / lz77-copy / color-cache-code) lz77-coded-image)
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
-    ARGB32* pixel = context.bitmap->begin();
-    ARGB32* end = context.bitmap->end();
+    ARGB32* pixel = bitmap->begin();
+    ARGB32* end = bitmap->end();
 
     auto emit_pixel = [&pixel, &color_cache, color_cache_size, color_cache_code_bits](ARGB32 color) {
         // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
@@ -639,17 +648,17 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
             // "The smallest distance codes [1..120] are special, and are reserved for a close neighborhood of the current pixel."
             if (distance <= 120) {
                 auto offset = distance_map[distance - 1];
-                distance = offset.x + offset.y * context.size->width();
+                distance = offset.x + offset.y * bitmap->physical_width();
                 if (distance < 1)
                     distance = 1;
             } else {
                 distance = distance - 120;
             }
 
-            if (pixel - context.bitmap->begin() < distance)
+            if (pixel - bitmap->begin() < distance)
                 return context.error("WebPImageDecoderPlugin: Backward reference distance out of bounds");
 
-            if (context.bitmap->end() - pixel < length)
+            if (bitmap->end() - pixel < length)
                 return context.error("WebPImageDecoderPlugin: Backward reference length out of bounds");
 
             ARGB32* src = pixel - distance;
@@ -668,7 +677,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         }
     }
 
-    return {};
+    return bitmap;
 }
 
 static ErrorOr<VP8XHeader> decode_webp_chunk_VP8X(WebPLoadingContext& context, Chunk const& vp8x_chunk)
