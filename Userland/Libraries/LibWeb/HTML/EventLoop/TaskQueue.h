@@ -32,6 +32,7 @@ public:
     }
 
     void remove_tasks_matching(Function<bool(HTML::Task const&)>);
+    ErrorOr<Vector<NonnullOwnPtr<Task>>> take_tasks_matching(Function<bool(HTML::Task const&)>);
 
 private:
     HTML::EventLoop& m_event_loop;
