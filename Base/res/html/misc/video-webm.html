@@ -1,0 +1,72 @@
+<html>
+<head>
+<style type="text/css">
+    video {
+        border: 1px solid #333;
+    }
+
+    table, td {
+        border: 1px solid #333;
+        border-collapse: collapse;
+    }
+
+    thead, tfoot {
+        background-color: #333333;
+        color: #ffffff;
+    }
+</style>
+</head>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <th colspan="2">Metadata</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ID</td>
+                <td id=id>null</td>
+            </tr>
+            <tr>
+                <td>Is Selected</td>
+                <td id=selected>false</td>
+            </tr>
+            <tr>
+                <td>Duration</td>
+                <td id=duration>0 seconds</td>
+            </tr>
+            <tr>
+                <td>Width</td>
+                <td id=width>0px</td>
+            </tr>
+            <tr>
+                <td>Height</td>
+                <td id=height>0px</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br />
+
+    <video id=video controls src="file:///home/anon/Videos/test-webm.webm"></video>
+
+    <script type="text/javascript">
+        let video = document.getElementById('video');
+
+        video.videoTracks.onaddtrack = (event) => {
+            document.getElementById('id').textContent = event.track.id;
+            document.getElementById('selected').textContent = event.track.selected;
+        };
+
+        video.addEventListener('durationchange', () => {
+            document.getElementById('duration').textContent = `${video.duration} seconds`;
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            document.getElementById('width').textContent = `${video.videoWidth}px`;
+            document.getElementById('height').textContent = `${video.videoHeight}px`;
+        });
+    </script>
+</body>
+</html>
