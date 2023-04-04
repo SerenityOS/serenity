@@ -117,6 +117,7 @@ class Process final
         SessionID sid { 0 };
         // FIXME: This should be a NonnullRefPtr
         RefPtr<Credentials> credentials;
+        RefPtr<ProcessGroup> process_group;
         bool dumpable { false };
         bool executable_is_setid { false };
         Atomic<bool> has_promises { false };
@@ -238,7 +239,7 @@ public:
     bool is_session_leader() const { return sid().value() == pid().value(); }
     ProcessGroupID pgid() const
     {
-        return m_pg.with([&](auto& pg) { return pg ? pg->pgid() : 0; });
+        return with_protected_data([](auto& protected_data) { return protected_data.process_group ? protected_data.process_group->pgid() : 0; });
     }
     bool is_group_leader() const { return pgid().value() == pid().value(); }
     ProcessID ppid() const
@@ -680,8 +681,6 @@ private:
     SpinlockProtected<NonnullOwnPtr<KString>, LockRank::None> m_name;
 
     SpinlockProtected<OwnPtr<Memory::AddressSpace>, LockRank::None> m_space;
-
-    SpinlockProtected<RefPtr<ProcessGroup>, LockRank::None> m_pg;
 
     RecursiveSpinlock<LockRank::None> mutable m_protected_data_lock;
     AtomicEdgeAction<u32> m_protected_data_refs;
