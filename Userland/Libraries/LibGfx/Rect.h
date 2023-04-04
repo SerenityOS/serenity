@@ -557,6 +557,24 @@ public:
         return points;
     }
 
+    template<typename U = T>
+    [[nodiscard]] Gfx::Rect<U> interpolated_to(Gfx::Rect<T> const& to, float factor) const
+    {
+        VERIFY(factor >= 0.0f);
+        VERIFY(factor <= 1.0f);
+        if (factor == 0.0f)
+            return *this;
+        if (factor == 1.0f)
+            return to;
+        if (this == &to)
+            return *this;
+        auto interpolated_left = round_to<U>(mix<float>(x(), to.x(), factor));
+        auto interpolated_top = round_to<U>(mix<float>(y(), to.y(), factor));
+        auto interpolated_right = round_to<U>(mix<float>(right(), to.right(), factor));
+        auto interpolated_bottom = round_to<U>(mix<float>(bottom(), to.bottom(), factor));
+        return { interpolated_left, interpolated_top, interpolated_right - interpolated_left + 1, interpolated_bottom - interpolated_top + 1 };
+    }
+
     [[nodiscard]] float center_point_distance_to(Rect<T> const& other) const
     {
         return Line { center(), other.center() }.length();
