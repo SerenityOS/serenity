@@ -35,12 +35,27 @@ static ErrorOr<StringView> month_name(int month)
     return AK::long_month_names.at(month_index);
 }
 
-static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
+enum class Header {
+    MonthAndYear,
+    Month,
+};
+
+static ErrorOr<Vector<String>> month_lines_to_print(Header header_mode, int month, int year)
 {
     Vector<String> lines;
 
     // FIXME: Both the month name and month header text should be provided by a locale
-    TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", TRY(String::formatted("{} - {}", TRY(month_name(month)), year)), month_width))));
+    String header;
+    switch (header_mode) {
+    case Header::Month:
+        header = TRY(String::from_utf8(TRY(month_name(month))));
+        break;
+    case Header::MonthAndYear:
+        header = TRY(String::formatted("{} - {}", TRY(month_name(month)), year));
+        break;
+    }
+
+    TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", header, month_width))));
     TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
 
     auto date_time = Core::DateTime::create(year, month, 1);
@@ -121,16 +136,16 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (year_mode) {
         outln("{: ^{}}", TRY(String::formatted("Year {}", year)), year_width);
 
-        for (int i = 1; i < 12; ++i) {
+        for (int month_index = 1; month_index < 12; ++month_index) {
             outln();
             outln();
-            Vector<String> lines_left = TRY(month_lines_to_print(i++, year));
-            Vector<String> lines_center = TRY(month_lines_to_print(i++, year));
-            Vector<String> lines_right = TRY(month_lines_to_print(i, year));
+            Vector<String> lines_left = TRY(month_lines_to_print(Header::Month, month_index++, year));
+            Vector<String> lines_center = TRY(month_lines_to_print(Header::Month, month_index++, year));
+            Vector<String> lines_right = TRY(month_lines_to_print(Header::Month, month_index, year));
             print_months_side_by_side(lines_left, lines_center, lines_right);
         }
     } else {
-        Vector<String> lines = TRY(month_lines_to_print(month, year));
+        Vector<String> lines = TRY(month_lines_to_print(Header::MonthAndYear, month, year));
         for (String const& line : lines) {
             outln("{}", line);
         }
