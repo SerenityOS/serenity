@@ -448,7 +448,7 @@ enum class ImageKind {
     EntropyCoded,
 };
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, ImageKind image_kind, VP8LHeader const& vp8l_header, LittleEndianInputBitStream& bit_stream)
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, ImageKind image_kind, BitmapFormat format, IntSize const& size, LittleEndianInputBitStream& bit_stream)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
@@ -495,7 +495,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
     PrefixCodeGroup group = TRY(decode_webp_chunk_VP8L_prefix_code_group(context, color_cache_size, bit_stream));
 
-    auto bitmap = TRY(Bitmap::create(vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, context.size.value()));
+    auto bitmap = TRY(Bitmap::create(format, size));
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#522_lz77_backward_reference
     struct Offset {
@@ -681,7 +681,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         }
     }
 
-    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, vp8l_header, bit_stream));
+    auto format = vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
+    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, context.size.value(), bit_stream));
     return {};
 }
 
