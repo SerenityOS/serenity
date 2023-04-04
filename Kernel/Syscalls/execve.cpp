@@ -488,7 +488,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     auto new_process_name = TRY(KString::try_create(last_part));
     auto new_main_thread_name = TRY(new_process_name->try_clone());
 
-    auto allocated_space = TRY(Memory::AddressSpace::try_create(nullptr));
+    auto allocated_space = TRY(Memory::AddressSpace::try_create(*this, nullptr));
     OwnPtr<Memory::AddressSpace> old_space;
     auto& new_space = m_space.with([&](auto& space) -> Memory::AddressSpace& {
         old_space = move(space);

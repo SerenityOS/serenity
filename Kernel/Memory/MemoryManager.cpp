@@ -722,8 +722,11 @@ Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
     auto page_directory = PageDirectory::find_current();
     if (!page_directory)
         return nullptr;
-    VERIFY(page_directory->address_space());
-    return find_user_region_from_vaddr(*page_directory->address_space(), vaddr);
+    auto* process = page_directory->process();
+    VERIFY(process);
+    return process->address_space().with([&](auto& space) {
+        return find_user_region_from_vaddr(*space, vaddr);
+    });
 }
 
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)

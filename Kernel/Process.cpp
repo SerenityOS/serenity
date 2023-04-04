@@ -286,20 +286,22 @@ void Process::unprotect_data()
 
 ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
-    OwnPtr<Memory::AddressSpace> new_address_space;
-    if (fork_parent) {
-        TRY(fork_parent->address_space().with([&](auto& parent_address_space) -> ErrorOr<void> {
-            new_address_space = TRY(Memory::AddressSpace::try_create(parent_address_space.ptr()));
-            return {};
-        }));
-    } else {
-        new_address_space = TRY(Memory::AddressSpace::try_create(nullptr));
-    }
     auto unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto exec_unveil_tree = UnveilNode { TRY(KString::try_create("/"sv)), UnveilMetadata(TRY(KString::try_create("/"sv))) };
     auto credentials = TRY(Credentials::create(uid, gid, uid, gid, uid, gid, {}, fork_parent ? fork_parent->sid() : 0, fork_parent ? fork_parent->pgid() : 0));
 
     auto process = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Process(move(name), move(credentials), ppid, is_kernel_process, move(current_directory), move(executable), tty, move(unveil_tree), move(exec_unveil_tree))));
+
+    OwnPtr<Memory::AddressSpace> new_address_space;
+    if (fork_parent) {
+        TRY(fork_parent->address_space().with([&](auto& parent_address_space) -> ErrorOr<void> {
+            new_address_space = TRY(Memory::AddressSpace::try_create(*process, parent_address_space.ptr()));
+            return {};
+        }));
+    } else {
+        new_address_space = TRY(Memory::AddressSpace::try_create(*process, nullptr));
+    }
+
     auto first_thread = TRY(process->attach_resources(new_address_space.release_nonnull(), fork_parent));
 
     return ProcessAndFirstThread { move(process), move(first_thread) };

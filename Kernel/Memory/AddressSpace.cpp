@@ -19,9 +19,9 @@
 
 namespace Kernel::Memory {
 
-ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const* parent)
+ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(Process& process, AddressSpace const* parent)
 {
-    auto page_directory = TRY(PageDirectory::try_create_for_userspace());
+    auto page_directory = TRY(PageDirectory::try_create_for_userspace(process));
 
     VirtualRange total_range = [&]() -> VirtualRange {
         if (parent)
@@ -33,9 +33,7 @@ ErrorOr<NonnullOwnPtr<AddressSpace>> AddressSpace::try_create(AddressSpace const
         return VirtualRange(VirtualAddress { base }, userspace_range_ceiling - base);
     }();
 
-    auto space = TRY(adopt_nonnull_own_or_enomem(new (nothrow) AddressSpace(move(page_directory), total_range)));
-    space->page_directory().set_space({}, *space);
-    return space;
+    return adopt_nonnull_own_or_enomem(new (nothrow) AddressSpace(move(page_directory), total_range));
 }
 
 AddressSpace::AddressSpace(NonnullLockRefPtr<PageDirectory> page_directory, VirtualRange total_range)
