@@ -382,6 +382,7 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
     u8 last_non_zero = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
 
     // "A prefix table is then built from code_length_code_lengths and used to read up to max_symbol code lengths."
+    dbgln_if(WEBP_DEBUG, "  reading {} symbols", max_symbol);
     while (code_lengths.size() < max_symbol) {
         auto symbol = TRY(code_length_code.read_symbol(bit_stream));
 
@@ -418,6 +419,7 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
     if (code_lengths.size() != alphabet_size)
         return Error::from_string_literal("Number of code lengths does not match the sum of codes");
 
+    dbgln_if(WEBP_DEBUG, "  done reading symbols");
     return Compress::CanonicalCode::from_bytes(code_lengths);
 }
 
@@ -595,11 +597,15 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
                 distance = distance - 120;
             }
 
-            if (pixel - bitmap->begin() < distance)
+            if (pixel - bitmap->begin() < distance) {
+                dbgln_if(WEBP_DEBUG, "invalid backref, {} < {}", pixel - bitmap->begin(), distance);
                 return context.error("WebPImageDecoderPlugin: Backward reference distance out of bounds");
+            }
 
-            if (bitmap->end() - pixel < length)
+            if (bitmap->end() - pixel < length) {
+                dbgln_if(WEBP_DEBUG, "invalid length, {} < {}", bitmap->end() - pixel, length);
                 return context.error("WebPImageDecoderPlugin: Backward reference length out of bounds");
+            }
 
             ARGB32* src = pixel - distance;
             for (u32 i = 0; i < length; ++i)
