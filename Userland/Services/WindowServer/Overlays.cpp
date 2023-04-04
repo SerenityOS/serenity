@@ -228,7 +228,7 @@ Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& scre
 WindowGeometryOverlay::WindowGeometryOverlay(Window& window)
     : m_window(window)
 {
-    update_rect();
+    window_rect_changed();
 }
 
 void WindowGeometryOverlay::set_actual_rect()
@@ -291,35 +291,39 @@ void WindowGeometryOverlay::start_or_stop_move_to_tile_overlay_animation(TileWin
     }
 }
 
-void WindowGeometryOverlay::update_rect()
+void WindowGeometryOverlay::window_rect_changed()
 {
     if (auto* window = m_window.ptr()) {
         auto& wm = WindowManager::the();
         auto* tile_window_overlay = wm.get_tile_window_overlay(*window);
         auto geometry_rect = tile_window_overlay ? tile_window_overlay->tiled_frame_rect() : window->rect();
-        if (!window->size_increment().is_empty()) {
-            int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
-            int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
-            m_label = DeprecatedString::formatted("{} ({}x{})", geometry_rect, width_steps, height_steps);
-        } else {
-            m_label = geometry_rect.to_deprecated_string();
+        UpdateState new_update_state = { geometry_rect, tile_window_overlay != nullptr };
+        if (m_last_updated != new_update_state) {
+            m_last_updated = new_update_state;
+
+            if (!window->size_increment().is_empty()) {
+                int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
+                int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
+                m_label = DeprecatedString::formatted("{} ({}x{})", geometry_rect, width_steps, height_steps);
+            } else {
+                m_label = geometry_rect.to_deprecated_string();
+            }
+            m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().pixel_size_rounded_up() + 10 };
+
+            auto rect = calculate_frame_rect(m_label_rect).centered_within(window->frame().rect());
+            auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());
+            if (rect.left() < desktop_rect.left())
+                rect.set_left(desktop_rect.left());
+            if (rect.top() < desktop_rect.top())
+                rect.set_top(desktop_rect.top());
+            if (rect.right() > desktop_rect.right())
+                rect.set_right_without_resize(desktop_rect.right());
+            if (rect.bottom() > desktop_rect.bottom())
+                rect.set_bottom_without_resize(desktop_rect.bottom());
+            m_ideal_overlay_rect = rect;
+            set_actual_rect();
+            invalidate_content(); // Needed in case the rectangle itself doesn't change, but the contents did.
         }
-        m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().pixel_size_rounded_up() + 10 };
-
-        auto rect = calculate_frame_rect(m_label_rect).centered_within(window->frame().rect());
-        auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());
-        if (rect.left() < desktop_rect.left())
-            rect.set_left(desktop_rect.left());
-        if (rect.top() < desktop_rect.top())
-            rect.set_top(desktop_rect.top());
-        if (rect.right() > desktop_rect.right())
-            rect.set_right_without_resize(desktop_rect.right());
-        if (rect.bottom() > desktop_rect.bottom())
-            rect.set_bottom_without_resize(desktop_rect.bottom());
-
-        m_ideal_overlay_rect = rect;
-        set_actual_rect();
-        invalidate_content(); // needed in case the rectangle itself doesn't change. But the contents did.
 
         start_or_stop_move_to_tile_overlay_animation(tile_window_overlay);
     } else {
@@ -330,12 +334,6 @@ void WindowGeometryOverlay::update_rect()
 void WindowGeometryOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 {
     painter.draw_text(Gfx::IntRect { {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::TextAlignment::Center, Color::White);
-}
-
-void WindowGeometryOverlay::window_rect_changed()
-{
-    update_rect();
-    invalidate_content();
 }
 
 DndOverlay::DndOverlay(DeprecatedString const& text, Gfx::Bitmap const* bitmap)
