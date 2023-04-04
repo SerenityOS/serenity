@@ -45,7 +45,7 @@ $ cal 2023
                            Year 2023
 
 
-   January - 2023       February - 2023         March - 2023
+      January               February               March
 Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
  1  2  3  4  5  6  7            1  2  3  4            1  2  3  4
  8  9 10 11 12 13 14   5  6  7  8  9 10 11   5  6  7  8  9 10 11
@@ -54,7 +54,7 @@ Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
 29 30 31              26 27 28              26 27 28 29 30 31
 
 
-    April - 2023           May - 2023           June - 2023
+       April                  May                   June
 Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
                    1      1  2  3  4  5  6               1  2  3
  2  3  4  5  6  7  8   7  8  9 10 11 12 13   4  5  6  7  8  9 10
@@ -64,7 +64,7 @@ Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
 30
 
 
-    July - 2023          August - 2023        September - 2023
+        July                 August              September
 Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
                    1         1  2  3  4  5                  1  2
  2  3  4  5  6  7  8   6  7  8  9 10 11 12   3  4  5  6  7  8  9
@@ -74,7 +74,7 @@ Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
 30 31
 
 
-   October - 2023       November - 2023       December - 2023
+      October               November              December
 Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
  1  2  3  4  5  6  7            1  2  3  4                  1  2
  8  9 10 11 12 13 14   5  6  7  8  9 10 11   3  4  5  6  7  8  9
