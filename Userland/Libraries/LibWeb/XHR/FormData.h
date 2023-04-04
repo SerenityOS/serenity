@@ -41,6 +41,8 @@ public:
     WebIDL::ExceptionOr<void> set(String const& name, String const& value);
     WebIDL::ExceptionOr<void> set(String const& name, JS::NonnullGCPtr<FileAPI::Blob> const& blob_value, Optional<String> const& filename = {});
 
+    Vector<FormDataEntry> const& entry_list() const { return m_entry_list; }
+
     using ForEachCallback = Function<JS::ThrowCompletionOr<void>(String const&, FormDataEntryValue const&)>;
     JS::ThrowCompletionOr<void> for_each(ForEachCallback);
 
