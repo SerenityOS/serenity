@@ -1000,19 +1000,23 @@ void Compositor::add_overlay(Overlay& overlay)
     if (!did_insert)
         m_overlay_list.append(overlay);
 
-    overlay.clear_invalidated();
+    overlay.invalidate();
     overlay_rects_changed();
-    auto& rect = overlay.rect();
-    if (!rect.is_empty())
-        invalidate_screen(rect);
 }
 
 void Compositor::remove_overlay(Overlay& overlay)
 {
-    auto& current_render_rect = overlay.current_render_rect();
-    if (!current_render_rect.is_empty())
-        invalidate_screen(current_render_rect);
     m_overlay_list.remove(overlay);
+
+    auto last_rendered_rect = overlay.current_render_rect();
+    if (!last_rendered_rect.is_empty()) {
+        // We need to invalidate the entire area. While recomputing occlusions
+        // will detect areas no longer occupied by overlays, if there are other
+        // overlays intersecting with the overlay that was removed, then that
+        // area would not get re-rendered.
+        invalidate_screen(last_rendered_rect);
+    }
+
     overlay_rects_changed();
 }
 
@@ -1133,8 +1137,6 @@ void Compositor::overlay_rects_changed()
     m_overlay_rects_changed = true;
     m_invalidated_any = true;
     invalidate_occlusions();
-    for (auto& rect : m_overlay_rects.rects())
-        invalidate_screen(rect);
     start_compose_async_timer();
 }
 
@@ -1144,13 +1146,19 @@ void Compositor::recompute_overlay_rects()
     // regular window contents. This effectively just forces those areas to
     // be rendered as transparency areas, which allows us to render these
     // flicker-free.
+    swap(m_last_rendered_overlay_rects, m_overlay_rects);
     m_overlay_rects.clear_with_capacity();
     for (auto& overlay : m_overlay_list) {
         auto& render_rect = overlay.rect();
         m_overlay_rects.add(render_rect);
 
+        // Invalidate areas that are no longer in the rendered area because the overlay was moved.
+        auto previous_rects = overlay.current_render_rect().shatter(render_rect);
+        for (auto& rect : previous_rects)
+            invalidate_screen(rect);
+
         // Save the rectangle we are using for rendering from now on
-        overlay.did_recompute_occlusions();
+        bool needs_invalidation = overlay.apply_render_rect();
 
         // Cache which screens this overlay are rendered on
         overlay.m_screens.clear_with_capacity();
@@ -1160,8 +1168,15 @@ void Compositor::recompute_overlay_rects()
             return IterationDecision::Continue;
         });
 
-        invalidate_screen(render_rect);
+        if (needs_invalidation)
+            invalidate_screen(render_rect);
     }
+
+    // Invalidate rects that are not going to get rendered anymore, e.g.
+    // because overlays were removed or rectangles were changed
+    auto no_longer_rendered_rects = m_last_rendered_overlay_rects.shatter(m_overlay_rects);
+    for (auto& rect : no_longer_rendered_rects.rects())
+        invalidate_screen(rect);
 }
 
 void Compositor::recompute_occlusions()

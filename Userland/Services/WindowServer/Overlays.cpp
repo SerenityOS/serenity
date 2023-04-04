@@ -13,7 +13,8 @@ namespace WindowServer {
 
 Overlay::~Overlay()
 {
-    Compositor::the().remove_overlay(*this);
+    if (is_enabled())
+        Compositor::the().remove_overlay(*this);
 }
 
 bool Overlay::invalidate()
@@ -21,9 +22,8 @@ bool Overlay::invalidate()
     if (m_invalidated)
         return false;
     m_invalidated = true;
-    // m_current_rect should only get updated by recompute_overlay_rects()
-    if (!m_current_rect.is_empty())
-        Compositor::the().invalidate_screen(m_current_rect);
+    if (is_enabled())
+        Compositor::the().overlay_rects_changed();
     return true;
 }
 
@@ -45,8 +45,6 @@ void Overlay::set_rect(Gfx::IntRect const& rect)
     auto previous_rect = m_rect;
     m_rect = rect;
     invalidate();
-    if (is_enabled())
-        Compositor::the().overlay_rects_changed();
     rect_changed(previous_rect);
 }
 
@@ -257,6 +255,7 @@ void WindowGeometryOverlay::update_rect()
             rect.set_bottom_without_resize(desktop_rect.bottom());
 
         set_rect(rect);
+        invalidate_content(); // needed in case the rectangle itself doesn't change. But the contents did.
     } else {
         set_enabled(false);
     }
