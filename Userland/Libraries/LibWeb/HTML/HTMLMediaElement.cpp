@@ -25,6 +25,14 @@ JS::ThrowCompletionOr<void> HTMLMediaElement::initialize(JS::Realm& realm)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#queue-a-media-element-task
+void HTMLMediaElement::queue_a_media_element_task(JS::SafeFunction<void()> steps)
+{
+    // To queue a media element task with a media element element and a series of steps steps, queue an element task on the media element's
+    // media element event task source given element and steps.
+    queue_an_element_task(media_element_event_task_source(), move(steps));
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype
 Bindings::CanPlayTypeResult HTMLMediaElement::can_play_type(DeprecatedString const& type) const
 {

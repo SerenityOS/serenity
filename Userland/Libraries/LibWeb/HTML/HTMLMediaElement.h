@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -15,6 +16,8 @@ class HTMLMediaElement : public HTMLElement {
 
 public:
     virtual ~HTMLMediaElement() override;
+
+    void queue_a_media_element_task(JS::SafeFunction<void()> steps);
 
     enum class NetworkState : u16 {
         Empty,
@@ -35,6 +38,11 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
 private:
+    Task::Source media_element_event_task_source() const { return m_media_element_event_task_source.source; }
+
+    // https://html.spec.whatwg.org/multipage/media.html#media-element-event-task-source
+    UniqueTaskSource m_media_element_event_task_source {};
+
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-networkstate
     NetworkState m_network_state { NetworkState::Empty };
 };
