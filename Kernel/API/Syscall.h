@@ -73,7 +73,7 @@ enum class NeedsBigProcessLock {
     S(execve, NeedsBigProcessLock::Yes)                    \
     S(exit, NeedsBigProcessLock::Yes)                      \
     S(exit_thread, NeedsBigProcessLock::Yes)               \
-    S(faccessat, NeedsBigProcessLock::Yes)                 \
+    S(faccessat, NeedsBigProcessLock::No)                  \
     S(fchdir, NeedsBigProcessLock::No)                     \
     S(fchmod, NeedsBigProcessLock::No)                     \
     S(fchown, NeedsBigProcessLock::No)                     \
