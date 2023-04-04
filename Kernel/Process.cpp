@@ -310,7 +310,6 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
     , m_current_directory(move(current_directory))
-    , m_tty(tty)
     , m_unveil_data(move(unveil_tree))
     , m_exec_unveil_data(move(exec_unveil_tree))
     , m_wait_blocker_set(*this)
@@ -320,6 +319,7 @@ Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credent
         protected_data.pid = allocate_pid();
         protected_data.ppid = ppid;
         protected_data.credentials = move(credentials);
+        protected_data.tty = move(tty);
     });
 
     if constexpr (PROCESS_DEBUG) {
@@ -758,7 +758,7 @@ void Process::finalize()
             TimerQueue::the().cancel_timer(timer.release_nonnull());
     });
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
-    m_tty.with([](auto& tty) { tty = nullptr; });
+    with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
     m_executable.with([](auto& executable) { executable = nullptr; });
     m_jail_process_list.with([this](auto& list_ptr) {
         if (list_ptr) {
@@ -835,7 +835,7 @@ void Process::die()
     // getting an EOF when the last process using the slave PTY dies.
     // If the master PTY owner relies on an EOF to know when to wait() on a
     // slave owner, we have to allow the PTY pair to be torn down.
-    m_tty.with([](auto& tty) { tty = nullptr; });
+    with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = nullptr; });
 
     VERIFY(m_threads_for_coredump.is_empty());
     for_each_thread([&](auto& thread) {
@@ -943,17 +943,17 @@ void Process::OpenFileDescriptionAndFlags::set(NonnullRefPtr<OpenFileDescription
 
 RefPtr<TTY> Process::tty()
 {
-    return m_tty.with([&](auto& tty) { return tty; });
+    return with_protected_data([&](auto& protected_data) { return protected_data.tty; });
 }
 
 RefPtr<TTY const> Process::tty() const
 {
-    return m_tty.with([&](auto& tty) { return tty; });
+    return with_protected_data([&](auto& protected_data) { return protected_data.tty; });
 }
 
 void Process::set_tty(RefPtr<TTY> new_tty)
 {
-    m_tty.with([&](auto& tty) { swap(tty, new_tty); });
+    with_mutable_protected_data([&](auto& protected_data) { protected_data.tty = move(new_tty); });
 }
 
 ErrorOr<void> Process::start_tracing_from(ProcessID tracer)

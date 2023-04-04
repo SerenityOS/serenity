@@ -38,8 +38,8 @@ ErrorOr<FlatPtr> Process::sys$setsid()
     // Create a new Session and a new ProcessGroup.
 
     auto process_group = TRY(ProcessGroup::create(ProcessGroupID(pid().value())));
-    m_tty.with([](auto& tty) { tty = nullptr; });
     return with_mutable_protected_data([&](auto& protected_data) -> ErrorOr<FlatPtr> {
+        protected_data.tty = nullptr;
         protected_data.process_group = move(process_group);
         protected_data.sid = pid().value();
         return protected_data.sid.value();

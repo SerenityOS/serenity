@@ -118,6 +118,7 @@ class Process final
         // FIXME: This should be a NonnullRefPtr
         RefPtr<Credentials> credentials;
         RefPtr<ProcessGroup> process_group;
+        RefPtr<TTY> tty;
         bool dumpable { false };
         bool executable_is_setid { false };
         Atomic<bool> has_promises { false };
@@ -856,8 +857,6 @@ private:
 
     Vector<NonnullOwnPtr<KString>> m_arguments;
     Vector<NonnullOwnPtr<KString>> m_environment;
-
-    SpinlockProtected<RefPtr<TTY>, LockRank::None> m_tty;
 
     LockWeakPtr<Memory::Region> m_master_tls_region;
 
