@@ -121,7 +121,7 @@ public:
     ALWAYS_INLINE Value& operator=(Value const& value) = default;
 
     template<typename T>
-    ALWAYS_INLINE Optional<T> to()
+    ALWAYS_INLINE Optional<T> to() const
     {
         Optional<T> result;
         m_value.visit(

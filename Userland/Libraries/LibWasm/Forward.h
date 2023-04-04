@@ -11,5 +11,10 @@ namespace Wasm {
 class AbstractMachine;
 class Validator;
 struct ValidationError;
+struct Interpreter;
+
+namespace Wasi {
+struct Implementation;
+}
 
 }

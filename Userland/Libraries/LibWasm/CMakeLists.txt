@@ -5,6 +5,7 @@ set(SOURCES
     AbstractMachine/Validator.cpp
     Parser/Parser.cpp
     Printer/Printer.cpp
+    WASI/Wasi.cpp
 )
 
 serenity_lib(LibWasm wasm)
