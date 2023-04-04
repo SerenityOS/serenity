@@ -359,11 +359,20 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
         dbgln_if(WEBP_DEBUG, "  code_length_code_lengths[{}] = {}", kCodeLengthCodeOrder[i], code_length_code_lengths[kCodeLengthCodeOrder[i]]);
     }
 
-    int max_symbol = num_code_lengths;
+    // The spec is at best misleading here, suggesting that max_symbol should be set to "num_code_lengths" if it's not explicitly stored.
+    // But num_code_lengths doesn't mean the num_code_lengths mentioned a few lines further up in the spec (and in scope here),
+    // but alphabet_size!
+    //
+    // Since the spec doesn't mention it, see libwebp vp8l_dec.c, ReadHuffmanCode()
+    // which passes alphabet_size to ReadHuffmanCodeLengths() as num_symbols,
+    // and ReadHuffmanCodeLengths() then sets max_symbol to that.)
+    unsigned max_symbol = alphabet_size;
     if (TRY(bit_stream.read_bits(1))) {
         int length_nbits = 2 + 2 * TRY(bit_stream.read_bits(3));
         max_symbol = 2 + TRY(bit_stream.read_bits(length_nbits));
         dbgln_if(WEBP_DEBUG, "  extended, length_nbits {} max_symbol {}", length_nbits, max_symbol);
+        if (max_symbol > alphabet_size)
+            return context.error("WebPImageDecoderPlugin: invalid max_symbol");
     }
 
     auto const code_length_code = TRY(Compress::CanonicalCode::from_bytes({ code_length_code_lengths, sizeof(code_length_code_lengths) }));
@@ -373,8 +382,7 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
     u8 last_non_zero = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
 
     // "A prefix table is then built from code_length_code_lengths and used to read up to max_symbol code lengths."
-    // FIXME: what's max_symbol good for? (seems to work with alphabet_size)
-    while (code_lengths.size() < alphabet_size) {
+    while (code_lengths.size() < max_symbol) {
         auto symbol = TRY(code_length_code.read_symbol(bit_stream));
 
         if (symbol < 16) {
