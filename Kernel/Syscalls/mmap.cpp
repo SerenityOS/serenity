@@ -480,7 +480,7 @@ ErrorOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 
 ErrorOr<FlatPtr> Process::sys$mremap(Userspace<Syscall::SC_mremap_params const*> user_params)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
     auto params = TRY(copy_typed_from_user(user_params));
 
