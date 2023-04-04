@@ -443,11 +443,17 @@ static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(WebPLoa
     return group;
 }
 
-static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, VP8LHeader const& vp8l_header, LittleEndianInputBitStream& bit_stream)
+enum class ImageKind {
+    SpatiallyCoded,
+    EntropyCoded,
+};
+
+static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingContext& context, ImageKind image_kind, VP8LHeader const& vp8l_header, LittleEndianInputBitStream& bit_stream)
 {
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#623_decoding_entropy-coded_image_data
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#523_color_cache_coding
     // spatially-coded-image =  color-cache-info meta-prefix data
+    // entropy-coded-image   =  color-cache-info data
 
     // color-cache-info      =  %b0
     // color-cache-info      =/ (%b1 4BIT) ; 1 followed by color cache size
@@ -469,13 +475,15 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
         TRY(color_cache.try_resize(color_cache_size));
     }
 
-    // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#622_decoding_of_meta_prefix_codes
-    // "Meta prefix codes may be used only when the image is being used in the role of an ARGB image."
-    // meta-prefix           =  %b0 / (%b1 entropy-image)
-    bool has_meta_prefix = TRY(bit_stream.read_bits(1));
-    dbgln_if(WEBP_DEBUG, "has_meta_prefix {}", has_meta_prefix);
-    if (has_meta_prefix)
-        return context.error("WebPImageDecoderPlugin: VP8L meta_prefix not yet implemented");
+    if (image_kind == ImageKind::SpatiallyCoded) {
+        // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#622_decoding_of_meta_prefix_codes
+        // "Meta prefix codes may be used only when the image is being used in the role of an ARGB image."
+        // meta-prefix           =  %b0 / (%b1 entropy-image)
+        bool has_meta_prefix = TRY(bit_stream.read_bits(1));
+        dbgln_if(WEBP_DEBUG, "has_meta_prefix {}", has_meta_prefix);
+        if (has_meta_prefix)
+            return context.error("WebPImageDecoderPlugin: VP8L meta_prefix not yet implemented");
+    }
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#52_encoding_of_image_data
     // "The encoded image data consists of several parts:
@@ -673,7 +681,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         }
     }
 
-    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, vp8l_header, bit_stream));
+    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, vp8l_header, bit_stream));
     return {};
 }
 
