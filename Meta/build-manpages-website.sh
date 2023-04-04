@@ -108,6 +108,7 @@ pandoc -f gfm -t html5 -s \
 echo 'Copying images'
 rsync -a Meta/Websites/man.serenityos.org/banner.png output/ &
 rsync -a Base/usr/share/man/man7/LibDSP_classes.svg output/ &
+rsync -a Base/res/icons/32x32/msgbox-warning.png output/icons/32x32/ &
 find Base/usr/share/man/ -iname '*.png' -exec rsync -a {} output/ \; &
 
 # Copy icons
