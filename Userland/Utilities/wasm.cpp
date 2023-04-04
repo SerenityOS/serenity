@@ -7,6 +7,7 @@
 
 #include <AK/MemoryStream.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibLine/Editor.h>
@@ -15,6 +16,7 @@
 #include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/Printer/Printer.h>
 #include <LibWasm/Types.h>
+#include <LibWasm/Wasi.h>
 #include <signal.h>
 #include <unistd.h>
 
@@ -278,9 +280,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool debug = false;
     bool export_all_imports = false;
     bool shell_mode = false;
+    bool wasi = false;
     DeprecatedString exported_function_to_execute;
     Vector<u64> values_to_push;
     Vector<DeprecatedString> modules_to_link_in;
+    Vector<StringView> args_if_wasi;
+    Vector<StringView> wasi_preopened_mappings;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(filename, "File name to parse", "file");
@@ -290,6 +295,21 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
     parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
     parser.add_option(shell_mode, "Launch a REPL in the module's context (implies -i)", "shell", 's');
+    parser.add_option(wasi, "Enable WASI", "wasi", 'w');
+    parser.add_option(Core::ArgsParser::Option {
+        .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
+        .help_string = "Directory mappings to expose via WASI",
+        .long_name = "wasi-map-dir",
+        .short_name = 0,
+        .value_name = "path[:path]",
+        .accept_value = [&](StringView str) {
+            if (!str.is_empty()) {
+                wasi_preopened_mappings.append(str);
+                return true;
+            }
+            return false;
+        },
+    });
     parser.add_option(Core::ArgsParser::Option {
         .argument_mode = Core::ArgsParser::OptionArgumentMode::Required,
         .help_string = "Extra modules to link with, use to resolve imports",
@@ -318,6 +338,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return false;
         },
     });
+    parser.add_positional_argument(args_if_wasi, "Arguments to pass to the WASI module", "args", Core::ArgsParser::Required::No);
     parser.parse(arguments);
 
     if (shell_mode) {
@@ -351,6 +372,34 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (attempt_instantiate) {
         Wasm::AbstractMachine machine;
+        Optional<Wasm::Wasi::Implementation> wasi_impl;
+
+        if (wasi) {
+            wasi_impl.emplace(Wasm::Wasi::Implementation::Details {
+                .provide_arguments = [&] {
+                    Vector<String> strings;
+                    for (auto& string : args_if_wasi)
+                        strings.append(String::from_utf8(string).release_value_but_fixme_should_propagate_errors());
+                    return strings; },
+                .provide_environment = {},
+                .provide_preopened_directories = [&] {
+                    Vector<Wasm::Wasi::Implementation::MappedPath> paths;
+                    for (auto& string : wasi_preopened_mappings) {
+                        auto split_index = string.find(':');
+                        if (split_index.has_value()) {
+                            LexicalPath host_path { Core::DeprecatedFile::real_path_for(string.substring_view(0, *split_index)) };
+                            LexicalPath mapped_path { string.substring_view(*split_index + 1) };
+                            paths.append({move(host_path), move(mapped_path)});
+                        } else {
+                            LexicalPath host_path { Core::DeprecatedFile::real_path_for(string) };
+                            LexicalPath mapped_path { string };
+                            paths.append({move(host_path), move(mapped_path)});
+                        }
+                    }
+                    return paths; },
+            });
+        }
+
         Core::EventLoop main_loop;
         if (debug) {
             g_line_editor = Line::Editor::construct();
@@ -388,6 +437,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         Wasm::Linker linker { parse_result.value() };
         for (auto& instance : linked_instances)
             linker.link(*instance);
+
+        if (wasi) {
+            HashMap<Wasm::Linker::Name, Wasm::ExternValue> wasi_exports;
+            for (auto& entry : linker.unresolved_imports()) {
+                if (entry.module != "wasi_snapshot_preview1"sv)
+                    continue;
+                auto function = wasi_impl->function_by_name(entry.name);
+                if (function.is_error()) {
+                    dbgln("wasi function {} not implemented :(", entry.name);
+                    continue;
+                }
+                auto address = machine.store().allocate(function.release_value());
+                wasi_exports.set(entry, *address);
+            }
+
+            linker.link(wasi_exports);
+        }
 
         if (export_all_imports) {
             HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;
