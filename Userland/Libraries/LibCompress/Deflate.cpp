@@ -69,6 +69,10 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
         code.m_prefix_table[1] = code.m_prefix_table[0];
         code.m_max_prefixed_code_length = 1;
 
+        if (code.m_bit_codes.size() < static_cast<size_t>(last_non_zero + 1)) {
+            TRY(code.m_bit_codes.try_resize(last_non_zero + 1));
+            TRY(code.m_bit_code_lengths.try_resize(last_non_zero + 1));
+        }
         code.m_bit_codes[last_non_zero] = 0;
         code.m_bit_code_lengths[last_non_zero] = 1;
 
@@ -107,6 +111,10 @@ ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
                 code.m_symbol_values.append(symbol);
             }
 
+            if (code.m_bit_codes.size() < symbol + 1) {
+                TRY(code.m_bit_codes.try_resize(symbol + 1));
+                TRY(code.m_bit_code_lengths.try_resize(symbol + 1));
+            }
             code.m_bit_codes[symbol] = fast_reverse16(start_bit | next_code, code_length); // DEFLATE writes huffman encoded symbols as lsb-first
             code.m_bit_code_lengths[symbol] = code_length;
 
@@ -159,7 +167,9 @@ ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& stream) cons
 
 ErrorOr<void> CanonicalCode::write_symbol(LittleEndianOutputBitStream& stream, u32 symbol) const
 {
-    TRY(stream.write_bits(m_bit_codes[symbol], m_bit_code_lengths[symbol]));
+    auto code = symbol < m_bit_codes.size() ? m_bit_codes[symbol] : 0u;
+    auto length = symbol < m_bit_code_lengths.size() ? m_bit_code_lengths[symbol] : 0u;
+    TRY(stream.write_bits(code, length));
     return {};
 }
 

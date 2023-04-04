@@ -45,8 +45,10 @@ private:
     size_t m_max_prefixed_code_length { 0 };
 
     // Compression - indexed by symbol
-    Array<u16, 288> m_bit_codes {}; // deflate uses a maximum of 288 symbols (maximum of 32 for distances)
-    Array<u16, 288> m_bit_code_lengths {};
+    // Deflate uses a maximum of 288 symbols (maximum of 32 for distances),
+    // but this is also used by webp, which can use up to 256 + 24 + (1 << 11) == 2328 symbols.
+    Vector<u16, 288> m_bit_codes {};
+    Vector<u16, 288> m_bit_code_lengths {};
 };
 
 class DeflateDecompressor final : public Stream {
