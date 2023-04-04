@@ -6,6 +6,8 @@ interface HTMLVideoElement : HTMLMediaElement {
 
     [HTMLConstructor] constructor();
 
+    readonly attribute unsigned long videoWidth;
+    readonly attribute unsigned long videoHeight;
     [CEReactions, Reflect] attribute USVString poster;
     [CEReactions, Reflect=playsinline] attribute boolean playsInline;
 

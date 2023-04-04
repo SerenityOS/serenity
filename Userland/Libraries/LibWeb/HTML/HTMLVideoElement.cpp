@@ -24,4 +24,26 @@ JS::ThrowCompletionOr<void> HTMLVideoElement::initialize(JS::Realm& realm)
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#dom-video-videowidth
+u32 HTMLVideoElement::video_width() const
+{
+    // The videoWidth IDL attribute must return the intrinsic width of the video in CSS pixels. The videoHeight IDL
+    // attribute must return the intrinsic height of the video in CSS pixels. If the element's readyState attribute
+    // is HAVE_NOTHING, then the attributes must return 0.
+    if (ready_state() == ReadyState::HaveNothing)
+        return 0;
+    return m_video_width;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#dom-video-videoheight
+u32 HTMLVideoElement::video_height() const
+{
+    // The videoWidth IDL attribute must return the intrinsic width of the video in CSS pixels. The videoHeight IDL
+    // attribute must return the intrinsic height of the video in CSS pixels. If the element's readyState attribute
+    // is HAVE_NOTHING, then the attributes must return 0.
+    if (ready_state() == ReadyState::HaveNothing)
+        return 0;
+    return m_video_height;
+}
+
 }

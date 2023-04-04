@@ -603,7 +603,10 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
         // 5. For video elements, set the videoWidth and videoHeight attributes, and queue a media element task given the media element to fire an event
         //    named resize at the media element.
         if (is<HTMLVideoElement>(*this)) {
-            // FIXME: Set the videoWidth and videoHeight attributes.
+            auto& video_element = verify_cast<HTMLVideoElement>(*this);
+            video_element.set_video_width(video_track->pixel_width());
+            video_element.set_video_height(video_track->pixel_height());
+
             queue_a_media_element_task([this] {
                 dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::resize.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
             });
