@@ -65,7 +65,10 @@ ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)
         }
 
         TRY(process_object.add("pid"sv, process.pid().value()));
-        TRY(process_object.add("pgid"sv, process.tty() ? process.tty()->pgid().value() : 0));
+        ProcessGroupID tty_pgid = 0;
+        if (auto tty = process.tty())
+            tty_pgid = tty->pgid();
+        TRY(process_object.add("pgid"sv, tty_pgid.value()));
         TRY(process_object.add("pgp"sv, process.pgid().value()));
         TRY(process_object.add("sid"sv, process.sid().value()));
         auto credentials = process.credentials();

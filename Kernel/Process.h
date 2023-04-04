@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -198,7 +198,7 @@ public:
     }
 
     static ErrorOr<ProcessAndFirstThread> create_kernel_process(NonnullOwnPtr<KString> name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT, RegisterProcess do_register = RegisterProcess::Yes);
-    static ErrorOr<ProcessAndFirstThread> create_user_process(StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY*);
+    static ErrorOr<ProcessAndFirstThread> create_user_process(StringView path, UserID, GroupID, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<TTY>);
     static void register_new(Process&);
 
     ~Process();
@@ -466,8 +466,9 @@ public:
     [[noreturn]] void crash(int signal, Optional<RegisterState const&> regs, bool out_of_memory = false);
     [[nodiscard]] siginfo_t wait_info() const;
 
-    const TTY* tty() const { return m_tty; }
-    void set_tty(TTY*);
+    RefPtr<TTY> tty();
+    RefPtr<TTY const> tty() const;
+    void set_tty(RefPtr<TTY>);
 
     clock_t m_ticks_in_user { 0 };
     clock_t m_ticks_in_kernel { 0 };
@@ -604,8 +605,8 @@ private:
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
 
-    Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree);
-    static ErrorOr<ProcessAndFirstThread> create(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials>, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree);
+    static ErrorOr<ProcessAndFirstThread> create(NonnullOwnPtr<KString> name, UserID, GroupID, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory = nullptr, RefPtr<Custody> executable = nullptr, RefPtr<TTY> = nullptr, Process* fork_parent = nullptr);
     ErrorOr<NonnullRefPtr<Thread>> attach_resources(NonnullOwnPtr<Memory::AddressSpace>&&, Process* fork_parent);
     static ProcessID allocate_pid();
 
@@ -857,7 +858,7 @@ private:
     Vector<NonnullOwnPtr<KString>> m_arguments;
     Vector<NonnullOwnPtr<KString>> m_environment;
 
-    LockRefPtr<TTY> m_tty;
+    SpinlockProtected<RefPtr<TTY>, LockRank::None> m_tty;
 
     LockWeakPtr<Memory::Region> m_master_tls_region;
 

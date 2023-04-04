@@ -26,7 +26,7 @@ ErrorOr<NonnullRefPtr<OpenFileDescription>> SelfTTYDevice::open(int options)
     if (!Process::has_current())
         return Error::from_errno(ESRCH);
     auto& current_process = Process::current();
-    LockRefPtr<TTY> tty = current_process.tty();
+    auto tty = current_process.tty();
     if (!tty)
         return Error::from_errno(ENXIO);
     auto description = TRY(OpenFileDescription::try_create(*tty));

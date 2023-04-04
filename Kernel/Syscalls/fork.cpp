@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2023, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -11,6 +11,7 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
@@ -21,7 +22,7 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 
     auto child_name = TRY(name().with([](auto& name) { return name->try_clone(); }));
     auto credentials = this->credentials();
-    auto child_and_first_thread = TRY(Process::create(move(child_name), credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), m_tty, this));
+    auto child_and_first_thread = TRY(Process::create(move(child_name), credentials->uid(), credentials->gid(), pid(), m_is_kernel_process, current_directory(), executable(), tty(), this));
     auto& child = child_and_first_thread.process;
     auto& child_first_thread = child_and_first_thread.first_thread;
 

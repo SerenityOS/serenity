@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -208,7 +208,7 @@ void Process::register_new(Process& process)
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, TTY* tty)
+ErrorOr<Process::ProcessAndFirstThread> Process::create_user_process(StringView path, UserID uid, GroupID gid, Vector<NonnullOwnPtr<KString>> arguments, Vector<NonnullOwnPtr<KString>> environment, RefPtr<TTY> tty)
 {
     auto parts = path.split_view('/');
     if (arguments.is_empty()) {
@@ -284,7 +284,7 @@ void Process::unprotect_data()
     });
 }
 
-ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> name, UserID uid, GroupID gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, Process* fork_parent)
 {
     OwnPtr<Memory::AddressSpace> new_address_space;
     if (fork_parent) {
@@ -305,7 +305,7 @@ ErrorOr<Process::ProcessAndFirstThread> Process::create(NonnullOwnPtr<KString> n
     return ProcessAndFirstThread { move(process), move(first_thread) };
 }
 
-Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, TTY* tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree)
+Process::Process(NonnullOwnPtr<KString> name, NonnullRefPtr<Credentials> credentials, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> current_directory, RefPtr<Custody> executable, RefPtr<TTY> tty, UnveilNode unveil_tree, UnveilNode exec_unveil_tree)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
@@ -758,7 +758,7 @@ void Process::finalize()
             TimerQueue::the().cancel_timer(timer.release_nonnull());
     });
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
-    m_tty = nullptr;
+    m_tty.with([](auto& tty) { tty = nullptr; });
     m_executable.with([](auto& executable) { executable = nullptr; });
     m_jail_process_list.with([this](auto& list_ptr) {
         if (list_ptr) {
@@ -835,7 +835,7 @@ void Process::die()
     // getting an EOF when the last process using the slave PTY dies.
     // If the master PTY owner relies on an EOF to know when to wait() on a
     // slave owner, we have to allow the PTY pair to be torn down.
-    m_tty = nullptr;
+    m_tty.with([](auto& tty) { tty = nullptr; });
 
     VERIFY(m_threads_for_coredump.is_empty());
     for_each_thread([&](auto& thread) {
@@ -941,9 +941,19 @@ void Process::OpenFileDescriptionAndFlags::set(NonnullRefPtr<OpenFileDescription
     m_flags = flags;
 }
 
-void Process::set_tty(TTY* tty)
+RefPtr<TTY> Process::tty()
 {
-    m_tty = tty;
+    return m_tty.with([&](auto& tty) { return tty; });
+}
+
+RefPtr<TTY const> Process::tty() const
+{
+    return m_tty.with([&](auto& tty) { return tty; });
+}
+
+void Process::set_tty(RefPtr<TTY> new_tty)
+{
+    m_tty.with([&](auto& tty) { swap(tty, new_tty); });
 }
 
 ErrorOr<void> Process::start_tracing_from(ProcessID tracer)
