@@ -33,6 +33,15 @@ public:
 
     WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> can_play_type(DeprecatedString const& type) const;
 
+    enum class ReadyState : u16 {
+        HaveNothing,
+        HaveMetadata,
+        HaveCurrentData,
+        HaveFutureData,
+        HaveEnoughData,
+    };
+    ReadyState ready_state() const { return m_ready_state; }
+
     void load() const;
     double duration() const;
     void pause() const;
@@ -60,6 +69,7 @@ private:
     WebIDL::ExceptionOr<void> process_media_data(Function<void()> failure_callback);
     WebIDL::ExceptionOr<void> handle_media_source_failure();
     void forget_media_resource_specific_tracks();
+    void set_ready_state(ReadyState);
     void set_duration(double);
 
     // https://html.spec.whatwg.org/multipage/media.html#media-element-event-task-source
@@ -67,6 +77,10 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-networkstate
     NetworkState m_network_state { NetworkState::Empty };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-readystate
+    ReadyState m_ready_state { ReadyState::HaveNothing };
+    bool m_first_data_load_event_since_load_start { false };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
     double m_duration { NAN };
