@@ -757,7 +757,11 @@ void WindowManager::start_tile_window_animation(Gfx::IntRect const& starting_rec
 
 void WindowManager::stop_tile_window_animation()
 {
-    m_tile_window_overlay = nullptr;
+    if (m_tile_window_overlay) {
+        if (m_geometry_overlay)
+            m_geometry_overlay->start_or_stop_move_to_tile_overlay_animation(nullptr);
+        m_tile_window_overlay = nullptr;
+    }
     m_tile_window_overlay_animation = nullptr;
 }
 
@@ -776,8 +780,16 @@ void WindowManager::show_tile_window_overlay(Window& window, Screen const& curso
         if (m_tile_window_overlay->tiled_frame_rect() != tiled_frame_rect) {
             m_tile_window_overlay->set_tiled_frame_rect(tiled_frame_rect);
             start_tile_window_animation(m_tile_window_overlay->rect());
+            if (m_geometry_overlay)
+                m_geometry_overlay->window_rect_changed();
         }
     }
+}
+TileWindowOverlay* WindowManager::get_tile_window_overlay(Window& window) const
+{
+    if (m_tile_window_overlay && m_tile_window_overlay->is_window(window))
+        return m_tile_window_overlay.ptr();
+    return nullptr;
 }
 
 bool WindowManager::process_ongoing_window_move(MouseEvent& event)
