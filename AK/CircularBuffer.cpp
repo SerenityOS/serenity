@@ -206,20 +206,21 @@ ErrorOr<size_t> CircularBuffer::fill_from_stream(Stream& stream)
     return bytes.size();
 }
 
-ErrorOr<void> CircularBuffer::copy_from_seekback(size_t distance, size_t length)
+ErrorOr<size_t> CircularBuffer::copy_from_seekback(size_t distance, size_t length)
 {
     if (distance > m_seekback_limit)
         return Error::from_string_literal("Tried a seekback copy beyond the seekback limit");
 
-    while (length > 0) {
+    auto remaining_length = length;
+    while (remaining_length > 0) {
         auto next_span = next_read_span_with_seekback(distance);
         if (next_span.size() == 0)
             break;
 
-        length -= write(next_span.trim(length));
+        remaining_length -= write(next_span.trim(remaining_length));
     }
 
-    return {};
+    return length - remaining_length;
 }
 
 }
