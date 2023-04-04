@@ -407,7 +407,7 @@ ErrorOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int p
 
 ErrorOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
-    VERIFY_PROCESS_BIG_LOCK_ACQUIRED(this);
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
     TRY(require_promise(Pledge::stdio));
 
     auto range_to_madvise = TRY(Memory::expand_range_to_page_boundaries(address.ptr(), size));

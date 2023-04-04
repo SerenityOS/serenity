@@ -121,7 +121,7 @@ enum class NeedsBigProcessLock {
     S(link, NeedsBigProcessLock::No)                       \
     S(listen, NeedsBigProcessLock::No)                     \
     S(lseek, NeedsBigProcessLock::No)                      \
-    S(madvise, NeedsBigProcessLock::Yes)                   \
+    S(madvise, NeedsBigProcessLock::No)                    \
     S(map_time_page, NeedsBigProcessLock::Yes)             \
     S(mkdir, NeedsBigProcessLock::No)                      \
     S(mknod, NeedsBigProcessLock::No)                      \
