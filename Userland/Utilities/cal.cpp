@@ -143,6 +143,24 @@ static void print_months_side_by_side(Vector<String> const& left_month, Vector<S
     }
 }
 
+static void go_to_next_month(int& month, int& year)
+{
+    month += 1;
+    if (month > 12) {
+        year += 1;
+        month = 1;
+    }
+}
+
+static void go_to_previous_month(int& month, int& year)
+{
+    month -= 1;
+    if (month < 1) {
+        year -= 1;
+        month = 12;
+    }
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio rpath cpath"));
@@ -150,6 +168,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int month = 0;
     int year = 0;
     StringView week_start_day_name {};
+    bool three_month_mode = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display a nice overview of a month or year, defaulting to the current month.");
@@ -157,6 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_positional_argument(month, "Month", "month", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(year, "Year", "year", Core::ArgsParser::Required::No);
     args_parser.add_option(week_start_day_name, "Day that starts the week", "starting-day", 's', "day");
+    args_parser.add_option(three_month_mode, "Show the previous and next month beside the current one", "three-month-view", '3');
     args_parser.parse(arguments);
 
     time_t now = time(nullptr);
@@ -195,6 +215,17 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             Vector<String> lines_right = TRY(month_lines_to_print(Header::Month, week_start_day, month_index, year));
             print_months_side_by_side(lines_left, lines_center, lines_right);
         }
+    } else if (three_month_mode) {
+        int month_on_left = month, year_on_left = year;
+        go_to_previous_month(month_on_left, year_on_left);
+
+        int month_on_right = month, year_on_right = year;
+        go_to_next_month(month_on_right, year_on_right);
+
+        Vector<String> lines_previous_month = TRY(month_lines_to_print(Header::MonthAndYear, week_start_day, month_on_left, year_on_left));
+        Vector<String> lines_current_month = TRY(month_lines_to_print(Header::MonthAndYear, week_start_day, month, year));
+        Vector<String> lines_next_month = TRY(month_lines_to_print(Header::MonthAndYear, week_start_day, month_on_right, year_on_right));
+        print_months_side_by_side(lines_previous_month, lines_current_month, lines_next_month);
     } else {
         Vector<String> lines = TRY(month_lines_to_print(Header::MonthAndYear, week_start_day, month, year));
         for (String const& line : lines) {

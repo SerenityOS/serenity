@@ -5,7 +5,7 @@ cal - Display a calendar
 ## Synopsis
 
 ```**sh
-$ cal [--starting-day weekday] [[month] year]
+$ cal [--starting-day weekday] [--three-month-view] [[month] year]
 ```
 
 ## Description
@@ -23,6 +23,7 @@ Days, months and years are specified with numbers. Week starts at Sunday.
 ## Options
 
 * `-s`, `--starting-day`: Specify which day should start the week. Accepts either short or long weekday names or indexes (0 being Sunday).
+* `-3`, `--three-month-view`: Display the previous, current, and next months side-by-side.
 
 ## Examples
 
@@ -47,6 +48,16 @@ Su Mo Tu We Th Fr Sa
 17 18 19 20 21 22 23
 24 25 26 27 28 29 30
 31                  
+
+# Display three months side-by-side
+$ cal -3 3 2023
+  February - 2023         March - 2023          April - 2023
+Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa  Su Mo Tu We Th Fr Sa
+          1  2  3  4            1  2  3  4                     1
+ 5  6  7  8  9 10 11   5  6  7  8  9 10 11   2  3  4  5  6  7  8
+12 13 14 15 16 17 18  12 13 14 15 16 17 18   9 10 11 12 13 14 15
+19 20 21 22 23 24 25  19 20 21 22 23 24 25  16 17 18 19 20 21 22
+26 27 28              26 27 28 29 30 31     23 24 25 26 27 28 29
 
 # Display an entire year
 $ cal 2023
