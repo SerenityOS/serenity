@@ -111,6 +111,8 @@ public:
 private:
     XzDecompressor(NonnullOwnPtr<CountingStream>);
 
+    ErrorOr<bool> load_next_stream();
+
     NonnullOwnPtr<CountingStream> m_stream;
     Optional<XzStreamFlags> m_stream_flags;
     bool m_found_first_stream_header { false };
