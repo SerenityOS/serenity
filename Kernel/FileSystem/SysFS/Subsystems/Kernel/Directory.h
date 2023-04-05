@@ -14,7 +14,7 @@ namespace Kernel {
 
 class SysFSGlobalKernelStatsDirectory : public SysFSDirectory {
 public:
-    static NonnullLockRefPtr<SysFSGlobalKernelStatsDirectory> must_create(SysFSRootDirectory const&);
+    static NonnullRefPtr<SysFSGlobalKernelStatsDirectory> must_create(SysFSRootDirectory const&);
     virtual StringView name() const override { return "kernel"sv; }
 
 private:

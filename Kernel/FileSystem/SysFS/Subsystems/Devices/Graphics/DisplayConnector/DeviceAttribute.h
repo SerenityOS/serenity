@@ -25,7 +25,7 @@ public:
     };
 
 public:
-    static NonnullLockRefPtr<DisplayConnectorAttributeSysFSComponent> must_create(DisplayConnectorSysFSDirectory const& device_directory, Type);
+    static NonnullRefPtr<DisplayConnectorAttributeSysFSComponent> must_create(DisplayConnectorSysFSDirectory const& device_directory, Type);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~DisplayConnectorAttributeSysFSComponent() {};
@@ -35,7 +35,7 @@ public:
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer() const;
     DisplayConnectorAttributeSysFSComponent(DisplayConnectorSysFSDirectory const& device, Type);
-    NonnullLockRefPtr<DisplayConnector> m_device;
+    NonnullRefPtr<DisplayConnector> m_device;
     Type const m_type { Type::MutableModeSettingCapable };
 };
 

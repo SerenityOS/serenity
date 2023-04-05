@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -18,7 +18,7 @@ class SysFSDiskUsage final : public SysFSGlobalInformation {
 public:
     virtual StringView name() const override { return "df"sv; }
 
-    static NonnullLockRefPtr<SysFSDiskUsage> must_create(SysFSDirectory const& parent_directory);
+    static NonnullRefPtr<SysFSDiskUsage> must_create(SysFSDirectory const& parent_directory);
 
 private:
     SysFSDiskUsage(SysFSDirectory const& parent_directory);

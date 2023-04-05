@@ -45,7 +45,6 @@ SysFSBusDirectory& SysFSComponentRegistry::buses_directory()
 
 void SysFSComponentRegistry::register_new_bus_directory(SysFSDirectory& new_bus_directory)
 {
-    VERIFY(!m_root_directory->m_buses_directory.is_null());
     MUST(m_root_directory->m_buses_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(new_bus_directory);
         return {};

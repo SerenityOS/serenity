@@ -12,9 +12,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDiskUsage> SysFSDiskUsage::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSDiskUsage> SysFSDiskUsage::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSDiskUsage(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSDiskUsage(parent_directory)).release_nonnull();
 }
 
 UNMAP_AFTER_INIT SysFSDiskUsage::SysFSDiskUsage(SysFSDirectory const& parent_directory)

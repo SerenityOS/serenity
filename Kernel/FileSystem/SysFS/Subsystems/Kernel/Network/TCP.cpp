@@ -18,9 +18,9 @@ UNMAP_AFTER_INIT SysFSNetworkTCPStats::SysFSNetworkTCPStats(SysFSDirectory const
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSNetworkTCPStats> SysFSNetworkTCPStats::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSNetworkTCPStats> SysFSNetworkTCPStats::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSNetworkTCPStats(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSNetworkTCPStats(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSNetworkTCPStats::try_generate(KBufferBuilder& builder)

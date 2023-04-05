@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -17,7 +17,7 @@ namespace Kernel {
 class SysFSNetworkAdaptersStats final : public SysFSGlobalInformation {
 public:
     virtual StringView name() const override { return "adapters"sv; }
-    static NonnullLockRefPtr<SysFSNetworkAdaptersStats> must_create(SysFSDirectory const&);
+    static NonnullRefPtr<SysFSNetworkAdaptersStats> must_create(SysFSDirectory const&);
 
 private:
     explicit SysFSNetworkAdaptersStats(SysFSDirectory const&);

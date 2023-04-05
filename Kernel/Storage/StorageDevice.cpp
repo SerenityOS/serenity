@@ -38,7 +38,6 @@ StorageDevice::StorageDevice(Badge<RamdiskDevice>, LUNAddress logical_unit_numbe
 
 ErrorOr<void> StorageDevice::after_inserting()
 {
-    after_inserting_add_to_device_management();
     auto sysfs_storage_device_directory = StorageDeviceSysFSDirectory::create(SysFSStorageDirectory::the(), *this);
     m_sysfs_device_directory = sysfs_storage_device_directory;
     SysFSStorageDirectory::the().plug({}, *sysfs_storage_device_directory);
@@ -46,6 +45,7 @@ ErrorOr<void> StorageDevice::after_inserting()
     auto sys_fs_component = TRY(SysFSSymbolicLinkDeviceComponent::try_create(SysFSBlockDevicesDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
+    after_inserting_add_to_device_management();
     return {};
 }
 

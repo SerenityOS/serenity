@@ -15,9 +15,9 @@ UNMAP_AFTER_INIT SysFSUptime::SysFSUptime(SysFSDirectory const& parent_directory
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSUptime> SysFSUptime::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSUptime> SysFSUptime::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSUptime(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSUptime(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSUptime::try_generate(KBufferBuilder& builder)

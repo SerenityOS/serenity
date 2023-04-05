@@ -14,25 +14,24 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
+NonnullRefPtr<SysFSRootDirectory> SysFSRootDirectory::create()
 {
-    return adopt_lock_ref(*new (nothrow) SysFSRootDirectory);
+    return adopt_ref(*new (nothrow) SysFSRootDirectory);
 }
 
 SysFSRootDirectory::SysFSRootDirectory()
+    : m_buses_directory(SysFSBusDirectory::must_create(*this))
 {
-    auto buses_directory = SysFSBusDirectory::must_create(*this);
     auto device_identifiers_directory = SysFSDeviceIdentifiersDirectory::must_create(*this);
     auto devices_directory = SysFSDevicesDirectory::must_create(*this);
     auto global_kernel_stats_directory = SysFSGlobalKernelStatsDirectory::must_create(*this);
     MUST(m_child_components.with([&](auto& list) -> ErrorOr<void> {
-        list.append(buses_directory);
+        list.append(m_buses_directory);
         list.append(device_identifiers_directory);
         list.append(devices_directory);
         list.append(global_kernel_stats_directory);
         return {};
     }));
-    m_buses_directory = buses_directory;
 }
 
 }

@@ -28,7 +28,7 @@ public:
     };
 
     virtual StringView name() const override;
-    static NonnullLockRefPtr<SysFSSystemConstantInformation> must_create(SysFSDirectory const& parent_directory, NonnullOwnPtr<KBuffer> constant_data_buffer, mode_t mode, ReadableByJailedProcesses readable_by_jailed_processes, NodeName name);
+    static NonnullRefPtr<SysFSSystemConstantInformation> must_create(SysFSDirectory const& parent_directory, NonnullOwnPtr<KBuffer> constant_data_buffer, mode_t mode, ReadableByJailedProcesses readable_by_jailed_processes, NodeName name);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
 

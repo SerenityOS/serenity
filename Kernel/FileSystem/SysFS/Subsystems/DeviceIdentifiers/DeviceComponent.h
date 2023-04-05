@@ -19,7 +19,7 @@ class SysFSDeviceComponent final
     friend class SysFSCharacterDevicesDirectory;
 
 public:
-    static NonnullLockRefPtr<SysFSDeviceComponent> must_create(Device const&);
+    static NonnullRefPtr<SysFSDeviceComponent> must_create(Device const&);
     virtual StringView name() const override { return m_major_minor_formatted_device_name->view(); }
     bool is_block_device() const { return m_block_device; }
 

@@ -16,9 +16,9 @@ UNMAP_AFTER_INIT SysFSMemoryStatus::SysFSMemoryStatus(SysFSDirectory const& pare
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSMemoryStatus> SysFSMemoryStatus::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSMemoryStatus> SysFSMemoryStatus::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSMemoryStatus(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSMemoryStatus(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSMemoryStatus::try_generate(KBufferBuilder& builder)

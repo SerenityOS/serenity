@@ -24,9 +24,9 @@ StringView SysFSSystemConstantInformation::name() const
     }
 }
 
-NonnullLockRefPtr<SysFSSystemConstantInformation> SysFSSystemConstantInformation::must_create(SysFSDirectory const& parent_directory, NonnullOwnPtr<KBuffer> constant_data_buffer, mode_t mode, ReadableByJailedProcesses readable_by_jailed_processes, NodeName name)
+NonnullRefPtr<SysFSSystemConstantInformation> SysFSSystemConstantInformation::must_create(SysFSDirectory const& parent_directory, NonnullOwnPtr<KBuffer> constant_data_buffer, mode_t mode, ReadableByJailedProcesses readable_by_jailed_processes, NodeName name)
 {
-    auto node = adopt_lock_ref_if_nonnull(new (nothrow) SysFSSystemConstantInformation(parent_directory, move(constant_data_buffer), mode, readable_by_jailed_processes, name)).release_nonnull();
+    auto node = adopt_ref_if_nonnull(new (nothrow) SysFSSystemConstantInformation(parent_directory, move(constant_data_buffer), mode, readable_by_jailed_processes, name)).release_nonnull();
     return node;
 }
 

@@ -27,9 +27,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalKernelStatsDirectory::must_create(SysFSRootDirectory const& root_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelStatsDirectory> SysFSGlobalKernelStatsDirectory::must_create(SysFSRootDirectory const& root_directory)
 {
-    auto global_kernel_stats_directory = adopt_lock_ref_if_nonnull(new (nothrow) SysFSGlobalKernelStatsDirectory(root_directory)).release_nonnull();
+    auto global_kernel_stats_directory = adopt_ref_if_nonnull(new (nothrow) SysFSGlobalKernelStatsDirectory(root_directory)).release_nonnull();
     auto global_constants_directory = SysFSGlobalKernelConstantsDirectory::must_create(*global_kernel_stats_directory);
     MUST(global_kernel_stats_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(global_constants_directory);

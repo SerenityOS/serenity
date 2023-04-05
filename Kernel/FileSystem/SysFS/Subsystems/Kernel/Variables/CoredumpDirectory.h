@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/StringVariable.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -16,7 +16,7 @@ namespace Kernel {
 class SysFSCoredumpDirectory final : public SysFSSystemStringVariable {
 public:
     virtual StringView name() const override { return "coredump_directory"sv; }
-    static NonnullLockRefPtr<SysFSCoredumpDirectory> must_create(SysFSDirectory const&);
+    static NonnullRefPtr<SysFSCoredumpDirectory> must_create(SysFSDirectory const&);
 
 private:
     virtual ErrorOr<NonnullOwnPtr<KString>> value() const override;

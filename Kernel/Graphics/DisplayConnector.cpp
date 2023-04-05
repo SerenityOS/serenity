@@ -93,7 +93,6 @@ ErrorOr<void> DisplayConnector::allocate_framebuffer_resources(size_t rounded_si
 
 ErrorOr<void> DisplayConnector::after_inserting()
 {
-    after_inserting_add_to_device_management();
     ArmedScopeGuard clean_from_device_management([&] {
         before_will_be_destroyed_remove_from_device_management();
     });
@@ -110,6 +109,7 @@ ErrorOr<void> DisplayConnector::after_inserting()
     auto sys_fs_component = TRY(SysFSSymbolicLinkDeviceComponent::try_create(SysFSCharacterDevicesDirectory::the(), *this, *m_sysfs_device_directory));
     m_symlink_sysfs_component = sys_fs_component;
     after_inserting_add_symlink_to_device_identifier_directory();
+
     ArmedScopeGuard clean_symlink_to_device_identifier_directory([&] {
         VERIFY(m_symlink_sysfs_component);
         before_will_be_destroyed_remove_symlink_from_device_identifier_directory();
@@ -136,6 +136,7 @@ ErrorOr<void> DisplayConnector::after_inserting()
     if (m_enable_write_combine_optimization) {
         [[maybe_unused]] auto result = m_framebuffer_region->set_write_combine(true);
     }
+    after_inserting_add_to_device_management();
     return {};
 }
 

@@ -14,9 +14,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalKernelConstantsDirectory> SysFSGlobalKernelConstantsDirectory::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelConstantsDirectory> SysFSGlobalKernelConstantsDirectory::must_create(SysFSDirectory const& parent_directory)
 {
-    auto global_constants_directory = adopt_lock_ref_if_nonnull(new (nothrow) SysFSGlobalKernelConstantsDirectory(parent_directory)).release_nonnull();
+    auto global_constants_directory = adopt_ref_if_nonnull(new (nothrow) SysFSGlobalKernelConstantsDirectory(parent_directory)).release_nonnull();
     MUST(global_constants_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         {
             auto builder = TRY(KBufferBuilder::try_create());

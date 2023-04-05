@@ -15,7 +15,7 @@ namespace Kernel {
 
 class PCIDeviceSysFSDirectory final : public SysFSDirectory {
 public:
-    static NonnullLockRefPtr<PCIDeviceSysFSDirectory> create(SysFSDirectory const&, PCI::DeviceIdentifier const&);
+    static NonnullRefPtr<PCIDeviceSysFSDirectory> create(SysFSDirectory const&, PCI::DeviceIdentifier const&);
     PCI::DeviceIdentifier const& device_identifier() const { return *m_device_identifier; }
 
     virtual StringView name() const override { return m_device_directory_name->view(); }

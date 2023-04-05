@@ -16,9 +16,9 @@ UNMAP_AFTER_INIT SysFSKernelLog::SysFSKernelLog(SysFSDirectory const& parent_dir
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSKernelLog> SysFSKernelLog::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSKernelLog> SysFSKernelLog::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSKernelLog(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSKernelLog(parent_directory)).release_nonnull();
 }
 
 mode_t SysFSKernelLog::permissions() const

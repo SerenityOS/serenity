@@ -15,9 +15,9 @@ UNMAP_AFTER_INIT SysFSCoredumpDirectory::SysFSCoredumpDirectory(SysFSDirectory c
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSCoredumpDirectory> SysFSCoredumpDirectory::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSCoredumpDirectory> SysFSCoredumpDirectory::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSCoredumpDirectory(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSCoredumpDirectory(parent_directory)).release_nonnull();
 }
 
 ErrorOr<NonnullOwnPtr<KString>> SysFSCoredumpDirectory::value() const

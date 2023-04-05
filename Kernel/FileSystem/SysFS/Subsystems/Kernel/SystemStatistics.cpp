@@ -17,9 +17,9 @@ UNMAP_AFTER_INIT SysFSSystemStatistics::SysFSSystemStatistics(SysFSDirectory con
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSSystemStatistics> SysFSSystemStatistics::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSSystemStatistics> SysFSSystemStatistics::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSSystemStatistics(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSSystemStatistics(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSSystemStatistics::try_generate(KBufferBuilder& builder)

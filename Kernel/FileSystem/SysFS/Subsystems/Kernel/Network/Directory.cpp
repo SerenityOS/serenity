@@ -17,9 +17,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalNetworkStatsDirectory> SysFSGlobalNetworkStatsDirectory::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalNetworkStatsDirectory> SysFSGlobalNetworkStatsDirectory::must_create(SysFSDirectory const& parent_directory)
 {
-    auto global_network_stats_directory = adopt_lock_ref_if_nonnull(new (nothrow) SysFSGlobalNetworkStatsDirectory(parent_directory)).release_nonnull();
+    auto global_network_stats_directory = adopt_ref_if_nonnull(new (nothrow) SysFSGlobalNetworkStatsDirectory(parent_directory)).release_nonnull();
     MUST(global_network_stats_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSNetworkAdaptersStats::must_create(*global_network_stats_directory));
         list.append(SysFSNetworkARPStats::must_create(*global_network_stats_directory));

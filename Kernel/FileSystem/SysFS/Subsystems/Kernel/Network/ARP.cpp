@@ -17,9 +17,9 @@ UNMAP_AFTER_INIT SysFSNetworkARPStats::SysFSNetworkARPStats(SysFSDirectory const
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSNetworkARPStats> SysFSNetworkARPStats::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSNetworkARPStats> SysFSNetworkARPStats::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSNetworkARPStats(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSNetworkARPStats(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSNetworkARPStats::try_generate(KBufferBuilder& builder)

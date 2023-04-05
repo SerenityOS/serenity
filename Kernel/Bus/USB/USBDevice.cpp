@@ -21,7 +21,9 @@ ErrorOr<NonnullLockRefPtr<Device>> Device::try_create(USBController const& contr
     auto pipe = TRY(ControlPipe::create(controller, 0, 8, 0));
     auto device = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Device(controller, port, speed, move(pipe))));
     auto sysfs_node = TRY(SysFSUSBDeviceInformation::create(*device));
-    device->m_sysfs_device_info_node = move(sysfs_node);
+    device->m_sysfs_device_info_node.with([&](auto& node) {
+        node = move(sysfs_node);
+    });
     TRY(device->enumerate_device());
     return device;
 }

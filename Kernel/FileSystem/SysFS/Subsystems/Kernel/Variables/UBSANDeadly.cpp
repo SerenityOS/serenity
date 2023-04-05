@@ -15,9 +15,9 @@ UNMAP_AFTER_INIT SysFSUBSANDeadly::SysFSUBSANDeadly(SysFSDirectory const& parent
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSUBSANDeadly> SysFSUBSANDeadly::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSUBSANDeadly> SysFSUBSANDeadly::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSUBSANDeadly(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSUBSANDeadly(parent_directory)).release_nonnull();
 }
 
 bool SysFSUBSANDeadly::value() const

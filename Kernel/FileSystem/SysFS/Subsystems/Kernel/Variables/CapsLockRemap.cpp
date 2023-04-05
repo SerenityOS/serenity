@@ -15,9 +15,9 @@ UNMAP_AFTER_INIT SysFSCapsLockRemap::SysFSCapsLockRemap(SysFSDirectory const& pa
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSCapsLockRemap> SysFSCapsLockRemap::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSCapsLockRemap> SysFSCapsLockRemap::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSCapsLockRemap(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSCapsLockRemap(parent_directory)).release_nonnull();
 }
 
 bool SysFSCapsLockRemap::value() const

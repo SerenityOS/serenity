@@ -96,10 +96,10 @@ private:
 protected:
     // FIXME: This pointer will be eventually removed after all nodes in /sys/dev/block/ and
     // /sys/dev/char/ are symlinks.
-    LockRefPtr<SysFSDeviceComponent> m_sysfs_component;
+    RefPtr<SysFSDeviceComponent> m_sysfs_component;
 
-    LockRefPtr<SysFSSymbolicLinkDeviceComponent> m_symlink_sysfs_component;
-    LockRefPtr<SysFSDirectory> m_sysfs_device_directory;
+    RefPtr<SysFSSymbolicLinkDeviceComponent> m_symlink_sysfs_component;
+    RefPtr<SysFSDirectory> m_sysfs_device_directory;
 };
 
 }

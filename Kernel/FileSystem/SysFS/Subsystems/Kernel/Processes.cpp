@@ -19,9 +19,9 @@ UNMAP_AFTER_INIT SysFSOverallProcesses::SysFSOverallProcesses(SysFSDirectory con
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSOverallProcesses> SysFSOverallProcesses::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSOverallProcesses> SysFSOverallProcesses::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSOverallProcesses(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSOverallProcesses(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSOverallProcesses::try_generate(KBufferBuilder& builder)

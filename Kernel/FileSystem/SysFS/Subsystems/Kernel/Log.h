@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/GlobalInformation.h>
 #include <Kernel/KBufferBuilder.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -17,7 +17,7 @@ namespace Kernel {
 class SysFSKernelLog final : public SysFSGlobalInformation {
 public:
     virtual StringView name() const override { return "dmesg"sv; }
-    static NonnullLockRefPtr<SysFSKernelLog> must_create(SysFSDirectory const& parent_directory);
+    static NonnullRefPtr<SysFSKernelLog> must_create(SysFSDirectory const& parent_directory);
 
     virtual mode_t permissions() const override;
 
