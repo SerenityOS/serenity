@@ -64,7 +64,7 @@ TEST_CASE(lzma2_compressed_without_settings_after_uncompressed)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ("\x00\x00\x00"sv.bytes(), buffer.span());
 }
 
@@ -174,7 +174,7 @@ TEST_CASE(lzma2_literal_context_bits_after_state_reset)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ("\x80\x80\x80"sv.bytes(), buffer.span());
 }
 
@@ -1090,7 +1090,7 @@ TEST_CASE(xz_utils_good_0cat_empty)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.size(), 0ul);
 }
 
@@ -1108,7 +1108,7 @@ TEST_CASE(xz_utils_good_0catpad_empty)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.size(), 0ul);
 }
 
@@ -1122,7 +1122,7 @@ TEST_CASE(xz_utils_good_0_empty)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.size(), 0ul);
 }
 
@@ -1138,7 +1138,7 @@ TEST_CASE(xz_utils_good_0pad_empty)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.size(), 0ul);
 }
 
@@ -1332,7 +1332,7 @@ TEST_CASE(xz_utils_good_1_block_header_1)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1349,7 +1349,7 @@ TEST_CASE(xz_utils_good_1_block_header_2)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1366,7 +1366,7 @@ TEST_CASE(xz_utils_good_1_block_header_3)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1384,7 +1384,7 @@ TEST_CASE(xz_utils_good_1_check_crc32)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1401,7 +1401,7 @@ TEST_CASE(xz_utils_good_1_check_crc64)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1418,7 +1418,7 @@ TEST_CASE(xz_utils_good_1_check_none)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1437,7 +1437,7 @@ TEST_CASE(xz_utils_good_1_check_sha256)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
@@ -1498,7 +1498,7 @@ TEST_CASE(xz_utils_good_1_lzma2_1)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_lorem_ipsum.bytes());
 }
 
@@ -1538,7 +1538,7 @@ TEST_CASE(xz_utils_good_1_lzma2_2)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_lorem_ipsum.bytes());
 }
 
@@ -1578,7 +1578,7 @@ TEST_CASE(xz_utils_good_1_lzma2_3)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_lorem_ipsum.bytes());
 }
 
@@ -1621,7 +1621,7 @@ TEST_CASE(xz_utils_good_1_lzma2_4)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_lorem_ipsum.bytes());
 }
 
@@ -1639,7 +1639,7 @@ TEST_CASE(xz_utils_good_1_lzma2_5)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.size(), 0ul);
 }
 
@@ -1770,7 +1770,7 @@ TEST_CASE(xz_utils_good_2_lzma2)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::XzDecompressor::create(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(buffer.span(), xz_utils_hello_world.bytes());
 }
 
