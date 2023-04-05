@@ -30,7 +30,7 @@ ErrorOr<XzMultibyteInteger> XzMultibyteInteger::read_from_stream(Stream& stream)
     u64 result = 0;
 
     for (size_t i = 0; i < maximum_number_of_bytes; i++) {
-        u64 next_byte = TRY(stream.read_value<u8>());
+        u64 const next_byte = TRY(stream.read_value<u8>());
         result |= (next_byte & 0x7F) << (i * 7);
 
         // We should reject numbers that are encoded in too many bytes.
@@ -44,7 +44,7 @@ ErrorOr<XzMultibyteInteger> XzMultibyteInteger::read_from_stream(Stream& stream)
     return XzMultibyteInteger { result };
 }
 
-ErrorOr<void> XzStreamHeader::validate()
+ErrorOr<void> XzStreamHeader::validate() const
 {
     // 2.1.1.1. Header Magic Bytes:
     // "The first six (6) bytes of the Stream are so called Header
@@ -81,7 +81,7 @@ ErrorOr<void> XzStreamHeader::validate()
     return {};
 }
 
-ErrorOr<void> XzStreamFooter::validate()
+ErrorOr<void> XzStreamFooter::validate() const
 {
     // 2.1.2.1. CRC32:
     // "The CRC32 is calculated from the Backward Size and Stream Flags
@@ -110,7 +110,7 @@ ErrorOr<void> XzStreamFooter::validate()
     return {};
 }
 
-u32 XzStreamFooter::backward_size()
+u32 XzStreamFooter::backward_size() const
 {
     // 2.1.2.2. Backward Size:
     // "Backward Size is stored as a 32-bit little endian integer,
@@ -121,7 +121,7 @@ u32 XzStreamFooter::backward_size()
     return (encoded_backward_size + 1) * 4;
 }
 
-u8 XzBlockFlags::number_of_filters()
+u8 XzBlockFlags::number_of_filters() const
 {
     // 3.1.2. Block Flags:
     // "Bit(s)  Mask  Description
@@ -129,7 +129,7 @@ u8 XzBlockFlags::number_of_filters()
     return encoded_number_of_filters + 1;
 }
 
-ErrorOr<void> XzFilterLzma2Properties::validate()
+ErrorOr<void> XzFilterLzma2Properties::validate() const
 {
     // 5.3.1. LZMA2:
     // "Bits   Mask   Description
@@ -146,7 +146,7 @@ ErrorOr<void> XzFilterLzma2Properties::validate()
     return {};
 }
 
-u32 XzFilterLzma2Properties::dictionary_size()
+u32 XzFilterLzma2Properties::dictionary_size() const
 {
     // "Dictionary Size is encoded with one-bit mantissa and five-bit
     //  exponent. The smallest dictionary size is 4 KiB and the biggest
@@ -268,7 +268,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     //  bytes:
     //
     //      real_header_size = (encoded_header_size + 1) * 4;"
-    u64 block_header_size = (encoded_block_header_size + 1) * 4;
+    u64 const block_header_size = (encoded_block_header_size + 1) * 4;
 
     // Read the whole header into a buffer to allow calculating the CRC32 later (3.1.7. CRC32).
     auto header = TRY(ByteBuffer::create_uninitialized(block_header_size));
@@ -282,7 +282,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     //  It is possible that there is a new field present which the
     //  decoder is not aware of, and can thus parse the Block Header
     //  incorrectly."
-    auto flags = TRY(header_stream.read_value<XzBlockFlags>());
+    auto const flags = TRY(header_stream.read_value<XzBlockFlags>());
 
     if (flags.reserved != 0)
         return Error::from_string_literal("XZ block header has reserved non-null block flag bits");
@@ -294,7 +294,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     //  the Block Flags field (see Section 3.1.2)."
     if (flags.compressed_size_present) {
         // "Compressed Size is stored using the encoding described in Section 1.2."
-        u64 compressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
+        u64 const compressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
 
         // "The Compressed Size field contains the size of the Compressed
         //  Data field, which MUST be non-zero."
@@ -309,7 +309,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     //  the Block Flags field (see Section 3.1.2)."
     if (flags.uncompressed_size_present) {
         // "Uncompressed Size is stored using the encoding described in Section 1.2."
-        u64 uncompressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
+        u64 const uncompressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
 
         m_current_block_expected_uncompressed_size = uncompressed_size;
     } else {
@@ -323,8 +323,8 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
         // "The format of each Filter Flags field is as follows:
         //  Both Filter ID and Size of Properties are stored using the
         //  encoding described in Section 1.2."
-        u64 filter_id = TRY(header_stream.read_value<XzMultibyteInteger>());
-        u64 size_of_properties = TRY(header_stream.read_value<XzMultibyteInteger>());
+        u64 const filter_id = TRY(header_stream.read_value<XzMultibyteInteger>());
+        u64 const size_of_properties = TRY(header_stream.read_value<XzMultibyteInteger>());
 
         // "Size of Properties indicates the size of the Filter Properties field as bytes."
         auto filter_properties = TRY(ByteBuffer::create_uninitialized(size_of_properties));
@@ -335,7 +335,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
             if (size_of_properties < sizeof(XzFilterLzma2Properties))
                 return Error::from_string_literal("XZ LZMA2 filter has a smaller-than-needed properties size");
 
-            auto properties = reinterpret_cast<XzFilterLzma2Properties*>(filter_properties.data());
+            auto const* properties = reinterpret_cast<XzFilterLzma2Properties*>(filter_properties.data());
             TRY(properties->validate());
 
             new_block_stream = TRY(Lzma2Decompressor::create_from_raw_stream(move(new_block_stream), properties->dictionary_size()));
@@ -351,7 +351,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     constexpr size_t size_of_block_header_size = 1;
     constexpr size_t size_of_crc32 = 4;
     while (MUST(header_stream.tell()) < block_header_size - size_of_block_header_size - size_of_crc32) {
-        auto padding_byte = TRY(header_stream.read_value<u8>());
+        auto const padding_byte = TRY(header_stream.read_value<u8>());
 
         // "If any of the bytes are not null bytes, the decoder MUST
         //  indicate an error."
@@ -364,7 +364,7 @@ ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
     //  field except the CRC32 field itself.
     Crypto::Checksum::CRC32 calculated_header_crc32 { header.span().trim(block_header_size - size_of_crc32) };
     //  It is stored as an unsigned 32-bit little endian integer.
-    u32 stored_header_crc32 = TRY(header_stream.read_value<LittleEndian<u32>>());
+    u32 const stored_header_crc32 = TRY(header_stream.read_value<LittleEndian<u32>>());
     //  If the calculated value does not match the stored one, the decoder MUST indicate
     //  an error."
     if (calculated_header_crc32.digest() != stored_header_crc32)
@@ -385,7 +385,7 @@ ErrorOr<void> XzDecompressor::finish_current_block()
     //  the Block a multiple of four bytes. This can be needed when
     //  the size of Compressed Data is not a multiple of four."
     for (size_t i = 0; (unpadded_size + i) % 4 != 0; i++) {
-        auto padding_byte = TRY(m_stream->read_value<u8>());
+        auto const padding_byte = TRY(m_stream->read_value<u8>());
 
         // "If any of the bytes in Block Padding are not null bytes, the decoder
         //  MUST indicate an error."
@@ -402,7 +402,7 @@ ErrorOr<void> XzDecompressor::finish_current_block()
     //  stored one, the decoder MUST indicate an error. If the selected
     //  type of Check is not supported by the decoder, it SHOULD
     //  indicate a warning or error."
-    auto maybe_check_size = size_for_check_type(m_stream_flags->check_type);
+    auto const maybe_check_size = size_for_check_type(m_stream_flags->check_type);
 
     if (!maybe_check_size.has_value())
         return Error::from_string_literal("XZ stream has an unknown check type");
@@ -428,14 +428,14 @@ ErrorOr<void> XzDecompressor::finish_current_block()
 ErrorOr<void> XzDecompressor::finish_current_stream()
 {
     // We already read the Index Indicator (one byte) to determine that this is an Index.
-    auto start_of_current_block = m_stream->read_bytes() - 1;
+    auto const start_of_current_block = m_stream->read_bytes() - 1;
 
     // 4.2. Number of Records:
     // "This field indicates how many Records there are in the List
     //  of Records field, and thus how many Blocks there are in the
     //  Stream. The value is stored using the encoding described in
     //  Section 1.2."
-    u64 number_of_records = TRY(m_stream->read_value<XzMultibyteInteger>());
+    u64 const number_of_records = TRY(m_stream->read_value<XzMultibyteInteger>());
 
     if (m_processed_blocks.size() != number_of_records)
         return Error::from_string_literal("Number of Records in XZ Index does not match the number of processed Blocks");
@@ -455,7 +455,7 @@ ErrorOr<void> XzDecompressor::finish_current_stream()
         //  Padding field. That is, Unpadded Size is the size of the Block
         //  Header, Compressed Data, and Check fields. Unpadded Size is
         //  stored using the encoding described in Section 1.2."
-        u64 unpadded_size = TRY(m_stream->read_value<XzMultibyteInteger>());
+        u64 const unpadded_size = TRY(m_stream->read_value<XzMultibyteInteger>());
 
         // "The value MUST never be zero; with the current structure of Blocks, the
         //  actual minimum value for Unpadded Size is five."
@@ -466,7 +466,7 @@ ErrorOr<void> XzDecompressor::finish_current_stream()
         // "This field indicates the Uncompressed Size of the respective
         //  Block as bytes. The value is stored using the encoding
         //  described in Section 1.2."
-        u64 uncompressed_size = TRY(m_stream->read_value<XzMultibyteInteger>());
+        u64 const uncompressed_size = TRY(m_stream->read_value<XzMultibyteInteger>());
 
         // 4.3. List of Records:
         // "If the decoder has decoded all the Blocks of the Stream, it
@@ -494,18 +494,18 @@ ErrorOr<void> XzDecompressor::finish_current_stream()
     // "The CRC32 is calculated over everything in the Index field
     //  except the CRC32 field itself. The CRC32 is stored as an
     //  unsigned 32-bit little endian integer."
-    u32 index_crc32 = TRY(m_stream->read_value<LittleEndian<u32>>());
+    u32 const index_crc32 = TRY(m_stream->read_value<LittleEndian<u32>>());
 
     // "If the calculated value does not match the stored one, the decoder MUST indicate
     //  an error."
     // TODO: Validation of the index CRC32 is currently unimplemented.
     (void)index_crc32;
 
-    auto size_of_index = m_stream->read_bytes() - start_of_current_block;
+    auto const size_of_index = m_stream->read_bytes() - start_of_current_block;
 
     // According to the specification of a stream (2.1. Stream), the index is the last element in a stream,
     // followed by the stream footer (2.1.2. Stream Footer).
-    auto stream_footer = TRY(m_stream->read_value<XzStreamFooter>());
+    auto const stream_footer = TRY(m_stream->read_value<XzStreamFooter>());
 
     // This handles verifying the CRC32 (2.1.2.1. CRC32) and the magic bytes (2.1.2.4. Footer Magic Bytes).
     TRY(stream_footer.validate());
@@ -522,7 +522,7 @@ ErrorOr<void> XzDecompressor::finish_current_stream()
     //  when parsing the Stream backwards. The decoder MUST compare
     //  the Stream Flags fields in both Stream Header and Stream
     //  Footer, and indicate an error if they are not identical."
-    if (Bytes { &*m_stream_flags, sizeof(XzStreamFlags) } != Bytes { &stream_footer.flags, sizeof(stream_footer.flags) })
+    if (ReadonlyBytes { &*m_stream_flags, sizeof(XzStreamFlags) } != ReadonlyBytes { &stream_footer.flags, sizeof(stream_footer.flags) })
         return Error::from_string_literal("XZ stream header flags don't match the stream footer");
 
     return {};
@@ -543,7 +543,7 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 
         // The first byte between Block Header (3.1.1. Block Header Size) and Index (4.1. Index Indicator) overlap.
         // Block header sizes have valid values in the range of [0x01, 0xFF], the only valid value for an Index Indicator is therefore 0x00.
-        auto encoded_block_header_size_or_index_indicator = TRY(m_stream->read_value<u8>());
+        auto const encoded_block_header_size_or_index_indicator = TRY(m_stream->read_value<u8>());
 
         if (encoded_block_header_size_or_index_indicator == 0x00) {
             // This is an Index, which is the last element before the stream footer.
