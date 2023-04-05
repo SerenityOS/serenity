@@ -15,6 +15,9 @@ An overview of a whole year is displayed when a `year` is passed without a `mont
 
 The current day is always highlighted.
 
+Months and years are specified with numbers. Weeks start at what's configured in the Calendar system settings,
+unless the `--starting-day` option is passed.
+
 Days, months and years are specified with numbers. Week starts at Sunday.
 
 ## Options
@@ -45,6 +48,7 @@ Su Mo Tu We Th Fr Sa
 24 25 26 27 28 29 30
 31                  
 
+# Display an entire year
 $ cal 2023
                            Year 2023
 
