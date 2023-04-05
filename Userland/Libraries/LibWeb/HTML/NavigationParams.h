@@ -11,6 +11,7 @@
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicy.h>
 #include <LibWeb/HTML/CrossOrigin/CrossOriginOpenerPolicyEnforcementResult.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/HTML/SandboxingFlagSet.h>
@@ -48,6 +49,9 @@ struct NavigationParams {
 
     // the browsing context to be navigated (or discarded, if a browsing context group switch occurs)
     JS::Handle<HTML::BrowsingContext> browsing_context;
+
+    // the navigable to be navigated
+    JS::Handle<Navigable> navigable;
 
     // a history handling behavior
     HistoryHandlingBehavior history_handling { HistoryHandlingBehavior::Default };

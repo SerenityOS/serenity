@@ -338,6 +338,7 @@ void FrameLoader::load_html(StringView html, const AK::URL& url)
         .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
         .reserved_environment = {},
         .browsing_context = browsing_context(),
+        .navigable = nullptr,
     };
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", move(navigation_params)).release_value_but_fixme_should_propagate_errors();
     browsing_context().set_active_document(document);
@@ -463,6 +464,7 @@ void FrameLoader::resource_did_load()
         .coop_enforcement_result = HTML::CrossOriginOpenerPolicyEnforcementResult {},
         .reserved_environment = {},
         .browsing_context = browsing_context(),
+        .navigable = nullptr,
     };
     auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", move(navigation_params)).release_value_but_fixme_should_propagate_errors();
     document->set_url(url);
