@@ -121,7 +121,7 @@ enum class NeedsBigProcessLock {
     S(link, NeedsBigProcessLock::No)                       \
     S(listen, NeedsBigProcessLock::No)                     \
     S(lseek, NeedsBigProcessLock::No)                      \
-    S(madvise, NeedsBigProcessLock::Yes)                   \
+    S(madvise, NeedsBigProcessLock::No)                    \
     S(map_time_page, NeedsBigProcessLock::No)              \
     S(mkdir, NeedsBigProcessLock::No)                      \
     S(mknod, NeedsBigProcessLock::No)                      \
@@ -130,7 +130,7 @@ enum class NeedsBigProcessLock {
     S(mprotect, NeedsBigProcessLock::Yes)                  \
     S(mremap, NeedsBigProcessLock::Yes)                    \
     S(msync, NeedsBigProcessLock::Yes)                     \
-    S(munmap, NeedsBigProcessLock::Yes)                    \
+    S(munmap, NeedsBigProcessLock::No)                     \
     S(open, NeedsBigProcessLock::No)                       \
     S(perf_event, NeedsBigProcessLock::Yes)                \
     S(perf_register_string, NeedsBigProcessLock::Yes)      \
@@ -157,7 +157,7 @@ enum class NeedsBigProcessLock {
     S(scheduler_set_parameters, NeedsBigProcessLock::No)   \
     S(sendfd, NeedsBigProcessLock::No)                     \
     S(sendmsg, NeedsBigProcessLock::Yes)                   \
-    S(set_mmap_name, NeedsBigProcessLock::Yes)             \
+    S(set_mmap_name, NeedsBigProcessLock::No)              \
     S(set_thread_name, NeedsBigProcessLock::No)            \
     S(setegid, NeedsBigProcessLock::No)                    \
     S(seteuid, NeedsBigProcessLock::No)                    \
