@@ -827,11 +827,6 @@ public:
         return m_fds.with_shared([fd](auto& fds) { return fds.open_file_description(fd); });
     }
 
-    ErrorOr<ScopedDescriptionAllocation> allocate_fd()
-    {
-        return m_fds.with_exclusive([](auto& fds) { return fds.allocate(); });
-    }
-
 private:
     ErrorOr<NonnullRefPtr<Custody>> custody_for_dirfd(int dirfd);
 

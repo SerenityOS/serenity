@@ -54,7 +54,6 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
 
     dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path->view(), options, mode);
 
-    auto fd_allocation = TRY(allocate_fd());
     auto base = TRY(custody_for_dirfd(dirfd));
     auto description = TRY(VirtualFileSystem::the().open(credentials(), path->view(), options, mode & ~umask(), *base));
 
@@ -62,6 +61,7 @@ ErrorOr<FlatPtr> Process::sys$open(Userspace<Syscall::SC_open_params const*> use
         return ENXIO;
 
     return m_fds.with_exclusive([&](auto& fds) -> ErrorOr<FlatPtr> {
+        auto fd_allocation = TRY(fds.allocate());
         u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
         fds[fd_allocation.fd].set(move(description), fd_flags);
         return fd_allocation.fd;

@@ -511,7 +511,7 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
     // (For dynamically linked executable) Allocate an FD for passing the main executable to the dynamic loader.
     Optional<ScopedDescriptionAllocation> main_program_fd_allocation;
     if (has_interpreter)
-        main_program_fd_allocation = TRY(allocate_fd());
+        main_program_fd_allocation = TRY(m_fds.with_exclusive([](auto& fds) { return fds.allocate(); }));
 
     auto old_credentials = this->credentials();
     auto new_credentials = old_credentials;
