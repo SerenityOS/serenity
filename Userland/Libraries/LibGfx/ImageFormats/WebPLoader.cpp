@@ -648,6 +648,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#72_structure_of_transforms
 
     // optional-transform   =  (%b1 transform optional-transform) / %b0
+    // "Each transform is allowed to be used only once."
+    u8 seen_transforms = 0;
     while (TRY(bit_stream.read_bits(1))) {
         // transform            =  predictor-tx / color-tx / subtract-green-tx
         // transform            =/ color-indexing-tx
@@ -668,6 +670,12 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
         TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
         dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
+
+        // Check that each transfom is used only once.
+        u8 mask = 1 << (int)transform_type;
+        if (seen_transforms & mask)
+            return context.error("WebPImageDecoderPlugin: transform type used multiple times");
+        seen_transforms |= mask;
 
         switch (transform_type) {
         case PREDICTOR_TRANSFORM:
