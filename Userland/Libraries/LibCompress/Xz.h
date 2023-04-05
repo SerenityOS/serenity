@@ -112,6 +112,7 @@ private:
     XzDecompressor(NonnullOwnPtr<CountingStream>);
 
     ErrorOr<bool> load_next_stream();
+    ErrorOr<void> finish_current_block();
 
     NonnullOwnPtr<CountingStream> m_stream;
     Optional<XzStreamFlags> m_stream_flags;
