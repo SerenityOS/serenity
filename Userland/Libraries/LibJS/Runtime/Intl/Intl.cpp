@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(Intl::get_canonical_locales)
     return Array::create_from(realm, marked_locale_list);
 }
 
-// 1.4.4 AvailableCanonicalTimeZones (), https://tc39.es/proposal-intl-enumeration/#sec-availablecanonicaltimezones
+// 6.5.4 AvailableCanonicalTimeZones ( ), https://tc39.es/ecma402/#sec-availablecanonicaltimezones
 static ThrowCompletionOr<Vector<StringView>> available_canonical_time_zones(VM& vm)
 {
     // 1. Let names be a List of all supported Zone and Link names in the IANA Time Zone Database.
@@ -108,7 +108,7 @@ static ThrowCompletionOr<Vector<StringView>> available_canonical_time_zones(VM& 
     return result;
 }
 
-// 2.2.2 Intl.supportedValuesOf ( key ), https://tc39.es/proposal-intl-enumeration/#sec-intl.supportedvaluesof
+// 8.3.2 Intl.supportedValuesOf ( key ), https://tc39.es/ecma402/#sec-intl.supportedvaluesof
 JS_DEFINE_NATIVE_FUNCTION(Intl::supported_values_of)
 {
     auto& realm = *vm.current_realm();
