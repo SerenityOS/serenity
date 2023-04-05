@@ -12,6 +12,7 @@
 #include <AK/StringUtils.h>
 #include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/System.h>
 #include <LibMain/Main.h>
@@ -45,6 +46,13 @@ static ErrorOr<int> weekday_index(StringView weekday_name)
         return numeric_weekday.value();
 
     return Error::from_string_view(TRY(String::formatted("Unknown weekday name: '{}'", weekday_name)));
+}
+
+static ErrorOr<int> default_weekday_start()
+{
+    auto calendar_config = TRY(Core::ConfigFile::open_for_app("Calendar"sv));
+    String default_first_day_of_week = TRY(String::from_utf8(calendar_config->read_entry("View"sv, "FirstDayOfWeek"sv, "Sunday"sv)));
+    return TRY(weekday_index(default_first_day_of_week));
 }
 
 static ErrorOr<StringView> month_name(int month)
@@ -137,9 +145,7 @@ static void print_months_side_by_side(Vector<String> const& left_month, Vector<S
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
-    TRY(Core::System::unveil("/etc/timezone", "r"));
-    TRY(Core::System::unveil(nullptr, nullptr));
+    TRY(Core::System::pledge("stdio rpath cpath"));
 
     int month = 0;
     int year = 0;
@@ -167,8 +173,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     bool year_mode = !month && year;
 
-    int week_start_day = 0;
-    if (!week_start_day_name.is_empty())
+    int week_start_day;
+    if (week_start_day_name.is_empty())
+        week_start_day = TRY(default_weekday_start());
+    else
         week_start_day = TRY(weekday_index(week_start_day_name));
 
     if (!year)
