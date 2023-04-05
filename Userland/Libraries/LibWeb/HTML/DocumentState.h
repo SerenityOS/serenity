@@ -11,6 +11,7 @@
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Origin.h>
+#include <LibWeb/HTML/POSTResource.h>
 #include <LibWeb/HTML/PolicyContainers.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
 
@@ -95,7 +96,8 @@ private:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-nested-histories
     Vector<NestedHistory> m_nested_histories;
 
-    // FIXME: https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-resource
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-resource
+    Variant<Empty, String, POSTResource> m_resource {};
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-reload-pending
     bool m_reload_pending { false };
