@@ -626,6 +626,18 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
     return bitmap;
 }
 
+namespace {
+
+class Transform {
+public:
+    virtual ~Transform();
+    virtual ErrorOr<void> transform(Bitmap&) = 0;
+};
+
+Transform::~Transform() = default;
+
+}
+
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#7_overall_structure_of_the_format
 static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk const& vp8l_chunk)
@@ -656,6 +668,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     // optional-transform   =  (%b1 transform optional-transform) / %b0
     // "Each transform is allowed to be used only once."
     u8 seen_transforms = 0;
+    Vector<NonnullOwnPtr<Transform>, 4> transforms;
     while (TRY(bit_stream.read_bits(1))) {
         // transform            =  predictor-tx / color-tx / subtract-green-tx
         // transform            =/ color-indexing-tx
@@ -697,6 +710,12 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
     auto format = vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
     context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, context.size.value(), bit_stream));
+
+    // Transforms have to be applied in the reverse order they appear in in the file.
+    // (As far as I can tell, this isn't mentioned in the spec.)
+    for (auto const& transform : transforms.in_reverse())
+        TRY(transform->transform(*context.bitmap));
+
     return {};
 }
 
