@@ -301,6 +301,109 @@ ErrorOr<void> XzDecompressor::finish_current_block()
     return {};
 }
 
+ErrorOr<void> XzDecompressor::finish_current_stream()
+{
+    // We already read the Index Indicator (one byte) to determine that this is an Index.
+    auto start_of_current_block = m_stream->read_bytes() - 1;
+
+    // 4.2. Number of Records:
+    // "This field indicates how many Records there are in the List
+    //  of Records field, and thus how many Blocks there are in the
+    //  Stream. The value is stored using the encoding described in
+    //  Section 1.2."
+    u64 number_of_records = TRY(m_stream->read_value<XzMultibyteInteger>());
+
+    if (m_processed_blocks.size() != number_of_records)
+        return Error::from_string_literal("Number of Records in XZ Index does not match the number of processed Blocks");
+
+    // 4.3. List of Records:
+    // "List of Records consists of as many Records as indicated by the
+    //  Number of Records field:"
+    for (u64 i = 0; i < number_of_records; i++) {
+        // "Each Record contains information about one Block:
+        //
+        //      +===============+===================+
+        //      | Unpadded Size | Uncompressed Size |
+        //      +===============+===================+"
+
+        // 4.3.1. Unpadded Size:
+        // "This field indicates the size of the Block excluding the Block
+        //  Padding field. That is, Unpadded Size is the size of the Block
+        //  Header, Compressed Data, and Check fields. Unpadded Size is
+        //  stored using the encoding described in Section 1.2."
+        u64 unpadded_size = TRY(m_stream->read_value<XzMultibyteInteger>());
+
+        // "The value MUST never be zero; with the current structure of Blocks, the
+        //  actual minimum value for Unpadded Size is five."
+        if (unpadded_size < 5)
+            return Error::from_string_literal("XZ index contains a record with an unpadded size of less than five");
+
+        // 4.3.2. Uncompressed Size:
+        // "This field indicates the Uncompressed Size of the respective
+        //  Block as bytes. The value is stored using the encoding
+        //  described in Section 1.2."
+        u64 uncompressed_size = TRY(m_stream->read_value<XzMultibyteInteger>());
+
+        // 4.3. List of Records:
+        // "If the decoder has decoded all the Blocks of the Stream, it
+        //  MUST verify that the contents of the Records match the real
+        //  Unpadded Size and Uncompressed Size of the respective Blocks."
+        if (m_processed_blocks[i].uncompressed_size != uncompressed_size)
+            return Error::from_string_literal("Uncompressed size of XZ Block does not match the Index");
+
+        if (m_processed_blocks[i].unpadded_size != unpadded_size)
+            return Error::from_string_literal("Unpadded size of XZ Block does not match the Index");
+    }
+
+    // 4.4. Index Padding:
+    // "This field MUST contain 0-3 null bytes to pad the Index to
+    //  a multiple of four bytes. If any of the bytes are not null
+    //  bytes, the decoder MUST indicate an error."
+    while ((m_stream->read_bytes() - start_of_current_block) % 4 != 0) {
+        auto padding_byte = TRY(m_stream->read_value<u8>());
+
+        if (padding_byte != 0)
+            return Error::from_string_literal("XZ index contains a non-null padding byte");
+    }
+
+    // 4.5. CRC32:
+    // "The CRC32 is calculated over everything in the Index field
+    //  except the CRC32 field itself. The CRC32 is stored as an
+    //  unsigned 32-bit little endian integer."
+    u32 index_crc32 = TRY(m_stream->read_value<LittleEndian<u32>>());
+
+    // "If the calculated value does not match the stored one, the decoder MUST indicate
+    //  an error."
+    // TODO: Validation of the index CRC32 is currently unimplemented.
+    (void)index_crc32;
+
+    auto size_of_index = m_stream->read_bytes() - start_of_current_block;
+
+    // According to the specification of a stream (2.1. Stream), the index is the last element in a stream,
+    // followed by the stream footer (2.1.2. Stream Footer).
+    auto stream_footer = TRY(m_stream->read_value<XzStreamFooter>());
+
+    // This handles verifying the CRC32 (2.1.2.1. CRC32) and the magic bytes (2.1.2.4. Footer Magic Bytes).
+    TRY(stream_footer.validate());
+
+    // 2.1.2.2. Backward Size:
+    // "If the stored value does not match the real size of the Index
+    //  field, the decoder MUST indicate an error."
+    if (stream_footer.backward_size() != size_of_index)
+        return Error::from_string_literal("XZ index size does not match the stored size in the stream footer");
+
+    // 2.1.2.3. Stream Flags:
+    // "This is a copy of the Stream Flags field from the Stream
+    //  Header. The information stored to Stream Flags is needed
+    //  when parsing the Stream backwards. The decoder MUST compare
+    //  the Stream Flags fields in both Stream Header and Stream
+    //  Footer, and indicate an error if they are not identical."
+    if (Bytes { &*m_stream_flags, sizeof(XzStreamFlags) } != Bytes { &stream_footer.flags, sizeof(stream_footer.flags) })
+        return Error::from_string_literal("XZ stream header flags don't match the stream footer");
+
+    return {};
+}
+
 ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 {
     if (!m_stream_flags.has_value()) {
@@ -324,102 +427,8 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
         auto encoded_block_header_size_or_index_indicator = TRY(m_stream->read_value<u8>());
 
         if (encoded_block_header_size_or_index_indicator == 0x00) {
-            // This is an Index.
-
-            // 4.2. Number of Records:
-            // "This field indicates how many Records there are in the List
-            //  of Records field, and thus how many Blocks there are in the
-            //  Stream. The value is stored using the encoding described in
-            //  Section 1.2."
-            u64 number_of_records = TRY(m_stream->read_value<XzMultibyteInteger>());
-
-            if (m_processed_blocks.size() != number_of_records)
-                return Error::from_string_literal("Number of Records in XZ Index does not match the number of processed Blocks");
-
-            // 4.3. List of Records:
-            // "List of Records consists of as many Records as indicated by the
-            //  Number of Records field:"
-            for (u64 i = 0; i < number_of_records; i++) {
-                // "Each Record contains information about one Block:
-                //
-                //      +===============+===================+
-                //      | Unpadded Size | Uncompressed Size |
-                //      +===============+===================+"
-
-                // 4.3.1. Unpadded Size:
-                // "This field indicates the size of the Block excluding the Block
-                //  Padding field. That is, Unpadded Size is the size of the Block
-                //  Header, Compressed Data, and Check fields. Unpadded Size is
-                //  stored using the encoding described in Section 1.2."
-                u64 unpadded_size = TRY(m_stream->read_value<XzMultibyteInteger>());
-
-                // "The value MUST never be zero; with the current structure of Blocks, the
-                //  actual minimum value for Unpadded Size is five."
-                if (unpadded_size < 5)
-                    return Error::from_string_literal("XZ index contains a record with an unpadded size of less than five");
-
-                // 4.3.2. Uncompressed Size:
-                // "This field indicates the Uncompressed Size of the respective
-                //  Block as bytes. The value is stored using the encoding
-                //  described in Section 1.2."
-                u64 uncompressed_size = TRY(m_stream->read_value<XzMultibyteInteger>());
-
-                // 4.3. List of Records:
-                // "If the decoder has decoded all the Blocks of the Stream, it
-                //  MUST verify that the contents of the Records match the real
-                //  Unpadded Size and Uncompressed Size of the respective Blocks."
-                if (m_processed_blocks[i].uncompressed_size != uncompressed_size)
-                    return Error::from_string_literal("Uncompressed size of XZ Block does not match the Index");
-
-                if (m_processed_blocks[i].unpadded_size != unpadded_size)
-                    return Error::from_string_literal("Unpadded size of XZ Block does not match the Index");
-            }
-
-            // 4.4. Index Padding:
-            // "This field MUST contain 0-3 null bytes to pad the Index to
-            //  a multiple of four bytes. If any of the bytes are not null
-            //  bytes, the decoder MUST indicate an error."
-            while ((m_stream->read_bytes() - start_of_current_block) % 4 != 0) {
-                auto padding_byte = TRY(m_stream->read_value<u8>());
-
-                if (padding_byte != 0)
-                    return Error::from_string_literal("XZ index contains a non-null padding byte");
-            }
-
-            // 4.5. CRC32:
-            // "The CRC32 is calculated over everything in the Index field
-            //  except the CRC32 field itself. The CRC32 is stored as an
-            //  unsigned 32-bit little endian integer."
-            u32 index_crc32 = TRY(m_stream->read_value<LittleEndian<u32>>());
-
-            // "If the calculated value does not match the stored one, the decoder MUST indicate
-            //  an error."
-            // TODO: Validation of the index CRC32 is currently unimplemented.
-            (void)index_crc32;
-
-            auto size_of_index = m_stream->read_bytes() - start_of_current_block;
-
-            // According to the specification of a stream (2.1. Stream), the index is the last element in a stream,
-            // followed by the stream footer (2.1.2. Stream Footer).
-            auto stream_footer = TRY(m_stream->read_value<XzStreamFooter>());
-
-            // This handles verifying the CRC32 (2.1.2.1. CRC32) and the magic bytes (2.1.2.4. Footer Magic Bytes).
-            TRY(stream_footer.validate());
-
-            // 2.1.2.2. Backward Size:
-            // "If the stored value does not match the real size of the Index
-            //  field, the decoder MUST indicate an error."
-            if (stream_footer.backward_size() != size_of_index)
-                return Error::from_string_literal("XZ index size does not match the stored size in the stream footer");
-
-            // 2.1.2.3. Stream Flags:
-            // "This is a copy of the Stream Flags field from the Stream
-            //  Header. The information stored to Stream Flags is needed
-            //  when parsing the Stream backwards. The decoder MUST compare
-            //  the Stream Flags fields in both Stream Header and Stream
-            //  Footer, and indicate an error if they are not identical."
-            if (Bytes { &*m_stream_flags, sizeof(XzStreamFlags) } != Bytes { &stream_footer.flags, sizeof(stream_footer.flags) })
-                return Error::from_string_literal("XZ stream header flags don't match the stream footer");
+            // This is an Index, which is the last element before the stream footer.
+            TRY(finish_current_stream());
 
             // Another XZ Stream might follow, so we just unset the current information and continue on the next read.
             m_stream_flags.clear();

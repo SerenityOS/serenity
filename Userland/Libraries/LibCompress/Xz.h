@@ -113,6 +113,7 @@ private:
 
     ErrorOr<bool> load_next_stream();
     ErrorOr<void> finish_current_block();
+    ErrorOr<void> finish_current_stream();
 
     NonnullOwnPtr<CountingStream> m_stream;
     Optional<XzStreamFlags> m_stream_flags;
