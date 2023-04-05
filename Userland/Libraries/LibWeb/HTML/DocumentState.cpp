@@ -18,6 +18,11 @@ void DocumentState::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_document);
+    for (auto& nested_history : m_nested_histories) {
+        for (auto& entry : nested_history.entries) {
+            visitor.visit(entry);
+        }
+    }
 }
 
 }
