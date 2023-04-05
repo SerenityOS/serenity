@@ -144,8 +144,10 @@ void Path::close_all_subpaths()
     Optional<FloatPoint> cursor, start_of_subpath;
     bool is_first_point_in_subpath { false };
 
-    for (auto& segment : m_segments) {
-        switch (segment->type()) {
+    auto segment_count = m_segments.size();
+    for (size_t i = 0; i < segment_count; i++) {
+        // Note: We need to use m_segments[i] as append_segment() may invalidate any references.
+        switch (m_segments[i]->type()) {
         case Segment::Type::MoveTo: {
             if (cursor.has_value() && !is_first_point_in_subpath) {
                 // This is a move from a subpath to another
@@ -157,7 +159,7 @@ void Path::close_all_subpaths()
                 append_segment<LineSegment>(start_of_subpath.value());
             }
             is_first_point_in_subpath = true;
-            cursor = segment->point();
+            cursor = m_segments[i]->point();
             break;
         }
         case Segment::Type::LineTo:
@@ -168,7 +170,7 @@ void Path::close_all_subpaths()
                 start_of_subpath = cursor;
                 is_first_point_in_subpath = false;
             }
-            cursor = segment->point();
+            cursor = m_segments[i]->point();
             break;
         case Segment::Type::Invalid:
             VERIFY_NOT_REACHED();
