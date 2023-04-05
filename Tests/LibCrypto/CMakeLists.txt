@@ -8,6 +8,7 @@ set(TEST_SOURCES
     TestEd25519.cpp
     TestHash.cpp
     TestHMAC.cpp
+    TestPBKDF2.cpp
     TestPoly1305.cpp
     TestRSA.cpp
 )
