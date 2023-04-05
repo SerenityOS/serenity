@@ -51,7 +51,7 @@ TEST_CASE(specification_a_lzma_decompress)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::LzmaDecompressor::create_from_container(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(specification_a_txt, buffer.span());
 }
 
@@ -70,7 +70,7 @@ TEST_CASE(specification_a_eos_lzma_decompress)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::LzmaDecompressor::create_from_container(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(specification_a_txt, buffer.span());
 }
 
@@ -89,7 +89,7 @@ TEST_CASE(specification_a_eos_and_size_lzma_decompress)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::LzmaDecompressor::create_from_container(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(specification_a_txt, buffer.span());
 }
 
@@ -109,7 +109,7 @@ TEST_CASE(specification_a_lp1_lc2_pb1_lzma_decompress)
 
     auto stream = MUST(try_make<FixedMemoryStream>(compressed));
     auto decompressor = MUST(Compress::LzmaDecompressor::create_from_container(move(stream)));
-    auto buffer = MUST(decompressor->read_until_eof(PAGE_SIZE));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
     EXPECT_EQ(specification_a_txt, buffer.span());
 }
 
