@@ -118,7 +118,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
     if (!new_range_mask)
         return Error::from_errno(errno);
     u16 new_range_mask_size { 0 };
-    for (size_t i = 0; i < s_max_glyph_count; ++i) {
+    for (size_t i = 0; i < m_glyph_count; ++i) {
         if (m_glyph_widths[i] > 0) {
             new_range_mask[i / 256 / 8] |= 1 << (i / 256 % 8);
             if (i / 256 / 8 + 1 > new_range_mask_size)
@@ -136,7 +136,7 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::masked_character_set() const
     auto* new_widths = static_cast<u8*>(calloc(new_glyph_count, 1));
     if (!new_widths)
         return Error::from_errno(errno);
-    for (size_t i = 0, j = 0; i < s_max_glyph_count; ++i) {
+    for (size_t i = 0, j = 0; i < m_glyph_count; ++i) {
         if (!(new_range_mask[i / 256 / 8] & 1 << (i / 256 % 8))) {
             j++;
             i += 255;
