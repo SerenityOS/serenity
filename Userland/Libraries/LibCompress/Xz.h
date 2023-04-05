@@ -112,6 +112,7 @@ private:
     XzDecompressor(NonnullOwnPtr<CountingStream>);
 
     ErrorOr<bool> load_next_stream();
+    ErrorOr<void> load_next_block(u8 encoded_block_header_size);
     ErrorOr<void> finish_current_block();
     ErrorOr<void> finish_current_stream();
 

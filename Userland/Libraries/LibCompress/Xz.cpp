@@ -252,6 +252,130 @@ ErrorOr<bool> XzDecompressor::load_next_stream()
     return true;
 }
 
+ErrorOr<void> XzDecompressor::load_next_block(u8 encoded_block_header_size)
+{
+    // We already read the encoded Block Header size (one byte) to determine that this is not an Index.
+    m_current_block_start_offset = m_stream->read_bytes() - 1;
+
+    // Ensure that the start of the block is aligned to a multiple of four (in theory, everything in XZ is).
+    VERIFY(m_current_block_start_offset % 4 == 0);
+
+    // 3.1.1. Block Header Size:
+    // "This field contains the size of the Block Header field,
+    //  including the Block Header Size field itself. Valid values are
+    //  in the range [0x01, 0xFF], which indicate the size of the Block
+    //  Header as multiples of four bytes, minimum size being eight
+    //  bytes:
+    //
+    //      real_header_size = (encoded_header_size + 1) * 4;"
+    u64 block_header_size = (encoded_block_header_size + 1) * 4;
+
+    // Read the whole header into a buffer to allow calculating the CRC32 later (3.1.7. CRC32).
+    auto header = TRY(ByteBuffer::create_uninitialized(block_header_size));
+    header[0] = encoded_block_header_size;
+    TRY(m_stream->read_until_filled(header.span().slice(1)));
+
+    FixedMemoryStream header_stream { header.span().slice(1) };
+
+    // 3.1.2. Block Flags:
+    // "If any reserved bit is set, the decoder MUST indicate an error.
+    //  It is possible that there is a new field present which the
+    //  decoder is not aware of, and can thus parse the Block Header
+    //  incorrectly."
+    auto flags = TRY(header_stream.read_value<XzBlockFlags>());
+
+    if (flags.reserved != 0)
+        return Error::from_string_literal("XZ block header has reserved non-null block flag bits");
+
+    MaybeOwned<Stream> new_block_stream { *m_stream };
+
+    // 3.1.3. Compressed Size:
+    // "This field is present only if the appropriate bit is set in
+    //  the Block Flags field (see Section 3.1.2)."
+    if (flags.compressed_size_present) {
+        // "Compressed Size is stored using the encoding described in Section 1.2."
+        u64 compressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
+
+        // "The Compressed Size field contains the size of the Compressed
+        //  Data field, which MUST be non-zero."
+        if (compressed_size == 0)
+            return Error::from_string_literal("XZ block header contains a compressed size of zero");
+
+        new_block_stream = TRY(try_make<ConstrainedStream>(move(new_block_stream), compressed_size));
+    }
+
+    // 3.1.4. Uncompressed Size:
+    // "This field is present only if the appropriate bit is set in
+    //  the Block Flags field (see Section 3.1.2)."
+    if (flags.uncompressed_size_present) {
+        // "Uncompressed Size is stored using the encoding described in Section 1.2."
+        u64 uncompressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
+
+        m_current_block_expected_uncompressed_size = uncompressed_size;
+    } else {
+        m_current_block_expected_uncompressed_size.clear();
+    }
+
+    // 3.1.5. List of Filter Flags:
+    // "The number of Filter Flags fields is stored in the Block Flags
+    //  field (see Section 3.1.2)."
+    for (size_t i = 0; i < flags.number_of_filters(); i++) {
+        // "The format of each Filter Flags field is as follows:
+        //  Both Filter ID and Size of Properties are stored using the
+        //  encoding described in Section 1.2."
+        u64 filter_id = TRY(header_stream.read_value<XzMultibyteInteger>());
+        u64 size_of_properties = TRY(header_stream.read_value<XzMultibyteInteger>());
+
+        // "Size of Properties indicates the size of the Filter Properties field as bytes."
+        auto filter_properties = TRY(ByteBuffer::create_uninitialized(size_of_properties));
+        TRY(header_stream.read_until_filled(filter_properties));
+
+        // 5.3.1. LZMA2
+        if (filter_id == 0x21) {
+            if (size_of_properties < sizeof(XzFilterLzma2Properties))
+                return Error::from_string_literal("XZ LZMA2 filter has a smaller-than-needed properties size");
+
+            auto properties = reinterpret_cast<XzFilterLzma2Properties*>(filter_properties.data());
+            TRY(properties->validate());
+
+            new_block_stream = TRY(Lzma2Decompressor::create_from_raw_stream(move(new_block_stream), properties->dictionary_size()));
+            continue;
+        }
+
+        return Error::from_string_literal("XZ block header contains unknown filter ID");
+    }
+
+    // 3.1.6. Header Padding:
+    // "This field contains as many null byte as it is needed to make
+    //  the Block Header have the size specified in Block Header Size."
+    constexpr size_t size_of_block_header_size = 1;
+    constexpr size_t size_of_crc32 = 4;
+    while (MUST(header_stream.tell()) < block_header_size - size_of_block_header_size - size_of_crc32) {
+        auto padding_byte = TRY(header_stream.read_value<u8>());
+
+        // "If any of the bytes are not null bytes, the decoder MUST
+        //  indicate an error."
+        if (padding_byte != 0)
+            return Error::from_string_literal("XZ block header padding contains non-null bytes");
+    }
+
+    // 3.1.7. CRC32:
+    // "The CRC32 is calculated over everything in the Block Header
+    //  field except the CRC32 field itself.
+    Crypto::Checksum::CRC32 calculated_header_crc32 { header.span().trim(block_header_size - size_of_crc32) };
+    //  It is stored as an unsigned 32-bit little endian integer.
+    u32 stored_header_crc32 = TRY(header_stream.read_value<LittleEndian<u32>>());
+    //  If the calculated value does not match the stored one, the decoder MUST indicate
+    //  an error."
+    if (calculated_header_crc32.digest() != stored_header_crc32)
+        return Error::from_string_literal("Stored XZ block header CRC32 does not match the stored CRC32");
+
+    m_current_block_stream = move(new_block_stream);
+    m_current_block_uncompressed_size = 0;
+
+    return {};
+}
+
 ErrorOr<void> XzDecompressor::finish_current_block()
 {
     auto unpadded_size = m_stream->read_bytes() - m_current_block_start_offset;
@@ -417,11 +541,6 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             TRY(finish_current_block());
         }
 
-        auto start_of_current_block = m_stream->read_bytes();
-
-        // Ensure that the start of the block is aligned to a multiple of four (in theory, everything in XZ is).
-        VERIFY(start_of_current_block % 4 == 0);
-
         // The first byte between Block Header (3.1.1. Block Header Size) and Index (4.1. Index Indicator) overlap.
         // Block header sizes have valid values in the range of [0x01, 0xFF], the only valid value for an Index Indicator is therefore 0x00.
         auto encoded_block_header_size_or_index_indicator = TRY(m_stream->read_value<u8>());
@@ -436,120 +555,7 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
             return bytes.trim(0);
         }
 
-        m_current_block_start_offset = start_of_current_block;
-
-        // 3.1.1. Block Header Size:
-        // "This field contains the size of the Block Header field,
-        //  including the Block Header Size field itself. Valid values are
-        //  in the range [0x01, 0xFF], which indicate the size of the Block
-        //  Header as multiples of four bytes, minimum size being eight
-        //  bytes:
-        //
-        //      real_header_size = (encoded_header_size + 1) * 4;"
-        u64 block_header_size = (encoded_block_header_size_or_index_indicator + 1) * 4;
-
-        // Read the whole header into a buffer to allow calculating the CRC32 later (3.1.7. CRC32).
-        auto header = TRY(ByteBuffer::create_uninitialized(block_header_size));
-        header[0] = encoded_block_header_size_or_index_indicator;
-        TRY(m_stream->read_until_filled(header.span().slice(1)));
-
-        FixedMemoryStream header_stream { header.span().slice(1) };
-
-        // 3.1.2. Block Flags:
-        // "If any reserved bit is set, the decoder MUST indicate an error.
-        //  It is possible that there is a new field present which the
-        //  decoder is not aware of, and can thus parse the Block Header
-        //  incorrectly."
-        auto flags = TRY(header_stream.read_value<XzBlockFlags>());
-
-        if (flags.reserved != 0)
-            return Error::from_string_literal("XZ block header has reserved non-null block flag bits");
-
-        MaybeOwned<Stream> new_block_stream { *m_stream };
-
-        // 3.1.3. Compressed Size:
-        // "This field is present only if the appropriate bit is set in
-        //  the Block Flags field (see Section 3.1.2)."
-        if (flags.compressed_size_present) {
-            // "Compressed Size is stored using the encoding described in Section 1.2."
-            u64 compressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
-
-            // "The Compressed Size field contains the size of the Compressed
-            //  Data field, which MUST be non-zero."
-            if (compressed_size == 0)
-                return Error::from_string_literal("XZ block header contains a compressed size of zero");
-
-            new_block_stream = TRY(try_make<ConstrainedStream>(move(new_block_stream), compressed_size));
-        }
-
-        // 3.1.4. Uncompressed Size:
-        // "This field is present only if the appropriate bit is set in
-        //  the Block Flags field (see Section 3.1.2)."
-        if (flags.uncompressed_size_present) {
-            // "Uncompressed Size is stored using the encoding described in Section 1.2."
-            u64 uncompressed_size = TRY(header_stream.read_value<XzMultibyteInteger>());
-
-            m_current_block_expected_uncompressed_size = uncompressed_size;
-        } else {
-            m_current_block_expected_uncompressed_size.clear();
-        }
-
-        // 3.1.5. List of Filter Flags:
-        // "The number of Filter Flags fields is stored in the Block Flags
-        //  field (see Section 3.1.2)."
-        for (size_t i = 0; i < flags.number_of_filters(); i++) {
-            // "The format of each Filter Flags field is as follows:
-            //  Both Filter ID and Size of Properties are stored using the
-            //  encoding described in Section 1.2."
-            u64 filter_id = TRY(header_stream.read_value<XzMultibyteInteger>());
-            u64 size_of_properties = TRY(header_stream.read_value<XzMultibyteInteger>());
-
-            // "Size of Properties indicates the size of the Filter Properties field as bytes."
-            auto filter_properties = TRY(ByteBuffer::create_uninitialized(size_of_properties));
-            TRY(header_stream.read_until_filled(filter_properties));
-
-            // 5.3.1. LZMA2
-            if (filter_id == 0x21) {
-                if (size_of_properties < sizeof(XzFilterLzma2Properties))
-                    return Error::from_string_literal("XZ LZMA2 filter has a smaller-than-needed properties size");
-
-                auto properties = reinterpret_cast<XzFilterLzma2Properties*>(filter_properties.data());
-                TRY(properties->validate());
-
-                new_block_stream = TRY(Lzma2Decompressor::create_from_raw_stream(move(new_block_stream), properties->dictionary_size()));
-                continue;
-            }
-
-            return Error::from_string_literal("XZ block header contains unknown filter ID");
-        }
-
-        // 3.1.6. Header Padding:
-        // "This field contains as many null byte as it is needed to make
-        //  the Block Header have the size specified in Block Header Size."
-        constexpr size_t size_of_block_header_size = 1;
-        constexpr size_t size_of_crc32 = 4;
-        while (MUST(header_stream.tell()) < block_header_size - size_of_block_header_size - size_of_crc32) {
-            auto padding_byte = TRY(header_stream.read_value<u8>());
-
-            // "If any of the bytes are not null bytes, the decoder MUST
-            //  indicate an error."
-            if (padding_byte != 0)
-                return Error::from_string_literal("XZ block header padding contains non-null bytes");
-        }
-
-        // 3.1.7. CRC32:
-        // "The CRC32 is calculated over everything in the Block Header
-        //  field except the CRC32 field itself.
-        Crypto::Checksum::CRC32 calculated_header_crc32 { header.span().trim(block_header_size - size_of_crc32) };
-        //  It is stored as an unsigned 32-bit little endian integer.
-        u32 stored_header_crc32 = TRY(header_stream.read_value<LittleEndian<u32>>());
-        //  If the calculated value does not match the stored one, the decoder MUST indicate
-        //  an error."
-        if (calculated_header_crc32.digest() != stored_header_crc32)
-            return Error::from_string_literal("Stored XZ block header CRC32 does not match the stored CRC32");
-
-        m_current_block_stream = move(new_block_stream);
-        m_current_block_uncompressed_size = 0;
+        TRY(load_next_block(encoded_block_header_size_or_index_indicator));
     }
 
     auto result = TRY((*m_current_block_stream)->read_some(bytes));
