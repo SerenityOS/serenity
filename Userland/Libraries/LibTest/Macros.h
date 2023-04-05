@@ -141,3 +141,17 @@ void current_test_case_did_fail();
         if (!crash.run())                              \
             ::Test::current_test_case_did_fail();      \
     } while (false)
+
+#define TRY_OR_FAIL(expression)                                                                      \
+    ({                                                                                               \
+        /* Ignore -Wshadow to allow nesting the macro. */                                            \
+        AK_IGNORE_DIAGNOSTIC("-Wshadow",                                                             \
+            auto&& _temporary_result = (expression));                                                \
+        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
+            "Do not return a reference from a fallible expression");                                 \
+        if (_temporary_result.is_error()) [[unlikely]] {                                             \
+            FAIL(_temporary_result.release_error());                                                 \
+            return;                                                                                  \
+        }                                                                                            \
+        _temporary_result.release_value();                                                           \
+    })
