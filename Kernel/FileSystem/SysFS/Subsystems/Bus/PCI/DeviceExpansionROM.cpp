@@ -12,10 +12,10 @@
 
 namespace Kernel {
 
-NonnullLockRefPtr<PCIDeviceExpansionROMSysFSComponent> PCIDeviceExpansionROMSysFSComponent::create(PCIDeviceSysFSDirectory const& device)
+NonnullRefPtr<PCIDeviceExpansionROMSysFSComponent> PCIDeviceExpansionROMSysFSComponent::create(PCIDeviceSysFSDirectory const& device)
 {
     auto option_rom_size = PCI::get_expansion_rom_space_size(device.device_identifier());
-    return adopt_lock_ref(*new (nothrow) PCIDeviceExpansionROMSysFSComponent(device, option_rom_size));
+    return adopt_ref(*new (nothrow) PCIDeviceExpansionROMSysFSComponent(device, option_rom_size));
 }
 
 PCIDeviceExpansionROMSysFSComponent::PCIDeviceExpansionROMSysFSComponent(PCIDeviceSysFSDirectory const& device, size_t option_rom_size)

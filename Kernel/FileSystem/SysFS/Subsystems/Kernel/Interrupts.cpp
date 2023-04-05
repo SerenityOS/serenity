@@ -18,9 +18,9 @@ UNMAP_AFTER_INIT SysFSInterrupts::SysFSInterrupts(SysFSDirectory const& parent_d
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSInterrupts> SysFSInterrupts::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSInterrupts> SysFSInterrupts::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSInterrupts(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSInterrupts(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSInterrupts::try_generate(KBufferBuilder& builder)

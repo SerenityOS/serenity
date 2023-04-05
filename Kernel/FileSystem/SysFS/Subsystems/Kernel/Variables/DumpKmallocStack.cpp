@@ -15,9 +15,9 @@ UNMAP_AFTER_INIT SysFSDumpKmallocStacks::SysFSDumpKmallocStacks(SysFSDirectory c
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSDumpKmallocStacks> SysFSDumpKmallocStacks::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSDumpKmallocStacks> SysFSDumpKmallocStacks::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSDumpKmallocStacks(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSDumpKmallocStacks(parent_directory)).release_nonnull();
 }
 
 bool SysFSDumpKmallocStacks::value() const

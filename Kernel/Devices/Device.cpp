@@ -34,19 +34,19 @@ void Device::after_inserting_add_to_device_management()
 
 ErrorOr<void> Device::after_inserting()
 {
-    after_inserting_add_to_device_management();
     VERIFY(!m_sysfs_component);
     auto sys_fs_component = SysFSDeviceComponent::must_create(*this);
     m_sysfs_component = sys_fs_component;
     after_inserting_add_to_device_identifier_directory();
+    after_inserting_add_to_device_management();
     return {};
 }
 
 void Device::will_be_destroyed()
 {
     VERIFY(m_sysfs_component);
-    before_will_be_destroyed_remove_from_device_identifier_directory();
     before_will_be_destroyed_remove_from_device_management();
+    before_will_be_destroyed_remove_from_device_identifier_directory();
 }
 
 Device::~Device()

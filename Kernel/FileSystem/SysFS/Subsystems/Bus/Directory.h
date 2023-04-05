@@ -16,7 +16,7 @@ class SysFSBusDirectory : public SysFSDirectory {
 
 public:
     virtual StringView name() const override { return "bus"sv; }
-    static NonnullLockRefPtr<SysFSBusDirectory> must_create(SysFSRootDirectory const&);
+    static NonnullRefPtr<SysFSBusDirectory> must_create(SysFSRootDirectory const&);
 
 private:
     explicit SysFSBusDirectory(SysFSRootDirectory const&);

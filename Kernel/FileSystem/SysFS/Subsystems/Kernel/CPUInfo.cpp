@@ -18,9 +18,9 @@ UNMAP_AFTER_INIT SysFSCPUInformation::SysFSCPUInformation(SysFSDirectory const& 
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSCPUInformation> SysFSCPUInformation::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSCPUInformation> SysFSCPUInformation::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSCPUInformation(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSCPUInformation(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSCPUInformation::try_generate(KBufferBuilder& builder)

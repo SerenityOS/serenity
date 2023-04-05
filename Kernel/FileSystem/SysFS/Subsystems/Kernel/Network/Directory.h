@@ -14,7 +14,7 @@ namespace Kernel {
 
 class SysFSGlobalNetworkStatsDirectory : public SysFSDirectory {
 public:
-    static NonnullLockRefPtr<SysFSGlobalNetworkStatsDirectory> must_create(SysFSDirectory const&);
+    static NonnullRefPtr<SysFSGlobalNetworkStatsDirectory> must_create(SysFSDirectory const&);
     virtual StringView name() const override { return "net"sv; }
 
 private:

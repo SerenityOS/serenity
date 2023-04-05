@@ -40,7 +40,7 @@ protected:
     virtual ErrorOr<void> attach(OpenFileDescription& description) override final;
     virtual void did_seek(OpenFileDescription&, off_t) override final;
 
-    NonnullLockRefPtr<SysFSComponent> m_associated_component;
+    NonnullRefPtr<SysFSComponent> const m_associated_component;
 };
 
 }

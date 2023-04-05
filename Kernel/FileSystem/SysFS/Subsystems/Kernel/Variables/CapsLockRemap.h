@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
@@ -17,7 +17,7 @@ namespace Kernel {
 class SysFSCapsLockRemap final : public SysFSSystemBooleanVariable {
 public:
     virtual StringView name() const override { return "caps_lock_to_ctrl"sv; }
-    static NonnullLockRefPtr<SysFSCapsLockRemap> must_create(SysFSDirectory const&);
+    static NonnullRefPtr<SysFSCapsLockRemap> must_create(SysFSDirectory const&);
 
 private:
     virtual bool value() const override;

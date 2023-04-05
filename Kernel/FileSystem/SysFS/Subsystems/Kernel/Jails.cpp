@@ -16,9 +16,9 @@ UNMAP_AFTER_INIT SysFSJails::SysFSJails(SysFSDirectory const& parent_directory)
 {
 }
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSJails> SysFSJails::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSJails> SysFSJails::must_create(SysFSDirectory const& parent_directory)
 {
-    return adopt_lock_ref_if_nonnull(new (nothrow) SysFSJails(parent_directory)).release_nonnull();
+    return adopt_ref_if_nonnull(new (nothrow) SysFSJails(parent_directory)).release_nonnull();
 }
 
 ErrorOr<void> SysFSJails::try_generate(KBufferBuilder& builder)

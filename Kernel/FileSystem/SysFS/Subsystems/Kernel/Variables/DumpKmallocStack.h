@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Kernel/Variables/BooleanVariable.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
@@ -17,7 +17,7 @@ namespace Kernel {
 class SysFSDumpKmallocStacks final : public SysFSSystemBooleanVariable {
 public:
     virtual StringView name() const override { return "kmalloc_stacks"sv; }
-    static NonnullLockRefPtr<SysFSDumpKmallocStacks> must_create(SysFSDirectory const&);
+    static NonnullRefPtr<SysFSDumpKmallocStacks> must_create(SysFSDirectory const&);
 
 private:
     virtual bool value() const override;

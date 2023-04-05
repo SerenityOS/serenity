@@ -15,9 +15,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<SysFSGlobalKernelVariablesDirectory> SysFSGlobalKernelVariablesDirectory::must_create(SysFSDirectory const& parent_directory)
+UNMAP_AFTER_INIT NonnullRefPtr<SysFSGlobalKernelVariablesDirectory> SysFSGlobalKernelVariablesDirectory::must_create(SysFSDirectory const& parent_directory)
 {
-    auto global_variables_directory = adopt_lock_ref_if_nonnull(new (nothrow) SysFSGlobalKernelVariablesDirectory(parent_directory)).release_nonnull();
+    auto global_variables_directory = adopt_ref_if_nonnull(new (nothrow) SysFSGlobalKernelVariablesDirectory(parent_directory)).release_nonnull();
     MUST(global_variables_directory->m_child_components.with([&](auto& list) -> ErrorOr<void> {
         list.append(SysFSCapsLockRemap::must_create(*global_variables_directory));
         list.append(SysFSDumpKmallocStacks::must_create(*global_variables_directory));

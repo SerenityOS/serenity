@@ -14,7 +14,7 @@ namespace Kernel {
 
 class SysFSGlobalKernelVariablesDirectory : public SysFSDirectory {
 public:
-    static NonnullLockRefPtr<SysFSGlobalKernelVariablesDirectory> must_create(SysFSDirectory const&);
+    static NonnullRefPtr<SysFSGlobalKernelVariablesDirectory> must_create(SysFSDirectory const&);
     virtual StringView name() const override { return "variables"sv; }
 
 private:

@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/Firmware/Directory.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel {
@@ -17,7 +17,7 @@ namespace Kernel {
 class BIOSSysFSDirectory : public SysFSDirectory {
 public:
     virtual StringView name() const override { return "bios"sv; }
-    static NonnullLockRefPtr<BIOSSysFSDirectory> must_create(FirmwareSysFSDirectory&);
+    static NonnullRefPtr<BIOSSysFSDirectory> must_create(FirmwareSysFSDirectory&);
 
     void create_components();
 

@@ -15,7 +15,7 @@ namespace Kernel {
 
 class PCIDeviceExpansionROMSysFSComponent : public SysFSComponent {
 public:
-    static NonnullLockRefPtr<PCIDeviceExpansionROMSysFSComponent> create(PCIDeviceSysFSDirectory const& device);
+    static NonnullRefPtr<PCIDeviceExpansionROMSysFSComponent> create(PCIDeviceSysFSDirectory const& device);
 
     virtual ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, OpenFileDescription*) const override;
     virtual ~PCIDeviceExpansionROMSysFSComponent() {};
@@ -25,7 +25,7 @@ public:
 protected:
     ErrorOr<NonnullOwnPtr<KBuffer>> try_to_generate_buffer(size_t offset_in_rom, size_t count) const;
     PCIDeviceExpansionROMSysFSComponent(PCIDeviceSysFSDirectory const& device, size_t option_rom_size);
-    NonnullLockRefPtr<PCIDeviceSysFSDirectory> m_device;
+    NonnullRefPtr<PCIDeviceSysFSDirectory> m_device;
     size_t const m_option_rom_size { 0 };
 };
 
