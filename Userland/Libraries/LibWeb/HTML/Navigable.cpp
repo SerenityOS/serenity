@@ -695,7 +695,14 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     String csp_navigation_type,
     ReferrerPolicy::ReferrerPolicy referrer_policy)
 {
-    // FIXME: 1. Let sourceSnapshotParams be the result of snapshotting source snapshot params given sourceDocument.
+    // 1. Let sourceSnapshotParams be the result of snapshotting source snapshot params given sourceDocument.
+    auto source_snapshot_params = SourceSnapshotParams {
+        .has_transient_activation = false,
+        .sandboxing_flags = source_document->active_sandboxing_flag_set(),
+        .allows_downloading = true,
+        .fetch_client = source_document->relevant_settings_object(),
+        .source_policy_container = source_document->policy_container()
+    };
 
     // 2. Let initiatorOriginSnapshot be sourceDocument's origin.
     auto initiator_origin_snapshot = source_document->origin();
@@ -783,7 +790,7 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
     }
 
     // 16. In parallel, run these steps:
-    Platform::EventLoopPlugin::the().deferred_invoke([this, document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response] {
+    Platform::EventLoopPlugin::the().deferred_invoke([this, source_snapshot_params = move(source_snapshot_params), document_resource, url, navigation_id, referrer_policy, initiator_origin_snapshot, response, history_handling] {
         // FIXME: 1. Let unloadPromptCanceled be the result of checking if unloading is user-canceled for navigable's active document's inclusive descendant navigables.
 
         // FIXME: 2. If unloadPromptCanceled is true, or navigable's ongoing navigation is no longer navigationId, then:
@@ -797,10 +804,11 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         // 4. Let documentState be a new document state with
         //    request referrer policy: referrerPolicy
         //    initiator origin: initiatorOriginSnapshot
-        //    FIXME: resource: documentResource
+        //    resource: documentResource
         //    navigable target name: navigable's target name
         JS::NonnullGCPtr<DocumentState> document_state = *heap().allocate_without_realm<DocumentState>();
         document_state->set_request_referrer_policy(referrer_policy);
+        document_state->set_resource(document_resource);
         document_state->set_initiator_origin(initiator_origin_snapshot);
         document_state->set_navigable_target_name(target_name());
 
@@ -819,11 +827,72 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         history_entry->url = url;
         history_entry->document_state = document_state;
 
-        // FIXME: 8. Let navigationParams be null.
+        // 8. Let navigationParams be null.
+        Optional<NavigationParams> navigation_params;
 
         // FIXME: 9. If response is non-null:
         if (response) {
         }
+
+        // 10. Attempt to populate the history entry's document
+        //     for historyEntry, given navigable, "navigate", sourceSnapshotParams,
+        //     targetSnapshotParams, navigationId, navigationParams, cspNavigationType, with allowPOST
+        //     set to true and completionSteps set to the following step:
+        populate_session_history_entry_document(history_entry, navigation_params, navigation_id, source_snapshot_params, [this, history_entry, history_handling] {
+            // https://html.spec.whatwg.org/multipage/browsing-the-web.html#finalize-a-cross-document-navigation
+
+            // 1. FIXME: Assert: this is running on navigable's traversable navigable's session history traversal queue.
+
+            // 2. Set navigable's is delaying load events to false.
+            set_delaying_load_events(false);
+
+            // 3. If historyEntry's document is null, then return.
+            if (!history_entry->document_state->document())
+                return;
+
+            // 4. FIXME: If all of the following are true:
+            //    - navigable's parent is null;
+            //    - historyEntry's document's browsing context is not an auxiliary browsing context whose opener browsing context is non-null; and
+            //    - historyEntry's document's origin is not navigable's active document's origin
+            //    then set historyEntry's document state's navigable target name to the empty string.
+
+            // 5. Let entryToReplace be navigable's active session history entry if historyHandling is "replace", otherwise null.
+            auto entry_to_replace = history_handling == HistoryHandlingBehavior::Replace ? active_session_history_entry() : nullptr;
+
+            // 6. Let traversable be navigable's traversable navigable.
+            auto traversable = traversable_navigable();
+
+            // 7. Let targetStep be null.
+            int target_step;
+
+            // 8. Let targetEntries be the result of getting session history entries for navigable.
+            auto& target_entries = get_session_history_entries();
+
+            // 9. If entryToReplace is null, then:
+            if (entry_to_replace == nullptr) {
+                // FIXME: 1. Clear the forward session history of traversable.
+
+                // 2. Set targetStep to traversable's current session history step + 1.
+                target_step = traversable->current_session_history_step() + 1;
+
+                // 3. Set historyEntry's step to targetStep.
+                history_entry->step = target_step;
+
+                // 4. Append historyEntry to targetEntries.
+                target_entries.append(move(history_entry));
+            } else {
+                // 1. Replace entryToReplace with historyEntry in targetEntries.
+                *(target_entries.find(*entry_to_replace)) = history_entry;
+
+                // 2. Set historyEntry's step to entryToReplace's step.
+                history_entry->step = entry_to_replace->step;
+
+                // 3. Set targetStep to traversable's current session history step.
+                target_step = traversable->current_session_history_step();
+            }
+
+            // FIXME: 10. Apply the history step targetStep to traversable.
+        }).release_value_but_fixme_should_propagate_errors();
     });
 
     return {};
