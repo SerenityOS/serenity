@@ -207,6 +207,9 @@ public:
     [[nodiscard]] bool mmapped_from_readable() const { return m_mmapped_from_readable; }
     [[nodiscard]] bool mmapped_from_writable() const { return m_mmapped_from_writable; }
 
+    void start_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults++; };
+    void finish_handling_page_fault(Badge<MemoryManager>) { m_in_progress_page_faults--; };
+
 private:
     Region();
     Region(NonnullLockRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
@@ -234,6 +237,7 @@ private:
     size_t m_offset_in_vmobject { 0 };
     LockRefPtr<VMObject> m_vmobject;
     OwnPtr<KString> m_name;
+    Atomic<u32> m_in_progress_page_faults;
     u8 m_access { Region::None };
     bool m_shared : 1 { false };
     bool m_cacheable : 1 { false };

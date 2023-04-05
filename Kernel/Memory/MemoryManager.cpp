@@ -658,16 +658,6 @@ UNMAP_AFTER_INIT void MemoryManager::initialize(u32 cpu)
     }
 }
 
-Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress address)
-{
-    if (is_user_address(address))
-        return nullptr;
-
-    return MM.m_global_data.with([&](auto& global_data) {
-        return global_data.region_tree.find_region_containing(address);
-    });
-}
-
 Region* MemoryManager::find_user_region_from_vaddr(AddressSpace& space, VirtualAddress vaddr)
 {
     return space.find_region_containing({ vaddr, 1 });
@@ -715,20 +705,6 @@ void MemoryManager::validate_syscall_preconditions(Process& process, RegisterSta
     }
 }
 
-Region* MemoryManager::find_region_from_vaddr(VirtualAddress vaddr)
-{
-    if (auto* region = kernel_region_from_vaddr(vaddr))
-        return region;
-    auto page_directory = PageDirectory::find_current();
-    if (!page_directory)
-        return nullptr;
-    auto* process = page_directory->process();
-    VERIFY(process);
-    return process->address_space().with([&](auto& space) {
-        return find_user_region_from_vaddr(*space, vaddr);
-    });
-}
-
 PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
 {
     auto faulted_in_range = [&fault](auto const* start, auto const* end) {
@@ -753,11 +729,44 @@ PageFaultResponse MemoryManager::handle_page_fault(PageFault const& fault)
         return PageFaultResponse::ShouldCrash;
     }
     dbgln_if(PAGE_FAULT_DEBUG, "MM: CPU[{}] handle_page_fault({:#04x}) at {}", Processor::current_id(), fault.code(), fault.vaddr());
-    auto* region = find_region_from_vaddr(fault.vaddr());
-    if (!region) {
-        return PageFaultResponse::ShouldCrash;
+
+    // The faulting region may be unmapped concurrently to handling this page fault, and since
+    // regions are singly-owned it would usually result in the region being immediately
+    // de-allocated. To ensure the region is not de-allocated while we're still handling the
+    // fault we increase a page fault counter on the region, and the region will refrain from
+    // de-allocating itself until the counter reaches zero. (Since unmapping the region also
+    // includes removing it from the region tree while holding the address space spinlock, and
+    // because we increment the counter while still holding the spinlock it is guaranteed that
+    // we always increment the counter before it gets a chance to be deleted)
+    Region* region = nullptr;
+    if (is_user_address(fault.vaddr())) {
+        auto page_directory = PageDirectory::find_current();
+        if (!page_directory)
+            return PageFaultResponse::ShouldCrash;
+        auto* process = page_directory->process();
+        VERIFY(process);
+        region = process->address_space().with([&](auto& space) -> Region* {
+            auto* region = find_user_region_from_vaddr(*space, fault.vaddr());
+            if (!region)
+                return nullptr;
+            region->start_handling_page_fault({});
+            return region;
+        });
+    } else {
+        region = MM.m_global_data.with([&](auto& global_data) -> Region* {
+            auto* region = global_data.region_tree.find_region_containing(fault.vaddr());
+            if (!region)
+                return nullptr;
+            region->start_handling_page_fault({});
+            return region;
+        });
     }
-    return region->handle_fault(fault);
+    if (!region)
+        return PageFaultResponse::ShouldCrash;
+
+    auto response = region->handle_fault(fault);
+    region->finish_handling_page_fault({});
+    return response;
 }
 
 ErrorOr<NonnullOwnPtr<Region>> MemoryManager::allocate_contiguous_kernel_region(size_t size, StringView name, Region::Access access, Region::Cacheable cacheable)
