@@ -224,6 +224,74 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
     VERIFY_NOT_REACHED();
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-from-a-srcdoc-resource
+static WebIDL::ExceptionOr<NavigationParams> create_navigation_params_from_a_srcdoc_resource(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const&, Optional<String> navigation_id)
+{
+    auto& vm = navigable->vm();
+    auto& realm = navigable->active_window()->realm();
+
+    // 1. Let documentResource be entry's document state's resource.
+    auto document_resource = entry->document_state->resource();
+    VERIFY(document_resource.has<String>());
+
+    // 2. Let response be a new response with
+    //    URL: about:srcdoc
+    //    header list: (`Content-Type`, `text/html`)
+    //    body: the UTF-8 encoding of documentResource, as a body
+    auto response = Fetch::Infrastructure::Response::create(vm);
+    response->url_list().append(AK::URL("about:srcdoc"));
+    auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html"sv));
+    TRY_OR_THROW_OOM(vm, response->header_list()->append(move(header)));
+    response->set_body(TRY(Fetch::Infrastructure::byte_sequence_as_body(realm, document_resource.get<String>().bytes())));
+
+    // FIXME: 3. Let responseOrigin be the result of determining the origin given response's URL, targetSnapshotParams's sandboxing flags, null, and entry's document state's origin.
+
+    // 4. Let coop be a new cross-origin opener policy.
+    CrossOriginOpenerPolicy coop;
+
+    // 5. Let coopEnforcementResult be a new cross-origin opener policy enforcement result with
+    //    url: response's URL
+    //    FIXME: origin: responseOrigin
+    //    cross-origin opener policy: coop
+    CrossOriginOpenerPolicyEnforcementResult coop_enforcement_result {
+        .url = *response->url(),
+        .origin = Origin {},
+        .cross_origin_opener_policy = coop
+    };
+
+    // FIXME: 6. Let policyContainer be the result of determining navigation params policy container given response's URL, entry's document state's history policy container, null, navigable's container document's policy container, and null.
+
+    // 7. Return a new navigation params, with
+    //    id: navigationId
+    //    request: null
+    //    response: response
+    //    FIXME: origin: responseOrigin
+    //    FIXME: policy container: policyContainer
+    //    FIXME: final sandboxing flag set: targetSnapshotParams's sandboxing flags
+    //    cross-origin opener policy: coop
+    //    COOP enforcement result: coopEnforcementResult
+    //    reserved environment: null
+    //    navigable: navigable
+    //    FIXME: navigation timing type: navTimingType
+    //    fetch controller: null
+    //    commit early hints: null
+    HTML::NavigationParams navigation_params {
+        .id = navigation_id,
+        .request = {},
+        .response = *response,
+        .origin = Origin {},
+        .policy_container = PolicyContainer {},
+        .final_sandboxing_flag_set = SandboxingFlagSet {},
+        .cross_origin_opener_policy = move(coop),
+        .coop_enforcement_result = move(coop_enforcement_result),
+        .reserved_environment = {},
+        .browsing_context = navigable->active_browsing_context(),
+        .navigable = navigable,
+    };
+
+    return { navigation_params };
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-by-fetching
 static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, Optional<String> navigation_id)
 {
@@ -506,7 +574,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         //    of creating navigation params from a srcdoc resource given entry, navigable,
         //    targetSnapshotParams, navigationId, and navTimingType.
         if (document_resource.has<String>()) {
-            TODO();
+            navigation_params = create_navigation_params_from_a_srcdoc_resource(entry, this, source_snapshot_params, navigation_id).release_value_but_fixme_should_propagate_errors();
         }
         // 2. Otherwise, if both of the following are true:
         //    - entry's URL's scheme is a fetch scheme; and
