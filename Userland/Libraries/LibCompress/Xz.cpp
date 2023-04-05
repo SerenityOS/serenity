@@ -252,6 +252,55 @@ ErrorOr<bool> XzDecompressor::load_next_stream()
     return true;
 }
 
+ErrorOr<void> XzDecompressor::finish_current_block()
+{
+    auto unpadded_size = m_stream->read_bytes() - m_current_block_start_offset;
+
+    // 3.3. Block Padding:
+    // "Block Padding MUST contain 0-3 null bytes to make the size of
+    //  the Block a multiple of four bytes. This can be needed when
+    //  the size of Compressed Data is not a multiple of four."
+    for (size_t i = 0; (unpadded_size + i) % 4 != 0; i++) {
+        auto padding_byte = TRY(m_stream->read_value<u8>());
+
+        // "If any of the bytes in Block Padding are not null bytes, the decoder
+        //  MUST indicate an error."
+        if (padding_byte != 0)
+            return Error::from_string_literal("XZ block contains a non-null padding byte");
+    }
+
+    // 3.4. Check:
+    // "The type and size of the Check field depends on which bits
+    //  are set in the Stream Flags field (see Section 2.1.1.2).
+    //
+    //  The Check, when used, is calculated from the original
+    //  uncompressed data. If the calculated Check does not match the
+    //  stored one, the decoder MUST indicate an error. If the selected
+    //  type of Check is not supported by the decoder, it SHOULD
+    //  indicate a warning or error."
+    auto maybe_check_size = size_for_check_type(m_stream_flags->check_type);
+
+    if (!maybe_check_size.has_value())
+        return Error::from_string_literal("XZ stream has an unknown check type");
+
+    // TODO: Block content checks are currently unimplemented as a whole, independent of the check type.
+    //       For now, we only make sure to remove the correct amount of bytes from the stream.
+    TRY(m_stream->discard(*maybe_check_size));
+    unpadded_size += *maybe_check_size;
+
+    if (m_current_block_expected_uncompressed_size.has_value()) {
+        if (*m_current_block_expected_uncompressed_size != m_current_block_uncompressed_size)
+            return Error::from_string_literal("Uncompressed size of XZ block does not match the expected value");
+    }
+
+    TRY(m_processed_blocks.try_append({
+        .uncompressed_size = m_current_block_uncompressed_size,
+        .unpadded_size = unpadded_size,
+    }));
+
+    return {};
+}
+
 ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
 {
     if (!m_stream_flags.has_value()) {
@@ -262,50 +311,7 @@ ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
     if (!m_current_block_stream.has_value() || (*m_current_block_stream)->is_eof()) {
         if (m_current_block_stream.has_value()) {
             // We have already processed a block, so we weed to clean up trailing data before the next block starts.
-
-            auto unpadded_size = m_stream->read_bytes() - m_current_block_start_offset;
-
-            // 3.3. Block Padding:
-            // "Block Padding MUST contain 0-3 null bytes to make the size of
-            //  the Block a multiple of four bytes. This can be needed when
-            //  the size of Compressed Data is not a multiple of four."
-            for (size_t i = 0; (unpadded_size + i) % 4 != 0; i++) {
-                auto padding_byte = TRY(m_stream->read_value<u8>());
-
-                // "If any of the bytes in Block Padding are not null bytes, the decoder
-                //  MUST indicate an error."
-                if (padding_byte != 0)
-                    return Error::from_string_literal("XZ block contains a non-null padding byte");
-            }
-
-            // 3.4. Check:
-            // "The type and size of the Check field depends on which bits
-            //  are set in the Stream Flags field (see Section 2.1.1.2).
-            //
-            //  The Check, when used, is calculated from the original
-            //  uncompressed data. If the calculated Check does not match the
-            //  stored one, the decoder MUST indicate an error. If the selected
-            //  type of Check is not supported by the decoder, it SHOULD
-            //  indicate a warning or error."
-            auto maybe_check_size = size_for_check_type(m_stream_flags->check_type);
-
-            if (!maybe_check_size.has_value())
-                return Error::from_string_literal("XZ stream has an unknown check type");
-
-            // TODO: Block content checks are currently unimplemented as a whole, independent of the check type.
-            //       For now, we only make sure to remove the correct amount of bytes from the stream.
-            TRY(m_stream->discard(*maybe_check_size));
-            unpadded_size += *maybe_check_size;
-
-            if (m_current_block_expected_uncompressed_size.has_value()) {
-                if (*m_current_block_expected_uncompressed_size != m_current_block_uncompressed_size)
-                    return Error::from_string_literal("Uncompressed size of XZ block does not match the expected value");
-            }
-
-            TRY(m_processed_blocks.try_append({
-                .uncompressed_size = m_current_block_uncompressed_size,
-                .unpadded_size = unpadded_size,
-            }));
+            TRY(finish_current_block());
         }
 
         auto start_of_current_block = m_stream->read_bytes();
