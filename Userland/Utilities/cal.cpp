@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DateConstants.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
@@ -26,12 +27,22 @@ int current_year;
 int current_month;
 int current_day;
 
+static ErrorOr<StringView> month_name(int month)
+{
+    int month_index = month - 1;
+
+    if (month_index < 0 || month_index >= static_cast<int>(AK::long_month_names.size()))
+        return Error::from_string_view("Month out of range"sv);
+
+    return AK::long_month_names.at(month_index);
+}
+
 static ErrorOr<Vector<String>> month_lines_to_print(int month, int year)
 {
     Vector<String> lines;
 
     // FIXME: Both the month name and month header text should be provided by a locale
-    TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", TRY(String::formatted("{:02} - {:02}", month, year)), month_width))));
+    TRY(lines.try_append(TRY(String::formatted("{: ^{}s}", TRY(String::formatted("{} - {}", TRY(month_name(month)), year)), month_width))));
     TRY(lines.try_append(TRY(String::from_utf8("Su Mo Tu We Th Fr Sa"sv))));
 
     int day_to_print = 1;
