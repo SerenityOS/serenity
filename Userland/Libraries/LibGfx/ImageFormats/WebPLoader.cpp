@@ -435,7 +435,7 @@ static ErrorOr<PrefixCodeGroup> decode_webp_chunk_VP8L_prefix_code_group(WebPLoa
     //  * G channel: 256 + 24 + color_cache_size
     //  * other literals (A,R,B): 256
     //  * distance code: 40"
-    static Array<size_t, 5> const alphabet_sizes { 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 };
+    Array<size_t, 5> const alphabet_sizes { 256 + 24 + static_cast<size_t>(color_cache_size), 256, 256, 256, 40 };
 
     PrefixCodeGroup group;
     for (size_t i = 0; i < alphabet_sizes.size(); ++i)
