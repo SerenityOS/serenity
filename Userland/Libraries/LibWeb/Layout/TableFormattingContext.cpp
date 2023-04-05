@@ -246,6 +246,8 @@ void TableFormattingContext::compute_table_width()
         // of resolved-table-width, and the used min-width of the table.
         CSSPixels resolved_table_width = computed_values.width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box());
         used_width = max(resolved_table_width, used_min_width);
+        if (!computed_values.max_width().is_none())
+            used_width = min(used_width, computed_values.max_width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box()));
         table_box_state.set_content_width(used_width);
     }
 }
