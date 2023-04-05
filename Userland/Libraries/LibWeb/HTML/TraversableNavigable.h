@@ -25,6 +25,7 @@ public:
     bool is_top_level_traversable() const;
 
     int current_session_history_step() const { return m_current_session_history_step; };
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& session_history_entries() { return m_session_history_entries; };
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>> const& session_history_entries() const { return m_session_history_entries; };
     bool running_nested_apply_history_step() const { return m_running_nested_apply_history_step; };
     VisibilityState system_visibility_state() const { return m_system_visibility_state; };
