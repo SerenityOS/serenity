@@ -245,6 +245,28 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
     m_global_data.with([&](auto& global_data) {
         global_data.used_memory_ranges.ensure_capacity(4);
 #if ARCH(X86_64)
+        // NOTE: We don't touch the first 1 MiB of RAM on x86-64 even if it's usable as indicated
+        // by a certain memory map. There are 2 reasons for this:
+        //
+        // The first reason is specified for Linux doing the same thing in
+        // https://cateee.net/lkddb/web-lkddb/X86_RESERVE_LOW.html -
+        // "By default we reserve the first 64K of physical RAM, as a number of BIOSes are known
+        //  to corrupt that memory range during events such as suspend/resume or monitor cable insertion,
+        //  so it must not be used by the kernel."
+        //
+        // Linux also allows configuring this knob in compiletime for this reserved range length, that might
+        // also include the EBDA and other potential ranges in the first 1 MiB that could be corrupted by the BIOS:
+        // "You can set this to 4 if you are absolutely sure that you trust the BIOS to get all its memory
+        //  reservations and usages right. If you know your BIOS have problems beyond the default 64K area,
+        //  you can set this to 640 to avoid using the entire low memory range."
+        //
+        // The second reason is that the first 1 MiB memory range should also include the actual BIOS blob
+        // together with possible execution blob code for various option ROMs, which should not be touched
+        // by our kernel.
+        //
+        // **To be completely on the safe side** and never worry about where the EBDA is located, how BIOS might
+        // corrupt the low memory range during power state changing, other bad behavior of some BIOS might change
+        // a value in the very first 64k bytes of RAM, etc - we should just ignore this range completely.
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
