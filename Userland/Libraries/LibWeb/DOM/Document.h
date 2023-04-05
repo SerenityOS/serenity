@@ -472,9 +472,9 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
-private:
     Document(JS::Realm&, AK::URL const&);
 
+private:
     // ^HTML::GlobalEventHandlers
     virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }
 

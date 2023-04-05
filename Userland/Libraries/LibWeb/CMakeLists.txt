@@ -155,6 +155,7 @@ set(SOURCES
     DOM/Text.cpp
     DOM/Text.idl
     DOM/TreeWalker.cpp
+    DOM/XMLDocument.cpp
     DOMParsing/InnerHTML.cpp
     DOMParsing/XMLSerializer.cpp
     Dump.cpp

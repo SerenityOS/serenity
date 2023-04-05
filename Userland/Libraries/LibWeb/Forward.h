@@ -214,6 +214,7 @@ class StaticNodeList;
 class StaticRange;
 class Text;
 class TreeWalker;
+class XMLDocument;
 
 enum class QuirksMode;
 
