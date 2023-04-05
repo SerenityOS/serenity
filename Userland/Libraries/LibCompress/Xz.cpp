@@ -191,63 +191,72 @@ static Optional<size_t> size_for_check_type(XzStreamCheckType check_type)
     }
 }
 
-ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
+ErrorOr<bool> XzDecompressor::load_next_stream()
 {
+    // If we already determined to have found the last stream footer, there is nothing more to do.
     if (m_found_last_stream_footer)
-        return bytes.trim(0);
+        return false;
 
-    if (!m_stream_flags.has_value()) {
-        // This assumes that we can just read the Stream Header into memory as-is. Check that this still holds up for good measure.
-        static_assert(AK::Traits<XzStreamHeader>::is_trivially_serializable());
+    // This assumes that we can just read the Stream Header into memory as-is. Check that this still holds up for good measure.
+    static_assert(AK::Traits<XzStreamHeader>::is_trivially_serializable());
 
-        XzStreamHeader stream_header {};
-        Bytes stream_header_bytes { &stream_header, sizeof(stream_header) };
+    XzStreamHeader stream_header {};
+    Bytes stream_header_bytes { &stream_header, sizeof(stream_header) };
 
-        if (m_found_first_stream_header) {
-            // 2.2. Stream Padding:
-            // "Stream Padding MUST contain only null bytes. To preserve the
-            //  four-byte alignment of consecutive Streams, the size of Stream
-            //  Padding MUST be a multiple of four bytes. Empty Stream Padding
-            //  is allowed. If these requirements are not met, the decoder MUST
-            //  indicate an error."
+    if (m_found_first_stream_header) {
+        // 2.2. Stream Padding:
+        // "Stream Padding MUST contain only null bytes. To preserve the
+        //  four-byte alignment of consecutive Streams, the size of Stream
+        //  Padding MUST be a multiple of four bytes. Empty Stream Padding
+        //  is allowed. If these requirements are not met, the decoder MUST
+        //  indicate an error."
 
-            VERIFY(m_stream->read_bytes() % 4 == 0);
+        VERIFY(m_stream->read_bytes() % 4 == 0);
 
-            while (true) {
-                // Read the first byte until we either get a non-null byte or reach EOF.
-                auto byte_or_error = m_stream->read_value<u8>();
+        while (true) {
+            // Read the first byte until we either get a non-null byte or reach EOF.
+            auto byte_or_error = m_stream->read_value<u8>();
 
-                if (byte_or_error.is_error() && m_stream->is_eof())
-                    break;
+            if (byte_or_error.is_error() && m_stream->is_eof())
+                break;
 
-                auto byte = TRY(byte_or_error);
+            auto byte = TRY(byte_or_error);
 
-                if (byte != 0) {
-                    stream_header_bytes[0] = byte;
-                    stream_header_bytes = stream_header_bytes.slice(1);
-                    break;
-                }
-            }
-
-            // If we aren't at EOF we already read the potential first byte of the header, so we need to subtract that.
-            auto end_of_padding_offset = m_stream->read_bytes();
-            if (!m_stream->is_eof())
-                end_of_padding_offset -= 1;
-
-            if (end_of_padding_offset % 4 != 0)
-                return Error::from_string_literal("XZ Stream Padding is not aligned to 4 bytes");
-
-            if (m_stream->is_eof()) {
-                m_found_last_stream_footer = true;
-                return bytes.trim(0);
+            if (byte != 0) {
+                stream_header_bytes[0] = byte;
+                stream_header_bytes = stream_header_bytes.slice(1);
+                break;
             }
         }
 
-        TRY(m_stream->read_until_filled(stream_header_bytes));
-        TRY(stream_header.validate());
+        // If we aren't at EOF we already read the potential first byte of the header, so we need to subtract that.
+        auto end_of_padding_offset = m_stream->read_bytes();
+        if (!m_stream->is_eof())
+            end_of_padding_offset -= 1;
 
-        m_stream_flags = stream_header.flags;
-        m_found_first_stream_header = true;
+        if (end_of_padding_offset % 4 != 0)
+            return Error::from_string_literal("XZ Stream Padding is not aligned to 4 bytes");
+
+        if (m_stream->is_eof()) {
+            m_found_last_stream_footer = true;
+            return false;
+        }
+    }
+
+    TRY(m_stream->read_until_filled(stream_header_bytes));
+    TRY(stream_header.validate());
+
+    m_stream_flags = stream_header.flags;
+    m_found_first_stream_header = true;
+
+    return true;
+}
+
+ErrorOr<Bytes> XzDecompressor::read_some(Bytes bytes)
+{
+    if (!m_stream_flags.has_value()) {
+        if (!TRY(load_next_stream()))
+            return bytes.trim(0);
     }
 
     if (!m_current_block_stream.has_value() || (*m_current_block_stream)->is_eof()) {
