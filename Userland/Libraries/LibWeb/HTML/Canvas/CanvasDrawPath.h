@@ -24,7 +24,8 @@ public:
     virtual void stroke() = 0;
     virtual void stroke(Path2D const& path) = 0;
 
-    virtual void clip() = 0;
+    virtual void clip(DeprecatedString const& fill_rule) = 0;
+    virtual void clip(Path2D& path, DeprecatedString const& fill_rule) = 0;
 
 protected:
     CanvasDrawPath() = default;

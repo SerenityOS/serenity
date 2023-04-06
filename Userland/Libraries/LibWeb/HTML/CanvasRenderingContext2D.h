@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/Canvas/CanvasImageData.h>
 #include <LibWeb/HTML/Canvas/CanvasImageSmoothing.h>
 #include <LibWeb/HTML/Canvas/CanvasPath.h>
+#include <LibWeb/HTML/Canvas/CanvasPathClipper.h>
 #include <LibWeb/HTML/Canvas/CanvasPathDrawingStyles.h>
 #include <LibWeb/HTML/Canvas/CanvasRect.h>
 #include <LibWeb/HTML/Canvas/CanvasState.h>
@@ -84,7 +85,8 @@ public:
 
     virtual JS::NonnullGCPtr<TextMetrics> measure_text(DeprecatedString const& text) override;
 
-    virtual void clip() override;
+    virtual void clip(DeprecatedString const& fill_rule) override;
+    virtual void clip(Path2D& path, DeprecatedString const& fill_rule) override;
 
     virtual bool image_smoothing_enabled() const override;
     virtual void set_image_smoothing_enabled(bool) override;
@@ -109,6 +111,20 @@ private:
     };
 
     void did_draw(Gfx::FloatRect const&);
+
+    template<typename TDrawFunction>
+    void draw_clipped(TDrawFunction draw_function)
+    {
+        auto painter = this->antialiased_painter();
+        if (!painter.has_value())
+            return;
+        ScopedCanvasPathClip clipper(painter->underlying_painter(), drawing_state().clip);
+        auto draw_rect = draw_function(*painter);
+        if (drawing_state().clip.has_value())
+            draw_rect.intersect(drawing_state().clip->path.bounding_box());
+        did_draw(draw_rect);
+    }
+
     PreparedText prepare_text(DeprecatedString const& text, float max_width = INFINITY);
 
     Gfx::Painter* painter();
@@ -118,7 +134,8 @@ private:
     HTMLCanvasElement const& canvas_element() const;
 
     void stroke_internal(Gfx::Path const&);
-    void fill_internal(Gfx::Path&, DeprecatedString const& fill_rule);
+    void fill_internal(Gfx::Path&, StringView fill_rule);
+    void clip_internal(Gfx::Path&, StringView fill_rule);
 
     JS::NonnullGCPtr<HTMLCanvasElement> m_element;
     OwnPtr<Gfx::Painter> m_painter;

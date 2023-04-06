@@ -13,10 +13,10 @@ interface mixin CanvasDrawPath {
     undefined stroke();
     undefined stroke(Path2D path);
 
-    // FIXME: Replace this with these two definitions:
-    // undefined clip(optional CanvasFillRule fillRule = "nonzero");
-    // undefined clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
-    undefined clip();
+    // FIXME: `DOMString` should be `CanvasFillRule`
+    undefined clip(optional DOMString fillRule = "nonzero");
+    // FIXME: `DOMString` should be `CanvasFillRule`
+    undefined clip(Path2D path, optional DOMString fillRule = "nonzero");
 
     // FIXME: boolean isPointInPath(unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
     // FIXME: boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
