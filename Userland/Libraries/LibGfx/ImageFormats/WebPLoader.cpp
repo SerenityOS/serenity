@@ -1459,7 +1459,7 @@ ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
         return ImageFrameDescriptor { m_context->bitmap, 0 };
     }
 
-    return Error::from_string_literal("WebPImageDecoderPlugin: decoding not yet implemented");
+    return Error::from_string_literal("WebPImageDecoderPlugin: decoding lossy webps not yet implemented");
 }
 
 ErrorOr<Optional<ReadonlyBytes>> WebPImageDecoderPlugin::icc_data()
