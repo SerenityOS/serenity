@@ -35,6 +35,8 @@ public:
     JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; };
     JS::GCPtr<SessionHistoryEntry> current_session_history_entry() const { return m_current_session_history_entry; };
 
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& get_session_history_entries() const;
+
     JS::GCPtr<DOM::Document> active_document();
     JS::GCPtr<BrowsingContext> active_browsing_context();
     JS::GCPtr<WindowProxy> active_window_proxy();
