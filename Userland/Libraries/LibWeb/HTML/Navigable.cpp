@@ -160,6 +160,44 @@ JS::GCPtr<TraversableNavigable> Navigable::top_level_traversable()
     return verify_cast<TraversableNavigable>(navigable);
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-session-history-entries
+Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_entries() const
+{
+    // 1. Let traversable be navigable's traversable navigable.
+    auto traversable = traversable_navigable();
+
+    // FIXME 2. Assert: this is running within traversable's session history traversal queue.
+
+    // 3. If navigable is traversable, return traversable's session history entries.
+    if (this == traversable)
+        return traversable->session_history_entries();
+
+    // 4. Let docStates be an empty ordered set of document states.
+    Vector<JS::GCPtr<DocumentState>> doc_states;
+
+    // 5. For each entry of traversable's session history entries, append entry's document state to docStates.
+    for (auto& entry : traversable->session_history_entries())
+        doc_states.append(entry->document_state);
+
+    // 6. For each docState of docStates:
+    while (!doc_states.is_empty()) {
+        auto doc_state = doc_states.take_first();
+
+        // 1. For each nestedHistory of docState's nested histories:
+        for (auto& nested_history : doc_state->nested_histories()) {
+            // 1. If nestedHistory's id equals navigable's id, return nestedHistory's entries.
+            if (nested_history.id == id())
+                return nested_history.entries;
+
+            // 2. For each entry of nestedHistory's entries, append entry's document state to docStates.
+            for (auto& entry : nested_history.entries)
+                doc_states.append(entry->document_state);
+        }
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 // To navigate a navigable navigable to a URL url using a Document sourceDocument,
 // with an optional POST resource, string, or null documentResource (default null),
 // an optional response-or-null response (default null), an optional boolean exceptionsEnabled (default false),
