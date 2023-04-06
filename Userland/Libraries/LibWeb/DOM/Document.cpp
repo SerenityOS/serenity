@@ -1010,7 +1010,7 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = old_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave).release_value_but_fixme_should_propagate_errors());
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseleave.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
         }
     }
 
@@ -1019,7 +1019,7 @@ void Document::set_hovered_node(Node* node)
         // FIXME: Check if we need to dispatch these events in a specific order.
         for (auto target = m_hovered_node; target && target.ptr() != common_ancestor; target = target->parent()) {
             // FIXME: Populate the event with mouse coordinates, etc.
-            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter).release_value_but_fixme_should_propagate_errors());
+            target->dispatch_event(UIEvents::MouseEvent::create(realm(), UIEvents::EventNames::mouseenter.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
         }
     }
 }
@@ -1589,7 +1589,7 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
     }
 
     // 4. Fire an event named readystatechange at document.
-    dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
 }
 
 Page* Document::page()
@@ -1604,7 +1604,7 @@ Page const* Document::page() const
 
 EventTarget* Document::get_parent(Event const& event)
 {
-    if (event.type() == HTML::EventNames::load)
+    if (event.type() == HTML::EventNames::load.to_deprecated_fly_string())
         return nullptr;
 
     return m_window;
@@ -1637,7 +1637,7 @@ void Document::completely_finish_loading()
     // 5. Otherwise, if container is non-null, then queue an element task on the DOM manipulation task source given container to fire an event named load at container.
     else if (container) {
         container->queue_an_element_task(HTML::Task::Source::DOMManipulation, [container] {
-            container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
+            container->dispatch_event(DOM::Event::create(container->realm(), HTML::EventNames::load.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
         });
     }
 }
@@ -1767,7 +1767,7 @@ void Document::update_the_visibility_state(HTML::VisibilityState visibility_stat
     // FIXME: 3. Run any page visibility change steps which may be defined in other specifications, with visibility state and document.
 
     // 4. Fire an event named visibilitychange at document, with its bubbles attribute initialized to true.
-    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange).release_value_but_fixme_should_propagate_errors();
+    auto event = DOM::Event::create(realm(), HTML::EventNames::visibilitychange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
     event->set_bubbles(true);
     dispatch_event(event);
 }
@@ -1788,7 +1788,7 @@ void Document::run_the_resize_steps()
         return;
     m_last_viewport_size = viewport_size;
 
-    window().dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize).release_value_but_fixme_should_propagate_errors());
+    window().dispatch_event(DOM::Event::create(realm(), UIEvents::EventNames::resize.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
 
     schedule_layout_update();
 }
@@ -1800,14 +1800,14 @@ void Document::run_the_scroll_steps()
     for (auto& target : m_pending_scroll_event_targets) {
         // 1. If target is a Document, fire an event named scroll that bubbles at target and fire an event named scroll at the VisualViewport that is associated with target.
         if (is<Document>(*target)) {
-            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll).release_value_but_fixme_should_propagate_errors();
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
             event->set_bubbles(true);
             target->dispatch_event(event);
             // FIXME: Fire at the associated VisualViewport
         }
         // 2. Otherwise, fire an event named scroll at target.
         else {
-            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll).release_value_but_fixme_should_propagate_errors();
+            auto event = DOM::Event::create(realm(), HTML::EventNames::scroll.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
             target->dispatch_event(event);
         }
     }
@@ -1847,7 +1847,7 @@ void Document::evaluate_media_queries_and_report_changes()
             CSS::MediaQueryListEventInit init;
             init.media = String::from_deprecated_string(media_query_list->media()).release_value_but_fixme_should_propagate_errors();
             init.matches = now_matches;
-            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change, init).release_value_but_fixme_should_propagate_errors();
+            auto event = CSS::MediaQueryListEvent::create(realm(), HTML::EventNames::change.to_deprecated_fly_string(), init).release_value_but_fixme_should_propagate_errors();
             event->set_is_trusted(true);
             media_query_list->dispatch_event(*event);
         }
@@ -2327,7 +2327,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         m_page_showing = false;
 
         // 2. Fire a page transition event named pagehide at document's relevant global object with document's salvageable state.
-        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide, m_salvageable);
+        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide.to_deprecated_fly_string(), m_salvageable);
 
         // 3. Update the visibility state of newDocument to "hidden".
         update_the_visibility_state(HTML::VisibilityState::Hidden);
@@ -2347,7 +2347,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         // then fire an event named unload at document's relevant global object, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
         //        We should reorganize this so that the flag appears explicitly here instead.
-        auto event = DOM::Event::create(realm(), HTML::EventNames::unload).release_value_but_fixme_should_propagate_errors();
+        auto event = DOM::Event::create(realm(), HTML::EventNames::unload.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
         global_object().dispatch_event(event);
     }
 

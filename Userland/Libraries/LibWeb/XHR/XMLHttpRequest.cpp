@@ -436,7 +436,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
         m_state = State::Opened;
 
         // 2. Fire an event named readystatechange at this.
-        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange)));
+        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange.to_deprecated_fly_string())));
     }
 
     return {};
@@ -607,7 +607,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
     // 11. If this’s synchronous flag is unset, then:
     if (!m_synchronous) {
         // 1. Fire a progress event named loadstart at this with 0 and 0.
-        fire_progress_event(*this, EventNames::loadstart, 0, 0);
+        fire_progress_event(*this, EventNames::loadstart.to_deprecated_fly_string(), 0, 0);
 
         // 2. Let requestBodyTransmitted be 0.
         // NOTE: This is kept on the XHR object itself instead of the stack, as we cannot capture references to stack variables in an async context.
@@ -625,7 +625,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
         // 5. If this’s upload complete flag is unset and this’s upload listener flag is set, then fire a progress event named loadstart at this’s upload object with requestBodyTransmitted and requestBodyLength.
         if (!m_upload_complete && m_upload_listener)
-            fire_progress_event(m_upload_object, EventNames::loadstart, m_request_body_transmitted, request_body_length);
+            fire_progress_event(m_upload_object, EventNames::loadstart.to_deprecated_fly_string(), m_request_body_transmitted, request_body_length);
 
         // 6. If this’s state is not opened or this’s send() flag is unset, then return.
         if (m_state != State::Opened || !m_send)
@@ -642,7 +642,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
             // 3. If this’s upload listener flag is set, then fire a progress event named progress at this’s upload object with requestBodyTransmitted and requestBodyLength.
             if (m_upload_listener)
-                fire_progress_event(m_upload_object, EventNames::progress, m_request_body_transmitted, request_body_length);
+                fire_progress_event(m_upload_object, EventNames::progress.to_deprecated_fly_string(), m_request_body_transmitted, request_body_length);
         };
 
         // 8. Let processRequestEndOfBody be these steps:
@@ -657,13 +657,13 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
                 return;
 
             // 3. Fire a progress event named progress at this’s upload object with requestBodyTransmitted and requestBodyLength.
-            fire_progress_event(m_upload_object, EventNames::progress, m_request_body_transmitted, request_body_length);
+            fire_progress_event(m_upload_object, EventNames::progress.to_deprecated_fly_string(), m_request_body_transmitted, request_body_length);
 
             // 4. Fire a progress event named load at this’s upload object with requestBodyTransmitted and requestBodyLength.
-            fire_progress_event(m_upload_object, EventNames::load, m_request_body_transmitted, request_body_length);
+            fire_progress_event(m_upload_object, EventNames::load.to_deprecated_fly_string(), m_request_body_transmitted, request_body_length);
 
             // 5. Fire a progress event named loadend at this’s upload object with requestBodyTransmitted and requestBodyLength.
-            fire_progress_event(m_upload_object, EventNames::loadend, m_request_body_transmitted, request_body_length);
+            fire_progress_event(m_upload_object, EventNames::loadend.to_deprecated_fly_string(), m_request_body_transmitted, request_body_length);
         };
 
         // 9. Let processResponse, given a response, be these steps:
@@ -686,7 +686,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
             // 5. Fire an event named readystatechange at this.
             // FIXME: We're in an async context, so we can't propagate the error anywhere.
-            dispatch_event(*DOM::Event::create(this->realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(*DOM::Event::create(this->realm(), EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
 
             // 6. If this’s state is not headers received, then return.
             if (m_state != State::HeadersReceived)
@@ -983,19 +983,19 @@ bool XMLHttpRequest::must_survive_garbage_collection() const
     if ((m_state == State::Opened && m_send)
         || m_state == State::HeadersReceived
         || m_state == State::Loading) {
-        if (has_event_listener(EventNames::readystatechange))
+        if (has_event_listener(EventNames::readystatechange.to_deprecated_fly_string()))
             return true;
-        if (has_event_listener(EventNames::progress))
+        if (has_event_listener(EventNames::progress.to_deprecated_fly_string()))
             return true;
-        if (has_event_listener(EventNames::abort))
+        if (has_event_listener(EventNames::abort.to_deprecated_fly_string()))
             return true;
-        if (has_event_listener(EventNames::error))
+        if (has_event_listener(EventNames::error.to_deprecated_fly_string()))
             return true;
-        if (has_event_listener(EventNames::load))
+        if (has_event_listener(EventNames::load.to_deprecated_fly_string()))
             return true;
-        if (has_event_listener(EventNames::timeout))
+        if (has_event_listener(EventNames::timeout.to_deprecated_fly_string()))
             return true;
-        if (has_event_listener(EventNames::loadend))
+        if (has_event_listener(EventNames::loadend.to_deprecated_fly_string()))
             return true;
     }
 
@@ -1017,7 +1017,7 @@ void XMLHttpRequest::abort()
         // NOTE: This cannot throw as we don't pass in an exception. XHR::abort cannot be reached in a synchronous context where the state matches above.
         //       This is because it pauses inside XHR::send until the request is done or times out and then immediately calls `handle_response_end_of_body`
         //       which will always set `m_state` to `Done`.
-        MUST(request_error_steps(EventNames::abort));
+        MUST(request_error_steps(EventNames::abort.to_deprecated_fly_string()));
     }
 
     // 3. If this’s state is done, then set this’s state to unsent and this’s response to a network error.
@@ -1078,7 +1078,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_response_end_of_body()
 
     // 6. If xhr’s synchronous flag is unset, then fire a progress event named progress at xhr with transmitted and length.
     if (!m_synchronous)
-        fire_progress_event(*this, EventNames::progress, transmitted, length);
+        fire_progress_event(*this, EventNames::progress.to_deprecated_fly_string(), transmitted, length);
 
     // 7. Set xhr’s state to done.
     m_state = State::Done;
@@ -1088,13 +1088,13 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_response_end_of_body()
 
     // 9. Fire an event named readystatechange at xhr.
     // FIXME: If we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
 
     // 10. Fire a progress event named load at xhr with transmitted and length.
-    fire_progress_event(*this, EventNames::load, transmitted, length);
+    fire_progress_event(*this, EventNames::load.to_deprecated_fly_string(), transmitted, length);
 
     // 11. Fire a progress event named loadend at xhr with transmitted and length.
-    fire_progress_event(*this, EventNames::loadend, transmitted, length);
+    fire_progress_event(*this, EventNames::loadend.to_deprecated_fly_string(), transmitted, length);
 
     return {};
 }
@@ -1108,15 +1108,15 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_errors()
 
     // 2. If xhr’s timed out flag is set, then run the request error steps for xhr, timeout, and "TimeoutError" DOMException.
     if (m_timed_out)
-        return TRY(request_error_steps(EventNames::timeout, WebIDL::TimeoutError::create(realm(), "Timed out"sv)));
+        return TRY(request_error_steps(EventNames::timeout.to_deprecated_fly_string(), WebIDL::TimeoutError::create(realm(), "Timed out"sv)));
 
     // 3. Otherwise, if xhr’s response’s aborted flag is set, run the request error steps for xhr, abort, and "AbortError" DOMException.
     if (m_response->aborted())
-        return TRY(request_error_steps(EventNames::abort, WebIDL::AbortError::create(realm(), "Aborted"sv)));
+        return TRY(request_error_steps(EventNames::abort.to_deprecated_fly_string(), WebIDL::AbortError::create(realm(), "Aborted"sv)));
 
     // 4. Otherwise, if xhr’s response is a network error, then run the request error steps for xhr, error, and "NetworkError" DOMException.
     if (m_response->is_network_error())
-        return TRY(request_error_steps(EventNames::error, WebIDL::NetworkError::create(realm(), "Network error"sv)));
+        return TRY(request_error_steps(EventNames::error.to_deprecated_fly_string(), WebIDL::NetworkError::create(realm(), "Network error"sv)));
 
     return {};
 }
@@ -1140,7 +1140,7 @@ JS::ThrowCompletionOr<void> XMLHttpRequest::request_error_steps(DeprecatedFlyStr
 
     // 5. Fire an event named readystatechange at xhr.
     // FIXME: Since we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
 
     // 6. If xhr’s upload complete flag is unset, then:
     if (!m_upload_complete) {
@@ -1153,7 +1153,7 @@ JS::ThrowCompletionOr<void> XMLHttpRequest::request_error_steps(DeprecatedFlyStr
             fire_progress_event(m_upload_object, event_name, 0, 0);
 
             // 2. Fire a progress event named loadend at xhr’s upload object with 0 and 0.
-            fire_progress_event(m_upload_object, EventNames::loadend, 0, 0);
+            fire_progress_event(m_upload_object, EventNames::loadend.to_deprecated_fly_string(), 0, 0);
         }
     }
 
@@ -1161,7 +1161,7 @@ JS::ThrowCompletionOr<void> XMLHttpRequest::request_error_steps(DeprecatedFlyStr
     fire_progress_event(*this, event_name, 0, 0);
 
     // 8. Fire a progress event named loadend at xhr with 0 and 0.
-    fire_progress_event(*this, EventNames::loadend, 0, 0);
+    fire_progress_event(*this, EventNames::loadend.to_deprecated_fly_string(), 0, 0);
 
     return {};
 }

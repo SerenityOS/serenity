@@ -968,7 +968,7 @@ void Window::post_message(JS::Value message, String const&)
         MessageEventInit event_init {};
         event_init.data = message;
         event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
-        dispatch_event(MessageEvent::create(realm(), String::from_deprecated_string(EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(MessageEvent::create(realm(), EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
     });
 }
 

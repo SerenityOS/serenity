@@ -51,8 +51,8 @@ public:
     virtual void legacy_cancelled_activation_behavior() { }
     virtual void legacy_cancelled_activation_behavior_was_not_called() { }
 
-    WebIDL::CallbackType* event_handler_attribute(DeprecatedFlyString const& name);
-    void set_event_handler_attribute(DeprecatedFlyString const& name, WebIDL::CallbackType*);
+    WebIDL::CallbackType* event_handler_attribute(FlyString const& name);
+    void set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType*);
 
     bool has_event_listener(DeprecatedFlyString const& type) const;
     bool has_event_listeners() const;
@@ -60,7 +60,7 @@ public:
 protected:
     explicit EventTarget(JS::Realm&);
 
-    void element_event_handler_attribute_changed(DeprecatedFlyString const& local_name, DeprecatedString const& value);
+    void element_event_handler_attribute_changed(FlyString const& local_name, DeprecatedString const& value);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -77,6 +77,6 @@ private:
     JS::ThrowCompletionOr<void> process_event_handler_for_event(DeprecatedFlyString const& name, Event& event);
 };
 
-bool is_window_reflecting_body_element_event_handler(DeprecatedFlyString const& name);
+bool is_window_reflecting_body_element_event_handler(FlyString const& name);
 
 }

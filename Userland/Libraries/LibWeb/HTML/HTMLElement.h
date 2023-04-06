@@ -74,7 +74,7 @@ private:
     virtual bool is_html_element() const final { return true; }
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const&) override { return *this; }
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 
     enum class ContentEditableState {
         True,

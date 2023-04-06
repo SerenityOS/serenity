@@ -77,7 +77,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platfo
 
 void MouseEvent::set_event_characteristics()
 {
-    if (type().is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {
+    auto type = String::from_deprecated_string(this->type()).release_value();
+    if (type.is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {
         set_bubbles(true);
         set_cancelable(true);
         set_composed(true);

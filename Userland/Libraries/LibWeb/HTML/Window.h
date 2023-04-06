@@ -194,7 +194,7 @@ private:
     virtual void visit_edges(Cell::Visitor&) override;
 
     // ^HTML::GlobalEventHandlers
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const&) override { return *this; }
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const&) override { return *this; }
 
     // ^HTML::WindowEventHandlers
     virtual DOM::EventTarget& window_event_handlers_to_event_target() override { return *this; }

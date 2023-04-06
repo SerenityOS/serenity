@@ -79,7 +79,7 @@ void HTMLBodyElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
 #undef __ENUMERATE
 }
 
-DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target(DeprecatedFlyString const& event_name)
+DOM::EventTarget& HTMLBodyElement::global_event_handlers_to_event_target(FlyString const& event_name)
 {
     // NOTE: This is a little weird, but IIUC document.body.onload actually refers to window.onload
     // NOTE: document.body can return either a HTMLBodyElement or HTMLFrameSetElement, so both these elements must support this mapping.

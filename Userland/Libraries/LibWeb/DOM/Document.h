@@ -470,7 +470,7 @@ private:
     Document(JS::Realm&, AK::URL const&);
 
     // ^HTML::GlobalEventHandlers
-    virtual EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const&) final { return *this; }
+    virtual EventTarget& global_event_handlers_to_event_target(FlyString const&) final { return *this; }
 
     void tear_down_layout_tree();
 
