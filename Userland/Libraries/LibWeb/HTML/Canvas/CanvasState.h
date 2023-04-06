@@ -13,6 +13,7 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/PaintStyle.h>
 #include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
+#include <LibWeb/HTML/Canvas/CanvasPathClipper.h>
 #include <LibWeb/HTML/CanvasGradient.h>
 #include <LibWeb/HTML/CanvasPattern.h>
 
@@ -77,6 +78,7 @@ public:
         float line_width { 1 };
         bool image_smoothing_enabled { true };
         Bindings::ImageSmoothingQuality image_smoothing_quality { Bindings::ImageSmoothingQuality::Low };
+        Optional<CanvasClip> clip;
     };
     DrawingState& drawing_state() { return m_drawing_state; }
     DrawingState const& drawing_state() const { return m_drawing_state; }
