@@ -42,6 +42,7 @@ public:
     Vector<JS::Handle<Navigable>> get_all_navigables_whose_current_session_history_entry_will_change_or_reload(int) const;
     Vector<int> get_all_used_history_steps() const;
     void clear_the_forward_session_history();
+    void traverse_the_history_by_delta(int delta);
 
 private:
     TraversableNavigable();
