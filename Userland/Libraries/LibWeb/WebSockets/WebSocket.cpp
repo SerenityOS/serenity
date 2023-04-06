@@ -204,13 +204,13 @@ void WebSocket::on_open()
     // 1. Change the readyState attribute's value to OPEN (1).
     // 2. Change the extensions attribute's value to the extensions in use, if it is not the null value. [WSP]
     // 3. Change the protocol attribute's value to the subprotocol in use, if it is not the null value. [WSP]
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::open.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::open).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol
 void WebSocket::on_error()
 {
-    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://websockets.spec.whatwg.org/#feedback-from-the-protocol

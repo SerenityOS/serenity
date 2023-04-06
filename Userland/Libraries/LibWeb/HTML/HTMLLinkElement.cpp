@@ -403,11 +403,11 @@ void HTMLLinkElement::process_stylesheet_resource(bool success, Fetch::Infrastru
         }
 
         // 2. Fire an event named load at el.
-        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
     }
     // 5. Otherwise, fire an event named error at el.
     else {
-        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(*DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
     }
 
     // FIXME: 6. If el contributes a script-blocking style sheet, then:

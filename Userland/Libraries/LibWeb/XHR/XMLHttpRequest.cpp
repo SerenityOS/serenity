@@ -436,7 +436,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::open(String const& method_string, Stri
         m_state = State::Opened;
 
         // 2. Fire an event named readystatechange at this.
-        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange.to_deprecated_fly_string())));
+        dispatch_event(TRY(DOM::Event::create(realm(), EventNames::readystatechange)));
     }
 
     return {};
@@ -686,7 +686,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::send(Optional<DocumentOrXMLHttpRequest
 
             // 5. Fire an event named readystatechange at this.
             // FIXME: We're in an async context, so we can't propagate the error anywhere.
-            dispatch_event(*DOM::Event::create(this->realm(), EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(*DOM::Event::create(this->realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
 
             // 6. If this’s state is not headers received, then return.
             if (m_state != State::HeadersReceived)
@@ -1088,7 +1088,7 @@ WebIDL::ExceptionOr<void> XMLHttpRequest::handle_response_end_of_body()
 
     // 9. Fire an event named readystatechange at xhr.
     // FIXME: If we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*DOM::Event::create(realm, EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
 
     // 10. Fire a progress event named load at xhr with transmitted and length.
     fire_progress_event(*this, EventNames::load.to_deprecated_fly_string(), transmitted, length);
@@ -1140,7 +1140,7 @@ JS::ThrowCompletionOr<void> XMLHttpRequest::request_error_steps(DeprecatedFlyStr
 
     // 5. Fire an event named readystatechange at xhr.
     // FIXME: Since we're in an async context, this will propagate to a callback context which can't propagate it anywhere else and does not expect this to fail.
-    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(*DOM::Event::create(realm(), EventNames::readystatechange).release_value_but_fixme_should_propagate_errors());
 
     // 6. If xhr’s upload complete flag is unset, then:
     if (!m_upload_complete) {

@@ -14,24 +14,24 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Event::create(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Event::create(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<Event>(realm, realm, event_name, event_init));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Event::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, EventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Event::construct_impl(JS::Realm& realm, FlyString const& event_name, EventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-Event::Event(JS::Realm& realm, DeprecatedFlyString const& type)
+Event::Event(JS::Realm& realm, FlyString const& type)
     : PlatformObject(realm)
     , m_type(type)
     , m_initialized(true)
 {
 }
 
-Event::Event(JS::Realm& realm, DeprecatedFlyString const& type, EventInit const& event_init)
+Event::Event(JS::Realm& realm, FlyString const& type, EventInit const& event_init)
     : PlatformObject(realm)
     , m_type(type)
     , m_bubbles(event_init.bubbles)
@@ -100,7 +100,7 @@ void Event::set_cancelled_flag()
 }
 
 // https://dom.spec.whatwg.org/#concept-event-initialize
-void Event::initialize_event(DeprecatedString const& type, bool bubbles, bool cancelable)
+void Event::initialize_event(String const& type, bool bubbles, bool cancelable)
 {
     // 1. Set event’s initialized flag.
     m_initialized = true;
@@ -127,7 +127,7 @@ void Event::initialize_event(DeprecatedString const& type, bool bubbles, bool ca
 }
 
 // https://dom.spec.whatwg.org/#dom-event-initevent
-void Event::init_event(DeprecatedString const& type, bool bubbles, bool cancelable)
+void Event::init_event(String const& type, bool bubbles, bool cancelable)
 {
     // 1. If this’s dispatch flag is set, then return.
     if (m_dispatch)

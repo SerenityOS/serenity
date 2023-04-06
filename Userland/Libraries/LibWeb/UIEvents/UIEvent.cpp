@@ -9,22 +9,22 @@
 
 namespace Web::UIEvents {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<UIEvent>> UIEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<UIEvent>> UIEvent::create(JS::Realm& realm, FlyString const& event_name)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<UIEvent>(realm, realm, event_name));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<UIEvent>> UIEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, UIEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<UIEvent>> UIEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, UIEventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<UIEvent>(realm, realm, event_name, event_init));
 }
 
-UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name)
+UIEvent::UIEvent(JS::Realm& realm, FlyString const& event_name)
     : Event(realm, event_name)
 {
 }
 
-UIEvent::UIEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, UIEventInit const& event_init)
+UIEvent::UIEvent(JS::Realm& realm, FlyString const& event_name, UIEventInit const& event_init)
     : Event(realm, event_name, event_init)
     , m_view(event_init.view)
     , m_detail(event_init.detail)

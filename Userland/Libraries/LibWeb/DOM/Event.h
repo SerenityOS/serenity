@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/DOM/EventTarget.h>
 
@@ -45,18 +45,18 @@ public:
 
     using Path = Vector<PathEntry>;
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create(JS::Realm&, DeprecatedFlyString const& event_name, EventInit const& event_init = {});
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> construct_impl(JS::Realm&, DeprecatedFlyString const& event_name, EventInit const& event_init);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> create(JS::Realm&, FlyString const& event_name, EventInit const& event_init = {});
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> construct_impl(JS::Realm&, FlyString const& event_name, EventInit const& event_init);
 
-    Event(JS::Realm&, DeprecatedFlyString const& type);
-    Event(JS::Realm&, DeprecatedFlyString const& type, EventInit const& event_init);
+    Event(JS::Realm&, FlyString const& type);
+    Event(JS::Realm&, FlyString const& type, EventInit const& event_init);
 
     virtual ~Event() = default;
 
     double time_stamp() const;
 
-    DeprecatedFlyString const& type() const { return m_type; }
-    void set_type(StringView type) { m_type = type; }
+    FlyString const& type() const { return m_type; }
+    void set_type(FlyString const& type) { m_type = type; }
 
     JS::GCPtr<EventTarget> target() const { return m_target; }
     void set_target(EventTarget* target) { m_target = target; }
@@ -137,20 +137,20 @@ public:
         m_stop_immediate_propagation = true;
     }
 
-    void init_event(DeprecatedString const&, bool, bool);
+    void init_event(String const&, bool, bool);
 
     void set_time_stamp(double time_stamp) { m_time_stamp = time_stamp; }
 
     Vector<JS::Handle<EventTarget>> composed_path() const;
 
 protected:
-    void initialize_event(DeprecatedString const&, bool, bool);
+    void initialize_event(String const&, bool, bool);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Visitor&) override;
 
 private:
-    DeprecatedFlyString m_type;
+    FlyString m_type;
     JS::GCPtr<EventTarget> m_target;
     JS::GCPtr<EventTarget> m_related_target;
     JS::GCPtr<EventTarget> m_current_target;

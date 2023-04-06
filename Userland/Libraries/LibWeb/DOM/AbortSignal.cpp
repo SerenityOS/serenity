@@ -62,7 +62,7 @@ void AbortSignal::signal_abort(JS::Value reason)
     m_abort_algorithms.clear();
 
     // 5. Fire an event named abort at signal.
-    dispatch_event(Event::create(realm(), HTML::EventNames::abort.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+    dispatch_event(Event::create(realm(), HTML::EventNames::abort).release_value_but_fixme_should_propagate_errors());
 }
 
 void AbortSignal::set_onabort(WebIDL::CallbackType* event_handler)

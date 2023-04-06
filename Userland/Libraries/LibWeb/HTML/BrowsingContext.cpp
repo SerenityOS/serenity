@@ -1187,7 +1187,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
             // and the newURL attribute initialized to newURL.
 
             // FIXME: Implement a proper HashChangeEvent class.
-            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
+            auto event = DOM::Event::create(verify_cast<HTML::Window>(relevant_global_object(*new_document)).realm(), HTML::EventNames::hashchange).release_value_but_fixme_should_propagate_errors();
             new_document->dispatch_event(event);
         });
     }

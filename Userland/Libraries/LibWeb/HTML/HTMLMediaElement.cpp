@@ -117,7 +117,7 @@ void HTMLMediaElement::set_duration(double duration)
     if (!isnan(duration)) {
         // FIXME: Handle seeking to the end of the media resource when needed.
         queue_a_media_element_task([this] {
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::durationchange.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::durationchange).release_value_but_fixme_should_propagate_errors());
         });
     }
 
@@ -154,7 +154,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
     //    fire an event named abort at the media element.
     if (m_network_state == NetworkState::Loading || m_network_state == NetworkState::Idle) {
         queue_a_media_element_task([this] {
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::abort.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::abort).release_value_but_fixme_should_propagate_errors());
         });
     }
 
@@ -162,7 +162,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
     if (m_network_state != NetworkState::Empty) {
         // 1. Queue a media element task given the media element to fire an event named emptied at the media element.
         queue_a_media_element_task([this] {
-            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::emptied.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::emptied).release_value_but_fixme_should_propagate_errors());
         });
 
         // 2. If a fetching process is in progress for the media element, the user agent should stop it.
@@ -247,7 +247,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 
     // 8. ⌛ Queue a media element task given the media element to fire an event named loadstart at the media element.
     queue_a_media_element_task([this] {
-        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::loadstart.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::loadstart).release_value_but_fixme_should_propagate_errors());
     });
 
     // 9. Run the appropriate steps from the following list:
@@ -584,7 +584,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
         TrackEventInit event_init {};
         event_init.track = video_track;
 
-        auto event = TRY(TrackEvent::create(realm, TRY_OR_THROW_OOM(vm, FlyString::from_deprecated_fly_string(HTML::EventNames::addtrack.to_deprecated_fly_string())), event_init));
+        auto event = TRY(TrackEvent::create(realm, HTML::EventNames::addtrack, event_init));
         m_video_tracks->dispatch_event(event);
     }
 
@@ -608,7 +608,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
             video_element.set_video_height(video_track->pixel_height());
 
             queue_a_media_element_task([this] {
-                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::resize.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::resize).release_value_but_fixme_should_propagate_errors());
             });
         }
 
@@ -634,11 +634,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
     // -> Once the entire media resource has been fetched (but potentially before any of it has been decoded)
     if (video_track != nullptr) {
         // Fire an event named progress at the media element.
-        dispatch_event(TRY(DOM::Event::create(this->realm(), HTML::EventNames::progress.to_deprecated_fly_string())));
+        dispatch_event(TRY(DOM::Event::create(this->realm(), HTML::EventNames::progress)));
 
         // Set the networkState to NETWORK_IDLE and fire an event named suspend at the media element.
         m_network_state = NetworkState::Idle;
-        dispatch_event(TRY(DOM::Event::create(this->realm(), HTML::EventNames::suspend.to_deprecated_fly_string())));
+        dispatch_event(TRY(DOM::Event::create(this->realm(), HTML::EventNames::suspend)));
 
         // If the user agent ever discards any media data and then needs to resume the network activity to obtain it again, then it must queue a media
         // element task given the media element to set the networkState to NETWORK_LOADING.
@@ -668,7 +668,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure()
     // FIXME: 4. Set the element's show poster flag to true.
 
     // 5. Fire an event named error at the media element.
-    dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string())));
+    dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::error)));
 
     // FIXME: 6. Reject pending play promises with promises and a "NotSupportedError" DOMException.
     // FIXME: 7. Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
@@ -695,7 +695,7 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
     if (m_ready_state == ReadyState::HaveNothing && ready_state == ReadyState::HaveMetadata) {
         // Queue a media element task given the media element to fire an event named loadedmetadata at the element.
         queue_a_media_element_task([this] {
-            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadedmetadata.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadedmetadata).release_value_but_fixme_should_propagate_errors());
         });
 
         return;
@@ -709,7 +709,7 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
             m_first_data_load_event_since_load_start = false;
 
             queue_a_media_element_task([this] {
-                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadeddata.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadeddata).release_value_but_fixme_should_propagate_errors());
             });
         }
 
@@ -731,7 +731,7 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
     if (m_ready_state <= ReadyState::HaveCurrentData && ready_state == ReadyState::HaveFutureData) {
         // The user agent must queue a media element task given the media element to fire an event named canplay at the element.
         queue_a_media_element_task([this] {
-            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay).release_value_but_fixme_should_propagate_errors());
         });
 
         // FIXME: If the element's paused attribute is false, the user agent must notify about playing for the element.
@@ -745,13 +745,13 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
         if (m_ready_state <= ReadyState::HaveCurrentData) {
             // FIXME: Handle the paused attribute.
             queue_a_media_element_task([this] {
-                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay).release_value_but_fixme_should_propagate_errors());
             });
         }
 
         // The user agent must queue a media element task given the media element to fire an event named canplaythrough at the element.
         queue_a_media_element_task([this] {
-            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplaythrough.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+            dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplaythrough).release_value_but_fixme_should_propagate_errors());
         });
 
         // FIXME: If the element is not eligible for autoplay, then the user agent must abort these substeps.

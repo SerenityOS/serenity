@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MessageEvent>> MessageEvent::construct_impl
 }
 
 MessageEvent::MessageEvent(JS::Realm& realm, FlyString const& event_name, MessageEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_data(event_init.data)
     , m_origin(event_init.origin)
     , m_last_event_id(event_init.last_event_id)

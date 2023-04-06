@@ -63,7 +63,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
             continue;
 
         // 1. If event’s type attribute value is not listener’s type, then continue.
-        if (event.type() != listener->type)
+        if (event.type().to_deprecated_fly_string() != listener->type)
             continue;
 
         // 2. Set found to true.
@@ -180,14 +180,14 @@ void EventDispatcher::invoke(Event::PathEntry& struct_, Event& event, Event::Pha
 
         // 2. If event’s type attribute value is a match for any of the strings in the first column in the following table,
         //    set event’s type attribute value to the string in the second column on the same row as the matching string, and return otherwise.
-        if (event.type() == "animationend")
-            event.set_type("webkitAnimationEnd"sv);
-        else if (event.type() == "animationiteration")
-            event.set_type("webkitAnimationIteration"sv);
-        else if (event.type() == "animationstart")
-            event.set_type("webkitAnimationStart"sv);
-        else if (event.type() == "transitionend")
-            event.set_type("webkitTransitionEnd"sv);
+        if (event.type() == HTML::EventNames::animationend)
+            event.set_type(HTML::EventNames::webkitAnimationEnd);
+        else if (event.type() == HTML::EventNames::animationiteration)
+            event.set_type(HTML::EventNames::webkitAnimationIteration);
+        else if (event.type() == HTML::EventNames::animationstart)
+            event.set_type(HTML::EventNames::webkitAnimationStart);
+        else if (event.type() == HTML::EventNames::transitionend)
+            event.set_type(HTML::EventNames::webkitTransitionEnd);
         else
             return;
 
@@ -235,7 +235,7 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
         event.append_to_path(*target, target_override, related_target, touch_targets, false);
 
         // 4. Let isActivationEvent be true, if event is a MouseEvent object and event’s type attribute is "click"; otherwise false.
-        bool is_activation_event = is<UIEvents::MouseEvent>(event) && FlyString::from_deprecated_fly_string(event.type()).release_value() == HTML::EventNames::click;
+        bool is_activation_event = is<UIEvents::MouseEvent>(event) && event.type() == HTML::EventNames::click;
 
         // 5. If isActivationEvent is true and target has activation behavior, then set activationTarget to target.
         if (is_activation_event && target->activation_behavior)

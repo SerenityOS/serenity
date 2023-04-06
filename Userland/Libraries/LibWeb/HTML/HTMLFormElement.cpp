@@ -156,7 +156,7 @@ ErrorOr<void> HTMLFormElement::submit_form(JS::GCPtr<HTMLElement> submitter, boo
 void HTMLFormElement::reset_form()
 {
     // 1. Let reset be the result of firing an event named reset at form, with the bubbles and cancelable attributes initialized to true.
-    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
+    auto reset_event = DOM::Event::create(realm(), HTML::EventNames::reset).release_value_but_fixme_should_propagate_errors();
     reset_event->set_bubbles(true);
     reset_event->set_cancelable(true);
 
