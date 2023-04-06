@@ -148,43 +148,42 @@ static JS::NonnullGCPtr<HTML::BrowsingContext> obtain_a_browsing_context_to_use_
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#initialise-the-document-object
-WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, DeprecatedString content_type, HTML::NavigationParams navigation_params)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(Type type, DeprecatedString content_type, HTML::NavigationParams& navigation_params)
 {
-    // 1. Let browsingContext be the result of the obtaining a browsing context to use for a navigation response
-    //    given navigationParams's browsing context, navigationParams's final sandboxing flag set,
+    // 1. Let browsingContext be navigationParams's navigable's active browsing context.
+    auto browsing_context = navigation_params.navigable->active_browsing_context();
+
+    // 2. Set browsingContext to the result of the obtaining a browsing context to use for a navigation response given browsingContext, navigationParams's final sandboxing flag set,
     //    navigationParams's cross-origin opener policy, and navigationParams's COOP enforcement result.
-    auto browsing_context = obtain_a_browsing_context_to_use_for_a_navigation_response(
-        *navigation_params.browsing_context,
+    browsing_context = obtain_a_browsing_context_to_use_for_a_navigation_response(
+        *browsing_context,
         navigation_params.final_sandboxing_flag_set,
         navigation_params.cross_origin_opener_policy,
         navigation_params.coop_enforcement_result);
 
-    // FIXME: 2. Let permissionsPolicy be the result of creating a permissions policy from a response
+    // FIXME: 3. Let permissionsPolicy be the result of creating a permissions policy from a response
     //           given browsingContext, navigationParams's origin, and navigationParams's response.
 
-    // 3. Let creationURL be navigationParams's response's URL.
+    // 4. Let creationURL be navigationParams's response's URL.
     auto creation_url = navigation_params.response->url();
 
-    // 4. If navigationParams's request is non-null, then set creationURL to navigationParams's request's current URL.
+    // 5. If navigationParams's request is non-null, then set creationURL to navigationParams's request's current URL.
     if (navigation_params.request) {
         creation_url = navigation_params.request->current_url();
     }
 
+    // 6. Let window be null.
     JS::GCPtr<HTML::Window> window;
 
-    // 5. If browsingContext is still on its initial about:blank Document,
-    //    and navigationParams's history handling is "replace",
+    // 7. If browsingContext's active document's is initial about:blank is true,
     //    and browsingContext's active document's origin is same origin-domain with navigationParams's origin,
-    //    then do nothing.
+    //    then set window to browsingContext's active window.
     if (browsing_context->still_on_its_initial_about_blank_document()
-        && navigation_params.history_handling == HTML::HistoryHandlingBehavior::Replace
         && (browsing_context->active_document() && browsing_context->active_document()->origin().is_same_origin(navigation_params.origin))) {
-        // Do nothing.
-        // NOTE: This means that both the initial about:blank Document, and the new Document that is about to be created, will share the same Window object.
         window = browsing_context->active_window();
     }
 
-    // 6. Otherwise:
+    // 8. Otherwise:
     else {
         // FIXME: 1. Let oacHeader be the result of getting a structured field value given `Origin-Agent-Cluster` and "item" from response's header list.
 
@@ -208,17 +207,19 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
                 return browsing_context->window_proxy();
             });
 
-        // 6. Let topLevelCreationURL be creationURL.
+        // 6. Set window to the global object of realmExecutionContext's Realm component.
+        window = verify_cast<HTML::Window>(realm_execution_context->realm->global_object());
+
+        // 7. Let topLevelCreationURL be creationURL.
         auto top_level_creation_url = creation_url;
 
-        // 7. Let topLevelOrigin be navigationParams's origin.
+        // 8. Let topLevelOrigin be navigationParams's origin.
         auto top_level_origin = navigation_params.origin;
 
-        // 8. If browsingContext is not a top-level browsing context, then:
-        if (!browsing_context->is_top_level()) {
-            // 1. Let parentEnvironment be browsingContext's container's relevant settings object.
-            VERIFY(browsing_context->container());
-            auto& parent_environment = HTML::relevant_settings_object(*browsing_context->container());
+        // 9. If navigable's container is not null, then:
+        if (navigation_params.navigable->container()) {
+            // 1. Let parentEnvironment be navigable's container's relevant settings object.
+            auto& parent_environment = HTML::relevant_settings_object(*navigation_params.navigable->container());
 
             // 2. Set topLevelCreationURL to parentEnvironment's top-level creation URL.
             top_level_creation_url = parent_environment.top_level_creation_url;
@@ -240,7 +241,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
             top_level_origin);
     }
 
-    // FIXME: 7. Let loadTimingInfo be a new document load timing info with its navigation start time set to response's timing info's start time.
+    // FIXME: 9. Let loadTimingInfo be a new document load timing info with its navigation start time set to navigationParams's response's timing info's start time.
 
     // 8. Let document be a new Document,
     //    whose type is type,
@@ -256,22 +257,21 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
     document->m_type = type;
     document->m_content_type = MUST(String::from_deprecated_string(content_type));
     document->set_origin(navigation_params.origin);
+    document->set_browsing_context(browsing_context);
     document->m_policy_container = navigation_params.policy_container;
     document->m_active_sandboxing_flag_set = navigation_params.final_sandboxing_flag_set;
+    document->set_url(*creation_url);
     document->m_navigation_id = navigation_params.id;
-
-    document->m_window = window;
-    window->set_associated_document(*document);
-
-    // 9. Set document's URL to creationURL.
-    document->m_url = creation_url.value();
-
-    // 10. Set document's current document readiness to "loading".
     document->m_readiness = HTML::DocumentReadyState::Loading;
 
-    // FIXME: 11. Run CSP initialization for a Document given document.
+    document->m_window = window;
 
-    // 12. If navigationParams's request is non-null, then:
+    // 11. Set window's associated Document to document.
+    window->set_associated_document(*document);
+
+    // FIXME: 12. Run CSP initialization for a Document given document.
+
+    // 13. If navigationParams's request is non-null, then:
     if (navigation_params.request) {
         // 1. Set document's referrer to the empty string.
         document->m_referrer = DeprecatedString::empty();
@@ -285,23 +285,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> Document::create_and_initialize(
         }
     }
 
-    // FIXME: 13. Let historyHandling be navigationParams's history handling.
+    // FIXME: 14: If navigationParams's fetch controller is not null, then:
 
-    // FIXME: 14: Let navigationTimingType be the result of switching on navigationParams's history handling...
+    // FIXME: 15. Create the navigation timing entry for document, with navigationParams's response's timing info, redirectCount, navigationParams's navigation timing type, and
+    //            navigationParams's response's service worker timing info.
 
-    // FIXME: 15. Let redirectCount be 0 if navigationParams's has cross-origin redirects is true;
-    //            otherwise navigationParams's request's redirect count.
+    // FIXME: 16. If navigationParams's response has a `Refresh` header, then:
 
-    // FIXME: 16. Create the navigation timing entry for document, with navigationParams's response's timing info,
-    //            redirectCount, navigationTimingType, and navigationParams's response's service worker timing info.
+    // FIXME: 17. If navigationParams's commit early hints is not null, then call navigationParams's commit early hints with document.
 
-    // FIXME: 17. If navigationParams's response has a `Refresh` header, then...
+    // FIXME: 18. Process link headers given document, navigationParams's response, and "pre-media".
 
-    // FIXME: 18. If navigationParams's commit early hints is not null, then call navigationParams's commit early hints with document.
-
-    // FIXME: 19. Process link headers given document, navigationParams's response, and "pre-media".
-
-    // 20. Return document.
+    // 19. Return document.
     return document;
 }
 
