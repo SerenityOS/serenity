@@ -288,7 +288,8 @@ void CanvasRenderingContext2D::fill_internal(Gfx::Path& path, DeprecatedString c
 
 void CanvasRenderingContext2D::fill(DeprecatedString const& fill_rule)
 {
-    return fill_internal(path(), fill_rule);
+    auto transformed_path = path().copy_transformed(drawing_state().transform);
+    return fill_internal(transformed_path, fill_rule);
 }
 
 void CanvasRenderingContext2D::fill(Path2D& path, DeprecatedString const& fill_rule)
