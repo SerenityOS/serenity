@@ -468,55 +468,90 @@ void ProcessModel::update()
                 m_processes.append(make<Process>());
                 process_state = &m_processes.last();
             }
+
+            auto add_thread_data = [&live_tids, this](int tid, Process& process_state, ThreadState state) {
+                auto thread_data = m_threads.ensure(tid, [&] { return make_ref_counted<Thread>(process_state); });
+                thread_data->previous_state = move(thread_data->current_state);
+                thread_data->current_state = move(state);
+                if (auto maybe_thread_index = process_state.threads.find_first_index(thread_data); maybe_thread_index.has_value()) {
+                    process_state.threads[maybe_thread_index.value()] = thread_data;
+                } else {
+                    process_state.threads.append(thread_data);
+                }
+                live_tids.set(tid);
+            };
+
             (*process_state)->pid = process.pid;
-            for (auto& thread : process.threads) {
+            if (!process.threads.is_empty()) {
+                for (auto& thread : process.threads) {
+                    ThreadState state(**process_state);
+                    state.tid = thread.tid;
+                    state.pid = process.pid;
+                    state.ppid = process.ppid;
+                    state.pgid = process.pgid;
+                    state.sid = process.sid;
+                    state.time_user = thread.time_user;
+                    state.time_kernel = thread.time_kernel;
+                    state.kernel = process.kernel;
+                    state.executable = process.executable;
+                    state.name = thread.name;
+                    state.command = read_command_line(process.pid);
+                    state.uid = process.uid;
+                    state.state = thread.state;
+                    state.user = process.username;
+                    state.pledge = process.pledge;
+                    state.veil = process.veil;
+                    state.cpu = thread.cpu;
+                    state.priority = thread.priority;
+                    state.amount_virtual = process.amount_virtual;
+                    state.amount_resident = process.amount_resident;
+                    state.amount_dirty_private = process.amount_dirty_private;
+                    state.amount_clean_inode = process.amount_clean_inode;
+                    state.amount_purgeable_volatile = process.amount_purgeable_volatile;
+                    state.amount_purgeable_nonvolatile = process.amount_purgeable_nonvolatile;
+                    state.syscall_count = thread.syscall_count;
+                    state.inode_faults = thread.inode_faults;
+                    state.zero_faults = thread.zero_faults;
+                    state.cow_faults = thread.cow_faults;
+                    state.unix_socket_read_bytes = thread.unix_socket_read_bytes;
+                    state.unix_socket_write_bytes = thread.unix_socket_write_bytes;
+                    state.ipv4_socket_read_bytes = thread.ipv4_socket_read_bytes;
+                    state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
+                    state.file_read_bytes = thread.file_read_bytes;
+                    state.file_write_bytes = thread.file_write_bytes;
+                    state.cpu_percent = 0;
+
+                    add_thread_data(thread.tid, **process_state, move(state));
+                }
+            } else {
+                // FIXME: If there are no threads left in a process this is an indication
+                // for a zombie process, so it should be handled differently - we add a mock thread
+                // just to simulate a process with a single thread.
+                // Find a way to untie the process representation from a main thread so we can
+                // just represent a zombie process without creating a mock thread.
                 ThreadState state(**process_state);
-                state.tid = thread.tid;
+                state.tid = process.pid;
                 state.pid = process.pid;
                 state.ppid = process.ppid;
                 state.pgid = process.pgid;
                 state.sid = process.sid;
-                state.time_user = thread.time_user;
-                state.time_kernel = thread.time_kernel;
                 state.kernel = process.kernel;
                 state.executable = process.executable;
-                state.name = thread.name;
+                state.name = process.name;
                 state.command = read_command_line(process.pid);
                 state.uid = process.uid;
-                state.state = thread.state;
+                state.state = "Zombie";
                 state.user = process.username;
                 state.pledge = process.pledge;
                 state.veil = process.veil;
-                state.cpu = thread.cpu;
-                state.priority = thread.priority;
                 state.amount_virtual = process.amount_virtual;
                 state.amount_resident = process.amount_resident;
                 state.amount_dirty_private = process.amount_dirty_private;
                 state.amount_clean_inode = process.amount_clean_inode;
                 state.amount_purgeable_volatile = process.amount_purgeable_volatile;
                 state.amount_purgeable_nonvolatile = process.amount_purgeable_nonvolatile;
-                state.syscall_count = thread.syscall_count;
-                state.inode_faults = thread.inode_faults;
-                state.zero_faults = thread.zero_faults;
-                state.cow_faults = thread.cow_faults;
-                state.unix_socket_read_bytes = thread.unix_socket_read_bytes;
-                state.unix_socket_write_bytes = thread.unix_socket_write_bytes;
-                state.ipv4_socket_read_bytes = thread.ipv4_socket_read_bytes;
-                state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
-                state.file_read_bytes = thread.file_read_bytes;
-                state.file_write_bytes = thread.file_write_bytes;
-                state.cpu_percent = 0;
 
-                auto thread_data = m_threads.ensure(thread.tid, [&] { return make_ref_counted<Thread>(**process_state); });
-                thread_data->previous_state = move(thread_data->current_state);
-                thread_data->current_state = move(state);
-                if (auto maybe_thread_index = (*process_state)->threads.find_first_index(thread_data); maybe_thread_index.has_value()) {
-                    (*process_state)->threads[maybe_thread_index.value()] = thread_data;
-                } else {
-                    (*process_state)->threads.append(thread_data);
-                }
-
-                live_tids.set(thread.tid);
+                add_thread_data(process.pid, **process_state, move(state));
             }
         }
     }
