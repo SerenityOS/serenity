@@ -319,7 +319,7 @@ void HTMLElement::click()
     m_click_in_progress = true;
 
     // FIXME: 4. Fire a synthetic pointer event named click at this element, with the not trusted flag set.
-    fire_a_synthetic_pointer_event(HTML::EventNames::click, *this, true);
+    fire_a_synthetic_pointer_event(HTML::EventNames::click.to_deprecated_fly_string(), *this, true);
 
     // 5. Unset this element's click in progress flag.
     m_click_in_progress = false;

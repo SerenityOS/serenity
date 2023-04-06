@@ -91,7 +91,7 @@ public:
 #undef __ENUMERATE
 
 protected:
-    virtual DOM::EventTarget& global_event_handlers_to_event_target(DeprecatedFlyString const& event_name) = 0;
+    virtual DOM::EventTarget& global_event_handlers_to_event_target(FlyString const& event_name) = 0;
 };
 
 }

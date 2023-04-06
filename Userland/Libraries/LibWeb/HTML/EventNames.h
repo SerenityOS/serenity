@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
 #include <AK/Error.h>
+#include <AK/FlyString.h>
 
 namespace Web::HTML::EventNames {
 
@@ -95,7 +95,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(webkitanimationstart)     \
     __ENUMERATE_HTML_EVENT(webkittransitionend)
 
-#define __ENUMERATE_HTML_EVENT(name) extern DeprecatedFlyString name;
+#define __ENUMERATE_HTML_EVENT(name) extern FlyString name;
 ENUMERATE_HTML_EVENTS
 #undef __ENUMERATE_HTML_EVENT
 

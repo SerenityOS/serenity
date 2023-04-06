@@ -235,7 +235,7 @@ bool EventDispatcher::dispatch(JS::NonnullGCPtr<EventTarget> target, Event& even
         event.append_to_path(*target, target_override, related_target, touch_targets, false);
 
         // 4. Let isActivationEvent be true, if event is a MouseEvent object and event’s type attribute is "click"; otherwise false.
-        bool is_activation_event = is<UIEvents::MouseEvent>(event) && event.type() == HTML::EventNames::click;
+        bool is_activation_event = is<UIEvents::MouseEvent>(event) && FlyString::from_deprecated_fly_string(event.type()).release_value() == HTML::EventNames::click;
 
         // 5. If isActivationEvent is true and target has activation behavior, then set activationTarget to target.
         if (is_activation_event && target->activation_behavior)

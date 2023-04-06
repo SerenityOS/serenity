@@ -166,7 +166,7 @@ void Worker::run_a_worker(AK::URL& url, EnvironmentSettingsObject& outside_setti
                 MessageEventInit event_init {};
                 event_init.data = message;
                 event_init.origin = "<origin>"_string.release_value_but_fixme_should_propagate_errors();
-                dispatch_event(MessageEvent::create(*m_worker_realm, String::from_deprecated_string(HTML::EventNames::message).release_value_but_fixme_should_propagate_errors(), event_init).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(MessageEvent::create(*m_worker_realm, HTML::EventNames::message, event_init).release_value_but_fixme_should_propagate_errors());
             }));
 
             return JS::js_undefined();
