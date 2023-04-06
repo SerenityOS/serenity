@@ -1287,8 +1287,8 @@ struct DAIF {
     {
         DAIF daif;
 
-        asm("mrs %[value], daif"
-            : [value] "=r"(daif));
+        asm volatile("mrs %[value], daif"
+                     : [value] "=r"(daif));
 
         return daif;
     }
