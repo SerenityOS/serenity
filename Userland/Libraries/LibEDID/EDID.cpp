@@ -18,7 +18,7 @@
 #    include <fcntl.h>
 #    include <unistd.h>
 
-#    ifdef ENABLE_PNP_IDS_DATA
+#    if ENABLE_PNP_IDS_DATA
 #        include <LibEDID/PnpIDs.h>
 #    endif
 #endif
@@ -425,7 +425,7 @@ DeprecatedString Parser::manufacturer_name() const
     if (!m_legacy_manufacturer_id_valid)
         return "Unknown";
     auto manufacturer_id = legacy_manufacturer_id();
-#    ifdef ENABLE_PNP_IDS_DATA
+#    if ENABLE_PNP_IDS_DATA
     if (auto pnp_id_data = PnpIDs::find_by_manufacturer_id(manufacturer_id); pnp_id_data.has_value())
         return pnp_id_data.value().manufacturer_name;
 #    endif
