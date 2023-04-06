@@ -298,19 +298,75 @@ static ErrorOr<VP8LHeader> decode_webp_chunk_VP8L_header(WebPLoadingContext& con
     return VP8LHeader { width, height, is_alpha_used };
 }
 
+namespace {
+
+// WebP-lossless's CanonicalCodes are almost identical to deflate's.
+// One difference is that codes with a single element in webp-lossless consume 0 bits to produce that single element,
+// while they consume 1 bit in Compress::CanonicalCode. This class wraps Compress::CanonicalCode to handle the case
+// where the codes contain just a single element, and dispatch to Compress::CanonicalCode else.
+class CanonicalCode {
+public:
+    CanonicalCode()
+        : m_code(0)
+    {
+    }
+
+    static ErrorOr<CanonicalCode> from_bytes(ReadonlyBytes);
+    ErrorOr<u32> read_symbol(LittleEndianInputBitStream&) const;
+
+private:
+    explicit CanonicalCode(u32 single_symbol)
+        : m_code(single_symbol)
+    {
+    }
+
+    explicit CanonicalCode(Compress::CanonicalCode code)
+        : m_code(move(code))
+    {
+    }
+
+    Variant<u32, Compress::CanonicalCode> m_code;
+};
+
+ErrorOr<CanonicalCode> CanonicalCode::from_bytes(ReadonlyBytes bytes)
+{
+    auto non_zero_symbols = 0;
+    auto last_non_zero = -1;
+    for (size_t i = 0; i < bytes.size(); i++) {
+        if (bytes[i] != 0) {
+            non_zero_symbols++;
+            last_non_zero = i;
+        }
+    }
+
+    if (non_zero_symbols == 1)
+        return CanonicalCode(last_non_zero);
+
+    return CanonicalCode(TRY(Compress::CanonicalCode::from_bytes(bytes)));
+}
+
+ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& bit_stream) const
+{
+    return TRY(m_code.visit(
+        [](u32 single_code) -> ErrorOr<u32> { return single_code; },
+        [&bit_stream](Compress::CanonicalCode const& code) { return code.read_symbol(bit_stream); }));
+}
+
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#61_overview
 // "From here on, we refer to this set as a prefix code group."
 class PrefixCodeGroup {
 public:
-    Compress::CanonicalCode& operator[](int i) { return m_codes[i]; }
-    Compress::CanonicalCode const& operator[](int i) const { return m_codes[i]; }
+    CanonicalCode& operator[](int i) { return m_codes[i]; }
+    CanonicalCode const& operator[](int i) const { return m_codes[i]; }
 
 private:
-    Array<Compress::CanonicalCode, 5> m_codes;
+    Array<CanonicalCode, 5> m_codes;
 };
 
+}
+
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#621_decoding_and_building_the_prefix_codes
-static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, size_t alphabet_size)
+static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, size_t alphabet_size)
 {
     // prefix-code           =  simple-prefix-code / normal-prefix-code
     bool is_simple_code_length_code = TRY(bit_stream.read_bits(1));
@@ -338,7 +394,7 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
             code_lengths[symbol1] = 1;
         }
 
-        return Compress::CanonicalCode::from_bytes(code_lengths);
+        return CanonicalCode::from_bytes(code_lengths);
     }
 
     // This has plenty in common with deflate (cf DeflateDecompressor::decode_codes() in Deflate.cpp in LibCompress)
@@ -375,7 +431,7 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
             return context.error("WebPImageDecoderPlugin: invalid max_symbol");
     }
 
-    auto const code_length_code = TRY(Compress::CanonicalCode::from_bytes({ code_length_code_lengths, sizeof(code_length_code_lengths) }));
+    auto const code_length_code = TRY(CanonicalCode::from_bytes({ code_length_code_lengths, sizeof(code_length_code_lengths) }));
 
     // Next we extract the code lengths of the code that was used to encode the block.
 
@@ -420,7 +476,7 @@ static ErrorOr<Compress::CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPL
         return Error::from_string_literal("Number of code lengths does not match the sum of codes");
 
     dbgln_if(WEBP_DEBUG, "  done reading symbols");
-    return Compress::CanonicalCode::from_bytes(code_lengths);
+    return CanonicalCode::from_bytes(code_lengths);
 }
 
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#622_decoding_of_meta_prefix_codes
