@@ -760,13 +760,6 @@ void Process::finalize()
     m_fds.with_exclusive([](auto& fds) { fds.clear(); });
     m_tty = nullptr;
     m_executable.with([](auto& executable) { executable = nullptr; });
-    m_jail_process_list.with([this](auto& list_ptr) {
-        if (list_ptr) {
-            list_ptr->attached_processes().with([&](auto& list) {
-                list.remove(*this);
-            });
-        }
-    });
     m_attached_jail.with([](auto& jail) {
         if (jail)
             jail->detach({});
@@ -818,6 +811,17 @@ void Process::unblock_waiters(Thread::WaitBlocker::UnblockFlags flags, u8 signal
 
     if (waiter_process)
         waiter_process->m_wait_blocker_set.unblock(*this, flags, signal);
+}
+
+void Process::remove_from_secondary_lists()
+{
+    m_jail_process_list.with([this](auto& list_ptr) {
+        if (list_ptr) {
+            list_ptr->attached_processes().with([&](auto& list) {
+                list.remove(*this);
+            });
+        }
+    });
 }
 
 void Process::die()
