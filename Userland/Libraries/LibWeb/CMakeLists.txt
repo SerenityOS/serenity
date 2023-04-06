@@ -126,6 +126,7 @@ set(SOURCES
     DOM/DOMTokenList.cpp
     DOM/DOMTokenList.idl
     DOM/Document.cpp
+    DOM/DocumentLoading.cpp
     DOM/DocumentFragment.cpp
     DOM/DocumentLoadEventDelayer.cpp
     DOM/DocumentType.cpp
