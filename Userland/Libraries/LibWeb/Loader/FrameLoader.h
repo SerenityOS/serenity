@@ -45,7 +45,6 @@ private:
 
     void load_error_page(const AK::URL& failed_url, DeprecatedString const& error_message);
     void load_favicon(RefPtr<Gfx::Bitmap> bitmap = nullptr);
-    bool parse_document(DOM::Document&, ByteBuffer const& data);
 
     JS::NonnullGCPtr<HTML::BrowsingContext> m_browsing_context;
     size_t m_redirects_count { 0 };
