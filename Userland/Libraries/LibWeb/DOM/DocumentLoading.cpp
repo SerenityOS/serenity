@@ -13,6 +13,7 @@
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/DocumentLoading.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Parser/HTMLEncodingDetection.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -199,6 +200,102 @@ bool parse_document(DOM::Document& document, ByteBuffer const& data)
         return build_gemini_document(document, data);
 
     return false;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#loading-a-document
+JS::GCPtr<DOM::Document> load_document(Optional<HTML::NavigationParams> navigation_params)
+{
+    VERIFY(navigation_params.has_value());
+
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", *navigation_params).release_value_but_fixme_should_propagate_errors();
+
+    auto& realm = document->realm();
+
+    if (navigation_params->response->body().has_value()) {
+        auto process_body = [navigation_params, document](ByteBuffer bytes) {
+            if (!parse_document(*document, bytes)) {
+                // FIXME: Load html page with an error if parsing failed.
+                TODO();
+            }
+        };
+
+        auto process_body_error = [](auto&) {
+            // FIXME: Load html page with an error if read of body failed.
+            TODO();
+        };
+
+        navigation_params->response->body()->fully_read(
+                                               realm,
+                                               move(process_body),
+                                               move(process_body_error),
+                                               JS::NonnullGCPtr { realm.global_object() })
+            .release_value_but_fixme_should_propagate_errors();
+    }
+
+    return document;
+}
+
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#read-ua-inline
+JS::GCPtr<DOM::Document> create_document_for_inline_content(JS::GCPtr<HTML::Navigable> navigable, Optional<String> navigation_id, StringView content_html)
+{
+    auto& vm = navigable->vm();
+
+    // 1. Let origin be a new opaque origin.
+    HTML::Origin origin {};
+
+    // 2. Let coop be a new cross-origin opener policy.
+    auto coop = HTML::CrossOriginOpenerPolicy {};
+
+    // 3. Let coopEnforcementResult be a new cross-origin opener policy enforcement result with
+    //    url: response's URL
+    //    origin: origin
+    //    cross-origin opener policy: coop
+    HTML::CrossOriginOpenerPolicyEnforcementResult coop_enforcement_result {
+        .url = AK::URL("about:error"), // AD-HOC
+        .origin = origin,
+        .cross_origin_opener_policy = coop
+    };
+
+    // 4. Let navigationParams be a new navigation params with
+    //    id: navigationId
+    //    request: null
+    //    response: a new response
+    //    origin: origin
+    //    policy container: a new policy container
+    //    final sandboxing flag set: an empty set
+    //    cross-origin opener policy: coop
+    //    COOP enforcement result: coopEnforcementResult
+    //    reserved environment: null
+    //    navigable: navigable
+    //    FIXME: navigation timing type: navTimingType
+    //    FIXME: fetch controller: fetch controller
+    //    FIXME: commit early hints: null
+    auto response = Fetch::Infrastructure::Response::create(vm);
+    response->url_list().append(AK::URL("about:error")); // AD-HOC: https://github.com/whatwg/html/issues/9122
+    HTML::NavigationParams navigation_params {
+        .id = navigation_id,
+        .request = {},
+        .response = *response,
+        .origin = move(origin),
+        .policy_container = HTML::PolicyContainer {},
+        .final_sandboxing_flag_set = HTML::SandboxingFlagSet {},
+        .cross_origin_opener_policy = move(coop),
+        .coop_enforcement_result = move(coop_enforcement_result),
+        .reserved_environment = {},
+        .browsing_context = navigable->active_browsing_context(),
+        .navigable = navigable,
+    };
+
+    // 5. Let document be the result of creating and initializing a Document object given "html", "text/html", and navigationParams.
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
+
+    // 6. Either associate document with a custom rendering that is not rendered using the normal Document rendering rules, or mutate document until it represents the content the
+    //    user agent wants to render.
+    auto parser = HTML::HTMLParser::create(document, content_html, "utf-8");
+    parser->run(AK::URL("about:error"));
+
+    // 7. Return document.
+    return document;
 }
 
 }

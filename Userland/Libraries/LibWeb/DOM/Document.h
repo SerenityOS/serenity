@@ -470,6 +470,8 @@ public:
 
     void make_active();
 
+    void set_salvageable(bool value) { m_salvageable = value; };
+
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;

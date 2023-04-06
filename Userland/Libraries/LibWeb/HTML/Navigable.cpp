@@ -7,9 +7,15 @@
 
 #include <LibWeb/Crypto/Crypto.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/DOM/DocumentLoading.h>
+#include <LibWeb/Fetch/Fetching/Fetching.h>
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
+#include <LibWeb/Fetch/Infrastructure/FetchController.h>
+#include <LibWeb/Fetch/Infrastructure/URL.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/DocumentState.h>
 #include <LibWeb/HTML/Navigable.h>
+#include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
@@ -216,6 +222,134 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
     }
 
     VERIFY_NOT_REACHED();
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#attempt-to-populate-the-history-entry's-document
+WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry> entry, Optional<NavigationParams> navigation_params, Optional<String> navigation_id, SourceSnapshotParams const& source_snapshot_params, Function<void()> completion_steps)
+{
+    // FIXME: 1. Assert: this is running in parallel.
+
+    // 2. Assert: if navigationParams is non-null, then navigationParams's response is non-null.
+    if (navigation_params.has_value())
+        VERIFY(navigation_params->response);
+
+    // 3. Let currentBrowsingContext be navigable's active browsing context.
+    [[maybe_unused]] auto current_browsing_context = active_browsing_context();
+
+    // 4. Let documentResource be entry's document state's resource.
+    auto document_resource = entry->document_state->resource();
+
+    // 5. If navigationParams is null, then:
+    if (!navigation_params.has_value()) {
+        // 1. If documentResource is a string, then set navigationParams to the result
+        //    of creating navigation params from a srcdoc resource given entry, navigable,
+        //    targetSnapshotParams, navigationId, and navTimingType.
+        if (document_resource.has<String>()) {
+            TODO();
+        }
+        // 2. Otherwise, if both of the following are true:
+        //    - entry's URL's scheme is a fetch scheme; and
+        //    - documentResource is null, FIXME: or allowPOST is true and documentResource's request body is not failure
+        else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && document_resource.has<Empty>()) {
+            TODO();
+        }
+        // FIXME: 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with
+        //    initiator origin: entry's document state's initiator origin
+        else {
+            TODO();
+        }
+    }
+
+    // 6. Queue a global task on the navigation and traversal task source, given navigable's active window, to run these steps:
+    queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this, entry, navigation_params, navigation_id, completion_steps = move(completion_steps)] {
+        // 1. If navigable's ongoing navigation no longer equals navigationId, then run completionSteps and return.
+        if (navigation_id.has_value() && (!ongoing_navigation().has<String>() || ongoing_navigation().get<String>() != *navigation_id)) {
+            completion_steps();
+            return;
+        }
+
+        // 2. Let failure be false.
+        auto failure = false;
+
+        // FIXME: 3. If navigationParams is a non-fetch scheme navigation params, then set entry's document state's document to the result of running attempt to create a non-fetch
+        //    scheme document given entry's URL, navigable, targetSnapshotParams's sandboxing flags, navigationId, navTimingType, sourceSnapshotParams's has transient
+        //    activation, and navigationParams's initiator origin.
+
+        // 4. Otherwise, if navigationParams is null, then set failure to true.
+        if (!navigation_params.has_value()) {
+            failure = true;
+        }
+
+        // FIXME: 5. Otherwise, if the result of should navigation response to navigation request of type in target be blocked by Content Security Policy? given navigationParams's request,
+        //    navigationParams's response, navigationParams's policy container's CSP list, cspNavigationType, and navigable is "Blocked", then set failure to true.
+
+        // FIXME: 6. Otherwise, if navigationParams's reserved environment is non-null and the result of checking a navigation response's adherence to its embedder policy given
+        //    navigationParams's response, navigable, and navigationParams's policy container's embedder policy is false, then set failure to true.
+
+        // 8. If failure is true, then:
+        if (failure) {
+            // 1. Set entry's document state's document to the result of creating a document for inline content that doesn't have a DOM, given navigable, null, and navTimingType.
+            //    The inline content should indicate to the user the sort of error that occurred.
+            // FIXME: Use SourceGenerator to produce error page from file:///res/html/error.html
+            //        and display actual error from fetch response.
+            auto error_html = String::formatted("<h1>Failed to load {}</h1>"sv, entry->url).release_value_but_fixme_should_propagate_errors();
+            entry->document_state->set_document(create_document_for_inline_content(this, navigation_id, error_html));
+
+            // 2. Set entry's document state's document's salvageable to false.
+            entry->document_state->document()->set_salvageable(false);
+
+            // FIXME: 3. If navigationParams is not null, then:
+            if (navigation_params.has_value()) {
+                TODO();
+            }
+        }
+        // FIXME: 9. Otherwise, if navigationParams's response's status is 204 or 205, then:
+        else if (navigation_params->response->status() == 204 || navigation_params->response->status() == 205) {
+            // 1. Run completionSteps.
+            completion_steps();
+
+            // 2. Return.
+            return;
+        }
+        // FIXME: 10. Otherwise, if navigationParams's response has a `Content-Disposition`
+        //            header specifying the attachment disposition type, then:
+        // 11. Otherwise:
+        else {
+            // 1. Let document be the result of loading a document given navigationParams, sourceSnapshotParams,
+            //    and entry's document state's initiator origin.
+            auto document = load_document(navigation_params);
+
+            // 2. If document is null, then run completionSteps and return.
+            if (!document) {
+                VERIFY_NOT_REACHED();
+
+                completion_steps();
+                return;
+            }
+
+            // 3. Set entry's document state's document to document.
+            entry->document_state->set_document(document.ptr());
+
+            // 4. Set entry's document state's origin to document's origin.
+            entry->document_state->set_origin(document->origin());
+        }
+
+        // FIXME: 12. If entry's document state's request referrer is "client", then set it to request's referrer.
+
+        // 13. If entry's document state's document is not null, then set entry's document state's ever populated to true.
+        if (entry->document_state->document()) {
+            entry->document_state->set_ever_populated(true);
+        }
+
+        // 14. Run completionSteps.
+        completion_steps();
+
+        (void)this;
+    });
+
+    (void)source_snapshot_params;
+
+    return {};
 }
 
 // To navigate a navigable navigable to a URL url using a Document sourceDocument,
