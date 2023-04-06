@@ -115,6 +115,33 @@ JS::GCPtr<SessionHistoryEntry> Navigable::get_the_target_history_entry(int targe
     return result;
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#activate-history-entry
+void Navigable::activate_history_entry(JS::GCPtr<SessionHistoryEntry> entry)
+{
+    // FIXME: 1. Save persisted state to the navigable's active session history entry.
+
+    // 2. Let newDocument be entry's document.
+    JS::GCPtr<DOM::Document> new_document = entry->document_state->document().ptr();
+
+    // 3. Assert: newDocument's is initial about:blank is false, i.e., we never traverse
+    //    back to the initial about:blank Document because it always gets replaced when we
+    //    navigate away from it.
+    VERIFY(!new_document->is_initial_about_blank());
+
+    // 4. Set navigable's active session history entry to entry.
+    m_active_session_history_entry = entry;
+
+    // 5. Make active newDocument.
+    new_document->make_active();
+
+    // Not in the spec:
+    if (is<TraversableNavigable>(*this) && parent() == nullptr) {
+        if (auto* page = active_browsing_context()->page()) {
+            page->client().page_did_start_loading(entry->url, false);
+        }
+    }
+}
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
 JS::GCPtr<DOM::Document> Navigable::active_document()
 {

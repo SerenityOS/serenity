@@ -46,6 +46,8 @@ public:
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& get_session_history_entries() const;
 
+    void activate_history_entry(JS::GCPtr<SessionHistoryEntry>);
+
     JS::GCPtr<DOM::Document> active_document();
     JS::GCPtr<BrowsingContext> active_browsing_context();
     JS::GCPtr<WindowProxy> active_window_proxy();
