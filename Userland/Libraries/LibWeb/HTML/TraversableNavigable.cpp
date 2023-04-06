@@ -498,4 +498,14 @@ void TraversableNavigable::traverse_the_history_by_delta(int delta)
     apply_the_history_step(all_steps[target_step_index]);
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-pending-history-changes
+void TraversableNavigable::apply_pending_history_changes()
+{
+    // 1. Let targetStep be traversable's current session history step.
+    auto target_step = current_session_history_step();
+
+    // 2. Apply the history step targetStep to traversable with checkForUserCancelation set to checkForUserCancelation.
+    apply_the_history_step(target_step);
+}
+
 }

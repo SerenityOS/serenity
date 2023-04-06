@@ -951,4 +951,19 @@ WebIDL::ExceptionOr<void> Navigable::navigate_to_a_javascript_url(AK::URL const&
     TODO();
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#reload
+void Navigable::reload()
+{
+    // 1. Set navigable's active session history entry's document state's reload pending to true.
+    active_session_history_entry()->document_state->set_reload_pending(true);
+
+    // 2. Let traversable be navigable's traversable navigable.
+    auto traversable = traversable_navigable();
+
+    // FIXME: 3. Append the following session history traversal steps to traversable:
+
+    // 1. Apply pending history changes to traversable with true.
+    traversable->apply_pending_history_changes();
+}
+
 }
