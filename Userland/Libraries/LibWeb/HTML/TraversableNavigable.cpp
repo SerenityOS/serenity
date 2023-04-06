@@ -470,4 +470,32 @@ void TraversableNavigable::clear_the_forward_session_history()
     }
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#traverse-the-history-by-a-delta
+void TraversableNavigable::traverse_the_history_by_delta(int delta)
+{
+    // FIXME: 1. Let sourceSnapshotParams and initiatorToCheck be null.
+
+    // FIXME: 2. If sourceDocument is given, then:
+
+    // 3. Append the following session history traversal steps to traversable:
+
+    // 1. Let allSteps be the result of getting all used history steps for traversable.
+    auto all_steps = get_all_used_history_steps();
+
+    // 2. Let currentStepIndex be the index of traversable's current session history step within allSteps.
+    auto current_step_index = *all_steps.find_first_index(current_session_history_step());
+
+    // 3. Let targetStepIndex be currentStepIndex plus delta
+    auto target_step_index = current_step_index + delta;
+
+    // 4. If allSteps[targetStepIndex] does not exist, then abort these steps.
+    if (target_step_index >= all_steps.size()) {
+        return;
+    }
+
+    // 5. Apply the history step allSteps[targetStepIndex] to traversable, with checkForUserCancelation set to true,
+    //    sourceSnapshotParams set to sourceSnapshotParams, and initiatorToCheck set to initiatorToCheck.
+    apply_the_history_step(all_steps[target_step_index]);
+}
+
 }
