@@ -62,7 +62,7 @@ ErrorOr<NonnullRefPtr<SVGDecodedImageData>> SVGDecodedImageData::create(Page& ho
         .browsing_context = browsing_context,
         .navigable = nullptr,
     };
-    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", move(navigation_params)).release_value_but_fixme_should_propagate_errors();
+    auto document = DOM::Document::create_and_initialize(DOM::Document::Type::HTML, "text/html", navigation_params).release_value_but_fixme_should_propagate_errors();
     browsing_context->set_active_document(document);
 
     auto parser = HTML::HTMLParser::create_with_uncertain_encoding(document, data);

@@ -89,7 +89,7 @@ public:
         HTML
     };
 
-    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, DeprecatedString content_type, HTML::NavigationParams);
+    static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> create_and_initialize(Type, DeprecatedString content_type, HTML::NavigationParams&);
 
     [[nodiscard]] static JS::NonnullGCPtr<Document> create(JS::Realm&, AK::URL const& url = "about:blank"sv);
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<Document>> construct_impl(JS::Realm&);
