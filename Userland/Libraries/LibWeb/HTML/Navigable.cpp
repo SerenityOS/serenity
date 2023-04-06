@@ -224,6 +224,267 @@ Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_en
     VERIFY_NOT_REACHED();
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#create-navigation-params-by-fetching
+static WebIDL::ExceptionOr<Optional<NavigationParams>> create_navigation_params_by_fetching(JS::GCPtr<SessionHistoryEntry> entry, JS::GCPtr<Navigable> navigable, SourceSnapshotParams const& source_snapshot_params, Optional<String> navigation_id)
+{
+    auto& vm = navigable->vm();
+    auto& realm = navigable->active_window()->realm();
+
+    // FIXME: 1. Assert: this is running in parallel.
+
+    // 2. Let documentResource be entry's document state's resource.
+    auto document_resource = entry->document_state->resource();
+
+    // 3. Let request be a new request, with
+    //    url: entry's URL
+    //    client: sourceSnapshotParams's fetch client
+    //    destination: "document"
+    //    credentials mode: "include"
+    //    use-URL-credentials flag: set
+    //    redirect mode: "manual"
+    //    replaces client id: navigable's active document's relevant settings object's id
+    //    mode: "navigate"
+    //    referrer: entry's document state's request referrer
+    //    FIXME: referrer policy: entry's document state's request referrer policy
+    auto request = Fetch::Infrastructure::Request::create(vm);
+    request->set_url(entry->url);
+    request->set_client(source_snapshot_params.fetch_client);
+    request->set_destination(Fetch::Infrastructure::Request::Destination::Document);
+    request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
+    request->set_use_url_credentials(true);
+    request->set_redirect_mode(Fetch::Infrastructure::Request::RedirectMode::Manual);
+    auto replaces_client_id = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(navigable->active_document()->relevant_settings_object().id));
+    request->set_replaces_client_id(replaces_client_id);
+    request->set_mode(Fetch::Infrastructure::Request::Mode::Navigate);
+    request->set_referrer(entry->document_state->request_referrer());
+
+    // 4. If documentResource is a POST resource, then:
+    if (document_resource.has<POSTResource>()) {
+        // 1. Set request's method to `POST`.
+        request->set_method(TRY_OR_THROW_OOM(vm, ByteBuffer::copy("post"sv.bytes())));
+
+        // 2. Set request's body to documentResource's request body.
+        request->set_body(document_resource.get<POSTResource>().request_body.value());
+
+        // 3. Set `Content-Type` to documentResource's request content-type in request's header list.
+        auto request_content_type = document_resource.get<POSTResource>().request_content_type;
+        auto request_content_type_string = [request_content_type]() {
+            switch (request_content_type) {
+            case POSTResource::RequestContentType::ApplicationXWWWFormUrlencoded:
+                return "application/x-www-form-urlencoded"sv;
+            case POSTResource::RequestContentType::MultipartFormData:
+                return "multipart/form-data"sv;
+            case POSTResource::RequestContentType::TextPlain:
+                return "text/plain"sv;
+            default:
+                VERIFY_NOT_REACHED();
+            }
+        }();
+        auto header = TRY_OR_THROW_OOM(vm, Fetch::Infrastructure::Header::from_string_pair("Content-Type"sv, request_content_type_string));
+        TRY_OR_THROW_OOM(vm, request->header_list()->append(move(header)));
+    }
+
+    // 5. If entry's document state's reload pending is true, then set request's reload-navigation flag.
+    if (entry->document_state->reload_pending())
+        request->set_reload_navigation(true);
+
+    // 6. Otherwise, if entry's document state's ever populated is true, then set request's history-navigation flag.
+    if (entry->document_state->ever_populated())
+        request->set_history_navigation(true);
+
+    // 9. Let response be null.
+    JS::GCPtr<Fetch::Infrastructure::Response> response = nullptr;
+
+    // 10. Let responseOrigin be null.
+    Optional<HTML::Origin> response_origin;
+
+    // 11. Let fetchController be null.
+    JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller = nullptr;
+
+    // 13. Let finalSandboxFlags be an empty sandboxing flag set.
+    SandboxingFlagSet final_sandbox_flags;
+
+    // 16. Let locationURL be null.
+    ErrorOr<Optional<AK::URL>> location_url { OptionalNone {} };
+
+    // 17. Let currentURL be request's current URL.
+    AK::URL current_url = request->current_url();
+
+    // FIXME: 18. Let commitEarlyHints be null.
+
+    // 19. While true:
+    while (true) {
+        // FIXME: 1. If request's reserved client is not null and currentURL's origin is not the same as request's reserved client's creation URL's origin, then:
+        // FIXME: 2. If request's reserved client is null, then:
+        // FIXME: 3. If the result of should navigation request of type be blocked by Content Security Policy? given request and cspNavigationType is "Blocked", then set response to a network error and break. [CSP]
+
+        // 4. Set response to null.
+        response = nullptr;
+
+        // 5. If fetchController is null, then set fetchController to the result of fetching request,
+        //    with processEarlyHintsResponse set to processEarlyHintsResponseas defined below, processResponse
+        //    set to processResponse as defined below, and useParallelQueue set to true.
+        if (!fetch_controller) {
+            // FIXME: Let processEarlyHintsResponse be the following algorithm given a response earlyResponse:
+
+            // Let processResponse be the following algorithm given a response fetchedResponse:
+            auto process_response = [&response](JS::NonnullGCPtr<Fetch::Infrastructure::Response> fetch_response) {
+                // 1. Set response to fetchedResponse.
+                response = fetch_response;
+            };
+
+            fetch_controller = TRY(Fetch::Fetching::fetch(
+                realm,
+                request,
+                Fetch::Infrastructure::FetchAlgorithms::create(vm,
+                    {
+                        .process_request_body_chunk_length = {},
+                        .process_request_end_of_body = {},
+                        .process_early_hints_response = {},
+                        .process_response = move(process_response),
+                        .process_response_end_of_body = {},
+                        .process_response_consume_body = {},
+                    }),
+                Fetch::Fetching::UseParallelQueue::Yes));
+        }
+        // 6. Otherwise, process the next manual redirect for fetchController.
+        else {
+            fetch_controller->process_next_manual_redirect();
+        }
+
+        // 7. Wait until either response is non-null, or navigable's ongoing navigation changes to no longer equal navigationId.
+        Platform::EventLoopPlugin::the().spin_until([&]() {
+            if (response != nullptr)
+                return true;
+
+            if (navigation_id.has_value() && (!navigable->ongoing_navigation().has<String>() || navigable->ongoing_navigation().get<String>() != *navigation_id))
+                return true;
+
+            return false;
+        });
+        // If the latter condition occurs, then abort fetchController, and return. Otherwise, proceed onward.
+        if (navigation_id.has_value() && (!navigable->ongoing_navigation().has<String>() || navigable->ongoing_navigation().get<String>() != *navigation_id)) {
+            fetch_controller->abort(realm, {});
+            return OptionalNone {};
+        }
+
+        // 8. If request's body is null, then set entry's document state's resource to null.
+        if (!request->body().has<Empty>()) {
+            entry->document_state->set_resource(Empty {});
+        }
+
+        // 11. Set responseOrigin to the result of determining the origin given response's URL, finalSandboxFlags,
+        //     entry's document state's initiator origin, and null.
+        response_origin = determine_the_origin(*response->url(), final_sandbox_flags, entry->document_state->initiator_origin(), {});
+
+        // 14. Set locationURL to response's location URL given currentURL's fragment.
+        auto const& fragment = current_url.fragment();
+        auto fragment_string = fragment.is_null() ? Optional<String> {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(fragment));
+        auto location_url = response->location_url(fragment_string);
+
+        VERIFY(!location_url.is_error());
+
+        // 15. If locationURL is failure or null, then break.
+        if (location_url.is_error() || !location_url.value().has_value()) {
+            break;
+        }
+
+        // 16. Assert: locationURL is a URL.
+        VERIFY(location_url.value()->is_valid());
+
+        // FIXME: 17. Set entry's serialized state to StructuredSerializeForStorage(null).
+
+        // 18. Let oldDocState be entry's document state.
+        auto old_doc_state = entry->document_state;
+
+        // 19. Set entry's document state to a new document state, with
+        // history policy container: a clone of the oldDocState's history policy container if it is non-null; null otherwise
+        // request referrer: oldDocState's request referrer
+        // request referrer policy: oldDocState's request referrer policy
+        // origin: oldDocState's origin
+        // resource: oldDocState's resource
+        // ever populated: oldDocState's ever populated
+        // navigable target name: oldDocState's navigable target name
+        entry->document_state = navigable->heap().allocate_without_realm<DocumentState>();
+        entry->document_state->set_history_policy_container(old_doc_state->history_policy_container());
+        entry->document_state->set_request_referrer(old_doc_state->request_referrer());
+        entry->document_state->set_request_referrer_policy(old_doc_state->request_referrer_policy());
+        entry->document_state->set_origin(old_doc_state->origin());
+        entry->document_state->set_resource(old_doc_state->resource());
+        entry->document_state->set_ever_populated(old_doc_state->ever_populated());
+        entry->document_state->set_navigable_target_name(old_doc_state->navigable_target_name());
+
+        // 20. If locationURL's scheme is not an HTTP(S) scheme, then:
+        if (!Fetch::Infrastructure::is_http_or_https_scheme(location_url.value()->scheme())) {
+            // 1. Set entry's document state's resource to null.
+            entry->document_state->set_resource(Empty {});
+
+            // 2. Break.
+            break;
+        }
+
+        // 21. Set currentURL to locationURL.
+        current_url = location_url.value().value();
+
+        // 22. Set entry's URL to currentURL.
+        entry->url = current_url;
+    }
+
+    // FIXME: 20. If locationURL is a URL whose scheme is not a fetch scheme, then return a new non-fetch scheme navigation params, with
+    //            initiator origin request's current URL's origin
+    if (!location_url.is_error() && location_url.value().has_value() && !Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme())) {
+        TODO();
+    }
+
+    // 21. If any of the following are true:
+    //       - response is a network error;
+    //       - locationURL is failure; or
+    //       - locationURL is a URL whose scheme is a fetch scheme
+    //     then return null.
+    if (response->is_network_error() || location_url.is_error() || (location_url.value().has_value() && Fetch::Infrastructure::is_fetch_scheme(location_url.value().value().scheme()))) {
+        return OptionalNone {};
+    }
+
+    // 22. Assert: locationURL is null and response is not a network error.
+    VERIFY(!location_url.value().has_value());
+    VERIFY(!response->is_network_error());
+
+    // FIXME: 23. Let resultPolicyContainer be the result of determining navigation params policy container given response's
+    //        URL, entry's document state's history policy container, sourceSnapshotParams's source policy container,
+    //        null, and responsePolicyContainer.
+
+    // 25. Return a new navigation params, with
+    //     id: navigationId
+    //     request: request
+    //     response: response
+    //     origin: responseOrigin
+    //     FIXME: policy container: resultPolicyContainer
+    //     FIXME: final sandboxing flag set: finalSandboxFlags
+    //     FIXME: cross-origin opener policy: responseCOOP
+    //     FIXME: COOP enforcement result: coopEnforcementResult
+    //     FIXME: reserved environment: request's reserved client
+    //     navigable: navigable
+    //     FIXME: navigation timing type: navTimingType
+    //     fetch controller: fetchController
+    //     FIXME: commit early hints: commitEarlyHints
+    HTML::NavigationParams navigation_params {
+        .id = navigation_id,
+        .request = request,
+        .response = *response,
+        .origin = *response_origin,
+        .policy_container = PolicyContainer {},
+        .final_sandboxing_flag_set = SandboxingFlagSet {},
+        .cross_origin_opener_policy = CrossOriginOpenerPolicy {},
+        .coop_enforcement_result = CrossOriginOpenerPolicyEnforcementResult {},
+        .reserved_environment = {},
+        .browsing_context = navigable->active_browsing_context(),
+        .navigable = navigable,
+        .fetch_controller = fetch_controller,
+    };
+
+    return { navigation_params };
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#attempt-to-populate-the-history-entry's-document
 WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS::GCPtr<SessionHistoryEntry> entry, Optional<NavigationParams> navigation_params, Optional<String> navigation_id, SourceSnapshotParams const& source_snapshot_params, Function<void()> completion_steps)
 {
@@ -251,7 +512,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
         //    - entry's URL's scheme is a fetch scheme; and
         //    - documentResource is null, FIXME: or allowPOST is true and documentResource's request body is not failure
         else if (Fetch::Infrastructure::is_fetch_scheme(entry->url.scheme()) && document_resource.has<Empty>()) {
-            TODO();
+            navigation_params = create_navigation_params_by_fetching(entry, this, source_snapshot_params, navigation_id).release_value_but_fixme_should_propagate_errors();
         }
         // FIXME: 3. Otherwise, if entry's URL's scheme is not a fetch scheme, then set navigationParams to a new non-fetch scheme navigation params, with
         //    initiator origin: entry's document state's initiator origin
@@ -343,11 +604,7 @@ WebIDL::ExceptionOr<void> Navigable::populate_session_history_entry_document(JS:
 
         // 14. Run completionSteps.
         completion_steps();
-
-        (void)this;
     });
-
-    (void)source_snapshot_params;
 
     return {};
 }
