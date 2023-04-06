@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebGLContextEvent>> WebGLContextEvent::cons
 }
 
 WebGLContextEvent::WebGLContextEvent(JS::Realm& realm, FlyString const& type, WebGLContextEventInit const& event_init)
-    : DOM::Event(realm, type.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, type, event_init)
     , m_status_message(event_init.status_message)
 {
 }

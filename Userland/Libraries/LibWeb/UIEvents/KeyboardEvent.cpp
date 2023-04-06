@@ -117,7 +117,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<KeyboardEvent>> KeyboardEvent::construct_im
 }
 
 KeyboardEvent::KeyboardEvent(JS::Realm& realm, FlyString const& event_name, KeyboardEventInit const& event_init)
-    : UIEvent(realm, event_name.to_deprecated_fly_string(), event_init)
+    : UIEvent(realm, event_name, event_init)
     , m_key(event_init.key)
     , m_code(event_init.code)
     , m_location(event_init.location)

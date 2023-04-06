@@ -165,7 +165,7 @@ void run_iframe_load_event_steps(HTML::HTMLIFrameElement& element)
     // FIXME: 4. Set childDocument's iframe load in progress flag.
 
     // 5. Fire an event named load at element.
-    element.dispatch_event(DOM::Event::create(element.realm(), HTML::EventNames::load.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+    element.dispatch_event(DOM::Event::create(element.realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
 
     // FIXME: 6. Unset childDocument's iframe load in progress flag.
 }

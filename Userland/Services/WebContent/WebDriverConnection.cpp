@@ -38,6 +38,7 @@
 #include <LibWeb/Page/Page.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <LibWeb/Platform/Timer.h>
+#include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 #include <LibWeb/WebDriver/Screenshot.h>
@@ -307,7 +308,7 @@ static Optional<Web::DOM::Element&> container_for_element(Web::DOM::Element& ele
 }
 
 template<typename T>
-static bool fire_an_event(DeprecatedString name, Optional<Web::DOM::Element&> target)
+static bool fire_an_event(FlyString name, Optional<Web::DOM::Element&> target)
 {
     // FIXME: This is supposed to call the https://dom.spec.whatwg.org/#concept-event-fire DOM algorithm,
     //        but that doesn't seem to be implemented elsewhere. So, we'll ad-hack it for now. :^)
@@ -1322,13 +1323,13 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
         auto parent_node = element_container;
 
         // 2. Fire a mouseOver event at parent node.
-        fire_an_event<Web::UIEvents::MouseEvent>("mouseOver", parent_node);
+        fire_an_event<Web::UIEvents::MouseEvent>(Web::UIEvents::EventNames::mouseover, parent_node);
 
         // 3. Fire a mouseMove event at parent node.
-        fire_an_event<Web::UIEvents::MouseEvent>("mouseMove", parent_node);
+        fire_an_event<Web::UIEvents::MouseEvent>(Web::UIEvents::EventNames::mousemove, parent_node);
 
         // 4. Fire a mouseDown event at parent node.
-        fire_an_event<Web::UIEvents::MouseEvent>("mouseDown", parent_node);
+        fire_an_event<Web::UIEvents::MouseEvent>(Web::UIEvents::EventNames::mousedown, parent_node);
 
         // 5. Run the focusing steps on parent node.
         Web::HTML::run_focusing_steps(parent_node.has_value() ? &*parent_node : nullptr);
@@ -1336,7 +1337,7 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
         // 6. If element is not disabled:
         if (!option_element.is_actually_disabled()) {
             // 1. Fire an input event at parent node.
-            fire_an_event<Web::DOM::Event>("input", parent_node);
+            fire_an_event<Web::DOM::Event>(Web::HTML::EventNames::input, parent_node);
 
             // 2. Let previous selectedness be equal to element selectedness.
             auto previous_selectedness = option_element.selected();
@@ -1353,14 +1354,14 @@ Messages::WebDriverClient::ElementClickResponse WebDriverConnection::element_cli
 
             // 4. If previous selectedness is false, fire a change event at parent node.
             if (!previous_selectedness) {
-                fire_an_event<Web::DOM::Event>("change", parent_node);
+                fire_an_event<Web::DOM::Event>(Web::HTML::EventNames::change, parent_node);
             }
         }
         // 7. Fire a mouseUp event at parent node.
-        fire_an_event<Web::UIEvents::MouseEvent>("mouseUp", parent_node);
+        fire_an_event<Web::UIEvents::MouseEvent>(Web::UIEvents::EventNames::mouseup, parent_node);
 
         // 8. Fire a click event at parent node.
-        fire_an_event<Web::UIEvents::MouseEvent>("click", parent_node);
+        fire_an_event<Web::UIEvents::MouseEvent>(Web::UIEvents::EventNames::click, parent_node);
     }
     // -> Otherwise
     else {

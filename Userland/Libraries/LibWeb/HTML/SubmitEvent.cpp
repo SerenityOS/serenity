@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<SubmitEvent>> SubmitEvent::construct_impl(J
 }
 
 SubmitEvent::SubmitEvent(JS::Realm& realm, FlyString const& event_name, SubmitEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_submitter(event_init.submitter)
 {
 }

@@ -22,7 +22,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::construct_impl(J
 }
 
 CustomEvent::CustomEvent(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
-    : Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : Event(realm, event_name, event_init)
     , m_detail(event_init.detail)
 {
 }
@@ -51,7 +51,7 @@ void CustomEvent::init_custom_event(String const& type, bool bubbles, bool cance
         return;
 
     // 2. Initialize this with type, bubbles, and cancelable.
-    initialize_event(type.to_deprecated_string(), bubbles, cancelable);
+    initialize_event(type, bubbles, cancelable);
 
     // 3. Set this’s detail attribute to detail.
     m_detail = detail;

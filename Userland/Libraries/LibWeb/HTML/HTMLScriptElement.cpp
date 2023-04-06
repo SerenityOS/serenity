@@ -72,7 +72,7 @@ void HTMLScriptElement::execute_script()
     // 3. If el's result is null, then fire an event named error at el, and return.
     if (m_result.has<ResultState::Null>()) {
         dbgln("HTMLScriptElement: Refusing to run script because the element's result is null.");
-        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
         return;
     }
 
@@ -123,7 +123,7 @@ void HTMLScriptElement::execute_script()
 
     // 8. If el's from an external file is true, then fire an event named load at el.
     if (m_from_an_external_file)
-        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::load).release_value_but_fixme_should_propagate_errors());
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#prepare-a-script
@@ -294,7 +294,7 @@ void HTMLScriptElement::prepare_script()
         if (m_script_type == ScriptType::ImportMap) {
             // then queue an element task on the DOM manipulation task source given el to fire an event named error at el, and return.
             queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
             });
             return;
         }
@@ -306,7 +306,7 @@ void HTMLScriptElement::prepare_script()
         if (src.is_empty()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src attribute is empty.");
             queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
             });
             return;
         }
@@ -321,7 +321,7 @@ void HTMLScriptElement::prepare_script()
         if (!url.is_valid()) {
             dbgln("HTMLScriptElement: Refusing to run script because the src URL '{}' is invalid.", url);
             queue_an_element_task(HTML::Task::Source::DOMManipulation, [this] {
-                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::error).release_value_but_fixme_should_propagate_errors());
             });
             return;
         }

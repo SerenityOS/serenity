@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ProgressEvent>> ProgressEvent::construct_im
 }
 
 ProgressEvent::ProgressEvent(JS::Realm& realm, FlyString const& event_name, ProgressEventInit const& event_init)
-    : Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : Event(realm, event_name, event_init)
     , m_length_computable(event_init.length_computable)
     , m_loaded(event_init.loaded)
     , m_total(event_init.total)

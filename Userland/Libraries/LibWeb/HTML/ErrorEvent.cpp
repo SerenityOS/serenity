@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ErrorEvent>> ErrorEvent::construct_impl(JS:
 }
 
 ErrorEvent::ErrorEvent(JS::Realm& realm, FlyString const& event_name, ErrorEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string())
+    : DOM::Event(realm, event_name)
     , m_message(event_init.message)
     , m_filename(event_init.filename)
     , m_lineno(event_init.lineno)

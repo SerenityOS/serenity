@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PromiseRejectionEvent>> PromiseRejectionEve
 }
 
 PromiseRejectionEvent::PromiseRejectionEvent(JS::Realm& realm, FlyString const& event_name, PromiseRejectionEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_promise(const_cast<JS::Promise*>(event_init.promise.cell()))
     , m_reason(event_init.reason)
 {

@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PageTransitionEvent>> PageTransitionEvent::
 }
 
 PageTransitionEvent::PageTransitionEvent(JS::Realm& realm, FlyString const& event_name, PageTransitionEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_persisted(event_init.persisted)
 {
 }

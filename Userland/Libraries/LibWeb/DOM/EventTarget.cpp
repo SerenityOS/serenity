@@ -616,7 +616,7 @@ JS::ThrowCompletionOr<void> EventTarget::process_event_handler_for_event(Depreca
     // 3. Let special error event handling be true if event is an ErrorEvent object, event's type is error, and event's currentTarget implements the WindowOrWorkerGlobalScope mixin.
     //    Otherwise, let special error event handling be false.
     // FIXME: This doesn't check for WorkerGlobalScape as we don't currently have it.
-    bool special_error_event_handling = is<HTML::ErrorEvent>(event) && event.type() == HTML::EventNames::error.to_deprecated_fly_string() && is<HTML::Window>(event.current_target().ptr());
+    bool special_error_event_handling = is<HTML::ErrorEvent>(event) && event.type() == HTML::EventNames::error && is<HTML::Window>(event.current_target().ptr());
 
     // 4. Process the Event object event as follows:
     JS::Completion return_value_or_error;

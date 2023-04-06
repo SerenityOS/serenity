@@ -13,7 +13,7 @@
 
 namespace Web::UIEvents {
 
-MouseEvent::MouseEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
+MouseEvent::MouseEvent(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
     : UIEvent(realm, event_name, event_init)
     , m_offset_x(event_init.offset_x)
     , m_offset_y(event_init.offset_y)
@@ -56,12 +56,12 @@ static i16 determine_button(unsigned mouse_button)
     }
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, MouseEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create(JS::Realm& realm, FlyString const& event_name, MouseEventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<MouseEvent>(realm, realm, event_name, event_init));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, DeprecatedFlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platform_event(JS::Realm& realm, FlyString const& event_name, CSSPixelPoint offset, CSSPixelPoint client_offset, CSSPixelPoint page_offset, unsigned buttons, unsigned mouse_button)
 {
     MouseEventInit event_init {};
     event_init.offset_x = static_cast<double>(offset.x().value());
@@ -77,8 +77,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<MouseEvent>> MouseEvent::create_from_platfo
 
 void MouseEvent::set_event_characteristics()
 {
-    auto type = String::from_deprecated_string(this->type()).release_value();
-    if (type.is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {
+    if (type().is_one_of(EventNames::mousedown, EventNames::mousemove, EventNames::mouseout, EventNames::mouseover, EventNames::mouseup, HTML::EventNames::click)) {
         set_bubbles(true);
         set_cancelable(true);
         set_composed(true);

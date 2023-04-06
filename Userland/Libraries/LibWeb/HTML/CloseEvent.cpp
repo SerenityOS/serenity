@@ -20,7 +20,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<CloseEvent>> CloseEvent::construct_impl(JS:
 }
 
 CloseEvent::CloseEvent(JS::Realm& realm, FlyString const& event_name, CloseEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_was_clean(event_init.was_clean)
     , m_code(event_init.code)
     , m_reason(event_init.reason)

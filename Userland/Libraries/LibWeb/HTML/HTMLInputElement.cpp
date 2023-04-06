@@ -156,11 +156,11 @@ void HTMLInputElement::update_the_file_selection(JS::NonnullGCPtr<FileAPI::FileL
         this->set_files(files.ptr());
 
         // 2. Fire an event named input at the input element, with the bubbles and composed attributes initialized to true.
-        auto input_event = DOM::Event::create(this->realm(), EventNames::input.to_deprecated_fly_string(), { .bubbles = true, .composed = true }).release_value_but_fixme_should_propagate_errors();
+        auto input_event = DOM::Event::create(this->realm(), EventNames::input, { .bubbles = true, .composed = true }).release_value_but_fixme_should_propagate_errors();
         this->dispatch_event(input_event);
 
         // 3. Fire an event named change at the input element, with the bubbles attribute initialized to true.
-        auto change_event = DOM::Event::create(this->realm(), EventNames::change.to_deprecated_fly_string(), { .bubbles = true }).release_value_but_fixme_should_propagate_errors();
+        auto change_event = DOM::Event::create(this->realm(), EventNames::change, { .bubbles = true }).release_value_but_fixme_should_propagate_errors();
         this->dispatch_event(change_event);
     });
 }
@@ -247,13 +247,13 @@ ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
             return {};
 
         // 2. Fire an event named input at the element with the bubbles and composed attributes initialized to true.
-        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
+        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input).release_value_but_fixme_should_propagate_errors();
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(input_event);
 
         // 3. Fire an event named change at the element with the bubbles attribute initialized to true.
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
         change_event->set_bubbles(true);
         dispatch_event(*change_event);
     } else if (type_state() == TypeAttributeState::SubmitButton) {
@@ -271,7 +271,7 @@ ErrorOr<void> HTMLInputElement::run_input_activation_behavior()
     } else if (type_state() == TypeAttributeState::FileUpload) {
         show_the_picker_if_applicable(*this);
     } else {
-        dispatch_event(DOM::Event::create(realm(), EventNames::change.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors());
+        dispatch_event(DOM::Event::create(realm(), EventNames::change).release_value_but_fixme_should_propagate_errors());
     }
 
     return {};
@@ -286,13 +286,13 @@ void HTMLInputElement::did_edit_text_node(Badge<BrowsingContext>)
     // NOTE: This is a bit ad-hoc, but basically implements part of "4.10.5.5 Common event behaviors"
     //       https://html.spec.whatwg.org/multipage/input.html#common-input-element-events
     queue_an_element_task(HTML::Task::Source::UserInteraction, [this] {
-        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
+        auto input_event = DOM::Event::create(realm(), HTML::EventNames::input).release_value_but_fixme_should_propagate_errors();
         input_event->set_bubbles(true);
         input_event->set_composed(true);
         dispatch_event(*input_event);
 
         // FIXME: This should only fire when the input is "committed", whatever that means.
-        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change.to_deprecated_fly_string()).release_value_but_fixme_should_propagate_errors();
+        auto change_event = DOM::Event::create(realm(), HTML::EventNames::change).release_value_but_fixme_should_propagate_errors();
         change_event->set_bubbles(true);
         dispatch_event(change_event);
     });

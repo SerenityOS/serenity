@@ -21,7 +21,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<TrackEvent>> TrackEvent::construct_impl(JS:
 }
 
 TrackEvent::TrackEvent(JS::Realm& realm, FlyString const& event_name, TrackEventInit const& event_init)
-    : DOM::Event(realm, event_name.to_deprecated_fly_string(), event_init)
+    : DOM::Event(realm, event_name, event_init)
     , m_track(event_init.track)
 {
 }

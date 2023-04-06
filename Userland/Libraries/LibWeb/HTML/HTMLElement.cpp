@@ -281,7 +281,7 @@ bool HTMLElement::fire_a_synthetic_pointer_event(DeprecatedFlyString const& type
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(realm(), type).release_value_but_fixme_should_propagate_errors();
+    auto event = UIEvents::MouseEvent::create(realm(), FlyString::from_deprecated_fly_string(type).release_value()).release_value_but_fixme_should_propagate_errors();
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
