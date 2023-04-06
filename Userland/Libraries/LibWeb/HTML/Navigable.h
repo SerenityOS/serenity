@@ -42,6 +42,7 @@ public:
 
     JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; };
     JS::GCPtr<SessionHistoryEntry> current_session_history_entry() const { return m_current_session_history_entry; };
+    void set_current_session_history_entry(JS::GCPtr<SessionHistoryEntry> entry) { m_current_session_history_entry = entry; };
 
     Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& get_session_history_entries() const;
 
