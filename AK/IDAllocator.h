@@ -12,11 +12,17 @@
 
 namespace AK {
 
-// This class manages a pool of random ID's in the range 1..INT32_MAX
+// This class manages a pool of random ID's in the range N (default of 1) to INT32_MAX
 class IDAllocator {
 
 public:
     IDAllocator() = default;
+
+    explicit IDAllocator(int minimum_value)
+        : m_minimum_value(minimum_value)
+    {
+    }
+
     ~IDAllocator() = default;
 
     int allocate()
@@ -25,7 +31,7 @@ public:
         int id = 0;
         for (;;) {
             id = static_cast<int>(get_random_uniform(NumericLimits<int>::max()));
-            if (id == 0)
+            if (id < m_minimum_value)
                 continue;
             if (m_allocated_ids.set(id) == AK::HashSetResult::InsertedNewEntry)
                 break;
@@ -40,6 +46,7 @@ public:
 
 private:
     HashTable<int> m_allocated_ids;
+    int m_minimum_value { 1 };
 };
 }
 
