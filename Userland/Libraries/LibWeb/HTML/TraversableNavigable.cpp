@@ -149,4 +149,35 @@ Vector<int> TraversableNavigable::get_all_used_history_steps() const
     return sorted_steps;
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#clear-the-forward-session-history
+void TraversableNavigable::clear_the_forward_session_history()
+{
+    // FIXME: 1. Assert: this is running within navigable's session history traversal queue.
+
+    // 2. Let step be the navigable's current session history step.
+    auto step = current_session_history_step();
+
+    // 3. Let entryLists be the ordered set « navigable's session history entries ».
+    Vector<Vector<JS::NonnullGCPtr<SessionHistoryEntry>>&> entry_lists;
+    entry_lists.append(session_history_entries());
+
+    // 4. For each entryList of entryLists:
+    while (!entry_lists.is_empty()) {
+        auto& entry_list = entry_lists.take_first();
+
+        // 1. Remove every session history entry from entryList that has a step greater than step.
+        entry_list.remove_all_matching([step](auto& entry) {
+            return entry->step.template get<int>() > step;
+        });
+
+        // 2. For each entry of entryList:
+        for (auto& entry : entry_list) {
+            // 1. For each nestedHistory of entry's document state's nested histories, append nestedHistory's entries list to entryLists.
+            for (auto& nested_history : entry->document_state->nested_histories()) {
+                entry_lists.append(nested_history.entries);
+            }
+        }
+    }
+}
+
 }
