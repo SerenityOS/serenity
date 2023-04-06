@@ -38,8 +38,8 @@ struct alignas(u64) ID_AA64ISAR0_EL1 {
     {
         ID_AA64ISAR0_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64ISAR0_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64ISAR0_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -70,8 +70,8 @@ struct alignas(u64) ID_AA64ISAR1_EL1 {
     {
         ID_AA64ISAR1_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64ISAR1_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64ISAR1_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -101,8 +101,8 @@ struct alignas(u64) ID_AA64ISAR2_EL1 {
     {
         ID_AA64ISAR2_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64ISAR2_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64ISAR2_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -133,8 +133,8 @@ struct alignas(u64) ID_AA64PFR0_EL1 {
     {
         ID_AA64PFR0_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64PFR0_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64PFR0_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -165,8 +165,8 @@ struct alignas(u64) ID_AA64PFR1_EL1 {
     {
         ID_AA64PFR1_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64PFR1_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64PFR1_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -186,8 +186,8 @@ struct alignas(u64) ID_AA64PFR2_EL1 {
     {
         ID_AA64PFR2_EL1 feature_register;
 
-        asm("mrs %[value], s3_0_c0_c4_2" // encoded ID_AA64PFR2_EL1 register
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], s3_0_c0_c4_2" // encoded ID_AA64PFR2_EL1 register
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -211,8 +211,8 @@ struct alignas(u64) MPIDR_EL1 {
     {
         MPIDR_EL1 affinity_register;
 
-        asm("mrs %[value], MPIDR_EL1"
-            : [value] "=r"(affinity_register));
+        asm volatile("mrs %[value], MPIDR_EL1"
+                     : [value] "=r"(affinity_register));
 
         return affinity_register;
     }
@@ -242,8 +242,8 @@ struct alignas(u64) ID_AA64MMFR0_EL1 {
     {
         ID_AA64MMFR0_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64MMFR0_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64MMFR0_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -274,8 +274,8 @@ struct alignas(u64) ID_AA64MMFR1_EL1 {
     {
         ID_AA64MMFR1_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64MMFR1_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64MMFR1_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -306,8 +306,8 @@ struct alignas(u64) ID_AA64MMFR2_EL1 {
     {
         ID_AA64MMFR2_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64MMFR2_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64MMFR2_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -338,8 +338,8 @@ struct alignas(u64) ID_AA64MMFR3_EL1 {
     {
         ID_AA64MMFR3_EL1 feature_register;
 
-        asm("mrs %[value], s3_0_c0_c7_3" // encoded ID_AA64MMFR3_EL1 register
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], s3_0_c0_c7_3" // encoded ID_AA64MMFR3_EL1 register
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -358,8 +358,8 @@ struct alignas(u64) ID_AA64MMFR4_EL1 {
     {
         ID_AA64MMFR4_EL1 feature_register;
 
-        asm("mrs %[value], s3_0_c0_c7_4" // encoded ID_AA64MMFR4_EL1 register
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], s3_0_c0_c7_4" // encoded ID_AA64MMFR4_EL1 register
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -390,8 +390,8 @@ struct alignas(u64) ID_AA64SMFR0_EL1 {
     {
         ID_AA64SMFR0_EL1 feature_register;
 
-        asm("mrs %[value], s3_0_c0_c4_5" // encoded ID_AA64SMFR0_EL1 register
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], s3_0_c0_c4_5" // encoded ID_AA64SMFR0_EL1 register
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -421,8 +421,8 @@ struct alignas(u64) ID_AA64ZFR0_EL1 {
     {
         ID_AA64ZFR0_EL1 feature_register;
 
-        asm("mrs %[value], s3_0_c0_c4_4" // encoded ID_AA64ZFR0_EL1 register
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], s3_0_c0_c4_4" // encoded ID_AA64ZFR0_EL1 register
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -453,8 +453,8 @@ struct alignas(u64) ID_AA64DFR0_EL1 {
     {
         ID_AA64DFR0_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64DFR0_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64DFR0_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -480,8 +480,8 @@ struct alignas(u64) ID_AA64DFR1_EL1 {
     {
         ID_AA64DFR1_EL1 feature_register;
 
-        asm("mrs %[value], ID_AA64DFR1_EL1"
-            : [value] "=r"(feature_register));
+        asm volatile("mrs %[value], ID_AA64DFR1_EL1"
+                     : [value] "=r"(feature_register));
 
         return feature_register;
     }
@@ -498,8 +498,8 @@ struct alignas(u64) CNTFRQ_EL0 {
     {
         CNTFRQ_EL0 frequency;
 
-        asm("mrs %[value], CNTFRQ_EL0"
-            : [value] "=r"(frequency));
+        asm volatile("mrs %[value], CNTFRQ_EL0"
+                     : [value] "=r"(frequency));
 
         return frequency;
     }
@@ -597,15 +597,15 @@ struct alignas(u64) TCR_EL1 {
 
     static inline void write(TCR_EL1 tcr_el1)
     {
-        asm("msr tcr_el1, %[value]" ::[value] "r"(tcr_el1));
+        asm volatile("msr tcr_el1, %[value]" ::[value] "r"(tcr_el1));
     }
 
     static inline TCR_EL1 read()
     {
         TCR_EL1 tcr_el1;
 
-        asm("mrs %[value], tcr_el1_el1"
-            : [value] "=r"(tcr_el1));
+        asm volatile("mrs %[value], tcr_el1"
+                     : [value] "=r"(tcr_el1));
 
         return tcr_el1;
     }
@@ -672,15 +672,15 @@ struct alignas(u64) SCTLR_EL1 {
 
     static inline void write(SCTLR_EL1 sctlr_el1)
     {
-        asm("msr sctlr_el1, %[value]" ::[value] "r"(sctlr_el1));
+        asm volatile("msr sctlr_el1, %[value]" ::[value] "r"(sctlr_el1));
     }
 
     static inline SCTLR_EL1 read()
     {
         SCTLR_EL1 sctlr;
 
-        asm("mrs %[value], sctlr_el1"
-            : [value] "=r"(sctlr));
+        asm volatile("mrs %[value], sctlr_el1"
+                     : [value] "=r"(sctlr));
 
         return sctlr;
     }
@@ -711,8 +711,8 @@ struct alignas(u64) MIDR_EL1 {
     {
         MIDR_EL1 main_id_register;
 
-        asm("mrs %[value], MIDR_EL1"
-            : [value] "=r"(main_id_register));
+        asm volatile("mrs %[value], MIDR_EL1"
+                     : [value] "=r"(main_id_register));
 
         return main_id_register;
     }
@@ -728,8 +728,8 @@ struct alignas(u64) AIDR_EL1 {
     {
         AIDR_EL1 auxiliary_id_register;
 
-        asm("mrs %[value], AIDR_EL1"
-            : [value] "=r"(auxiliary_id_register));
+        asm volatile("mrs %[value], AIDR_EL1"
+                     : [value] "=r"(auxiliary_id_register));
 
         return auxiliary_id_register;
     }
@@ -786,15 +786,15 @@ struct alignas(u64) HCR_EL2 {
 
     static inline void write(HCR_EL2 hcr_el2)
     {
-        asm("msr hcr_el2, %[value]" ::[value] "r"(hcr_el2));
+        asm volatile("msr hcr_el2, %[value]" ::[value] "r"(hcr_el2));
     }
 
     static inline HCR_EL2 read()
     {
         HCR_EL2 spsr;
 
-        asm("mrs %[value], hcr_el2"
-            : [value] "=r"(spsr));
+        asm volatile("mrs %[value], hcr_el2"
+                     : [value] "=r"(spsr));
 
         return spsr;
     }
@@ -842,15 +842,15 @@ struct alignas(u64) SCR_EL3 {
 
     static inline void write(SCR_EL3 scr_el3)
     {
-        asm("msr scr_el3, %[value]" ::[value] "r"(scr_el3));
+        asm volatile("msr scr_el3, %[value]" ::[value] "r"(scr_el3));
     }
 
     static inline SCR_EL3 read()
     {
         SCR_EL3 scr;
 
-        asm("mrs %[value], scr_el3"
-            : [value] "=r"(scr));
+        asm volatile("mrs %[value], scr_el3"
+                     : [value] "=r"(scr));
 
         return scr;
     }
@@ -890,15 +890,15 @@ struct alignas(u64) SPSR_EL1 {
 
     static inline void write(SPSR_EL1 spsr_el1)
     {
-        asm("msr spsr_el1, %[value]" ::[value] "r"(spsr_el1));
+        asm volatile("msr spsr_el1, %[value]" ::[value] "r"(spsr_el1));
     }
 
     static inline SPSR_EL1 read()
     {
         SPSR_EL1 spsr;
 
-        asm("mrs %[value], spsr_el1"
-            : [value] "=r"(spsr));
+        asm volatile("mrs %[value], spsr_el1"
+                     : [value] "=r"(spsr));
 
         return spsr;
     }
@@ -939,15 +939,15 @@ struct alignas(u64) SPSR_EL2 {
 
     static inline void write(SPSR_EL2 spsr_el2)
     {
-        asm("msr spsr_el2, %[value]" ::[value] "r"(spsr_el2));
+        asm volatile("msr spsr_el2, %[value]" ::[value] "r"(spsr_el2));
     }
 
     static inline SPSR_EL2 read()
     {
         SPSR_EL2 spsr;
 
-        asm("mrs %[value], spsr_el2"
-            : [value] "=r"(spsr));
+        asm volatile("mrs %[value], spsr_el2"
+                     : [value] "=r"(spsr));
 
         return spsr;
     }
@@ -988,15 +988,15 @@ struct alignas(u64) SPSR_EL3 {
 
     static inline void write(SPSR_EL3 spsr_el3)
     {
-        asm("msr spsr_el3, %[value]" ::[value] "r"(spsr_el3));
+        asm volatile("msr spsr_el3, %[value]" ::[value] "r"(spsr_el3));
     }
 
     static inline SPSR_EL3 read()
     {
         SPSR_EL3 spsr;
 
-        asm("mrs %[value], spsr_el3"
-            : [value] "=r"(spsr));
+        asm volatile("mrs %[value], spsr_el3"
+                     : [value] "=r"(spsr));
 
         return spsr;
     }
@@ -1011,7 +1011,7 @@ struct alignas(u64) MAIR_EL1 {
 
     static inline void write(MAIR_EL1 mair_el1)
     {
-        asm("msr mair_el1, %[value]" ::[value] "r"(mair_el1));
+        asm volatile("msr mair_el1, %[value]" ::[value] "r"(mair_el1));
     }
 };
 static_assert(sizeof(MAIR_EL1) == 8);
@@ -1029,8 +1029,8 @@ struct ESR_EL1 {
     {
         ESR_EL1 esr_el1;
 
-        asm("mrs %[value], esr_el1"
-            : [value] "=r"(esr_el1));
+        asm volatile("mrs %[value], esr_el1"
+                     : [value] "=r"(esr_el1));
 
         return esr_el1;
     }
@@ -1045,8 +1045,8 @@ struct FAR_EL1 {
     {
         FAR_EL1 far_el1;
 
-        asm("mrs %[value], far_el1"
-            : [value] "=r"(far_el1));
+        asm volatile("mrs %[value], far_el1"
+                     : [value] "=r"(far_el1));
 
         return far_el1;
     }
@@ -1359,7 +1359,7 @@ struct alignas(u64) CPACR_EL1 {
 
     static inline void write(CPACR_EL1 cpacr_el1)
     {
-        asm("msr cpacr_el1, %[value]" ::[value] "r"(cpacr_el1));
+        asm volatile("msr cpacr_el1, %[value]" ::[value] "r"(cpacr_el1));
     }
 };
 static_assert(sizeof(CPACR_EL1) == 8);
