@@ -11,18 +11,18 @@
 
 namespace Web::DOM {
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::create(JS::Realm& realm, DeprecatedFlyString const& event_name, CustomEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::create(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
 {
     return MUST_OR_THROW_OOM(realm.heap().allocate<CustomEvent>(realm, realm, event_name, event_init));
 }
 
-WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::construct_impl(JS::Realm& realm, DeprecatedFlyString const& event_name, CustomEventInit const& event_init)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<CustomEvent>> CustomEvent::construct_impl(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
 {
     return create(realm, event_name, event_init);
 }
 
-CustomEvent::CustomEvent(JS::Realm& realm, DeprecatedFlyString const& event_name, CustomEventInit const& event_init)
-    : Event(realm, event_name, event_init)
+CustomEvent::CustomEvent(JS::Realm& realm, FlyString const& event_name, CustomEventInit const& event_init)
+    : Event(realm, event_name.to_deprecated_fly_string(), event_init)
     , m_detail(event_init.detail)
 {
 }
@@ -44,14 +44,14 @@ void CustomEvent::visit_edges(JS::Cell::Visitor& visitor)
 }
 
 // https://dom.spec.whatwg.org/#dom-customevent-initcustomevent
-void CustomEvent::init_custom_event(DeprecatedString const& type, bool bubbles, bool cancelable, JS::Value detail)
+void CustomEvent::init_custom_event(String const& type, bool bubbles, bool cancelable, JS::Value detail)
 {
     // 1. If this’s dispatch flag is set, then return.
     if (dispatched())
         return;
 
     // 2. Initialize this with type, bubbles, and cancelable.
-    initialize_event(type, bubbles, cancelable);
+    initialize_event(type.to_deprecated_string(), bubbles, cancelable);
 
     // 3. Set this’s detail attribute to detail.
     m_detail = detail;

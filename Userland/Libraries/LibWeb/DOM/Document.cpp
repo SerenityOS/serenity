@@ -1296,7 +1296,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Event>> Document::create_event(DeprecatedSt
     } else if (Infra::is_ascii_case_insensitive_match(interface, "compositionevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create CompositionEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "customevent"sv)) {
-        event = TRY(CustomEvent::create(realm, ""));
+        event = TRY(CustomEvent::create(realm, FlyString {}));
     } else if (Infra::is_ascii_case_insensitive_match(interface, "devicemotionevent"sv)) {
         event = TRY(Event::create(realm, "")); // FIXME: Create DeviceMotionEvent
     } else if (Infra::is_ascii_case_insensitive_match(interface, "deviceorientationevent"sv)) {
