@@ -136,7 +136,10 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     box_state.padding_left = padding_left.to_px(box);
     box_state.padding_right = padding_right.to_px(box);
 
-    if (should_treat_width_as_auto(box, available_space) && available_space.width.is_intrinsic_sizing_constraint())
+    // NOTE: If we are calculating the min-content or max-content width of this box,
+    //       and the width should be treated as auto, then we can simply return here,
+    //       as the preferred width and min/max constraints are irrelevant for intrinsic sizing.
+    if (box_state.width_constraint != SizeConstraint::None)
         return;
 
     auto try_compute_width = [&](auto const& a_width) {
