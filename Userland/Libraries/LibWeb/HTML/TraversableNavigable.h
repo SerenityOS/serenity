@@ -31,6 +31,7 @@ public:
     VisibilityState system_visibility_state() const { return m_system_visibility_state; };
 
     Vector<int> get_all_used_history_steps() const;
+    void clear_the_forward_session_history();
 
 private:
     TraversableNavigable();
