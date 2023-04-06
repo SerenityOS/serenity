@@ -87,6 +87,8 @@ public:
 
     WebIDL::ExceptionOr<void> navigate_to_a_javascript_url(AK::URL const&, HistoryHandlingBehavior, Origin const& initiator_origin, CSPNavigationType csp_navigation_type);
 
+    void reload();
+
 protected:
     Navigable();
 

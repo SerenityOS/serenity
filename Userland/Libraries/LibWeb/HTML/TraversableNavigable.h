@@ -37,6 +37,7 @@ public:
     HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
 
     void apply_the_history_step(int step, Optional<SourceSnapshotParams> = {});
+    void apply_pending_history_changes();
 
     int get_the_used_step(int step) const;
     Vector<JS::Handle<Navigable>> get_all_navigables_whose_current_session_history_entry_will_change_or_reload(int) const;
