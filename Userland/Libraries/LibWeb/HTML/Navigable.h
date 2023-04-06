@@ -29,6 +29,8 @@ public:
 
     ErrorOr<void> initialize_navigable(JS::NonnullGCPtr<DocumentState> document_state, JS::GCPtr<Navigable> parent);
 
+    Vector<JS::Handle<Navigable>> child_navigables() const;
+
     String const& id() const { return m_id; };
     JS::GCPtr<Navigable> parent() const { return m_parent; };
 
