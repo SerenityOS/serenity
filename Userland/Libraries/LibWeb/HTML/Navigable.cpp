@@ -28,6 +28,18 @@ static HashTable<Navigable*>& all_navigables()
     return set;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#child-navigable
+Vector<JS::Handle<Navigable>> Navigable::child_navigables() const
+{
+    Vector<JS::Handle<Navigable>> results;
+    for (auto& entry : all_navigables()) {
+        if (entry->parent() == this)
+            results.append(entry);
+    }
+
+    return results;
+}
+
 Navigable::Navigable()
 {
     all_navigables().set(this);
