@@ -45,7 +45,7 @@ public:
     JS::GCPtr<NavigableContainer> container() const;
     void set_container(JS::GCPtr<NavigableContainer>);
 
-    JS::GCPtr<TraversableNavigable> traversable_navigable();
+    JS::GCPtr<TraversableNavigable> traversable_navigable() const;
     JS::GCPtr<TraversableNavigable> top_level_traversable();
 
     static JS::GCPtr<Navigable> navigable_with_active_document(JS::NonnullGCPtr<DOM::Document>);

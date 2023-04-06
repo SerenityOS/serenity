@@ -133,10 +133,10 @@ void Navigable::set_container(JS::GCPtr<NavigableContainer> container)
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-traversable
-JS::GCPtr<TraversableNavigable> Navigable::traversable_navigable()
+JS::GCPtr<TraversableNavigable> Navigable::traversable_navigable() const
 {
     // 1. Let navigable be inputNavigable.
-    auto navigable = this;
+    auto navigable = const_cast<Navigable*>(this);
 
     // 2. While navigable is not a traversable navigable, set navigable to navigable's parent.
     while (navigable && !is<TraversableNavigable>(*navigable))
