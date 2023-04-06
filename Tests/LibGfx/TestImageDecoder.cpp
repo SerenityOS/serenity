@@ -302,6 +302,18 @@ TEST_CASE(test_webp_simple_lossless)
     EXPECT(!plugin_decoder->loop_count());
 
     EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(386, 395));
+
+    // Ironically, simple-vp8l.webp is a much more complex file than extended-lossless.webp tested below.
+    // extended-lossless.webp tests the decoding basics.
+    // This here tests the predictor, color, and subtract green transforms,
+    // as well as meta prefix images, one-element canonical code handling,
+    // and handling of canonical codes with more than 288 elements.
+    // This image uses all 13 predictor modes of the predictor transform.
+    auto frame = MUST(plugin_decoder->frame(0));
+    EXPECT_EQ(frame.image->size(), Gfx::IntSize(386, 395));
+
+    // This pixel tests all predictor modes except 5, 7, 8, 9, and 13.
+    EXPECT_EQ(frame.image->get_pixel(289, 332), Gfx::Color(0xf2, 0xee, 0xd3, 255));
 }
 
 TEST_CASE(test_webp_extended_lossy)
