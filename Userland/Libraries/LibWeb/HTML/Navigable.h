@@ -42,6 +42,8 @@ public:
     JS::GCPtr<WindowProxy> active_window_proxy();
     JS::GCPtr<Window> active_window();
 
+    JS::GCPtr<SessionHistoryEntry> get_the_target_history_entry(int target_step) const;
+
     String target_name() const;
 
     JS::GCPtr<NavigableContainer> container() const;

@@ -77,6 +77,26 @@ ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> do
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-the-target-history-entry
+JS::GCPtr<SessionHistoryEntry> Navigable::get_the_target_history_entry(int target_step) const
+{
+    // 1. Let entries be the result of getting session history entries for navigable.
+    auto& entries = get_session_history_entries();
+
+    // 2. Return the item in entries that has the greatest step less than or equal to step.
+    JS::GCPtr<SessionHistoryEntry> result = nullptr;
+    for (auto& entry : entries) {
+        auto entry_step = entry->step.get<int>();
+        if (entry_step <= target_step) {
+            if (!result || result->step.get<int>() < entry_step) {
+                result = entry;
+            }
+        }
+    }
+
+    return result;
+}
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
 JS::GCPtr<DOM::Document> Navigable::active_document()
 {
