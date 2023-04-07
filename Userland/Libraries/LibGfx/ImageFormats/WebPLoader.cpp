@@ -746,7 +746,9 @@ static ARGB32 add_argb32(ARGB32 a, ARGB32 b)
 class Transform {
 public:
     virtual ~Transform();
-    virtual ErrorOr<void> transform(Bitmap&) = 0;
+
+    // Could modify the input bitmap and return it, or could return a new bitmap.
+    virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) = 0;
 };
 
 Transform::~Transform() = default;
@@ -755,7 +757,7 @@ Transform::~Transform() = default;
 class PredictorTransform : public Transform {
 public:
     static ErrorOr<NonnullOwnPtr<PredictorTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, IntSize const& image_size);
-    virtual ErrorOr<void> transform(Bitmap&) override;
+    virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
 private:
     PredictorTransform(int size_bits, NonnullRefPtr<Bitmap> predictor_bitmap)
@@ -853,8 +855,10 @@ ErrorOr<NonnullOwnPtr<PredictorTransform>> PredictorTransform::read(WebPLoadingC
     return adopt_nonnull_own_or_enomem(new (nothrow) PredictorTransform(size_bits, move(predictor_bitmap)));
 }
 
-ErrorOr<void> PredictorTransform::transform(Bitmap& bitmap)
+ErrorOr<NonnullRefPtr<Bitmap>> PredictorTransform::transform(NonnullRefPtr<Bitmap> bitmap_ref)
 {
+    Bitmap& bitmap = *bitmap_ref;
+
     // "There are special handling rules for some border pixels.
     //  If there is a prediction transform, regardless of the mode [0..13] for these pixels,
     //  the predicted value for the left-topmost pixel of the image is 0xff000000,
@@ -904,7 +908,7 @@ ErrorOr<void> PredictorTransform::transform(Bitmap& bitmap)
 
         bitmap_previous_scanline = bitmap_scanline;
     }
-    return {};
+    return bitmap_ref;
 }
 
 ErrorOr<ARGB32> PredictorTransform::predict(u8 predictor, ARGB32 TL, ARGB32 T, ARGB32 TR, ARGB32 L)
@@ -976,7 +980,7 @@ ErrorOr<ARGB32> PredictorTransform::predict(u8 predictor, ARGB32 TL, ARGB32 T, A
 class ColorTransform : public Transform {
 public:
     static ErrorOr<NonnullOwnPtr<ColorTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, IntSize const& image_size);
-    virtual ErrorOr<void> transform(Bitmap&) override;
+    virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
 private:
     ColorTransform(int size_bits, NonnullRefPtr<Bitmap> color_bitmap)
@@ -1011,8 +1015,10 @@ ErrorOr<NonnullOwnPtr<ColorTransform>> ColorTransform::read(WebPLoadingContext& 
     return adopt_nonnull_own_or_enomem(new (nothrow) ColorTransform(size_bits, move(color_bitmap)));
 }
 
-ErrorOr<void> ColorTransform::transform(Bitmap& bitmap)
+ErrorOr<NonnullRefPtr<Bitmap>> ColorTransform::transform(NonnullRefPtr<Bitmap> bitmap_ref)
 {
+    Bitmap& bitmap = *bitmap_ref;
+
     for (int y = 0; y < bitmap.height(); ++y) {
         ARGB32* bitmap_scanline = bitmap.scanline(y);
 
@@ -1024,7 +1030,7 @@ ErrorOr<void> ColorTransform::transform(Bitmap& bitmap)
             bitmap_scanline[x] = inverse_transform(bitmap_scanline[x], color_scanline[color_x]);
         }
     }
-    return {};
+    return bitmap_ref;
 }
 
 ARGB32 ColorTransform::inverse_transform(ARGB32 pixel, ARGB32 transform)
@@ -1056,25 +1062,25 @@ ARGB32 ColorTransform::inverse_transform(ARGB32 pixel, ARGB32 transform)
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#43_subtract_green_transform
 class SubtractGreenTransform : public Transform {
 public:
-    virtual ErrorOr<void> transform(Bitmap&) override;
+    virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 };
 
-ErrorOr<void> SubtractGreenTransform::transform(Bitmap& bitmap)
+ErrorOr<NonnullRefPtr<Bitmap>> SubtractGreenTransform::transform(NonnullRefPtr<Bitmap> bitmap)
 {
-    for (ARGB32& pixel : bitmap) {
+    for (ARGB32& pixel : *bitmap) {
         Color color = Color::from_argb(pixel);
         u8 red = (color.red() + color.green()) & 0xff;
         u8 blue = (color.blue() + color.green()) & 0xff;
         pixel = Color(red, color.green(), blue, color.alpha()).value();
     }
-    return {};
+    return bitmap;
 }
 
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
 class ColorIndexingTransform : public Transform {
 public:
     static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&);
-    virtual ErrorOr<void> transform(Bitmap&) override;
+    virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
 private:
     explicit ColorIndexingTransform(NonnullRefPtr<Bitmap> palette_bitmap)
@@ -1109,18 +1115,18 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebP
     return adopt_nonnull_own_or_enomem(new (nothrow) ColorIndexingTransform(move(palette_bitmap)));
 }
 
-ErrorOr<void> ColorIndexingTransform::transform(Bitmap& bitmap)
+ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<Bitmap> bitmap)
 {
     // FIXME: If this is the last transform, consider returning an Indexed8 bitmap here?
 
-    for (ARGB32& pixel : bitmap) {
+    for (ARGB32& pixel : *bitmap) {
         // "The inverse transform for the image is simply replacing the pixel values (which are indices to the color table)
         //  with the actual color table values. The indexing is done based on the green component of the ARGB color. [...]
         //  If the index is equal or larger than color_table_size, the argb color value should be set to 0x00000000 (transparent black)."
         u8 index = Color::from_argb(pixel).green();
         pixel = index < m_palette_bitmap->width() ? m_palette_bitmap->scanline(0)[index] : 0;
     }
-    return {};
+    return bitmap;
 }
 
 }
@@ -1205,7 +1211,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
     // Transforms have to be applied in the reverse order they appear in in the file.
     // (As far as I can tell, this isn't mentioned in the spec.)
     for (auto const& transform : transforms.in_reverse())
-        TRY(transform->transform(*context.bitmap));
+        context.bitmap = TRY(transform->transform(context.bitmap.release_nonnull()));
 
     return {};
 }
