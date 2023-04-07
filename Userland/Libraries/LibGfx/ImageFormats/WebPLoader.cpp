@@ -1086,12 +1086,29 @@ public:
     static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&);
     virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
+    // For a color indexing transform, the green channel of the source image is used as the index into a palette to produce an output color.
+    // If the palette is small enough, several output pixels are bundled into a single input pixel.
+    // If the palette has just 2 colors, every index needs just a single bit, and the 8 bits of the green channel of one input pixel can encode 8 output pixels.
+    // If the palette has 3 or 4 colors, every index needs 2 bits and every pixel can encode 4 output pixels.
+    // If the palette has 5 to 16 colors, every index needs 4 bits and every pixel can encode 2 output pixels.
+    // This returns how many output pixels one input pixel can encode after the color indexing transform.
+    //
+    // The spec isn't very explicit about this, but this affects all images after the color indexing transform:
+    // If a webp file contains a 32x32 image and it contains a color indexing transform with a 4-color palette, then the in-memory size of all images
+    // after the color indexing transform assume a bitmap size of (32/4)x32 = 8x32.
+    // That is, the sizes of transforms after the color indexing transform are computed relative to the size 8x32,
+    // the main image's meta prefix image's size (if present) is comptued relative to the size 8x32,
+    // the main image is 8x32, and only applying the color indexing transform resizes the image back to 32x32.
+    int pixels_per_pixel() const { return m_pixels_per_pixel; }
+
 private:
-    explicit ColorIndexingTransform(NonnullRefPtr<Bitmap> palette_bitmap)
-        : m_palette_bitmap(palette_bitmap)
+    ColorIndexingTransform(unsigned pixels_per_pixel, NonnullRefPtr<Bitmap> palette_bitmap)
+        : m_pixels_per_pixel(pixels_per_pixel)
+        , m_palette_bitmap(palette_bitmap)
     {
     }
 
+    int m_pixels_per_pixel;
     NonnullRefPtr<Bitmap> m_palette_bitmap;
 };
 
@@ -1102,13 +1119,17 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebP
     int color_table_size = TRY(bit_stream.read_bits(8)) + 1;
     dbgln_if(WEBP_DEBUG, "colorindexing color_table_size {}", color_table_size);
 
-    // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel...."
-    // FIXME: Implement support for this pixel packing.
-    if (color_table_size <= 16)
-        return Error::from_string_literal("WebPImageDecoderPlugin: COLOR_INDEXING_TRANSFORM pixel packing not yet implemented");
-
     IntSize palette_image_size { color_table_size, 1 };
     auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
+
+    // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel...."
+    int pixels_per_pixel = 1;
+    if (color_table_size <= 2)
+        pixels_per_pixel = 8;
+    else if (color_table_size <= 4)
+        pixels_per_pixel = 4;
+    else if (color_table_size <= 16)
+        pixels_per_pixel = 2;
 
     // "The color table is always subtraction-coded to reduce image entropy. [...]  In decoding, every final color in the color table
     //  can be obtained by adding the previous color component values by each ARGB component separately,
@@ -1116,21 +1137,46 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebP
     for (ARGB32* pixel = palette_bitmap->begin() + 1; pixel != palette_bitmap->end(); ++pixel)
         *pixel = add_argb32(*pixel, pixel[-1]);
 
-    return adopt_nonnull_own_or_enomem(new (nothrow) ColorIndexingTransform(move(palette_bitmap)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) ColorIndexingTransform(pixels_per_pixel, move(palette_bitmap)));
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<Bitmap> bitmap)
 {
     // FIXME: If this is the last transform, consider returning an Indexed8 bitmap here?
 
-    for (ARGB32& pixel : *bitmap) {
-        // "The inverse transform for the image is simply replacing the pixel values (which are indices to the color table)
-        //  with the actual color table values. The indexing is done based on the green component of the ARGB color. [...]
-        //  If the index is equal or larger than color_table_size, the argb color value should be set to 0x00000000 (transparent black)."
-        u8 index = Color::from_argb(pixel).green();
-        pixel = index < m_palette_bitmap->width() ? m_palette_bitmap->scanline(0)[index] : 0;
+    if (pixels_per_pixel() == 1) {
+        for (ARGB32& pixel : *bitmap) {
+            // "The inverse transform for the image is simply replacing the pixel values (which are indices to the color table)
+            //  with the actual color table values. The indexing is done based on the green component of the ARGB color. [...]
+            //  If the index is equal or larger than color_table_size, the argb color value should be set to 0x00000000 (transparent black)."
+            u8 index = Color::from_argb(pixel).green();
+            pixel = index < m_palette_bitmap->width() ? m_palette_bitmap->scanline(0)[index] : 0;
+        }
+        return bitmap;
     }
-    return bitmap;
+
+    // Pixel bundling case.
+    IntSize unbundled_size = { bitmap->size().width() * pixels_per_pixel(), bitmap->size().height() };
+    auto new_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, unbundled_size));
+
+    unsigned bits_per_pixel = 8 / pixels_per_pixel();
+    unsigned pixel_mask = (1 << bits_per_pixel) - 1;
+    for (int y = 0; y < bitmap->height(); ++y) {
+        ARGB32* bitmap_scanline = bitmap->scanline(y);
+        ARGB32* new_bitmap_scanline = new_bitmap->scanline(y);
+
+        for (int x = 0, new_x = 0; x < bitmap->width(); ++x, new_x += pixels_per_pixel()) {
+            u8 indexes = Color::from_argb(bitmap_scanline[x]).green();
+
+            for (int i = 0; i < pixels_per_pixel(); ++i) {
+                u8 index = indexes & pixel_mask;
+                new_bitmap_scanline[new_x + i] = index < m_palette_bitmap->width() ? m_palette_bitmap->scanline(0)[index] : 0;
+                indexes >>= bits_per_pixel;
+            }
+        }
+    }
+
+    return new_bitmap;
 }
 
 }
@@ -1161,6 +1207,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#4_transformations
     // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#72_structure_of_transforms
+
+    auto stored_size = context.size.value();
 
     // optional-transform   =  (%b1 transform optional-transform) / %b0
     // "Each transform is allowed to be used only once."
@@ -1195,22 +1243,25 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
 
         switch (transform_type) {
         case PREDICTOR_TRANSFORM:
-            TRY(transforms.try_append(TRY(PredictorTransform::read(context, bit_stream, context.size.value()))));
+            TRY(transforms.try_append(TRY(PredictorTransform::read(context, bit_stream, stored_size))));
             break;
         case COLOR_TRANSFORM:
-            TRY(transforms.try_append(TRY(ColorTransform::read(context, bit_stream, context.size.value()))));
+            TRY(transforms.try_append(TRY(ColorTransform::read(context, bit_stream, stored_size))));
             break;
         case SUBTRACT_GREEN_TRANSFORM:
             TRY(transforms.try_append(TRY(try_make<SubtractGreenTransform>())));
             break;
-        case COLOR_INDEXING_TRANSFORM:
-            TRY(transforms.try_append(TRY(ColorIndexingTransform::read(context, bit_stream))));
+        case COLOR_INDEXING_TRANSFORM: {
+            auto color_indexing_transform = TRY(ColorIndexingTransform::read(context, bit_stream));
+            stored_size.set_width(stored_size.width() / color_indexing_transform->pixels_per_pixel());
+            TRY(transforms.try_append(move(color_indexing_transform)));
             break;
+        }
         }
     }
 
     auto format = vp8l_header.is_alpha_used ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888;
-    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, context.size.value(), bit_stream));
+    context.bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::SpatiallyCoded, format, stored_size, bit_stream));
 
     // Transforms have to be applied in the reverse order they appear in in the file.
     // (As far as I can tell, this isn't mentioned in the spec.)
