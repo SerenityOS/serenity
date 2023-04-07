@@ -277,9 +277,13 @@ public:
 
     [[nodiscard]] Block const& next_block() const { return m_next_block; }
 
-    [[nodiscard]] bool operator[](Position pos) const
+    [[nodiscard]] BrickGame::BoardSpace operator[](Position pos) const
     {
-        return m_well[pos] || m_block[pos];
+        if (m_well[pos] || m_block[pos])
+            return BrickGame::BoardSpace::FullyOn;
+        if (m_shadow_hint_block[pos])
+            return BrickGame::BoardSpace::ShadowHint;
+        return BrickGame::BoardSpace::Off;
     }
 
     [[nodiscard]] RenderRequest rotate_left() { return set_current_block(Block(m_block).rotate_left()); }
@@ -297,9 +301,11 @@ public:
             m_block.place_into(m_well);
             check_and_remove_full_rows();
             add_new_block();
+            update_shadow_hint_block();
             return RenderRequest::RequestUpdate;
         }
         m_block = block;
+        update_shadow_hint_block();
         return RenderRequest::RequestUpdate;
     }
 
@@ -314,7 +320,17 @@ public:
             }
             m_block = block;
         }
+        update_shadow_hint_block();
         return RenderRequest::RequestUpdate;
+    }
+
+    void update_shadow_hint_block()
+    {
+        for (auto block = m_block;; block.move_down()) {
+            if (block.has_collision(m_well))
+                return;
+            m_shadow_hint_block = block;
+        }
     }
 
     void toggle_pause()
@@ -355,6 +371,7 @@ public:
         m_well.reset();
         m_block.random_shape();
         m_next_block.random_shape();
+        update_shadow_hint_block();
         m_last_update = Time::now_realtime();
         m_state = GameState::Active;
     }
@@ -363,6 +380,7 @@ private:
     Well m_well {};
     Block m_block {};
     Block m_next_block {};
+    Block m_shadow_hint_block {};
     unsigned m_level {};
     unsigned m_score {};
     GameState m_state { GameState::GameOver };
@@ -394,6 +412,7 @@ private:
     {
         if (!block.has_collision(m_well)) {
             m_block = block;
+            update_shadow_hint_block();
             return RenderRequest::RequestUpdate;
         }
         return RenderRequest::SkipRender;
@@ -516,23 +535,41 @@ void BrickGame::keydown_event(GUI::KeyEvent& event)
         update();
 }
 
-void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, bool is_on)
+void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, BrickGame::BoardSpace space)
 {
+    Color inside_color;
+    Color outside_color;
+
+    switch (space) {
+    case BrickGame::BoardSpace::FullyOn:
+        inside_color = m_front_color;
+        outside_color = m_front_color;
+        break;
+    case BrickGame::BoardSpace::ShadowHint:
+        inside_color = m_shadow_color;
+        outside_color = m_hint_block_color;
+        break;
+    case BrickGame::BoardSpace::Off:
+        inside_color = m_shadow_color;
+        outside_color = m_shadow_color;
+        break;
+    }
+
     painter.draw_rect(rect, m_back_color);
     rect.inflate(-1, -1, -1, -1);
-    painter.draw_rect(rect, is_on ? m_front_color : m_shadow_color);
+    painter.draw_rect(rect, outside_color);
     painter.set_pixel(rect.top_left(), m_back_color);
     painter.set_pixel(rect.bottom_left(), m_back_color);
     painter.set_pixel(rect.top_right(), m_back_color);
     painter.set_pixel(rect.bottom_right(), m_back_color);
     rect.inflate(-2, -2);
-    painter.draw_rect(rect, is_on ? m_front_color : m_shadow_color);
+    painter.draw_rect(rect, outside_color);
     rect.inflate(-2, -2);
     painter.draw_rect(rect, m_back_color);
     rect.inflate(-2, -2);
     painter.draw_rect(rect, m_back_color);
     rect.inflate(-2, -2);
-    painter.fill_rect(rect, is_on ? m_front_color : m_shadow_color);
+    painter.fill_rect(rect, inside_color);
 }
 
 void BrickGame::paint_sidebar_text(GUI::Painter& painter, int row, StringView text)
@@ -613,7 +650,9 @@ void BrickGame::paint_game(GUI::Painter& painter, Gfx::IntRect const& rect)
         auto const dot_rect = Gfx::IntRect { hint_rect.x(), hint_rect.y(), cell_size.width() - 1, cell_size.height() - 1 };
         for (size_t y = 0; y < Block::shape_size; ++y)
             for (size_t x = 0; x < Block::shape_size; ++x)
-                paint_cell(painter, dot_rect.translated(int(x * cell_size.width()), int(y * cell_size.height())), m_brick_game->next_block().dot_at({ x, y }));
+                paint_cell(painter,
+                    dot_rect.translated(int(x * cell_size.width()), int(y * cell_size.height())),
+                    m_brick_game->next_block().dot_at({ x, y }) ? BrickGame::BoardSpace::FullyOn : BrickGame::BoardSpace::Off);
 
         if (m_brick_game->state() == Bricks::GameState::Paused)
             paint_paused_text(painter);
