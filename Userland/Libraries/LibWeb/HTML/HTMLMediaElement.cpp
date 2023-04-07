@@ -128,9 +128,17 @@ void HTMLMediaElement::set_duration(double duration)
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-pause
-void HTMLMediaElement::pause() const
+WebIDL::ExceptionOr<void> HTMLMediaElement::pause()
 {
-    dbgln("(STUBBED) HTMLMediaElement::pause()");
+    // 1. If the media element's networkState attribute has the value NETWORK_EMPTY, invoke the media element's resource
+    //    selection algorithm.
+    if (m_network_state == NetworkState::Empty)
+        TRY(select_resource());
+
+    // 2. Run the internal pause steps for the media element.
+    TRY(pause_element());
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#media-element-load-algorithm
@@ -782,6 +790,37 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
         //            Queue a media element task given the element to fire an event named pause at the element.
         return;
     }
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#internal-pause-steps
+WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
+{
+    // FIXME: 1. Set the media element's can autoplay flag to false.
+
+    // 2. If the media element's paused attribute is false, run the following steps:
+    if (!paused()) {
+        // 1. Change the value of paused to true.
+        set_paused(true);
+
+        // FIXME: 2. Take pending play promises and let promises be the result.
+
+        // 3. Queue a media element task given the media element and the following steps:
+        queue_a_media_element_task([this]() {
+            auto& realm = this->realm();
+
+            // 1. Fire an event named timeupdate at the element.
+            dispatch_event(DOM::Event::create(realm, HTML::EventNames::timeupdate).release_value_but_fixme_should_propagate_errors());
+
+            // 2. Fire an event named pause at the element.
+            dispatch_event(DOM::Event::create(realm, HTML::EventNames::pause).release_value_but_fixme_should_propagate_errors());
+
+            // FIXME: 3. Reject pending play promises with promises and an "AbortError" DOMException.
+        });
+
+        // FIXME: 4. Set the official playback position to the current playback position.
+    }
+
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#notify-about-playing
