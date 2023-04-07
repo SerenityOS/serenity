@@ -380,6 +380,46 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform)
     EXPECT_EQ(frame.image->get_pixel(100, 100), Gfx::Color(0x73, 0x37, 0x23, 0xff));
 }
 
+TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
+{
+    struct TestCase {
+        StringView file_name;
+        Gfx::Color line_color;
+        Gfx::Color background_color;
+    };
+
+    // The number after the dash is the number of colors in each file's color index bitmap.
+    // catdog-alert-2 tests the 1-bit-per-pixel case,
+    // catdog-alert-3 tests the 2-bit-per-pixel case,
+    // catdog-alert-8 and catdog-alert-13 both test the 4-bits-per-pixel case.
+    TestCase test_cases[] = {
+        { "catdog-alert-2.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0xf3, 0xe6, 0xd8, 0xff) },
+        { "catdog-alert-3.webp"sv, Gfx::Color(0x35, 0x12, 0x0a, 0xff), Gfx::Color(0, 0, 0, 0) },
+        { "catdog-alert-8.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
+        { "catdog-alert-13.webp"sv, Gfx::Color(0, 0, 0, 255), Gfx::Color(0, 0, 0, 0) },
+    };
+
+    for (auto test_case : test_cases) {
+        auto file = MUST(Core::MappedFile::map(MUST(String::formatted("{}{}", TEST_INPUT(""), test_case.file_name))));
+        EXPECT(Gfx::WebPImageDecoderPlugin::sniff(file->bytes()));
+        auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+        EXPECT(plugin_decoder->initialize());
+
+        EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+        EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(32, 32));
+
+        auto frame = MUST(plugin_decoder->frame(0));
+        EXPECT_EQ(frame.image->size(), Gfx::IntSize(32, 32));
+
+        EXPECT_EQ(frame.image->get_pixel(4, 0), test_case.background_color);
+        EXPECT_EQ(frame.image->get_pixel(5, 0), test_case.line_color);
+
+        EXPECT_EQ(frame.image->get_pixel(9, 5), test_case.background_color);
+        EXPECT_EQ(frame.image->get_pixel(10, 5), test_case.line_color);
+        EXPECT_EQ(frame.image->get_pixel(11, 5), test_case.background_color);
+    }
+}
+
 TEST_CASE(test_webp_extended_lossless_animated)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless-animated.webp"sv)));
