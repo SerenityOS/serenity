@@ -52,7 +52,7 @@ private:
     virtual bool is_regular_file() const override;
 
     explicit InodeFile(NonnullRefPtr<Inode>);
-    NonnullRefPtr<Inode> m_inode;
+    NonnullRefPtr<Inode> const m_inode;
 };
 
 }

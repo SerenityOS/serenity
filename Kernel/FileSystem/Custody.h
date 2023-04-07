@@ -37,7 +37,7 @@ private:
 
     RefPtr<Custody> m_parent;
     NonnullOwnPtr<KString> m_name;
-    NonnullRefPtr<Inode> m_inode;
+    NonnullRefPtr<Inode> const m_inode;
     int m_mount_flags { 0 };
 
     mutable IntrusiveListNode<Custody> m_all_custodies_list_node;

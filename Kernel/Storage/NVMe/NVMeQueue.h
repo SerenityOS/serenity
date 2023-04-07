@@ -75,6 +75,6 @@ private:
     Vector<NonnullRefPtr<Memory::PhysicalPage>> m_sq_dma_page;
     Span<NVMeCompletion> m_cqe_array;
     Memory::TypedMapping<DoorbellRegister volatile> m_db_regs;
-    NonnullRefPtr<Memory::PhysicalPage const> m_rw_dma_page;
+    NonnullRefPtr<Memory::PhysicalPage const> const m_rw_dma_page;
 };
 }
