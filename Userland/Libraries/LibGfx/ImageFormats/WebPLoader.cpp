@@ -847,6 +847,8 @@ ErrorOr<NonnullOwnPtr<PredictorTransform>> PredictorTransform::read(WebPLoadingC
     // predictor-image      =  3BIT ; sub-pixel code
     //                         entropy-coded-image
     int size_bits = TRY(bit_stream.read_bits(3)) + 2;
+    dbgln_if(WEBP_DEBUG, "predictor size_bits {}", size_bits);
+
     int block_size = 1 << size_bits;
     IntSize predictor_image_size { ceil_div(image_size.width(), block_size), ceil_div(image_size.height(), block_size) };
 
@@ -1003,6 +1005,8 @@ ErrorOr<NonnullOwnPtr<ColorTransform>> ColorTransform::read(WebPLoadingContext& 
     // color-image          =  3BIT ; sub-pixel code
     //                         entropy-coded-image
     int size_bits = TRY(bit_stream.read_bits(3)) + 2;
+    dbgln_if(WEBP_DEBUG, "color size_bits {}", size_bits);
+
     int block_size = 1 << size_bits;
     IntSize color_image_size { ceil_div(image_size.width(), block_size), ceil_div(image_size.height(), block_size) };
 
@@ -1090,13 +1094,14 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebP
     // color-indexing-image =  8BIT ; color count
     //                         entropy-coded-image
     int color_table_size = TRY(bit_stream.read_bits(8)) + 1;
-    IntSize palette_image_size { color_table_size, 1 };
+    dbgln_if(WEBP_DEBUG, "colorindexing color_table_size {}", color_table_size);
 
     // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel...."
     // FIXME: Implement support for this pixel packing.
     if (color_table_size <= 16)
         return Error::from_string_literal("WebPImageDecoderPlugin: COLOR_INDEXING_TRANSFORM pixel packing not yet implemented");
 
+    IntSize palette_image_size { color_table_size, 1 };
     auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
 
     // "The color table is always subtraction-coded to reduce image entropy. [...]  In decoding, every final color in the color table
