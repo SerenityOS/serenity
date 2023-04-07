@@ -1062,6 +1062,58 @@ ErrorOr<void> SubtractGreenTransform::transform(Bitmap& bitmap)
     return {};
 }
 
+// https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
+class ColorIndexingTransform : public Transform {
+public:
+    static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&);
+    virtual ErrorOr<void> transform(Bitmap&) override;
+
+private:
+    explicit ColorIndexingTransform(NonnullRefPtr<Bitmap> palette_bitmap)
+        : m_palette_bitmap(palette_bitmap)
+    {
+    }
+
+    NonnullRefPtr<Bitmap> m_palette_bitmap;
+};
+
+ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream)
+{
+    // color-indexing-image =  8BIT ; color count
+    //                         entropy-coded-image
+    int color_table_size = TRY(bit_stream.read_bits(8)) + 1;
+    IntSize palette_image_size { color_table_size, 1 };
+
+    // "When the color table is small (equal to or less than 16 colors), several pixels are bundled into a single pixel...."
+    // FIXME: Implement support for this pixel packing.
+    if (color_table_size <= 16)
+        return Error::from_string_literal("WebPImageDecoderPlugin: COLOR_INDEXING_TRANSFORM pixel packing not yet implemented");
+
+    auto palette_bitmap = TRY(decode_webp_chunk_VP8L_image(context, ImageKind::EntropyCoded, BitmapFormat::BGRA8888, palette_image_size, bit_stream));
+
+    // "The color table is always subtraction-coded to reduce image entropy. [...]  In decoding, every final color in the color table
+    //  can be obtained by adding the previous color component values by each ARGB component separately,
+    //  and storing the least significant 8 bits of the result."
+    for (ARGB32* pixel = palette_bitmap->begin() + 1; pixel != palette_bitmap->end(); ++pixel)
+        *pixel = add_argb32(*pixel, pixel[-1]);
+
+    return adopt_nonnull_own_or_enomem(new (nothrow) ColorIndexingTransform(move(palette_bitmap)));
+}
+
+ErrorOr<void> ColorIndexingTransform::transform(Bitmap& bitmap)
+{
+    // FIXME: If this is the last transform, consider returning an Indexed8 bitmap here?
+
+    for (ARGB32& pixel : bitmap) {
+        // "The inverse transform for the image is simply replacing the pixel values (which are indices to the color table)
+        //  with the actual color table values. The indexing is done based on the green component of the ARGB color. [...]
+        //  If the index is equal or larger than color_table_size, the argb color value should be set to 0x00000000 (transparent black)."
+        u8 index = Color::from_argb(pixel).green();
+        pixel = index < m_palette_bitmap->width() ? m_palette_bitmap->scanline(0)[index] : 0;
+    }
+    return {};
+}
+
 }
 
 // https://developers.google.com/speed/webp/docs/riff_container#simple_file_format_lossless
@@ -1133,7 +1185,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
             TRY(transforms.try_append(TRY(try_make<SubtractGreenTransform>())));
             break;
         case COLOR_INDEXING_TRANSFORM:
-            return context.error("WebPImageDecoderPlugin: VP8L COLOR_INDEXING_TRANSFORM handling not yet implemented");
+            TRY(transforms.try_append(TRY(ColorIndexingTransform::read(context, bit_stream))));
+            break;
         }
     }
 
