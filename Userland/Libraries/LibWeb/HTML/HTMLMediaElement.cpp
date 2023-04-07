@@ -179,9 +179,14 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
         if (m_ready_state != ReadyState::HaveNothing)
             set_ready_state(ReadyState::HaveNothing);
 
-        // FIXME: 6. If the paused attribute is false, then:
-        //            1. Set the paused attribute to true.
-        //            2. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
+        // 6. If the paused attribute is false, then:
+        if (!paused()) {
+            // 1. Set the paused attribute to true.
+            set_paused(true);
+
+            // FIXME 2. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
+        }
+
         // FIXME: 7. If seeking is true, set it to false.
         // FIXME: 8. Set the current playback position to 0.
         //            Set the official playback position to 0.
@@ -737,7 +742,10 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
             dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay).release_value_but_fixme_should_propagate_errors());
         });
 
-        // FIXME: If the element's paused attribute is false, the user agent must notify about playing for the element.
+        // If the element's paused attribute is false, the user agent must notify about playing for the element.
+        if (!paused())
+            notify_about_playing();
+
         return;
     }
 
@@ -746,10 +754,12 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
         // If the previous ready state was HAVE_CURRENT_DATA or less, the user agent must queue a media element task given the media element to fire an event
         // named canplay at the element, and, if the element's paused attribute is false, notify about playing for the element.
         if (m_ready_state <= ReadyState::HaveCurrentData) {
-            // FIXME: Handle the paused attribute.
             queue_a_media_element_task([this] {
                 dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplay).release_value_but_fixme_should_propagate_errors());
             });
+
+            if (!paused())
+                notify_about_playing();
         }
 
         // The user agent must queue a media element task given the media element to fire an event named canplaythrough at the element.
@@ -772,6 +782,33 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
         //            Queue a media element task given the element to fire an event named pause at the element.
         return;
     }
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#notify-about-playing
+void HTMLMediaElement::notify_about_playing()
+{
+    // FIXME: 1. Take pending play promises and let promises be the result.
+
+    // 2. Queue a media element task given the element and the following steps:
+    queue_a_media_element_task([this]() {
+        // 1. Fire an event named playing at the element.
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::playing).release_value_but_fixme_should_propagate_errors());
+
+        // FIXME: 2. Resolve pending play promises with promises.
+    });
+
+    on_playing();
+}
+
+void HTMLMediaElement::set_paused(bool paused)
+{
+    if (m_paused == paused)
+        return;
+
+    m_paused = paused;
+
+    if (m_paused)
+        on_paused();
 }
 
 }

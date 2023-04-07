@@ -31,6 +31,7 @@ interface HTMLMediaElement : HTMLElement {
 
     // playback state
     readonly attribute unrestricted double duration;
+    readonly attribute boolean paused;
     [Reflect, CEReactions] attribute boolean autoplay;
     [Reflect, CEReactions] attribute boolean loop;
     undefined pause();

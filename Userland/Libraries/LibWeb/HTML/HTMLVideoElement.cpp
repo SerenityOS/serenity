@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -84,9 +85,10 @@ void HTMLVideoElement::set_video_track(JS::GCPtr<HTML::VideoTrack> video_track)
         m_video_timer->stop();
 
     m_video_track = video_track;
-    if (!m_video_track)
-        return;
+}
 
+void HTMLVideoElement::on_playing()
+{
     if (!m_video_timer) {
         m_video_timer = Platform::Timer::create_repeating(s_frame_delay_ms, [this]() {
             if (auto frame = m_video_track->next_frame())
@@ -99,6 +101,12 @@ void HTMLVideoElement::set_video_track(JS::GCPtr<HTML::VideoTrack> video_track)
     }
 
     m_video_timer->start();
+}
+
+void HTMLVideoElement::on_paused()
+{
+    if (m_video_timer)
+        m_video_timer->stop();
 }
 
 }
