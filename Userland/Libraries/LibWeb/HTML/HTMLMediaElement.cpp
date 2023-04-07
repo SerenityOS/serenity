@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/Promise.h>
 #include <LibVideo/Containers/Matroska/MatroskaDemuxer.h>
 #include <LibWeb/Bindings/HTMLMediaElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
@@ -20,15 +21,18 @@
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
+#include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/TrackEvent.h>
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::HTML {
 
 HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
+    , m_pending_play_promises(heap())
 {
 }
 
@@ -127,6 +131,27 @@ void HTMLMediaElement::set_duration(double duration)
     m_duration = duration;
 }
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    // FIXME: 1. If the media element is not allowed to play, then return a promise rejected with a "NotAllowedError" DOMException.
+
+    // FIXME: 2. If the media element's error attribute is not null and its code is MEDIA_ERR_SRC_NOT_SUPPORTED, then return a promise
+    //           rejected with a "NotSupportedError" DOMException.
+
+    // 3. Let promise be a new promise and append promise to the list of pending play promises.
+    auto promise = WebIDL::create_promise(realm);
+    TRY_OR_THROW_OOM(vm, m_pending_play_promises.try_append(promise));
+
+    // 4. Run the internal play steps for the media element.
+    TRY(play_element());
+
+    // 5. Return promise.
+    return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-pause
 WebIDL::ExceptionOr<void> HTMLMediaElement::pause()
 {
@@ -192,7 +217,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
             // 1. Set the paused attribute to true.
             set_paused(true);
 
-            // FIXME 2. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
+            // 2. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
+            auto promises = take_pending_play_promises();
+            reject_pending_play_promises<WebIDL::AbortError>(promises, TRY_OR_THROW_OOM(vm, "Media playback was aborted"_fly_string));
         }
 
         // FIXME: 7. If seeking is true, set it to false.
@@ -289,8 +316,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
             // 6. Failed with attribute: Reaching this step indicates that the media resource failed to load or that the given URL could not be parsed. Take
             //    pending play promises and queue a media element task given the media element to run the dedicated media source failure steps with the result.
             queue_a_media_element_task([this, &ran_media_element_task]() {
-                // FIXME: Find and pass pending play promises to this AO.
-                handle_media_source_failure().release_value_but_fixme_should_propagate_errors();
+                auto promises = take_pending_play_promises();
+                handle_media_source_failure(promises).release_value_but_fixme_should_propagate_errors();
 
                 ran_media_element_task = true;
             });
@@ -671,8 +698,10 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
-WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure()
+WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS::NonnullGCPtr<WebIDL::Promise>> promises)
 {
+    auto& vm = this->vm();
+
     // FIXME: 1. Set the error attribute to the result of creating a MediaError with MEDIA_ERR_SRC_NOT_SUPPORTED.
 
     // 2. Forget the media element's media-resource-specific tracks.
@@ -686,7 +715,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure()
     // 5. Fire an event named error at the media element.
     dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::error)));
 
-    // FIXME: 6. Reject pending play promises with promises and a "NotSupportedError" DOMException.
+    // 6. Reject pending play promises with promises and a "NotSupportedError" DOMException.
+    reject_pending_play_promises<WebIDL::NotSupportedError>(promises, TRY_OR_THROW_OOM(vm, "Media is not supported"_fly_string));
+
     // FIXME: 7. Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
 
     return {};
@@ -792,6 +823,59 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
     }
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#internal-play-steps
+WebIDL::ExceptionOr<void> HTMLMediaElement::play_element()
+{
+    // 1. If the media element's networkState attribute has the value NETWORK_EMPTY, invoke the media element's resource
+    //    selection algorithm.
+    if (m_network_state == NetworkState::Empty)
+        TRY(select_resource());
+
+    // FIXME: 2. If the playback has ended and the direction of playback is forwards, seek to the earliest possible
+    //           position of the media resource.
+
+    // 3. If the media element's paused attribute is true, then:
+    if (paused()) {
+        // 1. Change the value of paused to false.
+        set_paused(false);
+
+        // FIXME: 2. If the show poster flag is true, set the element's show poster flag to false and run the time marches on steps.
+
+        // 3. Queue a media element task given the media element to fire an event named play at the element.
+        queue_a_media_element_task([this]() {
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::play).release_value_but_fixme_should_propagate_errors());
+        });
+
+        // 4. If the media element's readyState attribute has the value HAVE_NOTHING, HAVE_METADATA, or HAVE_CURRENT_DATA,
+        //    queue a media element task given the media element to fire an event named waiting at the element.
+        if (m_ready_state == ReadyState::HaveNothing || m_ready_state == ReadyState::HaveMetadata || m_ready_state == ReadyState::HaveCurrentData) {
+            queue_a_media_element_task([this]() {
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::waiting).release_value_but_fixme_should_propagate_errors());
+            });
+        }
+        //    Otherwise, the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA:
+        //    notify about playing for the element.
+        else {
+            notify_about_playing();
+        }
+    }
+
+    // 4. Otherwise, if the media element's readyState attribute has the value HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, take
+    //    pending play promises and queue a media element task given the media element to resolve pending play promises
+    //    with the result.
+    else if (m_ready_state == ReadyState::HaveFutureData || m_ready_state == ReadyState::HaveEnoughData) {
+        auto promises = take_pending_play_promises();
+
+        queue_a_media_element_task([this, promises = move(promises)]() {
+            resolve_pending_play_promises(promises);
+        });
+    }
+
+    // FIXME: 5. Set the media element's can autoplay flag to false.
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#internal-pause-steps
 WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
 {
@@ -802,10 +886,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
         // 1. Change the value of paused to true.
         set_paused(true);
 
-        // FIXME: 2. Take pending play promises and let promises be the result.
+        // 2. Take pending play promises and let promises be the result.
+        auto promises = take_pending_play_promises();
 
         // 3. Queue a media element task given the media element and the following steps:
-        queue_a_media_element_task([this]() {
+        queue_a_media_element_task([this, promises = move(promises)]() {
             auto& realm = this->realm();
 
             // 1. Fire an event named timeupdate at the element.
@@ -814,7 +899,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
             // 2. Fire an event named pause at the element.
             dispatch_event(DOM::Event::create(realm, HTML::EventNames::pause).release_value_but_fixme_should_propagate_errors());
 
-            // FIXME: 3. Reject pending play promises with promises and an "AbortError" DOMException.
+            // 3. Reject pending play promises with promises and an "AbortError" DOMException.
+            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback was paused"_fly_string.release_value_but_fixme_should_propagate_errors());
         });
 
         // FIXME: 4. Set the official playback position to the current playback position.
@@ -826,14 +912,16 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
 // https://html.spec.whatwg.org/multipage/media.html#notify-about-playing
 void HTMLMediaElement::notify_about_playing()
 {
-    // FIXME: 1. Take pending play promises and let promises be the result.
+    // 1. Take pending play promises and let promises be the result.
+    auto promises = take_pending_play_promises();
 
     // 2. Queue a media element task given the element and the following steps:
-    queue_a_media_element_task([this]() {
+    queue_a_media_element_task([this, promises = move(promises)]() {
         // 1. Fire an event named playing at the element.
         dispatch_event(DOM::Event::create(realm(), HTML::EventNames::playing).release_value_but_fixme_should_propagate_errors());
 
-        // FIXME: 2. Resolve pending play promises with promises.
+        // 2. Resolve pending play promises with promises.
+        resolve_pending_play_promises(promises);
     });
 
     on_playing();
@@ -848,6 +936,54 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (m_paused)
         on_paused();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#take-pending-play-promises
+JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> HTMLMediaElement::take_pending_play_promises()
+{
+    // 1. Let promises be an empty list of promises.
+    // 2. Copy the media element's list of pending play promises to promises.
+    // 3. Clear the media element's list of pending play promises.
+    auto promises = move(m_pending_play_promises);
+
+    // 4. Return promises.
+    return promises;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#resolve-pending-play-promises
+void HTMLMediaElement::resolve_pending_play_promises(ReadonlySpan<JS::NonnullGCPtr<WebIDL::Promise>> promises)
+{
+    auto& realm = this->realm();
+
+    // FIXME: This AO runs from the media element task queue, at which point we do not have a running execution
+    //        context. This pushes one to allow the promise resolving hook to run.
+    auto& environment_settings = document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    // To resolve pending play promises for a media element with a list of promises promises, the user agent
+    // must resolve each promise in promises with undefined.
+    for (auto const& promise : promises)
+        WebIDL::resolve_promise(realm, promise, JS::js_undefined());
+
+    environment_settings.clean_up_after_running_script();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#reject-pending-play-promises
+void HTMLMediaElement::reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPtr<WebIDL::Promise>> promises, JS::NonnullGCPtr<WebIDL::DOMException> error)
+{
+    auto& realm = this->realm();
+
+    // FIXME: This AO runs from the media element task queue, at which point we do not have a running execution
+    //        context. This pushes one to allow the promise rejection hook to run.
+    auto& environment_settings = document().relevant_settings_object();
+    environment_settings.prepare_to_run_script();
+
+    // To reject pending play promises for a media element with a list of promise promises and an exception name
+    // error, the user agent must reject each promise in promises with error.
+    for (auto const& promise : promises)
+        WebIDL::reject_promise(realm, promise, error);
+
+    environment_settings.clean_up_after_running_script();
 }
 
 }
