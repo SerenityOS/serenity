@@ -477,6 +477,11 @@ void BrickGame::set_show_shadow_hint(bool should_show)
     repaint();
 }
 
+bool BrickGame::show_shadow_hint()
+{
+    return m_show_shadow_hint;
+}
+
 void BrickGame::timer_event(Core::TimerEvent&)
 {
     switch (m_brick_game->state()) {
