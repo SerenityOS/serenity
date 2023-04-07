@@ -91,10 +91,10 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(visibilitychange)         \
     __ENUMERATE_HTML_EVENT(volumechange)             \
     __ENUMERATE_HTML_EVENT(waiting)                  \
-    __ENUMERATE_HTML_EVENT(webkitanimationend)       \
-    __ENUMERATE_HTML_EVENT(webkitanimationiteration) \
-    __ENUMERATE_HTML_EVENT(webkitanimationstart)     \
-    __ENUMERATE_HTML_EVENT(webkittransitionend)
+    __ENUMERATE_HTML_EVENT(webkitAnimationEnd)       \
+    __ENUMERATE_HTML_EVENT(webkitAnimationIteration) \
+    __ENUMERATE_HTML_EVENT(webkitAnimationStart)     \
+    __ENUMERATE_HTML_EVENT(webkitTransitionEnd)
 
 #define __ENUMERATE_HTML_EVENT(name) extern FlyString name;
 ENUMERATE_HTML_EVENTS

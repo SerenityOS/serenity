@@ -71,10 +71,10 @@
     E(ontoggle, HTML::EventNames::toggle)                                     \
     E(onvolumechange, HTML::EventNames::volumechange)                         \
     E(onwaiting, HTML::EventNames::waiting)                                   \
-    E(onwebkitanimationend, HTML::EventNames::webkitanimationend)             \
-    E(onwebkitanimationiteration, HTML::EventNames::webkitanimationiteration) \
-    E(onwebkitanimationstart, HTML::EventNames::webkitanimationstart)         \
-    E(onwebkittransitionend, HTML::EventNames::webkittransitionend)           \
+    E(onwebkitanimationend, HTML::EventNames::webkitAnimationEnd)             \
+    E(onwebkitanimationiteration, HTML::EventNames::webkitAnimationIteration) \
+    E(onwebkitanimationstart, HTML::EventNames::webkitAnimationStart)         \
+    E(onwebkittransitionend, HTML::EventNames::webkitTransitionEnd)           \
     E(onwheel, UIEvents::EventNames::wheel)
 
 namespace Web::HTML {
