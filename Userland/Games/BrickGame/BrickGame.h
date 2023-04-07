@@ -26,6 +26,7 @@ public:
 
     void reset();
     void toggle_pause();
+    void set_show_shadow_hint(bool);
 
 private:
     BrickGame(StringView app_name);
@@ -48,6 +49,7 @@ private:
     GameState m_state {};
     NonnullOwnPtr<Bricks> m_brick_game;
     unsigned m_high_score {};
+    bool m_show_shadow_hint { true };
 
     Color m_back_color { Color::from_rgb(0x8fbc8f) };
     Color m_front_color { Color::Black };

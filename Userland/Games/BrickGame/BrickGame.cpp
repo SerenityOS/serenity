@@ -471,6 +471,12 @@ void BrickGame::toggle_pause()
     update();
 }
 
+void BrickGame::set_show_shadow_hint(bool should_show)
+{
+    m_show_shadow_hint = should_show;
+    repaint();
+}
+
 void BrickGame::timer_event(Core::TimerEvent&)
 {
     switch (m_brick_game->state()) {
@@ -547,7 +553,7 @@ void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, BrickGame::
         break;
     case BrickGame::BoardSpace::ShadowHint:
         inside_color = m_shadow_color;
-        outside_color = m_hint_block_color;
+        outside_color = m_show_shadow_hint ? m_hint_block_color : m_shadow_color;
         break;
     case BrickGame::BoardSpace::Off:
         inside_color = m_shadow_color;

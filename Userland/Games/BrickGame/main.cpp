@@ -59,6 +59,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(game_menu->try_add_action(GUI::Action::create("Toggle &Pause", { Mod_None, Key_P }, [&](auto&) {
         game->toggle_pause();
     })));
+    auto show_shadow_piece_action = TRY(GUI::Action::try_create_checkable("&Show Shadow Piece", GUI::Shortcut {}, [&](auto& action) {
+        game->set_show_shadow_hint(action.is_checked());
+    }));
+    show_shadow_piece_action->set_checked(true);
+    TRY(game_menu->try_add_action(show_shadow_piece_action));
     TRY(game_menu->try_add_separator());
     TRY(game_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
