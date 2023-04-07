@@ -45,6 +45,7 @@ public:
 
     WebIDL::ExceptionOr<void> load();
     double duration() const;
+    bool paused() const { return m_paused; }
     void pause() const;
 
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
@@ -54,6 +55,11 @@ protected:
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
+
+    // Override in subclasses to handle implementation-specific behavior when the element state changes
+    // to playing or paused, e.g. to start/stop play timers.
+    virtual void on_playing() { }
+    virtual void on_paused() { }
 
 private:
     struct EntireResource { };
@@ -71,6 +77,9 @@ private:
     WebIDL::ExceptionOr<void> handle_media_source_failure();
     void forget_media_resource_specific_tracks();
     void set_ready_state(ReadyState);
+
+    void notify_about_playing();
+    void set_paused(bool);
     void set_duration(double);
 
     // https://html.spec.whatwg.org/multipage/media.html#media-element-event-task-source
@@ -85,6 +94,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
     double m_duration { NAN };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-paused
+    bool m_paused { true };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-videotracks
     JS::GCPtr<VideoTrackList> m_video_tracks;

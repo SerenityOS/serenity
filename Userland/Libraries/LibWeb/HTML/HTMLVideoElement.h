@@ -38,6 +38,9 @@ private:
 
     virtual JS::GCPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
+    virtual void on_playing() override;
+    virtual void on_paused() override;
+
     JS::GCPtr<HTML::VideoTrack> m_video_track;
     RefPtr<Platform::Timer> m_video_timer;
     RefPtr<Gfx::Bitmap> m_current_frame;
