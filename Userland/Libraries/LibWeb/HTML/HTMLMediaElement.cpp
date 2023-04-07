@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -91,9 +92,11 @@ WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> HTMLMediaElement::can_play_type
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-load
-void HTMLMediaElement::load() const
+WebIDL::ExceptionOr<void> HTMLMediaElement::load()
 {
-    dbgln("(STUBBED) HTMLMediaElement::load()");
+    // When the load() method on a media element is invoked, the user agent must run the media element load algorithm.
+    TRY(load_element());
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
