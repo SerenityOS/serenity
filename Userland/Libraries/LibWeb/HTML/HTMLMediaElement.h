@@ -46,7 +46,7 @@ public:
     WebIDL::ExceptionOr<void> load();
     double duration() const;
     bool paused() const { return m_paused; }
-    void pause() const;
+    WebIDL::ExceptionOr<void> pause();
 
     JS::NonnullGCPtr<VideoTrackList> video_tracks() const { return *m_video_tracks; }
 
@@ -78,6 +78,7 @@ private:
     void forget_media_resource_specific_tracks();
     void set_ready_state(ReadyState);
 
+    WebIDL::ExceptionOr<void> pause_element();
     void notify_about_playing();
     void set_paused(bool);
     void set_duration(double);
