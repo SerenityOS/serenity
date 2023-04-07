@@ -9,7 +9,9 @@ fi
 # Set this environment variable to override the default debugger.
 #
 if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
-    # Prepend the toolchain bin directory so we pick up GDB from there
+    # Prepend the toolchain's GDB bin directory so we pick up GDB from there
+    PATH="$SCRIPT_DIR/../Toolchain/Local/$SERENITY_ARCH-gdb/bin:$PATH"
+    # GDB used to be installed directly inside the toolchain bin directory
     PATH="$SCRIPT_DIR/../Toolchain/Local/$SERENITY_ARCH/bin:$PATH"
 
     if command -v "$SERENITY_ARCH-pc-serenity-gdb" >/dev/null; then
@@ -20,6 +22,9 @@ if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
         SERENITY_KERNEL_DEBUGGER="gdb"
     else
         echo "Error: No suitable GDB installation found." >&2
+        echo "Please install $SERENITY_ARCH-elf-gdb or build it with Toolchain/BuildGDB.sh $SERENITY_ARCH" >&2
+        # Prevent tmux from dying instantly by waiting for user input
+        read -rp "Press Enter to exit"
         exit 1
     fi
 fi
