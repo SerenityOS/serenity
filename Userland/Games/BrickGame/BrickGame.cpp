@@ -303,7 +303,7 @@ public:
         return RenderRequest::RequestUpdate;
     }
 
-    RenderRequest move_down_fast()
+    [[nodiscard]] RenderRequest move_down_fast()
     {
         for (auto block = m_block;; block.move_down()) {
             if (block.has_collision(m_well)) {
