@@ -37,7 +37,7 @@ Framebuffer::Framebuffer()
         FramebufferSetDepthMboxMessage set_depth;
         FramebufferSetPixelOrderMboxMessage set_pixel_order;
         FramebufferAllocateBufferMboxMessage allocate_buffer;
-        FramebufferGetPithMboxMessage get_pitch;
+        FramebufferGetPitchMboxMessage get_pitch;
         Mailbox::MessageTail tail;
     } message_queue;
 

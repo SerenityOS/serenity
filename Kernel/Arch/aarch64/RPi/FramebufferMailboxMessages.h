@@ -98,16 +98,16 @@ public:
 };
 static_assert(sizeof(FramebufferAllocateBufferMboxMessage) == 20);
 
-class FramebufferGetPithMboxMessage : public Mailbox::Message {
+class FramebufferGetPitchMboxMessage : public Mailbox::Message {
 public:
     u32 pitch;
 
-    FramebufferGetPithMboxMessage()
+    FramebufferGetPitchMboxMessage()
         : Mailbox::Message(0x40008, 4)
     {
         pitch = 0;
     }
 };
-static_assert(sizeof(FramebufferGetPithMboxMessage) == 16);
+static_assert(sizeof(FramebufferGetPitchMboxMessage) == 16);
 
 }
