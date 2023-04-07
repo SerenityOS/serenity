@@ -112,6 +112,19 @@ To add a package from the ports collection to Serenity, for example curl, change
 run `./package.sh`. The source code for the package will be downloaded and the package will be built. The next time you
 start Serenity, `curl` will be available.
 
+Ports might also have additional dependencies. Most prominently, you may need:
+`autoconf`, `automake`, `bison`, `flex`, `gettext`, `gperf`, `help2man`, `imagemagick` (specifically "convert"),
+`libgpg-error-dev`, `libtool`, `lzip`, `meson`, `nasm` (or another assembler), `qt6-base-dev`, `rename`, `zip`.
+
+For select ports you might need slightly more exotic dependencies such as:
+- ´file` (version 5.44 exactly, for file)
+- ´libpython3-dev` (most prominently for boost)
+- ´lua` (for luarocks)
+- ´openjdk-17-jdk` (to compile OpenJDK)
+- ´rake` (to build mruby).
+
+You may also need a symlink from "/usr/bin/python" to "/usr/bin/python3"; some ports depend on "python" existing, most notably ninja.
+
 ## More information
 
 At this point you should have a fully functioning VM for SerenityOS. The [advanced build instructions guide](AdvancedBuildInstructions.md)
