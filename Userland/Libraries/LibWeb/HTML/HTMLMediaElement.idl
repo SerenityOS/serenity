@@ -34,6 +34,7 @@ interface HTMLMediaElement : HTMLElement {
     readonly attribute boolean paused;
     [Reflect, CEReactions] attribute boolean autoplay;
     [Reflect, CEReactions] attribute boolean loop;
+    Promise<undefined> play();
     undefined pause();
 
     // controls
