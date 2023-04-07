@@ -97,6 +97,6 @@ private:
     Span<NVMeCompletion> m_cqe_array;
     WaitQueue m_sync_wait_queue;
     Memory::TypedMapping<DoorbellRegister volatile> m_db_regs;
-    NonnullRefPtr<Memory::PhysicalPage const> m_rw_dma_page;
+    NonnullRefPtr<Memory::PhysicalPage const> const m_rw_dma_page;
 };
 }

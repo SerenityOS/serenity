@@ -80,7 +80,7 @@ private:
     ErrorOr<void> create_notes_metadata_data(auto&) const;
 
     NonnullRefPtr<Process> const m_process;
-    NonnullRefPtr<OpenFileDescription> m_description;
+    NonnullRefPtr<OpenFileDescription> const m_description;
     size_t m_num_program_headers { 0 };
     Vector<FlatRegionData> m_regions;
 };

@@ -38,7 +38,7 @@ protected:
     explicit Device(DeviceIdentifier const& pci_identifier);
 
 private:
-    NonnullRefPtr<DeviceIdentifier const> m_pci_identifier;
+    NonnullRefPtr<DeviceIdentifier const> const m_pci_identifier;
 };
 
 template<typename... Parameters>

@@ -23,7 +23,7 @@ public:
 private:
     PCIDeviceSysFSDirectory(NonnullOwnPtr<KString> device_directory_name, SysFSDirectory const&, PCI::DeviceIdentifier const&);
 
-    NonnullRefPtr<PCI::DeviceIdentifier const> m_device_identifier;
+    NonnullRefPtr<PCI::DeviceIdentifier const> const m_device_identifier;
 
     NonnullOwnPtr<KString> m_device_directory_name;
 };

@@ -123,7 +123,7 @@ private:
     // it's probably better to just "cache" this here instead.
     AHCI::HBADefinedCapabilities const m_hba_capabilities;
 
-    NonnullRefPtr<Memory::PhysicalPage> m_identify_buffer_page;
+    NonnullRefPtr<Memory::PhysicalPage> const m_identify_buffer_page;
 
     volatile AHCI::PortRegisters& m_port_registers;
     LockWeakPtr<AHCIController> m_parent_controller;

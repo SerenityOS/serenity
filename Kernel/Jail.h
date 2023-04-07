@@ -52,7 +52,7 @@ public:
     using List = IntrusiveListRelaxedConst<&Jail::m_list_node>;
 
 private:
-    NonnullRefPtr<ProcessList> m_process_list;
+    NonnullRefPtr<ProcessList> const m_process_list;
 
     SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
 };
