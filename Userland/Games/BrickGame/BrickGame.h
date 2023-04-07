@@ -27,6 +27,7 @@ public:
     void reset();
     void toggle_pause();
     void set_show_shadow_hint(bool);
+    bool show_shadow_hint();
 
 private:
     BrickGame(StringView app_name);
