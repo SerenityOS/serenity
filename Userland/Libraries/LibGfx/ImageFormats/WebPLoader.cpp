@@ -728,6 +728,17 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
 
 namespace {
 
+static ARGB32 add_argb32(ARGB32 a, ARGB32 b)
+{
+    auto a_color = Color::from_argb(a);
+    auto b_color = Color::from_argb(b);
+    return Color(a_color.red() + b_color.red(),
+        a_color.green() + b_color.green(),
+        a_color.blue() + b_color.blue(),
+        a_color.alpha() + b_color.alpha())
+        .value();
+}
+
 class Transform {
 public:
     virtual ~Transform();
@@ -818,7 +829,6 @@ private:
     }
 
     static ErrorOr<ARGB32> predict(u8 predictor, ARGB32 TL, ARGB32 T, ARGB32 TR, ARGB32 L);
-    static ARGB32 inverse_transform(ARGB32 pixel, ARGB32 prediction);
 
     int m_size_bits;
     NonnullRefPtr<Bitmap> m_predictor_bitmap;
@@ -842,15 +852,15 @@ ErrorOr<void> PredictorTransform::transform(Bitmap& bitmap)
     // "There are special handling rules for some border pixels.
     //  If there is a prediction transform, regardless of the mode [0..13] for these pixels,
     //  the predicted value for the left-topmost pixel of the image is 0xff000000,
-    bitmap.scanline(0)[0] = inverse_transform(bitmap.scanline(0)[0], 0xff000000);
+    bitmap.scanline(0)[0] = add_argb32(bitmap.scanline(0)[0], 0xff000000);
 
     //  L-pixel for all pixels on the top row,
     for (int x = 1; x < bitmap.width(); ++x)
-        bitmap.scanline(0)[x] = inverse_transform(bitmap.scanline(0)[x], bitmap.scanline(0)[x - 1]);
+        bitmap.scanline(0)[x] = add_argb32(bitmap.scanline(0)[x], bitmap.scanline(0)[x - 1]);
 
     //  and T-pixel for all pixels on the leftmost column."
     for (int y = 1; y < bitmap.height(); ++y)
-        bitmap.scanline(y)[0] = inverse_transform(bitmap.scanline(y)[0], bitmap.scanline(y - 1)[0]);
+        bitmap.scanline(y)[0] = add_argb32(bitmap.scanline(y)[0], bitmap.scanline(y - 1)[0]);
 
     ARGB32* bitmap_previous_scanline = bitmap.scanline(0);
     for (int y = 1; y < bitmap.height(); ++y) {
@@ -873,7 +883,7 @@ ErrorOr<void> PredictorTransform::transform(Bitmap& bitmap)
             u8 predictor = Color::from_argb(predictor_scanline[predictor_x]).green();
 
             ARGB32 predicted = TRY(predict(predictor, TL, T, TR, L));
-            bitmap_scanline[x] = inverse_transform(bitmap_scanline[x], predicted);
+            bitmap_scanline[x] = add_argb32(bitmap_scanline[x], predicted);
 
             TL = T;
             T = TR;
@@ -954,17 +964,6 @@ ErrorOr<ARGB32> PredictorTransform::predict(u8 predictor, ARGB32 TL, ARGB32 T, A
     }
     }
     return Error::from_string_literal("WebPImageDecoderPlugin: invalid predictor");
-}
-
-ARGB32 PredictorTransform::inverse_transform(ARGB32 pixel, ARGB32 prediction)
-{
-    auto pixel_color = Color::from_argb(pixel);
-    auto prediction_color = Color::from_argb(prediction);
-    return Color(pixel_color.red() + prediction_color.red(),
-        pixel_color.green() + prediction_color.green(),
-        pixel_color.blue() + prediction_color.blue(),
-        pixel_color.alpha() + prediction_color.alpha())
-        .value();
 }
 
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#42_color_transform
