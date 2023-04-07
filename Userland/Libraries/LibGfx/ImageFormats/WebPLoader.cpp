@@ -438,8 +438,12 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
     u8 last_non_zero = 8; // "If code 16 is used before a non-zero value has been emitted, a value of 8 is repeated."
 
     // "A prefix table is then built from code_length_code_lengths and used to read up to max_symbol code lengths."
-    dbgln_if(WEBP_DEBUG, "  reading {} symbols", max_symbol);
-    while (code_lengths.size() < max_symbol) {
+    dbgln_if(WEBP_DEBUG, "  reading {} symbols from at most {} codes", alphabet_size, max_symbol);
+    while (code_lengths.size() < alphabet_size) {
+        if (max_symbol == 0)
+            break;
+        --max_symbol;
+
         auto symbol = TRY(code_length_code.read_symbol(bit_stream));
 
         if (symbol < 16) {
@@ -472,8 +476,8 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
         }
     }
 
-    if (code_lengths.size() != alphabet_size)
-        return Error::from_string_literal("Number of code lengths does not match the sum of codes");
+    if (code_lengths.size() > alphabet_size)
+        return Error::from_string_literal("Number of code lengths is larger than the alphabet size");
 
     dbgln_if(WEBP_DEBUG, "  done reading symbols");
     return CanonicalCode::from_bytes(code_lengths);
