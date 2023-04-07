@@ -17,6 +17,9 @@ namespace Web::HTML::EventNames {
 #define ENUMERATE_HTML_EVENTS                        \
     __ENUMERATE_HTML_EVENT(abort)                    \
     __ENUMERATE_HTML_EVENT(addtrack)                 \
+    __ENUMERATE_HTML_EVENT(animationend)             \
+    __ENUMERATE_HTML_EVENT(animationiteration)       \
+    __ENUMERATE_HTML_EVENT(animationstart)           \
     __ENUMERATE_HTML_EVENT(afterprint)               \
     __ENUMERATE_HTML_EVENT(beforeprint)              \
     __ENUMERATE_HTML_EVENT(beforeunload)             \
@@ -86,6 +89,7 @@ namespace Web::HTML::EventNames {
     __ENUMERATE_HTML_EVENT(suspend)                  \
     __ENUMERATE_HTML_EVENT(timeupdate)               \
     __ENUMERATE_HTML_EVENT(toggle)                   \
+    __ENUMERATE_HTML_EVENT(transitionend)            \
     __ENUMERATE_HTML_EVENT(unhandledrejection)       \
     __ENUMERATE_HTML_EVENT(unload)                   \
     __ENUMERATE_HTML_EVENT(visibilitychange)         \
