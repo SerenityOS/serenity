@@ -136,11 +136,6 @@ if (ENABLE_ALL_DEBUG_FACILITIES)
     # sure this code continues to build instead of all_debug_macros to avoid
     # people filing bugs.
     set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
-
-    # Enables KCOV API and injects kernel coverage instrumentation via
-    # -fsanitize-coverage=trace-pc. Mostly here to ensure that the CI catches
-    # commits breaking this flag.
-    set(ENABLE_KERNEL_COVERAGE_COLLECTION ON)
 endif()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)

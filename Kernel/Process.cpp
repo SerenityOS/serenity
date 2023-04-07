@@ -8,22 +8,19 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <Kernel/API/POSIX/errno.h>
+#include <Kernel/API/POSIX/sys/limits.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Coredump.h>
 #include <Kernel/Credentials.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
-#include <Kernel/InterruptDisabler.h>
-#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-#    include <Kernel/Devices/KCOVDevice.h>
-#endif
-#include <Kernel/API/POSIX/errno.h>
-#include <Kernel/API/POSIX/sys/limits.h>
-#include <Kernel/Arch/PageDirectory.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/InterruptDisabler.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Memory/AnonymousVMObject.h>
@@ -868,9 +865,6 @@ void Process::die()
     });
 
     kill_all_threads();
-#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-    KCOVDevice::free_process();
-#endif
 }
 
 void Process::terminate_due_to_signal(u8 signal)

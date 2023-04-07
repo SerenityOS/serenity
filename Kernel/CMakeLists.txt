@@ -60,8 +60,6 @@ set(KERNEL_SOURCES
     Devices/DeviceControlDevice.cpp
     Devices/DeviceManagement.cpp
     Devices/FullDevice.cpp
-    Devices/KCOVDevice.cpp
-    Devices/KCOVInstance.cpp
     Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
     Devices/PCISerialDevice.cpp
@@ -99,7 +97,6 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     IOWindow.cpp
     Jail.cpp
-    SanCov.cpp
     Storage/ATA/AHCI/Controller.cpp
     Storage/ATA/AHCI/Port.cpp
     Storage/ATA/AHCI/InterruptHandler.cpp
@@ -624,35 +621,7 @@ endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-pie")
 
-# Kernel Coverage (KCOV) is an API to collect and expose program counters of
-# kernel code that has been run to user space. It's rather slow and likely not
-# secure to run in production builds. Useful for coverage guided fuzzing.
-if (ENABLE_KERNEL_COVERAGE_COLLECTION)
-    add_definitions(-DENABLE_KERNEL_COVERAGE_COLLECTION)
-    add_compile_options(-fsanitize-coverage=trace-pc)
-    set(KCOV_EXCLUDED_SOURCES
-        # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
-        # otherwise we'll end up with recursive calls to that function.
-        ../AK/Error.cpp
-        ../AK/Format.cpp
-        ../AK/StringBuilder.cpp
-        ../Kernel/Arch/x86_64/Processor.cpp
-        ../Kernel/Devices/KCOVDevice.cpp
-        ../Kernel/Devices/KCOVInstance.cpp
-        ../Kernel/FileSystem/File.cpp
-        ../Kernel/FileSystem/OpenFileDescription.cpp
-        ../Kernel/init.cpp
-        ../Kernel/SanCov.cpp
-        # GCC assumes that the caller saves registers for functions according
-        # to the System V ABI and happily inserts coverage calls into the
-        # function prologue for all functions. This assumption is not true for
-        # interrupt handlers because their calling convention is not compatible
-        # with the System V ABI.
-        ../Kernel/Arch/x86_64/Interrupts.cpp
-        ../Kernel/Syscall.cpp
-    )
-    set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
-elseif (ENABLE_USERSPACE_COVERAGE_COLLECTION)
+if (ENABLE_USERSPACE_COVERAGE_COLLECTION)
     # Disable checking open() pledges and the veil for coverage data when building userspace with coverage
     # so that binaries can write out coverage data even with pledges/veil
     add_compile_definitions(SKIP_PATH_VALIDATION_FOR_COVERAGE_INSTRUMENTATION)

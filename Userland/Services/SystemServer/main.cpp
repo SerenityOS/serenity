@@ -288,13 +288,6 @@ static ErrorOr<void> populate_devtmpfs_devices_based_on_devctl()
             }
             break;
         }
-        case 30: {
-            if (!is_block_device) {
-                auto name = TRY(String::formatted("/dev/kcov{}", minor_number));
-                TRY(create_devtmpfs_char_device(name.bytes_as_string_view(), 0666, 30, minor_number));
-            }
-            break;
-        }
         case 3: {
             if (is_block_device) {
                 auto name = TRY(String::formatted("/dev/hd{}", offset_character_with_number('a', minor_number)));

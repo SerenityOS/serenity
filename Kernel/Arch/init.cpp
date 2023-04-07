@@ -18,7 +18,6 @@
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
-#include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
@@ -380,9 +379,6 @@ void init_stage2(void*)
 
     NetworkingManagement::the().initialize();
 
-#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
-    (void)KCOVDevice::must_create().leak_ref();
-#endif
     (void)MemoryDevice::must_create().leak_ref();
     (void)ZeroDevice::must_create().leak_ref();
     (void)FullDevice::must_create().leak_ref();

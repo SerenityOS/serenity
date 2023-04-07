@@ -43,7 +43,6 @@ directory to `Build/x86_64` and then running `ninja <target>`:
 There are some optional features that can be enabled during compilation that are intended to help with specific types of development work or introduce experimental features. Currently, the following build options are available:
 - `ENABLE_ADDRESS_SANITIZER` and `ENABLE_KERNEL_ADDRESS_SANITIZER`: builds in runtime checks for memory corruption bugs (like buffer overflows and memory leaks) in Lagom test cases and the kernel, respectively.
 - `ENABLE_KERNEL_UNDEFINED_SANITIZER`: builds in runtime checks for detecting undefined behavior in the kernel.
-- `ENABLE_KERNEL_COVERAGE_COLLECTION`: enables the KCOV API and kernel coverage collection instrumentation. Only useful for coverage guided kernel fuzzing.
 - `ENABLE_USERSPACE_COVERAGE_COLLECTION`: enables coverage collection instrumentation for userspace. Currently only works with a Clang build.
 - `ENABLE_MEMORY_SANITIZER`: enables runtime checks for uninitialized memory accesses in Lagom test cases.
 - `ENABLE_UNDEFINED_SANITIZER`: builds in runtime checks for [undefined behavior](https://en.wikipedia.org/wiki/Undefined_behavior) (like null pointer dereferences and signed integer overflows) in Lagom test cases.
