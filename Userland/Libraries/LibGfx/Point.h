@@ -247,6 +247,13 @@ public:
         return Point<U>(ceil(x()), ceil(y()));
     }
 
+    template<typename U>
+    requires FloatingPoint<T>
+    [[nodiscard]] Point<U> to_floored() const
+    {
+        return Point<U>(AK::floor(x()), AK::floor(y()));
+    }
+
     [[nodiscard]] DeprecatedString to_deprecated_string() const;
 
 private:
