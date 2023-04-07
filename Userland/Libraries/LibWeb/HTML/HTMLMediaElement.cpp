@@ -503,6 +503,16 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
 
                 queue_a_media_element_task([this, failure_callback = move(failure_callback)]() mutable {
                     process_media_data(move(failure_callback)).release_value_but_fixme_should_propagate_errors();
+
+                    // NOTE: The spec does not say exactly when to update the readyState attribute. Rather, it describes what
+                    //       each step requires, and leaves it up to the user agent to determine when those requirments are
+                    //       reached: https://html.spec.whatwg.org/multipage/media.html#ready-states
+                    //
+                    //       Since we fetch the entire response at once, if we reach here with successfully decoded video
+                    //       metadata, we have satisfied the HAVE_ENOUGH_DATA requirements. This logic will of course need
+                    //       to change if we fetch or process the media data in smaller chunks.
+                    if (m_ready_state == ReadyState::HaveMetadata)
+                        set_ready_state(ReadyState::HaveEnoughData);
                 });
             };
 
