@@ -106,6 +106,27 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::pull_steps(NonnullRefPtr
     return {};
 }
 
+// https://streams.spec.whatwg.org/#rbs-controller-private-pull
+WebIDL::ExceptionOr<void> ReadableByteStreamController::release_steps()
+{
+    auto& vm = this->vm();
+
+    // 1. If this.[[pendingPullIntos]] is not empty,
+    if (!m_pending_pull_intos.is_empty()) {
+        // 1. Let firstPendingPullInto be this.[[pendingPullIntos]][0].
+        auto first_pending_pull_into = m_pending_pull_intos.first();
+
+        // 2. Set firstPendingPullInto’s reader type to "none".
+        first_pending_pull_into.reader_type = ReaderType::None;
+
+        // 3. Set this.[[pendingPullIntos]] to the list « firstPendingPullInto ».
+        m_pending_pull_intos.clear();
+        TRY_OR_THROW_OOM(vm, m_pending_pull_intos.try_append(first_pending_pull_into));
+    }
+
+    return {};
+}
+
 void ReadableByteStreamController::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
