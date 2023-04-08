@@ -420,6 +420,27 @@ TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling)
     }
 }
 
+TEST_CASE(test_webp_simple_lossless_color_index_transform_pixel_bundling_odd_width)
+{
+    StringView file_names[] = {
+        "width11-height11-colors2.webp"sv,
+        "width11-height11-colors3.webp"sv,
+        "width11-height11-colors15.webp"sv,
+    };
+
+    for (auto file_name : file_names) {
+        auto file = MUST(Core::MappedFile::map(MUST(String::formatted("{}{}", TEST_INPUT(""), file_name))));
+        auto plugin_decoder = MUST(Gfx::WebPImageDecoderPlugin::create(file->bytes()));
+        EXPECT(plugin_decoder->initialize());
+
+        EXPECT_EQ(plugin_decoder->frame_count(), 1u);
+        EXPECT_EQ(plugin_decoder->size(), Gfx::IntSize(11, 11));
+
+        auto frame = MUST(plugin_decoder->frame(0));
+        EXPECT_EQ(frame.image->size(), Gfx::IntSize(11, 11));
+    }
+}
+
 TEST_CASE(test_webp_extended_lossless_animated)
 {
     auto file = MUST(Core::MappedFile::map(TEST_INPUT("extended-lossless-animated.webp"sv)));
