@@ -113,5 +113,7 @@ private:
     Browser::CookieJar& m_cookie_jar;
 
     StringView m_webdriver_content_ipc_path;
+
     WebView::EnableCallgrindProfiling m_enable_callgrind_profiling;
+    BookmarksModel* m_bookmarks_model;
 };

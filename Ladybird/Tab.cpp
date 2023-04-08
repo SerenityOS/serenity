@@ -24,7 +24,9 @@
 #include <QPainter>
 #include <QPlainTextEdit>
 #include <QPoint>
+#include <QPushButton>
 #include <QResizeEvent>
+#include <QStandardItemModel>
 #include <QSvgRenderer>
 
 extern DeprecatedString s_serenity_resource_root;
@@ -57,7 +59,7 @@ static QIcon render_svg_icon_with_theme_colors(QString name, QPalette const& pal
     return icon;
 }
 
-Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
+Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling, BookmarksModel* bookmark)
     : QWidget(window)
     , m_window(window)
 {
@@ -67,6 +69,15 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
 
     m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling);
     m_toolbar = new QToolBar(this);
+    m_bookmarks_bar = new QListView(this);
+    m_bookmarks_bar->setFlow(QListView::LeftToRight);
+    m_bookmarks_bar->setModel(bookmark);
+    m_bookmarks_bar->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    m_bookmarks_bar->setFixedHeight(20);
+    m_bookmarks_bar->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(m_bookmarks_bar, &QListView::clicked, this, &Tab::bookmark_clicked);
+    QObject::connect(m_bookmarks_bar, &QListView::customContextMenuRequested, this, &Tab::show_context_menu_bookmark);
+
     m_location_edit = new LocationEdit(this);
     m_reset_zoom_button = new QToolButton(m_toolbar);
 
@@ -80,14 +91,45 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
     addAction(focus_location_editor_action);
 
     m_layout->addWidget(m_toolbar);
+    m_layout->addWidget(m_bookmarks_bar);
     m_layout->addWidget(m_view);
+
+    m_back_action = make<QAction>("Back");
+    m_back_action->setEnabled(false);
+    m_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
+    m_forward_action = make<QAction>("Forward");
+    m_forward_action->setEnabled(false);
+    m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
+    m_reload_action = make<QAction>("Reload");
+    m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
+
+    auto back_icon_path = QString("%1/res/icons/16x16/go-back.png").arg(s_serenity_resource_root.characters());
+    auto forward_icon_path = QString("%1/res/icons/16x16/go-forward.png").arg(s_serenity_resource_root.characters());
+    auto home_icon_path = QString("%1/res/icons/16x16/go-home.png").arg(s_serenity_resource_root.characters());
+    auto reload_icon_path = QString("%1/res/icons/16x16/reload.png").arg(s_serenity_resource_root.characters());
+    auto add_bookmark_icon_path = QString("%1/res/icons/16x16/plus.png").arg(s_serenity_resource_root.characters());
+    m_back_action = make<QAction>(QIcon(back_icon_path), "Back");
+    m_back_action->setEnabled(false);
+    m_back_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Back));
+    m_forward_action = make<QAction>("Forward");
+    m_forward_action->setEnabled(false);
+    m_forward_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Forward));
+    m_reload_action = make<QAction>("Reload");
+    m_reload_action->setShortcuts(QKeySequence::keyBindings(QKeySequence::StandardKey::Refresh));
 
     rerender_toolbar_icons();
 
     m_toolbar->addAction(&m_window->go_back_action());
     m_toolbar->addAction(&m_window->go_forward_action());
     m_toolbar->addAction(&m_window->reload_action());
+    m_add_bookmark_action = make<QAction>(QIcon(add_bookmark_icon_path), "Add to bookmark");
+
+    m_toolbar->addAction(m_back_action);
+    m_toolbar->addAction(m_forward_action);
+    m_toolbar->addAction(m_reload_action);
+
     m_toolbar->addWidget(m_location_edit);
+    m_toolbar->addAction(m_add_bookmark_action);
     m_reset_zoom_button->setToolTip("Reset zoom level");
     m_reset_zoom_button_action = m_toolbar->addWidget(m_reset_zoom_button);
     m_reset_zoom_button_action->setVisible(false);
@@ -174,6 +216,11 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::
             return;
         emit favicon_changed(tab_index(), QIcon(qpixmap));
     };
+
+    QObject::connect(m_reload_action, &QAction::triggered, this, &Tab::reload);
+    QObject::connect(m_back_action, &QAction::triggered, this, &Tab::back);
+    QObject::connect(m_forward_action, &QAction::triggered, this, &Tab::forward);
+    QObject::connect(m_add_bookmark_action, &QAction::triggered, this, &Tab::add_bookmark);
 
     QObject::connect(focus_location_editor_action, &QAction::triggered, this, &Tab::focus_location_editor);
 
@@ -525,6 +572,49 @@ int Tab::tab_index()
     return m_window->tab_index(this);
 }
 
+void Tab::add_bookmark()
+{
+    auto model = qobject_cast<BookmarksModel*>(m_bookmarks_bar->model());
+    if (!model)
+        return;
+
+    model->add(m_location_edit->text());
+}
+
+void Tab::bookmark_clicked(QModelIndex const& index)
+{
+    auto model = qobject_cast<BookmarksModel*>(m_bookmarks_bar->model());
+    if (!model)
+        return;
+
+    auto url = model->data(index, Qt::DisplayRole).toString();
+    navigate(url);
+}
+
+void Tab::show_context_menu_bookmark(QPoint const& pos)
+{
+    auto list_view = qobject_cast<QListView*>(sender());
+    if (!list_view)
+        return;
+
+    auto bm = qobject_cast<BookmarksModel*>(list_view->model());
+    if (!bm)
+        return;
+
+    // Don't show context menu when there aren't bookmarks.
+    if (bm->get_urls().isEmpty())
+        return;
+
+    auto idx = list_view->indexAt(pos);
+
+    QMenu contextMenu("Context menu", this);
+    QAction remove_action("Remove", this);
+    QObject::connect(&remove_action, &QAction::triggered, this, [bm, idx] { bm->remove(idx.row()); });
+
+    contextMenu.addAction(&remove_action);
+    contextMenu.exec(mapToGlobal(pos));
+}
+
 void Tab::debug_request(DeprecatedString const& request, DeprecatedString const& argument)
 {
     if (request == "dump-history")
@@ -622,4 +712,47 @@ void Tab::close_sub_widgets()
 
     close_widget_window(m_console_widget);
     close_widget_window(m_inspector_widget);
+}
+
+BookmarksModel::BookmarksModel(QObject* parent)
+    : QAbstractListModel(parent)
+{
+    m_urls = s_settings->bookmarks();
+}
+
+int BookmarksModel::rowCount(QModelIndex const&) const
+{
+    return m_urls.size();
+}
+
+QVariant BookmarksModel::data(QModelIndex const& index, int role) const
+{
+    if (!index.isValid())
+        return {};
+
+    if (role != Qt::DisplayRole)
+        return {};
+
+    return m_urls.at(index.row());
+}
+
+void BookmarksModel::add(QString url)
+{
+    beginInsertRows(QModelIndex(), m_urls.size() - 1, m_urls.size());
+    m_urls.append(url);
+    endInsertRows();
+    s_settings->set_bookmarks(m_urls);
+}
+
+void BookmarksModel::remove(int idx)
+{
+    beginRemoveRows(QModelIndex(), m_urls.size() - 1, m_urls.size());
+    m_urls.removeAt(idx);
+    endRemoveRows();
+    s_settings->set_bookmarks(m_urls);
+}
+
+QStringList BookmarksModel::get_urls() const
+{
+    return m_urls;
 }

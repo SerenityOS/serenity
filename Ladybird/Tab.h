@@ -13,9 +13,11 @@
 #include <QBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
+#include <QListView>
 #include <QToolBar>
 #include <QToolButton>
-#include <QWidget>
+
+#include <QAbstractListModel>
 
 class BrowserWindow;
 
@@ -24,13 +26,31 @@ class ConsoleWidget;
 class InspectorWidget;
 }
 
+class BookmarksModel : public QAbstractListModel {
+    Q_OBJECT
+public:
+    explicit BookmarksModel(QObject* parent = nullptr);
+
+    int rowCount(QModelIndex const&) const override;
+    QVariant data(QModelIndex const& index, int role) const override;
+    void add(QString url);
+    void remove(int idx);
+    QStringList get_urls() const;
+
+private:
+    QStringList m_urls;
+};
+
 class Tab final : public QWidget {
     Q_OBJECT
 public:
-    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
+    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling, BookmarksModel* bookmarks);
     virtual ~Tab() override;
 
-    WebContentView& view() { return *m_view; }
+    WebContentView& view()
+    {
+        return *m_view;
+    }
 
     enum class LoadType {
         Normal,
@@ -44,6 +64,7 @@ public:
     void debug_request(DeprecatedString const& request, DeprecatedString const& argument);
 
     void update_reset_zoom_button();
+    void update_bookmarks();
 
     enum class InspectorTarget {
         Document,
@@ -77,6 +98,7 @@ private:
 
     QBoxLayout* m_layout;
     QToolBar* m_toolbar { nullptr };
+    QListView* m_bookmarks_bar { nullptr };
     QToolButton* m_reset_zoom_button { nullptr };
     QAction* m_reset_zoom_button_action { nullptr };
     LocationEdit* m_location_edit { nullptr };
@@ -102,6 +124,10 @@ private:
     OwnPtr<QAction> m_video_context_menu_controls_action;
     OwnPtr<QAction> m_video_context_menu_loop_action;
     URL m_video_context_menu_url;
+    OwnPtr<QAction> m_back_action;
+    OwnPtr<QAction> m_forward_action;
+    OwnPtr<QAction> m_reload_action;
+    OwnPtr<QAction> m_add_bookmark_action;
 
     int tab_index();
 
@@ -109,4 +135,8 @@ private:
 
     Ladybird::ConsoleWidget* m_console_widget { nullptr };
     Ladybird::InspectorWidget* m_inspector_widget { nullptr };
+
+    void add_bookmark();
+    void bookmark_clicked(QModelIndex const& index);
+    void show_context_menu_bookmark(QPoint const& pos);
 };

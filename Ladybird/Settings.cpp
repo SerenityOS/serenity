@@ -23,4 +23,14 @@ void Settings::set_new_tab_page(QString const& page)
     m_qsettings->setValue("new_tab_page", page);
 }
 
+QStringList Settings::bookmarks()
+{
+    return m_qsettings->value("bookmarks", {}).toStringList();
+}
+
+void Settings::set_bookmarks(QStringList urls)
+{
+    m_qsettings->setValue("bookmarks", urls);
+}
+
 }

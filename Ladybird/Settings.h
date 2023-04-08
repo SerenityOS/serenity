@@ -18,6 +18,9 @@ public:
     QString new_tab_page();
     void set_new_tab_page(QString const& page);
 
+    QStringList bookmarks();
+    void set_bookmarks(QStringList urls);
+
 private:
     QSettings* m_qsettings;
 };
