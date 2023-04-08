@@ -30,7 +30,6 @@ ErrorOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&
     SpinlockLocker lock(m_queue_lock);
     while (!m_queue.is_empty() && remaining_space_in_buffer) {
         auto packet = m_queue.dequeue();
-        lock.unlock();
 
         dbgln_if(MOUSE_DEBUG, "Mouse Read: Buttons {:x}", packet.buttons);
         dbgln_if(MOUSE_DEBUG, "PS2 Mouse: X {}, Y {}, Z {}, W {}, Relative {}", packet.x, packet.y, packet.z, packet.w, packet.buttons);
@@ -40,8 +39,6 @@ ErrorOr<size_t> MouseDevice::read(OpenFileDescription&, u64, UserOrKernelBuffer&
         TRY(buffer.write(&packet, nread, bytes_read_from_packet));
         nread += bytes_read_from_packet;
         remaining_space_in_buffer -= bytes_read_from_packet;
-
-        lock.lock();
     }
     return nread;
 }
