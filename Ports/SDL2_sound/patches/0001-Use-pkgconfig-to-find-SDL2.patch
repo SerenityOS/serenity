@@ -4,22 +4,20 @@ Date: Sun, 19 Sep 2021 22:46:10 +0300
 Subject: [PATCH] Use pkgconfig to find SDL2
 
 ---
- CMakeLists.txt | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ CMakeLists.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index c1b9241..a659246 100644
+index 4aac4777ea9c0e95c522bff5be1701306a3a24e5..1610408d2d284fda6918a6dc9b5bc1249acab17d 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -24,7 +24,10 @@ if(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
-     add_definitions(-xldscope=hidden)
+@@ -30,7 +30,8 @@ if(CMAKE_C_COMPILER_ID STREQUAL "SunPro")
+     add_compile_options(-xldscope=hidden)
  endif()
  
 -find_package(SDL2 REQUIRED)
 +INCLUDE(FindPkgConfig)
-+
 +PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-+
- include_directories(${SDL2_INCLUDE_DIRS} ${SDL2_INCLUDE_DIR})
  if(WIN32)
      # -lmingw32: gcc adds it automatically.
+     # -mwindows: doesn't make sense.
