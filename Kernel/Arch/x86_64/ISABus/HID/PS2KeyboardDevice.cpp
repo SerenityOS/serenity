@@ -10,10 +10,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Devices/HID/Management.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/Devices/HID/ScanCodeEvent.h>
 #include <Kernel/Sections.h>
-#include <Kernel/TTY/ConsoleManagement.h>
-#include <Kernel/WorkQueue.h>
 
 namespace Kernel {
 
@@ -23,89 +21,46 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
 {
     u8 ch = byte & 0x7f;
     bool pressed = !(byte & 0x80);
-
-    m_entropy_source.add_random_event(byte);
-
     if (byte == 0xe0) {
         m_has_e0_prefix = true;
         return;
     }
 
-    if ((m_modifiers == (Mod_Alt | Mod_Shift) || m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift)) && byte == 0x58) {
-        // Alt+Shift+F12 pressed, dump some kernel state to the debug console.
-        ConsoleManagement::the().switch_to_debug();
-        Scheduler::dump_scheduler_state(m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift));
-    }
+    ScanCodeEvent event {};
+    event.pressed = pressed;
+    event.e0_prefix = m_has_e0_prefix;
+    m_has_e0_prefix = false;
 
     dbgln_if(KEYBOARD_DEBUG, "Keyboard::irq_handle_byte_read: {:#02x} {}", ch, (pressed ? "down" : "up"));
-    switch (ch) {
-    case 0x38:
-        if (m_has_e0_prefix)
-            update_modifier(Mod_AltGr, pressed);
-        else
-            update_modifier(Mod_Alt, pressed);
-        break;
-    case 0x1d:
-        update_modifier(Mod_Ctrl, pressed);
-        break;
-    case 0x5b:
-        m_left_super_pressed = pressed;
-        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
-        break;
-    case 0x5c:
-        m_right_super_pressed = pressed;
-        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
-        break;
-    case 0x2a:
-        m_left_shift_pressed = pressed;
-        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
-        break;
-    case 0x36:
-        m_right_shift_pressed = pressed;
-        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
-        break;
-    }
-    switch (ch) {
-    case I8042Response::Acknowledge:
-        break;
-    default:
-        if ((m_modifiers & Mod_Alt) != 0 && ch >= 2 && ch <= ConsoleManagement::s_max_virtual_consoles + 1) {
-            // FIXME: Do something sanely here if we can't allocate a work queue?
-            MUST(g_io_work->try_queue([ch]() {
-                ConsoleManagement::the().switch_to(ch - 0x02);
-            }));
-        }
-        key_state_changed(ch, pressed);
-    }
+    event.scan_code_value = ch;
+    m_keyboard_device->handle_scan_code_input_event(event);
 }
 
 bool PS2KeyboardDevice::handle_irq(RegisterState const&)
 {
     // The controller will read the data and call irq_handle_byte_read
     // for the appropriate device
-    return m_i8042_controller->irq_process_input_buffer(HIDDevice::Type::Keyboard);
+    return m_i8042_controller->irq_process_input_buffer(instrument_type());
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<PS2KeyboardDevice>> PS2KeyboardDevice::try_to_initialize(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2KeyboardDevice>> PS2KeyboardDevice::try_to_initialize(I8042Controller const& ps2_controller, KeyboardDevice const& keyboard_device)
 {
-    auto keyboard_device = TRY(DeviceManagement::try_create_device<PS2KeyboardDevice>(ps2_controller));
-
-    TRY(keyboard_device->initialize());
-
-    return keyboard_device;
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2KeyboardDevice(ps2_controller, keyboard_device)));
+    TRY(device->initialize());
+    return device;
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> PS2KeyboardDevice::initialize()
 {
-    return m_i8042_controller->reset_device(HIDDevice::Type::Keyboard);
+    return m_i8042_controller->reset_device(PS2Device::Type::Keyboard);
 }
 
 // FIXME: UNMAP_AFTER_INIT might not be correct, because in practice PS/2 devices
 // are hot pluggable.
-UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT PS2KeyboardDevice::PS2KeyboardDevice(I8042Controller const& ps2_controller, KeyboardDevice const& keyboard_device)
     : IRQHandler(IRQ_KEYBOARD)
-    , KeyboardDevice()
-    , I8042Device(ps2_controller)
+    , PS2Device(ps2_controller)
+    , m_keyboard_device(keyboard_device)
 {
 }
 

@@ -12,14 +12,6 @@
 namespace Kernel {
 
 class HIDDevice : public CharacterDevice {
-public:
-    enum class Type {
-        Unknown = 0,
-        Keyboard,
-        Mouse,
-    };
-
-    virtual Type instrument_type() const = 0;
 
 protected:
     HIDDevice(MajorNumber major, MinorNumber minor)

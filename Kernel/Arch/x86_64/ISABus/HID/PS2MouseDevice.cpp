@@ -17,10 +17,10 @@ namespace Kernel {
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 #define PS2MOUSE_INTELLIMOUSE_EXPLORER_ID 0x04
 
-UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT PS2MouseDevice::PS2MouseDevice(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
     : IRQHandler(IRQ_MOUSE)
-    , MouseDevice()
-    , I8042Device(ps2_controller)
+    , PS2Device(ps2_controller)
+    , m_mouse_device(mouse_device)
 {
 }
 
@@ -35,21 +35,14 @@ bool PS2MouseDevice::handle_irq(RegisterState const&)
 
 void PS2MouseDevice::irq_handle_byte_read(u8 byte)
 {
-    auto commit_packet = [&] {
+    auto commit_packet = [this]() {
         m_data_state = 0;
         dbgln_if(PS2MOUSE_DEBUG, "PS2Mouse: {}, {} {} {}",
             m_data.bytes[1],
             m_data.bytes[2],
             (m_data.bytes[0] & 1) ? "Left" : "",
             (m_data.bytes[0] & 2) ? "Right" : "");
-
-        m_entropy_source.add_random_event(m_data.dword);
-
-        {
-            SpinlockLocker lock(m_queue_lock);
-            m_queue.enqueue(parse_data_packet(m_data));
-        }
-        evaluate_block_conditions();
+        m_mouse_device->handle_mouse_packet_input_event(parse_data_packet(m_data));
     };
 
     VERIFY(m_data_state < sizeof(m_data.bytes) / sizeof(m_data.bytes[0]));
@@ -59,25 +52,26 @@ void PS2MouseDevice::irq_handle_byte_read(u8 byte)
     case 0:
         if (!(byte & 0x08)) {
             dbgln("PS2Mouse: Stream out of sync.");
-            break;
+            return;
         }
         ++m_data_state;
-        break;
+        return;
     case 1:
         ++m_data_state;
-        break;
+        return;
     case 2:
         if (m_has_wheel) {
             ++m_data_state;
-            break;
+            return;
         }
         commit_packet();
-        break;
+        return;
     case 3:
         VERIFY(m_has_wheel);
         commit_packet();
-        break;
+        return;
     }
+    VERIFY_NOT_REACHED();
 }
 
 MousePacket PS2MouseDevice::parse_data_packet(RawPacket const& raw_packet)
@@ -173,11 +167,11 @@ ErrorOr<void> PS2MouseDevice::set_sample_rate(u8 rate)
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<PS2MouseDevice>> PS2MouseDevice::try_to_initialize(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
 {
-    auto mouse_device = TRY(DeviceManagement::try_create_device<PS2MouseDevice>(ps2_controller));
-    TRY(mouse_device->initialize());
-    return mouse_device;
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) PS2MouseDevice(ps2_controller, mouse_device)));
+    TRY(device->initialize());
+    return device;
 }
 
 UNMAP_AFTER_INIT ErrorOr<void> PS2MouseDevice::initialize()

@@ -11,16 +11,16 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(I8042Controller const& ps2_controller)
+UNMAP_AFTER_INIT ErrorOr<NonnullOwnPtr<VMWareMouseDevice>> VMWareMouseDevice::try_to_initialize(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
 {
     // FIXME: return the correct error
     if (!VMWareBackdoor::the())
         return Error::from_errno(EIO);
     if (!VMWareBackdoor::the()->vmmouse_is_absolute())
         return Error::from_errno(EIO);
-    auto mouse_device = TRY(DeviceManagement::try_create_device<VMWareMouseDevice>(ps2_controller));
-    TRY(mouse_device->initialize());
-    return mouse_device;
+    auto device = TRY(adopt_nonnull_own_or_enomem(new (nothrow) VMWareMouseDevice(ps2_controller, mouse_device)));
+    TRY(device->initialize());
+    return device;
 }
 
 void VMWareMouseDevice::irq_handle_byte_read(u8)
@@ -42,17 +42,12 @@ void VMWareMouseDevice::irq_handle_byte_read(u8)
         VERIFY(number_of_mouse_event_bytes % 4 == 0);
 
         auto mouse_packet = backdoor->receive_mouse_packet();
-        m_entropy_source.add_random_event(mouse_packet);
-        {
-            SpinlockLocker lock(m_queue_lock);
-            m_queue.enqueue(mouse_packet);
-        }
+        m_mouse_device->handle_mouse_packet_input_event(mouse_packet);
     }
-    evaluate_block_conditions();
 }
 
-VMWareMouseDevice::VMWareMouseDevice(I8042Controller const& ps2_controller)
-    : PS2MouseDevice(ps2_controller)
+VMWareMouseDevice::VMWareMouseDevice(I8042Controller const& ps2_controller, MouseDevice const& mouse_device)
+    : PS2MouseDevice(ps2_controller, mouse_device)
 {
 }
 VMWareMouseDevice::~VMWareMouseDevice() = default;

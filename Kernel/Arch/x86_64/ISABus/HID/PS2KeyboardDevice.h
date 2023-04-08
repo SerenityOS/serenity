@@ -10,39 +10,39 @@
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
-#include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 
 class PS2KeyboardDevice final : public IRQHandler
-    , public KeyboardDevice
-    , public I8042Device {
+    , public PS2Device {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<PS2KeyboardDevice>> try_to_initialize(I8042Controller const&);
+    static ErrorOr<NonnullOwnPtr<PS2KeyboardDevice>> try_to_initialize(I8042Controller const&, KeyboardDevice const&);
     virtual ~PS2KeyboardDevice() override;
     ErrorOr<void> initialize();
 
-    virtual StringView purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return "PS2KeyboardDevice"sv; }
 
-    // ^I8042Device
+    // ^PS2Device
     virtual void irq_handle_byte_read(u8 byte) override;
     virtual void enable_interrupts() override
     {
         enable_irq();
     }
+    virtual Type instrument_type() const override { return Type::Keyboard; }
 
 private:
-    explicit PS2KeyboardDevice(I8042Controller const&);
+    PS2KeyboardDevice(I8042Controller const&, KeyboardDevice const&);
 
     // ^IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
 
-    // ^CharacterDevice
-    virtual StringView class_name() const override { return "KeyboardDevice"sv; }
+    bool m_has_e0_prefix { false };
+
+    NonnullRefPtr<KeyboardDevice> const m_keyboard_device;
 };
 
 }
