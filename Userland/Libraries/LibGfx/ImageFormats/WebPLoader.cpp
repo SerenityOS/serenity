@@ -619,7 +619,7 @@ static ErrorOr<NonnullRefPtr<Bitmap>> decode_webp_chunk_VP8L_image(WebPLoadingCo
     ARGB32* end = bitmap->end();
     ARGB32* pixel = begin;
 
-    auto prefix_group = [prefix_bits, begin, &groups, size, &entropy_image](ARGB32* pixel) {
+    auto prefix_group = [prefix_bits, begin, &groups, size, &entropy_image](ARGB32* pixel) -> PrefixCodeGroup const& {
         if (!prefix_bits)
             return groups[0];
 
