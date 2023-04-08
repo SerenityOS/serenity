@@ -765,6 +765,34 @@ void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStream
     controller.pending_pull_intos().clear();
 }
 
+// https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerfillreadrequestfromqueue
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController& controller, NonnullRefPtr<ReadRequest> read_request)
+{
+    auto& vm = controller.vm();
+    auto& realm = controller.realm();
+
+    // 1. Assert: controller.[[queueTotalSize]] > 0.
+    VERIFY(controller.queue_total_size() > 0);
+
+    // 2. Let entry be controller.[[queue]][0].
+    // 3. Remove entry from controller.[[queue]].
+    auto entry = controller.queue().take_first();
+
+    // 4. Set controller.[[queueTotalSize]] to controller.[[queueTotalSize]] − entry’s byte length.
+    controller.set_queue_total_size(controller.queue_total_size() - entry.byte_length);
+
+    // 5. Perform ! ReadableByteStreamControllerHandleQueueDrain(controller).
+    readable_byte_stream_controller_handle_queue_drain(controller);
+
+    // 6. Let view be ! Construct(%Uint8Array%, « entry’s buffer, entry’s byte offset, entry’s byte length »).
+    auto view = MUST_OR_THROW_OOM(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), entry.buffer, JS::Value(entry.byte_offset), JS::Value(entry.byte_length)));
+
+    // 7. Perform readRequest’s chunk steps, given view.
+    read_request->on_chunk(view);
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-get-desired-size
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const& controller)
 {
@@ -781,6 +809,26 @@ Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteSt
 
     // 4. Return controller.[[strategyHWM]] − controller.[[queueTotalSize]].
     return controller.strategy_hwm() - controller.queue_total_size();
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-handle-queue-drain
+void readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController& controller)
+{
+    // 1. Assert: controller.[[stream]].[[state]] is "readable".
+    VERIFY(controller.stream()->state() == ReadableStream::State::Readable);
+
+    // 2. If controller.[[queueTotalSize]] is 0 and controller.[[closeRequested]] is true,
+    if (controller.queue_total_size() == 0 && controller.close_requested()) {
+        // 1. Perform ! ReadableByteStreamControllerClearAlgorithms(controller).
+        readable_byte_stream_controller_clear_algorithms(controller);
+
+        // 2. Perform ! ReadableStreamClose(controller.[[stream]]).
+        readable_stream_close(*controller.stream());
+    }
+    // 3. Otherwise,
+    else {
+        // FIXME: 1. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+    }
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-invalidate-byob-request
