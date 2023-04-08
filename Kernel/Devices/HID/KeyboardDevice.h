@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2021-2023, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2021, Edwin Hoksberg <mail@edwinhoksberg.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -12,14 +12,19 @@
 #include <Kernel/API/KeyCode.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/HID/Device.h>
+#include <Kernel/Devices/HID/ScanCodeEvent.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 
 class KeyboardDevice : public HIDDevice {
+    friend class DeviceManagement;
+
 public:
     using Event = KeyEvent;
+
+    static ErrorOr<NonnullRefPtr<KeyboardDevice>> try_to_initialize();
 
     virtual ~KeyboardDevice() override;
 
@@ -29,8 +34,7 @@ public:
     virtual ErrorOr<size_t> write(OpenFileDescription&, u64, UserOrKernelBuffer const&, size_t) override { return EINVAL; }
     virtual bool can_write(OpenFileDescription const&, u64) const override { return true; }
 
-    // ^HIDDevice
-    virtual Type instrument_type() const override { return Type::Keyboard; }
+    void handle_scan_code_input_event(ScanCodeEvent);
 
     // ^File
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
@@ -54,7 +58,6 @@ protected:
     bool m_caps_lock_to_ctrl_pressed { false };
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
-    bool m_has_e0_prefix { false };
     bool m_left_shift_pressed { false };
     bool m_right_shift_pressed { false };
     bool m_left_super_pressed { false };

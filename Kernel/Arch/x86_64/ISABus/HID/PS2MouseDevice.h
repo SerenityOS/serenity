@@ -9,33 +9,32 @@
 #include <AK/CircularQueue.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
-#include <Kernel/Devices/HID/MouseDevice.h>
 #include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {
 class PS2MouseDevice : public IRQHandler
-    , public MouseDevice
-    , public I8042Device {
+    , public PS2Device {
     friend class DeviceManagement;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<PS2MouseDevice>> try_to_initialize(I8042Controller const&);
+    static ErrorOr<NonnullOwnPtr<PS2MouseDevice>> try_to_initialize(I8042Controller const&, MouseDevice const&);
     ErrorOr<void> initialize();
 
     virtual ~PS2MouseDevice() override;
 
-    virtual StringView purpose() const override { return class_name(); }
+    virtual StringView purpose() const override { return "PS2MouseDevice"sv; }
 
-    // ^I8042Device
+    // ^PS2Device
     virtual void irq_handle_byte_read(u8 byte) override;
     virtual void enable_interrupts() override
     {
         enable_irq();
     }
+    virtual Type instrument_type() const override { return Type::Mouse; }
 
 protected:
-    explicit PS2MouseDevice(I8042Controller const&);
+    PS2MouseDevice(I8042Controller const&, MouseDevice const&);
 
     // ^IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
@@ -58,6 +57,8 @@ protected:
     RawPacket m_data;
     bool m_has_wheel { false };
     bool m_has_five_buttons { false };
+
+    NonnullRefPtr<MouseDevice> const m_mouse_device;
 };
 
 }

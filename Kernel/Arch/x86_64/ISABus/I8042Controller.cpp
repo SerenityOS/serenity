@@ -159,55 +159,63 @@ UNMAP_AFTER_INIT ErrorOr<void> I8042Controller::detect_devices()
 
     // Try to detect and initialize the devices
     if (m_first_port_available) {
-        auto error_or_device = PS2KeyboardDevice::try_to_initialize(*this);
+        // FIXME: Actually figure out the connected PS2 device type
+        m_first_ps2_port.device_type = PS2Device::Type::Keyboard;
+        auto keyboard_device = TRY(KeyboardDevice::try_to_initialize());
+        auto error_or_device = PS2KeyboardDevice::try_to_initialize(*this, *keyboard_device);
         if (error_or_device.is_error()) {
             dbgln("I8042: Keyboard device failed to initialize, disable");
             m_first_port_available = false;
             configuration &= ~I8042ConfigurationFlag::FirstPS2PortInterrupt;
             configuration |= I8042ConfigurationFlag::FirstPS2PortClock;
-            m_keyboard_device = nullptr;
+            m_first_ps2_port.device = nullptr;
+            m_first_ps2_port.device_type = {};
             SpinlockLocker lock(m_lock);
             // NOTE: Before setting the actual scan code set, stop packet streaming entirely.
-            TRY(send_command(HIDDevice::Type::Keyboard, I8042Command::DisablePacketStreaming));
+            TRY(send_command(PS2Device::Type::Keyboard, I8042Command::DisablePacketStreaming));
             TRY(do_wait_then_write(I8042Port::Buffer, I8042Command::SetScanCodeSet));
             TRY(do_wait_then_write(I8042Port::Buffer, 0x2));
 
             TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
             TRY(do_wait_then_write(I8042Port::Buffer, configuration));
         } else {
-            m_keyboard_device = error_or_device.release_value();
+            m_first_ps2_port.device = error_or_device.release_value();
         }
     }
     if (m_second_port_available) {
-        auto vmmouse_device_or_error = VMWareMouseDevice::try_to_initialize(*this);
+        // FIXME: Actually figure out the connected PS2 device type
+        m_second_ps2_port.device_type = PS2Device::Type::Mouse;
+        auto mouse_device = TRY(MouseDevice::try_to_initialize());
+        auto vmmouse_device_or_error = VMWareMouseDevice::try_to_initialize(*this, *mouse_device);
         if (vmmouse_device_or_error.is_error()) {
             // FIXME: is there something to do with the VMWare errors?
-            auto mouse_device_or_error = PS2MouseDevice::try_to_initialize(*this);
+            auto mouse_device_or_error = PS2MouseDevice::try_to_initialize(*this, *mouse_device);
             if (mouse_device_or_error.is_error()) {
                 dbgln("I8042: Mouse device failed to initialize, disable");
                 m_second_port_available = false;
                 configuration |= I8042ConfigurationFlag::SecondPS2PortClock;
-                m_mouse_device = nullptr;
+                m_second_ps2_port.device = nullptr;
+                m_second_ps2_port.device_type = {};
                 SpinlockLocker lock(m_lock);
                 TRY(do_wait_then_write(I8042Port::Command, I8042Command::WriteConfiguration));
                 TRY(do_wait_then_write(I8042Port::Buffer, configuration));
             } else {
-                m_mouse_device = mouse_device_or_error.release_value();
+                m_second_ps2_port.device = mouse_device_or_error.release_value();
             }
         } else {
-            m_mouse_device = vmmouse_device_or_error.release_value();
+            m_second_ps2_port.device = vmmouse_device_or_error.release_value();
         }
     }
 
     // Enable IRQs after both are detected and initialized
-    if (m_keyboard_device)
-        m_keyboard_device->enable_interrupts();
-    if (m_mouse_device)
-        m_mouse_device->enable_interrupts();
+    if (m_first_ps2_port.device)
+        m_first_ps2_port.device->enable_interrupts();
+    if (m_second_ps2_port.device)
+        m_second_ps2_port.device->enable_interrupts();
     return {};
 }
 
-bool I8042Controller::irq_process_input_buffer(HIDDevice::Type instrument_type)
+bool I8042Controller::irq_process_input_buffer(PS2Device::Type instrument_type)
 {
     VERIFY(Processor::current_in_irq());
 
@@ -215,17 +223,20 @@ bool I8042Controller::irq_process_input_buffer(HIDDevice::Type instrument_type)
     if (!(status & I8042StatusFlag::OutputBuffer))
         return false;
     u8 byte = IO::in8(I8042Port::Buffer);
-    if (instrument_type == HIDDevice::Type::Mouse) {
-        VERIFY(m_mouse_device);
-        static_cast<PS2MouseDevice&>(*m_mouse_device).irq_handle_byte_read(byte);
-        return true;
+
+    PS2Port* selected_port = nullptr;
+    if (m_first_ps2_port.device_type.has_value() && m_first_ps2_port.device_type.value() == instrument_type) {
+        VERIFY(m_first_ps2_port.device);
+        selected_port = &m_first_ps2_port;
+    } else if (m_second_ps2_port.device_type.has_value() && m_second_ps2_port.device_type.value() == instrument_type) {
+        VERIFY(m_second_ps2_port.device);
+        selected_port = &m_second_ps2_port;
+    } else {
+        return false;
     }
-    if (instrument_type == HIDDevice::Type::Keyboard) {
-        VERIFY(m_keyboard_device);
-        static_cast<PS2KeyboardDevice&>(*m_keyboard_device).irq_handle_byte_read(byte);
-        return true;
-    }
-    return false;
+
+    selected_port->device->irq_handle_byte_read(byte);
+    return true;
 }
 
 ErrorOr<void> I8042Controller::drain_output_buffer()
@@ -241,9 +252,9 @@ ErrorOr<void> I8042Controller::drain_output_buffer()
     return Error::from_errno(EBUSY);
 }
 
-ErrorOr<void> I8042Controller::do_reset_device(HIDDevice::Type device)
+ErrorOr<void> I8042Controller::do_reset_device(PS2Device::Type device)
 {
-    VERIFY(device != HIDDevice::Type::Unknown);
+    VERIFY(device != PS2Device::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
     VERIFY(!Processor::current_in_irq());
@@ -260,9 +271,9 @@ ErrorOr<void> I8042Controller::do_reset_device(HIDDevice::Type device)
     return {};
 }
 
-ErrorOr<u8> I8042Controller::do_send_command(HIDDevice::Type device, u8 command)
+ErrorOr<u8> I8042Controller::do_send_command(PS2Device::Type device, u8 command)
 {
-    VERIFY(device != HIDDevice::Type::Unknown);
+    VERIFY(device != PS2Device::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
     VERIFY(!Processor::current_in_irq());
@@ -270,9 +281,9 @@ ErrorOr<u8> I8042Controller::do_send_command(HIDDevice::Type device, u8 command)
     return do_write_to_device(device, command);
 }
 
-ErrorOr<u8> I8042Controller::do_send_command(HIDDevice::Type device, u8 command, u8 data)
+ErrorOr<u8> I8042Controller::do_send_command(PS2Device::Type device, u8 command, u8 data)
 {
-    VERIFY(device != HIDDevice::Type::Unknown);
+    VERIFY(device != PS2Device::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
     VERIFY(!Processor::current_in_irq());
@@ -283,9 +294,9 @@ ErrorOr<u8> I8042Controller::do_send_command(HIDDevice::Type device, u8 command,
     return response;
 }
 
-ErrorOr<u8> I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
+ErrorOr<u8> I8042Controller::do_write_to_device(PS2Device::Type device, u8 data)
 {
-    VERIFY(device != HIDDevice::Type::Unknown);
+    VERIFY(device != PS2Device::Type::Unknown);
     VERIFY(m_lock.is_locked());
 
     VERIFY(!Processor::current_in_irq());
@@ -293,7 +304,7 @@ ErrorOr<u8> I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
     int attempts = 0;
     u8 response;
     do {
-        if (device != HIDDevice::Type::Keyboard) {
+        if (device != PS2Device::Type::Keyboard) {
             TRY(prepare_for_output());
             IO::out8(I8042Port::Command, I8042Command::WriteSecondPS2PortInputBuffer);
         }
@@ -307,25 +318,25 @@ ErrorOr<u8> I8042Controller::do_write_to_device(HIDDevice::Type device, u8 data)
     return response;
 }
 
-ErrorOr<u8> I8042Controller::do_read_from_device(HIDDevice::Type device)
+ErrorOr<u8> I8042Controller::do_read_from_device(PS2Device::Type device)
 {
-    VERIFY(device != HIDDevice::Type::Unknown);
+    VERIFY(device != PS2Device::Type::Unknown);
 
     TRY(prepare_for_input(device));
     return IO::in8(I8042Port::Buffer);
 }
 
-ErrorOr<void> I8042Controller::prepare_for_input(HIDDevice::Type device)
+ErrorOr<void> I8042Controller::prepare_for_input(PS2Device::Type device)
 {
     VERIFY(m_lock.is_locked());
-    u8 const second_port_flag = device == HIDDevice::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
+    u8 const second_port_flag = device == PS2Device::Type::Keyboard ? 0 : I8042StatusFlag::SecondPS2PortOutputBuffer;
     for (int attempt = 0; attempt < 1000; attempt++) {
         u8 status = IO::in8(I8042Port::Status);
         if (!(status & I8042StatusFlag::OutputBuffer)) {
             microseconds_delay(1000);
             continue;
         }
-        if (device == HIDDevice::Type::Unknown)
+        if (device == PS2Device::Type::Unknown)
             return {};
         if ((status & I8042StatusFlag::SecondPS2PortOutputBuffer) == second_port_flag)
             return {};
@@ -369,7 +380,7 @@ ErrorOr<void> I8042Controller::do_wait_then_write(u8 port, u8 data)
 ErrorOr<u8> I8042Controller::do_wait_then_read(u8 port)
 {
     VERIFY(m_lock.is_locked());
-    TRY(prepare_for_input(HIDDevice::Type::Unknown));
+    TRY(prepare_for_input(PS2Device::Type::Unknown));
     return IO::in8(port);
 }
 
