@@ -8,13 +8,9 @@
 #include <Kernel/Arch/aarch64/BootPPMParser.h>
 #include <Kernel/Arch/aarch64/RPi/Framebuffer.h>
 #include <Kernel/Arch/aarch64/RPi/FramebufferMailboxMessages.h>
+#include <Kernel/BootInfo.h>
 #include <Kernel/Sections.h>
 
-extern READONLY_AFTER_INIT PhysicalAddress multiboot_framebuffer_addr;
-extern READONLY_AFTER_INIT u32 multiboot_framebuffer_pitch;
-extern READONLY_AFTER_INIT u32 multiboot_framebuffer_width;
-extern READONLY_AFTER_INIT u32 multiboot_framebuffer_height;
-extern READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 extern const u32 serenity_boot_logo_start;
 extern const u32 serenity_boot_logo_size;
 
