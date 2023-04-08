@@ -490,16 +490,25 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     auto allocated_space = TRY(Memory::AddressSpace::try_create(*this, nullptr));
     OwnPtr<Memory::AddressSpace> old_space;
+    auto old_master_tls_region = m_master_tls_region;
+    auto old_master_tls_size = m_master_tls_size;
+    auto old_master_tls_alignment = m_master_tls_alignment;
     auto& new_space = m_space.with([&](auto& space) -> Memory::AddressSpace& {
         old_space = move(space);
         space = move(allocated_space);
         return *space;
     });
+    m_master_tls_region = nullptr;
+    m_master_tls_size = 0;
+    m_master_tls_alignment = 0;
     ArmedScopeGuard space_guard([&]() {
         // If we failed at any point from now on we have to revert back to the old address space
         m_space.with([&](auto& space) {
             space = old_space.release_nonnull();
         });
+        m_master_tls_region = old_master_tls_region;
+        m_master_tls_size = old_master_tls_size;
+        m_master_tls_alignment = old_master_tls_alignment;
         Memory::MemoryManager::enter_process_address_space(*this);
     });
 
