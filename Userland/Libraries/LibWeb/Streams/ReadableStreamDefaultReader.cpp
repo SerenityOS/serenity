@@ -102,7 +102,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamDefaultReader::
     auto read_request = adopt_ref(*new DefaultReaderReadRequest(realm, promise_capability));
 
     // 4. Perform ! ReadableStreamDefaultReaderRead(this, readRequest).
-    readable_stream_default_reader_read(*this, read_request);
+    TRY(readable_stream_default_reader_read(*this, read_request));
 
     // 5. Return promise.
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise()) };

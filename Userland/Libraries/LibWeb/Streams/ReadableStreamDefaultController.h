@@ -65,7 +65,7 @@ public:
 
     WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> cancel_steps(JS::Value reason);
     WebIDL::ExceptionOr<void> pull_steps(ReadRequest&);
-    void release_steps();
+    WebIDL::ExceptionOr<void> release_steps();
 
 private:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;

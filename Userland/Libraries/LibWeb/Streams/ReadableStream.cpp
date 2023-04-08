@@ -7,6 +7,7 @@
 #include <LibJS/Runtime/PromiseCapability.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Streams/AbstractOperations.h>
+#include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
@@ -107,7 +108,7 @@ JS::ThrowCompletionOr<void> ReadableStream::initialize(JS::Realm& realm)
 void ReadableStream::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_controller);
+    m_controller->visit([&](auto& controller) { visitor.visit(controller); });
     visitor.visit(m_stored_error);
     visitor.visit(m_reader);
 }
