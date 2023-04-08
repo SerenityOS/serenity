@@ -32,9 +32,11 @@ static void delay(i64 nanoseconds)
 }
 
 constexpr u32 max_supported_sdsc_frequency = 25000000;
+constexpr u32 max_supported_sdsc_frequency_high_speed = 50000000;
 
 // In "m_registers->host_configuration_0"
 // 2.2.11 Host Control 1 Register
+constexpr u32 high_speed_enable = 1 << 2;
 constexpr u32 dma_select_adma2_32 = 0b10 << 3;
 constexpr u32 dma_select_adma2_64 = 0b11 << 3;
 
@@ -221,8 +223,13 @@ ErrorOr<NonnullLockRefPtr<SDMemoryCard>> SDHostController::try_initialize_insert
     u64 capacity = static_cast<u64>(block_count) * block_size;
     u64 card_capacity_in_blocks = capacity / block_len;
 
-    // TODO: Do high speed initialisation, if supported
-    TRY(sd_clock_frequency_change(max_supported_sdsc_frequency));
+    if (m_registers->capabilities.high_speed) {
+        dbgln("SDHC: Enabling High Speed mode");
+        m_registers->host_configuration_0 = m_registers->host_configuration_0 | high_speed_enable;
+        TRY(sd_clock_frequency_change(max_supported_sdsc_frequency_high_speed));
+    } else {
+        TRY(sd_clock_frequency_change(max_supported_sdsc_frequency));
+    }
 
     TRY(issue_command(SD::Commands::select_card, rca));
     TRY(wait_for_response());
