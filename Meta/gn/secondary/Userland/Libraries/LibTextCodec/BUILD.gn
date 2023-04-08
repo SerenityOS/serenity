@@ -1,0 +1,9 @@
+shared_library("LibTextCodec") {
+  output_name = "textcodec"
+  include_dirs = [ "//Userland/Libraries" ]
+  deps = [
+    "//AK",
+    "//Userland/Libraries/LibUnicode",
+  ]
+  sources = [ "Decoder.cpp" ]
+}
