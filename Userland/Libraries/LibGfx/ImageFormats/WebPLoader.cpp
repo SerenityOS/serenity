@@ -356,6 +356,10 @@ ErrorOr<u32> CanonicalCode::read_symbol(LittleEndianInputBitStream& bit_stream) 
 // "From here on, we refer to this set as a prefix code group."
 class PrefixCodeGroup {
 public:
+    PrefixCodeGroup() = default;
+    PrefixCodeGroup(PrefixCodeGroup&&) = default;
+    PrefixCodeGroup(PrefixCodeGroup const&) = delete;
+
     CanonicalCode& operator[](int i) { return m_codes[i]; }
     CanonicalCode const& operator[](int i) const { return m_codes[i]; }
 
