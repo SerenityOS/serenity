@@ -8,6 +8,8 @@
 
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/PlatformObject.h>
+#include <LibWeb/Forward.h>
+#include <LibWeb/Streams/ReadableByteStreamController.h>
 
 namespace Web::Streams {
 
@@ -19,6 +21,10 @@ public:
     virtual ~ReadableStreamBYOBRequest() override = default;
 
     JS::GCPtr<JS::TypedArrayBase> view();
+
+    void set_controller(JS::GCPtr<ReadableByteStreamController> value) { m_controller = value; }
+
+    void set_view(JS::GCPtr<JS::TypedArrayBase> value) { m_view = value; }
 
 private:
     explicit ReadableStreamBYOBRequest(JS::Realm&);

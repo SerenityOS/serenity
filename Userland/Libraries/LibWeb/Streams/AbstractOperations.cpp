@@ -12,6 +12,7 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
+#include <LibWeb/Streams/ReadableStreamBYOBRequest.h>
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/Streams/ReadableStreamGenericReader.h>
@@ -744,6 +745,26 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-algorithms
+void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController& controller)
+{
+    // 1. Set controller.[[pullAlgorithm]] to undefined.
+    controller.set_pull_algorithm({});
+
+    // 2. Set controller.[[cancelAlgorithm]] to undefined.
+    controller.set_cancel_algorithm({});
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-pending-pull-intos
+void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStreamController& controller)
+{
+    // 1. Perform ! ReadableByteStreamControllerInvalidateBYOBRequest(controller).
+    readable_byte_stream_controller_invalidate_byob_request(controller);
+
+    // 2. Set controller.[[pendingPullIntos]] to a new empty list.
+    controller.pending_pull_intos().clear();
+}
+
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-get-desired-size
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const& controller)
 {
@@ -760,6 +781,23 @@ Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteSt
 
     // 4. Return controller.[[strategyHWM]] − controller.[[queueTotalSize]].
     return controller.strategy_hwm() - controller.queue_total_size();
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-invalidate-byob-request
+void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamController& controller)
+{
+    // 1. If controller.[[byobRequest]] is null, return.
+    if (!controller.byob_request())
+        return;
+
+    // 2. Set controller.[[byobRequest]].[[controller]] to undefined.
+    controller.byob_request()->set_controller({});
+
+    // 3. Set controller.[[byobRequest]].[[view]] to null.
+    controller.byob_request()->set_view({});
+
+    // 4. Set controller.[[byobRequest]] to null.
+    controller.set_byob_request({});
 }
 
 // https://streams.spec.whatwg.org/#acquire-writable-stream-default-writer

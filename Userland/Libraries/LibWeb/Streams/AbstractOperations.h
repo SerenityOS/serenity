@@ -53,7 +53,10 @@ bool readable_stream_default_controller_can_close_or_enqueue(ReadableStreamDefau
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStream&, ReadableStreamDefaultController&, StartAlgorithm&&, PullAlgorithm&&, CancelAlgorithm&&, double high_water_mark, SizeAlgorithm&&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source_value, UnderlyingSource, double high_water_mark, SizeAlgorithm&&);
 
+void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController&);
+void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStreamController&);
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const&);
+void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamController&);
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> acquire_writable_stream_default_writer(WritableStream&);
 bool is_writable_stream_locked(WritableStream const&);
