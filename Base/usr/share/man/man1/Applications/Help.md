@@ -42,7 +42,7 @@ $ Help 2 mkdir
 ## Files
 
 `Help` looks for man pages under `/usr/share/man`. For example,
-this man page should be located at `/usr/share/man/man1/Help.md`.
+this man page should be located at `/usr/share/man/man1/Applications/Help.md`.
 
 ## See Also
 
