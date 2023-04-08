@@ -38,7 +38,7 @@
 #    define AK_ARCH_32_BIT
 #endif
 
-#if defined(__clang__)
+#if defined(__clang__) || defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #    define AK_COMPILER_CLANG
 #elif defined(__GNUC__)
 #    define AK_COMPILER_GCC
@@ -116,7 +116,7 @@
 #    define VALIDATE_IS_AARCH64() static_assert(false, "Trying to include aarch64 only header on non aarch64 platform");
 #endif
 
-#if !defined(AK_COMPILER_CLANG) && !defined(__CLION_IDE_) && !defined(__CLION_IDE__)
+#if !defined(AK_COMPILER_CLANG)
 #    define AK_HAS_CONDITIONALLY_TRIVIAL
 #endif
 

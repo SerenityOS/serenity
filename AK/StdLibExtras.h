@@ -8,7 +8,7 @@
 
 #include <AK/Platform.h>
 
-#if defined(AK_COMPILER_CLANG) || defined(__CLION_IDE__)
+#if defined(AK_COMPILER_CLANG)
 #    pragma clang diagnostic ignored "-Wunqualified-std-cast-call"
 #endif
 
