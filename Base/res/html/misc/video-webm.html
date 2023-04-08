@@ -14,38 +14,58 @@
         background-color: #333333;
         color: #ffffff;
     }
+
+    .horizontal > * {
+        display: inline-block;
+    }
 </style>
 </head>
 <body>
-    <table>
-        <thead>
-            <tr>
-                <th colspan="2">Metadata</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>ID</td>
-                <td id=id>null</td>
-            </tr>
-            <tr>
-                <td>Is Selected</td>
-                <td id=selected>false</td>
-            </tr>
-            <tr>
-                <td>Duration</td>
-                <td id=duration>0 seconds</td>
-            </tr>
-            <tr>
-                <td>Width</td>
-                <td id=width>0px</td>
-            </tr>
-            <tr>
-                <td>Height</td>
-                <td id=height>0px</td>
-            </tr>
-        </tbody>
-    </table>
+    <div class=horizontal>
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2">Metadata</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>ID</td>
+                    <td id=id>null</td>
+                </tr>
+                <tr>
+                    <td>Is Selected</td>
+                    <td id=selected>false</td>
+                </tr>
+                <tr>
+                    <td>Width</td>
+                    <td id=width>0px</td>
+                </tr>
+                <tr>
+                    <td>Height</td>
+                    <td id=height>0px</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <table>
+            <thead>
+                <tr>
+                    <th colspan="2">Playback State</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Duration</td>
+                    <td id=duration>0 seconds</td>
+                </tr>
+                <tr>
+                    <td>Play State</td>
+                    <td id=state>paused</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <br />
 
@@ -66,6 +86,16 @@
         video.addEventListener('loadedmetadata', () => {
             document.getElementById('width').textContent = `${video.videoWidth}px`;
             document.getElementById('height').textContent = `${video.videoHeight}px`;
+        });
+
+        video.addEventListener('playing', () => {
+            document.getElementById('state').textContent = 'playing';
+        });
+        video.addEventListener('waiting', () => {
+            document.getElementById('state').textContent = 'waiting';
+        });
+        video.addEventListener('pause', () => {
+            document.getElementById('state').textContent = 'paused';
         });
     </script>
 </body>
