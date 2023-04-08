@@ -68,7 +68,7 @@ RefPtr<Gfx::Bitmap> VideoTrack::next_frame()
     while (!decoded_frame) {
         auto result = m_decoder.receive_sample(frame_sample.value()->data());
         if (result.is_error()) {
-            dbgln("VideoTrack: Error receiving video sample data: {}", frame_sample.error().description());
+            dbgln("VideoTrack: Error receiving video sample data: {}", result.error().description());
             return {};
         }
 
