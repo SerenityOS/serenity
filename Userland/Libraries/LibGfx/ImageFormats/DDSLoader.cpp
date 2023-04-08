@@ -685,6 +685,11 @@ size_t DDSImageDecoderPlugin::frame_count()
     return 1;
 }
 
+size_t DDSImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> DDSImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)

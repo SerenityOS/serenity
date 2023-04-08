@@ -52,18 +52,20 @@ void ImageWidget::set_auto_resize(bool value)
 // Same as ImageViewer::ViewWidget::animate(), you probably want to keep any changes in sync
 void ImageWidget::animate()
 {
-    m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
+    auto first_animated_frame_index = m_image_decoder->first_animated_frame_index();
+    auto total_animated_frames = m_image_decoder->frame_count() - first_animated_frame_index;
+    m_current_frame_index = (m_current_frame_index + 1) % total_animated_frames;
 
-    auto current_frame = m_image_decoder->frame(m_current_frame_index).release_value_but_fixme_should_propagate_errors();
+    auto current_frame = m_image_decoder->frame(first_animated_frame_index + m_current_frame_index).release_value_but_fixme_should_propagate_errors();
     set_bitmap(current_frame.image);
 
     if (current_frame.duration != m_timer->interval()) {
         m_timer->restart(current_frame.duration);
     }
 
-    if (m_current_frame_index == m_image_decoder->frame_count() - 1) {
+    if (m_current_frame_index == total_animated_frames - 1) {
         ++m_loops_completed;
-        if (m_loops_completed > 0 && m_loops_completed == m_image_decoder->loop_count()) {
+        if (m_image_decoder->loop_count() > 0 && m_loops_completed == m_image_decoder->loop_count()) {
             m_timer->stop();
         }
     }

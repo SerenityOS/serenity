@@ -251,6 +251,11 @@ size_t ICOImageDecoderPlugin::frame_count()
     return 1;
 }
 
+size_t ICOImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> ICOImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)

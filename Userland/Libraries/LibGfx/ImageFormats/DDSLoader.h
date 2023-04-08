@@ -247,6 +247,7 @@ public:
     virtual bool is_animated() override;
     virtual size_t loop_count() override;
     virtual size_t frame_count() override;
+    virtual size_t first_animated_frame_index() override;
     virtual ErrorOr<ImageFrameDescriptor> frame(size_t index) override;
     virtual ErrorOr<Optional<ReadonlyBytes>> icc_data() override;
 
