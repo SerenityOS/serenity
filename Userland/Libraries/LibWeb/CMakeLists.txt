@@ -475,6 +475,7 @@ set(SOURCES
     Streams/AbstractOperations.cpp
     Streams/ReadableByteStreamController.cpp
     Streams/ReadableStream.cpp
+    Streams/ReadableStreamBYOBReader.cpp
     Streams/ReadableStreamBYOBRequest.cpp
     Streams/ReadableStreamDefaultController.cpp
     Streams/ReadableStreamDefaultReader.cpp
