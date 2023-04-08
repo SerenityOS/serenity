@@ -11,7 +11,7 @@ It's probably not done in the cleanest way but it works
  3 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
-index 1f0dd9819abb1f8dac52250d24aa8d0763f05445..65b641e283a42cdc2bd6c63c1750b46e0b33ab02 100644
+index ff6bd088c99a77689733af03858950fab1cf6284..c39b40670b45aa853b6678835ef2d46564ba9506 100644
 --- a/mkspecs/serenity-g++/qplatformdefs.h
 +++ b/mkspecs/serenity-g++/qplatformdefs.h
 @@ -43,6 +43,9 @@
