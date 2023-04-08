@@ -6,6 +6,7 @@
  */
 
 #include <bits/pthread_cancel.h>
+#include <bits/utimens.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -127,11 +128,18 @@ int utimensat(int dirfd, char const* path, struct timespec const times[2], int f
         errno = EFAULT;
         return -1;
     }
+    return __utimens(dirfd, path, times, flag);
+}
 
-    size_t path_length = strlen(path);
-    if (path_length > INT32_MAX) {
-        errno = EINVAL;
-        return -1;
+int __utimens(int fd, char const* path, struct timespec const times[2], int flag)
+{
+    size_t path_length = 0;
+    if (path) {
+        path_length = strlen(path);
+        if (path_length > INT32_MAX) {
+            errno = EINVAL;
+            return -1;
+        }
     }
 
     // POSIX allows AT_SYMLINK_NOFOLLOW flag or no flags.
@@ -161,8 +169,16 @@ int utimensat(int dirfd, char const* path, struct timespec const times[2], int f
         }
     }
 
-    Syscall::SC_utimensat_params params { dirfd, { path, path_length }, times, flag };
-    int rc = syscall(SC_utimensat, &params);
+    int rc = 0;
+    if (path) {
+        // NOTE: fd is treated as dirfd for this syscall.
+        Syscall::SC_utimensat_params params { fd, { path, path_length }, times, flag };
+        rc = syscall(SC_utimensat, &params);
+    } else {
+        Syscall::SC_futimens_params params { fd, times };
+        rc = syscall(SC_futimens, &params);
+    }
+
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
