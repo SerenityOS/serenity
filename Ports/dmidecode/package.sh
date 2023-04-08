@@ -1,5 +1,5 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='dmidecode'
-version='3.4'
-files="https://download.savannah.gnu.org/releases/dmidecode/dmidecode-${version}.tar.xz dmidecode-${version}.tar.xz 43cba851d8467c9979ccdbeab192eb6638c7d3a697eba5ddb779da8837542212"
+version='3.5'
+files="https://download-mirror.savannah.gnu.org/releases/dmidecode/dmidecode-${version}.tar.xz dmidecode-${version}.tar.xz 79d76735ee8e25196e2a722964cf9683f5a09581503537884b256b01389cc073"
 auth_type='sha256'
