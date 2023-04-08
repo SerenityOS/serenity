@@ -60,7 +60,7 @@ index 0000000000000000000000000000000000000000..3808b5a269788a32d4aa74aa629b519d
 +load(qt_config)
 diff --git a/mkspecs/serenity-g++/qplatformdefs.h b/mkspecs/serenity-g++/qplatformdefs.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..1f0dd9819abb1f8dac52250d24aa8d0763f05445
+index 0000000000000000000000000000000000000000..ff6bd088c99a77689733af03858950fab1cf6284
 --- /dev/null
 +++ b/mkspecs/serenity-g++/qplatformdefs.h
 @@ -0,0 +1,87 @@
@@ -148,7 +148,7 @@ index 0000000000000000000000000000000000000000..1f0dd9819abb1f8dac52250d24aa8d07
 +#endif
 +
 +#include <langinfo.h>
-+#include <sys/ioctl_numbers.h>
++#include <sys/ioctl.h>
 +
 +#endif // QPLATFORMDEFS_H
 diff --git a/src/corelib/global/qsystemdetection.h b/src/corelib/global/qsystemdetection.h
