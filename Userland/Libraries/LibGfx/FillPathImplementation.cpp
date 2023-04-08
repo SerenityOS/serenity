@@ -117,7 +117,8 @@ void Painter::fill_path_impl(Path const& path, ColorOrFunction color, Gfx::Paint
 
     auto draw_scanline = [&](int y, GridCoordinateType x1, GridCoordinateType x2) {
         const auto draw_offset = offset.value_or({ 0, 0 });
-        const auto draw_origin = (path.bounding_box().top_left() + draw_offset).to_type<int>();
+        // Note: .to_floored() is used here to be consistent with enclosing_int_rect()
+        const auto draw_origin = (path.bounding_box().top_left() + draw_offset).to_floored<int>();
         // FIMXE: Offset is added here to handle floating point translations in the AA painter,
         // really this should be done there but this function is a bit too specialised.
         y = floorf(y + draw_offset.y());
