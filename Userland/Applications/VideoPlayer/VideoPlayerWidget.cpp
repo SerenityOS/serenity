@@ -112,7 +112,7 @@ void VideoPlayerWidget::close_file()
 
 void VideoPlayerWidget::open_file(StringView filename)
 {
-    auto load_file_result = Video::PlaybackManager::from_file(*this, filename);
+    auto load_file_result = Video::PlaybackManager::from_file(filename);
 
     if (load_file_result.is_error()) {
         on_decoding_error(load_file_result.release_error());
@@ -121,9 +121,30 @@ void VideoPlayerWidget::open_file(StringView filename)
 
     m_path = filename;
     update_title();
-
     close_file();
+
     m_playback_manager = load_file_result.release_value();
+
+    m_playback_manager->on_video_frame = [this](auto frame) {
+        m_video_display->set_bitmap(move(frame));
+        m_video_display->repaint();
+
+        update_seek_slider_max();
+        set_current_timestamp(m_playback_manager->current_playback_time());
+    };
+
+    m_playback_manager->on_playback_state_change = [this]() {
+        update_play_pause_icon();
+    };
+
+    m_playback_manager->on_decoder_error = [this](auto error) {
+        on_decoding_error(error);
+    };
+
+    m_playback_manager->on_fatal_playback_error = [this](auto) {
+        close_file();
+    };
+
     update_seek_slider_max();
     resume_playback();
 }
@@ -238,32 +259,6 @@ void VideoPlayerWidget::set_time_label(Time timestamp)
     }
 
     m_timestamp_label->set_text(string_builder.string_view());
-}
-
-void VideoPlayerWidget::event(Core::Event& event)
-{
-    if (event.type() == Video::EventType::DecoderErrorOccurred) {
-        auto& error_event = static_cast<Video::DecoderErrorEvent&>(event);
-        on_decoding_error(error_event.error());
-        error_event.accept();
-    } else if (event.type() == Video::EventType::VideoFramePresent) {
-        auto& frame_event = static_cast<Video::VideoFramePresentEvent&>(event);
-
-        m_video_display->set_bitmap(frame_event.frame());
-        m_video_display->repaint();
-
-        update_seek_slider_max();
-        set_current_timestamp(m_playback_manager->current_playback_time());
-
-        frame_event.accept();
-    } else if (event.type() == Video::EventType::PlaybackStateChange) {
-        update_play_pause_icon();
-        event.accept();
-    } else if (event.type() == Video::EventType::FatalPlaybackError) {
-        close_file();
-    }
-
-    Widget::event(event);
 }
 
 void VideoPlayerWidget::drop_event(GUI::DropEvent& event)
