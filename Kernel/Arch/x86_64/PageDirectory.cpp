@@ -61,11 +61,9 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<PageDirectory> PageDirectory::must_create_ker
     return adopt_lock_ref_if_nonnull(new (nothrow) PageDirectory).release_nonnull();
 }
 
-ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace(Process& process)
+ErrorOr<NonnullLockRefPtr<PageDirectory>> PageDirectory::try_create_for_userspace()
 {
     auto directory = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PageDirectory));
-
-    directory->m_process = &process;
 
     directory->m_pml4t = TRY(MM.allocate_physical_page());
 

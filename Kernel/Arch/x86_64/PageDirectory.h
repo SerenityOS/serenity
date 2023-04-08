@@ -162,7 +162,7 @@ class PageDirectory final : public AtomicRefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static ErrorOr<NonnullLockRefPtr<PageDirectory>> try_create_for_userspace(Process& process);
+    static ErrorOr<NonnullLockRefPtr<PageDirectory>> try_create_for_userspace();
     static NonnullLockRefPtr<PageDirectory> must_create_kernel_page_directory();
     static LockRefPtr<PageDirectory> find_current();
 
@@ -180,7 +180,10 @@ public:
         return m_pml4t;
     }
 
-    Process* process() { return m_process; }
+    AddressSpace* address_space() { return m_space; }
+    AddressSpace const* address_space() const { return m_space; }
+
+    void set_space(Badge<AddressSpace>, AddressSpace& space) { m_space = &space; }
 
     RecursiveSpinlock<LockRank::None>& get_lock() { return m_lock; }
 
@@ -192,7 +195,7 @@ private:
     static void register_page_directory(PageDirectory* directory);
     static void deregister_page_directory(PageDirectory* directory);
 
-    Process* m_process { nullptr };
+    AddressSpace* m_space { nullptr };
     RefPtr<PhysicalPage> m_pml4t;
     RefPtr<PhysicalPage> m_directory_table;
     RefPtr<PhysicalPage> m_directory_pages[512];
