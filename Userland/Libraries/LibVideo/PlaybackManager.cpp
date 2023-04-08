@@ -25,7 +25,27 @@ namespace Video {
         _fatal_expression.release_value();                                                           \
     })
 
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(Core::Object& event_handler, StringView filename)
+class DefaultPlaybackTimer final : public PlaybackTimer {
+public:
+    static ErrorOr<NonnullOwnPtr<DefaultPlaybackTimer>> create(int interval_ms, Function<void()>&& timeout_handler)
+    {
+        auto timer = TRY(Core::Timer::create_single_shot(interval_ms, move(timeout_handler)));
+        return adopt_nonnull_own_or_enomem(new (nothrow) DefaultPlaybackTimer(move(timer)));
+    }
+
+    virtual void start() override { m_timer->start(); }
+    virtual void start(int interval_ms) override { m_timer->start(interval_ms); }
+
+private:
+    explicit DefaultPlaybackTimer(NonnullRefPtr<Core::Timer> timer)
+        : m_timer(move(timer))
+    {
+    }
+
+    NonnullRefPtr<Core::Timer> m_timer;
+};
+
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(StringView filename, PlaybackTimerCreator playback_timer_creator)
 {
     NonnullOwnPtr<Demuxer> demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
     auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
@@ -35,20 +55,24 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(Core::
 
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
 
-    return make<PlaybackManager>(event_handler, demuxer, track, make<VP9::Decoder>());
+    return make<PlaybackManager>(demuxer, track, make<VP9::Decoder>(), move(playback_timer_creator));
 }
 
-PlaybackManager::PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder)
-    : m_event_handler(event_handler)
-    , m_main_loop(Core::EventLoop::current())
-    , m_demuxer(move(demuxer))
+PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, PlaybackTimerCreator playback_timer_creator)
+    : m_demuxer(move(demuxer))
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
     , m_frame_queue(make<VideoFrameQueue>())
     , m_playback_handler(make<StartingStateHandler>(*this, false))
 {
-    m_present_timer = Core::Timer::create_single_shot(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
-    m_decode_timer = Core::Timer::create_single_shot(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
+    if (playback_timer_creator) {
+        m_present_timer = playback_timer_creator(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
+        m_decode_timer = playback_timer_creator(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
+    } else {
+        m_present_timer = DefaultPlaybackTimer::create(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
+        m_decode_timer = DefaultPlaybackTimer::create(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
+    }
+
     TRY_OR_FATAL_ERROR(m_playback_handler->on_enter());
 }
 
@@ -84,9 +108,8 @@ void PlaybackManager::dispatch_fatal_error(Error error)
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Encountered fatal error: {}", error.string_literal());
     // FIXME: For threading, this will have to use a pre-allocated event to send to the main loop
     //        to be able to gracefully handle OOM.
-    VERIFY(&m_main_loop == &Core::EventLoop::current());
-    FatalPlaybackErrorEvent event { move(error) };
-    m_event_handler.dispatch_event(event);
+    if (on_fatal_playback_error)
+        on_fatal_playback_error(move(error));
 }
 
 void PlaybackManager::dispatch_decoder_error(DecoderError error)
@@ -99,14 +122,18 @@ void PlaybackManager::dispatch_decoder_error(DecoderError error)
     default:
         dbgln("Playback error encountered: {}", error.string_literal());
         TRY_OR_FATAL_ERROR(m_playback_handler->stop());
-        m_main_loop.post_event(m_event_handler, make<DecoderErrorEvent>(move(error)));
+
+        if (on_decoder_error)
+            on_decoder_error(move(error));
+
         break;
     }
 }
 
 void PlaybackManager::dispatch_new_frame(RefPtr<Gfx::Bitmap> frame)
 {
-    m_main_loop.post_event(m_event_handler, make<VideoFramePresentEvent>(frame));
+    if (on_video_frame)
+        on_video_frame(move(frame));
 }
 
 bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
@@ -123,7 +150,8 @@ bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
 
 void PlaybackManager::dispatch_state_change()
 {
-    m_main_loop.post_event(m_event_handler, TRY_OR_FATAL_ERROR(try_make<PlaybackStateChangeEvent>()));
+    if (on_playback_state_change)
+        on_playback_state_change();
 }
 
 void PlaybackManager::timer_callback()

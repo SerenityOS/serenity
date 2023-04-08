@@ -11,7 +11,6 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Queue.h>
 #include <AK/Time.h>
-#include <LibCore/EventLoop.h>
 #include <LibCore/SharedCircularQueue.h>
 #include <LibGfx/Bitmap.h>
 #include <LibThreading/ConditionVariable.h>
@@ -83,6 +82,14 @@ private:
 static constexpr size_t FRAME_BUFFER_COUNT = 4;
 using VideoFrameQueue = Queue<FrameQueueItem, FRAME_BUFFER_COUNT>;
 
+class PlaybackTimer {
+public:
+    virtual ~PlaybackTimer() = default;
+
+    virtual void start() = 0;
+    virtual void start(int interval_ms) = 0;
+};
+
 class PlaybackManager {
 public:
     enum class SeekMode {
@@ -92,9 +99,11 @@ public:
 
     static constexpr SeekMode DEFAULT_SEEK_MODE = SeekMode::Accurate;
 
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(Core::Object& event_handler, StringView file);
+    using PlaybackTimerCreator = Function<ErrorOr<NonnullOwnPtr<PlaybackTimer>>(int, Function<void()>)>;
 
-    PlaybackManager(Core::Object& event_handler, NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(StringView file, PlaybackTimerCreator = nullptr);
+
+    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, PlaybackTimerCreator);
 
     void resume_playback();
     void pause_playback();
@@ -110,7 +119,10 @@ public:
     Time current_playback_time();
     Time duration();
 
-    Function<void(NonnullRefPtr<Gfx::Bitmap>, Time)> on_frame_present;
+    Function<void(RefPtr<Gfx::Bitmap>)> on_video_frame;
+    Function<void()> on_playback_state_change;
+    Function<void(DecoderError)> on_decoder_error;
+    Function<void(Error)> on_fatal_playback_error;
 
 private:
     class PlaybackStateHandler;
@@ -137,9 +149,6 @@ private:
     void dispatch_state_change();
     void dispatch_fatal_error(Error);
 
-    Core::Object& m_event_handler;
-    Core::EventLoop& m_main_loop;
-
     Time m_last_present_in_media_time = Time::zero();
 
     NonnullOwnPtr<Demuxer> m_demuxer;
@@ -148,10 +157,10 @@ private:
 
     NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
 
-    RefPtr<Core::Timer> m_present_timer;
+    OwnPtr<PlaybackTimer> m_present_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
-    RefPtr<Core::Timer> m_decode_timer;
+    OwnPtr<PlaybackTimer> m_decode_timer;
 
     NonnullOwnPtr<PlaybackStateHandler> m_playback_handler;
     Optional<FrameQueueItem> m_next_frame;
@@ -199,67 +208,6 @@ private:
         bool m_has_exited { false };
 #endif
     };
-};
-
-enum EventType : unsigned {
-    DecoderErrorOccurred = (('v' << 2) | ('i' << 1) | 'd') << 4,
-    VideoFramePresent,
-    PlaybackStateChange,
-    FatalPlaybackError,
-};
-
-class DecoderErrorEvent : public Core::Event {
-public:
-    explicit DecoderErrorEvent(DecoderError error)
-        : Core::Event(DecoderErrorOccurred)
-        , m_error(move(error))
-    {
-    }
-    virtual ~DecoderErrorEvent() = default;
-
-    DecoderError const& error() { return m_error; }
-
-private:
-    DecoderError m_error;
-};
-
-class VideoFramePresentEvent : public Core::Event {
-public:
-    VideoFramePresentEvent() = default;
-    explicit VideoFramePresentEvent(RefPtr<Gfx::Bitmap> frame)
-        : Core::Event(VideoFramePresent)
-        , m_frame(move(frame))
-    {
-    }
-    virtual ~VideoFramePresentEvent() = default;
-
-    RefPtr<Gfx::Bitmap> frame() { return m_frame; }
-
-private:
-    RefPtr<Gfx::Bitmap> m_frame;
-};
-
-class PlaybackStateChangeEvent : public Core::Event {
-public:
-    explicit PlaybackStateChangeEvent()
-        : Core::Event(PlaybackStateChange)
-    {
-    }
-    virtual ~PlaybackStateChangeEvent() = default;
-};
-
-class FatalPlaybackErrorEvent : public Core::Event {
-public:
-    explicit FatalPlaybackErrorEvent(Error error)
-        : Core::Event(FatalPlaybackError)
-        , m_error(move(error))
-    {
-    }
-    virtual ~FatalPlaybackErrorEvent() = default;
-    Error const& error() { return m_error; }
-
-private:
-    Error m_error;
 };
 
 }

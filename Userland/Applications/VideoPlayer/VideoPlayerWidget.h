@@ -51,8 +51,6 @@ private:
 
     void toggle_fullscreen();
 
-    void event(Core::Event&) override;
-
     virtual void drop_event(GUI::DropEvent&) override;
 
     DeprecatedString m_path;
