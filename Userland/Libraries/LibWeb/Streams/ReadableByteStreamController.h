@@ -116,6 +116,8 @@ public:
     JS::GCPtr<ReadableStream> stream() { return m_stream; }
     void set_stream(JS::GCPtr<ReadableStream> stream) { m_stream = stream; }
 
+    WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> cancel_steps(JS::Value reason);
+
 private:
     explicit ReadableByteStreamController(JS::Realm&);
 
