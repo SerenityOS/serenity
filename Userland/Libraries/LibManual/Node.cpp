@@ -32,16 +32,23 @@ ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<String
     if (query_parameter_iterator.is_end()) {
         // [/path/to/docs.md]
         auto path_from_query = LexicalPath { first_query_parameter };
+        constexpr auto MARKDOWN_FILE_EXTENSION = "md"sv;
         if (path_from_query.is_absolute()
             && path_from_query.is_child_of(manual_base_path)
-            && path_from_query.extension() == "md"sv) {
-            auto section_directory = path_from_query.parent();
-            auto man_string_location = section_directory.basename().find("man"sv);
-            if (!man_string_location.has_value())
+            && path_from_query.extension() == MARKDOWN_FILE_EXTENSION) {
+            // Parse the section number and page name from a directory string of the form:
+            // /usr/share/man/man[section_number]/[page_name].md
+            // The page_name includes any subsections.
+            auto const& section_directory = path_from_query.string();
+            auto section_name_start_index = manual_base_path.string().length() + 4;
+            auto section_name_end_index = section_directory.find('/', section_name_start_index);
+            if (!section_name_end_index.has_value())
                 return Error::from_string_literal("Page is inside invalid section");
-            auto section_name = section_directory.basename().substring_view(man_string_location.value() + 3);
+            auto section_name = section_directory.substring_view(section_name_start_index, section_name_end_index.value() - section_name_start_index);
             auto section = TRY(SectionNode::try_create_from_number(section_name));
-            return try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(path_from_query.title())));
+            auto page_name_end_index = section_directory.length() - section_name_end_index.value() - MARKDOWN_FILE_EXTENSION.length() - 1;
+            auto page_name = section_directory.substring_view(section_name_end_index.value(), page_name_end_index);
+            return try_make_ref_counted<PageNode>(section, TRY(String::from_utf8(page_name)));
         }
 
         // [page] (in any section)
