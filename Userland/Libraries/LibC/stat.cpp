@@ -5,6 +5,7 @@
  */
 
 #include <assert.h>
+#include <bits/utimens.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -119,6 +120,6 @@ int fstatat(int fd, char const* path, struct stat* statbuf, int flags)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/futimens.html
 int futimens(int fd, struct timespec const times[2])
 {
-    return utimensat(fd, "", times, 0);
+    return __utimens(fd, nullptr, times, 0);
 }
 }
