@@ -84,7 +84,9 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(Re
     (void)reader;
 
     // 7. Let sourceCancelPromise be ! stream.[[controller]].[[CancelSteps]](reason).
-    auto source_cancel_promise = MUST(stream.controller()->cancel_steps(reason));
+    auto source_cancel_promise = TRY(stream.controller()->visit([&](auto const& controller) {
+        return controller->cancel_steps(reason);
+    }));
 
     // 8. Return the result of reacting to sourceCancelPromise with a fulfillment step that returns undefined.
     auto react_result = WebIDL::react_to_promise(*source_cancel_promise,
@@ -317,7 +319,7 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
     WebIDL::mark_promise_as_handled(*reader.closed_promise_capability());
 
     // 7. Perform ! stream.[[controller]].[[ReleaseSteps]]().
-    stream->controller()->release_steps();
+    TRY(stream->controller()->visit([](auto const& controller) { return controller->release_steps(); }));
 
     // 8. Set stream.[[reader]] to undefined.
     stream->set_reader({});
@@ -343,7 +345,7 @@ void readable_stream_default_reader_error_read_requests(ReadableStreamDefaultRea
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-reader-read
-void readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
+WebIDL::ExceptionOr<void> readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, ReadRequest& read_request)
 {
     // 1. Let stream be reader.[[stream]].
     auto stream = reader.stream();
@@ -368,8 +370,12 @@ void readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, Re
         VERIFY(stream->is_readable());
 
         // 2. Perform ! stream.[[controller]].[[PullSteps]](readRequest).
-        MUST(stream->controller()->pull_steps(read_request));
+        TRY(stream->controller()->visit([&](auto const& controller) {
+            return controller->pull_steps(read_request);
+        }));
     }
+
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease
@@ -631,7 +637,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
     auto& realm = stream.realm();
 
     // 1. Assert: stream.[[controller]] is undefined.
-    VERIFY(!stream.controller());
+    VERIFY(!stream.controller().has_value());
 
     // 2. Set controller.[[stream]] to stream.
     controller.set_stream(stream);
@@ -656,7 +662,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
     controller.set_cancel_algorithm(move(cancel_algorithm));
 
     // 8. Set stream.[[controller]] to controller.
-    stream.set_controller(controller);
+    stream.set_controller(ReadableStreamController { controller });
 
     // 9. Let startResult be the result of performing startAlgorithm. (This might throw an exception.)
     auto start_result = TRY(start_algorithm());

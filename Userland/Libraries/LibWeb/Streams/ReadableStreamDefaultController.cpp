@@ -118,9 +118,10 @@ WebIDL::ExceptionOr<void> ReadableStreamDefaultController::pull_steps(Web::Strea
 }
 
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultcontroller-releasesteps
-void ReadableStreamDefaultController::release_steps()
+WebIDL::ExceptionOr<void> ReadableStreamDefaultController::release_steps()
 {
     // 1. Return.
+    return {};
 }
 
 JS::ThrowCompletionOr<void> ReadableStreamDefaultController::initialize(JS::Realm& realm)

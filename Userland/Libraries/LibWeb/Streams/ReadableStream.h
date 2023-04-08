@@ -17,9 +17,8 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#typedefdef-readablestreamreader
 using ReadableStreamReader = JS::GCPtr<ReadableStreamDefaultReader>;
 
-// FIXME: Variant<DefaultController, ByteStreamController>
 // https://streams.spec.whatwg.org/#typedefdef-readablestreamcontroller
-using ReadableStreamController = JS::GCPtr<ReadableStreamDefaultController>;
+using ReadableStreamController = Variant<JS::NonnullGCPtr<ReadableStreamDefaultController>, JS::NonnullGCPtr<ReadableByteStreamController>>;
 
 // https://streams.spec.whatwg.org/#readablestream
 class ReadableStream final : public Bindings::PlatformObject {
@@ -40,8 +39,8 @@ public:
     WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> cancel(JS::Value view);
     WebIDL::ExceptionOr<ReadableStreamReader> get_reader();
 
-    ReadableStreamController controller() { return m_controller; }
-    void set_controller(ReadableStreamController value) { m_controller = value; }
+    Optional<ReadableStreamController>& controller() { return m_controller; }
+    void set_controller(Optional<ReadableStreamController> value) { m_controller = move(value); }
 
     JS::Value stored_error() const { return m_stored_error; }
     void set_stored_error(JS::Value value) { m_stored_error = value; }
@@ -68,7 +67,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestream-controller
     // A ReadableStreamDefaultController or ReadableByteStreamController created with the ability to control the state and queue of this stream
-    ReadableStreamController m_controller;
+    Optional<ReadableStreamController> m_controller;
 
     // https://streams.spec.whatwg.org/#readablestream-detached
     // A boolean flag set to true when the stream is transferred
