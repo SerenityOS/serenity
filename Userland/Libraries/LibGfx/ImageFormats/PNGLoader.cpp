@@ -1062,6 +1062,11 @@ size_t PNGImageDecoderPlugin::frame_count()
     return 1;
 }
 
+size_t PNGImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)

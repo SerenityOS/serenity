@@ -1801,6 +1801,11 @@ size_t JPEGImageDecoderPlugin::frame_count()
     return 1;
 }
 
+size_t JPEGImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> JPEGImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)

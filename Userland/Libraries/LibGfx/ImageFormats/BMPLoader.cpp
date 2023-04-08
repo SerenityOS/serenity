@@ -1544,6 +1544,11 @@ size_t BMPImageDecoderPlugin::frame_count()
     return 1;
 }
 
+size_t BMPImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> BMPImageDecoderPlugin::frame(size_t index)
 {
     if (index > 0)

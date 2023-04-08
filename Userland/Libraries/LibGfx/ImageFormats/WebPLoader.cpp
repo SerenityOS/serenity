@@ -1555,6 +1555,11 @@ size_t WebPImageDecoderPlugin::frame_count()
     return m_context->animation_frame_chunks.size();
 }
 
+size_t WebPImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> WebPImageDecoderPlugin::frame(size_t index)
 {
     if (index >= frame_count())

@@ -627,6 +627,11 @@ size_t GIFImageDecoderPlugin::frame_count()
     return m_context->images.size();
 }
 
+size_t GIFImageDecoderPlugin::first_animated_frame_index()
+{
+    return 0;
+}
+
 ErrorOr<ImageFrameDescriptor> GIFImageDecoderPlugin::frame(size_t index)
 {
     if (m_context->error_state >= GIFLoadingContext::ErrorState::FailedToDecodeAnyFrame) {
