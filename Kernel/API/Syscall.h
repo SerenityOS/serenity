@@ -84,6 +84,7 @@ enum class NeedsBigProcessLock {
     S(fsync, NeedsBigProcessLock::No)                      \
     S(ftruncate, NeedsBigProcessLock::No)                  \
     S(futex, NeedsBigProcessLock::Yes)                     \
+    S(futimens, NeedsBigProcessLock::No)                   \
     S(get_dir_entries, NeedsBigProcessLock::Yes)           \
     S(get_root_session_id, NeedsBigProcessLock::No)        \
     S(get_stack_bounds, NeedsBigProcessLock::No)           \
@@ -455,6 +456,11 @@ struct SC_utimensat_params {
     StringArgument path;
     struct timespec const* times;
     int flag;
+};
+
+struct SC_futimens_params {
+    int fd;
+    struct timespec const* times;
 };
 
 struct SC_waitid_params {

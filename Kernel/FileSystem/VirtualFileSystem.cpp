@@ -313,10 +313,15 @@ ErrorOr<void> VirtualFileSystem::utime(Credentials const& credentials, StringVie
 ErrorOr<void> VirtualFileSystem::utimensat(Credentials const& credentials, StringView path, Custody& base, timespec const& atime, timespec const& mtime, int options)
 {
     auto custody = TRY(resolve_path(credentials, path, base, nullptr, options));
-    auto& inode = custody->inode();
+    return do_utimens(credentials, custody, atime, mtime);
+}
+
+ErrorOr<void> VirtualFileSystem::do_utimens(Credentials const& credentials, Custody& custody, timespec const& atime, timespec const& mtime)
+{
+    auto& inode = custody.inode();
     if (!credentials.is_superuser() && inode.metadata().uid != credentials.euid())
         return EACCES;
-    if (custody->is_readonly())
+    if (custody.is_readonly())
         return EROFS;
 
     // NOTE: A standard ext2 inode cannot store nanosecond timestamps.
