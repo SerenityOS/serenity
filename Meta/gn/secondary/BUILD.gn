@@ -4,7 +4,7 @@ group("default") {
   deps = [
     "//Meta/Lagom/Tools/CodeGenerators/IPCCompiler",
     "//Tests",
-    "//Userland/Libraries/LibJS",
+    "//Userland/Utilities:js",
   ]
   testonly = true
 }
