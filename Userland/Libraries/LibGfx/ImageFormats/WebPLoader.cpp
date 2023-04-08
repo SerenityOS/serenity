@@ -1083,7 +1083,7 @@ ErrorOr<NonnullRefPtr<Bitmap>> SubtractGreenTransform::transform(NonnullRefPtr<B
 // https://developers.google.com/speed/webp/docs/webp_lossless_bitstream_specification#44_color_indexing_transform
 class ColorIndexingTransform : public Transform {
 public:
-    static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&);
+    static ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> read(WebPLoadingContext&, LittleEndianInputBitStream&, int original_width);
     virtual ErrorOr<NonnullRefPtr<Bitmap>> transform(NonnullRefPtr<Bitmap>) override;
 
     // For a color indexing transform, the green channel of the source image is used as the index into a palette to produce an output color.
@@ -1102,17 +1102,19 @@ public:
     int pixels_per_pixel() const { return m_pixels_per_pixel; }
 
 private:
-    ColorIndexingTransform(unsigned pixels_per_pixel, NonnullRefPtr<Bitmap> palette_bitmap)
+    ColorIndexingTransform(int pixels_per_pixel, int original_width, NonnullRefPtr<Bitmap> palette_bitmap)
         : m_pixels_per_pixel(pixels_per_pixel)
+        , m_original_width(original_width)
         , m_palette_bitmap(palette_bitmap)
     {
     }
 
     int m_pixels_per_pixel;
+    int m_original_width;
     NonnullRefPtr<Bitmap> m_palette_bitmap;
 };
 
-ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream)
+ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebPLoadingContext& context, LittleEndianInputBitStream& bit_stream, int original_width)
 {
     // color-indexing-image =  8BIT ; color count
     //                         entropy-coded-image
@@ -1137,7 +1139,7 @@ ErrorOr<NonnullOwnPtr<ColorIndexingTransform>> ColorIndexingTransform::read(WebP
     for (ARGB32* pixel = palette_bitmap->begin() + 1; pixel != palette_bitmap->end(); ++pixel)
         *pixel = add_argb32(*pixel, pixel[-1]);
 
-    return adopt_nonnull_own_or_enomem(new (nothrow) ColorIndexingTransform(pixels_per_pixel, move(palette_bitmap)));
+    return adopt_nonnull_own_or_enomem(new (nothrow) ColorIndexingTransform(pixels_per_pixel, original_width, move(palette_bitmap)));
 }
 
 ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<Bitmap> bitmap)
@@ -1156,7 +1158,8 @@ ErrorOr<NonnullRefPtr<Bitmap>> ColorIndexingTransform::transform(NonnullRefPtr<B
     }
 
     // Pixel bundling case.
-    IntSize unbundled_size = { bitmap->size().width() * pixels_per_pixel(), bitmap->size().height() };
+    VERIFY(ceil_div(m_original_width, pixels_per_pixel()) == bitmap->size().width());
+    IntSize unbundled_size = { m_original_width, bitmap->size().height() };
     auto new_bitmap = TRY(Bitmap::create(BitmapFormat::BGRA8888, unbundled_size));
 
     unsigned bits_per_pixel = 8 / pixels_per_pixel();
@@ -1252,8 +1255,8 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
             TRY(transforms.try_append(TRY(try_make<SubtractGreenTransform>())));
             break;
         case COLOR_INDEXING_TRANSFORM: {
-            auto color_indexing_transform = TRY(ColorIndexingTransform::read(context, bit_stream));
-            stored_size.set_width(stored_size.width() / color_indexing_transform->pixels_per_pixel());
+            auto color_indexing_transform = TRY(ColorIndexingTransform::read(context, bit_stream, stored_size.width()));
+            stored_size.set_width(ceil_div(stored_size.width(), color_indexing_transform->pixels_per_pixel()));
             TRY(transforms.try_append(move(color_indexing_transform)));
             break;
         }
