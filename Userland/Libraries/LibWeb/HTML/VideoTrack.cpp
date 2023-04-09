@@ -8,6 +8,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibVideo/PlaybackManager.h>
+#include <LibVideo/Track.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/Bindings/VideoTrackPrototype.h>
 #include <LibWeb/DOM/Event.h>
@@ -21,12 +23,23 @@ namespace Web::HTML {
 
 static IDAllocator s_video_track_id_allocator;
 
-VideoTrack::VideoTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> media_element, NonnullOwnPtr<Video::Matroska::MatroskaDemuxer> demuxer, Video::Track track)
+VideoTrack::VideoTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> media_element, NonnullOwnPtr<Video::PlaybackManager> playback_manager)
     : PlatformObject(realm)
     , m_media_element(media_element)
-    , m_demuxer(move(demuxer))
-    , m_track(track)
+    , m_playback_manager(move(playback_manager))
 {
+    m_playback_manager->on_video_frame = [this](auto frame) {
+        if (is<HTMLVideoElement>(*m_media_element))
+            verify_cast<HTMLVideoElement>(*m_media_element).set_current_frame({}, move(frame));
+    };
+
+    m_playback_manager->on_decoder_error = [](auto) {
+        // FIXME: Propagate this error to HTMLMediaElement's error attribute.
+    };
+
+    m_playback_manager->on_fatal_playback_error = [](auto) {
+        // FIXME: Propagate this error to HTMLMediaElement's error attribute.
+    };
 }
 
 VideoTrack::~VideoTrack()
@@ -54,63 +67,29 @@ void VideoTrack::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_video_track_list);
 }
 
-RefPtr<Gfx::Bitmap> VideoTrack::next_frame()
+void VideoTrack::play_video(Badge<HTMLVideoElement>)
 {
-    auto frame_sample = m_demuxer->get_next_video_sample_for_track(m_track);
-    if (frame_sample.is_error()) {
-        if (frame_sample.error().category() != Video::DecoderErrorCategory::EndOfStream)
-            dbgln("VideoTrack: Error getting next video sample: {}", frame_sample.error().description());
-        return {};
-    }
+    m_playback_manager->resume_playback();
+}
 
-    OwnPtr<Video::VideoFrame> decoded_frame;
+void VideoTrack::pause_video(Badge<HTMLVideoElement>)
+{
+    m_playback_manager->pause_playback();
+}
 
-    while (!decoded_frame) {
-        auto result = m_decoder.receive_sample(frame_sample.value()->data());
-        if (result.is_error()) {
-            dbgln("VideoTrack: Error receiving video sample data: {}", result.error().description());
-            return {};
-        }
+Time VideoTrack::duration() const
+{
+    return m_playback_manager->selected_video_track().video_data().duration;
+}
 
-        while (true) {
-            auto frame_result = m_decoder.get_decoded_frame();
-            if (frame_result.is_error()) {
-                if (frame_result.error().category() == Video::DecoderErrorCategory::NeedsMoreInput)
-                    break;
+u64 VideoTrack::pixel_width() const
+{
+    return m_playback_manager->selected_video_track().video_data().pixel_width;
+}
 
-                dbgln("VideoTrack: Error decoding video frame: {}", frame_result.error().description());
-                return {};
-            }
-
-            decoded_frame = frame_result.release_value();
-            VERIFY(decoded_frame);
-        }
-    }
-
-    auto& cicp = decoded_frame->cicp();
-    cicp.adopt_specified_values(frame_sample.value()->container_cicp());
-    cicp.default_code_points_if_unspecified({ Video::ColorPrimaries::BT709, Video::TransferCharacteristics::BT709, Video::MatrixCoefficients::BT709, Video::VideoFullRangeFlag::Studio });
-
-    // BT.601, BT.709 and BT.2020 have a similar transfer function to sRGB, so other applications
-    // (Chromium, VLC) forgo transfer characteristics conversion. We will emulate that behavior by
-    // handling those as sRGB instead, which causes no transfer function change in the output,
-    // unless display color management is later implemented.
-    switch (cicp.transfer_characteristics()) {
-    case Video::TransferCharacteristics::BT601:
-    case Video::TransferCharacteristics::BT709:
-    case Video::TransferCharacteristics::BT2020BitDepth10:
-    case Video::TransferCharacteristics::BT2020BitDepth12:
-        cicp.set_transfer_characteristics(Video::TransferCharacteristics::SRGB);
-        break;
-    default:
-        break;
-    }
-
-    auto bitmap = decoded_frame->to_bitmap();
-    if (bitmap.is_error())
-        return {};
-
-    return bitmap.release_value();
+u64 VideoTrack::pixel_height() const
+{
+    return m_playback_manager->selected_video_track().video_data().pixel_height;
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-videotrack-selected
