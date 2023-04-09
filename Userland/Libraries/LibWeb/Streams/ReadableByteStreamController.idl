@@ -6,8 +6,8 @@ interface ReadableByteStreamController {
     readonly attribute unrestricted double? desiredSize;
 
     undefined close();
+    undefined error(optional any e);
 
     // FIXME: Implement
     // undefined enqueue(ArrayBufferView chunk);
-    // undefined error(optional any e);
 };
