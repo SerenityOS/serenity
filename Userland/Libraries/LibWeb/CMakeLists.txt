@@ -435,6 +435,7 @@ set(SOURCES
     Painting/FilterPainting.cpp
     Painting/ImagePaintable.cpp
     Painting/InlinePaintable.cpp
+    Painting/InputColors.cpp
     Painting/LabelablePaintable.cpp
     Painting/MarkerPaintable.cpp
     Painting/NestedBrowsingContextPaintable.cpp
