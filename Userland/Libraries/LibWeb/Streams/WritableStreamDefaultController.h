@@ -21,6 +21,7 @@ public:
 
     WebIDL::ExceptionOr<void> error(JS::Value error);
     JS::NonnullGCPtr<DOM::AbortSignal> signal() { return *m_signal; }
+    void set_signal(JS::NonnullGCPtr<DOM::AbortSignal> value) { m_signal = value; }
 
     auto& abort_algorithm() { return m_abort_algorithm; }
     void set_abort_algorithm(Optional<AbortAlgorithm>&& value) { m_abort_algorithm = move(value); }
@@ -52,6 +53,8 @@ public:
     void error_steps();
 
 private:
+    explicit WritableStreamDefaultController(JS::Realm&);
+
     // https://streams.spec.whatwg.org/#writablestreamdefaultcontroller-abortalgorithm
     // A promise-returning algorithm, taking one argument (the abort reason), which communicates a requested abort to the underlying sink
     Optional<AbortAlgorithm> m_abort_algorithm;
