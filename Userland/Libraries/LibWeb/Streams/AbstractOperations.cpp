@@ -128,8 +128,18 @@ void readable_stream_fulfill_read_request(ReadableStream& stream, JS::Value chun
     }
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-get-num-read-into-requests
+size_t readable_stream_get_num_read_into_requests(ReadableStream const& stream)
+{
+    // 1. Assert: ! ReadableStreamHasBYOBReader(stream) is true.
+    VERIFY(readable_stream_has_byob_reader(stream));
+
+    // 2. Return stream.[[reader]].[[readIntoRequests]]'s size.
+    return stream.reader()->get<JS::NonnullGCPtr<ReadableStreamBYOBReader>>()->read_into_requests().size();
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-get-num-read-requests
-size_t readable_stream_get_num_read_requests(ReadableStream& stream)
+size_t readable_stream_get_num_read_requests(ReadableStream const& stream)
 {
     // 1. Assert: ! ReadableStreamHasDefaultReader(stream) is true.
     VERIFY(readable_stream_has_default_reader(stream));
@@ -138,8 +148,26 @@ size_t readable_stream_get_num_read_requests(ReadableStream& stream)
     return stream.reader()->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()->read_requests().size();
 }
 
+// https://streams.spec.whatwg.org/#readable-stream-has-byob-reader
+bool readable_stream_has_byob_reader(ReadableStream const& stream)
+{
+    // 1. Let reader be stream.[[reader]].
+    auto reader = stream.reader();
+
+    // 2. If reader is undefined, return false.
+    if (!reader.has_value())
+        return false;
+
+    // 3. If reader implements ReadableStreamBYOBReader, return true.
+    if (reader->has<JS::NonnullGCPtr<ReadableStreamBYOBReader>>())
+        return true;
+
+    // 4. Return false.
+    return false;
+}
+
 // https://streams.spec.whatwg.org/#readable-stream-has-default-reader
-bool readable_stream_has_default_reader(ReadableStream& stream)
+bool readable_stream_has_default_reader(ReadableStream const& stream)
 {
     // 1. Let reader be stream.[[reader]].
     auto reader = stream.reader();
@@ -760,6 +788,62 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-call-pull-if-needed
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(ReadableByteStreamController& controller)
+{
+    // 1. Let shouldPull be ! ReadableByteStreamControllerShouldCallPull(controller).
+    auto should_pull = readable_byte_stream_controller_should_call_pull(controller);
+
+    // 2. If shouldPull is false, return.
+    if (!should_pull)
+        return {};
+
+    // 3. If controller.[[pulling]] is true,
+    if (controller.pulling()) {
+        // 1. Set controller.[[pullAgain]] to true.
+        controller.set_pull_again(true);
+
+        // 2. Return.
+        return {};
+    }
+
+    // 4. Assert: controller.[[pullAgain]] is false.
+    VERIFY(!controller.pull_again());
+
+    // 5. Set controller.[[pulling]] to true.
+    controller.set_pulling(true);
+
+    // 6. Let pullPromise be the result of performing controller.[[pullAlgorithm]].
+    auto pull_promise = TRY((*controller.pull_algorithm())());
+
+    // 7. Upon fulfillment of pullPromise,
+    WebIDL::upon_fulfillment(*pull_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Set controller.[[pulling]] to false.
+        controller.set_pulling(false);
+
+        // 2. If controller.[[pullAgain]] is true,
+        if (controller.pull_again()) {
+            // 1. Set controller.[[pullAgain]] to false.
+            controller.set_pull_again(false);
+
+            // 2. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+            TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
+        }
+
+        return JS::js_undefined();
+    });
+
+    // 8. Upon rejection of pullPromise with reason e,
+    WebIDL::upon_rejection(*pull_promise, [&](auto const& error) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Perform ! ReadableByteStreamControllerError(controller, e).
+        readable_byte_stream_controller_error(controller, error);
+
+        return JS::js_undefined();
+    });
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-clear-algorithms
 void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController& controller)
 {
@@ -780,6 +864,29 @@ void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStream
     controller.pending_pull_intos().clear();
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-error
+void readable_byte_stream_controller_error(ReadableByteStreamController& controller, JS::Value error)
+{
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. If stream.[[state]] is not "readable", return.
+    if (stream->state() != ReadableStream::State::Readable)
+        return;
+
+    // 3. Perform ! ReadableByteStreamControllerClearPendingPullIntos(controller).
+    readable_byte_stream_controller_clear_pending_pull_intos(controller);
+
+    // 4. Perform ! ResetQueue(controller).
+    reset_queue(controller);
+
+    // 5. Perform ! ReadableByteStreamControllerClearAlgorithms(controller).
+    readable_byte_stream_controller_clear_algorithms(controller);
+
+    // 6. Perform ! ReadableStreamError(stream, e).
+    readable_stream_error(*stream, error);
+}
+
 // https://streams.spec.whatwg.org/#abstract-opdef-readablebytestreamcontrollerfillreadrequestfromqueue
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController& controller, NonnullRefPtr<ReadRequest> read_request)
 {
@@ -797,7 +904,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from
     controller.set_queue_total_size(controller.queue_total_size() - entry.byte_length);
 
     // 5. Perform ! ReadableByteStreamControllerHandleQueueDrain(controller).
-    readable_byte_stream_controller_handle_queue_drain(controller);
+    TRY(readable_byte_stream_controller_handle_queue_drain(controller));
 
     // 6. Let view be ! Construct(%Uint8Array%, « entry’s buffer, entry’s byte offset, entry’s byte length »).
     auto view = MUST_OR_THROW_OOM(JS::construct(vm, *realm.intrinsics().uint8_array_constructor(), entry.buffer, JS::Value(entry.byte_offset), JS::Value(entry.byte_length)));
@@ -827,7 +934,7 @@ Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteSt
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-handle-queue-drain
-void readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController& controller)
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController& controller)
 {
     // 1. Assert: controller.[[stream]].[[state]] is "readable".
     VERIFY(controller.stream()->state() == ReadableStream::State::Readable);
@@ -842,8 +949,11 @@ void readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamContro
     }
     // 3. Otherwise,
     else {
-        // FIXME: 1. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+        // 1. Perform ! ReadableByteStreamControllerCallPullIfNeeded(controller).
+        TRY(readable_byte_stream_controller_call_pull_if_needed(controller));
     }
+
+    return {};
 }
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-invalidate-byob-request
@@ -861,6 +971,46 @@ void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamC
 
     // 4. Set controller.[[byobRequest]] to null.
     controller.set_byob_request({});
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-error
+bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamController const& controller)
+{
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. If stream.[[state]] is not "readable", return false.
+    if (stream->state() != ReadableStream::State::Readable)
+        return false;
+
+    // 3. If controller.[[closeRequested]] is true, return false.
+    if (controller.close_requested())
+        return false;
+
+    // 4. If controller.[[started]] is false, return false.
+    if (!controller.started())
+        return false;
+
+    // 5. If ! ReadableStreamHasDefaultReader(stream) is true and ! ReadableStreamGetNumReadRequests(stream) > 0, return true.
+    if (readable_stream_has_default_reader(*stream) && readable_stream_get_num_read_requests(*stream) > 0)
+        return true;
+
+    // 6. If ! ReadableStreamHasBYOBReader(stream) is true and ! ReadableStreamGetNumReadIntoRequests(stream) > 0, return true.
+    if (readable_stream_has_byob_reader(*stream) && readable_stream_get_num_read_into_requests(*stream) > 0)
+        return true;
+
+    // 7. Let desiredSize be ! ReadableByteStreamControllerGetDesiredSize(controller).
+    auto desired_size = readable_byte_stream_controller_get_desired_size(controller);
+
+    // 8. Assert: desiredSize is not null.
+    VERIFY(desired_size.has_value());
+
+    // 9. If desiredSize > 0, return true.
+    if (*desired_size > 0.0)
+        return true;
+
+    // 10. Return false.
+    return false;
 }
 
 // https://streams.spec.whatwg.org/#acquire-writable-stream-default-writer

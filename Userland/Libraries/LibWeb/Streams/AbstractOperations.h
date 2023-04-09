@@ -32,8 +32,10 @@ void readable_stream_error(ReadableStream&, JS::Value error);
 void readable_stream_add_read_request(ReadableStream&, ReadRequest const&);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(ReadableStream&, JS::Value reason);
 void readable_stream_fulfill_read_request(ReadableStream&, JS::Value chunk, bool done);
-size_t readable_stream_get_num_read_requests(ReadableStream&);
-bool readable_stream_has_default_reader(ReadableStream&);
+size_t readable_stream_get_num_read_into_requests(ReadableStream const&);
+size_t readable_stream_get_num_read_requests(ReadableStream const&);
+bool readable_stream_has_byob_reader(ReadableStream const&);
+bool readable_stream_has_default_reader(ReadableStream const&);
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin&, JS::Value reason);
 void readable_stream_reader_generic_initialize(ReadableStreamReader, ReadableStream&);
@@ -55,12 +57,15 @@ bool readable_stream_default_controller_can_close_or_enqueue(ReadableStreamDefau
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStream&, ReadableStreamDefaultController&, StartAlgorithm&&, PullAlgorithm&&, CancelAlgorithm&&, double high_water_mark, SizeAlgorithm&&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source_value, UnderlyingSource, double high_water_mark, SizeAlgorithm&&);
 
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(ReadableByteStreamController&);
 void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController&);
 void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStreamController&);
+void readable_byte_stream_controller_error(ReadableByteStreamController&, JS::Value error);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, NonnullRefPtr<ReadRequest>);
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const&);
-void readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController&);
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(ReadableByteStreamController&);
 void readable_byte_stream_controller_invalidate_byob_request(ReadableByteStreamController&);
+bool readable_byte_stream_controller_should_call_pull(ReadableByteStreamController const&);
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStreamDefaultWriter>> acquire_writable_stream_default_writer(WritableStream&);
 bool is_writable_stream_locked(WritableStream const&);
