@@ -63,7 +63,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<JS::Handle<DOM::DOMEvent
             continue;
 
         // 1. If event’s type attribute value is not listener’s type, then continue.
-        if (event.type().to_deprecated_fly_string() != listener->type)
+        if (event.type() != listener->type)
             continue;
 
         // 2. Set found to true.

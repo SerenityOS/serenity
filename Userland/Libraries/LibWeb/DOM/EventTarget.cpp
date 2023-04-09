@@ -129,7 +129,7 @@ void EventTarget::add_event_listener(FlyString const& type, IDLEventListener* ca
     //    once is once, and signal is signal.
 
     auto event_listener = heap().allocate_without_realm<DOMEventListener>();
-    event_listener->type = type.to_deprecated_fly_string();
+    event_listener->type = type;
     event_listener->callback = callback;
     event_listener->signal = move(flattened_options.signal);
     event_listener->capture = flattened_options.capture;
@@ -194,7 +194,7 @@ void EventTarget::remove_event_listener(FlyString const& type, IDLEventListener*
         return entry.callback->callback().callback == callback->callback().callback;
     };
     auto it = m_event_listener_list.find_if([&](auto& entry) {
-        return entry->type == type.to_deprecated_fly_string()
+        return entry->type == type
             && callbacks_match(*entry)
             && entry->capture == capture;
     });
@@ -560,7 +560,7 @@ void EventTarget::activate_event_handler(FlyString const& name, HTML::EventHandl
 
     // 5. Let listener be a new event listener whose type is the event handler event type corresponding to eventHandler and callback is callback.
     auto listener = realm.heap().allocate_without_realm<DOMEventListener>();
-    listener->type = name.to_deprecated_fly_string();
+    listener->type = name;
     listener->callback = IDLEventListener::create(realm, *callback).release_value_but_fixme_should_propagate_errors();
 
     // 6. Add an event listener with eventTarget and listener.
@@ -738,7 +738,7 @@ bool EventTarget::dispatch_event(Event& event)
 bool EventTarget::has_event_listener(FlyString const& type) const
 {
     for (auto& listener : m_event_listener_list) {
-        if (listener->type == type.to_deprecated_fly_string())
+        if (listener->type == type)
             return true;
     }
     return false;
