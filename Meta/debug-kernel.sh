@@ -16,7 +16,7 @@ if [ -z "$SERENITY_KERNEL_DEBUGGER" ]; then
         SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-pc-serenity-gdb"
     elif command -v "$SERENITY_ARCH-elf-gdb" >/dev/null; then
         SERENITY_KERNEL_DEBUGGER="$SERENITY_ARCH-elf-gdb"
-    elif command -v gdb >/dev/null && gdb ex 'set architecture' -ex 'quit' | grep "${SERENITY_ARCH//_/-}"; then
+    elif command -v gdb >/dev/null && gdb -ex 'set architecture' -ex 'quit' | grep "${SERENITY_ARCH//_/-}"; then
         SERENITY_KERNEL_DEBUGGER="gdb"
     else
         echo "Error: No suitable GDB installation found." >&2
