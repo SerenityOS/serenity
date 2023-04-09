@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/GCPtr.h>
+#include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Fetch {

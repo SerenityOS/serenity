@@ -11,6 +11,12 @@
 #include <AK/StdLibExtras.h>
 #include <AK/TypeList.h>
 
+#if defined(KERNEL)
+#    include <Kernel/Heap/kmalloc.h>
+#else
+#    include <new>
+#endif
+
 namespace AK::Detail {
 
 template<typename T, typename IndexType, IndexType InitialIndex, typename... InTypes>

@@ -10,6 +10,7 @@
 #pragma once
 
 #include <LibWeb/CSS/StyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 
 namespace Web::CSS {
 

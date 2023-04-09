@@ -1,5 +1,5 @@
 execute_process(COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/generate_all.py" "${SERENITY_ARCH}" OUTPUT_VARIABLE SOURCES_STRING)
-string(REPLACE "\n" ";" SOURCES_LIST ${SOURCES_STRING})
+string(REPLACE "\n" ";" SOURCES_LIST "${SOURCES_STRING}")
 
 # TODO: LibSoftGPU does not compile with this warning enabled, so we disable it here.
 # Once LibSoftGPU drops this disable, HeaderCheck should remove it, too. In particular, the following error would be generated:

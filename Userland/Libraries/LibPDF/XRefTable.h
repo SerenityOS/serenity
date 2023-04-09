@@ -11,6 +11,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <LibPDF/Error.h>
+#include <LibPDF/ObjectDerivatives.h>
 
 namespace PDF {
 

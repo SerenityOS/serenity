@@ -10,6 +10,7 @@
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <AK/ScopeGuard.h>
+#include <AK/Stream.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>

@@ -10,6 +10,7 @@
 #include <LibSQL/Forward.h>
 #include <LibSQL/Meta.h>
 #include <LibSQL/Serializer.h>
+#include <LibSQL/TupleDescriptor.h>
 
 namespace SQL {
 

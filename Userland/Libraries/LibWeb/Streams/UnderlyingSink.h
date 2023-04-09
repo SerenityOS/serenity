@@ -8,6 +8,7 @@
 
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Heap/Handle.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Streams {

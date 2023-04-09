@@ -12,6 +12,7 @@
 #include <AK/LEB128.h>
 #include <AK/Result.h>
 #include <AK/Variant.h>
+#include <AK/Vector.h>
 #include <LibWasm/Constants.h>
 #include <LibWasm/Forward.h>
 #include <LibWasm/Opcode.h>
