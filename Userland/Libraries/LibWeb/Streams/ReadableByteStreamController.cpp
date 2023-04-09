@@ -37,6 +37,13 @@ WebIDL::ExceptionOr<void> ReadableByteStreamController::close()
     return {};
 }
 
+// https://streams.spec.whatwg.org/#rbs-controller-error
+void ReadableByteStreamController::error(JS::Value error)
+{
+    // 1. Perform ! ReadableByteStreamControllerError(this, e).
+    readable_byte_stream_controller_error(*this, error);
+}
+
 ReadableByteStreamController::ReadableByteStreamController(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

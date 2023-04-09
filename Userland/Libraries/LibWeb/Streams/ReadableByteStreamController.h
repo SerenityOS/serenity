@@ -81,6 +81,7 @@ public:
 
     Optional<double> desired_size() const;
     WebIDL::ExceptionOr<void> close();
+    void error(JS::Value error);
 
     Optional<u32> const& auto_allocate_chunk_size() { return m_auto_allocate_chunk_size; }
     void set_auto_allocate_chunk_size(Optional<u32> value) { m_auto_allocate_chunk_size = value; }
