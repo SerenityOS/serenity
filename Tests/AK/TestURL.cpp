@@ -151,7 +151,7 @@ TEST_CASE(file_url_with_encoded_characters)
     URL url("file:///my/file/test%23file.txt"sv);
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "file");
-    EXPECT_EQ(url.path(), "/my/file/test#file.txt");
+    EXPECT_EQ(url.path(), "/my/file/test%23file.txt");
     EXPECT(url.query().is_null());
     EXPECT(url.fragment().is_null());
 }
@@ -389,7 +389,7 @@ TEST_CASE(unicode)
 {
     URL url { "http://example.com/_ünicöde_téxt_©"sv };
     EXPECT(url.is_valid());
-    EXPECT_EQ(url.path(), "/_ünicöde_téxt_©");
+    EXPECT_EQ(url.path(), "/_%C3%BCnic%C3%B6de_t%C3%A9xt_%C2%A9");
     EXPECT(url.query().is_null());
     EXPECT(url.fragment().is_null());
 }
@@ -414,4 +414,11 @@ TEST_CASE(empty_url_with_base_url)
     URL parsed_url = URLParser::parse(""sv, base_url);
     EXPECT_EQ(parsed_url.is_valid(), true);
     EXPECT(base_url.equals(parsed_url));
+}
+
+TEST_CASE(google_street_view)
+{
+    constexpr auto streetview_url = "https://www.google.co.uk/maps/@53.3354159,-1.9573545,3a,75y,121.1h,75.67t/data=!3m7!1e1!3m5!1sSY8xCv17jAX4S7SRdV38hg!2e0!6shttps:%2F%2Fstreetviewpixels-pa.googleapis.com%2Fv1%2Fthumbnail%3Fpanoid%3DSY8xCv17jAX4S7SRdV38hg%26cb_client%3Dmaps_sv.tactile.gps%26w%3D203%26h%3D100%26yaw%3D188.13148%26pitch%3D0%26thumbfov%3D100!7i13312!8i6656";
+    URL url(streetview_url);
+    EXPECT_EQ(url.serialize(), streetview_url);
 }
