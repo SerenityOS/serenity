@@ -32,6 +32,8 @@ public:
 
 private:
     PNGImageDecoderPlugin(u8 const*, size_t);
+    bool ensure_image_data_chunk_was_decoded();
+    bool ensure_animation_frame_was_decoded(u32);
 
     OwnPtr<PNGLoadingContext> m_context;
 };

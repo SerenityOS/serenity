@@ -11,6 +11,7 @@
 #include <LibCompress/Zlib.h>
 #include <LibGfx/ImageFormats/PNGLoader.h>
 #include <LibGfx/ImageFormats/PNGShared.h>
+#include <LibGfx/Painter.h>
 #include <string.h>
 
 namespace Gfx {
@@ -26,6 +27,34 @@ struct PNG_IHDR {
 };
 
 static_assert(AssertSize<PNG_IHDR, 13>());
+
+struct acTL_Chunk {
+    NetworkOrdered<u32> num_frames;
+    NetworkOrdered<u32> num_plays;
+};
+static_assert(AssertSize<acTL_Chunk, 8>());
+
+struct fcTL_Chunk {
+    enum class DisposeOp : u8 {
+        APNG_DISPOSE_OP_NONE = 0,
+        APNG_DISPOSE_OP_BACKGROUND,
+        APNG_DISPOSE_OP_PREVIOUS
+    };
+    enum class BlendOp : u8 {
+        APNG_BLEND_OP_SOURCE = 0,
+        APNG_BLEND_OP_OVER
+    };
+    NetworkOrdered<u32> sequence_number;
+    NetworkOrdered<u32> width;
+    NetworkOrdered<u32> height;
+    NetworkOrdered<u32> x_offset;
+    NetworkOrdered<u32> y_offset;
+    NetworkOrdered<u16> delay_num;
+    NetworkOrdered<u16> delay_den;
+    DisposeOp dispose_op { DisposeOp::APNG_DISPOSE_OP_NONE };
+    BlendOp blend_op { BlendOp::APNG_BLEND_OP_SOURCE };
+};
+static_assert(AssertSize<fcTL_Chunk, 26>());
 
 struct ChromaticitiesAndWhitepoint {
     NetworkOrdered<u32> white_point_x;
@@ -99,17 +128,44 @@ enum RenderingIntent {
     AbsoluteColorimetric = 3,
 };
 
+struct AnimationFrame {
+    fcTL_Chunk const& fcTL;
+    RefPtr<Bitmap> bitmap;
+    Vector<u8> compressed_data;
+
+    AnimationFrame(fcTL_Chunk const& fcTL)
+        : fcTL(fcTL)
+    {
+    }
+
+    u32 duration_ms() const
+    {
+        u32 num = fcTL.delay_num;
+        if (num == 0)
+            return 1;
+        u32 denom = fcTL.delay_den != 0 ? static_cast<u32>(fcTL.delay_den) : 100u;
+        return (num * 1000) / denom;
+    }
+
+    IntRect rect() const
+    {
+        return { fcTL.x_offset, fcTL.y_offset, fcTL.width, fcTL.height };
+    }
+};
+
 struct PNGLoadingContext {
     enum State {
         NotDecoded = 0,
         Error,
         HeaderDecoded,
         SizeDecoded,
+        ImageDataChunkDecoded,
         ChunksDecoded,
         BitmapDecoded,
     };
     State state { State::NotDecoded };
     u8 const* data { nullptr };
+    u8 const* data_current_ptr { nullptr };
     size_t data_size { 0 };
     int width { -1 };
     int height { -1 };
@@ -119,15 +175,24 @@ struct PNGLoadingContext {
     u8 filter_method { 0 };
     u8 interlace_method { 0 };
     u8 channels { 0 };
+    u32 animation_next_expected_seq { 0 };
+    u32 animation_next_frame_to_render { 0 };
+    u32 animation_frame_count { 0 };
+    u32 animation_loop_count { 0 };
+    Optional<u32> last_completed_animation_frame_index;
+    bool is_first_idat_part_of_animation { false };
     bool has_seen_zlib_header { false };
+    bool has_seen_iend { false };
+    bool has_seen_idat_chunk { false };
+    bool has_seen_actl_chunk_before_idat { false };
     bool has_alpha() const { return to_underlying(color_type) & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
     ByteBuffer unfiltered_data;
     RefPtr<Gfx::Bitmap> bitmap;
-    ByteBuffer* decompression_buffer { nullptr };
     Vector<u8> compressed_data;
     Vector<PaletteEntry> palette_data;
     Vector<u8> palette_transparency_data;
+    Vector<AnimationFrame> animation_frames;
 
     Optional<ChromaticitiesAndWhitepoint> chromaticities_and_whitepoint;
     Optional<CodingIndependentCodePoints> coding_independent_code_points;
@@ -148,6 +213,21 @@ struct PNGLoadingContext {
             state = State::Error;
         }
         return row_size;
+    }
+
+    PNGLoadingContext create_subimage_context(int width, int height)
+    {
+        PNGLoadingContext subimage_context;
+        subimage_context.state = State::ChunksDecoded;
+        subimage_context.width = width;
+        subimage_context.height = height;
+        subimage_context.channels = channels;
+        subimage_context.color_type = color_type;
+        subimage_context.palette_data = palette_data;
+        subimage_context.palette_transparency_data = palette_transparency_data;
+        subimage_context.bit_depth = bit_depth;
+        subimage_context.filter_method = filter_method;
+        return subimage_context;
     }
 };
 
@@ -190,6 +270,7 @@ public:
         return true;
     }
 
+    u8 const* current_data_ptr() const { return m_data_ptr; }
     bool at_end() const { return !m_size_remaining; }
 
 private:
@@ -525,6 +606,7 @@ static bool decode_png_header(PNGLoadingContext& context)
         return false;
     }
 
+    context.data_current_ptr = context.data + sizeof(PNG::header);
     context.state = PNGLoadingContext::HeaderDecoded;
     return true;
 }
@@ -539,15 +621,17 @@ static bool decode_png_size(PNGLoadingContext& context)
             return false;
     }
 
-    u8 const* data_ptr = context.data + sizeof(PNG::header);
-    size_t data_remaining = context.data_size - sizeof(PNG::header);
+    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
 
-    Streamer streamer(data_ptr, data_remaining);
-    while (!streamer.at_end()) {
+    Streamer streamer(context.data_current_ptr, data_remaining);
+    while (!streamer.at_end() && !context.has_seen_iend) {
         if (!process_chunk(streamer, context)) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
+
+        context.data_current_ptr = streamer.current_data_ptr();
+
         if (context.width && context.height) {
             context.state = PNGLoadingContext::State::SizeDecoded;
             return true;
@@ -555,6 +639,67 @@ static bool decode_png_size(PNGLoadingContext& context)
     }
 
     return false;
+}
+
+static bool decode_png_image_data_chunk(PNGLoadingContext& context)
+{
+    if (context.state >= PNGLoadingContext::ImageDataChunkDecoded)
+        return true;
+
+    if (context.state < PNGLoadingContext::SizeDecoded) {
+        if (!decode_png_size(context))
+            return false;
+    }
+
+    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
+
+    Streamer streamer(context.data_current_ptr, data_remaining);
+    while (!streamer.at_end() && !context.has_seen_iend) {
+        if (!process_chunk(streamer, context)) {
+            context.state = PNGLoadingContext::State::Error;
+            return false;
+        }
+
+        context.data_current_ptr = streamer.current_data_ptr();
+
+        if (context.state >= PNGLoadingContext::State::ImageDataChunkDecoded)
+            return true;
+    }
+
+    return false;
+}
+
+static bool decode_png_animation_data_chunks(PNGLoadingContext& context, u32 requested_animation_frame_index)
+{
+    if (context.state >= PNGLoadingContext::ImageDataChunkDecoded) {
+        if (context.last_completed_animation_frame_index.has_value()) {
+            if (requested_animation_frame_index <= context.last_completed_animation_frame_index.value())
+                return true;
+        }
+    } else if (!decode_png_image_data_chunk(context)) {
+        return false;
+    }
+
+    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
+
+    Streamer streamer(context.data_current_ptr, data_remaining);
+    while (!streamer.at_end() && !context.has_seen_iend) {
+        if (!process_chunk(streamer, context)) {
+            context.state = PNGLoadingContext::State::Error;
+            return false;
+        }
+
+        context.data_current_ptr = streamer.current_data_ptr();
+
+        if (context.last_completed_animation_frame_index.has_value()) {
+            if (requested_animation_frame_index <= context.last_completed_animation_frame_index.value())
+                break;
+        }
+    }
+
+    if (!context.last_completed_animation_frame_index.has_value())
+        return false;
+    return requested_animation_frame_index <= context.last_completed_animation_frame_index.value();
 }
 
 static bool decode_png_chunks(PNGLoadingContext& context)
@@ -567,27 +712,28 @@ static bool decode_png_chunks(PNGLoadingContext& context)
             return false;
     }
 
-    u8 const* data_ptr = context.data + sizeof(PNG::header);
-    int data_remaining = context.data_size - sizeof(PNG::header);
+    size_t data_remaining = context.data_size - (context.data_current_ptr - context.data);
 
     context.compressed_data.ensure_capacity(context.data_size);
 
-    Streamer streamer(data_ptr, data_remaining);
-    while (!streamer.at_end()) {
+    Streamer streamer(context.data_current_ptr, data_remaining);
+    while (!streamer.at_end() && !context.has_seen_iend) {
         if (!process_chunk(streamer, context)) {
             // Ignore failed chunk and just consider chunk decoding being done.
             // decode_png_bitmap() will check whether we got all required ones anyway.
             break;
         }
+
+        context.data_current_ptr = streamer.current_data_ptr();
     }
 
     context.state = PNGLoadingContext::State::ChunksDecoded;
     return true;
 }
 
-static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context)
+static ErrorOr<void> decode_png_bitmap_simple(PNGLoadingContext& context, ByteBuffer& decompression_buffer)
 {
-    Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
+    Streamer streamer(decompression_buffer.data(), decompression_buffer.size());
 
     for (int y = 0; y < context.height; ++y) {
         PNG::FilterType filter;
@@ -669,21 +815,12 @@ static int adam7_stepx[8] = { 1, 8, 8, 4, 4, 2, 2, 1 };
 
 static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, int pass)
 {
-    PNGLoadingContext subimage_context;
-    subimage_context.width = adam7_width(context, pass);
-    subimage_context.height = adam7_height(context, pass);
-    subimage_context.channels = context.channels;
-    subimage_context.color_type = context.color_type;
-    subimage_context.palette_data = context.palette_data;
-    subimage_context.palette_transparency_data = context.palette_transparency_data;
-    subimage_context.bit_depth = context.bit_depth;
-    subimage_context.filter_method = context.filter_method;
+    auto subimage_context = context.create_subimage_context(adam7_width(context, pass), adam7_height(context, pass));
 
     // For small images, some passes might be empty
     if (!subimage_context.width || !subimage_context.height)
         return {};
 
-    subimage_context.scanlines.clear_with_capacity();
     for (int y = 0; y < subimage_context.height; ++y) {
         PNG::FilterType filter;
         if (!streamer.read(filter)) {
@@ -720,9 +857,9 @@ static ErrorOr<void> decode_adam7_pass(PNGLoadingContext& context, Streamer& str
     return {};
 }
 
-static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context)
+static ErrorOr<void> decode_png_adam7(PNGLoadingContext& context, ByteBuffer& decompression_buffer)
 {
-    Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
+    Streamer streamer(decompression_buffer.data(), decompression_buffer.size());
     context.bitmap = TRY(Bitmap::create(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height }));
     for (int pass = 1; pass <= 7; ++pass)
         TRY(decode_adam7_pass(context, streamer, pass));
@@ -750,26 +887,57 @@ static ErrorOr<void> decode_png_bitmap(PNGLoadingContext& context)
         context.state = PNGLoadingContext::State::Error;
         return Error::from_string_literal("PNGImageDecoderPlugin: Decompression failed");
     }
-    context.decompression_buffer = &result.value();
+    auto& decompression_buffer = result.value();
     context.compressed_data.clear();
 
     context.scanlines.ensure_capacity(context.height);
     switch (context.interlace_method) {
     case PngInterlaceMethod::Null:
-        TRY(decode_png_bitmap_simple(context));
+        TRY(decode_png_bitmap_simple(context, decompression_buffer));
         break;
     case PngInterlaceMethod::Adam7:
-        TRY(decode_png_adam7(context));
+        TRY(decode_png_adam7(context, decompression_buffer));
         break;
     default:
         context.state = PNGLoadingContext::State::Error;
         return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method");
     }
 
-    context.decompression_buffer = nullptr;
-
     context.state = PNGLoadingContext::State::BitmapDecoded;
     return {};
+}
+
+static ErrorOr<RefPtr<Bitmap>> decode_png_animation_frame_bitmap(PNGLoadingContext& context, AnimationFrame& animation_frame)
+{
+    if (context.color_type == PNG::ColorType::IndexedColor && context.palette_data.is_empty())
+        return Error::from_string_literal("PNGImageDecoderPlugin: Didn't see a PLTE chunk for a palletized image, or it was empty.");
+
+    VERIFY(!animation_frame.bitmap);
+
+    auto frame_rect = animation_frame.rect();
+    auto frame_context = context.create_subimage_context(frame_rect.width(), frame_rect.height());
+
+    auto result = Compress::ZlibDecompressor::decompress_all(animation_frame.compressed_data.span());
+    if (!result.has_value())
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decompression of animation frame failed");
+
+    auto& decompression_buffer = result.value();
+    frame_context.compressed_data.clear();
+
+    frame_context.scanlines.ensure_capacity(frame_context.height);
+    switch (context.interlace_method) {
+    case PngInterlaceMethod::Null:
+        TRY(decode_png_bitmap_simple(frame_context, decompression_buffer));
+        break;
+    case PngInterlaceMethod::Adam7:
+        TRY(decode_png_adam7(frame_context, decompression_buffer));
+        break;
+    default:
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid interlace method");
+    }
+
+    context.state = PNGLoadingContext::State::BitmapDecoded;
+    return move(frame_context.bitmap);
 }
 
 static bool is_valid_compression_method(u8 compression_method)
@@ -857,6 +1025,8 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
 static bool process_IDAT(ReadonlyBytes data, PNGLoadingContext& context)
 {
     context.compressed_data.append(data.data(), data.size());
+    if (context.state < PNGLoadingContext::State::ImageDataChunkDecoded)
+        context.state = PNGLoadingContext::State::ImageDataChunkDecoded;
     return true;
 }
 
@@ -947,6 +1117,91 @@ static bool process_sRGB(ReadonlyBytes data, PNGLoadingContext& context)
     return true;
 }
 
+static bool process_acTL(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#acTL-chunk
+    if (context.has_seen_idat_chunk)
+        return true; // Ignore if we encounter it after the first idat
+    if (data.size() != sizeof(acTL_Chunk))
+        return false;
+
+    auto const& acTL = *bit_cast<acTL_Chunk* const>(data.data());
+    context.animation_frame_count = acTL.num_frames;
+    context.animation_loop_count = acTL.num_plays;
+    context.has_seen_actl_chunk_before_idat = true;
+    context.animation_frames.ensure_capacity(context.animation_frame_count);
+    return true;
+}
+
+static bool process_fcTL(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#fcTL-chunk
+    if (!context.has_seen_actl_chunk_before_idat)
+        return true; // Ignore if it's not a valid animated png
+
+    if (data.size() != sizeof(fcTL_Chunk))
+        return false;
+
+    auto const& fcTL = *bit_cast<fcTL_Chunk* const>(data.data());
+    if (fcTL.sequence_number != context.animation_next_expected_seq)
+        return false;
+
+    context.animation_next_expected_seq++;
+
+    if (fcTL.width == 0 || fcTL.height == 0)
+        return false;
+
+    Checked<int> left { static_cast<int>(fcTL.x_offset) };
+    Checked<int> top { static_cast<int>(fcTL.y_offset) };
+    Checked<int> width { static_cast<int>(fcTL.width) };
+    Checked<int> height { static_cast<int>(fcTL.height) };
+    auto right = left + width;
+    auto bottom = top + height;
+    if (left < 0 || width <= 0 || right.has_overflow() || right > context.width)
+        return false;
+    if (top < 0 || height <= 0 || bottom.has_overflow() || bottom > context.height)
+        return false;
+
+    bool is_first_animation_frame = context.animation_frames.is_empty();
+    if (!is_first_animation_frame)
+        context.last_completed_animation_frame_index = context.animation_frames.size() - 1;
+
+    context.animation_frames.append({ fcTL });
+
+    if (!context.has_seen_idat_chunk && is_first_animation_frame)
+        context.is_first_idat_part_of_animation = true;
+    return true;
+}
+
+static bool process_fdAT(ReadonlyBytes data, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#fdAT-chunk
+
+    if (data.size() <= 4)
+        return false;
+    u32 sequence_number = *bit_cast<NetworkOrdered<u32> const*>(data.data());
+    if (sequence_number != context.animation_next_expected_seq)
+        return false;
+    context.animation_next_expected_seq++;
+
+    if (context.animation_frames.is_empty())
+        return false;
+    auto& current_animation_frame = context.animation_frames[context.animation_frames.size() - 1];
+    auto compressed_data = data.slice(4);
+    current_animation_frame.compressed_data.append(compressed_data.data(), compressed_data.size());
+    return true;
+}
+
+static bool process_IEND(ReadonlyBytes, PNGLoadingContext& context)
+{
+    // https://www.w3.org/TR/png/#11IEND
+    if (context.has_seen_actl_chunk_before_idat)
+        context.last_completed_animation_frame_index = context.animation_frames.size();
+
+    context.has_seen_iend = true;
+    return true;
+}
+
 static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
@@ -990,17 +1245,55 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         return process_sRGB(chunk_data, context);
     if (!strcmp((char const*)chunk_type, "tRNS"))
         return process_tRNS(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "acTL"))
+        return process_acTL(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "fcTL"))
+        return process_fcTL(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "fdAT"))
+        return process_fdAT(chunk_data, context);
+    if (!strcmp((char const*)chunk_type, "IEND"))
+        return process_IEND(chunk_data, context);
     return true;
 }
 
 PNGImageDecoderPlugin::PNGImageDecoderPlugin(u8 const* data, size_t size)
 {
     m_context = make<PNGLoadingContext>();
-    m_context->data = data;
+    m_context->data = m_context->data_current_ptr = data;
     m_context->data_size = size;
 }
 
 PNGImageDecoderPlugin::~PNGImageDecoderPlugin() = default;
+
+bool PNGImageDecoderPlugin::ensure_image_data_chunk_was_decoded()
+{
+    if (m_context->state == PNGLoadingContext::State::Error)
+        return false;
+
+    if (m_context->state < PNGLoadingContext::State::ImageDataChunkDecoded) {
+        if (!decode_png_image_data_chunk(*m_context))
+            return false;
+    }
+    return true;
+}
+
+bool PNGImageDecoderPlugin::ensure_animation_frame_was_decoded(u32 animation_frame_index)
+{
+    if (m_context->state == PNGLoadingContext::State::Error)
+        return false;
+
+    if (m_context->state < PNGLoadingContext::State::ImageDataChunkDecoded) {
+        if (!decode_png_image_data_chunk(*m_context))
+            return false;
+    }
+
+    if (m_context->last_completed_animation_frame_index.has_value()) {
+        if (m_context->last_completed_animation_frame_index.value() >= animation_frame_index)
+            return true;
+    }
+
+    return decode_png_animation_data_chunks(*m_context, animation_frame_index);
+}
 
 IntSize PNGImageDecoderPlugin::size()
 {
@@ -1037,7 +1330,7 @@ bool PNGImageDecoderPlugin::initialize()
 bool PNGImageDecoderPlugin::sniff(ReadonlyBytes data)
 {
     PNGLoadingContext context;
-    context.data = data.data();
+    context.data = context.data_current_ptr = data.data();
     context.data_size = data.size();
     return decode_png_header(context);
 }
@@ -1049,39 +1342,139 @@ ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> PNGImageDecoderPlugin::create(Readonl
 
 bool PNGImageDecoderPlugin::is_animated()
 {
-    return false;
+    if (!ensure_image_data_chunk_was_decoded())
+        return false;
+    return m_context->has_seen_actl_chunk_before_idat;
 }
 
 size_t PNGImageDecoderPlugin::loop_count()
 {
-    return 0;
+    if (!ensure_image_data_chunk_was_decoded())
+        return 0;
+    return m_context->animation_loop_count;
 }
 
 size_t PNGImageDecoderPlugin::frame_count()
 {
-    return 1;
+    if (!ensure_image_data_chunk_was_decoded())
+        return 0;
+
+    if (!m_context->has_seen_actl_chunk_before_idat)
+        return 1;
+
+    auto total_frames = m_context->animation_frame_count;
+    if (!m_context->is_first_idat_part_of_animation)
+        total_frames++;
+    return total_frames;
 }
 
 size_t PNGImageDecoderPlugin::first_animated_frame_index()
 {
-    return 0;
+    if (!ensure_image_data_chunk_was_decoded())
+        return 0;
+    if (!m_context->has_seen_actl_chunk_before_idat)
+        return 0;
+    return m_context->is_first_idat_part_of_animation ? 0 : 1;
+}
+
+static ErrorOr<RefPtr<Bitmap>> render_animation_frame(AnimationFrame const& prev_animation_frame, AnimationFrame& animation_frame, Bitmap const& decoded_frame_bitmap)
+{
+    auto rendered_bitmap = TRY(prev_animation_frame.bitmap->clone());
+    Painter painter(rendered_bitmap);
+
+    static constexpr Color transparent_black = { 0, 0, 0, 0 };
+
+    auto frame_rect = animation_frame.rect();
+    switch (prev_animation_frame.fcTL.dispose_op) {
+    case fcTL_Chunk::DisposeOp::APNG_DISPOSE_OP_NONE:
+        break;
+    case fcTL_Chunk::DisposeOp::APNG_DISPOSE_OP_BACKGROUND:
+        painter.clear_rect(rendered_bitmap->rect(), transparent_black);
+        break;
+    case fcTL_Chunk::DisposeOp::APNG_DISPOSE_OP_PREVIOUS: {
+        painter.blit(frame_rect.location(), *prev_animation_frame.bitmap, frame_rect, 1.0f, false);
+        break;
+    }
+    }
+    switch (animation_frame.fcTL.blend_op) {
+    case fcTL_Chunk::BlendOp::APNG_BLEND_OP_SOURCE:
+        painter.blit(frame_rect.location(), decoded_frame_bitmap, decoded_frame_bitmap.rect(), 1.0f, false);
+        break;
+    case fcTL_Chunk::BlendOp::APNG_BLEND_OP_OVER:
+        painter.blit(frame_rect.location(), decoded_frame_bitmap, decoded_frame_bitmap.rect(), 1.0f, true);
+        break;
+    }
+    return rendered_bitmap;
 }
 
 ErrorOr<ImageFrameDescriptor> PNGImageDecoderPlugin::frame(size_t index)
 {
-    if (index > 0)
-        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index");
-
     if (m_context->state == PNGLoadingContext::State::Error)
         return Error::from_string_literal("PNGImageDecoderPlugin: Decoding failed");
 
-    if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
-        // NOTE: This forces the chunk decoding to happen.
-        TRY(decode_png_bitmap(*m_context));
+    if (!ensure_image_data_chunk_was_decoded())
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding image data chunk");
+
+    auto set_descriptor_duration = [](ImageFrameDescriptor& descriptor, AnimationFrame const& animation_frame) {
+        descriptor.duration = static_cast<int>(animation_frame.duration_ms());
+        if (descriptor.duration < 0)
+            descriptor.duration = NumericLimits<int>::min();
+    };
+    auto load_default_image = [&]() -> ErrorOr<void> {
+        if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
+            // NOTE: This forces the chunk decoding to happen.
+            TRY(decode_png_bitmap(*m_context));
+        }
+
+        VERIFY(m_context->bitmap);
+        return {};
+    };
+
+    if (index == 0) {
+        TRY(load_default_image());
+
+        ImageFrameDescriptor descriptor { m_context->bitmap };
+        if (m_context->has_seen_actl_chunk_before_idat && m_context->is_first_idat_part_of_animation)
+            set_descriptor_duration(descriptor, m_context->animation_frames[0]);
+        return descriptor;
     }
 
-    VERIFY(m_context->bitmap);
-    return ImageFrameDescriptor { m_context->bitmap, 0 };
+    if (!m_context->has_seen_actl_chunk_before_idat)
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid frame index");
+
+    if (!ensure_animation_frame_was_decoded(index))
+        return Error::from_string_literal("PNGImageDecoderPlugin: Decoding image data chunk");
+
+    if (index >= m_context->animation_frames.size())
+        return Error::from_string_literal("PNGImageDecoderPlugin: Invalid animation frame index");
+
+    // We need to assemble each frame up until the one requested,
+    // so decode all bitmaps that haven't been decoded yet.
+    for (size_t i = m_context->animation_next_frame_to_render; i <= index; i++) {
+        if (i == 0) {
+            // If the default image hasn't been loaded, load it now
+            TRY(load_default_image()); // May modify animation_frames!
+
+            auto& animation_frame = m_context->animation_frames[i];
+            animation_frame.bitmap = m_context->bitmap;
+        } else {
+            auto& animation_frame = m_context->animation_frames[i];
+            VERIFY(!animation_frame.bitmap);
+
+            auto decoded_bitmap = TRY(decode_png_animation_frame_bitmap(*m_context, animation_frame));
+
+            auto prev_animation_frame = m_context->animation_frames[i - 1];
+            animation_frame.bitmap = TRY(render_animation_frame(prev_animation_frame, animation_frame, *decoded_bitmap));
+        }
+        m_context->animation_next_frame_to_render = i + 1;
+    }
+
+    auto const& animation_frame = m_context->animation_frames[index];
+    VERIFY(animation_frame.bitmap);
+
+    ImageFrameDescriptor descriptor { animation_frame.bitmap };
+    set_descriptor_duration(descriptor, animation_frame);
+    return descriptor;
 }
 
 ErrorOr<Optional<ReadonlyBytes>> PNGImageDecoderPlugin::icc_data()
