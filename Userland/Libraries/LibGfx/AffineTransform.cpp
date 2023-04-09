@@ -79,6 +79,13 @@ AffineTransform& AffineTransform::set_scale(FloatPoint s)
     return set_scale(s.x(), s.y());
 }
 
+AffineTransform& AffineTransform::skew_radians(float x_radians, float y_radians)
+{
+    AffineTransform skew_transform(1, AK::tan(y_radians), AK::tan(x_radians), 1, 0, 0);
+    multiply(skew_transform);
+    return *this;
+}
+
 AffineTransform& AffineTransform::translate(float tx, float ty)
 {
     m_values[4] += tx * m_values[0] + ty * m_values[2];
