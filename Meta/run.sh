@@ -366,7 +366,7 @@ fi
 [ -z "$SERENITY_COMMON_QEMU_ISA_PC_ARGS" ] && SERENITY_COMMON_QEMU_ISA_PC_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -m $SERENITY_RAM_SIZE
--cpu pentium3
+-cpu qemu64
 -machine isapc
 -d guest_errors
 -device isa-vga
