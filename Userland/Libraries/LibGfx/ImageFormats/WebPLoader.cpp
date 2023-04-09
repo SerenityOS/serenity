@@ -414,10 +414,8 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
     constexpr int kCodeLengthCodes = 19;
     int kCodeLengthCodeOrder[kCodeLengthCodes] = { 17, 18, 0, 1, 2, 3, 4, 5, 16, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
     u8 code_length_code_lengths[kCodeLengthCodes] = { 0 }; // "All zeros" [sic]
-    for (int i = 0; i < num_code_lengths; ++i) {
+    for (int i = 0; i < num_code_lengths; ++i)
         code_length_code_lengths[kCodeLengthCodeOrder[i]] = TRY(bit_stream.read_bits(3));
-        dbgln_if(WEBP_DEBUG, "  code_length_code_lengths[{}] = {}", kCodeLengthCodeOrder[i], code_length_code_lengths[kCodeLengthCodeOrder[i]]);
-    }
 
     // The spec is at best misleading here, suggesting that max_symbol should be set to "num_code_lengths" if it's not explicitly stored.
     // But num_code_lengths doesn't mean the num_code_lengths mentioned a few lines further up in the spec (and in scope here),
@@ -452,14 +450,12 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
 
         if (symbol < 16) {
             // "Code [0..15] indicates literal code lengths."
-            dbgln_if(WEBP_DEBUG, "  append {}", symbol);
             code_lengths.append(static_cast<u8>(symbol));
             if (symbol != 0)
                 last_non_zero = symbol;
         } else if (symbol == 16) {
             // "Code 16 repeats the previous non-zero value [3..6] times, i.e., 3 + ReadBits(2) times."
             auto nrepeat = 3 + TRY(bit_stream.read_bits(2));
-            dbgln_if(WEBP_DEBUG, "  repeat {} {}s", nrepeat, last_non_zero);
 
             // This is different from deflate.
             for (size_t j = 0; j < nrepeat; ++j)
@@ -467,14 +463,12 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
         } else if (symbol == 17) {
             // "Code 17 emits a streak of zeros [3..10], i.e., 3 + ReadBits(3) times."
             auto nrepeat = 3 + TRY(bit_stream.read_bits(3));
-            dbgln_if(WEBP_DEBUG, "  repeat {} zeroes", nrepeat);
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
         } else {
             VERIFY(symbol == 18);
             // "Code 18 emits a streak of zeros of length [11..138], i.e., 11 + ReadBits(7) times."
             auto nrepeat = 11 + TRY(bit_stream.read_bits(7));
-            dbgln_if(WEBP_DEBUG, "  Repeat {} zeroes", nrepeat);
             for (size_t j = 0; j < nrepeat; ++j)
                 code_lengths.append(0);
         }
@@ -483,7 +477,6 @@ static ErrorOr<CanonicalCode> decode_webp_chunk_VP8L_prefix_code(WebPLoadingCont
     if (code_lengths.size() > alphabet_size)
         return Error::from_string_literal("Number of code lengths is larger than the alphabet size");
 
-    dbgln_if(WEBP_DEBUG, "  done reading symbols");
     return CanonicalCode::from_bytes(code_lengths);
 }
 
