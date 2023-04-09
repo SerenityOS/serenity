@@ -18,6 +18,25 @@ Optional<double> ReadableByteStreamController::desired_size() const
     return readable_byte_stream_controller_get_desired_size(*this);
 }
 
+// https://streams.spec.whatwg.org/#rbs-controller-close
+WebIDL::ExceptionOr<void> ReadableByteStreamController::close()
+{
+    // 1. If this.[[closeRequested]] is true, throw a TypeError exception.
+    if (m_close_requested)
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Controller is already closed"sv };
+
+    // 2. If this.[[stream]].[[state]] is not "readable", throw a TypeError exception.
+    if (m_stream->state() != ReadableStream::State::Readable) {
+        auto message = m_stream->state() == ReadableStream::State::Closed ? "Cannot close a closed stream"sv : "Cannot close an errored stream"sv;
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, message };
+    }
+
+    // 3. Perform ? ReadableByteStreamControllerClose(this).
+    TRY(readable_byte_stream_controller_close(*this));
+
+    return {};
+}
+
 ReadableByteStreamController::ReadableByteStreamController(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
 {

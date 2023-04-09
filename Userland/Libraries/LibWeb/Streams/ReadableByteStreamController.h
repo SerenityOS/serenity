@@ -80,6 +80,7 @@ public:
     void set_byob_request(JS::GCPtr<ReadableStreamBYOBRequest> request) { m_byob_request = request; }
 
     Optional<double> desired_size() const;
+    WebIDL::ExceptionOr<void> close();
 
     Optional<u32> const& auto_allocate_chunk_size() { return m_auto_allocate_chunk_size; }
     void set_auto_allocate_chunk_size(Optional<u32> value) { m_auto_allocate_chunk_size = value; }
