@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "AK/Endian.h"
-#include "AK/Forward.h"
 #include <AK/DeprecatedString.h>
+#include <AK/Endian.h>
 #include <AK/Error.h>
 #include <AK/FixedArray.h>
+#include <AK/Forward.h>
 #include <AK/Span.h>
 
 namespace OpenType {
