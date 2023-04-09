@@ -983,19 +983,19 @@ bool XMLHttpRequest::must_survive_garbage_collection() const
     if ((m_state == State::Opened && m_send)
         || m_state == State::HeadersReceived
         || m_state == State::Loading) {
-        if (has_event_listener(EventNames::readystatechange.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::readystatechange))
             return true;
-        if (has_event_listener(EventNames::progress.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::progress))
             return true;
-        if (has_event_listener(EventNames::abort.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::abort))
             return true;
-        if (has_event_listener(EventNames::error.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::error))
             return true;
-        if (has_event_listener(EventNames::load.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::load))
             return true;
-        if (has_event_listener(EventNames::timeout.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::timeout))
             return true;
-        if (has_event_listener(EventNames::loadend.to_deprecated_fly_string()))
+        if (has_event_listener(EventNames::loadend))
             return true;
     }
 

@@ -71,9 +71,9 @@ void HTMLBodyElement::parse_attribute(DeprecatedFlyString const& name, Deprecate
     }
 
 #undef __ENUMERATE
-#define __ENUMERATE(attribute_name, event_name)                     \
-    if (name == HTML::AttributeNames::attribute_name) {             \
-        element_event_handler_attribute_changed(event_name, value); \
+#define __ENUMERATE(attribute_name, event_name)                                                                     \
+    if (name == HTML::AttributeNames::attribute_name) {                                                             \
+        element_event_handler_attribute_changed(event_name, String::from_deprecated_string(value).release_value()); \
     }
     ENUMERATE_WINDOW_EVENT_HANDLERS(__ENUMERATE)
 #undef __ENUMERATE

@@ -26,12 +26,12 @@ public:
 
     virtual bool is_focusable() const { return false; }
 
-    void add_event_listener(DeprecatedFlyString const& type, IDLEventListener* callback, Variant<AddEventListenerOptions, bool> const& options);
-    void remove_event_listener(DeprecatedFlyString const& type, IDLEventListener* callback, Variant<EventListenerOptions, bool> const& options);
+    void add_event_listener(FlyString const& type, IDLEventListener* callback, Variant<AddEventListenerOptions, bool> const& options);
+    void remove_event_listener(FlyString const& type, IDLEventListener* callback, Variant<EventListenerOptions, bool> const& options);
 
     // NOTE: These are for internal use only. They operate as though addEventListener(type, callback) was called instead of addEventListener(type, callback, options).
-    void add_event_listener_without_options(DeprecatedFlyString const& type, IDLEventListener& callback);
-    void remove_event_listener_without_options(DeprecatedFlyString const& type, IDLEventListener& callback);
+    void add_event_listener_without_options(FlyString const& type, IDLEventListener& callback);
+    void remove_event_listener_without_options(FlyString const& type, IDLEventListener& callback);
 
     virtual bool dispatch_event(Event&);
     WebIDL::ExceptionOr<bool> dispatch_event_binding(Event&);
@@ -54,13 +54,13 @@ public:
     WebIDL::CallbackType* event_handler_attribute(FlyString const& name);
     void set_event_handler_attribute(FlyString const& name, WebIDL::CallbackType*);
 
-    bool has_event_listener(DeprecatedFlyString const& type) const;
+    bool has_event_listener(FlyString const& type) const;
     bool has_event_listeners() const;
 
 protected:
     explicit EventTarget(JS::Realm&);
 
-    void element_event_handler_attribute_changed(FlyString const& local_name, DeprecatedString const& value);
+    void element_event_handler_attribute_changed(FlyString const& local_name, Optional<String> const& value);
 
     virtual void visit_edges(Cell::Visitor&) override;
 
@@ -69,12 +69,12 @@ private:
 
     // https://html.spec.whatwg.org/multipage/webappapis.html#event-handler-map
     // Spec Note: The order of the entries of event handler map could be arbitrary. It is not observable through any algorithms that operate on the map.
-    HashMap<DeprecatedFlyString, JS::GCPtr<HTML::EventHandler>> m_event_handler_map;
+    HashMap<FlyString, JS::GCPtr<HTML::EventHandler>> m_event_handler_map;
 
-    WebIDL::CallbackType* get_current_value_of_event_handler(DeprecatedFlyString const& name);
-    void activate_event_handler(DeprecatedFlyString const& name, HTML::EventHandler& event_handler);
-    void deactivate_event_handler(DeprecatedFlyString const& name);
-    JS::ThrowCompletionOr<void> process_event_handler_for_event(DeprecatedFlyString const& name, Event& event);
+    WebIDL::CallbackType* get_current_value_of_event_handler(FlyString const& name);
+    void activate_event_handler(FlyString const& name, HTML::EventHandler& event_handler);
+    void deactivate_event_handler(FlyString const& name);
+    JS::ThrowCompletionOr<void> process_event_handler_for_event(FlyString const& name, Event& event);
 };
 
 bool is_window_reflecting_body_element_event_handler(FlyString const& name);
