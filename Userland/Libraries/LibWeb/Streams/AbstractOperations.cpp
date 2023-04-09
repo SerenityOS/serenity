@@ -864,6 +864,54 @@ void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStream
     controller.pending_pull_intos().clear();
 }
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-close
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_close(ReadableByteStreamController& controller)
+{
+    auto& realm = controller.realm();
+
+    // 1. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 2. If controller.[[closeRequested]] is true or stream.[[state]] is not "readable", return.
+    if (controller.close_requested() || stream->state() != ReadableStream::State::Readable)
+        return {};
+
+    // 3. If controller.[[queueTotalSize]] > 0,
+    if (controller.queue_total_size() > 0.0) {
+        // 1. Set controller.[[closeRequested]] to true.
+        controller.set_close_requested(true);
+
+        // 2. Return.
+        return {};
+    }
+
+    // 4. If controller.[[pendingPullIntos]] is not empty,
+    if (!controller.pending_pull_intos().is_empty()) {
+        // 1. Let firstPendingPullInto be controller.[[pendingPullIntos]][0].
+        auto& first_pending_pull_into = controller.pending_pull_intos().first();
+
+        // 2. If firstPendingPullInto’s bytes filled > 0,
+        if (first_pending_pull_into.bytes_filled > 0) {
+            // 1. Let e be a new TypeError exception.
+            auto error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot close controller in the middle of processing a write request"sv));
+
+            // 2. Perform ! ReadableByteStreamControllerError(controller, e).
+            readable_byte_stream_controller_error(controller, error);
+
+            // 3. Throw e.
+            return JS::throw_completion(error);
+        }
+    }
+
+    // 5. Perform ! ReadableByteStreamControllerClearAlgorithms(controller).
+    readable_byte_stream_controller_clear_algorithms(controller);
+
+    // 6. Perform ! ReadableStreamClose(stream).
+    readable_stream_close(*stream);
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#readable-byte-stream-controller-error
 void readable_byte_stream_controller_error(ReadableByteStreamController& controller, JS::Value error)
 {

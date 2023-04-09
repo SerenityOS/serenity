@@ -60,6 +60,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_call_pull_if_needed(ReadableByteStreamController&);
 void readable_byte_stream_controller_clear_algorithms(ReadableByteStreamController&);
 void readable_byte_stream_controller_clear_pending_pull_intos(ReadableByteStreamController&);
+WebIDL::ExceptionOr<void> readable_byte_stream_controller_close(ReadableByteStreamController&);
 void readable_byte_stream_controller_error(ReadableByteStreamController&, JS::Value error);
 WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from_queue(ReadableByteStreamController&, NonnullRefPtr<ReadRequest>);
 Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const&);
