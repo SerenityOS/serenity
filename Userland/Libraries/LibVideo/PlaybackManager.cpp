@@ -47,7 +47,18 @@ private:
 
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(StringView filename, PlaybackTimerCreator playback_timer_creator)
 {
-    NonnullOwnPtr<Demuxer> demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
+    auto demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
+    return create_with_demuxer(move(demuxer), move(playback_timer_creator));
+}
+
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_data(ReadonlyBytes data, PlaybackTimerCreator playback_timer_creator)
+{
+    auto demuxer = TRY(Matroska::MatroskaDemuxer::from_data(data));
+    return create_with_demuxer(move(demuxer), move(playback_timer_creator));
+}
+
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer, PlaybackTimerCreator playback_timer_creator)
+{
     auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
     if (video_tracks.is_empty())
         return DecoderError::with_description(DecoderErrorCategory::Invalid, "No video track is present"sv);
