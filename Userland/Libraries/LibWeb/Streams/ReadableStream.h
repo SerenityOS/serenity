@@ -56,7 +56,9 @@ public:
     bool is_closed() const;
     bool is_errored() const;
     bool is_locked() const;
-    void set_stream_state(State value) { m_state = value; }
+
+    State state() const { return m_state; }
+    void set_state(State value) { m_state = value; }
 
 private:
     explicit ReadableStream(JS::Realm&);
