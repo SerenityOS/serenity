@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/StringView.h>
 #include <AK/Types.h>
 #ifdef AK_OS_SERENITY
 #    include <bits/regex_defs.h>

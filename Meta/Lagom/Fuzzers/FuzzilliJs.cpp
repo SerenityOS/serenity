@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/Format.h>
 #include <AK/Function.h>
 #include <AK/StringView.h>

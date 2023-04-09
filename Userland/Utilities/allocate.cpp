@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/Format.h>
 #include <AK/Optional.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibMain/Main.h>

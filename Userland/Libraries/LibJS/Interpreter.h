@@ -8,7 +8,6 @@
 #pragma once
 
 #include <AK/DeprecatedFlyString.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/Weakable.h>
 #include <LibJS/Forward.h>

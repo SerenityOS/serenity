@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/NativeFunction.h>

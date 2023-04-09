@@ -6,7 +6,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
 #include <AK/Span.h>

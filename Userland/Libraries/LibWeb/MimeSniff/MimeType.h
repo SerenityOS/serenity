@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 
 namespace Web::MimeSniff {

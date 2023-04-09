@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
+#include <AK/Format.h>
 #include <AK/ScopeGuard.h>
 #include <AK/Vector.h>
 #include <errno.h>

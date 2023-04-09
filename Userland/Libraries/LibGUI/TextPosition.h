@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
+#include <AK/Format.h>
 
 namespace GUI {
 

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <LibJS/Runtime/Environment.h>
 #include <LibJS/Runtime/EnvironmentCoordinate.h>
 #include <LibJS/Runtime/PropertyKey.h>

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
 #include <LibCore/Account.h>

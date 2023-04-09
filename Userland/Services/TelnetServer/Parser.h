@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>

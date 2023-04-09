@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <LibJS/Runtime/ConsoleObject.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibWeb/Bindings/MainThreadVM.h>

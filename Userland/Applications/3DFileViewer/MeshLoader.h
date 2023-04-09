@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <LibCore/Forward.h>
 
 #include "Common.h"
