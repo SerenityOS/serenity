@@ -89,7 +89,7 @@ private:
 
     WebIDL::ExceptionOr<void> handle_response_end_of_body();
     WebIDL::ExceptionOr<void> handle_errors();
-    JS::ThrowCompletionOr<void> request_error_steps(DeprecatedFlyString const& event_name, JS::GCPtr<WebIDL::DOMException> exception = nullptr);
+    JS::ThrowCompletionOr<void> request_error_steps(FlyString const& event_name, JS::GCPtr<WebIDL::DOMException> exception = nullptr);
 
     XMLHttpRequest(JS::Realm&, XMLHttpRequestUpload&, Fetch::Infrastructure::HeaderList&, Fetch::Infrastructure::Response&, Fetch::Infrastructure::FetchController&);
 
