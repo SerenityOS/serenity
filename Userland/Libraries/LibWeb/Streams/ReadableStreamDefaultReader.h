@@ -45,8 +45,6 @@ public:
 
     SinglyLinkedList<NonnullRefPtr<ReadRequest>>& read_requests() { return m_read_requests; }
 
-    virtual bool is_default_reader() const override { return true; }
-
 private:
     explicit ReadableStreamDefaultReader(JS::Realm&);
 

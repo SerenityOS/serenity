@@ -29,8 +29,6 @@ public:
     JS::GCPtr<WebIDL::Promise> closed_promise_capability() { return m_closed_promise; }
     void set_closed_promise_capability(JS::GCPtr<WebIDL::Promise> promise) { m_closed_promise = promise; }
 
-    virtual bool is_default_reader() const { return false; }
-
 protected:
     explicit ReadableStreamGenericReaderMixin(JS::Realm&);
 

@@ -9,6 +9,7 @@
 
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/WebIDL/CallbackType.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
@@ -35,7 +36,7 @@ size_t readable_stream_get_num_read_requests(ReadableStream&);
 bool readable_stream_has_default_reader(ReadableStream&);
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin&, JS::Value reason);
-void readable_stream_reader_generic_initialize(ReadableStreamGenericReaderMixin&, ReadableStream&);
+void readable_stream_reader_generic_initialize(ReadableStreamReader, ReadableStream&);
 WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamGenericReaderMixin&);
 
 void readable_stream_default_reader_error_read_requests(ReadableStreamDefaultReader&, JS::Value error);
