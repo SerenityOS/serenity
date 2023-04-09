@@ -59,6 +59,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_writer(WritableStreamDe
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_abort(WritableStream&, JS::Value reason);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(WritableStream&);
 
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_add_write_request(WritableStream&);
 bool writable_stream_close_queued_or_in_flight(WritableStream const&);
 WebIDL::ExceptionOr<void> writable_stream_deal_with_rejection(WritableStream&, JS::Value error);
 WebIDL::ExceptionOr<void> writable_stream_finish_erroring(WritableStream&);
@@ -79,15 +80,19 @@ void writable_stream_default_writer_ensure_closed_promise_rejected(WritableStrea
 void writable_stream_default_writer_ensure_ready_promise_rejected(WritableStreamDefaultWriter&, JS::Value error);
 Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamDefaultWriter const&);
 WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamDefaultWriter&);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_write(WritableStreamDefaultWriter&, JS::Value chunk);
 
 WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_needed(WritableStreamDefaultController&);
 void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_close(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_error(WritableStreamDefaultController&, JS::Value error);
+WebIDL::ExceptionOr<void> writable_stream_default_controller_error_if_needed(WritableStreamDefaultController&, JS::Value error);
 bool writable_stream_default_controller_get_backpressure(WritableStreamDefaultController const&);
+WebIDL::ExceptionOr<JS::Value> writable_stream_default_controller_get_chunk_size(WritableStreamDefaultController&, JS::Value chunk);
 double writable_stream_default_controller_get_desired_size(WritableStreamDefaultController const&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(WritableStreamDefaultController&, JS::Value chunk);
+WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStreamDefaultController&, JS::Value chunk, JS::Value chunk_size);
 
 bool is_non_negative_number(JS::Value);
 

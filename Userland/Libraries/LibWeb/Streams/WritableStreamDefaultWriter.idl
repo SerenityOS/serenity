@@ -11,7 +11,5 @@ interface WritableStreamDefaultWriter {
     Promise<undefined> abort(optional any reason);
     Promise<undefined> close();
     undefined releaseLock();
-
-    // FIXME:
-    // Promise<undefined> write(optional any chunk);
+    Promise<undefined> write(optional any chunk);
 };
