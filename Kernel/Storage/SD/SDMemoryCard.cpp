@@ -23,6 +23,7 @@ SDMemoryCard::SDMemoryCard(SDHostController& sdhc, StorageDevice::LUNAddress lun
 
 void SDMemoryCard::start_request(AsyncBlockDeviceRequest& request)
 {
+    // FIXME: Make this asynchronous
     MutexLocker locker(m_lock);
 
     VERIFY(request.block_size() == block_size());
