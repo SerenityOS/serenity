@@ -1,3 +1,4 @@
+#import <Streams/ReadableStreamBYOBReader.idl>
 #import <Streams/ReadableStreamDefaultReader.idl>
 
 // https://streams.spec.whatwg.org/#readablestream
@@ -13,5 +14,4 @@ interface ReadableStream {
     ReadableStreamReader getReader();
 };
 
-// FIXME: typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;
-typedef ReadableStreamDefaultReader ReadableStreamReader;
+typedef (ReadableStreamDefaultReader or ReadableStreamBYOBReader) ReadableStreamReader;

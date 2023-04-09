@@ -13,9 +13,8 @@
 
 namespace Web::Streams {
 
-// FIXME: Variant<DefaultReader, ByteStreamReader>
 // https://streams.spec.whatwg.org/#typedefdef-readablestreamreader
-using ReadableStreamReader = JS::GCPtr<ReadableStreamDefaultReader>;
+using ReadableStreamReader = Variant<JS::NonnullGCPtr<ReadableStreamDefaultReader>, JS::NonnullGCPtr<ReadableStreamBYOBReader>>;
 
 // https://streams.spec.whatwg.org/#typedefdef-readablestreamcontroller
 using ReadableStreamController = Variant<JS::NonnullGCPtr<ReadableStreamDefaultController>, JS::NonnullGCPtr<ReadableByteStreamController>>;
@@ -45,8 +44,8 @@ public:
     JS::Value stored_error() const { return m_stored_error; }
     void set_stored_error(JS::Value value) { m_stored_error = value; }
 
-    ReadableStreamReader reader() const { return m_reader; }
-    void set_reader(ReadableStreamReader value) { m_reader = value; }
+    Optional<ReadableStreamReader> const& reader() const { return m_reader; }
+    void set_reader(Optional<ReadableStreamReader> value) { m_reader = move(value); }
 
     bool is_disturbed() const;
     void set_disturbed(bool value) { m_disturbed = value; }
@@ -79,7 +78,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestream-reader
     // A ReadableStreamDefaultReader or ReadableStreamBYOBReader instance, if the stream is locked to a reader, or undefined if it is not
-    ReadableStreamReader m_reader;
+    Optional<ReadableStreamReader> m_reader;
 
     // https://streams.spec.whatwg.org/#readablestream-state
     // A string containing the stream’s current state, used internally; one of "readable", "closed", or "errored"

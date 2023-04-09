@@ -12,6 +12,7 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
+#include <LibWeb/Streams/ReadableStreamBYOBReader.h>
 #include <LibWeb/Streams/ReadableStreamBYOBRequest.h>
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
@@ -46,7 +47,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_reada
 bool is_readable_stream_locked(ReadableStream const& stream)
 {
     // 1. If stream.[[reader]] is undefined, return false.
-    if (!stream.reader())
+    if (!stream.reader().has_value())
         return false;
 
     // 2. Return true.
@@ -75,13 +76,18 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(Re
     // 5. Let reader be stream.[[reader]].
     auto reader = stream.reader();
 
-    // FIXME:
     // 6. If reader is not undefined and reader implements ReadableStreamBYOBReader,
-    //    1. Let readIntoRequests be reader.[[readIntoRequests]].
-    //    2. Set reader.[[readIntoRequests]] to an empty list.
-    //    3. For each readIntoRequest of readIntoRequests,
-    //       1. Perform readIntoRequest’s close steps, given undefined.
-    (void)reader;
+    if (reader.has_value() && reader->has<JS::NonnullGCPtr<ReadableStreamBYOBReader>>()) {
+        // 1. Let readIntoRequests be reader.[[readIntoRequests]].
+        // 2. Set reader.[[readIntoRequests]] to an empty list.
+        auto read_into_requests = move(reader->get<JS::NonnullGCPtr<ReadableStreamBYOBReader>>()->read_into_requests());
+
+        // 3. For each readIntoRequest of readIntoRequests,
+        for (auto& read_into_request : read_into_requests) {
+            // 1. Perform readIntoRequest’s close steps, given undefined.
+            read_into_request->on_close(JS::js_undefined());
+        }
+    }
 
     // 7. Let sourceCancelPromise be ! stream.[[controller]].[[CancelSteps]](reason).
     auto source_cancel_promise = TRY(stream.controller()->visit([&](auto const& controller) {
@@ -103,14 +109,14 @@ void readable_stream_fulfill_read_request(ReadableStream& stream, JS::Value chun
     VERIFY(readable_stream_has_default_reader(stream));
 
     // 2. Let reader be stream.[[reader]].
-    auto& reader = *stream.reader();
+    auto reader = stream.reader()->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>();
 
     // 3. Assert: reader.[[readRequests]] is not empty.
-    VERIFY(!reader.read_requests().is_empty());
+    VERIFY(!reader->read_requests().is_empty());
 
     // 4. Let readRequest be reader.[[readRequests]][0].
     // 5. Remove readRequest from reader.[[readRequests]].
-    auto read_request = reader.read_requests().take_first();
+    auto read_request = reader->read_requests().take_first();
 
     // 6. If done is true, perform readRequest’s close steps.
     if (done) {
@@ -129,7 +135,7 @@ size_t readable_stream_get_num_read_requests(ReadableStream& stream)
     VERIFY(readable_stream_has_default_reader(stream));
 
     // 2. Return stream.[[reader]].[[readRequests]]'s size.
-    return stream.reader()->read_requests().size();
+    return stream.reader()->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()->read_requests().size();
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-has-default-reader
@@ -139,11 +145,11 @@ bool readable_stream_has_default_reader(ReadableStream& stream)
     auto reader = stream.reader();
 
     // 2. If reader is undefined, return false.
-    if (!reader)
+    if (!reader.has_value())
         return false;
 
     // 3. If reader implements ReadableStreamDefaultReader, return true.
-    if (reader->is_default_reader())
+    if (reader->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>())
         return true;
 
     // 4. Return false.
@@ -165,17 +171,19 @@ void readable_stream_close(ReadableStream& stream)
     auto reader = stream.reader();
 
     // 4. If reader is undefined, return.
-    if (!reader)
+    if (!reader.has_value())
         return;
 
     // 5. Resolve reader.[[closedPromise]] with undefined.
-    WebIDL::resolve_promise(realm, *reader->closed_promise_capability());
+    WebIDL::resolve_promise(realm, *reader->visit([](auto& reader) {
+        return reader->closed_promise_capability();
+    }));
 
     // 6. If reader implements ReadableStreamDefaultReader,
-    if (reader->is_default_reader()) {
+    if (reader->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()) {
         // 1. Let readRequests be reader.[[readRequests]].
         // 2. Set reader.[[readRequests]] to an empty list.
-        auto read_requests = move(reader->read_requests());
+        auto read_requests = move(reader->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()->read_requests());
 
         // 3. For each readRequest of readRequests,
         for (auto& read_request : read_requests) {
@@ -203,19 +211,21 @@ void readable_stream_error(ReadableStream& stream, JS::Value error)
     auto reader = stream.reader();
 
     // 5. If reader is undefined, return.
-    if (!reader)
+    if (!reader.has_value())
         return;
 
+    auto closed_promise_capability = reader->visit([](auto& reader) { return reader->closed_promise_capability(); });
+
     // 6. Reject reader.[[closedPromise]] with e.
-    WebIDL::reject_promise(realm, *reader->closed_promise_capability(), error);
+    WebIDL::reject_promise(realm, *closed_promise_capability, error);
 
     // 7. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-    WebIDL::mark_promise_as_handled(*reader->closed_promise_capability());
+    WebIDL::mark_promise_as_handled(*closed_promise_capability);
 
     // 8. If reader implements ReadableStreamDefaultReader,
-    if (reader->is_default_reader()) {
+    if (reader->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()) {
         // 1. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
-        readable_stream_default_reader_error_read_requests(*reader, error);
+        readable_stream_default_reader_error_read_requests(*reader->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>(), error);
     }
     // 9. Otherwise,
     else {
@@ -230,15 +240,14 @@ void readable_stream_error(ReadableStream& stream, JS::Value error)
 // https://streams.spec.whatwg.org/#readable-stream-add-read-request
 void readable_stream_add_read_request(ReadableStream& stream, ReadRequest const& read_request)
 {
-    // FIXME: Check implementation type
     // 1. Assert: stream.[[reader]] implements ReadableStreamDefaultReader.
-    VERIFY(stream.reader());
+    VERIFY(stream.reader().has_value() && stream.reader()->has<JS::NonnullGCPtr<ReadableStreamDefaultReader>>());
 
     // 2. Assert: stream.[[state]] is "readable".
     VERIFY(stream.state() == ReadableStream::State::Readable);
 
     // 3. Append readRequest to stream.[[reader]].[[readRequests]].
-    stream.reader()->read_requests().append(read_request);
+    stream.reader()->get<JS::NonnullGCPtr<ReadableStreamDefaultReader>>()->read_requests().append(read_request);
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-cancel
@@ -255,30 +264,27 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_ge
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize
-void readable_stream_reader_generic_initialize(ReadableStreamGenericReaderMixin& reader, ReadableStream& stream)
+void readable_stream_reader_generic_initialize(ReadableStreamReader reader, ReadableStream& stream)
 {
     auto& realm = stream.realm();
 
     // 1. Set reader.[[stream]] to stream.
-    reader.set_stream(stream);
+    reader.visit([&](auto& reader) { reader->set_stream(stream); });
 
     // 2. Set stream.[[reader]] to reader.
-    if (reader.is_default_reader()) {
-        stream.set_reader(static_cast<ReadableStreamDefaultReader&>(reader));
-    } else {
-        // FIXME: Handle other descendents of ReadableStreamGenericReaderMixin (i.e. BYOBReader)
-        TODO();
-    }
+    stream.set_reader(reader);
 
     // 3. If stream.[[state]] is "readable",
     if (stream.state() == ReadableStream::State::Readable) {
         // 1. Set reader.[[closedPromise]] to a new promise.
-        reader.set_closed_promise_capability(WebIDL::create_promise(realm));
+        reader.visit([&](auto& reader) { reader->set_closed_promise_capability(WebIDL::create_promise(realm)); });
     }
     // 4. Otherwise, if stream.[[state]] is "closed",
     else if (stream.state() == ReadableStream::State::Closed) {
         // 1. Set reader.[[closedPromise]] to a promise resolved with undefined.
-        reader.set_closed_promise_capability(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
+        reader.visit([&](auto& reader) {
+            reader->set_closed_promise_capability(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
+        });
     }
     // 5. Otherwise,
     else {
@@ -286,10 +292,11 @@ void readable_stream_reader_generic_initialize(ReadableStreamGenericReaderMixin&
         VERIFY(stream.state() == ReadableStream::State::Errored);
 
         // 2. Set reader.[[closedPromise]] to a promise rejected with stream.[[storedError]].
-        reader.set_closed_promise_capability(WebIDL::create_rejected_promise(realm, stream.stored_error()));
-
         // 3. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
-        WebIDL::mark_promise_as_handled(*reader.closed_promise_capability());
+        reader.visit([&](auto& reader) {
+            reader->set_closed_promise_capability(WebIDL::create_rejected_promise(realm, stream.stored_error()));
+            WebIDL::mark_promise_as_handled(*reader->closed_promise_capability());
+        });
     }
 }
 
@@ -303,7 +310,7 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
     VERIFY(stream);
 
     // 3. Assert: stream.[[reader]] is reader.
-    VERIFY(stream->reader().ptr() == &reader);
+    VERIFY(stream->reader()->visit([](auto& reader) -> ReadableStreamGenericReaderMixin* { return reader.ptr(); }) == &reader);
 
     auto& realm = stream->realm();
 
@@ -406,7 +413,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_reader(ReadableStreamDe
 
     // 2. Perform ! ReadableStreamReaderGenericInitialize(reader, stream).
     // 3. Set reader.[[readRequests]] to a new empty list.
-    readable_stream_reader_generic_initialize(reader, stream);
+    readable_stream_reader_generic_initialize(ReadableStreamReader { reader }, stream);
 
     return {};
 }

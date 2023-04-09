@@ -9,6 +9,7 @@
 #include <LibWeb/Streams/AbstractOperations.h>
 #include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
+#include <LibWeb/Streams/ReadableStreamBYOBReader.h>
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
 #include <LibWeb/Streams/UnderlyingSource.h>
@@ -111,7 +112,8 @@ void ReadableStream::visit_edges(Cell::Visitor& visitor)
     if (m_controller.has_value())
         m_controller->visit([&](auto& controller) { visitor.visit(controller); });
     visitor.visit(m_stored_error);
-    visitor.visit(m_reader);
+    if (m_reader.has_value())
+        m_reader->visit([&](auto& reader) { visitor.visit(reader); });
 }
 
 // https://streams.spec.whatwg.org/#readablestream-locked
