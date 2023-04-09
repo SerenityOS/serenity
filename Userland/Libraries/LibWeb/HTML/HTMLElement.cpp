@@ -276,12 +276,12 @@ void HTMLElement::focus()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#fire-a-synthetic-pointer-event
-bool HTMLElement::fire_a_synthetic_pointer_event(DeprecatedFlyString const& type, DOM::Element& target, bool not_trusted)
+bool HTMLElement::fire_a_synthetic_pointer_event(FlyString const& type, DOM::Element& target, bool not_trusted)
 {
     // 1. Let event be the result of creating an event using PointerEvent.
     // 2. Initialize event's type attribute to e.
     // FIXME: Actually create a PointerEvent!
-    auto event = UIEvents::MouseEvent::create(realm(), FlyString::from_deprecated_fly_string(type).release_value()).release_value_but_fixme_should_propagate_errors();
+    auto event = UIEvents::MouseEvent::create(realm(), type).release_value_but_fixme_should_propagate_errors();
 
     // 3. Initialize event's bubbles and cancelable attributes to true.
     event->set_bubbles(true);
@@ -319,7 +319,7 @@ void HTMLElement::click()
     m_click_in_progress = true;
 
     // FIXME: 4. Fire a synthetic pointer event named click at this element, with the not trusted flag set.
-    fire_a_synthetic_pointer_event(HTML::EventNames::click.to_deprecated_fly_string(), *this, true);
+    fire_a_synthetic_pointer_event(HTML::EventNames::click, *this, true);
 
     // 5. Unset this element's click in progress flag.
     m_click_in_progress = false;
