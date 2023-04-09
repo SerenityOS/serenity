@@ -64,6 +64,7 @@ public:
     AffineTransform& set_translation(float tx, float ty);
     AffineTransform& set_translation(FloatPoint t);
     AffineTransform& rotate_radians(float);
+    AffineTransform& skew_radians(float x_radians, float y_radians);
     AffineTransform& multiply(AffineTransform const&);
 
     Optional<AffineTransform> inverse() const;
