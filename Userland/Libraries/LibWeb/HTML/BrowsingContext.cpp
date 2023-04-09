@@ -1125,7 +1125,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::traverse_the_history(size_t entry_ind
 
             // 4. Fire a page transition event named pageshow at newDocument's relevant global object with true.
             auto& window = verify_cast<HTML::Window>(relevant_global_object(*new_document));
-            window.fire_a_page_transition_event(HTML::EventNames::pageshow.to_deprecated_fly_string(), true);
+            window.fire_a_page_transition_event(HTML::EventNames::pageshow, true);
         });
     }
 

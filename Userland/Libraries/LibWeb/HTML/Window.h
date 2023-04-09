@@ -106,7 +106,7 @@ public:
 
     Optional<CSS::MediaFeatureValue> query_media_feature(CSS::MediaFeatureID) const;
 
-    void fire_a_page_transition_event(DeprecatedFlyString const& event_name, bool persisted);
+    void fire_a_page_transition_event(FlyString const& event_name, bool persisted);
 
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> local_storage();
     WebIDL::ExceptionOr<JS::NonnullGCPtr<Storage>> session_storage();
