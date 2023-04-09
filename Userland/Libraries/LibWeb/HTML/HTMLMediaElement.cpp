@@ -6,7 +6,7 @@
  */
 
 #include <LibJS/Runtime/Promise.h>
-#include <LibVideo/Containers/Matroska/MatroskaDemuxer.h>
+#include <LibVideo/PlaybackManager.h>
 #include <LibWeb/Bindings/HTMLMediaElementPrototype.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
@@ -26,9 +26,30 @@
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/MimeSniff/MimeType.h>
+#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::HTML {
+
+class MediaElementPlaybackTimer final : public Video::PlaybackTimer {
+public:
+    static ErrorOr<NonnullOwnPtr<MediaElementPlaybackTimer>> create(int interval_ms, Function<void()> timeout_handler)
+    {
+        auto timer = Platform::Timer::create_single_shot(interval_ms, move(timeout_handler));
+        return adopt_nonnull_own_or_enomem(new (nothrow) MediaElementPlaybackTimer(move(timer)));
+    }
+
+    virtual void start() override { m_timer->start(); }
+    virtual void start(int interval_ms) override { m_timer->start(interval_ms); }
+
+private:
+    explicit MediaElementPlaybackTimer(NonnullRefPtr<Platform::Timer> timer)
+        : m_timer(move(timer))
+    {
+    }
+
+    NonnullRefPtr<Platform::Timer> m_timer;
+};
 
 HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
@@ -579,10 +600,13 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
+    auto playback_manager = Video::PlaybackManager::from_data(m_media_data, [](auto interval_ms, auto timeout_handler) {
+        return MediaElementPlaybackTimer::create(interval_ms, move(timeout_handler));
+    });
+
     // -> If the media data cannot be fetched at all, due to network errors, causing the user agent to give up trying to fetch the resource
     // -> If the media data can be fetched but is found by inspection to be in an unsupported format, or can otherwise not be rendered at all
-    auto demuxer = Video::Matroska::MatroskaDemuxer::from_data(m_media_data);
-    if (demuxer.is_error()) {
+    if (playback_manager.is_error()) {
         // 1. The user agent should cancel the fetching process.
         m_fetch_controller->terminate();
 
@@ -595,7 +619,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
     JS::GCPtr<VideoTrack> video_track;
 
     // -> If the media resource is found to have an audio track
-    if (auto audio_tracks = demuxer.value()->get_tracks_for_type(Video::TrackType::Audio); !audio_tracks.is_error() && !audio_tracks.value().is_empty()) {
+    {
         // FIXME: 1. Create an AudioTrack object to represent the audio track.
         // FIXME: 2. Update the media element's audioTracks attribute's AudioTrackList object with the new AudioTrack object.
         // FIXME: 3. Let enable be unknown.
@@ -609,9 +633,10 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
     }
 
     // -> If the media resource is found to have a video track
-    if (auto video_tracks = demuxer.value()->get_tracks_for_type(Video::TrackType::Video); !video_tracks.is_error() && !video_tracks.value().is_empty()) {
+    // NOTE: Creating a Video::PlaybackManager above will have failed if there was not a video track.
+    {
         // 1. Create a VideoTrack object to represent the video track.
-        video_track = TRY(vm.heap().allocate<VideoTrack>(realm, realm, *this, demuxer.release_value(), video_tracks.value()[0]));
+        video_track = TRY(vm.heap().allocate<VideoTrack>(realm, realm, *this, playback_manager.release_value()));
 
         // 2. Update the media element's videoTracks attribute's VideoTrackList object with the new VideoTrack object.
         TRY_OR_THROW_OOM(vm, m_video_tracks->add_track({}, *video_track));

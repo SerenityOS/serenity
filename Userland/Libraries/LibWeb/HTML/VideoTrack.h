@@ -9,9 +9,7 @@
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <LibGfx/Forward.h>
-#include <LibVideo/Containers/Matroska/MatroskaDemuxer.h>
-#include <LibVideo/Track.h>
-#include <LibVideo/VP9/Decoder.h>
+#include <LibVideo/Forward.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 
 namespace Web::HTML {
@@ -24,11 +22,12 @@ public:
 
     void set_video_track_list(Badge<VideoTrackList>, JS::GCPtr<VideoTrackList> video_track_list) { m_video_track_list = video_track_list; }
 
-    RefPtr<Gfx::Bitmap> next_frame();
+    void play_video(Badge<HTMLVideoElement>);
+    void pause_video(Badge<HTMLVideoElement>);
 
-    Time duration() const { return m_track.video_data().duration; }
-    u64 pixel_width() const { return m_track.video_data().pixel_width; }
-    u64 pixel_height() const { return m_track.video_data().pixel_height; }
+    Time duration() const;
+    u64 pixel_width() const;
+    u64 pixel_height() const;
 
     String const& id() const { return m_id; }
     String const& kind() const { return m_kind; }
@@ -39,7 +38,7 @@ public:
     void set_selected(bool selected);
 
 private:
-    explicit VideoTrack(JS::Realm&, JS::NonnullGCPtr<HTMLMediaElement>, NonnullOwnPtr<Video::Matroska::MatroskaDemuxer>, Video::Track);
+    VideoTrack(JS::Realm&, JS::NonnullGCPtr<HTMLMediaElement>, NonnullOwnPtr<Video::PlaybackManager>);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
@@ -62,9 +61,7 @@ private:
     JS::NonnullGCPtr<HTMLMediaElement> m_media_element;
     JS::GCPtr<VideoTrackList> m_video_track_list;
 
-    NonnullOwnPtr<Video::Matroska::MatroskaDemuxer> m_demuxer;
-    Video::VP9::Decoder m_decoder;
-    Video::Track m_track;
+    NonnullOwnPtr<Video::PlaybackManager> m_playback_manager;
 };
 
 }

@@ -28,6 +28,8 @@ public:
     u32 video_height() const;
 
     void set_video_track(JS::GCPtr<VideoTrack>);
+
+    void set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame);
     RefPtr<Gfx::Bitmap> const& current_frame() const { return m_current_frame; }
 
 private:
@@ -42,7 +44,6 @@ private:
     virtual void on_paused() override;
 
     JS::GCPtr<HTML::VideoTrack> m_video_track;
-    RefPtr<Platform::Timer> m_video_timer;
     RefPtr<Gfx::Bitmap> m_current_frame;
 
     u32 m_video_width { 0 };

@@ -11,12 +11,8 @@
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/Layout/VideoBox.h>
-#include <LibWeb/Platform/Timer.h>
 
 namespace Web::HTML {
-
-// FIXME: Determine a reasonable framerate somehow. For now, this is roughly 24fps.
-static constexpr int s_frame_delay_ms = 42;
 
 HTMLVideoElement::HTMLVideoElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLMediaElement(document, move(qualified_name))
@@ -81,32 +77,28 @@ void HTMLVideoElement::set_video_track(JS::GCPtr<HTML::VideoTrack> video_track)
     set_needs_style_update(true);
     document().set_needs_layout();
 
-    if (m_video_timer)
-        m_video_timer->stop();
+    if (m_video_track)
+        m_video_track->pause_video({});
 
     m_video_track = video_track;
 }
 
+void HTMLVideoElement::set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame)
+{
+    m_current_frame = move(frame);
+    layout_node()->set_needs_display();
+}
+
 void HTMLVideoElement::on_playing()
 {
-    if (!m_video_timer) {
-        m_video_timer = Platform::Timer::create_repeating(s_frame_delay_ms, [this]() {
-            if (auto frame = m_video_track->next_frame())
-                m_current_frame = move(frame);
-            else
-                m_video_timer->stop();
-
-            layout_node()->set_needs_display();
-        });
-    }
-
-    m_video_timer->start();
+    if (m_video_track)
+        m_video_track->play_video({});
 }
 
 void HTMLVideoElement::on_paused()
 {
-    if (m_video_timer)
-        m_video_timer->stop();
+    if (m_video_track)
+        m_video_track->pause_video({});
 }
 
 }
