@@ -453,7 +453,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_enqueue(ReadableStr
         }
 
         // 3. Let chunkSize be result.[[Value]].
-        auto chunk_size = TRY(result.release_value().release_value().to_double(vm));
+        auto chunk_size = result.release_value().release_value();
 
         // 4. Let enqueueResult be EnqueueValueWithSize(controller, chunk, chunkSize).
         auto enqueue_result = enqueue_value_with_size(controller, chunk, chunk_size);
@@ -1489,7 +1489,7 @@ void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultCo
 WebIDL::ExceptionOr<void> writable_stream_default_controller_close(WritableStreamDefaultController& controller)
 {
     // 1. Perform ! EnqueueValueWithSize(controller, close sentinel, 0).
-    TRY(enqueue_value_with_size(controller, create_close_sentinel(), 0.0));
+    TRY(enqueue_value_with_size(controller, create_close_sentinel(), JS::Value(0.0)));
 
     // 2. Perform ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
     TRY(writable_stream_default_controller_advance_queue_if_needed(controller));
@@ -1624,6 +1624,25 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
     });
 
     return {};
+}
+
+// https://streams.spec.whatwg.org/#is-non-negative-number
+bool is_non_negative_number(JS::Value value)
+{
+    // 1. If Type(v) is not Number, return false.
+    if (!value.is_number())
+        return false;
+
+    // 2. If v is NaN, return false.
+    if (value.is_nan())
+        return false;
+
+    // 3. If v < 0, return false.
+    if (value.as_double() < 0.0)
+        return false;
+
+    // 4. Return true.
+    return true;
 }
 
 // https://streams.spec.whatwg.org/#close-sentinel

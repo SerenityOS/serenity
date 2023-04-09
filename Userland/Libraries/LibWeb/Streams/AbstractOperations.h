@@ -89,6 +89,8 @@ double writable_stream_default_controller_get_desired_size(WritableStreamDefault
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_close(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(WritableStreamDefaultController&, JS::Value chunk);
 
+bool is_non_negative_number(JS::Value);
+
 JS::Value create_close_sentinel();
 bool is_close_sentinel(JS::Value);
 JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key);
@@ -125,13 +127,15 @@ JS::Value dequeue_value(T& container)
 
 // https://streams.spec.whatwg.org/#enqueue-value-with-size
 template<typename T>
-WebIDL::ExceptionOr<void> enqueue_value_with_size(T& container, JS::Value value, double size)
+WebIDL::ExceptionOr<void> enqueue_value_with_size(T& container, JS::Value value, JS::Value size_value)
 {
     // 1. Assert: container has [[queue]] and [[queueTotalSize]] internal slots.
 
     // 2. If ! IsNonNegativeNumber(size) is false, throw a RangeError exception.
-    if (size < 0.0)
-        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Chunk has negative size"sv };
+    if (!is_non_negative_number(size_value))
+        return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Chunk has non-positive size"sv };
+
+    auto size = size_value.as_double();
 
     // 3. If size is +∞, throw a RangeError exception.
     if (size == HUGE_VAL)
