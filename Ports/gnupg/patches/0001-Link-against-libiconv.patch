@@ -1,0 +1,22 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
+Date: Sun, 9 Apr 2023 11:48:19 +0200
+Subject: [PATCH] Link against libiconv
+
+---
+ sm/Makefile.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sm/Makefile.in b/sm/Makefile.in
+index 06c15db5b91d89dba33168436e4e316533a012f5..c1b9f936aee31b4f515bc94ba2819a09180c74af 100644
+--- a/sm/Makefile.in
++++ b/sm/Makefile.in
+@@ -554,7 +554,7 @@ module_tests =
+ module_maint_tests = t-minip12
+ t_common_src = 
+ t_common_ldadd = $(libcommon) $(LIBGCRYPT_LIBS) $(KSBA_LIBS) \
+-                 $(GPG_ERROR_LIBS) $(LIBINTL)
++                 $(GPG_ERROR_LIBS) $(LIBINTL) $(LIBICONV)
+ 
+ t_minip12_CFLAGS = -DWITHOUT_NPTH=1 \
+ 	           $(LIBGCRYPT_CFLAGS) $(GPG_ERROR_CFLAGS)
