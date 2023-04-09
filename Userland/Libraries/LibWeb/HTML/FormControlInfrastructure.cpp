@@ -176,7 +176,7 @@ WebIDL::ExceptionOr<Optional<Vector<XHR::FormDataEntry>>> construct_entry_list(J
     return entry_list;
 }
 
-// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart-form-data
+// https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#multipart/form-data-encoding-algorithm
 ErrorOr<SerializedFormData> serialize_to_multipart_form_data(Vector<XHR::FormDataEntry> const& entry_list)
 {
     auto normalize_line_breaks = [](StringView value) -> ErrorOr<String> {
