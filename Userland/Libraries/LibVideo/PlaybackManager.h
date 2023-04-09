@@ -156,7 +156,7 @@ private:
     NonnullOwnPtr<PlaybackStateHandler> m_playback_handler;
     Optional<FrameQueueItem> m_next_frame;
 
-    u64 m_skipped_frames;
+    u64 m_skipped_frames { 0 };
 
     // This is a nested class to allow private access.
     class PlaybackStateHandler {

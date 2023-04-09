@@ -314,7 +314,7 @@ protected:
         return {};
     }
 
-    bool m_playing;
+    bool m_playing { false };
 };
 
 class PlaybackManager::StartingStateHandler : public PlaybackManager::ResumingStateHandler {
@@ -362,7 +362,7 @@ class PlaybackManager::StartingStateHandler : public PlaybackManager::ResumingSt
         return {};
     }
 
-    bool m_playing;
+    bool m_playing { false };
 };
 
 class PlaybackManager::PlayingStateHandler : public PlaybackManager::PlaybackStateHandler {
