@@ -920,14 +920,17 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
                 break;
             // -> "manual"
             case Infrastructure::Request::RedirectMode::Manual:
-                // Set response to an opaque-redirect filtered response whose internal response is actualResponse. If
-                // request’s mode is "navigate", then set fetchParams’s controller’s next manual redirect steps to run
-                // HTTP-redirect fetch given fetchParams and response.
-                response = Infrastructure::OpaqueRedirectFilteredResponse::create(vm, *actual_response);
+                // 1. If request’s mode is "navigate", then set fetchParams’s controller’s next manual redirect steps
+                //    to run HTTP-redirect fetch given fetchParams and response.
                 if (request->mode() == Infrastructure::Request::Mode::Navigate) {
                     fetch_params.controller()->set_next_manual_redirect_steps([&realm, &fetch_params, response] {
                         (void)http_redirect_fetch(realm, fetch_params, *response);
                     });
+                }
+                // 2. Otherwise, set response to an opaque-redirect filtered response whose internal response is
+                //    actualResponse.
+                else {
+                    response = Infrastructure::OpaqueRedirectFilteredResponse::create(vm, *actual_response);
                 }
                 break;
             // -> "follow"
