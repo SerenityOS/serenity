@@ -20,7 +20,7 @@ enum class TrackType : u32 {
     Subtitles,
 };
 
-struct Track {
+class Track {
     struct VideoData {
         Time duration {};
         u64 pixel_width { 0 };

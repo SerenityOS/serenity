@@ -23,7 +23,8 @@
 
 namespace Video {
 
-struct FrameQueueItem {
+class FrameQueueItem {
+public:
     static constexpr Time no_timestamp = Time::min();
 
     enum class Type {
