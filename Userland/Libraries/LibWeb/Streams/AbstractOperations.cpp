@@ -934,6 +934,28 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_close(Wri
     return promise;
 }
 
+// https://streams.spec.whatwg.org/#writable-stream-add-write-request
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_add_write_request(WritableStream& stream)
+{
+    auto& realm = stream.realm();
+    auto& vm = stream.vm();
+
+    // 1. Assert: ! IsWritableStreamLocked(stream) is true.
+    VERIFY(is_writable_stream_locked(stream));
+
+    // 2. Assert: stream.[[state]] is "writable".
+    VERIFY(stream.state() == WritableStream::State::Writable);
+
+    // 3. Let promise be a new promise.
+    auto promise = WebIDL::create_promise(realm);
+
+    // 4. Append promise to stream.[[writeRequests]].
+    TRY_OR_THROW_OOM(vm, stream.write_requests().try_append(promise));
+
+    // 5. Return promise.
+    return promise;
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-close-queued-or-in-flight
 bool writable_stream_close_queued_or_in_flight(WritableStream const& stream)
 {
@@ -1423,6 +1445,59 @@ WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamD
     return {};
 }
 
+// https://streams.spec.whatwg.org/#writable-stream-default-writer-write
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_write(WritableStreamDefaultWriter& writer, JS::Value chunk)
+{
+    auto& realm = writer.realm();
+
+    // 1. Let stream be writer.[[stream]].
+    auto stream = writer.stream();
+
+    // 2. Assert: stream is not undefined.
+    VERIFY(stream);
+
+    // 3. Let controller be stream.[[controller]].
+    auto controller = stream->controller();
+
+    // 4. Let chunkSize be ! WritableStreamDefaultControllerGetChunkSize(controller, chunk).
+    auto chunk_size = TRY(writable_stream_default_controller_get_chunk_size(*controller, chunk));
+
+    // 5. If stream is not equal to writer.[[stream]], return a promise rejected with a TypeError exception.
+    if (stream.ptr() != writer.stream().ptr()) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Writer's locked stream changed during write"sv));
+        return WebIDL::create_rejected_promise(realm, exception);
+    }
+
+    // 6. Let state be stream.[[state]].
+    auto state = stream->state();
+
+    // 7. If state is "errored", return a promise rejected with stream.[[storedError]].
+    if (state == WritableStream::State::Errored)
+        return WebIDL::create_rejected_promise(realm, stream->stored_error());
+
+    // 8. If ! WritableStreamCloseQueuedOrInFlight(stream) is true or state is "closed", return a promise rejected with a TypeError exception indicating that the stream is closing or closed.
+    if (writable_stream_close_queued_or_in_flight(*stream) || state == WritableStream::State::Closed) {
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot write to a writer whose stream is closing or already closed"sv));
+        return WebIDL::create_rejected_promise(realm, exception);
+    }
+
+    // 9. If state is "erroring", return a promise rejected with stream.[[storedError]].
+    if (state == WritableStream::State::Erroring)
+        return WebIDL::create_rejected_promise(realm, stream->stored_error());
+
+    // 10. Assert: state is "writable".
+    VERIFY(state == WritableStream::State::Writable);
+
+    // 11. Let promise be ! WritableStreamAddWriteRequest(stream).
+    auto promise = writable_stream_add_write_request(*stream);
+
+    // 12. Perform ! WritableStreamDefaultControllerWrite(controller, chunk, chunkSize).
+    TRY(writable_stream_default_controller_write(*controller, chunk, chunk_size));
+
+    // 13. Return promise.
+    return promise;
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-advance-queue-if-needed
 WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_needed(WritableStreamDefaultController& controller)
 {
@@ -1513,6 +1588,16 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_error(WritableStrea
     return writable_stream_start_erroring(stream, error);
 }
 
+// https://streams.spec.whatwg.org/#writable-stream-default-controller-error-if-needed
+WebIDL::ExceptionOr<void> writable_stream_default_controller_error_if_needed(WritableStreamDefaultController& controller, JS::Value error)
+{
+    // 1. If controller.[[stream]].[[state]] is "writable", perform ! WritableStreamDefaultControllerError(controller, error).
+    if (controller.stream()->state() == WritableStream::State::Writable)
+        TRY(writable_stream_default_controller_error(controller, error));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-get-backpressure
 bool writable_stream_default_controller_get_backpressure(WritableStreamDefaultController const& controller)
 {
@@ -1521,6 +1606,25 @@ bool writable_stream_default_controller_get_backpressure(WritableStreamDefaultCo
 
     // 2. Return true if desiredSize ≤ 0, or false otherwise.
     return desired_size <= 0.0;
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-default-controller-get-chunk-size
+WebIDL::ExceptionOr<JS::Value> writable_stream_default_controller_get_chunk_size(WritableStreamDefaultController& controller, JS::Value chunk)
+{
+    // 1. Let returnValue be the result of performing controller.[[strategySizeAlgorithm]], passing in chunk, and interpreting the result as a completion record.
+    auto return_value = (*controller.strategy_size_algorithm())(chunk);
+
+    // 2. If returnValue is an abrupt completion,
+    if (return_value.is_abrupt()) {
+        // 1. Perform ! WritableStreamDefaultControllerErrorIfNeeded(controller, returnValue.[[Value]]).
+        TRY(writable_stream_default_controller_error_if_needed(controller, *return_value.release_value()));
+
+        // 2. Return 1.
+        return 1.0;
+    }
+
+    // 3. Return returnValue.[[Value]].
+    return *return_value.release_value();
 }
 
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-get-desired-size
@@ -1622,6 +1726,43 @@ WebIDL::ExceptionOr<void> writable_stream_default_controller_process_write(Writa
 
         return JS::js_undefined();
     });
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#writable-stream-default-controller-write
+WebIDL::ExceptionOr<void> writable_stream_default_controller_write(WritableStreamDefaultController& controller, JS::Value chunk, JS::Value chunk_size)
+{
+    auto& vm = controller.vm();
+
+    // 1. Let enqueueResult be EnqueueValueWithSize(controller, chunk, chunkSize).
+    auto enqueue_result = enqueue_value_with_size(controller, chunk, chunk_size);
+
+    // 2. If enqueueResult is an abrupt completion,
+    if (enqueue_result.is_exception()) {
+        auto throw_completion = Bindings::throw_dom_exception_if_needed(vm, [&] { return enqueue_result; }).throw_completion();
+
+        // 1. Perform ! WritableStreamDefaultControllerErrorIfNeeded(controller, enqueueResult.[[Value]]).
+        TRY(writable_stream_default_controller_error_if_needed(controller, *throw_completion.release_value()));
+
+        // 2. Return.
+        return {};
+    }
+
+    // 3. Let stream be controller.[[stream]].
+    auto stream = controller.stream();
+
+    // 4. If ! WritableStreamCloseQueuedOrInFlight(stream) is false and stream.[[state]] is "writable",
+    if (!writable_stream_close_queued_or_in_flight(*stream) && stream->state() == WritableStream::State::Writable) {
+        // 1. Let backpressure be ! WritableStreamDefaultControllerGetBackpressure(controller).
+        auto backpressure = writable_stream_default_controller_get_backpressure(controller);
+
+        // 2. Perform ! WritableStreamUpdateBackpressure(stream, backpressure).
+        writable_stream_update_backpressure(*stream, backpressure);
+    }
+
+    // 5. Perform ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
+    TRY(writable_stream_default_controller_advance_queue_if_needed(controller));
 
     return {};
 }
