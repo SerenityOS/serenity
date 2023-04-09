@@ -74,7 +74,12 @@ ErrorOr<u32> parse_size(ICCHeader const& header, ReadonlyBytes icc_bytes)
 
     // ICC v4, 7.1.2:
     // "NOTE 1 This implies that the length is required to be a multiple of four."
-    if (header.profile_size % 4 != 0)
+    // The ICC v2 spec doesn't have this note. It instead has:
+    // ICC v2, 6.2.2 Offset:
+    // "All tag data is required to start on a 4-byte boundary"
+    // And indeed, there are files in the wild where the last tag has a size that isn't a multiple of four,
+    // resulting in an ICC file whose size isn't a multiple of four either.
+    if (header.profile_version_major >= 4 && header.profile_size % 4 != 0)
         return Error::from_string_literal("ICC::Profile: Profile size not a multiple of four");
 
     return header.profile_size;
