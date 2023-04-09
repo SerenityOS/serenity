@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/DeprecatedFlyString.h>
+#include <AK/FlyString.h>
 #include <LibJS/Heap/GCPtr.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibWeb/Forward.h>
@@ -21,7 +21,7 @@ public:
     ~DOMEventListener();
 
     // type (a string)
-    DeprecatedFlyString type;
+    FlyString type;
 
     // callback (null or an EventListener object)
     JS::GCPtr<IDLEventListener> callback;
