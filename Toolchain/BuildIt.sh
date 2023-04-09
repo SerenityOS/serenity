@@ -103,7 +103,7 @@ buildstep() {
 has_gdb() {
     ARCH=$1
     ARCH_DASH="${ARCH//_/-}"
-    if command -v gdb >/dev/null && gdb -ex 'set architecture' -ex 'quit' | grep "$ARCH_DASH"; then
+    if command -v gdb >/dev/null && gdb -ex 'set architecture' -ex 'quit' 2>&1 | grep "$ARCH_DASH"; then
         return 0
     else
         command -v "$ARCH"-elf-gdb >/dev/null
