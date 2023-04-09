@@ -7,17 +7,18 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLCanvasElement.h>
+#include <LibWeb/WebGL/EventNames.h>
 #include <LibWeb/WebGL/WebGLContextEvent.h>
 #include <LibWeb/WebGL/WebGLRenderingContext.h>
 
 namespace Web::WebGL {
 
 // https://www.khronos.org/registry/webgl/specs/latest/1.0/#fire-a-webgl-context-event
-static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, DeprecatedFlyString const& type)
+static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, FlyString const& type)
 {
     // To fire a WebGL context event named e means that an event using the WebGLContextEvent interface, with its type attribute [DOM4] initialized to e, its cancelable attribute initialized to true, and its isTrusted attribute [DOM4] initialized to true, is to be dispatched at the given object.
     // FIXME: Consider setting a status message.
-    auto event = WebGLContextEvent::create(canvas_element.realm(), String::from_deprecated_string(type).release_value_but_fixme_should_propagate_errors(), WebGLContextEventInit {}).release_value_but_fixme_should_propagate_errors();
+    auto event = WebGLContextEvent::create(canvas_element.realm(), type, WebGLContextEventInit {}).release_value_but_fixme_should_propagate_errors();
     event->set_is_trusted(true);
     event->set_cancelable(true);
     canvas_element.dispatch_event(*event);
@@ -27,7 +28,7 @@ static void fire_webgl_context_event(HTML::HTMLCanvasElement& canvas_element, De
 static void fire_webgl_context_creation_error(HTML::HTMLCanvasElement& canvas_element)
 {
     // 1. Fire a WebGL context event named "webglcontextcreationerror" at canvas, optionally with its statusMessage attribute set to a platform dependent string about the nature of the failure.
-    fire_webgl_context_event(canvas_element, "webglcontextcreationerror"sv);
+    fire_webgl_context_event(canvas_element, EventNames::webglcontextcreationerror);
 }
 
 JS::ThrowCompletionOr<JS::GCPtr<WebGLRenderingContext>> WebGLRenderingContext::create(JS::Realm& realm, HTML::HTMLCanvasElement& canvas_element, JS::Value options)
