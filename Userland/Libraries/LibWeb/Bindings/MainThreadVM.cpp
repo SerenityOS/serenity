@@ -40,6 +40,7 @@
 #include <LibWeb/SVG/AttributeNames.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/UIEvents/EventNames.h>
+#include <LibWeb/WebGL/EventNames.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/XHR/EventNames.h>
 
@@ -89,6 +90,7 @@ ErrorOr<void> initialize_main_thread_vm()
     TRY(SVG::AttributeNames::initialize_strings());
     TRY(SVG::TagNames::initialize_strings());
     TRY(UIEvents::EventNames::initialize_strings());
+    TRY(WebGL::EventNames::initialize_strings());
     TRY(XHR::EventNames::initialize_strings());
 
     static_cast<WebEngineCustomData*>(s_main_thread_vm->custom_data())->event_loop.set_vm(*s_main_thread_vm);
