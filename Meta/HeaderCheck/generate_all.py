@@ -46,9 +46,17 @@ def generate_part(header):
     verbosely_write(as_filename(header), content)
 
 
+def is_foreign_to(header_name, arch):
+    # FIXME: This is more involved than it seems, since sys/arch/regs.h should never count as "foreign".
+    # Since HeaderCheck needs to be manually enabled anyway, simply assume x86_64.
+    assert arch == "x86_64", "The hardcoded hack broke"
+    return header_name.startswith("Userland/Libraries/LibC/sys/arch/aarch64")
+
+
 def run(root_path, arch):
     os.chdir(root_path)
     headers_list = get_headers_here()
+    headers_list = [h for h in headers_list if not is_foreign_to(h, arch)]
 
     generated_files_path = os.path.join(root_path, 'Build', arch, 'Meta', 'HeaderCheck')
     if not os.path.exists(generated_files_path):
