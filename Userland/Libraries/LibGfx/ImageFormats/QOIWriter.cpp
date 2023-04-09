@@ -5,7 +5,6 @@
  */
 
 #include "QOIWriter.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 
 namespace Gfx {

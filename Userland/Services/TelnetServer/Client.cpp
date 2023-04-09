@@ -7,7 +7,6 @@
 #include "Client.h"
 
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>

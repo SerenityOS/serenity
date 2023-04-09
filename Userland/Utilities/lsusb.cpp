@@ -5,7 +5,6 @@
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
 #include <AK/FixedArray.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>

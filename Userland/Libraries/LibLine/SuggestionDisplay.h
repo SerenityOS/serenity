@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <LibLine/StringMetrics.h>
 #include <LibLine/SuggestionManager.h>

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/URL.h>
 #include <LibWeb/Bindings/PlatformObject.h>
 #include <LibWeb/URL/URLSearchParams.h>

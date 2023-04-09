@@ -6,7 +6,6 @@
 
 #include "LineProgram.h"
 #include <AK/Debug.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/LEB128.h>
 #include <AK/StringBuilder.h>

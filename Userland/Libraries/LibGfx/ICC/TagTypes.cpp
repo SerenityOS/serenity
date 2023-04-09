@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/TagTypes.h>

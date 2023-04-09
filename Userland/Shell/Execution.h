@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Forward.h"
-#include <AK/DeprecatedString.h>
 #include <AK/Forward.h>
 #include <AK/Vector.h>
 #include <LibCore/ElapsedTimer.h>

@@ -10,7 +10,6 @@
 #pragma once
 
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/GenericShorthands.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/RefCounted.h>

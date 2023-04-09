@@ -9,7 +9,6 @@
 #include "AttributeValue.h"
 #include "DwarfTypes.h"
 #include <AK/ByteBuffer.h>
-#include <AK/DeprecatedString.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>

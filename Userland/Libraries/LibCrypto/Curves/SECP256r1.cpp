@@ -5,7 +5,6 @@
  */
 
 #include <AK/ByteReader.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Random.h>
 #include <AK/StringBuilder.h>

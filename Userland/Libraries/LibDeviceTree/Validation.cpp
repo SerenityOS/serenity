@@ -6,7 +6,6 @@
 
 #include <AK/AllOf.h>
 #include <AK/CharacterTypes.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Endian.h>
 #include <AK/Format.h>
 #include <AK/Try.h>
