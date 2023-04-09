@@ -82,6 +82,8 @@ Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamD
 WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamDefaultWriter&);
 WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_writer_write(WritableStreamDefaultWriter&, JS::Value chunk);
 
+WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStream&, WritableStreamDefaultController&, StartAlgorithm&&, WriteAlgorithm&&, CloseAlgorithm&&, AbortAlgorithm&&, double high_water_mark, SizeAlgorithm&&);
+WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underlying_sink(WritableStream&, JS::Value underlying_sink_value, UnderlyingSink&, double high_water_mark, SizeAlgorithm&& size_algorithm);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_needed(WritableStreamDefaultController&);
 void writable_stream_default_controller_clear_algorithms(WritableStreamDefaultController&);
 WebIDL::ExceptionOr<void> writable_stream_default_controller_close(WritableStreamDefaultController&);

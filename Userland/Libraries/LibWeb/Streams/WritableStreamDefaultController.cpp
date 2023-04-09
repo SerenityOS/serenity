@@ -43,4 +43,9 @@ void WritableStreamDefaultController::error_steps()
     reset_queue(*this);
 }
 
+WritableStreamDefaultController::WritableStreamDefaultController(JS::Realm& realm)
+    : Bindings::PlatformObject(realm)
+{
+}
+
 }

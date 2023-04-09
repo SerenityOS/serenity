@@ -42,8 +42,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> WritableStream::construct_
     // FIXME: 6. Let highWaterMark be ? ExtractHighWaterMark(strategy, 1).
     auto high_water_mark = 1.0;
 
-    // FIXME: 7. Perform ? SetUpWritableStreamDefaultControllerFromUnderlyingSink(this, underlyingSink, underlyingSinkDict, highWaterMark, sizeAlgorithm).
-    (void)high_water_mark;
+    // 7. Perform ? SetUpWritableStreamDefaultControllerFromUnderlyingSink(this, underlyingSink, underlyingSinkDict, highWaterMark, sizeAlgorithm).
+    TRY(set_up_writable_stream_default_controller_from_underlying_sink(*writable_stream, underlying_sink, underlying_sink_dict, high_water_mark, move(size_algorithm)));
 
     return writable_stream;
 }

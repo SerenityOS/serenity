@@ -1498,6 +1498,155 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> writable_stream_default_w
     return promise;
 }
 
+// https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller
+WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStream& stream, WritableStreamDefaultController& controller, StartAlgorithm&& start_algorithm, WriteAlgorithm&& write_algorithm, CloseAlgorithm&& close_algorithm, AbortAlgorithm&& abort_algorithm, double high_water_mark, SizeAlgorithm&& size_algorithm)
+{
+    auto& realm = stream.realm();
+
+    // 1. Assert: stream implements WritableStream.
+
+    // 2. Assert: stream.[[controller]] is undefined.
+    VERIFY(!stream.controller());
+
+    // 3. Set controller.[[stream]] to stream.
+    controller.set_stream(stream);
+
+    // 4. Set stream.[[controller]] to controller.
+    stream.set_controller(controller);
+
+    // 5. Perform ! ResetQueue(controller).
+    reset_queue(controller);
+
+    // 6. Set controller.[[signal]] to a new AbortSignal.
+    controller.set_signal(MUST_OR_THROW_OOM(realm.heap().allocate<DOM::AbortSignal>(realm, realm)));
+
+    // 7. Set controller.[[started]] to false.
+    controller.set_started(false);
+
+    // 8. Set controller.[[strategySizeAlgorithm]] to sizeAlgorithm.
+    controller.set_strategy_size_algorithm(move(size_algorithm));
+
+    // 9. Set controller.[[strategyHWM]] to highWaterMark.
+    controller.set_strategy_hwm(high_water_mark);
+
+    // 10. Set controller.[[writeAlgorithm]] to writeAlgorithm.
+    controller.set_write_algorithm(move(write_algorithm));
+
+    // 11. Set controller.[[closeAlgorithm]] to closeAlgorithm.
+    controller.set_close_algorithm(move(close_algorithm));
+
+    // 12. Set controller.[[abortAlgorithm]] to abortAlgorithm.
+    controller.set_abort_algorithm(move(abort_algorithm));
+
+    // 13. Let backpressure be ! WritableStreamDefaultControllerGetBackpressure(controller).
+    auto backpressure = writable_stream_default_controller_get_backpressure(controller);
+
+    // 14. Perform ! WritableStreamUpdateBackpressure(stream, backpressure).
+    writable_stream_update_backpressure(stream, backpressure);
+
+    // 15. Let startResult be the result of performing startAlgorithm. (This may throw an exception.)
+    auto start_result = TRY(start_algorithm());
+
+    // 16. Let startPromise be a promise resolved with startResult.
+    auto start_promise = WebIDL::create_resolved_promise(realm, start_result ? start_result->promise() : JS::js_undefined());
+
+    // 17. Upon fulfillment of startPromise,
+    WebIDL::upon_fulfillment(*start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Assert: stream.[[state]] is "writable" or "erroring".
+        auto state = stream.state();
+        VERIFY(state == WritableStream::State::Writable || state == WritableStream::State::Erroring);
+
+        // 2. Set controller.[[started]] to true.
+        controller.set_started(true);
+
+        // 3. Perform ! WritableStreamDefaultControllerAdvanceQueueIfNeeded(controller).
+        TRY(writable_stream_default_controller_advance_queue_if_needed(controller));
+
+        return JS::js_undefined();
+    });
+
+    // 18. Upon rejection of startPromise with reason r,
+    WebIDL::upon_rejection(*start_promise, [&](JS::Value reason) -> WebIDL::ExceptionOr<JS::Value> {
+        // 1. Assert: stream.[[state]] is "writable" or "erroring".
+        auto state = stream.state();
+        VERIFY(state == WritableStream::State::Writable || state == WritableStream::State::Erroring);
+
+        // 2. Set controller.[[started]] to true.
+        controller.set_started(true);
+
+        // 3. Perform ! WritableStreamDealWithRejection(stream, r).
+        TRY(writable_stream_deal_with_rejection(stream, reason));
+
+        return JS::js_undefined();
+    });
+
+    return {};
+}
+
+// https://streams.spec.whatwg.org/#set-up-writable-stream-default-controller-from-underlying-sink
+WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underlying_sink(WritableStream& stream, JS::Value underlying_sink_value, UnderlyingSink& underlying_sink, double high_water_mark, SizeAlgorithm&& size_algorithm)
+{
+    auto& realm = stream.realm();
+
+    // 1. Let controller be a new WritableStreamDefaultController.
+    auto controller = MUST_OR_THROW_OOM(realm.heap().allocate<WritableStreamDefaultController>(realm, realm));
+
+    // 2. Let startAlgorithm be an algorithm that returns undefined.
+    StartAlgorithm start_algorithm = [] { return JS::GCPtr<WebIDL::Promise> {}; };
+
+    // 3. Let writeAlgorithm be an algorithm that returns a promise resolved with undefined.
+    WriteAlgorithm write_algorithm = [&realm](auto const&) {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 4. Let closeAlgorithm be an algorithm that returns a promise resolved with undefined.
+    CloseAlgorithm close_algorithm = [&realm] {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 5. Let abortAlgorithm be an algorithm that returns a promise resolved with undefined.
+    AbortAlgorithm abort_algorithm = [&realm](auto const&) {
+        return WebIDL::create_resolved_promise(realm, JS::js_undefined());
+    };
+
+    // 6. If underlyingSinkDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["start"] with argument list « controller » and callback this value underlyingSink.
+    if (underlying_sink.start) {
+        start_algorithm = [&, callback = underlying_sink.start]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 7. If underlyingSinkDict["write"] exists, then set writeAlgorithm to an algorithm which takes an argument chunk and returns the result of invoking underlyingSinkDict["write"] with argument list « chunk, controller » and callback this value underlyingSink.
+    if (underlying_sink.write) {
+        write_algorithm = [&, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, chunk, controller)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 8. If underlyingSinkDict["close"] exists, then set closeAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["close"] with argument list «» and callback this value underlyingSink.
+    if (underlying_sink.close) {
+        close_algorithm = [&, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 9. If underlyingSinkDict["abort"] exists, then set abortAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSinkDict["abort"] with argument list « reason » and callback this value underlyingSink.
+    if (underlying_sink.abort) {
+        abort_algorithm = [&, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+            auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, reason)).release_value();
+            return WebIDL::create_resolved_promise(realm, result);
+        };
+    }
+
+    // 10. Perform ? SetUpWritableStreamDefaultController(stream, controller, startAlgorithm, writeAlgorithm, closeAlgorithm, abortAlgorithm, highWaterMark, sizeAlgorithm).
+    TRY(set_up_writable_stream_default_controller(stream, controller, move(start_algorithm), move(write_algorithm), move(close_algorithm), move(abort_algorithm), high_water_mark, move(size_algorithm)));
+
+    return {};
+}
+
 // https://streams.spec.whatwg.org/#writable-stream-default-controller-advance-queue-if-needed
 WebIDL::ExceptionOr<void> writable_stream_default_controller_advance_queue_if_needed(WritableStreamDefaultController& controller)
 {
