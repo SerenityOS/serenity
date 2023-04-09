@@ -125,6 +125,8 @@ public:
     Function<void(DecoderError)> on_decoder_error;
     Function<void(Error)> on_fatal_playback_error;
 
+    Track const& selected_video_track() const { return m_selected_video_track; }
+
 private:
     class PlaybackStateHandler;
     // Abstract class to allow resuming play/pause after the state is completed.
