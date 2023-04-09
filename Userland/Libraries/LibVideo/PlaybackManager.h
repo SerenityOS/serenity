@@ -102,6 +102,7 @@ public:
     using PlaybackTimerCreator = Function<ErrorOr<NonnullOwnPtr<PlaybackTimer>>(int, Function<void()>)>;
 
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(StringView file, PlaybackTimerCreator = nullptr);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(ReadonlyBytes data, PlaybackTimerCreator = nullptr);
 
     PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, PlaybackTimerCreator);
 
@@ -134,6 +135,8 @@ private:
     class BufferingStateHandler;
     class SeekingStateHandler;
     class StoppedStateHandler;
+
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer, PlaybackTimerCreator playback_timer_creator);
 
     void start_timer(int milliseconds);
     void timer_callback();
