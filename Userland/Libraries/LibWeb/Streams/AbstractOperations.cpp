@@ -61,11 +61,11 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_cancel(Re
     stream.set_disturbed(true);
 
     // 2. If stream.[[state]] is "closed", return a promise resolved with undefined.
-    if (stream.is_closed())
+    if (stream.state() == ReadableStream::State::Closed)
         return WebIDL::create_resolved_promise(realm, JS::js_undefined());
 
     // 3. If stream.[[state]] is "errored", return a promise rejected with stream.[[storedError]].
-    if (stream.is_errored())
+    if (stream.state() == ReadableStream::State::Errored)
         return WebIDL::create_rejected_promise(realm, stream.stored_error());
 
     // 4. Perform ! ReadableStreamClose(stream).
@@ -153,10 +153,10 @@ void readable_stream_close(ReadableStream& stream)
     auto& realm = stream.realm();
 
     // 1. Assert: stream.[[state]] is "readable".
-    VERIFY(stream.is_readable());
+    VERIFY(stream.state() == ReadableStream::State::Readable);
 
     // 2. Set stream.[[state]] to "closed".
-    stream.set_stream_state(ReadableStream::State::Closed);
+    stream.set_state(ReadableStream::State::Closed);
 
     // 3. Let reader be stream.[[reader]].
     auto reader = stream.reader();
@@ -188,10 +188,10 @@ void readable_stream_error(ReadableStream& stream, JS::Value error)
     auto& realm = stream.realm();
 
     // 1. Assert: stream.[[state]] is "readable".
-    VERIFY(stream.is_readable());
+    VERIFY(stream.state() == ReadableStream::State::Readable);
 
     // 2. Set stream.[[state]] to "errored".
-    stream.set_stream_state(ReadableStream::State::Errored);
+    stream.set_state(ReadableStream::State::Errored);
 
     // 3. Set stream.[[storedError]] to e.
     stream.set_stored_error(error);
@@ -232,7 +232,7 @@ void readable_stream_add_read_request(ReadableStream& stream, ReadRequest const&
     VERIFY(stream.reader());
 
     // 2. Assert: stream.[[state]] is "readable".
-    VERIFY(stream.is_readable());
+    VERIFY(stream.state() == ReadableStream::State::Readable);
 
     // 3. Append readRequest to stream.[[reader]].[[readRequests]].
     stream.reader()->read_requests().append(read_request);
@@ -268,19 +268,19 @@ void readable_stream_reader_generic_initialize(ReadableStreamGenericReaderMixin&
     }
 
     // 3. If stream.[[state]] is "readable",
-    if (stream.is_readable()) {
+    if (stream.state() == ReadableStream::State::Readable) {
         // 1. Set reader.[[closedPromise]] to a new promise.
         reader.set_closed_promise_capability(WebIDL::create_promise(realm));
     }
     // 4. Otherwise, if stream.[[state]] is "closed",
-    else if (stream.is_closed()) {
+    else if (stream.state() == ReadableStream::State::Closed) {
         // 1. Set reader.[[closedPromise]] to a promise resolved with undefined.
         reader.set_closed_promise_capability(WebIDL::create_resolved_promise(realm, JS::js_undefined()));
     }
     // 5. Otherwise,
     else {
         // 1. Assert: stream.[[state]] is "errored".
-        VERIFY(stream.is_errored());
+        VERIFY(stream.state() == ReadableStream::State::Errored);
 
         // 2. Set reader.[[closedPromise]] to a promise rejected with stream.[[storedError]].
         reader.set_closed_promise_capability(WebIDL::create_rejected_promise(realm, stream.stored_error()));
