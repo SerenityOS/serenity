@@ -671,7 +671,7 @@ constexpr bool should_ignore_keydown_event(u32 code_point)
     return code_point == 0 || code_point == 27;
 }
 
-bool EventHandler::fire_keyboard_event(DeprecatedFlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
+bool EventHandler::fire_keyboard_event(FlyString const& event_name, HTML::BrowsingContext& browsing_context, KeyCode key, unsigned int modifiers, u32 code_point)
 {
     JS::NonnullGCPtr<DOM::Document> document = *browsing_context.active_document();
     if (!document)
@@ -684,12 +684,12 @@ bool EventHandler::fire_keyboard_event(DeprecatedFlyString const& event_name, HT
                 return fire_keyboard_event(event_name, *browsing_context_container.nested_browsing_context(), key, modifiers, code_point);
         }
 
-        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), FlyString::from_deprecated_fly_string(event_name).release_value_but_fixme_should_propagate_errors(), key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
+        auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
         return !focused_element->dispatch_event(event);
     }
 
     // FIXME: De-duplicate this. This is just to prevent wasting a KeyboardEvent allocation when recursing into an (i)frame.
-    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), FlyString::from_deprecated_fly_string(event_name).release_value_but_fixme_should_propagate_errors(), key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
+    auto event = UIEvents::KeyboardEvent::create_from_platform_event(document->realm(), event_name, key, modifiers, code_point).release_value_but_fixme_should_propagate_errors();
 
     if (JS::GCPtr<HTML::HTMLElement> body = document->body())
         return !body->dispatch_event(event);
@@ -783,17 +783,17 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         return true;
     }
 
-    bool continue_ = fire_keyboard_event(UIEvents::EventNames::keydown.to_deprecated_fly_string(), m_browsing_context, key, modifiers, code_point);
+    bool continue_ = fire_keyboard_event(UIEvents::EventNames::keydown, m_browsing_context, key, modifiers, code_point);
     if (!continue_)
         return false;
 
     // FIXME: Work out and implement the difference between this and keydown.
-    return fire_keyboard_event(UIEvents::EventNames::keypress.to_deprecated_fly_string(), m_browsing_context, key, modifiers, code_point);
+    return fire_keyboard_event(UIEvents::EventNames::keypress, m_browsing_context, key, modifiers, code_point);
 }
 
 bool EventHandler::handle_keyup(KeyCode key, unsigned modifiers, u32 code_point)
 {
-    return fire_keyboard_event(UIEvents::EventNames::keyup.to_deprecated_fly_string(), m_browsing_context, key, modifiers, code_point);
+    return fire_keyboard_event(UIEvents::EventNames::keyup, m_browsing_context, key, modifiers, code_point);
 }
 
 void EventHandler::set_mouse_event_tracking_layout_node(Layout::Node* layout_node)
