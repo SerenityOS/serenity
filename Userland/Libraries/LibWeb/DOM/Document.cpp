@@ -2327,7 +2327,7 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         m_page_showing = false;
 
         // 2. Fire a page transition event named pagehide at document's relevant global object with document's salvageable state.
-        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide.to_deprecated_fly_string(), m_salvageable);
+        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide, m_salvageable);
 
         // 3. Update the visibility state of newDocument to "hidden".
         update_the_visibility_state(HTML::VisibilityState::Hidden);

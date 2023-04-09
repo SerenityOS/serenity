@@ -313,7 +313,7 @@ void HTMLParser::the_end()
         document->set_page_showing(true);
 
         // 11. Fire a page transition event named pageshow at window with false.
-        window->fire_a_page_transition_event(HTML::EventNames::pageshow.to_deprecated_fly_string(), false);
+        window->fire_a_page_transition_event(HTML::EventNames::pageshow, false);
 
         // 12. Completely finish loading the Document.
         document->completely_finish_loading();
