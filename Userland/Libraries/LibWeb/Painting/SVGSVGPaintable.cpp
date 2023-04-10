@@ -30,7 +30,7 @@ void SVGSVGPaintable::before_children_paint(PaintContext& context, PaintPhase ph
         return;
 
     if (!context.has_svg_context())
-        context.set_svg_context(SVGContext(absolute_rect().to_type<float>()));
+        context.set_svg_context(SVGContext(absolute_rect()));
 
     PaintableBox::before_children_paint(context, phase);
 }

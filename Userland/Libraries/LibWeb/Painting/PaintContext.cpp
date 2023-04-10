@@ -67,6 +67,14 @@ DevicePixelPoint PaintContext::rounded_device_point(CSSPixelPoint point) const
     };
 }
 
+DevicePixelPoint PaintContext::floored_device_point(CSSPixelPoint point) const
+{
+    return {
+        floorf(point.x().value() * m_device_pixels_per_css_pixel),
+        floorf(point.y().value() * m_device_pixels_per_css_pixel)
+    };
+}
+
 DevicePixelRect PaintContext::enclosing_device_rect(CSSPixelRect rect) const
 {
     return {
