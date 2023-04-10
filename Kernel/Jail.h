@@ -16,7 +16,6 @@
 #include <AK/Try.h>
 #include <AK/Types.h>
 #include <Kernel/KString.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Process.h>
 
@@ -31,8 +30,8 @@ class Jail : public AtomicRefCounted<Jail> {
 public:
     NonnullRefPtr<ProcessList> process_list();
 
-    static LockRefPtr<Jail> find_by_index(JailIndex);
-    static ErrorOr<NonnullLockRefPtr<Jail>> create(NonnullOwnPtr<KString> name);
+    static RefPtr<Jail> find_by_index(JailIndex);
+    static ErrorOr<NonnullRefPtr<Jail>> create(NonnullOwnPtr<KString> name);
     static ErrorOr<void> for_each_when_process_is_not_jailed(Function<ErrorOr<void>(Jail const&)> callback);
 
     StringView name() const { return m_name->view(); }
@@ -47,7 +46,7 @@ private:
     NonnullOwnPtr<KString> m_name;
     JailIndex const m_index;
 
-    IntrusiveListNode<Jail, NonnullLockRefPtr<Jail>> m_list_node;
+    IntrusiveListNode<Jail, NonnullRefPtr<Jail>> m_list_node;
 
 public:
     using List = IntrusiveListRelaxedConst<&Jail::m_list_node>;
