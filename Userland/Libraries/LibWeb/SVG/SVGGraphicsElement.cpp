@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/Layout/Node.h>
+#include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGGraphicsElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -31,7 +33,57 @@ void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, Deprec
     SVGElement::parse_attribute(name, value);
     if (name == "fill-opacity"sv) {
         m_fill_opacity = AttributeParser::parse_length(value);
+    } else if (name == "transform"sv) {
+        auto transform_list = AttributeParser::parse_transform(value);
+        if (transform_list.has_value())
+            m_transform = transform_from_transform_list(*transform_list);
     }
+}
+
+Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> tranform_list)
+{
+    Gfx::AffineTransform affine_transform;
+    auto to_radians = [](float degrees) {
+        return degrees * (AK::Pi<float> / 180.0f);
+    };
+    for (auto& tranform : tranform_list) {
+        tranform.operation.visit(
+            [&](Transform::Translate const& translate) {
+                affine_transform.multiply(Gfx::AffineTransform {}.translate({ translate.x, translate.y }));
+            },
+            [&](Transform::Scale const& scale) {
+                affine_transform.multiply(Gfx::AffineTransform {}.scale({ scale.x, scale.y }));
+            },
+            [&](Transform::Rotate const& rotate) {
+                Gfx::AffineTransform translate_transform;
+                affine_transform.multiply(
+                    Gfx::AffineTransform {}
+                        .translate({ rotate.x, rotate.y })
+                        .rotate_radians(to_radians(rotate.a))
+                        .translate({ -rotate.x, -rotate.y }));
+            },
+            [&](Transform::SkewX const& skew_x) {
+                affine_transform.multiply(Gfx::AffineTransform {}.skew_radians(to_radians(skew_x.a), 0));
+            },
+            [&](Transform::SkewY const& skew_y) {
+                affine_transform.multiply(Gfx::AffineTransform {}.skew_radians(0, to_radians(skew_y.a)));
+            },
+            [&](Transform::Matrix const& matrix) {
+                affine_transform.multiply(Gfx::AffineTransform {
+                    matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f });
+            });
+    }
+    return affine_transform;
+}
+
+Gfx::AffineTransform SVGGraphicsElement::get_transform() const
+{
+    // FIXME: It would be nice to do this using the SVGContext, however, then layout/hit testing knows nothing about the transform.
+    Gfx::AffineTransform transform = m_transform;
+    for (auto* svg_ancestor = first_ancestor_of_type<SVGGraphicsElement>(); svg_ancestor; svg_ancestor = svg_ancestor->first_ancestor_of_type<SVGGraphicsElement>()) {
+        transform = Gfx::AffineTransform { svg_ancestor->m_transform }.multiply(transform);
+    }
+    return transform;
 }
 
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
@@ -49,9 +101,6 @@ void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style)
         } else if (name.equals_ignoring_ascii_case("stroke-width"sv)) {
             if (auto stroke_width_value = parse_css_value(parsing_context, value, CSS::PropertyID::StrokeWidth))
                 style.set_property(CSS::PropertyID::StrokeWidth, stroke_width_value.release_nonnull());
-        } else if (name.equals_ignoring_ascii_case("transform"sv)) {
-            if (auto transform = parse_css_value(parsing_context, value, CSS::PropertyID::Transform))
-                style.set_property(CSS::PropertyID::Transform, transform.release_nonnull());
         }
     });
 }
