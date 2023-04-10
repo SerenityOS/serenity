@@ -24,11 +24,11 @@ NonnullRefPtr<ProcessList> Jail::process_list()
     return m_process_list;
 }
 
-ErrorOr<NonnullLockRefPtr<Jail>> Jail::create(NonnullOwnPtr<KString> name)
+ErrorOr<NonnullRefPtr<Jail>> Jail::create(NonnullOwnPtr<KString> name)
 {
-    return s_all_instances->with([&](auto& list) -> ErrorOr<NonnullLockRefPtr<Jail>> {
+    return s_all_instances->with([&](auto& list) -> ErrorOr<NonnullRefPtr<Jail>> {
         auto process_list = TRY(ProcessList::create());
-        auto jail = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Jail(move(name), generate_jail_id(), move(process_list))));
+        auto jail = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Jail(move(name), generate_jail_id(), move(process_list))));
         list.append(jail);
         return jail;
     });
@@ -50,9 +50,9 @@ ErrorOr<void> Jail::for_each_when_process_is_not_jailed(Function<ErrorOr<void>(J
     });
 }
 
-LockRefPtr<Jail> Jail::find_by_index(JailIndex index)
+RefPtr<Jail> Jail::find_by_index(JailIndex index)
 {
-    return s_all_instances->with([&](auto& list) -> LockRefPtr<Jail> {
+    return s_all_instances->with([&](auto& list) -> RefPtr<Jail> {
         for (auto& jail : list) {
             if (jail.index() == index)
                 return jail;
