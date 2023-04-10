@@ -27,6 +27,19 @@ Layout::SVGGeometryBox const& SVGGeometryPaintable::layout_box() const
     return static_cast<Layout::SVGGeometryBox const&>(layout_node());
 }
 
+Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, HitTestType type) const
+{
+    auto result = SVGGraphicsPaintable::hit_test(position, type);
+    if (!result.has_value())
+        return {};
+    auto& geometry_element = layout_box().dom_node();
+    auto transformed_bounding_box = layout_box().layout_transform().map_to_quad(
+        const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
+    if (!transformed_bounding_box.contains(position.to_type<float>()))
+        return {};
+    return result;
+}
+
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
