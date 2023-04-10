@@ -9,6 +9,7 @@
 
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Node.h>
+#include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGElement.h>
 #include <LibWeb/SVG/TagNames.h>
 
@@ -27,12 +28,17 @@ public:
     Optional<Gfx::Color> stroke_color() const;
     Optional<float> stroke_width() const;
 
+    Gfx::AffineTransform get_transform() const;
+
 protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 
     Optional<float> m_fill_opacity = {};
+    Gfx::AffineTransform m_transform = {};
 };
+
+Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> tranform_list);
 
 }
