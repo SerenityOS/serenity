@@ -42,15 +42,17 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     Gfx::AntiAliasingPainter painter { context.painter() };
     auto& svg_context = context.svg_context();
 
-    auto offset = svg_context.svg_element_position();
+    // FIXME: This should not be trucated to an int.
+    auto offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>().to_type<float>();
     painter.translate(offset);
 
     auto const* svg_element = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
     auto maybe_view_box = svg_element->view_box();
 
     context.painter().add_clip_rect(context.enclosing_device_rect(absolute_rect()).to_type<int>());
+    auto css_scale = context.device_pixels_per_css_pixel();
 
-    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(Gfx::AffineTransform {}.multiply(layout_box().layout_transform()));
+    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(layout_box().layout_transform()));
 
     if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
         // We need to fill the path before applying the stroke, however the filled
@@ -70,7 +72,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         painter.stroke_path(
             path,
             stroke_color,
-            geometry_element.stroke_width().value_or(svg_context.stroke_width()));
+            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * context.device_pixels_per_css_pixel());
     }
 
     painter.translate(-offset);

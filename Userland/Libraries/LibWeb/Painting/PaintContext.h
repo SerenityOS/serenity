@@ -42,6 +42,7 @@ public:
     DevicePixels floored_device_pixels(CSSPixels css_pixels) const;
     DevicePixels rounded_device_pixels(CSSPixels css_pixels) const;
     DevicePixelPoint rounded_device_point(CSSPixelPoint) const;
+    DevicePixelPoint floored_device_point(CSSPixelPoint) const;
     DevicePixelRect enclosing_device_rect(CSSPixelRect) const;
     DevicePixelRect rounded_device_rect(CSSPixelRect) const;
     DevicePixelSize enclosing_device_size(CSSPixelSize) const;
