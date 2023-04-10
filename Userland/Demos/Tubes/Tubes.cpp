@@ -12,7 +12,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 
 constexpr size_t grid_resolution = 15;
