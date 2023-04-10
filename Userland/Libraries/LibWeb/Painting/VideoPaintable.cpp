@@ -64,11 +64,13 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto video_rect = context.rounded_device_rect(absolute_rect());
     ScopedCornerRadiusClip corner_clip { context, context.painter(), video_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
-    Optional<DevicePixelPoint> mouse_position;
-    if (m_mouse_position.has_value())
-        mouse_position = context.rounded_device_point(*m_mouse_position);
-
     auto const& video_element = layout_box().dom_node();
+    auto const& layout_mouse_position = video_element.layout_mouse_position({});
+
+    Optional<DevicePixelPoint> mouse_position;
+    if (layout_mouse_position.has_value() && document().hovered_node() == &video_element)
+        mouse_position = context.rounded_device_point(*layout_mouse_position);
+
     auto paint_user_agent_controls = video_element.has_attribute(HTML::AttributeNames::controls);
 
     if (auto const& bitmap = layout_box().dom_node().current_frame()) {
@@ -201,12 +203,14 @@ VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<Eve
 
 VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mousemove(Badge<EventHandler>, CSSPixelPoint position, unsigned, unsigned)
 {
+    auto& video_element = layout_box().dom_node();
+
     if (absolute_rect().contains(position)) {
-        m_mouse_position = position;
+        video_element.set_layout_mouse_position({}, position);
         return DispatchEventOfSameName::Yes;
     }
 
-    m_mouse_position.clear();
+    video_element.set_layout_mouse_position({}, {});
     return DispatchEventOfSameName::No;
 }
 

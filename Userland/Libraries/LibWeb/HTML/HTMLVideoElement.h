@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
@@ -32,6 +33,9 @@ public:
     void set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame);
     RefPtr<Gfx::Bitmap> const& current_frame() const { return m_current_frame; }
 
+    void set_layout_mouse_position(Badge<Painting::VideoPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
+    Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::VideoPaintable>) const { return m_mouse_position; }
+
 private:
     HTMLVideoElement(DOM::Document&, DOM::QualifiedName);
 
@@ -48,6 +52,9 @@ private:
 
     u32 m_video_width { 0 };
     u32 m_video_height { 0 };
+
+    // Cached state for layout
+    Optional<CSSPixelPoint> m_mouse_position;
 };
 
 }

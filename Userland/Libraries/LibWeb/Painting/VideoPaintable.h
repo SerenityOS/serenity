@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
@@ -32,8 +31,6 @@ private:
 
     void paint_loaded_video_controls(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
     void paint_placeholder_video_controls(PaintContext&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
-
-    Optional<CSSPixelPoint> m_mouse_position;
 };
 
 }
