@@ -17,13 +17,14 @@
 
 namespace Web::Painting {
 
-static constexpr auto control_box_color = Gfx::Color::from_rgb(0x262626);
+static constexpr auto control_box_color = Gfx::Color::from_rgb(0x26'26'26);
+static constexpr auto control_highlight_color = Gfx::Color::from_rgb(0x1d'99'f3);
 
-static Gfx::Color control_button_color(PaintContext& context, bool is_hovered)
+static constexpr Gfx::Color control_button_color(bool is_hovered)
 {
     if (!is_hovered)
-        return Gfx::Color::from_rgb(0xff'ff'ff);
-    return context.palette().link();
+        return Color::White;
+    return control_highlight_color;
 }
 
 JS::NonnullGCPtr<VideoPaintable> VideoPaintable::create(Layout::VideoBox const& layout_box)
@@ -114,7 +115,7 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
     };
 
     auto playback_button_is_hovered = mouse_position.has_value() && playback_button_hover_rect.contains(*mouse_position);
-    auto playback_button_color = control_button_color(context, playback_button_is_hovered);
+    auto playback_button_color = control_button_color(playback_button_is_hovered);
 
     if (is_paused) {
         Array<Gfx::IntPoint, 3> play_button_coordinates { {
@@ -170,7 +171,7 @@ void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, Dev
     } };
 
     auto playback_button_is_hovered = mouse_position.has_value() && control_box_rect.contains(*mouse_position);
-    auto playback_button_color = control_button_color(context, playback_button_is_hovered);
+    auto playback_button_color = control_button_color(playback_button_is_hovered);
 
     Gfx::AntiAliasingPainter painter { context.painter() };
     painter.fill_ellipse(control_box_rect.to_type<int>(), control_box_color);
