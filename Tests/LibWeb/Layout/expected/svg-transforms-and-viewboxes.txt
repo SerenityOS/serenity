@@ -1,0 +1,96 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x700 children: not-inline
+    BlockContainer <body> at (50,50) content-size 700x600 children: inline
+      line 0 width: 616, height: 203.46875, bottom: 203.46875, baseline: 200
+        frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,150 200x100]
+        frag 1 from TextNode start: 0, length: 1, rect: [250,236 8x17.46875]
+          " "
+        frag 2 from SVGSVGBox start: 0, length: 0, rect: [258,50 200x200]
+        frag 3 from TextNode start: 0, length: 1, rect: [458,236 8x17.46875]
+          " "
+        frag 4 from SVGSVGBox start: 0, length: 0, rect: [466,50 200x200]
+      line 1 width: 616, height: 203.46875, bottom: 403.46875, baseline: 200
+        frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,250 200x200]
+        frag 1 from TextNode start: 0, length: 1, rect: [250,436 8x17.46875]
+          " "
+        frag 2 from SVGSVGBox start: 0, length: 0, rect: [258,250 200x200]
+        frag 3 from TextNode start: 0, length: 1, rect: [458,436 8x17.46875]
+          " "
+        frag 4 from SVGSVGBox start: 0, length: 0, rect: [466,250 200x200]
+      line 2 width: 200, height: 200, bottom: 600, baseline: 200
+        frag 0 from SVGSVGBox start: 0, length: 0, rect: [50,450 200x200]
+      SVGSVGBox <svg> at (50,150) content-size 200x100 children: inline
+        TextNode <#text>
+        SVGGraphicsBox <g>  children: inline
+          TextNode <#text>
+          SVGGeometryBox <path> at (45.193222,199.330932) content-size 119.782173x48.453796 children: not-inline
+          TextNode <#text>
+        TextNode <#text>
+        SVGGraphicsBox <g>  children: inline
+          TextNode <#text>
+          SVGGeometryBox <path> at (84.5,159.504882) content-size 81x80.995117 children: not-inline
+          TextNode <#text>
+        TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (258,50) content-size 200x200 children: inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (267.5,59.5) content-size 31x21 children: not-inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (287.5,129.5) content-size 111x91 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (466,50) content-size 200x200 children: inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (505.5,89.5) content-size 121x121 children: not-inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (470.858978,89.5) content-size 190.282043x121 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (50,250) content-size 200x200 children: inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (120.088233,320.088256) content-size 59.823524x59.823528 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <rect> at (51.943771,309.873626) content-size 69.144462x69.144454 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <rect> at (178.911773,320.981903) content-size 69.14447x69.144462 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (258,250) content-size 200x200 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <circle> at (277.5,269.5) content-size 161x161 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <circle> at (337.5,269.5) content-size 41x161 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <circle> at (277.5,329.5) content-size 161x41 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <circle> at (337.5,329.5) content-size 41x41 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (466,250) content-size 200x200 children: inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (505.5,289.5) content-size 121x121 children: not-inline
+        TextNode <#text>
+        SVGGeometryBox <rect> at (505.5,254.858978) content-size 121x190.282043 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
+      SVGSVGBox <svg> at (50,450) content-size 200x200 children: inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <rect> at (59.5,459.5) content-size 81x81 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <rect> at (159.5,459.5) content-size 81x81 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <rect> at (59.5,559.5) content-size 81x81 children: not-inline
+        TextNode <#text>
+        TextNode <#text>
+        SVGGeometryBox <rect> at (159.5,559.5) content-size 81x81 children: not-inline
+        TextNode <#text>
+      TextNode <#text>
