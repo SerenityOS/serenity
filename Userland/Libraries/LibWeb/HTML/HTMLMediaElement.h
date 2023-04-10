@@ -47,6 +47,11 @@ public:
     ReadyState ready_state() const { return m_ready_state; }
 
     WebIDL::ExceptionOr<void> load();
+
+    double current_time() const;
+    void set_current_time(double);
+    void set_current_playback_position(double);
+
     double duration() const;
     bool paused() const { return m_paused; }
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
@@ -90,6 +95,12 @@ private:
 
     WebIDL::ExceptionOr<void> dispatch_time_update_event();
 
+    enum class TimeMarchesOnReason {
+        NormalPlayback,
+        Other,
+    };
+    void time_marches_on(TimeMarchesOnReason = TimeMarchesOnReason::NormalPlayback);
+
     JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> take_pending_play_promises();
     void resolve_pending_play_promises(ReadonlySpan<JS::NonnullGCPtr<WebIDL::Promise>> promises);
     void reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPtr<WebIDL::Promise>> promises, JS::NonnullGCPtr<WebIDL::DOMException> error);
@@ -113,6 +124,15 @@ private:
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-readystate
     ReadyState m_ready_state { ReadyState::HaveNothing };
     bool m_first_data_load_event_since_load_start { false };
+
+    // https://html.spec.whatwg.org/multipage/media.html#current-playback-position
+    double m_current_playback_position { 0 };
+
+    // https://html.spec.whatwg.org/multipage/media.html#official-playback-position
+    double m_official_playback_position { 0 };
+
+    // https://html.spec.whatwg.org/multipage/media.html#default-playback-start-position
+    double m_default_playback_start_position { 0 };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
     double m_duration { NAN };

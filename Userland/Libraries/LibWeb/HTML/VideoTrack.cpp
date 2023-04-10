@@ -5,6 +5,7 @@
  */
 
 #include <AK/IDAllocator.h>
+#include <AK/Time.h>
 #include <LibGfx/Bitmap.h>
 #include <LibJS/Runtime/Realm.h>
 #include <LibJS/Runtime/VM.h>
@@ -31,6 +32,9 @@ VideoTrack::VideoTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
     m_playback_manager->on_video_frame = [this](auto frame) {
         if (is<HTMLVideoElement>(*m_media_element))
             verify_cast<HTMLVideoElement>(*m_media_element).set_current_frame({}, move(frame));
+
+        auto playback_position_ms = static_cast<double>(position().to_milliseconds());
+        m_media_element->set_current_playback_position(playback_position_ms / 1000.0);
     };
 
     m_playback_manager->on_decoder_error = [](auto) {
@@ -75,6 +79,11 @@ void VideoTrack::play_video(Badge<HTMLVideoElement>)
 void VideoTrack::pause_video(Badge<HTMLVideoElement>)
 {
     m_playback_manager->pause_playback();
+}
+
+Time VideoTrack::position() const
+{
+    return m_playback_manager->current_playback_time();
 }
 
 Time VideoTrack::duration() const
