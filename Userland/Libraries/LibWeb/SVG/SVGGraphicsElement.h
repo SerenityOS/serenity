@@ -20,7 +20,10 @@ class SVGGraphicsElement : public SVGElement {
 public:
     virtual void apply_presentational_hints(CSS::StyleProperties&) const override;
 
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+
     Optional<Gfx::Color> fill_color() const;
+    Gfx::Painter::WindingRule fill_rule() const;
     Optional<Gfx::Color> stroke_color() const;
     Optional<float> stroke_width() const;
 
@@ -28,6 +31,8 @@ protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);
 
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
+
+    Optional<float> m_fill_opacity = {};
 };
 
 }

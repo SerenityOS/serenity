@@ -26,6 +26,14 @@ JS::ThrowCompletionOr<void> SVGGraphicsElement::initialize(JS::Realm& realm)
     return {};
 }
 
+void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+{
+    SVGElement::parse_attribute(name, value);
+    if (name == "fill-opacity"sv) {
+        m_fill_opacity = AttributeParser::parse_length(value);
+    }
+}
+
 void SVGGraphicsElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
     CSS::Parser::ParsingContext parsing_context { document() };
@@ -54,7 +62,9 @@ Optional<Gfx::Color> SVGGraphicsElement::fill_color() const
         return {};
     // FIXME: In the working-draft spec, `fill` is intended to be a shorthand, with `fill-color`
     //        being what we actually want to use. But that's not final or widely supported yet.
-    return layout_node()->computed_values().fill();
+    return layout_node()->computed_values().fill().map([&](Gfx::Color color) {
+        return color.with_alpha(m_fill_opacity.value_or(1) * 255);
+    });
 }
 
 Optional<Gfx::Color> SVGGraphicsElement::stroke_color() const
