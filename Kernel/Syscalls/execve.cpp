@@ -261,7 +261,7 @@ enum class ShouldAllowSyscalls {
 };
 
 static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, OpenFileDescription& object_description,
-    FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls)
+    FlatPtr load_offset, ShouldAllocateTls should_allocate_tls, ShouldAllowSyscalls should_allow_syscalls, Optional<size_t> minimum_stack_size = {})
 {
     auto& inode = *(object_description.inode());
     auto vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(inode));
@@ -405,6 +405,9 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         return ENOEXEC;
     }
 
+    if (minimum_stack_size.has_value() && minimum_stack_size.value() > stack_size)
+        stack_size = minimum_stack_size.value();
+
     auto* stack_region = TRY(new_space.allocate_region(Memory::RandomizeVirtualAddress::Yes, {}, stack_size, PAGE_SIZE, "Stack (Main thread)"sv, PROT_READ | PROT_WRITE, AllocationStrategy::Reserve));
     stack_region->set_stack(true);
 
@@ -433,7 +436,30 @@ Process::load(Memory::AddressSpace& new_space, NonnullRefPtr<OpenFileDescription
         return load_result;
     }
 
-    auto interpreter_load_result = TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes));
+    Optional<size_t> requested_main_program_stack_size;
+    {
+        auto main_program_size = main_program_description->inode()->size();
+        auto main_program_rounded_size = TRY(Memory::page_round_up(main_program_size));
+
+        auto main_program_vmobject = TRY(Memory::SharedInodeVMObject::try_create_with_inode(*main_program_description->inode()));
+        auto main_program_region = TRY(MM.allocate_kernel_region_with_vmobject(*main_program_vmobject, main_program_rounded_size, "Loaded Main Program ELF"sv, Memory::Region::Access::Read));
+
+        auto main_program_image = ELF::Image(main_program_region->vaddr().as_ptr(), main_program_size);
+        if (!main_program_image.is_valid())
+            return EINVAL;
+
+        main_program_image.for_each_program_header([&requested_main_program_stack_size](ELF::Image::ProgramHeader const& program_header) {
+            if (program_header.type() != PT_GNU_STACK)
+                return;
+
+            if (program_header.size_in_memory() == 0)
+                return;
+
+            requested_main_program_stack_size = program_header.size_in_memory();
+        });
+    }
+
+    auto interpreter_load_result = TRY(load_elf_object(new_space, *interpreter_description, load_offset, ShouldAllocateTls::No, ShouldAllowSyscalls::Yes, requested_main_program_stack_size));
 
     // TLS allocation will be done in userspace by the loader
     VERIFY(!interpreter_load_result.tls_region);
