@@ -423,6 +423,14 @@ TEST_CASE(should_find_index)
     EXPECT(!v.find_first_index(42).has_value());
 }
 
+TEST_CASE(should_find_predicate_index)
+{
+    Vector<int> v { 1, 2, 3, 4, 0, 6, 7, 8, 0, 0 };
+
+    EXPECT_EQ(4u, v.find_first_index_if([](auto const v) { return v == 0; }).value());
+    EXPECT(!v.find_first_index_if([](auto const v) { return v == 123; }).has_value());
+}
+
 TEST_CASE(should_contain_start)
 {
     // Tests whether value is found if at the start of the range.
