@@ -56,8 +56,12 @@
             </thead>
             <tbody>
                 <tr>
+                    <td>Current Time</td>
+                    <td id=time>0.00 seconds</td>
+                </tr>
+                <tr>
                     <td>Duration</td>
-                    <td id=duration>0 seconds</td>
+                    <td id=duration>0.00 seconds</td>
                 </tr>
                 <tr>
                     <td>Play State</td>
@@ -79,8 +83,12 @@
             document.getElementById('selected').textContent = event.track.selected;
         };
 
+        video.addEventListener('timeupdate', () => {
+            document.getElementById('time').textContent = `${video.currentTime.toFixed(2)} seconds`;
+        });
+
         video.addEventListener('durationchange', () => {
-            document.getElementById('duration').textContent = `${video.duration} seconds`;
+            document.getElementById('duration').textContent = `${video.duration.toFixed(2)} seconds`;
         });
 
         video.addEventListener('loadedmetadata', () => {
