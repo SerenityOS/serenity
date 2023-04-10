@@ -521,8 +521,6 @@ ErrorOr<Vector<Certificate>> DefaultRootCACertificates::parse_pem_root_certifica
 
     for (auto& cert : certs) {
         auto certificate_result = Certificate::parse_certificate(cert.bytes());
-        // If the certificate does not parse it is likely using elliptic curve keys/signatures, which are not
-        // supported right now. It might make sense to cleanup cacert.pem before adding it to the system.
         if (certificate_result.is_error()) {
             // FIXME: It would be nice to have more informations about the certificate we failed to parse.
             //        Like: Issuer, Algorithm, CN, etc
