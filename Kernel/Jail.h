@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/AtomicRefCounted.h>
 #include <AK/DistinctNumeric.h>
 #include <AK/Error.h>
 #include <AK/IntrusiveList.h>
@@ -25,7 +26,7 @@ class ProcessList;
 
 AK_TYPEDEF_DISTINCT_ORDERED_ID(u64, JailIndex);
 
-class Jail : public RefCounted<Jail> {
+class Jail : public AtomicRefCounted<Jail> {
 
 public:
     NonnullRefPtr<ProcessList> process_list();
