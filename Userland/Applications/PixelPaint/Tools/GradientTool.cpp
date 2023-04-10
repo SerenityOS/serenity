@@ -65,7 +65,7 @@ void GradientTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
     // Check if user is hovering over a handle
     if (layer && m_editor && !m_button_pressed && has_gradient_start_end()) {
-        auto set_hover_flag = [&](bool& flag, const Optional<Gfx::IntPoint> p) {
+        auto set_hover_flag = [&](bool& flag, Optional<Gfx::IntPoint> const p) {
             auto handle_offset = m_editor->content_to_frame_position(editor_layer_location(*layer));
             float scale = m_editor->scale();
             auto frame_postion = p.value().to_type<float>().scaled(scale, scale).translated(handle_offset).to_type<int>();
