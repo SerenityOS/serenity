@@ -10,11 +10,13 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
+#include <LibCore/StandardPaths.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/PK/Code/EMSA_PKCS1_V1_5.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibTLS/Certificate.h>
 #include <LibTLS/TLSv12.h>
 #include <errno.h>
@@ -488,29 +490,30 @@ Vector<Certificate> TLSv12::parse_pem_certificate(ReadonlyBytes certificate_pem_
 Singleton<DefaultRootCACertificates> DefaultRootCACertificates::s_the;
 DefaultRootCACertificates::DefaultRootCACertificates()
 {
-    auto cacert_result = Core::File::open("/etc/cacert.pem"sv, Core::File::OpenMode::Read);
-    if (cacert_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", cacert_result.error());
-        return;
-    }
-    auto cacert_file = cacert_result.release_value();
-    auto data_result = cacert_file->read_until_eof();
-    if (data_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", data_result.error());
-        return;
-    }
-    auto data = data_result.release_value();
-
-    auto reload_result = reload_certificates(data);
-    if (reload_result.is_error()) {
-        dbgln("Failed to load CA Certificates: {}", reload_result.error());
+    auto load_result = load_certificates();
+    if (load_result.is_error()) {
+        dbgln("Failed to load CA Certificates: {}", load_result.error());
         return;
     }
 
-    m_ca_certificates = reload_result.release_value();
+    m_ca_certificates = load_result.release_value();
 }
 
-ErrorOr<Vector<Certificate>> DefaultRootCACertificates::reload_certificates(ByteBuffer& data)
+ErrorOr<Vector<Certificate>> DefaultRootCACertificates::load_certificates()
+{
+    auto cacert_file = TRY(Core::File::open("/etc/cacert.pem"sv, Core::File::OpenMode::Read));
+    auto data = TRY(cacert_file->read_until_eof());
+
+    auto user_cert_path = TRY(String::formatted("{}/.config/certs.pem", Core::StandardPaths::home_directory()));
+    if (FileSystem::exists(user_cert_path)) {
+        auto user_cert_file = TRY(Core::File::open(user_cert_path, Core::File::OpenMode::Read));
+        TRY(data.try_append(TRY(user_cert_file->read_until_eof())));
+    }
+
+    return TRY(parse_pem_root_certificate_authorities(data));
+}
+
+ErrorOr<Vector<Certificate>> DefaultRootCACertificates::parse_pem_root_certificate_authorities(ByteBuffer& data)
 {
     Vector<Certificate> certificates;
 
@@ -530,7 +533,7 @@ ErrorOr<Vector<Certificate>> DefaultRootCACertificates::reload_certificates(Byte
         if (certificate.is_certificate_authority && certificate.is_self_signed()) {
             TRY(certificates.try_append(move(certificate)));
         } else {
-            dbgln("Skipped '{}' because it is not a valid root CA", MUST(certificate.subject.to_string()));
+            dbgln("Skipped '{}' because it is not a valid root CA", TRY(certificate.subject.to_string()));
         }
     }
 

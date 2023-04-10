@@ -42,7 +42,7 @@ ErrorOr<Vector<Certificate>> load_certificates()
 {
     auto cacert_file = TRY(Core::File::open(locate_ca_certs_file(), Core::File::OpenMode::Read));
     auto data = TRY(cacert_file->read_until_eof());
-    return TRY(DefaultRootCACertificates::the().reload_certificates(data));
+    return TRY(DefaultRootCACertificates::parse_pem_root_certificate_authorities(data));
 }
 
 TEST_CASE(test_TLS_hello_handshake)
