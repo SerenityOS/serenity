@@ -15,11 +15,6 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<IDEController> IDEController::initialize()
-{
-    return adopt_lock_ref(*new IDEController());
-}
-
 ErrorOr<void> IDEController::reset()
 {
     return Error::from_errno(ENOTIMPL);

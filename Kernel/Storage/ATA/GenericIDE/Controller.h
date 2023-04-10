@@ -18,7 +18,6 @@ class AsyncBlockDeviceRequest;
 class IDEChannel;
 class IDEController : public ATAController {
 public:
-    static NonnullLockRefPtr<IDEController> initialize();
     virtual ~IDEController() override;
 
     virtual LockRefPtr<StorageDevice> device(u32 index) const override final;
