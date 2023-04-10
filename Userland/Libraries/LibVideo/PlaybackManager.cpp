@@ -129,6 +129,10 @@ void PlaybackManager::dispatch_decoder_error(DecoderError error)
     case DecoderErrorCategory::EndOfStream:
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "{}", error.string_literal());
         TRY_OR_FATAL_ERROR(m_playback_handler->stop());
+
+        if (on_end_of_stream)
+            on_end_of_stream();
+
         break;
     default:
         dbgln("Playback error encountered: {}", error.string_literal());
