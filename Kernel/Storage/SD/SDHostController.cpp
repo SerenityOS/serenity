@@ -81,7 +81,6 @@ ErrorOr<void> SDHostController::initialize()
     TRY(reset_host_controller());
 
     m_registers->interrupt_status_enable = 0xffffffff;
-    m_registers->interrupt_signal_enable = 0xffffffff;
 
     auto card_or_error = try_initialize_inserted_card();
     if (card_or_error.is_error() && card_or_error.error().code() != ENODEV) {
