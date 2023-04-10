@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <AK/GenericLexer.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibGfx/Point.h>
 
@@ -32,6 +34,39 @@ struct PathInstruction {
     Vector<float> data;
 };
 
+struct Transform {
+    struct Translate {
+        float x;
+        float y;
+    };
+    struct Scale {
+        float x;
+        float y;
+    };
+    struct Rotate {
+        float a;
+        float x;
+        float y;
+    };
+    struct SkewX {
+        float a;
+    };
+    struct SkewY {
+        float a;
+    };
+    struct Matrix {
+        float a;
+        float b;
+        float c;
+        float d;
+        float e;
+        float f;
+    };
+
+    using Operation = Variant<Translate, Scale, Rotate, SkewX, SkewY, Matrix>;
+    Operation operation;
+};
+
 class AttributeParser final {
 public:
     ~AttributeParser() = default;
@@ -41,6 +76,7 @@ public:
     static Optional<float> parse_positive_length(StringView input);
     static Vector<Gfx::FloatPoint> parse_points(StringView input);
     static Vector<PathInstruction> parse_path_data(StringView input);
+    static Optional<Vector<Transform>> parse_transform(StringView input);
 
 private:
     AttributeParser(StringView source);
@@ -56,6 +92,8 @@ private:
     void parse_quadratic_bezier_curveto();
     void parse_smooth_quadratic_bezier_curveto();
     void parse_elliptical_arc();
+
+    Optional<Vector<Transform>> parse_transform();
 
     float parse_length();
     float parse_coordinate();
@@ -79,12 +117,11 @@ private:
     bool match_length() const;
     bool match(char c) const { return !done() && ch() == c; }
 
-    bool done() const { return m_cursor >= m_source.length(); }
-    char ch() const { return m_source[m_cursor]; }
-    char consume() { return m_source[m_cursor++]; }
+    bool done() const { return m_lexer.is_eof(); }
+    char ch() const { return m_lexer.peek(); }
+    char consume() { return m_lexer.consume(); }
 
-    StringView m_source;
-    size_t m_cursor { 0 };
+    GenericLexer m_lexer;
     Vector<PathInstruction> m_instructions;
 };
 
