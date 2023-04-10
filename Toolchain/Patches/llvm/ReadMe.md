@@ -93,3 +93,8 @@ Prevent the use of POSIX shm on SerenityOS
 POSIX shm is not supported by SerenityOS yet, so this causes a
 compilation error.
 
+## `0012-cmake-Increase-the-default-stack-size-when-running-o.patch`
+
+cmake: Increase the default stack size when running on SerenityOS
+
+
