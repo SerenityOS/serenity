@@ -31,6 +31,6 @@ protected:
     IDEController();
 
     LockRefPtr<StorageDevice> device_by_channel_and_position(u32 index) const;
-    Vector<NonnullLockRefPtr<IDEChannel>> m_channels;
+    Array<RefPtr<IDEChannel>, 2> m_channels;
 };
 }

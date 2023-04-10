@@ -88,8 +88,8 @@ public:
     };
 
 public:
-    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, IOWindowGroup, ChannelType type);
-    static NonnullLockRefPtr<IDEChannel> create(IDEController const&, u8 irq, IOWindowGroup, ChannelType type);
+    static ErrorOr<NonnullRefPtr<IDEChannel>> create(IDEController const&, IOWindowGroup, ChannelType type);
+    static ErrorOr<NonnullRefPtr<IDEChannel>> create(IDEController const&, u8 irq, IOWindowGroup, ChannelType type);
 
     virtual ~IDEChannel() override;
 
