@@ -676,7 +676,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
         // 4. Update the duration attribute with the time of the last frame of the resource, if known, on the media timeline established above. If it is
         //    not known (e.g. a stream that is in principle infinite), update the duration attribute to the value positive Infinity.
         // FIXME: Handle unbounded media resources.
-        set_duration(static_cast<double>(video_track->duration().to_seconds()));
+        auto duration = static_cast<double>(video_track->duration().to_milliseconds());
+        set_duration(duration / 1000.0);
 
         // 5. For video elements, set the videoWidth and videoHeight attributes, and queue a media element task given the media element to fire an event
         //    named resize at the media element.
