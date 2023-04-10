@@ -86,9 +86,9 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
 
 void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HTMLVideoElement const& video_element, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const
 {
-    static constexpr DevicePixels maximum_control_box_size = 60;
-    static constexpr DevicePixels maximum_playback_button_size = 30;
-    static constexpr DevicePixels maximum_playback_button_offset_x = 30;
+    auto maximum_control_box_size = context.rounded_device_pixels(30);
+    auto maximum_playback_button_size = context.rounded_device_pixels(15);
+    auto maximum_playback_button_offset_x = context.rounded_device_pixels(15);
 
     auto is_hovered = document().hovered_node() == &video_element;
     auto is_paused = video_element.paused();
@@ -141,8 +141,8 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
 
 void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const
 {
-    static constexpr DevicePixels maximum_control_box_size = 200;
-    static constexpr DevicePixels maximum_playback_button_size = 80;
+    auto maximum_control_box_size = context.rounded_device_pixels(100);
+    auto maximum_playback_button_size = context.rounded_device_pixels(40);
 
     auto center = video_rect.center();
 
