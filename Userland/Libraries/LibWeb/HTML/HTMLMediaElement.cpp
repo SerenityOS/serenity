@@ -929,7 +929,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
             auto& realm = this->realm();
 
             // 1. Fire an event named timeupdate at the element.
-            dispatch_event(DOM::Event::create(realm, HTML::EventNames::timeupdate).release_value_but_fixme_should_propagate_errors());
+            dispatch_time_update_event().release_value_but_fixme_should_propagate_errors();
 
             // 2. Fire an event named pause at the element.
             dispatch_event(DOM::Event::create(realm, HTML::EventNames::pause).release_value_but_fixme_should_propagate_errors());
@@ -971,6 +971,17 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (m_paused)
         on_paused();
+}
+
+WebIDL::ExceptionOr<void> HTMLMediaElement::dispatch_time_update_event()
+{
+    ScopeGuard guard { [this] { m_running_time_update_event_handler = false; } };
+    m_running_time_update_event_handler = true;
+
+    m_last_time_update_event_time = Time::now_monotonic();
+
+    dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::timeupdate)));
+    return {};
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#take-pending-play-promises

@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/Time.h>
 #include <AK/Variant.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
@@ -87,6 +88,8 @@ private:
     void set_paused(bool);
     void set_duration(double);
 
+    WebIDL::ExceptionOr<void> dispatch_time_update_event();
+
     JS::MarkedVector<JS::NonnullGCPtr<WebIDL::Promise>> take_pending_play_promises();
     void resolve_pending_play_promises(ReadonlySpan<JS::NonnullGCPtr<WebIDL::Promise>> promises);
     void reject_pending_play_promises(ReadonlySpan<JS::NonnullGCPtr<WebIDL::Promise>> promises, JS::NonnullGCPtr<WebIDL::DOMException> error);
@@ -125,6 +128,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#media-data
     ByteBuffer m_media_data;
+
+    bool m_running_time_update_event_handler { false };
+    Optional<Time> m_last_time_update_event_time;
 
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
 };
