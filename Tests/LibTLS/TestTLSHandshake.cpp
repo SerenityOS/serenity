@@ -23,7 +23,7 @@ static ByteBuffer operator""_b(char const* string, size_t length)
     return ByteBuffer::copy(string, length).release_value();
 }
 
-Vector<Certificate> load_certificates();
+ErrorOr<Vector<Certificate>> load_certificates();
 DeprecatedString locate_ca_certs_file();
 
 DeprecatedString locate_ca_certs_file()
@@ -38,20 +38,18 @@ DeprecatedString locate_ca_certs_file()
     return "";
 }
 
-Vector<Certificate> load_certificates()
+ErrorOr<Vector<Certificate>> load_certificates()
 {
-    auto cacert_file = MUST(Core::File::open(locate_ca_certs_file(), Core::File::OpenMode::Read));
-    auto data = MUST(cacert_file->read_until_eof());
-    return MUST(DefaultRootCACertificates::the().reload_certificates(data));
+    auto cacert_file = TRY(Core::File::open(locate_ca_certs_file(), Core::File::OpenMode::Read));
+    auto data = TRY(cacert_file->read_until_eof());
+    return TRY(DefaultRootCACertificates::the().reload_certificates(data));
 }
-
-static Vector<Certificate> s_root_ca_certificates = load_certificates();
 
 TEST_CASE(test_TLS_hello_handshake)
 {
     Core::EventLoop loop;
     TLS::Options options;
-    options.set_root_certificates(s_root_ca_certificates);
+    options.set_root_certificates(TRY_OR_FAIL(load_certificates()));
     options.set_alert_handler([&](TLS::AlertDescription) {
         FAIL("Connection failure");
         loop.quit(1);
@@ -60,10 +58,10 @@ TEST_CASE(test_TLS_hello_handshake)
         loop.quit(0);
     });
 
-    auto tls = MUST(TLS::TLSv12::connect(DEFAULT_SERVER, port, move(options)));
+    auto tls = TRY_OR_FAIL(TLS::TLSv12::connect(DEFAULT_SERVER, port, move(options)));
     ByteBuffer contents;
     tls->on_ready_to_read = [&] {
-        auto read_bytes = MUST(tls->read_some(contents.must_get_bytes_for_writing(4 * KiB)));
+        auto read_bytes = TRY_OR_FAIL(tls->read_some(contents.must_get_bytes_for_writing(4 * KiB)));
         if (read_bytes.is_empty()) {
             FAIL("No data received");
             loop.quit(1);
