@@ -29,16 +29,7 @@ void CertificateStoreProxyModel::sort(int column, GUI::SortOrder sort_order)
 
 ErrorOr<void> CertificateStoreModel::load()
 {
-    auto cacert_file = TRY(Core::File::open("/etc/cacert.pem"sv, Core::File::OpenMode::Read));
-    auto data = TRY(cacert_file->read_until_eof());
-
-    auto user_cert_path = TRY(String::formatted("{}/.config/certs.pem", Core::StandardPaths::home_directory()));
-    if (FileSystem::exists(user_cert_path)) {
-        auto user_cert_file = TRY(Core::File::open(user_cert_path, Core::File::OpenMode::Read));
-        TRY(data.try_append(TRY(user_cert_file->read_until_eof())));
-    }
-
-    m_certificates = TRY(DefaultRootCACertificates::the().reload_certificates(data));
+    m_certificates = TRY(DefaultRootCACertificates::load_certificates());
 
     return {};
 }
@@ -111,7 +102,7 @@ ErrorOr<void> CertificateStoreWidget::import_pem()
         return Error::from_string_view("File is not a .pem or .crt file."sv);
 
     auto data = TRY(fsac_file.release_stream()->read_until_eof());
-    auto count = TRY(m_root_ca_model->add(TRY(DefaultRootCACertificates::the().reload_certificates(data))));
+    auto count = TRY(m_root_ca_model->add(TRY(DefaultRootCACertificates::parse_pem_root_certificate_authorities(data))));
 
     if (count == 0) {
         return Error::from_string_view("No valid CA found to import."sv);
