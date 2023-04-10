@@ -65,8 +65,10 @@ void GradientTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
     // Check if user is hovering over a handle
     if (layer && m_editor && !m_button_pressed && has_gradient_start_end()) {
-        auto set_hover_flag = [&](bool& flag, const Gfx::IntPoint p) {
-            auto frame_postion = m_editor->content_to_frame_position(p).to_type<int>();
+        auto set_hover_flag = [&](bool& flag, const Optional<Gfx::IntPoint> p) {
+            auto handle_offset = m_editor->content_to_frame_position(editor_layer_location(*layer));
+            float scale = m_editor->scale();
+            auto frame_postion = p.value().to_type<float>().scaled(scale, scale).translated(handle_offset).to_type<int>();
             auto handle = Gfx::IntRect::centered_at(frame_postion, { 16, 16 });
             if (flag != handle.contains(event.raw_event().position())) {
                 flag = !flag;
@@ -161,7 +163,7 @@ void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    draw_gradient(painter, true, m_editor->content_to_frame_position(Gfx::IntPoint(0, 0)), m_editor->scale(), m_editor->content_rect());
+    draw_gradient(painter, true, m_editor->content_to_frame_position(editor_layer_location(*layer)), m_editor->scale(), m_editor->content_rect());
 }
 
 void GradientTool::on_primary_color_change(Color)
@@ -271,8 +273,8 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
     auto t_gradient_center_line = m_gradient_center_line.scaled(scale, scale).translated(drawing_offset);
     auto t_gradient_end_line = m_gradient_end_line.scaled(scale, scale).translated(drawing_offset);
     auto t_gradient_center = m_gradient_center.value().to_type<float>().scaled(scale, scale).translated(drawing_offset).to_type<int>();
-    int width = m_editor->active_layer()->rect().width() * scale;
-    int height = m_editor->active_layer()->rect().height() * scale;
+    int width = m_editor->content_rect().width() * scale;
+    int height = m_editor->content_rect().height() * scale;
 
     float rotation_radians = atan2f(t_gradient_begin_line.a().y() - t_gradient_end_line.a().y(), t_gradient_begin_line.a().x() - t_gradient_end_line.a().x());
     float rotation_degrees = ((rotation_radians * 180) / static_cast<float>(M_PI)) - 90;
