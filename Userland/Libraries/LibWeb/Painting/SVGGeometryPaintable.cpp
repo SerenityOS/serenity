@@ -33,10 +33,12 @@ Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, H
     if (!result.has_value())
         return {};
     auto& geometry_element = layout_box().dom_node();
-    auto transformed_bounding_box = layout_box().layout_transform().map_to_quad(
-        const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
-    if (!transformed_bounding_box.contains(position.to_type<float>()))
-        return {};
+    if (auto transform = layout_box().layout_transform(); transform.has_value()) {
+        auto transformed_bounding_box = transform->map_to_quad(
+            const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
+        if (!transformed_bounding_box.contains(position.to_type<float>()))
+            return {};
+    }
     return result;
 }
 
@@ -56,6 +58,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto& svg_context = context.svg_context();
 
     // FIXME: This should not be trucated to an int.
+    Gfx::PainterStateSaver save_painter { context.painter() };
     auto offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>().to_type<float>();
     painter.translate(offset);
 
@@ -65,7 +68,10 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     context.painter().add_clip_rect(context.enclosing_device_rect(absolute_rect()).to_type<int>());
     auto css_scale = context.device_pixels_per_css_pixel();
 
-    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(layout_box().layout_transform()));
+    auto transform = layout_box().layout_transform();
+    if (!transform.has_value())
+        return;
+    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform));
 
     if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
         // We need to fill the path before applying the stroke, however the filled
@@ -87,9 +93,6 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
             stroke_color,
             geometry_element.stroke_width().value_or(svg_context.stroke_width()) * context.device_pixels_per_css_pixel());
     }
-
-    painter.translate(-offset);
-    context.painter().clear_clip_rect();
 }
 
 }
