@@ -5,6 +5,7 @@
  */
 
 #include <AK/Array.h>
+#include <AK/NumberFormat.h>
 #include <LibGUI/Event.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibWeb/DOM/Document.h>
@@ -62,6 +63,8 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
         return;
 
     auto video_rect = context.rounded_device_rect(absolute_rect());
+    context.painter().add_clip_rect(video_rect.to_type<int>());
+
     ScopedCornerRadiusClip corner_clip { context, context.painter(), video_rect, normalized_border_radii_data(ShrinkRadiiForBorders::Yes) };
 
     auto const& video_element = layout_box().dom_node();
@@ -90,8 +93,7 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
 void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HTMLVideoElement const& video_element, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const
 {
     auto maximum_control_box_size = context.rounded_device_pixels(30);
-    auto maximum_playback_button_size = context.rounded_device_pixels(15);
-    auto maximum_playback_button_offset_x = context.rounded_device_pixels(15);
+    auto playback_padding = context.rounded_device_pixels(5);
 
     auto is_hovered = document().hovered_node() == &video_element;
     auto is_paused = video_element.paused();
@@ -104,6 +106,21 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
         control_box_rect.take_from_top(control_box_rect.height() - maximum_control_box_size);
 
     context.painter().fill_rect(control_box_rect.to_type<int>(), control_box_color.with_alpha(0xd0));
+
+    control_box_rect = paint_control_bar_playback_button(context, video_element, control_box_rect, mouse_position);
+    control_box_rect.take_from_left(playback_padding);
+
+    control_box_rect = paint_control_bar_timeline(context, video_element, control_box_rect, mouse_position);
+    control_box_rect.take_from_left(playback_padding);
+
+    control_box_rect = paint_control_bar_timestamp(context, video_element, control_box_rect);
+    control_box_rect.take_from_left(playback_padding);
+}
+
+DevicePixelRect VideoPaintable::paint_control_bar_playback_button(PaintContext& context, HTML::HTMLVideoElement const& video_element, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const
+{
+    auto maximum_playback_button_size = context.rounded_device_pixels(15);
+    auto maximum_playback_button_offset_x = context.rounded_device_pixels(15);
 
     auto playback_button_size = min(maximum_playback_button_size, control_box_rect.height() / 2);
     auto playback_button_offset_x = min(maximum_playback_button_offset_x, control_box_rect.width());
@@ -119,7 +136,7 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
     auto playback_button_is_hovered = mouse_position.has_value() && playback_button_hover_rect.contains(*mouse_position);
     auto playback_button_color = control_button_color(playback_button_is_hovered);
 
-    if (is_paused) {
+    if (video_element.paused()) {
         Array<Gfx::IntPoint, 3> play_button_coordinates { {
             { 0, 0 },
             { static_cast<int>(playback_button_size), static_cast<int>(playback_button_size) / 2 },
@@ -140,6 +157,65 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
         context.painter().fill_rect(pause_button_left_rect.to_type<int>(), playback_button_color);
         context.painter().fill_rect(pause_button_right_rect.to_type<int>(), playback_button_color);
     }
+
+    control_box_rect.take_from_left(playback_button_hover_rect.width());
+    return control_box_rect;
+}
+
+DevicePixelRect VideoPaintable::paint_control_bar_timeline(PaintContext& context, HTML::HTMLVideoElement const& video_element, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const
+{
+    auto maximum_timeline_button_size = context.rounded_device_pixels(16);
+
+    auto timeline_rect = control_box_rect;
+    timeline_rect.set_width(min(control_box_rect.width() * 6 / 10, timeline_rect.width()));
+
+    auto playback_percentage = video_element.current_time() / video_element.duration();
+    auto playback_position = static_cast<double>(static_cast<int>(timeline_rect.width())) * playback_percentage;
+
+    auto timeline_button_size = min(maximum_timeline_button_size, timeline_rect.height() / 2);
+    auto timeline_button_offset_x = static_cast<DevicePixels>(round(playback_position));
+
+    Gfx::AntiAliasingPainter painter { context.painter() };
+
+    auto playback_timelime_scrub_rect = timeline_rect;
+    playback_timelime_scrub_rect.shrink(0, timeline_rect.height() - timeline_button_size / 2);
+
+    auto timeline_past_rect = playback_timelime_scrub_rect;
+    timeline_past_rect.set_width(timeline_button_offset_x);
+    painter.fill_rect_with_rounded_corners(timeline_past_rect.to_type<int>(), control_highlight_color.lightened(), 4);
+
+    auto timeline_future_rect = playback_timelime_scrub_rect;
+    timeline_future_rect.take_from_left(timeline_button_offset_x);
+    painter.fill_rect_with_rounded_corners(timeline_future_rect.to_type<int>(), Color::Black, 4);
+
+    auto timeline_button_rect = timeline_rect;
+    timeline_button_rect.shrink(timeline_rect.width() - timeline_button_size, timeline_rect.height() - timeline_button_size);
+    timeline_button_rect.set_x(timeline_rect.x() + timeline_button_offset_x - timeline_button_size / 2);
+
+    auto timeline_is_hovered = mouse_position.has_value() && timeline_rect.contains(*mouse_position);
+    auto timeline_color = control_button_color(timeline_is_hovered);
+    painter.fill_ellipse(timeline_button_rect.to_type<int>(), timeline_color);
+
+    control_box_rect.take_from_left(timeline_rect.width() + timeline_button_size / 2);
+    return control_box_rect;
+}
+
+DevicePixelRect VideoPaintable::paint_control_bar_timestamp(PaintContext& context, HTML::HTMLVideoElement const& video_element, DevicePixelRect control_box_rect) const
+{
+    auto current_time = human_readable_digital_time(round(video_element.current_time()));
+    auto duration = human_readable_digital_time(round(video_element.duration()));
+    auto timestamp = String::formatted("{} / {}", current_time, duration).release_value_but_fixme_should_propagate_errors();
+
+    auto timestamp_size = static_cast<DevicePixels::Type>(ceilf(context.painter().font().width(timestamp)));
+    if (timestamp_size > control_box_rect.width())
+        return control_box_rect;
+
+    auto timestamp_rect = control_box_rect;
+    timestamp_rect.set_width(timestamp_size);
+    context.painter().draw_text(timestamp_rect.to_type<int>(), timestamp, Gfx::TextAlignment::CenterLeft, Color::White);
+
+    control_box_rect.take_from_left(timestamp_rect.width());
+    return control_box_rect;
 }
 
 void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const
