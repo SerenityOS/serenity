@@ -14,7 +14,7 @@
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix prot_exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath unix prot_exec map_fixed"));
 
     unsigned refresh_rate = 12;
 
@@ -25,7 +25,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto app = TRY(GUI::Application::try_create(arguments));
 
-    TRY(Core::System::pledge("stdio recvfd sendfd rpath prot_exec"));
+    TRY(Core::System::pledge("stdio recvfd sendfd rpath prot_exec map_fixed"));
 
     auto window = TRY(Desktop::Screensaver::create_window("Tubes"sv, "app-tubes"sv));
     window->update();
