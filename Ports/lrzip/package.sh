@@ -2,7 +2,8 @@
 port='lrzip'
 version='0.651'
 useconfigure='true'
-files="https://github.com/ckolivas/lrzip/archive/refs/tags/v${version}.tar.gz v${version}.tar.gz f4c84de778a059123040681fd47c17565fcc4fec0ccc68fcf32d97fad16cd892"
+use_fresh_config_sub='true'
+files="http://ck.kolivas.org/apps/lrzip/lrzip-${version}.tar.xz lrzip-${version}.tar.xz 48bd8decb097c1596c9b3777959cd3e332819434ed77a2823e65aa436f1602f9"
 auth_type='sha256'
 depends=(
   'bzip2'
@@ -10,7 +11,3 @@ depends=(
   'lzo'
   'zlib'
 )
-
-configure() {
-    run ./autogen.sh --host="${SERENITY_ARCH}-pc-serenity"
-}
