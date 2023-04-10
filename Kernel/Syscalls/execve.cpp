@@ -284,7 +284,7 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
     FlatPtr load_base_address = 0;
-    size_t stack_size = 0;
+    size_t stack_size = Thread::default_userspace_stack_size;
 
     auto elf_name = TRY(object_description.pseudo_path());
     VERIFY(!Processor::in_critical());
@@ -381,7 +381,10 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
             return load_section(program_header);
 
         if (program_header.type() == PT_GNU_STACK) {
-            stack_size = program_header.size_in_memory();
+            auto new_stack_size = program_header.size_in_memory();
+
+            if (new_stack_size > stack_size)
+                stack_size = new_stack_size;
         }
 
         // NOTE: We ignore other program header types.
@@ -396,10 +399,6 @@ static ErrorOr<LoadResult> load_elf_object(Memory::AddressSpace& new_space, Open
         });
         return result;
     }());
-
-    if (stack_size == 0) {
-        stack_size = Thread::default_userspace_stack_size;
-    }
 
     if (!elf_image.entry().offset(load_offset).get()) {
         dbgln("do_exec: Failure loading program, entry pointer is invalid! {})", elf_image.entry().offset(load_offset));
