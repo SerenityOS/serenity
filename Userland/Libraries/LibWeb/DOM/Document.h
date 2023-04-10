@@ -426,8 +426,8 @@ public:
     bool is_completely_loaded() const;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
-    Optional<DeprecatedString> navigation_id() const;
-    void set_navigation_id(Optional<DeprecatedString>);
+    Optional<String> navigation_id() const;
+    void set_navigation_id(Optional<String>);
 
     // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
     HTML::SandboxingFlagSet active_sandboxing_flag_set() const;
@@ -609,7 +609,7 @@ private:
     Optional<AK::Time> m_completely_loaded_time;
 
     // https://html.spec.whatwg.org/multipage/dom.html#concept-document-navigation-id
-    Optional<DeprecatedString> m_navigation_id;
+    Optional<String> m_navigation_id;
 
     // https://html.spec.whatwg.org/multipage/origin.html#active-sandboxing-flag-set
     HTML::SandboxingFlagSet m_active_sandboxing_flag_set;
