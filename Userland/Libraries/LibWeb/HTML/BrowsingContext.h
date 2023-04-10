@@ -235,11 +235,11 @@ public:
         HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
         Optional<PolicyContainer> history_policy_container = {},
         DeprecatedString navigation_type = "other",
-        Optional<DeprecatedString> navigation_id = {},
+        Optional<String> navigation_id = {},
         Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {}) override;
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, DeprecatedString navigation_id);
+    WebIDL::ExceptionOr<void> navigate_to_a_fragment(AK::URL const&, HistoryHandlingBehavior, String navigation_id);
 
     // https://html.spec.whatwg.org/multipage/origin.html#one-permitted-sandboxed-navigator
     BrowsingContext const* the_one_permitted_sandboxed_navigator() const;

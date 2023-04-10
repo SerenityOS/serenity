@@ -35,7 +35,7 @@ public:
         HistoryHandlingBehavior history_handling = HistoryHandlingBehavior::Default,
         Optional<PolicyContainer> history_policy_container = {},
         DeprecatedString navigation_type = "other",
-        Optional<DeprecatedString> navigation_id = {},
+        Optional<String> navigation_id = {},
         Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body = {})
         = 0;
 

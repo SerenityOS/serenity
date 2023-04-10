@@ -2171,12 +2171,12 @@ void Document::set_domain(DeprecatedString const& domain)
     dbgln("(STUBBED) Document::set_domain(domain='{}')", domain);
 }
 
-void Document::set_navigation_id(Optional<AK::DeprecatedString> navigation_id)
+void Document::set_navigation_id(Optional<String> navigation_id)
 {
     m_navigation_id = move(navigation_id);
 }
 
-Optional<DeprecatedString> Document::navigation_id() const
+Optional<String> Document::navigation_id() const
 {
     return m_navigation_id;
 }

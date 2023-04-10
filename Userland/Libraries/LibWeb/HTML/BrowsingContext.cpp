@@ -872,7 +872,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
     HistoryHandlingBehavior history_handling,
     Optional<PolicyContainer> history_policy_container,
     DeprecatedString navigation_type,
-    Optional<DeprecatedString> navigation_id,
+    Optional<String> navigation_id,
     Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)> process_response_end_of_body)
 {
     // 1. If resource is a URL, then set resource to a new request whose URL is resource.
@@ -905,7 +905,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
         } else {
             // Otherwise let navigation id be the result of generating a random UUID. [UUID]
             // FIXME: Generate a UUID.
-            navigation_id = "FIXME";
+            navigation_id = String::from_utf8_short_string("FIXME"sv);
         }
     }
 
@@ -989,7 +989,7 @@ WebIDL::ExceptionOr<void> BrowsingContext::navigate(
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#navigate-fragid
-WebIDL::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, DeprecatedString navigation_id)
+WebIDL::ExceptionOr<void> BrowsingContext::navigate_to_a_fragment(AK::URL const& url, HistoryHandlingBehavior history_handling, String navigation_id)
 {
     // 1. If historyHandling is not "replace",
     if (history_handling != HistoryHandlingBehavior::Replace) {

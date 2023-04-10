@@ -29,7 +29,7 @@ public:
         HistoryHandlingBehavior,
         Optional<PolicyContainer>,
         DeprecatedString,
-        Optional<DeprecatedString>,
+        Optional<String>,
         Function<void(JS::NonnullGCPtr<Fetch::Infrastructure::Response>)>) override
     {
         return {};
