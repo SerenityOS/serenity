@@ -30,6 +30,7 @@ interface HTMLMediaElement : HTMLElement {
     readonly attribute unsigned short readyState;
 
     // playback state
+    attribute double currentTime;
     readonly attribute unrestricted double duration;
     readonly attribute boolean paused;
     [Reflect, CEReactions] attribute boolean autoplay;
