@@ -37,6 +37,13 @@ JS::GCPtr<Layout::Node> SVGSVGElement::create_layout_node(NonnullRefPtr<CSS::Sty
 
 void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) const
 {
+    // NOTE: Hack to ensure SVG unitless widths/heights are parsed even with <!DOCTYPE html>
+    auto previous_quirks_mode = document().mode();
+    const_cast<DOM::Document&>(document()).set_quirks_mode(DOM::QuirksMode::Yes);
+    ScopeGuard reset_quirks_mode = [&] {
+        const_cast<DOM::Document&>(document()).set_quirks_mode(previous_quirks_mode);
+    };
+
     auto width_attribute = attribute(SVG::AttributeNames::width);
     auto parsing_context = CSS::Parser::ParsingContext { document() };
     if (auto width_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
