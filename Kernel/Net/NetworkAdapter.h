@@ -39,7 +39,7 @@ struct PacketWithTimestamp final : public AtomicRefCounted<PacketWithTimestamp> 
 
     NonnullOwnPtr<KBuffer> buffer;
     Time timestamp;
-    IntrusiveListNode<PacketWithTimestamp, LockRefPtr<PacketWithTimestamp>> packet_node;
+    IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
 };
 
 class NetworkingManagement;
@@ -91,7 +91,7 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
-    LockRefPtr<PacketWithTimestamp> acquire_packet_buffer(size_t);
+    RefPtr<PacketWithTimestamp> acquire_packet_buffer(size_t);
     void release_packet_buffer(PacketWithTimestamp&);
 
     constexpr size_t layer3_payload_offset() const { return sizeof(EthernetFrameHeader); }

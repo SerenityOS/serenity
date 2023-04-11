@@ -189,7 +189,7 @@ private:
     HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
     Error m_error { Error::None };
-    LockRefPtr<NetworkAdapter> m_adapter;
+    SpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
     State m_state { State::Closed };
@@ -200,7 +200,7 @@ private:
 
     struct OutgoingPacket {
         u32 ack_number { 0 };
-        LockRefPtr<PacketWithTimestamp> buffer;
+        RefPtr<PacketWithTimestamp> buffer;
         size_t ipv4_payload_offset;
         LockWeakPtr<NetworkAdapter> adapter;
         int tx_counter { 0 };
