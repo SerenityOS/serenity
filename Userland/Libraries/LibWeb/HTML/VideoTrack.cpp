@@ -37,6 +37,11 @@ VideoTrack::VideoTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
         m_media_element->set_current_playback_position(playback_position_ms / 1000.0);
     };
 
+    m_playback_manager->on_end_of_stream = [this]() {
+        auto playback_position_ms = static_cast<double>(duration().to_milliseconds());
+        m_media_element->set_current_playback_position(playback_position_ms / 1000.0);
+    };
+
     m_playback_manager->on_decoder_error = [](auto) {
         // FIXME: Propagate this error to HTMLMediaElement's error attribute.
     };

@@ -54,6 +54,7 @@ public:
 
     double duration() const;
     bool paused() const { return m_paused; }
+    bool ended() const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
     WebIDL::ExceptionOr<void> pause();
 
@@ -92,6 +93,9 @@ private:
     void notify_about_playing();
     void set_paused(bool);
     void set_duration(double);
+
+    bool has_ended_playback() const;
+    WebIDL::ExceptionOr<void> reached_end_of_media_playback();
 
     WebIDL::ExceptionOr<void> dispatch_time_update_event();
 
