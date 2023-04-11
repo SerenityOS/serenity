@@ -850,13 +850,11 @@ ErrorOr<Certificate> Certificate::parse_certificate(ReadonlyBytes buffer, bool)
 
 ErrorOr<String> RelativeDistinguishedName::to_string()
 {
-#define ADD_IF_RECOGNIZED(identifier, shorthand_code)                 \
-    do {                                                              \
-        if (it->key == identifier) {                                  \
-            cert_name.appendff("\\{}={}", shorthand_code, it->value); \
-            continue;                                                 \
-        }                                                             \
-    } while (0);
+#define ADD_IF_RECOGNIZED(identifier, shorthand_code)             \
+    if (it->key == identifier) {                                  \
+        cert_name.appendff("\\{}={}", shorthand_code, it->value); \
+        continue;                                                 \
+    }
 
     StringBuilder cert_name;
 
