@@ -81,7 +81,6 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatConstructor::supported_locales_of)
 }
 
 // 15.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/ecma402/#sec-initializenumberformat
-// 1.1.2 InitializeNumberFormat ( numberFormat, locales, options ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-initializenumberformat
 ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& number_format, Value locales_value, Value options_value)
 {
     // 1. Let requestedLocales be ? CanonicalizeLocaleList(locales).
@@ -215,7 +214,6 @@ ThrowCompletionOr<NumberFormat*> initialize_number_format(VM& vm, NumberFormat& 
 }
 
 // 15.1.3 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/ecma402/#sec-setnfdigitoptions
-// 1.1.1 SetNumberFormatDigitOptions ( intlObj, options, mnfdDefault, mxfdDefault, notation ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-setnfdigitoptions
 ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase& intl_object, Object const& options, int default_min_fraction_digits, int default_max_fraction_digits, NumberFormat::Notation notation)
 {
     // 1. Let mnid be ? GetNumberOption(options, "minimumIntegerDigits,", 1, 21, 1).
@@ -237,7 +235,8 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
     intl_object.set_min_integer_digits(*min_integer_digits);
 
     // 7. Let roundingPriority be ? GetOption(options, "roundingPriority", string, « "auto", "morePrecision", "lessPrecision" », "auto").
-    auto rounding_priority = TRY(get_option(vm, options, vm.names.roundingPriority, OptionType::String, { "auto"sv, "morePrecision"sv, "lessPrecision"sv }, "auto"sv));
+    auto rounding_priority_option = TRY(get_option(vm, options, vm.names.roundingPriority, OptionType::String, { "auto"sv, "morePrecision"sv, "lessPrecision"sv }, "auto"sv));
+    auto rounding_priority = MUST_OR_THROW_OOM(rounding_priority_option.as_string().utf8_string_view());
 
     // 8. Let roundingIncrement be ? GetNumberOption(options, "roundingIncrement", 1, 5000, 1).
     auto rounding_increment = TRY(get_number_option(vm, options, vm.names.roundingIncrement, 1, 5000, 1));
@@ -288,7 +287,7 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
     bool need_fraction_digits = true;
 
     // 23. If roundingPriority is "auto", then
-    if (TRY(rounding_priority.as_string().utf8_string_view()) == "auto"sv) {
+    if (rounding_priority == "auto"sv) {
         // a. Set needSd to hasSd.
         need_significant_digits = has_significant_digits;
 
@@ -303,16 +302,12 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
     if (need_significant_digits) {
         // a. If hasSd is true, then
         if (has_significant_digits) {
-            // i. Set mnsd to ? DefaultNumberOption(mnsd, 1, 21, 1).
+            // i. Set intlObj.[[MinimumSignificantDigits]] to ? DefaultNumberOption(mnsd, 1, 21, 1).
             auto min_digits = TRY(default_number_option(vm, min_significant_digits, 1, 21, 1));
-
-            // ii. Set mxsd to ? DefaultNumberOption(mxsd, mnsd, 21, 21).
-            auto max_digits = TRY(default_number_option(vm, max_significant_digits, *min_digits, 21, 21));
-
-            // iii. Set intlObj.[[MinimumSignificantDigits]] to mnsd.
             intl_object.set_min_significant_digits(*min_digits);
 
-            // iv. Set intlObj.[[MaximumSignificantDigits]] to mxsd.
+            // ii. Set intlObj.[[MaximumSignificantDigits]] to ? DefaultNumberOption(mxsd, intlObj.[[MinimumSignificantDigits]], 21, 21).
+            auto max_digits = TRY(default_number_option(vm, max_significant_digits, *min_digits, 21, 21));
             intl_object.set_max_significant_digits(*max_digits);
         }
         // b. Else,
@@ -361,51 +356,46 @@ ThrowCompletionOr<void> set_number_format_digit_options(VM& vm, NumberFormatBase
         }
     }
 
-    // 26. If needSd is true or needFd is true, then
-    if (need_significant_digits || need_fraction_digits) {
-        auto rounding_priority_string = TRY(rounding_priority.as_string().utf8_string_view());
+    // 26. If needSd is false and needFd is false, then
+    if (!need_significant_digits && !need_fraction_digits) {
+        // a. Set intlObj.[[MinimumFractionDigits]] to 0.
+        intl_object.set_min_fraction_digits(0);
 
-        // a. If roundingPriority is "morePrecision", then
-        if (rounding_priority_string == "morePrecision"sv) {
-            // i. Set intlObj.[[RoundingType]] to morePrecision.
-            intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
-        }
-        // b. Else if roundingPriority is "lessPrecision", then
-        else if (rounding_priority_string == "lessPrecision"sv) {
-            // i. Set intlObj.[[RoundingType]] to lessPrecision.
-            intl_object.set_rounding_type(NumberFormatBase::RoundingType::LessPrecision);
-        }
-        // c. Else if hasSd is true, then
-        else if (has_significant_digits) {
-            // i. Set intlObj.[[RoundingType]] to significantDigits.
-            intl_object.set_rounding_type(NumberFormatBase::RoundingType::SignificantDigits);
-        }
-        // d. Else,
-        else {
-            // i. Set intlObj.[[RoundingType]] to fractionDigits.
-            intl_object.set_rounding_type(NumberFormatBase::RoundingType::FractionDigits);
-        }
+        // b. Set intlObj.[[MaximumFractionDigits]] to 0.
+        intl_object.set_max_fraction_digits(0);
+
+        // c. Set intlObj.[[MinimumSignificantDigits]] to 1.
+        intl_object.set_min_significant_digits(1);
+
+        // d. Set intlObj.[[MaximumSignificantDigits]] to 2.
+        intl_object.set_max_significant_digits(2);
+
+        // e. Set intlObj.[[RoundingType]] to morePrecision.
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
     }
-
-    // 27. Else,
-    else {
+    // 27. Else if roundingPriority is "morePrecision", then
+    else if (rounding_priority == "morePrecision"sv) {
         // a. Set intlObj.[[RoundingType]] to morePrecision.
         intl_object.set_rounding_type(NumberFormatBase::RoundingType::MorePrecision);
 
-        // b. Set intlObj.[[MinimumFractionDigits]] to 0.
-        intl_object.set_min_fraction_digits(0);
-
-        // c. Set intlObj.[[MaximumFractionDigits]] to 0.
-        intl_object.set_max_fraction_digits(0);
-
-        // d. Set intlObj.[[MinimumSignificantDigits]] to 1.
-        intl_object.set_min_significant_digits(1);
-
-        // e. Set intlObj.[[MaximumSignificantDigits]] to 2.
-        intl_object.set_max_significant_digits(2);
+    }
+    // 28. Else if roundingPriority is "lessPrecision", then
+    else if (rounding_priority == "lessPrecision"sv) {
+        // a. Set intlObj.[[RoundingType]] to lessPrecision.
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::LessPrecision);
+    }
+    // 29. Else if hasSd is true, then
+    else if (has_significant_digits) {
+        // a. Set intlObj.[[RoundingType]] to significantDigits.
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::SignificantDigits);
+    }
+    // 30. Else,
+    else {
+        // a. Set intlObj.[[RoundingType]] to fractionDigits.
+        intl_object.set_rounding_type(NumberFormatBase::RoundingType::FractionDigits);
     }
 
-    // 28. If roundingIncrement is not 1, then
+    // 31. If roundingIncrement is not 1, then
     if (rounding_increment != 1) {
         // a. If intlObj.[[RoundingType]] is not fractionDigits, throw a TypeError exception.
         if (intl_object.rounding_type() != NumberFormatBase::RoundingType::FractionDigits)
@@ -441,7 +431,7 @@ ThrowCompletionOr<void> set_number_format_unit_options(VM& vm, NumberFormat& int
             return vm.throw_completion<TypeError>(ErrorType::IntlOptionUndefined, "currency"sv, "style"sv, style);
     }
     // 7. Else,
-    //     a. If ! IsWellFormedCurrencyCode(currency) is false, throw a RangeError exception.
+    //     a. If IsWellFormedCurrencyCode(currency) is false, throw a RangeError exception.
     else if (!is_well_formed_currency_code(TRY(currency.as_string().utf8_string_view())))
         return vm.throw_completion<RangeError>(ErrorType::OptionIsNotValidValue, currency, "currency"sv);
 

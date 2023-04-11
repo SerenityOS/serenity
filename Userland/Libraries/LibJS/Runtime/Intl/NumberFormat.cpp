@@ -377,7 +377,6 @@ int currency_digits(StringView currency)
 }
 
 // 15.5.3 FormatNumericToString ( intlObject, x ), https://tc39.es/ecma402/#sec-formatnumberstring
-// 1.5.3 FormatNumericToString ( intlObject, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumberstring
 ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBase const& intl_object, MathematicalValue number)
 {
     bool is_negative = false;
@@ -514,7 +513,6 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
 }
 
 // 15.5.4 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-partitionnumberpattern
-// 1.5.4 PartitionNumberPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnumberpattern
 ThrowCompletionOr<Vector<PatternPartition>> partition_number_pattern(VM& vm, NumberFormat& number_format, MathematicalValue number)
 {
     // 1. Let exponent be 0.
@@ -727,7 +725,6 @@ static ThrowCompletionOr<Vector<String>> separate_integer_into_groups(VM& vm, ::
 }
 
 // 15.5.5 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/ecma402/#sec-partitionnotationsubpattern
-// 1.5.5 PartitionNotationSubPattern ( numberFormat, x, n, exponent ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnotationsubpattern
 ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& vm, NumberFormat& number_format, MathematicalValue const& number, String formatted_string, int exponent)
 {
     // 1. Let result be a new empty List.
@@ -769,8 +766,8 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_notation_sub_pattern(VM& v
             }
             // iii. Else if p is equal to "number", then
             else if (part == "number"sv) {
-                // 1. If the numberFormat.[[NumberingSystem]] matches one of the values in the "Numbering System" column of Table 12 below, then
-                //     a. Let digits be a List whose elements are the code points specified in the "Digits" column of the matching row in Table 13.
+                // 1. If the numberFormat.[[NumberingSystem]] matches one of the values in the "Numbering System" column of Table 14 below, then
+                //     a. Let digits be a List whose elements are the code points specified in the "Digits" column of the matching row in Table 14.
                 //     b. Assert: The length of digits is 10.
                 //     c. Let transliterated be the empty String.
                 //     d. Let len be the length of n.
@@ -999,7 +996,7 @@ struct RawPrecisionResult {
     MathematicalValue rounded;
 };
 
-// ToRawPrecisionFn, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#eqn-ToRawPrecisionFn
+// ToRawPrecisionFn, https://tc39.es/ecma402/#eqn-ToRawPrecisionFn
 static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, MathematicalValue const& number, int precision, PreferredResult mode)
 {
     RawPrecisionResult result {};
@@ -1036,7 +1033,6 @@ static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, M
 }
 
 // 15.5.8 ToRawPrecision ( x, minPrecision, maxPrecision ), https://tc39.es/ecma402/#sec-torawprecision
-// 1.5.8 ToRawPrecision ( x, minPrecision, maxPrecision, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-torawprecision
 ThrowCompletionOr<RawFormatResult> to_raw_precision(VM& vm, MathematicalValue const& number, int min_precision, int max_precision, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode)
 {
     RawFormatResult result {};
@@ -1153,7 +1149,7 @@ struct RawFixedResult {
     MathematicalValue rounded;
 };
 
-// ToRawFixedFn, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#eqn-ToRawFixedFn
+// ToRawFixedFn, https://tc39.es/ecma402/#eqn-ToRawFixedFn
 static ThrowCompletionOr<RawFixedResult> to_raw_fixed_function(VM& vm, MathematicalValue const& number, int fraction, int rounding_increment, PreferredResult mode)
 {
     RawFixedResult result {};
@@ -1200,7 +1196,6 @@ static ThrowCompletionOr<RawFixedResult> to_raw_fixed_function(VM& vm, Mathemati
 }
 
 // 15.5.9 ToRawFixed ( x, minInteger, minFraction, maxFraction ), https://tc39.es/ecma402/#sec-torawfixed
-// 1.5.9 ToRawFixed ( x, minFraction, maxFraction, roundingIncrement, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-torawfixed
 ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode)
 {
     RawFormatResult result {};
@@ -1292,7 +1287,6 @@ enum class NumberCategory {
 };
 
 // 15.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/ecma402/#sec-getnumberformatpattern
-// 1.5.11 GetNumberFormatPattern ( numberFormat, x ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getnumberformatpattern
 ThrowCompletionOr<Optional<Variant<StringView, String>>> get_number_format_pattern(VM& vm, NumberFormat& number_format, MathematicalValue const& number, ::Locale::NumberFormat& found_pattern)
 {
     // 1. Let localeData be %NumberFormat%.[[LocaleData]].
@@ -1655,10 +1649,9 @@ ThrowCompletionOr<int> compute_exponent_for_magnitude(VM& vm, NumberFormat& numb
     }
 }
 
-// 1.5.16 ToIntlMathematicalValue ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-tointlmathematicalvalue
+// 15.5.16 ToIntlMathematicalValue ( value ), https://tc39.es/ecma402/#sec-tointlmathematicalvalue
 ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value value)
 {
-
     // 1. Let primValue be ? ToPrimitive(value, number).
     auto primitive_value = TRY(value.to_primitive(vm, Value::PreferredType::Number));
 
@@ -1700,13 +1693,13 @@ ThrowCompletionOr<MathematicalValue> to_intl_mathematical_value(VM& vm, Value va
     return mathematical_value;
 }
 
-// 1.5.17 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-getunsignedroundingmode
+// 15.5.17 GetUnsignedRoundingMode ( roundingMode, isNegative ), https://tc39.es/ecma402/#sec-getunsignedroundingmode
 NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::RoundingMode rounding_mode, bool is_negative)
 {
-    // 1. If isNegative is true, return the specification type in the third column of Table 2 where the first column is roundingMode and the second column is "negative".
-    // 2. Else, return the specification type in the third column of Table 2 where the first column is roundingMode and the second column is "positive".
+    // 1. If isNegative is true, return the specification type in the third column of Table 15 where the first column is roundingMode and the second column is "negative".
+    // 2. Else, return the specification type in the third column of Table 15 where the first column is roundingMode and the second column is "positive".
 
-    // Table 2: Conversion from rounding mode to unsigned rounding mode, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#table-intl-unsigned-rounding-modes
+    // Table 15: Conversion from rounding mode to unsigned rounding mode, https://tc39.es/ecma402/#table-intl-unsigned-rounding-modes
     switch (rounding_mode) {
     case NumberFormat::RoundingMode::Ceil:
         return is_negative ? NumberFormat::UnsignedRoundingMode::Zero : NumberFormat::UnsignedRoundingMode::Infinity;
@@ -1731,7 +1724,7 @@ NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::Roun
     };
 }
 
-// 1.5.18 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-applyunsignedroundingmode
+// 15.5.18 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/ecma402/#sec-applyunsignedroundingmode
 RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode)
 {
     // 1. If x is equal to r1, return r1.
@@ -1743,7 +1736,7 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
     //
     //        This should be resolved when the "Intl mathematical value" is implemented to support
     //        arbitrarily precise decimals.
-    //        https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#intl-mathematical-value
+    //        https://tc39.es/ecma402/#intl-mathematical-value
     // 2. Assert: r1 < x < r2.
 
     // 3. Assert: unsignedRoundingMode is not undefined.
@@ -1795,7 +1788,7 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
     return RoundingDecision::HigherValue;
 }
 
-// 1.5.19 PartitionNumberRangePattern ( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-partitionnumberrangepattern
+// 15.5.19 PartitionNumberRangePattern ( numberFormat, x, y ), https://tc39.es/ecma402/#sec-partitionnumberrangepattern
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pattern(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
     // 1. If x is NaN or y is NaN, throw a RangeError exception.
@@ -1815,8 +1808,11 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     auto raw_end_result = TRY(partition_number_pattern(vm, number_format, move(end)));
     auto end_result = MUST_OR_THROW_OOM(PatternPartitionWithSource::create_from_parent_list(vm, move(raw_end_result)));
 
-    // 5. If xResult is equal to yResult, then
-    if (start_result == end_result) {
+    // 5. If ! FormatNumeric(numberFormat, x) is equal to ! FormatNumeric(numberFormat, y), then
+    auto formatted_start = MUST_OR_THROW_OOM(format_numeric(vm, number_format, start));
+    auto formatted_end = MUST_OR_THROW_OOM(format_numeric(vm, number_format, end));
+
+    if (formatted_start == formatted_end) {
         // a. Let appxResult be ? FormatApproximately(numberFormat, xResult).
         auto approximate_result = TRY(format_approximately(vm, number_format, move(start_result)));
 
@@ -1830,20 +1826,24 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
         return approximate_result;
     }
 
-    // 6. For each r in xResult, do
-    for (auto& part : start_result) {
-        // i. Set r.[[Source]] to "startRange".
+    // 6. For each element r in xResult, do
+    TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(start_result.size()));
+
+    for (auto& start_part : start_result) {
+        // a. Append a new Record { [[Type]]: r.[[Type]], [[Value]]: r.[[Value]], [[Source]]: "startRange" } as the last element of result.
+        PatternPartitionWithSource part;
+        part.type = start_part.type;
+        part.value = move(start_part.value);
         part.source = "startRange"sv;
+
+        result.unchecked_append(move(part));
     }
 
-    // 7. Add all elements in xResult to result in order.
-    result = move(start_result);
-
-    // 8. Let rangeSeparator be an ILND String value used to separate two numbers.
+    // 7. Let rangeSeparator be an ILND String value used to separate two numbers.
     auto range_separator_symbol = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::RangeSeparator)).value_or("-"sv);
     auto range_separator = TRY_OR_THROW_OOM(vm, ::Locale::augment_range_pattern(range_separator_symbol, result.last().value, end_result[0].value));
 
-    // 9. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
+    // 8. Append a new Record { [[Type]]: "literal", [[Value]]: rangeSeparator, [[Source]]: "shared" } element to result.
     PatternPartitionWithSource part;
     part.type = "literal"sv;
     part.value = range_separator.has_value()
@@ -1852,27 +1852,30 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> partition_number_range_pat
     part.source = "shared"sv;
     TRY_OR_THROW_OOM(vm, result.try_append(move(part)));
 
-    // 10. For each r in yResult, do
-    for (auto& part : end_result) {
-        // a. Set r.[[Source]] to "endRange".
+    // 9. For each element r in yResult, do
+    TRY_OR_THROW_OOM(vm, result.try_ensure_capacity(result.size() + end_result.size()));
+
+    for (auto& end_part : end_result) {
+        // a. Append a new Record { [[Type]]: r.[[Type]], [[Value]]: r.[[Value]], [[Source]]: "endRange" } as the last element of result.
+        PatternPartitionWithSource part;
+        part.type = end_part.type;
+        part.value = move(end_part.value);
         part.source = "endRange"sv;
+
+        result.unchecked_append(move(part));
     }
 
-    // 11. Add all elements in yResult to result in order.
-    TRY_OR_THROW_OOM(vm, result.try_extend(move(end_result)));
-
-    // 12. Return ! CollapseNumberRange(result).
+    // 10. Return ! CollapseNumberRange(result).
     return collapse_number_range(move(result));
 }
 
-// 1.5.20 FormatApproximately ( numberFormat, result ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatapproximately
+// 15.5.20 FormatApproximately ( numberFormat, result ), https://tc39.es/ecma402/#sec-formatapproximately
 ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM& vm, NumberFormat& number_format, Vector<PatternPartitionWithSource> result)
 {
-    // 1. Let i be an index into result, determined by an implementation-defined algorithm based on numberFormat and result.
-    // 2. Let approximatelySign be an ILND String value used to signify that a number is approximate.
+    // 1. Let approximatelySign be an ILND String value used to signify that a number is approximate.
     auto approximately_sign = TRY_OR_THROW_OOM(vm, ::Locale::get_number_system_symbol(number_format.data_locale(), number_format.numbering_system(), ::Locale::NumericSymbol::ApproximatelySign));
 
-    // 3. If approximatelySign is not empty, insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at index i in result.
+    // 2. If approximatelySign is not empty, insert a new Record { [[Type]]: "approximatelySign", [[Value]]: approximatelySign } at an ILND index in result. For example, if numberFormat has [[Locale]] "en-US" and [[NumberingSystem]] "latn" and [[Style]] "decimal", the new Record might be inserted before the first element of result.
     if (approximately_sign.has_value() && !approximately_sign->is_empty()) {
         PatternPartitionWithSource partition;
         partition.type = "approximatelySign"sv;
@@ -1883,18 +1886,18 @@ ThrowCompletionOr<Vector<PatternPartitionWithSource>> format_approximately(VM& v
         }));
     }
 
-    // 4. Return result.
+    // 3. Return result.
     return result;
 }
 
-// 1.5.21 CollapseNumberRange ( result ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-collapsenumberrange
+// 15.5.21 CollapseNumberRange ( result ), https://tc39.es/ecma402/#sec-collapsenumberrange
 Vector<PatternPartitionWithSource> collapse_number_range(Vector<PatternPartitionWithSource> result)
 {
     // Returning result unmodified is guaranteed to be a correct implementation of CollapseNumberRange.
     return result;
 }
 
-// 1.5.22 FormatNumericRange( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumericrange
+// 15.5.22 FormatNumericRange ( numberFormat, x, y ), https://tc39.es/ecma402/#sec-formatnumericrange
 ThrowCompletionOr<String> format_numeric_range(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
     // 1. Let parts be ? PartitionNumberRangePattern(numberFormat, x, y).
@@ -1913,7 +1916,7 @@ ThrowCompletionOr<String> format_numeric_range(VM& vm, NumberFormat& number_form
     return result.to_string();
 }
 
-// 1.5.23 FormatNumericRangeToParts( numberFormat, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-formatnumericrangetoparts
+// 15.5.23 FormatNumericRangeToParts ( numberFormat, x, y ), https://tc39.es/ecma402/#sec-formatnumericrangetoparts
 ThrowCompletionOr<Array*> format_numeric_range_to_parts(VM& vm, NumberFormat& number_format, MathematicalValue start, MathematicalValue end)
 {
     auto& realm = *vm.current_realm();

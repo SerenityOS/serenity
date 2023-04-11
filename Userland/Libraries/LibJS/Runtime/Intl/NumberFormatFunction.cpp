@@ -11,7 +11,6 @@
 namespace JS::Intl {
 
 // 15.5.2 Number Format Functions, https://tc39.es/ecma402/#sec-number-format-functions
-// 1.5.2 Number Format Functions, https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-number-format-functions
 NonnullGCPtr<NumberFormatFunction> NumberFormatFunction::create(Realm& realm, NumberFormat& number_format)
 {
     return realm.heap().allocate<NumberFormatFunction>(realm, number_format, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();

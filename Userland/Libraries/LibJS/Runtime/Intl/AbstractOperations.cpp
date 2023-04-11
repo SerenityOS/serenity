@@ -264,7 +264,6 @@ ThrowCompletionOr<Vector<String>> canonicalize_locale_list(VM& vm, Value locales
 }
 
 // 9.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/ecma402/#sec-bestavailablelocale
-// 1.2.2 BestAvailableLocale ( availableLocales, locale ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-bestavailablelocale
 Optional<StringView> best_available_locale(StringView locale)
 {
     // 1. Let candidate be locale.
@@ -608,7 +607,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
 
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.
 
-// 1.2.14 GetBooleanOrStringNumberFormatOption ( options, property, stringValues, fallback ), https://tc39.es/proposal-intl-numberformat-v3/out/negotiation/proposed.html#sec-getbooleanorstringnumberformatoption
+// 9.2.14 GetBooleanOrStringNumberFormatOption ( options, property, stringValues, fallback ), https://tc39.es/ecma402/#sec-getbooleanorstringnumberformatoption
 ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM& vm, Object const& options, PropertyKey const& property, ReadonlySpan<StringView> string_values, StringOrBoolean fallback)
 {
     // 1. Let value be ? Get(options, property).
@@ -638,7 +637,7 @@ ThrowCompletionOr<StringOrBoolean> get_boolean_or_string_number_format_option(VM
     return StringOrBoolean { *it };
 }
 
-// 9.2.14 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
+// 9.2.15 DefaultNumberOption ( value, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-defaultnumberoption
 ThrowCompletionOr<Optional<int>> default_number_option(VM& vm, Value value, int minimum, int maximum, Optional<int> fallback)
 {
     // 1. If value is undefined, return fallback.
@@ -656,7 +655,7 @@ ThrowCompletionOr<Optional<int>> default_number_option(VM& vm, Value value, int 
     return floor(value.as_double());
 }
 
-// 9.2.15 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
+// 9.2.16 GetNumberOption ( options, property, minimum, maximum, fallback ), https://tc39.es/ecma402/#sec-getnumberoption
 ThrowCompletionOr<Optional<int>> get_number_option(VM& vm, Object const& options, PropertyKey const& property, int minimum, int maximum, Optional<int> fallback)
 {
     // 1. Assert: Type(options) is Object.
@@ -668,7 +667,7 @@ ThrowCompletionOr<Optional<int>> get_number_option(VM& vm, Object const& options
     return default_number_option(vm, value, minimum, maximum, move(fallback));
 }
 
-// 9.2.16 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
+// 9.2.17 PartitionPattern ( pattern ), https://tc39.es/ecma402/#sec-partitionpattern
 ThrowCompletionOr<Vector<PatternPartition>> partition_pattern(VM& vm, StringView pattern)
 {
     // 1. Let result be a new empty List.
