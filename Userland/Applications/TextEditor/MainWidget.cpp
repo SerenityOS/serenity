@@ -230,7 +230,7 @@ MainWidget::MainWidget()
     m_statusbar->segment(1).set_clickable(true);
     m_statusbar->segment(1).set_menu(m_syntax_statusbar_menu);
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    auto width = font().width("Ln 0000, Col 000"sv) + font().max_glyph_width();
+    auto width = font().width("Ln 0,000  Col 000"sv) + font().max_glyph_width();
     m_statusbar->segment(2).set_fixed_width(width);
     m_statusbar->segment(2).set_clickable(true);
     m_statusbar->segment(2).set_menu(m_line_column_statusbar_menu);
@@ -923,11 +923,11 @@ void MainWidget::update_statusbar()
     if (m_editor->has_selection()) {
         DeprecatedString selected_text = m_editor->selected_text();
         auto word_count = m_editor->number_of_selected_words();
-        builder.appendff("{} {} ({} {}) selected", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+        builder.appendff("{:'d} {} ({:'d} {}) selected", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     } else {
         DeprecatedString text = m_editor->text();
         auto word_count = m_editor->number_of_words();
-        builder.appendff("{} {} ({} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+        builder.appendff("{:'d} {} ({:'d} {})", text.length(), text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
     m_statusbar->set_text(0, builder.to_deprecated_string());
 
@@ -935,7 +935,7 @@ void MainWidget::update_statusbar()
         auto language = m_editor->syntax_highlighter()->language();
         m_statusbar->set_text(1, Syntax::language_to_string(language));
     }
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", m_editor->cursor().line() + 1, m_editor->cursor().column()));
 }
 
 void MainWidget::find_text(GUI::TextEditor::SearchDirection direction, ShowMessageIfNoResults show_message)
