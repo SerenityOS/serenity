@@ -26,7 +26,8 @@ class AC97 final
     , public IRQHandler {
 
 public:
-    static ErrorOr<NonnullLockRefPtr<AC97>> try_create(PCI::DeviceIdentifier const&);
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<AudioController>> create(PCI::DeviceIdentifier const&);
 
     virtual ~AC97() override;
 
@@ -159,16 +160,15 @@ private:
     // ^IRQHandler
     virtual bool handle_irq(RegisterState const&) override;
 
-    ErrorOr<void> initialize();
     void set_master_output_volume(u8, u8, Muted);
     ErrorOr<void> set_pcm_output_sample_rate(u32);
     void set_pcm_output_volume(u8, u8, Muted);
     ErrorOr<void> write_single_buffer(UserOrKernelBuffer const&, size_t, size_t);
 
     // ^AudioController
+    virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
     virtual LockRefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
-    virtual void detect_hardware_audio_channels(Badge<AudioManagement>) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 
