@@ -368,6 +368,8 @@ class WorkerEnvironmentSettingsObject;
 class WorkerGlobalScope;
 class WorkerLocation;
 class WorkerNavigator;
+
+enum class MediaSeekMode;
 }
 
 namespace Web::HighResolutionTime {

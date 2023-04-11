@@ -104,6 +104,18 @@ Time VideoTrack::duration() const
     return m_playback_manager->selected_video_track().video_data().duration;
 }
 
+void VideoTrack::seek(Time position, MediaSeekMode seek_mode)
+{
+    switch (seek_mode) {
+    case MediaSeekMode::Accurate:
+        m_playback_manager->seek_to_timestamp(position, Video::PlaybackManager::SeekMode::Accurate);
+        break;
+    case MediaSeekMode::ApproximateForSpeed:
+        m_playback_manager->seek_to_timestamp(position, Video::PlaybackManager::SeekMode::Fast);
+        break;
+    }
+}
+
 u64 VideoTrack::pixel_width() const
 {
     return m_playback_manager->selected_video_track().video_data().pixel_width;

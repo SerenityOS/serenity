@@ -19,6 +19,11 @@
 
 namespace Web::HTML {
 
+enum class MediaSeekMode {
+    Accurate,
+    ApproximateForSpeed,
+};
+
 class HTMLMediaElement : public HTMLElement {
     WEB_PLATFORM_OBJECT(HTMLMediaElement, HTMLElement);
 
@@ -46,6 +51,8 @@ public:
     };
     ReadyState ready_state() const { return m_ready_state; }
 
+    bool seeking() const { return m_seeking; }
+
     WebIDL::ExceptionOr<void> load();
 
     double current_time() const;
@@ -71,6 +78,10 @@ protected:
     virtual void on_playing() { }
     virtual void on_paused() { }
 
+    // Override in subclasses to handle implementation-specific seeking behavior. When seeking is complete,
+    // subclasses must invoke set_current_playback_position() to unblock the user agent.
+    virtual void on_seek(double, MediaSeekMode) { m_seek_in_progress = false; }
+
 private:
     struct EntireResource { };
     using ByteRange = Variant<EntireResource>; // FIXME: This will need to include "until end" and an actual byte range.
@@ -90,6 +101,7 @@ private:
 
     WebIDL::ExceptionOr<void> play_element();
     WebIDL::ExceptionOr<void> pause_element();
+    void seek_element(double playback_position, MediaSeekMode = MediaSeekMode::Accurate);
     void notify_about_playing();
     void set_paused(bool);
     void set_duration(double);
@@ -129,6 +141,9 @@ private:
     ReadyState m_ready_state { ReadyState::HaveNothing };
     bool m_first_data_load_event_since_load_start { false };
 
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-seeking
+    bool m_seeking { false };
+
     // https://html.spec.whatwg.org/multipage/media.html#current-playback-position
     double m_current_playback_position { 0 };
 
@@ -157,6 +172,8 @@ private:
     Optional<Time> m_last_time_update_event_time;
 
     JS::GCPtr<Fetch::Infrastructure::FetchController> m_fetch_controller;
+
+    bool m_seek_in_progress = false;
 };
 
 }
