@@ -484,8 +484,8 @@ public:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#abort-a-document
     void abort();
 
-    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-a-document
-    void unload(bool recursive_flag = false, Optional<DocumentUnloadTimingInfo> = {});
+    // https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document
+    void unload(JS::GCPtr<Document> new_document = nullptr);
 
     // https://html.spec.whatwg.org/multipage/dom.html#active-parser
     JS::GCPtr<HTML::HTMLParser> active_parser();
