@@ -96,6 +96,20 @@ void URL::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_query.ptr());
 }
 
+// https://url.spec.whatwg.org/#dom-url-canparse
+bool URL::can_parse(JS::VM&, String const& url, Optional<String> const& base)
+{
+    // 1. Let parsedURL be the result of running the API URL parser on url with base, if given.
+    auto parsed_url = parse_api_url(url, base);
+
+    // 2. If parsedURL is failure, then return false.
+    if (!parsed_url.has_value())
+        return false;
+
+    // 3. Return true.
+    return true;
+}
+
 WebIDL::ExceptionOr<String> URL::href() const
 {
     auto& vm = realm().vm();
