@@ -406,10 +406,7 @@ ThrowCompletionOr<FormatResult> format_numeric_to_string(VM& vm, NumberFormatBas
     }
 
     // 3. Let unsignedRoundingMode be GetUnsignedRoundingMode(intlObject.[[RoundingMode]], isNegative).
-    // FIXME: Spec issue: Intl.PluralRules does not have [[RoundingMode]], see https://github.com/tc39/proposal-intl-numberformat-v3/issues/103
-    Optional<NumberFormat::UnsignedRoundingMode> unsigned_rounding_mode;
-    if (intl_object.rounding_mode() != NumberFormat::RoundingMode::Invalid)
-        unsigned_rounding_mode = get_unsigned_rounding_mode(intl_object.rounding_mode(), is_negative);
+    auto unsigned_rounding_mode = get_unsigned_rounding_mode(intl_object.rounding_mode(), is_negative);
 
     RawFormatResult result {};
 
@@ -1040,7 +1037,7 @@ static ThrowCompletionOr<RawPrecisionResult> to_raw_precision_function(VM& vm, M
 
 // 15.5.8 ToRawPrecision ( x, minPrecision, maxPrecision ), https://tc39.es/ecma402/#sec-torawprecision
 // 1.5.8 ToRawPrecision ( x, minPrecision, maxPrecision, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-torawprecision
-ThrowCompletionOr<RawFormatResult> to_raw_precision(VM& vm, MathematicalValue const& number, int min_precision, int max_precision, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
+ThrowCompletionOr<RawFormatResult> to_raw_precision(VM& vm, MathematicalValue const& number, int min_precision, int max_precision, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode)
 {
     RawFormatResult result {};
 
@@ -1204,7 +1201,7 @@ static ThrowCompletionOr<RawFixedResult> to_raw_fixed_function(VM& vm, Mathemati
 
 // 15.5.9 ToRawFixed ( x, minInteger, minFraction, maxFraction ), https://tc39.es/ecma402/#sec-torawfixed
 // 1.5.9 ToRawFixed ( x, minFraction, maxFraction, roundingIncrement, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-torawfixed
-ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
+ThrowCompletionOr<RawFormatResult> to_raw_fixed(VM& vm, MathematicalValue const& number, int min_fraction, int max_fraction, int rounding_increment, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode)
 {
     RawFormatResult result {};
 
@@ -1735,7 +1732,7 @@ NumberFormat::UnsignedRoundingMode get_unsigned_rounding_mode(NumberFormat::Roun
 }
 
 // 1.5.18 ApplyUnsignedRoundingMode ( x, r1, r2, unsignedRoundingMode ), https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#sec-applyunsignedroundingmode
-RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, Optional<NumberFormat::UnsignedRoundingMode> const& unsigned_rounding_mode)
+RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, MathematicalValue const& r1, MathematicalValue const& r2, NumberFormat::UnsignedRoundingMode unsigned_rounding_mode)
 {
     // 1. If x is equal to r1, return r1.
     if (x.is_equal_to(r1))
@@ -1750,7 +1747,6 @@ RoundingDecision apply_unsigned_rounding_mode(MathematicalValue const& x, Mathem
     // 2. Assert: r1 < x < r2.
 
     // 3. Assert: unsignedRoundingMode is not undefined.
-    VERIFY(unsigned_rounding_mode.has_value());
 
     // 4. If unsignedRoundingMode is zero, return r1.
     if (unsigned_rounding_mode == NumberFormat::UnsignedRoundingMode::Zero)
