@@ -15,7 +15,7 @@ private:
     LoopbackAdapter(NonnullOwnPtr<KString>);
 
 public:
-    static LockRefPtr<LoopbackAdapter> try_create();
+    static ErrorOr<NonnullRefPtr<LoopbackAdapter>> try_create();
     virtual ~LoopbackAdapter() override;
 
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override { VERIFY_NOT_REACHED(); }
