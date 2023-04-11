@@ -76,15 +76,21 @@ static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& paramet
     }
 }
 
+static void out_curve_tag(Gfx::ICC::TagData const& tag, int indent_amount)
+{
+    VERIFY(tag.type() == Gfx::ICC::CurveTagData::Type || tag.type() == Gfx::ICC::ParametricCurveTagData::Type);
+    if (tag.type() == Gfx::ICC::CurveTagData::Type)
+        out_curve(static_cast<Gfx::ICC::CurveTagData const&>(tag), indent_amount);
+    if (tag.type() == Gfx::ICC::ParametricCurveTagData::Type)
+        out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData const&>(tag), indent_amount);
+}
+
 static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
 {
     for (auto const& curve : curves) {
         VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
         outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
-        if (curve->type() == Gfx::ICC::CurveTagData::Type)
-            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*curve), /*indent=*/12);
-        if (curve->type() == Gfx::ICC::ParametricCurveTagData::Type)
-            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*curve), /*indent=*/12);
+        out_curve_tag(*curve, /*indent=*/12);
     }
 }
 
@@ -247,7 +253,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    video full range flag: {} - {}", cicp.video_full_range_flag(),
                 Video::video_full_range_flag_to_string((Video::VideoFullRangeFlag)cicp.video_full_range_flag()));
         } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
-            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*tag_data), /*indent=*/4);
+            out_curve_tag(*tag_data, /*indent=*/4);
         } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
             auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
             outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
@@ -384,7 +390,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (named_colors.size() > 5u)
                 outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
-            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data), /*indent=*/4);
+            out_curve_tag(*tag_data, /*indent=*/4);
         } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
             // This tag can contain arbitrarily many fixed-point numbers, but in practice it's
             // exclusively used for the 'chad' tag, where it always contains 9 values that
