@@ -170,6 +170,7 @@ DevicePixelRect VideoPaintable::paint_control_bar_timeline(PaintContext& context
 
     auto timeline_rect = control_box_rect;
     timeline_rect.set_width(min(control_box_rect.width() * 6 / 10, timeline_rect.width()));
+    layout_box().dom_node().cached_layout_boxes({}).timeline_rect = context.scale_to_css_rect(timeline_rect);
 
     auto playback_percentage = video_element.current_time() / video_element.duration();
     auto playback_position = static_cast<double>(static_cast<int>(timeline_rect.width())) * playback_percentage;
@@ -284,6 +285,16 @@ VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<Eve
     if (cached_layout_boxes.control_box_rect.has_value() && cached_layout_boxes.control_box_rect->contains(position)) {
         if (cached_layout_boxes.playback_button_rect.has_value() && cached_layout_boxes.playback_button_rect->contains(position)) {
             toggle_playback().release_value_but_fixme_should_propagate_errors();
+            return DispatchEventOfSameName::Yes;
+        }
+
+        if (cached_layout_boxes.timeline_rect.has_value() && cached_layout_boxes.timeline_rect->contains(position)) {
+            auto x_offset = position.x() - cached_layout_boxes.timeline_rect->x();
+            auto x_percentage = static_cast<float>(x_offset) / static_cast<float>(cached_layout_boxes.timeline_rect->width());
+
+            auto position = static_cast<double>(x_percentage) * video_element.duration();
+            video_element.set_current_time(position);
+
             return DispatchEventOfSameName::Yes;
         }
 

@@ -39,6 +39,7 @@ public:
     struct CachedLayoutBoxes {
         Optional<CSSPixelRect> control_box_rect;
         Optional<CSSPixelRect> playback_button_rect;
+        Optional<CSSPixelRect> timeline_rect;
     };
     CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::VideoPaintable>) const { return m_layout_boxes; }
 
