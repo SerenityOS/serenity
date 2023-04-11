@@ -95,7 +95,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto window = TRY(Desktop::Screensaver::create_window("Gradient"sv, "app-screensaver"sv));
+    auto window = TRY(Desktop::Screensaver::create_window("Gradient"sv, "app-gradient"sv));
 
     auto gradient_widget = TRY(window->set_main_widget<Gradient>(64, 48, 10000));
     gradient_widget->set_fill_with_background_color(false);
