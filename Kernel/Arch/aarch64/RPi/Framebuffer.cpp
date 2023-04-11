@@ -48,7 +48,7 @@ Framebuffer::Framebuffer()
     // message_queue.set_virtual_offset.y = 0;
 
     message_queue.set_depth.depth_bits = 32;
-    message_queue.set_pixel_order.pixel_order = FramebufferSetPixelOrderMboxMessage::PixelOrder::RGB;
+    message_queue.set_pixel_order.pixel_order = FramebufferSetPixelOrderMboxMessage::PixelOrder::BGR;
     message_queue.allocate_buffer.alignment = 4096;
 
     if (!Mailbox::the().send_queue(&message_queue, sizeof(message_queue))) {
@@ -127,7 +127,8 @@ void Framebuffer::initialize()
         multiboot_framebuffer_height = framebuffer.height();
         multiboot_framebuffer_pitch = framebuffer.pitch();
 
-        VERIFY(framebuffer.pixel_order() == PixelOrder::RGB);
+        // NOTE: The required pixel format for MULTIBOOT_FRAMEBUFFER_TYPE_RGB is actually BGRx8888.
+        VERIFY(framebuffer.pixel_order() == PixelOrder::BGR);
         multiboot_framebuffer_type = MULTIBOOT_FRAMEBUFFER_TYPE_RGB;
     }
 }
