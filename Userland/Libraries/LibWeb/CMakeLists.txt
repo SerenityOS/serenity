@@ -465,6 +465,7 @@ set(SOURCES
     SecureContexts/AbstractOperations.cpp
     Streams/AbstractOperations.cpp
     Streams/ReadableStream.cpp
+    Streams/ReadableStreamBYOBRequest.cpp
     Streams/ReadableStreamDefaultController.cpp
     Streams/ReadableStreamDefaultReader.cpp
     Streams/ReadableStreamGenericReader.cpp
