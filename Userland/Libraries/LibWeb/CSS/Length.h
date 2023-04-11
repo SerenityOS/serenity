@@ -79,6 +79,7 @@ public:
             || m_type == Type::Rlh;
     }
 
+    Type type() const { return m_type; }
     float raw_value() const { return m_value; }
 
     CSSPixels to_px(Layout::Node const&) const;

@@ -31,6 +31,7 @@ public:
     {
     }
 
+    Type type() const { return m_type; }
     float value() const { return m_value; }
     i64 integer_value() const
     {
