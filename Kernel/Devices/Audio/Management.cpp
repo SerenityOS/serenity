@@ -37,6 +37,35 @@ UNMAP_AFTER_INIT AudioManagement::AudioManagement()
 {
 }
 
+struct PCIAudioDriverInitializer {
+    ErrorOr<bool> (*probe)(PCI::DeviceIdentifier const&) = nullptr;
+    ErrorOr<NonnullRefPtr<AudioController>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
+};
+
+static constexpr PCIAudioDriverInitializer s_initializers[] = {
+    { AC97::probe, AC97::create },
+    { Audio::IntelHDA::Controller::probe, Audio::IntelHDA::Controller::create },
+};
+
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> AudioManagement::determine_audio_device(PCI::DeviceIdentifier const& device_identifier) const
+{
+    for (auto& initializer : s_initializers) {
+        auto initializer_probe_found_driver_match_or_error = initializer.probe(device_identifier);
+        if (initializer_probe_found_driver_match_or_error.is_error()) {
+            dmesgln("AudioManagement: Failed to probe device {}, due to {}", device_identifier.address(), initializer_probe_found_driver_match_or_error.error());
+            continue;
+        }
+        auto initializer_probe_found_driver_match = initializer_probe_found_driver_match_or_error.release_value();
+        if (initializer_probe_found_driver_match) {
+            auto device = TRY(initializer.create(device_identifier));
+            TRY(device->initialize({}));
+            return device;
+        }
+    }
+    dmesgln("AudioManagement: Failed to initialize device {}, unsupported audio device", device_identifier.address());
+    return Error::from_errno(ENODEV);
+}
+
 UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
 {
     if (PCI::Access::is_disabled())
@@ -46,48 +75,24 @@ UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_controllers()
         if (device_identifier.class_code().value() != to_underlying(PCI::ClassID::Multimedia))
             return;
 
-        auto create_audio_controller = [](PCI::DeviceIdentifier const& device_identifier) -> ErrorOr<NonnullLockRefPtr<AudioController>> {
-            switch (static_cast<PCI::Multimedia::SubclassID>(device_identifier.subclass_code().value())) {
-            case PCI::Multimedia::SubclassID::AudioController:
-                return AC97::try_create(device_identifier);
-            case PCI::Multimedia::SubclassID::HDACompatibleController:
-                return Audio::IntelHDA::Controller::create(device_identifier);
-            default:
-                return ENOTSUP;
-            }
-        };
-
-        dbgln("AudioManagement: found audio controller {} at {}", device_identifier.hardware_id(), device_identifier.address());
-        auto audio_controller_device = create_audio_controller(device_identifier);
-        if (audio_controller_device.is_error()) {
-            dbgln("AudioManagement: failed to initialize audio controller: {}", audio_controller_device.error());
+        auto result = determine_audio_device(device_identifier);
+        if (result.is_error()) {
+            dmesgln("Failed to initialize audio device ({} {}): {}", device_identifier.address(), device_identifier.hardware_id(), result.error());
             return;
         }
-        m_controllers_list.append(audio_controller_device.release_value());
+        m_controllers_list.with([&](auto& list) { list.append(result.release_value()); });
     }));
-}
-
-UNMAP_AFTER_INIT void AudioManagement::enumerate_hardware_audio_channels()
-{
-    for (auto& controller : m_controllers_list)
-        controller.detect_hardware_audio_channels({});
 }
 
 UNMAP_AFTER_INIT bool AudioManagement::initialize()
 {
-
-    /* Explanation on the flow:
-     * 1. Enumerate the PCI bus and try to find audio controllers
-     * 2. Ask each controller to detect the audio channels and instantiate AudioChannel objects.
-     */
     enumerate_hardware_controllers();
-    enumerate_hardware_audio_channels();
-
-    if (m_controllers_list.is_empty()) {
+    auto list_empty = m_controllers_list.with([&](auto& list) -> bool {
+        return list.is_empty();
+    });
+    if (list_empty)
         dbgln("AudioManagement: no audio controller was initialized.");
-        return false;
-    }
-    return true;
+    return !list_empty;
 }
 
 }

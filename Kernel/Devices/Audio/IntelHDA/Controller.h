@@ -28,7 +28,8 @@ class Controller final
     : public AudioController
     , public PCI::Device {
 public:
-    static ErrorOr<NonnullLockRefPtr<Controller>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<AudioController>> create(PCI::DeviceIdentifier const&);
     virtual ~Controller() = default;
 
     // ^PCI::Device
@@ -59,7 +60,6 @@ private:
 
     Controller(PCI::DeviceIdentifier const&, NonnullOwnPtr<IOWindow>);
 
-    ErrorOr<void> initialize();
     ErrorOr<void> initialize_codec(u8 codec_address);
     ErrorOr<void> configure_output_route();
     ErrorOr<void> reset();
@@ -67,7 +67,7 @@ private:
     // ^AudioController
     virtual LockRefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
-    virtual void detect_hardware_audio_channels(Badge<AudioManagement>) override;
+    virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
 

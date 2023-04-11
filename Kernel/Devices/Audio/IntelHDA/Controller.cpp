@@ -16,13 +16,16 @@
 
 namespace Kernel::Audio::IntelHDA {
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<Controller>> Controller::create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<bool> Controller::probe(PCI::DeviceIdentifier const& device_identifier)
+{
+    VERIFY(device_identifier.class_code().value() == to_underlying(PCI::ClassID::Multimedia));
+    return device_identifier.subclass_code().value() == to_underlying(PCI::Multimedia::SubclassID::HDACompatibleController);
+}
+
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<AudioController>> Controller::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     auto controller_io_window = TRY(IOWindow::create_for_pci_device_bar(pci_device_identifier, PCI::HeaderType0BaseRegister::BAR0));
-
-    auto intel_hda = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) Controller(pci_device_identifier, move(controller_io_window))));
-    TRY(intel_hda->initialize());
-    return intel_hda;
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Controller(pci_device_identifier, move(controller_io_window))));
 }
 
 UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_identifier, NonnullOwnPtr<IOWindow> controller_io_window)
@@ -31,7 +34,7 @@ UNMAP_AFTER_INIT Controller::Controller(PCI::DeviceIdentifier const& pci_device_
 {
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
 {
     // Enable DMA
     PCI::enable_bus_mastering(device_identifier());
@@ -83,6 +86,13 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize()
         }
     }
 
+    auto result = configure_output_route();
+    if (result.is_error()) {
+        dmesgln_pci(*this, "Failed to set up an output audio channel: {}", result.error());
+        return result.release_error();
+    }
+
+    m_audio_channel = AudioChannel::must_create(*this, fixed_audio_channel_index);
     return {};
 }
 
@@ -292,17 +302,6 @@ ErrorOr<size_t> Controller::write(size_t channel_index, UserOrKernelBuffer const
     if (channel_index != fixed_audio_channel_index || !m_output_path)
         return ENODEV;
     return m_output_path->output_stream().write(data, length);
-}
-
-UNMAP_AFTER_INIT void Controller::detect_hardware_audio_channels(Badge<AudioManagement>)
-{
-    auto result = configure_output_route();
-    if (result.is_error()) {
-        dmesgln_pci(*this, "Failed to set up an output audio channel: {}", result.error());
-        return;
-    }
-
-    m_audio_channel = AudioChannel::must_create(*this, fixed_audio_channel_index);
 }
 
 ErrorOr<void> Controller::set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate)
