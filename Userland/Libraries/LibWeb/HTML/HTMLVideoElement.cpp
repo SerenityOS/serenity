@@ -101,4 +101,10 @@ void HTMLVideoElement::on_paused()
         m_video_track->pause_video({});
 }
 
+void HTMLVideoElement::on_seek(double position, MediaSeekMode seek_mode)
+{
+    if (m_video_track)
+        m_video_track->seek(Time::from_milliseconds(position * 1000.0), seek_mode);
+}
+
 }

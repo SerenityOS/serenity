@@ -144,8 +144,7 @@ void HTMLMediaElement::set_current_time(double current_time)
         m_default_playback_start_position = current_time;
     } else {
         m_official_playback_position = current_time;
-
-        // FIXME: Seek to the provided position.
+        seek_element(current_time);
     }
 }
 
@@ -171,6 +170,9 @@ void HTMLMediaElement::set_current_playback_position(double playback_position)
     m_official_playback_position = m_current_playback_position;
 
     time_marches_on();
+
+    // NOTE: This notifies blocked seek_element() invocations that we have finished seeking.
+    m_seek_in_progress = false;
 
     // NOTE: Invoking the following steps is not listed in the spec. Rather, the spec just describes the scenario in
     //       which these steps should be invoked, which is when we've reached the end of the media playback.
@@ -207,10 +209,12 @@ void HTMLMediaElement::set_duration(double duration)
     // is not fired when the duration is reset as part of loading a new media resource.) If the duration is changed such that the current playback position
     // ends up being greater than the time of the end of the media resource, then the user agent must also seek to the time of the end of the media resource.
     if (!isnan(duration)) {
-        // FIXME: Handle seeking to the end of the media resource when needed.
         queue_a_media_element_task([this] {
             dispatch_event(DOM::Event::create(realm(), HTML::EventNames::durationchange).release_value_but_fixme_should_propagate_errors());
         });
+
+        if (m_current_playback_position > duration)
+            seek_element(duration);
     }
 
     m_duration = duration;
@@ -307,7 +311,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
             reject_pending_play_promises<WebIDL::AbortError>(promises, TRY_OR_THROW_OOM(vm, "Media playback was aborted"_fly_string));
         }
 
-        // FIXME: 7. If seeking is true, set it to false.
+        // 7. If seeking is true, set it to false.
+        m_seeking = false;
 
         // 8. Set the current playback position to 0.
         m_current_playback_position = 0;
@@ -777,7 +782,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
 
         // 8. If the media element's default playback start position is greater than zero, then seek to that time, and let jumped be true.
         if (m_default_playback_start_position > 0) {
-            // FIXME: Seek to the default playback position.
+            seek_element(m_default_playback_start_position);
             jumped = true;
         }
 
@@ -954,8 +959,12 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::play_element()
     if (m_network_state == NetworkState::Empty)
         TRY(select_resource());
 
-    // FIXME: 2. If the playback has ended and the direction of playback is forwards, seek to the earliest possible
-    //           position of the media resource.
+    // 2. If the playback has ended and the direction of playback is forwards, seek to the earliest possible position
+    //    of the media resource.
+    if (has_ended_playback()) {
+        // FIXME: Detect playback direction.
+        seek_element(0);
+    }
 
     // 3. If the media element's paused attribute is true, then:
     if (paused()) {
@@ -1033,6 +1042,81 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-seek
+void HTMLMediaElement::seek_element(double playback_position, MediaSeekMode seek_mode)
+{
+    // FIXME: 1. Set the media element's show poster flag to false.
+
+    // 2. If the media element's readyState is HAVE_NOTHING, return.
+    if (m_ready_state == ReadyState::HaveNothing)
+        return;
+
+    // FIXME: 3. If the element's seeking IDL attribute is true, then another instance of this algorithm is already running.
+    //           Abort that other instance of the algorithm without waiting for the step that it is running to complete.
+    if (m_seeking) {
+    }
+
+    // 4. Set the seeking IDL attribute to true.
+    m_seeking = true;
+
+    // FIXME: 5. If the seek was in response to a DOM method call or setting of an IDL attribute, then continue the script. The
+    //           remainder of these steps must be run in parallel. With the exception of the steps marked with ⌛, they could be
+    //           aborted at any time by another instance of this algorithm being invoked.
+
+    // 6. If the new playback position is later than the end of the media resource, then let it be the end of the media resource instead.
+    if (playback_position > m_duration)
+        playback_position = m_duration;
+
+    // 7. If the new playback position is less than the earliest possible position, let it be that position instead.
+    if (playback_position < 0)
+        playback_position = 0;
+
+    // FIXME: 8. If the (possibly now changed) new playback position is not in one of the ranges given in the seekable attribute,
+    //           then let it be the position in one of the ranges given in the seekable attribute that is the nearest to the new
+    //           playback position. If two positions both satisfy that constraint (i.e. the new playback position is exactly in the
+    //           middle between two ranges in the seekable attribute) then use the position that is closest to the current playback
+    //           position. If there are no ranges given in the seekable attribute then set the seeking IDL attribute to false and return.
+
+    // 9. If the approximate-for-speed flag is set, adjust the new playback position to a value that will allow for playback to resume
+    //    promptly. If new playback position before this step is before current playback position, then the adjusted new playback position
+    //    must also be before the current playback position. Similarly, if the new playback position before this step is after current
+    //    playback position, then the adjusted new playback position must also be after the current playback position.
+    // NOTE: LibVideo handles approximation for speed internally.
+
+    // 10. Queue a media element task given the media element to fire an event named seeking at the element.
+    queue_a_media_element_task([this]() {
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::seeking).release_value_but_fixme_should_propagate_errors());
+    });
+
+    // 11. Set the current playback position to the new playback position.
+    set_current_playback_position(playback_position);
+
+    // 12. Wait until the user agent has established whether or not the media data for the new playback position is
+    //     available, and, if it is, until it has decoded enough data to play back that position.
+    m_seek_in_progress = true;
+    on_seek(playback_position, seek_mode);
+    HTML::main_thread_event_loop().spin_until([&]() { return !m_seek_in_progress; });
+
+    // FIXME: 13. Await a stable state. The synchronous section consists of all the remaining steps of this algorithm. (Steps in the
+    //            synchronous section are marked with ⌛.)
+
+    // 14. ⌛ Set the seeking IDL attribute to false.
+    m_seeking = false;
+
+    // 15. ⌛ Run the time marches on steps.
+    time_marches_on(TimeMarchesOnReason::Other);
+
+    // 16. ⌛ Queue a media element task given the media element to fire an event named timeupdate at the element.
+    queue_a_media_element_task([this]() {
+        dispatch_time_update_event().release_value_but_fixme_should_propagate_errors();
+    });
+
+    // 17. ⌛ Queue a media element task given the media element to fire an event named seeked at the element.
+    queue_a_media_element_task([this]() {
+        dispatch_event(DOM::Event::create(realm(), HTML::EventNames::seeked).release_value_but_fixme_should_propagate_errors());
+    });
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#notify-about-playing
 void HTMLMediaElement::notify_about_playing()
 {
@@ -1095,7 +1179,13 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::reached_end_of_media_playback()
 {
     // 1. If the media element has a loop attribute specified, then seek to the earliest possible position of the media resource and return.
     if (has_attribute(HTML::AttributeNames::loop)) {
-        // FIXME: Seek to the beginning of the media resource.
+        seek_element(0);
+
+        // AD-HOC: LibVideo internally sets itself to a paused state when it reaches the end of a video. We must resume
+        //         playing manually to actually loop. Note that we don't need to update any HTMLMediaElement state as
+        //         it hasn't left the playing state by this point.
+        on_playing();
+
         return {};
     }
 

@@ -27,6 +27,7 @@ public:
 
     Time position() const;
     Time duration() const;
+    void seek(Time, MediaSeekMode);
 
     u64 pixel_width() const;
     u64 pixel_height() const;
