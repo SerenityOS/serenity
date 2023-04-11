@@ -149,7 +149,7 @@ void HTMLMediaElement::set_current_time(double current_time)
     }
 }
 
-// https://html.spec.whatwg.org/multipage/media.html#time-marches-on#playing-the-media-resource:current-playback-position-13
+// https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:current-playback-position-13
 void HTMLMediaElement::set_current_playback_position(double playback_position)
 {
     // When the current playback position of a media element changes (e.g. due to playback or seeking), the user agent must
@@ -164,7 +164,7 @@ void HTMLMediaElement::set_current_playback_position(double playback_position)
     // FIXME: Regarding the official playback position, the spec states:
     //
     //        Any time the user agent provides a stable state, the official playback position must be set to the current playback position.
-    //        https://html.spec.whatwg.org/multipage/media.html#time-marches-on#playing-the-media-resource:official-playback-position-2
+    //        https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:official-playback-position-2
     //
     //        We do not currently have a means to track a "stable state", so for now, keep the official playback position
     //        in sync with the current playback position.
