@@ -9,9 +9,11 @@
 
 #include <LibJS/Heap/Cell.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/HTML/ActivateTab.h>
 #include <LibWeb/HTML/HistoryHandlingBehavior.h>
 #include <LibWeb/HTML/POSTResource.h>
 #include <LibWeb/HTML/SourceSnapshotParams.h>
+#include <LibWeb/HTML/TokenizedFeatures.h>
 
 namespace Web::HTML {
 
@@ -62,6 +64,19 @@ public:
 
     JS::GCPtr<TraversableNavigable> traversable_navigable() const;
     JS::GCPtr<TraversableNavigable> top_level_traversable();
+
+    enum class WindowType {
+        ExistingOrNone,
+        NewAndUnrestricted,
+        NewWithNoOpener,
+    };
+
+    struct ChosenNavigable {
+        JS::GCPtr<Navigable> navigable;
+        WindowType window_type;
+    };
+
+    ChosenNavigable choose_a_navigable(StringView name, TokenizedFeature::NoOpener no_opener, ActivateTab = ActivateTab::Yes);
 
     static JS::GCPtr<Navigable> navigable_with_active_document(JS::NonnullGCPtr<DOM::Document>);
 

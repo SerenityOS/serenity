@@ -18,6 +18,7 @@
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
+#include <LibWeb/Infra/Strings.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 
 namespace Web::HTML {
@@ -223,6 +224,55 @@ JS::GCPtr<TraversableNavigable> Navigable::top_level_traversable()
 
     // 3. Return navigable.
     return verify_cast<TraversableNavigable>(navigable);
+}
+
+Navigable::ChosenNavigable Navigable::choose_a_navigable(StringView name, TokenizedFeature::NoOpener, ActivateTab)
+{
+    // 1. Let chosen be null.
+    JS::GCPtr<Navigable> chosen = nullptr;
+
+    // 2. Let windowType be "existing or none".
+    auto window_type = WindowType::ExistingOrNone;
+
+    // 3. Let sandboxingFlagSet be current's active document's active sandboxing flag set.
+    [[maybe_unused]] auto sandboxing_flag_set = active_document()->active_sandboxing_flag_set();
+
+    // 4. If name is the empty string or an ASCII case-insensitive match for "_self", then set chosen to currentNavigable.
+    if (name.is_empty() || Infra::is_ascii_case_insensitive_match(name, "_self"sv)) {
+        chosen = this;
+    }
+    // 5. Otherwise, if name is an ASCII case-insensitive match for "_parent",
+    //    set chosen to currentNavigable's parent, if any, and currentNavigable otherwise.
+    else if (Infra::is_ascii_case_insensitive_match(name, "_parent"sv)) {
+        if (auto parent = this->parent())
+            chosen = parent;
+        else
+            chosen = this;
+    }
+    // 6. Otherwise, if name is an ASCII case-insensitive match for "_top",
+    //    set chosen to currentNavigable's traversable navigable.
+    else if (Infra::is_ascii_case_insensitive_match(name, "_top"sv)) {
+        chosen = traversable_navigable();
+    }
+    //  7. Otherwise, if name is not an ASCII case-insensitive match for "_blank",
+    //     there exists a navigable whose target name is the same as name, currentNavigable's
+    //     active browsing context is familiar with that navigable's active browsing context,
+    //     and the user agent determines that the two browsing contexts are related enough that
+    //     it is ok if they reach each other, set chosen to that navigable. If there are multiple
+    //     matching navigables, the user agent should pick one in some arbitrary consistent manner,
+    //     such as the most recently opened, most recently focused, or more closely related, and set
+    //     chosen to it.
+    else if (!Infra::is_ascii_case_insensitive_match(name, "_blank"sv)) {
+        TODO();
+    }
+    // Otherwise, a new top-level traversable is being requested, and what happens depends on the
+    // user agent's configuration and abilities — it is determined by the rules given for the first
+    // applicable option from the following list:
+    else {
+        TODO();
+    }
+
+    return { chosen.ptr(), window_type };
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-session-history-entries
