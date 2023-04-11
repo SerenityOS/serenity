@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +23,8 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, String const& url, Optional<String> const& base = {});
 
     virtual ~URL() override;
+
+    static bool can_parse(JS::VM&, String const& url, Optional<String> const& base = {});
 
     WebIDL::ExceptionOr<String> href() const;
     WebIDL::ExceptionOr<void> set_href(String const&);
