@@ -12,6 +12,384 @@
 
 namespace Web::CSS {
 
+static bool is_number(CalculatedStyleValue::ResolvedType type)
+{
+    return type == CalculatedStyleValue::ResolvedType::Number || type == CalculatedStyleValue::ResolvedType::Integer;
+}
+
+static bool is_dimension(CalculatedStyleValue::ResolvedType type)
+{
+    return type != CalculatedStyleValue::ResolvedType::Number
+        && type != CalculatedStyleValue::ResolvedType::Integer
+        && type != CalculatedStyleValue::ResolvedType::Percentage;
+}
+
+CalculationNode::CalculationNode(Type type)
+    : m_type(type)
+{
+}
+
+CalculationNode::~CalculationNode() = default;
+
+ErrorOr<NonnullOwnPtr<NumericCalculationNode>> NumericCalculationNode::create(NumericValue value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) NumericCalculationNode(move(value)));
+}
+
+NumericCalculationNode::NumericCalculationNode(NumericValue value)
+    : CalculationNode(Type::Numeric)
+    , m_value(move(value))
+{
+}
+
+NumericCalculationNode::~NumericCalculationNode() = default;
+
+ErrorOr<String> NumericCalculationNode::to_string() const
+{
+    return m_value.visit([](auto& value) { return value.to_string(); });
+}
+
+Optional<CalculatedStyleValue::ResolvedType> NumericCalculationNode::resolved_type() const
+{
+    return m_value.visit(
+        [](Number const&) { return CalculatedStyleValue::ResolvedType::Number; },
+        [](Angle const&) { return CalculatedStyleValue::ResolvedType::Angle; },
+        [](Frequency const&) { return CalculatedStyleValue::ResolvedType::Frequency; },
+        [](Length const&) { return CalculatedStyleValue::ResolvedType::Length; },
+        [](Percentage const&) { return CalculatedStyleValue::ResolvedType::Percentage; },
+        [](Time const&) { return CalculatedStyleValue::ResolvedType::Time; });
+}
+
+bool NumericCalculationNode::contains_percentage() const
+{
+    return m_value.has<Percentage>();
+}
+
+CalculatedStyleValue::CalculationResult NumericCalculationNode::resolve(Layout::Node const*, CalculatedStyleValue::PercentageBasis const&) const
+{
+    return m_value;
+}
+
+ErrorOr<void> NumericCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    return builder.try_appendff("{: >{}}NUMERIC({})\n", "", indent, TRY(m_value.visit([](auto& it) { return it.to_string(); })));
+}
+
+ErrorOr<NonnullOwnPtr<SumCalculationNode>> SumCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) SumCalculationNode(move(values)));
+}
+
+SumCalculationNode::SumCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> values)
+    : CalculationNode(Type::Sum)
+    , m_values(move(values))
+{
+    VERIFY(!m_values.is_empty());
+}
+
+SumCalculationNode::~SumCalculationNode() = default;
+
+ErrorOr<String> SumCalculationNode::to_string() const
+{
+    bool first = true;
+    StringBuilder builder;
+    for (auto& value : m_values) {
+        if (!first)
+            TRY(builder.try_append(" + "sv));
+        TRY(builder.try_append(TRY(value->to_string())));
+        first = false;
+    }
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> SumCalculationNode::resolved_type() const
+{
+    // FIXME: Implement https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+    //        For now, this is just ad-hoc, based on the old implementation.
+
+    Optional<CalculatedStyleValue::ResolvedType> type;
+    for (auto const& value : m_values) {
+        auto maybe_value_type = value->resolved_type();
+        if (!maybe_value_type.has_value())
+            return {};
+        auto value_type = maybe_value_type.value();
+
+        if (!type.has_value()) {
+            type = value_type;
+            continue;
+        }
+
+        // At + or -, check that both sides have the same type, or that one side is a <number> and the other is an <integer>.
+        // If both sides are the same type, resolve to that type.
+        if (value_type == type)
+            continue;
+
+        // If one side is a <number> and the other is an <integer>, resolve to <number>.
+        if (is_number(*type) && is_number(value_type)) {
+            type = CalculatedStyleValue::ResolvedType::Number;
+            continue;
+        }
+
+        // FIXME: calc() handles <percentage> by allowing them to pretend to be whatever <dimension> type is allowed at this location.
+        //        Since we can't easily check what that type is, we just allow <percentage> to combine with any other <dimension> type.
+        if (type == CalculatedStyleValue::ResolvedType::Percentage && is_dimension(value_type)) {
+            type = value_type;
+            continue;
+        }
+        if (is_dimension(*type) && value_type == CalculatedStyleValue::ResolvedType::Percentage)
+            continue;
+
+        return {};
+    }
+    return type;
+}
+
+bool SumCalculationNode::contains_percentage() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_percentage())
+            return true;
+    }
+    return false;
+}
+
+CalculatedStyleValue::CalculationResult SumCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    Optional<CalculatedStyleValue::CalculationResult> total;
+
+    for (auto& additional_product : m_values) {
+        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
+        if (!total.has_value()) {
+            total = additional_value;
+            continue;
+        }
+        total->add(additional_value, layout_node, percentage_basis);
+    }
+
+    return total.value();
+}
+
+ErrorOr<void> SumCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    for (auto& item : m_values) {
+        TRY(item->for_each_child_node(callback));
+        TRY(callback(item));
+    }
+
+    return {};
+}
+
+ErrorOr<void> SumCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}SUM:\n", "", indent));
+    for (auto const& item : m_values)
+        TRY(item->dump(builder, indent + 2));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<ProductCalculationNode>> ProductCalculationNode::create(Vector<NonnullOwnPtr<CalculationNode>> values)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) ProductCalculationNode(move(values)));
+}
+
+ProductCalculationNode::ProductCalculationNode(Vector<NonnullOwnPtr<CalculationNode>> values)
+    : CalculationNode(Type::Product)
+    , m_values(move(values))
+{
+    VERIFY(!m_values.is_empty());
+}
+
+ProductCalculationNode::~ProductCalculationNode() = default;
+
+ErrorOr<String> ProductCalculationNode::to_string() const
+{
+    bool first = true;
+    StringBuilder builder;
+    for (auto& value : m_values) {
+        if (!first)
+            TRY(builder.try_append(" * "sv));
+        TRY(builder.try_append(TRY(value->to_string())));
+        first = false;
+    }
+    return builder.to_string();
+}
+
+Optional<CalculatedStyleValue::ResolvedType> ProductCalculationNode::resolved_type() const
+{
+    // FIXME: Implement https://www.w3.org/TR/css-values-4/#determine-the-type-of-a-calculation
+    //        For now, this is just ad-hoc, based on the old implementation.
+
+    Optional<CalculatedStyleValue::ResolvedType> type;
+    for (auto const& value : m_values) {
+        auto maybe_value_type = value->resolved_type();
+        if (!maybe_value_type.has_value())
+            return {};
+        auto value_type = maybe_value_type.value();
+
+        if (!type.has_value()) {
+            type = value_type;
+            continue;
+        }
+
+        // At *, check that at least one side is <number>.
+        if (!(is_number(*type) || is_number(value_type)))
+            return {};
+        // If both sides are <integer>, resolve to <integer>.
+        if (type == CalculatedStyleValue::ResolvedType::Integer && value_type == CalculatedStyleValue::ResolvedType::Integer) {
+            type = CalculatedStyleValue::ResolvedType::Integer;
+        } else {
+            // Otherwise, resolve to the type of the other side.
+            if (is_number(*type))
+                type = value_type;
+        }
+    }
+    return type;
+}
+
+bool ProductCalculationNode::contains_percentage() const
+{
+    for (auto const& value : m_values) {
+        if (value->contains_percentage())
+            return true;
+    }
+    return false;
+}
+
+CalculatedStyleValue::CalculationResult ProductCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    Optional<CalculatedStyleValue::CalculationResult> total;
+
+    for (auto& additional_product : m_values) {
+        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
+        if (!total.has_value()) {
+            total = additional_value;
+            continue;
+        }
+        total->multiply_by(additional_value, layout_node);
+    }
+
+    return total.value();
+}
+
+ErrorOr<void> ProductCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    for (auto& item : m_values) {
+        TRY(item->for_each_child_node(callback));
+        TRY(callback(item));
+    }
+
+    return {};
+}
+
+ErrorOr<void> ProductCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}PRODUCT:\n", "", indent));
+    for (auto const& item : m_values)
+        TRY(item->dump(builder, indent + 2));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<NegateCalculationNode>> NegateCalculationNode::create(NonnullOwnPtr<Web::CSS::CalculationNode> value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) NegateCalculationNode(move(value)));
+}
+
+NegateCalculationNode::NegateCalculationNode(NonnullOwnPtr<CalculationNode> value)
+    : CalculationNode(Type::Negate)
+    , m_value(move(value))
+{
+}
+
+NegateCalculationNode::~NegateCalculationNode() = default;
+
+ErrorOr<String> NegateCalculationNode::to_string() const
+{
+    return String::formatted("(0 - {})", TRY(m_value->to_string()));
+}
+
+Optional<CalculatedStyleValue::ResolvedType> NegateCalculationNode::resolved_type() const
+{
+    return m_value->resolved_type();
+}
+
+bool NegateCalculationNode::contains_percentage() const
+{
+    return m_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult NegateCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto child_value = m_value->resolve(layout_node, percentage_basis);
+    child_value.negate();
+    return child_value;
+}
+
+ErrorOr<void> NegateCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_value->for_each_child_node(callback));
+    TRY(callback(m_value));
+    return {};
+}
+
+ErrorOr<void> NegateCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}NEGATE:\n", "", indent));
+    TRY(m_value->dump(builder, indent + 2));
+    return {};
+}
+
+ErrorOr<NonnullOwnPtr<InvertCalculationNode>> InvertCalculationNode::create(NonnullOwnPtr<Web::CSS::CalculationNode> value)
+{
+    return adopt_nonnull_own_or_enomem(new (nothrow) InvertCalculationNode(move(value)));
+}
+
+InvertCalculationNode::InvertCalculationNode(NonnullOwnPtr<CalculationNode> value)
+    : CalculationNode(Type::Invert)
+    , m_value(move(value))
+{
+}
+
+InvertCalculationNode::~InvertCalculationNode() = default;
+
+ErrorOr<String> InvertCalculationNode::to_string() const
+{
+    return String::formatted("(1 / {})", TRY(m_value->to_string()));
+}
+
+Optional<CalculatedStyleValue::ResolvedType> InvertCalculationNode::resolved_type() const
+{
+    auto type = m_value->resolved_type();
+    if (type == CalculatedStyleValue::ResolvedType::Integer)
+        return CalculatedStyleValue::ResolvedType::Number;
+    return type;
+}
+
+bool InvertCalculationNode::contains_percentage() const
+{
+    return m_value->contains_percentage();
+}
+
+CalculatedStyleValue::CalculationResult InvertCalculationNode::resolve(Layout::Node const* layout_node, CalculatedStyleValue::PercentageBasis const& percentage_basis) const
+{
+    auto child_value = m_value->resolve(layout_node, percentage_basis);
+    child_value.invert();
+    return child_value;
+}
+
+ErrorOr<void> InvertCalculationNode::for_each_child_node(Function<ErrorOr<void>(NonnullOwnPtr<CalculationNode>&)> const& callback)
+{
+    TRY(m_value->for_each_child_node(callback));
+    TRY(callback(m_value));
+    return {};
+}
+
+ErrorOr<void> InvertCalculationNode::dump(StringBuilder& builder, int indent) const
+{
+    TRY(builder.try_appendff("{: >{}}INVERT:\n", "", indent));
+    TRY(m_value->dump(builder, indent + 2));
+    return {};
+}
+
 void CalculatedStyleValue::CalculationResult::add(CalculationResult const& other, Layout::Node const* layout_node, PercentageBasis const& percentage_basis)
 {
     add_or_subtract_internal(SumOperation::Add, other, layout_node, percentage_basis);
@@ -201,9 +579,57 @@ void CalculatedStyleValue::CalculationResult::divide_by(CalculationResult const&
         });
 }
 
+void CalculatedStyleValue::CalculationResult::negate()
+{
+    m_value.visit(
+        [&](Number const& number) {
+            m_value = Number { number.type(), 1 - number.value() };
+        },
+        [&](Angle const& angle) {
+            m_value = Angle { 1 - angle.raw_value(), angle.type() };
+        },
+        [&](Frequency const& frequency) {
+            m_value = Frequency { 1 - frequency.raw_value(), frequency.type() };
+        },
+        [&](Length const& length) {
+            m_value = Length { 1 - length.raw_value(), length.type() };
+        },
+        [&](Time const& time) {
+            m_value = Time { 1 - time.raw_value(), time.type() };
+        },
+        [&](Percentage const& percentage) {
+            m_value = Percentage { 1 - percentage.value() };
+        });
+}
+
+void CalculatedStyleValue::CalculationResult::invert()
+{
+    // FIXME: Correctly handle division by zero.
+    m_value.visit(
+        [&](Number const& number) {
+            m_value = Number { Number::Type::Number, 1 / number.value() };
+        },
+        [&](Angle const& angle) {
+            m_value = Angle { 1 / angle.raw_value(), angle.type() };
+        },
+        [&](Frequency const& frequency) {
+            m_value = Frequency { 1 / frequency.raw_value(), frequency.type() };
+        },
+        [&](Length const& length) {
+            m_value = Length { 1 / length.raw_value(), length.type() };
+        },
+        [&](Time const& time) {
+            m_value = Time { 1 / time.raw_value(), time.type() };
+        },
+        [&](Percentage const& percentage) {
+            m_value = Percentage { 1 / percentage.value() };
+        });
+}
+
 ErrorOr<String> CalculatedStyleValue::to_string() const
 {
-    return String::formatted("calc({})", TRY(m_expression->to_string()));
+    // FIXME: Implement this according to https://www.w3.org/TR/css-values-4/#calc-serialize once that stabilizes.
+    return String::formatted("calc({})", TRY(m_calculation->to_string()));
 }
 
 bool CalculatedStyleValue::equals(StyleValue const& other) const
@@ -214,45 +640,9 @@ bool CalculatedStyleValue::equals(StyleValue const& other) const
     return to_string().release_value_but_fixme_should_propagate_errors() == other.to_string().release_value_but_fixme_should_propagate_errors();
 }
 
-ErrorOr<String> CalculatedStyleValue::CalcValue::to_string() const
-{
-    return value.visit(
-        [](Number const& number) -> ErrorOr<String> { return String::number(number.value()); },
-        [](NonnullOwnPtr<CalcSum> const& sum) -> ErrorOr<String> { return String::formatted("({})", TRY(sum->to_string())); },
-        [](auto const& v) -> ErrorOr<String> { return v.to_string(); });
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcSum::to_string() const
-{
-    StringBuilder builder;
-    TRY(builder.try_append(TRY(first_calc_product->to_string())));
-    for (auto const& item : zero_or_more_additional_calc_products)
-        TRY(builder.try_append(TRY(item->to_string())));
-    return builder.to_string();
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcProduct::to_string() const
-{
-    StringBuilder builder;
-    TRY(builder.try_append(TRY(first_calc_value.to_string())));
-    for (auto const& item : zero_or_more_additional_calc_values)
-        TRY(builder.try_append(TRY(item->to_string())));
-    return builder.to_string();
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcSumPartWithOperator::to_string() const
-{
-    return String::formatted(" {} {}", op == SumOperation::Add ? "+"sv : "-"sv, TRY(value->to_string()));
-}
-
-ErrorOr<String> CalculatedStyleValue::CalcProductPartWithOperator::to_string() const
-{
-    return String::formatted(" {} {}", op == ProductOperation::Multiply ? "*"sv : "/"sv, TRY(value.to_string()));
-}
-
 Optional<Angle> CalculatedStyleValue::resolve_angle() const
 {
-    auto result = m_expression->resolve(nullptr, {});
+    auto result = m_calculation->resolve(nullptr, {});
 
     if (result.value().has<Angle>())
         return result.value().get<Angle>();
@@ -261,7 +651,7 @@ Optional<Angle> CalculatedStyleValue::resolve_angle() const
 
 Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& percentage_basis) const
 {
-    auto result = m_expression->resolve(nullptr, percentage_basis);
+    auto result = m_calculation->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
         [&](Angle const& angle) -> Optional<Angle> {
@@ -277,7 +667,7 @@ Optional<Angle> CalculatedStyleValue::resolve_angle_percentage(Angle const& perc
 
 Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
 {
-    auto result = m_expression->resolve(nullptr, {});
+    auto result = m_calculation->resolve(nullptr, {});
 
     if (result.value().has<Frequency>())
         return result.value().get<Frequency>();
@@ -286,7 +676,7 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency() const
 
 Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency const& percentage_basis) const
 {
-    auto result = m_expression->resolve(nullptr, percentage_basis);
+    auto result = m_calculation->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
         [&](Frequency const& frequency) -> Optional<Frequency> {
@@ -302,7 +692,7 @@ Optional<Frequency> CalculatedStyleValue::resolve_frequency_percentage(Frequency
 
 Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout_node) const
 {
-    auto result = m_expression->resolve(&layout_node, {});
+    auto result = m_calculation->resolve(&layout_node, {});
 
     if (result.value().has<Length>())
         return result.value().get<Length>();
@@ -311,7 +701,7 @@ Optional<Length> CalculatedStyleValue::resolve_length(Layout::Node const& layout
 
 Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node const& layout_node, Length const& percentage_basis) const
 {
-    auto result = m_expression->resolve(&layout_node, percentage_basis);
+    auto result = m_calculation->resolve(&layout_node, percentage_basis);
 
     return result.value().visit(
         [&](Length const& length) -> Optional<Length> {
@@ -327,7 +717,7 @@ Optional<Length> CalculatedStyleValue::resolve_length_percentage(Layout::Node co
 
 Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
 {
-    auto result = m_expression->resolve(nullptr, {});
+    auto result = m_calculation->resolve(nullptr, {});
     if (result.value().has<Percentage>())
         return result.value().get<Percentage>();
     return {};
@@ -335,7 +725,7 @@ Optional<Percentage> CalculatedStyleValue::resolve_percentage() const
 
 Optional<Time> CalculatedStyleValue::resolve_time() const
 {
-    auto result = m_expression->resolve(nullptr, {});
+    auto result = m_calculation->resolve(nullptr, {});
 
     if (result.value().has<Time>())
         return result.value().get<Time>();
@@ -344,7 +734,7 @@ Optional<Time> CalculatedStyleValue::resolve_time() const
 
 Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percentage_basis) const
 {
-    auto result = m_expression->resolve(nullptr, percentage_basis);
+    auto result = m_calculation->resolve(nullptr, percentage_basis);
 
     return result.value().visit(
         [&](Time const& time) -> Optional<Time> {
@@ -357,7 +747,7 @@ Optional<Time> CalculatedStyleValue::resolve_time_percentage(Time const& percent
 
 Optional<float> CalculatedStyleValue::resolve_number()
 {
-    auto result = m_expression->resolve(nullptr, {});
+    auto result = m_calculation->resolve(nullptr, {});
     if (result.value().has<Number>())
         return result.value().get<Number>().value();
     return {};
@@ -365,246 +755,15 @@ Optional<float> CalculatedStyleValue::resolve_number()
 
 Optional<i64> CalculatedStyleValue::resolve_integer()
 {
-    auto result = m_expression->resolve(nullptr, {});
+    auto result = m_calculation->resolve(nullptr, {});
     if (result.value().has<Number>())
         return result.value().get<Number>().integer_value();
     return {};
 }
 
-static bool is_number(CalculatedStyleValue::ResolvedType type)
-{
-    return type == CalculatedStyleValue::ResolvedType::Number || type == CalculatedStyleValue::ResolvedType::Integer;
-}
-
-static bool is_dimension(CalculatedStyleValue::ResolvedType type)
-{
-    return type != CalculatedStyleValue::ResolvedType::Number
-        && type != CalculatedStyleValue::ResolvedType::Integer
-        && type != CalculatedStyleValue::ResolvedType::Percentage;
-}
-
-template<typename SumWithOperator>
-static Optional<CalculatedStyleValue::ResolvedType> resolve_sum_type(CalculatedStyleValue::ResolvedType first_type, Vector<NonnullOwnPtr<SumWithOperator>> const& zero_or_more_additional_products)
-{
-    auto type = first_type;
-
-    for (auto const& product : zero_or_more_additional_products) {
-        auto maybe_product_type = product->resolved_type();
-        if (!maybe_product_type.has_value())
-            return {};
-        auto product_type = maybe_product_type.value();
-
-        // At + or -, check that both sides have the same type, or that one side is a <number> and the other is an <integer>.
-        // If both sides are the same type, resolve to that type.
-        if (product_type == type)
-            continue;
-
-        // If one side is a <number> and the other is an <integer>, resolve to <number>.
-        if (is_number(type) && is_number(product_type)) {
-            type = CalculatedStyleValue::ResolvedType::Number;
-            continue;
-        }
-
-        // FIXME: calc() handles <percentage> by allowing them to pretend to be whatever <dimension> type is allowed at this location.
-        //        Since we can't easily check what that type is, we just allow <percentage> to combine with any other <dimension> type.
-        if (type == CalculatedStyleValue::ResolvedType::Percentage && is_dimension(product_type)) {
-            type = product_type;
-            continue;
-        }
-        if (is_dimension(type) && product_type == CalculatedStyleValue::ResolvedType::Percentage)
-            continue;
-
-        return {};
-    }
-    return type;
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSum::resolved_type() const
-{
-    auto maybe_type = first_calc_product->resolved_type();
-    if (!maybe_type.has_value())
-        return {};
-    auto type = maybe_type.value();
-    return resolve_sum_type(type, zero_or_more_additional_calc_products);
-}
-
-template<typename ProductWithOperator>
-static Optional<CalculatedStyleValue::ResolvedType> resolve_product_type(CalculatedStyleValue::ResolvedType first_type, Vector<NonnullOwnPtr<ProductWithOperator>> const& zero_or_more_additional_values)
-{
-    auto type = first_type;
-
-    for (auto const& value : zero_or_more_additional_values) {
-        auto maybe_value_type = value->resolved_type();
-        if (!maybe_value_type.has_value())
-            return {};
-        auto value_type = maybe_value_type.value();
-
-        if (value->op == CalculatedStyleValue::ProductOperation::Multiply) {
-            // At *, check that at least one side is <number>.
-            if (!(is_number(type) || is_number(value_type)))
-                return {};
-            // If both sides are <integer>, resolve to <integer>.
-            if (type == CalculatedStyleValue::ResolvedType::Integer && value_type == CalculatedStyleValue::ResolvedType::Integer) {
-                type = CalculatedStyleValue::ResolvedType::Integer;
-            } else {
-                // Otherwise, resolve to the type of the other side.
-                if (is_number(type))
-                    type = value_type;
-            }
-
-            continue;
-        } else {
-            VERIFY(value->op == CalculatedStyleValue::ProductOperation::Divide);
-            // At /, check that the right side is <number>.
-            if (!is_number(value_type))
-                return {};
-            // If the left side is <integer>, resolve to <number>.
-            if (type == CalculatedStyleValue::ResolvedType::Integer) {
-                type = CalculatedStyleValue::ResolvedType::Number;
-            } else {
-                // Otherwise, resolve to the type of the left side.
-            }
-
-            // FIXME: Division by zero makes the whole calc() expression invalid.
-        }
-    }
-    return type;
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProduct::resolved_type() const
-{
-    auto maybe_type = first_calc_value.resolved_type();
-    if (!maybe_type.has_value())
-        return {};
-    auto type = maybe_type.value();
-    return resolve_product_type(type, zero_or_more_additional_calc_values);
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcSumPartWithOperator::resolved_type() const
-{
-    return value->resolved_type();
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcProductPartWithOperator::resolved_type() const
-{
-    return value.resolved_type();
-}
-
-Optional<CalculatedStyleValue::ResolvedType> CalculatedStyleValue::CalcValue::resolved_type() const
-{
-    return value.visit(
-        [](Number const& number) -> Optional<CalculatedStyleValue::ResolvedType> {
-            return { number.is_integer() ? ResolvedType::Integer : ResolvedType::Number };
-        },
-        [](Angle const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Angle }; },
-        [](Frequency const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Frequency }; },
-        [](Length const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Length }; },
-        [](Percentage const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Percentage }; },
-        [](Time const&) -> Optional<CalculatedStyleValue::ResolvedType> { return { ResolvedType::Time }; },
-        [](NonnullOwnPtr<CalcSum> const& sum) { return sum->resolved_type(); });
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcValue::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    return value.visit(
-        [&](NonnullOwnPtr<CalcSum> const& sum) -> CalculatedStyleValue::CalculationResult {
-            return sum->resolve(layout_node, percentage_basis);
-        },
-        [&](auto const& v) -> CalculatedStyleValue::CalculationResult {
-            return CalculatedStyleValue::CalculationResult { v };
-        });
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSum::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    auto value = first_calc_product->resolve(layout_node, percentage_basis);
-
-    for (auto& additional_product : zero_or_more_additional_calc_products) {
-        auto additional_value = additional_product->resolve(layout_node, percentage_basis);
-
-        if (additional_product->op == CalculatedStyleValue::SumOperation::Add)
-            value.add(additional_value, layout_node, percentage_basis);
-        else if (additional_product->op == CalculatedStyleValue::SumOperation::Subtract)
-            value.subtract(additional_value, layout_node, percentage_basis);
-        else
-            VERIFY_NOT_REACHED();
-    }
-
-    return value;
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProduct::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    auto value = first_calc_value.resolve(layout_node, percentage_basis);
-
-    for (auto& additional_value : zero_or_more_additional_calc_values) {
-        if (additional_value->op == ProductOperation::Multiply) {
-            auto resolved_value = additional_value->value.resolve(layout_node, percentage_basis);
-            value.multiply_by(resolved_value, layout_node);
-        } else {
-            auto resolved_calc_number_value = additional_value->value.resolve(layout_node, percentage_basis);
-            // FIXME: Return the relevant constant here. (infinity?)
-            VERIFY(resolved_calc_number_value.value().get<Number>().value() != 0.0f);
-            value.divide_by(resolved_calc_number_value, layout_node);
-        }
-    }
-
-    return value;
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcProductPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    return value.resolve(layout_node, percentage_basis);
-}
-
-CalculatedStyleValue::CalculationResult CalculatedStyleValue::CalcSumPartWithOperator::resolve(Layout::Node const* layout_node, PercentageBasis const& percentage_basis) const
-{
-    return value->resolve(layout_node, percentage_basis);
-}
-
 bool CalculatedStyleValue::contains_percentage() const
 {
-    return m_expression->contains_percentage();
-}
-
-bool CalculatedStyleValue::CalcSum::contains_percentage() const
-{
-    if (first_calc_product->contains_percentage())
-        return true;
-    for (auto& part : zero_or_more_additional_calc_products) {
-        if (part->contains_percentage())
-            return true;
-    }
-    return false;
-}
-
-bool CalculatedStyleValue::CalcSumPartWithOperator::contains_percentage() const
-{
-    return value->contains_percentage();
-}
-
-bool CalculatedStyleValue::CalcProduct::contains_percentage() const
-{
-    if (first_calc_value.contains_percentage())
-        return true;
-    for (auto& part : zero_or_more_additional_calc_values) {
-        if (part->contains_percentage())
-            return true;
-    }
-    return false;
-}
-
-bool CalculatedStyleValue::CalcProductPartWithOperator::contains_percentage() const
-{
-    return value.contains_percentage();
-}
-
-bool CalculatedStyleValue::CalcValue::contains_percentage() const
-{
-    return value.visit(
-        [](Percentage const&) { return true; },
-        [](NonnullOwnPtr<CalcSum> const& sum) { return sum->contains_percentage(); },
-        [](auto const&) { return false; });
+    return m_calculation->contains_percentage();
 }
 
 }

@@ -323,13 +323,7 @@ private:
     RefPtr<StyleValue> parse_grid_template_areas_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_area_shorthand_value(Vector<ComponentValue> const&);
 
-    // calc() parsing, according to https://www.w3.org/TR/css-values-3/#calc-syntax
-    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_sum(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcProduct> parse_calc_product(TokenStream<ComponentValue>&);
-    Optional<CalculatedStyleValue::CalcValue> parse_calc_value(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcProductPartWithOperator> parse_calc_product_part_with_operator(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcSumPartWithOperator> parse_calc_sum_part_with_operator(TokenStream<ComponentValue>&);
-    OwnPtr<CalculatedStyleValue::CalcSum> parse_calc_expression(Vector<ComponentValue> const&);
+    ErrorOr<OwnPtr<CalculationNode>> parse_a_calculation(Vector<ComponentValue> const&);
 
     ParseErrorOr<NonnullRefPtr<Selector>> parse_complex_selector(TokenStream<ComponentValue>&, SelectorType);
     ParseErrorOr<Optional<Selector::CompoundSelector>> parse_compound_selector(TokenStream<ComponentValue>&);
