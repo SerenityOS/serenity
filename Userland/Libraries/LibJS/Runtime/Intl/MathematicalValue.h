@@ -15,7 +15,7 @@
 
 namespace JS::Intl {
 
-// https://tc39.es/proposal-intl-numberformat-v3/out/numberformat/proposed.html#intl-mathematical-value
+// https://tc39.es/ecma402/#intl-mathematical-value
 class MathematicalValue {
 public:
     enum class Symbol {
