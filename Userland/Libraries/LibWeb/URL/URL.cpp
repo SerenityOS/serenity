@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,37 +19,55 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::create(JS::Realm& realm, AK::URL
     return MUST_OR_THROW_OOM(realm.heap().allocate<URL>(realm, realm, move(url), move(query)));
 }
 
+// https://url.spec.whatwg.org/#api-url-parser
+static Optional<AK::URL> parse_api_url(String const& url, Optional<String> const& base)
+{
+    // FIXME: We somewhat awkwardly have two failure states encapsulated in the return type (and convert between them in the steps),
+    //        ideally we'd get rid of URL's valid flag
+
+    // 1. Let parsedBase be null.
+    Optional<AK::URL> parsed_base;
+
+    // 2. If base is non-null:
+    if (base.has_value()) {
+        // 1. Set parsedBase to the result of running the basic URL parser on base.
+        auto parsed_base_url = URLParser::parse(*base);
+
+        // 2. If parsedBase is failure, then return failure.
+        if (!parsed_base_url.is_valid())
+            return {};
+
+        parsed_base = parsed_base_url;
+    }
+
+    // 3. Return the result of running the basic URL parser on url with parsedBase.
+    auto parsed = URLParser::parse(url, parsed_base);
+    return parsed.is_valid() ? parsed : Optional<AK::URL> {};
+}
+
+// https://url.spec.whatwg.org/#dom-url-url
 WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> URL::construct_impl(JS::Realm& realm, String const& url, Optional<String> const& base)
 {
     auto& vm = realm.vm();
 
-    // 1. Let parsedBase be null.
-    Optional<AK::URL> parsed_base;
-    // 2. If base is given, then:
-    if (base.has_value()) {
-        // 1. Let parsedBase be the result of running the basic URL parser on base.
-        parsed_base = base.value();
-        // 2. If parsedBase is failure, then throw a TypeError.
-        if (!parsed_base->is_valid())
-            return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid base URL"sv };
-    }
-    // 3. Let parsedURL be the result of running the basic URL parser on url with parsedBase.
-    AK::URL parsed_url;
-    if (parsed_base.has_value())
-        parsed_url = parsed_base->complete_url(url);
-    else
-        parsed_url = url;
-    // 4. If parsedURL is failure, then throw a TypeError.
-    if (!parsed_url.is_valid())
+    // 1. Let parsedURL be the result of running the API URL parser on url with base, if given.
+    auto parsed_url = parse_api_url(url, base);
+
+    // 2. If parsedURL is failure, then throw a TypeError.
+    if (!parsed_url.has_value())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL"sv };
-    // 5. Let query be parsedURL’s query, if that is non-null, and the empty string otherwise.
-    auto query = parsed_url.query().is_null() ? String {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(parsed_url.query()));
-    // 6. Set this’s URL to parsedURL.
-    // 7. Set this’s query object to a new URLSearchParams object.
+
+    // 3. Let query be parsedURL’s query, if that is non-null, and the empty string otherwise.
+    auto query = parsed_url->query().is_null() ? String {} : TRY_OR_THROW_OOM(vm, String::from_deprecated_string(parsed_url->query()));
+
+    // 4. Set this’s URL to parsedURL.
+    // 5. Set this’s query object to a new URLSearchParams object.
     auto query_object = MUST(URLSearchParams::construct_impl(realm, query));
-    // 8. Initialize this’s query object with query.
-    auto result_url = TRY(URL::create(realm, move(parsed_url), move(query_object)));
-    // 9. Set this’s query object’s URL object to this.
+
+    // 6. Initialize this’s query object with query.
+    auto result_url = TRY(URL::create(realm, parsed_url.release_value(), move(query_object)));
+
+    // 7. Set this’s query object’s URL object to this.
     result_url->m_query->m_url = result_url;
 
     return result_url;
