@@ -38,6 +38,13 @@ static ErrorOr<NonnullRefPtr<XYZTagData>> XYZ_data(XYZ xyz)
     return try_make_ref_counted<XYZTagData>(0, 0, move(xyzs));
 }
 
+ErrorOr<NonnullRefPtr<TagData>> sRGB_curve()
+{
+    // Numbers from https://en.wikipedia.org/wiki/SRGB#From_sRGB_to_CIE_XYZ
+    Array<S15Fixed16, 7> curve_parameters = { 2.4, 1 / 1.055, 0.055 / 1.055, 1 / 12.92, 0.04045 };
+    return try_make_ref_counted<ParametricCurveTagData>(0, 0, ParametricCurveTagData::FunctionType::sRGB, curve_parameters);
+}
+
 ErrorOr<NonnullRefPtr<Profile>> sRGB()
 {
     // Returns an sRGB profile.
@@ -54,9 +61,7 @@ ErrorOr<NonnullRefPtr<Profile>> sRGB()
     TRY(tag_table.try_set(copyrightTag, TRY(en_US("Public Domain"sv))));
 
     // Transfer function.
-    // Numbers from https://en.wikipedia.org/wiki/SRGB#From_sRGB_to_CIE_XYZ
-    Array<S15Fixed16, 7> curve_parameters = { 2.4, 1 / 1.055, 0.055 / 1.055, 1 / 12.92, 0.04045 };
-    auto curve = TRY(try_make_ref_counted<ParametricCurveTagData>(0, 0, ParametricCurveTagData::FunctionType::sRGB, curve_parameters));
+    auto curve = TRY(sRGB_curve());
     TRY(tag_table.try_set(redTRCTag, curve));
     TRY(tag_table.try_set(greenTRCTag, curve));
     TRY(tag_table.try_set(blueTRCTag, curve));
