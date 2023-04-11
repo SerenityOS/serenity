@@ -22,7 +22,7 @@ class RTL8168NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~RTL8168NetworkAdapter() override;

@@ -39,7 +39,7 @@ public:
     NonnullLockRefPtr<NetworkAdapter> loopback_adapter() const;
 
 private:
-    ErrorOr<NonnullLockRefPtr<NetworkAdapter>> determine_network_device(PCI::DeviceIdentifier const&) const;
+    ErrorOr<NonnullRefPtr<NetworkAdapter>> determine_network_device(PCI::DeviceIdentifier const&) const;
 
     SpinlockProtected<Vector<NonnullLockRefPtr<NetworkAdapter>>, LockRank::None> m_adapters {};
     LockRefPtr<NetworkAdapter> m_loopback_adapter;

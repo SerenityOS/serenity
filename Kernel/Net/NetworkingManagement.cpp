@@ -93,7 +93,7 @@ ErrorOr<NonnullOwnPtr<KString>> NetworkingManagement::generate_interface_name_fr
 
 struct PCINetworkDriverInitializer {
     ErrorOr<bool> (*probe)(PCI::DeviceIdentifier const&) = nullptr;
-    ErrorOr<NonnullLockRefPtr<NetworkAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
+    ErrorOr<NonnullRefPtr<NetworkAdapter>> (*create)(PCI::DeviceIdentifier const&) = nullptr;
 };
 
 static constexpr PCINetworkDriverInitializer s_initializers[] = {
@@ -102,7 +102,7 @@ static constexpr PCINetworkDriverInitializer s_initializers[] = {
     { E1000ENetworkAdapter::probe, E1000ENetworkAdapter::create },
 };
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> NetworkingManagement::determine_network_device(PCI::DeviceIdentifier const& device_identifier) const
 {
     for (auto& initializer : s_initializers) {
         auto initializer_probe_found_driver_match_or_error = initializer.probe(device_identifier);
@@ -133,7 +133,7 @@ bool NetworkingManagement::initialize()
                 dmesgln("Failed to initialize network adapter ({} {}): {}", device_identifier.address(), device_identifier.hardware_id(), result.error());
                 return;
             }
-            m_adapters.with([&](auto& adapters) { adapters.append(result.release_value()); });
+            m_adapters.with([&](auto& adapters) { adapters.append(*result.release_value()); });
         }));
     }
     auto loopback = LoopbackAdapter::try_create();
