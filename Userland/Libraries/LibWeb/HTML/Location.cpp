@@ -312,7 +312,7 @@ WebIDL::ExceptionOr<void> Location::set_hash(String const& value)
     copy_url.set_fragment("");
 
     // 6. Basic URL parse input, with copyURL as url and fragment state as state override.
-    auto result_url = URLParser::parse(input, nullptr, copy_url, URLParser::State::Fragment);
+    auto result_url = URLParser::parse(input, {}, copy_url, URLParser::State::Fragment);
 
     // 7. If copyURL's fragment is this's url's fragment, then return.
     if (copy_url.fragment() == this->url().fragment())

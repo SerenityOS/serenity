@@ -197,11 +197,11 @@ Optional<URL> URLParser::parse_data_url(StringView raw_input)
 // NOTE: Since the URL class's member variables contain percent decoded data, we have to deviate from the URL parser specification when setting
 //       some of those values. Because the specification leaves all values percent encoded in their URL data structure, we have to percent decode
 //       everything before setting the member variables.
-URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> url, Optional<State> state_override)
+URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Optional<URL> url, Optional<State> state_override)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
-        return base_url ? *base_url : URL {};
+        return base_url.has_value() ? *base_url : URL {};
 
     if (raw_input.starts_with("data:"sv)) {
         auto maybe_url = parse_data_url(raw_input);
@@ -301,7 +301,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
                     }
                     state = State::File;
                 } else if (url->is_special()) {
-                    if (base_url && base_url->m_scheme == url->m_scheme)
+                    if (base_url.has_value() && base_url->m_scheme == url->m_scheme)
                         state = State::SpecialRelativeOrAuthority;
                     else
                         state = State::SpecialAuthoritySlashes;
@@ -321,7 +321,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
             }
             break;
         case State::NoScheme:
-            if (!base_url || (base_url->m_cannot_be_a_base_url && code_point != '#')) {
+            if (!base_url.has_value() || (base_url->m_cannot_be_a_base_url && code_point != '#')) {
                 report_validation_error();
                 return {};
             } else if (base_url->m_cannot_be_a_base_url && code_point == '#') {
@@ -527,7 +527,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
                 if (code_point == '\\')
                     report_validation_error();
                 state = State::FileSlash;
-            } else if (base_url && base_url->m_scheme == "file") {
+            } else if (base_url.has_value() && base_url->m_scheme == "file") {
                 url->m_host = base_url->m_host;
                 url->m_paths = base_url->m_paths;
                 url->m_query = base_url->m_query;
@@ -557,7 +557,7 @@ URL URLParser::parse(StringView raw_input, URL const* base_url, Optional<URL> ur
                 if (code_point == '\\')
                     report_validation_error();
                 state = State::FileHost;
-            } else if (base_url && base_url->m_scheme == "file") {
+            } else if (base_url.has_value() && base_url->m_scheme == "file") {
                 url->m_host = base_url->m_host;
                 auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                 if (!starts_with_windows_drive_letter(substring_from_pointer) && is_normalized_windows_drive_letter(base_url->m_paths[0]))
