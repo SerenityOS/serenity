@@ -76,22 +76,24 @@ static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& paramet
     }
 }
 
-static void out_curve_tag(Gfx::ICC::TagData const& tag, int indent_amount)
+static ErrorOr<void> out_curve_tag(Gfx::ICC::TagData const& tag, int indent_amount)
 {
     VERIFY(tag.type() == Gfx::ICC::CurveTagData::Type || tag.type() == Gfx::ICC::ParametricCurveTagData::Type);
     if (tag.type() == Gfx::ICC::CurveTagData::Type)
         out_curve(static_cast<Gfx::ICC::CurveTagData const&>(tag), indent_amount);
     if (tag.type() == Gfx::ICC::ParametricCurveTagData::Type)
         out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData const&>(tag), indent_amount);
+    return {};
 }
 
-static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
+static ErrorOr<void> out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
 {
     for (auto const& curve : curves) {
         VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
         outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
-        out_curve_tag(*curve, /*indent=*/12);
+        TRY(out_curve_tag(*curve, /*indent=*/12));
     }
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -253,7 +255,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    video full range flag: {} - {}", cicp.video_full_range_flag(),
                 Video::video_full_range_flag_to_string((Video::VideoFullRangeFlag)cicp.video_full_range_flag()));
         } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
-            out_curve_tag(*tag_data, /*indent=*/4);
+            TRY(out_curve_tag(*tag_data, /*indent=*/4));
         } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
             auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
             outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
@@ -280,7 +282,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_a_curves = a_to_b.a_curves(); optional_a_curves.has_value()) {
                 outln("    a curves: {} curves", optional_a_curves->size());
-                out_curves(optional_a_curves.value());
+                TRY(out_curves(optional_a_curves.value()));
             } else {
                 outln("    a curves: (not set)");
             }
@@ -298,7 +300,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_m_curves = a_to_b.m_curves(); optional_m_curves.has_value()) {
                 outln("    m curves: {} curves", optional_m_curves->size());
-                out_curves(optional_m_curves.value());
+                TRY(out_curves(optional_m_curves.value()));
             } else {
                 outln("    m curves: (not set)");
             }
@@ -313,13 +315,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             outln("    b curves: {} curves", a_to_b.b_curves().size());
-            out_curves(a_to_b.b_curves());
+            TRY(out_curves(a_to_b.b_curves()));
         } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
             auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
             outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
 
             outln("    b curves: {} curves", b_to_a.b_curves().size());
-            out_curves(b_to_a.b_curves());
+            TRY(out_curves(b_to_a.b_curves()));
 
             if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
                 auto const& e = optional_e.value();
@@ -332,7 +334,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_m_curves = b_to_a.m_curves(); optional_m_curves.has_value()) {
                 outln("    m curves: {} curves", optional_m_curves->size());
-                out_curves(optional_m_curves.value());
+                TRY(out_curves(optional_m_curves.value()));
             } else {
                 outln("    m curves: (not set)");
             }
@@ -350,7 +352,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_a_curves = b_to_a.a_curves(); optional_a_curves.has_value()) {
                 outln("    a curves: {} curves", optional_a_curves->size());
-                out_curves(optional_a_curves.value());
+                TRY(out_curves(optional_a_curves.value()));
             } else {
                 outln("    a curves: (not set)");
             }
@@ -390,7 +392,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (named_colors.size() > 5u)
                 outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
-            out_curve_tag(*tag_data, /*indent=*/4);
+            TRY(out_curve_tag(*tag_data, /*indent=*/4));
         } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
             // This tag can contain arbitrarily many fixed-point numbers, but in practice it's
             // exclusively used for the 'chad' tag, where it always contains 9 values that
