@@ -152,7 +152,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->m_statusbar = widget->add<GUI::Statusbar>(3);
     widget->m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
     widget->m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    auto width = widget->font().width("Ln 0000, Col 000"sv) + widget->font().max_glyph_width();
+    auto width = widget->font().width("Ln 0,000  Col 000"sv) + widget->font().max_glyph_width();
     widget->m_statusbar->segment(2).set_fixed_width(width);
     widget->update_statusbar();
 
@@ -1611,12 +1611,12 @@ void HackStudioWidget::update_statusbar()
     if (current_editor().has_selection()) {
         DeprecatedString selected_text = current_editor().selected_text();
         auto word_count = current_editor().number_of_selected_words();
-        builder.appendff("Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+        builder.appendff("Selected: {:'d} {} ({:'d} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
     m_statusbar->set_text(0, builder.to_deprecated_string());
     m_statusbar->set_text(1, Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText)));
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
 }
 
 void HackStudioWidget::handle_external_file_deletion(DeprecatedString const& filepath)
