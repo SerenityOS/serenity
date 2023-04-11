@@ -124,4 +124,20 @@ CSSPixelPoint PaintContext::scale_to_css_point(DevicePixelPoint point) const
     };
 }
 
+CSSPixelSize PaintContext::scale_to_css_size(DevicePixelSize size) const
+{
+    return {
+        scale_to_css_pixels(size.width()),
+        scale_to_css_pixels(size.height())
+    };
+}
+
+CSSPixelRect PaintContext::scale_to_css_rect(DevicePixelRect rect) const
+{
+    return {
+        scale_to_css_point(rect.location()),
+        scale_to_css_size(rect.size())
+    };
+}
+
 }

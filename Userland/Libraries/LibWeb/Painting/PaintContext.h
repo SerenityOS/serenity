@@ -49,6 +49,8 @@ public:
     DevicePixelSize rounded_device_size(CSSPixelSize) const;
     CSSPixels scale_to_css_pixels(DevicePixels) const;
     CSSPixelPoint scale_to_css_point(DevicePixelPoint) const;
+    CSSPixelSize scale_to_css_size(DevicePixelSize) const;
+    CSSPixelRect scale_to_css_rect(DevicePixelRect) const;
 
     PaintContext clone(Gfx::Painter& painter) const
     {
