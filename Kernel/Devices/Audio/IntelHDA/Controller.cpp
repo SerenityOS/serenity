@@ -92,7 +92,7 @@ UNMAP_AFTER_INIT ErrorOr<void> Controller::initialize(Badge<AudioManagement>)
         return result.release_error();
     }
 
-    m_audio_channel = AudioChannel::must_create(*this, fixed_audio_channel_index);
+    m_audio_channel = TRY(AudioChannel::create(*this, fixed_audio_channel_index));
     return {};
 }
 
@@ -290,7 +290,7 @@ ErrorOr<void> Controller::reset()
     return {};
 }
 
-LockRefPtr<AudioChannel> Controller::audio_channel(u32 index) const
+RefPtr<AudioChannel> Controller::audio_channel(u32 index) const
 {
     if (index != fixed_audio_channel_index)
         return {};

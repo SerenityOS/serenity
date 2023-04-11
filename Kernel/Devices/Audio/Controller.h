@@ -8,11 +8,11 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Channel.h>
 #include <Kernel/Devices/Device.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Library/LockWeakable.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Memory/PhysicalPage.h>
@@ -30,7 +30,7 @@ class AudioController
 public:
     virtual ~AudioController() = default;
 
-    virtual LockRefPtr<AudioChannel> audio_channel(u32 index) const = 0;
+    virtual RefPtr<AudioChannel> audio_channel(u32 index) const = 0;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) = 0;
 
     virtual ErrorOr<void> initialize(Badge<AudioManagement>) = 0;

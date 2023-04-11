@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Controller.h>
@@ -167,7 +168,7 @@ private:
 
     // ^AudioController
     virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
-    virtual LockRefPtr<AudioChannel> audio_channel(u32 index) const override;
+    virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
     virtual ErrorOr<u32> get_pcm_output_sample_rate(size_t channel_index) override;
@@ -185,7 +186,7 @@ private:
     NonnullOwnPtr<AC97Channel> m_pcm_out_channel;
     u32 m_sample_rate { 0 };
     bool m_variable_rate_pcm_supported { false };
-    LockRefPtr<AudioChannel> m_audio_channel;
+    RefPtr<AudioChannel> m_audio_channel;
 };
 
 }
