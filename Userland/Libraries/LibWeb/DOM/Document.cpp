@@ -2694,6 +2694,10 @@ void Document::discard()
 // https://html.spec.whatwg.org/multipage/document-lifecycle.html#destroy-a-document
 void Document::destroy()
 {
+    // NOTE: Abort needs to happen before destory. There is currently bug in the spec: https://github.com/whatwg/html/issues/9148
+    // 4. Abort document.
+    abort();
+
     // 1. Destroy the active documents of each of document's descendant navigables.
     for (auto navigable : descendant_navigables()) {
         if (auto document = navigable->active_document())
@@ -2705,9 +2709,6 @@ void Document::destroy()
 
     // FIXME: 3. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
 
-    // 4. Abort document.
-    abort();
-
     // 5. Remove any tasks whose document is document from any task queue (without running those tasks).
     HTML::main_thread_event_loop().task_queue().remove_tasks_matching([this](auto& task) {
         return task.document() == this;
@@ -2717,7 +2718,9 @@ void Document::destroy()
     m_browsing_context = nullptr;
 
     // 7. Set document's node navigable's active session history entry's document state's document to null.
-    navigable()->active_session_history_entry()->document_state->set_document(nullptr);
+    if (navigable()) {
+        navigable()->active_session_history_entry()->document_state->set_document(nullptr);
+    }
 
     // FIXME: 8. Remove document from the owner set of each WorkerGlobalScope object whose set contains document.
 
@@ -2788,42 +2791,53 @@ void Document::set_browsing_context(HTML::BrowsingContext* browsing_context)
     m_browsing_context = browsing_context;
 }
 
-// https://html.spec.whatwg.org/multipage/browsing-the-web.html#unload-a-document
-void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> unload_timing_info)
+// https://html.spec.whatwg.org/multipage/document-lifecycle.html#unload-a-document
+void Document::unload(JS::GCPtr<Document>)
 {
-    // 1. Increase the event loop's termination nesting level by one.
-    HTML::main_thread_event_loop().increment_termination_nesting_level();
+    auto& vm = this->vm();
 
-    // 2. Increase document's unload counter by 1.
+    // FIXME: 1. Assert: this is running as part of a task queued on oldDocument's event loop.
+
+    // FIXME: 2. Let unloadTimingInfo be a new document unload timing info.
+
+    // FIXME: 3. If newDocument is not given, then set unloadTimingInfo to null.
+
+    // FIXME: 4. Otherwise, if newDocument's event loop is not oldDocument's event loop, then the user agent may be unloading oldDocument in parallel. In that case, the user agent should
+    //           set unloadTimingInfo to null.
+
+    // 5. Let intendToStoreInBfcache be true if the user agent intends to keep oldDocument alive in a session history entry, such that it can later be used for history traversal.
+    auto intend_to_store_in_bfcache = false;
+
+    // 6. Let eventLoop be oldDocument's relevant agent's event loop.
+    auto& event_loop = verify_cast<Bindings::WebEngineCustomData>(*vm.custom_data()).event_loop;
+
+    // 7. Increase eventLoop's termination nesting level by 1.
+    event_loop.increment_termination_nesting_level();
+
+    // 8. Increase oldDocument's unload counter by 1.
     m_unload_counter += 1;
 
-    // 3. If the user agent does not intend to keep document alive in a session history entry
-    //    (such that it can be reused later on history traversal), set document's salvageable state to false.
-    // FIXME: If we want to implement fast back/forward cache, this has to change.
-    m_salvageable = false;
+    // 9. If intendToKeepInBfcache is false, then set oldDocument's salvageable state to false.
+    if (!intend_to_store_in_bfcache) {
+        m_salvageable = false;
+    }
 
-    // 4. If document's page showing flag is true:
+    // 10. If oldDocument's page showing is true:
     if (m_page_showing) {
-        // 1. Set document's page showing flag to false.
+        // 1. Set oldDocument's page showing to false.
         m_page_showing = false;
 
-        // 2. Fire a page transition event named pagehide at document's relevant global object with document's salvageable state.
-        global_object().fire_a_page_transition_event(HTML::EventNames::pagehide, m_salvageable);
+        // 2. Fire a page transition event named pagehide at oldDocument's relevant global object with oldDocument's salvageable state.
+        verify_cast<HTML::Window>(relevant_global_object(*this)).fire_a_page_transition_event(HTML::EventNames::pagehide, m_salvageable);
 
-        // 3. Update the visibility state of newDocument to "hidden".
+        // 3. Update the visibility state of oldDocument to "hidden".
         update_the_visibility_state(HTML::VisibilityState::Hidden);
     }
 
-    // 5. If unloadTimingInfo is not null,
-    if (unload_timing_info.has_value()) {
-        // then set unloadTimingInfo's unload event start time to the current high resolution time given newGlobal,
-        // coarsened given document's relevant settings object's cross-origin isolated capability.
-        unload_timing_info->unload_event_start_time = HighResolutionTime::coarsen_time(
-            HighResolutionTime::unsafe_shared_current_time(),
-            relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
-    }
+    // FIXME: 11. If unloadTimingInfo is not null, then set unloadTimingInfo's unload event start time to the current high resolution time given newDocument's relevant global object, coarsened
+    //            given oldDocument's relevant settings object's cross-origin isolated capability.
 
-    // 6. If document's salvageable state is false,
+    // 12. If oldDocument's salvageable state is false, then fire an event named unload at oldDocument's relevant global object, with legacy target override flag set.
     if (!m_salvageable) {
         // then fire an event named unload at document's relevant global object, with legacy target override flag set.
         // FIXME: The legacy target override flag is currently set by a virtual override of dispatch_event()
@@ -2832,51 +2846,30 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
         global_object().dispatch_event(event);
     }
 
-    // 7. If unloadTimingInfo is not null,
-    if (unload_timing_info.has_value()) {
-        // then set unloadTimingInfo's unload event end time to the current high resolution time given newGlobal,
-        // coarsened given document's relevant settings object's cross-origin isolated capability.
-        unload_timing_info->unload_event_end_time = HighResolutionTime::coarsen_time(
-            HighResolutionTime::unsafe_shared_current_time(),
-            relevant_settings_object().cross_origin_isolated_capability() == HTML::CanUseCrossOriginIsolatedAPIs::Yes);
+    // FIXME: 13. If unloadTimingInfo is not null, then set unloadTimingInfo's unload event end time to the current high resolution time given newDocument's relevant global object, coarsened
+    //            given oldDocument's relevant settings object's cross-origin isolated capability.
+
+    // 14. Decrease eventLoop's termination nesting level by 1.
+    event_loop.decrement_termination_nesting_level();
+
+    // FIXME: 15. Set oldDocument's suspension time to the current high resolution time given document's relevant global object.
+
+    // FIXME: 16. Set oldDocument's suspended timer handles to the result of getting the keys for the map of active timers.
+
+    // FIXME: 17. Set oldDocument's has been scrolled by the user to false.
+
+    // FIXME: 18. Run any unloading document cleanup steps for oldDocument that are defined by this specification and other applicable specifications.
+
+    // 19. If oldDocument's salvageable state is false, then destroy oldDocument.
+    if (!m_salvageable) {
+        destroy();
     }
 
-    // 8. Decrease the event loop's termination nesting level by one.
-    HTML::main_thread_event_loop().decrement_termination_nesting_level();
-
-    // FIXME: 9. Set document's suspension time to the current high resolution time given document's relevant global object.
-
-    // FIXME: 10. Set document's suspended timer handles to the result of getting the keys for the map of active timers.
-
-    // FIXME: 11. Run any unloading document cleanup steps for document that are defined by this specification and other applicable specifications.
-
-    // 12. If the recursiveFlag is not set, then:
-    if (!recursive_flag) {
-        // 1. Let descendants be the list of the descendant browsing contexts of document.
-        auto descendants = list_of_descendant_browsing_contexts();
-
-        // 2. For each browsingContext in descendants:
-        for (auto browsing_context : descendants) {
-            JS::GCPtr<Document> active_document = browsing_context->active_document();
-            if (!active_document)
-                continue;
-
-            // 1. Unload the active document of browsingContext with the recursiveFlag set.
-            active_document->unload(true);
-
-            // 2. If the salvageable state of the active document of browsingContext is false,
-            //    then set the salvageable state of document to false also.
-            if (!active_document->m_salvageable)
-                m_salvageable = false;
-        }
-
-        // 3. If document's salvageable state is false, then discard document.
-        if (!m_salvageable)
-            discard();
-    }
-
-    // 13. Decrease document's unload counter by 1.
+    // 20. Decrease oldDocument's unload counter by 1.
     m_unload_counter -= 1;
+
+    // FIXME: 21. If newDocument is given, newDocument's was created via cross-origin redirects is false, and newDocument's origin is the same as oldDocument's origin, then set
+    //            newDocument's previous document unload timing to unloadTimingInfo.
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use
