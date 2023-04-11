@@ -35,43 +35,41 @@ static void out_optional(char const* label, Optional<T> const& optional)
 
 static void out_curve(Gfx::ICC::CurveTagData const& curve, int indent_amount)
 {
-    auto indent = MUST(String::repeated(' ', indent_amount));
     if (curve.values().is_empty()) {
-        outln("{}identity curve", indent);
+        outln("{: >{}}identity curve", "", indent_amount);
     } else if (curve.values().size() == 1) {
-        outln("{}gamma: {}", indent, FixedPoint<8, u16>::create_raw(curve.values()[0]));
+        outln("{: >{}}gamma: {}", "", indent_amount, FixedPoint<8, u16>::create_raw(curve.values()[0]));
     } else {
         // FIXME: Maybe print the actual points if -v is passed?
-        outln("{}curve with {} points", indent, curve.values().size());
+        outln("{: >{}}curve with {} points", "", indent_amount, curve.values().size());
     }
 }
 
 static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& parametric_curve, int indent_amount)
 {
-    auto indent = MUST(String::repeated(' ', indent_amount));
     switch (parametric_curve.function_type()) {
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
-        outln("{}Y = X**{}", indent, parametric_curve.g());
+        outln("{: >{}}Y = X**{}", "", indent_amount, parametric_curve.g());
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
-        outln("{}Y = ({}*X + {})**{}   if X >= -{}/{}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{}   if X >= -{}/{}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
-        outln("{}Y = 0                                else", indent);
+        outln("{: >{}}Y = 0                                else", "", indent_amount);
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
-        outln("{}Y = ({}*X + {})**{} + {}   if X >= -{}/{}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{} + {}   if X >= -{}/{}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
-        outln("{}Y =  {}                                    else", indent, parametric_curve.c());
+        outln("{: >{}}Y =  {}                                    else", "", indent_amount, parametric_curve.c());
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
-        outln("{}Y = ({}*X + {})**{}   if X >= {}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{}   if X >= {}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
-        outln("{}Y =  {}*X                         else", indent, parametric_curve.c());
+        outln("{: >{}}Y =  {}*X                         else", "", indent_amount, parametric_curve.c());
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
-        outln("{}Y = ({}*X + {})**{} + {}   if X >= {}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{} + {}   if X >= {}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
-        outln("{}Y =  {}*X + {}                             else", indent, parametric_curve.c(), parametric_curve.f());
+        outln("{: >{}}Y =  {}*X + {}                             else", "", indent_amount, parametric_curve.c(), parametric_curve.f());
         break;
     }
 }
