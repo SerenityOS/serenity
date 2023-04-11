@@ -20,7 +20,7 @@ class AudioChannel final
     friend class DeviceManagement;
 
 public:
-    static NonnullLockRefPtr<AudioChannel> must_create(AudioController const&, size_t channel_index);
+    static ErrorOr<NonnullRefPtr<AudioChannel>> create(AudioController const&, size_t channel_index);
     virtual ~AudioChannel() override = default;
 
     // ^CharacterDevice

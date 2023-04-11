@@ -9,6 +9,7 @@
 #include <AK/Error.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/Audio/Channel.h>
@@ -16,7 +17,6 @@
 #include <Kernel/Devices/Audio/IntelHDA/OutputPath.h>
 #include <Kernel/Devices/Audio/IntelHDA/RingBuffer.h>
 #include <Kernel/IOWindow.h>
-#include <Kernel/Library/LockRefPtr.h>
 
 namespace Kernel::Audio::IntelHDA {
 
@@ -65,7 +65,7 @@ private:
     ErrorOr<void> reset();
 
     // ^AudioController
-    virtual LockRefPtr<AudioChannel> audio_channel(u32 index) const override;
+    virtual RefPtr<AudioChannel> audio_channel(u32 index) const override;
     virtual ErrorOr<size_t> write(size_t channel_index, UserOrKernelBuffer const& data, size_t length) override;
     virtual ErrorOr<void> initialize(Badge<AudioManagement>) override;
     virtual ErrorOr<void> set_pcm_output_sample_rate(size_t channel_index, u32 samples_per_second_rate) override;
@@ -79,7 +79,7 @@ private:
     OwnPtr<ResponseInboundRingBuffer> m_response_buffer;
     Vector<NonnullRefPtr<Codec>> m_codecs {};
     OwnPtr<OutputPath> m_output_path;
-    LockRefPtr<AudioChannel> m_audio_channel;
+    RefPtr<AudioChannel> m_audio_channel;
 };
 
 }
