@@ -171,6 +171,11 @@ void HTMLMediaElement::set_current_playback_position(double playback_position)
     m_official_playback_position = m_current_playback_position;
 
     time_marches_on();
+
+    // NOTE: Invoking the following steps is not listed in the spec. Rather, the spec just describes the scenario in
+    //       which these steps should be invoked, which is when we've reached the end of the media playback.
+    if (m_current_playback_position == m_duration)
+        reached_end_of_media_playback().release_value_but_fixme_should_propagate_errors();
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
@@ -182,6 +187,16 @@ double HTMLMediaElement::duration() const
 
     // FIXME: Handle unbounded media resources.
     return m_duration;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-ended
+bool HTMLMediaElement::ended() const
+{
+    // The ended attribute must return true if, the last time the event loop reached step 1, the media element had ended
+    // playback and the direction of playback was forwards, and false otherwise.
+    // FIXME: Add a hook into EventLoop::process() to be notified when step 1 is reached.
+    // FIXME: Detect playback direction.
+    return has_ended_playback();
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#durationChange
@@ -1045,6 +1060,71 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (m_paused)
         on_paused();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#ended-playback
+bool HTMLMediaElement::has_ended_playback() const
+{
+    // A media element is said to have ended playback when:
+
+    // The element's readyState attribute is HAVE_METADATA or greater, and
+    if (m_ready_state < ReadyState::HaveMetadata)
+        return false;
+
+    // Either:
+    if (
+        // The current playback position is the end of the media resource, and
+        m_current_playback_position == m_duration &&
+
+        // FIXME: The direction of playback is forwards, and
+
+        // The media element does not have a loop attribute specified.
+        !has_attribute(HTML::AttributeNames::loop)) {
+        return true;
+    }
+
+    // FIXME: Or:
+    //            The current playback position is the earliest possible position, and
+    //            The direction of playback is backwards.
+
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#reaches-the-end
+WebIDL::ExceptionOr<void> HTMLMediaElement::reached_end_of_media_playback()
+{
+    // 1. If the media element has a loop attribute specified, then seek to the earliest possible position of the media resource and return.
+    if (has_attribute(HTML::AttributeNames::loop)) {
+        // FIXME: Seek to the beginning of the media resource.
+        return {};
+    }
+
+    // 2. As defined above, the ended IDL attribute starts returning true once the event loop returns to step 1.
+
+    // 3. Queue a media element task given the media element and the following steps:
+    queue_a_media_element_task([this]() mutable {
+        // 1. Fire an event named timeupdate at the media element.
+        dispatch_time_update_event().release_value_but_fixme_should_propagate_errors();
+
+        // 2. If the media element has ended playback, the direction of playback is forwards, and paused is false, then:
+        // FIXME: Detect playback direction.
+        if (has_ended_playback() && !paused()) {
+            // 1. Set the paused attribute to true.
+            set_paused(true);
+
+            // 2. Fire an event named pause at the media element.
+            dispatch_event(DOM::Event::create(realm(), HTML::EventNames::pause).release_value_but_fixme_should_propagate_errors());
+
+            // 3. Take pending play promises and reject pending play promises with the result and an "AbortError" DOMException.
+            auto promises = take_pending_play_promises();
+            reject_pending_play_promises<WebIDL::AbortError>(promises, "Media playback has ended"_fly_string.release_value_but_fixme_should_propagate_errors());
+        }
+    });
+
+    // 4. Fire an event named ended at the media element.
+    dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::ended)));
+
+    return {};
 }
 
 WebIDL::ExceptionOr<void> HTMLMediaElement::dispatch_time_update_event()
