@@ -136,10 +136,9 @@ bool NetworkingManagement::initialize()
             m_adapters.with([&](auto& adapters) { adapters.append(*result.release_value()); });
         }));
     }
-    auto loopback = LoopbackAdapter::try_create();
-    VERIFY(loopback);
+    auto loopback = MUST(LoopbackAdapter::try_create());
     m_adapters.with([&](auto& adapters) { adapters.append(*loopback); });
-    m_loopback_adapter = loopback;
+    m_loopback_adapter = *loopback;
     return true;
 }
 }

@@ -11,12 +11,10 @@ namespace Kernel {
 
 static bool s_loopback_initialized = false;
 
-LockRefPtr<LoopbackAdapter> LoopbackAdapter::try_create()
+ErrorOr<NonnullRefPtr<LoopbackAdapter>> LoopbackAdapter::try_create()
 {
-    auto interface_name = KString::try_create("loop"sv);
-    if (interface_name.is_error())
-        return {};
-    return adopt_lock_ref_if_nonnull(new LoopbackAdapter(interface_name.release_value()));
+    auto interface_name = TRY(KString::try_create("loop"sv));
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LoopbackAdapter(move(interface_name))));
 }
 
 LoopbackAdapter::LoopbackAdapter(NonnullOwnPtr<KString> interface_name)
