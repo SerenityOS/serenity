@@ -106,6 +106,7 @@ void VideoPaintable::paint_loaded_video_controls(PaintContext& context, HTML::HT
         control_box_rect.take_from_top(control_box_rect.height() - maximum_control_box_size);
 
     context.painter().fill_rect(control_box_rect.to_type<int>(), control_box_color.with_alpha(0xd0));
+    layout_box().dom_node().cached_layout_boxes({}).control_box_rect = context.scale_to_css_rect(control_box_rect);
 
     control_box_rect = paint_control_bar_playback_button(context, video_element, control_box_rect, mouse_position);
     control_box_rect.take_from_left(playback_padding);
@@ -132,6 +133,7 @@ DevicePixelRect VideoPaintable::paint_control_bar_playback_button(PaintContext& 
         control_box_rect.top_left(),
         { playback_button_size + playback_button_offset_x * 2, control_box_rect.height() }
     };
+    layout_box().dom_node().cached_layout_boxes({}).playback_button_rect = context.scale_to_css_rect(playback_button_hover_rect);
 
     auto playback_button_is_hovered = mouse_position.has_value() && playback_button_hover_rect.contains(*mouse_position);
     auto playback_button_color = control_button_color(playback_button_is_hovered);
@@ -256,24 +258,39 @@ void VideoPaintable::paint_placeholder_video_controls(PaintContext& context, Dev
     context.painter().draw_triangle(playback_button_location.to_type<int>(), play_button_coordinates, playback_button_color);
 }
 
-VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint, unsigned button, unsigned)
+VideoPaintable::DispatchEventOfSameName VideoPaintable::handle_mouseup(Badge<EventHandler>, CSSPixelPoint position, unsigned button, unsigned)
 {
     if (button != GUI::MouseButton::Primary)
         return DispatchEventOfSameName::No;
 
     auto& video_element = layout_box().dom_node();
+    auto const& cached_layout_boxes = video_element.cached_layout_boxes({});
 
     // FIXME: This runs from outside the context of any user script, so we do not have a running execution
     //        context. This pushes one to allow the promise creation hook to run.
     auto& environment_settings = document().relevant_settings_object();
     environment_settings.prepare_to_run_script();
 
-    if (video_element.paused())
-        video_element.play().release_value_but_fixme_should_propagate_errors();
-    else
-        video_element.pause().release_value_but_fixme_should_propagate_errors();
+    ScopeGuard guard { [&] { environment_settings.clean_up_after_running_script(); } };
 
-    environment_settings.clean_up_after_running_script();
+    auto toggle_playback = [&]() -> WebIDL::ExceptionOr<void> {
+        if (video_element.paused())
+            TRY(video_element.play());
+        else
+            TRY(video_element.pause());
+        return {};
+    };
+
+    if (cached_layout_boxes.control_box_rect.has_value() && cached_layout_boxes.control_box_rect->contains(position)) {
+        if (cached_layout_boxes.playback_button_rect.has_value() && cached_layout_boxes.playback_button_rect->contains(position)) {
+            toggle_playback().release_value_but_fixme_should_propagate_errors();
+            return DispatchEventOfSameName::Yes;
+        }
+
+        return DispatchEventOfSameName::No;
+    }
+
+    toggle_playback().release_value_but_fixme_should_propagate_errors();
     return DispatchEventOfSameName::Yes;
 }
 

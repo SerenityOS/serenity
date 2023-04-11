@@ -36,6 +36,12 @@ public:
     void set_layout_mouse_position(Badge<Painting::VideoPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
     Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::VideoPaintable>) const { return m_mouse_position; }
 
+    struct CachedLayoutBoxes {
+        Optional<CSSPixelRect> control_box_rect;
+        Optional<CSSPixelRect> playback_button_rect;
+    };
+    CachedLayoutBoxes& cached_layout_boxes(Badge<Painting::VideoPaintable>) const { return m_layout_boxes; }
+
 private:
     HTMLVideoElement(DOM::Document&, DOM::QualifiedName);
 
@@ -56,6 +62,7 @@ private:
 
     // Cached state for layout
     Optional<CSSPixelPoint> m_mouse_position;
+    mutable CachedLayoutBoxes m_layout_boxes;
 };
 
 }
