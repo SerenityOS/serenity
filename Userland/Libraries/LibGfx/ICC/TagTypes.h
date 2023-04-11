@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
+#include <math.h>
 
 namespace Gfx::ICC {
 
@@ -158,6 +159,26 @@ public:
     //      (i.e. the values represented by the entries, which are in the range 0,0 to 1,0 are encoded in the range 0 to
     //      65 535). Function values between the entries shall be obtained through linear interpolation."
     Vector<u16> const& values() const { return m_values; }
+
+    // x must be in [0..1].
+    float evaluate(float x) const
+    {
+        VERIFY(0.f <= x && x <= 1.f);
+
+        if (values().is_empty())
+            return x;
+
+        if (values().size() == 1)
+            return powf(x, values()[0] / (float)0x100);
+
+        size_t i = static_cast<size_t>(x * (values().size() - 1));
+        if (i == values().size() - 1)
+            --i;
+
+        float f = x * (values().size() - 1) - i;
+
+        return (1 - f) * (values()[i] / 65535.f) + f * (values()[i + 1] / 65535.f);
+    }
 
 private:
     Vector<u16> m_values;
@@ -689,6 +710,34 @@ public:
     {
         VERIFY(function_type() >= FunctionType::Type4);
         return m_parameters[6];
+    }
+
+    // x must be in [0..1].
+    float evaluate(float x) const
+    {
+        VERIFY(0.f <= x && x <= 1.f);
+
+        switch (function_type()) {
+        case FunctionType::Type0:
+            return powf(x, (float)g());
+        case FunctionType::Type1:
+            if (x >= -(float)b() / (float)a())
+                return powf((float)a() * x + (float)b(), (float)g());
+            return 0;
+        case FunctionType::Type2:
+            if (x >= -(float)b() / (float)a())
+                return powf((float)a() * x + (float)b(), (float)g()) + (float)c();
+            return (float)c();
+        case FunctionType::Type3:
+            if (x >= (float)d())
+                return powf((float)a() * x + (float)b(), (float)g());
+            return (float)c() * x;
+        case FunctionType::Type4:
+            if (x >= (float)d())
+                return powf((float)a() * x + (float)b(), (float)g()) + (float)e();
+            return (float)c() * x + (float)f();
+        }
+        VERIFY_NOT_REACHED();
     }
 
 private:
