@@ -21,7 +21,7 @@ class E1000ENetworkAdapter final
     : public E1000NetworkAdapter {
 public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
-    static ErrorOr<NonnullLockRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
+    static ErrorOr<NonnullRefPtr<NetworkAdapter>> create(PCI::DeviceIdentifier const&);
     virtual ErrorOr<void> initialize(Badge<NetworkingManagement>) override;
 
     virtual ~E1000ENetworkAdapter() override;

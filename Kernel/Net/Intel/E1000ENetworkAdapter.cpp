@@ -188,7 +188,7 @@ UNMAP_AFTER_INIT ErrorOr<bool> E1000ENetworkAdapter::probe(PCI::DeviceIdentifier
     return is_valid_device_id(pci_device_identifier.hardware_id().device_id);
 }
 
-UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> E1000ENetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<NetworkAdapter>> E1000ENetworkAdapter::create(PCI::DeviceIdentifier const& pci_device_identifier)
 {
     u8 irq = pci_device_identifier.interrupt_line().value();
     auto interface_name = TRY(NetworkingManagement::generate_interface_name_from_pci_address(pci_device_identifier));
@@ -199,7 +199,7 @@ UNMAP_AFTER_INIT ErrorOr<NonnullLockRefPtr<NetworkAdapter>> E1000ENetworkAdapter
     auto rx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors)), "E1000 RX Descriptors"sv, Memory::Region::Access::ReadWrite));
     auto tx_descriptors_region = TRY(MM.allocate_contiguous_kernel_region(TRY(Memory::page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors)), "E1000 TX Descriptors"sv, Memory::Region::Access::ReadWrite));
 
-    return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) E1000ENetworkAdapter(pci_device_identifier,
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) E1000ENetworkAdapter(pci_device_identifier,
         irq, move(registers_io_window),
         move(rx_buffer_region),
         move(tx_buffer_region),
