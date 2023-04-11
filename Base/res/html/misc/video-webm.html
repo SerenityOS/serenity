@@ -67,6 +67,10 @@
                     <td>Play State</td>
                     <td id=state>paused</td>
                 </tr>
+                <tr>
+                    <td>Ended</td>
+                    <td id=ended>false</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -98,12 +102,15 @@
 
         video.addEventListener('playing', () => {
             document.getElementById('state').textContent = 'playing';
+            document.getElementById('ended').textContent = video.ended;
         });
         video.addEventListener('waiting', () => {
             document.getElementById('state').textContent = 'waiting';
+            document.getElementById('ended').textContent = video.ended;
         });
         video.addEventListener('pause', () => {
             document.getElementById('state').textContent = 'paused';
+            document.getElementById('ended').textContent = video.ended;
         });
     </script>
 </body>
