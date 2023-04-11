@@ -17,13 +17,13 @@
 #include <time.h>
 #include <unistd.h>
 
-class Screensaver final : public Desktop::Screensaver {
-    C_OBJECT(Screensaver)
+class Gradient final : public Desktop::Screensaver {
+    C_OBJECT(Gradient)
 public:
-    virtual ~Screensaver() override = default;
+    virtual ~Gradient() override = default;
 
 private:
-    Screensaver(int width = 64, int height = 48, int interval = 10000);
+    Gradient(int width = 64, int height = 48, int interval = 10000);
     RefPtr<Gfx::Bitmap> m_bitmap;
 
     void draw();
@@ -31,7 +31,7 @@ private:
     virtual void timer_event(Core::TimerEvent&) override;
 };
 
-Screensaver::Screensaver(int width, int height, int interval)
+Gradient::Gradient(int width, int height, int interval)
 {
     on_screensaver_exit = []() { GUI::Application::the()->quit(); };
     m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }).release_value_but_fixme_should_propagate_errors();
@@ -41,20 +41,20 @@ Screensaver::Screensaver(int width, int height, int interval)
     draw();
 }
 
-void Screensaver::paint_event(GUI::PaintEvent& event)
+void Gradient::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
     painter.draw_scaled_bitmap(rect(), *m_bitmap, m_bitmap->rect());
 }
 
-void Screensaver::timer_event(Core::TimerEvent&)
+void Gradient::timer_event(Core::TimerEvent&)
 {
     draw();
     update();
 }
 
-void Screensaver::draw()
+void Gradient::draw()
 {
     const Color colors[] {
         Color::Blue,
@@ -95,12 +95,12 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    auto window = TRY(Desktop::Screensaver::create_window("Screensaver"sv, "app-screensaver"sv));
+    auto window = TRY(Desktop::Screensaver::create_window("Gradient"sv, "app-screensaver"sv));
 
-    auto screensaver_window = TRY(window->set_main_widget<Screensaver>(64, 48, 10000));
-    screensaver_window->set_fill_with_background_color(false);
-    screensaver_window->set_override_cursor(Gfx::StandardCursor::Hidden);
-    screensaver_window->update();
+    auto gradient_widget = TRY(window->set_main_widget<Gradient>(64, 48, 10000));
+    gradient_widget->set_fill_with_background_color(false);
+    gradient_widget->set_override_cursor(Gfx::StandardCursor::Hidden);
+    gradient_widget->update();
 
     window->show();
     window->move_to_front();
