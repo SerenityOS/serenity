@@ -202,7 +202,8 @@ ErrorOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserO
 
 ErrorOr<size_t> TCPSocket::protocol_send(UserOrKernelBuffer const& data, size_t data_length)
 {
-    RoutingDecision routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
+    RoutingDecision routing_decision = route_to(peer_address(), local_address(), adapter);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
     size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
@@ -220,7 +221,8 @@ ErrorOr<void> TCPSocket::send_ack(bool allow_duplicate)
 
 ErrorOr<void> TCPSocket::send_tcp_packet(u16 flags, UserOrKernelBuffer const* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
-    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
+    auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
+    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), adapter);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
 
@@ -409,13 +411,14 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(IPv4Address const& source, I
 
 ErrorOr<void> TCPSocket::protocol_bind()
 {
-    if (has_specific_local_address() && !m_adapter) {
-        m_adapter = NetworkingManagement::the().from_ipv4_address(local_address());
-        if (!m_adapter)
-            return set_so_error(EADDRNOTAVAIL);
-    }
-
-    return {};
+    return m_adapter.with([this](auto& adapter) -> ErrorOr<void> {
+        if (has_specific_local_address() && !adapter) {
+            adapter = NetworkingManagement::the().from_ipv4_address(local_address());
+            if (!adapter)
+                return set_so_error(EADDRNOTAVAIL);
+        }
+        return {};
+    });
 }
 
 ErrorOr<void> TCPSocket::protocol_listen(bool did_allocate_port)
@@ -598,7 +601,8 @@ void TCPSocket::retransmit_packets()
         return;
     }
 
-    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
+    auto routing_decision = route_to(peer_address(), local_address(), adapter);
     if (routing_decision.is_zero())
         return;
 

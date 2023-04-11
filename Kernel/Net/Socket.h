@@ -7,9 +7,9 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/RefPtr.h>
 #include <AK/Time.h>
 #include <Kernel/FileSystem/File.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Mutex.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/UnixTypes.h>
@@ -90,7 +90,7 @@ public:
     ProcessID acceptor_pid() const { return m_acceptor.pid; }
     UserID acceptor_uid() const { return m_acceptor.uid; }
     GroupID acceptor_gid() const { return m_acceptor.gid; }
-    LockRefPtr<NetworkAdapter> const bound_interface() const { return m_bound_interface; }
+    SpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> const& bound_interface() const { return m_bound_interface; }
 
     Mutex& mutex() { return m_mutex; }
 
@@ -123,31 +123,29 @@ protected:
 
     Role m_role { Role::None };
 
-    Optional<ErrnoCode> const& so_error() const
-    {
-        VERIFY(m_mutex.is_exclusively_locked_by_current_thread());
-        return m_so_error;
-    }
+    SpinlockProtected<Optional<ErrnoCode>, LockRank::None>& so_error() { return m_so_error; }
 
     Error set_so_error(ErrnoCode error_code)
     {
-        MutexLocker locker(mutex());
-        m_so_error = error_code;
-
+        m_so_error.with([&error_code](auto& so_error) {
+            so_error = error_code;
+        });
         return Error::from_errno(error_code);
     }
 
     Error set_so_error(Error error)
     {
-        MutexLocker locker(mutex());
-        m_so_error = static_cast<ErrnoCode>(error.code());
-
+        m_so_error.with([&error](auto& so_error) {
+            so_error = static_cast<ErrnoCode>(error.code());
+        });
         return error;
     }
 
     void clear_so_error()
     {
-        m_so_error = {};
+        m_so_error.with([](auto& so_error) {
+            so_error = {};
+        });
     }
 
     void set_origin(Process const&);
@@ -173,13 +171,13 @@ private:
     bool m_shut_down_for_reading { false };
     bool m_shut_down_for_writing { false };
 
-    LockRefPtr<NetworkAdapter> m_bound_interface { nullptr };
+    SpinlockProtected<RefPtr<NetworkAdapter>, LockRank::None> m_bound_interface;
 
     Time m_receive_timeout {};
     Time m_send_timeout {};
     int m_timestamp { 0 };
 
-    Optional<ErrnoCode> m_so_error;
+    SpinlockProtected<Optional<ErrnoCode>, LockRank::None> m_so_error;
 
     Vector<NonnullRefPtr<Socket>> m_pending;
 };

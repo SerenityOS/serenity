@@ -35,7 +35,7 @@ UNMAP_AFTER_INIT NetworkingManagement::NetworkingManagement()
 {
 }
 
-NonnullLockRefPtr<NetworkAdapter> NetworkingManagement::loopback_adapter() const
+NonnullRefPtr<NetworkAdapter> NetworkingManagement::loopback_adapter() const
 {
     return *m_loopback_adapter;
 }
@@ -56,13 +56,13 @@ ErrorOr<void> NetworkingManagement::try_for_each(Function<ErrorOr<void>(NetworkA
     });
 }
 
-LockRefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address const& address) const
+RefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address const& address) const
 {
     if (address[0] == 0 && address[1] == 0 && address[2] == 0 && address[3] == 0)
         return m_loopback_adapter;
     if (address[0] == 127)
         return m_loopback_adapter;
-    return m_adapters.with([&](auto& adapters) -> LockRefPtr<NetworkAdapter> {
+    return m_adapters.with([&](auto& adapters) -> RefPtr<NetworkAdapter> {
         for (auto& adapter : adapters) {
             if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
                 return adapter;
@@ -71,9 +71,9 @@ LockRefPtr<NetworkAdapter> NetworkingManagement::from_ipv4_address(IPv4Address c
     });
 }
 
-LockRefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name) const
+RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(StringView name) const
 {
-    return m_adapters.with([&](auto& adapters) -> LockRefPtr<NetworkAdapter> {
+    return m_adapters.with([&](auto& adapters) -> RefPtr<NetworkAdapter> {
         for (auto& adapter : adapters) {
             if (adapter->name() == name)
                 return adapter;

@@ -212,7 +212,8 @@ ErrorOr<size_t> IPv4Socket::sendto(OpenFileDescription&, UserOrKernelBuffer cons
         return set_so_error(EPIPE);
 
     auto allow_using_gateway = ((flags & MSG_DONTROUTE) || m_routing_disabled) ? AllowUsingGateway::No : AllowUsingGateway::Yes;
-    auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface(), allow_using_gateway);
+    auto adapter = bound_interface().with([](auto& bound_device) -> RefPtr<NetworkAdapter> { return bound_device; });
+    auto routing_decision = route_to(m_peer_address, m_local_address, adapter, allow_using_gateway);
     if (routing_decision.is_zero())
         return set_so_error(EHOSTUNREACH);
 

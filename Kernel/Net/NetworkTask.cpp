@@ -31,7 +31,7 @@ static void handle_icmp(EthernetFrameHeader const&, IPv4Packet const&, Time cons
 static void handle_udp(IPv4Packet const&, Time const& packet_timestamp);
 static void handle_tcp(IPv4Packet const&, Time const& packet_timestamp);
 static void send_delayed_tcp_ack(TCPSocket& socket);
-static void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, LockRefPtr<NetworkAdapter> adapter);
+static void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, RefPtr<NetworkAdapter> adapter);
 static void flush_delayed_tcp_acks();
 static void retransmit_tcp_packets();
 
@@ -333,7 +333,7 @@ void flush_delayed_tcp_acks()
     }
 }
 
-void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, LockRefPtr<NetworkAdapter> adapter)
+void send_tcp_rst(IPv4Packet const& ipv4_packet, TCPPacket const& tcp_packet, RefPtr<NetworkAdapter> adapter)
 {
     auto routing_decision = route_to(ipv4_packet.source(), ipv4_packet.destination(), adapter);
     if (routing_decision.is_zero())
