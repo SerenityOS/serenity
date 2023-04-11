@@ -207,7 +207,7 @@ static char const* object_relocation_type_to_string(ElfW(Word) type)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::pledge("stdio rpath map_fixed"));
 
     DeprecatedString path {};
     static bool display_all = false;
