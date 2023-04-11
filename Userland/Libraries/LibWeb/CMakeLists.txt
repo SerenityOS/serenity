@@ -464,6 +464,7 @@ set(SOURCES
     ResizeObserver/ResizeObserver.cpp
     SecureContexts/AbstractOperations.cpp
     Streams/AbstractOperations.cpp
+    Streams/ReadableByteStreamController.cpp
     Streams/ReadableStream.cpp
     Streams/ReadableStreamBYOBRequest.cpp
     Streams/ReadableStreamDefaultController.cpp
