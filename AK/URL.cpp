@@ -44,7 +44,7 @@ URL URL::complete_url(StringView relative_url) const
     if (!is_valid())
         return {};
 
-    return URLParser::parse(relative_url, this);
+    return URLParser::parse(relative_url, *this);
 }
 
 void URL::set_scheme(DeprecatedString scheme)
