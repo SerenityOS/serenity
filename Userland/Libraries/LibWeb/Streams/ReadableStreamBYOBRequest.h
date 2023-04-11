@@ -27,7 +27,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreambyobrequest-controller
     // The parent ReadableByteStreamController instance
-    JS::GCPtr<JS::Object> m_controller;
+    JS::GCPtr<ReadableByteStreamController> m_controller;
 
     // https://streams.spec.whatwg.org/#readablestreambyobrequest-view
     // A typed array representing the destination region to which the controller can write generated data, or null after the BYOB request has been invalidated.
