@@ -158,7 +158,7 @@ bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
         return true;
     }
 
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation");
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation with timestamp {}ms", item.timestamp().to_milliseconds());
     dispatch_new_frame(item.bitmap());
     return false;
 }
@@ -575,7 +575,7 @@ private:
         if (keyframe_timestamp.has_value()) {
             dbgln("{} seeking to timestamp target {}ms, selected keyframe at {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), keyframe_timestamp->to_milliseconds());
         } else {
-            dbgln("{} seeking to timestamp target {}ms, demuxer kept its iterator position", seek_mode_name, m_target_timestamp.to_milliseconds());
+            dbgln("{} seeking to timestamp target {}ms, demuxer kept its iterator position after {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), earliest_available_sample.to_milliseconds());
         }
 #endif
 
@@ -584,10 +584,11 @@ private:
         }
 
         if (keyframe_timestamp.has_value()) {
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Timestamp is earlier than current media time, clearing queue");
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Keyframe is nearer to the target than the current frames, clearing queue");
             manager().m_frame_queue->clear();
             manager().m_next_frame.clear();
         } else if (m_target_timestamp >= manager().m_last_present_in_media_time && manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Target timestamp is between the last presented frame and the next frame, exiting seek at {}ms", m_target_timestamp.to_milliseconds());
             manager().m_last_present_in_media_time = m_target_timestamp;
             return assume_next_state();
         }
