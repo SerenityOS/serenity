@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  * Copyright (c) 2021-2022, Idan Horowitz <idan.horowitz@serenityos.org>
  *
@@ -169,52 +169,101 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(VM& vm, Typ
 // 23.2.3.1 %TypedArray%.prototype.at ( index ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.at
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
+
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
+
+    // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
     auto relative_index = TRY(vm.argument(0).to_integer_or_infinity(vm));
+
     if (Value(relative_index).is_infinity())
         return js_undefined();
+
     Checked<size_t> index { 0 };
+
+    // 5. If relativeIndex ≥ 0, then
     if (relative_index >= 0) {
+        // a. Let k be relativeIndex.
         index += relative_index;
-    } else {
+    }
+    // 6. Else,
+    else {
+        // a. Let k be len + relativeIndex.
         index += length;
         index -= -relative_index;
     }
+
+    // 7. If k < 0 or k ≥ len, return undefined.
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return TRY(typed_array->get(index.value()));
+
+    // 8. Return ! Get(O, ! ToString(𝔽(k))).
+    return MUST(typed_array->get(index.value()));
 }
 
 // 23.2.3.2 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     auto* typed_array = TRY(typed_array_from_this(vm));
-    auto* array_buffer = typed_array->viewed_array_buffer();
-    VERIFY(array_buffer);
-    return Value(array_buffer);
+
+    // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
+    // 4. Let buffer be O.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array->viewed_array_buffer();
+    VERIFY(buffer);
+
+    // 5. Return buffer.
+    return Value(buffer);
 }
 
 // 23.2.3.3 get %TypedArray%.prototype.byteLength, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     auto* typed_array = TRY(typed_array_from_this(vm));
-    auto* array_buffer = typed_array->viewed_array_buffer();
-    VERIFY(array_buffer);
-    if (array_buffer->is_detached())
+
+    // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
+    // 4. Let buffer be O.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array->viewed_array_buffer();
+    VERIFY(buffer);
+
+    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
+    if (buffer->is_detached())
         return Value(0);
-    return Value(typed_array->byte_length());
+
+    // 6. Let size be O.[[ByteLength]].
+    auto size = typed_array->byte_length();
+
+    // 7. Return 𝔽(size).
+    return Value(size);
 }
 
 // 23.2.3.4 get %TypedArray%.prototype.byteOffset, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     auto* typed_array = TRY(typed_array_from_this(vm));
-    auto* array_buffer = typed_array->viewed_array_buffer();
-    VERIFY(array_buffer);
-    if (array_buffer->is_detached())
+
+    // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
+    // 4. Let buffer be O.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array->viewed_array_buffer();
+    VERIFY(buffer);
+
+    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
+    if (buffer->is_detached())
         return Value(0);
-    return Value(typed_array->byte_offset());
+
+    // 6. Let offset be O.[[ByteOffset]].
+    auto offset = typed_array->byte_offset();
+
+    // 7. Return 𝔽(offset).
+    return Value(offset);
 }
 
 // 23.2.3.6 %TypedArray%.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin
@@ -801,55 +850,91 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
 // 23.2.3.20 %TypedArray%.prototype.lastIndexOf ( searchElement [ , fromIndex ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::last_index_of)
 {
-    auto typed_array = TRY(validate_typed_array_from_this(vm));
+    auto search_element = vm.argument(0);
+    auto from_index = vm.argument(1);
 
+    // 1. Let O be the this value.
+    // 2. Perform ? ValidateTypedArray(O).
+    auto* typed_array = TRY(validate_typed_array_from_this(vm));
+
+    // 3. Let len be O.[[ArrayLength]].
     auto length = typed_array->array_length();
 
+    // 4. If len = 0, return -1𝔽.
     if (length == 0)
         return Value(-1);
 
     double n;
+
+    // 5. If fromIndex is present, let n be ? ToIntegerOrInfinity(fromIndex); else let n be len - 1.
     if (vm.argument_count() > 1)
-        n = TRY(vm.argument(1).to_integer_or_infinity(vm));
+        n = TRY(from_index.to_integer_or_infinity(vm));
     else
         n = length - 1;
 
+    // 6. If n = -∞, return -1𝔽.
     if (Value(n).is_negative_infinity())
         return Value(-1);
 
     i32 k;
+
+    // 7. If n ≥ 0, then
     if (n >= 0) {
+        // a. Let k be min(n, len - 1).
         k = min(n, (i32)length - 1);
-    } else {
+    }
+    // 8. Else,
+    else {
+        // a. Let k be len + n.
         auto relative_k = length + n;
         if (relative_k < 0) // ensures we dont underflow `k`
             relative_k = -1;
         k = relative_k;
     }
 
-    auto search_element = vm.argument(0);
+    // 9. Repeat, while k ≥ 0,
     for (; k >= 0; --k) {
+        // a. Let kPresent be ! HasProperty(O, ! ToString(𝔽(k))).
         auto k_present = MUST(typed_array->has_property(k));
+
+        // b. If kPresent is true, then
         if (k_present) {
+            // i. Let elementK be ! Get(O, ! ToString(𝔽(k))).
             auto element_k = MUST(typed_array->get(k));
 
+            // ii. If IsStrictlyEqual(searchElement, elementK) is true, return 𝔽(k).
             if (is_strictly_equal(search_element, element_k))
                 return Value(k);
         }
+
+        // c. Set k to k - 1.
     }
 
+    // 10. Return -1𝔽.
     return Value(-1);
 }
 
 // 23.2.3.21 get %TypedArray%.prototype.length, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::length_getter)
 {
+    // 1. Let O be the this value.
+    // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     auto* typed_array = TRY(typed_array_from_this(vm));
-    auto* array_buffer = typed_array->viewed_array_buffer();
-    VERIFY(array_buffer);
-    if (array_buffer->is_detached())
+
+    // 3. Assert: O has [[ViewedArrayBuffer]] and [[ArrayLength]] internal slots.
+    // 4. Let buffer be O.[[ViewedArrayBuffer]].
+    auto* buffer = typed_array->viewed_array_buffer();
+    VERIFY(buffer);
+
+    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
+    if (buffer->is_detached())
         return Value(0);
-    return Value(typed_array->array_length());
+
+    // 6. Let length be O.[[ArrayLength]].
+    auto length = typed_array->array_length();
+
+    // 7. Return 𝔽(length).
+    return Value(length);
 }
 
 // 23.2.3.22 %TypedArray%.prototype.map ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.map
@@ -1611,6 +1696,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_reversed)
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
 {
     auto comparefn = vm.argument(0);
+
     // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
     if (!comparefn.is_undefined() && !comparefn.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
@@ -1647,6 +1733,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
         // b. Set j to j + 1.
     }
 
+    // 11. Return A.
     return return_array;
 }
 
@@ -1730,12 +1817,22 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::with)
 // 23.2.3.38 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag
 JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
 {
+    // 1. Let O be the this value.
     auto this_value = vm.this_value();
+
+    // 2. If O is not an Object, return undefined.
     if (!this_value.is_object())
         return js_undefined();
+
     auto& this_object = this_value.as_object();
+
+    // 3. If O does not have a [[TypedArrayName]] internal slot, return undefined.
     if (!this_object.is_typed_array())
         return js_undefined();
+
+    // 4. Let name be O.[[TypedArrayName]].
+    // 5. Assert: name is a String.
+    // 6. Return name.
     return PrimitiveString::create(vm, static_cast<TypedArrayBase&>(this_object).element_name());
 }
 
