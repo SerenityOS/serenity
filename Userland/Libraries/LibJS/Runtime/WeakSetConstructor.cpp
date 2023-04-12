@@ -35,6 +35,8 @@ ThrowCompletionOr<void> WeakSetConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> WeakSetConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.WeakSet);
 }
 
@@ -42,22 +44,36 @@ ThrowCompletionOr<Value> WeakSetConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> WeakSetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+    auto iterable = vm.argument(0);
 
-    auto weak_set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &Intrinsics::weak_set_prototype));
+    // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakSet.prototype%", « [[WeakSetData]] »).
+    // 3. Set set.[[WeakSetData]] to a new empty List.
+    auto set = TRY(ordinary_create_from_constructor<WeakSet>(vm, new_target, &Intrinsics::weak_set_prototype));
 
-    if (vm.argument(0).is_nullish())
-        return weak_set;
+    // 4. If iterable is either undefined or null, return set.
+    if (iterable.is_nullish())
+        return set;
 
-    auto adder = TRY(weak_set->get(vm.names.add));
+    // 5. Let adder be ? Get(set, "add").
+    auto adder = TRY(set->get(vm.names.add));
+
+    // 6. If IsCallable(adder) is false, throw a TypeError exception.
     if (!adder.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'add' property of WeakSet");
 
-    (void)TRY(get_iterator_values(vm, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
-        TRY(JS::call(vm, adder.as_function(), weak_set, iterator_value));
+    // 7. Let iteratorRecord be ? GetIterator(iterable, sync).
+    // 8. Repeat,
+    //     a. Let next be ? IteratorStep(iteratorRecord).
+    //     c. Let nextValue be ? IteratorValue(next).
+    (void)TRY(get_iterator_values(vm, iterable, [&](Value next_value) -> Optional<Completion> {
+        // d. Let status be Completion(Call(adder, set, « nextValue »)).
+        // e. IfAbruptCloseIterator(status, iteratorRecord).
+        TRY(JS::call(vm, adder.as_function(), set, next_value));
         return {};
     }));
 
-    return weak_set;
+    // b. If next is false, return set.
+    return set;
 }
 
 }
