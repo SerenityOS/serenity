@@ -110,131 +110,156 @@ bool URL::can_parse(JS::VM&, String const& url, Optional<String> const& base)
     return true;
 }
 
+// https://url.spec.whatwg.org/#dom-url-href
 WebIDL::ExceptionOr<String> URL::href() const
 {
     auto& vm = realm().vm();
 
-    // return the serialization of this’s URL.
+    // The href getter steps and the toJSON() method steps are to return the serialization of this’s URL.
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize()));
 }
 
+// https://url.spec.whatwg.org/#dom-url-tojson
 WebIDL::ExceptionOr<String> URL::to_json() const
 {
     auto& vm = realm().vm();
 
-    // return the serialization of this’s URL.
+    // The href getter steps and the toJSON() method steps are to return the serialization of this’s URL.
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-href②
 WebIDL::ExceptionOr<void> URL::set_href(String const& href)
 {
     auto& vm = realm().vm();
 
     // 1. Let parsedURL be the result of running the basic URL parser on the given value.
     AK::URL parsed_url = href;
+
     // 2. If parsedURL is failure, then throw a TypeError.
     if (!parsed_url.is_valid())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::TypeError, "Invalid URL"sv };
+
     // 3. Set this’s URL to parsedURL.
     m_url = move(parsed_url);
+
     // 4. Empty this’s query object’s list.
     m_query->m_list.clear();
+
     // 5. Let query be this’s URL’s query.
     auto& query = m_url.query();
+
     // 6. If query is non-null, then set this’s query object’s list to the result of parsing query.
     if (!query.is_null())
         m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(query));
     return {};
 }
 
+// https://url.spec.whatwg.org/#dom-url-origin
 WebIDL::ExceptionOr<String> URL::origin() const
 {
     auto& vm = realm().vm();
 
-    // return the serialization of this’s URL’s origin.
+    // The origin getter steps are to return the serialization of this’s URL’s origin. [HTML]
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.serialize_origin()));
 }
 
+// https://url.spec.whatwg.org/#dom-url-protocol
 WebIDL::ExceptionOr<String> URL::protocol() const
 {
     auto& vm = realm().vm();
 
-    // return this’s URL’s scheme, followed by U+003A (:).
+    // The protocol getter steps are to return this’s URL’s scheme, followed by U+003A (:).
     return TRY_OR_THROW_OOM(vm, String::formatted("{}:", m_url.scheme()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-protocol%E2%91%A0
 WebIDL::ExceptionOr<void> URL::set_protocol(String const& protocol)
 {
     auto& vm = realm().vm();
 
-    // basic URL parse the given value, followed by U+003A (:), with this’s URL as url and scheme start state as state override.
+    // The protocol setter steps are to basic URL parse the given value, followed by U+003A (:), with this’s URL as
+    // url and scheme start state as state override.
     auto result_url = URLParser::parse(TRY_OR_THROW_OOM(vm, String::formatted("{}:", protocol)), {}, m_url, URLParser::State::SchemeStart);
     if (result_url.is_valid())
         m_url = move(result_url);
     return {};
 }
 
+// https://url.spec.whatwg.org/#dom-url-username
 WebIDL::ExceptionOr<String> URL::username() const
 {
     auto& vm = realm().vm();
 
-    // return this’s URL’s username.
+    // The username getter steps are to return this’s URL’s username.
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.username()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-username%E2%91%A0
 void URL::set_username(String const& username)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
         return;
+
     // 2. Set the username given this’s URL and the given value.
     m_url.set_username(AK::URL::percent_encode(username, AK::URL::PercentEncodeSet::Userinfo));
 }
 
+// https://url.spec.whatwg.org/#dom-url-password
 WebIDL::ExceptionOr<String> URL::password() const
 {
     auto& vm = realm().vm();
 
-    // return this’s URL’s password.
+    // The password getter steps are to return this’s URL’s password.
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.password()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-password%E2%91%A0
 void URL::set_password(String const& password)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
     if (m_url.cannot_have_a_username_or_password_or_port())
         return;
+
     // 2. Set the password given this’s URL and the given value.
     m_url.set_password(AK::URL::percent_encode(password, AK::URL::PercentEncodeSet::Userinfo));
 }
 
+// https://url.spec.whatwg.org/#dom-url-host
 WebIDL::ExceptionOr<String> URL::host() const
 {
     auto& vm = realm().vm();
 
     // 1. Let url be this’s URL.
     auto& url = m_url;
+
     // 2. If url’s host is null, then return the empty string.
     if (url.host().is_null())
         return String {};
+
     // 3. If url’s port is null, return url’s host, serialized.
     if (!url.port().has_value())
         return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url.host()));
+
     // 4. Return url’s host, serialized, followed by U+003A (:) and url’s port, serialized.
     return TRY_OR_THROW_OOM(vm, String::formatted("{}:{}", url.host(), *url.port()));
 }
 
+// https://url.spec.whatwg.org/#dom-url-hostref-for-dom-url-host%E2%91%A0
 void URL::set_host(String const& host)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
         return;
+
     // 2. Basic URL parse the given value with this’s URL as url and host state as state override.
     auto result_url = URLParser::parse(host, {}, m_url, URLParser::State::Host);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
 
+// https://url.spec.whatwg.org/#dom-url-hostname
 WebIDL::ExceptionOr<String> URL::hostname() const
 {
     auto& vm = realm().vm();
@@ -242,21 +267,25 @@ WebIDL::ExceptionOr<String> URL::hostname() const
     // 1. If this’s URL’s host is null, then return the empty string.
     if (m_url.host().is_null())
         return String {};
+
     // 2. Return this’s URL’s host, serialized.
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.host()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-hostname①
 void URL::set_hostname(String const& hostname)
 {
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
         return;
+
     // 2. Basic URL parse the given value with this’s URL as url and hostname state as state override.
     auto result_url = URLParser::parse(hostname, {}, m_url, URLParser::State::Hostname);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-hostname①
 WebIDL::ExceptionOr<String> URL::port() const
 {
     auto& vm = realm().vm();
@@ -269,6 +298,7 @@ WebIDL::ExceptionOr<String> URL::port() const
     return TRY_OR_THROW_OOM(vm, String::formatted("{}", *m_url.port()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-port%E2%91%A0
 void URL::set_port(String const& port)
 {
     // 1. If this’s URL cannot have a username/password/port, then return.
@@ -278,39 +308,43 @@ void URL::set_port(String const& port)
     // 2. If the given value is the empty string, then set this’s URL’s port to null.
     if (port.is_empty()) {
         m_url.set_port({});
-        return;
     }
-
     // 3. Otherwise, basic URL parse the given value with this’s URL as url and port state as state override.
-    auto result_url = URLParser::parse(port, {}, m_url, URLParser::State::Port);
-    if (result_url.is_valid())
-        m_url = move(result_url);
+    else {
+        auto result_url = URLParser::parse(port, {}, m_url, URLParser::State::Port);
+        if (result_url.is_valid())
+            m_url = move(result_url);
+    }
 }
 
+// https://url.spec.whatwg.org/#dom-url-pathname
 WebIDL::ExceptionOr<String> URL::pathname() const
 {
     auto& vm = realm().vm();
 
-    // 1. If this’s URL’s cannot-be-a-base-URL is true, then return this’s URL’s path[0].
-    // 2. If this’s URL’s path is empty, then return the empty string.
-    // 3. Return U+002F (/), followed by the strings in this’s URL’s path (including empty strings), if any, separated from each other by U+002F (/).
+    // The pathname getter steps are to return the result of URL path serializing this’s URL.
     return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_url.path()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-pathname%E2%91%A0
 void URL::set_pathname(String const& pathname)
 {
+    // FIXME: These steps no longer match the speci.
     // 1. If this’s URL’s cannot-be-a-base-URL is true, then return.
     if (m_url.cannot_be_a_base_url())
         return;
+
     // 2. Empty this’s URL’s path.
     auto url = m_url; // We copy the URL here to follow other browser's behaviour of reverting the path change if the parse failed.
     url.set_paths({});
+
     // 3. Basic URL parse the given value with this’s URL as url and path start state as state override.
     auto result_url = URLParser::parse(pathname, {}, move(url), URLParser::State::PathStart);
     if (result_url.is_valid())
         m_url = move(result_url);
 }
 
+// https://url.spec.whatwg.org/#dom-url-search
 WebIDL::ExceptionOr<String> URL::search() const
 {
     auto& vm = realm().vm();
@@ -318,44 +352,61 @@ WebIDL::ExceptionOr<String> URL::search() const
     // 1. If this’s URL’s query is either null or the empty string, then return the empty string.
     if (m_url.query().is_null() || m_url.query().is_empty())
         return String {};
+
     // 2. Return U+003F (?), followed by this’s URL’s query.
     return TRY_OR_THROW_OOM(vm, String::formatted("?{}", m_url.query()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-search%E2%91%A0
 WebIDL::ExceptionOr<void> URL::set_search(String const& search)
 {
     auto& vm = realm().vm();
 
     // 1. Let url be this’s URL.
     auto& url = m_url;
-    // If the given value is the empty string, set url’s query to null, empty this’s query object’s list, and then return.
+
+    // 2. If the given value is the empty string:
     if (search.is_empty()) {
+        // 1. Set url’s query to null.
         url.set_query({});
+
+        // 2. Empty this’s query object’s list.
         m_query->m_list.clear();
+
+        // FIXME: 3. Potentially strip trailing spaces from an opaque path with this.
+
+        // 4. Return.
         return {};
     }
-    // 2. Let input be the given value with a single leading U+003F (?) removed, if any.
+
+    // 3. Let input be the given value with a single leading U+003F (?) removed, if any.
     auto search_as_string_view = search.bytes_as_string_view();
     auto input = search_as_string_view.substring_view(search_as_string_view.starts_with('?'));
-    // 3. Set url’s query to the empty string.
+
+    // 4. Set url’s query to the empty string.
     auto url_copy = url; // We copy the URL here to follow other browser's behaviour of reverting the search change if the parse failed.
     url_copy.set_query(DeprecatedString::empty());
-    // 4. Basic URL parse input with url as url and query state as state override.
+
+    // 5. Basic URL parse input with url as url and query state as state override.
     auto result_url = URLParser::parse(input, {}, move(url_copy), URLParser::State::Query);
     if (result_url.is_valid()) {
         m_url = move(result_url);
-        // 5. Set this’s query object’s list to the result of parsing input.
+
+        // 6. Set this’s query object’s list to the result of parsing input.
         m_query->m_list = TRY_OR_THROW_OOM(vm, url_decode(input));
     }
 
     return {};
 }
 
+// https://url.spec.whatwg.org/#dom-url-searchparams
 URLSearchParams const* URL::search_params() const
 {
+    // The searchParams getter steps are to return this’s query object.
     return m_query;
 }
 
+// https://url.spec.whatwg.org/#dom-url-hash
 WebIDL::ExceptionOr<String> URL::hash() const
 {
     auto& vm = realm().vm();
@@ -363,23 +414,33 @@ WebIDL::ExceptionOr<String> URL::hash() const
     // 1. If this’s URL’s fragment is either null or the empty string, then return the empty string.
     if (m_url.fragment().is_null() || m_url.fragment().is_empty())
         return String {};
+
     // 2. Return U+0023 (#), followed by this’s URL’s fragment.
     return TRY_OR_THROW_OOM(vm, String::formatted("#{}", m_url.fragment()));
 }
 
+// https://url.spec.whatwg.org/#ref-for-dom-url-hash%E2%91%A0
 void URL::set_hash(String const& hash)
 {
-    // 1. If the given value is the empty string, then set this’s URL’s fragment to null and return.
+    // 1. If the given value is the empty string:
     if (hash.is_empty()) {
+        // 1. Set this’s URL’s fragment to null.
         m_url.set_fragment({});
+
+        // FIXME: 2. Potentially strip trailing spaces from an opaque path with this.
+
+        // 3. Return.
         return;
     }
+
     // 2. Let input be the given value with a single leading U+0023 (#) removed, if any.
     auto hash_as_string_view = hash.bytes_as_string_view();
     auto input = hash_as_string_view.substring_view(hash_as_string_view.starts_with('#'));
+
     // 3. Set this’s URL’s fragment to the empty string.
     auto url = m_url; // We copy the URL here to follow other browser's behaviour of reverting the hash change if the parse failed.
     url.set_fragment(DeprecatedString::empty());
+
     // 4. Basic URL parse input with this’s URL as url and fragment state as state override.
     auto result_url = URLParser::parse(input, {}, move(url), URLParser::State::Fragment);
     if (result_url.is_valid())
@@ -392,29 +453,30 @@ HTML::Origin url_origin(AK::URL const& url)
     // FIXME: We should probably have an extended version of AK::URL for LibWeb instead of standalone functions like this.
 
     // The origin of a URL url is the origin returned by running these steps, switching on url’s scheme:
-    // "blob"
+    // -> "blob"
     if (url.scheme() == "blob"sv) {
         // FIXME: Support 'blob://' URLs
         return HTML::Origin {};
     }
 
-    // "ftp"
-    // "http"
-    // "https"
-    // "ws"
-    // "wss"
+    // -> "ftp"
+    // -> "http"
+    // -> "https"
+    // -> "ws"
+    // -> "wss"
     if (url.scheme().is_one_of("ftp"sv, "http"sv, "https"sv, "ws"sv, "wss"sv)) {
         // Return the tuple origin (url’s scheme, url’s host, url’s port, null).
         return HTML::Origin(url.scheme(), url.host(), url.port().value_or(0));
     }
 
-    // "file"
+    // -> "file"
     if (url.scheme() == "file"sv) {
         // Unfortunate as it is, this is left as an exercise to the reader. When in doubt, return a new opaque origin.
         // Note: We must return an origin with the `file://' protocol for `file://' iframes to work from `file://' pages.
         return HTML::Origin(url.scheme(), DeprecatedString(), 0);
     }
 
+    // -> Otherwise
     // Return a new opaque origin.
     return HTML::Origin {};
 }
