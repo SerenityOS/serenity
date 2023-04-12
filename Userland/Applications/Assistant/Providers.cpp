@@ -62,6 +62,13 @@ void URLResult::activate() const
     Desktop::Launcher::open(URL::create_with_url_or_path(title()));
 }
 
+AppProvider::AppProvider()
+{
+    Desktop::AppFile::for_each([this](NonnullRefPtr<Desktop::AppFile> app_file) {
+        m_app_file_cache.append(move(app_file));
+    });
+}
+
 void AppProvider::query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete)
 {
     if (query.starts_with('=') || query.starts_with('$'))
@@ -69,17 +76,17 @@ void AppProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
 
     Vector<NonnullRefPtr<Result>> results;
 
-    Desktop::AppFile::for_each([&](NonnullRefPtr<Desktop::AppFile> app_file) {
+    for (auto const& app_file : m_app_file_cache) {
         auto query_and_arguments = query.split_limit(' ', 2);
         auto app_name = query_and_arguments.is_empty() ? query : query_and_arguments[0];
         auto arguments = query_and_arguments.size() < 2 ? DeprecatedString::empty() : query_and_arguments[1];
         auto match_result = fuzzy_match(app_name, app_file->name());
         if (!match_result.matched)
-            return;
+            continue;
 
         auto icon = GUI::FileIconProvider::icon_for_executable(app_file->executable());
-        results.append(adopt_ref(*new AppResult(icon.bitmap_for_size(16), app_file->name(), {}, app_file, arguments, match_result.score)));
-    });
+        results.append(make_ref_counted<AppResult>(icon.bitmap_for_size(16), app_file->name(), DeprecatedString::empty(), app_file, arguments, match_result.score));
+    };
 
     on_complete(move(results));
 }

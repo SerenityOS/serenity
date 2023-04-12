@@ -141,7 +141,12 @@ public:
 
 class AppProvider final : public Provider {
 public:
+    AppProvider();
+
     void query(DeprecatedString const& query, Function<void(Vector<NonnullRefPtr<Result>>)> on_complete) override;
+
+private:
+    Vector<NonnullRefPtr<Desktop::AppFile>> m_app_file_cache;
 };
 
 class CalculatorProvider final : public Provider {
