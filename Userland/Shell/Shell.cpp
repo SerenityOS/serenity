@@ -1901,7 +1901,7 @@ ErrorOr<Vector<Line::CompletionSuggestion>> Shell::complete_via_program_itself(s
 
     // Restrict the process to effectively readonly access to the FS.
     auto scoped_promise = promise({
-        .exec_promises = "stdio rpath prot_exec no_error",
+        .exec_promises = "stdio rpath prot_exec map_fixed no_error",
         .unveils = {
             { "/", "rx" },
         },
