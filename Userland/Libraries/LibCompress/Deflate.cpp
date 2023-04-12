@@ -968,10 +968,8 @@ ErrorOr<void> DeflateCompressor::flush()
     auto write_uncompressed = [&]() -> ErrorOr<void> {
         TRY(m_output_stream->write_bits(0b00u, 2)); // no compression
         TRY(m_output_stream->align_to_byte_boundary());
-        LittleEndian<u16> len = m_pending_block_size;
-        TRY(m_output_stream->write_until_depleted(len.bytes()));
-        LittleEndian<u16> nlen = ~m_pending_block_size;
-        TRY(m_output_stream->write_until_depleted(nlen.bytes()));
+        TRY(m_output_stream->write_value<LittleEndian<u16>>(m_pending_block_size));
+        TRY(m_output_stream->write_value<LittleEndian<u16>>(~m_pending_block_size));
         TRY(m_output_stream->write_until_depleted(pending_block().slice(0, m_pending_block_size)));
         return {};
     };

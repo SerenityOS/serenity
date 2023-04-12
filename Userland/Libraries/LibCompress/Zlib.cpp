@@ -113,7 +113,7 @@ ErrorOr<void> ZlibCompressor::write_header(ZlibCompressionMethod compression_met
 
     // FIXME: Support pre-defined dictionaries.
 
-    TRY(m_output_stream->write_until_depleted(header.as_u16.bytes()));
+    TRY(m_output_stream->write_value(header.as_u16));
 
     return {};
 }
