@@ -18,13 +18,15 @@ namespace Web::Streams {
 // https://streams.spec.whatwg.org/#rs-constructor
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStream>> ReadableStream::construct_impl(JS::Realm& realm, Optional<JS::Handle<JS::Object>> const& underlying_source_object)
 {
+    auto& vm = realm.vm();
+
     auto readable_stream = MUST_OR_THROW_OOM(realm.heap().allocate<ReadableStream>(realm, realm));
 
     // 1. If underlyingSource is missing, set it to null.
     auto underlying_source = underlying_source_object.has_value() ? JS::Value(underlying_source_object.value().ptr()) : JS::js_null();
 
     // 2. Let underlyingSourceDict be underlyingSource, converted to an IDL value of type UnderlyingSource.
-    auto underlying_source_dict = TRY(UnderlyingSource::from_value(realm.vm(), underlying_source));
+    auto underlying_source_dict = TRY(UnderlyingSource::from_value(vm, underlying_source));
 
     // 3. Perform ! InitializeReadableStream(this).
 
@@ -71,10 +73,12 @@ bool ReadableStream::locked()
 // https://streams.spec.whatwg.org/#rs-cancel
 WebIDL::ExceptionOr<JS::GCPtr<JS::Object>> ReadableStream::cancel(JS::Value reason)
 {
+    auto& realm = this->realm();
+
     // 1. If ! IsReadableStreamLocked(this) is true, return a promise rejected with a TypeError exception.
     if (is_readable_stream_locked(*this)) {
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm(), "Cannot cancel a locked stream"sv));
-        return WebIDL::create_rejected_promise(realm(), JS::Value { exception })->promise();
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Cannot cancel a locked stream"sv));
+        return WebIDL::create_rejected_promise(realm, JS::Value { exception })->promise();
     }
 
     // 2. Return ! ReadableStreamCancel(this, reason).
