@@ -133,7 +133,6 @@ public:
 
     virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }
-    virtual bool is_sharing_with_others() const override { return false; }
     virtual HandlerType type() const override { return HandlerType::IRQHandler; }
     virtual StringView controller() const override { return {}; }
     virtual bool eoi() override;

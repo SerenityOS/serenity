@@ -41,7 +41,6 @@ public:
 
     virtual size_t sharing_devices_count() const = 0;
     virtual bool is_shared_handler() const = 0;
-    virtual bool is_sharing_with_others() const = 0;
 
     virtual HandlerType type() const = 0;
     virtual StringView purpose() const = 0;
