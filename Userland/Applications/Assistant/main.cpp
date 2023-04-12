@@ -144,8 +144,6 @@ private:
 
 }
 
-static constexpr size_t MAX_SEARCH_RESULTS = 6;
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     TRY(Core::System::pledge("stdio recvfd sendfd rpath cpath unix proc exec thread"));
@@ -270,7 +268,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         else
             app_state.selected_index = 0;
         app_state.results = results;
-        app_state.visible_result_count = min(results.size(), MAX_SEARCH_RESULTS);
+        app_state.visible_result_count = min(results.size(), Assistant::MAX_SEARCH_RESULTS);
 
         update_ui_timer->restart();
     };
