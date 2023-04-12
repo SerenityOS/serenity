@@ -176,8 +176,7 @@ public:
             --i;
 
         float f = x * (values().size() - 1) - i;
-
-        return (1 - f) * (values()[i] / 65535.f) + f * (values()[i + 1] / 65535.f);
+        return mix(values()[i] / 65535.f, values()[i + 1] / 65535.f, f);
     }
 
 private:
