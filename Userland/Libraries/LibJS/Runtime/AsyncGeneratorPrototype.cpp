@@ -20,7 +20,7 @@ ThrowCompletionOr<void> AsyncGeneratorPrototype::initialize(Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
     // 27.6.1.5 AsyncGenerator.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-asyncgenerator-prototype-tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "AsyncGenerator"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "AsyncGenerator"sv)), Attribute::Configurable);
 
     return {};
 }

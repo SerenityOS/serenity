@@ -65,10 +65,10 @@ public:
 
     void gather_roots(HashTable<Cell*>&);
 
-#define __JS_ENUMERATE(SymbolName, snake_name)     \
-    Symbol* well_known_symbol_##snake_name() const \
-    {                                              \
-        return m_well_known_symbols.snake_name;    \
+#define __JS_ENUMERATE(SymbolName, snake_name)                  \
+    NonnullGCPtr<Symbol> well_known_symbol_##snake_name() const \
+    {                                                           \
+        return *m_well_known_symbols.snake_name;                \
     }
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE

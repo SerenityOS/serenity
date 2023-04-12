@@ -24,7 +24,7 @@ ThrowCompletionOr<void> MapIteratorPrototype::initialize(Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Map Iterator"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Map Iterator"sv)), Attribute::Configurable);
 
     return {};
 }

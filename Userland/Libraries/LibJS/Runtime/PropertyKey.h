@@ -80,9 +80,9 @@ public:
         VERIFY(!m_string.is_null());
     }
 
-    PropertyKey(Symbol& symbol)
+    PropertyKey(NonnullGCPtr<Symbol> symbol)
         : m_type(Type::Symbol)
-        , m_symbol(&symbol)
+        , m_symbol(symbol)
     {
     }
 

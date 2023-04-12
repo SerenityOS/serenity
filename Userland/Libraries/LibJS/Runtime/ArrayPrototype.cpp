@@ -84,7 +84,7 @@ ThrowCompletionOr<void> ArrayPrototype::initialize(Realm& realm)
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
     // 23.1.3.40 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
-    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
+    define_direct_property(vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
     // 23.1.3.41 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     // With array grouping proposal, https://tc39.es/proposal-array-grouping/#sec-array.prototype-@@unscopables
@@ -108,7 +108,7 @@ ThrowCompletionOr<void> ArrayPrototype::initialize(Realm& realm)
     MUST(unscopable_list->create_data_property_or_throw(vm.names.toSpliced, Value(true)));
     MUST(unscopable_list->create_data_property_or_throw(vm.names.values, Value(true)));
 
-    define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
 
     return {};
 }
@@ -135,7 +135,7 @@ static ThrowCompletionOr<Object*> array_species_create(VM& vm, Object& original_
     }
 
     if (constructor.is_object()) {
-        constructor = TRY(constructor.as_object().get(*vm.well_known_symbol_species()));
+        constructor = TRY(constructor.as_object().get(vm.well_known_symbol_species()));
         if (constructor.is_null())
             constructor = js_undefined();
     }
@@ -183,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         if (!val.is_object())
             return false;
         auto& object = val.as_object();
-        auto spreadable = TRY(object.get(*vm.well_known_symbol_is_concat_spreadable()));
+        auto spreadable = TRY(object.get(vm.well_known_symbol_is_concat_spreadable()));
         if (!spreadable.is_undefined())
             return spreadable.to_boolean();
 

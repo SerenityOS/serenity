@@ -21,7 +21,7 @@ ThrowCompletionOr<void> WeakRefPrototype::initialize(Realm& realm)
 
     define_native_function(realm, vm.names.deref, deref, 0, Attribute::Writable | Attribute::Configurable);
 
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.WeakRef.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.WeakRef.as_string()), Attribute::Configurable);
 
     return {};
 }

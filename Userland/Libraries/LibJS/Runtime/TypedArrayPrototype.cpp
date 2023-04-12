@@ -63,13 +63,13 @@ ThrowCompletionOr<void> TypedArrayPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.with, with, 2, attr);
     define_native_function(realm, vm.names.values, values, 0, attr);
 
-    define_native_accessor(realm, *vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
+    define_native_accessor(realm, vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
     // 23.2.3.34 %TypedArray%.prototype.toString ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.tostring
     define_direct_property(vm.names.toString, realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.toString), attr);
 
     // 23.2.3.37 %TypedArray%.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator
-    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
+    define_direct_property(vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.values), attr);
 
     return {};
 }

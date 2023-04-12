@@ -55,7 +55,7 @@ static JS::ThrowCompletionOr<Vector<String>> convert_value_to_sequence_of_string
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
 
     // 2. Let method be ? GetMethod(V, @@iterator).
-    auto* method = TRY(value.get_method(vm, *vm.well_known_symbol_iterator()));
+    auto* method = TRY(value.get_method(vm, vm.well_known_symbol_iterator()));
 
     // 3. If method is undefined, throw a TypeError.
     if (!method)
