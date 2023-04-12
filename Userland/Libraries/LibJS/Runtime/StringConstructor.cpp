@@ -44,11 +44,20 @@ ThrowCompletionOr<void> StringConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> StringConstructor::call()
 {
     auto& vm = this->vm();
+    auto value = vm.argument(0);
+
+    // 1. If value is not present, let s be the empty String.
     if (!vm.argument_count())
         return PrimitiveString::create(vm, String {});
-    if (vm.argument(0).is_symbol())
-        return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, vm.argument(0).as_symbol().descriptive_string()));
-    return TRY(vm.argument(0).to_primitive_string(vm));
+
+    // 2. Else,
+    // a. If NewTarget is undefined and value is a Symbol, return SymbolDescriptiveString(value).
+    if (value.is_symbol())
+        return PrimitiveString::create(vm, TRY_OR_THROW_OOM(vm, value.as_symbol().descriptive_string()));
+
+    // b. Let s be ? ToString(value).
+    // 3. If NewTarget is undefined, return s.
+    return TRY(value.to_primitive_string(vm));
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
@@ -56,79 +65,137 @@ ThrowCompletionOr<NonnullGCPtr<Object>> StringConstructor::construct(FunctionObj
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
+    auto value = vm.argument(0);
 
     PrimitiveString* primitive_string;
-    if (!vm.argument_count())
+
+    // 1. If value is not present, let s be the empty String.
+    if (!vm.argument_count()) {
         primitive_string = PrimitiveString::create(vm, String {});
-    else
-        primitive_string = TRY(vm.argument(0).to_primitive_string(vm));
+    }
+    // 2. Else,
+    else {
+        // b. Let s be ? ToString(value).
+        primitive_string = TRY(value.to_primitive_string(vm));
+    }
+
+    // 4. Return StringCreate(s, ? GetPrototypeFromConstructor(NewTarget, "%String.prototype%")).
     auto* prototype = TRY(get_prototype_from_constructor(vm, new_target, &Intrinsics::string_prototype));
     return MUST_OR_THROW_OOM(StringObject::create(realm, *primitive_string, *prototype));
-}
-
-// 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
-JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
-{
-    auto* cooked = TRY(vm.argument(0).to_object(vm));
-    auto raw_value = TRY(cooked->get(vm.names.raw));
-    auto* raw = TRY(raw_value.to_object(vm));
-    auto literal_segments = TRY(length_of_array_like(vm, *raw));
-
-    if (literal_segments == 0)
-        return PrimitiveString::create(vm, String {});
-
-    auto const number_of_substituions = vm.argument_count() - 1;
-
-    StringBuilder builder;
-    for (size_t i = 0; i < literal_segments; ++i) {
-        auto next_key = DeprecatedString::number(i);
-        auto next_segment_value = TRY(raw->get(next_key));
-        auto next_segment = TRY(next_segment_value.to_deprecated_string(vm));
-
-        builder.append(next_segment);
-
-        if (i + 1 == literal_segments)
-            break;
-
-        if (i < number_of_substituions) {
-            auto next = vm.argument(i + 1);
-            auto next_sub = TRY(next.to_deprecated_string(vm));
-            builder.append(next_sub);
-        }
-    }
-    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 // 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
+    // 1. Let result be the empty String.
     Utf16Data string;
     string.ensure_capacity(vm.argument_count());
 
-    for (size_t i = 0; i < vm.argument_count(); ++i)
-        string.append(TRY(vm.argument(i).to_u16(vm)));
+    // 2. For each element next of codeUnits, do
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        // a. Let nextCU be the code unit whose numeric value is ℝ(? ToUint16(next)).
+        auto next_code_unit = TRY(vm.argument(i).to_u16(vm));
 
+        // b. Set result to the string-concatenation of result and nextCU.
+        string.append(next_code_unit);
+    }
+
+    // 3. Return result.
     return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
 }
 
 // 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
 {
+    // 1. Let result be the empty String.
     Utf16Data string;
-    string.ensure_capacity(vm.argument_count()); // This will be an under-estimate if any code point is > 0xffff.
+    // This will be an under-estimate if any code point is > 0xffff.
+    string.ensure_capacity(vm.argument_count());
 
+    // 2. For each element next of codePoints, do
     for (size_t i = 0; i < vm.argument_count(); ++i) {
+        // a. Let nextCP be ? ToNumber(next).
         auto next_code_point = TRY(vm.argument(i).to_number(vm));
+
+        // b. If IsIntegralNumber(nextCP) is false, throw a RangeError exception.
         if (!next_code_point.is_integral_number())
             return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, TRY_OR_THROW_OOM(vm, next_code_point.to_string_without_side_effects()));
-        auto code_point = TRY(next_code_point.to_i32(vm));
+
+        auto code_point = MUST(next_code_point.to_i32(vm));
+
+        // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
         if (code_point < 0 || code_point > 0x10FFFF)
             return vm.throw_completion<RangeError>(ErrorType::InvalidCodePoint, TRY_OR_THROW_OOM(vm, next_code_point.to_string_without_side_effects()));
 
+        // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
         TRY_OR_THROW_OOM(vm, code_point_to_utf16(string, static_cast<u32>(code_point)));
     }
 
+    // 3. Assert: If codePoints is empty, then result is the empty String.
+    if (!vm.argument_count())
+        VERIFY(string.is_empty());
+
+    // 4. Return result.
     return PrimitiveString::create(vm, TRY(Utf16String::create(vm, move(string))));
+}
+
+// 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
+JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
+{
+    auto template_ = vm.argument(0);
+
+    // 1. Let substitutionCount be the number of elements in substitutions.
+    auto substitution_count = vm.argument_count() > 0 ? vm.argument_count() - 1 : 0;
+
+    // 2. Let cooked be ? ToObject(template).
+    auto* cooked = TRY(template_.to_object(vm));
+
+    // 3. Let literals be ? ToObject(? Get(cooked, "raw")).
+    auto* literals = TRY(TRY(cooked->get(vm.names.raw)).to_object(vm));
+
+    // 4. Let literalCount be ? LengthOfArrayLike(literals).
+    auto literal_count = TRY(length_of_array_like(vm, *literals));
+
+    // 5. If literalCount ≤ 0, return the empty String.
+    if (literal_count == 0)
+        return PrimitiveString::create(vm, String {});
+
+    // 6. Let R be the empty String.
+    StringBuilder builder;
+
+    // 7. Let nextIndex be 0.
+    // 8. Repeat,
+    for (size_t i = 0; i < literal_count; ++i) {
+        auto next_key = DeprecatedString::number(i);
+
+        // a. Let nextLiteralVal be ? Get(literals, ! ToString(𝔽(nextIndex))).
+        auto next_literal_value = TRY(literals->get(next_key));
+
+        // b. Let nextLiteral be ? ToString(nextLiteralVal).
+        auto next_literal = TRY(next_literal_value.to_deprecated_string(vm));
+
+        // c. Set R to the string-concatenation of R and nextLiteral.
+        builder.append(next_literal);
+
+        // d. If nextIndex + 1 = literalCount, return R.
+        if (i + 1 == literal_count)
+            break;
+
+        // e. If nextIndex < substitutionCount, then
+        if (i < substitution_count) {
+            // i. Let nextSubVal be substitutions[nextIndex].
+            auto next_substitution_value = vm.argument(i + 1);
+
+            // ii. Let nextSub be ? ToString(nextSubVal).
+            auto next_substitution = TRY(next_substitution_value.to_deprecated_string(vm));
+
+            // iii. Set R to the string-concatenation of R and nextSub.
+            builder.append(next_substitution);
+        }
+
+        // f. Set nextIndex to nextIndex + 1.
+    }
+    return PrimitiveString::create(vm, builder.to_deprecated_string());
 }
 
 }
