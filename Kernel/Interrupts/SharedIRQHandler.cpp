@@ -23,15 +23,17 @@ UNMAP_AFTER_INIT void SharedIRQHandler::initialize(u8 interrupt_number)
 void SharedIRQHandler::register_handler(GenericInterruptHandler& handler)
 {
     dbgln_if(INTERRUPT_DEBUG, "Interrupt Handler registered @ Shared Interrupt Handler {}", interrupt_number());
-    m_handlers.append(handler);
+    m_handlers.with([&handler](auto& list) { list.append(handler); });
     enable_interrupt_vector();
 }
 void SharedIRQHandler::unregister_handler(GenericInterruptHandler& handler)
 {
     dbgln_if(INTERRUPT_DEBUG, "Interrupt Handler unregistered @ Shared Interrupt Handler {}", interrupt_number());
-    m_handlers.remove(handler);
-    if (m_handlers.is_empty())
-        disable_interrupt_vector();
+    m_handlers.with([&handler, this](auto& list) {
+        list.remove(handler);
+        if (list.is_empty())
+            disable_interrupt_vector();
+    });
 }
 
 bool SharedIRQHandler::eoi()
@@ -43,9 +45,7 @@ bool SharedIRQHandler::eoi()
 
 void SharedIRQHandler::enumerate_handlers(Function<void(GenericInterruptHandler&)>& callback)
 {
-    for (auto& handler : m_handlers) {
-        callback(handler);
-    }
+    m_handlers.for_each([&](auto& handler) { callback(handler); });
 }
 
 SharedIRQHandler::SharedIRQHandler(u8 irq)
@@ -67,11 +67,11 @@ bool SharedIRQHandler::handle_interrupt(RegisterState const& regs)
 
     if constexpr (INTERRUPT_DEBUG) {
         dbgln("Interrupt @ {}", interrupt_number());
-        dbgln("Interrupt Handlers registered - {}", m_handlers.size_slow());
+        dbgln("Interrupt Handlers registered - {}", sharing_devices_count());
     }
     int i = 0;
     bool was_handled = false;
-    for (auto& handler : m_handlers) {
+    m_handlers.for_each([&](auto& handler) {
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
         if (handler.handle_interrupt(regs)) {
             handler.increment_call_count();
@@ -79,7 +79,8 @@ bool SharedIRQHandler::handle_interrupt(RegisterState const& regs)
         }
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());
         i++;
-    }
+    });
+
     return was_handled;
 }
 
