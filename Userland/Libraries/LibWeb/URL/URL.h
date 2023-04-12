@@ -55,7 +55,7 @@ public:
     WebIDL::ExceptionOr<String> search() const;
     WebIDL::ExceptionOr<void> set_search(String const&);
 
-    URLSearchParams const* search_params() const;
+    JS::NonnullGCPtr<URLSearchParams const> search_params() const;
 
     WebIDL::ExceptionOr<String> hash() const;
     void set_hash(String const&);

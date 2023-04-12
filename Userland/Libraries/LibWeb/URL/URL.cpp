@@ -400,7 +400,7 @@ WebIDL::ExceptionOr<void> URL::set_search(String const& search)
 }
 
 // https://url.spec.whatwg.org/#dom-url-searchparams
-URLSearchParams const* URL::search_params() const
+JS::NonnullGCPtr<URLSearchParams const> URL::search_params() const
 {
     // The searchParams getter steps are to return this’s query object.
     return m_query;
