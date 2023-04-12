@@ -377,9 +377,7 @@ bool Context::verify_certificate_pair(Certificate const& subject, Certificate co
     auto verification_buffer_bytes = verification_buffer.bytes();
     rsa.verify(subject.signature_value, verification_buffer_bytes);
 
-    // FIXME: This slice is subject hack, this will work for most certificates, but you actually have to parse
-    //        the ASN.1 data to correctly extract the signed part of the certificate.
-    ReadonlyBytes message = subject.original_asn1.bytes().slice(4, subject.original_asn1.size() - 4 - (5 + subject.signature_value.size()) - 15);
+    ReadonlyBytes message = subject.tbs_asn1.bytes();
     auto pkcs1 = Crypto::PK::EMSA_PKCS1_V1_5<Crypto::Hash::Manager>(kind);
     auto verification = pkcs1.verify(message, verification_buffer_bytes, subject.signature_value.size() * 8);
     return verification == Crypto::VerificationConsistency::Consistent;
