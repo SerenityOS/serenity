@@ -271,6 +271,7 @@ public:
     AlgorithmIdentifier signature_algorithm;
     ByteBuffer signature_value {};
     ByteBuffer original_asn1 {};
+    ByteBuffer tbs_asn1 {};
     bool is_allowed_to_sign_certificate { false };
     bool is_certificate_authority { false };
     Optional<size_t> path_length_constraint {};

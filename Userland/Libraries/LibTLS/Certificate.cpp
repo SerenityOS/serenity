@@ -680,9 +680,21 @@ static ErrorOr<Certificate> parse_tbs_certificate(Crypto::ASN1::Decoder& decoder
     //     -- If present, version shall be v3]]
     // }
 
+    // Note: Parse out the ASN.1 of this object, since its used for TLS verification.
+    // To do this, we get the bytes of our parent, the size of ourself, and slice the parent buffer.
+    auto pre_cert_buffer = TRY(decoder.peek_entry_bytes());
+
+    // FIXME: Dont assume this value.
+    // Note: we assume this to be 4. 1 for the tag, and 3 for the length.
+    auto entry_length_byte_count = 4;
+
     ENTER_TYPED_SCOPE(Sequence, "TBSCertificate"sv);
 
+    auto post_cert_buffer = TRY(decoder.peek_entry_bytes());
+    auto asn1_data = TRY(ByteBuffer::copy(pre_cert_buffer.slice(0, post_cert_buffer.size() + entry_length_byte_count)));
+
     Certificate certificate;
+    certificate.tbs_asn1 = asn1_data;
     certificate.version = TRY(parse_version(decoder, current_scope)).to_u64();
     certificate.serial_number = TRY(parse_serial_number(decoder, current_scope));
     certificate.algorithm = TRY(parse_algorithm_identifier(decoder, current_scope));
