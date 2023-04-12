@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: EWouters <6179932+EWouters@users.noreply.github.com>
+Date: Thu, 13 Apr 2023 00:47:41 +0200
+Subject: [PATCH] Set `UNAME_S` to SerenityOS and `LINUX` to yes
+
+---
+ Makefile | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 18361eea8d90921984d52d53663876064374a3bc..8ec06525c91f694647e4fcf8fa4788519ba7d07e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -129,7 +129,8 @@ RANLIB ?= $(shell which ranlib)
+ AR ?= $(shell which ar)
+ # For now, assume !windows == unix.
+ OS_TYPE ?= unix
+-UNAME_S := $(shell uname -s)
++UNAME_S := SerenityOS
++LINUX = yes
+ 
+ ifeq ($(MAKECMDGOALS),tops20)
+     EXPORT_TYPE = tops20

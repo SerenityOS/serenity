@@ -1,7 +1,7 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='frotz'
 version='2.54'
-files="https://gitlab.com/DavidGriffith/frotz/-/archive/${version}/frotz-${version}.tar.bz2 frotz-${version}.tar.bz2 bdf9131e6de49108c9f032200cea3cb4011e5ca0c9fbdbf5b0c05f7c56c81395"
+files="https://gitlab.com/DavidGriffith/frotz/-/archive/${version}/frotz-${version}.tar.bz2 frotz-${version}.tar.bz2 756d7e11370c9c8e61573e350e2a5071e77fd2781be74c107bd432f817f3abc7"
 auth_type='sha256'
 depends=("ncurses")
 
