@@ -5,6 +5,7 @@
  */
 
 #include "Providers.h"
+#include <AK/BinaryHeap.h>
 #include <AK/FuzzyMatch.h>
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
@@ -132,7 +133,7 @@ void FileProvider::query(DeprecatedString const& query, Function<void(Vector<Non
 
     m_fuzzy_match_work = Threading::BackgroundAction<Optional<Vector<NonnullRefPtr<Result>>>>::construct(
         [this, query](auto& task) -> Optional<Vector<NonnullRefPtr<Result>>> {
-            Vector<NonnullRefPtr<Result>> results;
+            BinaryHeap<int, DeprecatedString, MAX_SEARCH_RESULTS> sorted_results;
 
             for (auto& path : m_full_path_cache) {
                 if (task.is_canceled())
@@ -144,7 +145,20 @@ void FileProvider::query(DeprecatedString const& query, Function<void(Vector<Non
                 if (match_result.score < 0)
                     continue;
 
-                results.append(adopt_ref(*new FileResult(path, match_result.score)));
+                if (sorted_results.size() < MAX_SEARCH_RESULTS || match_result.score > sorted_results.peek_min_key()) {
+                    if (sorted_results.size() == MAX_SEARCH_RESULTS)
+                        sorted_results.pop_min();
+
+                    sorted_results.insert(match_result.score, path);
+                }
+            }
+
+            Vector<NonnullRefPtr<Result>> results;
+            results.ensure_capacity(sorted_results.size());
+            while (!sorted_results.is_empty()) {
+                auto score = sorted_results.peek_min_key();
+                auto path = sorted_results.pop_min();
+                results.append(make_ref_counted<FileResult>(path, score));
             }
             return results;
         },

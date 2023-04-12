@@ -18,6 +18,8 @@
 
 namespace Assistant {
 
+static constexpr size_t MAX_SEARCH_RESULTS = 6;
+
 class Result : public RefCounted<Result> {
 public:
     virtual ~Result() = default;
