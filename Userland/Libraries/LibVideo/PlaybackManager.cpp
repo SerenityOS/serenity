@@ -313,8 +313,8 @@ ErrorOr<void> PlaybackManager::PlaybackStateHandler::replace_handler_and_delete_
     m_has_exited = true;
     dbgln("Changing state from {} to {}", temp_handler->name(), m_manager.m_playback_handler->name());
 #endif
-    m_manager.dispatch_state_change();
     TRY(m_manager.m_playback_handler->on_enter());
+    m_manager.dispatch_state_change();
     return {};
 }
 
