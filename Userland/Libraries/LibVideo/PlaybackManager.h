@@ -91,6 +91,15 @@ public:
     virtual void start(int interval_ms) = 0;
 };
 
+enum class PlaybackState {
+    Starting,
+    Playing,
+    Paused,
+    Buffering,
+    Seeking,
+    Stopped,
+};
+
 class PlaybackManager {
 public:
     enum class SeekMode {
@@ -114,6 +123,10 @@ public:
     bool is_playing() const
     {
         return m_playback_handler->is_playing();
+    }
+    PlaybackState get_state() const
+    {
+        return m_playback_handler->get_state();
     }
 
     u64 number_of_skipped_frames() const { return m_skipped_frames; }
@@ -187,7 +200,8 @@ private:
         virtual ErrorOr<void> on_enter() { return {}; }
 
         virtual ErrorOr<void> play() { return {}; };
-        virtual bool is_playing() = 0;
+        virtual bool is_playing() const = 0;
+        virtual PlaybackState get_state() const = 0;
         virtual ErrorOr<void> pause() { return {}; };
         virtual ErrorOr<void> buffer() { return {}; };
         virtual ErrorOr<void> seek(Time target_timestamp, SeekMode);
