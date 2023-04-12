@@ -29,8 +29,11 @@ ThrowCompletionOr<void> WeakRefPrototype::initialize(Realm& realm)
 // 26.1.3.2 WeakRef.prototype.deref ( ), https://tc39.es/ecma262/#sec-weak-ref.prototype.deref
 JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
 {
+    // 1. Let weakRef be the this value.
+    // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
     auto* weak_ref = TRY(typed_this_object(vm));
 
+    // 3. Return WeakRefDeref(weakRef).
     weak_ref->update_execution_generation();
     return weak_ref->value().visit(
         [](Empty) -> Value { return js_undefined(); },
