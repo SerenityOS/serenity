@@ -37,11 +37,11 @@ ThrowCompletionOr<void> RegExpPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.exec, exec, 1, attr);
     define_native_function(realm, vm.names.compile, compile, 2, attr);
 
-    define_native_function(realm, *vm.well_known_symbol_match(), symbol_match, 1, attr);
-    define_native_function(realm, *vm.well_known_symbol_match_all(), symbol_match_all, 1, attr);
-    define_native_function(realm, *vm.well_known_symbol_replace(), symbol_replace, 2, attr);
-    define_native_function(realm, *vm.well_known_symbol_search(), symbol_search, 1, attr);
-    define_native_function(realm, *vm.well_known_symbol_split(), symbol_split, 2, attr);
+    define_native_function(realm, vm.well_known_symbol_match(), symbol_match, 1, attr);
+    define_native_function(realm, vm.well_known_symbol_match_all(), symbol_match_all, 1, attr);
+    define_native_function(realm, vm.well_known_symbol_replace(), symbol_replace, 2, attr);
+    define_native_function(realm, vm.well_known_symbol_search(), symbol_search, 1, attr);
+    define_native_function(realm, vm.well_known_symbol_split(), symbol_split, 2, attr);
 
     define_native_accessor(realm, vm.names.flags, flags, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.source, source, {}, Attribute::Configurable);

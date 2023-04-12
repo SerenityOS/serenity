@@ -24,7 +24,7 @@ ThrowCompletionOr<void> SegmenterPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 18.3.2 Intl.Segmenter.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.segmenter.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Segmenter"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Segmenter"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.resolvedOptions, resolved_options, 0, attr);

@@ -260,7 +260,7 @@ ThrowCompletionOr<void> PromiseConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.reject, reject, 1, attr);
     define_native_function(realm, vm.names.resolve, resolve, 1, attr);
 
-    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 

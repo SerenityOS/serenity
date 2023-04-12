@@ -194,7 +194,7 @@ ThrowCompletionOr<void> StringPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.trimEnd, trim_end, 0, attr);
     define_native_function(realm, vm.names.trimStart, trim_start, 0, attr);
     define_native_function(realm, vm.names.valueOf, value_of, 0, attr);
-    define_native_function(realm, *vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
+    define_native_function(realm, vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 
     // B.2.2 Additional Properties of the String.prototype Object, https://tc39.es/ecma262/#sec-additional-properties-of-the-string.prototype-object
     define_native_function(realm, vm.names.substr, substr, 2, attr);
@@ -464,14 +464,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     auto this_object = TRY(require_object_coercible(vm, vm.this_value()));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* matcher = TRY(regexp.get_method(vm, *vm.well_known_symbol_match())))
+        if (auto* matcher = TRY(regexp.get_method(vm, vm.well_known_symbol_match())))
             return TRY(call(vm, *matcher, regexp, this_object));
     }
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
     auto rx = TRY(regexp_create(vm, regexp, js_undefined()));
-    return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_match(), PrimitiveString::create(vm, move(string))));
+    return TRY(Value(rx).invoke(vm, vm.well_known_symbol_match(), PrimitiveString::create(vm, move(string))));
 }
 
 // 22.1.3.13 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
@@ -488,14 +488,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             if (!flags_string.contains('g'))
                 return vm.throw_completion<TypeError>(ErrorType::StringNonGlobalRegExp);
         }
-        if (auto* matcher = TRY(regexp.get_method(vm, *vm.well_known_symbol_match_all())))
+        if (auto* matcher = TRY(regexp.get_method(vm, vm.well_known_symbol_match_all())))
             return TRY(call(vm, *matcher, regexp, this_object));
     }
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
     auto rx = TRY(regexp_create(vm, regexp, PrimitiveString::create(vm, "g"_short_string)));
-    return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_match_all(), PrimitiveString::create(vm, move(string))));
+    return TRY(Value(rx).invoke(vm, vm.well_known_symbol_match_all(), PrimitiveString::create(vm, move(string))));
 }
 
 // 22.1.3.14 String.prototype.normalize ( [ form ] ), https://tc39.es/ecma262/#sec-string.prototype.normalize
@@ -613,7 +613,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     auto replace_value = vm.argument(1);
 
     if (!search_value.is_nullish()) {
-        if (auto* replacer = TRY(search_value.get_method(vm, *vm.well_known_symbol_replace())))
+        if (auto* replacer = TRY(search_value.get_method(vm, vm.well_known_symbol_replace())))
             return TRY(call(vm, *replacer, search_value, this_object, replace_value));
     }
 
@@ -665,7 +665,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
                 return vm.throw_completion<TypeError>(ErrorType::StringNonGlobalRegExp);
         }
 
-        auto* replacer = TRY(search_value.get_method(vm, *vm.well_known_symbol_replace()));
+        auto* replacer = TRY(search_value.get_method(vm, vm.well_known_symbol_replace()));
         if (replacer)
             return TRY(call(vm, *replacer, search_value, this_object, replace_value));
     }
@@ -722,14 +722,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     auto this_object = TRY(require_object_coercible(vm, vm.this_value()));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* searcher = TRY(regexp.get_method(vm, *vm.well_known_symbol_search())))
+        if (auto* searcher = TRY(regexp.get_method(vm, vm.well_known_symbol_search())))
             return TRY(call(vm, *searcher, regexp, this_object));
     }
 
     auto string = TRY(this_object.to_utf16_string(vm));
 
     auto rx = TRY(regexp_create(vm, regexp, js_undefined()));
-    return TRY(Value(rx).invoke(vm, *vm.well_known_symbol_search(), PrimitiveString::create(vm, move(string))));
+    return TRY(Value(rx).invoke(vm, vm.well_known_symbol_search(), PrimitiveString::create(vm, move(string))));
 }
 
 // 22.1.3.21 String.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.slice
@@ -774,7 +774,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto limit_argument = vm.argument(1);
 
     if (!separator_argument.is_nullish()) {
-        auto splitter = TRY(separator_argument.get_method(vm, *vm.well_known_symbol_split()));
+        auto splitter = TRY(separator_argument.get_method(vm, vm.well_known_symbol_split()));
         if (splitter)
             return TRY(call(vm, *splitter, separator_argument, object, limit_argument));
     }

@@ -147,7 +147,7 @@ ThrowCompletionOr<FunctionObject*> species_constructor(VM& vm, Object const& obj
         return vm.throw_completion<TypeError>(ErrorType::NotAConstructor, TRY_OR_THROW_OOM(vm, constructor.to_string_without_side_effects()));
 
     // 4. Let S be ? Get(C, @@species).
-    auto species = TRY(constructor.as_object().get(*vm.well_known_symbol_species()));
+    auto species = TRY(constructor.as_object().get(vm.well_known_symbol_species()));
 
     // 5. If S is either undefined or null, return defaultConstructor.
     if (species.is_nullish())
@@ -1076,7 +1076,7 @@ Object* create_unmapped_arguments_object(VM& vm, Span<Value> arguments)
 
     // 7. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     auto array_prototype_values = realm.intrinsics().array_prototype_values_function();
-    MUST(object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
+    MUST(object->define_property_or_throw(vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
 
     // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
     auto throw_type_error = realm.intrinsics().throw_type_error_function();
@@ -1159,7 +1159,7 @@ Object* create_mapped_arguments_object(VM& vm, FunctionObject& function, Vector<
 
     // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     auto array_prototype_values = realm.intrinsics().array_prototype_values_function();
-    MUST(object->define_property_or_throw(*vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
+    MUST(object->define_property_or_throw(vm.well_known_symbol_iterator(), { .value = array_prototype_values, .writable = true, .enumerable = false, .configurable = true }));
 
     // 21. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Value]]: func, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     MUST(object->define_property_or_throw(vm.names.callee, { .value = &function, .writable = true, .enumerable = false, .configurable = true }));
@@ -1401,7 +1401,7 @@ ThrowCompletionOr<GCPtr<FunctionObject>> get_dispose_method(VM& vm, Value value,
 
     // 2. Else,
     // a. Let method be ? GetMethod(V, @@dispose).
-    return GCPtr<FunctionObject> { TRY(value.get_method(vm, *vm.well_known_symbol_dispose())) };
+    return GCPtr<FunctionObject> { TRY(value.get_method(vm, vm.well_known_symbol_dispose())) };
 }
 
 // 2.1.5 Dispose ( V, hint, method ), https://tc39.es/proposal-explicit-resource-management/#sec-dispose

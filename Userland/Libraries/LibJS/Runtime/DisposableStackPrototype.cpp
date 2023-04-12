@@ -31,10 +31,10 @@ ThrowCompletionOr<void> DisposableStackPrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.move, move_, 0, attr);
 
     // 11.3.3.7 DisposableStack.prototype [ @@dispose ] (), https://tc39.es/proposal-explicit-resource-management/#sec-disposablestack.prototype-@@dispose
-    define_direct_property(*vm.well_known_symbol_dispose(), get_without_side_effects(vm.names.dispose), attr);
+    define_direct_property(vm.well_known_symbol_dispose(), get_without_side_effects(vm.names.dispose), attr);
 
     // 11.3.3.8 DisposableStack.prototype [ @@toStringTag ], https://tc39.es/proposal-explicit-resource-management/#sec-disposablestack.prototype-@@toStringTag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DisposableStack.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DisposableStack.as_string()), Attribute::Configurable);
 
     return {};
 }

@@ -24,7 +24,7 @@ ThrowCompletionOr<void> CollatorPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 10.3.2 Intl.Collator.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.collator.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Collator"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Collator"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_accessor(realm, vm.names.compare, compare_getter, {}, attr);

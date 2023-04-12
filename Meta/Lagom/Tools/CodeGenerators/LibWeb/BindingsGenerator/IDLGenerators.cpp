@@ -887,7 +887,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
-    auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(vm, *vm.well_known_symbol_iterator()));
+    auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(vm, vm.well_known_symbol_iterator()));
     if (!iterator_method@recursion_depth@)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 )~~~");
@@ -1169,7 +1169,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (sequence_type) {
             // 1. Let method be ? GetMethod(V, @@iterator).
             union_generator.append(R"~~~(
-        auto* method = TRY(@js_name@@js_suffix@.get_method(vm, *vm.well_known_symbol_iterator()));
+        auto* method = TRY(@js_name@@js_suffix@.get_method(vm, vm.well_known_symbol_iterator()));
 )~~~");
 
             // 2. If method is not undefined, return the result of creating a sequence of that type from V and method.
@@ -2602,7 +2602,7 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
     if (interface.indexed_property_getter.has_value()) {
         auto iterator_generator = generator.fork();
         iterator_generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_iterator(), realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_direct_property(vm.well_known_symbol_iterator(), realm.intrinsics().array_prototype()->get_without_side_effects(vm.names.values), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
 
         if (interface.value_iterator_type.has_value()) {
@@ -2625,18 +2625,18 @@ JS::ThrowCompletionOr<void> @class_name@::initialize(JS::Realm& realm)
     define_native_function(realm, vm.names.keys, keys, 0, default_attributes);
     define_native_function(realm, vm.names.values, values, 0, default_attributes);
 
-    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
+    define_direct_property(vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), JS::Attribute::Configurable | JS::Attribute::Writable);
 )~~~");
     }
 
     if (interface.has_unscopable_member) {
         generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_unscopables(), unscopable_object, JS::Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_unscopables(), unscopable_object, JS::Attribute::Configurable);
 )~~~");
     }
 
     generator.append(R"~~~(
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@namespaced_name@"sv)), JS::Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "@namespaced_name@"sv)), JS::Attribute::Configurable);
 )~~~");
 
     if (!is_global_interface) {
@@ -3835,7 +3835,7 @@ JS::ThrowCompletionOr<void> @prototype_class@::initialize(JS::Realm& realm)
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
     define_native_function(realm, vm.names.next, next, 0, JS::Attribute::Writable | JS::Attribute::Enumerable | JS::Attribute::Configurable);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm, "Iterator"sv)), JS::Attribute::Configurable);
 
     return {};
 }

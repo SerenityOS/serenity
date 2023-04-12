@@ -33,7 +33,7 @@ ThrowCompletionOr<void> Temporal::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 1.1.1 Temporal [ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_direct_property(vm.names.Now, MUST_OR_THROW_OOM(heap().allocate<Now>(realm, realm)), attr);

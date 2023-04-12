@@ -40,7 +40,7 @@ ThrowCompletionOr<void> JSONObject::initialize(Realm& realm)
     define_native_function(realm, vm.names.parse, parse, 2, attr);
 
     // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "JSON"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "JSON"sv)), Attribute::Configurable);
 
     return {};
 }

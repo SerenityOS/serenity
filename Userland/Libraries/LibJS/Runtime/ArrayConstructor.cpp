@@ -35,7 +35,7 @@ ThrowCompletionOr<void> ArrayConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.of, of, 0, attr);
 
     // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
-    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     }
 
     // 4. Let usingIterator be ? GetMethod(items, @@iterator).
-    auto using_iterator = TRY(items.get_method(vm, *vm.well_known_symbol_iterator()));
+    auto using_iterator = TRY(items.get_method(vm, vm.well_known_symbol_iterator()));
 
     // 5. If usingIterator is not undefined, then
     if (using_iterator) {

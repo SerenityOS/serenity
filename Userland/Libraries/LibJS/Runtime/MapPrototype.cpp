@@ -35,8 +35,8 @@ ThrowCompletionOr<void> MapPrototype::initialize(Realm& realm)
 
     define_native_accessor(realm, vm.names.size, size_getter, {}, Attribute::Configurable);
 
-    define_direct_property(*vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), attr);
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Map.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_iterator(), get_without_side_effects(vm.names.entries), attr);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Map.as_string()), Attribute::Configurable);
 
     return {};
 }

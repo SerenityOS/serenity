@@ -87,7 +87,7 @@ ThrowCompletionOr<void> DatePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.setYear, set_year, 1, attr);
 
     // 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
-    define_native_function(realm, *vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
+    define_native_function(realm, vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
     // Aliases.
     define_native_function(realm, vm.names.valueOf, get_time, 0, attr);

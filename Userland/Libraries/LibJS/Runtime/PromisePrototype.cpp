@@ -32,7 +32,7 @@ ThrowCompletionOr<void> PromisePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.finally, finally, 1, attr);
 
     // 27.2.5.5 Promise.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-promise.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Promise.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Promise.as_string()), Attribute::Configurable);
 
     return {};
 }

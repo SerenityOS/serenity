@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +42,7 @@ ThrowCompletionOr<bool> ObjectEnvironment::has_binding(DeprecatedFlyString const
         return true;
 
     // 5. Let unscopables be ? Get(bindingObject, @@unscopables).
-    auto unscopables = TRY(m_binding_object->get(*vm.well_known_symbol_unscopables()));
+    auto unscopables = TRY(m_binding_object->get(vm.well_known_symbol_unscopables()));
 
     // 6. If Type(unscopables) is Object, then
     if (unscopables.is_object()) {

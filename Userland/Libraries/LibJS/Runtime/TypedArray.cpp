@@ -527,7 +527,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 TRY(initialize_typed_array_from_array_buffer(vm, *typed_array, array_buffer,                                                                                           \
                     vm.argument(1), vm.argument(2)));                                                                                                                                  \
             } else {                                                                                                                                                                   \
-                auto iterator = TRY(first_argument.get_method(vm, *vm.well_known_symbol_iterator()));                                                                                  \
+                auto iterator = TRY(first_argument.get_method(vm, vm.well_known_symbol_iterator()));                                                                                   \
                 if (iterator) {                                                                                                                                                        \
                     auto values = TRY(iterable_to_list(vm, first_argument, iterator));                                                                                                 \
                     TRY(initialize_typed_array_from_list(vm, *typed_array, values));                                                                                                   \
