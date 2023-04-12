@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -23,7 +23,7 @@
 namespace JS {
 
 RegExpPrototype::RegExpPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -352,14 +352,12 @@ static ThrowCompletionOr<Value> regexp_builtin_exec(VM& vm, RegExpObject& regexp
         // i. If the value of R’s [[LegacyFeaturesEnabled]] internal slot is true, then
         if (regexp_object.legacy_features_enabled()) {
             // a. Perform UpdateLegacyRegExpStaticProperties(%RegExp%, S, lastIndex, e, capturedValues).
-            auto* regexp_constructor = realm.intrinsics().regexp_constructor();
-            TRY(update_legacy_regexp_static_properties(vm, *regexp_constructor, string, match_indices.start_index, match_indices.end_index, captured_values));
+            TRY(update_legacy_regexp_static_properties(vm, realm.intrinsics().regexp_constructor(), string, match_indices.start_index, match_indices.end_index, captured_values));
         }
         // ii. Else,
         else {
             // a. Perform InvalidateLegacyRegExpStaticProperties(%RegExp%).
-            auto* regexp_constructor = realm.intrinsics().regexp_constructor();
-            invalidate_legacy_regexp_static_properties(*regexp_constructor);
+            invalidate_legacy_regexp_static_properties(realm.intrinsics().regexp_constructor());
         }
     }
 
@@ -605,7 +603,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.intrinsics().regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, realm.intrinsics().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -910,7 +908,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, *realm.intrinsics().regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *regexp_object, realm.intrinsics().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));

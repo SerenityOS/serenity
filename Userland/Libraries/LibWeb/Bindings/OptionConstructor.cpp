@@ -17,7 +17,7 @@
 namespace Web::Bindings {
 
 OptionConstructor::OptionConstructor(JS::Realm& realm)
-    : NativeFunction(*realm.intrinsics().function_prototype())
+    : NativeFunction(realm.intrinsics().function_prototype())
 {
 }
 

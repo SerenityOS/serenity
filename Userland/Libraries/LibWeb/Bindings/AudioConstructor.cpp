@@ -15,7 +15,7 @@
 namespace Web::Bindings {
 
 AudioConstructor::AudioConstructor(JS::Realm& realm)
-    : NativeFunction(*realm.intrinsics().function_prototype())
+    : NativeFunction(realm.intrinsics().function_prototype())
 {
 }
 

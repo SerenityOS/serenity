@@ -17,7 +17,7 @@
 namespace JS {
 
 TypedArrayPrototype::TypedArrayPrototype(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {
 }
 
@@ -149,7 +149,7 @@ static ThrowCompletionOr<TypedArrayBase*> typed_array_species_create(VM& vm, Typ
     auto& realm = *vm.current_realm();
 
     // 1. Let defaultConstructor be the intrinsic object listed in column one of Table 72 for exemplar.[[TypedArrayName]].
-    auto* default_constructor = (realm.intrinsics().*exemplar.intrinsic_constructor())();
+    auto default_constructor = (realm.intrinsics().*exemplar.intrinsic_constructor())();
 
     // 2. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
     auto* constructor = TRY(species_constructor(vm, exemplar, *default_constructor));

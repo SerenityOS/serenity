@@ -15,7 +15,7 @@
 namespace JS {
 
 SetPrototype::SetPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 

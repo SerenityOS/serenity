@@ -549,10 +549,10 @@ void ConnectionFromClient::initialize_js_console(Badge<PageHost>)
     if (m_realm.ptr() == realm.ptr())
         return;
 
-    auto& console_object = *realm->intrinsics().console_object();
+    auto console_object = realm->intrinsics().console_object();
     m_realm = realm;
-    m_console_client = make<WebContentConsoleClient>(console_object.console(), *m_realm, *this);
-    console_object.console().set_client(*m_console_client.ptr());
+    m_console_client = make<WebContentConsoleClient>(console_object->console(), *m_realm, *this);
+    console_object->console().set_client(*m_console_client.ptr());
 }
 
 void ConnectionFromClient::js_console_input(DeprecatedString const& js_source)

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +25,7 @@ static ThrowCompletionOr<ProxyObject*> proxy_create(VM& vm, Value target, Value 
 }
 
 ProxyConstructor::ProxyConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Proxy.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Proxy.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,17 +17,17 @@ ThrowCompletionOr<NonnullGCPtr<ArrayBuffer>> ArrayBuffer::create(Realm& realm, s
     if (buffer.is_error())
         return realm.vm().throw_completion<RangeError>(ErrorType::NotEnoughMemoryToAllocate, byte_length);
 
-    return MUST_OR_THROW_OOM(realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), *realm.intrinsics().array_buffer_prototype()));
+    return MUST_OR_THROW_OOM(realm.heap().allocate<ArrayBuffer>(realm, buffer.release_value(), realm.intrinsics().array_buffer_prototype()));
 }
 
 NonnullGCPtr<ArrayBuffer> ArrayBuffer::create(Realm& realm, ByteBuffer buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm, move(buffer), *realm.intrinsics().array_buffer_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<ArrayBuffer>(realm, move(buffer), realm.intrinsics().array_buffer_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NonnullGCPtr<ArrayBuffer> ArrayBuffer::create(Realm& realm, ByteBuffer* buffer)
 {
-    return realm.heap().allocate<ArrayBuffer>(realm, buffer, *realm.intrinsics().array_buffer_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<ArrayBuffer>(realm, buffer, realm.intrinsics().array_buffer_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer buffer, Object& prototype)
@@ -101,7 +101,7 @@ ThrowCompletionOr<ArrayBuffer*> clone_array_buffer(VM& vm, ArrayBuffer& source_b
     VERIFY(!source_buffer.is_detached());
 
     // 2. Let targetBuffer be ? AllocateArrayBuffer(%ArrayBuffer%, srcLength).
-    auto* target_buffer = TRY(allocate_array_buffer(vm, *realm.intrinsics().array_buffer_constructor(), source_length));
+    auto* target_buffer = TRY(allocate_array_buffer(vm, realm.intrinsics().array_buffer_constructor(), source_length));
 
     // 3. Let srcBlock be srcBuffer.[[ArrayBufferData]].
     auto& source_block = source_buffer.buffer();

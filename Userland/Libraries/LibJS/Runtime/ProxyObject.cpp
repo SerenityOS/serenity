@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ namespace JS {
 
 NonnullGCPtr<ProxyObject> ProxyObject::create(Realm& realm, Object& target, Object& handler)
 {
-    return realm.heap().allocate<ProxyObject>(realm, target, handler, *realm.intrinsics().object_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<ProxyObject>(realm, target, handler, realm.intrinsics().object_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)

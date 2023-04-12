@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
@@ -30,7 +30,7 @@
 namespace JS {
 
 DatePrototype::DatePrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -987,7 +987,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 static ThrowCompletionOr<Intl::DateTimeFormat*> construct_date_time_format(VM& vm, Value locales, Value options)
 {
     auto& realm = *vm.current_realm();
-    auto date_time_format = TRY(construct(vm, *realm.intrinsics().intl_date_time_format_constructor(), locales, options));
+    auto date_time_format = TRY(construct(vm, realm.intrinsics().intl_date_time_format_constructor(), locales, options));
     return static_cast<Intl::DateTimeFormat*>(date_time_format.ptr());
 }
 

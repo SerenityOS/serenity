@@ -14,7 +14,7 @@
 namespace JS {
 
 BooleanPrototype::BooleanPrototype(Realm& realm)
-    : BooleanObject(false, *realm.intrinsics().object_prototype())
+    : BooleanObject(false, realm.intrinsics().object_prototype())
 {
 }
 

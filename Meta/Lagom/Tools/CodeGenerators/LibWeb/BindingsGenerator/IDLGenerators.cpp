@@ -3311,7 +3311,7 @@ using namespace Web::WebIDL;
 namespace Web::Bindings {
 
 @constructor_class@::@constructor_class@(JS::Realm& realm)
-    : NativeFunction("@name@"sv, *realm.intrinsics().function_prototype())
+    : NativeFunction("@name@"sv, realm.intrinsics().function_prototype())
 {
 }
 
@@ -3698,7 +3698,7 @@ namespace Web::Bindings {
         // https://webidl.spec.whatwg.org/#es-DOMException-specialness
         // Object.getPrototypeOf(DOMException.prototype) === Error.prototype
         generator.append(R"~~~(
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().error_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().error_prototype())
 )~~~");
     } else if (!interface.parent_name.is_empty()) {
         generator.append(R"~~~(
@@ -3706,7 +3706,7 @@ namespace Web::Bindings {
 )~~~");
     } else {
         generator.append(R"~~~(
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 )~~~");
     }
 
@@ -3821,7 +3821,7 @@ using namespace Web::WebIDL;
 namespace Web::Bindings {
 
 @prototype_class@::@prototype_class@(JS::Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().iterator_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().iterator_prototype())
 {
 }
 

@@ -27,7 +27,7 @@ ThrowCompletionOr<Value> AsyncFunctionDriverWrapper::create(Realm& realm, Genera
 }
 
 AsyncFunctionDriverWrapper::AsyncFunctionDriverWrapper(Realm& realm, NonnullGCPtr<GeneratorObject> generator_object, NonnullGCPtr<Promise> top_level_promise)
-    : Promise(*realm.intrinsics().promise_prototype())
+    : Promise(realm.intrinsics().promise_prototype())
     , m_generator_object(generator_object)
     , m_on_fulfillment(*NativeFunction::create(realm, "async.on_fulfillment"sv, [this](VM& vm) -> ThrowCompletionOr<Value> {
         auto arg = vm.argument(0);

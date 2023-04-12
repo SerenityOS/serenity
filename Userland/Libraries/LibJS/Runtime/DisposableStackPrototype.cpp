@@ -13,7 +13,7 @@
 namespace JS {
 
 DisposableStackPrototype::DisposableStackPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
