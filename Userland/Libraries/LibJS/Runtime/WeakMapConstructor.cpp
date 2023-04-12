@@ -35,6 +35,8 @@ ThrowCompletionOr<void> WeakMapConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> WeakMapConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.WeakMap);
 }
 
@@ -42,28 +44,36 @@ ThrowCompletionOr<Value> WeakMapConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> WeakMapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+    auto iterable = vm.argument(0);
 
-    auto weak_map = TRY(ordinary_create_from_constructor<WeakMap>(vm, new_target, &Intrinsics::weak_map_prototype));
+    // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
+    // 3. Set map.[[WeakMapData]] to a new empty List.
+    auto map = TRY(ordinary_create_from_constructor<WeakMap>(vm, new_target, &Intrinsics::weak_map_prototype));
 
-    if (vm.argument(0).is_nullish())
-        return weak_map;
+    // 4. If iterable is either undefined or null, return map.
+    if (iterable.is_nullish())
+        return map;
 
-    auto adder = TRY(weak_map->get(vm.names.set));
+    // 5. Let adder be ? Get(map, "set").
+    auto adder = TRY(map->get(vm.names.set));
+
+    // 6. If IsCallable(adder) is false, throw a TypeError exception.
     if (!adder.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'set' property of WeakMap");
 
-    (void)TRY(get_iterator_values(vm, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
+    // 7. Return ? AddEntriesFromIterable(map, iterable, adder).
+    (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
         if (!iterator_value.is_object())
             return vm.throw_completion<TypeError>(ErrorType::NotAnObject, DeprecatedString::formatted("Iterator value {}", TRY_OR_THROW_OOM(vm, iterator_value.to_string_without_side_effects())));
 
         auto key = TRY(iterator_value.as_object().get(0));
         auto value = TRY(iterator_value.as_object().get(1));
-        TRY(JS::call(vm, adder.as_function(), weak_map, key, value));
+        TRY(JS::call(vm, adder.as_function(), map, key, value));
 
         return {};
     }));
 
-    return weak_map;
+    return map;
 }
 
 }
