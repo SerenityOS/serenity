@@ -55,27 +55,56 @@ ThrowCompletionOr<void> SetPrototype::initialize(Realm& realm)
 // 24.2.3.1 Set.prototype.add ( value ), https://tc39.es/ecma262/#sec-set.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
 {
-    auto* set = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
+    auto* set = TRY(typed_this_object(vm));
+
+    // 4. If value is -0𝔽, set value to +0𝔽.
     if (value.is_negative_zero())
         value = Value(0);
+
+    // 3. For each element e of S.[[SetData]], do
+    //     a. If e is not empty and SameValueZero(e, value) is true, then
+    //         i. Return S.
+    // 5. Append value to S.[[SetData]].
     set->set_add(value);
+
+    // 6. Return S.
     return set;
 }
 
 // 24.2.3.2 Set.prototype.clear ( ), https://tc39.es/ecma262/#sec-set.prototype.clear
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 {
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
     auto* set = TRY(typed_this_object(vm));
+
+    // 3. For each element e of S.[[SetData]], do
+    //     a. Replace the element of S.[[SetData]] whose value is e with an element whose value is empty.
     set->set_clear();
+
+    // 4. Return undefined.
     return js_undefined();
 }
 
 // 24.2.3.4 Set.prototype.delete ( value ), https://tc39.es/ecma262/#sec-set.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
 {
+    auto value = vm.argument(0);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
     auto* set = TRY(typed_this_object(vm));
-    return Value(set->set_remove(vm.argument(0)));
+
+    // 3. For each element e of S.[[SetData]], do
+    //     a. If e is not empty and SameValueZero(e, value) is true, then
+    //         i. Replace the element of S.[[SetData]] whose value is e with an element whose value is empty.
+    //         ii. Return true.
+    // 4. Return false.
+    return Value(set->set_remove(value));
 }
 
 // 24.2.3.5 Set.prototype.entries ( ), https://tc39.es/ecma262/#sec-set.prototype.entries
@@ -83,28 +112,62 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
 {
     auto& realm = *vm.current_realm();
 
+    // 1. Let S be the this value.
     auto* set = TRY(typed_this_object(vm));
 
+    // 2. Return ? CreateSetIterator(S, key+value).
     return SetIterator::create(realm, *set, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.2.3.6 Set.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-set.prototype.foreach
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 {
+    auto callback_fn = vm.argument(0);
+    auto this_arg = vm.argument(1);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
     auto* set = TRY(typed_this_object(vm));
-    if (!vm.argument(0).is_function())
+
+    // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    if (!callback_fn.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, vm.argument(0).to_string_without_side_effects()));
-    auto this_value = vm.this_value();
-    for (auto& entry : *set)
-        TRY(call(vm, vm.argument(0).as_function(), vm.argument(1), entry.key, entry.key, this_value));
+
+    // 4. Let entries be S.[[SetData]].
+    // 5. Let numEntries be the number of elements in entries.
+    // 6. Let index be 0.
+    // 7. Repeat, while index < numEntries,
+    for (auto& entry : *set) {
+        // a. Let e be entries[index].
+        // b. Set index to index + 1.
+        // c. If e is not empty, then
+        // NOTE: This is handled in Map::IteratorImpl.
+
+        // i. Perform ? Call(callbackfn, thisArg, « e, e, S »).
+        TRY(call(vm, callback_fn.as_function(), this_arg, entry.key, entry.key, set));
+
+        // ii. NOTE: The number of elements in entries may have increased during execution of callbackfn.
+        // iii. Set numEntries to the number of elements in entries.
+        // NOTE: This is handled in Map::IteratorImpl.
+    }
+
+    // 8. Return undefined.
     return js_undefined();
 }
 
 // 24.2.3.7 Set.prototype.has ( value ), https://tc39.es/ecma262/#sec-set.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 {
+    auto value = vm.argument(0);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
     auto* set = TRY(typed_this_object(vm));
-    return Value(set->set_has(vm.argument(0)));
+
+    // 3. For each element e of S.[[SetData]], do
+    //     a. If e is not empty and SameValueZero(e, value) is true, return true.
+    // 4. Return false.
+    return Value(set->set_has(value));
 }
 
 // 24.2.3.10 Set.prototype.values ( ), https://tc39.es/ecma262/#sec-set.prototype.values
@@ -112,16 +175,28 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 {
     auto& realm = *vm.current_realm();
 
+    // 1. Let S be the this value.
+    // NOTE: CreateSetIterator checks the presence of a [[SetData]] slot, so we can do this here.
     auto* set = TRY(typed_this_object(vm));
 
+    // 2. Return ? CreateSetIterator(S, value).
     return SetIterator::create(realm, *set, Object::PropertyKind::Value);
 }
 
 // 24.2.3.9 get Set.prototype.size, https://tc39.es/ecma262/#sec-get-set.prototype.size
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
     auto* set = TRY(typed_this_object(vm));
-    return Value(set->set_size());
+
+    // 3. Let count be 0.
+    // 4. For each element e of S.[[SetData]], do
+    //     a. If e is not empty, set count to count + 1.
+    auto count = set->set_size();
+
+    // 5. Return 𝔽(count).
+    return Value(count);
 }
 
 // 8 Set Records, https://tc39.es/proposal-set-methods/#sec-set-records
