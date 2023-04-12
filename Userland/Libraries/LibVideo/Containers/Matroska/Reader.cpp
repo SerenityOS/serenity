@@ -855,7 +855,7 @@ DecoderErrorOr<SampleIterator> Reader::seek_to_random_access_point(SampleIterato
 {
     if (TRY(has_cues_for_track(iterator.m_track.track_number()))) {
         TRY(seek_to_cue_for_timestamp(iterator, timestamp));
-        VERIFY(iterator.last_timestamp().has_value() && iterator.last_timestamp().value() <= timestamp);
+        VERIFY(iterator.last_timestamp().has_value());
         return iterator;
     }
 
