@@ -36,46 +36,96 @@ ThrowCompletionOr<void> WeakMapPrototype::initialize(Realm& realm)
 // 24.3.3.2 WeakMap.prototype.delete ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 {
+    auto key = vm.argument(0);
+
+    // 1. Let M be the this value.
+    // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
     auto* weak_map = TRY(typed_this_object(vm));
-    auto value = vm.argument(0);
-    if (!can_be_held_weakly(value))
+
+    // 3. If CanBeHeldWeakly(key) is false, return false.
+    if (!can_be_held_weakly(key))
         return Value(false);
-    return Value(weak_map->values().remove(&value.as_cell()));
+
+    // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    //     a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+    //         i. Set p.[[Key]] to empty.
+    //         ii. Set p.[[Value]] to empty.
+    //         iii. Return true.
+    // 5. Return false.
+    return Value(weak_map->values().remove(&key.as_cell()));
 }
 
 // 24.3.3.3 WeakMap.prototype.get ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 {
+    auto key = vm.argument(0);
+
+    // 1. Let M be the this value.
+    // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
     auto* weak_map = TRY(typed_this_object(vm));
-    auto value = vm.argument(0);
-    if (!can_be_held_weakly(value))
+
+    // 3. If CanBeHeldWeakly(key) is false, return undefined.
+    if (!can_be_held_weakly(key))
         return js_undefined();
+
+    // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    //     a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
     auto& values = weak_map->values();
-    auto result = values.find(&value.as_cell());
-    if (result == values.end())
-        return js_undefined();
-    return result->value;
+    auto result = values.find(&key.as_cell());
+    if (result != values.end())
+        return result->value;
+
+    // 5. Return undefined.
+    return js_undefined();
 }
 
 // 24.3.3.4 WeakMap.prototype.has ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 {
+    auto key = vm.argument(0);
+
+    // 1. Let M be the this value.
+    // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
     auto* weak_map = TRY(typed_this_object(vm));
-    auto value = vm.argument(0);
-    if (!can_be_held_weakly(value))
+
+    // 3. If CanBeHeldWeakly(key) is false, return false.
+    if (!can_be_held_weakly(key))
         return Value(false);
+
+    // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    //     a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return true.
     auto& values = weak_map->values();
-    return Value(values.find(&value.as_cell()) != values.end());
+    auto result = values.find(&key.as_cell());
+    if (result != values.end())
+        return Value(true);
+
+    // 5. Return false.
+    return Value(false);
 }
 
 // 24.3.3.5 WeakMap.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-weakmap.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 {
+    auto key = vm.argument(0);
+    auto value = vm.argument(1);
+
+    // 1. Let M be the this value.
+    // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
     auto* weak_map = TRY(typed_this_object(vm));
-    auto value = vm.argument(0);
-    if (!can_be_held_weakly(value))
+
+    // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
+    if (!can_be_held_weakly(key))
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
-    weak_map->values().set(&value.as_cell(), vm.argument(1));
+
+    // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+    //    a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+    //        i. Set p.[[Value]] to value.
+    //        ii. Return M.
+    // 5. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+    // 6. Append p to M.[[WeakMapData]].
+    weak_map->values().set(&key.as_cell(), value);
+
+    // 7. Return M.
     return weak_map;
 }
 
