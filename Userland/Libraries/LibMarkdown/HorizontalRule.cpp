@@ -35,7 +35,7 @@ RecursionDecision HorizontalRule::walk(Visitor& visitor) const
     return RecursionDecision::Continue;
 }
 
-static Regex<ECMA262> thematic_break_re("^ {0,3}([\\*\\-_])(\\s*\\1\\s*){2,}$");
+static Regex<ECMA262> thematic_break_re("^ {0,3}([\\*\\-_])\\s*(\\1\\s*){2,}$");
 
 OwnPtr<HorizontalRule> HorizontalRule::parse(LineIterator& lines)
 {
