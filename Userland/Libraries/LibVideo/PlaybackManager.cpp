@@ -580,13 +580,14 @@ private:
 #endif
 
         if (m_seek_mode == SeekMode::Fast) {
-            m_target_timestamp = keyframe_timestamp.value_or(earliest_available_sample);
+            m_target_timestamp = keyframe_timestamp.value_or(manager().m_last_present_in_media_time);
         }
 
         if (keyframe_timestamp.has_value()) {
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Keyframe is nearer to the target than the current frames, clearing queue");
             manager().m_frame_queue->clear();
             manager().m_next_frame.clear();
+            manager().m_last_present_in_media_time = keyframe_timestamp.value();
         } else if (m_target_timestamp >= manager().m_last_present_in_media_time && manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Target timestamp is between the last presented frame and the next frame, exiting seek at {}ms", m_target_timestamp.to_milliseconds());
             manager().m_last_present_in_media_time = m_target_timestamp;
@@ -603,14 +604,16 @@ private:
             manager().m_decode_timer->start(0);
 
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Dequeuing frame at {}ms and comparing to seek target {}ms", item.timestamp().to_milliseconds(), m_target_timestamp.to_milliseconds());
-            if (item.timestamp() > m_target_timestamp || item.timestamp() == FrameQueueItem::no_timestamp) {
-                // Fast seeking will result in an equal timestamp, so we can exit as soon as we see the next frame.
-                if (manager().m_next_frame.has_value()) {
+            if (manager().m_next_frame.has_value() && (item.timestamp() > m_target_timestamp || item.timestamp() == FrameQueueItem::no_timestamp)) {
+                // If the frame we're presenting is later than the target timestamp, skip the timestamp forward to it.
+                if (manager().m_next_frame->timestamp() > m_target_timestamp) {
+                    manager().m_last_present_in_media_time = manager().m_next_frame->timestamp();
+                } else {
                     manager().m_last_present_in_media_time = m_target_timestamp;
-
-                    if (manager().dispatch_frame_queue_item(manager().m_next_frame.release_value()))
-                        return {};
                 }
+
+                if (manager().dispatch_frame_queue_item(manager().m_next_frame.release_value()))
+                    return {};
 
                 manager().m_next_frame.emplace(item);
 
