@@ -34,6 +34,8 @@ ThrowCompletionOr<void> WeakRefConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> WeakRefConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.WeakRef);
 }
 
@@ -41,11 +43,16 @@ ThrowCompletionOr<Value> WeakRefConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> WeakRefConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
-
     auto target = vm.argument(0);
+
+    // 2. If CanBeHeldWeakly(target) is false, throw a TypeError exception.
     if (!can_be_held_weakly(target))
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, TRY_OR_THROW_OOM(vm, target.to_string_without_side_effects()));
 
+    // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRef.prototype%", « [[WeakRefTarget]] »).
+    // 4. Perform AddToKeptObjects(target).
+    // 5. Set weakRef.[[WeakRefTarget]] to target.
+    // 6. Return weakRef.
     if (target.is_object())
         return TRY(ordinary_create_from_constructor<WeakRef>(vm, new_target, &Intrinsics::weak_ref_prototype, target.as_object()));
     VERIFY(target.is_symbol());
