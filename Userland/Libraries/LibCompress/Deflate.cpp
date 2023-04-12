@@ -238,6 +238,9 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     if (m_bytes_remaining == 0)
         return false;
 
+    if (m_decompressor.m_input_stream->is_eof())
+        return Error::from_string_literal("Input data ends in the middle of an uncompressed DEFLATE block");
+
     Array<u8, 4096> temporary_buffer;
     auto readable_bytes = temporary_buffer.span().trim(min(m_bytes_remaining, m_decompressor.m_output_buffer.empty_space()));
     auto read_bytes = TRY(m_decompressor.m_input_stream->read_some(readable_bytes));
