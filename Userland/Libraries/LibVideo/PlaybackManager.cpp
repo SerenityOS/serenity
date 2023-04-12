@@ -349,7 +349,7 @@ protected:
         manager().dispatch_state_change();
         return {};
     }
-    bool is_playing() override { return m_playing; }
+    bool is_playing() const override { return m_playing; }
     ErrorOr<void> pause() override
     {
         m_playing = false;
@@ -369,6 +369,8 @@ class PlaybackManager::StartingStateHandler : public PlaybackManager::ResumingSt
     }
 
     StringView name() override { return "Starting"sv; }
+
+    PlaybackState get_state() const override { return PlaybackState::Starting; }
 
     ErrorOr<void> on_timer_callback() override
     {
@@ -409,7 +411,8 @@ private:
 
     StringView name() override { return "Playing"sv; }
 
-    bool is_playing() override { return true; };
+    bool is_playing() const override { return true; };
+    PlaybackState get_state() const override { return PlaybackState::Playing; }
     ErrorOr<void> pause() override
     {
         manager().m_last_present_in_media_time = current_time();
@@ -531,7 +534,8 @@ private:
     {
         return replace_handler_and_delete_this<PlayingStateHandler>();
     }
-    bool is_playing() override { return false; };
+    bool is_playing() const override { return false; };
+    PlaybackState get_state() const override { return PlaybackState::Paused; }
 };
 
 class PlaybackManager::BufferingStateHandler : public PlaybackManager::ResumingStateHandler {
@@ -549,6 +553,8 @@ class PlaybackManager::BufferingStateHandler : public PlaybackManager::ResumingS
     {
         return assume_next_state();
     }
+
+    PlaybackState get_state() const override { return PlaybackState::Buffering; }
 };
 
 class PlaybackManager::SeekingStateHandler : public PlaybackManager::ResumingStateHandler {
@@ -649,6 +655,8 @@ private:
         return skip_samples_until_timestamp();
     }
 
+    PlaybackState get_state() const override { return PlaybackState::Seeking; }
+
     Time m_target_timestamp { Time::zero() };
     SeekMode m_seek_mode { SeekMode::Accurate };
 };
@@ -678,7 +686,8 @@ private:
         manager().m_last_present_in_media_time = start_timestamp.release_value();
         return replace_handler_and_delete_this<StartingStateHandler>(true);
     }
-    bool is_playing() override { return false; };
+    bool is_playing() const override { return false; };
+    PlaybackState get_state() const override { return PlaybackState::Stopped; }
 };
 
 }
