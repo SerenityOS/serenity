@@ -35,33 +35,69 @@ ThrowCompletionOr<void> WeakSetPrototype::initialize(Realm& realm)
 // 24.4.3.1 WeakSet.prototype.add ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.add
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
 {
-    auto* weak_set = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
+    auto* weak_set = TRY(typed_this_object(vm));
+
+    // 3. If CanBeHeldWeakly(value) is false, throw a TypeError exception.
     if (!can_be_held_weakly(value))
         return vm.throw_completion<TypeError>(ErrorType::CannotBeHeldWeakly, TRY_OR_THROW_OOM(vm, value.to_string_without_side_effects()));
+
+    // 4. For each element e of S.[[WeakSetData]], do
+    //     a. If e is not empty and SameValue(e, value) is true, then
+    //         i. Return S.
+    // 5. Append value to S.[[WeakSetData]].
     weak_set->values().set(&value.as_cell(), AK::HashSetExistingEntryBehavior::Keep);
+
+    // 6. Return S.
     return weak_set;
 }
 
 // 24.4.3.3 WeakSet.prototype.delete ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::delete_)
 {
-    auto* weak_set = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
+    auto* weak_set = TRY(typed_this_object(vm));
+
+    // 3. If CanBeHeldWeakly(value) is false, return false.
     if (!can_be_held_weakly(value))
         return Value(false);
+
+    // 4. For each element e of S.[[WeakSetData]], do
+    //     a. If e is not empty and SameValue(e, value) is true, then
+    //         i. Replace the element of S.[[WeakSetData]] whose value is e with an element whose value is empty.
+    //         ii. Return true.
+    // 5. Return false.
     return Value(weak_set->values().remove(&value.as_cell()));
 }
 
 // 24.4.3.4 WeakSet.prototype.has ( value ), https://tc39.es/ecma262/#sec-weakset.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::has)
 {
-    auto* weak_set = TRY(typed_this_object(vm));
     auto value = vm.argument(0);
+
+    // 1. Let S be the this value.
+    // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
+    auto* weak_set = TRY(typed_this_object(vm));
+
+    // 3. If CanBeHeldWeakly(value) is false, return false.
     if (!can_be_held_weakly(value))
         return Value(false);
+
+    // 4. For each element e of S.[[WeakSetData]], do
+    //     a. If e is not empty and SameValue(e, value) is true, return true.
     auto& values = weak_set->values();
-    return Value(values.find(&value.as_cell()) != values.end());
+    auto result = values.find(&value.as_cell());
+    if (result != values.end())
+        return Value(true);
+
+    // 5. Return false.
+    return Value(false);
 }
 
 }
