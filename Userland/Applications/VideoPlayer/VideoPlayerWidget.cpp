@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/NumberFormat.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -249,8 +250,8 @@ void VideoPlayerWidget::set_time_label(Time timestamp)
 {
     StringBuilder string_builder;
     auto append_time = [&](Time time) {
-        auto seconds = time.to_seconds();
-        string_builder.appendff("{:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60);
+        auto seconds = (time.to_milliseconds() + 500) / 1000;
+        string_builder.append(human_readable_digital_time(seconds));
     };
 
     append_time(timestamp);
@@ -259,7 +260,7 @@ void VideoPlayerWidget::set_time_label(Time timestamp)
         string_builder.append(" / "sv);
         append_time(m_playback_manager->duration());
     } else {
-        string_builder.append(" / --:--:--.---"sv);
+        string_builder.append(" / --:--:--"sv);
     }
 
     m_timestamp_label->set_text(string_builder.string_view());
