@@ -231,10 +231,8 @@ ErrorOr<size_t> GzipCompressor::write_some(ReadonlyBytes bytes)
     TRY(compressed_stream->final_flush());
     Crypto::Checksum::CRC32 crc32;
     crc32.update(bytes);
-    LittleEndian<u32> digest = crc32.digest();
-    LittleEndian<u32> size = bytes.size();
-    TRY(m_output_stream->write_until_depleted(digest.bytes()));
-    TRY(m_output_stream->write_until_depleted(size.bytes()));
+    TRY(m_output_stream->write_value<LittleEndian<u32>>(crc32.digest()));
+    TRY(m_output_stream->write_value<LittleEndian<u32>>(bytes.size()));
     return bytes.size();
 }
 
