@@ -33,7 +33,6 @@ public:
         return m_handlers.with([](auto& list) { return list.size_slow(); });
     }
     virtual bool is_shared_handler() const override { return true; }
-    virtual bool is_sharing_with_others() const override { return false; }
 
     virtual HandlerType type() const override { return HandlerType::SharedIRQHandler; }
     virtual StringView purpose() const override { return "Shared IRQ Handler"sv; }
