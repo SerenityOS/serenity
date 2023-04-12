@@ -15,8 +15,50 @@
 #include <LibCore/DateTime.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/PK/RSA.h>
+#include <LibTLS/Extensions.h>
 
 namespace TLS {
+
+constexpr static Array<int, 7>
+    rsa_encryption_oid { 1, 2, 840, 113549, 1, 1, 1 },
+    rsa_md5_encryption_oid { 1, 2, 840, 113549, 1, 1, 4 },
+    rsa_sha1_encryption_oid { 1, 2, 840, 113549, 1, 1, 5 },
+    rsa_sha256_encryption_oid { 1, 2, 840, 113549, 1, 1, 11 },
+    rsa_sha384_encryption_oid { 1, 2, 840, 113549, 1, 1, 12 },
+    rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 },
+    rsa_sha224_encryption_oid { 1, 2, 840, 113549, 1, 1, 14 },
+    ecdsa_with_sha224_encryption_oid { 1, 2, 840, 10045, 4, 3, 1 },
+    ecdsa_with_sha256_encryption_oid { 1, 2, 840, 10045, 4, 3, 2 },
+    ecdsa_with_sha384_encryption_oid { 1, 2, 840, 10045, 4, 3, 3 },
+    ecdsa_with_sha512_encryption_oid { 1, 2, 840, 10045, 4, 3, 3 },
+    ec_public_key_encryption_oid { 1, 2, 840, 10045, 2, 1 };
+
+constexpr static Array<Array<int, 7>, 9> known_algorithm_identifiers {
+    rsa_encryption_oid,
+    rsa_md5_encryption_oid,
+    rsa_sha1_encryption_oid,
+    rsa_sha256_encryption_oid,
+    rsa_sha384_encryption_oid,
+    rsa_sha512_encryption_oid,
+    ecdsa_with_sha256_encryption_oid,
+    ecdsa_with_sha384_encryption_oid,
+    ec_public_key_encryption_oid
+};
+
+constexpr static Array<int, 7>
+    curve_ansip384r1 { 1, 3, 132, 0, 34 },
+    curve_prime256 { 1, 2, 840, 10045, 3, 1, 7 };
+
+constexpr static Array<Array<int, 7>, 9> known_curve_identifiers {
+    curve_ansip384r1,
+    curve_prime256
+};
+
+constexpr static Array<int, 4>
+    key_usage_oid { 2, 5, 29, 15 },
+    subject_alternative_name_oid { 2, 5, 29, 17 },
+    issuer_alternative_name_oid { 2, 5, 29, 18 },
+    basic_constraints_oid { 2, 5, 29, 19 };
 
 #define _ENUM(key, value) key,
 
@@ -129,28 +171,18 @@ constexpr static StringView enum_value(AttributeType object_class)
 #undef __ENUM_ATTRIBUTE_TYPE
 }
 
-enum class CertificateKeyAlgorithm : u8 {
-    Unsupported = 0x00,
-    RSA_RSA = 0x01,
-    RSA_MD2 = 0x2,
-    RSA_MD4 = 0x3,
-    RSA_MD5 = 0x04,
-    RSA_SHA1 = 0x05,
-    RSA_OAEP = 0x6,
-    RSAES_OAEP = 0x7,
-    RSA_MGF1 = 0x8,
-    RSA_SPECIFIED = 0x9,
-    RSA_PSS = 0xa,
-    RSA_SHA256 = 0x0b,
-    RSA_SHA384 = 0x0c,
-    RSA_SHA512 = 0x0d,
-    RSA_SHA224 = 0xe,
-    ECDSA_SHA224 = 0x10,
-    ECDSA_SHA256 = 0x11,
-    ECDSA_SHA384 = 0x12,
-    ECDSA_SHA512 = 0x13,
-    ECDSA_SECP256R1 = 0x14,
-    ECDSA_SECP384R1 = 0x15,
+struct AlgorithmIdentifier {
+    AlgorithmIdentifier()
+    {
+    }
+
+    explicit AlgorithmIdentifier(Vector<int, 9> identifier)
+        : identifier(identifier)
+    {
+    }
+
+    Vector<int, 9> identifier;
+    SupportedGroup ec_parameters {};
 };
 
 struct BasicConstraints {
@@ -215,16 +247,15 @@ class SubjectPublicKey {
 public:
     Crypto::PK::RSAPublicKey<Crypto::UnsignedBigInteger> rsa;
 
-    CertificateKeyAlgorithm algorithm { CertificateKeyAlgorithm::Unsupported };
+    AlgorithmIdentifier algorithm;
     ByteBuffer raw_key;
 };
 
 class Certificate {
 public:
     u16 version { 0 };
-    CertificateKeyAlgorithm algorithm { CertificateKeyAlgorithm::Unsupported };
-    CertificateKeyAlgorithm ec_algorithm { CertificateKeyAlgorithm::Unsupported };
-    SubjectPublicKey public_key {};
+    AlgorithmIdentifier algorithm;
+    SubjectPublicKey public_key;
     ByteBuffer exponent {};
     Crypto::PK::RSAPrivateKey<Crypto::UnsignedBigInteger> private_key {};
     RelativeDistinguishedName issuer, subject;
@@ -237,7 +268,7 @@ public:
     ByteBuffer fingerprint {};
     ByteBuffer der {};
     ByteBuffer data {};
-    CertificateKeyAlgorithm signature_algorithm { CertificateKeyAlgorithm::Unsupported };
+    AlgorithmIdentifier signature_algorithm;
     ByteBuffer signature_value {};
     ByteBuffer original_asn1 {};
     bool is_allowed_to_sign_certificate { false };

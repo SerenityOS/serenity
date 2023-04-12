@@ -11,50 +11,8 @@
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
-#include <LibTLS/Extensions.h>
 
 namespace TLS {
-
-constexpr static Array<int, 7>
-    rsa_encryption_oid { 1, 2, 840, 113549, 1, 1, 1 },
-    rsa_md5_encryption_oid { 1, 2, 840, 113549, 1, 1, 4 },
-    rsa_sha1_encryption_oid { 1, 2, 840, 113549, 1, 1, 5 },
-    rsa_sha256_encryption_oid { 1, 2, 840, 113549, 1, 1, 11 },
-    rsa_sha384_encryption_oid { 1, 2, 840, 113549, 1, 1, 12 },
-    rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 },
-    rsa_sha224_encryption_oid { 1, 2, 840, 113549, 1, 1, 14 },
-    ecdsa_with_sha224_encryption_oid { 1, 2, 840, 10045, 4, 3, 1 },
-    ecdsa_with_sha256_encryption_oid { 1, 2, 840, 10045, 4, 3, 2 },
-    ecdsa_with_sha384_encryption_oid { 1, 2, 840, 10045, 4, 3, 3 },
-    ecdsa_with_sha512_encryption_oid { 1, 2, 840, 10045, 4, 3, 3 },
-    ec_public_key_encryption_oid { 1, 2, 840, 10045, 2, 1 };
-
-constexpr static Array<Array<int, 7>, 9> known_algorithm_identifiers {
-    rsa_encryption_oid,
-    rsa_md5_encryption_oid,
-    rsa_sha1_encryption_oid,
-    rsa_sha256_encryption_oid,
-    rsa_sha384_encryption_oid,
-    rsa_sha512_encryption_oid,
-    ecdsa_with_sha256_encryption_oid,
-    ecdsa_with_sha384_encryption_oid,
-    ec_public_key_encryption_oid
-};
-
-constexpr static Array<int, 7>
-    curve_ansip384r1 { 1, 3, 132, 0, 34 },
-    curve_prime256 { 1, 2, 840, 10045, 3, 1, 7 };
-
-constexpr static Array<Array<int, 7>, 9> known_curve_identifiers {
-    curve_ansip384r1,
-    curve_prime256
-};
-
-constexpr static Array<int, 4>
-    key_usage_oid { 2, 5, 29, 15 },
-    subject_alternative_name_oid { 2, 5, 29, 17 },
-    issuer_alternative_name_oid { 2, 5, 29, 18 },
-    basic_constraints_oid { 2, 5, 29, 19 };
 
 #define ERROR_WITH_SCOPE(error)                                                                 \
     do {                                                                                        \
@@ -122,34 +80,6 @@ static ErrorOr<SupportedGroup> oid_to_curve(Vector<int> curve)
     return Error::from_string_view(TRY(String::formatted("Unknown curve oid {}", curve)));
 }
 
-static ErrorOr<CertificateKeyAlgorithm> oid_to_algorithm(Vector<int> algorithm)
-{
-    if (algorithm == rsa_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_RSA;
-    else if (algorithm == rsa_md5_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_MD5;
-    else if (algorithm == rsa_sha1_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_SHA1;
-    else if (algorithm == rsa_sha256_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_SHA256;
-    else if (algorithm == rsa_sha384_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_SHA384;
-    else if (algorithm == rsa_sha512_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_SHA512;
-    else if (algorithm == rsa_sha224_encryption_oid)
-        return CertificateKeyAlgorithm::RSA_SHA224;
-    else if (algorithm == ecdsa_with_sha224_encryption_oid)
-        return CertificateKeyAlgorithm::ECDSA_SHA224;
-    else if (algorithm == ecdsa_with_sha256_encryption_oid)
-        return CertificateKeyAlgorithm::ECDSA_SHA256;
-    else if (algorithm == ecdsa_with_sha384_encryption_oid)
-        return CertificateKeyAlgorithm::ECDSA_SHA384;
-    else if (algorithm == ecdsa_with_sha512_encryption_oid)
-        return CertificateKeyAlgorithm::ECDSA_SHA512;
-
-    return Error::from_string_view(TRY(String::formatted("Unknown algorithm oid {}", algorithm)));
-}
-
 static ErrorOr<Crypto::UnsignedBigInteger> parse_version(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
 {
     // Version ::= INTEGER {v1(0), v2(1), v3(2)}
@@ -203,7 +133,7 @@ static ErrorOr<SupportedGroup> parse_ec_parameters(Crypto::ASN1::Decoder& decode
     return oid_to_curve(named_curve);
 }
 
-static ErrorOr<CertificateKeyAlgorithm> parse_algorithm_identifier(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
+static ErrorOr<AlgorithmIdentifier> parse_algorithm_identifier(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
 {
     // AlgorithmIdentifier{ALGORITHM:SupportedAlgorithms} ::= SEQUENCE {
     //     algorithm ALGORITHM.&id({SupportedAlgorithms}),
@@ -264,7 +194,7 @@ static ErrorOr<CertificateKeyAlgorithm> parse_algorithm_identifier(Crypto::ASN1:
         POP_SCOPE();
 
         EXIT_SCOPE();
-        return oid_to_algorithm(algorithm);
+        return AlgorithmIdentifier(algorithm);
     }
 
     // When the ecdsa-with-SHA224, ecdsa-with-SHA256, ecdsa-with-SHA384, or
@@ -288,7 +218,7 @@ static ErrorOr<CertificateKeyAlgorithm> parse_algorithm_identifier(Crypto::ASN1:
     if (is_no_parameter_algorithm) {
         EXIT_SCOPE();
 
-        return oid_to_algorithm(algorithm);
+        return AlgorithmIdentifier(algorithm);
     }
 
     if (algorithm.span() == ec_public_key_encryption_oid.span()) {
@@ -297,7 +227,7 @@ static ErrorOr<CertificateKeyAlgorithm> parse_algorithm_identifier(Crypto::ASN1:
         if (decoder.eof()) {
             EXIT_SCOPE();
 
-            return oid_to_algorithm(algorithm);
+            return AlgorithmIdentifier(algorithm);
         }
 
         auto tag = TRY(decoder.peek());
@@ -308,16 +238,14 @@ static ErrorOr<CertificateKeyAlgorithm> parse_algorithm_identifier(Crypto::ASN1:
             POP_SCOPE();
 
             EXIT_SCOPE();
-            return oid_to_algorithm(algorithm);
+            return AlgorithmIdentifier(algorithm);
         }
 
-        auto ec_parameters = TRY(parse_ec_parameters(decoder, current_scope));
-        EXIT_SCOPE();
+        auto algorithm_identifier = AlgorithmIdentifier(algorithm);
+        algorithm_identifier.ec_parameters = TRY(parse_ec_parameters(decoder, current_scope));
 
-        if (ec_parameters == SupportedGroup::SECP256R1)
-            return CertificateKeyAlgorithm::ECDSA_SECP256R1;
-        else if (ec_parameters == SupportedGroup::SECP384R1)
-            return CertificateKeyAlgorithm::ECDSA_SECP384R1;
+        EXIT_SCOPE();
+        return algorithm_identifier;
     }
 
     ERROR_WITH_SCOPE(TRY(String::formatted("Unhandled parameters for algorithm {}", algorithm)));
@@ -432,26 +360,28 @@ static ErrorOr<SubjectPublicKey> parse_subject_public_key_info(Crypto::ASN1::Dec
     READ_OBJECT(BitString, Crypto::ASN1::BitStringView, value);
     POP_SCOPE();
 
-    switch (public_key.algorithm) {
-    case CertificateKeyAlgorithm::ECDSA_SECP256R1:
-    case CertificateKeyAlgorithm::ECDSA_SECP384R1: {
-        public_key.raw_key = TRY(ByteBuffer::copy(value.raw_bytes()));
-        break;
-    }
-    case CertificateKeyAlgorithm::RSA_RSA: {
-        public_key.raw_key = TRY(ByteBuffer::copy(value.raw_bytes()));
+    public_key.raw_key = TRY(ByteBuffer::copy(value.raw_bytes()));
+
+    if (public_key.algorithm.identifier.span() == rsa_encryption_oid.span()) {
         auto key = Crypto::PK::RSA::parse_rsa_key(value.raw_bytes());
         if (!key.public_key.length()) {
             return Error::from_string_literal("Invalid RSA key");
         }
 
         public_key.rsa = move(key.public_key);
-        break;
+
+        EXIT_SCOPE();
+        return public_key;
     }
-    default: {
-        ERROR_WITH_SCOPE(TRY(String::formatted("Unknown algorithm {}", static_cast<u8>(public_key.algorithm))));
+
+    if (public_key.algorithm.identifier.span() == ec_public_key_encryption_oid.span()) {
+        // Note: Raw key is already stored, so we can just exit out at this point.
+        EXIT_SCOPE();
+        return public_key;
     }
-    }
+
+    String algo_oid = TRY(String::join("."sv, public_key.algorithm.identifier));
+    ERROR_WITH_SCOPE(TRY(String::formatted("Unhandled algorithm {}", algo_oid)));
 
     EXIT_SCOPE();
     return public_key;
@@ -822,8 +752,7 @@ ErrorOr<Certificate> Certificate::parse_certificate(ReadonlyBytes buffer, bool)
     Certificate certificate = TRY(parse_tbs_certificate(decoder, current_scope));
     certificate.original_asn1 = TRY(ByteBuffer::copy(buffer));
 
-    CertificateKeyAlgorithm signature_algorithm = TRY(parse_algorithm_identifier(decoder, current_scope));
-    certificate.signature_algorithm = signature_algorithm;
+    certificate.signature_algorithm = TRY(parse_algorithm_identifier(decoder, current_scope));
 
     PUSH_SCOPE("signature"sv);
     READ_OBJECT(BitString, Crypto::ASN1::BitStringView, signature);
