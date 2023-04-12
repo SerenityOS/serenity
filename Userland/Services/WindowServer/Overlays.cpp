@@ -291,6 +291,21 @@ void WindowGeometryOverlay::start_or_stop_move_to_tile_overlay_animation(TileWin
     }
 }
 
+Gfx::IntRect WindowGeometryOverlay::calculate_ideal_overlay_rect() const
+{
+    auto rect = calculate_frame_rect(m_label_rect).centered_within(m_window->frame().rect());
+    auto desktop_rect = WindowManager::the().desktop_rect(ScreenInput::the().cursor_location_screen());
+    if (rect.left() < desktop_rect.left())
+        rect.set_left(desktop_rect.left());
+    if (rect.top() < desktop_rect.top())
+        rect.set_top(desktop_rect.top());
+    if (rect.right() > desktop_rect.right())
+        rect.set_right_without_resize(desktop_rect.right());
+    if (rect.bottom() > desktop_rect.bottom())
+        rect.set_bottom_without_resize(desktop_rect.bottom());
+    return rect;
+}
+
 void WindowGeometryOverlay::window_rect_changed()
 {
     if (auto* window = m_window.ptr()) {
@@ -310,17 +325,7 @@ void WindowGeometryOverlay::window_rect_changed()
             }
             m_label_rect = Gfx::IntRect { 0, 0, static_cast<int>(ceilf(wm.font().width(m_label))) + 16, wm.font().pixel_size_rounded_up() + 10 };
 
-            auto rect = calculate_frame_rect(m_label_rect).centered_within(window->frame().rect());
-            auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());
-            if (rect.left() < desktop_rect.left())
-                rect.set_left(desktop_rect.left());
-            if (rect.top() < desktop_rect.top())
-                rect.set_top(desktop_rect.top());
-            if (rect.right() > desktop_rect.right())
-                rect.set_right_without_resize(desktop_rect.right());
-            if (rect.bottom() > desktop_rect.bottom())
-                rect.set_bottom_without_resize(desktop_rect.bottom());
-            m_ideal_overlay_rect = rect;
+            m_ideal_overlay_rect = calculate_ideal_overlay_rect();
             set_actual_rect();
             invalidate_content(); // Needed in case the rectangle itself doesn't change, but the contents did.
         }
