@@ -11,6 +11,7 @@
 #include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/x86_64/Interrupts/PIC.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
@@ -371,6 +372,7 @@ void register_generic_interrupt_handler(u8 interrupt_number, GenericInterruptHan
             return;
         }
         VERIFY(handler_slot->type() == HandlerType::IRQHandler);
+        static_cast<IRQHandler*>(handler_slot)->set_shared_with_others(true);
         auto& previous_handler = *handler_slot;
         handler_slot = nullptr;
         SharedIRQHandler::initialize(interrupt_number);
@@ -400,6 +402,7 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
     }
     if (!handler_slot->is_shared_handler()) {
         VERIFY(handler_slot->type() == HandlerType::IRQHandler);
+        static_cast<IRQHandler*>(handler_slot)->set_shared_with_others(false);
         handler_slot = nullptr;
         revert_to_unused_handler(interrupt_number);
         return;

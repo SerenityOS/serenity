@@ -32,6 +32,7 @@ public:
     virtual size_t sharing_devices_count() const override { return 0; }
     virtual bool is_shared_handler() const override { return false; }
     virtual bool is_sharing_with_others() const override { return m_shared_with_others; }
+    void set_shared_with_others(bool status) { m_shared_with_others = status; }
 
 protected:
     void change_irq_number(u8 irq);
