@@ -15,7 +15,7 @@
 namespace JS {
 
 DataViewConstructor::DataViewConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.DataView.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.DataView.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

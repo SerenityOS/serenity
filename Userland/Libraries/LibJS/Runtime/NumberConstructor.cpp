@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,7 +25,7 @@ constexpr double const MIN_SAFE_INTEGER_VALUE { -(__builtin_exp2(53) - 1) };
 namespace JS {
 
 NumberConstructor::NumberConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Number.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Number.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

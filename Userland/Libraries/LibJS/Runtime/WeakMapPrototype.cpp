@@ -12,7 +12,7 @@
 namespace JS {
 
 WeakMapPrototype::WeakMapPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 

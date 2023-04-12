@@ -10,7 +10,7 @@
 namespace JS {
 
 GeneratorPrototype::GeneratorPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().iterator_prototype())
+    : PrototypeObject(realm.intrinsics().iterator_prototype())
 {
 }
 

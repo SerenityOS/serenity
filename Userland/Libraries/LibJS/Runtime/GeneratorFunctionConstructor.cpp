@@ -12,7 +12,7 @@
 namespace JS {
 
 GeneratorFunctionConstructor::GeneratorFunctionConstructor(Realm& realm)
-    : NativeFunction(static_cast<Object&>(*realm.intrinsics().function_constructor()))
+    : NativeFunction(static_cast<Object&>(realm.intrinsics().function_constructor()))
 {
 }
 

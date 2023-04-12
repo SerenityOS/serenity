@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,7 +22,7 @@ JS::NonnullGCPtr<Promise> create_promise(JS::Realm& realm)
     auto& vm = realm.vm();
 
     // 1. Let constructor be realm.[[Intrinsics]].[[%Promise%]].
-    auto* constructor = realm.intrinsics().promise_constructor();
+    auto constructor = realm.intrinsics().promise_constructor();
 
     // Return ? NewPromiseCapability(constructor).
     // NOTE: When called with %Promise%, NewPromiseCapability can't throw.
@@ -37,7 +37,7 @@ JS::NonnullGCPtr<Promise> create_resolved_promise(JS::Realm& realm, JS::Value va
     // 1. Let value be the result of converting x to an ECMAScript value.
 
     // 2. Let constructor be realm.[[Intrinsics]].[[%Promise%]].
-    auto* constructor = realm.intrinsics().promise_constructor();
+    auto constructor = realm.intrinsics().promise_constructor();
 
     // 3. Let promiseCapability be ? NewPromiseCapability(constructor).
     // NOTE: When called with %Promise%, NewPromiseCapability can't throw.
@@ -56,7 +56,7 @@ JS::NonnullGCPtr<Promise> create_rejected_promise(JS::Realm& realm, JS::Value re
     auto& vm = realm.vm();
 
     // 1. Let constructor be realm.[[Intrinsics]].[[%Promise%]].
-    auto* constructor = realm.intrinsics().promise_constructor();
+    auto constructor = realm.intrinsics().promise_constructor();
 
     // 2. Let promiseCapability be ? NewPromiseCapability(constructor).
     // NOTE: When called with %Promise%, NewPromiseCapability can't throw.
@@ -132,7 +132,7 @@ JS::NonnullGCPtr<JS::Promise> react_to_promise(Promise const& promise, Optional<
     auto on_rejected = JS::NativeFunction::create(realm, move(on_rejected_steps), 1, "");
 
     // 5. Let constructor be promise.[[Promise]].[[Realm]].[[Intrinsics]].[[%Promise%]].
-    auto* constructor = realm.intrinsics().promise_constructor();
+    auto constructor = realm.intrinsics().promise_constructor();
 
     // 6. Let newCapability be ? NewPromiseCapability(constructor).
     // NOTE: When called with %Promise%, NewPromiseCapability can't throw.

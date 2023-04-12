@@ -18,7 +18,7 @@
 namespace JS {
 
 BigIntPrototype::BigIntPrototype(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {
 }
 
@@ -90,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
     auto* bigint = TRY(this_bigint_value(vm, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
-    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, *realm.intrinsics().intl_number_format_constructor(), locales, options)).ptr());
+    auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, realm.intrinsics().intl_number_format_constructor(), locales, options)).ptr());
 
     // 3. Return ? FormatNumeric(numberFormat, x).
     auto formatted = TRY(Intl::format_numeric(vm, *number_format, Value(bigint)));

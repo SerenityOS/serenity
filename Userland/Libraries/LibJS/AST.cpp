@@ -1955,8 +1955,8 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             class_private_environment->add_private_name({}, opt_private_name.release_value());
     }
 
-    auto* proto_parent = realm.intrinsics().object_prototype();
-    auto* constructor_parent = realm.intrinsics().function_prototype();
+    auto proto_parent = GCPtr { realm.intrinsics().object_prototype() };
+    auto constructor_parent = realm.intrinsics().function_prototype();
 
     if (!m_super_class.is_null()) {
         vm.running_execution_context().lexical_environment = class_environment;
@@ -1985,9 +1985,9 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> ClassExpression::class_definition_e
             if (super_class_prototype.is_null())
                 proto_parent = nullptr;
             else
-                proto_parent = &super_class_prototype.as_object();
+                proto_parent = super_class_prototype.as_object();
 
-            constructor_parent = &super_class.as_object();
+            constructor_parent = super_class.as_object();
         }
     }
 

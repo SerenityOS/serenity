@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -149,7 +149,7 @@ CodePoint code_point_at(Utf16View const& string, size_t position)
 }
 
 StringPrototype::StringPrototype(Realm& realm)
-    : StringObject(*PrimitiveString::create(realm.vm(), String {}), *realm.intrinsics().object_prototype())
+    : StringObject(*PrimitiveString::create(realm.vm(), String {}), realm.intrinsics().object_prototype())
 {
 }
 
@@ -452,7 +452,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::locale_compare)
     auto that_value = TRY(vm.argument(0).to_string(vm));
 
     // 4. Let collator be ? Construct(%Collator%, « locales, options »).
-    auto collator = TRY(construct(vm, *realm.intrinsics().intl_collator_constructor(), vm.argument(1), vm.argument(2)));
+    auto collator = TRY(construct(vm, realm.intrinsics().intl_collator_constructor(), vm.argument(1), vm.argument(2)));
 
     // 5. Return CompareStrings(collator, S, thatValue).
     return Intl::compare_strings(static_cast<Intl::Collator&>(*collator), string.code_points(), that_value.code_points());

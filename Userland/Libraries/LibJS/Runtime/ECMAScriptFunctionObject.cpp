@@ -115,7 +115,7 @@ ThrowCompletionOr<void> ECMAScriptFunctionObject::initialize(Realm& realm)
         Object* prototype = nullptr;
         switch (m_kind) {
         case FunctionKind::Normal:
-            prototype = MUST_OR_THROW_OOM(vm.heap().allocate<Object>(realm, *realm.intrinsics().new_ordinary_function_prototype_object_shape()));
+            prototype = MUST_OR_THROW_OOM(vm.heap().allocate<Object>(realm, realm.intrinsics().new_ordinary_function_prototype_object_shape()));
             MUST(prototype->define_property_or_throw(vm.names.constructor, { .value = this, .writable = true, .enumerable = false, .configurable = true }));
             break;
         case FunctionKind::Generator:

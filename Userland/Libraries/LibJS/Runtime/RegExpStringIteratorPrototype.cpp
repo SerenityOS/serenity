@@ -13,7 +13,7 @@
 namespace JS {
 
 RegExpStringIteratorPrototype::RegExpStringIteratorPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().iterator_prototype())
+    : PrototypeObject(realm.intrinsics().iterator_prototype())
 {
 }
 

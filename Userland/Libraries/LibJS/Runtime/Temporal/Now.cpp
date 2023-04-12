@@ -22,7 +22,7 @@ namespace JS::Temporal {
 
 // 2 The Temporal.Now Object, https://tc39.es/proposal-temporal/#sec-temporal-now-object
 Now::Now(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {
 }
 

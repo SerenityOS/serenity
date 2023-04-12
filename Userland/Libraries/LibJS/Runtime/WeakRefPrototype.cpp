@@ -10,7 +10,7 @@
 namespace JS {
 
 WeakRefPrototype::WeakRefPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -240,7 +240,7 @@ static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_
 }
 
 PromiseConstructor::PromiseConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Promise.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Promise.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

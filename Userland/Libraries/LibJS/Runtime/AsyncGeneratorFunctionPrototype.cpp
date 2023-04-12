@@ -12,7 +12,7 @@
 namespace JS {
 
 AsyncGeneratorFunctionPrototype::AsyncGeneratorFunctionPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().function_prototype())
+    : PrototypeObject(realm.intrinsics().function_prototype())
 {
 }
 

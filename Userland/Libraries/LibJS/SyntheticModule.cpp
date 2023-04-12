@@ -148,7 +148,7 @@ ThrowCompletionOr<NonnullGCPtr<Module>> parse_json_module(StringView source_text
     auto& vm = realm.vm();
 
     // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
-    auto* json_parse = realm.intrinsics().json_parse_function();
+    auto json_parse = realm.intrinsics().json_parse_function();
 
     // 2. Let json be ? Call(jsonParse, undefined, « sourceText »).
     auto json = TRY(call(vm, *json_parse, js_undefined(), MUST_OR_THROW_OOM(PrimitiveString::create(realm.vm(), source_text))));
