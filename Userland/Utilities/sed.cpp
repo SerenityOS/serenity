@@ -206,7 +206,7 @@ struct OptionalLabelArgument {
     {
         auto blanks = lexer.consume_while(is_ascii_blank);
         if (blanks.is_empty())
-            return SedError::parsing_error(lexer, "expected one or more blank characeters"sv);
+            return SedError::parsing_error(lexer, "expected one or more blank characters"sv);
         if (lexer.next_is(is_command_separator))
             return ArgsT {};
         return ArgsT { lexer.consume_until(is_command_separator) };
@@ -219,7 +219,7 @@ struct FilepathArgument {
     {
         auto blanks = lexer.consume_while(is_ascii_blank);
         if (blanks.is_empty())
-            return SedError::parsing_error(lexer, "expected one or more blank characeters"sv);
+            return SedError::parsing_error(lexer, "expected one or more blank characters"sv);
         auto filepath = lexer.consume_until(is_command_separator);
         if (filepath.is_empty())
             return SedError::parsing_error(lexer, "input filename expected, none found");

@@ -39,6 +39,6 @@ protected:
     Gfx::AffineTransform m_transform = {};
 };
 
-Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> tranform_list);
+Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list);
 
 }

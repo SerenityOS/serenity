@@ -335,7 +335,7 @@ public:
     bool operator<(This const& other) const { return raw() < other.raw(); }
     bool operator<=(This const& other) const { return raw() <= other.raw(); }
 
-    // FIXE: There are probably better ways to do these
+    // FIXME: There are probably better ways to do these
     template<Integral I>
     bool operator==(I other) const
     {

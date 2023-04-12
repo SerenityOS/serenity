@@ -96,7 +96,7 @@ PDFErrorOr<NonnullRefPtr<CFF>> CFF::create(ReadonlyBytes const& cff_bytes, RefPt
         });
     }));
 
-    // Create glpyhs (now that we have the subroutines) and associate missing information to store them and their encoding
+    // Create glyphs (now that we have the subroutines) and associate missing information to store them and their encoding
     auto glyphs = TRY(parse_charstrings(Reader(cff_bytes.slice(charstrings_offset)), subroutines));
     auto charset = TRY(parse_charset(Reader { cff_bytes.slice(charset_offset) }, glyphs.size()));
 
