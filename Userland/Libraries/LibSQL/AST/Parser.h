@@ -77,10 +77,10 @@ private:
     RefPtr<Expression> parse_column_name_expression(DeprecatedString with_parsed_identifier = {}, bool with_parsed_period = false);
     RefPtr<Expression> parse_unary_operator_expression();
     RefPtr<Expression> parse_binary_operator_expression(NonnullRefPtr<Expression> lhs);
-    RefPtr<Expression> parse_chained_expression();
+    RefPtr<Expression> parse_chained_expression(bool surrounded_by_parentheses = true);
     RefPtr<Expression> parse_cast_expression();
     RefPtr<Expression> parse_case_expression();
-    RefPtr<Expression> parse_exists_expression(bool invert_expression, TokenType opening_token = TokenType::Exists);
+    RefPtr<Expression> parse_exists_expression(bool invert_expression);
     RefPtr<Expression> parse_collate_expression(NonnullRefPtr<Expression> expression);
     RefPtr<Expression> parse_is_expression(NonnullRefPtr<Expression> expression);
     RefPtr<Expression> parse_match_expression(NonnullRefPtr<Expression> lhs, bool invert_expression);

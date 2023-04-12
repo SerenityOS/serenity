@@ -307,6 +307,14 @@ TEST_CASE(insert)
     EXPECT(parse("INSERT INTO table_name VALUES"sv).is_error());
     EXPECT(parse("INSERT INTO table_name VALUES ();"sv).is_error());
     EXPECT(parse("INSERT INTO table_name VALUES (1)"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES SELECT"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES EXISTS"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES NOT"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES EXISTS (SELECT 1)"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES (SELECT)"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES (EXISTS SELECT)"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES ((SELECT))"sv).is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES (EXISTS (SELECT))"sv).is_error());
     EXPECT(parse("INSERT INTO table_name SELECT"sv).is_error());
     EXPECT(parse("INSERT INTO table_name SELECT * from table_name"sv).is_error());
     EXPECT(parse("INSERT OR INTO table_name DEFAULT VALUES;"sv).is_error());
@@ -367,6 +375,12 @@ TEST_CASE(insert)
     validate("INSERT INTO table_name VALUES (1, 2);"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 2 }, false);
     validate("INSERT INTO table_name VALUES (1, 2), (3, 4, 5);"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 2, 3 }, false);
 
+    validate("INSERT INTO table_name VALUES ((SELECT 1));"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 1 }, false);
+    validate("INSERT INTO table_name VALUES (EXISTS (SELECT 1));"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 1 }, false);
+    validate("INSERT INTO table_name VALUES (NOT EXISTS (SELECT 1));"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 1 }, false);
+    validate("INSERT INTO table_name VALUES ((SELECT 1), (SELECT 1));"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 2 }, false);
+    validate("INSERT INTO table_name VALUES ((SELECT 1), (SELECT 1)), ((SELECT 1), (SELECT 1), (SELECT 1));"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, { 2, 3 }, false);
+
     validate("INSERT INTO table_name SELECT * FROM table_name;"sv, resolution, {}, "TABLE_NAME"sv, {}, {}, {}, true);
 }
 
@@ -379,11 +393,21 @@ TEST_CASE(update)
     EXPECT(parse("UPDATE table_name SET column_name=4"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4, ;"sv).is_error());
     EXPECT(parse("UPDATE table_name SET (column_name)=4"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name)=EXISTS"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name)=SELECT"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name)=(SELECT)"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name)=NOT (SELECT 1)"sv).is_error());
     EXPECT(parse("UPDATE table_name SET (column_name)=4, ;"sv).is_error());
     EXPECT(parse("UPDATE table_name SET (column_name, )=4;"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4 FROM"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4 FROM table_name"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4 WHERE"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE EXISTS"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE NOT"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE NOT EXISTS"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE SELECT"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE (SELECT)"sv).is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE NOT (SELECT)"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4 WHERE 1==1"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4 RETURNING"sv).is_error());
     EXPECT(parse("UPDATE table_name SET column_name=4 RETURNING *"sv).is_error());
@@ -452,10 +476,17 @@ TEST_CASE(update)
     validate("UPDATE table_name AS foo SET column_name=1;"sv, resolution, {}, "TABLE_NAME"sv, "FOO"sv, update_columns, false, false, {});
 
     validate("UPDATE table_name SET column_name=1;"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, false, false, {});
+    validate("UPDATE table_name SET column_name=(SELECT 1);"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, false, false, {});
+    validate("UPDATE table_name SET column_name=EXISTS (SELECT 1);"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, false, false, {});
+    validate("UPDATE table_name SET column_name=NOT EXISTS (SELECT 1);"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, false, false, {});
     validate("UPDATE table_name SET column1=1, column2=2;"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN1"sv }, { "COLUMN2"sv } }, false, false, {});
     validate("UPDATE table_name SET (column1, column2)=1, column3=2;"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN1"sv, "COLUMN2"sv }, { "COLUMN3"sv } }, false, false, {});
 
     validate("UPDATE table_name SET column_name=1 WHERE 1==1;"sv, resolution, {}, "TABLE_NAME"sv, {}, update_columns, true, false, {});
+
+    validate("UPDATE table_name SET column_name=1 WHERE (SELECT 1);"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, true, false, {});
+    validate("UPDATE table_name SET column_name=1 WHERE EXISTS (SELECT 1);"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, true, false, {});
+    validate("UPDATE table_name SET column_name=1 WHERE NOT EXISTS (SELECT 1);"sv, resolution, {}, "TABLE_NAME"sv, {}, { { "COLUMN_NAME"sv } }, true, false, {});
 
     validate("UPDATE table_name SET column_name=1 RETURNING *;"sv, resolution, {}, "TABLE_NAME"sv, {}, update_columns, false, true, {});
     validate("UPDATE table_name SET column_name=1 RETURNING column_name;"sv, resolution, {}, "TABLE_NAME"sv, {}, update_columns, false, true, { {} });
@@ -469,6 +500,12 @@ TEST_CASE(delete_)
     EXPECT(parse("DELETE FROM"sv).is_error());
     EXPECT(parse("DELETE FROM table_name"sv).is_error());
     EXPECT(parse("DELETE FROM table_name WHERE"sv).is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE EXISTS"sv).is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE NOT"sv).is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE NOT (SELECT 1)"sv).is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE NOT EXISTS"sv).is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE SELECT"sv).is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE (SELECT)"sv).is_error());
     EXPECT(parse("DELETE FROM table_name WHERE 15"sv).is_error());
     EXPECT(parse("DELETE FROM table_name WHERE 15 RETURNING"sv).is_error());
     EXPECT(parse("DELETE FROM table_name WHERE 15 RETURNING *"sv).is_error());
@@ -514,6 +551,9 @@ TEST_CASE(delete_)
     validate("DELETE FROM schema_name.table_name;"sv, "SCHEMA_NAME"sv, "TABLE_NAME"sv, {}, false, false, {});
     validate("DELETE FROM schema_name.table_name AS alias;"sv, "SCHEMA_NAME"sv, "TABLE_NAME"sv, "ALIAS"sv, false, false, {});
     validate("DELETE FROM table_name WHERE (1 == 1);"sv, {}, "TABLE_NAME"sv, {}, true, false, {});
+    validate("DELETE FROM table_name WHERE EXISTS (SELECT 1);"sv, {}, "TABLE_NAME"sv, {}, true, false, {});
+    validate("DELETE FROM table_name WHERE NOT EXISTS (SELECT 1);"sv, {}, "TABLE_NAME"sv, {}, true, false, {});
+    validate("DELETE FROM table_name WHERE (SELECT 1);"sv, {}, "TABLE_NAME"sv, {}, true, false, {});
     validate("DELETE FROM table_name RETURNING *;"sv, {}, "TABLE_NAME"sv, {}, false, true, {});
     validate("DELETE FROM table_name RETURNING column_name;"sv, {}, "TABLE_NAME"sv, {}, false, true, { {} });
     validate("DELETE FROM table_name RETURNING column_name AS alias;"sv, {}, "TABLE_NAME"sv, {}, false, true, { "ALIAS"sv });

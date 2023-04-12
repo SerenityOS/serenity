@@ -219,7 +219,7 @@ NonnullRefPtr<Insert> Parser::parse_insert_statement(RefPtr<CommonTableExpressio
     if (consume_if(TokenType::Values)) {
         parse_comma_separated_list(false, [&]() {
             if (auto chained_expression = parse_chained_expression()) {
-                auto chained_expr = dynamic_cast<ChainedExpression*>(chained_expression.ptr());
+                auto* chained_expr = verify_cast<ChainedExpression>(chained_expression.ptr());
                 if ((column_names.size() > 0) && (chained_expr->expressions().size() != column_names.size())) {
                     syntax_error("Number of expressions does not match number of columns");
                 } else {
@@ -422,17 +422,34 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
     if (auto expression = parse_unary_operator_expression())
         return expression.release_nonnull();
 
-    if (auto expression = parse_chained_expression())
-        return expression.release_nonnull();
-
     if (auto expression = parse_cast_expression())
         return expression.release_nonnull();
 
     if (auto expression = parse_case_expression())
         return expression.release_nonnull();
 
-    if (auto expression = parse_exists_expression(false))
-        return expression.release_nonnull();
+    if (auto invert_expression = consume_if(TokenType::Not); invert_expression || consume_if(TokenType::Exists)) {
+        if (auto expression = parse_exists_expression(invert_expression))
+            return expression.release_nonnull();
+
+        expected("Exists expression"sv);
+    }
+
+    if (consume_if(TokenType::ParenOpen)) {
+        // Encountering a Select token at this point means this must be an ExistsExpression with no EXISTS keyword.
+        if (match(TokenType::Select)) {
+            auto select_statement = parse_select_statement({});
+            consume(TokenType::ParenClose);
+            return create_ast_node<ExistsExpression>(move(select_statement), false);
+        }
+
+        if (auto expression = parse_chained_expression(false)) {
+            consume(TokenType::ParenClose);
+            return expression.release_nonnull();
+        }
+
+        expected("Chained expression"sv);
+    }
 
     expected("Primary Expression"sv);
     consume();
@@ -662,17 +679,16 @@ RefPtr<Expression> Parser::parse_binary_operator_expression(NonnullRefPtr<Expres
     return {};
 }
 
-RefPtr<Expression> Parser::parse_chained_expression()
+RefPtr<Expression> Parser::parse_chained_expression(bool surrounded_by_parentheses)
 {
-    if (!consume_if(TokenType::ParenOpen))
+    if (surrounded_by_parentheses && !consume_if(TokenType::ParenOpen))
         return {};
-
-    if (match(TokenType::Select))
-        return parse_exists_expression(false, TokenType::Select);
 
     Vector<NonnullRefPtr<Expression>> expressions;
     parse_comma_separated_list(false, [&]() { expressions.append(parse_expression()); });
-    consume(TokenType::ParenClose);
+
+    if (surrounded_by_parentheses)
+        consume(TokenType::ParenClose);
 
     return create_ast_node<ChainedExpression>(move(expressions));
 }
@@ -726,15 +742,14 @@ RefPtr<Expression> Parser::parse_case_expression()
     return create_ast_node<CaseExpression>(move(case_expression), move(when_then_clauses), move(else_expression));
 }
 
-RefPtr<Expression> Parser::parse_exists_expression(bool invert_expression, TokenType opening_token)
+RefPtr<Expression> Parser::parse_exists_expression(bool invert_expression)
 {
-    VERIFY((opening_token == TokenType::Exists) || (opening_token == TokenType::Select));
-
-    if ((opening_token == TokenType::Exists) && !consume_if(TokenType::Exists))
+    if (!(match(TokenType::Exists) || match(TokenType::ParenOpen)))
         return {};
 
-    if (opening_token == TokenType::Exists)
-        consume(TokenType::ParenOpen);
+    consume_if(TokenType::Exists);
+    consume(TokenType::ParenOpen);
+
     auto select_statement = parse_select_statement({});
     consume(TokenType::ParenClose);
 
