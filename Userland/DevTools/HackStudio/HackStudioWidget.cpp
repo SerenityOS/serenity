@@ -321,6 +321,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
 
     if (editor_wrapper_or_none.has_value()) {
         set_current_editor_wrapper(editor_wrapper_or_none.release_value());
+        current_editor().set_cursor(line, column);
         return true;
     } else if (active_file().is_empty() && !current_editor().document().is_modified() && !full_filename.is_empty()) {
         // Replace "Untitled" blank file since it hasn't been modified
