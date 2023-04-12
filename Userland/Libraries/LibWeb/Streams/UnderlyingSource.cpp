@@ -27,7 +27,7 @@ JS::ThrowCompletionOr<UnderlyingSource> UnderlyingSource::from_value(JS::VM& vm,
     };
 
     if (TRY(object.has_property("type"))) {
-        auto type_value = TRY(TRY(object.get("type")).to_string(object.vm()));
+        auto type_value = TRY(TRY(object.get("type")).to_string(vm));
         if (type_value == "bytes"sv) {
             underlying_source.type = ReadableStreamType::Bytes;
         } else {
@@ -36,7 +36,7 @@ JS::ThrowCompletionOr<UnderlyingSource> UnderlyingSource::from_value(JS::VM& vm,
     }
 
     if (TRY(object.has_property("autoAllocateChunkSize")))
-        underlying_source.auto_allocate_chunk_size = TRY(TRY(object.get("autoAllocateChunkSize")).to_bigint_int64(object.vm()));
+        underlying_source.auto_allocate_chunk_size = TRY(TRY(object.get("autoAllocateChunkSize")).to_bigint_int64(vm));
 
     return underlying_source;
 }
