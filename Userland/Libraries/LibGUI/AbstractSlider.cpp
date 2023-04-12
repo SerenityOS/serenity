@@ -57,10 +57,9 @@ void AbstractSlider::set_value(int value, AllowCallback allow_callback, DoClamp 
     if (m_value == value)
         return;
     m_value = value;
-    update();
-
     if (on_change && allow_callback == AllowCallback::Yes)
         on_change(m_value);
+    update();
 }
 
 }
