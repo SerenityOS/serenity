@@ -74,7 +74,7 @@ PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_tr
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
     , m_frame_queue(make<VideoFrameQueue>())
-    , m_playback_handler(make<StartingStateHandler>(*this, false))
+    , m_playback_handler(make<SeekingStateHandler>(*this, false, Time::zero(), SeekMode::Fast))
 {
     if (playback_timer_creator) {
         m_present_timer = playback_timer_creator(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
@@ -358,40 +358,6 @@ protected:
     }
 
     bool m_playing { false };
-};
-
-class PlaybackManager::StartingStateHandler : public PlaybackManager::ResumingStateHandler {
-    using PlaybackManager::ResumingStateHandler::ResumingStateHandler;
-
-    ErrorOr<void> on_enter() override
-    {
-        return on_timer_callback();
-    }
-
-    StringView name() override { return "Starting"sv; }
-
-    PlaybackState get_state() const override { return PlaybackState::Starting; }
-
-    ErrorOr<void> on_timer_callback() override
-    {
-        // Once we're threaded, instead of checking for the count here we can just mutex
-        // in the queue until we display the first and then again for the second to store it.
-        if (manager().m_frame_queue->size() < 3) {
-            manager().m_decode_timer->start(0);
-            manager().start_timer(0);
-            return {};
-        }
-
-        auto frame_to_display = manager().m_frame_queue->dequeue();
-        manager().m_last_present_in_media_time = frame_to_display.timestamp();
-        if (manager().dispatch_frame_queue_item(move(frame_to_display)))
-            return {};
-
-        manager().m_next_frame.emplace(manager().m_frame_queue->dequeue());
-        manager().m_decode_timer->start(0);
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Displayed frame at {}ms, emplaced second frame at {}ms, finishing start now", manager().m_last_present_in_media_time.to_milliseconds(), manager().m_next_frame->timestamp().to_milliseconds());
-        return assume_next_state();
-    }
 };
 
 class PlaybackManager::PlayingStateHandler : public PlaybackManager::PlaybackStateHandler {
@@ -684,7 +650,7 @@ private:
         auto start_timestamp = manager().seek_demuxer_to_most_recent_keyframe(Time::zero());
         VERIFY(start_timestamp.has_value());
         manager().m_last_present_in_media_time = start_timestamp.release_value();
-        return replace_handler_and_delete_this<StartingStateHandler>(true);
+        return replace_handler_and_delete_this<SeekingStateHandler>(true, Time::zero(), SeekMode::Fast);
     }
     bool is_playing() const override { return false; };
     PlaybackState get_state() const override { return PlaybackState::Stopped; }

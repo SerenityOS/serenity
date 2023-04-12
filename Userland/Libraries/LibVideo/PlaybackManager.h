@@ -92,7 +92,6 @@ public:
 };
 
 enum class PlaybackState {
-    Starting,
     Playing,
     Paused,
     Buffering,
@@ -146,7 +145,6 @@ private:
     class PlaybackStateHandler;
     // Abstract class to allow resuming play/pause after the state is completed.
     class ResumingStateHandler;
-    class StartingStateHandler;
     class PlayingStateHandler;
     class PausedStateHandler;
     class BufferingStateHandler;
