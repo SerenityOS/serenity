@@ -344,22 +344,24 @@ bool Context::verify_chain(StringView host) const
 
 bool Context::verify_certificate_pair(Certificate const& subject, Certificate const& issuer) const
 {
-    Crypto::Hash::HashKind kind;
-    switch (subject.signature_algorithm) {
-    case CertificateKeyAlgorithm::RSA_SHA1:
+    Crypto::Hash::HashKind kind = Crypto::Hash::HashKind::Unknown;
+    auto identifier = subject.signature_algorithm.identifier;
+
+    if (identifier == rsa_encryption_oid)
+        kind = Crypto::Hash::HashKind::None;
+    if (identifier == rsa_md5_encryption_oid)
+        kind = Crypto::Hash::HashKind::MD5;
+    if (identifier == rsa_sha1_encryption_oid)
         kind = Crypto::Hash::HashKind::SHA1;
-        break;
-    case CertificateKeyAlgorithm::RSA_SHA256:
+    if (identifier == rsa_sha256_encryption_oid)
         kind = Crypto::Hash::HashKind::SHA256;
-        break;
-    case CertificateKeyAlgorithm::RSA_SHA384:
+    if (identifier == rsa_sha384_encryption_oid)
         kind = Crypto::Hash::HashKind::SHA384;
-        break;
-    case CertificateKeyAlgorithm::RSA_SHA512:
+    if (identifier == rsa_sha512_encryption_oid)
         kind = Crypto::Hash::HashKind::SHA512;
-        break;
-    default:
-        dbgln("verify_certificate_pair: Unknown signature algorithm, expected RSA with SHA1/256/384/512, got {}", (u8)subject.signature_algorithm);
+
+    if (kind == Crypto::Hash::HashKind::Unknown) {
+        dbgln("verify_certificate_pair: Unknown signature algorithm, expected RSA with SHA1/256/384/512, got OID {}", identifier);
         return false;
     }
 

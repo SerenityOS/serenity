@@ -18,6 +18,7 @@ namespace Crypto {
 namespace Hash {
 
 enum class HashKind {
+    Unknown,
     None,
     SHA1,
     SHA256,
