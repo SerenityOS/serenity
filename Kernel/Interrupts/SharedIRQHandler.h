@@ -11,6 +11,7 @@
 #include <Kernel/Arch/IRQController.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Library/LockRefPtr.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 class IRQHandler;
@@ -27,7 +28,10 @@ public:
 
     void enumerate_handlers(Function<void(GenericInterruptHandler&)>&);
 
-    virtual size_t sharing_devices_count() const override { return m_handlers.size_slow(); }
+    virtual size_t sharing_devices_count() const override
+    {
+        return m_handlers.with([](auto& list) { return list.size_slow(); });
+    }
     virtual bool is_shared_handler() const override { return true; }
     virtual bool is_sharing_with_others() const override { return false; }
 
@@ -40,7 +44,7 @@ private:
     void disable_interrupt_vector();
     explicit SharedIRQHandler(u8 interrupt_number);
     bool m_enabled { true };
-    GenericInterruptHandler::List m_handlers;
+    SpinlockProtected<GenericInterruptHandler::List, LockRank::None> m_handlers;
     NonnullLockRefPtr<IRQController> m_responsible_irq_controller;
 };
 }
