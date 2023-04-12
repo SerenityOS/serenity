@@ -409,7 +409,7 @@ void CanvasRadialGradientPaintStyle::paint(IntRect physical_bounding_box, PaintF
     //      - Start circle radius == end circle radius
     //      - Start circle larger than end circle (inside end circle)
     //      - Start circle larger than end circle (outside end circle)
-    //      - Start cirlce or end circle radius == 0
+    //      - Start circle or end circle radius == 0
 
     Gradient radial_gradient {
         move(gradient_line),

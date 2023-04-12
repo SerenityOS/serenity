@@ -1233,7 +1233,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
         dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
 
-        // Check that each transfom is used only once.
+        // Check that each transform is used only once.
         u8 mask = 1 << (int)transform_type;
         if (seen_transforms & mask)
             return context.error("WebPImageDecoderPlugin: transform type used multiple times");

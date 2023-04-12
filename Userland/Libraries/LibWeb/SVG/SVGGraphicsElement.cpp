@@ -40,14 +40,14 @@ void SVGGraphicsElement::parse_attribute(DeprecatedFlyString const& name, Deprec
     }
 }
 
-Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> tranform_list)
+Gfx::AffineTransform transform_from_transform_list(ReadonlySpan<Transform> transform_list)
 {
     Gfx::AffineTransform affine_transform;
     auto to_radians = [](float degrees) {
         return degrees * (AK::Pi<float> / 180.0f);
     };
-    for (auto& tranform : tranform_list) {
-        tranform.operation.visit(
+    for (auto& transform : transform_list) {
+        transform.operation.visit(
             [&](Transform::Translate const& translate) {
                 affine_transform.multiply(Gfx::AffineTransform {}.translate({ translate.x, translate.y }));
             },
