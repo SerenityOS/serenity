@@ -151,6 +151,8 @@ public:
     void start_or_stop_move_to_tile_overlay_animation(TileWindowOverlay*);
 
 private:
+    Gfx::IntRect calculate_ideal_overlay_rect() const;
+
     WeakPtr<Window> m_window;
     DeprecatedString m_label;
     Gfx::IntRect m_label_rect;
