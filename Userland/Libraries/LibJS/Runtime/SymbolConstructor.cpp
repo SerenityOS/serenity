@@ -42,14 +42,22 @@ ThrowCompletionOr<void> SymbolConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> SymbolConstructor::call()
 {
     auto& vm = this->vm();
-    if (vm.argument(0).is_undefined())
-        return Symbol::create(vm, {}, false);
-    return Symbol::create(vm, TRY(vm.argument(0).to_string(vm)), false);
+    auto description = vm.argument(0);
+
+    // 2. If description is undefined, let descString be undefined.
+    // 3. Else, let descString be ? ToString(description).
+    auto description_string = description.is_undefined()
+        ? Optional<String> {}
+        : TRY(description.to_string(vm));
+
+    // 4. Return a new Symbol whose [[Description]] is descString.
+    return Symbol::create(vm, move(description_string), false);
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 ThrowCompletionOr<NonnullGCPtr<Object>> SymbolConstructor::construct(FunctionObject&)
 {
+    // 1. If NewTarget is not undefined, throw a TypeError exception.
     return vm().throw_completion<TypeError>(ErrorType::NotAConstructor, "Symbol");
 }
 
@@ -83,16 +91,16 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);
+
+    // 1. If sym is not a Symbol, throw a TypeError exception.
     if (!argument.is_symbol())
         return vm.throw_completion<TypeError>(ErrorType::NotASymbol, TRY_OR_THROW_OOM(vm, argument.to_string_without_side_effects()));
 
-    auto& symbol = argument.as_symbol();
-    if (symbol.is_global()) {
-        // NOTE: Global symbols should always have a description string
-        return PrimitiveString::create(vm, *symbol.description());
-    }
-
-    return js_undefined();
+    // 2. Return KeyForSymbol(sym).
+    auto key = argument.as_symbol().key();
+    return key.has_value()
+        ? PrimitiveString::create(vm, key.release_value())
+        : js_undefined();
 }
 
 }
