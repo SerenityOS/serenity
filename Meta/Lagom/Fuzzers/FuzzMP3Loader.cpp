@@ -22,7 +22,7 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t const* data, size_t size)
         auto samples = mp3->load_chunks(1 * KiB);
         if (samples.is_error())
             return 0;
-        if (samples.value().size() > 0)
+        if (samples.value().size() == 0)
             break;
     }
 
