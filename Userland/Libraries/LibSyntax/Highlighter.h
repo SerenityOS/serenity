@@ -125,7 +125,6 @@ public:
     }
 
 private:
-    virtual Vector<GUI::TextDocumentSpan>& spans() override { return m_spans; }
     virtual Vector<GUI::TextDocumentSpan> const& spans() const override { return m_spans; }
     virtual void set_span_at_index(size_t index, GUI::TextDocumentSpan span) override { m_spans.at(index) = move(span); }
 
