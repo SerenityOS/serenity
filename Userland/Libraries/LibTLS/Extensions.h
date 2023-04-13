@@ -159,6 +159,13 @@ enum class ExtensionType : u16 {
     __ENUM_EXTENSION_TYPES
 };
 
+#define __ENUM_NAME_TYPES \
+    _ENUM_KEY_VALUE(HOST_NAME, 0)
+
+enum class NameType : u8 {
+    __ENUM_NAME_TYPES
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 

@@ -113,10 +113,6 @@ enum class Error : i8 {
     OutOfMemory = -23,
 };
 
-enum class NameType : u8 {
-    HostName = 0x00,
-};
-
 enum class WritePacketStage {
     Initial = 0,
     ClientHandshake = 1,

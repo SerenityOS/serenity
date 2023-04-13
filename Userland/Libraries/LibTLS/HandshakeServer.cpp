@@ -136,7 +136,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 auto sni_name_type = (NameType)(*(u8 const*)buffer.offset_pointer(res++));
                 auto sni_name_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res += 2)));
 
-                if (sni_name_type != NameType::HostName)
+                if (sni_name_type != NameType::HOST_NAME)
                     return (i8)Error::NotUnderstood;
 
                 if (sizeof(sni_name_type) + sizeof(sni_name_length) + sni_name_length != sni_name_list_bytes)
