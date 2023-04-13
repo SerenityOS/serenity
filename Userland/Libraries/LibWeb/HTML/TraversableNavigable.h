@@ -30,6 +30,8 @@ public:
     bool running_nested_apply_history_step() const { return m_running_nested_apply_history_step; };
     VisibilityState system_visibility_state() const { return m_system_visibility_state; };
 
+    Vector<int> get_all_used_history_steps() const;
+
 private:
     TraversableNavigable();
 
