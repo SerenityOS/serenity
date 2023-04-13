@@ -133,10 +133,6 @@ enum ClientVerificationStaus {
     VerificationNeeded,
 };
 
-enum class ECCurveType : u8 {
-    NamedCurve = 3,
-};
-
 // Note for the 16 iv length instead of 8:
 // 4 bytes of fixed IV, 8 random (nonce) bytes, 4 bytes for counter
 // GCM specifically asks us to transmit only the nonce, the counter is zero

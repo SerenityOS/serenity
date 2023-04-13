@@ -166,6 +166,16 @@ enum class NameType : u8 {
     __ENUM_NAME_TYPES
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-10
+#define __ENUM_EC_CURVE_TYPES          \
+    _ENUM_KEY_VALUE(EXPLICIT_PRIME, 1) \
+    _ENUM_KEY_VALUE(EXPLICIT_CHAR2, 2) \
+    _ENUM_KEY_VALUE(NAMED_CURVE, 3)
+
+enum class ECCurveType : u8 {
+    __ENUM_EC_CURVE_TYPES
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 
