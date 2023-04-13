@@ -30,6 +30,12 @@ public:
     bool running_nested_apply_history_step() const { return m_running_nested_apply_history_step; };
     VisibilityState system_visibility_state() const { return m_system_visibility_state; };
 
+    struct HistoryObjectLengthAndIndex {
+        size_t script_history_length;
+        size_t script_history_index;
+    };
+    HistoryObjectLengthAndIndex get_the_history_object_length_and_index(int) const;
+
     Vector<int> get_all_used_history_steps() const;
     void clear_the_forward_session_history();
 
