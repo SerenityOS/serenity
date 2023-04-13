@@ -63,6 +63,15 @@ To build with LLVM's libFuzzer, invoke the ``BuildFuzzers.sh`` script with no ar
 
 (Note that we require clang >= 13, see the pick_clang() function in the script for the paths that are searched)
 
+To build fuzzers without any kind of default instrumentation, pass the ``--standalone`` flag to ``BuildFuzzers.sh``:
+
+```sh
+./BuildFuzzers.sh --standalone
+
+# This binary will read a single test input from a given filename (or, if no filename is given, from stdin) and exit.
+./Build/lagom-fuzzers-standalone/Fuzzers/FuzzSomething
+```
+
 The fuzzing build's CMake cache can be manipulated with commands like `cmake -B Build/fuzzers -S . -DENABLE_LAGOM_LIBWEB=OFF`.
 
 Any fuzzing results (particularly slow inputs, crashes, etc.) will be dropped in the current directory.
