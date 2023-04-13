@@ -44,7 +44,6 @@ NavigableContainer::~NavigableContainer()
 void NavigableContainer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_nested_browsing_context);
     visitor.visit(m_content_navigable);
 }
 
@@ -133,49 +132,15 @@ WebIDL::ExceptionOr<void> NavigableContainer::create_new_child_navigable()
     return {};
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-nested-browsing-context
-void NavigableContainer::create_new_nested_browsing_context()
-{
-    // 1. Let group be element's node document's browsing context's top-level browsing context's group.
-    VERIFY(document().browsing_context());
-    auto* group = document().browsing_context()->top_level_browsing_context().group();
-
-    // NOTE: The spec assumes that `group` is non-null here.
-    VERIFY(group);
-    VERIFY(group->page());
-
-    // 2. Let browsingContext be the result of creating a new browsing context with element's node document, element, and group.
-    // 3. Set element's nested browsing context to browsingContext.
-    m_nested_browsing_context = BrowsingContext::create_a_new_browsing_context(*group->page(), document(), *this, *group);
-
-    document().browsing_context()->append_child(*m_nested_browsing_context);
-    m_nested_browsing_context->set_frame_nesting_levels(document().browsing_context()->frame_nesting_levels());
-    m_nested_browsing_context->register_frame_nesting(document().url());
-
-    // 4. If element has a name attribute, then set browsingContext's name to the value of this attribute.
-    if (auto name = deprecated_attribute(HTML::AttributeNames::name); !name.is_empty())
-        m_nested_browsing_context->set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
-}
-
 // https://html.spec.whatwg.org/multipage/browsers.html#concept-bcc-content-document
 const DOM::Document* NavigableContainer::content_document() const
 {
-    // 1. If container's nested browsing context is null, then return null.
-    if (m_nested_browsing_context == nullptr)
+    // 1. If container's content navigable is null, then return null.
+    if (m_content_navigable == nullptr)
         return nullptr;
 
-    // 2. Let context be container's nested browsing context.
-    auto const& context = *m_nested_browsing_context;
-
-    // 3. Let document be context's active document.
-    auto const* document = context.active_document();
-
-    // FIXME: This should not be here, as we're expected to have a document at this point.
-    if (!document)
-        return nullptr;
-
-    VERIFY(document);
-    VERIFY(m_document);
+    // 2. Let document be container's content navigable's active document.
+    auto document = m_content_navigable->active_document();
 
     // 4. If document's origin and container's node document's origin are not same origin-domain, then return null.
     if (!document->origin().is_same_origin_domain(m_document->origin()))
@@ -187,9 +152,10 @@ const DOM::Document* NavigableContainer::content_document() const
 
 DOM::Document const* NavigableContainer::content_document_without_origin_check() const
 {
-    if (!m_nested_browsing_context)
+    if (!m_content_navigable)
         return nullptr;
-    return m_nested_browsing_context->active_document();
+
+    return m_content_navigable->active_document();
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content-other.html#dom-media-getsvgdocument
@@ -207,13 +173,13 @@ const DOM::Document* NavigableContainer::get_svg_document() const
 
 HTML::WindowProxy* NavigableContainer::content_window()
 {
-    if (!m_nested_browsing_context)
+    if (!m_content_navigable)
         return nullptr;
-    return m_nested_browsing_context->window_proxy();
+    return m_content_navigable->active_window_proxy();
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#shared-attribute-processing-steps-for-iframe-and-frame-elements
-void NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
+Optional<AK::URL> NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(bool initial_insertion)
 {
     // 1. Let url be the URL record about:blank.
     auto url = AK::URL("about:blank");
@@ -228,83 +194,45 @@ void NavigableContainer::shared_attribute_processing_steps_for_iframe_and_frame(
             url = parsed_src;
     }
 
-    // 3. If there exists an ancestor browsing context of element's nested browsing context
-    //    whose active document's URL, ignoring fragments, is equal to url, then return.
-    if (m_nested_browsing_context) {
-        for (auto ancestor = m_nested_browsing_context->parent(); ancestor; ancestor = ancestor->parent()) {
-            VERIFY(ancestor->active_document());
-            if (ancestor->active_document()->url().equals(url, AK::URL::ExcludeFragment::Yes))
-                return;
+    // 3. If the inclusive ancestor navigables of element's node navigable contains a navigable
+    //    whose active document's URL equals url with exclude fragments set to true, then return null.
+    if (m_content_navigable) {
+        for (auto const& navigable : document().inclusive_ancestor_navigables()) {
+            VERIFY(navigable->active_document());
+            if (navigable->active_document()->url().equals(url, AK::URL::ExcludeFragment::Yes))
+                return {};
         }
     }
 
-    // 4. If url matches about:blank and initialInsertion is true, then:
+    // 4. If url matches about:blank and initialInsertion is true, then perform the URL and history update steps given element's content navigable's active document and url.
     if (url_matches_about_blank(url) && initial_insertion) {
-        // FIXME: 1. Perform the URL and history update steps given element's nested browsing context's active document and url.
-
-        // 2. Run the iframe load event steps given element.
-        // FIXME: The spec doesn't check frame vs iframe here. Bug: https://github.com/whatwg/html/issues/8295
-        if (is<HTMLIFrameElement>(*this)) {
-            run_iframe_load_event_steps(static_cast<HTMLIFrameElement&>(*this));
-        }
-
-        // 3. Return.
-        return;
+        perform_url_and_history_update_steps(*m_content_navigable->active_document(), url);
     }
 
-    // 5. Let resource be a new request whose URL is url and whose referrer policy is the current state of element's referrerpolicy content attribute.
-    auto resource = Fetch::Infrastructure::Request::create(vm());
-    resource->set_url(url);
-    // FIXME: Set the referrer policy.
-
-    // AD-HOC:
-    if (url.scheme() == "file" && document().origin().scheme() != "file") {
-        dbgln("iframe failed to load URL: Security violation: {} may not load {}", document().url(), url);
-        return;
-    }
-
-    // 6. If element is an iframe element, then set element's current navigation was lazy loaded boolean to false.
-    if (is<HTMLIFrameElement>(*this)) {
-        static_cast<HTMLIFrameElement&>(*this).set_current_navigation_was_lazy_loaded(false);
-    }
-
-    // 7. If element is an iframe element, and the will lazy load element steps given element return true, then:
-    if (is<HTMLIFrameElement>(*this) && static_cast<HTMLIFrameElement&>(*this).will_lazy_load_element()) {
-        // FIXME: 1. Set element's lazy load resumption steps to the rest of this algorithm starting with the step labeled navigate to the resource.
-        // FIXME: 2. Set element's current navigation was lazy loaded boolean to true.
-        // FIXME: 3. Start intersection-observing a lazy loading element for element.
-        // FIXME: 4. Return.
-    }
-
-    // 8. Navigate to the resource: navigate an iframe or frame given element and resource.
-    navigate_an_iframe_or_frame(resource);
+    // 5. Return url.
+    return url;
 }
 
 // https://html.spec.whatwg.org/multipage/iframe-embed-object.html#navigate-an-iframe-or-frame
-void NavigableContainer::navigate_an_iframe_or_frame(JS::NonnullGCPtr<Fetch::Infrastructure::Request> resource)
+void NavigableContainer::navigate_an_iframe_or_frame(AK::URL url, ReferrerPolicy::ReferrerPolicy referrer_policy, Optional<String> srcdoc_string)
 {
-    // 1. Let historyHandling be "default".
-    auto history_handling = HistoryHandlingBehavior::Default;
+    // 1. Let historyHandling be "auto".
+    auto history_handling = Bindings::NavigationHistoryBehavior::Auto;
 
-    // 2. If element's nested browsing context's active document is not completely loaded, then set historyHandling to "replace".
-    VERIFY(m_nested_browsing_context);
-    VERIFY(m_nested_browsing_context->active_document());
-    if (!m_nested_browsing_context->active_document()->is_completely_loaded()) {
-        history_handling = HistoryHandlingBehavior::Replace;
+    // 2. If element's content navigable's active document is not completely loaded, then set historyHandling to "replace".
+    if (m_content_navigable->active_document() && !m_content_navigable->active_document()->is_completely_loaded()) {
+        history_handling = Bindings::NavigationHistoryBehavior::Replace;
     }
 
-    // FIXME: 3. Let reportFrameTiming be the following step given response response:
-    //           queue an element task on the networking task source
-    //           given element's node document's relevant global object
-    //           to finalize and report timing given response, element's node document's relevant global object, and element's local name.
+    // FIXME: 3. If element is an iframe, then set element's pending resource-timing start time to the current high resolution
+    //           time given element's node document's relevant global object.
 
-    // 4. Navigate element's nested browsing context to resource,
-    //    with historyHandling set to historyHandling,
-    //    the source browsing context set to element's node document's browsing context,
-    //    FIXME: and processResponseEndOfBody set to reportFrameTiming.
-    auto* source_browsing_context = document().browsing_context();
-    VERIFY(source_browsing_context);
-    MUST(m_nested_browsing_context->navigate(resource, *source_browsing_context, false, history_handling));
+    // 4. Navigate element's content navigable to url using element's node document, with historyHandling set to historyHandling,
+    //    referrerPolicy set to referrerPolicy, and documentResource set to scrdocString.
+    Variant<Empty, String, POSTResource> document_resource = Empty {};
+    if (srcdoc_string.has_value())
+        document_resource = srcdoc_string.value();
+    MUST(m_content_navigable->navigate(url, document(), document_resource, nullptr, false, history_handling, {}, {}, referrer_policy));
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#destroy-a-child-navigable
