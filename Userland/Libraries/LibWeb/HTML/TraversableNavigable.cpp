@@ -8,8 +8,10 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/BrowsingContextGroup.h>
 #include <LibWeb/HTML/DocumentState.h>
+#include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/SessionHistoryEntry.h>
 #include <LibWeb/HTML/TraversableNavigable.h>
+#include <LibWeb/Platform/EventLoopPlugin.h>
 
 namespace Web::HTML {
 
@@ -220,6 +222,221 @@ Vector<JS::Handle<Navigable>> TraversableNavigable::get_all_navigables_whose_cur
 
     // 4. Return results.
     return results;
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#apply-the-history-step
+void TraversableNavigable::apply_the_history_step(int step, Optional<SourceSnapshotParams> source_snapshot_params)
+{
+    // FIXME: 1. Assert: This is running within traversable's session history traversal queue.
+
+    // 2. Let targetStep be the result of getting the used step given traversable and step.
+    auto target_step = get_the_used_step(step);
+
+    // FIXME: 3. If initiatorToCheck is given, then:
+
+    // FIXME: 4. Let navigablesCrossingDocuments be the result of getting all navigables that might experience a cross-document traversal given traversable and targetStep.
+
+    // FIXME: 5. If checkForUserCancelation is true, and the result of checking if unloading is user-canceled given navigablesCrossingDocuments given traversable and targetStep is true, then return.
+
+    // 6. Let changingNavigables be the result of get all navigables whose current session history entry will change or reload given traversable and targetStep.
+    auto changing_navigables = get_all_navigables_whose_current_session_history_entry_will_change_or_reload(target_step);
+
+    // FIXME: 7. Let nonchangingNavigablesThatStillNeedUpdates be the result of getting all navigables that only need history object length/index update given traversable and targetStep.
+
+    // 8. For each navigable of changingNavigables:
+    for (auto& navigable : changing_navigables) {
+        // 1. Let targetEntry be the result of getting the target history entry given navigable and targetStep.
+        auto target_entry = navigable->get_the_target_history_entry(target_step);
+
+        // 2. Set navigable's current session history entry to targetEntry.
+        navigable->set_current_session_history_entry(target_entry);
+
+        // 3. Set navigable's ongoing navigation to "traversal".
+        m_ongoing_navigation = Traversal::Tag;
+    }
+
+    // 9. Let totalChangeJobs be the size of changingNavigables.
+    auto total_change_jobs = changing_navigables.size();
+
+    // 10. Let completedChangeJobs be 0.
+    size_t completed_change_jobs = 0;
+
+    struct ChangingNavigableContinuationState {
+        JS::Handle<DOM::Document> displayed_document;
+        JS::Handle<SessionHistoryEntry> target_entry;
+        JS::Handle<Navigable> navigable;
+        bool update_only;
+    };
+
+    // 11. Let changingNavigableContinuations be an empty queue of changing navigable continuation states.
+    Queue<ChangingNavigableContinuationState> changing_navigable_continuations;
+
+    // 12. For each navigable of changingNavigables, queue a global task on the navigation and traversal task source of navigable's active window to run the steps:
+    for (auto& navigable : changing_navigables) {
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&] {
+            // 1. Let displayedEntry be navigable's active session history entry.
+            auto displayed_entry = navigable->active_session_history_entry();
+
+            // 2. Let targetEntry be navigable's current session history entry.
+            auto target_entry = navigable->current_session_history_entry();
+
+            // 3. Let changingNavigableContinuation be a changing navigable continuation state with:
+            auto changing_navigable_continuation = ChangingNavigableContinuationState {
+                .displayed_document = displayed_entry->document_state->document(),
+                .target_entry = target_entry,
+                .navigable = navigable,
+                .update_only = false
+            };
+
+            // 4. If displayedEntry is targetEntry and targetEntry's document state's reload pending is false, then:
+            if (displayed_entry == target_entry && !target_entry->document_state->reload_pending()) {
+                // 1. Set changingNavigableContinuation's update-only to true.
+                changing_navigable_continuation.update_only = true;
+
+                // 2. Enqueue changingNavigableContinuation on changingNavigableContinuations.
+                changing_navigable_continuations.enqueue(move(changing_navigable_continuation));
+
+                // 3. Abort these steps.
+                return;
+            }
+
+            // 5. Let oldOrigin be targetEntry's document state's origin.
+            [[maybe_unused]] auto old_origin = target_entry->document_state->origin();
+
+            auto after_document_populated = [target_entry, changing_navigable_continuation, &changing_navigable_continuations]() mutable {
+                // 1. If targetEntry's document is null, then set changingNavigableContinuation's update-only to true.
+                if (!target_entry->document_state->document()) {
+                    changing_navigable_continuation.update_only = true;
+                }
+
+                // FIXME: 2. If targetEntry's document's origin is not oldOrigin, then set targetEntry's serialized state to StructuredSerializeForStorage(null).
+
+                // FIXME: 3. If all of the following are true:
+
+                // 4. Enqueue changingNavigableContinuation on changingNavigableContinuations.
+                changing_navigable_continuations.enqueue(move(changing_navigable_continuation));
+            };
+
+            // 6. If targetEntry's document is null, or targetEntry's document state's reload pending is true, then:
+            if (!target_entry->document_state->document() || target_entry->document_state->reload_pending()) {
+                // FIXME: 1. Let navTimingType be "back_forward" if targetEntry's document is null; otherwise "reload".
+
+                // FIXME: 2. Let targetSnapshotParams be the result of snapshotting target snapshot params given navigable.
+
+                // 3. Let potentiallyTargetSpecificSourceSnapshotParams be sourceSnapshotParams.
+                Optional<SourceSnapshotParams> potentially_target_specific_source_snapshot_params = source_snapshot_params;
+
+                // FIXME: 4. If potentiallyTargetSpecificSourceSnapshotParams is null, then set it to the result of snapshotting source snapshot params given navigable's active document.
+                if (!potentially_target_specific_source_snapshot_params.has_value()) {
+                    potentially_target_specific_source_snapshot_params = SourceSnapshotParams {
+                        .has_transient_activation = false,
+                        .sandboxing_flags = navigable->active_document()->active_sandboxing_flag_set(),
+                        .allows_downloading = true,
+                        .fetch_client = navigable->active_document()->relevant_settings_object(),
+                        .source_policy_container = navigable->active_document()->policy_container()
+                    };
+                }
+
+                // 5. Set targetEntry's document state's reload pending to false.
+                target_entry->document_state->set_reload_pending(false);
+
+                // FIXME: 6. Let allowPOST be targetEntry's document state's reload pending.
+
+                // 7. In parallel, attempt to populate the history entry's document for targetEntry, given navigable, potentiallyTargetSpecificSourceSnapshotParams,
+                //    targetSnapshotParams, with allowPOST set to allowPOST and completionSteps set to queue a global task on the navigation and traversal task source given
+                //    navigable's active window to run afterDocumentPopulated.
+                navigable->populate_session_history_entry_document(target_entry, {}, {}, *potentially_target_specific_source_snapshot_params, [this, after_document_populated]() mutable {
+                             queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [after_document_populated]() mutable {
+                                 after_document_populated();
+                             });
+                         })
+                    .release_value_but_fixme_should_propagate_errors();
+            }
+            // Otherwise, run afterDocumentPopulated immediately.
+            else {
+                after_document_populated();
+            }
+        });
+    }
+
+    // FIXME: 13. Let navigablesThatMustWaitBeforeHandlingSyncNavigation be an empty set.
+
+    // FIXME: 14. While completedChangeJobs does not equal totalChangeJobs:
+    while (completed_change_jobs != total_change_jobs) {
+        // FIXME: 1. If traversable's running nested apply history step is false, then:
+
+        // AD-HOC: Since currently populate_session_history_entry_document does not run in parallel
+        //         we call spin_until to interrupt execution of this function and let document population
+        //         to complete.
+        Platform::EventLoopPlugin::the().spin_until([&] {
+            return !changing_navigable_continuations.is_empty() || completed_change_jobs == total_change_jobs;
+        });
+
+        if (changing_navigable_continuations.is_empty()) {
+            continue;
+        }
+
+        // 2. Let changingNavigableContinuation be the result of dequeuing from changingNavigableContinuations.
+        auto changing_navigable_continuation = changing_navigable_continuations.dequeue();
+
+        // 3. If changingNavigableContinuation is nothing, then continue.
+
+        // 4. Let displayedDocument be changingNavigableContinuation's displayed document.
+        auto displayed_document = changing_navigable_continuation.displayed_document;
+
+        // 5. Let targetEntry be changingNavigableContinuation's target entry.
+        auto target_entry = changing_navigable_continuation.target_entry;
+
+        // 6. Let navigable be changingNavigableContinuation's navigable.
+        auto navigable = changing_navigable_continuation.navigable;
+
+        // 7. Set navigable's ongoing navigation to null.
+        m_ongoing_navigation = {};
+
+        // 8. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
+        auto [script_history_length, script_history_index] = get_the_history_object_length_and_index(target_step);
+        (void)script_history_length;
+        (void)script_history_index;
+
+        // FIXME: 9. Append navigable to navigablesThatMustWaitBeforeHandlingSyncNavigation.
+
+        // 10. Queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
+        queue_global_task(Task::Source::NavigationAndTraversal, *navigable->active_window(), [&, target_entry, navigable, displayed_document, update_only = changing_navigable_continuation.update_only] {
+            // 1. If changingNavigableContinuation's update-only is false, then:
+            if (!update_only) {
+                // 1. Unload displayedDocument given targetEntry's document.
+                displayed_document->unload(target_entry->document_state->document());
+
+                // FIXME: 2. For each childNavigable of displayedDocument's descendant navigables, queue a global task on the navigation and traversal task source given
+                //           childNavigable's active window to unload childNavigable's active document.
+
+                // 3. Activate history entry targetEntry for navigable.
+                navigable->activate_history_entry(*target_entry);
+            }
+
+            // FIXME: 2. If targetEntry's document is not equal to displayedDocument, then queue a global task on the navigation and traversal task source given targetEntry's document's
+            //           relevant global object to perform the following step. Otherwise, continue onward to perform the following step within the currently-queued task.
+
+            // FIXME: 3. Update document for history step application given targetEntry's document, targetEntry, changingNavigableContinuation's update-only, scriptHistoryLength, and
+            //           scriptHistoryIndex.
+
+            // 4. Increment completedChangeJobs.
+            completed_change_jobs++;
+        });
+    }
+
+    // FIXME: 15. Let totalNonchangingJobs be the size of nonchangingNavigablesThatStillNeedUpdates.
+
+    // FIXME: 16. Let completedNonchangingJobs be 0.
+
+    // FIXME: 17. Let (scriptHistoryLength, scriptHistoryIndex) be the result of getting the history object length and index given traversable and targetStep.
+
+    // FIXME: 18. For each navigable of nonchangingNavigablesThatStillNeedUpdates, queue a global task on the navigation and traversal task source given navigable's active window to run the steps:
+
+    // FIXME: 19. Wait for completedNonchangingJobs to equal totalNonchangingJobs.
+
+    // 20. Set traversable's current session history step to targetStep.
+    m_current_session_history_step = target_step;
 }
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#clear-the-forward-session-history
