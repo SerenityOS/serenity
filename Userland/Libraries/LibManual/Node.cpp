@@ -70,11 +70,10 @@ ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
 {
     if (url.host() != "man")
         return Error::from_string_view("Bad help operation"sv);
-    if (url.paths().size() < 2)
+    if (url.path_segment_count() < 2)
         return Error::from_string_view("Bad help page URL"sv);
 
-    auto paths = url.paths();
-    auto const section = paths.take_first();
+    auto const section = url.path_segment_at_index(0);
     auto maybe_section_number = section.to_uint();
     if (!maybe_section_number.has_value())
         return Error::from_string_view("Bad section number"sv);
@@ -84,16 +83,16 @@ ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
 
     NonnullRefPtr<Node const> current_node = sections[section_number - 1];
 
-    while (!paths.is_empty()) {
-        auto next_path_segment = TRY(String::from_deprecated_string(paths.take_first()));
+    for (size_t i = 1; i < url.path_segment_count(); i++) {
         auto children = TRY(current_node->children());
         for (auto const& child : children) {
-            if (TRY(child->name()) == next_path_segment) {
+            if (TRY(child->name()) == url.path_segment_at_index(i).view()) {
                 current_node = child;
                 break;
             }
         }
     }
+
     return current_node;
 }
 

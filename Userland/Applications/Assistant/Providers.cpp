@@ -226,7 +226,7 @@ void URLProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
         url.set_scheme("http");
     if (url.host().is_empty())
         url.set_host(query);
-    if (url.paths().is_empty())
+    if (url.path_segment_count() == 0)
         url.set_paths({ "" });
 
     if (!url.is_valid())

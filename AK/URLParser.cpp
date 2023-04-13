@@ -536,7 +536,7 @@ URL URLParser::parse(StringView raw_input, Optional<URL> const& base_url, Option
                     url->m_query = {};
                     auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                     if (!starts_with_windows_drive_letter(substring_from_pointer)) {
-                        if (!url->paths().is_empty() && !(url->scheme() == "file" && url->paths().size() == 1 && is_normalized_windows_drive_letter(url->paths()[0])))
+                        if (!url->m_paths.is_empty() && !(url->scheme() == "file" && url->m_paths.size() == 1 && is_normalized_windows_drive_letter(url->m_paths[0])))
                             url->m_paths.remove(url->m_paths.size() - 1);
                     } else {
                         report_validation_error();

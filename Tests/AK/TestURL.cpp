@@ -203,8 +203,8 @@ TEST_CASE(mailto_url)
     EXPECT_EQ(url.scheme(), "mailto");
     EXPECT(url.host().is_null());
     EXPECT_EQ(url.port_or_default(), 0);
-    EXPECT_EQ(url.paths().size(), 1u);
-    EXPECT_EQ(url.paths()[0], "mail@example.com");
+    EXPECT_EQ(url.path_segment_count(), 1u);
+    EXPECT_EQ(url.path_segment_at_index(0), "mail@example.com");
     EXPECT(url.query().is_null());
     EXPECT(url.fragment().is_null());
     EXPECT_EQ(url.serialize(), "mailto:mail@example.com");
@@ -329,20 +329,20 @@ TEST_CASE(create_with_file_scheme)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.scheme(), "file");
     EXPECT_EQ(url.port_or_default(), 0);
-    EXPECT_EQ(url.paths().size(), 3u);
-    EXPECT_EQ(url.paths()[0], "home");
-    EXPECT_EQ(url.paths()[1], "anon");
-    EXPECT_EQ(url.paths()[2], "README.md");
+    EXPECT_EQ(url.path_segment_count(), 3u);
+    EXPECT_EQ(url.path_segment_at_index(0), "home");
+    EXPECT_EQ(url.path_segment_at_index(1), "anon");
+    EXPECT_EQ(url.path_segment_at_index(2), "README.md");
     EXPECT_EQ(url.serialize_path(), "/home/anon/README.md");
     EXPECT(url.query().is_null());
     EXPECT(url.fragment().is_null());
 
     url = URL::create_with_file_scheme("/home/anon/");
     EXPECT(url.is_valid());
-    EXPECT_EQ(url.paths().size(), 3u);
-    EXPECT_EQ(url.paths()[0], "home");
-    EXPECT_EQ(url.paths()[1], "anon");
-    EXPECT_EQ(url.paths()[2], "");
+    EXPECT_EQ(url.path_segment_count(), 3u);
+    EXPECT_EQ(url.path_segment_at_index(0), "home");
+    EXPECT_EQ(url.path_segment_at_index(1), "anon");
+    EXPECT_EQ(url.path_segment_at_index(2), "");
     EXPECT_EQ(url.serialize_path(), "/home/anon/");
 
     url = URL("file:///home/anon/"sv);
@@ -399,9 +399,9 @@ TEST_CASE(complete_file_url_with_base)
     URL url { "file:///home/index.html" };
     EXPECT(url.is_valid());
     EXPECT_EQ(url.serialize_path(), "/home/index.html");
-    EXPECT_EQ(url.paths().size(), 2u);
-    EXPECT_EQ(url.paths()[0], "home");
-    EXPECT_EQ(url.paths()[1], "index.html");
+    EXPECT_EQ(url.path_segment_count(), 2u);
+    EXPECT_EQ(url.path_segment_at_index(0), "home");
+    EXPECT_EQ(url.path_segment_at_index(1), "index.html");
 
     auto sub_url = url.complete_url("js/app.js"sv);
     EXPECT(sub_url.is_valid());
