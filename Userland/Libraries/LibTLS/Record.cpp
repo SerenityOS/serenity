@@ -325,8 +325,8 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     // FIXME: Read the version and verify it
 
     if constexpr (TLS_DEBUG) {
-        auto version = ByteReader::load16(buffer.offset_pointer(buffer_position));
-        dbgln("type={}, version={}", (u8)type, (u16)version);
+        auto version = static_cast<ProtocolVersion>(ByteReader::load16(buffer.offset_pointer(buffer_position)));
+        dbgln("type={}, version={}", enum_to_string(type), enum_to_string(version));
     }
 
     buffer_position += 2;
@@ -341,7 +341,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         return (i8)Error::NeedMoreData;
     }
 
-    dbgln_if(TLS_DEBUG, "message type: {}, length: {}", (u8)type, length);
+    dbgln_if(TLS_DEBUG, "message type: {}, length: {}", enum_to_string(type), length);
     auto plain = buffer.slice(buffer_position, buffer.size() - buffer_position);
 
     ByteBuffer decrypted;

@@ -704,6 +704,89 @@ enum class AlertDescription : u8 {
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 
+constexpr static StringView enum_to_string(CipherSuite descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case CipherSuite::name:          \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_CIPHER_SUITES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(ExtensionType descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case ExtensionType::name:        \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_EXTENSION_TYPES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(ContentType descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case ContentType::name:          \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_CONTENT_TYPES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(ProtocolVersion descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case ProtocolVersion::name:      \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_PROTOCOL_VERSIONS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(HandshakeType descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case HandshakeType::name:        \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_HANDSHAKE_TYPES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(SignatureAlgorithm descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case SignatureAlgorithm::name:   \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_SIGNATURE_ALGORITHM
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
 constexpr static StringView enum_to_string(AlertDescription descriptor)
 {
 #define _ENUM_KEY_VALUE(name, value) \

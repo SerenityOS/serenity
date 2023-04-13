@@ -412,7 +412,7 @@ ssize_t TLSv12::handle_handshake_payload(ReadonlyBytes vbuffer)
             }
             break;
         default:
-            dbgln("message type not understood: {}", to_underlying(type));
+            dbgln("message type not understood: {}", enum_to_string(type));
             return (i8)Error::NotUnderstood;
         }
 
