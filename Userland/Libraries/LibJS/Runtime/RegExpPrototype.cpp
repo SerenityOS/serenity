@@ -443,9 +443,9 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
     {                                                                                      \
         auto& realm = *vm.current_realm();                                                 \
         /* 1. If Type(R) is not Object, throw a TypeError exception. */                    \
-        auto* regexp_object = TRY(this_object(vm));                                        \
+        auto regexp_object = TRY(this_object(vm));                                         \
         /* 2. If R does not have an [[OriginalFlags]] internal slot, then */               \
-        if (!is<RegExpObject>(regexp_object)) {                                            \
+        if (!is<RegExpObject>(*regexp_object)) {                                           \
             /* a. If SameValue(R, %RegExp.prototype%) is true, return undefined. */        \
             if (same_value(regexp_object, realm.intrinsics().regexp_prototype()))          \
                 return js_undefined();                                                     \
@@ -453,7 +453,7 @@ size_t advance_string_index(Utf16View const& string, size_t index, bool unicode)
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "RegExp"); \
         }                                                                                  \
         /* 3. Let flags be R.[[OriginalFlags]]. */                                         \
-        auto const& flags = static_cast<RegExpObject*>(regexp_object)->flags();            \
+        auto const& flags = static_cast<RegExpObject&>(*regexp_object).flags();            \
         /* 4. If flags contains codeUnit, return true. */                                  \
         /* 5. Return false. */                                                             \
         return Value(flags.contains(#flag_char##sv));                                      \
@@ -481,7 +481,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::flags)
 
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let result be the empty String.
     StringBuilder builder(8);
@@ -521,7 +521,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
@@ -533,7 +533,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // 5. If flags does not contain "g", then
     if (!flags.contains('g')) {
         // a. Return ? RegExpExec(rx, S).
-        return TRY(regexp_exec(vm, *regexp_object, move(string)));
+        return TRY(regexp_exec(vm, regexp_object, move(string)));
     }
 
     // 6. Else,
@@ -554,7 +554,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
     // e. Repeat,
     while (true) {
         // i. Let result be ? RegExpExec(rx, S).
-        auto result_value = TRY(regexp_exec(vm, *regexp_object, string));
+        auto result_value = TRY(regexp_exec(vm, regexp_object, string));
 
         // ii. If result is null, then
         if (result_value.is_null()) {
@@ -581,7 +581,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         // 3. If matchStr is the empty String, then
         if (match_str.is_empty()) {
             // Steps 3a-3c are implemented by increment_last_index.
-            TRY(increment_last_index(vm, *regexp_object, string.view(), full_unicode));
+            TRY(increment_last_index(vm, regexp_object, string.view(), full_unicode));
         }
 
         // 4. Set n to n + 1.
@@ -597,13 +597,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match_all)
 
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(R, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, realm.intrinsics().regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, regexp_object, realm.intrinsics().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(R, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -642,7 +642,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(string_value.to_utf16_string(vm));
@@ -683,7 +683,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
     // 11. Repeat, while done is false,
     while (true) {
         // a. Let result be ? RegExpExec(rx, S).
-        auto result = TRY(regexp_exec(vm, *regexp_object, string));
+        auto result = TRY(regexp_exec(vm, regexp_object, string));
 
         // b. If result is null, set done to true.
         if (result.is_null())
@@ -707,7 +707,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         // 2. If matchStr is the empty String, then
         if (match_str.is_empty()) {
             // Steps 2a-2c are implemented by increment_last_index.
-            TRY(increment_last_index(vm, *regexp_object, string.view(), full_unicode));
+            TRY(increment_last_index(vm, regexp_object, string.view(), full_unicode));
         }
     }
 
@@ -834,7 +834,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
 {
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
@@ -849,7 +849,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_search)
     }
 
     // 6. Let result be ? RegExpExec(rx, S).
-    auto result = TRY(regexp_exec(vm, *regexp_object, move(string)));
+    auto result = TRY(regexp_exec(vm, regexp_object, move(string)));
 
     // 7. Let currentLastIndex be ? Get(rx, "lastIndex").
     auto current_last_index = TRY(regexp_object->get(vm.names.lastIndex));
@@ -875,10 +875,10 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::source)
 
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. If R does not have an [[OriginalSource]] internal slot, then
-    if (!is<RegExpObject>(regexp_object)) {
+    if (!is<RegExpObject>(*regexp_object)) {
         // a. If SameValue(R, %RegExp.prototype%) is true, return "(?:)".
         if (same_value(regexp_object, realm.intrinsics().regexp_prototype()))
             return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "(?:)"sv));
@@ -902,13 +902,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_split)
 
     // 1. Let rx be the this value.
     // 2. If Type(rx) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let C be ? SpeciesConstructor(rx, %RegExp%).
-    auto* constructor = TRY(species_constructor(vm, *regexp_object, realm.intrinsics().regexp_constructor()));
+    auto* constructor = TRY(species_constructor(vm, regexp_object, realm.intrinsics().regexp_constructor()));
 
     // 5. Let flags be ? ToString(? Get(rx, "flags")).
     auto flags_value = TRY(regexp_object->get(vm.names.flags));
@@ -1056,13 +1056,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::test)
 {
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let string be ? ToString(S).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Let match be ? RegExpExec(R, string).
-    auto match = TRY(regexp_exec(vm, *regexp_object, move(string)));
+    auto match = TRY(regexp_exec(vm, regexp_object, move(string)));
 
     // 5. If match is not null, return true; else return false.
     return Value(!match.is_null());
@@ -1073,7 +1073,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::to_string)
 {
     // 1. Let R be the this value.
     // 2. If Type(R) is not Object, throw a TypeError exception.
-    auto* regexp_object = TRY(this_object(vm));
+    auto regexp_object = TRY(this_object(vm));
 
     // 3. Let pattern be ? ToString(? Get(R, "source")).
     auto source_attr = TRY(regexp_object->get(vm.names.source));
