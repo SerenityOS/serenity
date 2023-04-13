@@ -65,6 +65,8 @@ public:
     DeprecatedString query(ApplyPercentDecoding = ApplyPercentDecoding::No) const;
     DeprecatedString fragment(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     Optional<u16> port() const { return m_port; }
+    DeprecatedString path_segment_at_index(size_t index, ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    size_t path_segment_count() const { return m_paths.size(); }
 
     u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme)); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }

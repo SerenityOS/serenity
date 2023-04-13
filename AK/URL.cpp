@@ -45,6 +45,12 @@ DeprecatedString URL::password(ApplyPercentDecoding apply_percent_decoding) cons
     return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_password) : m_password;
 }
 
+DeprecatedString URL::path_segment_at_index(size_t index, ApplyPercentDecoding apply_percent_decoding) const
+{
+    VERIFY(index < path_segment_count());
+    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_paths[index]) : m_paths[index];
+}
+
 DeprecatedString URL::basename(ApplyPercentDecoding apply_percent_decoding) const
 {
     if (!m_valid)
