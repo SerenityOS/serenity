@@ -53,14 +53,19 @@ public:
 
     bool is_valid() const { return m_valid; }
 
+    enum class ApplyPercentDecoding {
+        Yes,
+        No
+    };
     DeprecatedString const& scheme() const { return m_scheme; }
-    DeprecatedString const& username() const { return m_username; }
-    DeprecatedString const& password() const { return m_password; }
+    DeprecatedString username(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    DeprecatedString password(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     DeprecatedString const& host() const { return m_host; }
-    Vector<DeprecatedString> const& paths() const { return m_paths; }
-    DeprecatedString const& query() const { return m_query; }
-    DeprecatedString const& fragment() const { return m_fragment; }
+    DeprecatedString basename(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
+    DeprecatedString query(ApplyPercentDecoding = ApplyPercentDecoding::No) const;
+    DeprecatedString fragment(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     Optional<u16> port() const { return m_port; }
+
     u16 port_or_default() const { return m_port.value_or(default_port_for_scheme(m_scheme)); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
     bool cannot_have_a_username_or_password_or_port() const { return m_host.is_null() || m_host.is_empty() || m_cannot_be_a_base_url || m_scheme == "file"sv; }
@@ -89,7 +94,6 @@ public:
     }
 
     DeprecatedString path() const;
-    DeprecatedString basename() const;
 
     DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
     DeprecatedString serialize_for_display() const;

@@ -47,6 +47,36 @@ URL URL::complete_url(StringView relative_url) const
     return URLParser::parse(relative_url, *this);
 }
 
+DeprecatedString URL::username(ApplyPercentDecoding apply_percent_decoding) const
+{
+    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_username) : m_username;
+}
+
+DeprecatedString URL::password(ApplyPercentDecoding apply_percent_decoding) const
+{
+    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_password) : m_password;
+}
+
+DeprecatedString URL::basename(ApplyPercentDecoding apply_percent_decoding) const
+{
+    if (!m_valid)
+        return {};
+    if (m_paths.is_empty())
+        return {};
+    auto& last_segment = m_paths.last();
+    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(last_segment) : last_segment;
+}
+
+DeprecatedString URL::query(ApplyPercentDecoding apply_percent_decoding) const
+{
+    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_query) : m_query;
+}
+
+DeprecatedString URL::fragment(ApplyPercentDecoding apply_percent_decoding) const
+{
+    return apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(m_fragment) : m_fragment;
+}
+
 // NOTE: This only exists for compatibility with the existing URL tests which check for both .is_null() and .is_empty().
 static DeprecatedString deprecated_string_percent_encode(DeprecatedString const& input, URL::PercentEncodeSet set = URL::PercentEncodeSet::Userinfo, URL::SpaceAsPlus space_as_plus = URL::SpaceAsPlus::No)
 {
@@ -387,15 +417,6 @@ bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
     if (!m_valid || !other.m_valid)
         return false;
     return serialize(exclude_fragments) == other.serialize(exclude_fragments);
-}
-
-DeprecatedString URL::basename() const
-{
-    if (!m_valid)
-        return {};
-    if (m_paths.is_empty())
-        return {};
-    return m_paths.last();
 }
 
 void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
