@@ -930,7 +930,8 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
                 target_step = traversable->current_session_history_step();
             }
 
-            // FIXME: 10. Apply the history step targetStep to traversable.
+            // 10. Apply the history step targetStep to traversable.
+            traversable->apply_the_history_step(target_step);
         }).release_value_but_fixme_should_propagate_errors();
     });
 
