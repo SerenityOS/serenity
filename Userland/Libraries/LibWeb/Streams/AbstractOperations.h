@@ -33,7 +33,7 @@ void readable_stream_fulfill_read_request(ReadableStream&, JS::Value chunk, bool
 size_t readable_stream_get_num_read_requests(ReadableStream&);
 bool readable_stream_has_default_reader(ReadableStream&);
 
-JS::NonnullGCPtr<WebIDL::Promise> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin&, JS::Value reason);
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin&, JS::Value reason);
 void readable_stream_reader_generic_initialize(ReadableStreamGenericReaderMixin&, ReadableStream&);
 WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamGenericReaderMixin&);
 

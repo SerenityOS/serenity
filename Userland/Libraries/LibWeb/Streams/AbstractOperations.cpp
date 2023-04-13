@@ -242,7 +242,7 @@ void readable_stream_add_read_request(ReadableStream& stream, ReadRequest const&
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-cancel
-JS::NonnullGCPtr<WebIDL::Promise> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin& reader, JS::Value reason)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> readable_stream_reader_generic_cancel(ReadableStreamGenericReaderMixin& reader, JS::Value reason)
 {
     // 1. Let stream be reader.[[stream]]
     auto stream = reader.stream();
@@ -251,7 +251,7 @@ JS::NonnullGCPtr<WebIDL::Promise> readable_stream_reader_generic_cancel(Readable
     VERIFY(stream);
 
     // 3. Return ! ReadableStreamCancel(stream, reason)
-    return MUST(readable_stream_cancel(*stream, reason));
+    return TRY(readable_stream_cancel(*stream, reason));
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-reader-generic-initialize

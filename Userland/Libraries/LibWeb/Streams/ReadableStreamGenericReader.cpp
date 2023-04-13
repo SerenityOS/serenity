@@ -32,7 +32,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamGenericReaderMi
     }
 
     // 2. Return ! ReadableStreamReaderGenericCancel(this, reason).
-    auto promise_capability = readable_stream_reader_generic_cancel(*this, reason);
+    auto promise_capability = TRY(readable_stream_reader_generic_cancel(*this, reason));
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
 }
 
