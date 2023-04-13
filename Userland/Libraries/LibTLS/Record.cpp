@@ -16,7 +16,7 @@ namespace TLS {
 
 ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 {
-    PacketBuilder builder(MessageType::Alert, (u16)m_context.options.version);
+    PacketBuilder builder(ContentType::ALERT, (u16)m_context.options.version);
     builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
     builder.append(code);
 
@@ -69,8 +69,8 @@ void TLSv12::update_packet(ByteBuffer& packet)
     u32 header_size = 5;
     ByteReader::store(packet.offset_pointer(3), AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size)));
 
-    if (packet[0] != (u8)MessageType::ChangeCipher) {
-        if (packet[0] == (u8)MessageType::Handshake && packet.size() > header_size) {
+    if (packet[0] != (u8)ContentType::CHANGE_CIPHER_SPEC) {
+        if (packet[0] == (u8)ContentType::HANDSHAKE && packet.size() > header_size) {
             u8 handshake_type = packet[header_size];
             if (handshake_type != HandshakeType::HelloRequest && handshake_type != HandshakeType::HelloVerifyRequest) {
                 update_hash(packet.bytes(), header_size);
@@ -319,7 +319,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         return (i8)Error::NeedMoreData;
     }
 
-    auto type = (MessageType)buffer[0];
+    auto type = (ContentType)buffer[0];
     size_t buffer_position { 1 };
 
     // FIXME: Read the version and verify it
@@ -346,7 +346,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
     ByteBuffer decrypted;
 
-    if (m_context.cipher_spec_set && type != MessageType::ChangeCipher) {
+    if (m_context.cipher_spec_set && type != ContentType::CHANGE_CIPHER_SPEC) {
         if constexpr (TLS_DEBUG) {
             dbgln("Encrypted: ");
             print_buffer(buffer.slice(header_size, length));
@@ -489,7 +489,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     m_context.remote_sequence_number++;
 
     switch (type) {
-    case MessageType::ApplicationData:
+    case ContentType::APPLICATION_DATA:
         if (m_context.connection_status != ConnectionStatus::Established) {
             dbgln("unexpected application data");
             payload_res = (i8)Error::UnexpectedMessage;
@@ -505,11 +505,11 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             }
         }
         break;
-    case MessageType::Handshake:
+    case ContentType::HANDSHAKE:
         dbgln_if(TLS_DEBUG, "tls handshake message");
         payload_res = handle_handshake_payload(plain);
         break;
-    case MessageType::ChangeCipher:
+    case ContentType::CHANGE_CIPHER_SPEC:
         if (m_context.connection_status != ConnectionStatus::KeyExchange) {
             dbgln("unexpected change cipher message");
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
@@ -521,7 +521,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             m_context.remote_sequence_number = 0;
         }
         break;
-    case MessageType::Alert:
+    case ContentType::ALERT:
         dbgln_if(TLS_DEBUG, "alert message of length {}", length);
         if (length >= 2) {
             if constexpr (TLS_DEBUG)

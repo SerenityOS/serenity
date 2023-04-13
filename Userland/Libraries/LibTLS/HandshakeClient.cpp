@@ -309,7 +309,7 @@ void TLSv12::build_ecdhe_rsa_pre_master_secret(PacketBuilder& builder)
 
 ByteBuffer TLSv12::build_certificate()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.options.version };
+    PacketBuilder builder { ContentType::HANDSHAKE, m_context.options.version };
 
     Vector<Certificate const&> certificates;
     Vector<Certificate>* local_certificates = nullptr;
@@ -369,7 +369,7 @@ ByteBuffer TLSv12::build_client_key_exchange()
         return {};
     }
 
-    PacketBuilder builder { MessageType::Handshake, m_context.options.version };
+    PacketBuilder builder { ContentType::HANDSHAKE, m_context.options.version };
     builder.append((u8)HandshakeType::ClientKeyExchange);
 
     switch (get_key_exchange_algorithm(m_context.cipher)) {
