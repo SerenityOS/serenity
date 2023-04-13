@@ -20,287 +20,513 @@
 
 namespace Kernel {
 
-static constexpr KeyCode unshifted_key_map[0x80] = {
-    Key_Invalid,
-    Key_Escape,
-    Key_1,
-    Key_2,
-    Key_3,
-    Key_4,
-    Key_5,
-    Key_6,
-    Key_7,
-    Key_8,
-    Key_9,
-    Key_0,
-    Key_Minus,
-    Key_Equal,
-    Key_Backspace,
-    Key_Tab, // 15
-    Key_Q,
-    Key_W,
-    Key_E,
-    Key_R,
-    Key_T,
-    Key_Y,
-    Key_U,
-    Key_I,
-    Key_O,
-    Key_P,
-    Key_LeftBracket,
-    Key_RightBracket,
-    Key_Return,  // 28
-    Key_Control, // 29
-    Key_A,
-    Key_S,
-    Key_D,
-    Key_F,
-    Key_G,
-    Key_H,
-    Key_J,
-    Key_K,
-    Key_L,
-    Key_Semicolon,
-    Key_Apostrophe,
-    Key_Backtick,
-    Key_LeftShift, // 42
-    Key_Backslash,
-    Key_Z,
-    Key_X,
-    Key_C,
-    Key_V,
-    Key_B,
-    Key_N,
-    Key_M,
-    Key_Comma,
-    Key_Period,
-    Key_Slash,
-    Key_RightShift, // 54
-    Key_Asterisk,
-    Key_Alt,      // 56
-    Key_Space,    // 57
-    Key_CapsLock, // 58
-    Key_F1,
-    Key_F2,
-    Key_F3,
-    Key_F4,
-    Key_F5,
-    Key_F6,
-    Key_F7,
-    Key_F8,
-    Key_F9,
-    Key_F10,
-    Key_NumLock,
-    Key_Invalid, // 70
-    Key_Home,
-    Key_Up,
-    Key_PageUp,
-    Key_Minus,
-    Key_Left,
-    Key_Invalid,
-    Key_Right, // 77
-    Key_Plus,
-    Key_End,
-    Key_Down, // 80
-    Key_PageDown,
-    Key_Insert,
-    Key_Delete, // 83
-    Key_Invalid,
-    Key_Invalid,
-    Key_Backslash,
-    Key_F11,
-    Key_F12,
-    Key_Invalid,
-    Key_Invalid,
-    Key_Super,
-    Key_Invalid,
-    Key_Menu,
+// clang-format off
+static constexpr KeyCodeEntry unshifted_scan_code_set1_key_map[0x80] = {
+    { Key_Invalid, 0xFF },    { Key_Escape, 1 },        { Key_1, 2 },                 { Key_2, 3 },
+    { Key_3, 4 },             { Key_4, 5 },             { Key_5, 6 },                 { Key_6, 7 },
+    { Key_7, 8 },             { Key_8, 9 },             { Key_9, 0x0A },              { Key_0, 0x0B },
+    { Key_Minus, 0x0C },      { Key_Equal, 0x0D },      { Key_Backspace, 0x0E },      { Key_Tab, 0x0F },
+    { Key_Q, 0x10 },          { Key_W, 0x11 },          { Key_E, 0x12 },              { Key_R, 0x13 },
+    { Key_T, 0x14 },          { Key_Y, 0x15 },          { Key_U, 0x16 },              { Key_I, 0x17 },
+    { Key_O, 0x18 },          { Key_P, 0x19 },          { Key_LeftBracket, 0x1A },    { Key_RightBracket, 0x1B },
+    { Key_Return, 0x1C },     { Key_Control, 0x1D },    { Key_A, 0x1E },              { Key_S, 0x1F },
+    { Key_D, 0x20 },          { Key_F, 0x21 },          { Key_G, 0x22 },              { Key_H, 0x23 },
+    { Key_J, 0x24 },          { Key_K, 0x25 },          { Key_L, 0x26 },              { Key_Semicolon, 0x27 },
+    { Key_Apostrophe, 0x28 }, { Key_Backtick, 0x29 },   { Key_LeftShift, 0xFF },      { Key_Backslash, 0x2B },
+    { Key_Z, 0x2C },          { Key_X, 0x2D },          { Key_C, 0x2E },              { Key_V, 0x2F },
+    { Key_B, 0x30 },          { Key_N, 0x31 },          { Key_M, 0x32 },              { Key_Comma, 0x33 },
+    { Key_Period, 0x34 },     { Key_Slash, 0x35 },      { Key_RightShift, 0xFF },     { Key_Asterisk, 0x37 },
+    { Key_Alt, 0xFF },        { Key_Space, 0x39 },      { Key_CapsLock, 0xFF },       { Key_F1, 0xFF },
+    { Key_F2, 0xFF },         { Key_F3, 0xFF },         { Key_F4, 0xFF },             { Key_F5, 0xFF },
+    { Key_F6, 0xFF },         { Key_F7, 0xFF },         { Key_F8, 0xFF },             { Key_F9, 0xFF },
+    { Key_F10, 0xFF },        { Key_NumLock, 0xFF },    { Key_ScrollLock, 0xFF },     { Key_Home, 0xFF },
+    { Key_Up, 0xFF },         { Key_PageUp, 0xFF },     { Key_Minus, 0x4A },          { Key_Left, 0xFF },
+    { Key_Invalid, 0xFF },    { Key_Right, 0xFF },      { Key_Plus, 0xFF },           { Key_End, 0xFF },
+    { Key_Down, 0xFF },       { Key_PageDown, 0xFF },   { Key_Insert, 0xFF },         { Key_Delete, 0xFF },
+    { Key_Invalid, 0xFF },    { Key_Invalid, 0xFF },    { Key_Backslash, 0x56 },      { Key_F11, 0xFF },
+    { Key_F12, 0xFF },        { Key_Invalid, 0xFF },    { Key_Invalid, 0xFF },        { Key_Super, 0xFF },
+    { Key_Invalid, 0xFF },    { Key_Menu, 0xFF },
 };
+// clang-format on
 
-static constexpr KeyCode shifted_key_map[0x100] = {
-    Key_Invalid,
-    Key_Escape,
-    Key_ExclamationPoint,
-    Key_AtSign,
-    Key_Hashtag,
-    Key_Dollar,
-    Key_Percent,
-    Key_Circumflex,
-    Key_Ampersand,
-    Key_Asterisk,
-    Key_LeftParen,
-    Key_RightParen,
-    Key_Underscore,
-    Key_Plus,
-    Key_Backspace,
-    Key_Tab,
-    Key_Q,
-    Key_W,
-    Key_E,
-    Key_R,
-    Key_T,
-    Key_Y,
-    Key_U,
-    Key_I,
-    Key_O,
-    Key_P,
-    Key_LeftBrace,
-    Key_RightBrace,
-    Key_Return,
-    Key_Control,
-    Key_A,
-    Key_S,
-    Key_D,
-    Key_F,
-    Key_G,
-    Key_H,
-    Key_J,
-    Key_K,
-    Key_L,
-    Key_Colon,
-    Key_DoubleQuote,
-    Key_Tilde,
-    Key_LeftShift, // 42
-    Key_Pipe,
-    Key_Z,
-    Key_X,
-    Key_C,
-    Key_V,
-    Key_B,
-    Key_N,
-    Key_M,
-    Key_LessThan,
-    Key_GreaterThan,
-    Key_QuestionMark,
-    Key_RightShift, // 54
-    Key_Asterisk,
-    Key_Alt,
-    Key_Space,    // 57
-    Key_CapsLock, // 58
-    Key_F1,
-    Key_F2,
-    Key_F3,
-    Key_F4,
-    Key_F5,
-    Key_F6,
-    Key_F7,
-    Key_F8,
-    Key_F9,
-    Key_F10,
-    Key_NumLock,
-    Key_Invalid, // 70
-    Key_Home,
-    Key_Up,
-    Key_PageUp,
-    Key_Minus,
-    Key_Left,
-    Key_Invalid,
-    Key_Right, // 77
-    Key_Plus,
-    Key_End,
-    Key_Down, // 80
-    Key_PageDown,
-    Key_Insert,
-    Key_Delete, // 83
-    Key_Invalid,
-    Key_Invalid,
-    Key_Pipe,
-    Key_F11,
-    Key_F12,
-    Key_Invalid,
-    Key_Invalid,
-    Key_Super,
-    Key_Invalid,
-    Key_Menu,
+// clang-format off
+static constexpr KeyCodeEntry shifted_scan_code_set1_key_map[0x100] = {
+    { Key_Invalid, 0xFF },        { Key_Escape, 1 },                    { Key_Escape, 2 },             { Key_AtSign, 3 },
+    { Key_Hashtag, 4 },           { Key_Dollar, 5 },                    { Key_Percent, 6 },            { Key_Circumflex, 7 },
+    { Key_Ampersand, 8 },         { Key_Asterisk, 9 },                  { Key_LeftParen, 0x0A },       { Key_RightParen, 0x0B },
+    { Key_Underscore, 0xC },      { Key_Plus, 0xFF },                   { Key_Backspace, 0x0E },          { Key_Tab, 0x0F },
+    { Key_Q, 0x10 },              { Key_W, 0x11 },                      { Key_E, 0x12 },                  { Key_R, 0x13 },
+    { Key_T, 0x14 },              { Key_Y, 0x15 },                      { Key_U, 0x16 },                  { Key_I, 0x17 },
+    { Key_O, 0x18 },              { Key_P, 0x19 },                      { Key_LeftBrace, 0x1A },          { Key_RightBrace, 0x1B },
+    { Key_Return, 0x1C },         { Key_Control, 0x1D },                { Key_A, 0x1E },                  { Key_S, 0x1F },
+    { Key_D, 0x20 },              { Key_F, 0x21 },                      { Key_G, 0x22 },                  { Key_H, 0x23 },
+    { Key_J, 0x24 },              { Key_K, 0x25 },                      { Key_L, 0x26 },                  { Key_Colon, 0x27 },
+    { Key_DoubleQuote, 0x28 },    { Key_Tilde, 0x29 },                  { Key_LeftShift, 0xFF },          { Key_Pipe, 0x2B },
+    { Key_Z, 0x2C },              { Key_X, 0x2D },                      { Key_C, 0x2E },                  { Key_V, 0x2F },
+    { Key_B, 0x30 },              { Key_N, 0x31 },                      { Key_M, 0x32 },                  { Key_LessThan, 0x33 },
+    { Key_GreaterThan, 0x34 },    { Key_QuestionMark, 0x35 },           { Key_RightShift, 0x36 },         { Key_Asterisk, 0x37 },
+    { Key_Alt, 0x38 },            { Key_Space, 0x39 },                  { Key_CapsLock, 0x3A },           { Key_F1, 0x3B },
+    { Key_F2, 0x3C },             { Key_F3, 0x3D },                     { Key_F4, 0x3E },                 { Key_F5, 0x3F },
+    { Key_F6, 0x40 },             { Key_F7, 0x41 },                     { Key_F8, 0x42 },                 { Key_F9, 0x43 },
+    { Key_F10, 0x44 },            { Key_NumLock, 0x45 },                { Key_ScrollLock, 0x46 },         { Key_Home, 0x47 },
+    { Key_Up, 0x48 },             { Key_PageUp, 0x49 },                 { Key_Minus, 0x0C },              { Key_Left, 0x4B },
+    { Key_Invalid, 0xFF },        { Key_Right, 0xFF },                  { Key_Plus, 0xFF },               { Key_End, 0xFF },
+    { Key_Down, 0xFF },           { Key_PageDown, 0xFF },               { Key_Insert, 0xFF },             { Key_Delete, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },                { Key_Pipe, 0x56 },               { Key_F11, 0xFF },
+    { Key_F12, 0xFF },            { Key_Invalid, 0xFF },                { Key_Invalid, 0xFF },            { Key_Super, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Menu, 0xFF },
 };
+// clang-format on
 
-void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
+// clang-format off
+static constexpr KeyCodeEntry unshifted_simple_scan_code_set2_key_map_with_key_num_pad[0x84] = {
+    { Key_Invalid, 0xFF },        { Key_F9, 0x43 },             { Key_Invalid, 0xFF },          { Key_F5, 0x3F },
+    { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },               { Key_F12, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },               { Key_F6, 0x40 },
+    { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },         { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },        { Key_Invalid, 0xFF },
+    { Key_Control, 0x1D },        { Key_Q, 0x10 },              { Key_1, 2 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },                { Key_S, 0x1F },
+    { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_2, 3 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },                { Key_D, 0x20 },
+    { Key_E, 0x12 },              { Key_4, 5 },                 { Key_3, 4 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Space, 0x39 },          { Key_V, 0x2F },                { Key_F, 0x21 },
+    { Key_T, 0x14 },              { Key_R, 0x13 },              { Key_5, 6 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_N, 0x31 },              { Key_B, 0x30 },                { Key_H, 0x23 },
+    { Key_G, 0x22 },              { Key_Y, 0x15 },              { Key_6, 7 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_M, 0x32 },                { Key_J, 0x24 },
+    { Key_U, 0x16 },              { Key_7, 8 },                 { Key_8, 9 },                   { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Comma, 0x33 },          { Key_K, 0x25 },                { Key_I, 0x17 },
+    { Key_O, 0x18 },              { Key_0, 0x0B },              { Key_9, 0x0A },                { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Period, 0x34 },         { Key_Slash, 0x35 },            { Key_L, 0x26 },
+    { Key_Semicolon, 0x27 },      { Key_P, 0x19 },              { Key_Minus, 0x0C },            { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Apostrophe, 0x28 },       { Key_Invalid, 0xFF },
+    { Key_LeftBracket, 0x1A },    { Key_Equal, 0x0D },          { Key_Invalid, 0xFF },          { Key_Invalid, 0xFF },
+    { Key_CapsLock, 0x3A },       { Key_RightShift, 0x36 },     { Key_Return, 0x1C },           { Key_RightBracket, 0x1B },
+    { Key_Invalid, 0xFF },        { Key_Backslash, 0x2B },      { Key_Invalid, 0xFF },          { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },          { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Backspace, 0x0E },        { Key_Invalid, 0xFF },
+    // Keypad numbers from here
+    { Key_Invalid, 0xFF },        { Key_1, 2 },                 { Key_Invalid, 0xFF },          { Key_4, 5 },
+    { Key_7, 8 },                 { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },          { Key_Invalid, 0xFF },
+    { Key_0, 0x0B },              { Key_Period, 0x34 },         { Key_2, 3 },                   { Key_5, 6 },
+    { Key_6, 7 },                 { Key_8, 9 },                 { Key_Escape, 1 },              { Key_NumLock, 0x45 },
+    { Key_F11, 0xFF },            { Key_Plus, 0xFF },           { Key_3, 4 },                   { Key_Minus, 0x0C },
+    { Key_Asterisk, 0x37 },       { Key_9, 0x0A },              { Key_ScrollLock, 0x46 },       { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },          { Key_F7, 0x41 },
+};
+// clang-format on
+
+// clang-format off
+static constexpr KeyCodeEntry unshifted_simple_scan_code_set2_key_map_with_disabled_key_num_pad[0x84] = {
+    { Key_Invalid, 0xFF },        { Key_F9, 0x43 },             { Key_Invalid, 0xFF },        { Key_F5, 0x3F },
+    { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },             { Key_F12, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },             { Key_F6, 0x40 },
+    { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },       { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },      { Key_Invalid, 0xFF },
+    { Key_Control, 0x1D },        { Key_Q, 0x10 },              { Key_1, 2 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },              { Key_S, 0x1F },
+    { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_2, 3 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },              { Key_D, 0x20 },
+    { Key_E, 0x12 },              { Key_4, 5 },                 { Key_3, 4 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Space, 0x39 },          { Key_V, 0x2F },              { Key_F, 0x21 },
+    { Key_T, 0x14 },              { Key_R, 0x13 },              { Key_5, 6 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_N, 0x31 },              { Key_B, 0x30 },              { Key_H, 0x23 },
+    { Key_G, 0x22 },              { Key_Y, 0x15 },              { Key_6, 7 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_M, 0x32 },              { Key_J, 0x24 },
+    { Key_U, 0x16 },              { Key_7, 8 },                 { Key_8, 9 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Comma, 0x33 },          { Key_K, 0x25 },              { Key_I, 0x17 },
+    { Key_O, 0x18 },              { Key_0, 0x0B },              { Key_9, 0x0A },              { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Period, 0x34 },         { Key_Slash, 0x35 },          { Key_L, 0x26 },
+    { Key_Semicolon, 0x27 },      { Key_P, 0x19 },              { Key_Underscore, 0x0C },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Apostrophe, 0x28 },     { Key_Invalid, 0xFF },
+    { Key_LeftBracket, 0x1A },    { Key_Equal, 0x0D },          { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_CapsLock, 0x3A },       { Key_RightShift, 0x36 },     { Key_Return, 0x1C },         { Key_RightBracket, 0x1B },
+    { Key_Invalid, 0xFF },        { Key_Backslash, 0x2B },      { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Backspace, 0x0E },      { Key_Invalid, 0xFF },
+    // Keypad numbers from here, and disabled or converted to arrows
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Left, 0x4B },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Insert, 0xFF },         { Key_Delete, 0xFF },         { Key_Down, 0xFF },           { Key_Invalid, 0xFF },
+    { Key_Right, 0xFF },          { Key_Up, 0x48 },             { Key_Escape, 1 },            { Key_NumLock, 0x45 },
+    { Key_F11, 0xFF },            { Key_Plus, 0xFF },           { Key_Invalid, 0xFF },        { Key_Minus, 0x0C },
+    { Key_Asterisk, 0x37 },       { Key_Invalid, 0xFF },        { Key_ScrollLock, 0x46 },     { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_F7, 0x41 },
+};
+// clang-format on
+
+// clang-format off
+static constexpr KeyCodeEntry shifted_simple_scan_code_set2_key_map_with_key_num_pad[0x84] = {
+    { Key_Invalid, 0xFF },        { Key_F9, 0x43 },             { Key_Invalid, 0xFF },            { Key_F5, 0x3F },
+    { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },                 { Key_F12, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },                 { Key_F6, 0x40 },
+    { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },           { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },          { Key_Invalid, 0xFF },
+    { Key_Control, 0x1D },        { Key_Slash, 0x35 },          { Key_Escape, 2 },                { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },                  { Key_S, 0x1F },
+    { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_AtSign, 3 },                { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },                  { Key_D, 0x20 },
+    { Key_E, 0x12 },              { Key_Dollar, 5 },            { Key_Hashtag, 4 },               { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Space, 0x39 },          { Key_V, 0x2F },                  { Key_F, 0x21 },
+    { Key_T, 0x14 },              { Key_R, 0x13 },              { Key_Percent, 6 },               { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_N, 0x31 },              { Key_B, 0x30 },                  { Key_H, 0x23 },
+    { Key_G, 0x22 },              { Key_Y, 0x15 },              { Key_Circumflex, 7 },            { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_M, 0x32 },                  { Key_J, 0x24 },
+    { Key_U, 0x16 },              { Key_Ampersand, 8 },         { Key_Asterisk, 0x37 },           { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_LessThan, 0x33 },       { Key_K, 0x25 },                  { Key_I, 0x17 },
+    { Key_O, 0x18 },              { Key_RightParen, 0x0B },     { Key_LeftParen, 0x0A },          { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_GreaterThan, 0x34 },    { Key_Slash, 0x35 },              { Key_L, 0x26 },
+    { Key_Semicolon, 0x27 },      { Key_P, 0x19 },              { Key_Minus, 0x0C },              { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_DoubleQuote, 0x28 },        { Key_Invalid, 0xFF },
+    { Key_LeftBrace, 0x1A },      { Key_Plus, 0xFF },           { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },
+    { Key_CapsLock, 0x3A },       { Key_RightShift, 0x36 },     { Key_Return, 0x1C },             { Key_RightBrace, 0x1B },
+    { Key_Invalid, 0xFF },        { Key_Pipe, 0x2B },           { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Backspace, 0x0E },          { Key_Invalid, 0xFF },
+    // Keypad numbers from here
+    { Key_Invalid, 0xFF },        { Key_1, 2 },                 { Key_Invalid, 0xFF },            { Key_4, 5 },
+    { Key_7, 8 },                 { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },
+    { Key_0, 0x0B },              { Key_Period, 0x34 },         { Key_2, 3 },                     { Key_5, 6 },
+    { Key_6, 7 },                 { Key_8, 9 },                 { Key_Escape, 1 },                { Key_NumLock, 0x45 },
+    { Key_F11, 0xFF },            { Key_Plus, 0xFF },           { Key_3, 4 },                     { Key_Minus, 0x0C },
+    { Key_Asterisk, 0x37 },       { Key_9, 0x0A },              { Key_ScrollLock, 0x46 },         { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_F7, 0x41 },
+};
+// clang-format on
+
+// clang-format off
+static constexpr KeyCodeEntry shifted_simple_scan_code_set2_key_map_with_disabled_key_num_pad[0x84] = {
+    { Key_Invalid, 0xFF },        { Key_F9, 0x43 },             { Key_Invalid, 0xFF },              { Key_F5, 0x3F },
+    { Key_F3, 0x3D },             { Key_F1, 0x3B },             { Key_F2, 0x3C },                   { Key_F12, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_F10, 0x44 },            { Key_F8, 0x42 },                   { Key_F6, 0x40 },
+    { Key_F4, 0x3E },             { Key_Tab, 0x0F },            { Key_Backtick, 0x29 },             { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Alt, 0x38 },            { Key_LeftShift, 0x2A },            { Key_Invalid, 0xFF },
+    { Key_Control, 0x1D },        { Key_Slash, 0x35 },          { Key_Escape, 2 },                  { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Z, 0x2C },                    { Key_S, 0x1F },
+    { Key_A, 0x1E },              { Key_W, 0x11 },              { Key_AtSign, 3 },                  { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_C, 0x2E },              { Key_X, 0x2D },                    { Key_D, 0x20 },
+    { Key_E, 0x12 },              { Key_Dollar, 5 },            { Key_Hashtag, 4 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Space, 0x39 },          { Key_V, 0x2F },                    { Key_F, 0x21 },
+    { Key_T, 0x14 },              { Key_R, 0x13 },              { Key_Percent, 6 },                 { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_N, 0x31 },              { Key_B, 0x30 },                    { Key_H, 0x23 },
+    { Key_G, 0x22 },              { Key_Y, 0x15 },              { Key_Circumflex, 7 },              { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_M, 0x32 },                    { Key_J, 0x24 },
+    { Key_U, 0x16 },              { Key_Ampersand, 8 },         { Key_Asterisk, 0x37 },             { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_LessThan, 0xFF},        { Key_K, 0x25 },                    { Key_I, 0x17 },
+    { Key_O, 0x18 },              { Key_RightParen, 0x0B },     { Key_LeftParen, 0x0A },            { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Period, 0x34 },         { Key_Slash, 0x35 },                { Key_L, 0x26 },
+    { Key_Semicolon, 0x27 },      { Key_P, 0x19 },              { Key_Underscore, 0x0C },           { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_DoubleQuote, 0x28 },          { Key_Invalid, 0xFF },
+    { Key_LeftBrace, 0x1A },      { Key_Plus, 0xFF },           { Key_Invalid, 0xFF },              { Key_Invalid, 0xFF },
+    { Key_CapsLock, 0x3A },       { Key_RightShift, 0x36 },     { Key_Return, 0x1C },               { Key_RightBrace, 0x1B },
+    { Key_Invalid, 0xFF },        { Key_Pipe, 0x2B },           { Key_Invalid, 0xFF },              { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },              { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Backspace, 0x0E },            { Key_Invalid, 0xFF },
+    // Keypad numbers from here, and disabled or converted to arrows
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },              { Key_Left, 0x4B },
+    { Key_7, 8 },                 { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },              { Key_Invalid, 0xFF },
+    { Key_Insert, 0xFF },         { Key_Delete, 0xFF },         { Key_Down, 0xFF },                 { Key_Invalid, 0xFF },
+    { Key_Right, 0xFF },          { Key_Up, 0x48 },             { Key_Escape, 1 },                  { Key_NumLock, 0x45 },
+    { Key_F11, 0xFF },            { Key_Plus, 0xFF },           { Key_Invalid, 0xFF },              { Key_Minus, 0x0C },
+    { Key_Asterisk, 0x37 },       { Key_Invalid, 0xFF },        { Key_ScrollLock, 0x46 },           { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },              { Key_F7, 0x41 },
+};
+// clang-format on
+
+// Note: First scan code starts at actual 0xE0, 0x10, but we start from 0xE0, 0x0
+// Note: All keycode are for pressing buttons, not releasing...
+// clang-format off
+static constexpr KeyCodeEntry unshifted_scan_code_set2_e0_key_map[0x80] = {
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_WWWSearch, 0xFF },      { Key_RightAlt, 0xFF },           { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_RightControl, 0xFF },   { Key_PreviousTrack, 0xFF },      { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_WWWFavourites, 0xFF },  { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_LeftGUI, 0xFF },
+    { Key_WWWRefresh, 0xFF },     { Key_VolumeDown, 0xFF },         { Key_Invalid, 0xFF },        { Key_Mute, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_RightGUI, 0xFF },
+    { Key_WWWStop, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Calculator, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Apps, 0xFF },
+    { Key_WWWForward, 0xFF },     { Key_Invalid, 0xFF },            { Key_VolumeUp, 0xFF },       { Key_Invalid, 0xFF },
+    { Key_PlayPause, 0xFF },      { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Power, 0xFF },
+    { Key_WWWBack, 0xFF },        { Key_Invalid, 0xFF },            { Key_WWWHome, 0xFF },        { Key_Stop, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Sleep, 0xFF },
+    { Key_MyComputer, 0xFF },     { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Email, 0xFF },          { Key_Invalid, 0xFF },            { Key_Slash, 0x35 },          { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_NextTrack, 0xFF },          { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_MediaSelect, 0xFF},     { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Return, 0x1C },         { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Wake, 0xFF },           { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_End, 0xFF },                { Key_Invalid, 0xFF },        { Key_CursorLeft, 0xFF },
+    { Key_Home, 0x47 },           { Key_Invalid, 0xFF },            { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Insert, 0xFF },         { Key_Delete, 0xFF },             { Key_CursorDown, 0xFF },     { Key_Invalid, 0xFF },
+    { Key_CursorRight, 0xFF },    { Key_CursorUp, 0xFF },           { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },            { Key_PageDown, 0xFF },       { Key_Invalid, 0xFF },
+    { Key_Invalid, 0xFF },        { Key_PageUp, 0x49 },             { Key_Invalid, 0xFF },        { Key_Invalid, 0xFF },
+};
+// clang-format on
+
+KeyboardDevice::RawKeyEvent KeyboardDevice::handle_scan_code_input_event_set1(ScanCodeEvent event)
 {
-    m_entropy_source.add_random_event(event.scan_code_value);
-    switch (event.scan_code_value) {
+    RawKeyEvent key_event {};
+    VERIFY(event.sent_scan_code_set == ScanCodeSet::Set1);
+    bool has_e0_prefix = event.scan_code_bytes[0] == 0xe0;
+    if (has_e0_prefix)
+        VERIFY(event.bytes_count == 2);
+    else
+        VERIFY(event.bytes_count == 1);
+
+    u8 byte = has_e0_prefix ? event.scan_code_bytes[1] : event.scan_code_bytes[0];
+    bool pressed = !(byte & 0x80);
+    u8 ch = byte & 0x7f;
+
+    key_event.is_press_down = pressed;
+
+    m_entropy_source.add_random_event(byte);
+
+    switch (ch) {
     case 0x38:
-        if (event.e0_prefix)
-            update_modifier(Mod_AltGr, event.pressed);
+        if (has_e0_prefix)
+            update_modifier(Mod_AltGr, key_event.is_press());
         else
-            update_modifier(Mod_Alt, event.pressed);
+            update_modifier(Mod_Alt, key_event.is_press());
         break;
     case 0x1d:
-        update_modifier(Mod_Ctrl, event.pressed);
+        update_modifier(Mod_Ctrl, key_event.is_press());
         break;
     case 0x5b:
-        m_left_super_pressed = event.pressed;
+        m_left_super_pressed = key_event.is_press();
         update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
         break;
     case 0x5c:
-        m_right_super_pressed = event.pressed;
+        m_right_super_pressed = key_event.is_press();
         update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
         break;
     case 0x2a:
-        m_left_shift_pressed = event.pressed;
+        m_left_shift_pressed = key_event.is_press();
         update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
         break;
     case 0x36:
-        m_right_shift_pressed = event.pressed;
+        m_right_shift_pressed = key_event.is_press();
         update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
         break;
     }
 
-    KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[event.scan_code_value] : unshifted_key_map[event.scan_code_value];
+    key_event.code_entry = (m_modifiers & Mod_Shift) ? shifted_scan_code_set1_key_map[ch] : unshifted_scan_code_set1_key_map[ch];
+    key_event.scancode = has_e0_prefix ? 0xe000 + ch : ch;
+    return key_event;
+}
 
-    if ((m_modifiers == (Mod_Alt | Mod_Shift) || m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift)) && key == Key_F12) {
+KeyboardDevice::RawKeyEvent KeyboardDevice::handle_scan_code_input_event_set2(ScanCodeEvent event)
+{
+    VERIFY(event.sent_scan_code_set == ScanCodeSet::Set2);
+
+    auto get_key_from_standard_key_map = [this](u8 byte) -> KeyCodeEntry {
+        if (!(m_modifiers & Mod_Shift))
+            return (m_num_lock_on) ? unshifted_simple_scan_code_set2_key_map_with_key_num_pad[byte] : unshifted_simple_scan_code_set2_key_map_with_disabled_key_num_pad[byte];
+        return (m_num_lock_on) ? shifted_simple_scan_code_set2_key_map_with_key_num_pad[byte] : shifted_simple_scan_code_set2_key_map_with_disabled_key_num_pad[byte];
+    };
+
+    RawKeyEvent key_event {};
+    if (event.bytes_count == 1) {
+        auto byte = event.scan_code_bytes[0];
+        key_event.code_entry = get_key_from_standard_key_map(byte);
+        key_event.scancode = byte;
+        key_event.is_press_down = true;
+        m_entropy_source.add_random_event(byte);
+    } else if (event.bytes_count == 2) {
+        auto byte_prefix = event.scan_code_bytes[0];
+        auto byte = event.scan_code_bytes[1];
+        if (byte_prefix == 0xe0) {
+            key_event.code_entry = unshifted_scan_code_set2_e0_key_map[byte];
+            key_event.scancode = 0xe000 + byte;
+            key_event.is_press_down = true;
+        } else if (byte_prefix == 0xf0) {
+            key_event.code_entry = get_key_from_standard_key_map(byte);
+            key_event.scancode = 0xf000 + byte;
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+        m_entropy_source.add_random_event(byte);
+    } else if (event.bytes_count == 3) {
+        auto first_byte_prefix = event.scan_code_bytes[0];
+        auto second_byte_prefix = event.scan_code_bytes[1];
+        VERIFY(first_byte_prefix == 0xe0);
+        VERIFY(second_byte_prefix == 0xf0);
+        auto byte = event.scan_code_bytes[2];
+        key_event.code_entry = unshifted_scan_code_set2_e0_key_map[byte];
+        key_event.scancode = 0xe0f000 + byte;
+        m_entropy_source.add_random_event(byte);
+    } else if (event.bytes_count == 4) {
+        // 0xE0, 0x12, 0xE0, 0x7C - print screen pressed
+        auto first_byte_prefix = event.scan_code_bytes[0];
+        auto second_byte_prefix = event.scan_code_bytes[1];
+        auto third_byte_prefix = event.scan_code_bytes[2];
+        auto fourth_byte_prefix = event.scan_code_bytes[3];
+        VERIFY(first_byte_prefix == 0xe0);
+        VERIFY(second_byte_prefix == 0x12);
+        VERIFY(third_byte_prefix == 0xe0);
+        VERIFY(fourth_byte_prefix == 0x7c);
+        key_event.code_entry = KeyCodeEntry { Key_PrintScreen, 0xFF };
+        key_event.scancode = 0xe012e07c;
+        key_event.is_press_down = true;
+    } else if (event.bytes_count == 6) {
+        // 0xE0, 0xF0, 0x7C, 0xE0, 0xF0, 0x12 - print screen released
+        auto first_byte_prefix = event.scan_code_bytes[0];
+        auto second_byte_prefix = event.scan_code_bytes[1];
+        auto third_byte_prefix = event.scan_code_bytes[2];
+        auto fourth_byte_prefix = event.scan_code_bytes[3];
+        auto fifth_byte_prefix = event.scan_code_bytes[4];
+        auto sixth_byte_prefix = event.scan_code_bytes[5];
+        VERIFY(first_byte_prefix == 0xe0);
+        VERIFY(second_byte_prefix == 0xf0);
+        VERIFY(third_byte_prefix == 0x7c);
+        VERIFY(fourth_byte_prefix == 0xe0);
+        VERIFY(fifth_byte_prefix == 0xf0);
+        VERIFY(sixth_byte_prefix == 0x12);
+        key_event.code_entry = KeyCodeEntry { Key_PrintScreen, 0xFF };
+        key_event.scancode = 0xe0f07ce0f012;
+    } else if (event.bytes_count == 8) {
+        // 0xE1, 0x14, 0x77, 0xE1, 0xF0, 0x14, 0xF0, 0x77 - pause pressed
+        auto first_byte_prefix = event.scan_code_bytes[0];
+        auto second_byte_prefix = event.scan_code_bytes[1];
+        auto third_byte_prefix = event.scan_code_bytes[2];
+        auto fourth_byte_prefix = event.scan_code_bytes[3];
+        auto fifth_byte_prefix = event.scan_code_bytes[4];
+        auto sixth_byte_prefix = event.scan_code_bytes[5];
+        auto seventh_byte_prefix = event.scan_code_bytes[6];
+        auto eight_byte_prefix = event.scan_code_bytes[7];
+        VERIFY(first_byte_prefix == 0xe1);
+        VERIFY(second_byte_prefix == 0x14);
+        VERIFY(third_byte_prefix == 0x77);
+        VERIFY(fourth_byte_prefix == 0xe1);
+        VERIFY(fifth_byte_prefix == 0xf0);
+        VERIFY(sixth_byte_prefix == 0x14);
+        VERIFY(seventh_byte_prefix == 0xf0);
+        VERIFY(eight_byte_prefix == 0x77);
+        key_event.code_entry = KeyCodeEntry { Key_PauseBreak, 0xFF };
+        key_event.scancode = 0xe11477e1f014f077;
+    }
+
+    switch (key_event.code_entry.key_code) {
+    case Key_RightAlt:
+        update_modifier(Mod_AltGr, key_event.is_press());
+        break;
+    case Key_Alt:
+        update_modifier(Mod_Alt, key_event.is_press());
+        break;
+    case Key_Control:
+        update_modifier(Mod_Ctrl, key_event.is_press());
+        break;
+    case Key_Super:
+        m_left_super_pressed = key_event.is_press();
+        update_modifier(Mod_Super, m_left_super_pressed || m_right_super_pressed);
+        break;
+    case Key_LeftShift:
+        m_left_shift_pressed = key_event.is_press();
+        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
+        break;
+    case Key_RightShift:
+        m_right_shift_pressed = key_event.is_press();
+        update_modifier(Mod_Shift, m_left_shift_pressed || m_right_shift_pressed);
+        break;
+    default:
+        break;
+    }
+
+    return key_event;
+}
+
+void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
+{
+    RawKeyEvent raw_event {};
+    if (event.sent_scan_code_set == ScanCodeSet::Set1) {
+        raw_event = handle_scan_code_input_event_set1(event);
+    } else if (event.sent_scan_code_set == ScanCodeSet::Set2) {
+        raw_event = handle_scan_code_input_event_set2(event);
+    } else if (event.sent_scan_code_set == ScanCodeSet::Set3) {
+        // FIXME: Implement support for scan code set 3!
+        VERIFY_NOT_REACHED();
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    KeyEvent queued_event = {
+        .key = raw_event.code_entry.key_code,
+        .map_entry_index = raw_event.code_entry.map_entry_index,
+        .scancode = raw_event.scancode,
+        .flags = raw_event.is_press() ? (u8)Is_Press : (u8)0,
+    };
+
+    if (queued_event.key == Key_NumLock && queued_event.is_press())
+        m_num_lock_on = !m_num_lock_on;
+
+    // NOTE: This piece of code is needed for the ScanCodeSet::Set1 when NumLock is enabled
+    // because we don't have special mappings when NumLock is enabled for this scan code set.
+    // Scan code set 2 handling code in handle_scan_code_input_event_set2() already handles this fine.
+    if (event.sent_scan_code_set == ScanCodeSet::Set1 && m_num_lock_on && !(queued_event.scancode & 0xe000)) {
+        if (queued_event.scancode >= 0x47 && queued_event.scancode <= 0x53) {
+            u8 index = queued_event.scancode - 0x47;
+            constexpr KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, Key_5, Key_6, Key_Invalid, Key_1, Key_2, Key_3, Key_0, Key_Comma };
+            KeyCode newKey = numpad_key_map[index];
+
+            if (newKey != Key_Invalid) {
+                queued_event.key = newKey;
+            }
+        }
+    }
+
+    queued_event.flags |= m_modifiers;
+    queued_event.caps_lock_on = m_caps_lock_on;
+    if (raw_event.code_entry.map_entry_index != 0xFF)
+        queued_event.code_point = HIDManagement::the().get_char_from_character_map(queued_event, raw_event.code_entry.map_entry_index);
+
+    // NOTE: This piece of code is needed for the ScanCodeSet::Set1 to ensure some keys could
+    // function properly.
+    if (event.sent_scan_code_set == ScanCodeSet::Set1) {
+        if ((queued_event.scancode & 0xe000) && queued_event.key == Key_Slash) {
+            // If Key_Slash (scancode = 0x35) mapped to other form "/", we fix num pad key of "/" with this case.
+            queued_event.code_point = '/';
+        } else if ((queued_event.scancode & 0xe000) && queued_event.key != Key_Return) {
+            // Except for `keypad-/` and 'keypad-return', all e0 scan codes are not actually characters. i.e., `keypad-0` and
+            // `Insert` have the same scancode except for the prefix, but insert should not have a code_point.
+            queued_event.code_point = 0;
+        }
+    }
+
+    if (queued_event.is_press() && (m_modifiers == (Mod_Alt | Mod_Shift) || m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift)) && queued_event.key == Key_F12) {
         // Alt+Shift+F12 pressed, dump some kernel state to the debug console.
         ConsoleManagement::the().switch_to_debug();
         Scheduler::dump_scheduler_state(m_modifiers == (Mod_Ctrl | Mod_Alt | Mod_Shift));
     }
 
-    if ((m_modifiers & Mod_Alt) != 0 && key >= Key_1 && key <= Key_1 + ConsoleManagement::s_max_virtual_consoles + 1) {
+    if (queued_event.is_press() && (m_modifiers & Mod_Alt) != 0 && queued_event.key >= Key_1 && queued_event.key <= Key_1 + ConsoleManagement::s_max_virtual_consoles + 1) {
         // FIXME: Do something sanely here if we can't allocate a work queue?
+        auto key = queued_event.key;
         MUST(g_io_work->try_queue([key]() {
             ConsoleManagement::the().switch_to(key - Key_1);
         }));
     }
 
-    if (key == Key_NumLock && event.pressed)
-        m_num_lock_on = !m_num_lock_on;
-
-    if (m_num_lock_on && !event.e0_prefix) {
-        if (event.scan_code_value >= 0x47 && event.scan_code_value <= 0x53) {
-            u8 index = event.scan_code_value - 0x47;
-            constexpr KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, Key_5, Key_6, Key_Invalid, Key_1, Key_2, Key_3, Key_0, Key_Comma };
-            KeyCode newKey = numpad_key_map[index];
-
-            if (newKey != Key_Invalid) {
-                key = newKey;
-            }
-        }
-    }
-
-    Event queued_event;
-    queued_event.key = key;
-    queued_event.map_entry_index = event.scan_code_value & 0xFF;
-    queued_event.scancode = event.e0_prefix ? 0xe000 + event.scan_code_value : event.scan_code_value;
-    queued_event.flags = m_modifiers;
-    queued_event.e0_prefix = event.e0_prefix;
-    queued_event.caps_lock_on = m_caps_lock_on;
-    queued_event.code_point = HIDManagement::the().get_char_from_character_map(queued_event);
-
     // If using a non-QWERTY layout, queued_event.key needs to be updated to be the same as event.code_point
     KeyCode mapped_key = code_point_to_key_code(queued_event.code_point);
-    if (mapped_key != KeyCode::Key_Invalid) {
+    if (mapped_key != KeyCode::Key_Invalid)
         queued_event.key = mapped_key;
-        key = mapped_key;
-    }
 
-    if (!g_caps_lock_remapped_to_ctrl && key == Key_CapsLock && event.pressed)
+    if (!g_caps_lock_remapped_to_ctrl && queued_event.key == Key_CapsLock && queued_event.is_press())
         m_caps_lock_on = !m_caps_lock_on;
 
-    if (g_caps_lock_remapped_to_ctrl && key == Key_CapsLock) {
-        m_caps_lock_to_ctrl_pressed = event.pressed;
+    if (g_caps_lock_remapped_to_ctrl && queued_event.key == Key_CapsLock) {
+        m_caps_lock_to_ctrl_pressed = queued_event.is_press();
         update_modifier(Mod_Ctrl, m_caps_lock_to_ctrl_pressed);
     }
-
-    if (event.pressed)
-        queued_event.flags |= Is_Press;
 
     {
         SpinlockLocker locker(HIDManagement::the().m_client_lock);

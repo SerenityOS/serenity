@@ -24,6 +24,13 @@ class KeyboardDevice : public HIDDevice {
 public:
     using Event = KeyEvent;
 
+    struct RawKeyEvent {
+        KeyCodeEntry code_entry;
+        u64 scancode { 0 };
+        bool is_press_down { false };
+        bool is_press() const { return is_press_down; }
+    };
+
     static ErrorOr<NonnullRefPtr<KeyboardDevice>> try_to_initialize();
 
     virtual ~KeyboardDevice() override;
@@ -48,6 +55,9 @@ public:
     }
 
 protected:
+    RawKeyEvent handle_scan_code_input_event_set1(ScanCodeEvent);
+    RawKeyEvent handle_scan_code_input_event_set2(ScanCodeEvent);
+
     KeyboardDevice();
     mutable Spinlock<LockRank::None> m_queue_lock {};
     CircularQueue<Event, 16> m_queue;

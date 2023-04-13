@@ -94,7 +94,11 @@ class I8042Controller final
 public:
     static ErrorOr<NonnullRefPtr<I8042Controller>> create();
 
-    ErrorOr<void> detect_devices();
+    enum class EnableFirstPortTranslation {
+        Yes,
+        No
+    };
+    ErrorOr<void> detect_devices(EnableFirstPortTranslation);
 
     virtual ErrorOr<void> reset_device(PS2PortIndex port_index) override
     {
