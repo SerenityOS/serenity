@@ -85,7 +85,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         return (i8)Error::NoCommonCipher;
     }
     m_context.cipher = cipher;
-    dbgln_if(TLS_DEBUG, "Cipher: {}", (u16)cipher);
+    dbgln_if(TLS_DEBUG, "Cipher: {}", enum_to_string(cipher));
 
     // Simplification: We only support handshake hash functions via HMAC
     m_context.handshake_hash.initialize(hmac_hash());
@@ -116,7 +116,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         u16 extension_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
         res += 2;
 
-        dbgln_if(TLS_DEBUG, "Extension {} with length {}", (u16)extension_type, extension_length);
+        dbgln_if(TLS_DEBUG, "Extension {} with length {}", enum_to_string(extension_type), extension_length);
 
         if (buffer.size() - res < extension_length)
             return (i8)Error::NeedMoreData;
@@ -188,7 +188,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
             // that the server supports uncompressed points.
             res += extension_length;
         } else {
-            dbgln("Encountered unknown extension {} with length {}", (u16)extension_type, extension_length);
+            dbgln("Encountered unknown extension {} with length {}", enum_to_string(extension_type), extension_length);
             res += extension_length;
         }
     }
@@ -346,9 +346,9 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
 ssize_t TLSv12::verify_rsa_server_key_exchange(ReadonlyBytes server_key_info_buffer, ReadonlyBytes signature_buffer)
 {
     auto signature_hash = signature_buffer[0];
-    auto signature_algorithm = signature_buffer[1];
-    if (signature_algorithm != (u8)SignatureAlgorithm::RSA) {
-        dbgln("verify_rsa_server_key_exchange failed: Signature algorithm is not RSA, instead {}", signature_algorithm);
+    auto signature_algorithm = static_cast<SignatureAlgorithm>(signature_buffer[1]);
+    if (signature_algorithm != SignatureAlgorithm::RSA) {
+        dbgln("verify_rsa_server_key_exchange failed: Signature algorithm is not RSA, instead {}", enum_to_string(signature_algorithm));
         return (i8)Error::NotUnderstood;
     }
 
