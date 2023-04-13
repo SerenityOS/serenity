@@ -306,7 +306,6 @@ private:
     virtual void document_did_update_undo_stack() override;
 
     // ^Syntax::HighlighterClient
-    virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
     virtual Vector<TextDocumentSpan> const& spans() const final { return document().spans(); }
     virtual void set_span_at_index(size_t index, TextDocumentSpan span) final { document().set_span_at_index(index, move(span)); }
     virtual Vector<GUI::TextDocumentFoldingRegion>& folding_regions() final { return document().folding_regions(); };
