@@ -298,7 +298,7 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
         return (i8)Error::NeedMoreData;
 
     auto curve_type = buffer[3];
-    if (curve_type != (u8)ECCurveType::NamedCurve)
+    if (curve_type != (u8)ECCurveType::NAMED_CURVE)
         return (i8)Error::NotUnderstood;
 
     auto curve = static_cast<NamedCurve>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4))));
