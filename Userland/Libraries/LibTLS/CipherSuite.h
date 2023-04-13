@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibTLS/Extensions.h>
 
 namespace TLS {
 
@@ -106,14 +107,6 @@ enum class HashAlgorithm : u8 {
 };
 
 // Defined in RFC 5246 section 7.4.1.4.1
-enum class SignatureAlgorithm : u8 {
-    Anonymous = 0,
-    RSA = 1,
-    DSA = 2,
-    ECDSA = 3,
-};
-
-// Defined in RFC 5246 section 7.4.1.4.1
 struct SignatureAndHashAlgorithm {
     HashAlgorithm hash;
     SignatureAlgorithm signature;
@@ -158,7 +151,7 @@ constexpr SignatureAlgorithm signature_for_key_exchange_algorithm(KeyExchangeAlg
     case KeyExchangeAlgorithm::DH_anon:
     case KeyExchangeAlgorithm::ECDH_anon:
     default:
-        return SignatureAlgorithm::Anonymous;
+        return SignatureAlgorithm::ANONYMOUS;
     }
 }
 

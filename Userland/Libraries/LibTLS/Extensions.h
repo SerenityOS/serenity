@@ -257,6 +257,21 @@ enum class ECPointFormat : u8 {
     __ENUM_EC_POINT_FORMATS
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-16
+#define __ENUM_SIGNATURE_ALGORITHM         \
+    _ENUM_KEY_VALUE(ANONYMOUS, 0)          \
+    _ENUM_KEY_VALUE(RSA, 1)                \
+    _ENUM_KEY_VALUE(DSA, 2)                \
+    _ENUM_KEY_VALUE(ECDSA, 3)              \
+    _ENUM_KEY_VALUE(ED25519, 7)            \
+    _ENUM_KEY_VALUE(ED448, 8)              \
+    _ENUM_KEY_VALUE(GOSTR34102012_256, 64) \
+    _ENUM_KEY_VALUE(GOSTR34102012_512, 65)
+
+enum class SignatureAlgorithm : u8 {
+    __ENUM_SIGNATURE_ALGORITHM
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 
