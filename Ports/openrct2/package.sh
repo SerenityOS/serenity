@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port='openrct2'
-version='0.4.3'
+version='0.4.4'
 auth_type='sha256'
 depends=(
     'curl'
@@ -18,8 +18,8 @@ depends=(
     'speexdsp'
     'zlib'
 )
-files="https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz 1269759b3a90717f379cd375f30629e3f24d3fdeb0c54cc1dca03676e64731ef
-https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-x86_64.tar.gz OpenRCT2-${version}-linux-x86_64.tar.gz 3691aa42e0b2eff80609688930d87b8cb8b97fb57f2ed624d3ed57e2eefb4fcf"
+files="https://github.com/OpenRCT2/OpenRCT2/archive/refs/tags/v${version}.tar.gz ${port}-${version}.tar.gz 18970bfffe49c77fa81ea6c295119b173a613c7310d7762963458e3e77c24913
+https://github.com/OpenRCT2/OpenRCT2/releases/download/v${version}/OpenRCT2-${version}-linux-jammy-x86_64.tar.gz OpenRCT2-${version}-linux-jammy-x86_64.tar.gz e4263121ec51a1340d269e07b366f7ec306013e292babfea9fd768c03e19b5b7"
 useconfigure='true'
 workdir="OpenRCT2-${version}"
 configopts=(
