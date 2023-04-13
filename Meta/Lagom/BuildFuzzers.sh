@@ -74,6 +74,13 @@ if [ "$#" -gt "0" ] && [ "--oss-fuzz" = "$1" ] ; then
         -DCMAKE_PREFIX_PATH=Build/tool-install
     ninja -C Build/fuzzers
     cp Build/fuzzers/Fuzzers/Fuzz* "$OUT"/
+elif [ "$#" -gt "0" ] && [ "--standalone" = "$1" ] ; then
+    echo "Building for standalone fuzz configuration..."
+    cmake -GNinja -B Build/lagom-fuzzers-standalone \
+        -DBUILD_LAGOM=ON \
+        -DENABLE_FUZZERS=ON \
+        -DCMAKE_PREFIX_PATH=Build/tool-install
+    ninja -C Build/lagom-fuzzers-standalone
 else
     echo "Building for local fuzz configuration..."
     pick_clang
