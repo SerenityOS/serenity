@@ -29,12 +29,12 @@ class PrototypeObject : public Object {
 public:
     virtual ~PrototypeObject() override = default;
 
-    static ThrowCompletionOr<Object*> this_object(VM& vm)
+    static ThrowCompletionOr<NonnullGCPtr<Object>> this_object(VM& vm)
     {
         auto this_value = vm.this_value();
         if (!this_value.is_object())
             return vm.throw_completion<TypeError>(ErrorType::NotAnObject, this_value);
-        return &this_value.as_object();
+        return this_value.as_object();
     }
 
     // Use typed_this_object() when the spec coerces |this| value to an object.
