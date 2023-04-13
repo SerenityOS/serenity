@@ -138,55 +138,55 @@ void TLSv12::try_disambiguate_error() const
 {
     dbgln("Possible failure cause(s): ");
     switch ((AlertDescription)m_context.critical_error) {
-    case AlertDescription::HandshakeFailure:
+    case AlertDescription::HANDSHAKE_FAILURE:
         if (!m_context.cipher_spec_set) {
             dbgln("- No cipher suite in common with {}", m_context.extensions.SNI);
         } else {
             dbgln("- Unknown internal issue");
         }
         break;
-    case AlertDescription::InsufficientSecurity:
+    case AlertDescription::INSUFFICIENT_SECURITY:
         dbgln("- No cipher suite in common with {} (the server is oh so secure)", m_context.extensions.SNI);
         break;
-    case AlertDescription::ProtocolVersion:
+    case AlertDescription::PROTOCOL_VERSION:
         dbgln("- The server refused to negotiate with TLS 1.2 :(");
         break;
-    case AlertDescription::UnexpectedMessage:
+    case AlertDescription::UNEXPECTED_MESSAGE:
         dbgln("- We sent an invalid message for the state we're in.");
         break;
-    case AlertDescription::BadRecordMAC:
+    case AlertDescription::BAD_RECORD_MAC:
         dbgln("- Bad MAC record from our side.");
         dbgln("- Ciphertext wasn't an even multiple of the block length.");
         dbgln("- Bad block cipher padding.");
         dbgln("- If both sides are compliant, the only cause is messages being corrupted in the network.");
         break;
-    case AlertDescription::RecordOverflow:
+    case AlertDescription::RECORD_OVERFLOW:
         dbgln("- Sent a ciphertext record which has a length bigger than 18432 bytes.");
         dbgln("- Sent record decrypted to a compressed record that has a length bigger than 18432 bytes.");
         dbgln("- If both sides are compliant, the only cause is messages being corrupted in the network.");
         break;
-    case AlertDescription::DecompressionFailure:
+    case AlertDescription::DECOMPRESSION_FAILURE_RESERVED:
         dbgln("- We sent invalid input for decompression (e.g. data that would expand to excessive length)");
         break;
-    case AlertDescription::IllegalParameter:
+    case AlertDescription::ILLEGAL_PARAMETER:
         dbgln("- We sent a parameter in the handshake that is out of range or inconsistent with the other parameters.");
         break;
-    case AlertDescription::DecodeError:
+    case AlertDescription::DECODE_ERROR:
         dbgln("- The message we sent cannot be decoded because a field was out of range or the length was incorrect.");
         dbgln("- If both sides are compliant, the only cause is messages being corrupted in the network.");
         break;
-    case AlertDescription::DecryptError:
+    case AlertDescription::DECRYPT_ERROR:
         dbgln("- A handshake crypto operation failed. This includes signature verification and validating Finished.");
         break;
-    case AlertDescription::AccessDenied:
+    case AlertDescription::ACCESS_DENIED:
         dbgln("- The certificate is valid, but once access control was applied, the sender decided to stop negotiation.");
         break;
-    case AlertDescription::InternalError:
+    case AlertDescription::INTERNAL_ERROR:
         dbgln("- No one knows, but it isn't a protocol failure.");
         break;
-    case AlertDescription::DecryptionFailed:
-    case AlertDescription::NoCertificate:
-    case AlertDescription::ExportRestriction:
+    case AlertDescription::DECRYPTION_FAILED_RESERVED:
+    case AlertDescription::NO_CERTIFICATE_RESERVED:
+    case AlertDescription::EXPORT_RESTRICTION_RESERVED:
         dbgln("- No one knows, the server sent a non-compliant alert.");
         break;
     default:

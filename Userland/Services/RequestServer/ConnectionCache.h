@@ -146,9 +146,9 @@ ErrorOr<void> recreate_socket_if_needed(T& connection, URL const& url)
             TLS::Options options;
             options.set_alert_handler([&connection](TLS::AlertDescription alert) {
                 Core::NetworkJob::Error reason;
-                if (alert == TLS::AlertDescription::HandshakeFailure)
+                if (alert == TLS::AlertDescription::HANDSHAKE_FAILURE)
                     reason = Core::NetworkJob::Error::ProtocolFailed;
-                else if (alert == TLS::AlertDescription::DecryptError)
+                else if (alert == TLS::AlertDescription::DECRYPT_ERROR)
                     reason = Core::NetworkJob::Error::ConnectionFailed;
                 else
                     reason = Core::NetworkJob::Error::TransmissionFailed;

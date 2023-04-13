@@ -365,7 +365,7 @@ ByteBuffer TLSv12::build_client_key_exchange()
     bool chain_verified = m_context.verify_chain(m_context.extensions.SNI);
     if (!chain_verified) {
         dbgln("certificate verification failed :(");
-        alert(AlertLevel::FATAL, AlertDescription::BadCertificate);
+        alert(AlertLevel::FATAL, AlertDescription::BAD_CERTIFICATE);
         return {};
     }
 

@@ -424,58 +424,58 @@ ssize_t TLSv12::handle_handshake_payload(ReadonlyBytes vbuffer)
         if (payload_res < 0) {
             switch ((Error)payload_res) {
             case Error::UnexpectedMessage: {
-                auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
+                auto packet = build_alert(true, (u8)AlertDescription::UNEXPECTED_MESSAGE);
                 write_packet(packet);
                 break;
             }
             case Error::CompressionNotSupported: {
-                auto packet = build_alert(true, (u8)AlertDescription::DecompressionFailure);
+                auto packet = build_alert(true, (u8)AlertDescription::DECOMPRESSION_FAILURE_RESERVED);
                 write_packet(packet);
                 break;
             }
             case Error::BrokenPacket: {
-                auto packet = build_alert(true, (u8)AlertDescription::DecodeError);
+                auto packet = build_alert(true, (u8)AlertDescription::DECODE_ERROR);
                 write_packet(packet);
                 break;
             }
             case Error::NotVerified: {
-                auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
+                auto packet = build_alert(true, (u8)AlertDescription::BAD_RECORD_MAC);
                 write_packet(packet);
                 break;
             }
             case Error::BadCertificate: {
-                auto packet = build_alert(true, (u8)AlertDescription::BadCertificate);
+                auto packet = build_alert(true, (u8)AlertDescription::BAD_CERTIFICATE);
                 write_packet(packet);
                 break;
             }
             case Error::UnsupportedCertificate: {
-                auto packet = build_alert(true, (u8)AlertDescription::UnsupportedCertificate);
+                auto packet = build_alert(true, (u8)AlertDescription::UNSUPPORTED_CERTIFICATE);
                 write_packet(packet);
                 break;
             }
             case Error::NoCommonCipher: {
-                auto packet = build_alert(true, (u8)AlertDescription::InsufficientSecurity);
+                auto packet = build_alert(true, (u8)AlertDescription::INSUFFICIENT_SECURITY);
                 write_packet(packet);
                 break;
             }
             case Error::NotUnderstood:
             case Error::OutOfMemory: {
-                auto packet = build_alert(true, (u8)AlertDescription::InternalError);
+                auto packet = build_alert(true, (u8)AlertDescription::INTERNAL_ERROR);
                 write_packet(packet);
                 break;
             }
             case Error::NoRenegotiation: {
-                auto packet = build_alert(true, (u8)AlertDescription::NoRenegotiation);
+                auto packet = build_alert(true, (u8)AlertDescription::NO_RENEGOTIATION_RESERVED);
                 write_packet(packet);
                 break;
             }
             case Error::DecryptionFailed: {
-                auto packet = build_alert(true, (u8)AlertDescription::DecryptionFailed);
+                auto packet = build_alert(true, (u8)AlertDescription::DECRYPTION_FAILED_RESERVED);
                 write_packet(packet);
                 break;
             }
             case Error::NotSafe: {
-                auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
+                auto packet = build_alert(true, (u8)AlertDescription::DECRYPT_ERROR);
                 write_packet(packet);
                 break;
             }
