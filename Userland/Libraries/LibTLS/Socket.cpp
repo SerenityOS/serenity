@@ -91,7 +91,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, u16
 
     tls_socket->try_disambiguate_error();
     // FIXME: Should return richer information here.
-    return AK::Error::from_string_view(alert_name(static_cast<AlertDescription>(256 - result)));
+    return AK::Error::from_string_view(enum_to_string(static_cast<AlertDescription>(256 - result)));
 }
 
 ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, Core::Socket& underlying_stream, Options options)
@@ -112,7 +112,7 @@ ErrorOr<NonnullOwnPtr<TLSv12>> TLSv12::connect(DeprecatedString const& host, Cor
 
     tls_socket->try_disambiguate_error();
     // FIXME: Should return richer information here.
-    return AK::Error::from_string_view(alert_name(static_cast<AlertDescription>(256 - result)));
+    return AK::Error::from_string_view(enum_to_string(static_cast<AlertDescription>(256 - result)));
 }
 
 void TLSv12::setup_connection()
@@ -135,7 +135,7 @@ void TLSv12::setup_connection()
                 if (timeout_diff < m_max_wait_time_for_handshake_in_seconds + 1) {
                     // The server did not respond fast enough,
                     // time the connection out.
-                    alert(AlertLevel::FATAL, AlertDescription::UserCanceled);
+                    alert(AlertLevel::FATAL, AlertDescription::USER_CANCELED);
                     m_context.tls_buffer.clear();
                     m_context.error_code = Error::TimedOut;
                     m_context.critical_error = (u8)Error::TimedOut;
@@ -317,7 +317,7 @@ ErrorOr<bool> TLSv12::flush()
 
 void TLSv12::close()
 {
-    alert(AlertLevel::FATAL, AlertDescription::CloseNotify);
+    alert(AlertLevel::FATAL, AlertDescription::CLOSE_NOTIFY);
     // bye bye.
     m_context.connection_status = ConnectionStatus::Disconnected;
 }

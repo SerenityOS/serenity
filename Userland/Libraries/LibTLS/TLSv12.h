@@ -40,55 +40,6 @@ inline void print_buffer(u8 const* buffer, size_t size)
 
 class Socket;
 
-#define ENUMERATE_ALERT_DESCRIPTIONS                        \
-    ENUMERATE_ALERT_DESCRIPTION(CloseNotify, 0)             \
-    ENUMERATE_ALERT_DESCRIPTION(UnexpectedMessage, 10)      \
-    ENUMERATE_ALERT_DESCRIPTION(BadRecordMAC, 20)           \
-    ENUMERATE_ALERT_DESCRIPTION(DecryptionFailed, 21)       \
-    ENUMERATE_ALERT_DESCRIPTION(RecordOverflow, 22)         \
-    ENUMERATE_ALERT_DESCRIPTION(DecompressionFailure, 30)   \
-    ENUMERATE_ALERT_DESCRIPTION(HandshakeFailure, 40)       \
-    ENUMERATE_ALERT_DESCRIPTION(NoCertificate, 41)          \
-    ENUMERATE_ALERT_DESCRIPTION(BadCertificate, 42)         \
-    ENUMERATE_ALERT_DESCRIPTION(UnsupportedCertificate, 43) \
-    ENUMERATE_ALERT_DESCRIPTION(CertificateRevoked, 44)     \
-    ENUMERATE_ALERT_DESCRIPTION(CertificateExpired, 45)     \
-    ENUMERATE_ALERT_DESCRIPTION(CertificateUnknown, 46)     \
-    ENUMERATE_ALERT_DESCRIPTION(IllegalParameter, 47)       \
-    ENUMERATE_ALERT_DESCRIPTION(UnknownCA, 48)              \
-    ENUMERATE_ALERT_DESCRIPTION(AccessDenied, 49)           \
-    ENUMERATE_ALERT_DESCRIPTION(DecodeError, 50)            \
-    ENUMERATE_ALERT_DESCRIPTION(DecryptError, 51)           \
-    ENUMERATE_ALERT_DESCRIPTION(ExportRestriction, 60)      \
-    ENUMERATE_ALERT_DESCRIPTION(ProtocolVersion, 70)        \
-    ENUMERATE_ALERT_DESCRIPTION(InsufficientSecurity, 71)   \
-    ENUMERATE_ALERT_DESCRIPTION(InternalError, 80)          \
-    ENUMERATE_ALERT_DESCRIPTION(InappropriateFallback, 86)  \
-    ENUMERATE_ALERT_DESCRIPTION(UserCanceled, 90)           \
-    ENUMERATE_ALERT_DESCRIPTION(NoRenegotiation, 100)       \
-    ENUMERATE_ALERT_DESCRIPTION(UnsupportedExtension, 110)  \
-    ENUMERATE_ALERT_DESCRIPTION(NoError, 255)
-
-enum class AlertDescription : u8 {
-#define ENUMERATE_ALERT_DESCRIPTION(name, value) name = value,
-    ENUMERATE_ALERT_DESCRIPTIONS
-#undef ENUMERATE_ALERT_DESCRIPTION
-};
-
-constexpr static StringView alert_name(AlertDescription descriptor)
-{
-#define ENUMERATE_ALERT_DESCRIPTION(name, value) \
-    case AlertDescription::name:                 \
-        return #name##sv;
-
-    switch (descriptor) {
-        ENUMERATE_ALERT_DESCRIPTIONS
-    }
-
-    return "Unknown"sv;
-#undef ENUMERATE_ALERT_DESCRIPTION
-}
-
 enum class Error : i8 {
     NoError = 0,
     UnknownError = -1,

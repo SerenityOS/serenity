@@ -359,7 +359,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 VERIFY(is_aead());
                 if (length < 24) {
                     dbgln("Invalid packet length");
-                    auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
+                    auto packet = build_alert(true, (u8)AlertDescription::DECRYPT_ERROR);
                     write_packet(packet);
                     return_value = Error::BrokenPacket;
                     return;
@@ -418,7 +418,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
                 if (consistency != Crypto::VerificationConsistency::Consistent) {
                     dbgln("integrity check failed (tag length {})", tag.size());
-                    auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
+                    auto packet = build_alert(true, (u8)AlertDescription::BAD_RECORD_MAC);
                     write_packet(packet);
 
                     return_value = Error::IntegrityCheckFailed;
@@ -453,7 +453,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                 auto mac_size = mac_length();
                 if (length < mac_size) {
                     dbgln("broken packet");
-                    auto packet = build_alert(true, (u8)AlertDescription::DecryptError);
+                    auto packet = build_alert(true, (u8)AlertDescription::DECRYPT_ERROR);
                     write_packet(packet);
                     return_value = Error::BrokenPacket;
                     return;
@@ -473,7 +473,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
                     print_buffer(message_mac);
                     dbgln("mac computed:");
                     print_buffer(hmac);
-                    auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
+                    auto packet = build_alert(true, (u8)AlertDescription::BAD_RECORD_MAC);
                     write_packet(packet);
 
                     return_value = Error::IntegrityCheckFailed;
@@ -493,14 +493,14 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         if (m_context.connection_status != ConnectionStatus::Established) {
             dbgln("unexpected application data");
             payload_res = (i8)Error::UnexpectedMessage;
-            auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
+            auto packet = build_alert(true, (u8)AlertDescription::UNEXPECTED_MESSAGE);
             write_packet(packet);
         } else {
             dbgln_if(TLS_DEBUG, "application data message of size {}", plain.size());
 
             if (m_context.application_buffer.try_append(plain.data(), plain.size()).is_error()) {
                 payload_res = (i8)Error::DecryptionFailed;
-                auto packet = build_alert(true, (u8)AlertDescription::DecryptionFailed);
+                auto packet = build_alert(true, (u8)AlertDescription::DECRYPTION_FAILED_RESERVED);
                 write_packet(packet);
             }
         }
@@ -512,7 +512,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     case ContentType::CHANGE_CIPHER_SPEC:
         if (m_context.connection_status != ConnectionStatus::KeyExchange) {
             dbgln("unexpected change cipher message");
-            auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
+            auto packet = build_alert(true, (u8)AlertDescription::UNEXPECTED_MESSAGE);
             write_packet(packet);
             payload_res = (i8)Error::UnexpectedMessage;
         } else {
@@ -532,19 +532,19 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             dbgln_if(TLS_DEBUG, "Alert received with level {}, code {}", level, code);
 
             if (level == (u8)AlertLevel::FATAL) {
-                dbgln("We were alerted of a critical error: {} ({})", code, alert_name((AlertDescription)code));
+                dbgln("We were alerted of a critical error: {} ({})", code, enum_to_string((AlertDescription)code));
                 m_context.critical_error = code;
                 try_disambiguate_error();
                 res = (i8)Error::UnknownError;
             }
 
-            if (code == (u8)AlertDescription::CloseNotify) {
+            if (code == (u8)AlertDescription::CLOSE_NOTIFY) {
                 res += 2;
-                alert(AlertLevel::FATAL, AlertDescription::CloseNotify);
+                alert(AlertLevel::FATAL, AlertDescription::CLOSE_NOTIFY);
                 if (!m_context.cipher_spec_set) {
                     // AWS CloudFront hits this.
                     dbgln("Server sent a close notify and we haven't agreed on a cipher suite. Treating it as a handshake failure.");
-                    m_context.critical_error = (u8)AlertDescription::HandshakeFailure;
+                    m_context.critical_error = (u8)AlertDescription::HANDSHAKE_FAILURE;
                     try_disambiguate_error();
                 }
                 m_context.close_notify = true;

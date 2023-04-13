@@ -659,7 +659,63 @@ enum class CipherSuite : u16 {
     __ENUM_CIPHER_SUITES
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-6
+#define __ENUM_ALERT_DESCRIPTIONS                             \
+    _ENUM_KEY_VALUE(CLOSE_NOTIFY, 0)                          \
+    _ENUM_KEY_VALUE(UNEXPECTED_MESSAGE, 10)                   \
+    _ENUM_KEY_VALUE(BAD_RECORD_MAC, 20)                       \
+    _ENUM_KEY_VALUE(DECRYPTION_FAILED_RESERVED, 21)           \
+    _ENUM_KEY_VALUE(RECORD_OVERFLOW, 22)                      \
+    _ENUM_KEY_VALUE(DECOMPRESSION_FAILURE_RESERVED, 30)       \
+    _ENUM_KEY_VALUE(HANDSHAKE_FAILURE, 40)                    \
+    _ENUM_KEY_VALUE(NO_CERTIFICATE_RESERVED, 41)              \
+    _ENUM_KEY_VALUE(BAD_CERTIFICATE, 42)                      \
+    _ENUM_KEY_VALUE(UNSUPPORTED_CERTIFICATE, 43)              \
+    _ENUM_KEY_VALUE(CERTIFICATE_REVOKED, 44)                  \
+    _ENUM_KEY_VALUE(CERTIFICATE_EXPIRED, 45)                  \
+    _ENUM_KEY_VALUE(CERTIFICATE_UNKNOWN, 46)                  \
+    _ENUM_KEY_VALUE(ILLEGAL_PARAMETER, 47)                    \
+    _ENUM_KEY_VALUE(UNKNOWN_CA, 48)                           \
+    _ENUM_KEY_VALUE(ACCESS_DENIED, 49)                        \
+    _ENUM_KEY_VALUE(DECODE_ERROR, 50)                         \
+    _ENUM_KEY_VALUE(DECRYPT_ERROR, 51)                        \
+    _ENUM_KEY_VALUE(TOO_MANY_CIDS_REQUESTED, 52)              \
+    _ENUM_KEY_VALUE(EXPORT_RESTRICTION_RESERVED, 60)          \
+    _ENUM_KEY_VALUE(PROTOCOL_VERSION, 70)                     \
+    _ENUM_KEY_VALUE(INSUFFICIENT_SECURITY, 71)                \
+    _ENUM_KEY_VALUE(INTERNAL_ERROR, 80)                       \
+    _ENUM_KEY_VALUE(INAPPROPRIATE_FALLBACK, 86)               \
+    _ENUM_KEY_VALUE(USER_CANCELED, 90)                        \
+    _ENUM_KEY_VALUE(NO_RENEGOTIATION_RESERVED, 100)           \
+    _ENUM_KEY_VALUE(MISSING_EXTENSION, 109)                   \
+    _ENUM_KEY_VALUE(UNSUPPORTED_EXTENSION, 110)               \
+    _ENUM_KEY_VALUE(CERTIFICATE_UNOBTAINABLE_RESERVED, 111)   \
+    _ENUM_KEY_VALUE(UNRECOGNIZED_NAME, 112)                   \
+    _ENUM_KEY_VALUE(BAD_CERTIFICATE_STATUS_RESPONSE, 113)     \
+    _ENUM_KEY_VALUE(BAD_CERTIFICATE_HASH_VALUE_RESERVED, 114) \
+    _ENUM_KEY_VALUE(UNKNOWN_PSK_IDENTITY, 115)                \
+    _ENUM_KEY_VALUE(CERTIFICATE_REQUIRED, 116)                \
+    _ENUM_KEY_VALUE(NO_APPLICATION_PROTOCOL, 120)
+
+enum class AlertDescription : u8 {
+    __ENUM_ALERT_DESCRIPTIONS
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
+
+constexpr static StringView enum_to_string(AlertDescription descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case AlertDescription::name:     \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_ALERT_DESCRIPTIONS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
 
 }
