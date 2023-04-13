@@ -111,7 +111,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
     }
 
     while (buffer.size() - res >= 4) {
-        auto extension_type = (HandshakeExtension)AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
+        auto extension_type = (ExtensionType)AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
         res += 2;
         u16 extension_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
         res += 2;
@@ -121,7 +121,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         if (buffer.size() - res < extension_length)
             return (i8)Error::NeedMoreData;
 
-        if (extension_type == HandshakeExtension::ServerName) {
+        if (extension_type == ExtensionType::SERVER_NAME) {
             // RFC6066 section 3: SNI extension_data can be empty in the server hello
             if (extension_length > 0) {
                 // ServerNameList total size
@@ -149,7 +149,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 res += sni_name_length;
                 dbgln("SNI host_name: {}", m_context.extensions.SNI);
             }
-        } else if (extension_type == HandshakeExtension::ApplicationLayerProtocolNegotiation && m_context.alpn.size()) {
+        } else if (extension_type == ExtensionType::APPLICATION_LAYER_PROTOCOL_NEGOTIATION && m_context.alpn.size()) {
             if (buffer.size() - res > 2) {
                 auto alpn_length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res)));
                 if (alpn_length && alpn_length <= extension_length - 2) {
@@ -172,12 +172,12 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
                 }
             }
             res += extension_length;
-        } else if (extension_type == HandshakeExtension::SignatureAlgorithms) {
+        } else if (extension_type == ExtensionType::SIGNATURE_ALGORITHMS) {
             dbgln("supported signatures: ");
             print_buffer(buffer.slice(res, extension_length));
             res += extension_length;
             // FIXME: what are we supposed to do here?
-        } else if (extension_type == HandshakeExtension::ECPointFormats) {
+        } else if (extension_type == ExtensionType::EC_POINT_FORMATS) {
             // RFC8422 section 5.2: A server that selects an ECC cipher suite in response to a ClientHello message
             // including a Supported Point Formats Extension appends this extension (along with others) to its
             // ServerHello message, enumerating the point formats it can parse. The Supported Point Formats Extension,
