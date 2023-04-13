@@ -117,7 +117,7 @@ void CalculatorProvider::query(DeprecatedString const& query, Function<void(Vect
     }
 
     Vector<NonnullRefPtr<Result>> results;
-    results.append(adopt_ref(*new CalculatorResult(calculation)));
+    results.append(make_ref_counted<CalculatorResult>(calculation));
     on_complete(move(results));
 }
 
@@ -235,7 +235,7 @@ void TerminalProvider::query(DeprecatedString const& query, Function<void(Vector
     auto command = query.substring(1).trim_whitespace();
 
     Vector<NonnullRefPtr<Result>> results;
-    results.append(adopt_ref(*new TerminalResult(move(command))));
+    results.append(make_ref_counted<TerminalResult>(move(command)));
     on_complete(move(results));
 }
 
@@ -257,7 +257,7 @@ void URLProvider::query(DeprecatedString const& query, Function<void(Vector<Nonn
         return;
 
     Vector<NonnullRefPtr<Result>> results;
-    results.append(adopt_ref(*new URLResult(url)));
+    results.append(make_ref_counted<URLResult>(url));
     on_complete(results);
 }
 
