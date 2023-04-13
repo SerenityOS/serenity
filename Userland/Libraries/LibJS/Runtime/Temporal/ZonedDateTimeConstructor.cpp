@@ -55,10 +55,10 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ZonedDateTimeConstructor::construct(Func
     auto& vm = this->vm();
 
     // 2. Set epochNanoseconds to ? ToBigInt(epochNanoseconds).
-    auto* epoch_nanoseconds = TRY(vm.argument(0).to_bigint(vm));
+    auto epoch_nanoseconds = TRY(vm.argument(0).to_bigint(vm));
 
     // 3. If ! IsValidEpochNanoseconds(epochNanoseconds) is false, throw a RangeError exception.
-    if (!is_valid_epoch_nanoseconds(*epoch_nanoseconds))
+    if (!is_valid_epoch_nanoseconds(epoch_nanoseconds))
         return vm.throw_completion<RangeError>(ErrorType::TemporalInvalidEpochNanoseconds);
 
     // 4. Let timeZone be ? ToTemporalTimeZone(timeZoneLike).
@@ -68,7 +68,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ZonedDateTimeConstructor::construct(Func
     auto* calendar = TRY(to_temporal_calendar_with_iso_default(vm, vm.argument(2)));
 
     // 6. Return ? CreateTemporalZonedDateTime(epochNanoseconds, timeZone, calendar, NewTarget).
-    return *TRY(create_temporal_zoned_date_time(vm, *epoch_nanoseconds, *time_zone, *calendar, &new_target));
+    return *TRY(create_temporal_zoned_date_time(vm, epoch_nanoseconds, *time_zone, *calendar, &new_target));
 }
 
 // 6.2.2 Temporal.ZonedDateTime.from ( item [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.zoneddatetime.from

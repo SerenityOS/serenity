@@ -69,7 +69,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
     auto bits = TRY(vm.argument(0).to_index(vm));
 
     // 2. Set bigint to ? ToBigInt(bigint).
-    auto* bigint = TRY(vm.argument(1).to_bigint(vm));
+    auto bigint = TRY(vm.argument(1).to_bigint(vm));
 
     // 3. Let mod be ℝ(bigint) modulo 2^bits.
     // FIXME: For large values of `bits`, this can likely be improved with a SignedBigInteger API to
@@ -95,7 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
     auto bits = TRY(vm.argument(0).to_index(vm));
 
     // 2. Set bigint to ? ToBigInt(bigint).
-    auto* bigint = TRY(vm.argument(1).to_bigint(vm));
+    auto bigint = TRY(vm.argument(1).to_bigint(vm));
 
     // 3. Return the BigInt value that represents ℝ(bigint) modulo 2bits.
     // FIXME: For large values of `bits`, this can likely be improved with a SignedBigInteger API to
