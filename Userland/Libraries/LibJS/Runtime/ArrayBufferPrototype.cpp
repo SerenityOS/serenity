@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-    auto* array_buffer_object = TRY(typed_this_value(vm));
+    auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto new_length = max(final - first, 0.0);
 
     // 15. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, realm.intrinsics().array_buffer_constructor()));
+    auto* constructor = TRY(species_constructor(vm, array_buffer_object, realm.intrinsics().array_buffer_constructor()));
 
     // 16. Let new be ? Construct(ctor, « 𝔽(newLen) »).
     auto new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));
@@ -129,7 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::byte_length_getter)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
-    auto* array_buffer_object = TRY(typed_this_value(vm));
+    auto array_buffer_object = TRY(typed_this_value(vm));
 
     // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
     // FIXME: Check for shared buffer

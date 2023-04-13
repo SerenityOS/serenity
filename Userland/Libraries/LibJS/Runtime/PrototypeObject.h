@@ -47,12 +47,12 @@ public:
     }
 
     // Use typed_this_value() when the spec does not coerce |this| value to an object.
-    static ThrowCompletionOr<ObjectType*> typed_this_value(VM& vm)
+    static ThrowCompletionOr<NonnullGCPtr<ObjectType>> typed_this_value(VM& vm)
     {
         auto this_value = vm.this_value();
         if (!this_value.is_object() || !is<ObjectType>(this_value.as_object()))
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, PrototypeType::display_name());
-        return static_cast<ObjectType*>(&this_value.as_object());
+        return static_cast<ObjectType&>(this_value.as_object());
     }
 
 protected:

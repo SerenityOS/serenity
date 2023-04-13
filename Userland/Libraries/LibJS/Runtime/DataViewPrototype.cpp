@@ -58,7 +58,7 @@ static ThrowCompletionOr<Value> get_view_value(VM& vm, Value request_index, Valu
 {
     // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
     // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
-    auto* view = TRY(DataViewPrototype::typed_this_value(vm));
+    auto view = TRY(DataViewPrototype::typed_this_value(vm));
 
     // 3. Let getIndex be ? ToIndex(requestIndex).
     auto get_index = TRY(request_index.to_index(vm));
@@ -103,7 +103,7 @@ static ThrowCompletionOr<Value> set_view_value(VM& vm, Value request_index, Valu
 {
     // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
     // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
-    auto* view = TRY(DataViewPrototype::typed_this_value(vm));
+    auto view = TRY(DataViewPrototype::typed_this_value(vm));
 
     // 3. Let getIndex be ? ToIndex(requestIndex).
     auto get_index = TRY(request_index.to_index(vm));
@@ -160,7 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::buffer_getter)
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-    auto* data_view = TRY(typed_this_value(vm));
+    auto data_view = TRY(typed_this_value(vm));
 
     // 4. Let buffer be O.[[ViewedArrayBuffer]].
     // 5. Return buffer.
@@ -173,7 +173,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_length_getter)
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-    auto* data_view = TRY(typed_this_value(vm));
+    auto data_view = TRY(typed_this_value(vm));
 
     // 4. Let buffer be O.[[ViewedArrayBuffer]].
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
@@ -191,7 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(DataViewPrototype::byte_offset_getter)
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-    auto* data_view = TRY(typed_this_value(vm));
+    auto data_view = TRY(typed_this_value(vm));
 
     // 4. Let buffer be O.[[ViewedArrayBuffer]].
     // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.

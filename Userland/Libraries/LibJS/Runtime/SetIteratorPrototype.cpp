@@ -36,7 +36,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetIteratorPrototype::next)
 {
     auto& realm = *vm.current_realm();
 
-    auto* set_iterator = TRY(typed_this_value(vm));
+    auto set_iterator = TRY(typed_this_value(vm));
     if (set_iterator->done())
         return create_iterator_result_object(vm, js_undefined(), true);
 
