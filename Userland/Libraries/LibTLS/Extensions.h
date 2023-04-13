@@ -272,6 +272,21 @@ enum class SignatureAlgorithm : u8 {
     __ENUM_SIGNATURE_ALGORITHM
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-18
+#define __ENUM_HASH_ALGORITHM  \
+    _ENUM_KEY_VALUE(NONE, 0)   \
+    _ENUM_KEY_VALUE(MD5, 1)    \
+    _ENUM_KEY_VALUE(SHA1, 2)   \
+    _ENUM_KEY_VALUE(SHA224, 3) \
+    _ENUM_KEY_VALUE(SHA256, 4) \
+    _ENUM_KEY_VALUE(SHA384, 5) \
+    _ENUM_KEY_VALUE(SHA512, 6) \
+    _ENUM_KEY_VALUE(INTRINSIC, 8)
+
+enum class HashAlgorithm : u8 {
+    __ENUM_HASH_ALGORITHM
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 
