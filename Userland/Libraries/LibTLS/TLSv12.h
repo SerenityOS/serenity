@@ -113,14 +113,6 @@ enum class Error : i8 {
     OutOfMemory = -23,
 };
 
-enum class HandshakeExtension : u16 {
-    ServerName = 0x00,
-    EllipticCurves = 0x0a,
-    ECPointFormats = 0x0b,
-    SignatureAlgorithms = 0x0d,
-    ApplicationLayerProtocolNegotiation = 0x10,
-};
-
 enum class NameType : u8 {
     HostName = 0x00,
 };

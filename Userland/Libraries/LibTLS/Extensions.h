@@ -93,6 +93,72 @@ enum class HandshakeType : u8 {
     __ENUM_HANDSHAKE_TYPES
 };
 
+// https://www.iana.org/assignments/tls-extensiontype-values/tls-extensiontype-values.xhtml#tls-extensiontype-values-1
+#define __ENUM_EXTENSION_TYPES                                  \
+    _ENUM_KEY_VALUE(SERVER_NAME, 0)                             \
+    _ENUM_KEY_VALUE(MAX_FRAGMENT_LENGTH, 1)                     \
+    _ENUM_KEY_VALUE(CLIENT_CERTIFICATE_URL, 2)                  \
+    _ENUM_KEY_VALUE(TRUSTED_CA_KEYS, 3)                         \
+    _ENUM_KEY_VALUE(TRUNCATED_HMAC, 4)                          \
+    _ENUM_KEY_VALUE(STATUS_REQUEST, 5)                          \
+    _ENUM_KEY_VALUE(USER_MAPPING, 6)                            \
+    _ENUM_KEY_VALUE(CLIENT_AUTHZ, 7)                            \
+    _ENUM_KEY_VALUE(SERVER_AUTHZ, 8)                            \
+    _ENUM_KEY_VALUE(CERT_TYPE, 9)                               \
+    _ENUM_KEY_VALUE(SUPPORTED_GROUPS, 10)                       \
+    _ENUM_KEY_VALUE(EC_POINT_FORMATS, 11)                       \
+    _ENUM_KEY_VALUE(SRP, 12)                                    \
+    _ENUM_KEY_VALUE(SIGNATURE_ALGORITHMS, 13)                   \
+    _ENUM_KEY_VALUE(USE_SRTP, 14)                               \
+    _ENUM_KEY_VALUE(HEARTBEAT, 15)                              \
+    _ENUM_KEY_VALUE(APPLICATION_LAYER_PROTOCOL_NEGOTIATION, 16) \
+    _ENUM_KEY_VALUE(STATUS_REQUEST_V2, 17)                      \
+    _ENUM_KEY_VALUE(SIGNED_CERTIFICATE_TIMESTAMP, 18)           \
+    _ENUM_KEY_VALUE(CLIENT_CERTIFICATE_TYPE, 19)                \
+    _ENUM_KEY_VALUE(SERVER_CERTIFICATE_TYPE, 20)                \
+    _ENUM_KEY_VALUE(PADDING, 21)                                \
+    _ENUM_KEY_VALUE(ENCRYPT_THEN_MAC, 22)                       \
+    _ENUM_KEY_VALUE(EXTENDED_MASTER_SECRET, 23)                 \
+    _ENUM_KEY_VALUE(TOKEN_BINDING, 24)                          \
+    _ENUM_KEY_VALUE(CACHED_INFO, 25)                            \
+    _ENUM_KEY_VALUE(TLS_LTS, 26)                                \
+    _ENUM_KEY_VALUE(COMPRESS_CERTIFICATE, 27)                   \
+    _ENUM_KEY_VALUE(RECORD_SIZE_LIMIT, 28)                      \
+    _ENUM_KEY_VALUE(PWD_PROTECT, 29)                            \
+    _ENUM_KEY_VALUE(PWD_CLEAR, 30)                              \
+    _ENUM_KEY_VALUE(PASSWORD_SALT, 31)                          \
+    _ENUM_KEY_VALUE(TICKET_PINNING, 32)                         \
+    _ENUM_KEY_VALUE(TLS_CERT_WITH_EXTERN_PSK, 33)               \
+    _ENUM_KEY_VALUE(DELEGATED_CREDENTIALS, 34)                  \
+    _ENUM_KEY_VALUE(SESSION_TICKET, 35)                         \
+    _ENUM_KEY_VALUE(TLMSP, 36)                                  \
+    _ENUM_KEY_VALUE(TLMSP_PROXYING, 37)                         \
+    _ENUM_KEY_VALUE(TLMSP_DELEGATE, 38)                         \
+    _ENUM_KEY_VALUE(SUPPORTED_EKT_CIPHERS, 39)                  \
+    _ENUM_KEY_VALUE(PRE_SHARED_KEY, 41)                         \
+    _ENUM_KEY_VALUE(EARLY_DATA, 42)                             \
+    _ENUM_KEY_VALUE(SUPPORTED_VERSIONS, 43)                     \
+    _ENUM_KEY_VALUE(COOKIE, 44)                                 \
+    _ENUM_KEY_VALUE(PSK_KEY_EXCHANGE_MODES, 45)                 \
+    _ENUM_KEY_VALUE(CERTIFICATE_AUTHORITIES, 47)                \
+    _ENUM_KEY_VALUE(OID_FILTERS, 48)                            \
+    _ENUM_KEY_VALUE(POST_HANDSHAKE_AUTH, 49)                    \
+    _ENUM_KEY_VALUE(SIGNATURE_ALGORITHMS_CERT, 50)              \
+    _ENUM_KEY_VALUE(KEY_SHARE, 51)                              \
+    _ENUM_KEY_VALUE(TRANSPARENCY_INFO, 52)                      \
+    _ENUM_KEY_VALUE(CONNECTION_ID_DEPRECATED, 53)               \
+    _ENUM_KEY_VALUE(CONNECTION_ID, 54)                          \
+    _ENUM_KEY_VALUE(EXTERNAL_ID_HASH, 55)                       \
+    _ENUM_KEY_VALUE(EXTERNAL_SESSION_ID, 56)                    \
+    _ENUM_KEY_VALUE(QUIC_TRANSPORT_PARAMETERS, 57)              \
+    _ENUM_KEY_VALUE(TICKET_REQUEST, 58)                         \
+    _ENUM_KEY_VALUE(DNSSEC_CHAIN, 59)                           \
+    _ENUM_KEY_VALUE(RENEGOTIATION_INFO, 65281)
+
+enum class ExtensionType : u16 {
+    __ENUM_EXTENSION_TYPES
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 

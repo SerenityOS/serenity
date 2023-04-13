@@ -90,7 +90,7 @@ ByteBuffer TLSv12::build_hello()
 
     if (sni_length) {
         // SNI extension
-        builder.append((u16)HandshakeExtension::ServerName);
+        builder.append((u16)ExtensionType::SERVER_NAME);
         // extension length
         builder.append((u16)(sni_length + 5));
         // SNI length
@@ -103,7 +103,7 @@ ByteBuffer TLSv12::build_hello()
     }
 
     // signature_algorithms extension
-    builder.append((u16)HandshakeExtension::SignatureAlgorithms);
+    builder.append((u16)ExtensionType::SIGNATURE_ALGORITHMS);
     // Extension length
     builder.append((u16)(2 + 2 * m_context.options.supported_signature_algorithms.size()));
     // Vector count
@@ -116,14 +116,14 @@ ByteBuffer TLSv12::build_hello()
 
     if (supports_elliptic_curves) {
         // elliptic_curves extension
-        builder.append((u16)HandshakeExtension::EllipticCurves);
+        builder.append((u16)ExtensionType::SUPPORTED_GROUPS);
         builder.append((u16)(2 + elliptic_curves_length));
         builder.append((u16)elliptic_curves_length);
         for (auto& curve : m_context.options.elliptic_curves)
             builder.append((u16)curve);
 
         // ec_point_formats extension
-        builder.append((u16)HandshakeExtension::ECPointFormats);
+        builder.append((u16)ExtensionType::EC_POINT_FORMATS);
         builder.append((u16)(1 + supported_ec_point_formats_length));
         builder.append((u8)supported_ec_point_formats_length);
         for (auto& format : m_context.options.supported_ec_point_formats)
