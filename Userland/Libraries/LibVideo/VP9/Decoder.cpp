@@ -939,15 +939,19 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
         return intermediate_buffer[row * width + column];
     };
 
+    // Check our reference frame bounds before starting the loop.
+    reference_frame_buffer_at(scaled_bottom, scaled_right);
+
     for (auto row = 0u; row < intermediate_height; row++) {
+        auto clamped_row = static_cast<size_t>(clip_3(0, scaled_bottom, (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3));
+        u16 const* scan_line = &reference_frame_buffer_at(clamped_row, 0);
+
         for (auto column = 0u; column < width; column++) {
             auto samples_start = offset_scaled_block_x + static_cast<i32>(scaled_step_x * column);
 
             i32 accumulated_samples = 0;
             for (auto t = 0u; t < 8u; t++) {
-                auto sample = reference_frame_buffer_at(
-                    clip_3(0, scaled_bottom, (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3),
-                    clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3));
+                auto sample = scan_line[clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3)];
                 accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
             }
             intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
@@ -957,11 +961,14 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     for (auto row = 0u; row < height; row++) {
         for (auto column = 0u; column < width; column++) {
             auto samples_start = (offset_scaled_block_y & 15) + static_cast<i32>(scaled_step_y * row);
+            auto const* scan_column = &intermediate_buffer_at(samples_start >> 4, column);
+            auto const* subpel_filters_for_samples = subpel_filters[block_context.interpolation_filter][samples_start & 15];
 
             i32 accumulated_samples = 0;
             for (auto t = 0u; t < 8u; t++) {
-                auto sample = intermediate_buffer_at((samples_start >> 4) + t, column);
-                accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
+                auto sample = *scan_column;
+                accumulated_samples += subpel_filters_for_samples[t] * sample;
+                scan_column += width;
             }
             block_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
         }
