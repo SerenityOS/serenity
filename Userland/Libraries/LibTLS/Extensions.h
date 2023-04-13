@@ -801,4 +801,181 @@ constexpr static StringView enum_to_string(AlertDescription descriptor)
 #undef _ENUM_KEY_VALUE
 }
 
+constexpr static const StringView enum_to_value(AlertDescription descriptor)
+{
+    switch (descriptor) {
+    case AlertDescription::UNEXPECTED_MESSAGE:
+        return "An inappropriate message was received. "
+               "This alert is always fatal and should never be observed in communication between proper implementations."sv;
+
+    case AlertDescription::BAD_RECORD_MAC:
+        return "This alert is returned if a record is received with an incorrect MAC. "
+               "This alert also MUST be returned if an alert is sent because a TLSCiphertext decrypted in an invalid way: "
+               "either it wasn't an even multiple of the block length, "
+               "or its padding values, when checked, weren't correct. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::DECRYPTION_FAILED_RESERVED:
+        return "This alert MAY be returned if a TLSCiphertext decrypted in an invalid way: "
+               "either it wasn't an even multiple of the block length, "
+               "or its padding values, when checked, weren't correct. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::RECORD_OVERFLOW:
+        return "A TLSCiphertext record was received that had a length more than 2^14 + 2048 bytes, "
+               "or a record decrypted to a TLSCompressed record with more than 2^14 + 1024 bytes. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::DECOMPRESSION_FAILURE_RESERVED:
+        return "The decompression function received improper input (e.g., data that would expand to excessive length). "
+               "This message is always fatal."sv;
+
+    case AlertDescription::HANDSHAKE_FAILURE:
+        return "Reception of a handshake_failure alert message indicates that the sender "
+               "was unable to negotiate an acceptable set of security parameters given the options available. "
+               "This is a fatal error."sv;
+
+    case AlertDescription::NO_CERTIFICATE_RESERVED:
+        return "This alert was used in SSLv3 but not in TLS. It should not be sent by compliant implementations."sv;
+
+    case AlertDescription::BAD_CERTIFICATE:
+        return "A certificate was corrupt, contained signatures that did not verify correctly, etc."sv;
+
+    case AlertDescription::UNSUPPORTED_CERTIFICATE:
+        return "A certificate was of an unsupported type."sv;
+
+    case AlertDescription::CERTIFICATE_REVOKED:
+        return "A certificate was revoked by its signer."sv;
+
+    case AlertDescription::CERTIFICATE_EXPIRED:
+        return "A certificate has expired or is not currently valid."sv;
+
+    case AlertDescription::CERTIFICATE_UNKNOWN:
+        return "Some other (unspecified) issue arose in processing the certificate, rendering it unacceptable."sv;
+
+    case AlertDescription::ILLEGAL_PARAMETER:
+        return "A field in the handshake was out of range or inconsistent with other fields. "
+               "This is always fatal."sv;
+
+    case AlertDescription::UNKNOWN_CA:
+        return "A valid certificate chain or partial chain was received, but the certificate was not accepted "
+               "because the CA certificate could not be located "
+               "or couldn't be matched with a known, trusted CA. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::ACCESS_DENIED:
+        return "A valid certificate was received, but when access control was applied, "
+               "the sender decided not to proceed with negotiation. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::DECODE_ERROR:
+        return "A message could not be decoded because some field was out of the specified range "
+               "or the length of the message was incorrect. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::DECRYPT_ERROR:
+        return "A handshake cryptographic operation failed, "
+               "including being unable to correctly verify a signature, "
+               "decrypt a key exchange, or validate a finished message."sv;
+
+    case AlertDescription::EXPORT_RESTRICTION_RESERVED:
+        return "This alert was used in TLS 1.0 but not TLS 1.1."sv;
+
+    case AlertDescription::PROTOCOL_VERSION:
+        return "The protocol version the client has attempted to negotiate is recognized but not supported. "
+               "(For example, old protocol versions might be avoided for security reasons). "
+               "This message is always fatal."sv;
+
+    case AlertDescription::INSUFFICIENT_SECURITY:
+        return "Returned instead of handshake_failure when a negotiation has failed"
+               "specifically because the server requires ciphers more secure than those supported by the client."
+               "This message is always fatal."sv;
+
+    case AlertDescription::INTERNAL_ERROR:
+        return "An internal error unrelated to the peer "
+               "or the correctness of the protocol (such as a memory allocation failure) "
+               "makes it impossible to continue. "
+               "This message is always fatal."sv;
+
+    case AlertDescription::USER_CANCELED:
+        return "This handshake is being canceled for some reason unrelated to a protocol failure. "
+               "If the user cancels an operation after the handshake is complete, "
+               "just closing the connection by sending a close_notify is more appropriate. "
+               "This alert should be followed by a close_notify. "
+               "This message is generally a warning."sv;
+
+    case AlertDescription::NO_RENEGOTIATION_RESERVED:
+        return "Sent by the client in response to a hello request "
+               "or by the server in response to a client hello after initial handshaking. "
+               "Either of these would normally lead to renegotiation; "
+               "when that is not appropriate, the recipient should respond with this alert. "
+               "At that point, the original requester can decide whether to proceed with the connection. "
+               "One case where this would be appropriate is where a server has spawned a process to satisfy a request; "
+               "the process might receive security parameters(key length, authentication, etc.) at startup "
+               "and it might be difficult to communicate changes to these parameters after that point. "
+               "This message is always a warning."sv;
+
+    case AlertDescription::CLOSE_NOTIFY:
+        return "This alert notifies the recipient that the sender will not send any more messages on this connection. "
+               "Any data received after a closure alert has been received MUST be ignored."sv;
+
+    case AlertDescription::INAPPROPRIATE_FALLBACK:
+        return "Sent by a server in response to an invalid connection retry attempt from a client (see [RFC7507])."sv;
+
+    case AlertDescription::MISSING_EXTENSION:
+        return "Sent by endpoints that receive a handshake message not containing an extension "
+               "that is mandatory to send for the offered TLS version or other negotiated parameters."sv;
+
+    case AlertDescription::CERTIFICATE_REQUIRED:
+        return "Sent by servers when a client certificate is desired but none was provided by the client."sv;
+
+    case AlertDescription::NO_APPLICATION_PROTOCOL:
+        return "Sent by servers when a client \"application_layer_protocol_negotiation\" extension "
+               "advertises only protocols that the server does not support (see [RFC7301])."sv;
+
+    case AlertDescription::UNSUPPORTED_EXTENSION:
+        return "Sent by endpoints receiving any handshake message containing an extension known to be prohibited "
+               "for inclusion in the given handshake message, "
+               "or including any extensions in a ServerHello "
+               "or Certificate not first offered in the corresponding ClientHello or CertificateRequest."sv;
+
+    case AlertDescription::CERTIFICATE_UNOBTAINABLE_RESERVED:
+        return "If a server is unable to obtain certificates in a given CertificateURL, "
+               "it MUST send a fatal certificate_unobtainable(111) alert "
+               "if it requires the certificates to complete the handshake."sv;
+
+    case AlertDescription::TOO_MANY_CIDS_REQUESTED:
+        return "Endpoints MAY handle an excessive number of RequestConnectionId messages by terminating the connection."sv;
+
+    case AlertDescription::UNRECOGNIZED_NAME:
+        return "The ServerNameList MUST NOT contain more than one name of the same name_type. "
+               "If the server understood the ClientHello extension but does not recognize the server name, "
+               "the server SHOULD take one of two actions: "
+               "either abort the handshake by sending a fatal-level unrecognized_name(112) alert or continue the handshake. "
+               "It is NOT RECOMMENDED to send a warning-level unrecognized_name(112) alert, "
+               "because the client's behavior in response to warning-level alerts is unpredictable."sv;
+
+    case AlertDescription::BAD_CERTIFICATE_STATUS_RESPONSE:
+        return "Clients requesting an OCSP response and receiving an OCSP response "
+               "in a \"CertificateStatus\" message MUST check the OCSP response "
+               "and abort the handshake if the response is not satisfactory. "
+               "This alert is always fatal."sv;
+
+    case AlertDescription::BAD_CERTIFICATE_HASH_VALUE_RESERVED:
+        return "The server MUST check that the SHA-1 hash of the contents of the object retrieved from that URL "
+               "(after decoding any MIME Content-Transfer-Encoding) matches the given hash. "
+               "If any retrieved object does not have the correct SHA-1 hash, "
+               "the server MUST abort the handshake. "
+               "This alert is always fatal."sv;
+
+    case AlertDescription::UNKNOWN_PSK_IDENTITY:
+        return "If the server does not recognize the PSK identity, it MAY respond with this message."
+               "Alternatively, if the server wishes to hide the fact that the PSK identity was not known, "
+               "it MAY continue the protocol as if the PSK identity existed but the key was incorrect: "
+               "that is, respond with a \"DECRYPT_ERROR\" alert."sv;
+    }
+
+    return "Unknown alert"sv;
+}
+
 }

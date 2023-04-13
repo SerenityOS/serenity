@@ -193,6 +193,8 @@ void TLSv12::try_disambiguate_error() const
         dbgln("- No one knows.");
         break;
     }
+
+    dbgln("- {}", enum_to_value((AlertDescription)m_context.critical_error));
 }
 
 void TLSv12::set_root_certificates(Vector<Certificate> certificates)
