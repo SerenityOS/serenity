@@ -117,4 +117,36 @@ bool TraversableNavigable::is_top_level_traversable() const
     return parent() == nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-all-used-history-steps
+Vector<int> TraversableNavigable::get_all_used_history_steps() const
+{
+    // FIXME: 1. Assert: this is running within traversable's session history traversal queue.
+
+    // 2. Let steps be an empty ordered set of non-negative integers.
+    OrderedHashTable<int> steps;
+
+    // 3. Let entryLists be the ordered set « traversable's session history entries ».
+    Vector<Vector<JS::NonnullGCPtr<SessionHistoryEntry>>> entry_lists { session_history_entries() };
+
+    // 4. For each entryList of entryLists:
+    while (!entry_lists.is_empty()) {
+        auto entry_list = entry_lists.take_first();
+
+        // 1. For each entry of entryList:
+        for (auto& entry : entry_list) {
+            // 1. Append entry's step to steps.
+            steps.set(entry->step.get<int>());
+
+            // 2. For each nestedHistory of entry's document state's nested histories, append nestedHistory's entries list to entryLists.
+            for (auto& nested_history : entry->document_state->nested_histories())
+                entry_lists.append(nested_history.entries);
+        }
+    }
+
+    // 5. Return steps, sorted.
+    auto sorted_steps = steps.values();
+    quick_sort(sorted_steps);
+    return sorted_steps;
+}
+
 }
