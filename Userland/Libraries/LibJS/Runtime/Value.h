@@ -369,7 +369,7 @@ public:
     ThrowCompletionOr<String> to_string(VM&) const;
     ThrowCompletionOr<DeprecatedString> to_deprecated_string(VM&) const;
     ThrowCompletionOr<Utf16String> to_utf16_string(VM&) const;
-    ThrowCompletionOr<PrimitiveString*> to_primitive_string(VM&);
+    ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> to_primitive_string(VM&);
     ThrowCompletionOr<Value> to_primitive(VM&, PreferredType preferred_type = PreferredType::Default) const;
     ThrowCompletionOr<Object*> to_object(VM&) const;
     ThrowCompletionOr<Value> to_numeric(VM&) const;

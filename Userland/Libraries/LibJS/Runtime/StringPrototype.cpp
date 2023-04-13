@@ -301,15 +301,15 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
     auto object = TRY(require_object_coercible(vm, vm.this_value()));
 
     // 2. Let S be ? ToString(O).
-    auto* string = TRY(object.to_primitive_string(vm));
+    auto string = TRY(object.to_primitive_string(vm));
 
     // 3. Let R be S.
-    auto* result = string;
+    auto result = string;
 
     // 4. For each element next of args, do
     for (size_t i = 0; i < vm.argument_count(); ++i) {
         // a. Let nextString be ? ToString(next).
-        auto* next_string = TRY(vm.argument(i).to_primitive_string(vm));
+        auto next_string = TRY(vm.argument(i).to_primitive_string(vm));
 
         // b. Set R to the string-concatenation of R and nextString.
         result = PrimitiveString::create(vm, *result, *next_string);

@@ -397,12 +397,12 @@ ErrorOr<String> Value::to_string_without_side_effects() const
     }
 }
 
-ThrowCompletionOr<PrimitiveString*> Value::to_primitive_string(VM& vm)
+ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> Value::to_primitive_string(VM& vm)
 {
     if (is_string())
-        return &as_string();
+        return as_string();
     auto string = TRY(to_string(vm));
-    return PrimitiveString::create(vm, move(string)).ptr();
+    return PrimitiveString::create(vm, move(string));
 }
 
 // 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
@@ -1728,7 +1728,7 @@ ThrowCompletionOr<Value> add(VM& vm, Value lhs, Value rhs)
         auto rhs_string = TRY(rhs_primitive.to_primitive_string(vm));
 
         // iii. Return the string-concatenation of lstr and rstr.
-        return PrimitiveString::create(vm, *lhs_string, *rhs_string);
+        return PrimitiveString::create(vm, lhs_string, rhs_string);
     }
 
     // d. Set lval to lprim.
