@@ -329,7 +329,7 @@ ThrowCompletionOr<Object*> to_temporal_time_zone(VM& vm, Value temporal_time_zon
 ThrowCompletionOr<double> get_offset_nanoseconds_for(VM& vm, Value time_zone, Instant& instant)
 {
     // 1. Let getOffsetNanosecondsFor be ? GetMethod(timeZone, "getOffsetNanosecondsFor").
-    auto* get_offset_nanoseconds_for = TRY(time_zone.get_method(vm, vm.names.getOffsetNanosecondsFor));
+    auto get_offset_nanoseconds_for = TRY(time_zone.get_method(vm, vm.names.getOffsetNanosecondsFor));
 
     // 2. Let offsetNanoseconds be ? Call(getOffsetNanosecondsFor, timeZone, « instant »).
     auto offset_nanoseconds_value = TRY(call(vm, get_offset_nanoseconds_for, time_zone, &instant));

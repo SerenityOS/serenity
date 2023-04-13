@@ -1401,7 +1401,7 @@ ThrowCompletionOr<GCPtr<FunctionObject>> get_dispose_method(VM& vm, Value value,
 
     // 2. Else,
     // a. Let method be ? GetMethod(V, @@dispose).
-    return GCPtr<FunctionObject> { TRY(value.get_method(vm, vm.well_known_symbol_dispose())) };
+    return TRY(value.get_method(vm, vm.well_known_symbol_dispose()));
 }
 
 // 2.1.5 Dispose ( V, hint, method ), https://tc39.es/proposal-explicit-resource-management/#sec-dispose

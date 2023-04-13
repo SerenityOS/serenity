@@ -392,7 +392,7 @@ public:
     bool to_boolean() const;
 
     ThrowCompletionOr<Value> get(VM&, PropertyKey const&) const;
-    ThrowCompletionOr<FunctionObject*> get_method(VM&, PropertyKey const&) const;
+    ThrowCompletionOr<GCPtr<FunctionObject>> get_method(VM&, PropertyKey const&) const;
 
     ErrorOr<String> to_string_without_side_effects() const;
 

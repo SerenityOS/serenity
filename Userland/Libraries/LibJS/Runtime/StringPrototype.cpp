@@ -464,7 +464,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     auto this_object = TRY(require_object_coercible(vm, vm.this_value()));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* matcher = TRY(regexp.get_method(vm, vm.well_known_symbol_match())))
+        if (auto matcher = TRY(regexp.get_method(vm, vm.well_known_symbol_match())))
             return TRY(call(vm, *matcher, regexp, this_object));
     }
 
@@ -488,7 +488,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
             if (!flags_string.contains('g'))
                 return vm.throw_completion<TypeError>(ErrorType::StringNonGlobalRegExp);
         }
-        if (auto* matcher = TRY(regexp.get_method(vm, vm.well_known_symbol_match_all())))
+        if (auto matcher = TRY(regexp.get_method(vm, vm.well_known_symbol_match_all())))
             return TRY(call(vm, *matcher, regexp, this_object));
     }
 
@@ -613,7 +613,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     auto replace_value = vm.argument(1);
 
     if (!search_value.is_nullish()) {
-        if (auto* replacer = TRY(search_value.get_method(vm, vm.well_known_symbol_replace())))
+        if (auto replacer = TRY(search_value.get_method(vm, vm.well_known_symbol_replace())))
             return TRY(call(vm, *replacer, search_value, this_object, replace_value));
     }
 
@@ -665,7 +665,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace_all)
                 return vm.throw_completion<TypeError>(ErrorType::StringNonGlobalRegExp);
         }
 
-        auto* replacer = TRY(search_value.get_method(vm, vm.well_known_symbol_replace()));
+        auto replacer = TRY(search_value.get_method(vm, vm.well_known_symbol_replace()));
         if (replacer)
             return TRY(call(vm, *replacer, search_value, this_object, replace_value));
     }
@@ -722,7 +722,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
     auto this_object = TRY(require_object_coercible(vm, vm.this_value()));
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* searcher = TRY(regexp.get_method(vm, vm.well_known_symbol_search())))
+        if (auto searcher = TRY(regexp.get_method(vm, vm.well_known_symbol_search())))
             return TRY(call(vm, *searcher, regexp, this_object));
     }
 

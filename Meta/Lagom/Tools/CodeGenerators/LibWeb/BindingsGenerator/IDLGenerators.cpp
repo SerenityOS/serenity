@@ -887,7 +887,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (!@js_name@@js_suffix@.is_object())
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 
-    auto* iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(vm, vm.well_known_symbol_iterator()));
+    auto iterator_method@recursion_depth@ = TRY(@js_name@@js_suffix@.get_method(vm, vm.well_known_symbol_iterator()));
     if (!iterator_method@recursion_depth@)
         return vm.throw_completion<JS::TypeError>(JS::ErrorType::NotIterable, TRY_OR_THROW_OOM(vm, @js_name@@js_suffix@.to_string_without_side_effects()));
 )~~~");
@@ -1169,7 +1169,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (sequence_type) {
             // 1. Let method be ? GetMethod(V, @@iterator).
             union_generator.append(R"~~~(
-        auto* method = TRY(@js_name@@js_suffix@.get_method(vm, vm.well_known_symbol_iterator()));
+        auto method = TRY(@js_name@@js_suffix@.get_method(vm, vm.well_known_symbol_iterator()));
 )~~~");
 
             // 2. If method is not undefined, return the result of creating a sequence of that type from V and method.
