@@ -113,20 +113,6 @@ enum class Error : i8 {
     OutOfMemory = -23,
 };
 
-enum HandshakeType {
-    HelloRequest = 0x00,
-    ClientHello = 0x01,
-    ServerHello = 0x02,
-    HelloVerifyRequest = 0x03,
-    CertificateMessage = 0x0b,
-    ServerKeyExchange = 0x0c,
-    CertificateRequest = 0x0d,
-    ServerHelloDone = 0x0e,
-    CertificateVerify = 0x0f,
-    ClientKeyExchange = 0x10,
-    Finished = 0x14
-};
-
 enum class HandshakeExtension : u16 {
     ServerName = 0x00,
     EllipticCurves = 0x0a,

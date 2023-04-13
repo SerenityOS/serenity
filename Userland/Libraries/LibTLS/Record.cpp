@@ -71,8 +71,8 @@ void TLSv12::update_packet(ByteBuffer& packet)
 
     if (packet[0] != (u8)ContentType::CHANGE_CIPHER_SPEC) {
         if (packet[0] == (u8)ContentType::HANDSHAKE && packet.size() > header_size) {
-            u8 handshake_type = packet[header_size];
-            if (handshake_type != HandshakeType::HelloRequest && handshake_type != HandshakeType::HelloVerifyRequest) {
+            auto handshake_type = static_cast<HandshakeType>(packet[header_size]);
+            if (handshake_type != HandshakeType::HELLO_REQUEST_RESERVED && handshake_type != HandshakeType::HELLO_VERIFY_REQUEST_RESERVED) {
                 update_hash(packet.bytes(), header_size);
             }
         }
