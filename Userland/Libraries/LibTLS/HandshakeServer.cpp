@@ -46,7 +46,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
         dbgln("not enough data for version");
         return (i8)Error::NeedMoreData;
     }
-    auto version = static_cast<Version>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
+    auto version = static_cast<ProtocolVersion>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
 
     res += 2;
     if (!supports_version(version))
