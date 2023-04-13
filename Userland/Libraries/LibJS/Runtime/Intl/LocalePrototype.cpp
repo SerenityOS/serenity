@@ -61,7 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::maximize)
 
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
     VERIFY(locale.has_value());
@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::minimize)
 
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
     VERIFY(locale.has_value());
@@ -99,7 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::to_string)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Return loc.[[Locale]].
     return PrimitiveString::create(vm, locale_object->locale());
@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
@@ -135,7 +135,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::base_name)
 #define __JS_ENUMERATE(keyword)                                       \
     JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)               \
     {                                                                 \
-        auto* locale_object = TRY(typed_this_object(vm));             \
+        auto locale_object = TRY(typed_this_object(vm));              \
         if (!locale_object->has_##keyword())                          \
             return js_undefined();                                    \
         return PrimitiveString::create(vm, locale_object->keyword()); \
@@ -148,7 +148,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::numeric)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Return loc.[[Numeric]].
     return Value(locale_object->numeric());
@@ -159,7 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::language)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
@@ -176,7 +176,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::script)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
@@ -197,7 +197,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
@@ -223,11 +223,11 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::region)
 // 1.4.17 get Intl.Locale.prototype.collations, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.collations
 // 1.4.18 get Intl.Locale.prototype.hourCycles, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.hourCycles
 // 1.4.19 get Intl.Locale.prototype.numberingSystems, https://tc39.es/proposal-intl-locale-info/#sec-Intl.Locale.prototype.numberingSystems
-#define __JS_ENUMERATE(keyword)                                            \
-    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)                    \
-    {                                                                      \
-        auto* locale_object = TRY(typed_this_object(vm));                  \
-        return MUST_OR_THROW_OOM(keyword##_of_locale(vm, *locale_object)); \
+#define __JS_ENUMERATE(keyword)                                           \
+    JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::keyword)                   \
+    {                                                                     \
+        auto locale_object = TRY(typed_this_object(vm));                  \
+        return MUST_OR_THROW_OOM(keyword##_of_locale(vm, locale_object)); \
     }
 JS_ENUMERATE_LOCALE_INFO_PROPERTIES
 #undef __JS_ENUMERATE
@@ -237,7 +237,7 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::time_zones)
 {
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let locale be loc.[[Locale]].
     auto locale = TRY_OR_THROW_OOM(vm, ::Locale::parse_unicode_locale_id(locale_object->locale()));
@@ -257,13 +257,13 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::text_info)
 
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let info be ! ObjectCreate(%Object.prototype%).
     auto info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let dir be ! CharacterDirectionOfLocale(loc).
-    auto direction = MUST_OR_THROW_OOM(character_direction_of_locale(vm, *locale_object));
+    auto direction = MUST_OR_THROW_OOM(character_direction_of_locale(vm, locale_object));
 
     // 5. Perform ! CreateDataPropertyOrThrow(info, "direction", dir).
     MUST(info->create_data_property_or_throw(vm.names.direction, MUST_OR_THROW_OOM(PrimitiveString::create(vm, direction))));
@@ -279,13 +279,13 @@ JS_DEFINE_NATIVE_FUNCTION(LocalePrototype::week_info)
 
     // 1. Let loc be the this value.
     // 2. Perform ? RequireInternalSlot(loc, [[InitializedLocale]]).
-    [[maybe_unused]] auto* locale_object = TRY(typed_this_object(vm));
+    auto locale_object = TRY(typed_this_object(vm));
 
     // 3. Let info be ! ObjectCreate(%Object.prototype%).
     auto info = Object::create(realm, realm.intrinsics().object_prototype());
 
     // 4. Let wi be ! WeekInfoOfLocale(loc).
-    auto week_info = MUST_OR_THROW_OOM(week_info_of_locale(vm, *locale_object));
+    auto week_info = MUST_OR_THROW_OOM(week_info_of_locale(vm, locale_object));
 
     // 5. Let we be ! CreateArrayFromList( wi.[[Weekend]] ).
     auto weekend = Array::create_from<u8>(realm, week_info.weekend, [](auto day) { return Value(day); });

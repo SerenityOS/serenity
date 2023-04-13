@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
 {
     // 1. Let relativeTimeFormat be the this value.
     // 2. Perform ? RequireInternalSlot(relativeTimeFormat, [[InitializedRelativeTimeFormat]]).
-    auto* relative_time_format = TRY(typed_this_object(vm));
+    auto relative_time_format = TRY(typed_this_object(vm));
 
     // 3. Let value be ? ToNumber(value).
     auto value = TRY(vm.argument(0).to_number(vm));
@@ -47,7 +47,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format)
     auto unit = TRY(vm.argument(1).to_string(vm));
 
     // 5. Return ? FormatRelativeTime(relativeTimeFormat, value, unit).
-    auto formatted = TRY(format_relative_time(vm, *relative_time_format, value.as_double(), unit.bytes_as_string_view()));
+    auto formatted = TRY(format_relative_time(vm, relative_time_format, value.as_double(), unit.bytes_as_string_view()));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -56,7 +56,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
 {
     // 1. Let relativeTimeFormat be the this value.
     // 2. Perform ? RequireInternalSlot(relativeTimeFormat, [[InitializedRelativeTimeFormat]]).
-    auto* relative_time_format = TRY(typed_this_object(vm));
+    auto relative_time_format = TRY(typed_this_object(vm));
 
     // 3. Let value be ? ToNumber(value).
     auto value = TRY(vm.argument(0).to_number(vm));
@@ -65,7 +65,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::format_to_parts)
     auto unit = TRY(vm.argument(1).to_string(vm));
 
     // 5. Return ? FormatRelativeTimeToParts(relativeTimeFormat, value, unit).
-    return TRY(format_relative_time_to_parts(vm, *relative_time_format, value.as_double(), unit.bytes_as_string_view()));
+    return TRY(format_relative_time_to_parts(vm, relative_time_format, value.as_double(), unit.bytes_as_string_view()));
 }
 
 // 17.3.5 Intl.RelativeTimeFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.relativetimeformat.prototype.resolvedoptions
@@ -75,7 +75,7 @@ JS_DEFINE_NATIVE_FUNCTION(RelativeTimeFormatPrototype::resolved_options)
 
     // 1. Let relativeTimeFormat be the this value.
     // 2. Perform ? RequireInternalSlot(relativeTimeFormat, [[InitializedRelativeTimeFormat]]).
-    auto* relative_time_format = TRY(typed_this_object(vm));
+    auto relative_time_format = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());

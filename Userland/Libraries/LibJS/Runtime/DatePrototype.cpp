@@ -400,7 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
     new_date = time_clip(utc_time(new_date));
 
     // 7. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 8. Return u.
@@ -435,7 +435,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     new_date = time_clip(utc_time(new_date));
 
     // 8. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 9. Return u.
@@ -487,7 +487,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     date = time_clip(utc_time(date));
 
     // 13. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(date);
 
     // 14. Return u.
@@ -522,7 +522,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     date = time_clip(utc_time(date));
 
     // 7. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(date);
 
     // 8. Return u.
@@ -569,7 +569,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     date = time_clip(utc_time(date));
 
     // 11. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(date);
 
     // 12. Return u.
@@ -609,7 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
     new_date = time_clip(utc_time(new_date));
 
     // 9. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 10. Return u.
@@ -650,7 +650,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     new_date = time_clip(utc_time(new_date));
 
     // 9. Set the [[DateValue]] internal slot of this Date object to u.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 10. Return u.
@@ -670,7 +670,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
     time = time_clip(time);
 
     // 4. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(time);
 
     // 5. Return v.
@@ -701,7 +701,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_date)
     new_date = time_clip(new_date);
 
     // 6. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 7. Return v.
@@ -736,7 +736,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_full_year)
     new_date = time_clip(new_date);
 
     // 8. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 9. Return v.
@@ -785,7 +785,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_hours)
     date = time_clip(date);
 
     // 12. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(date);
 
     // 13. Return v.
@@ -817,7 +817,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_milliseconds)
     date = time_clip(date);
 
     // 6. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(date);
 
     // 7. Return v.
@@ -861,7 +861,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_minutes)
     date = time_clip(date);
 
     // 10. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(date);
 
     // 11. Return v.
@@ -898,7 +898,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_month)
     new_date = time_clip(new_date);
 
     // 8. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 9. Return v.
@@ -936,7 +936,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_utc_seconds)
     new_date = time_clip(new_date);
 
     // 8. Set the [[DateValue]] internal slot of this Date object to v.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
     this_object->set_date_value(new_date);
 
     // 9. Return v.
@@ -962,7 +962,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 // 21.4.4.36 Date.prototype.toISOString ( ), https://tc39.es/ecma262/#sec-date.prototype.toisostring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
 {
-    auto* this_object = TRY(typed_this_object(vm));
+    auto this_object = TRY(typed_this_object(vm));
 
     if (!Value(this_object->date_value()).is_finite_number())
         return vm.throw_completion<RangeError>(ErrorType::InvalidTimeValue);
@@ -1298,7 +1298,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
     // 3. Let y be ? ToNumber(year).
     auto year = TRY(vm.argument(0).to_number(vm)).as_double();
 
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
 
     // 4. If y is NaN, then
     if (isnan(year)) {

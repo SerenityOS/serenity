@@ -466,13 +466,13 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
 {
     // 1. Let R be the this value.
     // 2. Perform ? RequireInternalSlot(R, [[RegExpMatcher]]).
-    auto* regexp_object = TRY(typed_this_object(vm));
+    auto regexp_object = TRY(typed_this_object(vm));
 
     // 3. Let S be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Return ? RegExpBuiltinExec(R, S).
-    return TRY(regexp_builtin_exec(vm, *regexp_object, move(string)));
+    return TRY(regexp_builtin_exec(vm, regexp_object, move(string)));
 }
 
 // 22.2.5.4 get RegExp.prototype.flags, https://tc39.es/ecma262/#sec-get-regexp.prototype.flags
@@ -1097,7 +1097,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::compile)
 
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[RegExpMatcher]]).
-    auto* regexp_object = TRY(typed_this_object(vm));
+    auto regexp_object = TRY(typed_this_object(vm));
 
     // 3. Let thisRealm be the current Realm Record.
     auto* this_realm = vm.current_realm();

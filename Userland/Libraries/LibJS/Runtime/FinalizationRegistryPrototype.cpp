@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::cleanup_some)
 
     // 1. Let finalizationRegistry be the this value.
     // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
-    auto* finalization_registry = TRY(typed_this_object(vm));
+    auto finalization_registry = TRY(typed_this_object(vm));
 
     // 3. If callback is present and IsCallable(callback) is false, throw a TypeError exception.
     if (vm.argument_count() > 0 && !callback.is_function())
@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::register_)
 
     // 1. Let finalizationRegistry be the this value.
     // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
-    auto* finalization_registry = TRY(typed_this_object(vm));
+    auto finalization_registry = TRY(typed_this_object(vm));
 
     // 3. If target is not an Object, throw a TypeError exception.
     if (!can_be_held_weakly(target))
@@ -93,7 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(FinalizationRegistryPrototype::unregister)
 
     // 1. Let finalizationRegistry be the this value.
     // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
-    auto* finalization_registry = TRY(typed_this_object(vm));
+    auto finalization_registry = TRY(typed_this_object(vm));
 
     // 3. If unregisterToken is not an Object, throw a TypeError exception.
     if (!can_be_held_weakly(unregister_token))

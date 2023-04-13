@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(SegmenterPrototype::resolved_options)
 
     // 1. Let segmenter be the this value.
     // 2. Perform ? RequireInternalSlot(segmenter, [[InitializedSegmenter]]).
-    auto* segmenter = TRY(typed_this_object(vm));
+    auto segmenter = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());
@@ -64,13 +64,13 @@ JS_DEFINE_NATIVE_FUNCTION(SegmenterPrototype::segment)
 
     // 1. Let segmenter be the this value.
     // 2. Perform ? RequireInternalSlot(segmenter, [[InitializedSegmenter]]).
-    auto* segmenter = TRY(typed_this_object(vm));
+    auto segmenter = TRY(typed_this_object(vm));
 
     // 3. Let string be ? ToString(string).
     auto string = TRY(vm.argument(0).to_utf16_string(vm));
 
     // 4. Return ! CreateSegmentsObject(segmenter, string).
-    return Segments::create(realm, *segmenter, move(string));
+    return Segments::create(realm, segmenter, move(string));
 }
 
 }

@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 4. If value is -0𝔽, set value to +0𝔽.
     if (value.is_negative_zero())
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
 {
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. For each element e of S.[[SetData]], do
     //     a. Replace the element of S.[[SetData]] whose value is e with an element whose value is empty.
@@ -97,7 +97,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. For each element e of S.[[SetData]], do
     //     a. If e is not empty and SameValueZero(e, value) is true, then
@@ -113,10 +113,10 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::entries)
     auto& realm = *vm.current_realm();
 
     // 1. Let S be the this value.
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 2. Return ? CreateSetIterator(S, key+value).
-    return SetIterator::create(realm, *set, Object::PropertyKind::KeyAndValue);
+    return SetIterator::create(realm, set, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.2.3.6 Set.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-set.prototype.foreach
@@ -127,7 +127,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
     if (!callback_fn.is_function())
@@ -162,7 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. For each element e of S.[[SetData]], do
     //     a. If e is not empty and SameValueZero(e, value) is true, return true.
@@ -177,10 +177,10 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::values)
 
     // 1. Let S be the this value.
     // NOTE: CreateSetIterator checks the presence of a [[SetData]] slot, so we can do this here.
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 2. Return ? CreateSetIterator(S, value).
-    return SetIterator::create(realm, *set, Object::PropertyKind::Value);
+    return SetIterator::create(realm, set, Object::PropertyKind::Value);
 }
 
 // 24.2.3.9 get Set.prototype.size, https://tc39.es/ecma262/#sec-get-set.prototype.size
@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::size_getter)
 {
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let count be 0.
     // 4. For each element e of S.[[SetData]], do
@@ -273,7 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::union_)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
@@ -322,7 +322,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::intersection)
 
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
@@ -400,7 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::difference)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
@@ -469,7 +469,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::symmetric_difference)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
@@ -524,7 +524,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_subset_of)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
@@ -555,7 +555,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_superset_of)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));
@@ -599,7 +599,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_disjoint_from)
 {
     // 1. Let O be the this value.
     // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
-    auto* set = TRY(typed_this_object(vm));
+    auto set = TRY(typed_this_object(vm));
 
     // 3. Let otherRec be ? GetSetRecord(other).
     auto other_record = TRY(get_set_record(vm, vm.argument(0)));

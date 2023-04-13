@@ -31,7 +31,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakRefPrototype::deref)
 {
     // 1. Let weakRef be the this value.
     // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
-    auto* weak_ref = TRY(typed_this_object(vm));
+    auto weak_ref = TRY(typed_this_object(vm));
 
     // 3. Return WeakRefDeref(weakRef).
     weak_ref->update_execution_generation();

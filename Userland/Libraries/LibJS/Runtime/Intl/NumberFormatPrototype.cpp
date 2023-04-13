@@ -48,13 +48,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
     // 3. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(vm));
+    auto number_format = TRY(typed_this_object(vm));
 
     // 4. If nf.[[BoundFormat]] is undefined, then
     if (!number_format->bound_format()) {
         // a. Let F be a new built-in function object as defined in Number Format Functions (15.1.4).
         // b. Set F.[[NumberFormat]] to nf.
-        auto bound_format = NumberFormatFunction::create(realm, *number_format);
+        auto bound_format = NumberFormatFunction::create(realm, number_format);
 
         // c. Set nf.[[BoundFormat]] to F.
         number_format->set_bound_format(bound_format);
@@ -71,13 +71,13 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_to_parts)
 
     // 1. Let nf be the this value.
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(vm));
+    auto number_format = TRY(typed_this_object(vm));
 
     // 3. Let x be ? ToIntlMathematicalValue(value).
     auto mathematical_value = TRY(to_intl_mathematical_value(vm, value));
 
     // 4. Return ? FormatNumericToParts(nf, x).
-    return TRY(format_numeric_to_parts(vm, *number_format, move(mathematical_value)));
+    return TRY(format_numeric_to_parts(vm, number_format, move(mathematical_value)));
 }
 
 // 15.3.5 Intl.NumberFormat.prototype.formatRange ( start, end ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.formatrange
@@ -88,7 +88,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
 
     // 1. Let nf be the this value.
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(vm));
+    auto number_format = TRY(typed_this_object(vm));
 
     // 3. If start is undefined or end is undefined, throw a TypeError exception.
     if (start.is_undefined())
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range)
     auto y = TRY(to_intl_mathematical_value(vm, end));
 
     // 6. Return ? FormatNumericRange(nf, x, y).
-    auto formatted = TRY(format_numeric_range(vm, *number_format, move(x), move(y)));
+    auto formatted = TRY(format_numeric_range(vm, number_format, move(x), move(y)));
     return PrimitiveString::create(vm, move(formatted));
 }
 
@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
 
     // 1. Let nf be the this value.
     // 2. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(vm));
+    auto number_format = TRY(typed_this_object(vm));
 
     // 3. If start is undefined or end is undefined, throw a TypeError exception.
     if (start.is_undefined())
@@ -130,7 +130,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::format_range_to_parts)
     auto y = TRY(to_intl_mathematical_value(vm, end));
 
     // 6. Return ? FormatNumericRangeToParts(nf, x, y).
-    return TRY(format_numeric_range_to_parts(vm, *number_format, move(x), move(y)));
+    return TRY(format_numeric_range_to_parts(vm, number_format, move(x), move(y)));
 }
 
 // 15.3.7 Intl.NumberFormat.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.numberformat.prototype.resolvedoptions
@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberFormatPrototype::resolved_options)
     // 2. If the implementation supports the normative optional constructor mode of 4.3 Note 1, then
     //     a. Set nf to ? UnwrapNumberFormat(nf).
     // 3. Perform ? RequireInternalSlot(nf, [[InitializedNumberFormat]]).
-    auto* number_format = TRY(typed_this_object(vm));
+    auto number_format = TRY(typed_this_object(vm));
 
     // 4. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());

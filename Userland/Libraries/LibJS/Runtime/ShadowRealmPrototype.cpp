@@ -38,7 +38,7 @@ JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::evaluate)
 
     // 1. Let O be this value.
     // 2. Perform ? ValidateShadowRealmObject(O).
-    auto* object = TRY(typed_this_object(vm));
+    auto object = TRY(typed_this_object(vm));
 
     // 3. If Type(sourceText) is not String, throw a TypeError exception.
     if (!source_text.is_string())
@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(ShadowRealmPrototype::import_value)
 
     // 1. Let O be this value.
     // 2. Perform ? ValidateShadowRealmObject(O).
-    auto* object = TRY(typed_this_object(vm));
+    auto object = TRY(typed_this_object(vm));
 
     // 3. Let specifierString be ? ToString(specifier).
     auto specifier_string = TRY(specifier.to_deprecated_string(vm));
