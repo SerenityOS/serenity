@@ -742,7 +742,7 @@ ThrowCompletionOr<Value> Value::to_number(VM& vm) const
 static Optional<BigInt*> string_to_bigint(VM& vm, StringView string);
 
 // 7.1.13 ToBigInt ( argument ), https://tc39.es/ecma262/#sec-tobigint
-ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
+ThrowCompletionOr<NonnullGCPtr<BigInt>> Value::to_bigint(VM& vm) const
 {
     // 1. Let prim be ? ToPrimitive(argument, number).
     auto primitive = TRY(to_primitive(vm, PreferredType::Number));
@@ -768,12 +768,12 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
     case BOOLEAN_TAG: {
         // Return 1n if prim is true and 0n if prim is false.
         auto value = primitive.as_bool() ? 1 : 0;
-        return BigInt::create(vm, Crypto::SignedBigInteger { value }).ptr();
+        return BigInt::create(vm, Crypto::SignedBigInteger { value });
     }
     // BigInt
     case BIGINT_TAG:
         // Return prim.
-        return &primitive.as_bigint();
+        return primitive.as_bigint();
     case STRING_TAG: {
         // 1. Let n be ! StringToBigInt(prim).
         auto bigint = string_to_bigint(vm, TRY(primitive.as_string().deprecated_string()));
@@ -783,7 +783,7 @@ ThrowCompletionOr<BigInt*> Value::to_bigint(VM& vm) const
             return vm.throw_completion<SyntaxError>(ErrorType::BigIntInvalidValue, primitive);
 
         // 3. Return n.
-        return bigint.release_value();
+        return *bigint.release_value();
     }
     // Symbol
     case SYMBOL_TAG:
@@ -866,7 +866,7 @@ static Optional<BigInt*> string_to_bigint(VM& vm, StringView string)
 ThrowCompletionOr<i64> Value::to_bigint_int64(VM& vm) const
 {
     // 1. Let n be ? ToBigInt(argument).
-    auto* bigint = TRY(to_bigint(vm));
+    auto bigint = TRY(to_bigint(vm));
 
     // 2. Let int64bit be ℝ(n) modulo 2^64.
     // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
@@ -877,7 +877,7 @@ ThrowCompletionOr<i64> Value::to_bigint_int64(VM& vm) const
 ThrowCompletionOr<u64> Value::to_bigint_uint64(VM& vm) const
 {
     // 1. Let n be ? ToBigInt(argument).
-    auto* bigint = TRY(to_bigint(vm));
+    auto bigint = TRY(to_bigint(vm));
 
     // 2. Let int64bit be ℝ(n) modulo 2^64.
     // 3. Return ℤ(int64bit).

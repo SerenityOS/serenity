@@ -374,7 +374,7 @@ public:
     ThrowCompletionOr<NonnullGCPtr<Object>> to_object(VM&) const;
     ThrowCompletionOr<Value> to_numeric(VM&) const;
     ThrowCompletionOr<Value> to_number(VM&) const;
-    ThrowCompletionOr<BigInt*> to_bigint(VM&) const;
+    ThrowCompletionOr<NonnullGCPtr<BigInt>> to_bigint(VM&) const;
     ThrowCompletionOr<i64> to_bigint_int64(VM&) const;
     ThrowCompletionOr<u64> to_bigint_uint64(VM&) const;
     ThrowCompletionOr<double> to_double(VM&) const;
