@@ -176,6 +176,77 @@ enum class ECCurveType : u8 {
     __ENUM_EC_CURVE_TYPES
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-8
+#define __ENUM_SUPPORTED_GROUPS                              \
+    _ENUM_KEY_VALUE(SECT163K1, 0x0001)                       \
+    _ENUM_KEY_VALUE(SECT163R1, 0x0002)                       \
+    _ENUM_KEY_VALUE(SECT163R2, 0x0003)                       \
+    _ENUM_KEY_VALUE(SECT193R1, 0x0004)                       \
+    _ENUM_KEY_VALUE(SECT193R2, 0x0005)                       \
+    _ENUM_KEY_VALUE(SECT233K1, 0x0006)                       \
+    _ENUM_KEY_VALUE(SECT233R1, 0x0007)                       \
+    _ENUM_KEY_VALUE(SECT239K1, 0x0008)                       \
+    _ENUM_KEY_VALUE(SECT283K1, 0x0009)                       \
+    _ENUM_KEY_VALUE(SECT283R1, 0x000a)                       \
+    _ENUM_KEY_VALUE(SECT409K1, 0x000b)                       \
+    _ENUM_KEY_VALUE(SECT409R1, 0x000c)                       \
+    _ENUM_KEY_VALUE(SECT571K1, 0x000d)                       \
+    _ENUM_KEY_VALUE(SECT571R1, 0x000e)                       \
+    _ENUM_KEY_VALUE(SECP160K1, 0x000f)                       \
+    _ENUM_KEY_VALUE(SECP160R1, 0x0010)                       \
+    _ENUM_KEY_VALUE(SECP160R2, 0x0011)                       \
+    _ENUM_KEY_VALUE(SECP192K1, 0x0012)                       \
+    _ENUM_KEY_VALUE(SECP192R1, 0x0013)                       \
+    _ENUM_KEY_VALUE(SECP224K1, 0x0014)                       \
+    _ENUM_KEY_VALUE(SECP224R1, 0x0015)                       \
+    _ENUM_KEY_VALUE(SECP256K1, 0x0016)                       \
+    _ENUM_KEY_VALUE(SECP256R1, 0x0017)                       \
+    _ENUM_KEY_VALUE(SECP384R1, 0x0018)                       \
+    _ENUM_KEY_VALUE(SECP521R1, 0x0019)                       \
+    _ENUM_KEY_VALUE(BRAINPOOLP256R1, 0x001a)                 \
+    _ENUM_KEY_VALUE(BRAINPOOLP384R1, 0x001b)                 \
+    _ENUM_KEY_VALUE(BRAINPOOLP512R1, 0x001c)                 \
+    _ENUM_KEY_VALUE(X25519, 0x001d)                          \
+    _ENUM_KEY_VALUE(X448, 0x001e)                            \
+    _ENUM_KEY_VALUE(BRAINPOOLP256R1TLS13, 0x001f)            \
+    _ENUM_KEY_VALUE(BRAINPOOLP384R1TLS13, 0x0020)            \
+    _ENUM_KEY_VALUE(BRAINPOOLP512R1TLS13, 0x0021)            \
+    _ENUM_KEY_VALUE(GC256A, 0x0022)                          \
+    _ENUM_KEY_VALUE(GC256B, 0x0023)                          \
+    _ENUM_KEY_VALUE(GC256C, 0x0024)                          \
+    _ENUM_KEY_VALUE(GC256D, 0x0025)                          \
+    _ENUM_KEY_VALUE(GC512A, 0x0026)                          \
+    _ENUM_KEY_VALUE(GC512B, 0x0027)                          \
+    _ENUM_KEY_VALUE(GC512C, 0x0028)                          \
+    _ENUM_KEY_VALUE(CURVESM2, 0x0029)                        \
+    _ENUM_KEY_VALUE(FFDHE2048, 0x0100)                       \
+    _ENUM_KEY_VALUE(FFDHE3072, 0x0101)                       \
+    _ENUM_KEY_VALUE(FFDHE4096, 0x0102)                       \
+    _ENUM_KEY_VALUE(FFDHE6144, 0x0103)                       \
+    _ENUM_KEY_VALUE(FFDHE8192, 0x0104)                       \
+    _ENUM_KEY_VALUE(ARBITRARY_EXPLICIT_PRIME_CURVES, 0xff01) \
+    _ENUM_KEY_VALUE(ARBITRARY_EXPLICIT_CHAR2_CURVES, 0xff02) \
+    _ENUM_KEY_VALUE(GREASE_0, 0x0A0A)                        \
+    _ENUM_KEY_VALUE(GREASE_1, 0x1A1A)                        \
+    _ENUM_KEY_VALUE(GREASE_2, 0x2A2A)                        \
+    _ENUM_KEY_VALUE(GREASE_3, 0x3A3A)                        \
+    _ENUM_KEY_VALUE(GREASE_4, 0x4A4A)                        \
+    _ENUM_KEY_VALUE(GREASE_5, 0x5A5A)                        \
+    _ENUM_KEY_VALUE(GREASE_6, 0x6A6A)                        \
+    _ENUM_KEY_VALUE(GREASE_7, 0x7A7A)                        \
+    _ENUM_KEY_VALUE(GREASE_8, 0x8A8A)                        \
+    _ENUM_KEY_VALUE(GREASE_9, 0x9A9A)                        \
+    _ENUM_KEY_VALUE(GREASE_A, 0xAAAA)                        \
+    _ENUM_KEY_VALUE(GREASE_B, 0xBABA)                        \
+    _ENUM_KEY_VALUE(GREASE_C, 0xCACA)                        \
+    _ENUM_KEY_VALUE(GREASE_D, 0xDADA)                        \
+    _ENUM_KEY_VALUE(GREASE_E, 0xEAEA)                        \
+    _ENUM_KEY_VALUE(GREASE_F, 0xFAFA)
+
+enum class SupportedGroup : u16 {
+    __ENUM_SUPPORTED_GROUPS
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 

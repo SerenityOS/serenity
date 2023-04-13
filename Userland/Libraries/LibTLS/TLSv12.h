@@ -211,10 +211,10 @@ struct Options {
         { HashAlgorithm::SHA384, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
-    OPTION_WITH_DEFAULTS(Vector<NamedCurve>, elliptic_curves,
-        NamedCurve::x25519,
-        NamedCurve::secp256r1,
-        NamedCurve::x448)
+    OPTION_WITH_DEFAULTS(Vector<SupportedGroup>, elliptic_curves,
+        SupportedGroup::X25519,
+        SupportedGroup::SECP256R1,
+        SupportedGroup::X448)
     OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::Uncompressed)
 
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
