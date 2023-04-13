@@ -113,11 +113,6 @@ enum class Error : i8 {
     OutOfMemory = -23,
 };
 
-enum class AlertLevel : u8 {
-    Warning = 0x01,
-    Critical = 0x02
-};
-
 enum HandshakeType {
     HelloRequest = 0x00,
     ClientHello = 0x01,

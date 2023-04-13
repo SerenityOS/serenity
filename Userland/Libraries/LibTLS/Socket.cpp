@@ -135,7 +135,7 @@ void TLSv12::setup_connection()
                 if (timeout_diff < m_max_wait_time_for_handshake_in_seconds + 1) {
                     // The server did not respond fast enough,
                     // time the connection out.
-                    alert(AlertLevel::Critical, AlertDescription::UserCanceled);
+                    alert(AlertLevel::FATAL, AlertDescription::UserCanceled);
                     m_context.tls_buffer.clear();
                     m_context.error_code = Error::TimedOut;
                     m_context.critical_error = (u8)Error::TimedOut;
@@ -317,7 +317,7 @@ ErrorOr<bool> TLSv12::flush()
 
 void TLSv12::close()
 {
-    alert(AlertLevel::Critical, AlertDescription::CloseNotify);
+    alert(AlertLevel::FATAL, AlertDescription::CloseNotify);
     // bye bye.
     m_context.connection_status = ConnectionStatus::Disconnected;
 }

@@ -54,6 +54,14 @@ enum class ProtocolVersion : u16 {
     __ENUM_PROTOCOL_VERSIONS
 };
 
+#define __ENUM_ALERT_LEVELS     \
+    _ENUM_KEY_VALUE(WARNING, 1) \
+    _ENUM_KEY_VALUE(FATAL, 2)
+
+enum class AlertLevel : u8 {
+    __ENUM_ALERT_LEVELS
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 
