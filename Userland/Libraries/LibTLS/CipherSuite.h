@@ -189,14 +189,6 @@ constexpr size_t cipher_key_size(CipherAlgorithm algorithm)
     }
 }
 
-enum class NamedCurve : u16 {
-    secp256r1 = 23,
-    secp384r1 = 24,
-    secp521r1 = 25,
-    x25519 = 29,
-    x448 = 30,
-};
-
 enum class ECPointFormat : u8 {
     Uncompressed = 0,
 };

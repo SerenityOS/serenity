@@ -11,7 +11,7 @@
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
-#include <LibTLS/CipherSuite.h>
+#include <LibTLS/Extensions.h>
 
 namespace TLS {
 
@@ -112,12 +112,12 @@ constexpr static Array<int, 4>
         }                                                                               \
     } while (0)
 
-static ErrorOr<NamedCurve> oid_to_curve(Vector<int> curve)
+static ErrorOr<SupportedGroup> oid_to_curve(Vector<int> curve)
 {
     if (curve == curve_ansip384r1)
-        return NamedCurve::secp384r1;
+        return SupportedGroup::SECP384R1;
     else if (curve == curve_prime256)
-        return NamedCurve::secp256r1;
+        return SupportedGroup::SECP256R1;
 
     return Error::from_string_view(TRY(String::formatted("Unknown curve oid {}", curve)));
 }
@@ -175,7 +175,7 @@ static ErrorOr<Crypto::UnsignedBigInteger> parse_serial_number(Crypto::ASN1::Dec
     return serial;
 }
 
-static ErrorOr<NamedCurve> parse_ec_parameters(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
+static ErrorOr<SupportedGroup> parse_ec_parameters(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)
 {
     // ECParameters ::= CHOICE {
     //     namedCurve      OBJECT IDENTIFIER
@@ -314,9 +314,9 @@ static ErrorOr<CertificateKeyAlgorithm> parse_algorithm_identifier(Crypto::ASN1:
         auto ec_parameters = TRY(parse_ec_parameters(decoder, current_scope));
         EXIT_SCOPE();
 
-        if (ec_parameters == NamedCurve::secp256r1)
+        if (ec_parameters == SupportedGroup::SECP256R1)
             return CertificateKeyAlgorithm::ECDSA_SECP256R1;
-        else if (ec_parameters == NamedCurve::secp384r1)
+        else if (ec_parameters == SupportedGroup::SECP384R1)
             return CertificateKeyAlgorithm::ECDSA_SECP384R1;
     }
 

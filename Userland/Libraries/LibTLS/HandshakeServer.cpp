@@ -301,18 +301,18 @@ ssize_t TLSv12::handle_ecdhe_rsa_server_key_exchange(ReadonlyBytes buffer)
     if (curve_type != (u8)ECCurveType::NAMED_CURVE)
         return (i8)Error::NotUnderstood;
 
-    auto curve = static_cast<NamedCurve>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4))));
+    auto curve = static_cast<SupportedGroup>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(4))));
     if (!m_context.options.elliptic_curves.contains_slow(curve))
         return (i8)Error::NotUnderstood;
 
-    switch ((NamedCurve)curve) {
-    case NamedCurve::x25519:
+    switch ((SupportedGroup)curve) {
+    case SupportedGroup::X25519:
         m_context.server_key_exchange_curve = make<Crypto::Curves::X25519>();
         break;
-    case NamedCurve::x448:
+    case SupportedGroup::X448:
         m_context.server_key_exchange_curve = make<Crypto::Curves::X448>();
         break;
-    case NamedCurve::secp256r1:
+    case SupportedGroup::SECP256R1:
         m_context.server_key_exchange_curve = make<Crypto::Curves::SECP256r1>();
         break;
     default:
