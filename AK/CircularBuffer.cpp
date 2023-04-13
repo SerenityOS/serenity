@@ -220,7 +220,13 @@ ErrorOr<size_t> CircularBuffer::copy_from_seekback(size_t distance, size_t lengt
         if (next_span.size() == 0)
             break;
 
-        remaining_length -= write(next_span.trim(remaining_length));
+        auto length_written = write(next_span.trim(remaining_length));
+        remaining_length -= length_written;
+
+        // If we copied right from the end of the seekback area (i.e. our length is larger than the distance)
+        // and the last copy was one complete "chunk", we can now double the distance to copy twice as much data in one go.
+        if (remaining_length > distance && length_written == distance)
+            distance *= 2;
     }
 
     return length - remaining_length;
