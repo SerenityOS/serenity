@@ -59,6 +59,8 @@ private:
     // (8.5.1) Intra prediction process
     DecoderErrorOr<void> predict_intra(u8 plane, BlockContext const& block_context, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TransformSize transform_size, u32 block_index);
 
+    DecoderErrorOr<void> prepare_referenced_frame(Gfx::Size<u32> frame_size, u8 reference_frame_index);
+
     // (8.5.1) Inter prediction process
     DecoderErrorOr<void> predict_inter(u8 plane, BlockContext const& block_context, u32 x, u32 y, u32 width, u32 height, u32 block_index);
     // (8.5.2.1) Motion vector selection process

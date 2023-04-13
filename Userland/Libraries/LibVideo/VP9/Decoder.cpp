@@ -766,19 +766,12 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_co
     };
 }
 
-DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& block_context, ReferenceIndex reference_index, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
+static constexpr i32 maximum_scaled_step = 80;
+
+DecoderErrorOr<void> Decoder::prepare_referenced_frame(Gfx::Size<u32> frame_size, u8 reference_frame_index)
 {
-    VERIFY(width <= maximum_block_dimensions && height <= maximum_block_dimensions);
-    // 2. The motion vector selection process in section 8.5.2.1 is invoked with plane, refList, blockIdx as inputs
-    // and the output being the motion vector mv.
-    auto motion_vector = select_motion_vector(plane, block_context, reference_index, block_index);
+    ReferenceFrame& reference_frame = m_parser->m_reference_frames[reference_frame_index];
 
-    // 3. The motion vector clamping process in section 8.5.2.2 is invoked with plane, mv as inputs and the output
-    // being the clamped motion vector clampedMv
-    auto clamped_vector = clamp_motion_vector(plane, block_context, block_row, block_column, motion_vector);
-
-    // 4. The motion vector scaling process in section 8.5.2.3 is invoked with plane, refList, x, y, clampedMv as
-    // inputs and the output being the initial location startX, startY, and the step sizes stepX, stepY.
     // 8.5.2.3 Motion vector scaling process
     // The inputs to this process are:
     // − a variable plane specifying which plane is being predicted,
@@ -792,22 +785,17 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     // vector. The sampling locations are also adjusted to compensate for any difference in the size of the reference
     // frame compared to the current frame.
 
-    // A variable refIdx specifying which reference frame is being used is set equal to
-    // ref_frame_idx[ ref_frame[ refList ] - LAST_FRAME ].
-    auto reference_frame_index = block_context.frame_context.reference_frame_indices[block_context.reference_frame_types[reference_index] - ReferenceFrameType::LastFrame];
-
     // It is a requirement of bitstream conformance that all the following conditions are satisfied:
     // − 2 * FrameWidth >= RefFrameWidth[ refIdx ]
     // − 2 * FrameHeight >= RefFrameHeight[ refIdx ]
     // − FrameWidth <= 16 * RefFrameWidth[ refIdx ]
     // − FrameHeight <= 16 * RefFrameHeight[ refIdx ]
-    auto& reference_frame = m_parser->m_reference_frames[reference_frame_index];
     if (!reference_frame.is_valid())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Attempted to use reference frame {} that has not been saved", reference_frame_index);
-    auto double_frame_size = block_context.frame_context.size().scaled_by(2);
+    auto double_frame_size = frame_size.scaled_by(2);
     if (double_frame_size.width() < reference_frame.size.width() || double_frame_size.height() < reference_frame.size.height())
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too small relative to reference frame {}", reference_frame_index);
-    if (!reference_frame.size.scaled_by(16).contains(block_context.frame_context.size()))
+    if (!reference_frame.size.scaled_by(16).contains(frame_size))
         return DecoderError::format(DecoderErrorCategory::Corrupted, "Inter frame size is too large relative to reference frame {}", reference_frame_index);
 
     // FIXME: Convert all the operations in this function to vector operations supported by
@@ -817,8 +805,74 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     // A variable yScale is set equal to (RefFrameHeight[ refIdx ] << REF_SCALE_SHIFT) / FrameHeight.
     // (xScale and yScale specify the size of the reference frame relative to the current frame in units where 16 is
     // equivalent to the reference frame having the same size.)
-    i32 x_scale = (reference_frame.size.width() << REF_SCALE_SHIFT) / block_context.frame_context.size().width();
-    i32 y_scale = (reference_frame.size.height() << REF_SCALE_SHIFT) / block_context.frame_context.size().height();
+    i32 x_scale = (reference_frame.size.width() << REF_SCALE_SHIFT) / frame_size.width();
+    i32 y_scale = (reference_frame.size.height() << REF_SCALE_SHIFT) / frame_size.height();
+
+    // The output variable stepX is set equal to (16 * xScale) >> REF_SCALE_SHIFT.
+    // The output variable stepY is set equal to (16 * yScale) >> REF_SCALE_SHIFT.
+    i32 scaled_step_x = (16 * x_scale) >> REF_SCALE_SHIFT;
+    i32 scaled_step_y = (16 * y_scale) >> REF_SCALE_SHIFT;
+
+    // 5. The block inter prediction process in section 8.5.2.4 is invoked with plane, refList, startX, startY, stepX,
+    // stepY, w, h as inputs and the output is assigned to the 2D array preds[ refList ].
+
+    // 8.5.2.4 Block inter prediction process
+    // The inputs to this process are:
+    // − a variable plane,
+    // − a variable refList specifying that we should predict from ref_frame[ refList ],
+    // − variables x and y giving the block location in units of 1/16 th of a sample,
+    // − variables xStep and yStep giving the step size in units of 1/16 th of a sample. (These will be at most equal
+    // to 80 due to the restrictions on scaling between reference frames.)
+    VERIFY(scaled_step_x <= maximum_scaled_step && scaled_step_y <= maximum_scaled_step);
+    // − variables w and h giving the width and height of the block in units of samples
+    // The output from this process is the 2D array named pred containing inter predicted samples.
+
+    reference_frame.x_scale = x_scale;
+    reference_frame.y_scale = x_scale;
+    reference_frame.scaled_step_x = scaled_step_x;
+    reference_frame.scaled_step_y = scaled_step_y;
+
+    return {};
+}
+
+DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& block_context, ReferenceIndex reference_index, u32 block_row, u32 block_column, u32 x, u32 y, u32 width, u32 height, u32 block_index, Span<u16> block_buffer)
+{
+    VERIFY(width <= maximum_block_dimensions && height <= maximum_block_dimensions);
+    // 2. The motion vector selection process in section 8.5.2.1 is invoked with plane, refList, blockIdx as inputs
+    // and the output being the motion vector mv.
+    auto motion_vector = select_motion_vector(plane, block_context, reference_index, block_index);
+
+    // 3. The motion vector clamping process in section 8.5.2.2 is invoked with plane, mv as inputs and the output
+    // being the clamped motion vector clampedMv
+    auto clamped_vector = clamp_motion_vector(plane, block_context, block_row, block_column, motion_vector);
+
+    // 4. The motion vector scaling process in section 8.5.2.3 is invoked with plane, refList, x, y, clampedMv as
+    // inputs and the output being the initial location startX, startY, and the step sizes stepX, stepY.
+
+    // 8.5.2.3 Motion vector scaling process
+    // The inputs to this process are:
+    // − a variable plane specifying which plane is being predicted,
+    // − a variable refList specifying that we should scale to match reference frame ref_frame[ refList ],
+    // − variables x and y specifying the location of the top left sample in the CurrFrame[ plane ] array of the region
+    // to be predicted,
+    // − a variable clampedMv specifying the clamped motion vector.
+    // The outputs of this process are the variables startX and startY giving the reference block location in units of
+    // 1/16 th of a sample, and variables xStep and yStep giving the step size in units of 1/16 th of a sample.
+    // This process is responsible for computing the sampling locations in the reference frame based on the motion
+    // vector. The sampling locations are also adjusted to compensate for any difference in the size of the reference
+    // frame compared to the current frame.
+
+    // NOTE: Some of this is done in advance by Decoder::prepare_referenced_frame().
+
+    // A variable refIdx specifying which reference frame is being used is set equal to
+    // ref_frame_idx[ ref_frame[ refList ] - LAST_FRAME ].
+    auto reference_frame_index = block_context.frame_context.reference_frame_indices[block_context.reference_frame_types[reference_index] - ReferenceFrameType::LastFrame];
+    auto const& reference_frame = m_parser->m_reference_frames[reference_frame_index];
+
+    auto x_scale = reference_frame.x_scale;
+    auto y_scale = reference_frame.x_scale;
+    auto scaled_step_x = reference_frame.scaled_step_x;
+    auto scaled_step_y = reference_frame.scaled_step_y;
 
     // The variable baseX is set equal to (x * xScale) >> REF_SCALE_SHIFT.
     // The variable baseY is set equal to (y * yScale) >> REF_SCALE_SHIFT.
@@ -846,35 +900,15 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     i32 scaled_vector_x = ((clamped_vector.column() * x_scale) >> REF_SCALE_SHIFT) + frac_x;
     i32 scaled_vector_y = ((clamped_vector.row() * y_scale) >> REF_SCALE_SHIFT) + frac_y;
 
-    // The output variable stepX is set equal to (16 * xScale) >> REF_SCALE_SHIFT.
-    // The output variable stepY is set equal to (16 * yScale) >> REF_SCALE_SHIFT.
-    i32 scaled_step_x = (16 * x_scale) >> REF_SCALE_SHIFT;
-    i32 scaled_step_y = (16 * y_scale) >> REF_SCALE_SHIFT;
-
     // The output variable startX is set equal to (baseX << SUBPEL_BITS) + dX.
     // The output variable startY is set equal to (baseY << SUBPEL_BITS) + dY.
     i32 offset_scaled_block_x = (base_x << SUBPEL_BITS) + scaled_vector_x;
     i32 offset_scaled_block_y = (base_y << SUBPEL_BITS) + scaled_vector_y;
 
-    // 5. The block inter prediction process in section 8.5.2.4 is invoked with plane, refList, startX, startY, stepX,
-    // stepY, w, h as inputs and the output is assigned to the 2D array preds[ refList ].
-
-    // 8.5.2.4 Block inter prediction process
-    // The inputs to this process are:
-    // − a variable plane,
-    // − a variable refList specifying that we should predict from ref_frame[ refList ],
-    // − variables x and y giving the block location in units of 1/16 th of a sample,
-    // − variables xStep and yStep giving the step size in units of 1/16 th of a sample. (These will be at most equal
-    // to 80 due to the restrictions on scaling between reference frames.)
-    static constexpr i32 MAX_SCALED_STEP = 80;
-    VERIFY(scaled_step_x <= MAX_SCALED_STEP && scaled_step_y <= MAX_SCALED_STEP);
-    // − variables w and h giving the width and height of the block in units of samples
-    // The output from this process is the 2D array named pred containing inter predicted samples.
-
     // A variable ref specifying the reference frame contents is set equal to FrameStore[ refIdx ].
     auto& reference_frame_buffer = reference_frame.frame_planes[plane];
     auto reference_frame_width = reference_frame.size.width() >> subsampling_x;
-    auto reference_frame_buffer_at = [&](u32 row, u32 column) -> u16& {
+    auto reference_frame_buffer_at = [&](u32 row, u32 column) -> u16 const& {
         return reference_frame_buffer[row * reference_frame_width + column];
     };
 
@@ -890,7 +924,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
     // The variable intermediateHeight specifying the height required for the intermediate array is set equal to (((h -
     // 1) * yStep + 15) >> 4) + 8.
-    static constexpr auto maximum_intermediate_height = (((maximum_block_dimensions - 1) * MAX_SCALED_STEP + 15) >> 4) + 8;
+    static constexpr auto maximum_intermediate_height = (((maximum_block_dimensions - 1) * maximum_scaled_step + 15) >> 4) + 8;
     auto intermediate_height = (((height - 1) * scaled_step_y + 15) >> 4) + 8;
     VERIFY(intermediate_height <= maximum_intermediate_height);
     // The sub-sample interpolation is effected via two one-dimensional convolutions. First a horizontal filter is used

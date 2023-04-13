@@ -220,6 +220,9 @@ DecoderErrorOr<void> Parser::uncompressed_header(FrameContext& frame_context)
             render_size = TRY(parse_render_size(frame_context.bit_stream, frame_size));
             frame_context.high_precision_motion_vectors_allowed = TRY_READ(frame_context.bit_stream.read_bit());
             frame_context.interpolation_filter = TRY(read_interpolation_filter(frame_context.bit_stream));
+            for (auto i = 0; i < REFS_PER_FRAME; i++) {
+                TRY(m_decoder.prepare_referenced_frame(frame_size, frame_context.reference_frame_indices[i]));
+            }
         }
     }
 
