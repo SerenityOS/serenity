@@ -149,6 +149,28 @@ Vector<int> TraversableNavigable::get_all_used_history_steps() const
     return sorted_steps;
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-the-history-object-length-and-index
+TraversableNavigable::HistoryObjectLengthAndIndex TraversableNavigable::get_the_history_object_length_and_index(int step) const
+{
+    // 1. Let steps be the result of getting all used history steps within traversable.
+    auto steps = get_all_used_history_steps();
+
+    // 2. Let scriptHistoryLength be the size of steps.
+    auto script_history_length = steps.size();
+
+    // 3. Assert: steps contains step.
+    VERIFY(steps.contains_slow(step));
+
+    // 4. Let scriptHistoryIndex be the index of step in steps.
+    auto script_history_index = *steps.find_first_index(step);
+
+    // 5. Return (scriptHistoryLength, scriptHistoryIndex).
+    return HistoryObjectLengthAndIndex {
+        .script_history_length = script_history_length,
+        .script_history_index = script_history_index
+    };
+}
+
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#clear-the-forward-session-history
 void TraversableNavigable::clear_the_forward_session_history()
 {
