@@ -907,10 +907,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
     // A variable ref specifying the reference frame contents is set equal to FrameStore[ refIdx ].
     auto& reference_frame_buffer = reference_frame.frame_planes[plane];
-    auto reference_frame_width = reference_frame.size.width() >> subsampling_x;
-    auto reference_frame_buffer_at = [&](u32 row, u32 column) -> u16 const& {
-        return reference_frame_buffer[row * reference_frame_width + column];
-    };
+    auto reference_frame_width = (reference_frame.size.width() >> subsampling_x) + (MV_BORDER * 2);
 
     auto block_buffer_at = [&](u32 row, u32 column) -> u16& {
         return block_buffer[row * width + column];
@@ -919,8 +916,8 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     // The variable lastX is set equal to ( (RefFrameWidth[ refIdx ] + subX) >> subX) - 1.
     // The variable lastY is set equal to ( (RefFrameHeight[ refIdx ] + subY) >> subY) - 1.
     // (lastX and lastY specify the coordinates of the bottom right sample of the reference plane.)
-    i32 scaled_right = ((reference_frame.size.width() + subsampling_x) >> subsampling_x) - 1;
-    i32 scaled_bottom = ((reference_frame.size.height() + subsampling_y) >> subsampling_y) - 1;
+    // Ad-hoc: These variables are not needed, since the reference frame is expanded to contain the samples that
+    // may be referenced by motion vectors on the edge of the frame.
 
     // The variable intermediateHeight specifying the height required for the intermediate array is set equal to (((h -
     // 1) * yStep + 15) >> 4) + 8.
@@ -940,18 +937,19 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     };
 
     // Check our reference frame bounds before starting the loop.
-    reference_frame_buffer_at(scaled_bottom, scaled_right);
+    auto last_possible_reference = (MV_BORDER + (offset_scaled_block_y >> 4) + static_cast<i32>(intermediate_height - 1) - 3) * reference_frame_width;
+    VERIFY(reference_frame_buffer.size() >= last_possible_reference);
 
     for (auto row = 0u; row < intermediate_height; row++) {
-        auto clamped_row = static_cast<size_t>(clip_3(0, scaled_bottom, (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3));
-        u16 const* scan_line = &reference_frame_buffer_at(clamped_row, 0);
+        auto reference_row = (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3;
+        u16 const* scan_line = &reference_frame_buffer[static_cast<size_t>(MV_BORDER + reference_row) * reference_frame_width];
 
         for (auto column = 0u; column < width; column++) {
             auto samples_start = offset_scaled_block_x + static_cast<i32>(scaled_step_x * column);
 
             i32 accumulated_samples = 0;
             for (auto t = 0u; t < 8u; t++) {
-                auto sample = scan_line[clip_3(0, scaled_right, (samples_start >> 4) + static_cast<i32>(t) - 3)];
+                auto sample = scan_line[MV_BORDER + (samples_start >> 4) + static_cast<i32>(t) - 3];
                 accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
             }
             intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
@@ -1810,13 +1808,35 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
 
                 auto const& original_buffer = get_output_buffer(plane);
                 auto& frame_store_buffer = reference_frame.frame_planes[plane];
-                frame_store_buffer.resize_and_keep_capacity(width * height);
-                VERIFY(original_buffer.size() >= frame_store_buffer.size());
+                auto frame_store_width = width + MV_BORDER * 2;
+                auto frame_store_height = height + MV_BORDER * 2;
+                frame_store_buffer.resize_and_keep_capacity(frame_store_width * frame_store_height);
 
-                for (auto y = 0u; y < height; y++) {
-                    auto const* source = &original_buffer[index_from_row_and_column(y, 0, stride)];
-                    auto* destination = &frame_store_buffer[index_from_row_and_column(y, 0, width)];
+                VERIFY(original_buffer.size() >= width * height);
+                for (auto destination_y = 0u; destination_y < frame_store_height; destination_y++) {
+                    // Offset the source row by the motion vector border and then clamp it to the range of 0...height.
+                    // This will create an extended border on the top and bottom of the reference frame to avoid having to bounds check
+                    // inter-prediction.
+                    auto source_y = min(destination_y >= MV_BORDER ? destination_y - MV_BORDER : 0, height - 1);
+                    auto const* source = &original_buffer[index_from_row_and_column(source_y, 0, stride)];
+                    auto* destination = &frame_store_buffer[index_from_row_and_column(destination_y, MV_BORDER, frame_store_width)];
                     AK::TypedTransfer<RemoveReference<decltype(*destination)>>::copy(destination, source, width);
+                }
+
+                for (auto destination_y = 0u; destination_y < frame_store_height; destination_y++) {
+                    // Stretch the leftmost samples out into the border.
+                    auto sample = frame_store_buffer[index_from_row_and_column(destination_y, MV_BORDER, frame_store_width)];
+
+                    for (auto destination_x = 0u; destination_x < MV_BORDER; destination_x++) {
+                        frame_store_buffer[index_from_row_and_column(destination_y, destination_x, frame_store_width)] = sample;
+                    }
+
+                    // Stretch the rightmost samples out into the border.
+                    sample = frame_store_buffer[index_from_row_and_column(destination_y, MV_BORDER + width - 1, frame_store_width)];
+
+                    for (auto destination_x = MV_BORDER + width; destination_x < frame_store_width; destination_x++) {
+                        frame_store_buffer[index_from_row_and_column(destination_y, destination_x, frame_store_width)] = sample;
+                    }
                 }
             }
         }
