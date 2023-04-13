@@ -33,6 +33,15 @@ static void decode_video(StringView path, size_t expected_frame_count)
         auto block = block_result.release_value();
         for (auto const& frame : block.frames()) {
             MUST(vp9_decoder.receive_sample(frame));
+            while (true) {
+                auto frame_result = vp9_decoder.get_decoded_frame();
+                if (frame_result.is_error()) {
+                    if (frame_result.error().category() == Video::DecoderErrorCategory::NeedsMoreInput) {
+                        break;
+                    }
+                    VERIFY_NOT_REACHED();
+                }
+            }
             frame_count++;
         }
     }
