@@ -17,7 +17,7 @@ namespace TLS {
 ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 {
     PacketBuilder builder(ContentType::ALERT, (u16)m_context.options.version);
-    builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
+    builder.append((u8)(critical ? AlertLevel::FATAL : AlertLevel::WARNING));
     builder.append(code);
 
     if (critical)
@@ -31,7 +31,7 @@ ByteBuffer TLSv12::build_alert(bool critical, u8 code)
 
 void TLSv12::alert(AlertLevel level, AlertDescription code)
 {
-    auto the_alert = build_alert(level == AlertLevel::Critical, (u8)code);
+    auto the_alert = build_alert(level == AlertLevel::FATAL, (u8)code);
     write_packet(the_alert);
     MUST(flush());
 }
@@ -531,7 +531,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             auto code = plain[1];
             dbgln_if(TLS_DEBUG, "Alert received with level {}, code {}", level, code);
 
-            if (level == (u8)AlertLevel::Critical) {
+            if (level == (u8)AlertLevel::FATAL) {
                 dbgln("We were alerted of a critical error: {} ({})", code, alert_name((AlertDescription)code));
                 m_context.critical_error = code;
                 try_disambiguate_error();
@@ -540,7 +540,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
             if (code == (u8)AlertDescription::CloseNotify) {
                 res += 2;
-                alert(AlertLevel::Critical, AlertDescription::CloseNotify);
+                alert(AlertLevel::FATAL, AlertDescription::CloseNotify);
                 if (!m_context.cipher_spec_set) {
                     // AWS CloudFront hits this.
                     dbgln("Server sent a close notify and we haven't agreed on a cipher suite. Treating it as a handshake failure.");
