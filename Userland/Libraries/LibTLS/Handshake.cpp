@@ -22,7 +22,7 @@ ByteBuffer TLSv12::build_hello()
 
     auto packet_version = (u16)m_context.options.version;
     auto version = (u16)m_context.options.version;
-    PacketBuilder builder { MessageType::Handshake, packet_version };
+    PacketBuilder builder { ContentType::HANDSHAKE, packet_version };
 
     builder.append((u8)ClientHello);
 
@@ -152,7 +152,7 @@ ByteBuffer TLSv12::build_hello()
 
 ByteBuffer TLSv12::build_change_cipher_spec()
 {
-    PacketBuilder builder { MessageType::ChangeCipher, m_context.options.version, 64 };
+    PacketBuilder builder { ContentType::CHANGE_CIPHER_SPEC, m_context.options.version, 64 };
     builder.append((u8)1);
     auto packet = builder.build();
     update_packet(packet);
@@ -162,7 +162,7 @@ ByteBuffer TLSv12::build_change_cipher_spec()
 
 ByteBuffer TLSv12::build_handshake_finished()
 {
-    PacketBuilder builder { MessageType::Handshake, m_context.options.version, 12 + 64 };
+    PacketBuilder builder { ContentType::HANDSHAKE, m_context.options.version, 12 + 64 };
     builder.append((u8)HandshakeType::Finished);
 
     // RFC 5246 section 7.4.9: "In previous versions of TLS, the verify_data was always 12 octets

@@ -61,7 +61,7 @@ ErrorOr<size_t> TLSv12::write_some(ReadonlyBytes bytes)
     }
 
     for (size_t offset = 0; offset < bytes.size(); offset += MaximumApplicationDataChunkSize) {
-        PacketBuilder builder { MessageType::ApplicationData, m_context.options.version, bytes.size() - offset };
+        PacketBuilder builder { ContentType::APPLICATION_DATA, m_context.options.version, bytes.size() - offset };
         builder.append(bytes.slice(offset, min(bytes.size() - offset, MaximumApplicationDataChunkSize)));
         auto packet = builder.build();
 
