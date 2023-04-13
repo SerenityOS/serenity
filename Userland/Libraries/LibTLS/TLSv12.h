@@ -240,7 +240,7 @@ struct Options {
         return move(*this);                  \
     }
 
-    OPTION_WITH_DEFAULTS(Version, version, Version::V12)
+    OPTION_WITH_DEFAULTS(ProtocolVersion, version, ProtocolVersion::VERSION_1_2)
     OPTION_WITH_DEFAULTS(Vector<SignatureAndHashAlgorithm>, supported_signature_algorithms,
         { HashAlgorithm::SHA512, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA384, SignatureAlgorithm::RSA },
@@ -419,9 +419,9 @@ public:
         }
     }
 
-    bool supports_version(Version v) const
+    bool supports_version(ProtocolVersion v) const
     {
-        return v == Version::V12;
+        return v == ProtocolVersion::VERSION_1_2;
     }
 
     void alert(AlertLevel, AlertDescription);

@@ -169,7 +169,7 @@ void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
         dbgln("Server mode not supported");
         return;
     } else {
-        *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)Version::V12);
+        *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)ProtocolVersion::VERSION_1_2);
     }
 
     auto premaster_key_result = ByteBuffer::copy(random_bytes, bytes);
