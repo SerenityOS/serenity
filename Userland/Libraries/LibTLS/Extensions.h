@@ -62,6 +62,37 @@ enum class AlertLevel : u8 {
     __ENUM_ALERT_LEVELS
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-7
+#define __ENUM_HANDSHAKE_TYPES                        \
+    _ENUM_KEY_VALUE(HELLO_REQUEST_RESERVED, 0)        \
+    _ENUM_KEY_VALUE(CLIENT_HELLO, 1)                  \
+    _ENUM_KEY_VALUE(SERVER_HELLO, 2)                  \
+    _ENUM_KEY_VALUE(HELLO_VERIFY_REQUEST_RESERVED, 3) \
+    _ENUM_KEY_VALUE(NEW_SESSION_TICKET, 4)            \
+    _ENUM_KEY_VALUE(END_OF_EARLY_DATA, 5)             \
+    _ENUM_KEY_VALUE(HELLO_RETRY_REQUEST_RESERVED, 6)  \
+    _ENUM_KEY_VALUE(ENCRYPTED_EXTENSIONS, 8)          \
+    _ENUM_KEY_VALUE(REQUEST_CONNECTION_ID, 9)         \
+    _ENUM_KEY_VALUE(NEW_CONNECTION_ID, 10)            \
+    _ENUM_KEY_VALUE(CERTIFICATE, 11)                  \
+    _ENUM_KEY_VALUE(SERVER_KEY_EXCHANGE_RESERVED, 12) \
+    _ENUM_KEY_VALUE(CERTIFICATE_REQUEST, 13)          \
+    _ENUM_KEY_VALUE(SERVER_HELLO_DONE_RESERVED, 14)   \
+    _ENUM_KEY_VALUE(CERTIFICATE_VERIFY, 15)           \
+    _ENUM_KEY_VALUE(CLIENT_KEY_EXCHANGE_RESERVED, 16) \
+    _ENUM_KEY_VALUE(FINISHED, 20)                     \
+    _ENUM_KEY_VALUE(CERTIFICATE_URL_RESERVED, 21)     \
+    _ENUM_KEY_VALUE(CERTIFICATE_STATUS_RESERVED, 22)  \
+    _ENUM_KEY_VALUE(SUPPLEMENTAL_DATA_RESERVED, 23)   \
+    _ENUM_KEY_VALUE(KEY_UPDATE, 24)                   \
+    _ENUM_KEY_VALUE(COMPRESSED_CERTIFICATE, 25)       \
+    _ENUM_KEY_VALUE(EKT_KEY, 26)                      \
+    _ENUM_KEY_VALUE(MESSAGE_HASH, 254)
+
+enum class HandshakeType : u8 {
+    __ENUM_HANDSHAKE_TYPES
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 

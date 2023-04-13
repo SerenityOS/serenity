@@ -338,7 +338,7 @@ ByteBuffer TLSv12::build_certificate()
         }
     }
 
-    builder.append((u8)HandshakeType::CertificateMessage);
+    builder.append((u8)HandshakeType::CERTIFICATE);
 
     if (!total_certificate_size) {
         dbgln_if(TLS_DEBUG, "No certificates, sending empty certificate message");
@@ -370,7 +370,7 @@ ByteBuffer TLSv12::build_client_key_exchange()
     }
 
     PacketBuilder builder { ContentType::HANDSHAKE, m_context.options.version };
-    builder.append((u8)HandshakeType::ClientKeyExchange);
+    builder.append((u8)HandshakeType::CLIENT_KEY_EXCHANGE_RESERVED);
 
     switch (get_key_exchange_algorithm(m_context.cipher)) {
     case KeyExchangeAlgorithm::RSA:
