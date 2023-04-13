@@ -148,13 +148,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     auto substitution_count = vm.argument_count() > 0 ? vm.argument_count() - 1 : 0;
 
     // 2. Let cooked be ? ToObject(template).
-    auto* cooked = TRY(template_.to_object(vm));
+    auto cooked = TRY(template_.to_object(vm));
 
     // 3. Let literals be ? ToObject(? Get(cooked, "raw")).
-    auto* literals = TRY(TRY(cooked->get(vm.names.raw)).to_object(vm));
+    auto literals = TRY(TRY(cooked->get(vm.names.raw)).to_object(vm));
 
     // 4. Let literalCount be ? LengthOfArrayLike(literals).
-    auto literal_count = TRY(length_of_array_like(vm, *literals));
+    auto literal_count = TRY(length_of_array_like(vm, literals));
 
     // 5. If literalCount ≤ 0, return the empty String.
     if (literal_count == 0)

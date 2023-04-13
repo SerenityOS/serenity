@@ -133,10 +133,10 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
 
     // 7. NOTE: source is not an Iterable so assume it is already an array-like object.
     // 8. Let arrayLike be ! ToObject(source).
-    auto* array_like = MUST(source.to_object(vm));
+    auto array_like = MUST(source.to_object(vm));
 
     // 9. Let len be ? LengthOfArrayLike(arrayLike).
-    auto length = TRY(length_of_array_like(vm, *array_like));
+    auto length = TRY(length_of_array_like(vm, array_like));
 
     // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
     MarkedVector<Value> arguments(vm.heap());

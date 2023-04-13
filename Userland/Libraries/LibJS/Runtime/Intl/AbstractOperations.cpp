@@ -602,7 +602,7 @@ ThrowCompletionOr<Object*> coerce_options_to_object(VM& vm, Value options)
     }
 
     // 2. Return ? ToObject(options).
-    return TRY(options.to_object(vm));
+    return TRY(options.to_object(vm)).ptr();
 }
 
 // NOTE: 9.2.13 GetOption has been removed and is being pulled in from ECMA-262 in the Temporal proposal.

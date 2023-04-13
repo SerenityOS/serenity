@@ -236,10 +236,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     // 6. NOTE: items is not an Iterable so assume it is an array-like object.
 
     // 7. Let arrayLike be ! ToObject(items).
-    auto* array_like = MUST(items.to_object(vm));
+    auto array_like = MUST(items.to_object(vm));
 
     // 8. Let len be ? LengthOfArrayLike(arrayLike).
-    auto length = TRY(length_of_array_like(vm, *array_like));
+    auto length = TRY(length_of_array_like(vm, array_like));
 
     GCPtr<Object> array;
 

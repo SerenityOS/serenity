@@ -314,7 +314,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> PromiseConstructor::construct(FunctionOb
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(vm));
+    auto constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(vm, constructor));
@@ -348,7 +348,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(vm));
+    auto constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(vm, constructor));
@@ -382,7 +382,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(vm));
+    auto constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(vm, constructor));
@@ -416,7 +416,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 {
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(vm));
+    auto constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(vm, constructor));
@@ -452,7 +452,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     auto reason = vm.argument(0);
 
     // 1. Let C be the this value.
-    auto* constructor = TRY(vm.this_value().to_object(vm));
+    auto constructor = TRY(vm.this_value().to_object(vm));
 
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
     auto promise_capability = TRY(new_promise_capability(vm, constructor));

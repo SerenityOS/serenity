@@ -432,7 +432,7 @@ ThrowCompletionOr<void> Object::copy_data_properties(VM& vm, Value source, HashT
     if (source.is_nullish())
         return {};
 
-    auto* from_object = MUST(source.to_object(vm));
+    auto from_object = MUST(source.to_object(vm));
 
     for (auto& next_key_value : TRY(from_object->internal_own_property_keys())) {
         auto next_key = MUST(PropertyKey::from_value(vm, next_key_value));
@@ -1201,7 +1201,7 @@ ThrowCompletionOr<Object*> Object::define_properties(Value properties)
     auto& vm = this->vm();
 
     // 1. Let props be ? ToObject(Properties).
-    auto* props = TRY(properties.to_object(vm));
+    auto props = TRY(properties.to_object(vm));
 
     // 2. Let keys be ? props.[[OwnPropertyKeys]]().
     auto keys = TRY(props->internal_own_property_keys());

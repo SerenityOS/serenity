@@ -175,12 +175,12 @@ ThrowCompletionOr<PlainDate*> calendar_date_add(VM& vm, Object& calendar, Value 
     auto added_date = TRY(call(vm, date_add ?: js_undefined(), &calendar, date, &duration, options ?: js_undefined()));
 
     // 6. Perform ? RequireInternalSlot(addedDate, [[InitializedTemporalDate]]).
-    auto* added_date_object = TRY(added_date.to_object(vm));
-    if (!is<PlainDate>(added_date_object))
+    auto added_date_object = TRY(added_date.to_object(vm));
+    if (!is<PlainDate>(*added_date_object))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
     // 7. Return addedDate.
-    return static_cast<PlainDate*>(added_date_object);
+    return static_cast<PlainDate*>(added_date_object.ptr());
 }
 
 // 12.2.7 CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendardateuntil
@@ -196,12 +196,12 @@ ThrowCompletionOr<Duration*> calendar_date_until(VM& vm, Object& calendar, Value
     auto duration = TRY(call(vm, date_until ?: js_undefined(), &calendar, one, two, &options));
 
     // 4. Perform ? RequireInternalSlot(duration, [[InitializedTemporalDuration]]).
-    auto* duration_object = TRY(duration.to_object(vm));
-    if (!is<Duration>(duration_object))
+    auto duration_object = TRY(duration.to_object(vm));
+    if (!is<Duration>(*duration_object))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.Duration");
 
     // 5. Return duration.
-    return static_cast<Duration*>(duration_object);
+    return static_cast<Duration*>(duration_object.ptr());
 }
 
 // 12.2.8 CalendarYear ( calendar, dateLike ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryear
@@ -525,12 +525,12 @@ ThrowCompletionOr<PlainDate*> calendar_date_from_fields(VM& vm, Object& calendar
     auto date = TRY(Value(&calendar).invoke(vm, vm.names.dateFromFields, &fields, options ?: js_undefined()));
 
     // 3. Perform ? RequireInternalSlot(date, [[InitializedTemporalDate]]).
-    auto* date_object = TRY(date.to_object(vm));
-    if (!is<PlainDate>(date_object))
+    auto date_object = TRY(date.to_object(vm));
+    if (!is<PlainDate>(*date_object))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainDate");
 
     // 4. Return date.
-    return static_cast<PlainDate*>(date_object);
+    return static_cast<PlainDate*>(date_object.ptr());
 }
 
 // 12.2.25 CalendarYearMonthFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendaryearmonthfromfields
@@ -542,12 +542,12 @@ ThrowCompletionOr<PlainYearMonth*> calendar_year_month_from_fields(VM& vm, Objec
     auto year_month = TRY(Value(&calendar).invoke(vm, vm.names.yearMonthFromFields, &fields, options ?: js_undefined()));
 
     // 3. Perform ? RequireInternalSlot(yearMonth, [[InitializedTemporalYearMonth]]).
-    auto* year_month_object = TRY(year_month.to_object(vm));
-    if (!is<PlainYearMonth>(year_month_object))
+    auto year_month_object = TRY(year_month.to_object(vm));
+    if (!is<PlainYearMonth>(*year_month_object))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainYearMonth");
 
     // 4. Return yearMonth.
-    return static_cast<PlainYearMonth*>(year_month_object);
+    return static_cast<PlainYearMonth*>(year_month_object.ptr());
 }
 
 // 12.2.26 CalendarMonthDayFromFields ( calendar, fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal-calendarmonthdayfromfields
@@ -559,12 +559,12 @@ ThrowCompletionOr<PlainMonthDay*> calendar_month_day_from_fields(VM& vm, Object&
     auto month_day = TRY(Value(&calendar).invoke(vm, vm.names.monthDayFromFields, &fields, options ?: js_undefined()));
 
     // 3. Perform ? RequireInternalSlot(monthDay, [[InitializedTemporalMonthDay]]).
-    auto* month_day_object = TRY(month_day.to_object(vm));
-    if (!is<PlainMonthDay>(month_day_object))
+    auto month_day_object = TRY(month_day.to_object(vm));
+    if (!is<PlainMonthDay>(*month_day_object))
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "Temporal.PlainMonthDay");
 
     // 4. Return monthDay.
-    return static_cast<PlainMonthDay*>(month_day_object);
+    return static_cast<PlainMonthDay*>(month_day_object.ptr());
 }
 
 // 12.2.27 MaybeFormatCalendarAnnotation ( calendarObject, showCalendar ), https://tc39.es/proposal-temporal/#sec-temporal-maybeformatcalendarannotation
