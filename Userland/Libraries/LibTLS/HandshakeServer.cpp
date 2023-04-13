@@ -80,7 +80,7 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
     auto cipher = static_cast<CipherSuite>(AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(res))));
     res += 2;
     if (!supports_cipher(cipher)) {
-        m_context.cipher = CipherSuite::Invalid;
+        m_context.cipher = CipherSuite::TLS_NULL_WITH_NULL_NULL;
         dbgln("No supported cipher could be agreed upon");
         return (i8)Error::NoCommonCipher;
     }
