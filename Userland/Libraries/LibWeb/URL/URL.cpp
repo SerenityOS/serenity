@@ -147,7 +147,7 @@ WebIDL::ExceptionOr<void> URL::set_href(String const& href)
     m_query->m_list.clear();
 
     // 5. Let query be this’s URL’s query.
-    auto& query = m_url.query();
+    auto query = m_url.query();
 
     // 6. If query is non-null, then set this’s query object’s list to the result of parsing query.
     if (!query.is_null())
@@ -203,7 +203,7 @@ void URL::set_username(String const& username)
         return;
 
     // 2. Set the username given this’s URL and the given value.
-    m_url.set_username(AK::URL::percent_encode(username, AK::URL::PercentEncodeSet::Userinfo));
+    m_url.set_username(username.to_deprecated_string(), AK::URL::ApplyPercentEncoding::Yes);
 }
 
 // https://url.spec.whatwg.org/#dom-url-password
@@ -223,7 +223,7 @@ void URL::set_password(String const& password)
         return;
 
     // 2. Set the password given this’s URL and the given value.
-    m_url.set_password(AK::URL::percent_encode(password, AK::URL::PercentEncodeSet::Userinfo));
+    m_url.set_password(password.to_deprecated_string(), AK::URL::ApplyPercentEncoding::Yes);
 }
 
 // https://url.spec.whatwg.org/#dom-url-host
