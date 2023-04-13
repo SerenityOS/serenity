@@ -894,7 +894,7 @@ ThrowCompletionOr<void> GetMethod::execute_impl(Bytecode::Interpreter& interpret
 {
     auto& vm = interpreter.vm();
     auto identifier = interpreter.current_executable().get_identifier(m_property);
-    auto* method = TRY(interpreter.accumulator().get_method(vm, identifier));
+    auto method = TRY(interpreter.accumulator().get_method(vm, identifier));
     interpreter.accumulator() = method ?: js_undefined();
     return {};
 }

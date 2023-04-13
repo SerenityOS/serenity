@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 
     // 5. Let return be Completion(GetMethod(syncIterator, "return")).
     // 6. IfAbruptRejectPromise(return, promiseCapability).
-    auto* return_method = TRY_OR_REJECT(vm, promise_capability, Value(sync_iterator).get_method(vm, vm.names.return_));
+    auto return_method = TRY_OR_REJECT(vm, promise_capability, Value(sync_iterator).get_method(vm, vm.names.return_));
 
     // 7. If return is undefined, then
     if (return_method == nullptr) {
@@ -165,7 +165,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 
     // 5. Let throw be Completion(GetMethod(syncIterator, "throw")).
     // 6. IfAbruptRejectPromise(throw, promiseCapability).
-    auto* throw_method = TRY_OR_REJECT(vm, promise_capability, Value(sync_iterator).get_method(vm, vm.names.throw_));
+    auto throw_method = TRY_OR_REJECT(vm, promise_capability, Value(sync_iterator).get_method(vm, vm.names.throw_));
 
     // 7. If throw is undefined, then
     if (throw_method == nullptr) {

@@ -24,12 +24,12 @@ ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint,
         // a. If hint is async, then
         if (hint == IteratorHint::Async) {
             // i. Set method to ? GetMethod(obj, @@asyncIterator).
-            auto* async_method = TRY(value.get_method(vm, vm.well_known_symbol_async_iterator()));
+            auto async_method = TRY(value.get_method(vm, vm.well_known_symbol_async_iterator()));
 
             // ii. If method is undefined, then
             if (async_method == nullptr) {
                 // 1. Let syncMethod be ? GetMethod(obj, @@iterator).
-                auto* sync_method = TRY(value.get_method(vm, vm.well_known_symbol_iterator()));
+                auto sync_method = TRY(value.get_method(vm, vm.well_known_symbol_iterator()));
 
                 // 2. Let syncIteratorRecord be ? GetIterator(obj, sync, syncMethod).
                 auto sync_iterator_record = TRY(get_iterator(vm, value, IteratorHint::Sync, sync_method));
@@ -139,7 +139,7 @@ static Completion iterator_close_impl(VM& vm, Iterator const& iterator_record, C
     // 4. If innerResult.[[Type]] is normal, then
     if (!inner_result.is_error()) {
         // a. Let return be innerResult.[[Value]].
-        auto* return_method = get_method_result.value();
+        auto return_method = get_method_result.value();
 
         // b. If return is undefined, return ? completion.
         if (!return_method)

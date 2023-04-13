@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayConstructor::from)
     }
 
     // 5. Let usingIterator be ? GetMethod(source, @@iterator).
-    auto* using_iterator = TRY(source.get_method(vm, vm.well_known_symbol_iterator()));
+    auto using_iterator = TRY(source.get_method(vm, vm.well_known_symbol_iterator()));
 
     // 6. If usingIterator is not undefined, then
     if (using_iterator) {

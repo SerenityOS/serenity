@@ -139,7 +139,7 @@ ThrowCompletionOr<Vector<String>> calendar_fields(VM& vm, Object& calendar, Vect
 ThrowCompletionOr<Object*> calendar_merge_fields(VM& vm, Object& calendar, Object& fields, Object& additional_fields)
 {
     // 1. Let mergeFields be ? GetMethod(calendar, "mergeFields").
-    auto* merge_fields = TRY(Value(&calendar).get_method(vm, vm.names.mergeFields));
+    auto merge_fields = TRY(Value(&calendar).get_method(vm, vm.names.mergeFields));
 
     // 2. If mergeFields is undefined, then
     if (!merge_fields) {

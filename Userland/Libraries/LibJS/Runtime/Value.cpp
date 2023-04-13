@@ -508,7 +508,7 @@ ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_typ
     // 1. If input is an Object, then
     if (is_object()) {
         // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
-        auto* exotic_to_primitive = TRY(get_method(vm, vm.well_known_symbol_to_primitive()));
+        auto exotic_to_primitive = TRY(get_method(vm, vm.well_known_symbol_to_primitive()));
 
         // b. If exoticToPrim is not undefined, then
         if (exotic_to_primitive) {
@@ -1228,7 +1228,7 @@ ThrowCompletionOr<Value> Value::get(VM& vm, PropertyKey const& property_key) con
 }
 
 // 7.3.11 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-ThrowCompletionOr<FunctionObject*> Value::get_method(VM& vm, PropertyKey const& property_key) const
+ThrowCompletionOr<GCPtr<FunctionObject>> Value::get_method(VM& vm, PropertyKey const& property_key) const
 {
     // 1. Assert: IsPropertyKey(P) is true.
     VERIFY(property_key.is_valid());
@@ -1245,7 +1245,7 @@ ThrowCompletionOr<FunctionObject*> Value::get_method(VM& vm, PropertyKey const& 
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, function.to_string_without_side_effects()));
 
     // 5. Return func.
-    return &function.as_function();
+    return function.as_function();
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
@@ -2062,7 +2062,7 @@ ThrowCompletionOr<Value> instance_of(VM& vm, Value value, Value target)
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, target.to_string_without_side_effects()));
 
     // 2. Let instOfHandler be ? GetMethod(target, @@hasInstance).
-    auto* instance_of_handler = TRY(target.get_method(vm, vm.well_known_symbol_has_instance()));
+    auto instance_of_handler = TRY(target.get_method(vm, vm.well_known_symbol_has_instance()));
 
     // 3. If instOfHandler is not undefined, then
     if (instance_of_handler) {
