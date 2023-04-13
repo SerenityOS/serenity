@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -271,7 +271,7 @@ ThrowCompletionOr<void> IteratorToArray::execute_impl(Bytecode::Interpreter& int
 {
     auto& vm = interpreter.vm();
     auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, *iterator_object);
+    auto iterator = object_to_iterator(vm, iterator_object);
 
     auto array = MUST(Array::create(interpreter.realm(), 0));
     size_t index = 0;
@@ -340,7 +340,7 @@ ThrowCompletionOr<void> CopyObjectExcludingProperties::execute_impl(Bytecode::In
     auto& vm = interpreter.vm();
     auto& realm = *vm.current_realm();
 
-    auto* from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
+    auto from_object = TRY(interpreter.reg(m_from_object).to_object(vm));
 
     auto to_object = Object::create(realm, realm.intrinsics().object_prototype());
 
@@ -431,7 +431,7 @@ ThrowCompletionOr<void> EnterObjectEnvironment::execute_impl(Bytecode::Interpret
     auto& old_environment = vm.running_execution_context().lexical_environment;
     interpreter.saved_lexical_environment_stack().append(old_environment);
     auto object = TRY(interpreter.accumulator().to_object(vm));
-    vm.running_execution_context().lexical_environment = new_object_environment(*object, true, old_environment);
+    vm.running_execution_context().lexical_environment = new_object_environment(object, true, old_environment);
     return {};
 }
 
@@ -492,7 +492,7 @@ ThrowCompletionOr<void> SetVariable::execute_impl(Bytecode::Interpreter& interpr
 ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.accumulator().to_object(vm));
+    auto object = TRY(interpreter.accumulator().to_object(vm));
     interpreter.accumulator() = TRY(object->get(interpreter.current_executable().get_identifier(m_property)));
     return {};
 }
@@ -500,7 +500,7 @@ ThrowCompletionOr<void> GetById::execute_impl(Bytecode::Interpreter& interpreter
 ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
     PropertyKey name = interpreter.current_executable().get_identifier(m_property);
     auto value = interpreter.accumulator();
     return put_by_property_key(object, value, name, interpreter, m_kind);
@@ -509,7 +509,7 @@ ThrowCompletionOr<void> PutById::execute_impl(Bytecode::Interpreter& interpreter
 ThrowCompletionOr<void> DeleteById::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.accumulator().to_object(vm));
+    auto object = TRY(interpreter.accumulator().to_object(vm));
     auto const& identifier = interpreter.current_executable().get_identifier(m_property);
     bool strict = vm.in_strict_mode();
     auto reference = Reference { object, identifier, {}, strict };
@@ -854,7 +854,7 @@ void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to
 ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
     auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
 
@@ -865,7 +865,7 @@ ThrowCompletionOr<void> GetByValue::execute_impl(Bytecode::Interpreter& interpre
 ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
 
     auto property_key = TRY(interpreter.reg(m_property).to_property_key(vm));
     return put_by_property_key(object, interpreter.accumulator(), property_key, interpreter, m_kind);
@@ -874,7 +874,7 @@ ThrowCompletionOr<void> PutByValue::execute_impl(Bytecode::Interpreter& interpre
 ThrowCompletionOr<void> DeleteByValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.reg(m_base).to_object(vm));
+    auto object = TRY(interpreter.reg(m_base).to_object(vm));
     auto property_key = TRY(interpreter.accumulator().to_property_key(vm));
     bool strict = vm.in_strict_mode();
     auto reference = Reference { object, property_key, {}, strict };
@@ -917,14 +917,14 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
     // Invariant 3 effectively allows the implementation to ignore newly added keys, and we do so (similar to other implementations).
     // Invariants 1 and 6 through 9 are implemented in `enumerable_own_property_names`, which implements the EnumerableOwnPropertyNames AO.
     auto& vm = interpreter.vm();
-    auto* object = TRY(interpreter.accumulator().to_object(vm));
+    auto object = TRY(interpreter.accumulator().to_object(vm));
     // Note: While the spec doesn't explicitly require these to be ordered, it says that the values should be retrieved via OwnPropertyKeys,
     //       so we just keep the order consistent anyway.
     OrderedHashTable<PropertyKey> properties;
-    HashTable<Object*> seen_objects;
+    HashTable<NonnullGCPtr<Object>> seen_objects;
     // Collect all keys immediately (invariant no. 5)
-    for (auto* object_to_check = object; object_to_check && !seen_objects.contains(object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
-        seen_objects.set(object_to_check);
+    for (auto object_to_check = GCPtr { object.ptr() }; object_to_check && !seen_objects.contains(*object_to_check); object_to_check = TRY(object_to_check->internal_get_prototype_of())) {
+        seen_objects.set(*object_to_check);
         for (auto& key : TRY(object_to_check->enumerable_own_property_names(Object::PropertyKind::Key))) {
             properties.set(TRY(PropertyKey::from_value(vm, key)));
         }
@@ -981,8 +981,8 @@ ThrowCompletionOr<void> GetObjectPropertyIterator::execute_impl(Bytecode::Interp
 ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, *iterator_object);
+    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
+    auto iterator = object_to_iterator(vm, iterator_object);
 
     // FIXME: Return the value of the resulting completion. (Note that m_completion_value can be empty!)
     TRY(iterator_close(vm, iterator, Completion { m_completion_type, m_completion_value, {} }));
@@ -992,8 +992,8 @@ ThrowCompletionOr<void> IteratorClose::execute_impl(Bytecode::Interpreter& inter
 ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* iterator_object = TRY(interpreter.accumulator().to_object(vm));
-    auto iterator = object_to_iterator(vm, *iterator_object);
+    auto iterator_object = TRY(interpreter.accumulator().to_object(vm));
+    auto iterator = object_to_iterator(vm, iterator_object);
 
     interpreter.accumulator() = TRY(iterator_next(vm, iterator));
     return {};
@@ -1002,9 +1002,9 @@ ThrowCompletionOr<void> IteratorNext::execute_impl(Bytecode::Interpreter& interp
 ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* iterator_result = TRY(interpreter.accumulator().to_object(vm));
+    auto iterator_result = TRY(interpreter.accumulator().to_object(vm));
 
-    auto complete = TRY(iterator_complete(vm, *iterator_result));
+    auto complete = TRY(iterator_complete(vm, iterator_result));
     interpreter.accumulator() = Value(complete);
     return {};
 }
@@ -1012,9 +1012,9 @@ ThrowCompletionOr<void> IteratorResultDone::execute_impl(Bytecode::Interpreter& 
 ThrowCompletionOr<void> IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    auto* iterator_result = TRY(interpreter.accumulator().to_object(vm));
+    auto iterator_result = TRY(interpreter.accumulator().to_object(vm));
 
-    interpreter.accumulator() = TRY(iterator_value(vm, *iterator_result));
+    interpreter.accumulator() = TRY(iterator_value(vm, iterator_result));
     return {};
 }
 

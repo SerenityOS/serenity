@@ -160,7 +160,7 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
     HashMap<Wasm::Linker::Name, Wasm::ExternValue> resolved_imports;
     auto import_argument = vm.argument(1);
     if (!import_argument.is_undefined()) {
-        auto* import_object = TRY(import_argument.to_object(vm));
+        auto import_object = TRY(import_argument.to_object(vm));
         dbgln("Trying to resolve stuff because import object was specified");
         for (Wasm::Linker::Name const& import_name : linker.unresolved_imports()) {
             dbgln("Trying to resolve {}::{}", import_name.module, import_name.name);
@@ -171,7 +171,7 @@ JS::ThrowCompletionOr<size_t> instantiate_module(JS::VM& vm, Wasm::Module const&
             auto object_or_error = value.to_object(vm);
             if (object_or_error.is_error())
                 break;
-            auto* object = object_or_error.release_value();
+            auto object = object_or_error.release_value();
             auto import_or_error = object->get(import_name.name);
             if (import_or_error.is_error())
                 break;

@@ -107,8 +107,8 @@ HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_na
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
     auto& realm = *vm.current_realm();
-    auto* object = TRY(vm.argument(0).to_object(vm));
-    if (!is<JS::Uint8Array>(object))
+    auto object = TRY(vm.argument(0).to_object(vm));
+    if (!is<JS::Uint8Array>(*object))
         return vm.throw_completion<JS::TypeError>("Expected a Uint8Array argument to parse_webassembly_module"sv);
     auto& array = static_cast<JS::Uint8Array&>(*object);
     FixedMemoryStream stream { array.data() };
@@ -137,12 +137,12 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
 {
-    auto* lhs = TRY(vm.argument(0).to_object(vm));
-    if (!is<JS::TypedArrayBase>(lhs))
+    auto lhs = TRY(vm.argument(0).to_object(vm));
+    if (!is<JS::TypedArrayBase>(*lhs))
         return vm.throw_completion<JS::TypeError>("Expected a TypedArray"sv);
     auto& lhs_array = static_cast<JS::TypedArrayBase&>(*lhs);
-    auto* rhs = TRY(vm.argument(1).to_object(vm));
-    if (!is<JS::TypedArrayBase>(rhs))
+    auto rhs = TRY(vm.argument(1).to_object(vm));
+    if (!is<JS::TypedArrayBase>(*rhs))
         return vm.throw_completion<JS::TypeError>("Expected a TypedArray"sv);
     auto& rhs_array = static_cast<JS::TypedArrayBase&>(*rhs);
     return JS::Value(lhs_array.viewed_array_buffer()->buffer() == rhs_array.viewed_array_buffer()->buffer());
@@ -161,11 +161,11 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
 {
     auto name = TRY(vm.argument(0).to_deprecated_string(vm));
     auto this_value = vm.this_value();
-    auto* object = TRY(this_value.to_object(vm));
-    if (!is<WebAssemblyModule>(object))
+    auto object = TRY(this_value.to_object(vm));
+    if (!is<WebAssemblyModule>(*object))
         return vm.throw_completion<JS::TypeError>("Not a WebAssemblyModule"sv);
-    auto instance = static_cast<WebAssemblyModule*>(object);
-    for (auto& entry : instance->module_instance().exports()) {
+    auto& instance = static_cast<WebAssemblyModule&>(*object);
+    for (auto& entry : instance.module_instance().exports()) {
         if (entry.name() == name) {
             auto& value = entry.value();
             if (auto ptr = value.get_pointer<Wasm::FunctionAddress>())

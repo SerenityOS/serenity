@@ -347,7 +347,7 @@ ThrowCompletionOr<void> VM::property_binding_initialization(BindingPattern const
     auto& vm = *this;
     auto& realm = *vm.current_realm();
 
-    auto* object = TRY(value.to_object(vm));
+    auto object = TRY(value.to_object(vm));
 
     HashTable<PropertyKey> seen_names;
     for (auto& property : binding.entries) {

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020-2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -829,7 +829,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 if (!variable.is_object())
                     break;
 
-                auto const* object = MUST(variable.to_object(*g_vm));
+                auto const object = MUST(variable.to_object(*g_vm));
                 auto const& shape = object->shape();
                 list_all_properties(shape, property_name);
                 break;

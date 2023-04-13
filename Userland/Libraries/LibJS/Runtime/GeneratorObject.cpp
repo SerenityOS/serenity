@@ -27,8 +27,8 @@ ThrowCompletionOr<NonnullGCPtr<GeneratorObject>> GeneratorObject::create(Realm& 
     } else {
         generating_function_prototype = TRY(generating_function->get(vm.names.prototype));
     }
-    auto* generating_function_prototype_object = TRY(generating_function_prototype.to_object(vm));
-    auto object = MUST_OR_THROW_OOM(realm.heap().allocate<GeneratorObject>(realm, realm, *generating_function_prototype_object, move(execution_context)));
+    auto generating_function_prototype_object = TRY(generating_function_prototype.to_object(vm));
+    auto object = MUST_OR_THROW_OOM(realm.heap().allocate<GeneratorObject>(realm, realm, generating_function_prototype_object, move(execution_context)));
     object->m_generating_function = generating_function;
     object->m_frame = move(frame);
     object->m_previous_value = initial_value;

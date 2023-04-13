@@ -1259,10 +1259,10 @@ static ThrowCompletionOr<void> set_typed_array_from_array_like(VM& vm, TypedArra
     auto target_length = target.array_length();
 
     // 4. Let src be ? ToObject(source).
-    auto* src = TRY(source.to_object(vm));
+    auto src = TRY(source.to_object(vm));
 
     // 5. Let srcLength be ? LengthOfArrayLike(src).
-    auto source_length = TRY(length_of_array_like(vm, *src));
+    auto source_length = TRY(length_of_array_like(vm, src));
 
     // 6. If targetOffset is +∞, throw a RangeError exception.
     if (isinf(target_offset))
@@ -1702,7 +1702,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, comparefn);
 
     // 2. Let O be the this value.
-    auto* object = TRY(vm.this_value().to_object(vm));
+    auto object = TRY(vm.this_value().to_object(vm));
 
     // 3. Perform ? ValidateTypedArray(O).
     auto* typed_array = TRY(validate_typed_array_from_this(vm));
@@ -1723,7 +1723,7 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_sorted)
     };
 
     // 8. Let sortedList be ? SortIndexedProperties(O, len, SortCompare, read-through-holes).
-    auto sorted_list = TRY(sort_indexed_properties(vm, *object, length, sort_compare, Holes::ReadThroughHoles));
+    auto sorted_list = TRY(sort_indexed_properties(vm, object, length, sort_compare, Holes::ReadThroughHoles));
 
     // 9. Let j be 0.
     // 10. Repeat, while j < len,

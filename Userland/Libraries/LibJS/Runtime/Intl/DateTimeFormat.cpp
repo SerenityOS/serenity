@@ -73,7 +73,7 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
     auto& realm = *vm.current_realm();
 
     // 1. If options is undefined, let options be null; otherwise let options be ? ToObject(options).
-    Object* options = nullptr;
+    GCPtr<Object> options;
     if (!options_value.is_undefined())
         options = TRY(options_value.to_object(vm));
 
@@ -150,7 +150,7 @@ ThrowCompletionOr<Object*> to_date_time_options(VM& vm, Value options_value, Opt
     }
 
     // 13. Return options.
-    return options;
+    return options.ptr();
 }
 
 // 11.5.2 DateTimeStyleFormat ( dateStyle, timeStyle, styles ), https://tc39.es/ecma402/#sec-date-time-style-format

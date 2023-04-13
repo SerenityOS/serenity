@@ -40,7 +40,7 @@ ThrowCompletionOr<void> Reference::put_value(VM& vm, Value value)
     // 5. If IsPropertyReference(V) is true, then
     if (is_property_reference()) {
         // a. Let baseObj be ? ToObject(V.[[Base]]).
-        auto* base_obj = TRY(m_base_value.to_object(vm));
+        auto base_obj = TRY(m_base_value.to_object(vm));
 
         // b. If IsPrivateReference(V) is true, then
         if (is_private_reference()) {
@@ -105,7 +105,7 @@ ThrowCompletionOr<Value> Reference::get_value(VM& vm) const
             // as things currently stand this does the "wrong thing" but
             // the error is unobservable
 
-            auto* base_obj = TRY(m_base_value.to_object(vm));
+            auto base_obj = TRY(m_base_value.to_object(vm));
 
             // i. Return ? PrivateGet(baseObj, V.[[ReferencedName]]).
             return base_obj->private_get(m_private_name);
@@ -171,7 +171,7 @@ ThrowCompletionOr<bool> Reference::delete_(VM& vm)
             return vm.throw_completion<ReferenceError>(ErrorType::UnsupportedDeleteSuperProperty);
 
         // c. Let baseObj be ! ToObject(ref.[[Base]]).
-        auto* base_obj = MUST(m_base_value.to_object(vm));
+        auto base_obj = MUST(m_base_value.to_object(vm));
 
         // d. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
         bool delete_status = TRY(base_obj->internal_delete(m_name));

@@ -61,7 +61,7 @@ ThrowCompletionOr<bool> ObjectPrototype::internal_set_prototype_of(Object* proto
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
     auto property_key = TRY(vm.argument(0).to_property_key(vm));
-    auto* this_object = TRY(vm.this_value().to_object(vm));
+    auto this_object = TRY(vm.this_value().to_object(vm));
     return Value(TRY(this_object->has_own_property(property_key)));
 }
 
@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         return MUST_OR_THROW_OOM(PrimitiveString::create(vm, "[object Null]"sv));
 
     // 3. Let O be ! ToObject(this value).
-    auto* object = MUST(this_value.to_object(vm));
+    auto object = MUST(this_value.to_object(vm));
 
     // 4. Let isArray be ? IsArray(O).
     auto is_array = TRY(Value(object).is_array(vm));
@@ -96,22 +96,22 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     else if (object->is_function())
         builtin_tag = "Function";
     // 8. Else if O has an [[ErrorData]] internal slot, let builtinTag be "Error".
-    else if (is<Error>(object))
+    else if (is<Error>(*object))
         builtin_tag = "Error";
     // 9. Else if O has a [[BooleanData]] internal slot, let builtinTag be "Boolean".
-    else if (is<BooleanObject>(object))
+    else if (is<BooleanObject>(*object))
         builtin_tag = "Boolean";
     // 10. Else if O has a [[NumberData]] internal slot, let builtinTag be "Number".
-    else if (is<NumberObject>(object))
+    else if (is<NumberObject>(*object))
         builtin_tag = "Number";
     // 11. Else if O has a [[StringData]] internal slot, let builtinTag be "String".
-    else if (is<StringObject>(object))
+    else if (is<StringObject>(*object))
         builtin_tag = "String";
     // 12. Else if O has a [[DateValue]] internal slot, let builtinTag be "Date".
-    else if (is<Date>(object))
+    else if (is<Date>(*object))
         builtin_tag = "Date";
     // 13. Else if O has a [[RegExpMatcher]] internal slot, let builtinTag be "RegExp".
-    else if (is<RegExpObject>(object))
+    else if (is<RegExpObject>(*object))
         builtin_tag = "RegExp";
     // 14. Else, let builtinTag be "Object".
     else
@@ -152,7 +152,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
     // 1. Let P be ? ToPropertyKey(V).
     auto property_key = TRY(vm.argument(0).to_property_key(vm));
     // 2. Let O be ? ToObject(this value).
-    auto* this_object = TRY(vm.this_value().to_object(vm));
+    auto this_object = TRY(vm.this_value().to_object(vm));
     // 3. Let desc be ? O.[[GetOwnProperty]](P).
     auto property_descriptor = TRY(this_object->internal_get_own_property(property_key));
     // 4. If desc is undefined, return false.
@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
     if (!object_argument.is_object())
         return Value(false);
     auto* object = &object_argument.as_object();
-    auto* this_object = TRY(vm.this_value().to_object(vm));
+    auto this_object = TRY(vm.this_value().to_object(vm));
 
     for (;;) {
         object = TRY(object->internal_get_prototype_of());
@@ -183,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
 // B.2.2.2 Object.prototype.__defineGetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 {
-    auto* object = TRY(vm.this_value().to_object(vm));
+    auto object = TRY(vm.this_value().to_object(vm));
 
     auto getter = vm.argument(1);
     if (!getter.is_function())
@@ -201,7 +201,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_getter)
 // B.2.2.3 Object.prototype.__defineSetter__ ( P, getter ), https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 {
-    auto* object = TRY(vm.this_value().to_object(vm));
+    auto object = TRY(vm.this_value().to_object(vm));
 
     auto setter = vm.argument(1);
     if (!setter.is_function())
@@ -219,7 +219,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
 // B.2.2.4 Object.prototype.__lookupGetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 {
-    auto* object = TRY(vm.this_value().to_object(vm));
+    auto object = GCPtr { TRY(vm.this_value().to_object(vm)) };
 
     auto key = TRY(vm.argument(0).to_property_key(vm));
 
@@ -239,7 +239,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
 // B.2.2.5 Object.prototype.__lookupSetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 {
-    auto* object = TRY(vm.this_value().to_object(vm));
+    auto object = GCPtr { TRY(vm.this_value().to_object(vm)) };
 
     auto key = TRY(vm.argument(0).to_property_key(vm));
 
@@ -259,7 +259,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
 // B.2.2.1.1 get Object.prototype.__proto__, https://tc39.es/ecma262/#sec-get-object.prototype.__proto__
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
 {
-    auto* object = TRY(vm.this_value().to_object(vm));
+    auto object = TRY(vm.this_value().to_object(vm));
     return TRY(object->internal_get_prototype_of());
 }
 

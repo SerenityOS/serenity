@@ -76,7 +76,7 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ObjectConstructor::construct(FunctionObj
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(realm, realm.intrinsics().object_prototype());
-    return *TRY(value.to_object(vm));
+    return TRY(value.to_object(vm));
 }
 
 enum class GetOwnPropertyKeysType {
@@ -88,7 +88,7 @@ enum class GetOwnPropertyKeysType {
 static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(VM& vm, Value value, GetOwnPropertyKeysType type)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(value.to_object(vm));
+    auto object = TRY(value.to_object(vm));
 
     // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
     auto keys = TRY(object->internal_own_property_keys());
@@ -131,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
 
     // 2. Return ? obj.[[GetPrototypeOf]]().
     return TRY(object->internal_get_prototype_of());
@@ -258,7 +258,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
 // 20.1.2.8 Object.getOwnPropertyDescriptor ( O, P ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
 {
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
     auto key = TRY(vm.argument(1).to_property_key(vm));
     auto descriptor = TRY(object->internal_get_own_property(key));
     return from_property_descriptor(vm, descriptor);
@@ -270,7 +270,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
     auto& realm = *vm.current_realm();
 
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
 
     // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
     auto own_keys = TRY(object->internal_own_property_keys());
@@ -333,7 +333,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
     auto& realm = *vm.current_realm();
 
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Key));
     return Array::create_from(realm, name_list);
 }
@@ -343,7 +343,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
     auto& realm = *vm.current_realm();
 
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Value));
     return Array::create_from(realm, name_list);
 }
@@ -353,7 +353,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
     auto& realm = *vm.current_realm();
 
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
     auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
     return Array::create_from(realm, name_list);
 }
@@ -387,7 +387,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 {
     // 1. Let obj be ? ToObject(O).
-    auto* object = TRY(vm.argument(0).to_object(vm));
+    auto object = TRY(vm.argument(0).to_object(vm));
 
     // 2. Let key be ? ToPropertyKey(P).
     auto key = TRY(vm.argument(1).to_property_key(vm));
@@ -400,7 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 {
     // 1. Let to be ? ToObject(target).
-    auto* to = TRY(vm.argument(0).to_object(vm));
+    auto to = TRY(vm.argument(0).to_object(vm));
 
     // 2. If only one argument was passed, return to.
     if (vm.argument_count() == 1)
@@ -415,7 +415,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
             continue;
 
         // i. Let from be ! ToObject(nextSource).
-        auto* from = MUST(next_source.to_object(vm));
+        auto from = MUST(next_source.to_object(vm));
 
         // ii. Let keys be ? from.[[OwnPropertyKeys]]().
         auto keys = TRY(from->internal_own_property_keys());

@@ -51,7 +51,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpStringIteratorPrototype::next)
         return create_iterator_result_object(vm, match, false);
     }
 
-    auto* match_object = TRY(match.to_object(vm));
+    auto match_object = TRY(match.to_object(vm));
     auto match_string_value = TRY(match_object->get(0));
     auto match_string = TRY(match_string_value.to_deprecated_string(vm));
     if (match_string.is_empty()) {

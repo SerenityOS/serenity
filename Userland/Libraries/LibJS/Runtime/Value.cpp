@@ -554,7 +554,7 @@ ThrowCompletionOr<Value> Value::to_primitive(VM& vm, PreferredType preferred_typ
 }
 
 // 7.1.18 ToObject ( argument ), https://tc39.es/ecma262/#sec-toobject
-ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
+ThrowCompletionOr<NonnullGCPtr<Object>> Value::to_object(VM& vm) const
 {
     auto& realm = *vm.current_realm();
     VERIFY(!is_empty());
@@ -562,7 +562,7 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     // Number
     if (is_number()) {
         // Return a new Number object whose [[NumberData]] internal slot is set to argument. See 21.1 for a description of Number objects.
-        return NumberObject::create(realm, as_double()).ptr();
+        return NumberObject::create(realm, as_double());
     }
 
     switch (m_value.tag) {
@@ -575,23 +575,23 @@ ThrowCompletionOr<Object*> Value::to_object(VM& vm) const
     // Boolean
     case BOOLEAN_TAG:
         // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument. See 20.3 for a description of Boolean objects.
-        return BooleanObject::create(realm, as_bool()).ptr();
+        return BooleanObject::create(realm, as_bool());
     // String
     case STRING_TAG:
         // Return a new String object whose [[StringData]] internal slot is set to argument. See 22.1 for a description of String objects.
-        return MUST_OR_THROW_OOM(StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), realm.intrinsics().string_prototype())).ptr();
+        return MUST_OR_THROW_OOM(StringObject::create(realm, const_cast<JS::PrimitiveString&>(as_string()), realm.intrinsics().string_prototype()));
     // Symbol
     case SYMBOL_TAG:
         // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument. See 20.4 for a description of Symbol objects.
-        return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol())).ptr();
+        return SymbolObject::create(realm, const_cast<JS::Symbol&>(as_symbol()));
     // BigInt
     case BIGINT_TAG:
         // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument. See 21.2 for a description of BigInt objects.
-        return BigIntObject::create(realm, const_cast<JS::BigInt&>(as_bigint())).ptr();
+        return BigIntObject::create(realm, const_cast<JS::BigInt&>(as_bigint()));
     // Object
     case OBJECT_TAG:
         // Return argument.
-        return &const_cast<Object&>(as_object());
+        return const_cast<Object&>(as_object());
     default:
         VERIFY_NOT_REACHED();
     }
@@ -1221,7 +1221,7 @@ ThrowCompletionOr<Value> Value::get(VM& vm, PropertyKey const& property_key) con
     VERIFY(property_key.is_valid());
 
     // 2. Let O be ? ToObject(V).
-    auto* object = TRY(to_object(vm));
+    auto object = TRY(to_object(vm));
 
     // 3. Return ? O.[[Get]](P, V).
     return TRY(object->internal_get(property_key, *this));

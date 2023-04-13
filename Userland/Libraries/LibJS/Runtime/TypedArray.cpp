@@ -20,11 +20,11 @@ namespace JS {
 
 ThrowCompletionOr<TypedArrayBase*> typed_array_from(VM& vm, Value typed_array_value)
 {
-    auto* this_object = TRY(typed_array_value.to_object(vm));
+    auto this_object = TRY(typed_array_value.to_object(vm));
     if (!this_object->is_typed_array())
         return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, "TypedArray");
 
-    return static_cast<TypedArrayBase*>(this_object);
+    return static_cast<TypedArrayBase*>(this_object.ptr());
 }
 
 // 23.2.4.4 ValidateTypedArray ( O ), https://tc39.es/ecma262/#sec-validatetypedarray

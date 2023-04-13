@@ -619,13 +619,13 @@ Completion WithStatement::execute(Interpreter& interpreter) const
     auto value = TRY(m_object->execute(interpreter)).release_value();
 
     // 2. Let obj be ? ToObject(? GetValue(value)).
-    auto* object = TRY(value.to_object(vm));
+    auto object = TRY(value.to_object(vm));
 
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
     auto old_environment = vm.running_execution_context().lexical_environment;
 
     // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-    auto new_environment = new_object_environment(*object, true, old_environment);
+    auto new_environment = new_object_environment(object, true, old_environment);
 
     // 5. Set the running execution context's LexicalEnvironment to newEnv.
     vm.running_execution_context().lexical_environment = new_environment;
@@ -1155,7 +1155,7 @@ Completion ForInStatement::loop_evaluation(Interpreter& interpreter, Vector<Depr
     }
 
     // b. Let obj be ! ToObject(exprValue).
-    auto* object = MUST(rhs_result.to_object(vm));
+    auto object = MUST(rhs_result.to_object(vm));
 
     // 14.7.5.7 ForIn/OfBodyEvaluation ( lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet [ , iteratorKind ] ), https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
 
