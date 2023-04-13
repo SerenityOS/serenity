@@ -2695,17 +2695,22 @@ size_t ECMA262Parser::ensure_total_number_of_capturing_parenthesis()
     while (!lexer.is_eof()) {
         switch (lexer.peek()) {
         case '\\':
-            lexer.consume(2);
+            lexer.consume(min(lexer.tell_remaining(), 2));
             continue;
         case '[':
             while (!lexer.is_eof()) {
                 if (lexer.consume_specific('\\')) {
+                    if (lexer.is_eof())
+                        break;
                     lexer.consume();
                     continue;
                 }
                 if (lexer.consume_specific(']')) {
                     break;
                 }
+
+                if (lexer.is_eof())
+                    break;
                 lexer.consume();
             }
             break;
