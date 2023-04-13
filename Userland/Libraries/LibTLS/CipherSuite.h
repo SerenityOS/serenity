@@ -189,8 +189,4 @@ constexpr size_t cipher_key_size(CipherAlgorithm algorithm)
     }
 }
 
-enum class ECPointFormat : u8 {
-    Uncompressed = 0,
-};
-
 }

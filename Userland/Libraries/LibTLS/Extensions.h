@@ -247,6 +247,16 @@ enum class SupportedGroup : u16 {
     __ENUM_SUPPORTED_GROUPS
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-parameters-9
+#define __ENUM_EC_POINT_FORMATS                   \
+    _ENUM_KEY_VALUE(UNCOMPRESSED, 0)              \
+    _ENUM_KEY_VALUE(ANSIX962_COMPRESSED_PRIME, 1) \
+    _ENUM_KEY_VALUE(ANSIX962_COMPRESSED_CHAR2, 2)
+
+enum class ECPointFormat : u8 {
+    __ENUM_EC_POINT_FORMATS
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 

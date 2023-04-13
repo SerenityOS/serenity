@@ -215,7 +215,7 @@ struct Options {
         SupportedGroup::X25519,
         SupportedGroup::SECP256R1,
         SupportedGroup::X448)
-    OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::Uncompressed)
+    OPTION_WITH_DEFAULTS(Vector<ECPointFormat>, supported_ec_point_formats, ECPointFormat::UNCOMPRESSED)
 
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
     OPTION_WITH_DEFAULTS(bool, use_compression, false)
