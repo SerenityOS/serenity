@@ -40,13 +40,13 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::compare_getter)
 
     // 1. Let collator be the this value.
     // 2. Perform ? RequireInternalSlot(collator, [[InitializedCollator]]).
-    auto* collator = TRY(typed_this_object(vm));
+    auto collator = TRY(typed_this_object(vm));
 
     // 3. If collator.[[BoundCompare]] is undefined, then
     if (!collator->bound_compare()) {
         // a. Let F be a new built-in function object as defined in 10.3.3.1.
         // b. Set F.[[Collator]] to collator.
-        auto function = CollatorCompareFunction::create(realm, *collator);
+        auto function = CollatorCompareFunction::create(realm, collator);
 
         // c. Set collator.[[BoundCompare]] to F.
         collator->set_bound_compare(function);
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(CollatorPrototype::resolved_options)
 
     // 1. Let collator be the this value.
     // 2. Perform ? RequireInternalSlot(collator, [[InitializedCollator]]).
-    auto* collator = TRY(typed_this_object(vm));
+    auto collator = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());

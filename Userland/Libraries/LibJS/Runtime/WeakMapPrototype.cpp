@@ -40,7 +40,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 
     // 1. Let M be the this value.
     // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
-    auto* weak_map = TRY(typed_this_object(vm));
+    auto weak_map = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(key) is false, return false.
     if (!can_be_held_weakly(key))
@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 
     // 1. Let M be the this value.
     // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
-    auto* weak_map = TRY(typed_this_object(vm));
+    auto weak_map = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(key) is false, return undefined.
     if (!can_be_held_weakly(key))
@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 
     // 1. Let M be the this value.
     // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
-    auto* weak_map = TRY(typed_this_object(vm));
+    auto weak_map = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(key) is false, return false.
     if (!can_be_held_weakly(key))
@@ -111,7 +111,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 
     // 1. Let M be the this value.
     // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
-    auto* weak_map = TRY(typed_this_object(vm));
+    auto weak_map = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
     if (!can_be_held_weakly(key))

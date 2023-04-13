@@ -38,12 +38,12 @@ public:
     }
 
     // Use typed_this_object() when the spec coerces |this| value to an object.
-    static ThrowCompletionOr<ObjectType*> typed_this_object(VM& vm)
+    static ThrowCompletionOr<NonnullGCPtr<ObjectType>> typed_this_object(VM& vm)
     {
         auto this_object = TRY(vm.this_value().to_object(vm));
         if (!is<ObjectType>(*this_object))
             return vm.throw_completion<TypeError>(ErrorType::NotAnObjectOfType, PrototypeType::display_name());
-        return static_cast<ObjectType*>(this_object.ptr());
+        return static_cast<ObjectType&>(*this_object);
     }
 
     // Use typed_this_value() when the spec does not coerce |this| value to an object.

@@ -44,7 +44,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::disposed_getter)
 {
     // 1. Let disposableStack be the this value.
     // 2. Perform ? RequireInternalSlot(disposableStack, [[DisposableState]]).
-    auto* disposable_stack = TRY(typed_this_object(vm));
+    auto disposable_stack = TRY(typed_this_object(vm));
 
     // 3. If disposableStack.[[DisposableState]] is disposed, return true.
     if (disposable_stack->disposable_state() == DisposableStack::DisposableState::Disposed)
@@ -59,7 +59,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::dispose)
 {
     // 1. Let disposableStack be the this value.
     // 2. Perform ? RequireInternalSlot(disposableStack, [[DisposableState]]).
-    auto* disposable_stack = TRY(typed_this_object(vm));
+    auto disposable_stack = TRY(typed_this_object(vm));
 
     // 3. If disposableStack.[[DisposableState]] is disposed, return undefined.
     if (disposable_stack->disposable_state() == DisposableStack::DisposableState::Disposed)
@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::use)
 
     // 1. Let disposableStack be the this value.
     // 2. Perform ? RequireInternalSlot(disposableStack, [[DisposableState]]).
-    auto* disposable_stack = TRY(typed_this_object(vm));
+    auto disposable_stack = TRY(typed_this_object(vm));
 
     // 3. If disposableStack.[[DisposableState]] is disposed, throw a ReferenceError exception.
     if (disposable_stack->disposable_state() == DisposableStack::DisposableState::Disposed)
@@ -120,7 +120,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::adopt)
 
     // 1. Let disposableStack be the this value.
     // 2. Perform ? RequireInternalSlot(disposableStack, [[DisposableState]]).
-    auto* disposable_stack = TRY(typed_this_object(vm));
+    auto disposable_stack = TRY(typed_this_object(vm));
 
     // 3. If disposableStack.[[DisposableState]] is disposed, throw a ReferenceError exception.
     if (disposable_stack->disposable_state() == DisposableStack::DisposableState::Disposed)
@@ -161,7 +161,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::defer)
 
     // 1. Let disposableStack be the this value.
     // 2. Perform ? RequireInternalSlot(disposableStack, [[DisposableState]]).
-    auto* disposable_stack = TRY(typed_this_object(vm));
+    auto disposable_stack = TRY(typed_this_object(vm));
 
     // 3. If disposableStack.[[DisposableState]] is disposed, throw a ReferenceError exception.
     if (disposable_stack->disposable_state() == DisposableStack::DisposableState::Disposed)
@@ -183,7 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(DisposableStackPrototype::move_)
 {
     // 1. Let disposableStack be the this value.
     // 2. Perform ? RequireInternalSlot(disposableStack, [[DisposableState]]).
-    auto* disposable_stack = TRY(typed_this_object(vm));
+    auto disposable_stack = TRY(typed_this_object(vm));
 
     // 3. If disposableStack.[[DisposableState]] is disposed, throw a ReferenceError exception.
     if (disposable_stack->disposable_state() == DisposableStack::DisposableState::Disposed)

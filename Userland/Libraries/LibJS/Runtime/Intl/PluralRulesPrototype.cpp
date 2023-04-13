@@ -40,13 +40,13 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 {
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
-    auto* plural_rules = TRY(typed_this_object(vm));
+    auto plural_rules = TRY(typed_this_object(vm));
 
     // 3. Let n be ? ToNumber(value).
     auto number = TRY(vm.argument(0).to_number(vm));
 
     // 4. Return ! ResolvePlural(pr, n).[[PluralCategory]].
-    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, *plural_rules, number));
+    auto plurality = MUST_OR_THROW_OOM(resolve_plural(vm, plural_rules, number));
     return MUST_OR_THROW_OOM(PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality.plural_category)));
 }
 
@@ -58,7 +58,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
-    auto* plural_rules = TRY(typed_this_object(vm));
+    auto plural_rules = TRY(typed_this_object(vm));
 
     // 3. If start is undefined or end is undefined, throw a TypeError exception.
     if (start.is_undefined())
@@ -73,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
     auto y = TRY(end.to_number(vm));
 
     // 6. Return ? ResolvePluralRange(pr, x, y).
-    auto plurality = TRY(resolve_plural_range(vm, *plural_rules, x, y));
+    auto plurality = TRY(resolve_plural_range(vm, plural_rules, x, y));
     return MUST_OR_THROW_OOM(PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality)));
 }
 
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 
     // 1. Let pr be the this value.
     // 2. Perform ? RequireInternalSlot(pr, [[InitializedPluralRules]]).
-    auto* plural_rules = TRY(typed_this_object(vm));
+    auto plural_rules = TRY(typed_this_object(vm));
 
     // 3. Let options be OrdinaryObjectCreate(%Object.prototype%).
     auto options = Object::create(realm, realm.intrinsics().object_prototype());

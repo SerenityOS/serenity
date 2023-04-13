@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::id_getter)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Return timeZone.[[Identifier]].
     return PrimitiveString::create(vm, time_zone->identifier());
@@ -63,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_nanoseconds_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY(to_temporal_instant(vm, vm.argument(0)));
@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_offset_string_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY(to_temporal_instant(vm, vm.argument(0)));
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_plain_date_time_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set instant to ? ToTemporalInstant(instant).
     auto* instant = TRY(to_temporal_instant(vm, vm.argument(0)));
@@ -113,7 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_instant_for)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set dateTime to ? ToTemporalDateTime(dateTime).
     auto* date_time = TRY(to_temporal_date_time(vm, vm.argument(0)));
@@ -135,7 +135,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_possible_instants_for)
 
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimezone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set dateTime to ? ToTemporalDateTime(dateTime).
     auto* date_time = TRY(to_temporal_date_time(vm, vm.argument(0)));
@@ -182,7 +182,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_next_transition)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set startingPoint to ? ToTemporalInstant(startingPoint).
     auto* starting_point = TRY(to_temporal_instant(vm, vm.argument(0)));
@@ -207,7 +207,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::get_previous_transition)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Set startingPoint to ? ToTemporalInstant(startingPoint).
     auto* starting_point = TRY(to_temporal_instant(vm, vm.argument(0)));
@@ -232,7 +232,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_string)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Return timeZone.[[Identifier]].
     return PrimitiveString::create(vm, time_zone->identifier());
@@ -243,7 +243,7 @@ JS_DEFINE_NATIVE_FUNCTION(TimeZonePrototype::to_json)
 {
     // 1. Let timeZone be the this value.
     // 2. Perform ? RequireInternalSlot(timeZone, [[InitializedTemporalTimeZone]]).
-    auto* time_zone = TRY(typed_this_object(vm));
+    auto time_zone = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(timeZone).
     return PrimitiveString::create(vm, TRY(Value(time_zone).to_string(vm)));

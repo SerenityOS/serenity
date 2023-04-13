@@ -66,7 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::calendar_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return temporalTime.[[Calendar]].
     return Value(&temporal_time->calendar());
@@ -77,7 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::hour_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return 𝔽(temporalTime.[[ISOHour]]).
     return Value(temporal_time->iso_hour());
@@ -88,7 +88,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::minute_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return 𝔽(temporalTime.[[ISOMinute]]).
     return Value(temporal_time->iso_minute());
@@ -99,7 +99,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::second_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return 𝔽(temporalTime.[[ISOSecond]]).
     return Value(temporal_time->iso_second());
@@ -110,7 +110,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::millisecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return 𝔽(temporalTime.[[ISOMillisecond]]).
     return Value(temporal_time->iso_millisecond());
@@ -121,7 +121,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::microsecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return 𝔽(temporalTime.[[ISOMicrosecond]]).
     return Value(temporal_time->iso_microsecond());
@@ -132,7 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::nanosecond_getter)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return 𝔽(temporalTime.[[ISONanosecond]]).
     return Value(temporal_time->iso_nanosecond());
@@ -145,10 +145,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::add)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ? AddDurationToOrSubtractDurationFromPlainTime(add, temporalTime, temporalDurationLike).
-    return TRY(add_duration_to_or_subtract_duration_from_plain_time(vm, ArithmeticOperation::Add, *temporal_time, temporal_duration_like));
+    return TRY(add_duration_to_or_subtract_duration_from_plain_time(vm, ArithmeticOperation::Add, temporal_time, temporal_duration_like));
 }
 
 // 4.3.11 Temporal.PlainTime.prototype.subtract ( temporalDurationLike ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.subtract
@@ -158,10 +158,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::subtract)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ? AddDurationToOrSubtractDurationFromPlainTime(subtract, temporalTime, temporalDurationLike).
-    return TRY(add_duration_to_or_subtract_duration_from_plain_time(vm, ArithmeticOperation::Subtract, *temporal_time, temporal_duration_like));
+    return TRY(add_duration_to_or_subtract_duration_from_plain_time(vm, ArithmeticOperation::Subtract, temporal_time, temporal_duration_like));
 }
 
 // 4.3.12 Temporal.PlainTime.prototype.with ( temporalTimeLike [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.with
@@ -169,7 +169,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::with)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     auto temporal_time_like_argument = vm.argument(0);
 
@@ -244,10 +244,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::until)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ? DifferenceTemporalPlainTime(until, temporalTime, other, options).
-    return TRY(difference_temporal_plain_time(vm, DifferenceOperation::Until, *temporal_time, other, options));
+    return TRY(difference_temporal_plain_time(vm, DifferenceOperation::Until, temporal_time, other, options));
 }
 
 // 4.3.14 Temporal.PlainTime.prototype.since ( other [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.since
@@ -258,10 +258,10 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::since)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ? DifferenceTemporalPlainTime(since, temporalTime, other, options).
-    return TRY(difference_temporal_plain_time(vm, DifferenceOperation::Since, *temporal_time, other, options));
+    return TRY(difference_temporal_plain_time(vm, DifferenceOperation::Since, temporal_time, other, options));
 }
 
 // 4.3.15 Temporal.PlainTime.prototype.round ( roundTo ), https://tc39.es/proposal-temporal/#sec-temporal.plaintime.prototype.round
@@ -271,7 +271,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::round)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. If roundTo is undefined, then
     if (vm.argument(0).is_undefined()) {
@@ -321,7 +321,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::equals)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Set other to ? ToTemporalTime(other).
     auto* other = TRY(to_temporal_time(vm, vm.argument(0)));
@@ -359,7 +359,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_plain_date_time)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Set temporalDate to ? ToTemporalDate(temporalDate).
     auto* temporal_date = TRY(to_temporal_date(vm, vm.argument(0)));
@@ -375,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_zoned_date_time)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. If Type(item) is not Object, then
     if (!item.is_object()) {
@@ -424,7 +424,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::get_iso_fields)
 
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Let fields be OrdinaryObjectCreate(%Object.prototype%).
     auto fields = Object::create(realm, realm.intrinsics().object_prototype());
@@ -459,7 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_string)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Set options to ? GetOptionsObject(options).
     auto* options = TRY(get_options_object(vm, vm.argument(0)));
@@ -483,7 +483,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_locale_string)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ! TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
     auto string = MUST_OR_THROW_OOM(temporal_time_to_string(vm, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv));
@@ -495,7 +495,7 @@ JS_DEFINE_NATIVE_FUNCTION(PlainTimePrototype::to_json)
 {
     // 1. Let temporalTime be the this value.
     // 2. Perform ? RequireInternalSlot(temporalTime, [[InitializedTemporalTime]]).
-    auto* temporal_time = TRY(typed_this_object(vm));
+    auto temporal_time = TRY(typed_this_object(vm));
 
     // 3. Return ! TemporalTimeToString(temporalTime.[[ISOHour]], temporalTime.[[ISOMinute]], temporalTime.[[ISOSecond]], temporalTime.[[ISOMillisecond]], temporalTime.[[ISOMicrosecond]], temporalTime.[[ISONanosecond]], "auto").
     auto string = MUST_OR_THROW_OOM(temporal_time_to_string(vm, temporal_time->iso_hour(), temporal_time->iso_minute(), temporal_time->iso_second(), temporal_time->iso_millisecond(), temporal_time->iso_microsecond(), temporal_time->iso_nanosecond(), "auto"sv));

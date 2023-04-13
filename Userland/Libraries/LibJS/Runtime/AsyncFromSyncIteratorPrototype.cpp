@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
 
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
@@ -102,7 +102,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
 
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::throw_)
 
     // 1. Let O be the this value.
     // 2. Assert: O is an Object that has a [[SyncIteratorRecord]] internal slot.
-    auto* this_object = MUST(typed_this_object(vm));
+    auto this_object = MUST(typed_this_object(vm));
 
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     auto promise_capability = MUST(new_promise_capability(vm, realm.intrinsics().promise_constructor()));

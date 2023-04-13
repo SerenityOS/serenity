@@ -44,7 +44,7 @@ ThrowCompletionOr<void> MapPrototype::initialize(Realm& realm)
 // 24.1.3.1 Map.prototype.clear ( ), https://tc39.es/ecma262/#sec-map.prototype.clear
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     map->map_clear();
     return js_undefined();
 }
@@ -52,7 +52,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::clear)
 // 24.1.3.3 Map.prototype.delete ( key ), https://tc39.es/ecma262/#sec-map.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     return Value(map->map_remove(vm.argument(0)));
 }
 
@@ -61,15 +61,15 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::entries)
 {
     auto& realm = *vm.current_realm();
 
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
 
-    return MapIterator::create(realm, *map, Object::PropertyKind::KeyAndValue);
+    return MapIterator::create(realm, map, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.1.3.5 Map.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-map.prototype.foreach
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     if (!vm.argument(0).is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, TRY_OR_THROW_OOM(vm, vm.argument(0).to_string_without_side_effects()));
     auto this_value = vm.this_value();
@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::for_each)
 // 24.1.3.6 Map.prototype.get ( key ), https://tc39.es/ecma262/#sec-map.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     auto result = map->map_get(vm.argument(0));
     if (!result.has_value())
         return js_undefined();
@@ -91,7 +91,7 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::get)
 // 24.1.3.7 Map.prototype.has ( key ), https://tc39.es/ecma262/#sec-map.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     return map->map_has(vm.argument(0));
 }
 
@@ -100,15 +100,15 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::keys)
 {
     auto& realm = *vm.current_realm();
 
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
 
-    return MapIterator::create(realm, *map, Object::PropertyKind::Key);
+    return MapIterator::create(realm, map, Object::PropertyKind::Key);
 }
 
 // 24.1.3.9 Map.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-map.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     auto key = vm.argument(0);
     if (key.is_negative_zero())
         key = Value(0);
@@ -121,15 +121,15 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
 {
     auto& realm = *vm.current_realm();
 
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
 
-    return MapIterator::create(realm, *map, Object::PropertyKind::Value);
+    return MapIterator::create(realm, map, Object::PropertyKind::Value);
 }
 
 // 24.1.3.10 get Map.prototype.size, https://tc39.es/ecma262/#sec-get-map.prototype.size
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::size_getter)
 {
-    auto* map = TRY(typed_this_object(vm));
+    auto map = TRY(typed_this_object(vm));
     return Value(map->map_size());
 }
 

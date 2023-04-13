@@ -33,7 +33,7 @@ ThrowCompletionOr<void> GeneratorPrototype::initialize(Realm& realm)
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::next)
 {
     // 1. Return ? GeneratorResume(this value, value, empty).
-    auto* generator_object = TRY(typed_this_object(vm));
+    auto generator_object = TRY(typed_this_object(vm));
     return generator_object->resume(vm, vm.argument(0), {});
 }
 
@@ -41,7 +41,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::next)
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
 {
     // 1. Let g be the this value.
-    auto* generator_object = TRY(typed_this_object(vm));
+    auto generator_object = TRY(typed_this_object(vm));
 
     // 2. Let C be Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
     auto completion = Completion(Completion::Type::Return, vm.argument(0), {});
@@ -54,7 +54,7 @@ JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::return_)
 JS_DEFINE_NATIVE_FUNCTION(GeneratorPrototype::throw_)
 {
     // 1. Let g be the this value.
-    auto* generator_object = TRY(typed_this_object(vm));
+    auto generator_object = TRY(typed_this_object(vm));
 
     // 2. Let C be ThrowCompletion(exception).
     auto completion = throw_completion(vm.argument(0));

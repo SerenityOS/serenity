@@ -39,7 +39,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::add)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
-    auto* weak_set = TRY(typed_this_object(vm));
+    auto weak_set = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(value) is false, throw a TypeError exception.
     if (!can_be_held_weakly(value))
@@ -62,7 +62,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::delete_)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
-    auto* weak_set = TRY(typed_this_object(vm));
+    auto weak_set = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(value) is false, return false.
     if (!can_be_held_weakly(value))
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakSetPrototype::has)
 
     // 1. Let S be the this value.
     // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
-    auto* weak_set = TRY(typed_this_object(vm));
+    auto weak_set = TRY(typed_this_object(vm));
 
     // 3. If CanBeHeldWeakly(value) is false, return false.
     if (!can_be_held_weakly(value))

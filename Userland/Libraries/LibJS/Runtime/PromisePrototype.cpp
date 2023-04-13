@@ -50,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     auto promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, *promise, realm.intrinsics().promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, promise, realm.intrinsics().promise_constructor()));
 
     // 4. Let resultCapability be ? NewPromiseCapability(C).
     auto result_capability = TRY(new_promise_capability(vm, constructor));

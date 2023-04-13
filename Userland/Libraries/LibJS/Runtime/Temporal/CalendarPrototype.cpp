@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::id_getter)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Return calendar.[[Identifier]].
     return { PrimitiveString::create(vm, calendar->identifier()) };
@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_from_fields)
     auto result = TRY(iso_date_from_fields(vm, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return TRY(create_temporal_date(vm, result.year, result.month, result.day, *calendar));
+    return TRY(create_temporal_date(vm, result.year, result.month, result.day, calendar));
 }
 
 // 12.4.5 Temporal.Calendar.prototype.yearMonthFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.yearmonthfromfields
@@ -112,7 +112,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -129,7 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_month_from_fields)
     auto result = TRY(iso_year_month_from_fields(vm, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalYearMonth(result.[[Year]], result.[[Month]], calendar, result.[[ReferenceISODay]]).
-    return TRY(create_temporal_year_month(vm, result.year, result.month, *calendar, result.reference_iso_day));
+    return TRY(create_temporal_year_month(vm, result.year, result.month, calendar, result.reference_iso_day));
 }
 
 // 12.4.6 Temporal.Calendar.prototype.monthDayFromFields ( fields [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.monthdayfromfields
@@ -138,7 +138,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -155,7 +155,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_day_from_fields)
     auto result = TRY(iso_month_day_from_fields(vm, fields.as_object(), *options));
 
     // 7. Return ? CreateTemporalMonthDay(result.[[Month]], result.[[Day]], calendar, result.[[ReferenceISOYear]]).
-    return TRY(create_temporal_month_day(vm, result.month, result.day, *calendar, result.reference_iso_year));
+    return TRY(create_temporal_month_day(vm, result.month, result.day, calendar, result.reference_iso_year));
 }
 
 // 12.4.7 Temporal.Calendar.prototype.dateAdd ( date, duration [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateadd
@@ -164,7 +164,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -188,7 +188,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_add)
     auto result = TRY(add_iso_date(vm, date->iso_year(), date->iso_month(), date->iso_day(), duration->years(), duration->months(), duration->weeks(), balance_result.days, overflow));
 
     // 10. Return ? CreateTemporalDate(result.[[Year]], result.[[Month]], result.[[Day]], calendar).
-    return TRY(create_temporal_date(vm, result.year, result.month, result.day, *calendar));
+    return TRY(create_temporal_date(vm, result.year, result.month, result.day, calendar));
 }
 
 // 12.4.8 Temporal.Calendar.prototype.dateUntil ( one, two [ , options ] ), https://tc39.es/proposal-temporal/#sec-temporal.calendar.prototype.dateuntil
@@ -197,7 +197,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::date_until)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -231,7 +231,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -256,7 +256,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -287,7 +287,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::month_code)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -312,7 +312,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -336,7 +336,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -354,7 +354,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::day_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -372,7 +372,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::week_of_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -393,7 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::year_of_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -414,7 +414,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_week)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -432,7 +432,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_month)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -454,7 +454,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::days_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -476,7 +476,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::months_in_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -498,7 +498,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::in_leap_year)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -528,7 +528,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Assert: calendar.[[Identifier]] is "iso8601".
     VERIFY(calendar->identifier() == "iso8601"sv);
@@ -595,7 +595,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::merge_fields)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Set fields to ? ToObject(fields).
     auto fields = TRY(vm.argument(0).to_object(vm));
@@ -615,7 +615,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_string)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Return calendar.[[Identifier]].
     return PrimitiveString::create(vm, calendar->identifier());
@@ -626,7 +626,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::to_json)
 {
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. Return ? ToString(calendar).
     return PrimitiveString::create(vm, TRY(Value(calendar).to_string(vm)));
@@ -639,7 +639,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era)
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
@@ -667,7 +667,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::era_year)
 
     // 1. Let calendar be the this value.
     // 2. Perform ? RequireInternalSlot(calendar, [[InitializedTemporalCalendar]]).
-    auto* calendar = TRY(typed_this_object(vm));
+    auto calendar = TRY(typed_this_object(vm));
 
     // 3. If Type(temporalDateLike) is not Object or temporalDateLike does not have an [[InitializedTemporalDate]], [[InitializedTemporalDateTime]], or [[InitializedTemporalYearMonth]] internal slot, then
     if (!temporal_date_like.is_object() || !(is<PlainDate>(temporal_date_like.as_object()) || is<PlainDateTime>(temporal_date_like.as_object()) || is<PlainYearMonth>(temporal_date_like.as_object()))) {
