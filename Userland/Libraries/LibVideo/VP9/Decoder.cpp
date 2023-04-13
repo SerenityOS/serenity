@@ -6,6 +6,7 @@
  */
 
 #include <AK/IntegralMath.h>
+#include <AK/TypedTransfer.h>
 #include <LibGfx/Size.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
 
@@ -1766,15 +1767,15 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
                     stride >>= frame_context.color_config.subsampling_x;
                 }
 
-                auto original_buffer = get_output_buffer(plane);
+                auto const& original_buffer = get_output_buffer(plane);
                 auto& frame_store_buffer = reference_frame.frame_planes[plane];
                 frame_store_buffer.resize_and_keep_capacity(width * height);
+                VERIFY(original_buffer.size() >= frame_store_buffer.size());
 
-                for (auto x = 0u; x < width; x++) {
-                    for (auto y = 0u; y < height; y++) {
-                        auto sample = original_buffer[index_from_row_and_column(y, x, stride)];
-                        frame_store_buffer[index_from_row_and_column(y, x, width)] = sample;
-                    }
+                for (auto y = 0u; y < height; y++) {
+                    auto const* source = &original_buffer[index_from_row_and_column(y, 0, stride)];
+                    auto* destination = &frame_store_buffer[index_from_row_and_column(y, 0, width)];
+                    AK::TypedTransfer<RemoveReference<decltype(*destination)>>::copy(destination, source, width);
                 }
             }
         }
