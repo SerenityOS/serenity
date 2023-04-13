@@ -96,17 +96,6 @@ enum class CipherSuite {
 };
 
 // Defined in RFC 5246 section 7.4.1.4.1
-enum class HashAlgorithm : u8 {
-    None = 0,
-    MD5 = 1,
-    SHA1 = 2,
-    SHA224 = 3,
-    SHA256 = 4,
-    SHA384 = 5,
-    SHA512 = 6,
-};
-
-// Defined in RFC 5246 section 7.4.1.4.1
 struct SignatureAndHashAlgorithm {
     HashAlgorithm hash;
     SignatureAlgorithm signature;
