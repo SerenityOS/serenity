@@ -386,9 +386,10 @@ enum MouseButton : u8 {
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, KeyCode key, u8 modifiers, u32 code_point, u32 scancode)
+    KeyEvent(Type type, KeyCode key, u8 map_entry_index, u8 modifiers, u32 code_point, u32 scancode)
         : Event(type)
         , m_key(key)
+        , m_map_entry_index(map_entry_index)
         , m_modifiers(modifiers)
         , m_code_point(code_point)
         , m_scancode(scancode)
@@ -411,6 +412,8 @@ public:
     }
     u32 scancode() const { return m_scancode; }
 
+    u8 map_entry_index() const { return m_map_entry_index; }
+
     ByteString to_byte_string() const;
 
     bool is_arrow_key() const
@@ -429,6 +432,7 @@ public:
 private:
     friend class ConnectionToWindowServer;
     KeyCode m_key { KeyCode::Key_Invalid };
+    u8 m_map_entry_index { 0 };
     u8 m_modifiers { 0 };
     u32 m_code_point { 0 };
     u32 m_scancode { 0 };

@@ -60,8 +60,9 @@ enum MouseButton : u8 {
 
 class KeyEvent final : public Event {
 public:
-    KeyEvent(Type type, int key, u32 code_point, u8 modifiers, u32 scancode)
+    KeyEvent(Type type, int key, u8 map_entry_index, u32 code_point, u8 modifiers, u32 scancode)
         : Event(type)
+        , m_map_entry_index(map_entry_index)
         , m_key(key)
         , m_code_point(code_point)
         , m_modifiers(modifiers)
@@ -77,10 +78,12 @@ public:
     u8 modifiers() const { return m_modifiers; }
     u32 code_point() const { return m_code_point; }
     u32 scancode() const { return m_scancode; }
+    u8 map_entry_index() const { return m_map_entry_index; }
 
 private:
     friend class EventLoop;
     friend class Screen;
+    u8 m_map_entry_index { 0 };
     int m_key { 0 };
     u32 m_code_point { 0 };
     u8 m_modifiers { 0 };
