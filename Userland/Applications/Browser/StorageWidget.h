@@ -17,9 +17,10 @@
 namespace Browser {
 
 class StorageWidget final : public GUI::Widget {
-    C_OBJECT(StorageWidget);
+    C_OBJECT_ABSTRACT(StorageWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<StorageWidget>> try_create();
     virtual ~StorageWidget() override = default;
     void set_cookies_entries(Vector<Web::Cookie::Cookie> entries);
     void clear_cookies();
@@ -33,7 +34,7 @@ public:
     void clear_session_storage_entries();
 
 private:
-    StorageWidget();
+    explicit StorageWidget();
 
     void delete_cookie(Web::Cookie::Cookie);
 
