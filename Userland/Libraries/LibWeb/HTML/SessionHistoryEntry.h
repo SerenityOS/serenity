@@ -36,22 +36,30 @@ struct SessionHistoryEntry final : public JS::Cell {
     AK::URL url;
 
     // document, a Document or null
+    // FIXME: this property is not present in the spec anymore and should be gone after introducing navigables
     JS::GCPtr<DOM::Document> document;
 
-    // serialized state, which is serialized state or null, initially null
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-document-state
+    JS::GCPtr<HTML::DocumentState> document_state;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-serialized-state
+    // serialized state, which is serialized state, initially StructuredSerializeForStorage(null).
     Optional<DeprecatedString> serialized_state;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-scroll-restoration-mode
+    // scroll restoration mode, a scroll restoration mode, initially "auto"
+    ScrollRestorationMode scroll_restoration_mode { ScrollRestorationMode::Auto };
 
     // policy container, a policy container or null
     Optional<PolicyContainer> policy_container;
 
-    // scroll restoration mode, a scroll restoration mode, initially "auto"
-    ScrollRestorationMode scroll_restoration_mode { ScrollRestorationMode::Auto };
-
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-scroll-position
     // FIXME: scroll position data, which is scroll position data for the document's restorable scrollable regions
 
     // browsing context name, a browsing context name or null, initially null
     Optional<DeprecatedString> browsing_context_name;
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-other
     // FIXME: persisted user state, which is implementation-defined, initially null
     // NOTE: This is where we could remember the state of form controls, for example.
 
