@@ -22,6 +22,8 @@ public:
 
 private:
     Comment(Document&, DeprecatedString const&);
+
+    virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
 };
 
 template<>
