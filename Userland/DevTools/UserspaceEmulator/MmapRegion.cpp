@@ -26,7 +26,7 @@ static void free_pages(void* ptr, size_t bytes)
     VERIFY(rc == 0);
 }
 
-NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 prot, DeprecatedString name)
+NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(FlatPtr base, FlatPtr size, FlatPtr prot, DeprecatedString name)
 {
     auto* data = (u8*)mmap_initialized(size, 0, DeprecatedString::formatted("(UE) {}", name).characters());
     auto* shadow_data = (u8*)mmap_initialized(size, 1, "MmapRegion ShadowData");
@@ -35,7 +35,7 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_anonymous(u32 base, u32 size, u32 p
     return region;
 }
 
-NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32 prot, int flags, int fd, off_t offset, DeprecatedString name)
+NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(FlatPtr base, FlatPtr size, int prot, int flags, int fd, off_t offset, DeprecatedString name)
 {
     // Since we put the memory to an arbitrary location, do not pass MAP_FIXED and MAP_FIXED_NOREPLACE to the Kernel.
     auto real_flags = flags & ~(MAP_FIXED | MAP_FIXED_NOREPLACE);
@@ -48,7 +48,7 @@ NonnullOwnPtr<MmapRegion> MmapRegion::create_file_backed(u32 base, u32 size, u32
     return region;
 }
 
-MmapRegion::MmapRegion(u32 base, u32 size, int prot, u8* data, u8* shadow_data)
+MmapRegion::MmapRegion(FlatPtr base, FlatPtr size, int prot, u8* data, u8* shadow_data)
     : Region(base, size, true)
     , m_data(data)
     , m_shadow_data(shadow_data)
@@ -79,7 +79,7 @@ ValueWithShadow<u8> MmapRegion::read8(FlatPtr offset)
     return { m_data[offset], m_shadow_data[offset] };
 }
 
-ValueWithShadow<u16> MmapRegion::read16(u32 offset)
+ValueWithShadow<u16> MmapRegion::read16(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("16-bit read from unreadable MmapRegion @ {:p}"sv, base() + offset);
@@ -100,7 +100,7 @@ ValueWithShadow<u16> MmapRegion::read16(u32 offset)
     return { value, shadow };
 }
 
-ValueWithShadow<u32> MmapRegion::read32(u32 offset)
+ValueWithShadow<FlatPtr> MmapRegion::read32(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("32-bit read from unreadable MmapRegion @ {:p}"sv, base() + offset);
@@ -114,14 +114,14 @@ ValueWithShadow<u32> MmapRegion::read32(u32 offset)
     }
 
     VERIFY(offset + 3 < size());
-    u32 value, shadow;
+    FlatPtr value, shadow;
     ByteReader::load(m_data + offset, value);
     ByteReader::load(m_shadow_data + offset, shadow);
 
     return { value, shadow };
 }
 
-ValueWithShadow<u64> MmapRegion::read64(u32 offset)
+ValueWithShadow<u64> MmapRegion::read64(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("64-bit read from unreadable MmapRegion @ {:p}"sv, base() + offset);
@@ -142,7 +142,7 @@ ValueWithShadow<u64> MmapRegion::read64(u32 offset)
     return { value, shadow };
 }
 
-ValueWithShadow<u128> MmapRegion::read128(u32 offset)
+ValueWithShadow<u128> MmapRegion::read128(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("128-bit read from unreadable MmapRegion @ {:p}"sv, base() + offset);
@@ -162,7 +162,7 @@ ValueWithShadow<u128> MmapRegion::read128(u32 offset)
     return { value, shadow };
 }
 
-ValueWithShadow<u256> MmapRegion::read256(u32 offset)
+ValueWithShadow<u256> MmapRegion::read256(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("256-bit read from unreadable MmapRegion @ {:p}"sv, base() + offset);
@@ -182,7 +182,7 @@ ValueWithShadow<u256> MmapRegion::read256(u32 offset)
     return { value, shadow };
 }
 
-void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
+void MmapRegion::write8(FlatPtr offset, ValueWithShadow<u8> value)
 {
     if (!is_writable()) {
         reportln("8-bit write from unwritable MmapRegion @ {:p}"sv, base() + offset);
@@ -200,7 +200,7 @@ void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
     m_shadow_data[offset] = value.shadow()[0];
 }
 
-void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
+void MmapRegion::write16(FlatPtr offset, ValueWithShadow<u16> value)
 {
     if (!is_writable()) {
         reportln("16-bit write from unwritable MmapRegion @ {:p}"sv, base() + offset);
@@ -218,7 +218,7 @@ void MmapRegion::write16(u32 offset, ValueWithShadow<u16> value)
     ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
-void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
+void MmapRegion::write32(FlatPtr offset, ValueWithShadow<u32> value)
 {
     if (!is_writable()) {
         reportln("32-bit write from unwritable MmapRegion @ {:p}"sv, base() + offset);
@@ -237,7 +237,7 @@ void MmapRegion::write32(u32 offset, ValueWithShadow<u32> value)
     ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
-void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
+void MmapRegion::write64(FlatPtr offset, ValueWithShadow<u64> value)
 {
     if (!is_writable()) {
         reportln("64-bit write from unwritable MmapRegion @ {:p}"sv, base() + offset);
@@ -256,7 +256,7 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
     ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
-void MmapRegion::write128(u32 offset, ValueWithShadow<u128> value)
+void MmapRegion::write128(FlatPtr offset, ValueWithShadow<u128> value)
 {
     if (!is_writable()) {
         reportln("128-bit write from unwritable MmapRegion @ {:p}"sv, base() + offset);
@@ -274,7 +274,7 @@ void MmapRegion::write128(u32 offset, ValueWithShadow<u128> value)
     ByteReader::store(m_shadow_data + offset, value.shadow());
 }
 
-void MmapRegion::write256(u32 offset, ValueWithShadow<u256> value)
+void MmapRegion::write256(FlatPtr offset, ValueWithShadow<u256> value)
 {
     if (!is_writable()) {
         reportln("256-bit write from unwritable MmapRegion @ {:p}"sv, base() + offset);

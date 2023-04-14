@@ -29,10 +29,10 @@
 
 namespace UserspaceEmulator {
 
-static constexpr u32 stack_location = 0x10000000;
+static constexpr FlatPtr stack_location = 0x10000000;
 static constexpr size_t stack_size = 1 * MiB;
 
-static constexpr u32 signal_trampoline_location = 0xb0000000;
+static constexpr FlatPtr signal_trampoline_location = 0xb0000000;
 
 static Emulator* s_the;
 
@@ -99,16 +99,16 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);
     m_mmu.add_region(move(stack_region));
-    m_cpu->set_esp(shadow_wrap_as_initialized<u32>(stack_location + stack_size));
+    m_cpu->set_esp(shadow_wrap_as_initialized<FlatPtr>(stack_location + stack_size));
 
-    Vector<u32> argv_entries;
+    Vector<FlatPtr> argv_entries;
 
     for (auto const& argument : m_arguments) {
         m_cpu->push_string(argument);
         argv_entries.append(m_cpu->esp().value());
     }
 
-    Vector<u32> env_entries;
+    Vector<FlatPtr> env_entries;
 
     for (auto const& variable : m_environment) {
         m_cpu->push_string(variable.view());
@@ -127,20 +127,20 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
         m_cpu->push_buffer((u8 const*)&value, sizeof(value));
     }
 
-    m_cpu->push32(shadow_wrap_as_initialized<u32>(0)); // char** envp = { envv_entries..., nullptr }
+    m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(0)); // char** envp = { envv_entries..., nullptr }
     for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
         m_cpu->push32(shadow_wrap_as_initialized(env_entries[i]));
-    u32 envp = m_cpu->esp().value();
+    FlatPtr envp = m_cpu->esp().value();
 
-    m_cpu->push32(shadow_wrap_as_initialized<u32>(0)); // char** argv = { argv_entries..., nullptr }
+    m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(0)); // char** argv = { argv_entries..., nullptr }
     for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
         m_cpu->push32(shadow_wrap_as_initialized(argv_entries[i]));
-    u32 argv = m_cpu->esp().value();
+    FlatPtr argv = m_cpu->esp().value();
 
     while ((m_cpu->esp().value() + 4) % 16 != 0)
-        m_cpu->push32(shadow_wrap_as_initialized<u32>(0)); // (alignment)
+        m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(0)); // (alignment)
 
-    u32 argc = argv_entries.size();
+    FlatPtr argc = argv_entries.size();
     m_cpu->push32(shadow_wrap_as_initialized(envp));
     m_cpu->push32(shadow_wrap_as_initialized(argv));
     m_cpu->push32(shadow_wrap_as_initialized(argc));
@@ -389,9 +389,9 @@ Vector<FlatPtr> Emulator::raw_backtrace()
 
     // FIXME: Maybe do something if the backtrace has uninitialized data in the frame chain.
 
-    u32 frame_ptr = m_cpu->ebp().value();
+    FlatPtr frame_ptr = m_cpu->ebp().value();
     while (frame_ptr) {
-        u32 ret_ptr = m_mmu.read32({ 0x23, frame_ptr + 4 }).value();
+        FlatPtr ret_ptr = m_mmu.read32({ 0x23, frame_ptr + 4 }).value();
         if (!ret_ptr)
             break;
         backtrace.append(ret_ptr);
@@ -692,9 +692,9 @@ void Emulator::dispatch_one_pending_signal()
     m_cpu->push32(shadow_wrap_as_initialized(0u));
     m_cpu->push32(shadow_wrap_as_initialized(pointer_to_ucontext));
     m_cpu->push32(shadow_wrap_as_initialized(pointer_to_signal_info));
-    m_cpu->push32(shadow_wrap_as_initialized(static_cast<u32>(signum)));
+    m_cpu->push32(shadow_wrap_as_initialized(static_cast<FlatPtr>(signum)));
 
-    m_cpu->push32(shadow_wrap_as_initialized<u32>(handler.handler));
+    m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(handler.handler));
 
     m_cpu->set_eip(m_signal_trampoline);
 }

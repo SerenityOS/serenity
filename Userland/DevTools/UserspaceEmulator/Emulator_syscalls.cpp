@@ -34,7 +34,7 @@
 
 namespace UserspaceEmulator {
 
-u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
+FlatPtr Emulator::virt_syscall(FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
 {
     if constexpr (SPAM_DEBUG)
         reportln("Syscall: {} ({:x})"sv, Syscall::to_string((Syscall::Function)function), function);
@@ -747,7 +747,7 @@ int Emulator::virt$setgroups(ssize_t count, FlatPtr groups)
     return syscall(SC_setgroups, count, buffer.data());
 }
 
-u32 Emulator::virt$fcntl(int fd, int cmd, u32 arg)
+FlatPtr Emulator::virt$fcntl(int fd, int cmd, FlatPtr arg)
 {
     switch (cmd) {
     case F_DUPFD:
@@ -764,7 +764,7 @@ u32 Emulator::virt$fcntl(int fd, int cmd, u32 arg)
     return syscall(SC_fcntl, fd, cmd, arg);
 }
 
-u32 Emulator::virt$open(u32 params_addr)
+FlatPtr Emulator::virt$open(FlatPtr params_addr)
 {
     Syscall::SC_open_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
@@ -798,7 +798,7 @@ static void round_to_page_size(FlatPtr& address, size_t& size)
     size = new_end - address;
 }
 
-u32 Emulator::virt$munmap(FlatPtr address, size_t size)
+FlatPtr Emulator::virt$munmap(FlatPtr address, size_t size)
 {
     if (is_profiling())
         emit_profile_event(profile_stream(), "munmap"sv, DeprecatedString::formatted("\"ptr\": {}, \"size\": {}", address, size));
@@ -825,7 +825,7 @@ u32 Emulator::virt$munmap(FlatPtr address, size_t size)
     return 0;
 }
 
-u32 Emulator::virt$mmap(u32 params_addr)
+FlatPtr Emulator::virt$mmap(FlatPtr params_addr)
 {
     Syscall::SC_mmap_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
@@ -834,7 +834,7 @@ u32 Emulator::virt$mmap(u32 params_addr)
     if (params.size == 0)
         return -EINVAL;
 
-    u32 requested_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
+    FlatPtr requested_size = round_up_to_power_of_two(params.size, PAGE_SIZE);
     FlatPtr final_address;
 
     Optional<Range> result;
@@ -906,7 +906,7 @@ FlatPtr Emulator::virt$mremap(FlatPtr params_addr)
     return -EINVAL;
 }
 
-u32 Emulator::virt$mount(u32 params_addr)
+FlatPtr Emulator::virt$mount(FlatPtr params_addr)
 {
     Syscall::SC_mount_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
@@ -920,12 +920,12 @@ u32 Emulator::virt$mount(u32 params_addr)
     return syscall(SC_mount, &params);
 }
 
-u32 Emulator::virt$gettid()
+FlatPtr Emulator::virt$gettid()
 {
     return gettid();
 }
 
-u32 Emulator::virt$getpid()
+FlatPtr Emulator::virt$getpid()
 {
     return getpid();
 }
@@ -935,17 +935,17 @@ pid_t Emulator::virt$getppid()
     return getppid();
 }
 
-u32 Emulator::virt$pledge(u32)
+FlatPtr Emulator::virt$pledge(FlatPtr)
 {
     return 0;
 }
 
-u32 Emulator::virt$unveil(u32)
+FlatPtr Emulator::virt$unveil(FlatPtr)
 {
     return 0;
 }
 
-u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
+FlatPtr Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
 {
     round_to_page_size(base, size);
     bool has_non_mmapped_region = false;
@@ -967,7 +967,7 @@ u32 Emulator::virt$mprotect(FlatPtr base, size_t size, int prot)
     return 0;
 }
 
-u32 Emulator::virt$madvise(FlatPtr, size_t, int)
+FlatPtr Emulator::virt$madvise(FlatPtr, size_t, int)
 {
     return 0;
 }
@@ -1002,7 +1002,7 @@ int Emulator::virt$setgid(gid_t gid)
     return syscall(SC_setgid, gid);
 }
 
-u32 Emulator::virt$write(int fd, FlatPtr data, ssize_t size)
+FlatPtr Emulator::virt$write(int fd, FlatPtr data, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
@@ -1010,7 +1010,7 @@ u32 Emulator::virt$write(int fd, FlatPtr data, ssize_t size)
     return syscall(SC_write, fd, buffer.data(), buffer.size());
 }
 
-u32 Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
+FlatPtr Emulator::virt$read(int fd, FlatPtr buffer, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
@@ -1344,7 +1344,7 @@ int Emulator::virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set)
 
 int Emulator::virt$sigreturn()
 {
-    u32 stack_ptr = m_cpu->esp().value();
+    FlatPtr stack_ptr = m_cpu->esp().value();
     auto local_pop = [&]<typename T>() {
         auto value = m_cpu->read_memory<T>({ m_cpu->ss(), stack_ptr });
         stack_ptr += sizeof(T);
@@ -1363,7 +1363,7 @@ int Emulator::virt$sigreturn()
 
     auto ucontext = local_pop.operator()<ucontext_t>();
 
-    auto eax = local_pop.operator()<u32>();
+    auto eax = local_pop.operator()<FlatPtr>();
 
     m_signal_mask = ucontext.value().uc_sigmask;
 
@@ -1551,7 +1551,7 @@ int Emulator::virt$readlink(FlatPtr params_addr)
     return rc;
 }
 
-u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
+FlatPtr Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
 {
     // TODO: This matches what Thread::make_thread_specific_region does. The kernel
     // ends up allocating one more page. Figure out if this is intentional.
@@ -1571,10 +1571,10 @@ u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
     memset(tcb_region->shadow_data(), 0x01, size);
 
     auto tls_region = make<SimpleRegion>(0, 4);
-    tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + (u32)size));
+    tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + (FlatPtr)size));
     memset(tls_region->shadow_data(), 0x01, 4);
 
-    u32 tls_base = tcb_region->base();
+    FlatPtr tls_base = tcb_region->base();
     mmu().add_region(move(tcb_region));
     mmu().set_tls_region(move(tls_region));
     return tls_base;
@@ -1585,7 +1585,7 @@ int Emulator::virt$beep()
     return syscall(SC_beep);
 }
 
-u32 Emulator::virt$sysconf(u32 name)
+FlatPtr Emulator::virt$sysconf(FlatPtr name)
 {
     return syscall(SC_sysconf, name);
 }
@@ -1615,7 +1615,7 @@ int Emulator::virt$poll(FlatPtr params_addr)
 
     Vector<pollfd, FD_SETSIZE> fds;
     struct timespec timeout;
-    u32 sigmask;
+    FlatPtr sigmask;
 
     if (params.fds)
         mmu().copy_from_vm(fds.data(), (FlatPtr)params.fds, sizeof(pollfd) * params.nfds);

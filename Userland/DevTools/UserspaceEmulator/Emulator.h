@@ -62,7 +62,7 @@ public:
 
     int exec();
     void handle_repl();
-    u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
+    FlatPtr virt_syscall(FlatPtr function, FlatPtr arg1, FlatPtr arg2, FlatPtr arg3);
 
     SoftMMU& mmu() { return m_mmu; }
 
@@ -143,7 +143,7 @@ private:
     void emit_profile_event(Stream&, StringView event_name, DeprecatedString const& contents);
 
     int virt$accept4(FlatPtr);
-    u32 virt$allocate_tls(FlatPtr, size_t);
+    FlatPtr virt$allocate_tls(FlatPtr, size_t);
     int virt$anon_create(size_t, int);
     int virt$beep();
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
@@ -165,7 +165,7 @@ private:
     int virt$faccessat(FlatPtr);
     int virt$fchmod(int, mode_t);
     int virt$fchown(int, uid_t, gid_t);
-    u32 virt$fcntl(int fd, int, u32);
+    FlatPtr virt$fcntl(int fd, int, FlatPtr);
     int virt$fork();
     int virt$fstat(int, FlatPtr);
     int virt$ftruncate(int fd, FlatPtr length_addr);
@@ -181,13 +181,13 @@ private:
     int virt$getpeername(FlatPtr);
     int virt$getpgid(pid_t);
     int virt$getpgrp();
-    u32 virt$getpid();
+    FlatPtr virt$getpid();
     pid_t virt$getppid();
     ssize_t virt$getrandom(FlatPtr buffer, size_t buffer_size, unsigned int flags);
     int virt$getsid(pid_t);
     int virt$getsockname(FlatPtr);
     int virt$getsockopt(FlatPtr);
-    u32 virt$gettid();
+    FlatPtr virt$gettid();
     uid_t virt$getuid();
     int virt$inode_watcher_add_watch(FlatPtr);
     int virt$inode_watcher_remove_watch(int, int);
@@ -196,24 +196,24 @@ private:
     int virt$killpg(int pgrp, int sig);
     int virt$listen(int, int);
     int virt$lseek(int fd, FlatPtr offset_addr, int whence);
-    u32 virt$madvise(FlatPtr, size_t, int);
+    FlatPtr virt$madvise(FlatPtr, size_t, int);
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
-    u32 virt$mmap(u32);
-    u32 virt$mount(u32);
-    u32 virt$mprotect(FlatPtr, size_t, int);
+    FlatPtr virt$mmap(FlatPtr);
+    FlatPtr virt$mount(FlatPtr);
+    FlatPtr virt$mprotect(FlatPtr, size_t, int);
     FlatPtr virt$mremap(FlatPtr);
     int virt$annotate_mapping(FlatPtr);
-    u32 virt$munmap(FlatPtr address, size_t size);
-    u32 virt$open(u32);
+    FlatPtr virt$munmap(FlatPtr address, size_t size);
+    FlatPtr virt$open(FlatPtr);
     FlatPtr virt$perf_event(int type, FlatPtr arg1, FlatPtr arg2);
     FlatPtr virt$perf_register_string(FlatPtr, size_t);
     int virt$pipe(FlatPtr pipefd, int flags);
-    u32 virt$pledge(u32);
+    FlatPtr virt$pledge(FlatPtr);
     int virt$poll(FlatPtr);
     int virt$profiling_disable(pid_t);
     int virt$profiling_enable(pid_t);
     int virt$purge(int mode);
-    u32 virt$read(int, FlatPtr, ssize_t);
+    FlatPtr virt$read(int, FlatPtr, ssize_t);
     int virt$readlink(FlatPtr);
     int virt$realpath(FlatPtr);
     int virt$recvfd(int, int);
@@ -241,13 +241,13 @@ private:
     int virt$stat(FlatPtr);
     int virt$symlink(FlatPtr address);
     void virt$sync();
-    u32 virt$sysconf(u32 name);
+    FlatPtr virt$sysconf(FlatPtr name);
     mode_t virt$umask(mode_t);
     int virt$uname(FlatPtr params_addr);
     int virt$unlink(FlatPtr path, size_t path_length);
-    u32 virt$unveil(u32);
+    FlatPtr virt$unveil(FlatPtr);
     int virt$waitid(FlatPtr);
-    u32 virt$write(int, FlatPtr, ssize_t);
+    FlatPtr virt$write(int, FlatPtr, ssize_t);
 
     void dispatch_one_pending_signal();
     MmapRegion const* find_text_region(FlatPtr address);

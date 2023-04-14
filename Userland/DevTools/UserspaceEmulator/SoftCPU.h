@@ -23,7 +23,11 @@ class Region;
 
 union PartAddressableRegister {
     struct {
-        u32 full_u32;
+        u64 full_u64;
+    };
+    struct {
+        u32 low_u32;
+        u32 high_u32;
     };
     struct {
         u16 low_u16;
@@ -147,12 +151,22 @@ public:
 
     ValueWithShadow<u32> const_gpr32(X86::RegisterIndex32 reg) const
     {
-        return m_gpr[reg].slice<&PartAddressableRegister::full_u32>();
+        return m_gpr[reg].slice<&PartAddressableRegister::low_u32>();
     }
 
     ValueAndShadowReference<u32> gpr32(X86::RegisterIndex32 reg)
     {
-        return m_gpr[reg].reference_to<&PartAddressableRegister::full_u32>();
+        return m_gpr[reg].reference_to<&PartAddressableRegister::low_u32>();
+    }
+
+    ValueWithShadow<u64> const_gpr64(X86::RegisterIndex64 reg) const
+    {
+        return m_gpr[reg].slice<&PartAddressableRegister::full_u64>();
+    }
+
+    ValueAndShadowReference<u64> gpr64(X86::RegisterIndex64 reg)
+    {
+        return m_gpr[reg].reference_to<&PartAddressableRegister::full_u64>();
     }
 
     template<typename T>
@@ -265,6 +279,23 @@ public:
         m_flags_tainted = eflags.is_uninitialized();
     }
 
+    ValueWithShadow<u64> rax() const { return const_gpr64(X86::RegisterRAX); }
+    ValueWithShadow<u64> rbx() const { return const_gpr64(X86::RegisterRBX); }
+    ValueWithShadow<u64> rcx() const { return const_gpr64(X86::RegisterRCX); }
+    ValueWithShadow<u64> rdx() const { return const_gpr64(X86::RegisterRDX); }
+    ValueWithShadow<u64> rsp() const { return const_gpr64(X86::RegisterRSP); }
+    ValueWithShadow<u64> rbp() const { return const_gpr64(X86::RegisterRBP); }
+    ValueWithShadow<u64> rsi() const { return const_gpr64(X86::RegisterRSI); }
+    ValueWithShadow<u64> rdi() const { return const_gpr64(X86::RegisterRDI); }
+    ValueWithShadow<u64> r8() const { return const_gpr64(X86::RegisterR8); }
+    ValueWithShadow<u64> r9() const { return const_gpr64(X86::RegisterR9); }
+    ValueWithShadow<u64> r10() const { return const_gpr64(X86::RegisterR10); }
+    ValueWithShadow<u64> r11() const { return const_gpr64(X86::RegisterR11); }
+    ValueWithShadow<u64> r12() const { return const_gpr64(X86::RegisterR12); }
+    ValueWithShadow<u64> r13() const { return const_gpr64(X86::RegisterR13); }
+    ValueWithShadow<u64> r14() const { return const_gpr64(X86::RegisterR14); }
+    ValueWithShadow<u64> r15() const { return const_gpr64(X86::RegisterR15); }
+
     ValueWithShadow<u32> eax() const { return const_gpr32(X86::RegisterEAX); }
     ValueWithShadow<u32> ebx() const { return const_gpr32(X86::RegisterEBX); }
     ValueWithShadow<u32> ecx() const { return const_gpr32(X86::RegisterECX); }
@@ -295,6 +326,23 @@ public:
     long double fpu_get(u8 index) { return m_fpu.fpu_get(index); }
     long double fpu_pop() { return m_fpu.fpu_pop(); }
     MMX mmx_get(u8 index) const { return m_fpu.mmx_get(index); };
+
+    void set_rax(ValueWithShadow<u64> value) { gpr64(X86::RegisterRAX) = value; }
+    void set_rbx(ValueWithShadow<u64> value) { gpr64(X86::RegisterRBX) = value; }
+    void set_rcx(ValueWithShadow<u64> value) { gpr64(X86::RegisterRCX) = value; }
+    void set_rdx(ValueWithShadow<u64> value) { gpr64(X86::RegisterRDX) = value; }
+    void set_rsp(ValueWithShadow<u64> value) { gpr64(X86::RegisterRSP) = value; }
+    void set_rbp(ValueWithShadow<u64> value) { gpr64(X86::RegisterRBP) = value; }
+    void set_rsi(ValueWithShadow<u64> value) { gpr64(X86::RegisterRSI) = value; }
+    void set_rdi(ValueWithShadow<u64> value) { gpr64(X86::RegisterRDI) = value; }
+    void set_r8(ValueWithShadow<u64> value) { gpr64(X86::RegisterR8) = value; }
+    void set_r9(ValueWithShadow<u64> value) { gpr64(X86::RegisterR9) = value; }
+    void set_r10(ValueWithShadow<u64> value) { gpr64(X86::RegisterR10) = value; }
+    void set_r11(ValueWithShadow<u64> value) { gpr64(X86::RegisterR11) = value; }
+    void set_r12(ValueWithShadow<u64> value) { gpr64(X86::RegisterR12) = value; }
+    void set_r13(ValueWithShadow<u64> value) { gpr64(X86::RegisterR13) = value; }
+    void set_r14(ValueWithShadow<u64> value) { gpr64(X86::RegisterR14) = value; }
+    void set_r15(ValueWithShadow<u64> value) { gpr64(X86::RegisterR15) = value; }
 
     void set_eax(ValueWithShadow<u32> value) { gpr32(X86::RegisterEAX) = value; }
     void set_ebx(ValueWithShadow<u32> value) { gpr32(X86::RegisterEBX) = value; }

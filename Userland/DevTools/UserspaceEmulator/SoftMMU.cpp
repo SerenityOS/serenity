@@ -48,7 +48,7 @@ void SoftMMU::ensure_split_at(X86::LogicalAddress address)
     // FIXME: If this fails, call Emulator::dump_backtrace
     VERIFY(address.selector() != 0x2b);
 
-    u32 offset = address.offset();
+    FlatPtr offset = address.offset();
     VERIFY((offset & (PAGE_SIZE - 1)) == 0);
     size_t page_index = address.offset() / PAGE_SIZE;
 

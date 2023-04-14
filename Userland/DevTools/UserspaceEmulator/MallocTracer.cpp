@@ -320,12 +320,12 @@ void MallocTracer::populate_memory_graph()
         if (mallocation.freed)
             return IterationDecision::Continue;
 
-        size_t pointers_in_mallocation = mallocation.size / sizeof(u32);
+        size_t pointers_in_mallocation = mallocation.size / sizeof(FlatPtr);
 
         auto& edges_from_mallocation = m_memory_graph.find(mallocation.address)->value;
 
         for (size_t i = 0; i < pointers_in_mallocation; ++i) {
-            auto value = m_emulator.mmu().read32({ 0x23, mallocation.address + i * sizeof(u32) });
+            auto value = m_emulator.mmu().read32({ 0x23, mallocation.address + i * sizeof(FlatPtr) });
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
                 if constexpr (REACHABLE_DEBUG)
@@ -350,10 +350,10 @@ void MallocTracer::populate_memory_graph()
         if (is<MmapRegion>(region) && static_cast<const MmapRegion&>(region).is_malloc_block())
             return IterationDecision::Continue;
 
-        size_t pointers_in_region = region.size() / sizeof(u32);
+        size_t pointers_in_region = region.size() / sizeof(FlatPtr);
 
         for (size_t i = 0; i < pointers_in_region; ++i) {
-            auto value = region.read32(i * sizeof(u32));
+            auto value = region.read32(i * sizeof(FlatPtr));
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
                 if constexpr (REACHABLE_DEBUG)

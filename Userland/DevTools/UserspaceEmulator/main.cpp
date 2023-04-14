@@ -9,7 +9,9 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/DeprecatedFile.h>
 #include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCore/Process.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -18,9 +20,9 @@
 
 bool g_report_to_debug = false;
 
-int main(int argc, char** argv, char** env)
+ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    Vector<StringView> arguments;
+    Vector<StringView> positional_arguments;
     bool pause_on_startup { false };
     DeprecatedString profile_dump_path;
     bool enable_roi_mode { false };
@@ -36,20 +38,20 @@ int main(int argc, char** argv, char** env)
     parser.add_option(profile_dump_path, "File path for profile dump", "profile-file", 0, "path");
     parser.add_option(enable_roi_mode, "Enable Region-of-Interest mode for profiling", "roi", 0);
 
-    parser.add_positional_argument(arguments, "Command to emulate", "command");
+    parser.add_positional_argument(positional_arguments, "Command to emulate", "command");
 
-    parser.parse(argc, argv);
+    parser.parse(arguments);
 
     if (dump_profile && profile_instruction_interval == 0)
         profile_instruction_interval = 128;
 
     DeprecatedString executable_path;
-    if (arguments[0].contains("/"sv))
-        executable_path = Core::DeprecatedFile::real_path_for(arguments[0]);
+    if (positional_arguments[0].contains("/"sv))
+        executable_path = Core::DeprecatedFile::real_path_for(positional_arguments[0]);
     else
-        executable_path = Core::DeprecatedFile::resolve_executable_from_environment(arguments[0]).value_or({});
+        executable_path = Core::DeprecatedFile::resolve_executable_from_environment(positional_arguments[0]).value_or({});
     if (executable_path.is_empty()) {
-        reportln("Cannot find executable for '{}'."sv, arguments[0]);
+        reportln("Cannot find executable for '{}'."sv, positional_arguments[0]);
         return 1;
     }
 
@@ -82,12 +84,13 @@ int main(int argc, char** argv, char** env)
     }
 
     Vector<DeprecatedString> environment;
-    for (int i = 0; env[i]; ++i) {
-        environment.append(env[i]);
-    }
+    // TODO: Fix environment
+    //    for (int i = 0; arguments.env[i]; ++i) {
+    //        environment.append(env[i]);
+    //    }
 
     // FIXME: It might be nice to tear down the emulator properly.
-    auto& emulator = *new UserspaceEmulator::Emulator(executable_path, arguments, environment);
+    auto& emulator = *new UserspaceEmulator::Emulator(executable_path, positional_arguments, environment);
 
     emulator.set_profiling_details(dump_profile, profile_instruction_interval, profile_stream, profile_strings, profile_string_id_map);
     emulator.set_in_region_of_interest(!enable_roi_mode);
@@ -97,9 +100,9 @@ int main(int argc, char** argv, char** env)
 
     StringBuilder builder;
     builder.append("(UE) "sv);
-    builder.append(LexicalPath::basename(arguments[0]));
+    builder.append(LexicalPath::basename(positional_arguments[0]));
     if (auto result = Core::Process::set_name(builder.string_view(), Core::Process::SetThreadName::Yes); result.is_error()) {
-        reportln("Core::Process::set_name: {}"sv, result.error());
+        reportln("Core::Process::set_name: {}"sv, result.error().code());
         return 1;
     }
 

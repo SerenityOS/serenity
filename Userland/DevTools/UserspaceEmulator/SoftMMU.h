@@ -100,7 +100,7 @@ public:
                 return;
         }
         for (auto& region : m_regions) {
-            if (callback(region) == IterationDecision::Break)
+            if (callback(*region) == IterationDecision::Break)
                 return;
         }
     }

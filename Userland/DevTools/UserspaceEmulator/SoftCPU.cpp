@@ -238,45 +238,45 @@ void SoftCPU::write_memory256(X86::LogicalAddress address, ValueWithShadow<u256>
 void SoftCPU::push_string(StringView string)
 {
     u32 space_to_allocate = round_up_to_power_of_two(string.length() + 1, 16);
-    set_esp({ esp().value() - space_to_allocate, esp().shadow() });
-    m_emulator.mmu().copy_to_vm(esp().value(), string.characters_without_null_termination(), string.length());
-    m_emulator.mmu().write8({ 0x23, esp().value() + string.length() }, shadow_wrap_as_initialized((u8)'\0'));
+    set_rsp({ rsp().value() - space_to_allocate, rsp().shadow() });
+    m_emulator.mmu().copy_to_vm(rsp().value(), string.characters_without_null_termination(), string.length());
+    m_emulator.mmu().write8({ 0x23, rsp().value() + string.length() }, shadow_wrap_as_initialized((u8)'\0'));
 }
 
 void SoftCPU::push_buffer(u8 const* data, size_t size)
 {
-    set_esp({ esp().value() - size, esp().shadow() });
-    warn_if_uninitialized(esp(), "push_buffer");
-    m_emulator.mmu().copy_to_vm(esp().value(), data, size);
+    set_rsp({ rsp().value() - size, rsp().shadow() });
+    warn_if_uninitialized(rsp(), "push_buffer");
+    m_emulator.mmu().copy_to_vm(rsp().value(), data, size);
 }
 
 void SoftCPU::push32(ValueWithShadow<u32> value)
 {
-    set_esp({ esp().value() - sizeof(u32), esp().shadow() });
-    warn_if_uninitialized(esp(), "push32");
-    write_memory32({ ss(), esp().value() }, value);
+    set_rsp({ rsp().value() - sizeof(u32), rsp().shadow() });
+    warn_if_uninitialized(rsp(), "push32");
+    write_memory32({ ss(), rsp().value() }, value);
 }
 
 ValueWithShadow<u32> SoftCPU::pop32()
 {
-    warn_if_uninitialized(esp(), "pop32");
-    auto value = read_memory32({ ss(), esp().value() });
-    set_esp({ esp().value() + sizeof(u32), esp().shadow() });
+    warn_if_uninitialized(rsp(), "pop32");
+    auto value = read_memory32({ ss(), rsp().value() });
+    set_rsp({ rsp().value() + sizeof(u32), rsp().shadow() });
     return value;
 }
 
 void SoftCPU::push16(ValueWithShadow<u16> value)
 {
-    warn_if_uninitialized(esp(), "push16");
-    set_esp({ esp().value() - sizeof(u16), esp().shadow() });
-    write_memory16({ ss(), esp().value() }, value);
+    warn_if_uninitialized(rsp(), "push16");
+    set_rsp({ rsp().value() - sizeof(u16), rsp().shadow() });
+    write_memory16({ ss(), rsp().value() }, value);
 }
 
 ValueWithShadow<u16> SoftCPU::pop16()
 {
-    warn_if_uninitialized(esp(), "pop16");
-    auto value = read_memory16({ ss(), esp().value() });
-    set_esp({ esp().value() + sizeof(u16), esp().shadow() });
+    warn_if_uninitialized(rsp(), "pop16");
+    auto value = read_memory16({ ss(), rsp().value() });
+    set_rsp({ rsp().value() + sizeof(u16), rsp().shadow() });
     return value;
 }
 
@@ -1796,8 +1796,9 @@ void SoftCPU::INTO(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::INT_imm8(const X86::Instruction& insn)
 {
     VERIFY(insn.imm8() == 0x82);
+    // TODO: For x86_64, this logic should prob. be for the'syscall' instruction instead of INT
     // FIXME: virt_syscall should take ValueWithShadow and whine about uninitialized arguments
-    set_eax(shadow_wrap_as_initialized(m_emulator.virt_syscall(eax().value(), edx().value(), ecx().value(), ebx().value())));
+    set_rax(shadow_wrap_as_initialized(m_emulator.virt_syscall(rax().value(), rdx().value(), rdi().value(), rbx().value())));
 }
 
 void SoftCPU::INVLPG(const X86::Instruction&) { TODO_INSN(); }
