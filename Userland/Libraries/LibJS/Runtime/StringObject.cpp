@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +17,15 @@ namespace JS {
 // 10.4.3.4 StringCreate ( value, prototype ), https://tc39.es/ecma262/#sec-stringcreate
 ThrowCompletionOr<NonnullGCPtr<StringObject>> StringObject::create(Realm& realm, PrimitiveString& primitive_string, Object& prototype)
 {
+    // 1. Let S be MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
+    // 2. Set S.[[Prototype]] to prototype.
+    // 3. Set S.[[StringData]] to value.
+    // 4. Set S.[[GetOwnProperty]] as specified in 10.4.3.1.
+    // 5. Set S.[[DefineOwnProperty]] as specified in 10.4.3.2.
+    // 6. Set S.[[OwnPropertyKeys]] as specified in 10.4.3.3.
+    // 7. Let length be the length of value.
+    // 8. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
+    // 9. Return S.
     return MUST_OR_THROW_OOM(realm.heap().allocate<StringObject>(realm, primitive_string, prototype));
 }
 
