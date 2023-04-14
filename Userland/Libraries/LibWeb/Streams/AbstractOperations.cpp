@@ -389,10 +389,10 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamD
     TRY(readable_stream_reader_generic_release(reader));
 
     // 2. Let e be a new TypeError exception.
-    auto e = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Reader has been released"sv));
+    auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Reader has been released"sv));
 
     // 3. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
-    readable_stream_default_reader_error_read_requests(reader, e);
+    readable_stream_default_reader_error_read_requests(reader, exception);
 
     return {};
 }
