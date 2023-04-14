@@ -24,7 +24,7 @@ ReadableByteStreamController::ReadableByteStreamController(JS::Realm& realm)
 }
 
 // https://streams.spec.whatwg.org/#rbs-controller-private-cancel
-WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> ReadableByteStreamController::cancel_steps(JS::Value reason)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableByteStreamController::cancel_steps(JS::Value reason)
 {
     // 1. Perform ! ReadableByteStreamControllerClearPendingPullIntos(this).
     readable_byte_stream_controller_clear_pending_pull_intos(*this);

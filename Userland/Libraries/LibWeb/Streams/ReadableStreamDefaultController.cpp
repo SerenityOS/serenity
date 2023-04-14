@@ -63,7 +63,7 @@ void ReadableStreamDefaultController::error(JS::Value error)
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-private-cancel
-WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> ReadableStreamDefaultController::cancel_steps(JS::Value reason)
+WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> ReadableStreamDefaultController::cancel_steps(JS::Value reason)
 {
     // 1. Perform ! ResetQueue(this).
     reset_queue(*this);

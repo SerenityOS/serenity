@@ -15,12 +15,12 @@
 namespace Web::Streams {
 
 using SizeAlgorithm = JS::SafeFunction<JS::Completion(JS::Value)>;
-using PullAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
-using CancelAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
+using PullAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>()>;
+using CancelAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
 using StartAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
-using AbortAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
-using CloseAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>()>;
-using WriteAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>>(JS::Value)>;
+using AbortAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
+using CloseAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>()>;
+using WriteAlgorithm = JS::SafeFunction<WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>>(JS::Value)>;
 
 WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> acquire_readable_stream_default_reader(ReadableStream&);
 bool is_readable_stream_locked(ReadableStream const&);
