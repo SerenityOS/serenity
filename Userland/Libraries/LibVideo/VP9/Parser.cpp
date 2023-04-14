@@ -8,6 +8,7 @@
 #include <AK/MemoryStream.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
+#include <LibThreading/WorkerThread.h>
 
 #include "Context.h"
 #include "Decoder.h"
@@ -17,6 +18,9 @@
 #if defined(AK_COMPILER_GCC)
 #    pragma GCC optimize("O3")
 #endif
+
+// Beware, threading is unstable in Serenity with smp=on, and performs worse than with it off.
+#define VP9_TILE_THREADING
 
 namespace Video::VP9 {
 
@@ -857,8 +861,8 @@ static u32 get_tile_offset(u32 tile_start, u32 frame_size_in_blocks, u32 tile_si
 DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
 {
     auto log2_dimensions = frame_context.log2_of_tile_counts;
-    auto tile_cols = 1 << log2_dimensions.width();
-    auto tile_rows = 1 << log2_dimensions.height();
+    auto tile_cols = 1u << log2_dimensions.width();
+    auto tile_rows = 1u << log2_dimensions.height();
 
     PartitionContext above_partition_context = DECODER_TRY_ALLOC(PartitionContext::create(superblocks_to_blocks(frame_context.superblock_columns())));
     NonZeroTokens above_non_zero_tokens = DECODER_TRY_ALLOC(create_non_zero_tokens(blocks_to_sub_blocks(frame_context.columns()), frame_context.color_config.subsampling_x));
@@ -868,8 +872,15 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     //        then run through each column of tiles in top to bottom order afterward. Each column can be sent to a worker thread
     //        for execution. Each worker thread will want to create a set of above contexts sized to its tile width, then provide
     //        those to each tile as it decodes them.
-    for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
-        for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
+    Vector<Vector<TileContext, 1>, 4> tile_workloads;
+    DECODER_TRY_ALLOC(tile_workloads.try_ensure_capacity(tile_cols));
+    for (auto tile_col = 0u; tile_col < tile_cols; tile_col++) {
+        tile_workloads.append({});
+        DECODER_TRY_ALLOC(tile_workloads[tile_col].try_ensure_capacity(tile_rows));
+    }
+
+    for (auto tile_row = 0u; tile_row < tile_rows; tile_row++) {
+        for (auto tile_col = 0u; tile_col < tile_cols; tile_col++) {
             auto last_tile = (tile_row == tile_rows - 1) && (tile_col == tile_cols - 1);
             size_t tile_size;
             if (last_tile)
@@ -887,12 +898,54 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
             auto above_non_zero_tokens_view = create_non_zero_tokens_view(above_non_zero_tokens, blocks_to_sub_blocks(columns_start), blocks_to_sub_blocks(columns_end - columns_start), frame_context.color_config.subsampling_x);
             auto above_segmentation_ids_for_tile = safe_slice(above_segmentation_ids.span(), columns_start, columns_end - columns_start);
 
-            auto tile_context = TRY(TileContext::try_create(frame_context, tile_size, rows_start, rows_end, columns_start, columns_end, above_partition_context_for_tile, above_non_zero_tokens_view, above_segmentation_ids_for_tile));
-            TRY(decode_tile(tile_context));
-            *frame_context.counter += *tile_context.counter;
+            tile_workloads[tile_col].append(TRY(TileContext::try_create(frame_context, tile_size, rows_start, rows_end, columns_start, columns_end, above_partition_context_for_tile, above_non_zero_tokens_view, above_segmentation_ids_for_tile)));
             TRY_READ(frame_context.bit_stream.discard(tile_size));
         }
     }
+
+    auto decode_tile_column = [this, tile_rows](auto& column_workloads) -> DecoderErrorOr<void> {
+        VERIFY(column_workloads.size() == tile_rows);
+        for (auto tile_row = 0u; tile_row < tile_rows; tile_row++)
+            TRY(decode_tile(column_workloads[tile_row]));
+        return {};
+    };
+
+#ifdef VP9_TILE_THREADING
+    auto const worker_count = tile_cols - 1;
+
+    if (m_worker_threads.size() < worker_count) {
+        m_worker_threads.clear();
+        m_worker_threads.ensure_capacity(worker_count);
+        for (auto i = 0u; i < worker_count; i++)
+            m_worker_threads.append(DECODER_TRY_ALLOC(Threading::WorkerThread<DecoderError>::create("Decoder Worker"sv)));
+    }
+    VERIFY(m_worker_threads.size() >= worker_count);
+
+    // Start tile column decoding tasks in thread workers starting from the second column.
+    for (auto tile_col = 1u; tile_col < tile_cols; tile_col++) {
+        auto& column_workload = tile_workloads[tile_col];
+        m_worker_threads[tile_col - 1]->start_task([&decode_tile_column, &column_workload]() -> DecoderErrorOr<void> {
+            return decode_tile_column(column_workload);
+        });
+    }
+
+    // Decode the first column in this thread.
+    TRY(decode_tile_column(tile_workloads[0]));
+
+    for (auto& worker_thread : m_worker_threads)
+        TRY(worker_thread->wait_until_task_is_finished());
+#else
+    for (auto& column_workloads : tile_workloads)
+        TRY(decode_tile_column(column_workloads));
+#endif
+
+    // Sum up all tile contexts' syntax element counters after all decodes have finished.
+    for (auto& tile_contexts : tile_workloads) {
+        for (auto& tile_context : tile_contexts) {
+            *frame_context.counter += *tile_context.counter;
+        }
+    }
+
     return {};
 }
 

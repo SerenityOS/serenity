@@ -149,6 +149,11 @@ public:
         return m_storage[index_at(row, column)];
     }
 
+    void assign(u32 row, u32 column, T&& value)
+    {
+        new (&m_storage[index_at(row, column)]) T(move(value));
+    }
+
     template<typename OtherT, typename Function>
     void copy_to(Vector2D<OtherT>& other, Function function) const
     {
