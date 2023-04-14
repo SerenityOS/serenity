@@ -59,97 +59,105 @@ static DeprecatedString search_engines_file_path()
     return builder.to_deprecated_string();
 }
 
-BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
-    : m_cookie_jar(cookie_jar)
-    , m_window_actions(*this)
+ErrorOr<NonnullRefPtr<BrowserWindow>> BrowserWindow::try_create(CookieJar& cookie_jar, URL url)
 {
+    auto main_window = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) BrowserWindow(cookie_jar)));
+    main_window->m_bookmarks_bar = TRY(Browser::BookmarksBarWidget::try_create(Browser::bookmarks_file_path(), true));
+
     auto app_icon = GUI::Icon::default_icon("app-browser"sv);
-    m_bookmarks_bar = Browser::BookmarksBarWidget::construct(Browser::bookmarks_file_path(), true);
+    main_window->resize(730, 560);
+    main_window->set_icon(app_icon.bitmap_for_size(16));
+    main_window->set_title("Browser");
 
-    resize(730, 560);
-    set_icon(app_icon.bitmap_for_size(16));
-    set_title("Browser");
-
-    auto widget = set_main_widget<GUI::Widget>().release_value_but_fixme_should_propagate_errors();
-    widget->load_from_gml(browser_window_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(main_window->set_main_widget<GUI::Widget>());
+    TRY(widget->load_from_gml(browser_window_gml));
 
     auto& top_line = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
-    m_tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
-    m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
+    main_window->m_tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+
+    main_window->m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
         top_line.set_visible(tab_count > 1);
     };
 
-    m_tab_widget->on_change = [this](auto& active_widget) {
+    main_window->m_tab_widget->on_change = [main_window](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);
-        set_window_title_for_tab(tab);
+        main_window->set_window_title_for_tab(tab);
         tab.did_become_active();
-        update_displayed_zoom_level();
+        main_window->update_displayed_zoom_level();
     };
 
-    m_tab_widget->on_middle_click = [](auto& clicked_widget) {
+    main_window->m_tab_widget->on_middle_click = [](auto& clicked_widget) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.on_tab_close_request(tab);
     };
 
-    m_tab_widget->on_tab_close_click = [](auto& clicked_widget) {
+    main_window->m_tab_widget->on_tab_close_click = [](auto& clicked_widget) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.on_tab_close_request(tab);
     };
 
-    m_tab_widget->on_context_menu_request = [](auto& clicked_widget, const GUI::ContextMenuEvent& context_menu_event) {
+    main_window->m_tab_widget->on_context_menu_request = [](auto& clicked_widget, const GUI::ContextMenuEvent& context_menu_event) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.context_menu_requested(context_menu_event.screen_position());
     };
 
-    m_window_actions.on_create_new_tab = [this] {
-        create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), Web::HTML::ActivateTab::Yes);
+    main_window->m_window_actions.on_create_new_tab = [main_window] {
+        main_window->create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), Web::HTML::ActivateTab::Yes);
     };
 
-    m_window_actions.on_create_new_window = [this] {
-        create_new_window(g_home_url);
+    main_window->m_window_actions.on_create_new_window = [main_window] {
+        main_window->create_new_window(g_home_url);
     };
 
-    m_window_actions.on_next_tab = [this] {
-        m_tab_widget->activate_next_tab();
+    main_window->m_window_actions.on_next_tab = [main_window] {
+        main_window->m_tab_widget->activate_next_tab();
     };
 
-    m_window_actions.on_previous_tab = [this] {
-        m_tab_widget->activate_previous_tab();
+    main_window->m_window_actions.on_previous_tab = [main_window] {
+        main_window->m_tab_widget->activate_previous_tab();
     };
 
     for (size_t i = 0; i <= 7; ++i) {
-        m_window_actions.on_tabs.append([this, i] {
-            if (i >= m_tab_widget->tab_count())
+        main_window->m_window_actions.on_tabs.append([main_window, i] {
+            if (i >= main_window->m_tab_widget->tab_count())
                 return;
-            m_tab_widget->set_tab_index(i);
+            main_window->m_tab_widget->set_tab_index(i);
         });
     }
-    m_window_actions.on_tabs.append([this] {
-        m_tab_widget->activate_last_tab();
+
+    main_window->m_window_actions.on_tabs.append([main_window] {
+        main_window->m_tab_widget->activate_last_tab();
     });
 
-    m_window_actions.on_show_bookmarks_bar = [](auto& action) {
+    main_window->m_window_actions.on_show_bookmarks_bar = [](auto& action) {
         Browser::BookmarksBarWidget::the().set_visible(action.is_checked());
         Config::write_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, action.is_checked());
     };
 
     bool show_bookmarks_bar = Config::read_bool("Browser"sv, "Preferences"sv, "ShowBookmarksBar"sv, true);
-    m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
+    main_window->m_window_actions.show_bookmarks_bar_action().set_checked(show_bookmarks_bar);
     Browser::BookmarksBarWidget::the().set_visible(show_bookmarks_bar);
 
-    m_window_actions.on_vertical_tabs = [this](auto& action) {
-        m_tab_widget->set_tab_position(action.is_checked() ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+    main_window->m_window_actions.on_vertical_tabs = [main_window](auto& action) {
+        main_window->m_tab_widget->set_tab_position(action.is_checked() ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
         Config::write_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, action.is_checked());
     };
 
     bool vertical_tabs = Config::read_bool("Browser"sv, "Preferences"sv, "VerticalTabs"sv, false);
-    m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
-    m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
+    main_window->m_window_actions.vertical_tabs_action().set_checked(vertical_tabs);
+    main_window->m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
 
-    build_menus();
+    main_window->build_menus();
+    main_window->create_new_tab(move(url), Web::HTML::ActivateTab::Yes);
 
-    create_new_tab(move(url), Web::HTML::ActivateTab::Yes);
+    return main_window;
+}
+
+BrowserWindow::BrowserWindow(CookieJar& cookie_jar)
+    : m_cookie_jar(cookie_jar)
+    , m_window_actions(*this)
+{
 }
 
 void BrowserWindow::build_menus()

@@ -60,12 +60,12 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
         }
     };
 
-    auto delete_action = GUI::CommonActions::make_delete_action([widget](GUI::Action const&) {
+    auto delete_action = TRY(GUI::CommonActions::make_delete_action([widget](GUI::Action const&) {
         if (!widget->m_allowlist_view->selection().is_empty()) {
             widget->m_allowlist_model->delete_domain(widget->m_allowlist_view->selection().first().row());
             widget->set_modified(true);
         }
-    });
+    }));
     widget->m_entry_context_menu = TRY(GUI::Menu::try_create());
     widget->m_entry_context_menu->add_action(move(delete_action));
 

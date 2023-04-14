@@ -101,75 +101,81 @@ private:
 
 static BookmarksBarWidget* s_the;
 
+ErrorOr<NonnullRefPtr<BookmarksBarWidget>> BookmarksBarWidget::try_create(DeprecatedString const& bookmarks_file, bool enabled)
+{
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) BookmarksBarWidget()));
+
+    s_the = main_widget;
+    main_widget->set_layout<GUI::HorizontalBoxLayout>(2, 0);
+
+    main_widget->set_fixed_height(20);
+
+    if (!enabled)
+        main_widget->set_visible(false);
+
+    main_widget->m_additional = TRY(GUI::Button::try_create());
+    main_widget->m_additional->set_tooltip("Show hidden bookmarks");
+    main_widget->m_additional->set_menu(main_widget->m_additional_menu);
+    auto bitmap_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv);
+    if (!bitmap_or_error.is_error())
+        main_widget->m_additional->set_icon(bitmap_or_error.release_value());
+    main_widget->m_additional->set_button_style(Gfx::ButtonStyle::Coolbar);
+    main_widget->m_additional->set_fixed_size(22, 20);
+    main_widget->m_additional->set_focus_policy(GUI::FocusPolicy::TabFocus);
+
+    main_widget->m_separator = TRY(GUI::Widget::try_create());
+
+    main_widget->m_context_menu = TRY(GUI::Menu::try_create());
+    auto default_action = TRY(GUI::Action::try_create(
+        "&Open", g_icon_bag.go_to, [main_widget](auto&) {
+            if (main_widget->on_bookmark_click)
+                main_widget->on_bookmark_click(main_widget->m_context_menu_url, Open::InSameTab);
+        },
+        main_widget));
+    main_widget->m_context_menu_default_action = default_action;
+    main_widget->m_context_menu->add_action(default_action);
+    main_widget->m_context_menu->add_action(TRY(GUI::Action::try_create(
+        "Open in New &Tab", g_icon_bag.new_tab, [main_widget](auto&) {
+            if (main_widget->on_bookmark_click)
+                main_widget->on_bookmark_click(main_widget->m_context_menu_url, Open::InNewTab);
+        },
+        main_widget)));
+    main_widget->m_context_menu->add_action(TRY(GUI::Action::try_create(
+        "Open in New Window", g_icon_bag.new_window, [main_widget](auto&) {
+            if (main_widget->on_bookmark_click) {
+                main_widget->on_bookmark_click(main_widget->m_context_menu_url, Open::InNewWindow);
+            }
+        },
+        main_widget)));
+    main_widget->m_context_menu->add_separator();
+    main_widget->m_context_menu->add_action(TRY(GUI::Action::try_create(
+        "&Edit...", g_icon_bag.rename, [main_widget](auto&) {
+            if (auto result = main_widget->edit_bookmark(main_widget->m_context_menu_url); result.is_error())
+                GUI::MessageBox::show_error(main_widget->window(), MUST(String::formatted("Failed to edit bookmark: {}", result.error())));
+        },
+        main_widget)));
+    main_widget->m_context_menu->add_action(TRY(GUI::CommonActions::make_delete_action(
+        [main_widget](auto&) {
+            if (auto result = main_widget->remove_bookmark(main_widget->m_context_menu_url); result.is_error())
+                GUI::MessageBox::show_error(main_widget->window(), MUST(String::formatted("Failed to remove bookmark: {}", result.error())));
+        },
+        main_widget)));
+
+    Vector<GUI::JsonArrayModel::FieldSpec> fields;
+    fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
+    fields.empend("url", "Url", Gfx::TextAlignment::CenterRight);
+    main_widget->set_model(GUI::JsonArrayModel::create(bookmarks_file, move(fields)));
+    main_widget->model()->invalidate();
+    return main_widget;
+}
+
 BookmarksBarWidget& BookmarksBarWidget::the()
 {
     return *s_the;
 }
 
-BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, bool enabled)
+BookmarksBarWidget::BookmarksBarWidget()
 {
-    s_the = this;
-    set_layout<GUI::HorizontalBoxLayout>(2, 0);
-
-    set_fixed_height(20);
-
-    if (!enabled)
-        set_visible(false);
-
-    m_additional = GUI::Button::construct();
-    m_additional->set_tooltip("Show hidden bookmarks");
-    m_additional->set_menu(m_additional_menu);
-    auto bitmap_or_error = Gfx::Bitmap::load_from_file("/res/icons/16x16/overflow-menu.png"sv);
-    if (!bitmap_or_error.is_error())
-        m_additional->set_icon(bitmap_or_error.release_value());
-    m_additional->set_button_style(Gfx::ButtonStyle::Coolbar);
-    m_additional->set_fixed_size(22, 20);
-    m_additional->set_focus_policy(GUI::FocusPolicy::TabFocus);
-
-    m_separator = GUI::Widget::construct();
-
-    m_context_menu = GUI::Menu::construct();
-    auto default_action = GUI::Action::create(
-        "&Open", g_icon_bag.go_to, [this](auto&) {
-            if (on_bookmark_click)
-                on_bookmark_click(m_context_menu_url, Open::InSameTab);
-        },
-        this);
-    m_context_menu_default_action = default_action;
-    m_context_menu->add_action(default_action);
-    m_context_menu->add_action(GUI::Action::create(
-        "Open in New &Tab", g_icon_bag.new_tab, [this](auto&) {
-            if (on_bookmark_click)
-                on_bookmark_click(m_context_menu_url, Open::InNewTab);
-        },
-        this));
-    m_context_menu->add_action(GUI::Action::create(
-        "Open in New Window", g_icon_bag.new_window, [this](auto&) {
-            if (on_bookmark_click) {
-                on_bookmark_click(m_context_menu_url, Open::InNewWindow);
-            }
-        },
-        this));
-    m_context_menu->add_separator();
-    m_context_menu->add_action(GUI::Action::create(
-        "&Edit...", g_icon_bag.rename, [this](auto&) {
-            if (auto result = edit_bookmark(m_context_menu_url); result.is_error())
-                GUI::MessageBox::show_error(this->window(), MUST(String::formatted("Failed to edit bookmark: {}", result.error())));
-        },
-        this));
-    m_context_menu->add_action(GUI::CommonActions::make_delete_action(
-        [this](auto&) {
-            if (auto result = remove_bookmark(m_context_menu_url); result.is_error())
-                GUI::MessageBox::show_error(this->window(), MUST(String::formatted("Failed to remove bookmark: {}", result.error())));
-        },
-        this)
-                                   .release_value_but_fixme_should_propagate_errors());
-
-    Vector<GUI::JsonArrayModel::FieldSpec> fields;
-    fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
-    fields.empend("url", "Url", Gfx::TextAlignment::CenterRight);
-    set_model(GUI::JsonArrayModel::create(bookmarks_file, move(fields)));
-    model()->invalidate();
 }
 
 BookmarksBarWidget::~BookmarksBarWidget()

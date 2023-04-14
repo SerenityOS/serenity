@@ -22,9 +22,10 @@ class Tab;
 
 class BrowserWindow final : public GUI::Window
     , public Config::Listener {
-    C_OBJECT(BrowserWindow);
+    C_OBJECT_ABSTRACT(BrowserWindow);
 
 public:
+    static ErrorOr<NonnullRefPtr<BrowserWindow>> try_create(CookieJar&, URL);
     virtual ~BrowserWindow() override = default;
 
     GUI::TabWidget& tab_widget();
@@ -52,7 +53,7 @@ public:
     void broadcast_window_size(Gfx::IntSize);
 
 private:
-    explicit BrowserWindow(CookieJar&, URL);
+    explicit BrowserWindow(CookieJar&);
 
     void build_menus();
     ErrorOr<void> load_search_engines(GUI::Menu& settings_menu);

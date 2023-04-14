@@ -15,9 +15,10 @@ namespace Browser {
 class BookmarksBarWidget final
     : public GUI::Widget
     , private GUI::ModelClient {
-    C_OBJECT(BookmarksBarWidget);
+    C_OBJECT_ABSTRACT(BookmarksBarWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<BookmarksBarWidget>> try_create(DeprecatedString const& bookmarks_file, bool enabled);
     static BookmarksBarWidget& the();
 
     virtual ~BookmarksBarWidget() override;
@@ -53,7 +54,7 @@ public:
     }
 
 private:
-    BookmarksBarWidget(DeprecatedString const&, bool enabled);
+    BookmarksBarWidget();
 
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
