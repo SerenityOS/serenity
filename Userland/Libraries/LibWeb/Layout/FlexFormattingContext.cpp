@@ -852,6 +852,8 @@ void FlexFormattingContext::collect_flex_items_into_flex_lines()
         }
         line.items.append(item);
         line_main_size += outer_hypothetical_main_size;
+        // CSS-FLEXBOX-2: Account for gap between flex items.
+        line_main_size += main_gap();
     }
     m_flex_lines.append(move(line));
 }
@@ -873,6 +875,8 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
         for (auto const& item : line.items) {
             sum += item.outer_hypothetical_main_size();
         }
+        // CSS-FLEXBOX-2: Account for gap between flex items.
+        sum += main_gap() * (line.items.size() - 1);
         if (sum < inner_main_size(flex_container()))
             return FlexFactor::FlexGrowFactor;
         return FlexFactor::FlexShrinkFactor;
@@ -917,6 +921,8 @@ void FlexFormattingContext::resolve_flexible_lengths_for_line(FlexLine& line)
             else
                 sum += item.outer_flex_base_size();
         }
+        // CSS-FLEXBOX-2: Account for gap between flex items.
+        sum += main_gap() * (line.items.size() - 1);
         return inner_main_size(flex_container()) - sum;
     };
     auto const initial_free_space = calculate_remaining_free_space();
@@ -1224,6 +1230,9 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
                 + item.padding.main_before + item.padding.main_after;
         }
 
+        // CSS-FLEXBOX-2: Account for gap between flex items.
+        used_main_space += main_gap() * (flex_line.items.size() - 1);
+
         if (flex_line.remaining_free_space > 0) {
             CSSPixels size_per_auto_margin = flex_line.remaining_free_space / (float)auto_margins;
             for (auto& item : flex_line.items) {
@@ -1242,7 +1251,8 @@ void FlexFormattingContext::distribute_any_remaining_free_space()
         }
 
         // 12.2.
-        CSSPixels space_between_items = 0;
+        // CSS-FLEXBOX-2: Account for gap between items.
+        CSSPixels space_between_items = main_gap();
         CSSPixels initial_offset = 0;
         auto number_of_items = flex_line.items.size();
 
@@ -1466,6 +1476,9 @@ void FlexFormattingContext::align_all_flex_lines()
         for (auto& line : m_flex_lines)
             sum_of_flex_line_cross_sizes += line.cross_size;
 
+        // CSS-FLEXBOX-2: Account for gap between flex lines.
+        sum_of_flex_line_cross_sizes += cross_gap() * (m_flex_lines.size() - 1);
+
         CSSPixels start_of_current_line = 0;
         CSSPixels gap_size = 0;
         switch (flex_container().computed_values().align_content()) {
@@ -1513,6 +1526,8 @@ void FlexFormattingContext::align_all_flex_lines()
                 item.cross_offset += center_of_current_line;
             }
             start_of_current_line += flex_line.cross_size + gap_size;
+            // CSS-FLEXBOX-2: Account for gap between flex lines.
+            start_of_current_line += cross_gap();
         }
     }
 }
@@ -1672,6 +1687,8 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_main_size_of_flex_container
 
                 sum += result;
             }
+            // CSS-FLEXBOX-2: Account for gap between flex items.
+            sum += main_gap() * (flex_line.items.size() - 1);
             largest_sum = max(largest_sum, sum);
         }
         // 5. The flex container’s max-content size is the largest sum (among all the lines) of the afore-calculated sizes of all items within a single line.
@@ -1747,6 +1764,8 @@ CSSPixels FlexFormattingContext::calculate_intrinsic_cross_size_of_flex_containe
     for (auto& flex_line : m_flex_lines) {
         sum_of_flex_line_cross_sizes += flex_line.cross_size;
     }
+    // CSS-FLEXBOX-2: Account for gap between flex lines.
+    sum_of_flex_line_cross_sizes += cross_gap() * (m_flex_lines.size() - 1);
     return sum_of_flex_line_cross_sizes;
 }
 
@@ -2136,6 +2155,20 @@ float FlexFormattingContext::FlexLine::sum_of_scaled_flex_shrink_factor_of_unfro
             sum += item.scaled_flex_shrink_factor;
     }
     return sum;
+}
+
+CSSPixels FlexFormattingContext::main_gap() const
+{
+    auto const& computed_values = flex_container().computed_values();
+    auto gap = is_row_layout() ? computed_values.column_gap() : computed_values.row_gap();
+    return gap.resolved(flex_container(), CSS::Length::make_px(inner_main_size(flex_container()))).to_px(flex_container());
+}
+
+CSSPixels FlexFormattingContext::cross_gap() const
+{
+    auto const& computed_values = flex_container().computed_values();
+    auto gap = is_row_layout() ? computed_values.row_gap() : computed_values.column_gap();
+    return gap.resolved(flex_container(), CSS::Length::make_px(inner_cross_size(flex_container()))).to_px(flex_container());
 }
 
 }
