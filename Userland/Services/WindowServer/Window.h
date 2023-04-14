@@ -120,7 +120,7 @@ public:
 
     WindowTileType tile_type() const { return m_tile_type; }
     bool is_tiled() const { return m_tile_type != WindowTileType::None; }
-    void set_tiled(WindowTileType);
+    void set_tiled(WindowTileType, Optional<Screen const&> = {});
     WindowTileType tile_type_based_on_rect(Gfx::IntRect const&) const;
     void check_untile_due_to_resize(Gfx::IntRect const&);
     bool set_untiled();
@@ -376,6 +376,9 @@ public:
     void remove_all_stealing() { m_stealable_by_client_ids.clear(); }
     bool is_stealable_by_client(i32 client_id) const { return m_stealable_by_client_ids.contains_slow(client_id); }
 
+    void send_resize_event_to_client();
+    void send_move_event_to_client();
+
 private:
     Window(ConnectionFromClient&, WindowType, WindowMode, int window_id, bool minimizable, bool closeable, bool frameless, bool resizable, bool fullscreen, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -386,6 +389,7 @@ private:
     void add_child_window(Window&);
     void ensure_window_menu();
     void update_window_menu_items();
+    void tile_type_changed(Optional<Screen const&> = {});
     ErrorOr<Optional<DeprecatedString>> compute_title_username(ConnectionFromClient* client);
 
     ConnectionFromClient* m_client { nullptr };

@@ -14,7 +14,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<IDLEventListener>> IDLEventListener::create
 }
 
 IDLEventListener::IDLEventListener(JS::Realm& realm, JS::NonnullGCPtr<WebIDL::CallbackType> callback)
-    : JS::Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : JS::Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
     , m_callback(move(callback))
 {
 }

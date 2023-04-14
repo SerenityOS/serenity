@@ -113,8 +113,7 @@ ErrorOr<Optional<AK::URL>> Response::location_url(Optional<String> const& reques
         return Optional<AK::URL> {};
 
     // 3. If location is a header value, then set location to the result of parsing location with response’s URL.
-    auto base_url = *url();
-    auto location = AK::URLParser::parse(location_values.first(), &base_url);
+    auto location = AK::URLParser::parse(location_values.first(), url());
     if (!location.is_valid())
         return Error::from_string_view("Invalid 'Location' header URL"sv);
 

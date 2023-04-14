@@ -99,9 +99,9 @@ void Attr::handle_attribute_changes(Element& element, DeprecatedString const& ol
 
         JS::MarkedVector<JS::Value> arguments { vm.heap() };
         arguments.append(JS::PrimitiveString::create(vm, local_name()));
-        arguments.append(JS::PrimitiveString::create(vm, old_value));
-        arguments.append(JS::PrimitiveString::create(vm, new_value));
-        arguments.append(JS::PrimitiveString::create(vm, namespace_uri()));
+        arguments.append(old_value.is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, old_value));
+        arguments.append(new_value.is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, new_value));
+        arguments.append(namespace_uri().is_null() ? JS::js_null() : JS::PrimitiveString::create(vm, namespace_uri()));
 
         element.enqueue_a_custom_element_callback_reaction(HTML::CustomElementReactionNames::attributeChangedCallback, move(arguments));
     }

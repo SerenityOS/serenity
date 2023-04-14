@@ -238,6 +238,9 @@ ErrorOr<bool> DeflateDecompressor::UncompressedBlock::try_read_more()
     if (m_bytes_remaining == 0)
         return false;
 
+    if (m_decompressor.m_input_stream->is_eof())
+        return Error::from_string_literal("Input data ends in the middle of an uncompressed DEFLATE block");
+
     Array<u8, 4096> temporary_buffer;
     auto readable_bytes = temporary_buffer.span().trim(min(m_bytes_remaining, m_decompressor.m_output_buffer.empty_space()));
     auto read_bytes = TRY(m_decompressor.m_input_stream->read_some(readable_bytes));
@@ -968,10 +971,8 @@ ErrorOr<void> DeflateCompressor::flush()
     auto write_uncompressed = [&]() -> ErrorOr<void> {
         TRY(m_output_stream->write_bits(0b00u, 2)); // no compression
         TRY(m_output_stream->align_to_byte_boundary());
-        LittleEndian<u16> len = m_pending_block_size;
-        TRY(m_output_stream->write_until_depleted(len.bytes()));
-        LittleEndian<u16> nlen = ~m_pending_block_size;
-        TRY(m_output_stream->write_until_depleted(nlen.bytes()));
+        TRY(m_output_stream->write_value<LittleEndian<u16>>(m_pending_block_size));
+        TRY(m_output_stream->write_value<LittleEndian<u16>>(~m_pending_block_size));
         TRY(m_output_stream->write_until_depleted(pending_block().slice(0, m_pending_block_size)));
         return {};
     };

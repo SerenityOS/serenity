@@ -13,7 +13,7 @@ namespace JS::Intl {
 
 // 18.5.2 The %SegmentsPrototype% Object, https://tc39.es/ecma402/#sec-%segmentsprototype%-object
 SegmentsPrototype::SegmentsPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -24,7 +24,7 @@ ThrowCompletionOr<void> SegmentsPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(realm, *vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
+    define_native_function(realm, vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
     define_native_function(realm, vm.names.containing, containing, 1, attr);
 
     return {};

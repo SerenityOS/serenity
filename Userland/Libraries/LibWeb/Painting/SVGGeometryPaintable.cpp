@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +27,21 @@ Layout::SVGGeometryBox const& SVGGeometryPaintable::layout_box() const
     return static_cast<Layout::SVGGeometryBox const&>(layout_node());
 }
 
+Optional<HitTestResult> SVGGeometryPaintable::hit_test(CSSPixelPoint position, HitTestType type) const
+{
+    auto result = SVGGraphicsPaintable::hit_test(position, type);
+    if (!result.has_value())
+        return {};
+    auto& geometry_element = layout_box().dom_node();
+    if (auto transform = layout_box().layout_transform(); transform.has_value()) {
+        auto transformed_bounding_box = transform->map_to_quad(
+            const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
+        if (!transformed_bounding_box.contains(position.to_type<float>()))
+            return {};
+    }
+    return result;
+}
+
 void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     if (!is_visible())
@@ -41,58 +57,21 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     Gfx::AntiAliasingPainter painter { context.painter() };
     auto& svg_context = context.svg_context();
 
-    auto offset = svg_context.svg_element_position();
+    // FIXME: This should not be trucated to an int.
+    Gfx::PainterStateSaver save_painter { context.painter() };
+    auto offset = context.floored_device_point(svg_context.svg_element_position()).to_type<int>().to_type<float>();
     painter.translate(offset);
 
     auto const* svg_element = geometry_element.first_ancestor_of_type<SVG::SVGSVGElement>();
     auto maybe_view_box = svg_element->view_box();
 
     context.painter().add_clip_rect(context.enclosing_device_rect(absolute_rect()).to_type<int>());
+    auto css_scale = context.device_pixels_per_css_pixel();
 
-    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path();
-
-    if (maybe_view_box.has_value()) {
-        Gfx::Path new_path;
-        auto scaling = layout_box().viewbox_scaling();
-        auto origin = layout_box().viewbox_origin();
-
-        auto transform_point = [&scaling, &origin](Gfx::FloatPoint point) -> Gfx::FloatPoint {
-            auto new_point = point;
-            new_point.translate_by({ -origin.x(), -origin.y() });
-            new_point.scale_by(scaling);
-            return new_point;
-        };
-
-        for (auto& segment : path.segments()) {
-            switch (segment->type()) {
-            case Gfx::Segment::Type::Invalid:
-                break;
-            case Gfx::Segment::Type::MoveTo:
-                new_path.move_to(transform_point(segment->point()));
-                break;
-            case Gfx::Segment::Type::LineTo:
-                new_path.line_to(transform_point(segment->point()));
-                break;
-            case Gfx::Segment::Type::QuadraticBezierCurveTo: {
-                auto& quadratic_bezier_segment = static_cast<Gfx::QuadraticBezierCurveSegment const&>(*segment);
-                new_path.quadratic_bezier_curve_to(transform_point(quadratic_bezier_segment.through()), transform_point(quadratic_bezier_segment.point()));
-                break;
-            }
-            case Gfx::Segment::Type::CubicBezierCurveTo: {
-                auto& cubic_bezier_segment = static_cast<Gfx::CubicBezierCurveSegment const&>(*segment);
-                new_path.cubic_bezier_curve_to(transform_point(cubic_bezier_segment.through_0()), transform_point(cubic_bezier_segment.through_1()), transform_point(cubic_bezier_segment.point()));
-                break;
-            }
-            case Gfx::Segment::Type::EllipticalArcTo: {
-                auto& elliptical_arc_segment = static_cast<Gfx::EllipticalArcSegment const&>(*segment);
-                new_path.elliptical_arc_to(transform_point(elliptical_arc_segment.point()), elliptical_arc_segment.radii().scaled_by(scaling, scaling), elliptical_arc_segment.x_axis_rotation(), elliptical_arc_segment.large_arc(), elliptical_arc_segment.sweep());
-                break;
-            }
-            }
-        }
-
-        path = new_path;
-    }
+    auto transform = layout_box().layout_transform();
+    if (!transform.has_value())
+        return;
+    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform));
 
     if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
         // We need to fill the path before applying the stroke, however the filled
@@ -112,11 +91,8 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         painter.stroke_path(
             path,
             stroke_color,
-            geometry_element.stroke_width().value_or(svg_context.stroke_width()));
+            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * context.device_pixels_per_css_pixel());
     }
-
-    painter.translate(-offset);
-    context.painter().clear_clip_rect();
 }
 
 }

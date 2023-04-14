@@ -11,7 +11,7 @@
 namespace JS {
 
 ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vector<DeprecatedFlyString> exports)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
     , m_module(module)
     , m_exports(move(exports))
 {
@@ -24,10 +24,11 @@ ModuleNamespaceObject::ModuleNamespaceObject(Realm& realm, Module* module, Vecto
 
 ThrowCompletionOr<void> ModuleNamespaceObject::initialize(Realm& realm)
 {
+    auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
 
     // 28.3.1 @@toStringTag, https://tc39.es/ecma262/#sec-@@tostringtag
-    define_direct_property(*vm().well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm(), "Module"sv)), 0);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Module"sv)), 0);
 
     return {};
 }

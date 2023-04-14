@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -18,7 +18,7 @@
 namespace JS {
 
 ObjectConstructor::ObjectConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Object.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Object.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

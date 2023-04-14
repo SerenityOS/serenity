@@ -486,9 +486,10 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         }
         case Instructions::f32_const.value(): {
             // op literal
-            LittleEndian<u32> value;
-            if (stream.read_until_filled(value.bytes()).is_error())
+            auto value_or_error = stream.read_value<LittleEndian<u32>>();
+            if (value_or_error.is_error())
                 return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
+            auto value = value_or_error.release_value();
 
             auto floating = bit_cast<float>(static_cast<u32>(value));
             resulting_instructions.append(Instruction { opcode, floating });
@@ -496,9 +497,10 @@ ParseResult<Vector<Instruction>> Instruction::parse(Stream& stream, InstructionP
         }
         case Instructions::f64_const.value(): {
             // op literal
-            LittleEndian<u64> value;
-            if (stream.read_until_filled(value.bytes()).is_error())
+            auto value_or_error = stream.read_value<LittleEndian<u64>>();
+            if (value_or_error.is_error())
                 return with_eof_check(stream, ParseError::ExpectedFloatingImmediate);
+            auto value = value_or_error.release_value();
 
             auto floating = bit_cast<double>(static_cast<u64>(value));
             resulting_instructions.append(Instruction { opcode, floating });

@@ -15,4 +15,6 @@ class Profile;
 
 ErrorOr<NonnullRefPtr<Profile>> sRGB();
 
+ErrorOr<NonnullRefPtr<TagData>> sRGB_curve();
+
 }

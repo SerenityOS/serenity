@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ namespace JS {
 
 NonnullGCPtr<Error> Error::create(Realm& realm)
 {
-    return realm.heap().allocate<Error>(realm, *realm.intrinsics().error_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<Error>(realm, realm.intrinsics().error_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NonnullGCPtr<Error> Error::create(Realm& realm, String message)
@@ -105,29 +105,29 @@ ThrowCompletionOr<String> Error::stack_string(VM& vm) const
     return stack_string_builder.to_string();
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                                                          \
-    NonnullGCPtr<ClassName> ClassName::create(Realm& realm)                                                                                                       \
-    {                                                                                                                                                             \
-        return realm.heap().allocate<ClassName>(realm, *realm.intrinsics().snake_name##_prototype()).release_allocated_value_but_fixme_should_propagate_errors(); \
-    }                                                                                                                                                             \
-                                                                                                                                                                  \
-    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, String message)                                                                                       \
-    {                                                                                                                                                             \
-        auto& vm = realm.vm();                                                                                                                                    \
-        auto error = ClassName::create(realm);                                                                                                                    \
-        u8 attr = Attribute::Writable | Attribute::Configurable;                                                                                                  \
-        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, move(message)), attr);                                                        \
-        return error;                                                                                                                                             \
-    }                                                                                                                                                             \
-                                                                                                                                                                  \
-    ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, StringView message)                                                                \
-    {                                                                                                                                                             \
-        return create(realm, TRY_OR_THROW_OOM(realm.vm(), String::from_utf8(message)));                                                                           \
-    }                                                                                                                                                             \
-                                                                                                                                                                  \
-    ClassName::ClassName(Object& prototype)                                                                                                                       \
-        : Error(prototype)                                                                                                                                        \
-    {                                                                                                                                                             \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                                                         \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm)                                                                                                      \
+    {                                                                                                                                                            \
+        return realm.heap().allocate<ClassName>(realm, realm.intrinsics().snake_name##_prototype()).release_allocated_value_but_fixme_should_propagate_errors(); \
+    }                                                                                                                                                            \
+                                                                                                                                                                 \
+    NonnullGCPtr<ClassName> ClassName::create(Realm& realm, String message)                                                                                      \
+    {                                                                                                                                                            \
+        auto& vm = realm.vm();                                                                                                                                   \
+        auto error = ClassName::create(realm);                                                                                                                   \
+        u8 attr = Attribute::Writable | Attribute::Configurable;                                                                                                 \
+        error->define_direct_property(vm.names.message, PrimitiveString::create(vm, move(message)), attr);                                                       \
+        return error;                                                                                                                                            \
+    }                                                                                                                                                            \
+                                                                                                                                                                 \
+    ThrowCompletionOr<NonnullGCPtr<ClassName>> ClassName::create(Realm& realm, StringView message)                                                               \
+    {                                                                                                                                                            \
+        return create(realm, TRY_OR_THROW_OOM(realm.vm(), String::from_utf8(message)));                                                                          \
+    }                                                                                                                                                            \
+                                                                                                                                                                 \
+    ClassName::ClassName(Object& prototype)                                                                                                                      \
+        : Error(prototype)                                                                                                                                       \
+    {                                                                                                                                                            \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

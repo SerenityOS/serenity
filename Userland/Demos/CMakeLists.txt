@@ -1,6 +1,6 @@
 add_subdirectory(CatDog)
 add_subdirectory(Eyes)
-add_subdirectory(GradientScreensaver)
+add_subdirectory(Gradient)
 add_subdirectory(LibGfxDemo)
 add_subdirectory(LibGfxScaleDemo)
 add_subdirectory(Mandelbrot)

@@ -796,6 +796,15 @@ public:
         return {};
     }
 
+    template<typename TUnaryPredicate>
+    Optional<size_t> find_first_index_if(TUnaryPredicate&& finder) const
+    {
+        auto maybe_result = AK::find_if(begin(), end(), finder);
+        if (maybe_result == end())
+            return {};
+        return maybe_result.index();
+    }
+
     void reverse()
     {
         for (size_t i = 0; i < size() / 2; ++i)

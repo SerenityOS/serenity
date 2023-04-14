@@ -222,6 +222,28 @@ void HTMLParser::the_end()
 {
     // Once the user agent stops parsing the document, the user agent must run the following steps:
 
+    // The entirety of "the end" should be a no-op for HTML fragment parsers, because:
+    // - the temporary document is not accessible, making the DOMContentLoaded event and "ready for post load tasks" do
+    //   nothing, making the parser not re-entrant from document.{open,write,close} and document.readyState inaccessible
+    // - there is no Window associated with it and no associated browsing context with the temporary document (meaning
+    //   the Window load event is skipped and making the load timing info inaccessible)
+    // - scripts are not able to be prepared, meaning the script queues are empty.
+    // However, the unconditional "spin the event loop" invocations cause two issues:
+    // - Microtask timing is changed, as "spin the event loop" performs an unconditional microtask checkpoint, causing
+    //   things to happen out of order. For example, YouTube sets the innerHTML of a <template> element in the constructor
+    //   of the ytd-app custom element _before_ setting up class attributes. Since custom elements use microtasks to run
+    //   callbacks, this causes custom element callbacks that rely on attributes setup by the constructor to run before
+    //   the attributes are set up, causing unhandled exceptions.
+    // - Load event delaying can spin forever, e.g. if the fragment contains an <img> element which stops delaying the
+    //   load event from an element task. Since tasks are not considered runnable if they're from a document with no
+    //   browsing context (i.e. the temporary document made for innerHTML), the <img> element will forever delay the load
+    //   event and cause an infinite loop.
+    // We can avoid these issues and also avoid doing unnecessary work by simply skipping "the end" for HTML fragment
+    // parsers.
+    // See the message of the commit that added this for more details.
+    if (m_parsing_fragment)
+        return;
+
     // FIXME: 1. If the active speculative HTML parser is not null, then stop the speculative HTML parser and return.
 
     // 2. Set the insertion point to undefined.

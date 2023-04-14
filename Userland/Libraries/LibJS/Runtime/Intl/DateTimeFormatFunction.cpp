@@ -16,7 +16,7 @@ namespace JS::Intl {
 // 11.5.5 DateTime Format Functions, https://tc39.es/ecma402/#sec-datetime-format-functions
 NonnullGCPtr<DateTimeFormatFunction> DateTimeFormatFunction::create(Realm& realm, DateTimeFormat& date_time_format)
 {
-    return realm.heap().allocate<DateTimeFormatFunction>(realm, date_time_format, *realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<DateTimeFormatFunction>(realm, date_time_format, realm.intrinsics().function_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 DateTimeFormatFunction::DateTimeFormatFunction(DateTimeFormat& date_time_format, Object& prototype)
@@ -51,7 +51,7 @@ ThrowCompletionOr<Value> DateTimeFormatFunction::call()
     // 3. If date is not provided or is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date_value = MUST(JS::call(vm, realm.intrinsics().date_constructor_now_function(), js_undefined())).as_double();
+        date_value = MUST(JS::call(vm, *realm.intrinsics().date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {

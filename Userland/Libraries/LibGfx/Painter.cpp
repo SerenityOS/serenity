@@ -2519,11 +2519,11 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
     } else {
         // The painter has an affine transform, we have to draw through it!
 
-        // FIXME: This is *super* inefficient.
+        // FIXME: This is kinda inefficient.
         // What we currently do, roughly:
         // - Map the destination rect through the context's transform.
         // - Compute the bounding rect of the destination quad.
-        // - For each point in the computed bounding rect, reverse-map it to a point in the source image.
+        // - For each point in the clipped bounding rect, reverse-map it to a point in the source image.
         //   - Sample the source image at the computed point.
         //   - Set or blend (depending on alpha values) one pixel in the canvas.
         //   - Loop.
@@ -2536,31 +2536,31 @@ void Painter::draw_scaled_bitmap_with_transform(IntRect const& dst_rect, Bitmap 
 
         auto destination_quad = transform.map_to_quad(dst_rect.to_type<float>());
         auto destination_bounding_rect = destination_quad.bounding_rect().to_rounded<int>();
+        auto source_rect = enclosing_int_rect(src_rect).intersected(bitmap.rect());
 
         Gfx::AffineTransform source_transform;
         source_transform.translate(src_rect.x(), src_rect.y());
         source_transform.scale(src_rect.width() / dst_rect.width(), src_rect.height() / dst_rect.height());
         source_transform.translate(-dst_rect.x(), -dst_rect.y());
 
-        for (int y = destination_bounding_rect.y(); y <= destination_bounding_rect.bottom(); ++y) {
-            for (int x = destination_bounding_rect.x(); x <= destination_bounding_rect.right(); ++x) {
-                auto destination_point = Gfx::IntPoint { x, y };
-                if (!clip_rect().contains(destination_point))
-                    continue;
-                if (!destination_quad.contains(destination_point.to_type<float>()))
-                    continue;
-                auto source_point = source_transform.map(inverse_transform->map(destination_point)).to_rounded<int>();
-                if (!bitmap.rect().contains(source_point))
+        auto translated_dest_rect = destination_bounding_rect.translated(translation());
+        auto clipped_bounding_rect = translated_dest_rect.intersected(clip_rect());
+        if (clipped_bounding_rect.is_empty())
+            return;
+
+        auto sample_transform = source_transform.multiply(*inverse_transform);
+        auto start_offset = destination_bounding_rect.location() + (clipped_bounding_rect.location() - translated_dest_rect.location());
+        for (int y = 0; y < clipped_bounding_rect.height(); ++y) {
+            for (int x = 0; x < clipped_bounding_rect.width(); ++x) {
+                auto point = Gfx::IntPoint { x, y };
+                auto sample_point = point + start_offset;
+                auto source_point = sample_transform.map(sample_point).to_rounded<int>();
+                if (!source_rect.contains(source_point))
                     continue;
                 auto source_color = bitmap.get_pixel(source_point);
                 if (source_color.alpha() == 0)
                     continue;
-                if (source_color.alpha() == 255) {
-                    set_pixel(destination_point, source_color);
-                    continue;
-                }
-                auto dst_color = target()->get_pixel(destination_point);
-                set_pixel(destination_point, dst_color.blend(source_color));
+                set_physical_pixel(point + clipped_bounding_rect.location(), source_color, true);
             }
         }
     }

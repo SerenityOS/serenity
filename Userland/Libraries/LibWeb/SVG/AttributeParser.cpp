@@ -1,20 +1,28 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "AttributeParser.h"
 #include <AK/FloatingPointStringConversions.h>
+#include <AK/GenericShorthands.h>
 #include <AK/StringBuilder.h>
 #include <ctype.h>
 
 namespace Web::SVG {
 
 AttributeParser::AttributeParser(StringView source)
-    : m_source(move(source))
+    : m_lexer(source)
 {
+}
+
+Optional<Vector<Transform>> AttributeParser::parse_transform(StringView input)
+{
+    AttributeParser parser { input };
+    return parser.parse_transform();
 }
 
 Vector<PathInstruction> AttributeParser::parse_path_data(StringView input)
@@ -361,12 +369,12 @@ float AttributeParser::parse_nonnegative_number()
     //       at the start. That condition should have been checked by the caller.
     VERIFY(!match('+') && !match('-'));
 
-    auto remaining_source_text = m_source.substring_view(m_cursor);
+    auto remaining_source_text = m_lexer.remaining();
     char const* start = remaining_source_text.characters_without_null_termination();
 
     auto maybe_float = parse_first_floating_point<float>(start, start + remaining_source_text.length());
     VERIFY(maybe_float.parsed_value());
-    m_cursor += maybe_float.end_ptr - start;
+    m_lexer.ignore(maybe_float.end_ptr - start);
 
     return maybe_float.value;
 }
@@ -387,6 +395,109 @@ int AttributeParser::parse_sign()
     if (match('+'))
         consume();
     return 1;
+}
+
+// https://drafts.csswg.org/css-transforms/#svg-syntax
+Optional<Vector<Transform>> AttributeParser::parse_transform()
+{
+    // wsp:
+    // Either a U+000A LINE FEED, U+000D CARRIAGE RETURN, U+0009 CHARACTER TABULATION, or U+0020 SPACE.
+    auto wsp = [](char c) {
+        return AK::first_is_one_of(c, '\n', '\r', '\t', '\f', ' ');
+    };
+    auto consume_whitespace = [&] {
+        m_lexer.consume_while(wsp);
+    };
+
+    auto consume_comma_whitespace = [&] {
+        consume_whitespace();
+        m_lexer.consume_specific(',');
+        consume_whitespace();
+    };
+
+    // FIXME: AttributeParser currently does not handle invalid parses in most cases (e.g. parse_number()) and just crashes.
+    auto parse_optional_number = [&](float default_value = 0.0f) {
+        consume_comma_whitespace();
+        if (m_lexer.next_is(isdigit))
+            return parse_number();
+        return default_value;
+    };
+
+    auto parse_function = [&](auto body) -> Optional<Transform> {
+        consume_whitespace();
+        if (!m_lexer.consume_specific('('))
+            return {};
+        consume_whitespace();
+        Transform transform { .operation = Transform::Operation { body() } };
+        consume_whitespace();
+        if (m_lexer.consume_specific(')'))
+            return transform;
+        return {};
+    };
+
+    // NOTE: This looks very similar to the CSS transform but the syntax is not compatible.
+    Vector<Transform> transform_list;
+    consume_whitespace();
+    while (!done()) {
+        Optional<Transform> maybe_transform;
+        if (m_lexer.consume_specific("translate"sv)) {
+            maybe_transform = parse_function([&] {
+                Transform::Translate translate {};
+                translate.x = parse_number();
+                translate.y = parse_optional_number();
+                return translate;
+            });
+        } else if (m_lexer.consume_specific("scale"sv)) {
+            maybe_transform = parse_function([&] {
+                Transform::Scale scale {};
+                scale.x = parse_number();
+                scale.y = parse_optional_number(scale.x);
+                return scale;
+            });
+        } else if (m_lexer.consume_specific("rotate"sv)) {
+            maybe_transform = parse_function([&] {
+                Transform::Rotate rotate {};
+                rotate.a = parse_number();
+                rotate.x = parse_optional_number();
+                rotate.y = parse_optional_number();
+                return rotate;
+            });
+        } else if (m_lexer.consume_specific("skewX"sv)) {
+            maybe_transform = parse_function([&] {
+                Transform::SkewX skew_x {};
+                skew_x.a = parse_number();
+                return skew_x;
+            });
+        } else if (m_lexer.consume_specific("skewY"sv)) {
+            maybe_transform = parse_function([&] {
+                Transform::SkewY skew_y {};
+                skew_y.a = parse_number();
+                return skew_y;
+            });
+        } else if (m_lexer.consume_specific("matrix"sv)) {
+            maybe_transform = parse_function([&] {
+                Transform::Matrix matrix;
+                matrix.a = parse_number();
+                consume_comma_whitespace();
+                matrix.b = parse_number();
+                consume_comma_whitespace();
+                matrix.c = parse_number();
+                consume_comma_whitespace();
+                matrix.d = parse_number();
+                consume_comma_whitespace();
+                matrix.e = parse_number();
+                consume_comma_whitespace();
+                matrix.f = parse_number();
+                return matrix;
+            });
+        }
+        if (maybe_transform.has_value())
+            transform_list.append(*maybe_transform);
+        else
+            return {};
+        consume_comma_whitespace();
+    }
+    return transform_list;
 }
 
 bool AttributeParser::match_whitespace() const

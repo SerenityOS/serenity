@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Nico Weber <thakis@chromium.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
@@ -179,7 +179,7 @@ static double parse_date_string(DeprecatedString const& date_string)
 }
 
 DateConstructor::DateConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Date.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Date.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

@@ -19,7 +19,7 @@ This is a roughly categorized list of pages relating to SerenityOS and its subpr
 
 -   [GitHub Organization](https://github.com/SerenityOS) and [GitHub Repositories](https://github.com/orgs/SerenityOS/repositories)
 -   [Changelog](https://changelog.serenityos.org/)
--   [Issues Found by OSS-Fuzz Continous Fuzzing](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=label:Proj-serenity)
+-   [Issues Found by OSS-Fuzz Continuous Fuzzing](https://bugs.chromium.org/p/oss-fuzz/issues/list?q=label:Proj-serenity)
 -   [Azure CI Overview](https://dev.azure.com/SerenityOS/SerenityOS/_build)
 -   [SonarCloud Static Analysis](https://sonarcloud.io/project/overview?id=SerenityOS_serenity)
 -   [libjs.dev](https://libjs.dev/)

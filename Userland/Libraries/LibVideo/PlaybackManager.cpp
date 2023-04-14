@@ -129,6 +129,10 @@ void PlaybackManager::dispatch_decoder_error(DecoderError error)
     case DecoderErrorCategory::EndOfStream:
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "{}", error.string_literal());
         TRY_OR_FATAL_ERROR(m_playback_handler->stop());
+
+        if (on_end_of_stream)
+            on_end_of_stream();
+
         break;
     default:
         dbgln("Playback error encountered: {}", error.string_literal());
@@ -384,24 +388,8 @@ class PlaybackManager::StartingStateHandler : public PlaybackManager::ResumingSt
         manager().m_next_frame.emplace(manager().m_frame_queue->dequeue());
         manager().m_decode_timer->start(0);
         dbgln_if(PLAYBACK_MANAGER_DEBUG, "Displayed frame at {}ms, emplaced second frame at {}ms, finishing start now", manager().m_last_present_in_media_time.to_milliseconds(), manager().m_next_frame->timestamp().to_milliseconds());
-        if (!m_playing)
-            return replace_handler_and_delete_this<PausedStateHandler>();
-        return replace_handler_and_delete_this<PlayingStateHandler>();
+        return assume_next_state();
     }
-
-    ErrorOr<void> play() override
-    {
-        m_playing = true;
-        return {};
-    }
-    bool is_playing() override { return m_playing; };
-    ErrorOr<void> pause() override
-    {
-        m_playing = false;
-        return {};
-    }
-
-    bool m_playing { false };
 };
 
 class PlaybackManager::PlayingStateHandler : public PlaybackManager::PlaybackStateHandler {
@@ -657,7 +645,6 @@ private:
         return skip_samples_until_timestamp();
     }
 
-    bool m_playing { false };
     Time m_target_timestamp { Time::zero() };
     SeekMode m_seek_mode { SeekMode::Accurate };
 };

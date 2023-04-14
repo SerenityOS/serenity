@@ -30,7 +30,7 @@ Optional<ViewBox> try_parse_view_box(StringView string)
     while (!lexer.is_eof()) {
         lexer.consume_while([](auto ch) { return is_ascii_space(ch); });
         auto token = lexer.consume_until([](auto ch) { return is_ascii_space(ch) && ch != ','; });
-        auto maybe_number = token.to_int();
+        auto maybe_number = token.to_float();
         if (!maybe_number.has_value())
             return {};
         switch (state) {

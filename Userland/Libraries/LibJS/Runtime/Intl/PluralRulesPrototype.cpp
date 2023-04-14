@@ -14,7 +14,7 @@ namespace JS::Intl {
 
 // 16.3 Properties of the Intl.PluralRules Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-pluralrules-prototype-object
 PluralRulesPrototype::PluralRulesPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -25,7 +25,7 @@ ThrowCompletionOr<void> PluralRulesPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 16.3.2 Intl.PluralRules.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.pluralrules.prototype-tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.PluralRules"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.PluralRules"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(realm, vm.names.select, select, 1, attr);
@@ -36,7 +36,6 @@ ThrowCompletionOr<void> PluralRulesPrototype::initialize(Realm& realm)
 }
 
 // 16.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.select
-// 1.3.3 Intl.PluralRules.prototype.select ( value ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.select
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
 {
     // 1. Let pr be the this value.
@@ -51,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select)
     return MUST_OR_THROW_OOM(PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality.plural_category)));
 }
 
-// 1.3.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.selectrange
+// 16.3.4 Intl.PluralRules.prototype.selectRange ( start, end ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.selectrange
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
 {
     auto start = vm.argument(0);
@@ -78,8 +77,7 @@ JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::select_range)
     return MUST_OR_THROW_OOM(PrimitiveString::create(vm, ::Locale::plural_category_to_string(plurality)));
 }
 
-// 16.3.4 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
-// 1.3.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-intl.pluralrules.prototype.resolvedoptions
+// 16.3.5 Intl.PluralRules.prototype.resolvedOptions ( ), https://tc39.es/ecma402/#sec-intl.pluralrules.prototype.resolvedoptions
 JS_DEFINE_NATIVE_FUNCTION(PluralRulesPrototype::resolved_options)
 {
     auto& realm = *vm.current_realm();

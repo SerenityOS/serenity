@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/Optional.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/Painting/PaintableBox.h>
 
@@ -31,9 +30,11 @@ private:
     virtual DispatchEventOfSameName handle_mousemove(Badge<EventHandler>, CSSPixelPoint, unsigned buttons, unsigned modifiers) override;
 
     void paint_loaded_video_controls(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
-    void paint_placeholder_video_controls(PaintContext&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
+    DevicePixelRect paint_control_bar_playback_button(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const;
+    DevicePixelRect paint_control_bar_timeline(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect control_box_rect, Optional<DevicePixelPoint> const& mouse_position) const;
+    DevicePixelRect paint_control_bar_timestamp(PaintContext&, HTML::HTMLVideoElement const&, DevicePixelRect control_box_rect) const;
 
-    Optional<CSSPixelPoint> m_mouse_position;
+    void paint_placeholder_video_controls(PaintContext&, DevicePixelRect video_rect, Optional<DevicePixelPoint> const& mouse_position) const;
 };
 
 }

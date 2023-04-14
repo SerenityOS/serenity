@@ -30,6 +30,9 @@ public:
     ErrorOr<String> to_string() const;
     float to_degrees() const;
 
+    Type type() const { return m_type; }
+    float raw_value() const { return m_value; }
+
     bool operator==(Angle const& other) const
     {
         return m_type == other.m_type && m_value == other.m_value;

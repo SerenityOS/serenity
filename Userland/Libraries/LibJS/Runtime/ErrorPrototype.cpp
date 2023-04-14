@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +15,7 @@
 namespace JS {
 
 ErrorPrototype::ErrorPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -126,7 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::stack_setter)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                             \
     PrototypeName::PrototypeName(Realm& realm)                                                                       \
-        : PrototypeObject(*realm.intrinsics().error_prototype())                                                     \
+        : PrototypeObject(realm.intrinsics().error_prototype())                                                      \
     {                                                                                                                \
     }                                                                                                                \
                                                                                                                      \

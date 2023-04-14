@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ NonnullGCPtr<AsyncFromSyncIterator> AsyncFromSyncIterator::create(Realm& realm, 
 }
 
 AsyncFromSyncIterator::AsyncFromSyncIterator(Realm& realm, Iterator sync_iterator_record)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().async_from_sync_iterator_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().async_from_sync_iterator_prototype())
     , m_sync_iterator_record(sync_iterator_record)
 {
 }

@@ -80,12 +80,6 @@ BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="https://ftp.gnu.org/gnu/binutils"
 
-GDB_VERSION="13.1"
-GDB_MD5SUM="92b70971e81a450f6b3e1cf568671cfa"
-GDB_NAME="gdb-$GDB_VERSION"
-GDB_PKG="${GDB_NAME}.tar.gz"
-GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
-
 # Note: If you bump the gcc version, you also have to update the matching
 #       GCC_VERSION variable in the project's root CMakeLists.txt
 GCC_VERSION="12.2.0"
@@ -99,21 +93,6 @@ buildstep() {
     shift
     "$@" 2>&1 | sed $'s|^|\x1b[34m['"${NAME}"$']\x1b[39m |'
 }
-
-has_gdb() {
-    ARCH=$1
-    ARCH_DASH="${ARCH//_/-}"
-    if command -v gdb >/dev/null && gdb -ex 'set architecture' -ex 'quit' 2>&1 | grep "$ARCH_DASH"; then
-        return 0
-    else
-        command -v "$ARCH"-elf-gdb >/dev/null
-    fi
-}
-
-NEEDS_GDB=1
-if has_gdb "$ARCH"; then
-    NEEDS_GDB=0
-fi
 
 # === DEPENDENCIES ===
 buildstep dependencies echo "Checking whether 'make' is available..."
@@ -197,22 +176,6 @@ popd
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
-    # Build gdb for cross-debugging support
-    if [ $NEEDS_GDB -eq 1 ]; then
-        echo "GDB not found for $ARCH. Will build it from source."
-        md5=""
-        if [ -e "$GDB_PKG" ]; then
-            md5="$($MD5SUM $GDB_PKG | cut -f1 -d' ')"
-            echo "gdb md5='$md5'"
-        fi
-        if [ "$md5" != ${GDB_MD5SUM} ] ; then
-            rm -f $GDB_PKG
-            curl -LO "$GDB_BASE_URL/$GDB_PKG"
-        else
-            echo "Skipped downloading gdb"
-        fi
-    fi
-
     md5=""
     if [ -e "$BINUTILS_PKG" ]; then
         md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
@@ -235,29 +198,6 @@ pushd "$DIR/Tarballs"
         curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
         echo "Skipped downloading gcc"
-    fi
-
-    if [ $NEEDS_GDB -eq 1 ]; then
-        if [ -d ${GDB_NAME} ]; then
-            rm -rf "${GDB_NAME}"
-            rm -rf "$DIR/Build/$ARCH/$GDB_NAME"
-        fi
-        echo "Extracting GDB..."
-        tar -xzf ${GDB_PKG}
-
-        pushd ${GDB_NAME}
-            if [ "$git_patch" = "1" ]; then
-                git init > /dev/null
-                git add . > /dev/null
-                git commit -am "BASE" > /dev/null
-                git am "${DIR}"/Patches/gdb/*.patch > /dev/null
-            else
-                for patch in "${DIR}"/Patches/gdb/*.patch; do
-                    patch -p1 < "${patch}" > /dev/null
-                done
-            fi
-            $MD5SUM "$DIR"/Patches/gdb/*.patch > .patch.applied
-        popd
     fi
 
     patch_md5="$(${MD5SUM} "${DIR}"/Patches/binutils/*.patch)"
@@ -334,43 +274,6 @@ mkdir -p "$DIR/Build/$ARCH"
 
 pushd "$DIR/Build/$ARCH"
     unset PKG_CONFIG_LIBDIR # Just in case
-
-    if [ $NEEDS_GDB -eq 1 ]; then
-        rm -rf gdb
-        mkdir -p gdb
-
-        pushd gdb
-            echo "XXX configure gdb"
-
-
-            if [ "$SYSTEM_NAME" = "Darwin" ]; then
-                buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
-                                                        --target="$TARGET" \
-                                                        --with-sysroot="$SYSROOT" \
-                                                        --enable-shared \
-                                                        --disable-werror \
-                                                        --with-libgmp-prefix="$(brew --prefix gmp)" \
-                                                        --with-gmp="$(brew --prefix gmp)" \
-                                                        --with-isl="$(brew --prefix isl)" \
-                                                        --with-mpc="$(brew --prefix libmpc)" \
-                                                        --with-mpfr="$(brew --prefix mpfr)" \
-                                                        --disable-nls \
-                                                        ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-            else
-                buildstep "gdb/configure" "$DIR"/Tarballs/$GDB_NAME/configure --prefix="$PREFIX" \
-                                                        --target="$TARGET" \
-                                                        --with-sysroot="$SYSROOT" \
-                                                        --enable-shared \
-                                                        --disable-werror \
-                                                        --disable-nls \
-                                                        ${TRY_USE_LOCAL_TOOLCHAIN:+"--quiet"} || exit 1
-            fi
-
-            echo "XXX build gdb"
-            buildstep "gdb/build" "$MAKE" MAKEINFO=true -j "$MAKEJOBS" || exit 1
-            buildstep "gdb/install" "$MAKE" MAKEINFO=true install || exit 1
-        popd
-    fi
 
     rm -rf binutils
     mkdir -p binutils

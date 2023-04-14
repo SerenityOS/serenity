@@ -16,7 +16,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<NodeFilter>> NodeFilter::create(JS::Realm& 
 }
 
 NodeFilter::NodeFilter(JS::Realm& realm, WebIDL::CallbackType& callback)
-    : PlatformObject(*realm.intrinsics().object_prototype())
+    : PlatformObject(realm.intrinsics().object_prototype())
     , m_callback(callback)
 {
 }

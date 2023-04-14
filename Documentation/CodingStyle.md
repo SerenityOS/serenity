@@ -11,7 +11,11 @@ We'll definitely be tweaking and amending this over time, so let's consider it a
 
 ### Names
 
-A combination of CamelCase and snake\_case. Use CamelCase (Capitalize the first letter, including all letters in an acronym) in a class, struct, or namespace name. Use snake\_case (all lowercase, with underscores separating words) for variable and function names.
+A combination of CamelCase, snake\_case, and SCREAMING\_CASE:
+
+- Use CamelCase (Capitalize the first letter, including all letters in an acronym) in a class, struct, or namespace name
+- Use snake\_case (all lowercase, with underscores separating words) for variable and function names
+- Use SCREAMING\_CASE for constants (both global and static member variables)
 
 ###### Right:
 
