@@ -97,6 +97,8 @@ public:
     virtual float width(Utf8View const&) const override;
     virtual float width(Utf32View const&) const override;
 
+    virtual int width_rounded_up(StringView) const override;
+
     DeprecatedString name() const override { return m_name; }
     void set_name(DeprecatedString name) { m_name = move(name); }
 

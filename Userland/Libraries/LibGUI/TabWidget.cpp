@@ -452,7 +452,7 @@ Gfx::IntRect TabWidget::close_button_rect(size_t index) const
 
 int TabWidget::TabData::width(Gfx::Font const& font) const
 {
-    auto width = 16 + static_cast<int>(ceilf(font.width(title))) + (icon ? (16 + 4) : 0);
+    auto width = 16 + font.width_rounded_up(title) + (icon ? (16 + 4) : 0);
     // NOTE: This needs to always be an odd number, because the button rect
     //       includes 3px of light and shadow on the left and right edges. If
     //       the button rect width is not an odd number, the area left for the

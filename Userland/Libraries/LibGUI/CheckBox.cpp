@@ -65,7 +65,7 @@ void CheckBox::paint_event(PaintEvent& event)
     auto text_rect = rect();
     if (m_checkbox_position == CheckBoxPosition::Left)
         text_rect.set_left(box_rect.right() + 1 + gap_between_box_and_rect());
-    text_rect.set_width(static_cast<int>(ceilf(font().width(text()))));
+    text_rect.set_width(font().width_rounded_up(text()));
     text_rect.set_top(height() / 2 - font().pixel_size_rounded_up() / 2);
     text_rect.set_height(font().pixel_size_rounded_up());
 
@@ -101,7 +101,7 @@ void CheckBox::set_autosize(bool autosize)
 
 void CheckBox::size_to_fit()
 {
-    set_fixed_width(box_rect().width() + gap_between_box_and_rect() + static_cast<int>(ceilf(font().width(text()))) + horizontal_padding() * 2);
+    set_fixed_width(box_rect().width() + gap_between_box_and_rect() + font().width_rounded_up(text()) + horizontal_padding() * 2);
 }
 
 Optional<UISize> CheckBox::calculated_min_size() const

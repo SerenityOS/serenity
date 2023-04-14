@@ -61,6 +61,7 @@ public:
     virtual float width(StringView) const override;
     virtual float width(Utf8View const&) const override;
     virtual float width(Utf32View const&) const override;
+    virtual int width_rounded_up(StringView) const override;
     virtual DeprecatedString name() const override { return DeprecatedString::formatted("{} {}", family(), variant()); }
     virtual bool is_fixed_width() const override { return m_font->is_fixed_width(); }
     virtual u8 glyph_spacing() const override { return 0; }

@@ -116,7 +116,7 @@ void Label::size_to_fit()
 
 int Label::text_calculated_preferred_width() const
 {
-    return static_cast<int>(ceilf(font().width(m_text))) + m_autosize_padding * 2;
+    return font().width_rounded_up(m_text) + m_autosize_padding * 2;
 }
 
 int Label::text_calculated_preferred_height() const

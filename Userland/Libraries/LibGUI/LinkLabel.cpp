@@ -81,7 +81,7 @@ void LinkLabel::paint_event(PaintEvent& event)
     GUI::Painter painter(*this);
 
     if (m_hovered)
-        painter.draw_line({ 0, rect().bottom() }, { static_cast<int>(ceilf(font().width(text()))), rect().bottom() }, palette().link());
+        painter.draw_line({ 0, rect().bottom() }, { font().width_rounded_up(text()), rect().bottom() }, palette().link());
 
     if (is_focused())
         painter.draw_focus_rect(text_rect(), palette().focus_outline());

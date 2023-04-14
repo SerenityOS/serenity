@@ -43,7 +43,7 @@ void GroupBox::paint_event(PaintEvent& event)
     Gfx::StylePainter::paint_frame(painter, frame_rect, palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
 
     if (!m_title.is_empty()) {
-        Gfx::IntRect text_rect { 6, 1, static_cast<int>(ceilf(font().width(m_title) + 6)), font().pixel_size_rounded_up() };
+        Gfx::IntRect text_rect { 6, 1, font().width_rounded_up(m_title) + 6, font().pixel_size_rounded_up() };
         painter.fill_rect(text_rect, palette().button());
         painter.draw_text(text_rect, m_title, Gfx::TextAlignment::CenterLeft, palette().button_text());
     }
