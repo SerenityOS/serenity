@@ -238,6 +238,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Debug::DebugInfo::SourcePosition previous_source_position;
     bool in_step_line = false;
 
+    //    g_debug_session
     g_debug_session->run(Debug::DebugSession::DesiredInitialDebugeeState::Stopped, [&](Debug::DebugSession::DebugBreakReason reason, Optional<PtraceRegisters> optional_regs) {
         if (reason == Debug::DebugSession::DebugBreakReason::Exited) {
             outln("Program exited.");

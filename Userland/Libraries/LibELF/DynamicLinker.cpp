@@ -687,7 +687,7 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
 #ifdef AK_ARCH_AARCH64
         asm("brk #0");
 #else
-        asm("int3");
+//        asm("int3");
 #endif
     }
 

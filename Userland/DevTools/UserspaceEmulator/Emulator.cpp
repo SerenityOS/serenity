@@ -137,13 +137,14 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
         m_cpu->push64(shadow_wrap_as_initialized(argv_entries[i]));
     FlatPtr argv = m_cpu->rsp().value();
 
-    while ((m_cpu->rsp().value() + sizeof(FlatPtr)) % 16 != 0)
+    while (m_cpu->rsp().value() % 16 != 0)
         m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // (alignment)
 
     FlatPtr argc = argv_entries.size();
-    m_cpu->push64(shadow_wrap_as_initialized(envp));
-    m_cpu->push64(shadow_wrap_as_initialized(argv));
-    m_cpu->push64(shadow_wrap_as_initialized(argc));
+    // Entrypoint will be called with (argc, argv, envnp)
+    m_cpu->set_rdi(shadow_wrap_as_initialized(argc));
+    m_cpu->set_rsi(shadow_wrap_as_initialized(argv));
+    m_cpu->set_rdx(shadow_wrap_as_initialized(envp));
 
     VERIFY(m_cpu->rsp().value() % 16 == 0);
 }
@@ -223,7 +224,7 @@ int Emulator::exec()
     // X86::ELFSymbolProvider symbol_provider(*m_elf);
     X86::ELFSymbolProvider* symbol_provider = nullptr;
 
-    constexpr bool trace = false;
+    constexpr bool trace = true;
 
     size_t instructions_until_next_profile_dump = profile_instruction_interval();
     if (is_profiling() && m_loader_text_size.has_value())
@@ -232,7 +233,7 @@ int Emulator::exec()
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
             m_cpu->save_base_rip();
-            auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
+            auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Long);
             // Exec cycle
             if constexpr (trace) {
                 outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_rip(), insn.to_deprecated_string(m_cpu->base_rip(), symbol_provider));
@@ -299,7 +300,7 @@ void Emulator::handle_repl()
     // FIXME: Function names (base, call, jump)
     auto saved_rip = m_cpu->rip();
     m_cpu->save_base_rip();
-    auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
+    auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Long);
     // FIXME: This does not respect inlining
     //        another way of getting the current function is at need
     if (auto symbol = symbol_at(m_cpu->base_rip()); symbol.has_value()) {
@@ -309,7 +310,7 @@ void Emulator::handle_repl()
     outln("==> {}", create_instruction_line(m_cpu->base_rip(), insn));
     for (int i = 0; i < 7; ++i) {
         m_cpu->save_base_rip();
-        insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
+        insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Long);
         outln("    {}", create_instruction_line(m_cpu->base_rip(), insn));
     }
     // We don't want to increase EIP here, we just want the instructions
@@ -377,6 +378,14 @@ void Emulator::handle_repl()
             }
         }
         outln("Usage: sig [signal:int], default: SINGINT:2");
+    } else if (parts[0] == "str") {
+        auto addr = AK::StringUtils::convert_to_uint_from_hex(parts[1]);
+        if (addr.has_value()) {
+            for (size_t i = 0; i < 10; ++i) {
+                printf("0x%x, ", mmu().read8({ 0x23, addr.value() + i }).value());
+            }
+            outln();
+        }
     } else {
         help();
     }

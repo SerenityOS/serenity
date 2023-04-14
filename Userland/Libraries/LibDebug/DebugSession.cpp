@@ -118,15 +118,23 @@ OwnPtr<DebugSession> DebugSession::exec_and_attach(DeprecatedString const& comma
 
     auto debug_session = adopt_own(*new DebugSession(pid, source_root, move(on_initialization_progress)));
 
-    // Continue until breakpoint before entry point of main program
+    //    // Continue until breakpoint before entry point of main program
+    //    int wstatus = debug_session->continue_debuggee_and_wait();
+    //    if (WSTOPSIG(wstatus) != SIGTRAP) {
+    //        dbgln("expected SIGTRAP");
+    //        return {};
+    //    }
+    //
+    //    // At this point, libraries should have been loaded
+    debug_session->update_loaded_libs();
+
+    VERIFY(debug_session->insert_breakpoint("_entry").has_value());
+
     int wstatus = debug_session->continue_debuggee_and_wait();
     if (WSTOPSIG(wstatus) != SIGTRAP) {
         dbgln("expected SIGTRAP");
         return {};
     }
-
-    // At this point, libraries should have been loaded
-    debug_session->update_loaded_libs();
 
     return debug_session;
 }
@@ -409,8 +417,8 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
     Optional<InsertBreakpointAtSymbolResult> result;
     for_each_loaded_library([this, symbol_name, &result](auto& lib) {
         // The loader contains its own definitions for LibC symbols, so we don't want to include it in the search.
-        if (lib.name == "Loader.so")
-            return IterationDecision::Continue;
+        //        if (lib.name == "Loader.so")
+        //            return IterationDecision::Continue;
 
         auto symbol = lib.debug_info->elf().find_demangled_function(symbol_name);
         if (!symbol.has_value())

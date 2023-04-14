@@ -594,7 +594,7 @@ private:
     template<typename CPU>
     LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
     template<typename CPU>
-    LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>);
+    LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>, ProcessorMode);
 
     template<typename CPU>
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
@@ -775,7 +775,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
 }
 
 template<typename CPU>
-ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix)
+ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix, ProcessorMode processor_mode)
 {
     auto default_segment = SegmentRegister::DS;
     u32 offset = 0;
@@ -790,11 +790,16 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
         break;
     default: // 5
         if (mod() == 0) {
-            offset = m_displacement32;
+            if (processor_mode == ProcessorMode::Long) {
+                default_segment = SegmentRegister::CS;
+                offset = cpu.rip() + m_displacement32;
+            } else {
+                offset = m_displacement32;
+            };
             break;
         } else {
             default_segment = SegmentRegister::SS;
-            offset = cpu.ebp().value() + m_displacement32;
+            offset = cpu.rbp().value() + m_displacement32;
             break;
         }
         break;
@@ -1304,7 +1309,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, 
     case AddressSize::Size16:
         return resolve16(cpu, insn.segment_prefix());
     case AddressSize::Size32:
-        return resolve32(cpu, insn.segment_prefix());
+        return resolve32(cpu, insn.segment_prefix(), insn.mode());
     default:
         VERIFY_NOT_REACHED();
     }
