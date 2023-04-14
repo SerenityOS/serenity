@@ -120,28 +120,35 @@ void DirectoryView::handle_activation(GUI::ModelIndex const& index)
     }
 }
 
+ErrorOr<NonnullRefPtr<DirectoryView>> DirectoryView::try_create(Mode mode)
+{
+    auto view = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) DirectoryView(mode)));
+
+    view->set_active_widget(nullptr);
+    view->set_grabbable_margins(2);
+    TRY(view->setup_actions());
+
+    view->m_error_label = TRY(view->try_add<GUI::Label>());
+    view->m_error_label->set_font(view->m_error_label->font().bold_variant());
+
+    view->setup_model();
+    view->setup_icon_view();
+
+    if (mode != Mode::Desktop) {
+        view->setup_columns_view();
+        view->setup_table_view();
+    }
+
+    view->set_view_mode(ViewMode::Icon);
+
+    return view;
+}
+
 DirectoryView::DirectoryView(Mode mode)
     : m_mode(mode)
     , m_model(GUI::FileSystemModel::create({}))
     , m_sorting_model(MUST(GUI::SortingProxyModel::create(m_model)))
 {
-    set_active_widget(nullptr);
-    set_grabbable_margins(2);
-
-    setup_actions();
-
-    m_error_label = add<GUI::Label>();
-    m_error_label->set_font(m_error_label->font().bold_variant());
-
-    setup_model();
-
-    setup_icon_view();
-    if (mode != Mode::Desktop) {
-        setup_columns_view();
-        setup_table_view();
-    }
-
-    set_view_mode(ViewMode::Icon);
 }
 
 GUI::FileSystemModel::Node const& DirectoryView::node(GUI::ModelIndex const& index) const
@@ -565,7 +572,7 @@ void DirectoryView::handle_selection_change()
         on_selection_change(current_view());
 }
 
-void DirectoryView::setup_actions()
+ErrorOr<void> DirectoryView::setup_actions()
 {
     m_mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [&](GUI::Action const&) {
         String value;
@@ -611,7 +618,8 @@ void DirectoryView::setup_actions()
         spawn_terminal(window(), path());
     });
 
-    m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window()).release_value_but_fixme_should_propagate_errors();
+    m_delete_action = TRY(GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window()));
+
     m_rename_action = GUI::CommonActions::make_rename_action([this](auto&) {
         if (can_modify_current_selection())
             current_view().begin_editing(current_view().cursor_index());
@@ -649,6 +657,8 @@ void DirectoryView::setup_actions()
         m_view_as_table_action->set_enabled(false);
         m_view_as_columns_action->set_enabled(false);
     }
+
+    return {};
 }
 
 void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent const& event)

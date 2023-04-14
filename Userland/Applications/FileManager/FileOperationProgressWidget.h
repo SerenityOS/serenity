@@ -17,11 +17,12 @@ class FileOperationProgressWidget : public GUI::Widget {
     C_OBJECT(FileOperationProgressWidget);
 
 public:
+    // FIXME: The helper_pipe_fd parameter is only needed because we can't get the fd from a Core::Stream.
+    static ErrorOr<NonnullRefPtr<FileOperationProgressWidget>> try_create(FileOperation operation, NonnullOwnPtr<Core::BufferedFile> helper_pipe, int helper_pipe_fd);
     virtual ~FileOperationProgressWidget() override;
 
 private:
-    // FIXME: The helper_pipe_fd parameter is only needed because we can't get the fd from a Core::Stream.
-    FileOperationProgressWidget(FileOperation, NonnullOwnPtr<Core::BufferedFile> helper_pipe, int helper_pipe_fd);
+    FileOperationProgressWidget();
 
     void did_finish();
     void did_error(StringView message);

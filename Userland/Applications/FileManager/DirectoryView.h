@@ -41,7 +41,7 @@ class DirectoryView final
     : public GUI::StackWidget
     , private GUI::ModelClient
     , public Config::Listener {
-    C_OBJECT(DirectoryView);
+    C_OBJECT_ABSTRACT(DirectoryView);
 
 public:
     enum class Mode {
@@ -49,6 +49,7 @@ public:
         Normal,
     };
 
+    static ErrorOr<NonnullRefPtr<DirectoryView>> try_create(Mode mode);
     virtual ~DirectoryView() override;
 
     bool open(DeprecatedString const& path);
@@ -148,7 +149,7 @@ private:
     // ^GUI::ModelClient
     virtual void model_did_update(unsigned) override;
 
-    void setup_actions();
+    ErrorOr<void> setup_actions();
     void setup_model();
     void setup_icon_view();
     void setup_columns_view();

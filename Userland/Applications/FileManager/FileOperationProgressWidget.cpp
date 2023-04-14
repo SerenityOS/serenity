@@ -18,24 +18,27 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullOwnPtr<Core::BufferedFile> helper_pipe, int helper_pipe_fd)
-    : m_operation(operation)
-    , m_helper_pipe(move(helper_pipe))
+ErrorOr<NonnullRefPtr<FileOperationProgressWidget>> FileOperationProgressWidget::try_create(FileOperation operation, NonnullOwnPtr<Core::BufferedFile> helper_pipe, int helper_pipe_fd)
 {
-    load_from_gml(file_operation_progress_gml).release_value_but_fixme_should_propagate_errors();
+    auto main_widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) FileOperationProgressWidget()));
 
-    auto& button = *find_descendant_of_type_named<GUI::Button>("button");
+    main_widget->m_operation = operation;
+    main_widget->m_helper_pipe = move(helper_pipe);
 
-    auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
+    TRY(main_widget->load_from_gml(file_operation_progress_gml));
+
+    auto& button = *main_widget->find_descendant_of_type_named<GUI::Button>("button");
+
+    auto& file_copy_animation = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
     file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif"sv);
     file_copy_animation.animate();
 
-    auto& source_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("source_folder_icon");
+    auto& source_folder_icon = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("source_folder_icon");
     source_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png"sv);
 
-    auto& destination_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
+    auto& destination_folder_icon = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
 
-    switch (m_operation) {
+    switch (main_widget->m_operation) {
     case FileOperation::Delete:
         destination_folder_icon.load_from_file("/res/icons/32x32/recycle-bin.png"sv);
         break;
@@ -44,15 +47,15 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         break;
     }
 
-    button.on_click = [this](auto) {
-        close_pipe();
-        window()->close();
+    button.on_click = [main_widget](auto) {
+        main_widget->close_pipe();
+        main_widget->window()->close();
     };
 
-    auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
-    auto& current_file_action_label = *find_descendant_of_type_named<GUI::Label>("current_file_action_label");
+    auto& files_copied_label = *main_widget->find_descendant_of_type_named<GUI::Label>("files_copied_label");
+    auto& current_file_action_label = *main_widget->find_descendant_of_type_named<GUI::Label>("current_file_action_label");
 
-    switch (m_operation) {
+    switch (main_widget->m_operation) {
     case FileOperation::Copy:
         files_copied_label.set_text("Copying files...");
         current_file_action_label.set_text("Copying: ");
@@ -69,17 +72,18 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         VERIFY_NOT_REACHED();
     }
 
-    m_notifier = Core::Notifier::construct(helper_pipe_fd, Core::Notifier::Type::Read);
-    m_notifier->on_activation = [this] {
+    main_widget->m_notifier = main_widget->m_notifier = TRY(Core::Notifier::try_create(helper_pipe_fd, Core::Notifier::Type::Read));
+
+    main_widget->m_notifier->on_activation = [main_widget] {
         auto line_buffer_or_error = ByteBuffer::create_zeroed(1 * KiB);
         if (line_buffer_or_error.is_error()) {
-            did_error("Failed to allocate ByteBuffer for reading data."sv);
+            main_widget->did_error("Failed to allocate ByteBuffer for reading data."sv);
             return;
         }
         auto line_buffer = line_buffer_or_error.release_value();
-        auto line_or_error = m_helper_pipe->read_line(line_buffer.bytes());
+        auto line_or_error = main_widget->m_helper_pipe->read_line(line_buffer.bytes());
         if (line_or_error.is_error() || line_or_error.value().is_empty()) {
-            did_error("Read from pipe returned null."sv);
+            main_widget->did_error("Read from pipe returned null."sv);
             return;
         }
 
@@ -89,23 +93,23 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         VERIFY(!parts.is_empty());
 
         if (parts[0] == "ERROR"sv) {
-            did_error(line.substring_view(6));
+            main_widget->did_error(line.substring_view(6));
             return;
         }
 
         if (parts[0] == "WARN"sv) {
-            did_error(line.substring_view(5));
+            main_widget->did_error(line.substring_view(5));
             return;
         }
 
         if (parts[0] == "FINISH"sv) {
-            did_finish();
+            main_widget->did_finish();
             return;
         }
 
         if (parts[0] == "PROGRESS"sv) {
             VERIFY(parts.size() >= 8);
-            did_progress(
+            main_widget->did_progress(
                 parts[3].to_uint().value_or(0),
                 parts[4].to_uint().value_or(0),
                 parts[1].to_uint().value_or(0),
@@ -116,7 +120,13 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         }
     };
 
-    m_elapsed_timer.start();
+    main_widget->m_elapsed_timer.start();
+
+    return main_widget;
+}
+
+FileOperationProgressWidget::FileOperationProgressWidget()
+{
 }
 
 FileOperationProgressWidget::~FileOperationProgressWidget()
