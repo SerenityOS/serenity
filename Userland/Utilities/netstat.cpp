@@ -114,14 +114,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
     };
 
-    auto get_formatted_address = [&](DeprecatedString const& address, DeprecatedString const& port) {
+    auto get_formatted_address = [&](DeprecatedString const& address, String const& port) {
         if (flag_wide)
             return DeprecatedString::formatted("{}:{}", address, port);
 
-        if ((address.length() + port.length()) <= max_formatted_address_length)
+        if ((address.length() + port.bytes().size()) <= max_formatted_address_length)
             return DeprecatedString::formatted("{}:{}", address, port);
 
-        return DeprecatedString::formatted("{}:{}", address.substring_view(0, max_formatted_address_length - port.length()), port);
+        return DeprecatedString::formatted("{}:{}", address.substring_view(0, max_formatted_address_length - port.bytes().size()), port);
     };
 
     auto get_formatted_program = [&](pid_t pid) {
@@ -186,13 +186,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get_deprecated_string("peer_port"sv).value_or({});
+            auto peer_port = TRY(String::number(if_object.get_u32("peer_port"sv).value_or({})));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("peer_port"sv).value_or(0)), "tcp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
-                        peer_port = s_name;
+                        peer_port = TRY(String::from_utf8(s_name));
                 }
             }
 
@@ -208,13 +208,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get_deprecated_string("local_port"sv).value_or({});
+            auto local_port = TRY(String::number(if_object.get_u32("local_port"sv).value_or({})));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("local_port"sv).value_or(0)), "tcp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
-                        local_port = s_name;
+                        local_port = TRY(String::from_utf8(s_name));
                 }
             }
 
@@ -270,13 +270,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto local_port = if_object.get_deprecated_string("local_port"sv).value_or({});
+            auto local_port = TRY(String::number(if_object.get_u32("local_port"sv).value_or({})));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("local_port"sv).value_or(0)), "udp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
-                        local_port = s_name;
+                        local_port = TRY(String::from_utf8(s_name));
                 }
             }
 
@@ -292,13 +292,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto peer_port = if_object.get_deprecated_string("peer_port"sv).value_or({});
+            auto peer_port = TRY(String::number(if_object.get_u32("peer_port"sv).value_or({})));
             if (!flag_numeric) {
                 auto service = getservbyport(htons(if_object.get_u32("peer_port"sv).value_or(0)), "udp");
                 if (service != nullptr) {
                     auto s_name = StringView { service->s_name, strlen(service->s_name) };
                     if (!s_name.is_empty())
-                        peer_port = s_name;
+                        peer_port = TRY(String::from_utf8(s_name));
                 }
             }
 
