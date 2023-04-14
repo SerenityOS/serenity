@@ -65,8 +65,10 @@ void GradientTool::on_mousemove(Layer* layer, MouseEvent& event)
 {
     // Check if user is hovering over a handle
     if (layer && m_editor && !m_button_pressed && has_gradient_start_end()) {
-        auto set_hover_flag = [&](bool& flag, const Gfx::IntPoint p) {
-            auto frame_postion = m_editor->content_to_frame_position(p).to_type<int>();
+        auto set_hover_flag = [&](bool& flag, Optional<Gfx::IntPoint> const p) {
+            auto handle_offset = m_editor->content_to_frame_position(layer->location());
+            float scale = m_editor->scale();
+            auto frame_postion = p.value().to_type<float>().scaled(scale, scale).translated(handle_offset).to_type<int>();
             auto handle = Gfx::IntRect::centered_at(frame_postion, { 16, 16 });
             if (flag != handle.contains(event.raw_event().position())) {
                 flag = !flag;
@@ -161,7 +163,7 @@ void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    draw_gradient(painter, true, m_editor->content_to_frame_position(Gfx::IntPoint(0, 0)), m_editor->scale(), m_editor->content_rect());
+    draw_gradient(painter, true, m_editor->content_to_frame_position(layer->location()), m_editor->scale(), m_editor->content_rect());
 }
 
 void GradientTool::on_primary_color_change(Color)
@@ -271,6 +273,7 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
     auto t_gradient_center_line = m_gradient_center_line.scaled(scale, scale).translated(drawing_offset);
     auto t_gradient_end_line = m_gradient_end_line.scaled(scale, scale).translated(drawing_offset);
     auto t_gradient_center = m_gradient_center.value().to_type<float>().scaled(scale, scale).translated(drawing_offset).to_type<int>();
+
     int width = m_editor->active_layer()->rect().width() * scale;
     int height = m_editor->active_layer()->rect().height() * scale;
 
@@ -283,14 +286,12 @@ void GradientTool::draw_gradient(GUI::Painter& painter, bool with_guidelines, co
         if (center > side_length)
             return 2 * center;
 
-        return 2 * (AK::max(center, side_length - center));
+        return 2 * (AK::max(center + side_length, side_length - center));
     };
 
-    auto scaled_gradient_center = m_gradient_center.value().to_type<float>().scaled(scale, scale).to_type<int>();
-    auto gradient_rect_height = determine_required_side_length(scaled_gradient_center.y(), height);
-    auto gradient_rect_width = determine_required_side_length(scaled_gradient_center.x(), width);
-    auto gradient_max_side_length = AK::max(gradient_rect_height, gradient_rect_width);
-    auto gradient_rect = Gfx::IntRect::centered_at(t_gradient_center, { gradient_max_side_length, gradient_max_side_length });
+    auto gradient_rect_height = determine_required_side_length(t_gradient_center.y(), height);
+    auto gradient_rect_width = determine_required_side_length(t_gradient_center.x(), width);
+    auto gradient_rect = Gfx::IntRect::centered_at(t_gradient_center, { gradient_rect_width, gradient_rect_height });
     float overall_gradient_length_in_rect = Gfx::calculate_gradient_length(gradient_rect.size(), rotation_degrees);
 
     if (m_gradient_half_length == 0 || overall_gradient_length_in_rect == 0 || isnan(overall_gradient_length_in_rect))
