@@ -303,7 +303,7 @@ template<typename T>
 ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
 {
     typename T::ValueType result;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("incl %%eax\n"
@@ -321,8 +321,8 @@ ALWAYS_INLINE static T op_inc(SoftCPU& cpu, T data)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszap(new_flags);
     cpu.taint_flags_from(data);
@@ -333,7 +333,7 @@ template<typename T>
 ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 {
     typename T::ValueType result;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("decl %%eax\n"
@@ -351,8 +351,8 @@ ALWAYS_INLINE static T op_dec(SoftCPU& cpu, T data)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszap(new_flags);
     cpu.taint_flags_from(data);
@@ -363,7 +363,7 @@ template<typename T>
 ALWAYS_INLINE static T op_xor(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("xorl %%ecx, %%eax\n"
@@ -383,8 +383,8 @@ ALWAYS_INLINE static T op_xor(SoftCPU& cpu, T const& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszpc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -395,7 +395,7 @@ template<typename T>
 ALWAYS_INLINE static T op_or(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("orl %%ecx, %%eax\n"
@@ -415,8 +415,8 @@ ALWAYS_INLINE static T op_or(SoftCPU& cpu, T const& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszpc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -427,7 +427,7 @@ template<typename T>
 ALWAYS_INLINE static T op_sub(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("subl %%ecx, %%eax\n"
@@ -447,8 +447,8 @@ ALWAYS_INLINE static T op_sub(SoftCPU& cpu, T const& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -459,7 +459,7 @@ template<typename T, bool cf>
 ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (cf)
         asm volatile("stc");
@@ -484,8 +484,8 @@ ALWAYS_INLINE static T op_sbb_impl(SoftCPU& cpu, T const& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -505,7 +505,7 @@ template<typename T>
 ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, T const& src)
 {
     typename T::ValueType result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("addl %%ecx, %%eax\n"
@@ -525,8 +525,8 @@ ALWAYS_INLINE static T op_add(SoftCPU& cpu, T& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -537,7 +537,7 @@ template<typename T, bool cf>
 ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, T const& src)
 {
     typename T::ValueType result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (cf)
         asm volatile("stc");
@@ -562,8 +562,8 @@ ALWAYS_INLINE static T op_adc_impl(SoftCPU& cpu, T& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -583,7 +583,7 @@ template<typename T>
 ALWAYS_INLINE static T op_and(SoftCPU& cpu, T const& dest, T const& src)
 {
     typename T::ValueType result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("andl %%ecx, %%eax\n"
@@ -603,8 +603,8 @@ ALWAYS_INLINE static T op_and(SoftCPU& cpu, T const& dest, T const& src)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszpc(new_flags);
     cpu.taint_flags_from(dest, src);
@@ -648,7 +648,7 @@ ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("shrl %%cl, %%eax\n"
@@ -666,8 +666,8 @@ ALWAYS_INLINE static T op_shr(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(data, steps);
@@ -681,7 +681,7 @@ ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("shll %%cl, %%eax\n"
@@ -699,8 +699,8 @@ ALWAYS_INLINE static T op_shl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(data, steps);
@@ -714,7 +714,7 @@ ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("shrd %%cl, %%edx, %%eax\n"
@@ -728,8 +728,8 @@ ALWAYS_INLINE static T op_shrd(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(data, steps);
@@ -743,7 +743,7 @@ ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("shld %%cl, %%edx, %%eax\n"
@@ -757,8 +757,8 @@ ALWAYS_INLINE static T op_shld(SoftCPU& cpu, T data, T extra_bits, ValueWithShad
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     cpu.taint_flags_from(data, steps);
@@ -2506,7 +2506,7 @@ ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (cf)
         asm volatile("stc");
@@ -2529,8 +2529,8 @@ ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oc(new_flags);
     cpu.taint_flags_from(data, steps);
@@ -2555,7 +2555,7 @@ ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (cf)
         asm volatile("stc");
@@ -2578,8 +2578,8 @@ ALWAYS_INLINE static T op_rcr_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> ste
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oc(new_flags);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
@@ -2629,7 +2629,7 @@ ALWAYS_INLINE static T op_rol(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("roll %%cl, %%eax\n"
@@ -2647,8 +2647,8 @@ ALWAYS_INLINE static T op_rol(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oc(new_flags);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
@@ -2663,7 +2663,7 @@ ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("rorl %%cl, %%eax\n"
@@ -2681,8 +2681,8 @@ ALWAYS_INLINE static T op_ror(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oc(new_flags);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
@@ -2709,7 +2709,7 @@ static T op_sar(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
         return shadow_wrap_with_taint_from(data.value(), data, steps);
 
     u32 result = 0;
-    u32 new_flags = 0;
+    u64 new_flags = 0;
 
     if constexpr (sizeof(typename T::ValueType) == 4) {
         asm volatile("sarl %%cl, %%eax\n"
@@ -2727,8 +2727,8 @@ static T op_sar(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)
 
     asm volatile(
         "pushf\n"
-        "pop %%ebx"
-        : "=b"(new_flags));
+        "popq %0"
+        : "=r"(new_flags));
 
     cpu.set_flags_oszapc(new_flags);
     return shadow_wrap_with_taint_from<typename T::ValueType>(result, data, steps);
