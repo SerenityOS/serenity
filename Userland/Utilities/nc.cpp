@@ -50,6 +50,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool verbose = false;
     bool should_close = false;
     bool udp_mode = false;
+    bool numeric_mode = false;
     DeprecatedString target;
     int port = 0;
     int local_port = 0;
@@ -60,6 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(maximum_tcp_receive_buffer_size_input, "Set maximum tcp receive buffer size", "length", 'I', nullptr);
     args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
+    args_parser.add_option(numeric_mode, "Suppress name resolution", nullptr, 'n');
     args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
     args_parser.add_option(local_port, "Local port for remote connections", nullptr, 'p', "port");
     args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
@@ -144,16 +146,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)));
         TRY(Core::System::setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout)));
 
-        auto* hostent = gethostbyname(target.characters());
-        if (!hostent) {
-            warnln("Socket::connect: Unable to resolve '{}'", target);
-            return 1;
-        }
-
         sockaddr_in dst_addr {};
         dst_addr.sin_family = AF_INET;
         dst_addr.sin_port = htons(port);
-        dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
+
+        if (!numeric_mode) {
+            auto* hostent = gethostbyname(target.characters());
+            if (!hostent) {
+                warnln("nc: Unable to resolve '{}'", target);
+                return 1;
+            }
+            dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
+        } else {
+            if (inet_pton(AF_INET, target.characters(), &dst_addr.sin_addr) <= 0) {
+                perror("inet_pton");
+                return 1;
+            }
+        }
 
         // FIXME: Actually use the local_port for the outgoing connection once we have a working implementation of bind and connect
 
