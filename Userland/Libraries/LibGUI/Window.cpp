@@ -615,6 +615,9 @@ void Window::handle_fonts_change_event(FontsChangeEvent& event)
         });
     };
     dispatch_fonts_change(*m_main_widget.ptr(), dispatch_fonts_change);
+
+    if (is_auto_shrinking())
+        schedule_relayout();
 }
 
 void Window::handle_screen_rects_change_event(ScreenRectsChangeEvent& event)
@@ -1096,6 +1099,14 @@ void Window::set_obey_widget_min_size(bool obey_widget_min_size)
     }
 }
 
+void Window::set_auto_shrink(bool shrink)
+{
+    if (m_auto_shrink == shrink)
+        return;
+    m_auto_shrink = shrink;
+    schedule_relayout();
+}
+
 void Window::set_maximized(bool maximized)
 {
     m_maximized = maximized;
@@ -1119,16 +1130,19 @@ void Window::set_minimized(bool minimized)
 
 void Window::update_min_size()
 {
-    if (main_widget()) {
-        main_widget()->do_layout();
-        if (m_obey_widget_min_size) {
-            auto min_size = main_widget()->effective_min_size();
-            Gfx::IntSize size = { MUST(min_size.width().shrink_value()), MUST(min_size.height().shrink_value()) };
-            m_minimum_size_when_windowless = size;
-            if (is_visible())
-                ConnectionToWindowServer::the().async_set_window_minimum_size(m_window_id, size);
-        }
+    if (!main_widget())
+        return;
+    main_widget()->do_layout();
+
+    auto min_size = main_widget()->effective_min_size();
+    Gfx::IntSize size = { MUST(min_size.width().shrink_value()), MUST(min_size.height().shrink_value()) };
+    if (is_obeying_widget_min_size()) {
+        m_minimum_size_when_windowless = size;
+        if (is_visible())
+            ConnectionToWindowServer::the().async_set_window_minimum_size(m_window_id, size);
     }
+    if (is_auto_shrinking())
+        resize(size);
 }
 
 void Window::schedule_relayout()

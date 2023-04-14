@@ -63,6 +63,9 @@ public:
     bool is_obeying_widget_min_size() { return m_obey_widget_min_size; }
     void set_obey_widget_min_size(bool);
 
+    bool is_auto_shrinking() const { return m_auto_shrink; }
+    void set_auto_shrink(bool);
+
     bool is_minimizable() const { return m_minimizable; }
     void set_minimizable(bool minimizable) { m_minimizable = minimizable; }
 
@@ -321,6 +324,7 @@ private:
     bool m_moved_by_client { false };
     bool m_blocks_emoji_input { false };
     bool m_resizing { false };
+    bool m_auto_shrink { false };
 };
 
 }
