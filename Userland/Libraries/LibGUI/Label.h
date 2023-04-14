@@ -49,6 +49,7 @@ protected:
     explicit Label(DeprecatedString text = {});
 
     virtual void paint_event(PaintEvent&) override;
+    virtual void did_change_font() override;
     virtual void did_change_text() { }
 
 private:

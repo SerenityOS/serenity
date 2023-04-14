@@ -109,9 +109,16 @@ void Label::paint_event(PaintEvent& event)
     }
 }
 
+void Label::did_change_font()
+{
+    if (m_autosize)
+        size_to_fit();
+}
+
 void Label::size_to_fit()
 {
     set_fixed_width(text_calculated_preferred_width());
+    set_fixed_height(text_calculated_preferred_height());
 }
 
 int Label::text_calculated_preferred_width() const
