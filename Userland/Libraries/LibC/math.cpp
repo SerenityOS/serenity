@@ -10,7 +10,7 @@
 #include <AK/BuiltinWrappers.h>
 #include <AK/ExtraMathConstants.h>
 #include <AK/FloatingPoint.h>
-#ifndef AK_ARCH_AARCH64
+#if !ARCH(AARCH64)
 #    include <AK/FPControl.h>
 #endif
 #include <AK/Math.h>
@@ -364,7 +364,7 @@ MAKE_AK_BACKED2(remainder);
 
 long double truncl(long double x) NOEXCEPT
 {
-#ifndef AK_ARCH_AARCH64
+#if !ARCH(AARCH64)
     if (fabsl(x) < LONG_LONG_MAX) {
         // This is 1.6 times faster than the implementation using the "internal_to_integer"
         // helper (on x86_64)
@@ -384,7 +384,7 @@ long double truncl(long double x) NOEXCEPT
 
 double trunc(double x) NOEXCEPT
 {
-#ifndef AK_ARCH_AARCH64
+#if !ARCH(AARCH64)
     if (fabs(x) < LONG_LONG_MAX) {
         u64 temp;
         asm(
@@ -401,7 +401,7 @@ double trunc(double x) NOEXCEPT
 
 float truncf(float x) NOEXCEPT
 {
-#ifndef AK_ARCH_AARCH64
+#if !ARCH(AARCH64)
     if (fabsf(x) < LONG_LONG_MAX) {
         u64 temp;
         asm(
@@ -418,7 +418,7 @@ float truncf(float x) NOEXCEPT
 
 long double rintl(long double value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -432,7 +432,7 @@ long double rintl(long double value)
 }
 double rint(double value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -446,7 +446,7 @@ double rint(double value)
 }
 float rintf(float value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -461,7 +461,7 @@ float rintf(float value)
 
 long lrintl(long double value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -476,7 +476,7 @@ long lrintl(long double value)
 }
 long lrint(double value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -491,7 +491,7 @@ long lrint(double value)
 }
 long lrintf(float value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -507,7 +507,7 @@ long lrintf(float value)
 
 long long llrintl(long double value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -522,7 +522,7 @@ long long llrintl(long double value)
 }
 long long llrint(double value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else
@@ -537,7 +537,7 @@ long long llrint(double value)
 }
 long long llrintf(float value)
 {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
     (void)value;
     TODO_AARCH64();
 #else

@@ -148,7 +148,7 @@
 #ifdef NAKED
 #    undef NAKED
 #endif
-#ifndef AK_ARCH_AARCH64
+#if !ARCH(AARCH64)
 #    define NAKED __attribute__((naked))
 #else
 #    define NAKED
