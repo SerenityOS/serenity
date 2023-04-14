@@ -1363,25 +1363,25 @@ int Emulator::virt$sigreturn()
 
     auto ucontext = local_pop.operator()<ucontext_t>();
 
-    auto eax = local_pop.operator()<FlatPtr>();
+    auto rax = local_pop.operator()<FlatPtr>();
 
     m_signal_mask = ucontext.value().uc_sigmask;
 
     auto mcontext_slice = ucontext.slice<&ucontext_t::uc_mcontext>();
 
-    m_cpu->set_edi(mcontext_slice.slice<&__mcontext::edi>());
-    m_cpu->set_esi(mcontext_slice.slice<&__mcontext::esi>());
-    m_cpu->set_ebp(mcontext_slice.slice<&__mcontext::ebp>());
-    m_cpu->set_esp(mcontext_slice.slice<&__mcontext::esp>());
-    m_cpu->set_ebx(mcontext_slice.slice<&__mcontext::ebx>());
-    m_cpu->set_edx(mcontext_slice.slice<&__mcontext::edx>());
-    m_cpu->set_ecx(mcontext_slice.slice<&__mcontext::ecx>());
-    m_cpu->set_eax(mcontext_slice.slice<&__mcontext::eax>());
-    m_cpu->set_eip(mcontext_slice.value().eip);
-    m_cpu->set_eflags(mcontext_slice.slice<&__mcontext::eflags>());
+    m_cpu->set_rdi(mcontext_slice.slice<&__mcontext::rdi>());
+    m_cpu->set_rsi(mcontext_slice.slice<&__mcontext::rsi>());
+    m_cpu->set_rbp(mcontext_slice.slice<&__mcontext::rbp>());
+    m_cpu->set_rsp(mcontext_slice.slice<&__mcontext::rsp>());
+    m_cpu->set_rbx(mcontext_slice.slice<&__mcontext::rbx>());
+    m_cpu->set_rdx(mcontext_slice.slice<&__mcontext::rdx>());
+    m_cpu->set_rcx(mcontext_slice.slice<&__mcontext::rcx>());
+    m_cpu->set_rax(mcontext_slice.slice<&__mcontext::rax>());
+    m_cpu->set_rip(mcontext_slice.value().rip);
+    m_cpu->set_rflags(mcontext_slice.slice<&__mcontext::rflags>());
 
     // FIXME: We're dropping the shadow bits here.
-    return eax.value();
+    return rax.value();
 }
 
 int Emulator::virt$getpgrp()
@@ -1571,7 +1571,7 @@ FlatPtr Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
     memset(tcb_region->shadow_data(), 0x01, size);
 
     auto tls_region = make<SimpleRegion>(0, 4);
-    tls_region->write32(0, shadow_wrap_as_initialized(tcb_region->base() + (FlatPtr)size));
+    tls_region->write64(0, shadow_wrap_as_initialized(tcb_region->base() + (FlatPtr)size));
     memset(tls_region->shadow_data(), 0x01, 4);
 
     FlatPtr tls_base = tcb_region->base();
@@ -1624,7 +1624,7 @@ int Emulator::virt$poll(FlatPtr params_addr)
     if (params.sigmask)
         mmu().copy_from_vm(&sigmask, (FlatPtr)params.sigmask, sizeof(sigmask));
 
-    int rc = ppoll(params.fds ? fds.data() : nullptr, params.nfds, params.timeout ? &timeout : nullptr, params.sigmask ? &sigmask : nullptr);
+    int rc = ppoll(params.fds ? fds.data() : nullptr, params.nfds, params.timeout ? &timeout : nullptr, reinterpret_cast<sigset_t const*>(params.sigmask ? &sigmask : nullptr));
     if (rc < 0)
         return -errno;
 

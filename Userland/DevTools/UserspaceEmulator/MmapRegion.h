@@ -17,7 +17,7 @@ class MallocTracer;
 class MmapRegion final : public Region {
 public:
     static NonnullOwnPtr<MmapRegion> create_anonymous(FlatPtr base, FlatPtr size, FlatPtr prot, DeprecatedString name);
-    static NonnullOwnPtr<MmapRegion> create_file_backed(FlatPtr base, FlatPtr size, FlatPtr prot, int flags, int fd, off_t offset, DeprecatedString name);
+    static NonnullOwnPtr<MmapRegion> create_file_backed(FlatPtr base, FlatPtr size, int prot, int flags, int fd, off_t offset, DeprecatedString name);
     virtual ~MmapRegion() override;
 
     virtual ValueWithShadow<u8> read8(FlatPtr offset) override;

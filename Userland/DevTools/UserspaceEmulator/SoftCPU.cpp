@@ -123,20 +123,20 @@ SoftCPU::SoftCPU(Emulator& emulator)
 
 void SoftCPU::dump() const
 {
-    outln(" eax={:p}  ebx={:p}  ecx={:p}  edx={:p}  ebp={:p}  esp={:p}  esi={:p}  edi={:p} o={:d} s={:d} z={:d} a={:d} p={:d} c={:d}",
-        eax(), ebx(), ecx(), edx(), ebp(), esp(), esi(), edi(), of(), sf(), zf(), af(), pf(), cf());
-    outln("#eax={:hex-dump} #ebx={:hex-dump} #ecx={:hex-dump} #edx={:hex-dump} #ebhex-dump={:hex-dump} #eshex-dump={:hex-dump} #esi={:hex-dump} #edi={:hex-dump} #f={}",
-        eax().shadow().span(), ebx().shadow().span(), ecx().shadow().span(), edx().shadow().span(), ebp().shadow().span(), esp().shadow().span(), esi().shadow().span(), edi().shadow().span(), m_flags_tainted);
+    outln(" rax={:p} rbx={:p} rcx={:p} rdx={:p} rbp={:p} rsp={:p} rsi={:p} rdi={:p} r8={:p} r9={:p} r10={:p} r11={:p} r12={:p} r13={:p} r14={:p} r15={:p} o={:d} s={:d} z={:d} a={:d} p={:d} c={:d}",
+        rax(), rbx(), rcx(), rdx(), rbp(), rsp(), rsi(), rdi(), r8(), r9(), r10(), r11(), r12(), r13(), r14(), r15(), of(), sf(), zf(), af(), pf(), cf());
+    outln("#rax={:hex-dump} #rbx={:hex-dump} #rcx={:hex-dump} #rdx={:hex-dump} #rbp={:hex-dump} #rsp={:hex-dump} #rsi={:hex-dump} #rdi={:hex-dump} #r8={:hex-dump} #r9={:hex-dump} #r10={:hex-dump} #r11={:hex-dump} #r12={:hex-dump} #r13={:hex-dump} #r14={:hex-dump} #r15={:hex-dump} #f={}",
+        rax().shadow().span(), rbx().shadow().span(), rcx().shadow().span(), rdx().shadow().span(), rbp().shadow().span(), rsp().shadow().span(), rsi().shadow().span(), rdi().shadow().span(), r8().shadow().span(), r9().shadow().span(), r10().shadow().span(), r11().shadow().span(), r12().shadow().span(), r13().shadow().span(), r14().shadow().span(), r15().shadow().span(), m_flags_tainted);
     fflush(stdout);
 }
 
 void SoftCPU::update_code_cache()
 {
-    auto* region = m_emulator.mmu().find_region({ cs(), eip() });
+    auto* region = m_emulator.mmu().find_region({ cs(), rip() });
     VERIFY(region);
 
     if (!region->is_executable()) {
-        reportln("SoftCPU::update_code_cache: Non-executable region @ {:p}"sv, eip());
+        reportln("SoftCPU::update_code_cache: Non-executable region @ {:p}"sv, rip());
         Emulator::the().dump_backtrace();
         TODO();
     }
@@ -248,6 +248,21 @@ void SoftCPU::push_buffer(u8 const* data, size_t size)
     set_rsp({ rsp().value() - size, rsp().shadow() });
     warn_if_uninitialized(rsp(), "push_buffer");
     m_emulator.mmu().copy_to_vm(rsp().value(), data, size);
+}
+
+void SoftCPU::push64(ValueWithShadow<u64> value)
+{
+    set_rsp({ rsp().value() - sizeof(u64), rsp().shadow() });
+    warn_if_uninitialized(rsp(), "push64");
+    write_memory64({ ss(), rsp().value() }, value);
+}
+
+ValueWithShadow<u64> SoftCPU::pop64()
+{
+    warn_if_uninitialized(rsp(), "pop64");
+    auto value = read_memory64({ ss(), rsp().value() });
+    set_rsp({ rsp().value() + sizeof(u64), rsp().shadow() });
+    return value;
 }
 
 void SoftCPU::push32(ValueWithShadow<u32> value)
@@ -1228,9 +1243,9 @@ void SoftCPU::CALL_RM16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::CALL_RM32(const X86::Instruction& insn)
 {
     auto address = insn.modrm().read32(*this, insn);
-    push32(shadow_wrap_as_initialized(eip()));
+    push64(shadow_wrap_as_initialized(rip()));
     warn_if_uninitialized(address, "call rm32");
-    set_eip(address.value());
+    set_rip(address.value());
     // FIXME: this won't catch at the moment due to us not having a way to set
     //        the watch point
     m_emulator.call_callback(address.value());
@@ -1242,11 +1257,11 @@ void SoftCPU::CALL_imm16_imm32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::CALL_imm32(const X86::Instruction& insn)
 {
-    push32(shadow_wrap_as_initialized(eip()));
-    set_eip(eip() + (i32)insn.imm32());
+    push64(shadow_wrap_as_initialized(rip()));
+    set_rip(rip() + (i32)insn.imm32());
     // FIXME: this won't catch at the moment due to us not having a way to set
     //        the watch point
-    m_emulator.call_callback(eip() + (i32)insn.imm32());
+    m_emulator.call_callback(rip() + (i32)insn.imm32());
 }
 
 void SoftCPU::CBW(const X86::Instruction&)
@@ -1816,12 +1831,12 @@ void SoftCPU::JCXZ_imm8(const X86::Instruction& insn)
     case X86::AddressSize::Size32:
         warn_if_uninitialized(ecx(), "jecxz imm8");
         if (ecx().value() == 0)
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     case X86::AddressSize::Size16:
         warn_if_uninitialized(cx(), "jcxz imm8");
         if (cx().value() == 0)
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -1834,12 +1849,12 @@ void SoftCPU::JMP_RM16(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::JMP_RM32(const X86::Instruction& insn)
 {
-    set_eip(insn.modrm().read32(*this, insn).value());
+    set_rip(insn.modrm().read32(*this, insn).value());
 }
 
 void SoftCPU::JMP_imm16(const X86::Instruction& insn)
 {
-    set_eip(eip() + (i16)insn.imm16());
+    set_rip(rip() + (i16)insn.imm16());
 }
 
 void SoftCPU::JMP_imm16_imm16(const X86::Instruction&) { TODO_INSN(); }
@@ -1847,26 +1862,26 @@ void SoftCPU::JMP_imm16_imm32(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::JMP_imm32(const X86::Instruction& insn)
 {
-    set_eip(eip() + (i32)insn.imm32());
+    set_rip(rip() + (i32)insn.imm32());
 }
 
 void SoftCPU::JMP_short_imm8(const X86::Instruction& insn)
 {
-    set_eip(eip() + (i8)insn.imm8());
+    set_rip(rip() + (i8)insn.imm8());
 }
 
 void SoftCPU::Jcc_NEAR_imm(const X86::Instruction& insn)
 {
     warn_if_flags_tainted("jcc near imm32");
     if (evaluate_condition(insn.cc()))
-        set_eip(eip() + (i32)insn.imm32());
+        set_rip(rip() + (i32)insn.imm32());
 }
 
 void SoftCPU::Jcc_imm8(const X86::Instruction& insn)
 {
     warn_if_flags_tainted("jcc imm8");
     if (evaluate_condition(insn.cc()))
-        set_eip(eip() + (i8)insn.imm8());
+        set_rip(rip() + (i8)insn.imm8());
 }
 
 void SoftCPU::LAHF(const X86::Instruction&) { TODO_INSN(); }
@@ -1939,12 +1954,12 @@ void SoftCPU::LOOPNZ_imm8(const X86::Instruction& insn)
     case X86::AddressSize::Size32:
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0 && !zf())
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     case X86::AddressSize::Size16:
         set_cx({ (u16)(cx().value() - 1), cx().shadow() });
         if (cx().value() != 0 && !zf())
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -1957,12 +1972,12 @@ void SoftCPU::LOOPZ_imm8(const X86::Instruction& insn)
     case X86::AddressSize::Size32:
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0 && zf())
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     case X86::AddressSize::Size16:
         set_cx({ (u16)(cx().value() - 1), cx().shadow() });
         if (cx().value() != 0 && zf())
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -1975,12 +1990,12 @@ void SoftCPU::LOOP_imm8(const X86::Instruction& insn)
     case X86::AddressSize::Size32:
         set_ecx({ ecx().value() - 1, ecx().shadow() });
         if (ecx().value() != 0)
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     case X86::AddressSize::Size16:
         set_cx({ (u16)(cx().value() - 1), cx().shadow() });
         if (cx().value() != 0)
-            set_eip(eip() + (i8)insn.imm8());
+            set_rip(rip() + (i8)insn.imm8());
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -2314,16 +2329,16 @@ void SoftCPU::POPAD(const X86::Instruction&)
 void SoftCPU::POPF(const X86::Instruction&)
 {
     auto popped_value = pop16();
-    m_eflags &= ~0xffff;
-    m_eflags |= popped_value.value();
+    m_rflags &= ~0xffff;
+    m_rflags |= popped_value.value();
     taint_flags_from(popped_value);
 }
 
 void SoftCPU::POPFD(const X86::Instruction&)
 {
     auto popped_value = pop32();
-    m_eflags &= ~0x00fcffff;
-    m_eflags |= popped_value.value() & 0x00fcffff;
+    m_rflags &= ~0x00fcffff;
+    m_rflags |= popped_value.value() & 0x00fcffff;
     taint_flags_from(popped_value);
 }
 
@@ -2420,13 +2435,13 @@ void SoftCPU::PUSHAD(const X86::Instruction&)
 void SoftCPU::PUSHF(const X86::Instruction&)
 {
     // FIXME: Respect shadow flags when they exist!
-    push16(shadow_wrap_as_initialized<u16>(m_eflags & 0xffff));
+    push16(shadow_wrap_as_initialized<u16>(m_rflags & 0xffff));
 }
 
 void SoftCPU::PUSHFD(const X86::Instruction&)
 {
     // FIXME: Respect shadow flags when they exist!
-    push32(shadow_wrap_as_initialized(m_eflags & 0x00fcffff));
+    push32(shadow_wrap_as_initialized<u32>(m_rflags & 0x00fcffff));
 }
 
 void SoftCPU::PUSH_CS(X86::Instruction const&)
@@ -2601,9 +2616,9 @@ void SoftCPU::RDTSC(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::RET(const X86::Instruction& insn)
 {
     VERIFY(!insn.has_operand_size_override_prefix());
-    auto ret_address = pop32();
+    auto ret_address = pop64();
     warn_if_uninitialized(ret_address, "ret");
-    set_eip(ret_address.value());
+    set_rip(ret_address.value());
 
     m_emulator.return_callback(ret_address.value());
 }
@@ -2614,10 +2629,10 @@ void SoftCPU::RETF_imm16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::RET_imm16(const X86::Instruction& insn)
 {
     VERIFY(!insn.has_operand_size_override_prefix());
-    auto ret_address = pop32();
+    auto ret_address = pop64();
     warn_if_uninitialized(ret_address, "ret imm16");
-    set_eip(ret_address.value());
-    set_esp({ esp().value() + insn.imm16(), esp().shadow() });
+    set_rip(ret_address.value());
+    set_rsp({ rsp().value() + insn.imm16(), rsp().shadow() });
 
     m_emulator.return_callback(ret_address.value());
 }
@@ -2693,7 +2708,7 @@ DEFINE_GENERIC_SHIFT_ROTATE_INSN_HANDLERS(ROR, op_ror)
 void SoftCPU::SAHF(const X86::Instruction&)
 {
     // FIXME: Respect shadow flags once they exists!
-    set_al(shadow_wrap_as_initialized<u8>(eflags() & 0xff));
+    set_al(shadow_wrap_as_initialized<u8>(rflags() & 0xff));
 }
 
 void SoftCPU::SALC(const X86::Instruction&)

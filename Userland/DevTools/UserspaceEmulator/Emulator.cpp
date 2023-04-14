@@ -99,7 +99,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     auto stack_region = make<SimpleRegion>(stack_location, stack_size);
     stack_region->set_stack(true);
     m_mmu.add_region(move(stack_region));
-    m_cpu->set_esp(shadow_wrap_as_initialized<FlatPtr>(stack_location + stack_size));
+    m_cpu->set_rsp(shadow_wrap_as_initialized<FlatPtr>(stack_location + stack_size));
 
     Vector<FlatPtr> argv_entries;
 
@@ -118,7 +118,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     for (auto& auxv : aux_vector) {
         if (!auxv.optional_string.is_empty()) {
             m_cpu->push_string(auxv.optional_string);
-            auxv.auxv.a_un.a_ptr = (void*)m_cpu->esp().value();
+            auxv.auxv.a_un.a_ptr = (void*)m_cpu->rsp().value();
         }
     }
 
@@ -127,23 +127,23 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
         m_cpu->push_buffer((u8 const*)&value, sizeof(value));
     }
 
-    m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(0)); // char** envp = { envv_entries..., nullptr }
+    m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // char** envp = { envv_entries..., nullptr }
     for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
-        m_cpu->push32(shadow_wrap_as_initialized(env_entries[i]));
+        m_cpu->push64(shadow_wrap_as_initialized(env_entries[i]));
     FlatPtr envp = m_cpu->esp().value();
 
-    m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(0)); // char** argv = { argv_entries..., nullptr }
+    m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // char** argv = { argv_entries..., nullptr }
     for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
-        m_cpu->push32(shadow_wrap_as_initialized(argv_entries[i]));
+        m_cpu->push64(shadow_wrap_as_initialized(argv_entries[i]));
     FlatPtr argv = m_cpu->esp().value();
 
     while ((m_cpu->esp().value() + 4) % 16 != 0)
-        m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(0)); // (alignment)
+        m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // (alignment)
 
     FlatPtr argc = argv_entries.size();
-    m_cpu->push32(shadow_wrap_as_initialized(envp));
-    m_cpu->push32(shadow_wrap_as_initialized(argv));
-    m_cpu->push32(shadow_wrap_as_initialized(argc));
+    m_cpu->push64(shadow_wrap_as_initialized(envp));
+    m_cpu->push64(shadow_wrap_as_initialized(argv));
+    m_cpu->push64(shadow_wrap_as_initialized(argc));
 
     VERIFY(m_cpu->esp().value() % 16 == 0);
 }
@@ -152,7 +152,7 @@ bool Emulator::load_elf()
 {
     auto file_or_error = Core::MappedFile::map(m_executable_path);
     if (file_or_error.is_error()) {
-        reportln("Unable to map {}: {}"sv, m_executable_path, file_or_error.error());
+        reportln("Unable to map {}: {}"sv, m_executable_path, file_or_error.error().code());
         return false;
     }
 
@@ -165,7 +165,7 @@ bool Emulator::load_elf()
     }
 
     StringBuilder interpreter_path_builder;
-    auto result_or_error = ELF::validate_program_headers(*(Elf32_Ehdr const*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
+    auto result_or_error = ELF::validate_program_headers(*(Elf64_Ehdr const*)elf_image_data.data(), elf_image_data.size(), elf_image_data, &interpreter_path_builder);
     if (result_or_error.is_error() || !result_or_error.value()) {
         reportln("failed to validate ELF file"sv);
         return false;
@@ -205,7 +205,7 @@ bool Emulator::load_elf()
     });
 
     auto entry_point = interpreter_image.entry().offset(interpreter_load_offset).get();
-    m_cpu->set_eip(entry_point);
+    m_cpu->set_rip(entry_point);
 
     // executable_fd will be used by the loader
     int executable_fd = open(m_executable_path.characters(), O_RDONLY);
@@ -231,11 +231,11 @@ int Emulator::exec()
 
     while (!m_shutdown) {
         if (m_steps_til_pause) [[likely]] {
-            m_cpu->save_base_eip();
+            m_cpu->save_base_rip();
             auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
             // Exec cycle
             if constexpr (trace) {
-                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_eip(), insn.to_deprecated_string(m_cpu->base_eip(), symbol_provider));
+                outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_rip(), insn.to_deprecated_string(m_cpu->base_rip(), symbol_provider));
             }
 
             (m_cpu->*insn.handler())(insn);
@@ -297,23 +297,23 @@ void Emulator::handle_repl()
     // Console interface
     // FIXME: Previous Instruction**s**
     // FIXME: Function names (base, call, jump)
-    auto saved_eip = m_cpu->eip();
-    m_cpu->save_base_eip();
+    auto saved_rip = m_cpu->rip();
+    m_cpu->save_base_rip();
     auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
     // FIXME: This does not respect inlining
     //        another way of getting the current function is at need
-    if (auto symbol = symbol_at(m_cpu->base_eip()); symbol.has_value()) {
+    if (auto symbol = symbol_at(m_cpu->base_rip()); symbol.has_value()) {
         outln("[{}]: {}", symbol->lib_name, symbol->symbol);
     }
 
-    outln("==> {}", create_instruction_line(m_cpu->base_eip(), insn));
+    outln("==> {}", create_instruction_line(m_cpu->base_rip(), insn));
     for (int i = 0; i < 7; ++i) {
-        m_cpu->save_base_eip();
+        m_cpu->save_base_rip();
         insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Protected);
-        outln("    {}", create_instruction_line(m_cpu->base_eip(), insn));
+        outln("    {}", create_instruction_line(m_cpu->base_rip(), insn));
     }
     // We don't want to increase EIP here, we just want the instructions
-    m_cpu->set_eip(saved_eip);
+    m_cpu->set_rip(saved_rip);
 
     outln();
     m_cpu->dump();
@@ -385,17 +385,17 @@ void Emulator::handle_repl()
 Vector<FlatPtr> Emulator::raw_backtrace()
 {
     Vector<FlatPtr, 128> backtrace;
-    backtrace.append(m_cpu->base_eip());
+    backtrace.append(m_cpu->base_rip());
 
     // FIXME: Maybe do something if the backtrace has uninitialized data in the frame chain.
 
-    FlatPtr frame_ptr = m_cpu->ebp().value();
+    FlatPtr frame_ptr = m_cpu->rbp().value();
     while (frame_ptr) {
-        FlatPtr ret_ptr = m_mmu.read32({ 0x23, frame_ptr + 4 }).value();
+        FlatPtr ret_ptr = m_mmu.read64({ 0x23, frame_ptr + 4 }).value();
         if (!ret_ptr)
             break;
         backtrace.append(ret_ptr);
-        frame_ptr = m_mmu.read32({ 0x23, frame_ptr }).value();
+        frame_ptr = m_mmu.read64({ 0x23, frame_ptr }).value();
     }
     return backtrace;
 }
@@ -637,33 +637,41 @@ void Emulator::dispatch_one_pending_signal()
 
     reportln("\n=={}== Got signal {} ({}), handler at {:p}"sv, getpid(), signum, strsignal(signum), handler.handler);
 
-    auto old_esp = m_cpu->esp().value();
+    auto old_rsp = m_cpu->rsp().value();
 
     auto signal_info = m_signal_data[signum];
     signal_info.context.uc_sigmask = m_signal_mask;
     signal_info.context.uc_stack = {
-        .ss_sp = bit_cast<void*>(old_esp),
+        .ss_sp = bit_cast<void*>(old_rsp),
         .ss_flags = 0,
         .ss_size = 0,
     };
     signal_info.context.uc_mcontext = __mcontext {
-        .eax = m_cpu->eax().value(),
-        .ecx = m_cpu->ecx().value(),
-        .edx = m_cpu->edx().value(),
-        .ebx = m_cpu->ebx().value(),
-        .esp = m_cpu->esp().value(),
-        .ebp = m_cpu->ebp().value(),
-        .esi = m_cpu->esi().value(),
-        .edi = m_cpu->edi().value(),
-        .eip = m_cpu->eip(),
-        .eflags = m_cpu->eflags(),
+
+        .rax = m_cpu->rax().value(),
+        .rcx = m_cpu->rcx().value(),
+        .rdx = m_cpu->rdx().value(),
+        .rbx = m_cpu->rbx().value(),
+        .rsp = m_cpu->rsp().value(),
+        .rbp = m_cpu->rbp().value(),
+        .rsi = m_cpu->rsi().value(),
+        .rdi = m_cpu->rdi().value(),
+        .rip = m_cpu->rip(),
+        .r8 = m_cpu->r8().value(),
+        .r9 = m_cpu->r9().value(),
+        .r10 = m_cpu->r10().value(),
+        .r11 = m_cpu->r11().value(),
+        .r12 = m_cpu->r12().value(),
+        .r13 = m_cpu->r13().value(),
+        .r14 = m_cpu->r14().value(),
+        .r15 = m_cpu->r15().value(),
+        .rflags = m_cpu->rflags(), // TODO rflags?
         .cs = m_cpu->cs(),
         .ss = m_cpu->ss(),
         .ds = m_cpu->ds(),
         .es = m_cpu->es(),
-        // ???
-        .fs = 0,
-        .gs = 0,
+        .fs = m_cpu->fs(),
+        .gs = m_cpu->gs(),
     };
 
     // Align the stack to 16 bytes.
@@ -671,32 +679,32 @@ void Emulator::dispatch_one_pending_signal()
     // so we need to account for this here.
     constexpr static FlatPtr elements_pushed_on_stack_before_handler_address = 1; // one slot for a saved register
     FlatPtr const extra_bytes_pushed_on_stack_before_handler_address = sizeof(ucontext_t) + sizeof(siginfo_t);
-    FlatPtr stack_alignment = (old_esp - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
+    FlatPtr stack_alignment = (old_rsp - elements_pushed_on_stack_before_handler_address * sizeof(FlatPtr) + extra_bytes_pushed_on_stack_before_handler_address) % 16;
     // Also note that we have to skip the thread red-zone (if needed), so do that here.
-    old_esp -= stack_alignment;
+    old_rsp -= stack_alignment;
 
-    m_cpu->set_esp(shadow_wrap_with_taint_from(old_esp, m_cpu->esp()));
+    m_cpu->set_rsp(shadow_wrap_with_taint_from(old_rsp, m_cpu->rsp()));
 
-    m_cpu->push32(shadow_wrap_as_initialized(0u)); // syscall return value slot
+    m_cpu->push64(shadow_wrap_as_initialized(0ul)); // syscall return value slot
 
     m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info.context), sizeof(ucontext_t));
-    auto pointer_to_ucontext = m_cpu->esp().value();
+    auto pointer_to_ucontext = m_cpu->rsp().value();
 
     m_cpu->push_buffer(bit_cast<u8 const*>(&signal_info.signal_info), sizeof(siginfo_t));
-    auto pointer_to_signal_info = m_cpu->esp().value();
+    auto pointer_to_signal_info = m_cpu->rsp().value();
 
     // FPU state, leave a 512-byte gap. FIXME: Fill this in.
-    m_cpu->set_esp({ m_cpu->esp().value() - 512, m_cpu->esp().shadow() });
+    m_cpu->set_rsp({ m_cpu->rsp().value() - 512, m_cpu->rsp().shadow() });
 
     // Leave one empty slot to align the stack for a handler call.
-    m_cpu->push32(shadow_wrap_as_initialized(0u));
-    m_cpu->push32(shadow_wrap_as_initialized(pointer_to_ucontext));
-    m_cpu->push32(shadow_wrap_as_initialized(pointer_to_signal_info));
-    m_cpu->push32(shadow_wrap_as_initialized(static_cast<FlatPtr>(signum)));
+    m_cpu->push64(shadow_wrap_as_initialized(0ul));
+    m_cpu->push64(shadow_wrap_as_initialized(pointer_to_ucontext));
+    m_cpu->push64(shadow_wrap_as_initialized(pointer_to_signal_info));
+    m_cpu->push64(shadow_wrap_as_initialized(static_cast<FlatPtr>(signum)));
 
-    m_cpu->push32(shadow_wrap_as_initialized<FlatPtr>(handler.handler));
+    m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(handler.handler));
 
-    m_cpu->set_eip(m_signal_trampoline);
+    m_cpu->set_rip(m_signal_trampoline);
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
@@ -716,19 +724,19 @@ NEVER_INLINE void signal_trampoline_dummy()
         // stack state: 0, ucontext, signal_info, (alignment = 16), fpu_state (alignment = 16), 0, ucontext*, siginfo*, signal, (alignment = 16), handler
 
         // Pop the handler into ecx
-        "pop ecx\n" // save handler
+        "pop rcx\n" // save handler
         // we have to save eax 'cause it might be the return value from a syscall
-        "mov [esp+%P2], eax\n"
+        "mov [rsp+%P2], rax\n"
         // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
         // and it's already setup to call the handler with the expected values on the stack.
         // call the signal handler
-        "call ecx\n"
+        "call rcx\n"
         // drop the 4 arguments
-        "add esp, 16\n"
+        "add rsp, 16\n"
         // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
         // syscall SC_sigreturn
-        "mov eax, %P0\n"
-        "int 0x82\n"
+        "mov rax, %P0\n"
+        "int 0x82\n" // TODO port to x86_64
         ".globl asm_signal_trampoline_end\n"
         "asm_signal_trampoline_end:\n"
         ".att_syntax"
@@ -776,14 +784,14 @@ void Emulator::dump_regions() const
 
 bool Emulator::is_in_libsystem() const
 {
-    return m_cpu->base_eip() >= m_libsystem_start && m_cpu->base_eip() < m_libsystem_end;
+    return m_cpu->base_rip() >= m_libsystem_start && m_cpu->base_rip() < m_libsystem_end;
 }
 
 bool Emulator::is_in_loader_code() const
 {
     if (!m_loader_text_base.has_value() || !m_loader_text_size.has_value())
         return false;
-    return (m_cpu->base_eip() >= m_loader_text_base.value() && m_cpu->base_eip() < m_loader_text_base.value() + m_loader_text_size.value());
+    return (m_cpu->base_rip() >= m_loader_text_base.value() && m_cpu->base_rip() < m_loader_text_base.value() + m_loader_text_size.value());
 }
 
 }

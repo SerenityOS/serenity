@@ -100,7 +100,7 @@ ValueWithShadow<u16> MmapRegion::read16(FlatPtr offset)
     return { value, shadow };
 }
 
-ValueWithShadow<FlatPtr> MmapRegion::read32(FlatPtr offset)
+ValueWithShadow<u32> MmapRegion::read32(FlatPtr offset)
 {
     if (!is_readable()) {
         reportln("32-bit read from unreadable MmapRegion @ {:p}"sv, base() + offset);
@@ -114,7 +114,7 @@ ValueWithShadow<FlatPtr> MmapRegion::read32(FlatPtr offset)
     }
 
     VERIFY(offset + 3 < size());
-    FlatPtr value, shadow;
+    u32 value, shadow;
     ByteReader::load(m_data + offset, value);
     ByteReader::load(m_shadow_data + offset, shadow);
 

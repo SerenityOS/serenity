@@ -56,13 +56,13 @@ public:
     explicit SoftCPU(Emulator&);
     void dump() const;
 
-    u32 base_eip() const { return m_base_eip; }
-    void save_base_eip() { m_base_eip = m_eip; }
+    u64 base_rip() const { return m_base_rip; }
+    void save_base_rip() { m_base_rip = m_rip; }
 
-    u32 eip() const { return m_eip; }
-    void set_eip(u32 eip)
+    u64 rip() const { return m_rip; }
+    void set_rip(u64 rip)
     {
-        m_eip = eip;
+        m_rip = rip;
     }
 
     struct Flags {
@@ -78,6 +78,9 @@ public:
             OF = 0x0800, // 0b0000'1000'0000'0000
         };
     };
+
+    void push64(ValueWithShadow<u64>);
+    ValueWithShadow<u64> pop64();
 
     void push32(ValueWithShadow<u32>);
     ValueWithShadow<u32> pop32();
@@ -272,11 +275,11 @@ public:
         }
     }
 
-    u32 eflags() const { return m_eflags; }
-    void set_eflags(ValueWithShadow<u32> eflags)
+    u32 rflags() const { return m_rflags; }
+    void set_rflags(ValueWithShadow<u64> rflags)
     {
-        m_eflags = eflags.value();
-        m_flags_tainted = eflags.is_uninitialized();
+        m_rflags = rflags.value();
+        m_flags_tainted = rflags.is_uninitialized();
     }
 
     ValueWithShadow<u64> rax() const { return const_gpr64(X86::RegisterRAX); }
@@ -375,20 +378,20 @@ public:
     void fpu_set(u8 index, long double value) { m_fpu.fpu_set(index, value); }
     void mmx_set(u8 index, MMX value) { m_fpu.mmx_set(index, value); }
 
-    bool of() const { return m_eflags & Flags::OF; }
-    bool sf() const { return m_eflags & Flags::SF; }
-    bool zf() const { return m_eflags & Flags::ZF; }
-    bool af() const { return m_eflags & Flags::AF; }
-    bool pf() const { return m_eflags & Flags::PF; }
-    bool cf() const { return m_eflags & Flags::CF; }
-    bool df() const { return m_eflags & Flags::DF; }
+    bool of() const { return m_rflags & Flags::OF; }
+    bool sf() const { return m_rflags & Flags::SF; }
+    bool zf() const { return m_rflags & Flags::ZF; }
+    bool af() const { return m_rflags & Flags::AF; }
+    bool pf() const { return m_rflags & Flags::PF; }
+    bool cf() const { return m_rflags & Flags::CF; }
+    bool df() const { return m_rflags & Flags::DF; }
 
     void set_flag(Flags::Flag flag, bool value)
     {
         if (value)
-            m_eflags |= flag;
+            m_rflags |= flag;
         else
-            m_eflags &= ~flag;
+            m_rflags &= ~flag;
     }
 
     void set_of(bool value) { set_flag(Flags::OF, value); }
@@ -399,13 +402,13 @@ public:
     void set_cf(bool value) { set_flag(Flags::CF, value); }
     void set_df(bool value) { set_flag(Flags::DF, value); }
 
-    void set_flags_with_mask(u32 new_flags, u32 mask)
+    void set_flags_with_mask(u64 new_flags, u64 mask)
     {
-        m_eflags &= ~mask;
-        m_eflags |= new_flags & mask;
+        m_rflags &= ~mask;
+        m_rflags |= new_flags & mask;
     }
 
-    void set_flags_oszapc(u32 new_flags)
+    void set_flags_oszapc(u64 new_flags)
     {
         set_flags_with_mask(new_flags, Flags::OF | Flags::SF | Flags::ZF | Flags::AF | Flags::PF | Flags::CF);
     }
@@ -1402,15 +1405,15 @@ private:
     SoftFPU m_fpu;
     SoftVPU m_vpu;
 
-    ValueWithShadow<PartAddressableRegister> m_gpr[8];
+    ValueWithShadow<PartAddressableRegister> m_gpr[16];
 
     u16 m_segment[8] { 0 };
-    u32 m_eflags { 0 };
+    u64 m_rflags { 0 };
 
     bool m_flags_tainted { false };
 
-    u32 m_eip { 0 };
-    u32 m_base_eip { 0 };
+    u64 m_rip { 0 };
+    u64 m_base_rip { 0 };
 
     Region* m_cached_code_region { nullptr };
     u8* m_cached_code_base_ptr { nullptr };
@@ -1418,46 +1421,46 @@ private:
 
 ALWAYS_INLINE u8 SoftCPU::read8()
 {
-    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_rip))
         update_code_cache();
 
-    u8 value = m_cached_code_base_ptr[m_eip - m_cached_code_region->base()];
-    m_eip += 1;
+    u8 value = m_cached_code_base_ptr[m_rip - m_cached_code_region->base()];
+    m_rip += 1;
     return value;
 }
 
 ALWAYS_INLINE u16 SoftCPU::read16()
 {
-    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_rip))
         update_code_cache();
 
     u16 value;
-    ByteReader::load<u16>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()], value);
-    m_eip += 2;
+    ByteReader::load<u16>(&m_cached_code_base_ptr[m_rip - m_cached_code_region->base()], value);
+    m_rip += 2;
     return value;
 }
 
 ALWAYS_INLINE u32 SoftCPU::read32()
 {
-    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_rip))
         update_code_cache();
 
     u32 value;
-    ByteReader::load<u32>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()], value);
+    ByteReader::load<u32>(&m_cached_code_base_ptr[m_rip - m_cached_code_region->base()], value);
 
-    m_eip += 4;
+    m_rip += 4;
     return value;
 }
 
 ALWAYS_INLINE u64 SoftCPU::read64()
 {
-    if (!m_cached_code_region || !m_cached_code_region->contains(m_eip))
+    if (!m_cached_code_region || !m_cached_code_region->contains(m_rip))
         update_code_cache();
 
     u64 value;
-    ByteReader::load<u64>(&m_cached_code_base_ptr[m_eip - m_cached_code_region->base()], value);
+    ByteReader::load<u64>(&m_cached_code_base_ptr[m_rip - m_cached_code_region->base()], value);
 
-    m_eip += 8;
+    m_rip += 8;
     return value;
 }
 

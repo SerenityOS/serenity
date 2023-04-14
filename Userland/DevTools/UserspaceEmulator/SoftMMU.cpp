@@ -36,7 +36,7 @@ void SoftMMU::add_region(NonnullOwnPtr<Region> region)
 void SoftMMU::remove_region(Region& region)
 {
     size_t first_page_in_region = region.base() / PAGE_SIZE;
-    for (size_t i = 0; i < ceil_div(region.size(), PAGE_SIZE); ++i) {
+    for (size_t i = 0; i < ceil_div(region.size(), static_cast<uint64_t>(PAGE_SIZE)); ++i) {
         m_page_to_region_map[first_page_in_region + i] = nullptr;
     }
 
