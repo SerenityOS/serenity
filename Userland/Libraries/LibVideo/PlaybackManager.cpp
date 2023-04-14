@@ -28,22 +28,22 @@ namespace Video {
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(StringView filename)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
-    return create_with_demuxer(move(demuxer));
+    return create(move(demuxer));
 }
 
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_mapped_file(NonnullRefPtr<Core::MappedFile> mapped_file)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_mapped_file(move(mapped_file)));
-    return create_with_demuxer(move(demuxer));
+    return create(move(demuxer));
 }
 
 DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_data(ReadonlyBytes data)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_data(data));
-    return create_with_demuxer(move(demuxer));
+    return create(move(demuxer));
 }
 
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer)
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOwnPtr<Demuxer> demuxer)
 {
     auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
     if (video_tracks.is_empty())
@@ -52,20 +52,25 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create_with_demu
 
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
 
-    return make<PlaybackManager>(demuxer, track, make<VP9::Decoder>());
+    auto decoder = DECODER_TRY_ALLOC(try_make<VP9::Decoder>());
+    auto frame_queue = DECODER_TRY_ALLOC(try_make<VideoFrameQueue>());
+    auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder), move(frame_queue)));
+
+    playback_manager->m_present_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); }));
+    playback_manager->m_decode_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.on_decode_timer(); }));
+
+    playback_manager->m_playback_handler = make<SeekingStateHandler>(*playback_manager, false, Time::zero(), SeekMode::Fast);
+    DECODER_TRY_ALLOC(playback_manager->m_playback_handler->on_enter());
+
+    return playback_manager;
 }
 
-PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder)
+PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, NonnullOwnPtr<VideoFrameQueue>&& frame_queue)
     : m_demuxer(move(demuxer))
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
-    , m_frame_queue(make<VideoFrameQueue>())
-    , m_playback_handler(make<SeekingStateHandler>(*this, false, Time::zero(), SeekMode::Fast))
+    , m_frame_queue(move(frame_queue))
 {
-    m_present_timer = Core::Timer::create_single_shot(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
-    m_decode_timer = Core::Timer::create_single_shot(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
-
-    TRY_OR_FATAL_ERROR(m_playback_handler->on_enter());
 }
 
 PlaybackManager::~PlaybackManager() = default;
@@ -286,7 +291,7 @@ ErrorOr<void> PlaybackManager::PlaybackStateHandler::stop()
 template<class T, class... Args>
 ErrorOr<void> PlaybackManager::PlaybackStateHandler::replace_handler_and_delete_this(Args... args)
 {
-    auto temp_handler = TRY(adopt_nonnull_own_or_enomem<PlaybackStateHandler>(new (nothrow) T(m_manager, args...)));
+    OwnPtr<PlaybackStateHandler> temp_handler = TRY(try_make<T>(m_manager, args...));
     m_manager.m_playback_handler.swap(temp_handler);
 #if PLAYBACK_MANAGER_DEBUG
     m_has_exited = true;

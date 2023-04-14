@@ -105,7 +105,7 @@ public:
 
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(ReadonlyBytes data);
 
-    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder);
+    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, NonnullOwnPtr<VideoFrameQueue>&& frame_queue);
     ~PlaybackManager();
 
     void resume_playback();
@@ -143,7 +143,7 @@ private:
     class SeekingStateHandler;
     class StoppedStateHandler;
 
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create(NonnullOwnPtr<Demuxer> demuxer);
 
     void start_timer(int milliseconds);
     void timer_callback();
@@ -172,7 +172,7 @@ private:
 
     RefPtr<Core::Timer> m_decode_timer;
 
-    NonnullOwnPtr<PlaybackStateHandler> m_playback_handler;
+    OwnPtr<PlaybackStateHandler> m_playback_handler;
     Optional<FrameQueueItem> m_next_frame;
 
     u64 m_skipped_frames { 0 };
