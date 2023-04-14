@@ -70,7 +70,7 @@ Emulator::Emulator(DeprecatedString const& executable_path, Vector<StringView> c
     setup_signal_trampoline();
 }
 
-Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_eip, DeprecatedString const& executable_path, int executable_fd) const
+Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_base, FlatPtr entry_rip, DeprecatedString const& executable_path, int executable_fd) const
 {
     // FIXME: This is not fully compatible with the auxiliary vector the kernel generates, this is just the bare
     //        minimum to get the loader going.
@@ -80,7 +80,7 @@ Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_bas
     auxv.append({ ELF::AuxiliaryValue::PageSize, PAGE_SIZE });
     auxv.append({ ELF::AuxiliaryValue::BaseAddress, (void*)load_base });
 
-    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_eip });
+    auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_rip });
 
     // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
     auxv.append({ ELF::AuxiliaryValue::Platform, "i386"sv });
@@ -105,14 +105,14 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
 
     for (auto const& argument : m_arguments) {
         m_cpu->push_string(argument);
-        argv_entries.append(m_cpu->esp().value());
+        argv_entries.append(m_cpu->rsp().value());
     }
 
     Vector<FlatPtr> env_entries;
 
     for (auto const& variable : m_environment) {
         m_cpu->push_string(variable.view());
-        env_entries.append(m_cpu->esp().value());
+        env_entries.append(m_cpu->rsp().value());
     }
 
     for (auto& auxv : aux_vector) {
@@ -130,14 +130,14 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // char** envp = { envv_entries..., nullptr }
     for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
         m_cpu->push64(shadow_wrap_as_initialized(env_entries[i]));
-    FlatPtr envp = m_cpu->esp().value();
+    FlatPtr envp = m_cpu->rsp().value();
 
     m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // char** argv = { argv_entries..., nullptr }
     for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
         m_cpu->push64(shadow_wrap_as_initialized(argv_entries[i]));
-    FlatPtr argv = m_cpu->esp().value();
+    FlatPtr argv = m_cpu->rsp().value();
 
-    while ((m_cpu->esp().value() + 4) % 16 != 0)
+    while ((m_cpu->rsp().value() + 4) % 16 != 0)
         m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // (alignment)
 
     FlatPtr argc = argv_entries.size();
@@ -145,7 +145,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
     m_cpu->push64(shadow_wrap_as_initialized(argv));
     m_cpu->push64(shadow_wrap_as_initialized(argc));
 
-    VERIFY(m_cpu->esp().value() % 16 == 0);
+    VERIFY(m_cpu->rsp().value() % 16 == 0);
 }
 
 bool Emulator::load_elf()

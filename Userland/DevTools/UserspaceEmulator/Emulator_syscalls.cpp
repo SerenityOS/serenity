@@ -460,7 +460,7 @@ int Emulator::virt$setsockopt(FlatPtr params_addr)
 
 int Emulator::virt$get_stack_bounds(FlatPtr base, FlatPtr size)
 {
-    auto* region = mmu().find_region({ m_cpu->ss(), m_cpu->esp().value() });
+    auto* region = mmu().find_region({ m_cpu->ss(), m_cpu->rsp().value() });
     FlatPtr b = region->base();
     size_t s = region->size();
     mmu().copy_to_vm(base, &b, sizeof(b));
@@ -1344,7 +1344,7 @@ int Emulator::virt$sigprocmask(int how, FlatPtr set, FlatPtr old_set)
 
 int Emulator::virt$sigreturn()
 {
-    FlatPtr stack_ptr = m_cpu->esp().value();
+    FlatPtr stack_ptr = m_cpu->rsp().value();
     auto local_pop = [&]<typename T>() {
         auto value = m_cpu->read_memory<T>({ m_cpu->ss(), stack_ptr });
         stack_ptr += sizeof(T);
