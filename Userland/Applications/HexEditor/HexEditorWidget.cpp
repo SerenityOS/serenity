@@ -604,7 +604,7 @@ void HexEditorWidget::drop_event(GUI::DropEvent& event)
             return;
 
         // TODO: A drop event should be considered user consent for opening a file
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::File::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().serialize_path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
         open_file(response.value().filename(), response.value().release_stream());

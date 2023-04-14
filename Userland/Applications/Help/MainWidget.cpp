@@ -98,7 +98,7 @@ MainWidget::MainWidget()
     m_web_view = find_descendant_of_type_named<WebView::OutOfProcessWebView>("web_view");
     m_web_view->on_link_click = [this](auto& url, auto&, unsigned) {
         if (url.scheme() == "file") {
-            auto path = LexicalPath { url.path() };
+            auto path = LexicalPath { url.serialize_path() };
             if (!path.is_child_of(Manual::manual_base_path)) {
                 open_external(url);
                 return;
@@ -246,7 +246,7 @@ void MainWidget::open_url(URL const& url)
         m_web_view->load(url);
         m_web_view->scroll_to_top();
 
-        auto browse_view_index = m_manual_model->index_from_path(url.path());
+        auto browse_view_index = m_manual_model->index_from_path(url.serialize_path());
         if (browse_view_index.has_value()) {
             if (browse_view_index.value() != m_browse_view->selection_start_index()) {
                 m_browse_view->expand_all_parents_of(browse_view_index.value());

@@ -975,8 +975,9 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (!request_close())
             return;
 
-        if (auto result = open_file(urls.first().path()); result.is_error())
-            show_error(result.release_error(), "Opening"sv, LexicalPath { urls.first().path() }.basename());
+        auto file_path = urls.first().serialize_path();
+        if (auto result = open_file(file_path); result.is_error())
+            show_error(result.release_error(), "Opening"sv, LexicalPath { file_path }.basename());
     }
 }
 

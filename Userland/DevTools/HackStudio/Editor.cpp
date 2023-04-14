@@ -384,7 +384,7 @@ void Editor::drop_event(GUI::DropEvent& event)
             return;
         }
         set_current_editor_wrapper(static_cast<EditorWrapper*>(parent()));
-        open_file(urls.first().path());
+        open_file(urls.first().serialize_path());
     }
 }
 

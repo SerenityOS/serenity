@@ -270,7 +270,7 @@ Optional<Position> Sheet::position_from_url(const URL& url) const
     }
 
     // FIXME: Figure out a way to do this cross-process.
-    VERIFY(url.path() == DeprecatedString::formatted("/{}", getpid()));
+    VERIFY(url.serialize_path() == DeprecatedString::formatted("/{}", getpid()));
 
     return parse_cell_name(url.fragment());
 }

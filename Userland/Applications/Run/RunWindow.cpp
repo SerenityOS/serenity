@@ -141,9 +141,10 @@ bool RunWindow::run_via_launch(DeprecatedString const& run_input)
     auto url = URL::create_with_url_or_path(run_input);
 
     if (url.scheme() == "file") {
-        auto real_path_or_error = FileSystem::real_path(url.path());
+        auto file_path = url.serialize_path();
+        auto real_path_or_error = FileSystem::real_path(file_path);
         if (real_path_or_error.is_error()) {
-            warnln("Failed to launch '{}': {}", url.path(), real_path_or_error.error());
+            warnln("Failed to launch '{}': {}", file_path, real_path_or_error.error());
             return false;
         }
         url = URL::create_with_url_or_path(real_path_or_error.release_value().to_deprecated_string());

@@ -293,7 +293,7 @@ DeprecatedString HTMLHyperlinkElementUtils::pathname() const
     // 4. If url's cannot-be-a-base-URL is true, then return url's path[0].
     // 5. If url's path is empty, then return the empty string.
     // 6. Return "/", followed by the strings in url's path (including empty strings), separated from each other by "/".
-    return m_url->path();
+    return m_url->serialize_path();
 }
 
 // https://html.spec.whatwg.org/multipage/links.html#dom-hyperlink-pathname

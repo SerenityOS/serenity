@@ -192,29 +192,30 @@ RecursionDecision MarkdownLinkage::visit(Markdown::Text::LinkNode const& link_no
                 m_has_invalid_link = true;
                 return RecursionDecision::Recurse;
             }
-            if (url.paths().size() < 2) {
+            if (url.path_segment_count() < 2) {
                 warnln("help://man URL is missing section or page: {}", href);
                 m_has_invalid_link = true;
                 return RecursionDecision::Recurse;
             }
 
             // Remove leading '/' from the path.
-            auto file = DeprecatedString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, url.path().substring(1));
+            auto file = DeprecatedString::formatted("{}/Base/usr/share/man/man{}.md", m_serenity_source_directory, url.serialize_path().substring(1));
 
             m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
             return RecursionDecision::Recurse;
         }
         if (url.scheme() == "file") {
-            if (url.path().contains("man"sv) && url.path().ends_with(".md"sv)) {
+            auto file_path = url.serialize_path();
+            if (file_path.contains("man"sv) && file_path.ends_with(".md"sv)) {
                 warnln("Inter-manpage link without the help:// scheme: {}\nPlease use help URLs of the form 'help://man/<section>/<subsection...>/<page>'", href);
                 m_has_invalid_link = true;
                 return RecursionDecision::Recurse;
             }
             // TODO: Check more possible links other than icons.
-            if (url.path().starts_with("/res/icons/"sv)) {
-                auto file = DeprecatedString::formatted("{}/Base{}", m_serenity_source_directory, url.path());
+            if (file_path.starts_with("/res/icons/"sv)) {
+                auto file = DeprecatedString::formatted("{}/Base{}", m_serenity_source_directory, file_path);
                 m_file_links.append({ file, DeprecatedString(), StringCollector::from(*link_node.text) });
-            } else if (url.path().starts_with("/bin"sv)) {
+            } else if (file_path.starts_with("/bin"sv)) {
                 StringBuilder builder;
                 link_node.text->render_to_html(builder);
                 auto link_text = builder.string_view();

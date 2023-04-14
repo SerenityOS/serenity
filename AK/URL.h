@@ -93,8 +93,7 @@ public:
         append_path("", ApplyPercentEncoding::No);
     }
 
-    DeprecatedString path() const;
-
+    DeprecatedString serialize_path(ApplyPercentDecoding = ApplyPercentDecoding::Yes) const;
     DeprecatedString serialize(ExcludeFragment = ExcludeFragment::No) const;
     DeprecatedString serialize_for_display() const;
     DeprecatedString to_deprecated_string() const { return serialize(); }

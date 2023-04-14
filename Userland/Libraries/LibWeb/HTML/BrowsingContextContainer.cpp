@@ -121,7 +121,7 @@ static bool url_matches_about_blank(AK::URL const& url)
 {
     // A URL matches about:blank if its scheme is "about", its path contains a single string "blank", its username and password are the empty string, and its host is null.
     return url.scheme() == "about"sv
-        && url.path() == "blank"sv
+        && url.serialize_path() == "blank"sv
         && url.username().is_empty()
         && url.password().is_empty()
         && url.host().is_null();
