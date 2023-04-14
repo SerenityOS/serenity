@@ -73,15 +73,15 @@ public:
         No
     };
     void set_scheme(DeprecatedString);
-    void set_username(DeprecatedString username, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
-    void set_password(DeprecatedString password, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void set_username(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
+    void set_password(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
     void set_host(DeprecatedString);
     void set_port(Optional<u16>);
-    void set_paths(Vector<DeprecatedString> password, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
-    void set_query(DeprecatedString query, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
-    void set_fragment(DeprecatedString fragment, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void set_paths(Vector<DeprecatedString>, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
+    void set_query(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
+    void set_fragment(DeprecatedString fragment, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
-    void append_path(DeprecatedString path, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void append_path(DeprecatedString, ApplyPercentEncoding = ApplyPercentEncoding::Yes);
     void append_slash()
     {
         // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
