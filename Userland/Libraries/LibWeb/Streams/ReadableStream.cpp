@@ -108,7 +108,8 @@ JS::ThrowCompletionOr<void> ReadableStream::initialize(JS::Realm& realm)
 void ReadableStream::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    m_controller->visit([&](auto& controller) { visitor.visit(controller); });
+    if (m_controller.has_value())
+        m_controller->visit([&](auto& controller) { visitor.visit(controller); });
     visitor.visit(m_stored_error);
     visitor.visit(m_reader);
 }
