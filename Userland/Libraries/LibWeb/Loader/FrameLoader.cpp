@@ -144,7 +144,7 @@ static bool build_image_document(DOM::Document& document, ByteBuffer const& data
     auto title_element = DOM::create_element(document, HTML::TagNames::title, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
     MUST(head_element->append_child(title_element));
 
-    auto basename = LexicalPath::basename(document.url().path());
+    auto basename = LexicalPath::basename(document.url().serialize_path());
     auto title_text = document.heap().allocate<DOM::Text>(document.realm(), document, DeprecatedString::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())).release_allocated_value_but_fixme_should_propagate_errors();
     MUST(title_element->append_child(*title_text));
 

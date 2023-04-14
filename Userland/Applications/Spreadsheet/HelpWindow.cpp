@@ -84,24 +84,25 @@ HelpWindow::HelpWindow(GUI::Window* parent)
     m_webview->on_link_click = [this](auto& url, auto&, auto&&) {
         VERIFY(url.scheme() == "spreadsheet");
         if (url.host() == "example") {
-            auto entry = LexicalPath::basename(url.path());
+            auto example_path = url.serialize_path();
+            auto entry = LexicalPath::basename(example_path);
             auto doc_option = m_docs.get_object(entry);
             if (!doc_option.has_value()) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No documentation entry found for '{}'", url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No documentation entry found for '{}'", example_path));
                 return;
             }
             auto& doc = doc_option.value();
-            const auto& name = url.fragment();
+            auto name = url.fragment();
 
             auto maybe_example_data = doc.get_object("example_data"sv);
             if (!maybe_example_data.has_value()) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No example data found for '{}'", url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("No example data found for '{}'", example_path));
                 return;
             }
             auto& example_data = maybe_example_data.value();
 
             if (!example_data.has_object(name)) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Example '{}' not found for '{}'", name, url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Example '{}' not found for '{}'", name, example_path));
                 return;
             }
             auto& value = example_data.get_object(name).value();
@@ -115,14 +116,14 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto widget = window->set_main_widget<SpreadsheetWidget>(window, Vector<NonnullRefPtr<Sheet>> {}, false).release_value_but_fixme_should_propagate_errors();
             auto sheet = Sheet::from_json(value, widget->workbook());
             if (!sheet) {
-                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, url.path()));
+                GUI::MessageBox::show_error(this, DeprecatedString::formatted("Corrupted example '{}' in '{}'", name, example_path));
                 return;
             }
 
             widget->add_sheet(sheet.release_nonnull());
             window->show();
         } else if (url.host() == "doc") {
-            auto entry = LexicalPath::basename(url.path());
+            auto entry = LexicalPath::basename(url.serialize_path());
             m_webview->load(URL::create_with_data("text/html", render(entry)));
         } else {
             dbgln("Invalid spreadsheet action domain '{}'", url.host());

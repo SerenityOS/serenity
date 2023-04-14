@@ -480,7 +480,7 @@ void MainWidget::drop_event(GUI::DropEvent& drop_event)
             if (!scheme.equals_ignoring_ascii_case("file"sv))
                 continue;
 
-            auto lexical_path = LexicalPath(url.path());
+            auto lexical_path = LexicalPath(url.serialize_path());
             open_script_from_file(lexical_path);
         }
     }

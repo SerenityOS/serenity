@@ -92,7 +92,7 @@ WebIDL::ExceptionOr<String> WorkerLocation::pathname() const
 {
     auto& vm = realm().vm();
     // The pathname getter steps are to return the result of URL path serializing this's WorkerGlobalScope object's url.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_global_scope->url().path()));
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(m_global_scope->url().serialize_path()));
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-workerlocation-search

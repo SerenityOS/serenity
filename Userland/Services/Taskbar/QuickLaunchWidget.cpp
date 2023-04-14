@@ -243,13 +243,14 @@ void QuickLaunchWidget::drop_event(GUI::DropEvent& event)
     if (event.mime_data().has_urls()) {
         auto urls = event.mime_data().urls();
         for (auto& url : urls) {
-            auto entry = QuickLaunchEntry::create_from_path(url.path());
+            auto path = url.serialize_path();
+            auto entry = QuickLaunchEntry::create_from_path(path);
             if (entry) {
                 auto item_name = sanitize_entry_name(entry->name());
                 auto result = add_or_adjust_button(item_name, entry.release_nonnull());
                 if (result.is_error())
                     GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Failed to add quick launch entry: {}", result.release_error()));
-                Config::write_string("Taskbar"sv, quick_launch, item_name, url.path());
+                Config::write_string("Taskbar"sv, quick_launch, item_name, path);
             }
         }
     }

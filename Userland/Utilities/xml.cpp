@@ -371,7 +371,7 @@ static auto parse(StringView contents)
                 if (url.scheme() != "file")
                     return Error::from_string_literal("NYI: Nonlocal entity");
 
-                auto file = TRY(Core::File::open(url.path(), Core::File::OpenMode::Read));
+                auto file = TRY(Core::File::open(url.serialize_path(), Core::File::OpenMode::Read));
                 return DeprecatedString::copy(TRY(file->read_until_eof()));
             },
         },
@@ -440,28 +440,29 @@ static void do_run_tests(XML::Document& document)
                 continue;
             }
 
-            auto file_result = Core::File::open(url.path(), Core::File::OpenMode::Read);
+            auto file_path = url.serialize_path();
+            auto file_result = Core::File::open(file_path, Core::File::OpenMode::Read);
             if (file_result.is_error()) {
-                warnln("Read error for {}: {}", url.path(), file_result.error());
-                s_test_results.set(url.path(), TestResult::RunnerFailed);
+                warnln("Read error for {}: {}", file_path, file_result.error());
+                s_test_results.set(file_path, TestResult::RunnerFailed);
                 continue;
             }
 
-            warnln("Running test {}", url.path());
+            warnln("Running test {}", file_path);
 
             auto contents = file_result.value()->read_until_eof();
             if (contents.is_error()) {
-                warnln("Read error for {}: {}", url.path(), contents.error());
-                s_test_results.set(url.path(), TestResult::RunnerFailed);
+                warnln("Read error for {}: {}", file_path, contents.error());
+                s_test_results.set(file_path, TestResult::RunnerFailed);
                 continue;
             }
             auto parser = parse(contents.value());
             auto doc_or_error = parser.parse();
             if (doc_or_error.is_error()) {
                 if (type == "invalid" || type == "error" || type == "not-wf")
-                    s_test_results.set(url.path(), TestResult::Passed);
+                    s_test_results.set(file_path, TestResult::Passed);
                 else
-                    s_test_results.set(url.path(), TestResult::Failed);
+                    s_test_results.set(file_path, TestResult::Failed);
                 continue;
             }
 
@@ -471,33 +472,33 @@ static void do_run_tests(XML::Document& document)
                 auto file_result = Core::File::open(out_path, Core::File::OpenMode::Read);
                 if (file_result.is_error()) {
                     warnln("Read error for {}: {}", out_path, file_result.error());
-                    s_test_results.set(url.path(), TestResult::RunnerFailed);
+                    s_test_results.set(file_path, TestResult::RunnerFailed);
                     continue;
                 }
                 auto contents = file_result.value()->read_until_eof();
                 if (contents.is_error()) {
                     warnln("Read error for {}: {}", out_path, contents.error());
-                    s_test_results.set(url.path(), TestResult::RunnerFailed);
+                    s_test_results.set(file_path, TestResult::RunnerFailed);
                     continue;
                 }
                 auto parser = parse(contents.value());
                 auto out_doc_or_error = parser.parse();
                 if (out_doc_or_error.is_error()) {
                     warnln("Parse error for {}: {}", out_path, out_doc_or_error.error());
-                    s_test_results.set(url.path(), TestResult::RunnerFailed);
+                    s_test_results.set(file_path, TestResult::RunnerFailed);
                     continue;
                 }
                 auto out_doc = out_doc_or_error.release_value();
                 if (out_doc.root() != doc_or_error.value().root()) {
-                    s_test_results.set(url.path(), TestResult::Failed);
+                    s_test_results.set(file_path, TestResult::Failed);
                     continue;
                 }
             }
 
             if (type == "invalid" || type == "error" || type == "not-wf")
-                s_test_results.set(url.path(), TestResult::Failed);
+                s_test_results.set(file_path, TestResult::Failed);
             else
-                s_test_results.set(url.path(), TestResult::Passed);
+                s_test_results.set(file_path, TestResult::Passed);
         }
     }
 }

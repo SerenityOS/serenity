@@ -237,7 +237,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
         if (!m_page.has_value())
             return;
 
-        FileRequest file_request(url.path(), [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request](ErrorOr<i32> file_or_error) {
+        FileRequest file_request(url.serialize_path(), [this, success_callback = move(success_callback), error_callback = move(error_callback), log_success, log_failure, request](ErrorOr<i32> file_or_error) {
             --m_pending_loads;
             if (on_load_counter_change)
                 on_load_counter_change();
@@ -275,7 +275,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, Has
             // NOTE: For file:// URLs, we have to guess the MIME type, since there's no HTTP header to tell us what this is.
             //       We insert a fake Content-Type header here, so that clients can use it to learn the MIME type.
             HashMap<DeprecatedString, DeprecatedString, CaseInsensitiveStringTraits> response_headers;
-            auto mime_type = Core::guess_mime_type_based_on_filename(request.url().path());
+            auto mime_type = Core::guess_mime_type_based_on_filename(request.url().serialize_path());
             response_headers.set("Content-Type"sv, mime_type);
 
             success_callback(data, response_headers, {});

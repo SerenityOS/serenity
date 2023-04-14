@@ -100,7 +100,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         window->move_to_front();
 
-        auto path = urls.first().path();
+        auto path = urls.first().serialize_path();
         auto result = FileSystemAccessClient::Client::the().request_file_read_only_approved(window, path);
         if (result.is_error())
             return;
@@ -109,7 +109,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         widget->open_file(value.filename(), value.stream());
 
         for (size_t i = 1; i < urls.size(); ++i) {
-            Desktop::Launcher::open(URL::create_with_file_scheme(urls[i].path().characters()), "/bin/ImageViewer");
+            Desktop::Launcher::open(URL::create_with_file_scheme(urls[i].serialize_path().characters()), "/bin/ImageViewer");
         }
     };
     widget->on_doubleclick = [&] {

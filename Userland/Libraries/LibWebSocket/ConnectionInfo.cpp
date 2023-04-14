@@ -26,10 +26,11 @@ DeprecatedString ConnectionInfo::resource_name() const
     // The "resource-name" can be constructed by concatenating the following:
     StringBuilder builder;
     // "/" if the path component is empty
-    if (m_url.path().is_empty())
+    auto path = m_url.serialize_path();
+    if (path.is_empty())
         builder.append('/');
     // The path component
-    builder.append(m_url.path());
+    builder.append(path);
     // "?" if the query component is non-empty
     if (!m_url.query().is_empty())
         builder.append('?');

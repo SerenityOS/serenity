@@ -27,18 +27,6 @@ URL::URL(StringView string)
     }
 }
 
-DeprecatedString URL::path() const
-{
-    if (cannot_be_a_base_url())
-        return paths()[0];
-    StringBuilder builder;
-    for (auto& path : m_paths) {
-        builder.append('/');
-        builder.append(path);
-    }
-    return builder.to_deprecated_string();
-}
-
 URL URL::complete_url(StringView relative_url) const
 {
     if (!is_valid())
@@ -268,6 +256,18 @@ URL URL::create_with_url_or_path(DeprecatedString const& url_or_path)
 bool URL::is_special_scheme(StringView scheme)
 {
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
+}
+
+DeprecatedString URL::serialize_path(ApplyPercentDecoding apply_percent_decoding) const
+{
+    if (cannot_be_a_base_url())
+        return m_paths[0];
+    StringBuilder builder;
+    for (auto& path : m_paths) {
+        builder.append('/');
+        builder.append(apply_percent_decoding == ApplyPercentDecoding::Yes ? percent_decode(path) : path);
+    }
+    return builder.to_deprecated_string();
 }
 
 DeprecatedString URL::serialize_data_url() const

@@ -129,13 +129,14 @@ ErrorOr<bool> handle_drop(GUI::DropEvent const& event, DeprecatedString const& d
 
     Vector<DeprecatedString> paths_to_copy;
     for (auto& url_to_copy : urls) {
-        if (!url_to_copy.is_valid() || url_to_copy.path() == target)
+        auto file_path = url_to_copy.serialize_path();
+        if (!url_to_copy.is_valid() || file_path == target)
             continue;
-        auto new_path = DeprecatedString::formatted("{}/{}", target, LexicalPath::basename(url_to_copy.path()));
-        if (url_to_copy.path() == new_path)
+        auto new_path = DeprecatedString::formatted("{}/{}", target, LexicalPath::basename(file_path));
+        if (file_path == new_path)
             continue;
 
-        paths_to_copy.append(url_to_copy.path());
+        paths_to_copy.append(file_path);
         has_accepted_drop = true;
     }
 

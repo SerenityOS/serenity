@@ -279,7 +279,7 @@ void VideoPlayerWidget::drop_event(GUI::DropEvent& event)
             GUI::MessageBox::show_error(window(), "VideoPlayer can only view one clip at a time!"sv);
             return;
         }
-        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().path());
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(window(), urls.first().serialize_path());
         if (response.is_error())
             return;
         open_file(response.value().filename());

@@ -680,7 +680,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> scheme_fetch(JS::Realm& r
         // a body.
         // NOTE: URLs such as "about:config" are handled during navigation and result in a network error in the context
         //       of fetching.
-        if (request->current_url().path() == "blank"sv) {
+        if (request->current_url().serialize_path() == "blank"sv) {
             auto response = Infrastructure::Response::create(vm);
             response->set_status_message(MUST(ByteBuffer::copy("OK"sv.bytes())));
             auto header = MUST(Infrastructure::Header::from_string_pair("Content-Type"sv, "text/html;charset=utf-8"sv));

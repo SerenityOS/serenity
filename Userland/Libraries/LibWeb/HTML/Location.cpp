@@ -233,7 +233,7 @@ WebIDL::ExceptionOr<String> Location::pathname() const
         return WebIDL::SecurityError::create(realm(), "Location's relevant document is not same origin-domain with the entry settings object's origin"sv);
 
     // 2. Return the result of URL path serializing this Location object's url.
-    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url().path()));
+    return TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url().serialize_path()));
 }
 
 WebIDL::ExceptionOr<void> Location::set_pathname(String const&)

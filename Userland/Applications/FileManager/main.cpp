@@ -202,7 +202,7 @@ void do_paste(DeprecatedString const& target_directory, GUI::Window* window)
             dbgln("Cannot paste URI {}", uri_as_string);
             continue;
         }
-        source_paths.append(url.path());
+        source_paths.append(url.serialize_path());
     }
 
     if (!source_paths.is_empty()) {

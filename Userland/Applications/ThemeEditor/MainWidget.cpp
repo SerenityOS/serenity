@@ -671,7 +671,7 @@ void MainWidget::drop_event(GUI::DropEvent& event)
         if (request_close() == GUI::Window::CloseRequestDecision::StayOpen)
             return;
 
-        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().path(), Core::File::OpenMode::Read);
+        auto response = FileSystemAccessClient::Client::the().request_file(window(), urls.first().serialize_path(), Core::File::OpenMode::Read);
         if (response.is_error())
             return;
 
