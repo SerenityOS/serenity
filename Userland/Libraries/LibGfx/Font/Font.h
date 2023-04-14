@@ -196,6 +196,8 @@ public:
     virtual float width(Utf8View const&) const = 0;
     virtual float width(Utf32View const&) const = 0;
 
+    virtual int width_rounded_up(StringView) const = 0;
+
     virtual DeprecatedString name() const = 0;
 
     virtual bool is_fixed_width() const = 0;

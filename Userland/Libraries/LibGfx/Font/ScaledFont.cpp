@@ -36,6 +36,11 @@ ScaledFont::ScaledFont(NonnullRefPtr<VectorFont> font, float point_width, float 
     };
 }
 
+int ScaledFont::width_rounded_up(StringView view) const
+{
+    return static_cast<int>(ceilf(width(view)));
+}
+
 float ScaledFont::width(StringView view) const { return unicode_view_width(Utf8View(view)); }
 float ScaledFont::width(Utf8View const& view) const { return unicode_view_width(view); }
 float ScaledFont::width(Utf32View const& view) const { return unicode_view_width(view); }

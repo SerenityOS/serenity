@@ -201,7 +201,7 @@ void BookmarksBarWidget::model_did_update(unsigned)
         auto title = model()->index(item_index, 0).data().to_deprecated_string();
         auto url = model()->index(item_index, 1).data().to_deprecated_string();
 
-        Gfx::IntRect rect { width, 0, static_cast<int>(ceilf(font().width(title))) + 32, height() };
+        Gfx::IntRect rect { width, 0, font().width_rounded_up(title) + 32, height() };
 
         auto& button = add<GUI::Button>();
         m_bookmarks.append(button);

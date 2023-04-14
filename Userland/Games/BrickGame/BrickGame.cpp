@@ -585,7 +585,7 @@ void BrickGame::paint_cell(GUI::Painter& painter, Gfx::IntRect rect, BrickGame::
 
 void BrickGame::paint_sidebar_text(GUI::Painter& painter, int row, StringView text)
 {
-    auto const text_width = static_cast<int>(ceilf(font().width(text)));
+    auto const text_width = font().width_rounded_up(text);
     auto const entire_area_rect { frame_inner_rect() };
     auto const margin = 4;
     auto const rect { Gfx::IntRect { entire_area_rect.x() + entire_area_rect.width() - 116,
@@ -597,7 +597,7 @@ void BrickGame::paint_sidebar_text(GUI::Painter& painter, int row, StringView te
 void BrickGame::paint_paused_text(GUI::Painter& painter)
 {
     auto const paused_text = "Paused"sv;
-    auto const paused_text_width = static_cast<int>(ceilf(font().width(paused_text)));
+    auto const paused_text_width = font().width_rounded_up(paused_text);
     auto const more_or_less_font_height = static_cast<int>(font().pixel_size_rounded_up());
     auto const entire_area_rect { frame_inner_rect() };
     auto const margin = more_or_less_font_height * 2;
