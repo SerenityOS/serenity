@@ -112,6 +112,8 @@ private:
         float sum_of_scaled_flex_shrink_factor_of_unfrozen_items() const;
     };
 
+    CSSPixels main_gap() const;
+    CSSPixels cross_gap() const;
     bool has_definite_main_size(Box const&) const;
     bool has_definite_cross_size(Box const&) const;
     CSSPixels inner_main_size(Box const&) const;
