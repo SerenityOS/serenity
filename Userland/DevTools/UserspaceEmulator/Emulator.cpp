@@ -82,8 +82,8 @@ Vector<ELF::AuxiliaryValue> Emulator::generate_auxiliary_vector(FlatPtr load_bas
 
     auxv.append({ ELF::AuxiliaryValue::Entry, (void*)entry_rip });
 
-    // FIXME: Don't hard code this? We might support other platforms later.. (e.g. x86_64)
-    auxv.append({ ELF::AuxiliaryValue::Platform, "i386"sv });
+    // FIXME: Don't hard code this?
+    auxv.append({ ELF::AuxiliaryValue::Platform, "x86_64"sv });
 
     auxv.append({ ELF::AuxiliaryValue::ExecFilename, executable_path });
 
@@ -137,7 +137,7 @@ void Emulator::setup_stack(Vector<ELF::AuxiliaryValue> aux_vector)
         m_cpu->push64(shadow_wrap_as_initialized(argv_entries[i]));
     FlatPtr argv = m_cpu->rsp().value();
 
-    while ((m_cpu->rsp().value() + 4) % 16 != 0)
+    while ((m_cpu->rsp().value() + sizeof(FlatPtr)) % 16 != 0)
         m_cpu->push64(shadow_wrap_as_initialized<FlatPtr>(0)); // (alignment)
 
     FlatPtr argc = argv_entries.size();
@@ -360,7 +360,7 @@ void Emulator::handle_repl()
     } else if (parts[0].is_one_of("r"sv, "ret"sv)) {
         m_run_til_return = true;
         // FIXME: This may be uninitialized
-        m_watched_addr = m_mmu.read32({ 0x23, m_cpu->ebp().value() + 4 }).value();
+        m_watched_addr = m_mmu.read64({ 0x23, m_cpu->rbp().value() + sizeof(FlatPtr) }).value();
         m_steps_til_pause = -1;
     } else if (parts[0].is_one_of("q"sv, "quit"sv)) {
         m_shutdown = true;
