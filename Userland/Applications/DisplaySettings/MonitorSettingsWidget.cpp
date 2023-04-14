@@ -265,8 +265,9 @@ void MonitorSettingsWidget::apply_settings()
                 return;
             auto current_box_text = current_box_text_or_error.release_value();
 
-            auto box = GUI::MessageBox::construct(window(), current_box_text, "Apply new screen layout"sv,
-                GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+            auto box = GUI::MessageBox::create(window(), current_box_text, "Apply new screen layout"sv,
+                GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo)
+                           .release_value_but_fixme_should_propagate_errors();
             box->set_icon(window()->icon());
 
             // If after 10 seconds the user doesn't close the message box, just close it.
@@ -279,7 +280,7 @@ void MonitorSettingsWidget::apply_settings()
                     return;
                 }
                 auto current_box_text = current_box_text_or_error.release_value();
-                box->set_text(current_box_text.to_deprecated_string());
+                box->set_text(current_box_text);
                 if (seconds_until_revert <= 0) {
                     box->close();
                 }

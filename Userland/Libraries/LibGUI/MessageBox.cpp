@@ -12,13 +12,29 @@
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
-#include <LibGfx/Font/Font.h>
 
 namespace GUI {
 
+ErrorOr<NonnullRefPtr<MessageBox>> MessageBox::create(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
+{
+    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) MessageBox(parent_window, type, input_type)));
+    TRY(box->build());
+    box->set_title(TRY(String::from_utf8(title)).to_deprecated_string());
+    box->set_text(TRY(String::from_utf8(text)));
+    auto size = box->main_widget()->effective_min_size();
+    box->resize(TRY(size.width().shrink_value()), TRY(size.height().shrink_value()));
+
+    return box;
+}
+
 Dialog::ExecResult MessageBox::show(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
 {
-    auto box = MessageBox::construct(parent_window, text, title, type, input_type);
+    return MUST(try_show(parent_window, text, title, type, input_type));
+}
+
+ErrorOr<Dialog::ExecResult> MessageBox::try_show(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
+{
+    auto box = TRY(MessageBox::create(parent_window, text, title, type, input_type));
     if (parent_window)
         box->set_icon(parent_window->icon());
     return box->exec();
@@ -26,31 +42,41 @@ Dialog::ExecResult MessageBox::show(Window* parent_window, StringView text, Stri
 
 Dialog::ExecResult MessageBox::show_error(Window* parent_window, StringView text)
 {
-    return show(parent_window, text, "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK);
+    return MUST(try_show_error(parent_window, text));
+}
+
+ErrorOr<Dialog::ExecResult> MessageBox::try_show_error(Window* parent_window, StringView text)
+{
+    return TRY(try_show(parent_window, text, "Error"sv, GUI::MessageBox::Type::Error, GUI::MessageBox::InputType::OK));
 }
 
 Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp)
 {
+    return MUST(try_ask_about_unsaved_changes(parent_window, path, last_unmodified_timestamp));
+}
+
+ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp)
+{
     StringBuilder builder;
-    builder.append("Save changes to "sv);
+    TRY(builder.try_append("Save changes to "sv));
     if (path.is_empty())
-        builder.append("untitled document"sv);
+        TRY(builder.try_append("untitled document"sv));
     else
-        builder.appendff("\"{}\"", LexicalPath::basename(path));
-    builder.append(" before closing?"sv);
+        TRY(builder.try_appendff("\"{}\"", LexicalPath::basename(path)));
+    TRY(builder.try_append(" before closing?"sv));
 
     if (!path.is_empty() && last_unmodified_timestamp.has_value()) {
         auto age = (Time::now_monotonic() - *last_unmodified_timestamp).to_seconds();
         auto readable_time = human_readable_time(age);
-        builder.appendff("\nLast saved {} ago.", readable_time);
+        TRY(builder.try_appendff("\nLast saved {} ago.", readable_time));
     }
 
-    auto box = MessageBox::construct(parent_window, builder.string_view(), "Unsaved changes"sv, Type::Warning, InputType::YesNoCancel);
+    auto box = TRY(MessageBox::create(parent_window, builder.string_view(), "Unsaved changes"sv, Type::Warning, InputType::YesNoCancel));
     if (parent_window)
         box->set_icon(parent_window->icon());
 
     if (path.is_empty())
-        box->m_yes_button->set_text("Save As..."_string.release_value_but_fixme_should_propagate_errors());
+        box->m_yes_button->set_text(TRY("Save As..."_string));
     else
         box->m_yes_button->set_text("Save"_short_string);
     box->m_no_button->set_text("Discard"_short_string);
@@ -59,33 +85,31 @@ Dialog::ExecResult MessageBox::ask_about_unsaved_changes(Window* parent_window, 
     return box->exec();
 }
 
-void MessageBox::set_text(DeprecatedString text)
+void MessageBox::set_text(String text)
 {
-    m_text = move(text);
-    build();
+    m_text_label->set_text(move(text).to_deprecated_string());
 }
 
-MessageBox::MessageBox(Window* parent_window, StringView text, StringView title, Type type, InputType input_type)
+MessageBox::MessageBox(Window* parent_window, Type type, InputType input_type)
     : Dialog(parent_window)
-    , m_text(text)
     , m_type(type)
     , m_input_type(input_type)
 {
-    set_title(title);
-    build();
+    set_resizable(false);
+    set_auto_shrink(true);
 }
 
-RefPtr<Gfx::Bitmap> MessageBox::icon() const
+ErrorOr<RefPtr<Gfx::Bitmap>> MessageBox::icon() const
 {
     switch (m_type) {
     case Type::Information:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-information.png"sv).release_value_but_fixme_should_propagate_errors();
+        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-information.png"sv));
     case Type::Warning:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-warning.png"sv).release_value_but_fixme_should_propagate_errors();
+        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-warning.png"sv));
     case Type::Error:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-error.png"sv).release_value_but_fixme_should_propagate_errors();
+        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-error.png"sv));
     case Type::Question:
-        return Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-question.png"sv).release_value_but_fixme_should_propagate_errors();
+        return TRY(Gfx::Bitmap::load_from_file("/res/icons/32x32/msgbox-question.png"sv));
     default:
         return nullptr;
     }
@@ -111,72 +135,49 @@ bool MessageBox::should_include_no_button() const
     return should_include_yes_button();
 }
 
-void MessageBox::build()
+ErrorOr<void> MessageBox::build()
 {
-    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = TRY(set_main_widget<Widget>());
+    main_widget->set_fill_with_background_color(true);
+    TRY(main_widget->try_set_layout<VerticalBoxLayout>(8, 6));
 
-    int text_width = widget->font().width(m_text);
-    auto number_of_lines = m_text.split('\n').size();
-    int padded_text_height = widget->font().pixel_size_rounded_up() * 1.6;
-    int total_text_height = number_of_lines * padded_text_height;
-    int icon_width = 0;
+    auto message_container = TRY(main_widget->try_add<Widget>());
+    auto message_margins = Margins { 8, m_type != Type::None ? 8 : 0 };
+    TRY(message_container->try_set_layout<HorizontalBoxLayout>(message_margins, 8));
 
-    widget->set_layout<VerticalBoxLayout>(8, 6);
-    widget->set_fill_with_background_color(true);
-
-    auto& message_container = widget->add<Widget>();
-    message_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 8);
-
-    if (m_type != Type::None) {
-        auto& icon_image = message_container.add<ImageWidget>();
-        icon_image.set_bitmap(icon());
-        if (icon()) {
-            icon_width = icon()->width();
-            if (icon_width > 0)
-                message_container.layout()->set_margins({ 0, 0, 0, 8 });
-        }
+    if (auto icon = TRY(this->icon()); icon && m_type != Type::None) {
+        auto image_widget = TRY(message_container->try_add<ImageWidget>());
+        image_widget->set_bitmap(icon);
     }
 
-    auto& label = message_container.add<Label>(m_text);
-    label.set_fixed_height(total_text_height);
+    m_text_label = TRY(message_container->try_add<Label>());
+    m_text_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
+    m_text_label->set_autosize(true);
     if (m_type != Type::None)
-        label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        m_text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    auto& button_container = widget->add<Widget>();
-    button_container.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 8);
-    button_container.set_fixed_height(24);
+    auto button_container = TRY(main_widget->try_add<Widget>());
+    TRY(button_container->try_set_layout<HorizontalBoxLayout>(Margins {}, 8));
 
-    constexpr int button_width = 80;
-    int button_count = 0;
-
-    auto add_button = [&](String label, ExecResult result) -> GUI::Button& {
-        auto& button = button_container.add<Button>();
-        button.set_fixed_width(button_width);
-        button.set_text(move(label));
-        button.on_click = [this, result](auto) {
-            done(result);
-        };
-        ++button_count;
+    auto add_button = [&](String text, ExecResult result) -> ErrorOr<NonnullRefPtr<Button>> {
+        auto button = TRY(button_container->try_add<DialogButton>());
+        button->set_text(move(text));
+        button->on_click = [this, result](auto) { done(result); };
         return button;
     };
 
-    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    TRY(button_container->add_spacer());
     if (should_include_ok_button())
-        m_ok_button = add_button("OK"_short_string, ExecResult::OK);
+        m_ok_button = TRY(add_button("OK"_short_string, ExecResult::OK));
     if (should_include_yes_button())
-        m_yes_button = add_button("Yes"_short_string, ExecResult::Yes);
+        m_yes_button = TRY(add_button("Yes"_short_string, ExecResult::Yes));
     if (should_include_no_button())
-        m_no_button = add_button("No"_short_string, ExecResult::No);
+        m_no_button = TRY(add_button("No"_short_string, ExecResult::No));
     if (should_include_cancel_button())
-        m_cancel_button = add_button("Cancel"_short_string, ExecResult::Cancel);
-    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+        m_cancel_button = TRY(add_button("Cancel"_short_string, ExecResult::Cancel));
+    TRY(button_container->add_spacer());
 
-    int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
-    width = max(width, text_width + icon_width + 56);
-
-    // FIXME: Use shrink from new layout system
-    set_rect(x(), y(), width, 80 + label.text_calculated_preferred_height());
-    set_resizable(false);
+    return {};
 }
 
 }
