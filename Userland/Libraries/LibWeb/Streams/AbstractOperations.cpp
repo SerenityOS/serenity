@@ -308,7 +308,7 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
     auto& realm = stream->realm();
 
     // 4. If stream.[[state]] is "readable", reject reader.[[closedPromise]] with a TypeError exception.
-    auto exception = TRY(JS::TypeError::create(realm, "Released readable stream"sv));
+    auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Released readable stream"sv));
     if (stream->is_readable()) {
         WebIDL::reject_promise(realm, *reader.closed_promise_capability(), exception);
     }
@@ -389,7 +389,7 @@ WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamD
     TRY(readable_stream_reader_generic_release(reader));
 
     // 2. Let e be a new TypeError exception.
-    auto e = TRY(JS::TypeError::create(realm, "Reader has been released"sv));
+    auto e = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Reader has been released"sv));
 
     // 3. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
     readable_stream_default_reader_error_read_requests(reader, e);
