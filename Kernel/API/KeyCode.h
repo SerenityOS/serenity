@@ -142,6 +142,7 @@ enum KeyModifier {
 
 struct KeyEvent {
     KeyCode key { Key_Invalid };
+    u8 map_entry_index { 0 };
     u32 scancode { 0 };
     u32 code_point { 0 };
     u8 flags { 0 };
