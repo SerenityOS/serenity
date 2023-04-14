@@ -538,6 +538,10 @@
 #    cmakedefine01 WINDOWMANAGER_DEBUG
 #endif
 
+#ifndef WORKER_THREAD_DEBUG
+#    cmakedefine01 WORKER_THREAD_DEBUG
+#endif
+
 #ifndef WSMESSAGELOOP_DEBUG
 #    cmakedefine01 WSMESSAGELOOP_DEBUG
 #endif
