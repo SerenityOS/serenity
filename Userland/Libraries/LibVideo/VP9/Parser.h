@@ -11,8 +11,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/Span.h>
 #include <LibGfx/Size.h>
+#include <LibThreading/Forward.h>
 #include <LibVideo/Color/CodingIndependentCodePoints.h>
-#include <LibVideo/DecoderError.h>
+#include <LibVideo/Forward.h>
 
 #include "ContextStorage.h"
 #include "LookupTables.h"
@@ -141,6 +142,8 @@ private:
 
     OwnPtr<ProbabilityTables> m_probability_tables;
     Decoder& m_decoder;
+
+    Vector<NonnullOwnPtr<Threading::WorkerThread<DecoderError>>> m_worker_threads;
 };
 
 }

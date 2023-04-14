@@ -15,4 +15,4 @@ set(SOURCES
 )
 
 serenity_lib(LibVideo video)
-target_link_libraries(LibVideo PRIVATE LibAudio LibCore LibIPC LibGfx)
+target_link_libraries(LibVideo PRIVATE LibAudio LibCore LibIPC LibGfx LibThreading)
