@@ -103,7 +103,7 @@ ErrorOr<NonnullRefPtr<BrowserWindow>> BrowserWindow::try_create(CookieJar& cooki
     };
 
     main_window->m_window_actions.on_create_new_tab = [main_window] {
-        main_window->create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), Web::HTML::ActivateTab::Yes);
+        (void)main_window->create_new_tab(Browser::url_from_user_input(Browser::g_new_tab_url), Web::HTML::ActivateTab::Yes).release_value_but_fixme_should_propagate_errors();
     };
 
     main_window->m_window_actions.on_create_new_window = [main_window] {
@@ -149,7 +149,7 @@ ErrorOr<NonnullRefPtr<BrowserWindow>> BrowserWindow::try_create(CookieJar& cooki
     main_window->m_tab_widget->set_tab_position(vertical_tabs ? GUI::TabWidget::TabPosition::Left : GUI::TabWidget::TabPosition::Top);
 
     main_window->build_menus();
-    main_window->create_new_tab(move(url), Web::HTML::ActivateTab::Yes);
+    (void)TRY(main_window->create_new_tab(move(url), Web::HTML::ActivateTab::Yes));
 
     return main_window;
 }
@@ -583,31 +583,31 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
     set_title(DeprecatedString::formatted("{} - Browser", title.is_empty() ? url.to_deprecated_string() : title));
 }
 
-Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
+ErrorOr<NonnullRefPtr<Tab>> BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
 {
-    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab"_short_string, *this);
+    auto new_tab = TRY(m_tab_widget->try_add_tab<Browser::Tab>("New tab"_short_string, *this));
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 
-    new_tab.on_title_change = [this, &new_tab](auto& title) {
+    new_tab->on_title_change = [this, new_tab](auto& title) {
         m_tab_widget->set_tab_title(new_tab, String::from_deprecated_string(title).release_value_but_fixme_should_propagate_errors());
-        if (m_tab_widget->active_widget() == &new_tab)
+        if (m_tab_widget->active_widget() == new_tab)
             set_window_title_for_tab(new_tab);
     };
 
-    new_tab.on_favicon_change = [this, &new_tab](auto& bitmap) {
+    new_tab->on_favicon_change = [this, new_tab](auto& bitmap) {
         m_tab_widget->set_tab_icon(new_tab, &bitmap);
     };
 
-    new_tab.on_tab_open_request = [this](auto& url) {
-        create_new_tab(url, Web::HTML::ActivateTab::Yes);
+    new_tab->on_tab_open_request = [this](auto& url) {
+        (void)create_new_tab(url, Web::HTML::ActivateTab::Yes).release_value_but_fixme_should_propagate_errors();
     };
 
-    new_tab.on_activate_tab_request = [this](auto& tab) {
+    new_tab->on_activate_tab_request = [this](auto& tab) {
         m_tab_widget->set_active_widget(&tab);
     };
 
-    new_tab.on_tab_close_request = [this](auto& tab) {
+    new_tab->on_tab_close_request = [this](auto& tab) {
         m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_tab(tab);
             m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
@@ -616,7 +616,7 @@ Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
         });
     };
 
-    new_tab.on_tab_close_other_request = [this](auto& tab) {
+    new_tab->on_tab_close_other_request = [this](auto& tab) {
         m_tab_widget->deferred_invoke([this, &tab] {
             m_tab_widget->remove_all_tabs_except(tab);
             VERIFY(m_tab_widget->children().size() == 1);
@@ -624,56 +624,56 @@ Tab& BrowserWindow::create_new_tab(URL url, Web::HTML::ActivateTab activate)
         });
     };
 
-    new_tab.on_window_open_request = [this](auto& url) {
+    new_tab->on_window_open_request = [this](auto& url) {
         create_new_window(url);
     };
 
-    new_tab.on_get_all_cookies = [this](auto& url) {
+    new_tab->on_get_all_cookies = [this](auto& url) {
         return m_cookie_jar.get_all_cookies(url);
     };
 
-    new_tab.on_get_named_cookie = [this](auto& url, auto& name) {
+    new_tab->on_get_named_cookie = [this](auto& url, auto& name) {
         return m_cookie_jar.get_named_cookie(url, name);
     };
 
-    new_tab.on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
+    new_tab->on_get_cookie = [this](auto& url, auto source) -> DeprecatedString {
         return m_cookie_jar.get_cookie(url, source);
     };
 
-    new_tab.on_set_cookie = [this](auto& url, auto& cookie, auto source) {
+    new_tab->on_set_cookie = [this](auto& url, auto& cookie, auto source) {
         m_cookie_jar.set_cookie(url, cookie, source);
     };
 
-    new_tab.on_dump_cookies = [this]() {
+    new_tab->on_dump_cookies = [this]() {
         m_cookie_jar.dump_cookies();
     };
 
-    new_tab.on_update_cookie = [this](auto cookie) {
+    new_tab->on_update_cookie = [this](auto cookie) {
         m_cookie_jar.update_cookie(move(cookie));
     };
 
-    new_tab.on_get_cookies_entries = [this]() {
+    new_tab->on_get_cookies_entries = [this]() {
         return m_cookie_jar.get_all_cookies();
     };
 
-    new_tab.on_get_local_storage_entries = [this]() {
+    new_tab->on_get_local_storage_entries = [this]() {
         return active_tab().view().get_local_storage_entries();
     };
 
-    new_tab.on_get_session_storage_entries = [this]() {
+    new_tab->on_get_session_storage_entries = [this]() {
         return active_tab().view().get_session_storage_entries();
     };
 
-    new_tab.on_take_screenshot = [this]() {
+    new_tab->on_take_screenshot = [this]() {
         return active_tab().view().take_screenshot();
     };
 
-    new_tab.load(url);
+    new_tab->load(url);
 
     dbgln_if(SPAM_DEBUG, "Added new tab {:p}, loading {}", &new_tab, url);
 
     if (activate == Web::HTML::ActivateTab::Yes)
-        m_tab_widget->set_active_widget(&new_tab);
+        m_tab_widget->set_active_widget(new_tab);
 
     return new_tab;
 }

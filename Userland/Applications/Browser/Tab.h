@@ -29,12 +29,13 @@ class HistoryWidget;
 class StorageWidget;
 
 class Tab final : public GUI::Widget {
-    C_OBJECT(Tab);
+    C_OBJECT_ABSTRACT(Tab);
 
     // FIXME: This should go away eventually.
     friend class BrowserWindow;
 
 public:
+    static ErrorOr<NonnullRefPtr<Tab>> try_create(BrowserWindow&);
     virtual ~Tab() override;
 
     URL url() const;
@@ -99,7 +100,7 @@ public:
     WebView::OutOfProcessWebView& view() { return *m_web_content_view; }
 
 private:
-    explicit Tab(BrowserWindow&);
+    explicit Tab();
 
     virtual void show_event(GUI::ShowEvent&) override;
     virtual void hide_event(GUI::HideEvent&) override;
