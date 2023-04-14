@@ -65,6 +65,8 @@ static Gfx::StandardCursor cursor_css_to_gfx(Optional<CSS::Cursor> cursor)
         return Gfx::StandardCursor::Help;
     case CSS::Cursor::None:
         return Gfx::StandardCursor::Hidden;
+    case CSS::Cursor::NotAllowed:
+        return Gfx::StandardCursor::Disallowed;
     case CSS::Cursor::Text:
     case CSS::Cursor::VerticalText:
         return Gfx::StandardCursor::IBeam;
@@ -97,6 +99,13 @@ static Gfx::StandardCursor cursor_css_to_gfx(Optional<CSS::Cursor> cursor)
     case CSS::Cursor::ZoomIn:
     case CSS::Cursor::ZoomOut:
         return Gfx::StandardCursor::Zoom;
+    case CSS::Cursor::ContextMenu:
+    case CSS::Cursor::Alias:
+    case CSS::Cursor::Copy:
+    case CSS::Cursor::NoDrop:
+        // FIXME: No corresponding GFX Standard Cursor, fallthrough to None
+    case CSS::Cursor::Auto:
+    case CSS::Cursor::Default:
     default:
         return Gfx::StandardCursor::None;
     }
