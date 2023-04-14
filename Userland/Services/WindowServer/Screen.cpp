@@ -459,7 +459,7 @@ void ScreenInput::on_receive_mouse_data(MousePacket const& packet)
 void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
 {
     m_modifiers = kernel_event.modifiers();
-    auto message = make<KeyEvent>(kernel_event.is_press() ? Event::KeyDown : Event::KeyUp, kernel_event.key, kernel_event.code_point, kernel_event.modifiers(), kernel_event.scancode);
+    auto message = make<KeyEvent>(kernel_event.is_press() ? Event::KeyDown : Event::KeyUp, kernel_event.key, kernel_event.map_entry_index, kernel_event.code_point, kernel_event.modifiers(), kernel_event.scancode);
     Core::EventLoop::current().post_event(WindowManager::the(), move(message));
 }
 

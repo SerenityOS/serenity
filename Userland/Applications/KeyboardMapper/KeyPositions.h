@@ -9,7 +9,7 @@
 #include <AK/ByteString.h>
 
 struct KeyPosition {
-    u32 scancode;
+    u32 kernel_map_entry_index;
     int x;
     int y;
     int width;
