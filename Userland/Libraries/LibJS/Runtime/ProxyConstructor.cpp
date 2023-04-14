@@ -17,10 +17,24 @@ namespace JS {
 static ThrowCompletionOr<ProxyObject*> proxy_create(VM& vm, Value target, Value handler)
 {
     auto& realm = *vm.current_realm();
+
+    // 1. If target is not an Object, throw a TypeError exception.
     if (!target.is_object())
         return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "target", TRY_OR_THROW_OOM(vm, target.to_string_without_side_effects()));
+
+    // 2. If handler is not an Object, throw a TypeError exception.
     if (!handler.is_object())
         return vm.throw_completion<TypeError>(ErrorType::ProxyConstructorBadType, "handler", TRY_OR_THROW_OOM(vm, handler.to_string_without_side_effects()));
+
+    // 3. Let P be MakeBasicObject(« [[ProxyHandler]], [[ProxyTarget]] »).
+    // 4. Set P's essential internal methods, except for [[Call]] and [[Construct]], to the definitions specified in 10.5.
+    // 5.  IsCallable(target) is true, then
+    //    a. Set P.[[Call]] as specified in 10.5.12.
+    //    b. If IsConstructor(target) is true, then
+    //        i. Set P.[[Construct]] as specified in 10.5.13.
+    // 6. Set P.[[ProxyTarget]] to target.
+    // 7. Set P.[[ProxyHandler]] to handler.
+    // 8. Return P.
     return ProxyObject::create(realm, target.as_object(), handler.as_object()).ptr();
 }
 
@@ -45,6 +59,8 @@ ThrowCompletionOr<void> ProxyConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> ProxyConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.Proxy);
 }
 
@@ -52,16 +68,22 @@ ThrowCompletionOr<Value> ProxyConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> ProxyConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
-    return *TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
+    auto target = vm.argument(0);
+    auto handler = vm.argument(1);
+
+    // 2. Return ? ProxyCreate(target, handler).
+    return *TRY(proxy_create(vm, target, handler));
 }
 
 // 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
 JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
     auto& realm = *vm.current_realm();
+    auto target = vm.argument(0);
+    auto handler = vm.argument(1);
 
     // 1. Let p be ? ProxyCreate(target, handler).
-    auto* proxy = TRY(proxy_create(vm, vm.argument(0), vm.argument(1)));
+    auto* proxy = TRY(proxy_create(vm, target, handler));
 
     // 2. Let revokerClosure be a new Abstract Closure with no parameters that captures nothing and performs the following steps when called:
     auto revoker_closure = [proxy_handle = make_handle(proxy)](auto&) -> ThrowCompletionOr<Value> {
