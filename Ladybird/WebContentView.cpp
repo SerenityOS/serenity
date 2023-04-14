@@ -700,13 +700,60 @@ void WebContentView::notify_server_did_change_selection(Badge<WebContentClient>)
 void WebContentView::notify_server_did_request_cursor_change(Badge<WebContentClient>, Gfx::StandardCursor cursor)
 {
     switch (cursor) {
-    case Gfx::StandardCursor::Hand:
-        setCursor(Qt::PointingHandCursor);
+    case Gfx::StandardCursor::Hidden:
+        setCursor(Qt::BlankCursor);
+        break;
+    case Gfx::StandardCursor::Arrow:
+        setCursor(Qt::ArrowCursor);
+        break;
+    case Gfx::StandardCursor::Crosshair:
+        setCursor(Qt::CrossCursor);
         break;
     case Gfx::StandardCursor::IBeam:
         setCursor(Qt::IBeamCursor);
         break;
-    case Gfx::StandardCursor::Arrow:
+    case Gfx::StandardCursor::ResizeHorizontal:
+        setCursor(Qt::SizeHorCursor);
+        break;
+    case Gfx::StandardCursor::ResizeVertical:
+        setCursor(Qt::SizeVerCursor);
+        break;
+    case Gfx::StandardCursor::ResizeDiagonalTLBR:
+        setCursor(Qt::SizeFDiagCursor);
+        break;
+    case Gfx::StandardCursor::ResizeDiagonalBLTR:
+        setCursor(Qt::SizeBDiagCursor);
+        break;
+    case Gfx::StandardCursor::ResizeColumn:
+        setCursor(Qt::SplitHCursor);
+        break;
+    case Gfx::StandardCursor::ResizeRow:
+        setCursor(Qt::SplitVCursor);
+        break;
+    case Gfx::StandardCursor::Hand:
+        setCursor(Qt::PointingHandCursor);
+        break;
+    case Gfx::StandardCursor::Help:
+        setCursor(Qt::WhatsThisCursor);
+        break;
+    case Gfx::StandardCursor::Drag:
+        setCursor(Qt::ClosedHandCursor);
+        break;
+    case Gfx::StandardCursor::DragCopy:
+        setCursor(Qt::DragCopyCursor);
+        break;
+    case Gfx::StandardCursor::Move:
+        setCursor(Qt::DragMoveCursor);
+        break;
+    case Gfx::StandardCursor::Wait:
+        setCursor(Qt::BusyCursor);
+        break;
+    case Gfx::StandardCursor::Disallowed:
+        setCursor(Qt::ForbiddenCursor);
+        break;
+    case Gfx::StandardCursor::Eyedropper:
+    case Gfx::StandardCursor::Zoom:
+        // FIXME: No corresponding Qt cursors, default to Arrow
     default:
         setCursor(Qt::ArrowCursor);
         break;
