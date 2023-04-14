@@ -7,9 +7,11 @@
 #pragma once
 
 #include <AK/DistinctNumeric.h>
+#include <AK/IntrusiveList.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/DeviceManagement.h>
 #include <Kernel/Graphics/VirtIOGPU/Protocol.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel::Graphics::VirtIOGPU {
 
@@ -101,24 +103,35 @@ private:
     VirtIOGPU3DDevice(VirtIOGraphicsAdapter const& graphics_adapter, NonnullOwnPtr<Memory::Region> transfer_buffer_region, Graphics::VirtIOGPU::ContextID kernel_context_id);
 
     class PerContextState final : public AtomicRefCounted<PerContextState> {
+        friend class VirtIOGPU3DDevice;
+
     public:
-        static ErrorOr<LockRefPtr<PerContextState>> try_create(Graphics::VirtIOGPU::ContextID context_id)
+        static ErrorOr<NonnullRefPtr<PerContextState>> try_create(OpenFileDescription& description, Graphics::VirtIOGPU::ContextID context_id)
         {
             auto region_result = TRY(MM.allocate_kernel_region(
                 NUM_TRANSFER_REGION_PAGES * PAGE_SIZE,
                 "VIRGL3D userspace upload buffer"sv,
                 Memory::Region::Access::ReadWrite,
                 AllocationStrategy::AllocateNow));
-            return TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) PerContextState(context_id, move(region_result))));
+            return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) PerContextState(description, context_id, move(region_result))));
         }
         Graphics::VirtIOGPU::ContextID context_id() { return m_context_id; }
         Memory::Region& transfer_buffer_region() { return *m_transfer_buffer_region; }
 
+        OpenFileDescription& description() { return m_attached_file_description; }
+
     private:
         PerContextState() = delete;
-        explicit PerContextState(Graphics::VirtIOGPU::ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region);
+        PerContextState(OpenFileDescription&, Graphics::VirtIOGPU::ContextID context_id, OwnPtr<Memory::Region> transfer_buffer_region);
         Graphics::VirtIOGPU::ContextID m_context_id;
         OwnPtr<Memory::Region> m_transfer_buffer_region;
+
+        // NOTE: We clean this whole object when the file description is closed, therefore we need to hold
+        // a raw reference here instead of a strong reference pointer (e.g. RefPtr, which will make it
+        // possible to leak the attached OpenFileDescription for a context in this device).
+        OpenFileDescription& m_attached_file_description;
+
+        IntrusiveListNode<PerContextState, NonnullRefPtr<PerContextState>> m_list_node;
     };
 
     virtual bool can_read(OpenFileDescription const&, u64) const override { return true; }
@@ -130,13 +143,13 @@ private:
     virtual ErrorOr<void> ioctl(OpenFileDescription&, unsigned request, Userspace<void*> arg) override;
     virtual void detach(OpenFileDescription&) override;
 
-private:
-    ErrorOr<LockRefPtr<PerContextState>> get_context_for_description(OpenFileDescription&);
+    using ContextList = IntrusiveListRelaxedConst<&PerContextState::m_list_node>;
 
+private:
     NonnullLockRefPtr<VirtIOGraphicsAdapter> m_graphics_adapter;
     // Context used for kernel operations (e.g. flushing resources to scanout)
     Graphics::VirtIOGPU::ContextID m_kernel_context_id;
-    HashMap<OpenFileDescription*, LockRefPtr<PerContextState>> m_context_state_lookup;
+    SpinlockProtected<ContextList, LockRank::None> m_context_state_list;
     // Memory management for backing buffers
     NonnullOwnPtr<Memory::Region> m_transfer_buffer_region;
     constexpr static size_t NUM_TRANSFER_REGION_PAGES = 1024;
