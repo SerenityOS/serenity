@@ -352,7 +352,7 @@ void OutOfProcessWebView::notify_server_did_request_image_context_menu(Badge<Web
 
 void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient>, String const& message)
 {
-    m_dialog = GUI::MessageBox::construct(window(), message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK);
+    m_dialog = GUI::MessageBox::create(window(), message, "Alert"sv, GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::OK).release_value_but_fixme_should_propagate_errors();
     m_dialog->set_icon(window()->icon());
     m_dialog->exec();
 
@@ -362,7 +362,7 @@ void OutOfProcessWebView::notify_server_did_request_alert(Badge<WebContentClient
 
 void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClient>, String const& message)
 {
-    m_dialog = GUI::MessageBox::construct(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
+    m_dialog = GUI::MessageBox::create(window(), message, "Confirm"sv, GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel).release_value_but_fixme_should_propagate_errors();
     m_dialog->set_icon(window()->icon());
 
     client().async_confirm_closed(m_dialog->exec() == GUI::Dialog::ExecResult::OK);

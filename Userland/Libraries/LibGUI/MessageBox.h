@@ -13,7 +13,7 @@
 namespace GUI {
 
 class MessageBox : public Dialog {
-    C_OBJECT(MessageBox)
+    C_OBJECT_ABSTRACT(MessageBox)
 public:
     enum class Type {
         None,
@@ -36,19 +36,25 @@ public:
     static ExecResult show_error(Window* parent_window, StringView text);
     static ExecResult ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
 
-    void set_text(DeprecatedString text);
+    static ErrorOr<ExecResult> try_show(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
+    static ErrorOr<ExecResult> try_show_error(Window* parent_window, StringView text);
+    static ErrorOr<ExecResult> try_ask_about_unsaved_changes(Window* parent_window, StringView path, Optional<Time> last_unmodified_timestamp = {});
+
+    static ErrorOr<NonnullRefPtr<MessageBox>> create(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
+
+    void set_text(String);
 
 private:
-    explicit MessageBox(Window* parent_window, StringView text, StringView title, Type type = Type::None, InputType input_type = InputType::OK);
+    MessageBox(Window* parent_window, Type type = Type::None, InputType input_type = InputType::OK);
 
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;
     bool should_include_yes_button() const;
     bool should_include_no_button() const;
-    void build();
-    RefPtr<Gfx::Bitmap> icon() const;
 
-    DeprecatedString m_text;
+    ErrorOr<void> build();
+    ErrorOr<RefPtr<Gfx::Bitmap>> icon() const;
+
     Type m_type { Type::None };
     InputType m_input_type { InputType::OK };
 
@@ -56,6 +62,7 @@ private:
     RefPtr<GUI::Button> m_yes_button;
     RefPtr<GUI::Button> m_no_button;
     RefPtr<GUI::Button> m_cancel_button;
+    RefPtr<Label> m_text_label;
 };
 
 }
