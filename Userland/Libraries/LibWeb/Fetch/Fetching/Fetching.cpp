@@ -923,7 +923,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
             return;
         }
 
-        JS::GCPtr<PendingResponse> inner_pending_response;
+        Optional<JS::NonnullGCPtr<PendingResponse>> inner_pending_response;
 
         // 7. If actualResponse’s status is a redirect status, then:
         if (Infrastructure::is_redirect_status(actual_response->status())) {
@@ -963,8 +963,8 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
             }
         }
 
-        if (inner_pending_response) {
-            inner_pending_response->when_loaded([returned_pending_response](JS::NonnullGCPtr<Infrastructure::Response> response) {
+        if (inner_pending_response.has_value()) {
+            inner_pending_response.value()->when_loaded([returned_pending_response](JS::NonnullGCPtr<Infrastructure::Response> response) {
                 dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'HTTP fetch' inner_pending_response load callback");
                 returned_pending_response->resolve(response);
             });
@@ -979,7 +979,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_fetch(JS::Realm& rea
 }
 
 // https://fetch.spec.whatwg.org/#concept-http-redirect-fetch
-WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response& response)
+WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> http_redirect_fetch(JS::Realm& realm, Infrastructure::FetchParams const& fetch_params, Infrastructure::Response& response)
 {
     dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'HTTP-redirect fetch' with: fetch_params @ {}, response = {}", &fetch_params, &response);
 
@@ -1108,8 +1108,20 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<PendingResponse>> http_redirect_fetch(JS::R
 
     // FIXME: 19. Invoke set request’s referrer policy on redirect on request and actualResponse.
 
-    // 20. Return the result of running main fetch given fetchParams and true.
-    return TRY(main_fetch(realm, fetch_params, Recursive::Yes)).release_value();
+    // 20. Let recursive be true.
+    auto recursive = Recursive::Yes;
+
+    // 21. If request’s redirect mode is "manual", then:
+    if (request->redirect_mode() == Infrastructure::Request::RedirectMode::Manual) {
+        // 1. Assert: request’s mode is "navigate".
+        VERIFY(request->mode() == Infrastructure::Request::Mode::Navigate);
+
+        // 2. Set recursive to false.
+        recursive = Recursive::No;
+    }
+
+    // 22. Return the result of running main fetch given fetchParams and recursive.
+    return main_fetch(realm, fetch_params, recursive);
 }
 
 // https://fetch.spec.whatwg.org/#concept-http-network-or-cache-fetch
