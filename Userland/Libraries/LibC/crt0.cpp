@@ -25,7 +25,7 @@ void _start(int, char**, char**) __attribute__((used));
 
 NAKED void _start(int, char**, char**)
 {
-#    ifdef AK_ARCH_AARCH64
+#    if ARCH(AARCH64)
     asm(
         "bl _entry\n");
 #    else

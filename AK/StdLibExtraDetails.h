@@ -274,7 +274,7 @@ template<>
 struct __MakeUnsigned<bool> {
     using Type = bool;
 };
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
 template<>
 struct __MakeUnsigned<wchar_t> {
     using Type = wchar_t;
@@ -332,7 +332,7 @@ template<>
 struct __MakeSigned<char> {
     using Type = char;
 };
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
 template<>
 struct __MakeSigned<wchar_t> {
     using Type = void;

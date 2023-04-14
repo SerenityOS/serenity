@@ -684,7 +684,7 @@ void ELF::DynamicLinker::linker_main(DeprecatedString&& main_program_path, int m
 
     dbgln_if(DYNAMIC_LOAD_DEBUG, "Jumping to entry point: {:p}", entry_point_function);
     if (s_do_breakpoint_trap_before_entry) {
-#ifdef AK_ARCH_AARCH64
+#if ARCH(AARCH64)
         asm("brk #0");
 #else
         asm("int3");
