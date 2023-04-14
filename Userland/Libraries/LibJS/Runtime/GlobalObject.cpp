@@ -214,30 +214,55 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
     return js_undefined();
 }
 
-// 19.2.3 isNaN ( number ), https://tc39.es/ecma262/#sec-isnan-number
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
+// 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 {
-    return Value(TRY(vm.argument(0).to_number(vm)).is_nan());
+    auto x = vm.argument(0);
+
+    // 1. Return ? PerformEval(x, false, false).
+    return perform_eval(vm, x, CallerMode::NonStrict, EvalMode::Indirect);
 }
 
 // 19.2.2 isFinite ( number ), https://tc39.es/ecma262/#sec-isfinite-number
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_finite)
 {
-    return Value(TRY(vm.argument(0).to_number(vm)).is_finite_number());
+    auto number = vm.argument(0);
+
+    // 1. Let num be ? ToNumber(number).
+    auto num = TRY(number.to_number(vm));
+
+    // 2. If num is not finite, return false.
+    // 3. Otherwise, return true.
+    return Value(num.is_finite_number());
+}
+
+// 19.2.3 isNaN ( number ), https://tc39.es/ecma262/#sec-isnan-number
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::is_nan)
+{
+    auto number = vm.argument(0);
+
+    // 1. Let num be ? ToNumber(number).
+    auto num = TRY(number.to_number(vm));
+
+    // 2. If num is NaN, return true.
+    // 3. Otherwise, return false.
+    return Value(num.is_nan());
 }
 
 // 19.2.4 parseFloat ( string ), https://tc39.es/ecma262/#sec-parsefloat-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
+    auto string = vm.argument(0);
+
     // OPTIMIZATION: We can skip the number-to-string-to-number round trip when the value is already a number.
-    if (vm.argument(0).is_number())
-        return vm.argument(0);
+    if (string.is_number())
+        return string;
 
     // 1. Let inputString be ? ToString(string).
-    auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto input_string = TRY(string.to_string(vm));
 
     // 2. Let trimmedString be ! TrimString(inputString, start).
-    auto trimmed_string = MUST_OR_THROW_OOM(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+    auto trimmed_string = MUST_OR_THROW_OOM(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
     if (trimmed_string.is_empty())
         return js_nan();
 
@@ -269,23 +294,25 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 // 19.2.5 parseInt ( string, radix ), https://tc39.es/ecma262/#sec-parseint-string-radix
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 {
+    auto string = vm.argument(0);
+
     // 1. Let inputString be ? ToString(string).
-    auto input_string = TRY(vm.argument(0).to_deprecated_string(vm));
+    auto input_string = TRY(string.to_string(vm));
 
     // 2. Let S be ! TrimString(inputString, start).
     // NOTE: We TRY this operation only to propagate OOM errors.
-    auto string = TRY(trim_string(vm, PrimitiveString::create(vm, input_string), TrimMode::Left));
+    auto trimmed_string = TRY(trim_string(vm, PrimitiveString::create(vm, move(input_string)), TrimMode::Left));
 
     // 3. Let sign be 1.
     auto sign = 1;
 
     // 4. If S is not empty and the first code unit of S is the code unit 0x002D (HYPHEN-MINUS), set sign to -1.
-    auto first_code_point = string.is_empty() ? OptionalNone {} : Optional<u32> { *string.code_points().begin() };
+    auto first_code_point = trimmed_string.is_empty() ? OptionalNone {} : Optional<u32> { *trimmed_string.code_points().begin() };
     if (first_code_point == 0x2Du)
         sign = -1;
 
     // 5. If S is not empty and the first code unit of S is the code unit 0x002B (PLUS SIGN) or the code unit 0x002D (HYPHEN-MINUS), remove the first code unit from S.
-    auto trimmed_view = string.bytes_as_string_view();
+    auto trimmed_view = trimmed_string.bytes_as_string_view();
     if (first_code_point == 0x2Bu || first_code_point == 0x2Du)
         trimmed_view = trimmed_view.substring_view(1);
 
@@ -357,13 +384,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     return Value(sign * number);
 }
 
-// 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
-{
-    return perform_eval(vm, vm.argument(0), CallerMode::NonStrict, EvalMode::Indirect);
-}
-
-// 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode
+// 19.2.6.5 Encode ( string, extraUnescaped ), https://tc39.es/ecma262/#sec-encode
 static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const& string, StringView unescaped_set)
 {
     auto utf16_string = TRY(Utf16String::create(vm, string));
@@ -374,9 +395,14 @@ static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const
     // 2. Let R be the empty String.
     StringBuilder encoded_builder;
 
-    // 3. Let k be 0.
+    // 3. Let alwaysUnescaped be the string-concatenation of the ASCII word characters and "-.!~*'()".
+    // 4. Let unescapedSet be the string-concatenation of alwaysUnescaped and extraUnescaped.
+    // OPTIMIZATION: We pass in the entire unescapedSet as a StringView to avoid an extra allocation.
+
+    // 5. Let k be 0.
     auto k = 0u;
-    // 4. Repeat,
+
+    // 6. Repeat,
     while (k < string_length) {
         // a. If k = strLen, return R.
         // Handled below
@@ -406,10 +432,8 @@ static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const
             // iv. Let Octets be the List of octets resulting by applying the UTF-8 transformation to cp.[[CodePoint]].
             // v. For each element octet of Octets, do
             auto nwritten = AK::UnicodeUtils::code_point_to_utf8(code_point.code_point, [&encoded_builder](u8 octet) {
-                // 1. Set R to the string-concatenation of:
-                //  * R
-                //  * "%"
-                //  * the String representation of octet, formatted as a two-digit uppercase hexadecimal number, padded to the left with a zero if necessary
+                // 1. Let hex be the String representation of octet, formatted as an uppercase hexadecimal number.
+                // 2. Set R to the string-concatenation of R, "%", and ! StringPad(hex, 2𝔽, "0", start).
                 encoded_builder.appendff("%{:02X}", octet);
             });
             VERIFY(nwritten > 0);
@@ -418,7 +442,8 @@ static ThrowCompletionOr<DeprecatedString> encode(VM& vm, DeprecatedString const
     return encoded_builder.to_deprecated_string();
 }
 
-// 19.2.6.1.2 Decode ( string, reservedSet ), https://tc39.es/ecma262/#sec-decode
+// 19.2.6.6 Decode ( string, preserveEscapeSet ), https://tc39.es/ecma262/#sec-decode
+// FIXME: Add spec comments to this implementation. It deviates a lot, so that's a bit tricky.
 static ThrowCompletionOr<DeprecatedString> decode(VM& vm, DeprecatedString const& string, StringView reserved_set)
 {
     StringBuilder decoded_builder;
@@ -476,75 +501,161 @@ static ThrowCompletionOr<DeprecatedString> decode(VM& vm, DeprecatedString const
     return decoded_builder.to_deprecated_string();
 }
 
-// 19.2.6.4 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
-{
-    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto encoded = TRY(encode(vm, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv));
-    return PrimitiveString::create(vm, move(encoded));
-}
-
-// 19.2.6.2 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
+// 19.2.6.1 decodeURI ( encodedURI ), https://tc39.es/ecma262/#sec-decodeuri-encodeduri
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri)
 {
+    // 1. Let uriString be ? ToString(encodedURI).
     auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
+
+    // 2. Let preserveEscapeSet be ";/?:@&=+$,#".
+    // 3. Return ? Decode(uriString, preserveEscapeSet).
     auto decoded = TRY(decode(vm, uri_string, ";/?:@&=+$,#"sv));
     return PrimitiveString::create(vm, move(decoded));
 }
 
-// 19.2.6.5 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
+// 19.2.6.2 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
 {
-    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto encoded = TRY(encode(vm, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv));
+    auto encoded_uri_component = vm.argument(0);
+
+    // 1. Let componentString be ? ToString(encodedURIComponent).
+    auto uri_string = TRY(encoded_uri_component.to_deprecated_string(vm));
+
+    // 2. Let preserveEscapeSet be the empty String.
+    // 3. Return ? Decode(componentString, preserveEscapeSet).
+    auto decoded = TRY(decode(vm, uri_string, ""sv));
+    return PrimitiveString::create(vm, move(decoded));
+}
+
+// 19.2.6.3 encodeURI ( uri ), https://tc39.es/ecma262/#sec-encodeuri-uri
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri)
+{
+    auto uri = vm.argument(0);
+
+    // 1. Let uriString be ? ToString(uri).
+    auto uri_string = TRY(uri.to_deprecated_string(vm));
+
+    // 2. Let extraUnescaped be ";/?:@&=+$,#".
+    // 3. Return ? Encode(uriString, extraUnescaped).
+    auto encoded = TRY(encode(vm, uri_string, ";/?:@&=+$,abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()#"sv));
     return PrimitiveString::create(vm, move(encoded));
 }
 
-// 19.2.6.3 decodeURIComponent ( encodedURIComponent ), https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent
-JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
+// 19.2.6.4 encodeURIComponent ( uriComponent ), https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::encode_uri_component)
 {
-    auto uri_string = TRY(vm.argument(0).to_deprecated_string(vm));
-    auto decoded = TRY(decode(vm, uri_string, ""sv));
-    return PrimitiveString::create(vm, move(decoded));
+    auto uri_component = vm.argument(0);
+
+    // 1. Let componentString be ? ToString(uriComponent).
+    auto uri_string = TRY(uri_component.to_deprecated_string(vm));
+
+    // 2. Let extraUnescaped be the empty String.
+    // 3. Return ? Encode(componentString, extraUnescaped).
+    auto encoded = TRY(encode(vm, uri_string, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()"sv));
+    return PrimitiveString::create(vm, move(encoded));
 }
 
 // B.2.1.1 escape ( string ), https://tc39.es/ecma262/#sec-escape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
 {
+    // 1. Set string to ? ToString(string).
     auto string = TRY(vm.argument(0).to_deprecated_string(vm));
+
+    // 3. Let R be the empty String.
     StringBuilder escaped;
+
+    // 4. Let unescapedSet be the string-concatenation of the ASCII word characters and "@*+-./".
+    auto unescaped_set = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv;
+
+    // 2. Let length be the length of string.
+    // 5. Let k be 0.
+    // 6. Repeat, while k < length,
     for (auto code_point : TRY_OR_THROW_OOM(vm, utf8_to_utf16(string))) {
-        if (code_point < 256) {
-            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(static_cast<char>(code_point)))
-                escaped.append(code_point);
-            else
-                escaped.appendff("%{:02X}", code_point);
-            continue;
+        // a. Let char be the code unit at index k within string.
+
+        // b. If unescapedSet contains char, then
+        // NOTE: We know unescapedSet is ASCII-only, so ensure we have an ASCII codepoint before casting to char.
+        if (is_ascii(code_point) && unescaped_set.contains(static_cast<char>(code_point))) {
+            // i. Let S be the String value containing the single code unit char.
+            escaped.append(code_point);
         }
-        escaped.appendff("%u{:04X}", code_point);
+        // c. Else,
+        // i. Let n be the numeric value of char.
+        // ii. If n < 256, then
+        else if (code_point < 256) {
+            // 1. Let hex be the String representation of n, formatted as an uppercase hexadecimal number.
+            // 2. Let S be the string-concatenation of "%" and ! StringPad(hex, 2𝔽, "0", start).
+            escaped.appendff("%{:02X}", code_point);
+        }
+        // iii. Else,
+        else {
+            // 1. Let hex be the String representation of n, formatted as an uppercase hexadecimal number.
+            // 2. Let S be the string-concatenation of "%u" and ! StringPad(hex, 4𝔽, "0", start).
+            escaped.appendff("%u{:04X}", code_point);
+        }
+
+        // d. Set R to the string-concatenation of R and S.
+        // e. Set k to k + 1.
     }
+
+    // 7. Return R.
     return PrimitiveString::create(vm, escaped.to_deprecated_string());
 }
 
 // B.2.1.2 unescape ( string ), https://tc39.es/ecma262/#sec-unescape-string
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
 {
+    // 1. Set string to ? ToString(string).
     auto string = TRY(vm.argument(0).to_deprecated_string(vm));
+
+    // 2. Let length be the length of string.
     ssize_t length = string.length();
+
+    // 3. Let R be the empty String.
     StringBuilder unescaped(length);
+
+    // 4. Let k be 0.
+    // 5. Repeat, while k ≠ length,
     for (auto k = 0; k < length; ++k) {
+        // a. Let c be the code unit at index k within string.
         u32 code_point = string[k];
+
+        // b. If c is the code unit 0x0025 (PERCENT SIGN), then
         if (code_point == '%') {
+            // i. Let hexEscape be the empty String.
+            // ii. Let skip be 0.
+            // iii. If k ≤ length - 6 and the code unit at index k + 1 within string is the code unit 0x0075 (LATIN SMALL LETTER U), then
             if (k <= length - 6 && string[k + 1] == 'u' && is_ascii_hex_digit(string[k + 2]) && is_ascii_hex_digit(string[k + 3]) && is_ascii_hex_digit(string[k + 4]) && is_ascii_hex_digit(string[k + 5])) {
+                // 1. Set hexEscape to the substring of string from k + 2 to k + 6.
                 code_point = (parse_ascii_hex_digit(string[k + 2]) << 12) | (parse_ascii_hex_digit(string[k + 3]) << 8) | (parse_ascii_hex_digit(string[k + 4]) << 4) | parse_ascii_hex_digit(string[k + 5]);
+
+                // 2. Set skip to 5.
                 k += 5;
-            } else if (k <= length - 3 && is_ascii_hex_digit(string[k + 1]) && is_ascii_hex_digit(string[k + 2])) {
+            }
+            // iv. Else if k ≤ length - 3, then
+            else if (k <= length - 3 && is_ascii_hex_digit(string[k + 1]) && is_ascii_hex_digit(string[k + 2])) {
+                // 1. Set hexEscape to the substring of string from k + 1 to k + 3.
                 code_point = (parse_ascii_hex_digit(string[k + 1]) << 4) | parse_ascii_hex_digit(string[k + 2]);
+
+                // 2. Set skip to 2.
                 k += 2;
             }
+
+            // v. If hexEscape can be interpreted as an expansion of HexDigits[~Sep], then
+            //    1. Let hexIntegerLiteral be the string-concatenation of "0x" and hexEscape.
+            //    2. Let n be ! ToNumber(hexIntegerLiteral).
+            //    3. Set c to the code unit whose value is ℝ(n).
+            //    4. Set k to k + skip.
+            // NOTE: All of this is already done in the branches above.
         }
+
+        // c. Set R to the string-concatenation of R and c.
         unescaped.append_code_point(code_point);
+
+        // d. Set k to k + 1.
     }
+
+    // 6. Return R.
     return PrimitiveString::create(vm, unescaped.to_deprecated_string());
 }
 
