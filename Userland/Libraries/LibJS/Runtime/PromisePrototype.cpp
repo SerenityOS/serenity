@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@
 namespace JS {
 
 PromisePrototype::PromisePrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -32,7 +32,7 @@ ThrowCompletionOr<void> PromisePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.finally, finally, 1, attr);
 
     // 27.2.5.5 Promise.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-promise.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Promise.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.Promise.as_string()), Attribute::Configurable);
 
     return {};
 }
@@ -50,7 +50,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     auto promise = TRY(typed_this_object(vm));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, *promise, *realm.intrinsics().promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *promise, realm.intrinsics().promise_constructor()));
 
     // 4. Let resultCapability be ? NewPromiseCapability(C).
     auto result_capability = TRY(new_promise_capability(vm, constructor));
@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
         return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, promise.to_string_without_side_effects()));
 
     // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-    auto* constructor = TRY(species_constructor(vm, promise.as_object(), *realm.intrinsics().promise_constructor()));
+    auto* constructor = TRY(species_constructor(vm, promise.as_object(), realm.intrinsics().promise_constructor()));
 
     // 4. Assert: IsConstructor(C) is true.
     VERIFY(constructor);

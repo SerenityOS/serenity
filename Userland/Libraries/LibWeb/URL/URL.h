@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
+ * Copyright (c) 2023, networkException <networkexception@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,6 +23,8 @@ public:
     static WebIDL::ExceptionOr<JS::NonnullGCPtr<URL>> construct_impl(JS::Realm&, String const& url, Optional<String> const& base = {});
 
     virtual ~URL() override;
+
+    static bool can_parse(JS::VM&, String const& url, Optional<String> const& base = {});
 
     WebIDL::ExceptionOr<String> href() const;
     WebIDL::ExceptionOr<void> set_href(String const&);
@@ -52,14 +55,14 @@ public:
     WebIDL::ExceptionOr<String> search() const;
     WebIDL::ExceptionOr<void> set_search(String const&);
 
-    URLSearchParams const* search_params() const;
+    JS::NonnullGCPtr<URLSearchParams const> search_params() const;
 
     WebIDL::ExceptionOr<String> hash() const;
     void set_hash(String const&);
 
     WebIDL::ExceptionOr<String> to_json() const;
 
-    void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(query.to_deprecated_string()); }
+    void set_query(Badge<URLSearchParams>, String query) { m_url.set_query(query.to_deprecated_string(), AK::URL::ApplyPercentEncoding::Yes); }
 
 private:
     URL(JS::Realm&, AK::URL, JS::NonnullGCPtr<URLSearchParams> query);

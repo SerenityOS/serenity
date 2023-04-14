@@ -130,12 +130,12 @@ ThrowCompletionOr<DeprecatedString> parse_regex_pattern(VM& vm, StringView patte
 
 NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm)
 {
-    return realm.heap().allocate<RegExpObject>(realm, *realm.intrinsics().regexp_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<RegExpObject>(realm, realm.intrinsics().regexp_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 NonnullGCPtr<RegExpObject> RegExpObject::create(Realm& realm, Regex<ECMA262> regex, DeprecatedString pattern, DeprecatedString flags)
 {
-    return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), *realm.intrinsics().regexp_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
+    return realm.heap().allocate<RegExpObject>(realm, move(regex), move(pattern), move(flags), realm.intrinsics().regexp_prototype()).release_allocated_value_but_fixme_should_propagate_errors();
 }
 
 RegExpObject::RegExpObject(Object& prototype)
@@ -297,7 +297,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_create(VM& vm, Value patter
     auto& realm = *vm.current_realm();
 
     // 1. Let obj be ! RegExpAlloc(%RegExp%).
-    auto regexp_object = MUST(regexp_alloc(vm, *realm.intrinsics().regexp_constructor()));
+    auto regexp_object = MUST(regexp_alloc(vm, realm.intrinsics().regexp_constructor()));
 
     // 2. Return ? RegExpInitialize(obj, P, F).
     return TRY(regexp_object->regexp_initialize(vm, pattern, flags));
@@ -317,8 +317,7 @@ ThrowCompletionOr<NonnullGCPtr<RegExpObject>> regexp_alloc(VM& vm, FunctionObjec
     regexp_object->set_realm(this_realm);
 
     // 4. If SameValue(newTarget, thisRealm.[[Intrinsics]].[[%RegExp%]]) is true, then
-    auto* regexp_constructor = this_realm.intrinsics().regexp_constructor();
-    if (same_value(&new_target, regexp_constructor)) {
+    if (same_value(&new_target, this_realm.intrinsics().regexp_constructor())) {
         // i. Set the value of obj’s [[LegacyFeaturesEnabled]] internal slot to true.
         regexp_object->set_legacy_features_enabled(true);
     }

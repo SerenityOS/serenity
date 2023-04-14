@@ -184,6 +184,26 @@ static bool build_xml_document(DOM::Document& document, ByteBuffer const& data)
     return !result.is_error() && !builder.has_error();
 }
 
+static bool build_video_document(DOM::Document& document)
+{
+    auto html_element = DOM::create_element(document, HTML::TagNames::html, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(document.append_child(html_element));
+
+    auto head_element = DOM::create_element(document, HTML::TagNames::head, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(html_element->append_child(head_element));
+
+    auto body_element = DOM::create_element(document, HTML::TagNames::body, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(html_element->append_child(body_element));
+
+    auto video_element = DOM::create_element(document, HTML::TagNames::video, Namespace::HTML).release_value_but_fixme_should_propagate_errors();
+    MUST(video_element->set_attribute(HTML::AttributeNames::src, document.url().to_deprecated_string()));
+    MUST(video_element->set_attribute(HTML::AttributeNames::autoplay, DeprecatedString::empty()));
+    MUST(video_element->set_attribute(HTML::AttributeNames::controls, DeprecatedString::empty()));
+    MUST(body_element->append_child(video_element));
+
+    return true;
+}
+
 bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data)
 {
     auto& mime_type = document.content_type();
@@ -196,6 +216,8 @@ bool FrameLoader::parse_document(DOM::Document& document, ByteBuffer const& data
         return build_xml_document(document, data);
     if (mime_type.starts_with("image/"sv))
         return build_image_document(document, data);
+    if (mime_type.starts_with("video/"sv))
+        return build_video_document(document);
     if (mime_type == "text/plain" || mime_type == "application/json")
         return build_text_document(document, data);
     if (mime_type == "text/markdown")

@@ -162,6 +162,8 @@ static ErrorOr<void> decode_webp_header(WebPLoadingContext& context)
     //  Readers MAY parse such files, ignoring the trailing data."
     if (context.data.size() - 8 < header.file_size)
         return context.error("WebP data too small for size in header");
+    if (header.file_size < 4) // Need at least 4 bytes for 'WEBP', else we'll trim to less than the header size below.
+        return context.error("WebP stored file size too small for header it's stored in");
     if (context.data.size() - 8 > header.file_size) {
         dbgln_if(WEBP_DEBUG, "WebP has {} bytes of data, but header needs only {}. Trimming.", context.data.size(), header.file_size + 8);
         context.data = context.data.trim(header.file_size + 8);
@@ -1231,7 +1233,7 @@ static ErrorOr<void> decode_webp_chunk_VP8L(WebPLoadingContext& context, Chunk c
         TransformType transform_type = static_cast<TransformType>(TRY(bit_stream.read_bits(2)));
         dbgln_if(WEBP_DEBUG, "transform type {}", (int)transform_type);
 
-        // Check that each transfom is used only once.
+        // Check that each transform is used only once.
         u8 mask = 1 << (int)transform_type;
         if (seen_transforms & mask)
             return context.error("WebPImageDecoderPlugin: transform type used multiple times");

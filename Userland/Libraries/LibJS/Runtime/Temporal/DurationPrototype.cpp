@@ -16,7 +16,7 @@ namespace JS::Temporal {
 
 // 7.3 Properties of the Temporal.Duration Prototype Object, https://tc39.es/proposal-temporal/#sec-properties-of-the-temporal-duration-prototype-object
 DurationPrototype::DurationPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -27,7 +27,7 @@ ThrowCompletionOr<void> DurationPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 7.3.2 Temporal.Duration.prototype[ @@toStringTag ], https://tc39.es/proposal-temporal/#sec-temporal.duration.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.Duration"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Temporal.Duration"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.years, years_getter, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.months, months_getter, {}, Attribute::Configurable);

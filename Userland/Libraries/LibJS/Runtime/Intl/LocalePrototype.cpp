@@ -15,7 +15,7 @@ namespace JS::Intl {
 
 // 14.3 Properties of the Intl.Locale Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-locale-prototype-object
 LocalePrototype::LocalePrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -31,7 +31,7 @@ ThrowCompletionOr<void> LocalePrototype::initialize(Realm& realm)
     define_native_function(realm, vm.names.toString, to_string, 0, attr);
 
     // 14.3.2 Intl.Locale.prototype[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl.Locale.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Locale"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.Locale"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.baseName, base_name, {}, Attribute::Configurable);
     define_native_accessor(realm, vm.names.calendar, calendar, {}, Attribute::Configurable);

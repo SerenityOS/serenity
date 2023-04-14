@@ -1,0 +1,12 @@
+#import <Streams/ReadableStreamBYOBRequest.idl>
+
+[Exposed=*]
+interface ReadableByteStreamController {
+    readonly attribute ReadableStreamBYOBRequest? byobRequest;
+    readonly attribute unrestricted double? desiredSize;
+
+    // FIXME: Implement
+    // undefined close();
+    // undefined enqueue(ArrayBufferView chunk);
+    // undefined error(optional any e);
+};

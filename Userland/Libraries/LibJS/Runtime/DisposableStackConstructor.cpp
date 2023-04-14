@@ -11,7 +11,7 @@
 namespace JS {
 
 DisposableStackConstructor::DisposableStackConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.DisposableStack.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.DisposableStack.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

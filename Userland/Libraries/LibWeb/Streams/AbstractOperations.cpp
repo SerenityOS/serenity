@@ -10,6 +10,7 @@
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/DOM/AbortSignal.h>
 #include <LibWeb/Streams/AbstractOperations.h>
+#include <LibWeb/Streams/ReadableByteStreamController.h>
 #include <LibWeb/Streams/ReadableStream.h>
 #include <LibWeb/Streams/ReadableStreamDefaultController.h>
 #include <LibWeb/Streams/ReadableStreamDefaultReader.h>
@@ -301,14 +302,16 @@ WebIDL::ExceptionOr<void> readable_stream_reader_generic_release(ReadableStreamG
     // 3. Assert: stream.[[reader]] is reader.
     VERIFY(stream->reader().ptr() == &reader);
 
+    auto& realm = stream->realm();
+
     // 4. If stream.[[state]] is "readable", reject reader.[[closedPromise]] with a TypeError exception.
-    auto exception = TRY(JS::TypeError::create(stream->realm(), "Released readable stream"sv));
+    auto exception = TRY(JS::TypeError::create(realm, "Released readable stream"sv));
     if (stream->is_readable()) {
-        WebIDL::reject_promise(stream->realm(), *reader.closed_promise_capability(), exception);
+        WebIDL::reject_promise(realm, *reader.closed_promise_capability(), exception);
     }
     // 5. Otherwise, set reader.[[closedPromise]] to a promise rejected with a TypeError exception.
     else {
-        reader.set_closed_promise_capability(WebIDL::create_rejected_promise(stream->realm(), exception));
+        reader.set_closed_promise_capability(WebIDL::create_rejected_promise(realm, exception));
     }
 
     // 6. Set reader.[[closedPromise]].[[PromiseIsHandled]] to true.
@@ -373,11 +376,13 @@ void readable_stream_default_reader_read(ReadableStreamDefaultReader& reader, Re
 // https://streams.spec.whatwg.org/#abstract-opdef-readablestreamdefaultreaderrelease
 WebIDL::ExceptionOr<void> readable_stream_default_reader_release(ReadableStreamDefaultReader& reader)
 {
+    auto& realm = reader.realm();
+
     // 1. Perform ! ReadableStreamReaderGenericRelease(reader).
     TRY(readable_stream_reader_generic_release(reader));
 
     // 2. Let e be a new TypeError exception.
-    auto e = TRY(JS::TypeError::create(reader.realm(), "Reader has been released"sv));
+    auto e = TRY(JS::TypeError::create(realm, "Reader has been released"sv));
 
     // 3. Perform ! ReadableStreamDefaultReaderErrorReadRequests(reader, e).
     readable_stream_default_reader_error_read_requests(reader, e);
@@ -737,6 +742,24 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 8. Perform ? SetUpReadableStreamDefaultController(stream, controller, startAlgorithm, pullAlgorithm, cancelAlgorithm, highWaterMark, sizeAlgorithm).
     return set_up_readable_stream_default_controller(stream, controller, move(start_algorithm), move(pull_algorithm), move(cancel_algorithm), high_water_mark, move(size_algorithm));
+}
+
+// https://streams.spec.whatwg.org/#readable-byte-stream-controller-get-desired-size
+Optional<double> readable_byte_stream_controller_get_desired_size(ReadableByteStreamController const& controller)
+{
+    auto stream = controller.stream();
+
+    // 1. Let state be controller.[[stream]].[[state]].
+    // 2. If state is "errored", return null.
+    if (stream->is_errored())
+        return {};
+
+    // 3. If state is "closed", return 0.
+    if (stream->is_closed())
+        return 0.0;
+
+    // 4. Return controller.[[strategyHWM]] − controller.[[queueTotalSize]].
+    return controller.strategy_hwm() - controller.queue_total_size();
 }
 
 // https://streams.spec.whatwg.org/#acquire-writable-stream-default-writer
@@ -1418,6 +1441,8 @@ Optional<double> writable_stream_default_writer_get_desired_size(WritableStreamD
 // https://streams.spec.whatwg.org/#writable-stream-default-writer-release
 WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamDefaultWriter& writer)
 {
+    auto& realm = writer.realm();
+
     // 1. Let stream be writer.[[stream]].
     auto stream = writer.stream();
 
@@ -1428,7 +1453,7 @@ WebIDL::ExceptionOr<void> writable_stream_default_writer_release(WritableStreamD
     VERIFY(stream->writer().ptr() == &writer);
 
     // 4. Let releasedError be a new TypeError.
-    auto released_error = MUST_OR_THROW_OOM(JS::TypeError::create(writer.realm(), "Writer's stream lock has been released"sv));
+    auto released_error = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "Writer's stream lock has been released"sv));
 
     // 5. Perform ! WritableStreamDefaultWriterEnsureReadyPromiseRejected(writer, releasedError).
     writable_stream_default_writer_ensure_ready_promise_rejected(writer, released_error);

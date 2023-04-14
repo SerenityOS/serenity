@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ namespace JS {
 static const Crypto::SignedBigInteger BIGINT_ONE { 1 };
 
 BigIntConstructor::BigIntConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.BigInt.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.BigInt.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

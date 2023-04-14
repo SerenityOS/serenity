@@ -17,6 +17,7 @@
 #include <AK/Debug.h>
 #include <AK/Memory.h>
 #include <AK/ScopeGuard.h>
+#include <AK/TemporaryChange.h>
 #include <LibCore/Timer.h>
 #include <LibGfx/AntiAliasingPainter.h>
 #include <LibGfx/Font/Font.h>
@@ -999,19 +1000,23 @@ void Compositor::add_overlay(Overlay& overlay)
     if (!did_insert)
         m_overlay_list.append(overlay);
 
-    overlay.clear_invalidated();
+    overlay.invalidate();
     overlay_rects_changed();
-    auto& rect = overlay.rect();
-    if (!rect.is_empty())
-        invalidate_screen(rect);
 }
 
 void Compositor::remove_overlay(Overlay& overlay)
 {
-    auto& current_render_rect = overlay.current_render_rect();
-    if (!current_render_rect.is_empty())
-        invalidate_screen(current_render_rect);
     m_overlay_list.remove(overlay);
+
+    auto last_rendered_rect = overlay.current_render_rect();
+    if (!last_rendered_rect.is_empty()) {
+        // We need to invalidate the entire area. While recomputing occlusions
+        // will detect areas no longer occupied by overlays, if there are other
+        // overlays intersecting with the overlay that was removed, then that
+        // area would not get re-rendered.
+        invalidate_screen(last_rendered_rect);
+    }
+
     overlay_rects_changed();
 }
 
@@ -1132,8 +1137,6 @@ void Compositor::overlay_rects_changed()
     m_overlay_rects_changed = true;
     m_invalidated_any = true;
     invalidate_occlusions();
-    for (auto& rect : m_overlay_rects.rects())
-        invalidate_screen(rect);
     start_compose_async_timer();
 }
 
@@ -1143,13 +1146,19 @@ void Compositor::recompute_overlay_rects()
     // regular window contents. This effectively just forces those areas to
     // be rendered as transparency areas, which allows us to render these
     // flicker-free.
+    swap(m_last_rendered_overlay_rects, m_overlay_rects);
     m_overlay_rects.clear_with_capacity();
     for (auto& overlay : m_overlay_list) {
         auto& render_rect = overlay.rect();
         m_overlay_rects.add(render_rect);
 
+        // Invalidate areas that are no longer in the rendered area because the overlay was moved.
+        auto previous_rects = overlay.current_render_rect().shatter(render_rect);
+        for (auto& rect : previous_rects)
+            invalidate_screen(rect);
+
         // Save the rectangle we are using for rendering from now on
-        overlay.did_recompute_occlusions();
+        bool needs_invalidation = overlay.apply_render_rect();
 
         // Cache which screens this overlay are rendered on
         overlay.m_screens.clear_with_capacity();
@@ -1159,8 +1168,15 @@ void Compositor::recompute_overlay_rects()
             return IterationDecision::Continue;
         });
 
-        invalidate_screen(render_rect);
+        if (needs_invalidation)
+            invalidate_screen(render_rect);
     }
+
+    // Invalidate rects that are not going to get rendered anymore, e.g.
+    // because overlays were removed or rectangles were changed
+    auto no_longer_rendered_rects = m_last_rendered_overlay_rects.shatter(m_overlay_rects);
+    for (auto& rect : no_longer_rendered_rects.rects())
+        invalidate_screen(rect);
 }
 
 void Compositor::recompute_occlusions()
@@ -1527,43 +1543,45 @@ void Compositor::recompute_occlusions()
 
 void Compositor::register_animation(Badge<Animation>, Animation& animation)
 {
+    VERIFY(!m_animations_running);
     bool was_empty = m_animations.is_empty();
     auto result = m_animations.set(&animation);
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
-    if (was_empty)
+    if (was_empty) {
+        m_invalidated_any = true;
         start_compose_async_timer();
-}
-
-void Compositor::animation_started(Badge<Animation>)
-{
-    m_invalidated_any = true;
-    start_compose_async_timer();
+    }
 }
 
 void Compositor::unregister_animation(Badge<Animation>, Animation& animation)
 {
+    VERIFY(!m_animations_running);
     bool was_removed = m_animations.remove(&animation);
     VERIFY(was_removed);
 }
 
 void Compositor::update_animations(Screen& screen, Gfx::DisjointIntRectSet& flush_rects)
 {
+    Vector<NonnullRefPtr<Animation>, 16> finished_animations;
+    ScopeGuard call_stop_handlers([&] {
+        for (auto& animation : finished_animations)
+            animation->call_stop_handler({});
+    });
+
+    TemporaryChange animations_running(m_animations_running, true);
     auto& painter = *screen.compositor_screen_data().m_back_painter;
     // Iterating over the animations using remove_all_matching we can iterate
     // and immediately remove finished animations without having to keep track
     // of them in a separate container.
     m_animations.remove_all_matching([&](auto* animation) {
-        if (!animation->update({}, painter, screen, flush_rects)) {
+        VERIFY(animation->is_running());
+        if (!animation->update(painter, screen, flush_rects)) {
             // Mark it as removed so that the Animation::on_stop handler doesn't
             // trigger the Animation object from being destroyed, causing it to
             // unregister while we still loop over them.
             animation->was_removed({});
 
-            // Temporarily bump the ref count so that if the Animation::on_stop
-            // handler clears its own reference, it doesn't immediately destroy
-            // itself while we're still in the Function<> call
-            NonnullRefPtr<Animation> protect_animation(*animation);
-            animation->stop();
+            finished_animations.append(*animation);
             return true;
         }
         return false;

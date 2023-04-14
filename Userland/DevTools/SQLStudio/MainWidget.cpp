@@ -238,7 +238,7 @@ MainWidget::MainWidget()
     m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
     m_statusbar->set_text(1, "Disconnected"sv);
     m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    m_statusbar->segment(2).set_fixed_width(font().width("Ln 0000, Col 000"sv) + font().max_glyph_width());
+    m_statusbar->segment(2).set_fixed_width(font().width("Ln 0,000  Col 000"sv) + font().max_glyph_width());
 
     GUI::Application::the()->on_action_enter = [this](GUI::Action& action) {
         auto text = action.status_tip();
@@ -422,11 +422,11 @@ void MainWidget::update_statusbar(ScriptEditor* editor)
     if (editor->has_selection()) {
         auto character_count = editor->selected_text().length();
         auto word_count = editor->number_of_selected_words();
-        builder.appendff("Selected: {} {} ({} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+        builder.appendff("Selected: {:'d} {} ({:'d} {})", character_count, character_count == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
     m_statusbar->set_text(0, builder.to_deprecated_string());
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", editor->cursor().line() + 1, editor->cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", editor->cursor().line() + 1, editor->cursor().column()));
 }
 
 void MainWidget::update_editor_actions(ScriptEditor* editor)

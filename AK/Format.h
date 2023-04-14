@@ -191,6 +191,7 @@ public:
         bool prefix = false,
         bool upper_case = false,
         bool zero_pad = false,
+        bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
         char fill = ' ',
@@ -203,6 +204,7 @@ public:
         bool prefix = false,
         bool upper_case = false,
         bool zero_pad = false,
+        bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
         char fill = ' ',
@@ -216,6 +218,7 @@ public:
         u8 base = 10,
         bool upper_case = false,
         bool zero_pad = false,
+        bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
         size_t precision = 6,
@@ -228,6 +231,7 @@ public:
         long double value,
         u8 base = 10,
         bool upper_case = false,
+        bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
         size_t precision = 6,
@@ -240,6 +244,7 @@ public:
         u8 base = 10,
         bool upper_case = false,
         bool zero_pad = false,
+        bool use_separator = false,
         Align align = Align::Right,
         size_t min_width = 0,
         size_t precision = 6,
@@ -328,6 +333,7 @@ struct StandardFormatter {
     FormatBuilder::SignMode m_sign_mode = FormatBuilder::SignMode::OnlyIfNeeded;
     Mode m_mode = Mode::Default;
     bool m_alternative_form = false;
+    bool m_use_separator = false;
     char m_fill = ' ';
     bool m_zero_pad = false;
     Optional<size_t> m_width;

@@ -123,7 +123,11 @@ void InlineFormattingContext::dimension_box_on_line(Box const& box, LayoutMode l
     }
 
     // Any box that has simple flow inside should have generated line box fragments already.
-    VERIFY(!box.display().is_flow_inside());
+    if (box.display().is_flow_inside()) {
+        dbgln("FIXME: InlineFormattingContext::dimension_box_on_line got unexpected box in inline context:");
+        dump_tree(box);
+        return;
+    }
 
     auto const& width_value = box.computed_values().width();
     CSSPixels unconstrained_width = 0;

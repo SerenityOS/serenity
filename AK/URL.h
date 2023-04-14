@@ -19,8 +19,6 @@
 
 namespace AK {
 
-// NOTE: The member variables cannot contain any percent encoded sequences.
-//       The URL parser automatically decodes those sequences and the serialize() method will re-encode them as necessary.
 class URL {
     friend class URLParser;
 
@@ -70,16 +68,25 @@ public:
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
 
+    enum class ApplyPercentEncoding {
+        Yes,
+        No
+    };
     void set_scheme(DeprecatedString);
-    void set_username(DeprecatedString);
-    void set_password(DeprecatedString);
+    void set_username(DeprecatedString username, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void set_password(DeprecatedString password, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
     void set_host(DeprecatedString);
     void set_port(Optional<u16>);
-    void set_paths(Vector<DeprecatedString>);
-    void set_query(DeprecatedString);
-    void set_fragment(DeprecatedString);
+    void set_paths(Vector<DeprecatedString> password, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void set_query(DeprecatedString query, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void set_fragment(DeprecatedString fragment, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
     void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
-    void append_path(DeprecatedString path) { m_paths.append(move(path)); }
+    void append_path(DeprecatedString path, ApplyPercentEncoding apply_percent_encoding = ApplyPercentEncoding::Yes);
+    void append_slash()
+    {
+        // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
+        append_path("", ApplyPercentEncoding::No);
+    }
 
     DeprecatedString path() const;
     DeprecatedString basename() const;

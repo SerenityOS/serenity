@@ -11,7 +11,7 @@
 namespace JS {
 
 SuppressedErrorPrototype::SuppressedErrorPrototype(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().error_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().error_prototype())
 {
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,7 +28,7 @@ namespace JS::Intl {
 
 // 8 The Intl Object, https://tc39.es/ecma402/#intl-object
 Intl::Intl(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {
 }
 
@@ -39,7 +39,7 @@ ThrowCompletionOr<void> Intl::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 8.1.1 Intl[ @@toStringTag ], https://tc39.es/ecma402/#sec-Intl-toStringTag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl"sv)), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_intrinsic_accessor(vm.names.Collator, attr, [](auto& realm) -> Value { return realm.intrinsics().intl_collator_constructor(); });

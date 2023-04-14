@@ -11,7 +11,7 @@
 namespace JS {
 
 DataViewPrototype::DataViewPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -47,7 +47,7 @@ ThrowCompletionOr<void> DataViewPrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.byteOffset, byte_offset_getter, {}, Attribute::Configurable);
 
     // 25.3.4.25 DataView.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-dataview.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DataView.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.DataView.as_string()), Attribute::Configurable);
 
     return {};
 }

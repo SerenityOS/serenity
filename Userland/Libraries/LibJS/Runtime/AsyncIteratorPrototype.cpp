@@ -9,7 +9,7 @@
 namespace JS {
 
 AsyncIteratorPrototype::AsyncIteratorPrototype(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
 {
 }
 
@@ -18,7 +18,7 @@ ThrowCompletionOr<void> AsyncIteratorPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
     MUST_OR_THROW_OOM(Base::initialize(realm));
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(realm, *vm.well_known_symbol_async_iterator(), symbol_async_iterator, 0, attr);
+    define_native_function(realm, vm.well_known_symbol_async_iterator(), symbol_async_iterator, 0, attr);
 
     return {};
 }

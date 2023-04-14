@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Emanuele Torre <torreemanuele6@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -13,7 +13,7 @@
 namespace JS {
 
 ConsoleObject::ConsoleObject(Realm& realm)
-    : Object(ConstructWithPrototypeTag::Tag, *realm.intrinsics().object_prototype())
+    : Object(ConstructWithPrototypeTag::Tag, realm.intrinsics().object_prototype())
     , m_console(make<Console>(realm))
 {
 }

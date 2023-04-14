@@ -980,9 +980,9 @@ Messages::WindowServer::SetSystemFontsResponse ConnectionFromClient::set_system_
     return !g_config->sync().is_error();
 }
 
-void ConnectionFromClient::set_system_effects(Vector<bool> const& effects, u8 geometry)
+void ConnectionFromClient::set_system_effects(Vector<bool> const& effects, u8 geometry, u8 tile_window)
 {
-    WindowManager::the().apply_system_effects(effects, static_cast<ShowGeometry>(geometry));
+    WindowManager::the().apply_system_effects(effects, static_cast<ShowGeometry>(geometry), static_cast<TileWindow>(tile_window));
     ConnectionFromClient::for_each_client([&](auto& client) {
         client.async_update_system_effects(effects);
     });

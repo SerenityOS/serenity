@@ -230,15 +230,20 @@ public:
     }
 
     template<IteratorFunction<Processor&> Callback>
-    static inline IterationDecision for_each(Callback)
+    static inline IterationDecision for_each(Callback callback)
     {
-        TODO_AARCH64();
+        // FIXME: Once we support SMP for aarch64, make sure to call the callback for every processor.
+        if (callback(*g_current_processor) == IterationDecision::Break)
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
     }
 
     template<VoidFunction<Processor&> Callback>
-    static inline IterationDecision for_each(Callback)
+    static inline IterationDecision for_each(Callback callback)
     {
-        TODO_AARCH64();
+        // FIXME: Once we support SMP for aarch64, make sure to call the callback for every processor.
+        callback(*g_current_processor);
+        return IterationDecision::Continue;
     }
 
     static u32 count()

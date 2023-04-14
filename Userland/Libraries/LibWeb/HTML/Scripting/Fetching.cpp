@@ -159,7 +159,7 @@ WebIDL::ExceptionOr<Optional<AK::URL>> resolve_imports_match(DeprecatedString co
             VERIFY(resolution_result->serialize().ends_with("/"sv));
 
             // 5. Let url be the result of URL parsing afterPrefix with resolutionResult.
-            auto url = URLParser::parse(after_prefix, &*resolution_result);
+            auto url = URLParser::parse(after_prefix, *resolution_result);
 
             // 6. If url is failure, then throw a TypeError indicating that resolution of normalizedSpecifier was blocked since the afterPrefix portion
             //    could not be URL-parsed relative to the resolutionResult mapped to by the specifierKey prefix.
@@ -189,7 +189,7 @@ Optional<AK::URL> resolve_url_like_module_specifier(DeprecatedString const& spec
     // 1. If specifier starts with "/", "./", or "../", then:
     if (specifier.starts_with("/"sv) || specifier.starts_with("./"sv) || specifier.starts_with("../"sv)) {
         // 1. Let url be the result of URL parsing specifier with baseURL.
-        auto url = URLParser::parse(specifier, &base_url);
+        auto url = URLParser::parse(specifier, base_url);
 
         // 2. If url is failure, then return null.
         if (!url.is_valid())

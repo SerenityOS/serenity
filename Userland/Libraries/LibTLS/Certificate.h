@@ -260,7 +260,8 @@ public:
 
     Vector<Certificate> const& certificates() const { return m_ca_certificates; }
 
-    ErrorOr<Vector<Certificate>> reload_certificates(ByteBuffer&);
+    static ErrorOr<Vector<Certificate>> parse_pem_root_certificate_authorities(ByteBuffer&);
+    static ErrorOr<Vector<Certificate>> load_certificates();
 
     static DefaultRootCACertificates& the() { return s_the; }
 

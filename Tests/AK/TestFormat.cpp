@@ -35,6 +35,17 @@ TEST_CASE(format_integers)
     EXPECT_EQ(DeprecatedString::formatted("{:08x}", 4096), "00001000");
     EXPECT_EQ(DeprecatedString::formatted("{:x}", 0x1111222233334444ull), "1111222233334444");
     EXPECT_EQ(DeprecatedString::formatted("{:4}", 12345678), "12345678");
+    EXPECT_EQ(DeprecatedString::formatted("{:'}", 0), "0");
+    EXPECT_EQ(DeprecatedString::formatted("{:'}", 4096), "4,096");
+    EXPECT_EQ(DeprecatedString::formatted("{:'}", 16777216), "16,777,216");
+    EXPECT_EQ(DeprecatedString::formatted("{:'}", AK::NumericLimits<u64>::max()), "18,446,744,073,709,551,615");
+    EXPECT_EQ(DeprecatedString::formatted("{:'}", AK::NumericLimits<u64>::max()), "18,446,744,073,709,551,615");
+    EXPECT_EQ(DeprecatedString::formatted("{:'}", AK::NumericLimits<i64>::min() + 1), "-9,223,372,036,854,775,807");
+    EXPECT_EQ(DeprecatedString::formatted("{:'x}", 0), "0");
+    EXPECT_EQ(DeprecatedString::formatted("{:'x}", 16777216), "1,000,000");
+    EXPECT_EQ(DeprecatedString::formatted("{:'x}", AK::NumericLimits<u64>::max()), "f,fff,fff,fff,fff,fff");
+    EXPECT_EQ(DeprecatedString::formatted("{:'x}", AK::NumericLimits<i64>::min() + 1), "-7,fff,fff,fff,fff,fff");
+    EXPECT_EQ(DeprecatedString::formatted("{:'b}", AK::NumericLimits<u64>::max()), "1,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111,111");
 }
 
 TEST_CASE(reorder_format_arguments)
@@ -95,6 +106,8 @@ TEST_CASE(format_octal)
 {
     EXPECT_EQ(DeprecatedString::formatted("{:o}", 0744), "744");
     EXPECT_EQ(DeprecatedString::formatted("{:#o}", 0744), "0744");
+    EXPECT_EQ(DeprecatedString::formatted("{:'o}", 054321), "54,321");
+    EXPECT_EQ(DeprecatedString::formatted("{:'o}", 0567012340), "567,012,340");
 }
 
 TEST_CASE(zero_pad)
@@ -244,6 +257,8 @@ TEST_CASE(floating_point_numbers)
     EXPECT_EQ(DeprecatedString::formatted("{:.3}", 1.12), "1.12");
     EXPECT_EQ(DeprecatedString::formatted("{:.1}", 1.12), "1.1");
     EXPECT_EQ(DeprecatedString::formatted("{}", -1.12), "-1.12");
+    EXPECT_EQ(DeprecatedString::formatted("{:'.4}", 1234.5678), "1,234.5678");
+    EXPECT_EQ(DeprecatedString::formatted("{:'.4}", -1234.5678), "-1,234.5678");
 
     EXPECT_EQ(DeprecatedString::formatted("{}", NAN), "nan");
     EXPECT_EQ(DeprecatedString::formatted("{}", INFINITY), "inf");

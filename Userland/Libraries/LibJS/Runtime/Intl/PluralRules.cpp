@@ -92,7 +92,6 @@ PluralRules::PluralRules(Object& prototype)
 }
 
 // 16.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/ecma402/#sec-resolveplural
-// 1.5.3 ResolvePlural ( pluralRules, n ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-resolveplural
 ThrowCompletionOr<ResolvedPlurality> resolve_plural(VM& vm, PluralRules const& plural_rules, Value number)
 {
     return resolve_plural(vm, plural_rules, plural_rules.type(), number);
@@ -132,13 +131,13 @@ ThrowCompletionOr<ResolvedPlurality> resolve_plural(VM& vm, NumberFormatBase con
     return ResolvedPlurality { plural_category, move(string) };
 }
 
-// 1.5.4 PluralRuleSelectRange ( locale, type, xp, yp ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-pluralruleselectrange
+// 16.5.4 PluralRuleSelectRange ( locale, type, xp, yp ), https://tc39.es/ecma402/#sec-resolveplural
 ::Locale::PluralCategory plural_rule_select_range(StringView locale, ::Locale::PluralForm, ::Locale::PluralCategory start, ::Locale::PluralCategory end)
 {
     return ::Locale::determine_plural_range(locale, start, end);
 }
 
-// 1.5.5 ResolvePluralRange ( pluralRules, x, y ), https://tc39.es/proposal-intl-numberformat-v3/out/pluralrules/proposed.html#sec-resolvepluralrange
+// 16.5.5 ResolvePluralRange ( pluralRules, x, y ), https://tc39.es/ecma402/#sec-resolveplural
 ThrowCompletionOr<::Locale::PluralCategory> resolve_plural_range(VM& vm, PluralRules const& plural_rules, Value start, Value end)
 {
     // 1. Assert: Type(pluralRules) is Object.

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +19,7 @@
 namespace JS {
 
 FunctionConstructor::FunctionConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Function.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Function.as_string(), realm.intrinsics().function_prototype())
 {
 }
 
@@ -50,7 +50,7 @@ ThrowCompletionOr<ECMAScriptFunctionObject*> FunctionConstructor::create_dynamic
         new_target = &constructor;
 
     StringView prefix;
-    Object* (Intrinsics::*fallback_prototype)() = nullptr;
+    NonnullGCPtr<Object> (Intrinsics::*fallback_prototype)() = nullptr;
 
     switch (kind) {
     // 4. If kind is normal, then

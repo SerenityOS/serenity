@@ -43,6 +43,8 @@ public:
     };
     friend class RenderedCache;
 
+    static Gfx::IntRect frame_rect_for_window(Window&, Gfx::IntRect const&);
+
     static void reload_config();
 
     explicit WindowFrame(Window&);

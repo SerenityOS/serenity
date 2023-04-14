@@ -114,7 +114,7 @@ constexpr T clamp(T const& value, IdentityType<T> const& min, IdentityType<T> co
 }
 
 template<typename T, typename U>
-constexpr T mix(T const& v1, T const& v2, U const& interpolation)
+constexpr T mix(T const& v1, T const& v2, U const& interpolation) // aka lerp
 {
     return v1 + (v2 - v1) * interpolation;
 }

@@ -24,6 +24,7 @@ public:
     bool is_global() const { return m_is_global; }
 
     ErrorOr<String> descriptive_string() const;
+    Optional<String> key() const;
 
 private:
     Symbol(Optional<String>, bool);

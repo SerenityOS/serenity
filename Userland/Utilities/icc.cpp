@@ -35,57 +35,130 @@ static void out_optional(char const* label, Optional<T> const& optional)
 
 static void out_curve(Gfx::ICC::CurveTagData const& curve, int indent_amount)
 {
-    auto indent = MUST(String::repeated(' ', indent_amount));
     if (curve.values().is_empty()) {
-        outln("{}identity curve", indent);
+        outln("{: >{}}identity curve", "", indent_amount);
     } else if (curve.values().size() == 1) {
-        outln("{}gamma: {}", indent, FixedPoint<8, u16>::create_raw(curve.values()[0]));
+        outln("{: >{}}gamma: {}", "", indent_amount, FixedPoint<8, u16>::create_raw(curve.values()[0]));
     } else {
         // FIXME: Maybe print the actual points if -v is passed?
-        outln("{}curve with {} points", indent, curve.values().size());
+        outln("{: >{}}curve with {} points", "", indent_amount, curve.values().size());
     }
 }
 
 static void out_parametric_curve(Gfx::ICC::ParametricCurveTagData const& parametric_curve, int indent_amount)
 {
-    auto indent = MUST(String::repeated(' ', indent_amount));
     switch (parametric_curve.function_type()) {
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type0:
-        outln("{}Y = X**{}", indent, parametric_curve.g());
+        outln("{: >{}}Y = X**{}", "", indent_amount, parametric_curve.g());
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type1:
-        outln("{}Y = ({}*X + {})**{}   if X >= -{}/{}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{}   if X >= -{}/{}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.b(), parametric_curve.a());
-        outln("{}Y = 0                                else", indent);
+        outln("{: >{}}Y = 0                                else", "", indent_amount);
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type2:
-        outln("{}Y = ({}*X + {})**{} + {}   if X >= -{}/{}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{} + {}   if X >= -{}/{}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.c(), parametric_curve.b(), parametric_curve.a());
-        outln("{}Y =  {}                                    else", indent, parametric_curve.c());
+        outln("{: >{}}Y =  {}                                    else", "", indent_amount, parametric_curve.c());
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type3:
-        outln("{}Y = ({}*X + {})**{}   if X >= {}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{}   if X >= {}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.d());
-        outln("{}Y =  {}*X                         else", indent, parametric_curve.c());
+        outln("{: >{}}Y =  {}*X                         else", "", indent_amount, parametric_curve.c());
         break;
     case Gfx::ICC::ParametricCurveTagData::FunctionType::Type4:
-        outln("{}Y = ({}*X + {})**{} + {}   if X >= {}", indent,
+        outln("{: >{}}Y = ({}*X + {})**{} + {}   if X >= {}", "", indent_amount,
             parametric_curve.a(), parametric_curve.b(), parametric_curve.g(), parametric_curve.e(), parametric_curve.d());
-        outln("{}Y =  {}*X + {}                             else", indent, parametric_curve.c(), parametric_curve.f());
+        outln("{: >{}}Y =  {}*X + {}                             else", "", indent_amount, parametric_curve.c(), parametric_curve.f());
         break;
     }
 }
 
-static void out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
+static float curve_distance_u8(Gfx::ICC::TagData const& tag1, Gfx::ICC::TagData const& tag2)
+{
+    VERIFY(tag1.type() == Gfx::ICC::CurveTagData::Type || tag1.type() == Gfx::ICC::ParametricCurveTagData::Type);
+    VERIFY(tag2.type() == Gfx::ICC::CurveTagData::Type || tag2.type() == Gfx::ICC::ParametricCurveTagData::Type);
+
+    float curve1_data[256];
+    if (tag1.type() == Gfx::ICC::CurveTagData::Type) {
+        auto& curve1 = static_cast<Gfx::ICC::CurveTagData const&>(tag1);
+        for (int i = 0; i < 256; ++i)
+            curve1_data[i] = curve1.evaluate(i / 255.f);
+    } else {
+        auto& parametric_curve1 = static_cast<Gfx::ICC::ParametricCurveTagData const&>(tag1);
+        for (int i = 0; i < 256; ++i)
+            curve1_data[i] = parametric_curve1.evaluate(i / 255.f);
+    }
+
+    float curve2_data[256];
+    if (tag2.type() == Gfx::ICC::CurveTagData::Type) {
+        auto& curve2 = static_cast<Gfx::ICC::CurveTagData const&>(tag2);
+        for (int i = 0; i < 256; ++i)
+            curve2_data[i] = curve2.evaluate(i / 255.f);
+    } else {
+        auto& parametric_curve2 = static_cast<Gfx::ICC::ParametricCurveTagData const&>(tag2);
+        for (int i = 0; i < 256; ++i)
+            curve2_data[i] = parametric_curve2.evaluate(i / 255.f);
+    }
+
+    float distance = 0;
+    for (int i = 0; i < 256; ++i)
+        distance += fabsf(curve1_data[i] - curve2_data[i]);
+    return distance;
+}
+
+static ErrorOr<void> out_curve_tag(Gfx::ICC::TagData const& tag, int indent_amount)
+{
+    VERIFY(tag.type() == Gfx::ICC::CurveTagData::Type || tag.type() == Gfx::ICC::ParametricCurveTagData::Type);
+    if (tag.type() == Gfx::ICC::CurveTagData::Type)
+        out_curve(static_cast<Gfx::ICC::CurveTagData const&>(tag), indent_amount);
+    if (tag.type() == Gfx::ICC::ParametricCurveTagData::Type)
+        out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData const&>(tag), indent_amount);
+
+    auto sRGB_curve = TRY(Gfx::ICC::sRGB_curve());
+
+    // Some example values (for abs distance summed over the 256 values of an u8):
+    // In Compact-ICC-Profiles/profiles:
+    //   AdobeCompat-v2.icc: 1.14 (this is a gamma 2.2 curve, so not really sRGB but close)
+    //   AdobeCompat-v4.icc: 1.13
+    //   AppleCompat-v2.icc: 11.94 (gamma 1.8 curve)
+    //   DCI-P3-v4.icc: 8.29 (gamma 2.6 curve)
+    //   DisplayP3-v2-magic.icc: 0.000912 (looks sRGB-ish)
+    //   DisplayP3-v2-micro.icc: 0.010819
+    //   DisplayP3-v4.icc: 0.001062 (yes, definitely sRGB)
+    //   Rec2020-g24-v4.icc: 4.119216 (gamma 2.4 curve)
+    //   Rec2020-v4.icc: 7.805417 (custom non-sRGB curve)
+    //   Rec709-v4.icc: 7.783267 (same custom non-sRGB curve as Rec2020)
+    //   sRGB-v2-magic.icc: 0.000912
+    //   sRGB-v2-micro.icc: 0.010819
+    //   sRGB-v2-nano.icc: 0.052516
+    //   sRGB-v4.icc: 0.001062
+    //   scRGB-v2.icc: 48.379859 (linear identity curve)
+    // Google sRGB IEC61966-2.1 (from a Pixel jpeg, parametric): 0
+    // Google sRGB IEC61966-2.1 (from a Pixel jpeg, LUT curve): 0.00096
+    // Apple 2015 Display P3 (from iPhone 7, parametric): 0.011427 (has the old, left intersection for switching from linear to exponent)
+    // HP sRGB: 0.00096
+    // color.org sRGB2014.icc: 0.00096
+    // color.org sRGB_ICC_v4_Appearance.icc, AToB1Tag, a curves: 0.441926 -- but this is not _really_ sRGB
+    // color.org sRGB_v4_ICC_preference.icc, AToB1Tag, a curves: 2.205453 -- not really sRGB either
+    // So `< 0.06` identifies sRGB in practice (for u8 values).
+    float u8_distance_to_sRGB = curve_distance_u8(*sRGB_curve, tag);
+    if (u8_distance_to_sRGB < 0.06f)
+        outln("{: >{}}Looks like sRGB's curve (distance {})", "", indent_amount, u8_distance_to_sRGB);
+    else
+        outln("{: >{}}Does not look like sRGB's curve (distance: {})", "", indent_amount, u8_distance_to_sRGB);
+
+    return {};
+}
+
+static ErrorOr<void> out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
 {
     for (auto const& curve : curves) {
         VERIFY(curve->type() == Gfx::ICC::CurveTagData::Type || curve->type() == Gfx::ICC::ParametricCurveTagData::Type);
         outln("        type {}, relative offset {}, size {}", curve->type(), curve->offset(), curve->size());
-        if (curve->type() == Gfx::ICC::CurveTagData::Type)
-            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*curve), /*indent=*/12);
-        if (curve->type() == Gfx::ICC::ParametricCurveTagData::Type)
-            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*curve), /*indent=*/12);
+        TRY(out_curve_tag(*curve, /*indent=*/12));
     }
+    return {};
 }
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
@@ -247,7 +320,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             outln("    video full range flag: {} - {}", cicp.video_full_range_flag(),
                 Video::video_full_range_flag_to_string((Video::VideoFullRangeFlag)cicp.video_full_range_flag()));
         } else if (tag_data->type() == Gfx::ICC::CurveTagData::Type) {
-            out_curve(static_cast<Gfx::ICC::CurveTagData&>(*tag_data), /*indent=*/4);
+            TRY(out_curve_tag(*tag_data, /*indent=*/4));
         } else if (tag_data->type() == Gfx::ICC::Lut16TagData::Type) {
             auto& lut16 = static_cast<Gfx::ICC::Lut16TagData&>(*tag_data);
             outln("    input table: {} channels x {} entries", lut16.number_of_input_channels(), lut16.number_of_input_table_entries());
@@ -274,7 +347,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_a_curves = a_to_b.a_curves(); optional_a_curves.has_value()) {
                 outln("    a curves: {} curves", optional_a_curves->size());
-                out_curves(optional_a_curves.value());
+                TRY(out_curves(optional_a_curves.value()));
             } else {
                 outln("    a curves: (not set)");
             }
@@ -292,7 +365,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_m_curves = a_to_b.m_curves(); optional_m_curves.has_value()) {
                 outln("    m curves: {} curves", optional_m_curves->size());
-                out_curves(optional_m_curves.value());
+                TRY(out_curves(optional_m_curves.value()));
             } else {
                 outln("    m curves: (not set)");
             }
@@ -307,13 +380,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             outln("    b curves: {} curves", a_to_b.b_curves().size());
-            out_curves(a_to_b.b_curves());
+            TRY(out_curves(a_to_b.b_curves()));
         } else if (tag_data->type() == Gfx::ICC::LutBToATagData::Type) {
             auto& b_to_a = static_cast<Gfx::ICC::LutBToATagData&>(*tag_data);
             outln("    {} input channels, {} output channels", b_to_a.number_of_input_channels(), b_to_a.number_of_output_channels());
 
             outln("    b curves: {} curves", b_to_a.b_curves().size());
-            out_curves(b_to_a.b_curves());
+            TRY(out_curves(b_to_a.b_curves()));
 
             if (auto const& optional_e = b_to_a.e_matrix(); optional_e.has_value()) {
                 auto const& e = optional_e.value();
@@ -326,7 +399,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_m_curves = b_to_a.m_curves(); optional_m_curves.has_value()) {
                 outln("    m curves: {} curves", optional_m_curves->size());
-                out_curves(optional_m_curves.value());
+                TRY(out_curves(optional_m_curves.value()));
             } else {
                 outln("    m curves: (not set)");
             }
@@ -344,7 +417,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             if (auto const& optional_a_curves = b_to_a.a_curves(); optional_a_curves.has_value()) {
                 outln("    a curves: {} curves", optional_a_curves->size());
-                out_curves(optional_a_curves.value());
+                TRY(out_curves(optional_a_curves.value()));
             } else {
                 outln("    a curves: (not set)");
             }
@@ -384,7 +457,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (named_colors.size() > 5u)
                 outln("        ...");
         } else if (tag_data->type() == Gfx::ICC::ParametricCurveTagData::Type) {
-            out_parametric_curve(static_cast<Gfx::ICC::ParametricCurveTagData&>(*tag_data), /*indent=*/4);
+            TRY(out_curve_tag(*tag_data, /*indent=*/4));
         } else if (tag_data->type() == Gfx::ICC::S15Fixed16ArrayTagData::Type) {
             // This tag can contain arbitrarily many fixed-point numbers, but in practice it's
             // exclusively used for the 'chad' tag, where it always contains 9 values that

@@ -438,7 +438,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
             // i. If style is "2-digit" or "numeric", then
             if (style == DurationFormat::ValueStyle::TwoDigit || style == DurationFormat::ValueStyle::Numeric) {
                 // 1. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
-                auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
+                auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
 
                 // 2. Let dataLocale be durationFormat.[[DataLocale]].
                 auto const& data_locale = duration_format.data_locale();
@@ -502,7 +502,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
                 MUST(number_format_options->create_data_property_or_throw(vm.names.unitDisplay, MUST_OR_THROW_OOM(PrimitiveString::create(vm, unicode_style))));
 
                 // 4. Let nf be ! Construct(%NumberFormat%, « durationFormat.[[Locale]], nfOpts »).
-                auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
+                auto* number_format = static_cast<NumberFormat*>(MUST(construct(vm, realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), number_format_options)).ptr());
 
                 // 5. Let parts be ! PartitionNumberPattern(nf, 𝔽(value)).
                 auto parts = MUST_OR_THROW_OOM(partition_number_pattern(vm, *number_format, MathematicalValue(value)));
@@ -543,7 +543,7 @@ ThrowCompletionOr<Vector<PatternPartition>> partition_duration_format_pattern(VM
     MUST(list_format_options->create_data_property_or_throw(vm.names.style, MUST_OR_THROW_OOM(PrimitiveString::create(vm, unicode_list_style))));
 
     // 9. Let lf be ! Construct(%ListFormat%, « durationFormat.[[Locale]], lfOpts »).
-    auto* list_format = static_cast<ListFormat*>(MUST(construct(vm, *realm.intrinsics().intl_list_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), list_format_options)).ptr());
+    auto* list_format = static_cast<ListFormat*>(MUST(construct(vm, realm.intrinsics().intl_list_format_constructor(), PrimitiveString::create(vm, duration_format.locale()), list_format_options)).ptr());
 
     // FIXME: CreatePartsFromList expects a list of strings and creates a list of Pattern Partition records, but we already created a list of Pattern Partition records
     //  so we try to hack something together from it that looks mostly right

@@ -426,6 +426,8 @@ class Selection;
 
 namespace Web::Streams {
 class ReadableStream;
+class ReadableByteStreamController;
+class ReadableStreamBYOBRequest;
 class ReadableStreamDefaultController;
 class ReadableStreamDefaultReader;
 class ReadableStreamGenericReaderMixin;

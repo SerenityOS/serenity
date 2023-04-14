@@ -14,7 +14,7 @@
 namespace JS {
 
 SetConstructor::SetConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Set.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Set.as_string(), realm.intrinsics().function_prototype())
 {
 }
 
@@ -26,7 +26,7 @@ ThrowCompletionOr<void> SetConstructor::initialize(Realm& realm)
     // 24.2.2.1 Set.prototype, https://tc39.es/ecma262/#sec-set.prototype
     define_direct_property(vm.names.prototype, realm.intrinsics().set_prototype(), 0);
 
-    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(0), Attribute::Configurable);
 
@@ -37,6 +37,8 @@ ThrowCompletionOr<void> SetConstructor::initialize(Realm& realm)
 ThrowCompletionOr<Value> SetConstructor::call()
 {
     auto& vm = this->vm();
+
+    // 1. If NewTarget is undefined, throw a TypeError exception.
     return vm.throw_completion<TypeError>(ErrorType::ConstructorWithoutNew, vm.names.Set);
 }
 
@@ -44,27 +46,43 @@ ThrowCompletionOr<Value> SetConstructor::call()
 ThrowCompletionOr<NonnullGCPtr<Object>> SetConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
+    auto iterable = vm.argument(0);
 
+    // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%Set.prototype%", « [[SetData]] »).
     auto set = TRY(ordinary_create_from_constructor<Set>(vm, new_target, &Intrinsics::set_prototype));
 
-    if (vm.argument(0).is_nullish())
+    // 3. Set set.[[SetData]] to a new empty List.
+
+    // 4. If iterable is either undefined or null, return set.
+    if (iterable.is_nullish())
         return set;
 
+    // 5. Let adder be ? Get(set, "add").
     auto adder = TRY(set->get(vm.names.add));
+
+    // 6. If IsCallable(adder) is false, throw a TypeError exception.
     if (!adder.is_function())
         return vm.throw_completion<TypeError>(ErrorType::NotAFunction, "'add' property of Set");
 
-    (void)TRY(get_iterator_values(vm, vm.argument(0), [&](Value iterator_value) -> Optional<Completion> {
-        TRY(JS::call(vm, adder.as_function(), set, iterator_value));
+    // 7. Let iteratorRecord be ? GetIterator(iterable, sync).
+    // 8. Repeat,
+    //     a. Let next be ? IteratorStep(iteratorRecord).
+    //     c. Let nextValue be ? IteratorValue(next).
+    (void)TRY(get_iterator_values(vm, iterable, [&](Value next_value) -> Optional<Completion> {
+        // d. Let status be Completion(Call(adder, set, « nextValue »)).
+        // e. IfAbruptCloseIterator(status, iteratorRecord).
+        TRY(JS::call(vm, adder.as_function(), set, next_value));
         return {};
     }));
 
+    // b. If next is false, return set.
     return set;
 }
 
 // 24.2.2.2 get Set [ @@species ], https://tc39.es/ecma262/#sec-get-set-@@species
 JS_DEFINE_NATIVE_FUNCTION(SetConstructor::symbol_species_getter)
 {
+    // 1. Return the this value.
     return vm.this_value();
 }
 

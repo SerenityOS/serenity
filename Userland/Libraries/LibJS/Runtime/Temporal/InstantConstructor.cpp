@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@ namespace JS::Temporal {
 
 // 8.1 The Temporal.Instant Constructor, https://tc39.es/proposal-temporal/#sec-temporal-instant-constructor
 InstantConstructor::InstantConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Instant.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Instant.as_string(), realm.intrinsics().function_prototype())
 {
 }
 

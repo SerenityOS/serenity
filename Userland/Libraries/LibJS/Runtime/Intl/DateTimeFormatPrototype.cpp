@@ -15,7 +15,7 @@ namespace JS::Intl {
 
 // 11.3 Properties of the Intl.DateTimeFormat Prototype Object, https://tc39.es/ecma402/#sec-properties-of-intl-datetimeformat-prototype-object
 DateTimeFormatPrototype::DateTimeFormatPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -26,7 +26,7 @@ ThrowCompletionOr<void> DateTimeFormatPrototype::initialize(Realm& realm)
     auto& vm = this->vm();
 
     // 11.3.2 Intl.DateTimeFormat.prototype [ @@toStringTag ], https://tc39.es/ecma402/#sec-intl.datetimeformat.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.DateTimeFormat"sv)), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), MUST_OR_THROW_OOM(PrimitiveString::create(vm, "Intl.DateTimeFormat"sv)), Attribute::Configurable);
 
     define_native_accessor(realm, vm.names.format, format, nullptr, Attribute::Configurable);
 
@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateTimeFormatPrototype::format_to_parts)
     // 3. If date is undefined, then
     if (date.is_undefined()) {
         // a. Let x be ! Call(%Date.now%, undefined).
-        date_value = MUST(call(vm, realm.intrinsics().date_constructor_now_function(), js_undefined())).as_double();
+        date_value = MUST(call(vm, *realm.intrinsics().date_constructor_now_function(), js_undefined())).as_double();
     }
     // 4. Else,
     else {

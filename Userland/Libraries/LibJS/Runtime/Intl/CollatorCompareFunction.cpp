@@ -17,7 +17,7 @@ NonnullGCPtr<CollatorCompareFunction> CollatorCompareFunction::create(Realm& rea
 }
 
 CollatorCompareFunction::CollatorCompareFunction(Realm& realm, Collator& collator)
-    : NativeFunction(*realm.intrinsics().function_prototype())
+    : NativeFunction(realm.intrinsics().function_prototype())
     , m_collator(collator)
 {
 }

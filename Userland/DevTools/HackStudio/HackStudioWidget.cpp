@@ -152,7 +152,7 @@ ErrorOr<NonnullRefPtr<HackStudioWidget>> HackStudioWidget::create(DeprecatedStri
     widget->m_statusbar = widget->add<GUI::Statusbar>(3);
     widget->m_statusbar->segment(1).set_mode(GUI::Statusbar::Segment::Mode::Auto);
     widget->m_statusbar->segment(2).set_mode(GUI::Statusbar::Segment::Mode::Fixed);
-    auto width = widget->font().width("Ln 0000, Col 000"sv) + widget->font().max_glyph_width();
+    auto width = widget->font().width("Ln 0,000  Col 000"sv) + widget->font().max_glyph_width();
     widget->m_statusbar->segment(2).set_fixed_width(width);
     widget->update_statusbar();
 
@@ -321,6 +321,7 @@ bool HackStudioWidget::open_file(DeprecatedString const& full_filename, size_t l
 
     if (editor_wrapper_or_none.has_value()) {
         set_current_editor_wrapper(editor_wrapper_or_none.release_value());
+        current_editor().set_cursor(line, column);
         return true;
     } else if (active_file().is_empty() && !current_editor().document().is_modified() && !full_filename.is_empty()) {
         // Replace "Untitled" blank file since it hasn't been modified
@@ -1611,12 +1612,12 @@ void HackStudioWidget::update_statusbar()
     if (current_editor().has_selection()) {
         DeprecatedString selected_text = current_editor().selected_text();
         auto word_count = current_editor().number_of_selected_words();
-        builder.appendff("Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+        builder.appendff("Selected: {:'d} {} ({:'d} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
 
     m_statusbar->set_text(0, builder.to_deprecated_string());
     m_statusbar->set_text(1, Syntax::language_to_string(current_editor_wrapper().editor().code_document().language().value_or(Syntax::Language::PlainText)));
-    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
+    m_statusbar->set_text(2, DeprecatedString::formatted("Ln {:'d}  Col {:'d}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
 }
 
 void HackStudioWidget::handle_external_file_deletion(DeprecatedString const& filepath)

@@ -20,7 +20,7 @@ namespace JS::Intl {
 
 // 17.1 The Intl.RelativeTimeFormat Constructor, https://tc39.es/ecma402/#sec-intl-relativetimeformat-constructor
 RelativeTimeFormatConstructor::RelativeTimeFormatConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.RelativeTimeFormat.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.RelativeTimeFormat.as_string(), realm.intrinsics().function_prototype())
 {
 }
 
@@ -140,11 +140,11 @@ ThrowCompletionOr<RelativeTimeFormat*> initialize_relative_time_format(VM& vm, R
     relative_time_format.set_numeric(TRY(numeric.as_string().utf8_string_view()));
 
     // 19. Let relativeTimeFormat.[[NumberFormat]] be ! Construct(%NumberFormat%, « locale »).
-    auto number_format = MUST(construct(vm, *realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale)));
+    auto number_format = MUST(construct(vm, realm.intrinsics().intl_number_format_constructor(), PrimitiveString::create(vm, locale)));
     relative_time_format.set_number_format(static_cast<NumberFormat*>(number_format.ptr()));
 
     // 20. Let relativeTimeFormat.[[PluralRules]] be ! Construct(%PluralRules%, « locale »).
-    auto plural_rules = MUST(construct(vm, *realm.intrinsics().intl_plural_rules_constructor(), PrimitiveString::create(vm, locale)));
+    auto plural_rules = MUST(construct(vm, realm.intrinsics().intl_plural_rules_constructor(), PrimitiveString::create(vm, locale)));
     relative_time_format.set_plural_rules(static_cast<PluralRules*>(plural_rules.ptr()));
 
     // 21. Return relativeTimeFormat.

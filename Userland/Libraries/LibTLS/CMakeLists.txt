@@ -12,6 +12,6 @@ set(SOURCES
 )
 
 serenity_lib(LibTLS tls)
-target_link_libraries(LibTLS PRIVATE LibCore LibCrypto)
+target_link_libraries(LibTLS PRIVATE LibCore LibCrypto LibFileSystem)
 
 include(ca_certificates_data)

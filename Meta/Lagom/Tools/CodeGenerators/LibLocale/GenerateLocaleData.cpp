@@ -302,12 +302,12 @@ static ErrorOr<void> parse_likely_subtags(DeprecatedString core_supplemental_pat
 
 static ErrorOr<void> parse_identity(DeprecatedString locale_path, CLDR& cldr, LocaleData& locale)
 {
-    LexicalPath languages_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
-    languages_path = languages_path.append("languages.json"sv);
+    LexicalPath locale_display_names_path(move(locale_path)); // Note: Every JSON file defines identity data, so we can use any of them.
+    locale_display_names_path = locale_display_names_path.append("localeDisplayNames.json"sv);
 
-    auto languages = TRY(read_json_file(languages_path.string()));
-    auto const& main_object = languages.as_object().get_object("main"sv).value();
-    auto const& locale_object = main_object.get_object(languages_path.parent().basename()).value();
+    auto locale_display_names = TRY(read_json_file(locale_display_names_path.string()));
+    auto const& main_object = locale_display_names.as_object().get_object("main"sv).value();
+    auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& identity_object = locale_object.get_object("identity"sv).value();
     auto const& language_string = identity_object.get_deprecated_string("language"sv).value();
     auto const& territory_string = identity_object.get_deprecated_string("territory"sv);
@@ -363,6 +363,9 @@ static ErrorOr<void> preprocess_languages(DeprecatedString locale_path, CLDR& cl
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
 
+    if (!FileSystem::exists(languages_path.string()))
+        return {};
+
     auto locale_languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(languages_path.parent().basename()).value();
@@ -372,6 +375,25 @@ static ErrorOr<void> preprocess_languages(DeprecatedString locale_path, CLDR& cl
     languages_object.for_each_member([&](auto const& key, auto const&) {
         if (!key.contains("-alt-"sv) && !cldr.languages.contains_slow(key))
             cldr.languages.append(key);
+    });
+
+    return {};
+}
+
+static ErrorOr<void> preprocess_currencies(DeprecatedString numbers_path, CLDR& cldr)
+{
+    LexicalPath currencies_path(move(numbers_path));
+    currencies_path = currencies_path.append("currencies.json"sv);
+
+    auto locale_currencies = TRY(read_json_file(currencies_path.string()));
+    auto const& main_object = locale_currencies.as_object().get_object("main"sv).value();
+    auto const& locale_object = main_object.get_object(currencies_path.parent().basename()).value();
+    auto const& locale_numbers_object = locale_object.get_object("numbers"sv).value();
+    auto const& currencies_object = locale_numbers_object.get_object("currencies"sv).value();
+
+    currencies_object.for_each_member([&](auto const& key, JsonValue const&) {
+        if (!cldr.currencies.contains_slow(key))
+            cldr.currencies.append(key);
     });
 
     return {};
@@ -446,14 +468,22 @@ static ErrorOr<void> parse_locale_languages(DeprecatedString locale_path, CLDR& 
     LexicalPath languages_path(move(locale_path));
     languages_path = languages_path.append("languages.json"sv);
 
+    LanguageList languages;
+    languages.resize(cldr.languages.size());
+
+    if (!FileSystem::exists(languages_path.string())) {
+        for (size_t i = 0; i < languages.size(); ++i)
+            languages[i] = cldr.unique_strings.ensure(cldr.languages[i]);
+
+        locale.languages = cldr.unique_language_lists.ensure(move(languages));
+        return {};
+    }
+
     auto locale_languages = TRY(read_json_file(languages_path.string()));
     auto const& main_object = locale_languages.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(languages_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
     auto const& languages_object = locale_display_names_object.get_object("languages"sv).value();
-
-    LanguageList languages;
-    languages.resize(cldr.languages.size());
 
     languages_object.for_each_member([&](auto const& key, JsonValue const& value) {
         if (key.contains("-alt-"sv))
@@ -472,14 +502,22 @@ static ErrorOr<void> parse_locale_territories(DeprecatedString locale_path, CLDR
     LexicalPath territories_path(move(locale_path));
     territories_path = territories_path.append("territories.json"sv);
 
+    TerritoryList territories;
+    territories.resize(cldr.territories.size());
+
+    if (!FileSystem::exists(territories_path.string())) {
+        for (size_t i = 0; i < territories.size(); ++i)
+            territories[i] = cldr.unique_strings.ensure(cldr.territories[i]);
+
+        locale.territories = cldr.unique_territory_lists.ensure(move(territories));
+        return {};
+    }
+
     auto locale_territories = TRY(read_json_file(territories_path.string()));
     auto const& main_object = locale_territories.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(territories_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
     auto const& territories_object = locale_display_names_object.get_object("territories"sv).value();
-
-    TerritoryList territories;
-    territories.resize(cldr.territories.size());
 
     territories_object.for_each_member([&](auto const& key, JsonValue const& value) {
         if (auto index = cldr.territories.find_first_index(key); index.has_value())
@@ -495,14 +533,22 @@ static ErrorOr<void> parse_locale_scripts(DeprecatedString locale_path, CLDR& cl
     LexicalPath scripts_path(move(locale_path));
     scripts_path = scripts_path.append("scripts.json"sv);
 
+    ScriptList scripts;
+    scripts.resize(cldr.scripts.size());
+
+    if (!FileSystem::exists(scripts_path.string())) {
+        for (size_t i = 0; i < scripts.size(); ++i)
+            scripts[i] = cldr.unique_strings.ensure(cldr.scripts[i]);
+
+        locale.scripts = cldr.unique_script_lists.ensure(move(scripts));
+        return {};
+    }
+
     auto locale_scripts = TRY(read_json_file(scripts_path.string()));
     auto const& main_object = locale_scripts.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(scripts_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
     auto const& scripts_object = locale_display_names_object.get_object("scripts"sv).value();
-
-    ScriptList scripts;
-    scripts.resize(cldr.scripts.size());
 
     scripts_object.for_each_member([&](auto const& key, JsonValue const& value) {
         if (auto index = cldr.scripts.find_first_index(key); index.has_value())
@@ -606,11 +652,6 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
     auto const& locale_numbers_object = locale_object.get_object("numbers"sv).value();
     auto const& currencies_object = locale_numbers_object.get_object("currencies"sv).value();
 
-    currencies_object.for_each_member([&](auto const& key, JsonValue const&) {
-        if (!cldr.currencies.contains_slow(key))
-            cldr.currencies.append(key);
-    });
-
     CurrencyList long_currencies {};
     long_currencies.resize(cldr.currencies.size());
 
@@ -624,16 +665,16 @@ static ErrorOr<void> parse_locale_currencies(DeprecatedString numbers_path, CLDR
     numeric_currencies.resize(cldr.currencies.size());
 
     currencies_object.for_each_member([&](auto const& key, JsonValue const& value) {
-        auto const& long_name = value.as_object().get_deprecated_string("displayName"sv);
-        auto const& short_name = value.as_object().get_deprecated_string("symbol"sv);
-        auto const& narrow_name = value.as_object().get_deprecated_string("symbol-alt-narrow"sv);
-        auto const& numeric_name = value.as_object().get_deprecated_string("displayName-count-other"sv);
+        auto long_name = value.as_object().get_deprecated_string("displayName"sv).value_or(key);
+        auto short_name = value.as_object().get_deprecated_string("symbol"sv).value_or(key);
+        auto narrow_name = value.as_object().get_deprecated_string("symbol-alt-narrow"sv);
+        auto numeric_name = value.as_object().get_deprecated_string("displayName-count-other"sv);
 
         auto index = cldr.currencies.find_first_index(key).value();
-        long_currencies[index] = cldr.unique_strings.ensure(long_name.value());
-        short_currencies[index] = cldr.unique_strings.ensure(short_name.value());
-        narrow_currencies[index] = narrow_name.has_value() ? cldr.unique_strings.ensure(narrow_name.value()) : 0;
-        numeric_currencies[index] = cldr.unique_strings.ensure(numeric_name.has_value() ? numeric_name.value() : long_name.value());
+        long_currencies[index] = cldr.unique_strings.ensure(move(long_name));
+        short_currencies[index] = cldr.unique_strings.ensure(move(short_name));
+        narrow_currencies[index] = narrow_name.has_value() ? cldr.unique_strings.ensure(narrow_name.release_value()) : 0;
+        numeric_currencies[index] = numeric_name.has_value() ? cldr.unique_strings.ensure(numeric_name.release_value()) : long_currencies[index];
     });
 
     locale.long_currencies = cldr.unique_currency_lists.ensure(move(long_currencies));
@@ -652,6 +693,10 @@ static ErrorOr<void> parse_locale_calendars(DeprecatedString locale_path, CLDR& 
     auto const& main_object = locale_display_names.as_object().get_object("main"sv).value();
     auto const& locale_object = main_object.get_object(locale_display_names_path.parent().basename()).value();
     auto const& locale_display_names_object = locale_object.get_object("localeDisplayNames"sv).value();
+
+    if (!locale_display_names_object.has_object("types"sv))
+        return {};
+
     auto const& types_object = locale_display_names_object.get_object("types"sv).value();
     auto const& calendar_object = types_object.get_object("calendar"sv).value();
 
@@ -946,9 +991,16 @@ static ErrorOr<void> parse_all_locales(DeprecatedString bcp47_path, DeprecatedSt
         return IterationDecision::Continue;
     }));
 
+    TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/main", numbers_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
+        auto numbers_path = LexicalPath::join(directory.path().string(), entry.name).string();
+        TRY(preprocess_currencies(numbers_path, cldr));
+        return IterationDecision::Continue;
+    }));
+
     quick_sort(cldr.languages);
     quick_sort(cldr.territories);
     quick_sort(cldr.scripts);
+    quick_sort(cldr.currencies);
 
     TRY(Core::Directory::for_each_entry(TRY(String::formatted("{}/bcp47", bcp47_path)), Core::DirIterator::SkipParentAndBaseDir, [&](auto& entry, auto& directory) -> ErrorOr<IterationDecision> {
         auto bcp47_path = LexicalPath::join(directory.path().string(), entry.name).string();

@@ -615,7 +615,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
 
         // 1. If specifier is %s, let converted be the result of Call(%String%, undefined, « current »).
         if (specifier == "%s"sv) {
-            converted = TRY(call(vm, realm.intrinsics().string_constructor(), js_undefined(), current));
+            converted = TRY(call(vm, *realm.intrinsics().string_constructor(), js_undefined(), current));
         }
         // 2. If specifier is %d or %i:
         else if (specifier.is_one_of("%d"sv, "%i"sv)) {
@@ -625,7 +625,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
             }
             // 2. Otherwise, let converted be the result of Call(%parseInt%, undefined, « current, 10 »).
             else {
-                converted = TRY(call(vm, realm.intrinsics().parse_int_function(), js_undefined(), current, Value { 10 }));
+                converted = TRY(call(vm, *realm.intrinsics().parse_int_function(), js_undefined(), current, Value { 10 }));
             }
         }
         // 3. If specifier is %f:
@@ -636,7 +636,7 @@ ThrowCompletionOr<MarkedVector<Value>> ConsoleClient::formatter(MarkedVector<Val
             }
             // 2. Otherwise, let converted be the result of Call(% parseFloat %, undefined, « current »).
             else {
-                converted = TRY(call(vm, realm.intrinsics().parse_float_function(), js_undefined(), current));
+                converted = TRY(call(vm, *realm.intrinsics().parse_float_function(), js_undefined(), current));
             }
         }
         // 4. If specifier is %o, optionally let converted be current with optimally useful formatting applied.

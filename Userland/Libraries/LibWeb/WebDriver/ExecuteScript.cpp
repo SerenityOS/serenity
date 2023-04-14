@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -362,7 +362,7 @@ ExecuteScriptResultSerialized execute_async_script(Web::Page& page, DeprecatedSt
             return ExecuteScriptResult { ExecuteScriptResultType::PromiseResolved, JS::js_null() };
 
         // 9. Let scriptPromise be PromiseResolve(Promise, scriptResult.[[Value]]).
-        auto script_promise_or_error = JS::promise_resolve(vm, *realm.intrinsics().promise_constructor(), script_result.value());
+        auto script_promise_or_error = JS::promise_resolve(vm, realm.intrinsics().promise_constructor(), script_result.value());
         if (script_promise_or_error.is_throw_completion())
             return ExecuteScriptResult { ExecuteScriptResultType::PromiseRejected, *script_promise_or_error.throw_completion().value() };
         auto& script_promise = static_cast<JS::Promise&>(*script_promise_or_error.value());

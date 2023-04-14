@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2021, David Tuin <davidot@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,7 +15,7 @@
 namespace JS {
 
 AsyncFromSyncIteratorPrototype::AsyncFromSyncIteratorPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().async_iterator_prototype())
+    : PrototypeObject(realm.intrinsics().async_iterator_prototype())
 {
 }
 
@@ -48,7 +48,7 @@ static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, Pro
 
     // 6. Let valueWrapper be PromiseResolve(%Promise%, value).
     // 7. IfAbruptRejectPromise(valueWrapper, promiseCapability).
-    auto value_wrapper = TRY_OR_MUST_REJECT(vm, &promise_capability, promise_resolve(vm, *realm.intrinsics().promise_constructor(), value));
+    auto value_wrapper = TRY_OR_MUST_REJECT(vm, &promise_capability, promise_resolve(vm, realm.intrinsics().promise_constructor(), value));
 
     // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
     auto unwrap = [done](VM& vm) -> ThrowCompletionOr<Value> {

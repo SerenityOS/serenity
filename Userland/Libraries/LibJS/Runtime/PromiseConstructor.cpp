@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -240,7 +240,7 @@ static ThrowCompletionOr<Value> perform_promise_race(VM& vm, Iterator& iterator_
 }
 
 PromiseConstructor::PromiseConstructor(Realm& realm)
-    : NativeFunction(realm.vm().names.Promise.as_string(), *realm.intrinsics().function_prototype())
+    : NativeFunction(realm.vm().names.Promise.as_string(), realm.intrinsics().function_prototype())
 {
 }
 
@@ -260,7 +260,7 @@ ThrowCompletionOr<void> PromiseConstructor::initialize(Realm& realm)
     define_native_function(realm, vm.names.reject, reject, 1, attr);
     define_native_function(realm, vm.names.resolve, resolve, 1, attr);
 
-    define_native_accessor(realm, *vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(realm, vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 
     define_direct_property(vm.names.length, Value(1), Attribute::Configurable);
 

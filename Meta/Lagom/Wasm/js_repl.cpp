@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020-2022, Ali Mohammad Pur <mpfard@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -382,9 +382,9 @@ extern "C" int initialize_repl(char const* time_zone)
 
     s_print_last_result = true;
     interpreter = JS::Interpreter::create<ReplObject>(*g_vm);
-    auto& console_object = *interpreter->realm().intrinsics().console_object();
-    g_console_client = make<ReplConsoleClient>(console_object.console());
-    console_object.console().set_client(*g_console_client);
+    auto console_object = interpreter->realm().intrinsics().console_object();
+    g_console_client = make<ReplConsoleClient>(console_object->console());
+    console_object->console().set_client(*g_console_client);
     g_interpreter = move(interpreter);
 
     return 0;

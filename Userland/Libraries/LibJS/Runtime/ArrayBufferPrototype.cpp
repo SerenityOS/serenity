@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2023, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021-2022, Jamie Mansfield <jmansfield@cadixdev.org>
  * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
@@ -15,7 +15,7 @@
 namespace JS {
 
 ArrayBufferPrototype::ArrayBufferPrototype(Realm& realm)
-    : PrototypeObject(*realm.intrinsics().object_prototype())
+    : PrototypeObject(realm.intrinsics().object_prototype())
 {
 }
 
@@ -28,7 +28,7 @@ ThrowCompletionOr<void> ArrayBufferPrototype::initialize(Realm& realm)
     define_native_accessor(realm, vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
 
     // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
-    define_direct_property(*vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);
+    define_direct_property(vm.well_known_symbol_to_string_tag(), PrimitiveString::create(vm, vm.names.ArrayBuffer.as_string()), Attribute::Configurable);
 
     return {};
 }
@@ -84,7 +84,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto new_length = max(final - first, 0.0);
 
     // 15. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, *realm.intrinsics().array_buffer_constructor()));
+    auto* constructor = TRY(species_constructor(vm, *array_buffer_object, realm.intrinsics().array_buffer_constructor()));
 
     // 16. Let new be ? Construct(ctor, « 𝔽(newLen) »).
     auto new_array_buffer = TRY(construct(vm, *constructor, Value(new_length)));

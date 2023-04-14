@@ -121,7 +121,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
     // 5. If input is a string, then:
     if (input.has<String>()) {
         // 1. Let parsedURL be the result of parsing input with baseURL.
-        auto parsed_url = URLParser::parse(input.get<String>(), &base_url);
+        auto parsed_url = URLParser::parse(input.get<String>(), base_url);
 
         // 2. If parsedURL is failure, then throw a TypeError.
         if (!parsed_url.is_valid())
@@ -299,7 +299,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Request>> Request::construct_impl(JS::Realm
         // 3. Otherwise:
         else {
             // 1. Let parsedReferrer be the result of parsing referrer with baseURL.
-            auto parsed_referrer = URLParser::parse(referrer, &base_url);
+            auto parsed_referrer = URLParser::parse(referrer, base_url);
 
             // 2. If parsedReferrer is failure, then throw a TypeError.
             if (!parsed_referrer.is_valid())

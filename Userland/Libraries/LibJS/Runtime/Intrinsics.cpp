@@ -302,18 +302,18 @@ JS_ENUMERATE_TYPED_ARRAYS
             initialize_constructor(vm, vm.names.ClassName, *m_##snake_namespace##snake_name##_constructor, m_##snake_namespace##snake_name##_prototype);                                                           \
     }                                                                                                                                                                                                              \
                                                                                                                                                                                                                    \
-    Namespace::ConstructorName* Intrinsics::snake_namespace##snake_name##_constructor()                                                                                                                            \
+    NonnullGCPtr<Namespace::ConstructorName> Intrinsics::snake_namespace##snake_name##_constructor()                                                                                                               \
     {                                                                                                                                                                                                              \
         if (!m_##snake_namespace##snake_name##_constructor)                                                                                                                                                        \
             initialize_##snake_namespace##snake_name();                                                                                                                                                            \
-        return m_##snake_namespace##snake_name##_constructor;                                                                                                                                                      \
+        return *m_##snake_namespace##snake_name##_constructor;                                                                                                                                                     \
     }                                                                                                                                                                                                              \
                                                                                                                                                                                                                    \
-    Object* Intrinsics::snake_namespace##snake_name##_prototype()                                                                                                                                                  \
+    NonnullGCPtr<Object> Intrinsics::snake_namespace##snake_name##_prototype()                                                                                                                                     \
     {                                                                                                                                                                                                              \
         if (!m_##snake_namespace##snake_name##_prototype)                                                                                                                                                          \
             initialize_##snake_namespace##snake_name();                                                                                                                                                            \
-        return m_##snake_namespace##snake_name##_prototype;                                                                                                                                                        \
+        return *m_##snake_namespace##snake_name##_prototype;                                                                                                                                                       \
     }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
@@ -334,11 +334,11 @@ JS_ENUMERATE_TEMPORAL_OBJECTS
 #undef __JS_ENUMERATE_INNER
 
 #define __JS_ENUMERATE(ClassName, snake_name)                                                                                                   \
-    ClassName* Intrinsics::snake_name##_object()                                                                                                \
+    NonnullGCPtr<ClassName> Intrinsics::snake_name##_object()                                                                                   \
     {                                                                                                                                           \
         if (!m_##snake_name##_object)                                                                                                           \
             m_##snake_name##_object = heap().allocate<ClassName>(m_realm, m_realm).release_allocated_value_but_fixme_should_propagate_errors(); \
-        return m_##snake_name##_object;                                                                                                         \
+        return *m_##snake_name##_object;                                                                                                        \
     }
 JS_ENUMERATE_BUILTIN_NAMESPACE_OBJECTS
 #undef __JS_ENUMERATE
@@ -397,10 +397,10 @@ void add_restricted_function_properties(FunctionObject& function, Realm& realm)
     auto& vm = realm.vm();
 
     // 1. Assert: realm.[[Intrinsics]].[[%ThrowTypeError%]] exists and has been initialized.
-    VERIFY(realm.intrinsics().throw_type_error_function());
+    // NOTE: This is ensured by dereferencing the GCPtr in the getter.
 
     // 2. Let thrower be realm.[[Intrinsics]].[[%ThrowTypeError%]].
-    auto* thrower = realm.intrinsics().throw_type_error_function();
+    auto thrower = realm.intrinsics().throw_type_error_function();
 
     // 3. Perform ! DefinePropertyOrThrow(F, "caller", PropertyDescriptor { [[Get]]: thrower, [[Set]]: thrower, [[Enumerable]]: false, [[Configurable]]: true }).
     function.define_direct_accessor(vm.names.caller, thrower, thrower, Attribute::Configurable);

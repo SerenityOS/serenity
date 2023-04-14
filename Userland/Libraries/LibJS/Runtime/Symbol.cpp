@@ -34,4 +34,20 @@ ErrorOr<String> Symbol::descriptive_string() const
     return String::formatted("Symbol({})", description);
 }
 
+// 20.4.5.1 KeyForSymbol ( sym ), https://tc39.es/ecma262/#sec-keyforsymbol
+Optional<String> Symbol::key() const
+{
+    // 1. For each element e of the GlobalSymbolRegistry List, do
+    //    a. If SameValue(e.[[Symbol]], sym) is true, return e.[[Key]].
+    if (m_is_global) {
+        // NOTE: Global symbols should always have a description string
+        VERIFY(m_description.has_value());
+        return m_description;
+    }
+
+    // 2. Assert: GlobalSymbolRegistry does not currently contain an entry for sym.
+    // 3. Return undefined.
+    return {};
+}
+
 }

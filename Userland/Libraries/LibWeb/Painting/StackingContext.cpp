@@ -436,9 +436,12 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
 template<typename U, typename Callback>
 static TraversalDecision for_each_in_inclusive_subtree_of_type_within_same_stacking_context_in_reverse(Paintable const& paintable, Callback callback)
 {
-    if (is<PaintableBox>(paintable) && static_cast<PaintableBox const&>(paintable).stacking_context())
+    if (is<PaintableBox>(paintable) && static_cast<PaintableBox const&>(paintable).stacking_context()) {
+        // Note: Include the stacking context (so we can hit test it), but don't recurse into it.
+        if (auto decision = callback(static_cast<U const&>(paintable)); decision != TraversalDecision::Continue)
+            return decision;
         return TraversalDecision::SkipChildrenAndContinue;
-
+    }
     for (auto* child = paintable.last_child(); child; child = child->previous_sibling()) {
         if (for_each_in_inclusive_subtree_of_type_within_same_stacking_context_in_reverse<U>(*child, callback) == TraversalDecision::Break)
             return TraversalDecision::Break;
@@ -493,9 +496,8 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
             return result;
     }
 
-    Optional<HitTestResult> result;
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
-
+    Optional<HitTestResult> result;
     for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](PaintableBox const& paint_box) {
         // FIXME: Support more overflow variations.
         if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
@@ -503,9 +505,18 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
+        auto const& z_index = paint_box.computed_values().z_index();
+        auto& layout_box = paint_box.layout_box();
+        if (z_index.value_or(0) == 0 && layout_box.is_positioned() && !paint_box.stacking_context()) {
+            auto candidate = paint_box.hit_test(transformed_position, type);
+            if (candidate.has_value() && candidate->paintable->visible_for_hit_testing()) {
+                result = move(candidate);
+                return TraversalDecision::Break;
+            }
+        }
+
         if (paint_box.stacking_context()) {
-            auto const& z_index = paint_box.computed_values().z_index();
-            if (!z_index.has_value() || z_index.value() == 0) {
+            if (z_index.value_or(0) == 0) {
                 auto candidate = paint_box.stacking_context()->hit_test(transformed_position, type);
                 if (candidate.has_value() && candidate->paintable->visible_for_hit_testing()) {
                     result = move(candidate);
@@ -514,27 +525,10 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
             }
         }
 
-        auto& layout_box = paint_box.layout_box();
-        if (layout_box.is_positioned() && !paint_box.stacking_context()) {
-            if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value()) {
-                result = move(candidate);
-                return TraversalDecision::Break;
-            }
-        }
         return TraversalDecision::Continue;
     });
-    if (result.has_value() && result->paintable->visible_for_hit_testing())
+    if (result.has_value())
         return result;
-
-    // "child stacking contexts with stack level 0" is first in the step, so last here to match reverse order.
-    for (ssize_t i = m_children.size() - 1; i >= 0; --i) {
-        auto const& child = *m_children[i];
-        if (child.m_box->computed_values().z_index().value_or(0) != 0)
-            break;
-        auto result = child.hit_test(transformed_position, type);
-        if (result.has_value() && result->paintable->visible_for_hit_testing())
-            return result;
-    }
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box->children_are_inline() && is<Layout::BlockContainer>(*m_box)) {

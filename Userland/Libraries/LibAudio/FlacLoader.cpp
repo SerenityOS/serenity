@@ -250,12 +250,7 @@ ErrorOr<FlacRawMetadataBlock, LoaderError> FlacLoaderPlugin::next_meta_block(Big
     FLAC_VERIFY(!block_data_result.is_error(), LoaderError::Category::IO, "Out of memory");
     auto block_data = block_data_result.release_value();
 
-    // Blocks might exceed our buffer size.
-    auto bytes_left_to_read = block_data.bytes();
-    while (bytes_left_to_read.size()) {
-        auto read_bytes = LOADER_TRY(bit_input.read_some(bytes_left_to_read));
-        bytes_left_to_read = bytes_left_to_read.slice(read_bytes.size());
-    }
+    LOADER_TRY(bit_input.read_until_filled(block_data));
 
     m_data_start_location += block_length;
     return FlacRawMetadataBlock {
