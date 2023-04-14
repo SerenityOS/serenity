@@ -299,6 +299,7 @@ void KeyboardDevice::handle_scan_code_input_event(ScanCodeEvent event)
 
     Event queued_event;
     queued_event.key = key;
+    queued_event.map_entry_index = event.scan_code_value & 0xFF;
     queued_event.scancode = event.e0_prefix ? 0xe000 + event.scan_code_value : event.scan_code_value;
     queued_event.flags = m_modifiers;
     queued_event.e0_prefix = event.e0_prefix;
