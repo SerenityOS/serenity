@@ -38,6 +38,7 @@ public:
     bool is_autosize() const { return m_autosize; }
     void set_autosize(bool, size_t padding = 0);
 
+    virtual Optional<UISize> calculated_min_size() const override;
     virtual Optional<UISize> calculated_preferred_size() const override;
     int text_calculated_preferred_height() const;
     int text_calculated_preferred_width() const;

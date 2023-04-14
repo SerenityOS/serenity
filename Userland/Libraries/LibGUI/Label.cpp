@@ -23,7 +23,7 @@ Label::Label(DeprecatedString text)
     REGISTER_TEXT_WRAPPING_PROPERTY("text_wrapping", text_wrapping, set_text_wrapping);
 
     set_preferred_size({ SpecialDimension::OpportunisticGrow });
-    set_min_height(22);
+    set_min_size({ SpecialDimension::Shrink });
 
     set_frame_thickness(0);
     set_frame_shadow(Gfx::FrameShadow::Plain);
@@ -127,6 +127,16 @@ int Label::text_calculated_preferred_height() const
 Optional<UISize> Label::calculated_preferred_size() const
 {
     return GUI::UISize(text_calculated_preferred_width(), text_calculated_preferred_height());
+}
+
+Optional<UISize> Label::calculated_min_size() const
+{
+    int frame = frame_thickness() * 2;
+    int width = font().width_rounded_up("..."sv) + frame;
+    int height = font().pixel_size_rounded_up() + frame;
+    height = max(height, 22);
+
+    return UISize(width, height);
 }
 
 }
