@@ -96,7 +96,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto copy_path_action = GUI::Action::create("Copy Path to Clipboard", { Mod_Ctrl, Key_C }, copy_icon, [&](auto&) {
         GUI::Clipboard::the().set_plain_text(get_absolute_path_to_selected_node(tree_map_widget));
     });
-    auto delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
+    auto delete_action = TRY(GUI::CommonActions::make_delete_action([&](auto&) {
         DeprecatedString selected_node_path = get_absolute_path_to_selected_node(tree_map_widget);
         bool try_again = true;
         while (try_again) {
@@ -126,7 +126,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
             GUI::MessageBox::show_error(window, DeprecatedString::formatted("{}", result.error()));
         }
-    });
+    }));
 
     auto context_menu = TRY(GUI::Menu::try_create());
     TRY(context_menu->try_add_action(open_action));

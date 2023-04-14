@@ -101,6 +101,11 @@ Action::Action(DeprecatedString text, Shortcut const& shortcut, Shortcut const& 
 {
 }
 
+Action::Action(DeprecatedString text, Shortcut const& shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
+    : Action(move(text), shortcut, Shortcut {}, move(icon), move(on_activation_callback), parent, checkable)
+{
+}
+
 Action::Action(DeprecatedString text, Shortcut const& shortcut, Shortcut const& alternate_shortcut, RefPtr<Gfx::Bitmap const> icon, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
     : Core::Object(parent)
     , on_activation(move(on_activation_callback))

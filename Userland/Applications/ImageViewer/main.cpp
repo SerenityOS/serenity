@@ -129,7 +129,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             widget->open_file(value.filename(), value.stream());
         });
 
-    auto delete_action = GUI::CommonActions::make_delete_action(
+    auto delete_action = TRY(GUI::CommonActions::make_delete_action(
         [&](auto&) {
             auto path = widget->path();
             if (path.is_empty())
@@ -155,7 +155,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             widget->clear();
-        });
+        }));
 
     auto quit_action = GUI::CommonActions::make_quit_action(
         [&](auto&) {

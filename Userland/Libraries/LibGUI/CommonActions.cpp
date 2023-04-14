@@ -77,9 +77,9 @@ NonnullRefPtr<Action> make_redo_action(Function<void(Action&)> callback, Core::O
     return Action::create("&Redo", { Mod_Ctrl | Mod_Shift, Key_Z }, { Mod_Ctrl, Key_Y }, Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
 }
 
-NonnullRefPtr<Action> make_delete_action(Function<void(Action&)> callback, Core::Object* parent)
+ErrorOr<NonnullRefPtr<Action>> make_delete_action(Function<void(Action&)> callback, Core::Object* parent)
 {
-    return Action::create("&Delete", { Mod_None, Key_Delete }, Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv).release_value_but_fixme_should_propagate_errors(), move(callback), parent);
+    return Action::try_create("&Delete", Shortcut { Mod_None, Key_Delete }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/delete.png"sv)), move(callback), parent);
 }
 
 NonnullRefPtr<Action> make_cut_action(Function<void(Action&)> callback, Core::Object* parent)

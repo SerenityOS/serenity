@@ -611,7 +611,7 @@ void DirectoryView::setup_actions()
         spawn_terminal(window(), path());
     });
 
-    m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window());
+    m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) { do_delete(true); }, window()).release_value_but_fixme_should_propagate_errors();
     m_rename_action = GUI::CommonActions::make_rename_action([this](auto&) {
         if (can_modify_current_selection())
             current_view().begin_editing(current_view().cursor_index());

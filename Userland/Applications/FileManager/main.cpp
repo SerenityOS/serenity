@@ -970,22 +970,22 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         paste_action->set_enabled(data_type == "text/uri-list" && access(current_location.characters(), W_OK) == 0);
     };
 
-    auto tree_view_delete_action = GUI::CommonActions::make_delete_action(
+    auto tree_view_delete_action = TRY(GUI::CommonActions::make_delete_action(
         [&](auto&) {
             delete_paths(tree_view_selected_file_paths(), true, window);
             refresh_tree_view();
         },
-        &tree_view);
+        &tree_view));
 
     // This is a little awkward. The menu action does something different depending on which view has focus.
     // It would be nice to find a good abstraction for this instead of creating a branching action like this.
-    auto focus_dependent_delete_action = GUI::CommonActions::make_delete_action([&](auto&) {
+    auto focus_dependent_delete_action = TRY(GUI::CommonActions::make_delete_action([&](auto&) {
         if (tree_view.is_focused())
             tree_view_delete_action->activate();
         else
             directory_view->delete_action().activate();
         refresh_tree_view();
-    });
+    }));
     focus_dependent_delete_action->set_enabled(false);
 
     auto mkdir_action = GUI::Action::create("&New Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv)), [&](GUI::Action const&) {

@@ -162,7 +162,8 @@ BookmarksBarWidget::BookmarksBarWidget(DeprecatedString const& bookmarks_file, b
             if (auto result = remove_bookmark(m_context_menu_url); result.is_error())
                 GUI::MessageBox::show_error(this->window(), MUST(String::formatted("Failed to remove bookmark: {}", result.error())));
         },
-        this));
+        this)
+                                   .release_value_but_fixme_should_propagate_errors());
 
     Vector<GUI::JsonArrayModel::FieldSpec> fields;
     fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);

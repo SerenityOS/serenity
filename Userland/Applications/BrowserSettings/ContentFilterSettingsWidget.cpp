@@ -148,12 +148,13 @@ ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> ContentFilterSettingsWidget:
         }
     };
 
-    auto delete_action = GUI::CommonActions::make_delete_action([widget](GUI::Action const&) {
+    auto delete_action = TRY(GUI::CommonActions::make_delete_action([widget](GUI::Action const&) {
         if (!widget->m_domain_list_view->selection().is_empty()) {
             widget->m_domain_list_model->delete_domain(widget->m_domain_list_view->selection().first().row());
             widget->set_modified(true);
         }
-    });
+    }));
+
     widget->m_entry_context_menu = GUI::Menu::construct();
     widget->m_entry_context_menu->add_action(delete_action);
 

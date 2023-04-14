@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
     };
 
-    auto delete_action = GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
+    auto delete_action = TRY(GUI::CommonActions::make_delete_action([&](const GUI::Action&) {
         if (table_view->selection().is_empty())
             return;
 
@@ -59,7 +59,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto const& data_and_type = model->item_at(index.row()).data_and_type;
             GUI::Clipboard::the().set_data(data_and_type.data, data_and_type.mime_type, data_and_type.metadata);
         }
-    });
+    }));
 
     auto debug_dump_action = GUI::Action::create("Dump to debug console", [&](const GUI::Action&) {
         table_view->selection().for_each_index([&](GUI::ModelIndex& index) {

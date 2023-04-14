@@ -491,7 +491,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     m_copy_full_path_action = create_copy_full_path_action();
 
     m_new_directory_action = TRY(create_new_directory_action());
-    m_delete_action = create_delete_action();
+    m_delete_action = TRY(create_delete_action());
     m_tree_view_rename_action = GUI::CommonActions::make_rename_action([this](GUI::Action const&) {
         m_project_tree_view->begin_editing(m_project_tree_view->cursor_index());
     });
@@ -649,9 +649,9 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_copy_full_path_action()
     return copy_full_path_action;
 }
 
-NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
+ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_delete_action()
 {
-    auto delete_action = GUI::CommonActions::make_delete_action([this](const GUI::Action&) {
+    auto delete_action = TRY(GUI::CommonActions::make_delete_action([this](const GUI::Action&) {
         auto files = selected_file_paths();
         if (files.is_empty())
             return;
@@ -699,7 +699,8 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_delete_action()
             }
         }
     },
-        m_project_tree_view);
+        m_project_tree_view));
+
     delete_action->set_enabled(false);
     return delete_action;
 }

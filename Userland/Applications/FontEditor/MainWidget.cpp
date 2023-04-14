@@ -152,9 +152,9 @@ ErrorOr<void> MainWidget::create_actions()
         m_paste_action->set_enabled(data_type == "glyph/x-fonteditor");
     };
 
-    m_delete_action = GUI::CommonActions::make_delete_action([this](auto&) {
+    m_delete_action = TRY(GUI::CommonActions::make_delete_action([this](auto&) {
         delete_selected_glyphs();
-    });
+    }));
 
     m_undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
         undo();
