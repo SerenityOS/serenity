@@ -70,13 +70,20 @@ ThrowCompletionOr<NonnullGCPtr<Object>> ObjectConstructor::construct(FunctionObj
 {
     auto& vm = this->vm();
     auto& realm = *vm.current_realm();
-
-    if (&new_target != this)
-        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
     auto value = vm.argument(0);
+
+    // 1. If NewTarget is neither undefined nor the active function object, then
+    if (&new_target != this) {
+        // a. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
+        return TRY(ordinary_create_from_constructor<Object>(vm, new_target, &Intrinsics::object_prototype, ConstructWithPrototypeTag::Tag));
+    }
+
+    // 2. If value is either undefined or null, return OrdinaryObjectCreate(%Object.prototype%).
     if (value.is_nullish())
         return Object::create(realm, realm.intrinsics().object_prototype());
-    return TRY(value.to_object(vm));
+
+    // 3. Return ! ToObject(value).
+    return MUST(value.to_object(vm));
 }
 
 enum class GetOwnPropertyKeysType {
@@ -107,293 +114,6 @@ static ThrowCompletionOr<MarkedVector<Value>> get_own_property_keys(VM& vm, Valu
 
     // 5. Return nameList.
     return { move(name_list) };
-}
-
-// 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
-{
-    auto& realm = *vm.current_realm();
-
-    // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, string)).
-    return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::String)));
-}
-
-// 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
-{
-    auto& realm = *vm.current_realm();
-
-    // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, symbol)).
-    return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
-}
-
-// 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
-{
-    // 1. Let obj be ? ToObject(O).
-    auto object = TRY(vm.argument(0).to_object(vm));
-
-    // 2. Return ? obj.[[GetPrototypeOf]]().
-    return TRY(object->internal_get_prototype_of());
-}
-
-// 20.1.2.22 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
-{
-    auto proto = vm.argument(1);
-
-    // 1. Set O to ? RequireObjectCoercible(O).
-    auto object = TRY(require_object_coercible(vm, vm.argument(0)));
-
-    // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
-    if (!proto.is_object() && !proto.is_null())
-        return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
-
-    // 3. If Type(O) is not Object, return O.
-    if (!object.is_object())
-        return object;
-
-    // 4. Let status be ? O.[[SetPrototypeOf]](proto).
-    auto status = TRY(object.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object()));
-
-    // 5. If status is false, throw a TypeError exception.
-    if (!status) {
-        // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(ErrorType::ObjectSetPrototypeOfReturnedFalse);
-    }
-
-    // 6. Return O.
-    return object;
-}
-
-// 20.1.2.15 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
-{
-    auto argument = vm.argument(0);
-    if (!argument.is_object())
-        return Value(false);
-    return Value(TRY(argument.as_object().is_extensible()));
-}
-
-// 20.1.2.16 Object.isFrozen ( O ), https://tc39.es/ecma262/#sec-object.isfrozen
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
-{
-    auto argument = vm.argument(0);
-    if (!argument.is_object())
-        return Value(true);
-    return Value(TRY(argument.as_object().test_integrity_level(Object::IntegrityLevel::Frozen)));
-}
-
-// 20.1.2.17 Object.isSealed ( O ), https://tc39.es/ecma262/#sec-object.issealed
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
-{
-    auto argument = vm.argument(0);
-    if (!argument.is_object())
-        return Value(true);
-    return Value(TRY(argument.as_object().test_integrity_level(Object::IntegrityLevel::Sealed)));
-}
-
-// 20.1.2.19 Object.preventExtensions ( O ), https://tc39.es/ecma262/#sec-object.preventextensions
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
-{
-    auto argument = vm.argument(0);
-    if (!argument.is_object())
-        return argument;
-    auto status = TRY(argument.as_object().internal_prevent_extensions());
-    if (!status) {
-        // FIXME: Improve/contextualize error message
-        return vm.throw_completion<TypeError>(ErrorType::ObjectPreventExtensionsReturnedFalse);
-    }
-    return argument;
-}
-
-// 20.1.2.6 Object.freeze ( O ), https://tc39.es/ecma262/#sec-object.freeze
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
-{
-    auto argument = vm.argument(0);
-    if (!argument.is_object())
-        return argument;
-    auto status = TRY(argument.as_object().set_integrity_level(Object::IntegrityLevel::Frozen));
-    if (!status)
-        return vm.throw_completion<TypeError>(ErrorType::ObjectFreezeFailed);
-    return argument;
-}
-
-// 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
-{
-    auto& realm = *vm.current_realm();
-    auto iterable = TRY(require_object_coercible(vm, vm.argument(0)));
-
-    auto object = Object::create(realm, realm.intrinsics().object_prototype());
-
-    (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
-        if (!iterator_value.is_object())
-            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, DeprecatedString::formatted("Iterator value {}", TRY_OR_THROW_OOM(vm, iterator_value.to_string_without_side_effects())));
-
-        auto key = TRY(iterator_value.as_object().get(0));
-        auto value = TRY(iterator_value.as_object().get(1));
-
-        auto property_key = TRY(key.to_property_key(vm));
-        MUST(object->create_data_property_or_throw(property_key, value));
-
-        return {};
-    }));
-
-    return object;
-}
-
-// 20.1.2.21 Object.seal ( O ), https://tc39.es/ecma262/#sec-object.seal
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
-{
-    auto argument = vm.argument(0);
-    if (!argument.is_object())
-        return argument;
-    auto status = TRY(argument.as_object().set_integrity_level(Object::IntegrityLevel::Sealed));
-    if (!status)
-        return vm.throw_completion<TypeError>(ErrorType::ObjectSealFailed);
-    return argument;
-}
-
-// 20.1.2.8 Object.getOwnPropertyDescriptor ( O, P ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
-{
-    auto object = TRY(vm.argument(0).to_object(vm));
-    auto key = TRY(vm.argument(1).to_property_key(vm));
-    auto descriptor = TRY(object->internal_get_own_property(key));
-    return from_property_descriptor(vm, descriptor);
-}
-
-// 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
-{
-    auto& realm = *vm.current_realm();
-
-    // 1. Let obj be ? ToObject(O).
-    auto object = TRY(vm.argument(0).to_object(vm));
-
-    // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
-    auto own_keys = TRY(object->internal_own_property_keys());
-
-    // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
-    auto descriptors = Object::create(realm, realm.intrinsics().object_prototype());
-
-    // 4. For each element key of ownKeys, do
-    for (auto& key : own_keys) {
-        auto property_key = MUST(PropertyKey::from_value(vm, key));
-
-        // a. Let desc be ? obj.[[GetOwnProperty]](key).
-        auto desc = TRY(object->internal_get_own_property(property_key));
-
-        // b. Let descriptor be FromPropertyDescriptor(desc).
-        auto descriptor = from_property_descriptor(vm, desc);
-
-        // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
-        if (!descriptor.is_undefined())
-            MUST(descriptors->create_data_property_or_throw(property_key, descriptor));
-    }
-
-    // 5. Return descriptors.
-    return descriptors;
-}
-
-// 20.1.2.4 Object.defineProperty ( O, P, Attributes ), https://tc39.es/ecma262/#sec-object.defineproperty
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
-{
-    if (!vm.argument(0).is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, vm.argument(0).to_string_without_side_effects()));
-    auto key = TRY(vm.argument(1).to_property_key(vm));
-    auto descriptor = TRY(to_property_descriptor(vm, vm.argument(2)));
-    TRY(vm.argument(0).as_object().define_property_or_throw(key, descriptor));
-    return vm.argument(0);
-}
-
-// 20.1.2.3 Object.defineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-object.defineproperties
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
-{
-    auto object = vm.argument(0);
-    auto properties = vm.argument(1);
-
-    // 1. If Type(O) is not Object, throw a TypeError exception.
-    if (!object.is_object())
-        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, "Object argument");
-
-    // 2. Return ? ObjectDefineProperties(O, Properties).
-    return TRY(object.as_object().define_properties(properties));
-}
-
-// 20.1.2.14 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
-{
-    return Value(same_value(vm.argument(0), vm.argument(1)));
-}
-
-// 20.1.2.18 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
-{
-    auto& realm = *vm.current_realm();
-
-    auto object = TRY(vm.argument(0).to_object(vm));
-    auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Key));
-    return Array::create_from(realm, name_list);
-}
-
-// 20.1.2.23 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
-{
-    auto& realm = *vm.current_realm();
-
-    auto object = TRY(vm.argument(0).to_object(vm));
-    auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Value));
-    return Array::create_from(realm, name_list);
-}
-
-// 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
-{
-    auto& realm = *vm.current_realm();
-
-    auto object = TRY(vm.argument(0).to_object(vm));
-    auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
-    return Array::create_from(realm, name_list);
-}
-
-// 20.1.2.2 Object.create ( O, Properties ), https://tc39.es/ecma262/#sec-object.create
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
-{
-    auto& realm = *vm.current_realm();
-
-    auto proto = vm.argument(0);
-    auto properties = vm.argument(1);
-
-    // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
-    if (!proto.is_object() && !proto.is_null())
-        return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
-
-    // 2. Let obj be OrdinaryObjectCreate(O).
-    auto object = Object::create(realm, proto.is_null() ? nullptr : &proto.as_object());
-
-    // 3. If Properties is not undefined, then
-    if (!properties.is_undefined()) {
-        // a. Return ? ObjectDefineProperties(obj, Properties).
-        return TRY(object->define_properties(properties));
-    }
-
-    // 4. Return obj.
-    return object;
-}
-
-// 20.1.2.13 Object.hasOwn ( O, P ), https://tc39.es/ecma262/#sec-object.hasown
-JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
-{
-    // 1. Let obj be ? ToObject(O).
-    auto object = TRY(vm.argument(0).to_object(vm));
-
-    // 2. Let key be ? ToPropertyKey(P).
-    auto key = TRY(vm.argument(1).to_property_key(vm));
-
-    // 3. Return ? HasOwnProperty(obj, key).
-    return Value(TRY(object->has_own_property(key)));
 }
 
 // 20.1.2.1 Object.assign ( target, ...sources ), https://tc39.es/ecma262/#sec-object.assign
@@ -441,6 +161,375 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
 
     // 4. Return to.
     return to;
+}
+
+// 20.1.2.2 Object.create ( O, Properties ), https://tc39.es/ecma262/#sec-object.create
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
+{
+    auto& realm = *vm.current_realm();
+
+    auto proto = vm.argument(0);
+    auto properties = vm.argument(1);
+
+    // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
+    if (!proto.is_object() && !proto.is_null())
+        return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
+
+    // 2. Let obj be OrdinaryObjectCreate(O).
+    auto object = Object::create(realm, proto.is_null() ? nullptr : &proto.as_object());
+
+    // 3. If Properties is not undefined, then
+    if (!properties.is_undefined()) {
+        // a. Return ? ObjectDefineProperties(obj, Properties).
+        return TRY(object->define_properties(properties));
+    }
+
+    // 4. Return obj.
+    return object;
+}
+
+// 20.1.2.3 Object.defineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-object.defineproperties
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_properties)
+{
+    auto object = vm.argument(0);
+    auto properties = vm.argument(1);
+
+    // 1. If Type(O) is not Object, throw a TypeError exception.
+    if (!object.is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, "Object argument");
+
+    // 2. Return ? ObjectDefineProperties(O, Properties).
+    return TRY(object.as_object().define_properties(properties));
+}
+
+// 20.1.2.4 Object.defineProperty ( O, P, Attributes ), https://tc39.es/ecma262/#sec-object.defineproperty
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::define_property)
+{
+    // 1. If O is not an Object, throw a TypeError exception.
+    if (!vm.argument(0).is_object())
+        return vm.throw_completion<TypeError>(ErrorType::NotAnObject, TRY_OR_THROW_OOM(vm, vm.argument(0).to_string_without_side_effects()));
+
+    auto object = MUST(vm.argument(0).to_object(vm));
+
+    // 2. Let key be ? ToPropertyKey(P).
+    auto key = TRY(vm.argument(1).to_property_key(vm));
+
+    // 3. Let desc be ? ToPropertyDescriptor(Attributes).
+    auto descriptor = TRY(to_property_descriptor(vm, vm.argument(2)));
+
+    // 4. Perform ? DefinePropertyOrThrow(O, key, desc).
+    TRY(object->define_property_or_throw(key, descriptor));
+
+    // 5. Return O.
+    return object;
+}
+
+// 20.1.2.5 Object.entries ( O ), https://tc39.es/ecma262/#sec-object.entries
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Let entryList be ? EnumerableOwnProperties(obj, key+value).
+    auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::KeyAndValue));
+
+    // 3. Return CreateArrayFromList(entryList).
+    return Array::create_from(realm, name_list);
+}
+
+// 20.1.2.6 Object.freeze ( O ), https://tc39.es/ecma262/#sec-object.freeze
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
+{
+    auto argument = vm.argument(0);
+
+    // 1. If O is not an Object, return O.
+    if (!argument.is_object())
+        return argument;
+
+    // 2. Let status be ? SetIntegrityLevel(O, frozen).
+    auto status = TRY(argument.as_object().set_integrity_level(Object::IntegrityLevel::Frozen));
+
+    // 3. If status is false, throw a TypeError exception.
+    if (!status)
+        return vm.throw_completion<TypeError>(ErrorType::ObjectFreezeFailed);
+
+    // 4. Return O.
+    return argument;
+}
+
+// 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Perform ? RequireObjectCoercible(iterable).
+    auto iterable = TRY(require_object_coercible(vm, vm.argument(0)));
+
+    // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+    auto object = Object::create(realm, realm.intrinsics().object_prototype());
+
+    // 3. Assert: obj is an extensible ordinary object with no own properties.
+
+    // 4. Let closure be a new Abstract Closure with parameters (key, value) that captures obj and performs the following steps when called:
+    // 5. Let adder be CreateBuiltinFunction(closure, 2, "", « »).
+    // 6. Return ? AddEntriesFromIterable(obj, iterable, adder).
+    (void)TRY(get_iterator_values(vm, iterable, [&](Value iterator_value) -> Optional<Completion> {
+        if (!iterator_value.is_object())
+            return vm.throw_completion<TypeError>(ErrorType::NotAnObject, DeprecatedString::formatted("Iterator value {}", TRY_OR_THROW_OOM(vm, iterator_value.to_string_without_side_effects())));
+
+        auto key = TRY(iterator_value.as_object().get(0));
+        auto value = TRY(iterator_value.as_object().get(1));
+
+        // a. Let propertyKey be ? ToPropertyKey(key).
+        auto property_key = TRY(key.to_property_key(vm));
+
+        // b. Perform ! CreateDataPropertyOrThrow(obj, propertyKey, value).
+        MUST(object->create_data_property_or_throw(property_key, value));
+
+        // c. Return undefined.
+        return {};
+    }));
+
+    return object;
+}
+
+// 20.1.2.8 Object.getOwnPropertyDescriptor ( O, P ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptor
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
+{
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Let key be ? ToPropertyKey(P).
+    auto key = TRY(vm.argument(1).to_property_key(vm));
+
+    // 3. Let desc be ? obj.[[GetOwnProperty]](key).
+    auto descriptor = TRY(object->internal_get_own_property(key));
+
+    // 4. Return FromPropertyDescriptor(desc).
+    return from_property_descriptor(vm, descriptor);
+}
+
+// 20.1.2.9 Object.getOwnPropertyDescriptors ( O ), https://tc39.es/ecma262/#sec-object.getownpropertydescriptors
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptors)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
+    auto own_keys = TRY(object->internal_own_property_keys());
+
+    // 3. Let descriptors be OrdinaryObjectCreate(%Object.prototype%).
+    auto descriptors = Object::create(realm, realm.intrinsics().object_prototype());
+
+    // 4. For each element key of ownKeys, do
+    for (auto& key : own_keys) {
+        auto property_key = MUST(PropertyKey::from_value(vm, key));
+
+        // a. Let desc be ? obj.[[GetOwnProperty]](key).
+        auto desc = TRY(object->internal_get_own_property(property_key));
+
+        // b. Let descriptor be FromPropertyDescriptor(desc).
+        auto descriptor = from_property_descriptor(vm, desc);
+
+        // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
+        if (!descriptor.is_undefined())
+            MUST(descriptors->create_data_property_or_throw(property_key, descriptor));
+    }
+
+    // 5. Return descriptors.
+    return descriptors;
+}
+
+// 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, string)).
+    return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::String)));
+}
+
+// 20.1.2.11 Object.getOwnPropertySymbols ( O ), https://tc39.es/ecma262/#sec-object.getownpropertysymbols
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Return CreateArrayFromList(? GetOwnPropertyKeys(O, symbol)).
+    return Array::create_from(realm, TRY(get_own_property_keys(vm, vm.argument(0), GetOwnPropertyKeysType::Symbol)));
+}
+
+// 20.1.2.12 Object.getPrototypeOf ( O ), https://tc39.es/ecma262/#sec-object.getprototypeof
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
+{
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Return ? obj.[[GetPrototypeOf]]().
+    return TRY(object->internal_get_prototype_of());
+}
+
+// 20.1.2.13 Object.hasOwn ( O, P ), https://tc39.es/ecma262/#sec-object.hasown
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
+{
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Let key be ? ToPropertyKey(P).
+    auto key = TRY(vm.argument(1).to_property_key(vm));
+
+    // 3. Return ? HasOwnProperty(obj, key).
+    return Value(TRY(object->has_own_property(key)));
+}
+
+// 20.1.2.14 Object.is ( value1, value2 ), https://tc39.es/ecma262/#sec-object.is
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
+{
+    // 1. Return SameValue(value1, value2).
+    return Value(same_value(vm.argument(0), vm.argument(1)));
+}
+
+// 20.1.2.15 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_extensible)
+{
+    auto argument = vm.argument(0);
+
+    // 1. If O is not an Object, return false.
+    if (!argument.is_object())
+        return Value(false);
+
+    // 2. Return ? IsExtensible(O).
+    return Value(TRY(argument.as_object().is_extensible()));
+}
+
+// 20.1.2.16 Object.isFrozen ( O ), https://tc39.es/ecma262/#sec-object.isfrozen
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_frozen)
+{
+    auto argument = vm.argument(0);
+
+    // 1. If O is not an Object, return true.
+    if (!argument.is_object())
+        return Value(true);
+
+    // 2. Return ? TestIntegrityLevel(O, frozen).
+    return Value(TRY(argument.as_object().test_integrity_level(Object::IntegrityLevel::Frozen)));
+}
+
+// 20.1.2.17 Object.isSealed ( O ), https://tc39.es/ecma262/#sec-object.issealed
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is_sealed)
+{
+    auto argument = vm.argument(0);
+
+    // 1. If O is not an Object, return true.
+    if (!argument.is_object())
+        return Value(true);
+
+    // 2. Return ? TestIntegrityLevel(O, sealed).
+    return Value(TRY(argument.as_object().test_integrity_level(Object::IntegrityLevel::Sealed)));
+}
+
+// 20.1.2.18 Object.keys ( O ), https://tc39.es/ecma262/#sec-object.keys
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Let keyList be ? EnumerableOwnProperties(obj, key).
+    auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Key));
+
+    // 3. Return CreateArrayFromList(keyList).
+    return Array::create_from(realm, name_list);
+}
+
+// 20.1.2.19 Object.preventExtensions ( O ), https://tc39.es/ecma262/#sec-object.preventextensions
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::prevent_extensions)
+{
+    auto argument = vm.argument(0);
+
+    // 1. If O is not an Object, return O.
+    if (!argument.is_object())
+        return argument;
+
+    // 2. Let status be ? O.[[PreventExtensions]]().
+    auto status = TRY(argument.as_object().internal_prevent_extensions());
+
+    // 3. If status is false, throw a TypeError exception.
+    if (!status) {
+        // FIXME: Improve/contextualize error message
+        return vm.throw_completion<TypeError>(ErrorType::ObjectPreventExtensionsReturnedFalse);
+    }
+
+    // 4. Return O.
+    return argument;
+}
+
+// 20.1.2.21 Object.seal ( O ), https://tc39.es/ecma262/#sec-object.seal
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::seal)
+{
+    auto argument = vm.argument(0);
+
+    // 1. If O is not an Object, return O.
+    if (!argument.is_object())
+        return argument;
+
+    // 2. Let status be ? SetIntegrityLevel(O, sealed).
+    auto status = TRY(argument.as_object().set_integrity_level(Object::IntegrityLevel::Sealed));
+
+    // 3. If status is false, throw a TypeError exception.
+    if (!status)
+        return vm.throw_completion<TypeError>(ErrorType::ObjectSealFailed);
+
+    // 4. Return O.
+    return argument;
+}
+
+// 20.1.2.22 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
+{
+    auto proto = vm.argument(1);
+
+    // 1. Set O to ? RequireObjectCoercible(O).
+    auto object = TRY(require_object_coercible(vm, vm.argument(0)));
+
+    // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
+    if (!proto.is_object() && !proto.is_null())
+        return vm.throw_completion<TypeError>(ErrorType::ObjectPrototypeWrongType);
+
+    // 3. If Type(O) is not Object, return O.
+    if (!object.is_object())
+        return object;
+
+    // 4. Let status be ? O.[[SetPrototypeOf]](proto).
+    auto status = TRY(object.as_object().internal_set_prototype_of(proto.is_null() ? nullptr : &proto.as_object()));
+
+    // 5. If status is false, throw a TypeError exception.
+    if (!status) {
+        // FIXME: Improve/contextualize error message
+        return vm.throw_completion<TypeError>(ErrorType::ObjectSetPrototypeOfReturnedFalse);
+    }
+
+    // 6. Return O.
+    return object;
+}
+
+// 20.1.2.23 Object.values ( O ), https://tc39.es/ecma262/#sec-object.values
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
+{
+    auto& realm = *vm.current_realm();
+
+    // 1. Let obj be ? ToObject(O).
+    auto object = TRY(vm.argument(0).to_object(vm));
+
+    // 2. Let valueList be ? EnumerableOwnProperties(obj, value).
+    auto name_list = TRY(object->enumerable_own_property_names(PropertyKind::Value));
+
+    // 3. Return CreateArrayFromList(valueList).
+    return Array::create_from(realm, name_list);
 }
 
 }
