@@ -12,21 +12,18 @@
 #endif
 
 #ifdef __x86_64__
-#    define AK_ARCH_X86_64 1
 #    define AK_IS_ARCH_X86_64() 1
 #else
 #    define AK_IS_ARCH_X86_64() 0
 #endif
 
 #ifdef __aarch64__
-#    define AK_ARCH_AARCH64 1
 #    define AK_IS_ARCH_AARCH64() 1
 #else
 #    define AK_IS_ARCH_AARCH64() 0
 #endif
 
 #ifdef __wasm32__
-#    define AK_ARCH_WASM32 1
 #    define AK_IS_ARCH_WASM32() 1
 #else
 #    define AK_IS_ARCH_WASM32() 0
