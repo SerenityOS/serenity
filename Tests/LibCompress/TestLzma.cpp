@@ -9,6 +9,28 @@
 #include <AK/MemoryStream.h>
 #include <LibCompress/Lzma.h>
 
+TEST_CASE(repetition_length_beyond_distance)
+{
+    // This test exists to ensure correctness when repeating data from the dictionary that has been
+    // written earlier during the same repetition.
+    // While this test case is not large enough to testify how well this is optimized, it may still
+    // be a constellation that is improperly implemented as a whole.
+
+    Array<u8, 21> const compressed {
+        0x5D,                                           // Model properties (lc = 3, lp = 0, pb = 2)
+        0x00, 0x10, 0x00, 0x00,                         // Dictionary size (4 KB)
+        0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Uncompressed size (7)
+
+        // Encode a literal 'A' and a literal 'B', followed by a repetition from (real) distance 2 with a (real) length of 5.
+        0x00, 0x20, 0x90, 0x9F, 0x04, 0x00, 0x00, 0x00
+    };
+
+    auto stream = MUST(try_make<FixedMemoryStream>(compressed));
+    auto decompressor = MUST(Compress::LzmaDecompressor::create_from_container(move(stream)));
+    auto buffer = TRY_OR_FAIL(decompressor->read_until_eof(PAGE_SIZE));
+    EXPECT_EQ("ABABABA"sv.bytes(), buffer.span());
+}
+
 // The following tests are based on test files from the LZMA specification, which has been placed in the public domain.
 // LZMA Specification Draft (2015): https://www.7-zip.org/a/lzma-specification.7z
 
