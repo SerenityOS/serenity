@@ -733,7 +733,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 6. If underlyingSourceDict["pull"] exists, then set pullAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["pull"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source.pull) {
-        pull_algorithm = [&, pull = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+        pull_algorithm = [&, pull = underlying_source.pull]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             auto result = TRY(WebIDL::invoke_callback(*pull, underlying_source_value, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         };
@@ -741,7 +741,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 7. If underlyingSourceDict["cancel"] exists, then set cancelAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSourceDict["cancel"] with argument list « reason » and callback this value underlyingSource.
     if (underlying_source.cancel) {
-        cancel_algorithm = [&, cancel = underlying_source.cancel](auto const& reason) -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+        cancel_algorithm = [&, cancel = underlying_source.cancel](auto const& reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             auto result = TRY(WebIDL::invoke_callback(*cancel, underlying_source_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         };
@@ -1736,7 +1736,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 7. If underlyingSinkDict["write"] exists, then set writeAlgorithm to an algorithm which takes an argument chunk and returns the result of invoking underlyingSinkDict["write"] with argument list « chunk, controller » and callback this value underlyingSink.
     if (underlying_sink.write) {
-        write_algorithm = [&, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+        write_algorithm = [&, callback = underlying_sink.write](JS::Value chunk) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, chunk, controller)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         };
@@ -1744,7 +1744,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 8. If underlyingSinkDict["close"] exists, then set closeAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["close"] with argument list «» and callback this value underlyingSink.
     if (underlying_sink.close) {
-        close_algorithm = [&, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+        close_algorithm = [&, callback = underlying_sink.close]() -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         };
@@ -1752,7 +1752,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 9. If underlyingSinkDict["abort"] exists, then set abortAlgorithm to an algorithm which takes an argument reason and returns the result of invoking underlyingSinkDict["abort"] with argument list « reason » and callback this value underlyingSink.
     if (underlying_sink.abort) {
-        abort_algorithm = [&, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
+        abort_algorithm = [&, callback = underlying_sink.abort](JS::Value reason) -> WebIDL::ExceptionOr<JS::NonnullGCPtr<WebIDL::Promise>> {
             auto result = TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, reason)).release_value();
             return WebIDL::create_resolved_promise(realm, result);
         };
