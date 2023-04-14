@@ -17,13 +17,14 @@
 namespace Browser {
 
 class DownloadWidget final : public GUI::Widget {
-    C_OBJECT(DownloadWidget);
+    C_OBJECT_ABSTRACT(DownloadWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<DownloadWidget>> try_create(const URL&);
     virtual ~DownloadWidget() override = default;
 
 private:
-    explicit DownloadWidget(const URL&);
+    explicit DownloadWidget();
 
     void did_progress(Optional<u32> total_size, u32 downloaded_size);
     void did_finish(bool success);

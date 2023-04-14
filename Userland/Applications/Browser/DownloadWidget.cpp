@@ -25,89 +25,100 @@
 
 namespace Browser {
 
-DownloadWidget::DownloadWidget(const URL& url)
-    : m_url(url)
+ErrorOr<NonnullRefPtr<DownloadWidget>> DownloadWidget::try_create(const URL& url)
 {
+    auto main_widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) DownloadWidget()));
+
+    main_widget->m_url = url;
+
     {
         StringBuilder builder;
         builder.append(Core::StandardPaths::downloads_directory());
         builder.append('/');
-        builder.append(m_url.basename());
-        m_destination_path = builder.to_deprecated_string();
+        builder.append(url.basename());
+        main_widget->m_destination_path = builder.to_deprecated_string();
     }
 
     auto close_on_finish = Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, false);
 
-    m_elapsed_timer.start();
-    m_download = Web::ResourceLoader::the().connector().start_request("GET", url);
-    VERIFY(m_download);
-    m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
-        did_progress(total_size.value(), downloaded_size);
+    main_widget->m_elapsed_timer.start();
+
+    main_widget->m_download = Web::ResourceLoader::the().connector().start_request("GET", url);
+    VERIFY(main_widget->m_download);
+
+    main_widget->m_download->on_progress = [main_widget](Optional<u32> total_size, u32 downloaded_size) {
+        main_widget->did_progress(total_size.value(), downloaded_size);
     };
 
     {
-        auto file_or_error = Core::File::open(m_destination_path, Core::File::OpenMode::Write);
+        auto file_or_error = Core::File::open(main_widget->m_destination_path, Core::File::OpenMode::Write);
         if (file_or_error.is_error()) {
-            GUI::MessageBox::show(window(), DeprecatedString::formatted("Cannot open {} for writing", m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
-            window()->close();
-            return;
+            GUI::MessageBox::show(main_widget->window(), DeprecatedString::formatted("Cannot open {} for writing", main_widget->m_destination_path), "Download failed"sv, GUI::MessageBox::Type::Error);
+            main_widget->window()->close();
+            return file_or_error.release_error();
         }
-        m_output_file_stream = file_or_error.release_value();
+        main_widget->m_output_file_stream = file_or_error.release_value();
     }
 
-    m_download->on_finish = [this](bool success, auto) { did_finish(success); };
-    m_download->stream_into(*m_output_file_stream);
+    main_widget->m_download->on_finish = [main_widget](bool success, auto) { main_widget->did_finish(success); };
+    main_widget->m_download->stream_into(*main_widget->m_output_file_stream);
 
-    set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>(4);
+    main_widget->set_fill_with_background_color(true);
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4));
 
-    auto& animation_container = add<GUI::Widget>();
-    animation_container.set_fixed_height(32);
-    animation_container.set_layout<GUI::HorizontalBoxLayout>();
+    auto animation_container = TRY(main_widget->try_add<GUI::Widget>());
+    animation_container->set_fixed_height(32);
+    TRY(animation_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-    m_browser_image = animation_container.add<GUI::ImageWidget>();
-    m_browser_image->load_from_file("/res/graphics/download-animation.gif"sv);
-    animation_container.add_spacer().release_value_but_fixme_should_propagate_errors();
+    main_widget->m_browser_image = TRY(animation_container->try_add<GUI::ImageWidget>());
+    main_widget->m_browser_image->load_from_file("/res/graphics/download-animation.gif"sv);
+    TRY(animation_container->add_spacer());
 
-    auto& source_label = add<GUI::Label>(DeprecatedString::formatted("From: {}", url));
-    source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    source_label.set_fixed_height(16);
+    auto source_label = TRY(main_widget->try_add<GUI::Label>(DeprecatedString::formatted("From: {}", url)));
+    source_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    source_label->set_fixed_height(16);
 
-    m_progressbar = add<GUI::Progressbar>();
-    m_progressbar->set_fixed_height(20);
+    main_widget->m_progressbar = TRY(main_widget->try_add<GUI::Progressbar>());
+    main_widget->m_progressbar->set_fixed_height(20);
 
-    m_progress_label = add<GUI::Label>();
-    m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    m_progress_label->set_fixed_height(16);
+    main_widget->m_progress_label = TRY(main_widget->try_add<GUI::Label>());
+    main_widget->m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    main_widget->m_progress_label->set_fixed_height(16);
 
-    auto& destination_label = add<GUI::Label>(DeprecatedString::formatted("To: {}", m_destination_path));
-    destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-    destination_label.set_fixed_height(16);
+    auto destination_label = TRY(main_widget->try_add<GUI::Label>(DeprecatedString::formatted("To: {}", main_widget->m_destination_path)));
+    destination_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    destination_label->set_fixed_height(16);
 
-    m_close_on_finish_checkbox = add<GUI::CheckBox>("Close when finished"_string.release_value_but_fixme_should_propagate_errors());
-    m_close_on_finish_checkbox->set_checked(close_on_finish);
+    main_widget->m_close_on_finish_checkbox = TRY(main_widget->try_add<GUI::CheckBox>(TRY("Close when finished"_string)));
+    main_widget->m_close_on_finish_checkbox->set_checked(close_on_finish);
 
-    m_close_on_finish_checkbox->on_checked = [&](bool checked) {
+    main_widget->m_close_on_finish_checkbox->on_checked = [&](bool checked) {
         Config::write_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, checked);
     };
 
-    auto& button_container = add<GUI::Widget>();
-    button_container.set_layout<GUI::HorizontalBoxLayout>();
-    button_container.add_spacer().release_value_but_fixme_should_propagate_errors();
-    m_cancel_button = button_container.add<GUI::Button>("Cancel"_short_string);
-    m_cancel_button->set_fixed_size(100, 22);
-    m_cancel_button->on_click = [this](auto) {
-        bool success = m_download->stop();
+    auto button_container = TRY(main_widget->try_add<GUI::Widget>());
+    TRY(button_container->try_set_layout<GUI::HorizontalBoxLayout>());
+    TRY(button_container->add_spacer());
+    main_widget->m_cancel_button = TRY(button_container->try_add<GUI::Button>("Cancel"_short_string));
+    main_widget->m_cancel_button->set_fixed_size(100, 22);
+    main_widget->m_cancel_button->on_click = [main_widget](auto) {
+        bool success = main_widget->m_download->stop();
         VERIFY(success);
-        window()->close();
+        main_widget->window()->close();
     };
 
-    m_close_button = button_container.add<GUI::Button>("OK"_short_string);
-    m_close_button->set_enabled(false);
-    m_close_button->set_fixed_size(100, 22);
-    m_close_button->on_click = [this](auto) {
-        window()->close();
+    main_widget->m_close_button = TRY(button_container->try_add<GUI::Button>("OK"_short_string));
+    main_widget->m_close_button->set_enabled(false);
+    main_widget->m_close_button->set_fixed_size(100, 22);
+    main_widget->m_close_button->on_click = [main_widget](auto) {
+        main_widget->window()->close();
     };
+
+    return main_widget;
+}
+
+DownloadWidget::DownloadWidget()
+{
 }
 
 void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
