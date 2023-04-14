@@ -135,7 +135,6 @@ public:
 
     Function<void(RefPtr<Gfx::Bitmap>)> on_video_frame;
     Function<void()> on_playback_state_change;
-    Function<void()> on_end_of_stream;
     Function<void(DecoderError)> on_decoder_error;
     Function<void(Error)> on_fatal_playback_error;
 
