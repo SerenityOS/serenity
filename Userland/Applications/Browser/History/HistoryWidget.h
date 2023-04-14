@@ -15,9 +15,10 @@
 namespace Browser {
 
 class HistoryWidget final : public GUI::Widget {
-    C_OBJECT(HistoryWidget);
+    C_OBJECT_ABSTRACT(HistoryWidget);
 
 public:
+    static ErrorOr<NonnullRefPtr<HistoryWidget>> try_create();
     virtual ~HistoryWidget() override = default;
 
     void set_history_entries(Vector<History::URLTitlePair> entries);
