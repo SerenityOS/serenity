@@ -33,8 +33,8 @@ private:
     virtual void mouse_wheel(i32, Gfx::IntPoint, u32, u32, u32, i32, i32, i32, i32) override;
     virtual void window_entered(i32) override;
     virtual void window_left(i32) override;
-    virtual void key_down(i32, u32, u32, u32, u32) override;
-    virtual void key_up(i32, u32, u32, u32, u32) override;
+    virtual void key_down(i32, u32, u32, u8, u32, u32) override;
+    virtual void key_up(i32, u32, u32, u8, u32, u32) override;
     virtual void window_activated(i32) override;
     virtual void window_deactivated(i32) override;
     virtual void window_input_preempted(i32) override;

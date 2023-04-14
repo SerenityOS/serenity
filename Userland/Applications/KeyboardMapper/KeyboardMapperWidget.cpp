@@ -203,7 +203,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
 void KeyboardMapperWidget::keydown_event(GUI::KeyEvent& event)
 {
     for (int i = 0; i < KEY_COUNT; i++) {
-        if (keys[i].scancode != event.scancode())
+        if (keys[i].kernel_map_entry_index != event.map_entry_index())
             continue;
         auto& tmp_button = m_keys.at(i);
         tmp_button->set_pressed(true);
@@ -221,7 +221,7 @@ void KeyboardMapperWidget::keydown_event(GUI::KeyEvent& event)
 void KeyboardMapperWidget::keyup_event(GUI::KeyEvent& event)
 {
     for (int i = 0; i < KEY_COUNT; i++) {
-        if (keys[i].scancode != event.scancode())
+        if (keys[i].kernel_map_entry_index != event.map_entry_index())
             continue;
         auto& tmp_button = m_keys.at(i);
         tmp_button->set_pressed(false);

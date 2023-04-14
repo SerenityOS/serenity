@@ -180,13 +180,13 @@ static Action* action_for_shortcut(Window& window, Shortcut const& shortcut)
     return nullptr;
 }
 
-void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, u32 modifiers, u32 scancode)
+void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, u8 map_entry_index, u32 modifiers, u32 scancode)
 {
     auto* window = Window::from_window_id(window_id);
     if (!window)
         return;
 
-    auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)key, modifiers, code_point, scancode);
+    auto key_event = make<KeyEvent>(Event::KeyDown, (KeyCode)key, map_entry_index, modifiers, code_point, scancode);
 
     bool focused_widget_accepts_emoji_input = window->focused_widget() && window->focused_widget()->on_emoji_input;
     if (!window->blocks_emoji_input() && focused_widget_accepts_emoji_input && (modifiers == (Mod_Ctrl | Mod_Alt)) && key == Key_Space) {
@@ -201,13 +201,13 @@ void ConnectionToWindowServer::key_down(i32 window_id, u32 code_point, u32 key, 
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
-void ConnectionToWindowServer::key_up(i32 window_id, u32 code_point, u32 key, u32 modifiers, u32 scancode)
+void ConnectionToWindowServer::key_up(i32 window_id, u32 code_point, u32 key, u8 map_entry_index, u32 modifiers, u32 scancode)
 {
     auto* window = Window::from_window_id(window_id);
     if (!window)
         return;
 
-    auto key_event = make<KeyEvent>(Event::KeyUp, (KeyCode)key, modifiers, code_point, scancode);
+    auto key_event = make<KeyEvent>(Event::KeyUp, (KeyCode)key, map_entry_index, modifiers, code_point, scancode);
     Core::EventLoop::current().post_event(*window, move(key_event));
 }
 
