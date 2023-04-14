@@ -114,7 +114,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::getsockname(listen_fd, (struct sockaddr*)&sin, &len));
 
         if (verbose)
-            warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
+            warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str)), ntohs(sin.sin_port));
 
     } else {
         fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
@@ -138,7 +138,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         if (verbose) {
             char addr_str[INET_ADDRSTRLEN];
-            warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(dst_addr.sin_port));
+            warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str)), ntohs(dst_addr.sin_port));
         }
 
         TRY(Core::System::connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)));
@@ -258,7 +258,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             connected_clients.set(new_client);
 
             if (verbose)
-                warnln("got connection from {}:{}", inet_ntop(client.sin_family, &client.sin_addr, client_str, sizeof(client_str) - 1), ntohs(client.sin_port));
+                warnln("got connection from {}:{}", inet_ntop(client.sin_family, &client.sin_addr, client_str, sizeof(client_str)), ntohs(client.sin_port));
         }
 
         if (has_clients) {
