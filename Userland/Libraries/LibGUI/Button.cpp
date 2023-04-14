@@ -291,4 +291,14 @@ Optional<UISize> Button::calculated_min_size() const
     return UISize(width, height);
 }
 
+Optional<UISize> DialogButton::calculated_min_size() const
+{
+    int constexpr scale = 8;
+    int constexpr padding = 6;
+    int width = max(80, font().presentation_size() * scale);
+    int height = max(22, font().pixel_size_rounded_up() + padding);
+
+    return UISize(width, height);
+}
+
 }

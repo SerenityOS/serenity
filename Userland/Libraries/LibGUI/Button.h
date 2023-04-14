@@ -95,8 +95,11 @@ public:
     explicit DialogButton(String text = {})
         : Button(move(text))
     {
-        set_fixed_width(80);
+        set_min_size({ SpecialDimension::Shrink });
+        set_preferred_size({ SpecialDimension::Shrink });
     }
+
+    virtual Optional<UISize> calculated_min_size() const override;
 };
 
 }
