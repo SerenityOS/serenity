@@ -322,7 +322,7 @@ public:
 
     StringView alpn() const { return m_context.negotiated_alpn; }
 
-    bool supports_cipher(CipherSuite suite) const
+    static bool supports_cipher(CipherSuite suite)
     {
         switch (suite) {
 #define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \

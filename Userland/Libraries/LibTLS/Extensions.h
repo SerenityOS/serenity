@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/Types.h>
 
 namespace TLS {
@@ -701,6 +702,142 @@ enum class AlertDescription : u8 {
     __ENUM_ALERT_DESCRIPTIONS
 };
 
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-signaturescheme
+#define __ENUM_SIGNATURE_SCHEMES                               \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA1, 0x0201)                    \
+    _ENUM_KEY_VALUE(ECDSA_SHA1, 0x0203)                        \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA256, 0x0401)                  \
+    _ENUM_KEY_VALUE(ECDSA_SECP256R1_SHA256, 0x0403)            \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA256_LEGACY, 0x0420)           \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA384, 0x0501)                  \
+    _ENUM_KEY_VALUE(ECDSA_SECP384R1_SHA384, 0x0503)            \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA384_LEGACY, 0x0520)           \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA512, 0x0601)                  \
+    _ENUM_KEY_VALUE(ECDSA_SECP521R1_SHA512, 0x0603)            \
+    _ENUM_KEY_VALUE(RSA_PKCS1_SHA512_LEGACY, 0x0620)           \
+    _ENUM_KEY_VALUE(ECCSI_SHA256, 0x0704)                      \
+    _ENUM_KEY_VALUE(ISO_IBS1, 0x0705)                          \
+    _ENUM_KEY_VALUE(ISO_IBS2, 0x0706)                          \
+    _ENUM_KEY_VALUE(ISO_CHINESE_IBS, 0x0707)                   \
+    _ENUM_KEY_VALUE(SM2SIG_SM3, 0x0708)                        \
+    _ENUM_KEY_VALUE(GOSTR34102012_256A, 0x0709)                \
+    _ENUM_KEY_VALUE(GOSTR34102012_256B, 0x070A)                \
+    _ENUM_KEY_VALUE(GOSTR34102012_256C, 0x070B)                \
+    _ENUM_KEY_VALUE(GOSTR34102012_256D, 0x070C)                \
+    _ENUM_KEY_VALUE(GOSTR34102012_512A, 0x070D)                \
+    _ENUM_KEY_VALUE(GOSTR34102012_512B, 0x070E)                \
+    _ENUM_KEY_VALUE(GOSTR34102012_512C, 0x070F)                \
+    _ENUM_KEY_VALUE(RSA_PSS_RSAE_SHA256, 0x0804)               \
+    _ENUM_KEY_VALUE(RSA_PSS_RSAE_SHA384, 0x0805)               \
+    _ENUM_KEY_VALUE(RSA_PSS_RSAE_SHA512, 0x0806)               \
+    _ENUM_KEY_VALUE(ED25519, 0x0807)                           \
+    _ENUM_KEY_VALUE(ED448, 0x0808)                             \
+    _ENUM_KEY_VALUE(RSA_PSS_PSS_SHA256, 0x0809)                \
+    _ENUM_KEY_VALUE(RSA_PSS_PSS_SHA384, 0x080A)                \
+    _ENUM_KEY_VALUE(RSA_PSS_PSS_SHA512, 0x080B)                \
+    _ENUM_KEY_VALUE(ECDSA_BRAINPOOLP256R1TLS13_SHA256, 0x081A) \
+    _ENUM_KEY_VALUE(ECDSA_BRAINPOOLP384R1TLS13_SHA384, 0x081B) \
+    _ENUM_KEY_VALUE(ECDSA_BRAINPOOLP512R1TLS13_SHA512, 0x081C) \
+    _ENUM_KEY_VALUE(GREASE_0, 0x0A0A)                          \
+    _ENUM_KEY_VALUE(GREASE_1, 0x1A1A)                          \
+    _ENUM_KEY_VALUE(GREASE_2, 0x2A2A)                          \
+    _ENUM_KEY_VALUE(GREASE_3, 0x3A3A)                          \
+    _ENUM_KEY_VALUE(GREASE_4, 0x4A4A)                          \
+    _ENUM_KEY_VALUE(GREASE_5, 0x5A5A)                          \
+    _ENUM_KEY_VALUE(GREASE_6, 0x6A6A)                          \
+    _ENUM_KEY_VALUE(GREASE_7, 0x7A7A)                          \
+    _ENUM_KEY_VALUE(GREASE_8, 0x8A8A)                          \
+    _ENUM_KEY_VALUE(GREASE_9, 0x9A9A)                          \
+    _ENUM_KEY_VALUE(GREASE_A, 0xAAAA)                          \
+    _ENUM_KEY_VALUE(GREASE_B, 0xBABA)                          \
+    _ENUM_KEY_VALUE(GREASE_C, 0xCACA)                          \
+    _ENUM_KEY_VALUE(GREASE_D, 0xDADA)                          \
+    _ENUM_KEY_VALUE(GREASE_E, 0xEAEA)                          \
+    _ENUM_KEY_VALUE(GREASE_F, 0xFAFA)
+
+enum class SignatureScheme : u16 {
+    __ENUM_SIGNATURE_SCHEMES
+};
+
+// https://www.iana.org/assignments/tls-parameters/tls-parameters.xhtml#tls-pskkeyexchangemode
+#define __ENUM_PSK_KEY_EXCHANGE_MODES \
+    _ENUM_KEY_VALUE(PSK_KE, 0)        \
+    _ENUM_KEY_VALUE(PSK_DHE_KE, 1)    \
+    _ENUM_KEY_VALUE(GREASE_0, 0x0B)   \
+    _ENUM_KEY_VALUE(GREASE_1, 0x2A)   \
+    _ENUM_KEY_VALUE(GREASE_2, 0x49)   \
+    _ENUM_KEY_VALUE(GREASE_3, 0x68)   \
+    _ENUM_KEY_VALUE(GREASE_4, 0x87)   \
+    _ENUM_KEY_VALUE(GREASE_5, 0xA6)   \
+    _ENUM_KEY_VALUE(GREASE_6, 0xC5)   \
+    _ENUM_KEY_VALUE(GREASE_7, 0xE4)
+
+enum class PSKKeyExchangeMode : u8 {
+    __ENUM_PSK_KEY_EXCHANGE_MODES
+};
+
+#define __ENUM_COMPRESSION_METHODS \
+    _ENUM_KEY_VALUE(NONE, 0)       \
+    _ENUM_KEY_VALUE(DEFLATE, 1)
+
+enum class CompressionMethod : u8 {
+    __ENUM_COMPRESSION_METHODS
+};
+
+#define __ENUM_KEY_EXCHANGE_ALGORITHMS \
+    _ENUM_KEY(Invalid)                 \
+    _ENUM_KEY(RSA_PSK)                 \
+    _ENUM_KEY(DHE_DSS)                 \
+    _ENUM_KEY(DHE_RSA)                 \
+    _ENUM_KEY(DH_anon)                 \
+    _ENUM_KEY(RSA)                     \
+    _ENUM_KEY(DH_DSS)                  \
+    _ENUM_KEY(DH_RSA)                  \
+    _ENUM_KEY(ECDHE_RSA)               \
+    _ENUM_KEY(ECDH_ECDSA)              \
+    _ENUM_KEY(ECDH_RSA)                \
+    _ENUM_KEY(ECDHE_ECDSA)             \
+    _ENUM_KEY(ECDH_anon)
+
+enum class KeyExchangeAlgorithm {
+    __ENUM_KEY_EXCHANGE_ALGORITHMS
+};
+
+#define __ENUM_GENERIC_ERRORS          \
+    _ENUM_KEY(NoError)                 \
+    _ENUM_KEY(UnknownError)            \
+    _ENUM_KEY(BrokenPacket)            \
+    _ENUM_KEY(NotUnderstood)           \
+    _ENUM_KEY(NoCommonCipher)          \
+    _ENUM_KEY(UnexpectedMessage)       \
+    _ENUM_KEY(CloseConnection)         \
+    _ENUM_KEY(CompressionNotSupported) \
+    _ENUM_KEY(NotVerified)             \
+    _ENUM_KEY(NotSafe)                 \
+    _ENUM_KEY(IntegrityCheckFailed)    \
+    _ENUM_KEY(ErrorAlert)              \
+    _ENUM_KEY(BrokenConnection)        \
+    _ENUM_KEY(BadCertificate)          \
+    _ENUM_KEY(UnsupportedCertificate)  \
+    _ENUM_KEY(NoRenegotiation)         \
+    _ENUM_KEY(FeatureNotSupported)     \
+    _ENUM_KEY(DecryptionFailed)        \
+    _ENUM_KEY(NeedMoreData)            \
+    _ENUM_KEY(TimedOut)                \
+    _ENUM_KEY(OutOfMemory)
+
+enum class GenericError : i8 {
+    __ENUM_GENERIC_ERRORS
+};
+
+#define __ENUM_EC_BASIS_TYPES               \
+    _ENUM_KEY_VALUE(EC_BASIS_TRINOMINAL, 1) \
+    _ENUM_KEY_VALUE(EC_BASIS_PENTANOMINAL, 2)
+
+enum class ECBasisType : u8 {
+    __ENUM_EC_BASIS_TYPES
+};
+
 #undef _ENUM_KEY
 #undef _ENUM_KEY_VALUE
 
@@ -795,6 +932,146 @@ constexpr static StringView enum_to_string(AlertDescription descriptor)
 
     switch (descriptor) {
         __ENUM_ALERT_DESCRIPTIONS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static const StringView enum_to_string(AlertLevel descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case AlertLevel::name:           \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_ALERT_LEVELS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(GenericError descriptor)
+{
+#define _ENUM_KEY(name)      \
+    case GenericError::name: \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_GENERIC_ERRORS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY
+}
+
+constexpr static StringView enum_to_string(CompressionMethod descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case CompressionMethod::name:    \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_COMPRESSION_METHODS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(KeyExchangeAlgorithm descriptor)
+{
+#define _ENUM_KEY(name)              \
+    case KeyExchangeAlgorithm::name: \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_KEY_EXCHANGE_ALGORITHMS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY
+}
+
+constexpr static StringView enum_to_string(ECCurveType descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case ECCurveType::name:          \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_EC_CURVE_TYPES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(SignatureScheme descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case SignatureScheme::name:      \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_SIGNATURE_SCHEMES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(SupportedGroup descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case SupportedGroup::name:       \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_SUPPORTED_GROUPS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(ECPointFormat descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case ECPointFormat::name:        \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_EC_POINT_FORMATS
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(NameType descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case NameType::name:             \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_NAME_TYPES
+    }
+
+    return "Unknown"sv;
+#undef _ENUM_KEY_VALUE
+}
+
+constexpr static StringView enum_to_string(PSKKeyExchangeMode descriptor)
+{
+#define _ENUM_KEY_VALUE(name, value) \
+    case PSKKeyExchangeMode::name:   \
+        return #name##sv;
+
+    switch (descriptor) {
+        __ENUM_PSK_KEY_EXCHANGE_MODES
     }
 
     return "Unknown"sv;
@@ -977,5 +1254,164 @@ constexpr static const StringView enum_to_value(AlertDescription descriptor)
 
     return "Unknown alert"sv;
 }
+
+class TLSExtension : public RefCounted<TLSExtension> {
+public:
+    TLSExtension(ExtensionType type)
+        : type(type)
+    {
+    }
+
+    ExtensionType type;
+
+    virtual ~TLSExtension() {};
+    virtual u16 size() = 0;
+    virtual ErrorOr<String> to_string(size_t) = 0;
+    virtual ErrorOr<ByteBuffer> encode() = 0;
+};
+
+class SupportedGroups : public TLSExtension {
+public:
+    Vector<SupportedGroup> groups;
+
+    SupportedGroups();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class ECPointFormats : public TLSExtension {
+public:
+    Vector<ECPointFormat> formats;
+
+    ECPointFormats();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class SignatureSchemes : public TLSExtension {
+public:
+    Vector<SignatureScheme> signatures;
+
+    SignatureSchemes();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class EncryptThenMac : public TLSExtension {
+public:
+    EncryptThenMac();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class SessionTicket : public TLSExtension {
+public:
+    SessionTicket();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class ExtendMasterSecret : public TLSExtension {
+public:
+    ExtendMasterSecret();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class KeyShareEntry {
+public:
+    SupportedGroup group;
+    ByteBuffer key;
+
+    u16 size();
+    ErrorOr<String> to_string();
+};
+
+class KeyShares : public TLSExtension {
+public:
+    Vector<KeyShareEntry> keys;
+
+    KeyShares();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class SupportedVersions : public TLSExtension {
+public:
+    Vector<ProtocolVersion> versions;
+
+    SupportedVersions();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class RenegotiationInfo : public TLSExtension {
+public:
+    ByteBuffer data;
+
+    RenegotiationInfo();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class PSKKeyExchangeModes : public TLSExtension {
+public:
+    Vector<PSKKeyExchangeMode> modes;
+
+    PSKKeyExchangeModes();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class RecordSizeLimit : public TLSExtension {
+public:
+    u16 limit;
+
+    RecordSizeLimit();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
+
+class ServerNameEntry {
+public:
+    NameType type;
+    String name;
+
+    u16 size();
+    ErrorOr<String> to_string();
+};
+
+class ServerNameList : public TLSExtension {
+public:
+    Vector<ServerNameEntry> names;
+
+    ServerNameList();
+    u16 size() override;
+    ErrorOr<String> to_string(size_t) override;
+    ErrorOr<ByteBuffer> encode() override;
+    static ErrorOr<RefPtr<TLSExtension>> decode(ReadonlyBytes);
+};
 
 }

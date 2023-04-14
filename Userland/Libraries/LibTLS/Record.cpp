@@ -10,6 +10,7 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/Timer.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
+#include <LibTLS/TLSRecord.h>
 #include <LibTLS/TLSv12.h>
 
 namespace TLS {
@@ -317,6 +318,16 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
 
     if (buffer.size() < 5) {
         return (i8)Error::NeedMoreData;
+    }
+
+    if constexpr (TLS_DEBUG) {
+        auto maybe_record = TLSRecord::decode(buffer);
+        if (!maybe_record.is_error()) {
+            auto maybe_string = maybe_record.value()->to_string(0);
+            if (!maybe_string.is_error()) {
+                dbgln("{}", maybe_string.value());
+            }
+        }
     }
 
     auto type = (ContentType)buffer[0];

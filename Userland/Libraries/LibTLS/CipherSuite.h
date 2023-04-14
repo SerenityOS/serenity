@@ -17,25 +17,6 @@ struct SignatureAndHashAlgorithm {
     SignatureAlgorithm signature;
 };
 
-enum class KeyExchangeAlgorithm {
-    Invalid,
-    // Defined in RFC 5246 section 7.4.2 / RFC 4279 section 4
-    RSA_PSK,
-    // Defined in RFC 5246 section 7.4.3
-    DHE_DSS,
-    DHE_RSA,
-    DH_anon,
-    RSA,
-    DH_DSS,
-    DH_RSA,
-    // Defined in RFC 4492 section 2
-    ECDHE_RSA,
-    ECDH_ECDSA,
-    ECDH_RSA,
-    ECDHE_ECDSA,
-    ECDH_anon,
-};
-
 // Defined in RFC 5246 section 7.4.1.4.1
 constexpr SignatureAlgorithm signature_for_key_exchange_algorithm(KeyExchangeAlgorithm algorithm)
 {

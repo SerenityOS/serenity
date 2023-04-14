@@ -2,6 +2,7 @@ add_compile_options(-Wvla)
 
 set(SOURCES
     Certificate.cpp
+    Extensions.cpp
     Handshake.cpp
     HandshakeCertificate.cpp
     HandshakeClient.cpp
@@ -9,6 +10,7 @@ set(SOURCES
     Record.cpp
     Socket.cpp
     TLSv12.cpp
+    TLSRecord.cpp
 )
 
 serenity_lib(LibTLS tls)
