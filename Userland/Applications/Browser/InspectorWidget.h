@@ -20,7 +20,7 @@
 namespace Browser {
 
 class InspectorWidget final : public GUI::Widget {
-    C_OBJECT(InspectorWidget)
+    C_OBJECT_ABSTRACT(InspectorWidget)
 public:
     struct Selection {
         i32 dom_node_id { 0 };
@@ -39,6 +39,7 @@ public:
         }
     };
 
+    static ErrorOr<NonnullRefPtr<InspectorWidget>> try_create();
     virtual ~InspectorWidget() = default;
 
     void set_web_view(NonnullRefPtr<WebView::OutOfProcessWebView> web_view) { m_web_view = web_view; }
@@ -51,7 +52,7 @@ public:
     void select_default_node();
 
 private:
-    InspectorWidget();
+    explicit InspectorWidget();
 
     void set_selection(GUI::ModelIndex);
     void load_style_json(StringView computed_values_json, StringView resolved_values_json, StringView custom_properties_json);

@@ -73,51 +73,59 @@ void InspectorWidget::set_selection(GUI::ModelIndex const index)
     }
 }
 
+ErrorOr<NonnullRefPtr<InspectorWidget>> InspectorWidget::try_create()
+{
+    auto main_widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) InspectorWidget()));
+
+    main_widget->set_fill_with_background_color(true);
+
+    TRY(main_widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    auto splitter = TRY(main_widget->try_add<GUI::VerticalSplitter>());
+
+    auto top_tab_widget = TRY(splitter->try_add<GUI::TabWidget>());
+
+    auto dom_tree_container = TRY(top_tab_widget->try_add_tab<GUI::Widget>("DOM"_short_string));
+    TRY(dom_tree_container->try_set_layout<GUI::VerticalBoxLayout>(4));
+    main_widget->m_dom_tree_view = TRY(dom_tree_container->try_add<GUI::TreeView>());
+    main_widget->m_dom_tree_view->on_selection_change = [main_widget] {
+        const auto& index = main_widget->m_dom_tree_view->selection().first();
+        main_widget->set_selection(index);
+    };
+
+    auto accessibility_tree_container = TRY(top_tab_widget->try_add_tab<GUI::Widget>(TRY("Accessibility"_string)));
+    TRY(accessibility_tree_container->try_set_layout<GUI::VerticalBoxLayout>(4));
+    main_widget->m_accessibility_tree_view = TRY(accessibility_tree_container->try_add<GUI::TreeView>());
+    main_widget->m_accessibility_tree_view->on_selection_change = [main_widget] {
+        const auto& index = main_widget->m_accessibility_tree_view->selection().first();
+        main_widget->set_selection(index);
+    };
+
+    auto bottom_tab_widget = TRY(splitter->try_add<GUI::TabWidget>());
+
+    auto computed_style_table_container = TRY(bottom_tab_widget->try_add_tab<GUI::Widget>(TRY("Computed"_string)));
+    TRY(computed_style_table_container->try_set_layout<GUI::VerticalBoxLayout>(4));
+    main_widget->m_computed_style_table_view = TRY(computed_style_table_container->try_add<GUI::TableView>());
+
+    auto resolved_style_table_container = TRY(bottom_tab_widget->try_add_tab<GUI::Widget>(TRY("Resolved"_string)));
+    TRY(resolved_style_table_container->try_set_layout<GUI::VerticalBoxLayout>(4));
+    main_widget->m_resolved_style_table_view = TRY(resolved_style_table_container->try_add<GUI::TableView>());
+
+    auto custom_properties_table_container = TRY(bottom_tab_widget->try_add_tab<GUI::Widget>(TRY("Variables"_string)));
+    TRY(custom_properties_table_container->try_set_layout<GUI::VerticalBoxLayout>(4));
+    main_widget->m_custom_properties_table_view = TRY(custom_properties_table_container->try_add<GUI::TableView>());
+
+    auto box_model_widget = TRY(bottom_tab_widget->try_add_tab<GUI::Widget>(TRY("Box Model"_string)));
+    TRY(box_model_widget->try_set_layout<GUI::VerticalBoxLayout>(4));
+    main_widget->m_element_size_view = TRY(box_model_widget->try_add<ElementSizePreviewWidget>());
+    main_widget->m_element_size_view->set_should_hide_unnecessary_scrollbars(true);
+
+    main_widget->m_dom_tree_view->set_focus(true);
+
+    return main_widget;
+}
+
 InspectorWidget::InspectorWidget()
 {
-    set_fill_with_background_color(true);
-
-    set_layout<GUI::VerticalBoxLayout>(4);
-    auto& splitter = add<GUI::VerticalSplitter>();
-
-    auto& top_tab_widget = splitter.add<GUI::TabWidget>();
-
-    auto& dom_tree_container = top_tab_widget.add_tab<GUI::Widget>("DOM"_short_string);
-    dom_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
-    m_dom_tree_view = dom_tree_container.add<GUI::TreeView>();
-    m_dom_tree_view->on_selection_change = [this] {
-        const auto& index = m_dom_tree_view->selection().first();
-        set_selection(index);
-    };
-
-    auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility"_string.release_value_but_fixme_should_propagate_errors());
-    accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
-    m_accessibility_tree_view = accessibility_tree_container.add<GUI::TreeView>();
-    m_accessibility_tree_view->on_selection_change = [this] {
-        const auto& index = m_accessibility_tree_view->selection().first();
-        set_selection(index);
-    };
-
-    auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
-
-    auto& computed_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Computed"_string.release_value_but_fixme_should_propagate_errors());
-    computed_style_table_container.set_layout<GUI::VerticalBoxLayout>(4);
-    m_computed_style_table_view = computed_style_table_container.add<GUI::TableView>();
-
-    auto& resolved_style_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Resolved"_string.release_value_but_fixme_should_propagate_errors());
-    resolved_style_table_container.set_layout<GUI::VerticalBoxLayout>(4);
-    m_resolved_style_table_view = resolved_style_table_container.add<GUI::TableView>();
-
-    auto& custom_properties_table_container = bottom_tab_widget.add_tab<GUI::Widget>("Variables"_string.release_value_but_fixme_should_propagate_errors());
-    custom_properties_table_container.set_layout<GUI::VerticalBoxLayout>(4);
-    m_custom_properties_table_view = custom_properties_table_container.add<GUI::TableView>();
-
-    auto& box_model_widget = bottom_tab_widget.add_tab<GUI::Widget>("Box Model"_string.release_value_but_fixme_should_propagate_errors());
-    box_model_widget.set_layout<GUI::VerticalBoxLayout>(4);
-    m_element_size_view = box_model_widget.add<ElementSizePreviewWidget>();
-    m_element_size_view->set_should_hide_unnecessary_scrollbars(true);
-
-    m_dom_tree_view->set_focus(true);
 }
 
 void InspectorWidget::select_default_node()
