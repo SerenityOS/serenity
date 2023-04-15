@@ -65,7 +65,7 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
     auto pairs = TRY(value_pairs_to_iterate_over());
 
     if (m_index >= pairs.size())
-        return create_iterator_result_object(vm(), JS::js_undefined(), true);
+        return create_iterator_result_object(vm(), JS::js_undefined(), true).ptr();
 
     auto const& pair = pairs[m_index++];
     StringView pair_name { pair.name };
@@ -73,12 +73,12 @@ JS::ThrowCompletionOr<JS::Object*> HeadersIterator::next()
 
     switch (m_iteration_kind) {
     case JS::Object::PropertyKind::Key:
-        return create_iterator_result_object(vm(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_name)), false);
+        return create_iterator_result_object(vm(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_name)), false).ptr();
     case JS::Object::PropertyKind::Value:
-        return create_iterator_result_object(vm(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_value)), false);
+        return create_iterator_result_object(vm(), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_value)), false).ptr();
     case JS::Object::PropertyKind::KeyAndValue: {
         auto array = JS::Array::create_from(realm(), { MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_name)), MUST_OR_THROW_OOM(JS::PrimitiveString::create(vm(), pair_value)) });
-        return create_iterator_result_object(vm(), array, false);
+        return create_iterator_result_object(vm(), array, false).ptr();
     }
     default:
         VERIFY_NOT_REACHED();
