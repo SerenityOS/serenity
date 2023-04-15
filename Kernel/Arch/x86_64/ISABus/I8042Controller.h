@@ -6,11 +6,10 @@
 
 #pragma once
 
-#include <AK/AtomicRefCounted.h>
+#include <AK/Types.h>
 #include <Kernel/Devices/HID/Controller.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/Devices/HID/MouseDevice.h>
-#include <Kernel/Devices/HID/ScanCodeEvent.h>
 #include <Kernel/Locking/Spinlock.h>
 
 namespace Kernel {

@@ -10,6 +10,7 @@
 #    include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
 #endif
 #include <Kernel/CommandLine.h>
+#include <Kernel/Devices/HID/Device.h>
 #include <Kernel/Devices/HID/Management.h>
 #include <Kernel/Firmware/ACPI/Parser.h>
 #include <Kernel/Sections.h>
