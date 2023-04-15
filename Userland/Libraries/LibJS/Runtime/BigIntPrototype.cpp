@@ -38,17 +38,17 @@ ThrowCompletionOr<void> BigIntPrototype::initialize(Realm& realm)
 }
 
 // thisBigIntValue ( value ), https://tc39.es/ecma262/#thisbigintvalue
-static ThrowCompletionOr<BigInt*> this_bigint_value(VM& vm, Value value)
+static ThrowCompletionOr<NonnullGCPtr<BigInt>> this_bigint_value(VM& vm, Value value)
 {
     // 1. If value is a BigInt, return value.
     if (value.is_bigint())
-        return &value.as_bigint();
+        return value.as_bigint();
 
     // 2. If value is an Object and value has a [[BigIntData]] internal slot, then
     if (value.is_object() && is<BigIntObject>(value.as_object())) {
         // a. Assert: value.[[BigIntData]] is a BigInt.
         // b. Return value.[[BigIntData]].
-        return &static_cast<BigIntObject&>(value.as_object()).bigint();
+        return static_cast<BigIntObject&>(value.as_object()).bigint();
     }
 
     // 3. Throw a TypeError exception.
@@ -59,7 +59,7 @@ static ThrowCompletionOr<BigInt*> this_bigint_value(VM& vm, Value value)
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
     // 1. Let x be ? thisBigIntValue(this value).
-    auto* bigint = TRY(this_bigint_value(vm, vm.this_value()));
+    auto bigint = TRY(this_bigint_value(vm, vm.this_value()));
 
     // 2. If radix is undefined, let radixMV be 10.
     double radix = 10;
@@ -87,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
     auto options = vm.argument(1);
 
     // 1. Let x be ? thisBigIntValue(this value).
-    auto* bigint = TRY(this_bigint_value(vm, vm.this_value()));
+    auto bigint = TRY(this_bigint_value(vm, vm.this_value()));
 
     // 2. Let numberFormat be ? Construct(%NumberFormat%, « locales, options »).
     auto* number_format = static_cast<Intl::NumberFormat*>(TRY(construct(vm, realm.intrinsics().intl_number_format_constructor(), locales, options)).ptr());
