@@ -53,7 +53,7 @@ static Object* async_from_sync_iterator_continuation(VM& vm, Object& result, Pro
     // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
     auto unwrap = [done](VM& vm) -> ThrowCompletionOr<Value> {
         // a. Return CreateIterResultObject(value, done).
-        return create_iterator_result_object(vm, vm.argument(0), done);
+        return create_iterator_result_object(vm, vm.argument(0), done).ptr();
     };
 
     // 9. Let onFulfilled be CreateBuiltinFunction(unwrap, 1, "", « »).
@@ -117,7 +117,7 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::return_)
     // 7. If return is undefined, then
     if (return_method == nullptr) {
         // a. Let iterResult be CreateIterResultObject(value, true).
-        auto* iter_result = create_iterator_result_object(vm, vm.argument(0), true);
+        auto iter_result = create_iterator_result_object(vm, vm.argument(0), true);
 
         // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
         MUST(call(vm, *promise_capability->resolve(), js_undefined(), iter_result));

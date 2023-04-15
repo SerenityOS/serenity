@@ -73,7 +73,7 @@ JS::Object* FormDataIterator::next()
     if (m_iterator_kind == JS::Object::PropertyKind::Value)
         return create_iterator_result_object(vm, entry_value, false);
 
-    return create_iterator_result_object(vm, JS::Array::create_from(realm(), { JS::PrimitiveString::create(vm, entry.name), entry_value }), false);
+    return create_iterator_result_object(vm, JS::Array::create_from(realm(), { JS::PrimitiveString::create(vm, entry.name), entry_value }), false).ptr();
 }
 
 }

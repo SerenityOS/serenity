@@ -29,7 +29,7 @@ ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);
 ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);
 Completion iterator_close(VM&, Iterator const&, Completion);
 Completion async_iterator_close(VM&, Iterator const&, Completion);
-Object* create_iterator_result_object(VM&, Value, bool done);
+NonnullGCPtr<Object> create_iterator_result_object(VM&, Value, bool done);
 ThrowCompletionOr<MarkedVector<Value>> iterable_to_list(VM&, Value iterable, Optional<Value> method = {});
 
 using IteratorValueCallback = Function<Optional<Completion>(Value)>;

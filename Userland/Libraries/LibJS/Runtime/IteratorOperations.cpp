@@ -184,7 +184,7 @@ Completion async_iterator_close(VM& vm, Iterator const& iterator_record, Complet
 }
 
 // 7.4.10 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
-Object* create_iterator_result_object(VM& vm, Value value, bool done)
+NonnullGCPtr<Object> create_iterator_result_object(VM& vm, Value value, bool done)
 {
     auto& realm = *vm.current_realm();
 
