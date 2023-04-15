@@ -10,4 +10,5 @@
 /www	/www	bind	bind,nodev,nosuid
 /usr/Tests	/usr/Tests	bind	bind,nodev,ro
 /usr/local	/usr/local	bind	bind,nodev,nosuid
+/usr/Ports	/usr/Ports	bind	bind,nodev,nosuid
 
