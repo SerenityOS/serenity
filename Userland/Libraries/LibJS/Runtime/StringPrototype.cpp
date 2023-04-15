@@ -228,18 +228,18 @@ ThrowCompletionOr<void> StringPrototype::initialize(Realm& realm)
 }
 
 // thisStringValue ( value ), https://tc39.es/ecma262/#thisstringvalue
-static ThrowCompletionOr<PrimitiveString*> this_string_value(VM& vm, Value value)
+static ThrowCompletionOr<NonnullGCPtr<PrimitiveString>> this_string_value(VM& vm, Value value)
 {
     // 1. If value is a String, return value.
     if (value.is_string())
-        return &value.as_string();
+        return value.as_string();
 
     // 2. If value is an Object and value has a [[StringData]] internal slot, then
     if (value.is_object() && is<StringObject>(value.as_object())) {
         // a. Let s be value.[[StringData]].
         // b. Assert: s is a String.
         // c. Return s.
-        return &static_cast<StringObject&>(value.as_object()).primitive_string();
+        return static_cast<StringObject&>(value.as_object()).primitive_string();
     }
 
     // 3. Throw a TypeError exception.
