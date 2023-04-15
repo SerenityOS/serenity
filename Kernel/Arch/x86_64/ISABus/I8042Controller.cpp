@@ -17,9 +17,9 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullLockRefPtr<I8042Controller> I8042Controller::initialize()
+UNMAP_AFTER_INIT ErrorOr<NonnullRefPtr<I8042Controller>> I8042Controller::create()
 {
-    return adopt_lock_ref(*new I8042Controller());
+    return TRY(adopt_nonnull_ref_or_enomem(new (nothrow) I8042Controller()));
 }
 
 UNMAP_AFTER_INIT I8042Controller::I8042Controller()

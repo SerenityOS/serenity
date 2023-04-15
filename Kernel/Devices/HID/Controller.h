@@ -8,6 +8,8 @@
 
 #include <AK/AtomicRefCounted.h>
 #include <AK/IntrusiveList.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 
 namespace Kernel {
 
@@ -22,7 +24,7 @@ protected:
     HIDController() = default;
 
 private:
-    IntrusiveListNode<HIDController, NonnullLockRefPtr<HIDController>> m_list_node;
+    IntrusiveListNode<HIDController, NonnullRefPtr<HIDController>> m_list_node;
 };
 
 }

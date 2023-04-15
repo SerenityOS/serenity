@@ -123,7 +123,7 @@ UNMAP_AFTER_INIT ErrorOr<void> HIDManagement::enumerate()
     // set to emulate PS/2, we should not initialize the PS/2 controller.
 #if ARCH(X86_64)
     auto has_i8042_controller = false;
-    auto i8042_controller = I8042Controller::initialize();
+    auto i8042_controller = TRY(I8042Controller::create());
     switch (kernel_command_line().i8042_presence_mode()) {
     case I8042PresenceMode::Automatic: {
         // Note: If ACPI is disabled or doesn't indicate that we have an i8042, we
