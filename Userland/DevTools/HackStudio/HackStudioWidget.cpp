@@ -495,7 +495,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     m_tree_view_rename_action = GUI::CommonActions::make_rename_action([this](GUI::Action const&) {
         m_project_tree_view->begin_editing(m_project_tree_view->cursor_index());
     });
-    auto project_tree_view_context_menu = GUI::Menu::construct("Project Files");
+    auto project_tree_view_context_menu = GUI::Menu::construct(TRY("Project Files"_string));
 
     auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew...");
     for (auto& new_file_action : m_new_file_actions) {

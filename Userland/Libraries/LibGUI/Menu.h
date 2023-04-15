@@ -70,7 +70,6 @@ private:
     friend class Menubar;
 
     explicit Menu(String name = {});
-    explicit Menu(DeprecatedString name);
 
     int realize_menu(RefPtr<Action> default_action = nullptr);
     void unrealize_menu();
