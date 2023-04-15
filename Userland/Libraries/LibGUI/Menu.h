@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Action.h>
@@ -32,8 +33,9 @@ public:
     static Menu* from_menu_id(int);
     int menu_id() const { return m_menu_id; }
 
-    DeprecatedString const& name() const { return m_name; }
+    String const& name() const { return m_name; }
     void set_name(DeprecatedString);
+    void set_name(String);
 
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
     void set_icon(Gfx::Bitmap const*);
@@ -67,7 +69,8 @@ public:
 private:
     friend class Menubar;
 
-    explicit Menu(DeprecatedString name = "");
+    explicit Menu(String name = {});
+    explicit Menu(DeprecatedString name);
 
     int realize_menu(RefPtr<Action> default_action = nullptr);
     void unrealize_menu();
@@ -79,7 +82,7 @@ private:
     void update_parent_menu_item();
 
     int m_menu_id { -1 };
-    DeprecatedString m_name;
+    String m_name;
     RefPtr<Gfx::Bitmap const> m_icon;
     Vector<NonnullOwnPtr<MenuItem>> m_items;
     WeakPtr<Action> m_current_default_action;

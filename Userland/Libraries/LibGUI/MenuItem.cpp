@@ -91,7 +91,7 @@ void MenuItem::update_window_server()
     case MenuItem::Type::Submenu: {
         auto& submenu = *m_submenu;
         auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-        ConnectionToWindowServer::the().async_update_menu_item(m_menu_id, m_identifier, submenu.menu_id(), submenu.name(), m_enabled, m_visible, false, false, m_default, "", icon);
+        ConnectionToWindowServer::the().async_update_menu_item(m_menu_id, m_identifier, submenu.menu_id(), submenu.name().to_deprecated_string(), m_enabled, m_visible, false, false, m_default, "", icon);
         break;
     }
     default:

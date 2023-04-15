@@ -33,8 +33,13 @@ Menu* Menu::from_menu_id(int menu_id)
     return (*it).value;
 }
 
-Menu::Menu(DeprecatedString name)
+Menu::Menu(String name)
     : m_name(move(name))
+{
+}
+
+Menu::Menu(DeprecatedString name)
+    : m_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors())
 {
 }
 
@@ -91,9 +96,14 @@ void Menu::update_parent_menu_item()
 
 void Menu::set_name(DeprecatedString name)
 {
+    set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
+}
+
+void Menu::set_name(String name)
+{
     m_name = move(name);
     if (m_menu_id != -1) {
-        ConnectionToWindowServer::the().async_set_menu_name(m_menu_id, m_name);
+        ConnectionToWindowServer::the().async_set_menu_name(m_menu_id, m_name.to_deprecated_string());
         update_parent_menu_item();
     }
 }
@@ -168,7 +178,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     unrealize_menu();
     m_menu_id = s_menu_id_allocator.allocate();
 
-    ConnectionToWindowServer::the().async_create_menu(m_menu_id, m_name);
+    ConnectionToWindowServer::the().async_create_menu(m_menu_id, m_name.to_deprecated_string());
 
     dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);
@@ -242,7 +252,7 @@ void Menu::realize_menu_item(MenuItem& item, int item_id)
         auto& submenu = *item.submenu();
         submenu.realize_if_needed(m_current_default_action.strong_ref());
         auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, submenu.menu_id(), submenu.name(), true, true, false, false, false, "", icon, false);
+        ConnectionToWindowServer::the().async_add_menu_item(m_menu_id, item_id, submenu.menu_id(), submenu.name().to_deprecated_string(), true, true, false, false, false, "", icon, false);
         break;
     }
     case MenuItem::Type::Invalid:
