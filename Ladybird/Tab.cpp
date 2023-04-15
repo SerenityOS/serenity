@@ -20,7 +20,7 @@
 extern DeprecatedString s_serenity_resource_root;
 extern Browser::Settings* s_settings;
 
-Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
+Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
     : QWidget(window)
     , m_window(window)
 {
@@ -28,7 +28,7 @@ Tab::Tab(BrowserWindow* window, StringView webdriver_content_ipc_path)
     m_layout->setSpacing(0);
     m_layout->setContentsMargins(0, 0, 0, 0);
 
-    m_view = new WebContentView(webdriver_content_ipc_path);
+    m_view = new WebContentView(webdriver_content_ipc_path, enable_callgrind_profiling);
     m_toolbar = new QToolBar(this);
     m_location_edit = new LocationEdit(this);
     m_reset_zoom_button = new QToolButton(m_toolbar);

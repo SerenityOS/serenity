@@ -26,7 +26,7 @@ class CookieJar;
 class BrowserWindow : public QMainWindow {
     Q_OBJECT
 public:
-    explicit BrowserWindow(Browser::CookieJar&, StringView webdriver_content_ipc_path);
+    explicit BrowserWindow(Browser::CookieJar&, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
 
     WebContentView& view() const { return m_current_tab->view(); }
 
@@ -70,4 +70,5 @@ private:
     Browser::CookieJar& m_cookie_jar;
 
     StringView m_webdriver_content_ipc_path;
+    WebView::EnableCallgrindProfiling m_enable_callgrind_profiling;
 };

@@ -18,6 +18,12 @@
 
 namespace WebView {
 
+// Note: This only exists inside Serenity to avoid #ifdefs in all implementors of ViewImplementation.
+enum class EnableCallgrindProfiling {
+    No,
+    Yes
+};
+
 class ViewImplementation {
 public:
     virtual ~ViewImplementation() { }
@@ -120,11 +126,12 @@ protected:
 
     WebContentClient& client();
     WebContentClient const& client() const;
-    virtual void create_client() = 0;
     virtual void update_zoom() = 0;
 
+    virtual void create_client(EnableCallgrindProfiling = EnableCallgrindProfiling::No) {};
+
 #if !defined(AK_OS_SERENITY)
-    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths);
+    ErrorOr<NonnullRefPtr<WebView::WebContentClient>> launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling = EnableCallgrindProfiling::No);
 #endif
 
     struct SharedBitmap {

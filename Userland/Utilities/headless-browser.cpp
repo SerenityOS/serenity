@@ -157,7 +157,7 @@ private:
 
     void notify_server_did_finish_handling_input_event(bool) override { }
     void update_zoom() override { }
-    void create_client() override { }
+    void create_client(WebView::EnableCallgrindProfiling) override { }
 };
 
 static ErrorOr<NonnullRefPtr<Core::Timer>> load_page_for_screenshot_and_exit(Core::EventLoop& event_loop, HeadlessWebContentView& view, int screenshot_timeout)

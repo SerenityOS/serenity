@@ -126,7 +126,7 @@ void ViewImplementation::run_javascript(StringView js_source)
 
 #if !defined(AK_OS_SERENITY)
 
-ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths)
+ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web_content_process(ReadonlySpan<String> candidate_web_content_paths, EnableCallgrindProfiling enable_callgrind_profiling)
 {
     int socket_fds[2] {};
     TRY(Core::System::socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fds));
@@ -149,15 +149,22 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
 
         auto webcontent_fd_passing_socket_string = TRY(String::number(wc_fd_passing_fd));
 
-        auto arguments = Array {
-            "WebContent"sv,
-            "--webcontent-fd-passing-socket"sv,
-            webcontent_fd_passing_socket_string
-        };
-
         ErrorOr<void> result;
         for (auto const& path : candidate_web_content_paths) {
-            result = Core::System::exec(path, arguments, Core::System::SearchInPath::Yes);
+            constexpr auto callgrind_prefix_length = 3;
+            auto arguments_with_callgrind_prefix = Array {
+                "valgrind"sv,
+                "--tool=callgrind"sv,
+                "--instr-atstart=no"sv,
+                path.bytes_as_string_view(),
+                "--webcontent-fd-passing-socket"sv,
+                webcontent_fd_passing_socket_string
+            };
+            auto arguments = arguments_with_callgrind_prefix.span();
+            if (enable_callgrind_profiling == EnableCallgrindProfiling::No)
+                arguments = arguments.slice(callgrind_prefix_length);
+
+            result = Core::System::exec(arguments[0], arguments, Core::System::SearchInPath::Yes);
             if (!result.is_error())
                 break;
         }
@@ -175,6 +182,13 @@ ErrorOr<NonnullRefPtr<WebView::WebContentClient>> ViewImplementation::launch_web
 
     auto new_client = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) WebView::WebContentClient(move(socket), *this)));
     new_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(ui_fd_passing_fd)));
+
+    if (enable_callgrind_profiling == EnableCallgrindProfiling::Yes) {
+        dbgln();
+        dbgln("\033[1;45mLaunched WebContent process under callgrind!\033[0m");
+        dbgln("\033[100mRun `\033[4mcallgrind_control -i on\033[24m` to start instrumentation and `\033[4mcallgrind_control -i off\033[24m` stop it again.\033[0m");
+        dbgln();
+    }
 
     return new_client;
 }
