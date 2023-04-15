@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto audio_client = TRY(Audio::ConnectionToServer::try_create());
     auto decoder_client = TRY(ImageDecoderClient::Client::try_create());
 
-    Config::pledge_domain("SoundPlayer");
+    Config::pledge_domains({ "SoundPlayer", "FileManager" });
     app->set_config_domain(TRY("SoundPlayer"_string));
 
     TRY(Core::System::pledge("stdio recvfd sendfd rpath thread proc"));
