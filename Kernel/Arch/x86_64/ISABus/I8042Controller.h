@@ -90,7 +90,7 @@ protected:
     {
     }
 
-    NonnullLockRefPtr<I8042Controller> m_i8042_controller;
+    NonnullRefPtr<I8042Controller> const m_i8042_controller;
 };
 
 class PS2KeyboardDevice;
@@ -101,7 +101,7 @@ class I8042Controller final : public HIDController {
     friend class PS2MouseDevice;
 
 public:
-    static NonnullLockRefPtr<I8042Controller> initialize();
+    static ErrorOr<NonnullRefPtr<I8042Controller>> create();
 
     ErrorOr<void> detect_devices();
 
