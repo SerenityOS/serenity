@@ -572,6 +572,24 @@ StringView TemplatizedName::full_name() const
     return *m_full_name;
 }
 
+void SizedName::dump(FILE* output, size_t indent) const
+{
+    Name::dump(output, indent);
+    print_indent(output, indent + 1);
+
+    StringBuilder dimension_info;
+    for (auto const& dim : m_dimensions) {
+        dimension_info.append('[');
+        dimension_info.append(dim);
+        dimension_info.append(']');
+    }
+
+    if (dimension_info.is_empty()) {
+        dimension_info.append("[]"sv);
+    }
+    outln(output, "{}", dimension_info.to_deprecated_string());
+}
+
 void CppCastExpression::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);

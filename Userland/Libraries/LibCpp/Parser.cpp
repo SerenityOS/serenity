@@ -294,6 +294,19 @@ bool Parser::match_variable_declaration()
 
     (void)parse_name(get_dummy_node());
 
+    while (!eof() && (peek().type() == Token::Type::LeftBracket)) {
+        consume(Token::Type::LeftBracket);
+
+        if (match(Token::Type::Integer)) {
+            consume(Token::Type::Integer);
+        }
+        if (!match(Token::Type::RightBracket)) {
+            error("No closing right bracket"sv);
+            return false;
+        }
+        consume(Token::Type::RightBracket);
+    }
+
     if (match(Token::Type::Equals)) {
         consume(Token::Type::Equals);
         if (!match_expression()) {
@@ -1449,7 +1462,9 @@ NonnullRefPtr<Name const> Parser::parse_name(ASTNode const& parent)
         return name_node;
     }
 
+    bool is_templatized = false;
     if (match_template_arguments()) {
+        is_templatized = true;
         consume(Token::Type::Less);
         NonnullRefPtr<TemplatizedName> templatized_name = create_ast_node<TemplatizedName>(parent, name_node->start(), {});
         templatized_name->set_name(name_node->name());
@@ -1462,6 +1477,27 @@ NonnullRefPtr<Name const> Parser::parse_name(ASTNode const& parent)
                 consume(Token::Type::Comma);
         }
         consume(Token::Type::Greater);
+    }
+
+    if (!is_templatized && (peek().type() == Token::Type::LeftBracket)) {
+        NonnullRefPtr<SizedName> sized_name = create_ast_node<SizedName>(parent, name_node->start(), {});
+        sized_name->set_name(name_node->name());
+        sized_name->set_scope(name_node->scope());
+
+        while (peek().type() == Token::Type::LeftBracket) {
+            consume(Token::Type::LeftBracket);
+
+            StringView size = "0"sv;
+            if (peek().type() == Token::Type::Integer) {
+                auto token = consume(Token::Type::Integer);
+                size = token.text();
+            }
+            sized_name->append_dimension(size);
+
+            consume(Token::Type::RightBracket);
+        }
+        name_node->set_end(position());
+        name_node = sized_name;
     }
 
     name_node->set_end(previous_token_end());
@@ -1564,6 +1600,8 @@ NonnullRefPtr<BracedInitList const> Parser::parse_braced_init_list(ASTNode const
     consume(Token::Type::LeftCurly);
     while (!eof() && peek().type() != Token::Type::RightCurly) {
         init_list->add_expression(parse_expression(*init_list));
+        if (peek().type() == Token::Type::Comma)
+            consume(Token::Type::Comma);
     }
     consume(Token::Type::RightCurly);
     init_list->set_end(position());
