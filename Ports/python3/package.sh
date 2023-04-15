@@ -26,6 +26,7 @@ depends=(
     'readline'
     'sqlite'
     'termcap'
+    'xz'
     'zlib'
 )
 configopts=(
