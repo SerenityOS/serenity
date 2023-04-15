@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,7 @@ enum class IteratorHint {
 };
 
 ThrowCompletionOr<Iterator> get_iterator(VM&, Value, IteratorHint = IteratorHint::Sync, Optional<Value> method = {});
-ThrowCompletionOr<Object*> iterator_next(VM&, Iterator const&, Optional<Value> = {});
+ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM&, Iterator const&, Optional<Value> = {});
 ThrowCompletionOr<Object*> iterator_step(VM&, Iterator const&);
 ThrowCompletionOr<bool> iterator_complete(VM&, Object& iterator_result);
 ThrowCompletionOr<Value> iterator_value(VM&, Object& iterator_result);

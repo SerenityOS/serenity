@@ -68,7 +68,7 @@ ThrowCompletionOr<Iterator> get_iterator(VM& vm, Value value, IteratorHint hint,
 }
 
 // 7.4.3 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
-ThrowCompletionOr<Object*> iterator_next(VM& vm, Iterator const& iterator_record, Optional<Value> value)
+ThrowCompletionOr<NonnullGCPtr<Object>> iterator_next(VM& vm, Iterator const& iterator_record, Optional<Value> value)
 {
     Value result;
 
@@ -86,7 +86,7 @@ ThrowCompletionOr<Object*> iterator_next(VM& vm, Iterator const& iterator_record
         return vm.throw_completion<TypeError>(ErrorType::IterableNextBadReturn);
 
     // 4. Return result.
-    return &result.as_object();
+    return result.as_object();
 }
 
 // 7.4.4 IteratorComplete ( iterResult ), https://tc39.es/ecma262/#sec-iteratorcomplete
@@ -107,17 +107,17 @@ ThrowCompletionOr<Value> iterator_value(VM& vm, Object& iterator_result)
 ThrowCompletionOr<Object*> iterator_step(VM& vm, Iterator const& iterator_record)
 {
     // 1. Let result be ? IteratorNext(iteratorRecord).
-    auto* result = TRY(iterator_next(vm, iterator_record));
+    auto result = TRY(iterator_next(vm, iterator_record));
 
     // 2. Let done be ? IteratorComplete(result).
-    auto done = TRY(iterator_complete(vm, *result));
+    auto done = TRY(iterator_complete(vm, result));
 
     // 3. If done is true, return false.
     if (done)
         return nullptr;
 
     // 4. Return result.
-    return result;
+    return result.ptr();
 }
 
 // 7.4.7 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose

@@ -87,12 +87,12 @@ JS_DEFINE_NATIVE_FUNCTION(AsyncFromSyncIteratorPrototype::next)
     // 6. Else,
     //     a. Let result be Completion(IteratorNext(syncIteratorRecord)).
     // 7. IfAbruptRejectPromise(result, promiseCapability).
-    auto* result = TRY_OR_REJECT(vm, promise_capability,
+    auto result = TRY_OR_REJECT(vm, promise_capability,
         (vm.argument_count() > 0 ? iterator_next(vm, sync_iterator_record, vm.argument(0))
                                  : iterator_next(vm, sync_iterator_record)));
 
     // 8. Return AsyncFromSyncIteratorContinuation(result, promiseCapability).
-    return async_from_sync_iterator_continuation(vm, *result, promise_capability);
+    return async_from_sync_iterator_continuation(vm, result, promise_capability);
 }
 
 // 27.1.4.2.2 %AsyncFromSyncIteratorPrototype%.return ( [ value ] ), https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return
