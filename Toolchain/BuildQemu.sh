@@ -11,8 +11,8 @@ PREFIX="$DIR/Local/qemu"
 BUILD=$(realpath "$DIR/../Build")
 SYSROOT="$BUILD/Root"
 
-QEMU_VERSION=${QEMU_VERSION:="qemu-7.1.0"}
-QEMU_MD5SUM=${QEMU_MD5SUM:="3be5458a9171b4ec5220c65d5d52bdcf"}
+# shellcheck source=/dev/null
+source "${DIR}/../Ports/qemu/version.sh"
 
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
@@ -20,24 +20,21 @@ echo SYSROOT is "$SYSROOT"
 mkdir -p "$DIR/Tarballs"
 
 pushd "$DIR/Tarballs"
-    md5="$(md5sum $QEMU_VERSION.tar.xz | cut -f1 -d' ')"
-    if [ ! -e "$QEMU_VERSION.tar.xz" ] || [ "$md5" != "$QEMU_MD5SUM" ]; then
-        curl -C - -O "https://download.qemu.org/$QEMU_VERSION.tar.xz"
+    if [ ! -e "${QEMU_ARCHIVE}" ]; then
+        curl -C - -O "${QEMU_ARCHIVE_URL}"
     else
-        echo "Skipped downloading $QEMU_VERSION"
+        echo "Skipped downloading ${QEMU_ARCHIVE}"
     fi
 
-    md5="$(md5sum $QEMU_VERSION.tar.xz | cut -f1 -d' ')"
-    echo "qemu md5='$md5'"
-    if  [ "$md5" != "$QEMU_MD5SUM" ] ; then
-        echo "qemu md5 sum mismatching, please run script again."
-        rm -f $QEMU_VERSION.tar.xz
+    if ! sha256sum --status -c <(echo "${QEMU_ARCHIVE_SHA256SUM}" "${QEMU_ARCHIVE}"); then
+        echo "qemu sha256 sum mismatching, please run script again."
+        rm -f "${QEMU_ARCHIVE}"
         exit 1
     fi
 
     if [ ! -d "$QEMU_VERSION" ]; then
         echo "Extracting qemu..."
-        tar -xf "$QEMU_VERSION.tar.xz"
+        tar -xf "${QEMU_ARCHIVE}"
     else
         echo "Skipped extracting qemu"
     fi
@@ -61,9 +58,10 @@ fi
 echo Using $UI_LIB based UI
 
 pushd "$DIR/Build/qemu"
-    "$DIR"/Tarballs/$QEMU_VERSION/configure --prefix="$PREFIX" \
+    "$DIR"/Tarballs/qemu-"${QEMU_VERSION}"/configure --prefix="$PREFIX" \
                                             --target-list=aarch64-softmmu,x86_64-softmmu \
-                                            --enable-$UI_LIB || exit 1
+                                            --enable-$UI_LIB \
+                                            --enable-slirp || exit 1
     make -j "$MAKEJOBS" || exit 1
     make install || exit 1
 popd
