@@ -52,7 +52,7 @@ ThrowCompletionOr<MarkedVector<Value>> iterable_to_list_of_type(VM& vm, Value it
     // 4. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* iterator_result = TRY(iterator_step(vm, iterator_record));
+        auto iterator_result = TRY(iterator_step(vm, iterator_record));
         next = iterator_result;
 
         // b. If next is not false, then

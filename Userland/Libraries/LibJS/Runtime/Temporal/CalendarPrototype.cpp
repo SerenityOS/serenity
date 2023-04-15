@@ -543,7 +543,7 @@ JS_DEFINE_NATIVE_FUNCTION(CalendarPrototype::fields)
     // 7. Repeat, while next is not false,
     while (true) {
         // a. Set next to ? IteratorStep(iteratorRecord).
-        auto* next = TRY(iterator_step(vm, iterator_record));
+        auto next = TRY(iterator_step(vm, iterator_record));
 
         // b. If next is not false, then
         if (!next)

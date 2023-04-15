@@ -254,7 +254,7 @@ ThrowCompletionOr<Vector<String>> string_list_from_iterable(VM& vm, Value iterab
     Vector<String> list;
 
     // 4. Let next be true.
-    Object* next = nullptr;
+    GCPtr<Object> next;
 
     // 5. Repeat, while next is not false,
     do {

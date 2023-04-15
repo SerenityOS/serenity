@@ -104,7 +104,7 @@ ThrowCompletionOr<Value> iterator_value(VM& vm, Object& iterator_result)
 }
 
 // 7.4.6 IteratorStep ( iteratorRecord ), https://tc39.es/ecma262/#sec-iteratorstep
-ThrowCompletionOr<Object*> iterator_step(VM& vm, Iterator const& iterator_record)
+ThrowCompletionOr<GCPtr<Object>> iterator_step(VM& vm, Iterator const& iterator_record)
 {
     // 1. Let result be ? IteratorNext(iteratorRecord).
     auto result = TRY(iterator_next(vm, iterator_record));
@@ -117,7 +117,7 @@ ThrowCompletionOr<Object*> iterator_step(VM& vm, Iterator const& iterator_record
         return nullptr;
 
     // 4. Return result.
-    return result.ptr();
+    return result;
 }
 
 // 7.4.7 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
@@ -222,7 +222,7 @@ Completion get_iterator_values(VM& vm, Value iterable, IteratorValueCallback cal
     auto iterator_record = TRY(get_iterator(vm, iterable, IteratorHint::Sync, move(method)));
 
     while (true) {
-        auto* next_object = TRY(iterator_step(vm, iterator_record));
+        auto next_object = TRY(iterator_step(vm, iterator_record));
         if (!next_object)
             return {};
 

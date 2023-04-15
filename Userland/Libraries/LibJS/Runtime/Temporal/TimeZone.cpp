@@ -526,7 +526,7 @@ ThrowCompletionOr<MarkedVector<Instant*>> get_possible_instants_for(VM& vm, Valu
     auto list = MarkedVector<Instant*> { vm.heap() };
 
     // 5. Let next be true.
-    Object* next = nullptr;
+    GCPtr<Object> next;
 
     // 6. Repeat, while next is not false,
     do {

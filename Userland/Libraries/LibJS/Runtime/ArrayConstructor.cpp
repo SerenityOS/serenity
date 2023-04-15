@@ -191,7 +191,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
             auto property_key = PropertyKey { k };
 
             // iii. Let next be ? IteratorStep(iteratorRecord).
-            auto* next = TRY(iterator_step(vm, iterator));
+            auto next = TRY(iterator_step(vm, iterator));
 
             // iv. If next is false, then
             if (!next) {

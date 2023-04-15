@@ -290,7 +290,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::union_)
     // 7. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(keysIter).
-        auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+        auto iterator_result = TRY(iterator_step(vm, keys_iterator));
         next = iterator_result;
 
         // b. If next is not false, then
@@ -358,7 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::intersection)
         // c. Repeat, while next is not false,
         while (next) {
             // i. Set next to ? IteratorStep(keysIter).
-            auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+            auto iterator_result = TRY(iterator_step(vm, keys_iterator));
             next = iterator_result;
 
             // ii. If next is not false, then
@@ -436,7 +436,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::difference)
         // c. Repeat, while next is not false,
         while (next) {
             // i. Set next to ? IteratorStep(keysIter).
-            auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+            auto iterator_result = TRY(iterator_step(vm, keys_iterator));
             next = iterator_result;
 
             // ii. If next is not false, then
@@ -486,7 +486,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::symmetric_difference)
     // 7. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(keysIter).
-        auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+        auto iterator_result = TRY(iterator_step(vm, keys_iterator));
         next = iterator_result;
 
         // b. If next is not false, then
@@ -576,7 +576,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_superset_of)
     // 8. Repeat, while next is not false,
     while (next) {
         // a. Set next to ? IteratorStep(keysIter).
-        auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+        auto iterator_result = TRY(iterator_step(vm, keys_iterator));
         next = iterator_result;
 
         // b. If next is not false, then
@@ -630,7 +630,7 @@ JS_DEFINE_NATIVE_FUNCTION(SetPrototype::is_disjoint_from)
         // c. Repeat, while next is not false,
         while (next) {
             // i. Set next to ? IteratorStep(keysIter).
-            auto* iterator_result = TRY(iterator_step(vm, keys_iterator));
+            auto iterator_result = TRY(iterator_step(vm, keys_iterator));
             next = iterator_result;
 
             // ii. If next is not false, then

@@ -468,7 +468,7 @@ ThrowCompletionOr<void> VM::iterator_binding_initialization(BindingPattern const
             // 3. Let n be 0.
             // 4. Repeat,
             while (true) {
-                ThrowCompletionOr<Object*> next { nullptr };
+                ThrowCompletionOr<GCPtr<Object>> next { nullptr };
 
                 // a. If iteratorRecord.[[Done]] is false, then
                 if (!iterator_record.done) {

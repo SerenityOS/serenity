@@ -64,7 +64,7 @@ static ThrowCompletionOr<Value> perform_promise_common(VM& vm, Iterator& iterato
             iterator_record.done = true;
             return next_or_error.release_error();
         }
-        auto* next = next_or_error.release_value();
+        auto next = next_or_error.release_value();
 
         // d. If next is false, then
         if (!next) {

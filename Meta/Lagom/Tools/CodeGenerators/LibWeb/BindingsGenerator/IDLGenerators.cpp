@@ -1521,7 +1521,7 @@ void IDL::ParameterizedType::generate_sequence_from_iterable(SourceGenerator& ge
 
     sequence_generator.append(R"~~~(
     for (;;) {
-        auto* next@recursion_depth@ = TRY(JS::iterator_step(vm, iterator@recursion_depth@));
+        auto next@recursion_depth@ = TRY(JS::iterator_step(vm, iterator@recursion_depth@));
         if (!next@recursion_depth@)
             break;
 
