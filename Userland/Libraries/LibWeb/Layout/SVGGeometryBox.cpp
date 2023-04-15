@@ -38,6 +38,8 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
         // we now have to derive what it was from the original bounding box size.
         // FIXME: It would be nice if we could store the transform from layout somewhere, so we don't have to solve for it here.
         auto original_bounding_box = Gfx::AffineTransform {}.translate(-origin).multiply(transform).map(const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().bounding_box());
+        float stroke_width = geometry_element.visible_stroke_width();
+        original_bounding_box.inflate(stroke_width, stroke_width);
         // If the transform (or path) results in a empty box we can't display this.
         if (original_bounding_box.is_empty())
             return {};

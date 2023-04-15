@@ -28,6 +28,13 @@ public:
     Optional<Gfx::Color> stroke_color() const;
     Optional<float> stroke_width() const;
 
+    float visible_stroke_width() const
+    {
+        if (auto color = stroke_color(); color.has_value() && color->alpha() > 0)
+            return stroke_width().value_or(0);
+        return 0;
+    }
+
     Gfx::AffineTransform get_transform() const;
 
 protected:

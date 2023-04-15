@@ -87,7 +87,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
 
             // Stroke increases the path's size by stroke_width/2 per side.
             auto path_bounding_box = transform.map(path.bounding_box()).to_type<CSSPixels>();
-            CSSPixels stroke_width = geometry_box.dom_node().stroke_width().value_or(0);
+            CSSPixels stroke_width = geometry_box.dom_node().visible_stroke_width() * viewbox_scale;
             path_bounding_box.inflate(stroke_width, stroke_width);
             geometry_box_state.set_content_offset(path_bounding_box.top_left() + offset);
             geometry_box_state.set_content_width(path_bounding_box.width());

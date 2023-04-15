@@ -71,7 +71,9 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
     auto transform = layout_box().layout_transform();
     if (!transform.has_value())
         return;
-    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform));
+
+    auto paint_transform = Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform);
+    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(paint_transform);
 
     if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
         // We need to fill the path before applying the stroke, however the filled
@@ -91,7 +93,8 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         painter.stroke_path(
             path,
             stroke_color,
-            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * context.device_pixels_per_css_pixel());
+            // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
+            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * paint_transform.x_scale());
     }
 }
 
