@@ -19,53 +19,58 @@
 
 namespace Browser {
 
-ConsoleWidget::ConsoleWidget()
+ErrorOr<NonnullRefPtr<ConsoleWidget>> ConsoleWidget::try_create()
 {
-    set_layout<GUI::VerticalBoxLayout>();
-    set_fill_with_background_color(true);
+    auto main_widget = TRY(AK::adopt_nonnull_ref_or_enomem(new (nothrow) ConsoleWidget()));
 
-    m_output_view = add<WebView::OutOfProcessWebView>();
-    m_output_view->load("data:text/html,<html style=\"font: 10pt monospace;\"></html>"sv);
+    main_widget->m_output_view = TRY(main_widget->try_add<WebView::OutOfProcessWebView>());
+    main_widget->m_output_view->load("data:text/html,<html style=\"font: 10pt monospace;\"></html>"sv);
     // Wait until our output WebView is loaded, and then request any messages that occurred before we existed
-    m_output_view->on_load_finish = [this](auto&) {
-        if (on_request_messages)
-            on_request_messages(0);
+    main_widget->m_output_view->on_load_finish = [main_widget](auto&) {
+        if (main_widget->on_request_messages)
+            main_widget->on_request_messages(0);
     };
 
-    auto& bottom_container = add<GUI::Widget>();
-    bottom_container.set_layout<GUI::HorizontalBoxLayout>();
-    bottom_container.set_fixed_height(22);
+    auto bottom_container = TRY(main_widget->try_add<GUI::Widget>());
+    TRY(bottom_container->try_set_layout<GUI::HorizontalBoxLayout>());
+    bottom_container->set_fixed_height(22);
 
-    m_input = bottom_container.add<GUI::TextBox>();
-    m_input->set_syntax_highlighter(make<JS::SyntaxHighlighter>());
+    main_widget->m_input = TRY(bottom_container->try_add<GUI::TextBox>());
+    main_widget->m_input->set_syntax_highlighter(TRY(try_make<JS::SyntaxHighlighter>()));
     // FIXME: Syntax Highlighting breaks the cursor's position on non fixed-width fonts.
-    m_input->set_font(Gfx::FontDatabase::default_fixed_width_font());
-    m_input->set_history_enabled(true);
+    main_widget->m_input->set_font(Gfx::FontDatabase::default_fixed_width_font());
+    main_widget->m_input->set_history_enabled(true);
 
-    m_input->on_return_pressed = [this] {
-        auto js_source = m_input->text();
+    main_widget->m_input->on_return_pressed = [main_widget] {
+        auto js_source = main_widget->m_input->text();
 
         if (js_source.is_whitespace())
             return;
 
-        m_input->add_current_text_to_history();
-        m_input->clear();
+        main_widget->m_input->add_current_text_to_history();
+        main_widget->m_input->clear();
 
-        print_source_line(js_source);
+        main_widget->print_source_line(js_source);
 
-        if (on_js_input)
-            on_js_input(js_source);
+        if (main_widget->on_js_input)
+            main_widget->on_js_input(js_source);
     };
 
-    set_focus_proxy(m_input);
+    main_widget->set_focus_proxy(main_widget->m_input);
 
-    auto& clear_button = bottom_container.add<GUI::Button>();
-    clear_button.set_fixed_size(22, 22);
-    clear_button.set_icon(g_icon_bag.delete_icon);
-    clear_button.set_tooltip("Clear the console output");
-    clear_button.on_click = [this](auto) {
-        clear_output();
+    auto clear_button = TRY(bottom_container->try_add<GUI::Button>());
+    clear_button->set_fixed_size(22, 22);
+    clear_button->set_icon(g_icon_bag.delete_icon);
+    clear_button->set_tooltip("Clear the console output");
+    clear_button->on_click = [main_widget](auto) {
+        main_widget->clear_output();
     };
+
+    return main_widget;
+}
+
+ConsoleWidget::ConsoleWidget()
+{
 }
 
 void ConsoleWidget::request_console_messages()

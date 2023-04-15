@@ -16,8 +16,9 @@
 namespace Browser {
 
 class ConsoleWidget final : public GUI::Widget {
-    C_OBJECT(ConsoleWidget)
+    C_OBJECT_ABSTRACT(ConsoleWidget)
 public:
+    static ErrorOr<NonnullRefPtr<ConsoleWidget>> try_create();
     virtual ~ConsoleWidget() = default;
 
     void notify_about_new_console_message(i32 message_index);
@@ -30,7 +31,7 @@ public:
     Function<void(i32)> on_request_messages;
 
 private:
-    ConsoleWidget();
+    explicit ConsoleWidget();
 
     void request_console_messages();
     void clear_output();
