@@ -72,6 +72,8 @@ char* strdup(char const* str)
 {
     size_t len = strlen(str);
     char* new_str = (char*)malloc(len + 1);
+    if (!new_str)
+        return nullptr;
     memcpy(new_str, str, len);
     new_str[len] = '\0';
     return new_str;
@@ -82,6 +84,8 @@ char* strndup(char const* str, size_t maxlen)
 {
     size_t len = strnlen(str, maxlen);
     char* new_str = (char*)malloc(len + 1);
+    if (!new_str)
+        return nullptr;
     memcpy(new_str, str, len);
     new_str[len] = 0;
     return new_str;
