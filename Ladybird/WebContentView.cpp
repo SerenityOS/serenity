@@ -55,7 +55,7 @@
 #include <QTimer>
 #include <QToolTip>
 
-WebContentView::WebContentView(StringView webdriver_content_ipc_path)
+WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
     : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
     setMouseTracking(true);
@@ -76,7 +76,7 @@ WebContentView::WebContentView(StringView webdriver_content_ipc_path)
         update_viewport_rect();
     });
 
-    create_client();
+    create_client(enable_callgrind_profiling);
 }
 
 WebContentView::~WebContentView()
@@ -599,12 +599,12 @@ void WebContentView::update_palette()
     client().async_update_system_theme(make_system_theme_from_qt_palette(*this));
 }
 
-void WebContentView::create_client()
+void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)
 {
     m_client_state = {};
 
     auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
-    auto new_client = launch_web_content_process(candidate_web_content_paths).release_value_but_fixme_should_propagate_errors();
+    auto new_client = launch_web_content_process(candidate_web_content_paths, enable_callgrind_profiling).release_value_but_fixme_should_propagate_errors();
 
     m_web_content_notifier.setSocket(new_client->socket().fd().value());
     m_web_content_notifier.setEnabled(true);

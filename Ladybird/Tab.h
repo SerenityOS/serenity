@@ -24,7 +24,7 @@ class BrowserWindow;
 class Tab final : public QWidget {
     Q_OBJECT
 public:
-    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path);
+    Tab(BrowserWindow* window, StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling);
 
     WebContentView& view() { return *m_view; }
 
