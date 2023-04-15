@@ -180,6 +180,11 @@ public:
         return m_gpr[reg].reference_to<&PartAddressableRegister::full_u64>();
     }
 
+    void clear_high32(X86::RegisterIndex32 reg)
+    {
+        m_gpr[reg].reference_to<&PartAddressableRegister::high_u32>().value() = 0;
+    }
+
     template<typename T>
     ValueWithShadow<T> const_gpr(unsigned register_index) const
     {

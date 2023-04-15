@@ -902,6 +902,7 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, Instruction cons
 {
     if (is_register()) {
         cpu.gpr32(reg32()) = value;
+        cpu.clear_high32(reg32()) ;
         return;
     }
 
