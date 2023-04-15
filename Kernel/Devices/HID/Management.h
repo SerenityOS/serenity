@@ -9,13 +9,12 @@
 #include <AK/Atomic.h>
 #include <AK/CircularQueue.h>
 #include <AK/Error.h>
+#include <AK/IntrusiveList.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/API/KeyCode.h>
-#include <Kernel/API/MousePacket.h>
 #include <Kernel/Devices/HID/Controller.h>
-#include <Kernel/Devices/HID/Device.h>
-#include <Kernel/Forward.h>
-#include <Kernel/Library/LockRefPtr.h>
 #include <Kernel/Locking/Spinlock.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/UnixTypes.h>
@@ -25,8 +24,6 @@ namespace Kernel {
 
 extern Atomic<bool> g_caps_lock_remapped_to_ctrl;
 
-class HIDDevice;
-class I8042Controller;
 class MouseDevice;
 class KeyboardDevice;
 class KeyboardClient;

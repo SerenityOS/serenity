@@ -10,6 +10,9 @@
 #include <Kernel/Arch/x86_64/ISABus/HID/PS2MouseDevice.h>
 #include <Kernel/Arch/x86_64/ISABus/HID/VMWareMouseDevice.h>
 #include <Kernel/Arch/x86_64/ISABus/I8042Controller.h>
+#include <Kernel/Devices/HID/KeyboardDevice.h>
+#include <Kernel/Devices/HID/MouseDevice.h>
+#include <Kernel/Devices/HID/ScanCodeEvent.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {
