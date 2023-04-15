@@ -824,6 +824,7 @@ private:
     virtual void INT3(const X86::Instruction&) override;
     virtual void INTO(const X86::Instruction&) override;
     virtual void INT_imm8(const X86::Instruction&) override;
+    virtual void Syscall(const X86::Instruction&) override;
     virtual void INVLPG(const X86::Instruction&) override;
     virtual void IN_AL_DX(const X86::Instruction&) override;
     virtual void IN_AL_imm8(const X86::Instruction&) override;

@@ -1816,6 +1816,11 @@ void SoftCPU::INT_imm8(const X86::Instruction& insn)
     set_rax(shadow_wrap_as_initialized(m_emulator.virt_syscall(rax().value(), rdx().value(), rdi().value(), rbx().value())));
 }
 
+void SoftCPU::Syscall(const X86::Instruction&)
+{
+    set_rax(shadow_wrap_as_initialized(m_emulator.virt_syscall(rax().value(), rdx().value(), rdi().value(), rbx().value())));
+}
+
 void SoftCPU::INVLPG(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::IN_AL_DX(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::IN_AL_imm8(const X86::Instruction&) { TODO_INSN(); }

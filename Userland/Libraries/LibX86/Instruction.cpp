@@ -1251,7 +1251,7 @@ static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, Instructio
     }
 
     auto* table64_0f = s_0f_table[to_underlying(OperandSize::Size64)];
-    build_in_table(table64_0f, 0x05, "SYSCALL", OP, nullptr, LockPrefixNotAllowed);
+    build_in_table(table64_0f, 0x05, "SYSCALL", OP, &Interpreter::Syscall, LockPrefixNotAllowed);
     build_in_table(table64_0f, 0x07, "SYSRET", OP, nullptr, LockPrefixNotAllowed);
     for (u8 i = 0x80; i < 0x90; i++)
         table64_0f[i].long_mode_force_64 = true;  // Jcc

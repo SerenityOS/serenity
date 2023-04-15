@@ -280,6 +280,7 @@ public:
     virtual void INT3(Instruction const&) = 0;
     virtual void INTO(Instruction const&) = 0;
     virtual void INT_imm8(Instruction const&) = 0;
+    virtual void Syscall(Instruction const&) = 0;
     virtual void INVLPG(Instruction const&) = 0;
     virtual void IN_AL_DX(Instruction const&) = 0;
     virtual void IN_AL_imm8(Instruction const&) = 0;
