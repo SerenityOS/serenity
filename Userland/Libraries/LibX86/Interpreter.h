@@ -359,6 +359,7 @@ public:
     virtual void MOV_reg32_CR(Instruction const&) = 0;
     virtual void MOV_reg32_DR(Instruction const&) = 0;
     virtual void MOV_reg32_RM32(Instruction const&) = 0;
+    virtual void MOV_reg32_RM32_sign_extend(Instruction const&) = 0;
     virtual void MOV_reg32_imm32(Instruction const&) = 0;
     virtual void MOV_reg8_RM8(Instruction const&) = 0;
     virtual void MOV_reg8_imm8(Instruction const&) = 0;

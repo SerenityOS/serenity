@@ -1228,7 +1228,7 @@ static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, Instructio
     for (u8 i = 0x60; i < 0x68; i++)
         table64[i] = {}; // PUSHA{D}, POPA{D}, BOUND
     // ARPL replaced by MOVSXD
-    build_in_table(table64, 0x63, "MOVSXD", OP_RM32_reg32, nullptr, LockPrefixNotAllowed);
+    build_in_table(table64, 0x63, "MOVSXD", OP_reg32_RM32, &Interpreter::MOV_reg32_RM32_sign_extend, LockPrefixNotAllowed);
     table64[0x68].long_mode_default_64 = true; // PUSH
     table64[0x6A].long_mode_default_64 = true; // PUSH
     for (u8 jmp = 0x70; jmp < 0x80; jmp++)

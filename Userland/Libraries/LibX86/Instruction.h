@@ -695,6 +695,7 @@ public:
     }
 
     unsigned register_index() const { return m_register_index; }
+    RegisterIndex64 reg64() const { return static_cast<RegisterIndex64>(register_index()); }
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const {
@@ -715,6 +716,7 @@ public:
     ProcessorMode mode() const { return m_mode; }
 
     DeprecatedString to_deprecated_string(u32 origin, SymbolProvider const* = nullptr, bool x32 = true) const;
+    bool has_rex_w() const { return m_has_rex_w; }
 
 private:
     template<typename InstructionStreamType>

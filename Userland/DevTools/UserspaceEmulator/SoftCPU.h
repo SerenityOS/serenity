@@ -903,6 +903,7 @@ private:
     virtual void MOV_reg32_CR(const X86::Instruction&) override;
     virtual void MOV_reg32_DR(const X86::Instruction&) override;
     virtual void MOV_reg32_RM32(const X86::Instruction&) override;
+    virtual void MOV_reg32_RM32_sign_extend(const X86::Instruction&) override;
     virtual void MOV_reg32_imm32(const X86::Instruction&) override;
     virtual void MOV_reg8_RM8(const X86::Instruction&) override;
     virtual void MOV_reg8_imm8(const X86::Instruction&) override;

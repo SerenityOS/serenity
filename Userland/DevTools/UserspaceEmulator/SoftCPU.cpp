@@ -2157,6 +2157,15 @@ void SoftCPU::MOV_reg32_RM32(const X86::Instruction& insn)
     gpr32(insn.reg32()) = insn.modrm().read32(*this, insn);
 }
 
+void SoftCPU::MOV_reg32_RM32_sign_extend(const X86::Instruction& insn)
+{
+    if (insn.has_rex_w()) {
+        gpr64(insn.reg64()) = ValueWithShadowType64::create_initialized(sign_extended_to<u64>(static_cast<i32>(insn.modrm().read32(*this, insn).value())));
+    } else {
+        gpr32(insn.reg32()) = ValueWithShadowType32::create_initialized(sign_extended_to<i32>(insn.modrm().read32(*this, insn).value()));
+    }
+}
+
 void SoftCPU::MOV_reg32_imm32(const X86::Instruction& insn)
 {
     gpr32(insn.reg32()) = shadow_wrap_as_initialized(insn.imm32());
