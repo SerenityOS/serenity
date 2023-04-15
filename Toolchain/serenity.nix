@@ -18,11 +18,11 @@ stdenv.mkDerivation {
     rsync
     unzip
     texinfo
-    # Example Build-time Additional Dependencies
     pkg-config
+    # To create port launcher icons
+    imagemagick
   ];
   buildInputs = [
-    # Example Run-time Additional Dependencies
     openssl
     libxcrypt
     xlibsWrapper
