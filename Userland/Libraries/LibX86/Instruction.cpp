@@ -1272,7 +1272,7 @@ static StringView register_name(XMMRegisterIndex);
 
 StringView Instruction::reg8_name() const
 {
-    return register_name(static_cast<RegisterIndex8>(register_index()));
+    return register_name(reg8());
 }
 
 StringView Instruction::reg16_name() const
@@ -2496,8 +2496,10 @@ StringView register_name(SegmentRegister index)
 
 StringView register_name(RegisterIndex8 register_index)
 {
-    static constexpr StringView names[] = { "al"sv, "cl"sv, "dl"sv, "bl"sv, "ah"sv, "ch"sv, "dh"sv, "bh"sv, "r8b"sv, "r9b"sv, "r10b"sv, "r11b"sv, "r12b"sv, "r13b"sv, "r14b"sv, "r15b"sv };
-    return names[register_index & 15];
+    dbgln("register_name: {}", static_cast<int>(register_index));
+    static constexpr StringView names[] = { "al"sv, "cl"sv, "dl"sv, "bl"sv, "ah"sv, "ch"sv, "dh"sv, "bh"sv, "r8b"sv, "r9b"sv, "r10b"sv, "r11b"sv, "r12b"sv, "r13b"sv, "r14b"sv, "r15b"sv , "spl"sv, "bpl"sv, "sil"sv, "dil"sv};
+    VERIFY(register_index <= static_cast<int>(RegisterIndex8::RegisterDIL));
+    return names[register_index];
 }
 
 StringView register_name(RegisterIndex16 register_index)

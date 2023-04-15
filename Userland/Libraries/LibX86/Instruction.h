@@ -339,6 +339,10 @@ enum RegisterIndex8 {
     RegisterR13B,
     RegisterR14B,
     RegisterR15B,
+    RegisterSPL,
+    RegisterBPL,
+    RegisterSIL,
+    RegisterDIL,
 };
 
 enum RegisterIndex16 {
@@ -539,7 +543,14 @@ public:
     RegisterIndex64 reg64() const { return static_cast<RegisterIndex64>(register_index()); }
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
-    RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
+    RegisterIndex8 reg8() const {
+        dbgln("reg8: {}, {}", m_has_rex_prefix, register_index());
+        if (m_has_rex_prefix && register_index() >= 4 && register_index() <= 7)
+        {
+            return static_cast<RegisterIndex8>(register_index() + 12);
+        }
+        return static_cast<RegisterIndex8>(register_index());
+    }
     FpuRegisterIndex reg_fpu() const { return static_cast<FpuRegisterIndex>(register_index()); }
 
     // helpers to get the parts by name as in the spec
@@ -586,7 +597,7 @@ private:
     DeprecatedString to_deprecated_string_a64() const;
 
     template<typename InstructionStreamType>
-    void decode(InstructionStreamType&, AddressSize, bool has_rex_r, bool has_rex_x, bool has_rex_b);
+    void decode(InstructionStreamType&, AddressSize, bool has_rex_prefix,  bool has_rex_r, bool has_rex_x, bool has_rex_b);
     template<typename InstructionStreamType>
     void decode16(InstructionStreamType&);
     template<typename InstructionStreamType>
@@ -613,6 +624,7 @@ private:
     u8 m_displacement_bytes { 0 };
     u8 m_register_index : 7 { 0x7f };
     bool m_has_sib : 1 { false };
+    bool m_has_rex_prefix  : 1 { false };
 };
 
 class Instruction {
@@ -685,7 +697,14 @@ public:
     unsigned register_index() const { return m_register_index; }
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
-    RegisterIndex8 reg8() const { return static_cast<RegisterIndex8>(register_index()); }
+    RegisterIndex8 reg8() const {
+        dbgln("reg8: {}, {}", m_has_rex_prefix, register_index());
+        if (m_has_rex_prefix && register_index() >= 4 && register_index() <= 7)
+        {
+            return static_cast<RegisterIndex8>(register_index() + 12);
+        }
+        return static_cast<RegisterIndex8>(register_index());
+    }
 
     SegmentRegister segment_register() const { return static_cast<SegmentRegister>(register_index()); }
 
@@ -724,6 +743,7 @@ private:
     bool m_has_lock_prefix : 1 { false };
     bool m_has_operand_size_override_prefix : 1 { false };
     bool m_has_address_size_override_prefix : 1 { false };
+    bool m_has_rex_prefix : 1 { false };
     bool m_has_rex_w : 1 { false };
     bool m_has_rex_r : 1 { false };
     bool m_has_rex_x : 1 { false };
@@ -1043,6 +1063,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, ProcessorM
             continue;
         }
         if (m_mode == ProcessorMode::Long && (opbyte & Prefix::REX_Mask) == Prefix::REX_Base) {
+            m_has_rex_prefix = true;
             m_has_rex_w = opbyte & 8;
             if (m_has_rex_w)
                 m_operand_size = OperandSize::Size64;
@@ -1084,7 +1105,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, ProcessorM
 
     if (m_descriptor->has_rm) {
         // Consume ModR/M (may include SIB and displacement.)
-        m_modrm.decode(stream, m_address_size, m_has_rex_r, m_has_rex_x, m_has_rex_b);
+        m_modrm.decode(stream, m_address_size, m_has_rex_prefix, m_has_rex_r, m_has_rex_x, m_has_rex_b);
         m_register_index = m_modrm.reg();
     } else {
         if (has_sub_op())
@@ -1190,12 +1211,13 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, ProcessorM
 }
 
 template<typename InstructionStreamType>
-ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, AddressSize address_size, bool has_rex_r, bool has_rex_x, bool has_rex_b)
+ALWAYS_INLINE void MemoryOrRegisterReference::decode(InstructionStreamType& stream, AddressSize address_size, bool has_rex_prefix,  bool has_rex_r, bool has_rex_x, bool has_rex_b)
 {
     u8 mod_rm_byte = stream.read8();
     m_mod = mod_rm_byte >> 6;
     m_reg = (mod_rm_byte >> 3) & 7;
     m_rm = mod_rm_byte & 7;
+    m_has_rex_prefix = has_rex_prefix;
 
     if (address_size == AddressSize::Size32) {
         decode32(stream, has_rex_r, has_rex_x, has_rex_b);

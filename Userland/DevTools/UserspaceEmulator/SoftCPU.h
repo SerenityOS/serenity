@@ -137,6 +137,14 @@ public:
             return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::low_u8>();
         case X86::RegisterDH:
             return m_gpr[X86::RegisterEDX].slice<&PartAddressableRegister::high_u8>();
+        case X86::RegisterSPL:
+            return m_gpr[X86::RegisterESP].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterBPL:
+            return m_gpr[X86::RegisterEBP].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterSIL:
+            return m_gpr[X86::RegisterSIL].slice<&PartAddressableRegister::low_u8>();
+        case X86::RegisterDIL:
+            return m_gpr[X86::RegisterEDI].slice<&PartAddressableRegister::low_u8>();
         default:
             VERIFY_NOT_REACHED();
         }
