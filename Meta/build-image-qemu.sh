@@ -71,6 +71,13 @@ else
     DISK_SIZE_BYTES="$SERENITY_DISK_SIZE_BYTES"
 fi
 
+if [ -n "$SERENITY_INODE_COUNT" ]; then
+    if [ "$INODE_COUNT" -gt "$SERENITY_INODE_COUNT" ]; then
+        die "SERENITY_INODE_COUNT is set to $SERENITY_INODE_COUNT but required inode count is roughly $INODE_COUNT"
+    fi
+    INODE_COUNT="$SERENITY_INODE_COUNT"
+fi
+
 nearest_power_of_2() {
     local n=$1
     local p=1
