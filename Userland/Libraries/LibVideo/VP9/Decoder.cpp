@@ -693,15 +693,15 @@ MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_c
     auto round_mv_comp_q2 = [&](MotionVector in) {
         // return (value < 0 ? value - 1 : value + 1) / 2
         return MotionVector {
-            (in.row() < 0 ? in.row() - 1 : in.row() + 1) >> 1,
-            (in.column() < 0 ? in.column() - 1 : in.column() + 1) >> 1
+            (in.row() < 0 ? in.row() - 1 : in.row() + 1) / 2,
+            (in.column() < 0 ? in.column() - 1 : in.column() + 1) / 2
         };
     };
     auto round_mv_comp_q4 = [&](MotionVector in) {
         // return (value < 0 ? value - 2 : value + 2) / 4
         return MotionVector {
-            (in.row() < 0 ? in.row() - 2 : in.row() + 2) >> 2,
-            (in.column() < 0 ? in.column() - 2 : in.column() + 2) >> 2
+            (in.row() < 0 ? in.row() - 2 : in.row() + 2) / 4,
+            (in.column() < 0 ? in.column() - 2 : in.column() + 2) / 4
         };
     };
 
