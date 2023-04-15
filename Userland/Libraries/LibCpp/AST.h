@@ -434,6 +434,7 @@ public:
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_name() const override { return true; }
     virtual bool is_templatized() const { return false; }
+    virtual bool is_sized() const { return false; }
 
     Name(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
         : Expression(parent, start, end, filename)
@@ -450,6 +451,25 @@ public:
 private:
     RefPtr<Identifier const> m_name;
     Vector<NonnullRefPtr<Identifier const>> m_scope;
+    mutable Optional<DeprecatedString> m_full_name;
+};
+
+class SizedName : public Name {
+public:
+    virtual ~SizedName() override = default;
+    virtual StringView class_name() const override { return "SizedName"sv; }
+    virtual bool is_sized() const override { return true; }
+    void dump(FILE* output, size_t indent) const override;
+
+    SizedName(ASTNode const* parent, Optional<Position> start, Optional<Position> end, DeprecatedString const& filename)
+        : Name(parent, start, end, filename)
+    {
+    }
+
+    void append_dimension(StringView dim) { m_dimensions.append(dim); };
+
+private:
+    Vector<StringView> m_dimensions;
     mutable Optional<DeprecatedString> m_full_name;
 };
 
@@ -1020,5 +1040,6 @@ template<>
 inline bool ASTNode::fast_is<NamedType>() const { return is_type() && verify_cast<Type>(*this).is_named_type(); }
 template<>
 inline bool ASTNode::fast_is<TemplatizedName>() const { return is_name() && verify_cast<Name>(*this).is_templatized(); }
-
+template<>
+inline bool ASTNode::fast_is<SizedName>() const { return is_name() && verify_cast<Name>(*this).is_sized(); }
 }
