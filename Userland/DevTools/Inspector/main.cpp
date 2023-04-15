@@ -128,7 +128,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         remote_process.set_inspected_object(remote_object->address);
     };
 
-    auto properties_tree_view_context_menu = TRY(GUI::Menu::try_create("Properties Tree View"));
+    auto properties_tree_view_context_menu = TRY(GUI::Menu::try_create(TRY("Properties Tree View"_string)));
 
     auto copy_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"sv).release_value_but_fixme_should_propagate_errors();
     auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {

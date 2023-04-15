@@ -38,11 +38,6 @@ Menu::Menu(String name)
 {
 }
 
-Menu::Menu(DeprecatedString name)
-    : m_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors())
-{
-}
-
 Menu::~Menu()
 {
     unrealize_menu();
@@ -119,7 +114,7 @@ ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(DeprecatedString name)
     // NOTE: We grow the vector first, to get allocation failure handled immediately.
     TRY(m_items.try_ensure_capacity(m_items.size() + 1));
 
-    auto submenu = TRY(Menu::try_create(name));
+    auto submenu = TRY(Menu::try_create(TRY(String::from_deprecated_string(name))));
 
     auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, submenu)));
     submenu->set_parent(*this, m_items.size());
