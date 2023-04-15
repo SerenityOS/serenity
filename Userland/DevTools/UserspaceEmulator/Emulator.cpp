@@ -231,7 +231,9 @@ int Emulator::exec()
         emit_profile_event(profile_stream(), "mmap"sv, DeprecatedString::formatted(R"("ptr": {}, "size": {}, "name": "/usr/lib/Loader.so")", *m_loader_text_base, *m_loader_text_size));
 
     while (!m_shutdown) {
-        if (m_steps_til_pause) [[likely]] {
+        bool should_pause = ((m_steps_til_pause == 0) || m_breakpoints.contains(m_cpu->rip()));
+
+        if (!should_pause) [[likely]] {
             m_cpu->save_base_rip();
             auto insn = X86::Instruction::from_stream(*m_cpu, X86::ProcessorMode::Long);
             // Exec cycle
@@ -239,6 +241,7 @@ int Emulator::exec()
                 outln("{:p}  \033[33;1m{}\033[0m", m_cpu->base_rip(), insn.to_deprecated_string(m_cpu->base_rip(), symbol_provider));
             }
 
+            VERIFY(insn.handler() != nullptr);
             (m_cpu->*insn.handler())(insn);
 
             if (is_profiling()) {
@@ -332,6 +335,7 @@ void Emulator::handle_repl()
         outln("ret, r: Run until function returns");
         outln("step, s [count]: Execute [count] instructions and then halt");
         outln("signal, sig [number:int], send signal to emulated program (default: sigint:2)");
+        outln("breakpoint, bp [number:hex], add a breakpoint");
     };
     auto line = line_or_error.release_value();
     if (line.is_empty()) {
@@ -346,6 +350,9 @@ void Emulator::handle_repl()
     m_editor->add_to_history(line);
 
     if (parts[0].is_one_of("s"sv, "step"sv)) {
+        if (m_breakpoints.contains(m_cpu->rip())) {
+            m_breakpoints.remove(m_cpu->rip());
+        }
         if (parts.size() == 1) {
             m_steps_til_pause = 1;
             return;
@@ -356,8 +363,17 @@ void Emulator::handle_repl()
             return;
         }
         m_steps_til_pause = number.value();
+    } else if (parts[0] == "bp") {
+        auto addr = AK::StringUtils::convert_to_uint_from_hex(parts[1]);
+        if (addr.has_value()) {
+            m_breakpoints.set(addr.value());
+            outln("added breakpoint at: {:p}", addr.value());
+        }
     } else if (parts[0].is_one_of("c"sv, "continue"sv)) {
         m_steps_til_pause = -1;
+        if (m_breakpoints.contains(m_cpu->rip())) {
+            m_breakpoints.remove(m_cpu->rip());
+        }
     } else if (parts[0].is_one_of("r"sv, "ret"sv)) {
         m_run_til_return = true;
         // FIXME: This may be uninitialized

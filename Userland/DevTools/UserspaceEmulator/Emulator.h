@@ -12,6 +12,7 @@
 #include "Report.h"
 #include "SoftMMU.h"
 #include <AK/Types.h>
+#include <AK/HashTable.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -260,6 +261,7 @@ private:
     int m_exit_status { 0 };
 
     i64 m_steps_til_pause { -1 };
+    HashTable<FlatPtr> m_breakpoints;
     bool m_run_til_return { false };
     bool m_run_til_call { false };
     FlatPtr m_watched_addr { 0 };
