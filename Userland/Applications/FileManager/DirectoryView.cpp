@@ -547,7 +547,7 @@ bool DirectoryView::can_modify_current_selection()
     // FIXME: remove once Clang formats this properly.
     // clang-format off
     return selections.first_matching([&](auto& index) {
-        return FileSystem::can_delete_or_move(node(index).full_path());
+        return node(index).can_delete_or_move();
     }).has_value();
     // clang-format on
 }

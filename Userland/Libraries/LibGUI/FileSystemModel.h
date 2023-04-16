@@ -69,6 +69,8 @@ public:
         int error() const { return m_error; }
         char const* error_string() const { return strerror(m_error); }
 
+        bool can_delete_or_move() const;
+
         DeprecatedString full_path() const;
 
     private:
@@ -83,6 +85,7 @@ public:
 
         Node* m_parent { nullptr };
         Vector<NonnullOwnPtr<Node>> m_children;
+        mutable Optional<bool> m_can_delete_or_move;
         bool m_has_traversed { false };
 
         bool m_selected { false };
