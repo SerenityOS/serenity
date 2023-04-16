@@ -44,7 +44,7 @@ class Field final : public GUI::Frame {
     friend class SquareLabel;
 
 public:
-    static ErrorOr<NonnullRefPtr<Field>> create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
+    static ErrorOr<NonnullRefPtr<Field>> create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button);
     virtual ~Field() override = default;
 
     enum class Difficulty {
@@ -109,7 +109,7 @@ public:
     void generate_field(size_t start_row, size_t start_column);
 
 private:
-    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed);
+    Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button);
 
     void initialize();
 
@@ -166,5 +166,4 @@ private:
     bool m_chord_preview { false };
     bool m_first_click { true };
     bool m_single_chording { true };
-    Function<void(Gfx::IntSize)> m_on_size_changed;
 };
