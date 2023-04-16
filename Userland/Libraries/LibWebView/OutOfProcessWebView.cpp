@@ -371,12 +371,13 @@ void OutOfProcessWebView::notify_server_did_request_confirm(Badge<WebContentClie
 
 void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClient>, String const& message, String const& default_)
 {
-    m_dialog = GUI::InputBox::construct(window(), default_.to_deprecated_string(), message, "Prompt"sv, GUI::InputType::Text, StringView {});
+    String mutable_value = default_;
+    m_dialog = GUI::InputBox::create(window(), mutable_value, message, "Prompt"sv, GUI::InputType::Text).release_value_but_fixme_should_propagate_errors();
     m_dialog->set_icon(window()->icon());
 
     if (m_dialog->exec() == GUI::InputBox::ExecResult::OK) {
         auto const& dialog = static_cast<GUI::InputBox const&>(*m_dialog);
-        auto response = String::from_deprecated_string(dialog.text_value()).release_value_but_fixme_should_propagate_errors();
+        auto response = dialog.text_value();
 
         client().async_prompt_closed(move(response));
     } else {
@@ -389,7 +390,7 @@ void OutOfProcessWebView::notify_server_did_request_prompt(Badge<WebContentClien
 void OutOfProcessWebView::notify_server_did_request_set_prompt_text(Badge<WebContentClient>, String const& message)
 {
     if (m_dialog && is<GUI::InputBox>(*m_dialog))
-        static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message.to_deprecated_string());
+        static_cast<GUI::InputBox&>(*m_dialog).set_text_value(message);
 }
 
 void OutOfProcessWebView::notify_server_did_request_accept_dialog(Badge<WebContentClient>)

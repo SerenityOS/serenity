@@ -118,7 +118,7 @@ GalleryWidget::GalleryWidget()
     m_input_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"sv).release_value_but_fixme_should_propagate_errors());
 
     m_input_button->on_click = [&](auto) {
-        DeprecatedString value;
+        String value;
         if (GUI::InputBox::show(window(), value, "Enter input:"sv, "Input"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK)
             m_text_editor->set_text(value);
     };

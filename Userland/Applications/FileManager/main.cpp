@@ -223,7 +223,7 @@ void do_create_link(Vector<DeprecatedString> const& selected_file_paths, GUI::Wi
 
 void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI::Window* window)
 {
-    DeprecatedString archive_name;
+    String archive_name;
     if (GUI::InputBox::show(window, archive_name, "Enter name:"sv, "Create Archive"sv) != GUI::InputBox::ExecResult::OK)
         return;
 
@@ -237,7 +237,7 @@ void do_create_archive(Vector<DeprecatedString> const& selected_file_paths, GUI:
         path_builder.append(".zip"sv);
     } else {
         path_builder.append(archive_name);
-        if (!archive_name.ends_with(".zip"sv))
+        if (!AK::StringUtils::ends_with(archive_name, ".zip"sv, CaseSensitivity::CaseSensitive))
             path_builder.append(".zip"sv);
     }
     auto output_path = path_builder.to_deprecated_string();

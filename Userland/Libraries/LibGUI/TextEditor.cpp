@@ -97,9 +97,9 @@ void TextEditor::create_actions()
     if (is_multi_line()) {
         m_go_to_line_action = Action::create(
             "Go to line...", { Mod_Ctrl, Key_L }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
-                DeprecatedString value;
+                String value;
                 if (InputBox::show(window(), value, "Line:"sv, "Go to line"sv) == InputBox::ExecResult::OK) {
-                    auto line_target = value.to_uint();
+                    auto line_target = AK::StringUtils::convert_to_uint(value.bytes_as_string_view());
                     if (line_target.has_value()) {
                         set_cursor_and_focus_line(line_target.value() - 1, 0);
                     }

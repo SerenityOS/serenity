@@ -522,12 +522,12 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_file_action(Dep
 {
     auto icon_no_shadow = TRY(Gfx::Bitmap::load_from_file(icon));
     return GUI::Action::create(label, icon_no_shadow, [this, extension](const GUI::Action&) {
-        DeprecatedString filename;
+        String filename;
         if (GUI::InputBox::show(window(), filename, "Enter name of new file:"sv, "Add new file to project"sv) != GUI::InputBox::ExecResult::OK)
             return;
 
-        if (!extension.is_empty() && !filename.ends_with(DeprecatedString::formatted(".{}", extension))) {
-            filename = DeprecatedString::formatted("{}.{}", filename, extension);
+        if (!extension.is_empty() && !AK::StringUtils::ends_with(filename, DeprecatedString::formatted(".{}", extension), CaseSensitivity::CaseSensitive)) {
+            filename = String::formatted("{}.{}", filename, extension).release_value_but_fixme_should_propagate_errors();
         }
 
         auto path_to_selected = selected_file_paths();
@@ -564,7 +564,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_actio
 {
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv));
     return GUI::Action::create("&Directory...", { Mod_Ctrl | Mod_Shift, Key_N }, icon, [this](const GUI::Action&) {
-        DeprecatedString directory_name;
+        String directory_name;
         if (GUI::InputBox::show(window(), directory_name, "Enter name of new directory:"sv, "Add new folder to project"sv) != GUI::InputBox::ExecResult::OK)
             return;
 
@@ -580,7 +580,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_new_directory_actio
             else
                 dir_path = selected.dirname();
 
-            directory_name = DeprecatedString::formatted("{}/{}", dir_path, directory_name);
+            directory_name = String::formatted("{}/{}", dir_path, directory_name).release_value_but_fixme_should_propagate_errors();
         }
 
         auto formatted_dir_name = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_project->model().root_path(), directory_name));

@@ -69,7 +69,7 @@ CharacterMapWidget::CharacterMapWidget()
     m_next_glyph_action->set_status_tip("Seek the next visible glyph");
 
     m_go_to_glyph_action = GUI::Action::create("Go to glyph...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
-        DeprecatedString input;
+        String input;
         if (GUI::InputBox::show(window(), input, "Hexadecimal:"sv, "Go to glyph"sv, GUI::InputType::NonemptyText) == GUI::InputBox::ExecResult::OK) {
             auto maybe_code_point = AK::StringUtils::convert_to_uint_from_hex(input);
             if (!maybe_code_point.has_value())
