@@ -47,7 +47,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
-    hex_editor_widget->initialize_menubar(*window);
+    TRY(hex_editor_widget->initialize_menubar(*window));
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
