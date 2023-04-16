@@ -51,30 +51,6 @@ void Inode::sync()
     fs().flush_writes();
 }
 
-ErrorOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(OpenFileDescription* description) const
-{
-    auto builder = TRY(KBufferBuilder::try_create());
-
-    u8 buffer[4096];
-    off_t offset = 0;
-    for (;;) {
-        auto buf = UserOrKernelBuffer::for_kernel_buffer(buffer);
-        auto nread = TRY(read_bytes(offset, sizeof(buffer), buf, description));
-        VERIFY(nread <= sizeof(buffer));
-        if (nread == 0)
-            break;
-        TRY(builder.append((char const*)buffer, nread));
-        offset += nread;
-        if (nread < sizeof(buffer))
-            break;
-    }
-
-    auto entire_file = builder.build();
-    if (!entire_file)
-        return ENOMEM;
-    return entire_file.release_nonnull();
-}
-
 ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& credentials, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
 {
     // The default implementation simply treats the stored
