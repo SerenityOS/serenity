@@ -10,11 +10,13 @@ configopts=(
     '--disable-strip'
     '--enable-pie'
     '--enable-sdl'
+    '--enable-slirp'
     '--enable-tcg'
     '--enable-tools'
 )
 depends=(
   'glib'
+  'libslirp'
   'pixman'
   'SDL2'
 )
