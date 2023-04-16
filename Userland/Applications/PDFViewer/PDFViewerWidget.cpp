@@ -206,39 +206,39 @@ PDFViewerWidget::PDFViewerWidget()
     initialize_toolbar(toolbar);
 }
 
-void PDFViewerWidget::initialize_menubar(GUI::Window& window)
+ErrorOr<void> PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File"_short_string);
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(&window);
         if (!response.is_error())
             open_file(response.value().filename(), response.value().release_stream());
+    })));
+    TRY(file_menu->try_add_separator());
+    TRY(file_menu->add_recent_files_list([&](auto& action) {
+        auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
+        if (!response.is_error())
+            open_file(response.value().filename(), response.value().release_stream());
     }));
-    file_menu.add_separator();
-    file_menu.add_recent_files_list([&](auto& action) {
-                 auto response = FileSystemAccessClient::Client::the().request_file_read_only_approved(&window, action.text());
-                 if (!response.is_error())
-                     open_file(response.value().filename(), response.value().release_stream());
-             })
-        .release_value_but_fixme_should_propagate_errors();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& view_menu = window.add_menu("&View"_short_string);
-    view_menu.add_action(*m_toggle_sidebar_action);
-    view_menu.add_separator();
-    auto& view_mode_menu = view_menu.add_submenu("View &Mode"_string.release_value_but_fixme_should_propagate_errors());
-    view_mode_menu.add_action(*m_page_view_mode_single);
-    view_mode_menu.add_action(*m_page_view_mode_multiple);
-    view_menu.add_separator();
-    view_menu.add_action(*m_zoom_in_action);
-    view_menu.add_action(*m_zoom_out_action);
-    view_menu.add_action(*m_reset_zoom_action);
+    auto view_menu = TRY(window.try_add_menu("&View"_short_string));
+    TRY(view_menu->try_add_action(*m_toggle_sidebar_action));
+    TRY(view_menu->try_add_separator());
+    auto view_mode_menu = TRY(view_menu->try_add_submenu(TRY("View &Mode"_string)));
+    TRY(view_mode_menu->try_add_action(*m_page_view_mode_single));
+    TRY(view_mode_menu->try_add_action(*m_page_view_mode_multiple));
+    TRY(view_menu->try_add_separator());
+    TRY(view_menu->try_add_action(*m_zoom_in_action));
+    TRY(view_menu->try_add_action(*m_zoom_out_action));
+    TRY(view_menu->try_add_action(*m_reset_zoom_action));
 
-    auto& help_menu = window.add_menu("&Help"_short_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
+    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window)));
+    return {};
 }
 
 void PDFViewerWidget::initialize_toolbar(GUI::Toolbar& toolbar)

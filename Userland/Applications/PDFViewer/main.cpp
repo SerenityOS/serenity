@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto pdf_viewer_widget = TRY(window->set_main_widget<PDFViewerWidget>());
 
-    pdf_viewer_widget->initialize_menubar(*window);
+    TRY(pdf_viewer_widget->initialize_menubar(*window));
 
     window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
