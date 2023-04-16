@@ -151,7 +151,8 @@ void Statusbar::Segment::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Gfx::StylePainter::current().paint_frame(painter, rect(), palette(), m_shape, Gfx::FrameShadow::Sunken, m_thickness, spans_entire_window_horizontally());
+    bool skip_vertical_lines = window()->is_maximized() && spans_entire_window_horizontally();
+    Gfx::StylePainter::current().paint_frame(painter, rect(), palette(), m_shape, Gfx::FrameShadow::Sunken, m_thickness, skip_vertical_lines);
 
     if (is_clickable())
         Button::paint_event(event);
