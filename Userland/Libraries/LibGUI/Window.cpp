@@ -618,6 +618,9 @@ void Window::handle_fonts_change_event(FontsChangeEvent& event)
 
     if (is_auto_shrinking())
         schedule_relayout();
+
+    if (on_font_change)
+        on_font_change();
 }
 
 void Window::handle_screen_rects_change_event(ScreenRectsChangeEvent& event)
