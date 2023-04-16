@@ -395,7 +395,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window->set_fullscreen(!window->is_fullscreen());
     }));
 
-    auto& rotation_axis_menu = view_menu.add_submenu("Rotation &Axis");
+    auto& rotation_axis_menu = view_menu.add_submenu(TRY("Rotation &Axis"_string));
     auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget](auto&) {
         widget->toggle_rotate_x();
     });
@@ -413,7 +413,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     rotation_x_action->set_checked(true);
     rotation_z_action->set_checked(true);
 
-    auto& rotation_speed_menu = view_menu.add_submenu("Rotation &Speed");
+    auto& rotation_speed_menu = view_menu.add_submenu(TRY("Rotation &Speed"_string));
     GUI::ActionGroup rotation_speed_actions;
     rotation_speed_actions.set_exclusive(true);
 
@@ -456,7 +456,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     texture_enabled_action->set_checked(true);
     texture_menu.add_action(texture_enabled_action);
 
-    auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S");
+    auto& wrap_u_menu = texture_menu.add_submenu("Wrap &S"_short_string);
     GUI::ActionGroup wrap_s_actions;
     wrap_s_actions.set_exclusive(true);
 
@@ -480,7 +480,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     wrap_u_repeat_action->set_checked(true);
 
-    auto& wrap_t_menu = texture_menu.add_submenu("Wrap &T");
+    auto& wrap_t_menu = texture_menu.add_submenu("Wrap &T"_short_string);
     GUI::ActionGroup wrap_t_actions;
     wrap_t_actions.set_exclusive(true);
 
@@ -504,7 +504,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     wrap_t_repeat_action->set_checked(true);
 
-    auto& texture_scale_menu = texture_menu.add_submenu("S&cale");
+    auto& texture_scale_menu = texture_menu.add_submenu("S&cale"_short_string);
     GUI::ActionGroup texture_scale_actions;
     texture_scale_actions.set_exclusive(true);
 
@@ -542,7 +542,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     texture_scale_1_action->set_checked(true);
 
-    auto& texture_mag_filter_menu = texture_menu.add_submenu("Mag Filter");
+    auto& texture_mag_filter_menu = texture_menu.add_submenu(TRY("Mag Filter"_string));
     GUI::ActionGroup texture_mag_filter_actions;
     texture_mag_filter_actions.set_exclusive(true);
 

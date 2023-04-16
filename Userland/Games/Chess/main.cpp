@@ -127,7 +127,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
-    auto engine_submenu = TRY(engine_menu->try_add_submenu("&Engine"));
+    auto engine_submenu = TRY(engine_menu->try_add_submenu("&Engine"_short_string));
     for (auto const& engine : { "Human", "ChessEngine" }) {
         auto action = GUI::Action::create_checkable(engine, [&](auto& action) {
             if (action.text() == "Human") {

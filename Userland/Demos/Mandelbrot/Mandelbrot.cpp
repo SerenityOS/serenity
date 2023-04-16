@@ -415,7 +415,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto file_menu = TRY(window->try_add_menu("&File"_short_string));
 
-    auto& export_submenu = file_menu->add_submenu("&Export");
+    auto& export_submenu = file_menu->add_submenu("&Export"_short_string);
 
     TRY(export_submenu.try_add_action(GUI::Action::create("As &BMP",
         [&](GUI::Action&) {

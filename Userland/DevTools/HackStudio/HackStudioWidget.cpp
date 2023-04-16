@@ -497,7 +497,7 @@ ErrorOr<NonnullRefPtr<GUI::Menu>> HackStudioWidget::create_project_tree_view_con
     });
     auto project_tree_view_context_menu = GUI::Menu::construct(TRY("Project Files"_string));
 
-    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew...");
+    auto& new_file_submenu = project_tree_view_context_menu->add_submenu("N&ew..."_short_string);
     for (auto& new_file_action : m_new_file_actions) {
         new_file_submenu.add_action(new_file_action);
     }
@@ -1411,7 +1411,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 {
     auto& file_menu = window.add_menu("&File"_short_string);
 
-    auto& new_submenu = file_menu.add_submenu("&New...");
+    auto& new_submenu = file_menu.add_submenu("&New..."_short_string);
     new_submenu.add_action(*m_new_project_action);
     new_submenu.add_separator();
     for (auto& new_file_action : m_new_file_actions) {
@@ -1427,7 +1427,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
     new_submenu.add_action(*m_new_directory_action);
 
     file_menu.add_action(*m_open_action);
-    m_recent_projects_submenu = &file_menu.add_submenu("Open &Recent");
+    m_recent_projects_submenu = &file_menu.add_submenu(TRY("Open &Recent"_string));
     {
         auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/open-recent.png"sv));
         m_recent_projects_submenu->set_icon(icon);
@@ -1504,7 +1504,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode");
+    auto& wrapping_mode_menu = view_menu.add_submenu(TRY("&Wrapping Mode"_string));
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_wrapping_mode = GUI::TextEditor::WrappingMode::NoWrap;
         for (auto& wrapper : m_all_editor_wrappers)

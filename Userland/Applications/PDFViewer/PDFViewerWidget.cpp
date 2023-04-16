@@ -228,7 +228,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
     auto& view_menu = window.add_menu("&View"_short_string);
     view_menu.add_action(*m_toggle_sidebar_action);
     view_menu.add_separator();
-    auto& view_mode_menu = view_menu.add_submenu("View &Mode");
+    auto& view_mode_menu = view_menu.add_submenu("View &Mode"_string.release_value_but_fixme_should_propagate_errors());
     view_mode_menu.add_action(*m_page_view_mode_single);
     view_mode_menu.add_action(*m_page_view_mode_multiple);
     view_menu.add_separator();
