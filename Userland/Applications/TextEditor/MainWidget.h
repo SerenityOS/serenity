@@ -42,7 +42,7 @@ public:
 
     void update_title();
     void update_statusbar();
-    void initialize_menubar(GUI::Window&);
+    ErrorOr<void> initialize_menubar(GUI::Window&);
 
 private:
     MainWidget();

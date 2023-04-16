@@ -67,7 +67,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    text_widget->initialize_menubar(*window);
+    TRY(text_widget->initialize_menubar(*window));
     text_widget->update_title();
 
     window->show();
