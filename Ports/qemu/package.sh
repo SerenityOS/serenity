@@ -3,17 +3,21 @@ port='qemu'
 version='7.2.0'
 useconfigure='true'
 configopts=(
-    "--target-list=aarch64-softmmu,i386-softmmu,x86_64-softmmu"
+    '--target-list=aarch64-softmmu,i386-softmmu,x86_64-softmmu'
     "--cross-prefix=${SERENITY_ARCH}-pc-serenity-"
-    "--extra-ldflags=-lm"
-    "--without-default-features"
-    "--disable-strip"
-    "--enable-pie"
-    "--enable-sdl"
-    "--enable-tcg"
-    "--enable-tools"
+    '--extra-ldflags=-lm'
+    '--without-default-features'
+    '--disable-strip'
+    '--enable-pie'
+    '--enable-sdl'
+    '--enable-tcg'
+    '--enable-tools'
 )
-depends=("glib" "pixman" "SDL2")
+depends=(
+  'glib'
+  'pixman'
+  'SDL2'
+)
 files="https://download.qemu.org/qemu-${version}.tar.xz qemu-${version}.tar.xz 5b49ce2687744dad494ae90a898c52204a3406e84d072482a1e1be854eeb2157"
 auth_type='sha256'
 
