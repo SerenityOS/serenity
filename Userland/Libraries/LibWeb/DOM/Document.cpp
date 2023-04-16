@@ -1893,6 +1893,12 @@ void Document::update_readiness(HTML::DocumentReadyState readiness_value)
 
     // 4. Fire an event named readystatechange at document.
     dispatch_event(Event::create(realm(), HTML::EventNames::readystatechange));
+
+    if (readiness_value == HTML::DocumentReadyState::Complete && is_active() && navigable()->is_traversable()) {
+        if (auto* page = navigable()->traversable_navigable()->page()) {
+            page->client().page_did_finish_loading(url());
+        }
+    }
 }
 
 Page* Document::page()
