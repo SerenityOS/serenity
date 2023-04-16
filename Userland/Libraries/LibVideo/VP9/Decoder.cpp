@@ -1220,16 +1220,39 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
 {
     // 8.6.2 Reconstruct process
 
-    // The variable dqDenom is set equal to 2 if txSz is equal to Transform_32X32, otherwise dqDenom is set equal to 1.
-    Intermediate dq_denominator = transform_block_size == Transform_32x32 ? 2 : 1;
     // The variable n (specifying the base 2 logarithm of the width of the transform block) is set equal to 2 + txSz.
     u8 log2_of_block_size = 2u + transform_block_size;
+    switch (log2_of_block_size) {
+    case 2:
+        return reconstruct_templated<2>(plane, block_context, transform_block_x, transform_block_y, transform_set);
+        break;
+    case 3:
+        return reconstruct_templated<3>(plane, block_context, transform_block_x, transform_block_y, transform_set);
+        break;
+    case 4:
+        return reconstruct_templated<4>(plane, block_context, transform_block_x, transform_block_y, transform_set);
+        break;
+    case 5:
+        return reconstruct_templated<5>(plane, block_context, transform_block_x, transform_block_y, transform_set);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+template<u8 log2_of_block_size>
+DecoderErrorOr<void> Decoder::reconstruct_templated(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TransformSet transform_set)
+{
+    // 8.6.2 Reconstruct process, continued:
+
+    // The variable dqDenom is set equal to 2 if txSz is equal to Transform_32X32, otherwise dqDenom is set equal to 1.
+    constexpr Intermediate dq_denominator = log2_of_block_size == 5 ? 2 : 1;
     // The variable n0 (specifying the width of the transform block) is set equal to 1 << n.
-    auto block_size = 1u << log2_of_block_size;
+    constexpr auto block_size = 1u << log2_of_block_size;
 
     // 1. Dequant[ i ][ j ] is set equal to ( Tokens[ i * n0 + j ] * get_ac_quant( plane ) ) / dqDenom
     //    for i = 0..(n0-1), for j = 0..(n0-1)
-    Array<Intermediate, maximum_transform_size> dequantized;
+    Array<Intermediate, block_size * block_size> dequantized;
     Intermediate ac_quant = get_ac_quantizer(block_context, plane);
     for (auto i = 0u; i < block_size; i++) {
         for (auto j = 0u; j < block_size; j++) {
@@ -1250,7 +1273,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
 
     // 3. Invoke the 2D inverse transform block process defined in section 8.7.2 with the variable n as input.
     //    The inverse transform outputs are stored back to the Dequant buffer.
-    TRY(inverse_transform_2d(block_context, dequantized, log2_of_block_size, transform_set));
+    TRY(inverse_transform_2d<log2_of_block_size>(block_context, dequantized, transform_set));
 
     // 4. CurrFrame[ plane ][ y + i ][ x + j ] is set equal to Clip1( CurrFrame[ plane ][ y + i ][ x + j ] + Dequant[ i ][ j ] )
     //    for i = 0..(n0-1) and j = 0..(n0-1).
@@ -1359,9 +1382,12 @@ inline void Decoder::hadamard_rotation_in_place(Span<Intermediate> data, size_t 
     // to allow these bounds to be violated. Therefore, we can avoid the performance cost here.
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_permutation(Span<Intermediate> data, u8 log2_of_block_size)
+template<u8 log2_of_block_size>
+inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_permutation(Span<Intermediate> data)
 {
-    u8 block_size = 1 << log2_of_block_size;
+    static_assert(log2_of_block_size >= 2 && log2_of_block_size <= 5, "Block size out of range.");
+
+    constexpr u8 block_size = 1 << log2_of_block_size;
 
     // This process performs an in-place permutation of the array T of length 2^n for 2 ≤ n ≤ 5 which is required before
     // execution of the inverse DCT process.
@@ -1369,7 +1395,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_per
         return DecoderError::corrupted("Block size was out of range"sv);
 
     // 1.1. A temporary array named copyT is set equal to T.
-    Array<Intermediate, maximum_transform_size> data_copy;
+    Array<Intermediate, block_size> data_copy;
     AK::TypedTransfer<Intermediate>::copy(data_copy.data(), data.data(), block_size);
 
     // 1.2. T[ i ] is set equal to copyT[ brev( n, i ) ] for i = 0..((1<<n) - 1).
@@ -1379,26 +1405,29 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_per
     return {};
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Intermediate> data, u8 log2_of_block_size)
+template<u8 log2_of_block_size>
+inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Intermediate> data)
 {
+    static_assert(log2_of_block_size >= 2 && log2_of_block_size <= 5, "Block size out of range.");
+
     // 2.1. The variable n0 is set equal to 1<<n.
-    u8 block_size = 1 << log2_of_block_size;
+    constexpr u8 block_size = 1 << log2_of_block_size;
 
     // 8.7.1.3 Inverse DCT process
 
     // 2.2. The variable n1 is set equal to 1<<(n-1).
-    u8 half_block_size = block_size >> 1;
+    constexpr u8 half_block_size = block_size >> 1;
     // 2.3 The variable n2 is set equal to 1<<(n-2).
-    u8 quarter_block_size = half_block_size >> 1;
+    constexpr u8 quarter_block_size = half_block_size >> 1;
     // 2.4 The variable n3 is set equal to 1<<(n-3).
-    u8 eighth_block_size = quarter_block_size >> 1;
+    constexpr u8 eighth_block_size = quarter_block_size >> 1;
 
     // 2.5 If n is equal to 2, invoke B( 0, 1, 16, 1 ), otherwise recursively invoke the inverse DCT defined in this
     // section with the variable n set equal to n - 1.
-    if (log2_of_block_size == 2)
+    if constexpr (log2_of_block_size == 2)
         butterfly_rotation_in_place(data, 0, 1, 16, true);
     else
-        TRY(inverse_discrete_cosine_transform(data, log2_of_block_size - 1));
+        TRY(inverse_discrete_cosine_transform<log2_of_block_size - 1>(data));
 
     // 2.6 Invoke B( n1+i, n0-1-i, 32-brev( 5, n1+i), 0 ) for i = 0..(n2-1).
     for (auto i = 0u; i < quarter_block_size; i++) {
@@ -1407,7 +1436,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     }
 
     // 2.7 If n is greater than or equal to 3:
-    if (log2_of_block_size >= 3) {
+    if constexpr (log2_of_block_size >= 3) {
         // a. Invoke H( n1+4*i+2*j, n1+1+4*i+2*j, j ) for i = 0..(n3-1), j = 0..1.
         for (auto i = 0u; i < eighth_block_size; i++) {
             for (auto j = 0u; j < 2; j++) {
@@ -1418,7 +1447,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     }
 
     // 4. If n is equal to 5:
-    if (log2_of_block_size == 5) {
+    if constexpr (log2_of_block_size == 5) {
         // a. Invoke B( n0-n+3-n2*j-4*i, n1+n-4+n2*j+4*i, 28-16*i+56*j, 1 ) for i = 0..1, j = 0..1.
         for (auto i = 0u; i < 2; i++) {
             for (auto j = 0u; j < 2; j++) {
@@ -1440,7 +1469,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     }
 
     // 5. If n is greater than or equal to 4:
-    if (log2_of_block_size >= 4) {
+    if constexpr (log2_of_block_size >= 4) {
         // a. Invoke B( n0-n+2-i-n2*j, n1+n-3+i+n2*j, 24+48*j, 1 ) for i = 0..(n==5), j = 0..1.
         for (auto i = 0u; i <= (log2_of_block_size == 5); i++) {
             for (auto j = 0u; j < 2; j++) {
@@ -1461,7 +1490,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     }
 
     // 6. If n is greater than or equal to 3:
-    if (log2_of_block_size >= 3) {
+    if constexpr (log2_of_block_size >= 3) {
         // a. Invoke B( n0-n3-1-i, n1+n3+i, 16, 1 ) for i = 0..(n3-1).
         for (auto i = 0u; i < eighth_block_size; i++) {
             auto index_a = block_size - eighth_block_size - 1 - i;
@@ -1477,15 +1506,16 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     return {};
 }
 
-inline void Decoder::inverse_asymmetric_discrete_sine_transform_input_array_permutation(Span<Intermediate> data, u8 log2_of_block_size)
+template<u8 log2_of_block_size>
+inline void Decoder::inverse_asymmetric_discrete_sine_transform_input_array_permutation(Span<Intermediate> data)
 {
     // The variable n0 is set equal to 1<<n.
-    auto block_size = 1u << log2_of_block_size;
+    constexpr auto block_size = 1u << log2_of_block_size;
     // The variable n1 is set equal to 1<<(n-1).
     // We can iterate by 2 at a time instead of taking half block size.
 
     // A temporary array named copyT is set equal to T.
-    Array<Intermediate, maximum_transform_size> data_copy;
+    Array<Intermediate, block_size> data_copy;
     AK::TypedTransfer<Intermediate>::copy(data_copy.data(), data.data(), block_size);
 
     // The values at even locations T[ 2 * i ] are set equal to copyT[ n0 - 1 - 2 * i ] for i = 0..(n1-1).
@@ -1496,7 +1526,8 @@ inline void Decoder::inverse_asymmetric_discrete_sine_transform_input_array_perm
     }
 }
 
-inline void Decoder::inverse_asymmetric_discrete_sine_transform_output_array_permutation(Span<Intermediate> data, u8 log2_of_block_size)
+template<u8 log2_of_block_size>
+inline void Decoder::inverse_asymmetric_discrete_sine_transform_output_array_permutation(Span<Intermediate> data)
 {
     auto block_size = 1u << log2_of_block_size;
 
@@ -1638,7 +1669,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
 
     // 1. Invoke the ADST input array permutation process specified in section 8.7.1.4 with the input variable n set
     //    equal to 3.
-    inverse_asymmetric_discrete_sine_transform_input_array_permutation(data, 3);
+    inverse_asymmetric_discrete_sine_transform_input_array_permutation<3>(data);
 
     // 2. Invoke SB( 2*i, 1+2*i, 30-8*i, 1 ) for i = 0..3.
     for (auto i = 0u; i < 4; i++)
@@ -1665,7 +1696,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
 
     // 8. Invoke the ADST output array permutation process specified in section 8.7.1.5 with the input variable n
     //    set equal to 3.
-    inverse_asymmetric_discrete_sine_transform_output_array_permutation(data, 3);
+    inverse_asymmetric_discrete_sine_transform_output_array_permutation<3>(data);
 
     // 9. Set T[ 1+2*i ] equal to -T[ 1+2*i ] for i = 0..3.
     for (auto i = 0u; i < 4; i++) {
@@ -1690,7 +1721,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
 
     // 1. Invoke the ADST input array permutation process specified in section 8.7.1.4 with the input variable n set
     // equal to 4.
-    inverse_asymmetric_discrete_sine_transform_input_array_permutation(data, 4);
+    inverse_asymmetric_discrete_sine_transform_input_array_permutation<4>(data);
 
     // 2. Invoke SB( 2*i, 1+2*i, 31-4*i, 1 ) for i = 0..7.
     for (auto i = 0u; i < 8; i++)
@@ -1730,7 +1761,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
 
     // 11. Invoke the ADST output array permutation process specified in section 8.7.1.5 with the input variable n
     // set equal to 4.
-    inverse_asymmetric_discrete_sine_transform_output_array_permutation(data, 4);
+    inverse_asymmetric_discrete_sine_transform_output_array_permutation<4>(data);
 
     // 12. Set T[ 1+12*j+2*i ] equal to -T[ 1+12*j+2*i ] for i = 0..1, for j = 0..1.
     for (auto i = 0u; i < 2; i++) {
@@ -1742,21 +1773,22 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform_
     return {};
 }
 
-inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data, u8 log2_of_block_size)
+template<u8 log2_of_block_size>
+inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data)
 {
     // 8.7.1.9 Inverse ADST Process
 
     // This process performs an in-place inverse ADST process on the array T of size 2^n for 2 ≤ n ≤ 4.
-    if (log2_of_block_size < 2 || log2_of_block_size > 4)
+    if constexpr (log2_of_block_size < 2 || log2_of_block_size > 4)
         return DecoderError::corrupted("Block size was out of range"sv);
 
     // The process to invoke depends on n as follows:
-    if (log2_of_block_size == 2) {
+    if constexpr (log2_of_block_size == 2) {
         // − If n is equal to 2, invoke the Inverse ADST4 process specified in section 8.7.1.6.
         inverse_asymmetric_discrete_sine_transform_4(data);
         return {};
     }
-    if (log2_of_block_size == 3) {
+    if constexpr (log2_of_block_size == 3) {
         // − Otherwise if n is equal to 3, invoke the Inverse ADST8 process specified in section 8.7.1.7.
         return inverse_asymmetric_discrete_sine_transform_8(data);
     }
@@ -1764,15 +1796,18 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(
     return inverse_asymmetric_discrete_sine_transform_16(data);
 }
 
-DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, u8 log2_of_block_size, TransformSet transform_set)
+template<u8 log2_of_block_size>
+DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, TransformSet transform_set)
 {
+    static_assert(log2_of_block_size >= 2 && log2_of_block_size <= 5);
+
     // This process performs a 2D inverse transform for an array of size 2^n by 2^n stored in the 2D array Dequant.
     // The input to this process is a variable n (log2_of_block_size) that specifies the base 2 logarithm of the width of the transform.
 
     // 1. Set the variable n0 (block_size) equal to 1 << n.
-    auto block_size = 1u << log2_of_block_size;
+    constexpr auto block_size = 1u << log2_of_block_size;
 
-    Array<Intermediate, maximum_transform_size> row_array;
+    Array<Intermediate, block_size * block_size> row_array;
     Span<Intermediate> row = row_array.span().trim(block_size);
 
     // 2. The row transforms with i = 0..(n0-1) are applied as follows:
@@ -1792,14 +1827,14 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to ADST_DCT, apply an inverse DCT as
             // follows:
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
-            TRY(inverse_discrete_cosine_transform_array_permutation(row, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform_array_permutation<log2_of_block_size>(row));
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform(row, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform<log2_of_block_size>(row));
             break;
         case TransformType::ADST:
             // 4. Otherwise (TxType is equal to DCT_ADST or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform(row, log2_of_block_size));
+            TRY(inverse_asymmetric_discrete_sine_transform<log2_of_block_size>(row));
             break;
         default:
             return DecoderError::corrupted("Unknown tx_type"sv);
@@ -1810,7 +1845,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             dequantized[i * block_size + j] = row[j];
     }
 
-    Array<Intermediate, maximum_transform_size> column_array;
+    Array<Intermediate, block_size * block_size> column_array;
     auto column = column_array.span().trim(block_size);
 
     // 3. The column transforms with j = 0..(n0-1) are applied as follows:
@@ -1830,14 +1865,14 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
             // Otherwise, if TxType is equal to DCT_DCT or TxType is equal to DCT_ADST, apply an inverse DCT as
             // follows:
             // 1. Invoke the inverse DCT permutation process as specified in section 8.7.1.2 with the input variable n.
-            TRY(inverse_discrete_cosine_transform_array_permutation(column, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform_array_permutation<log2_of_block_size>(column));
             // 2. Invoke the inverse DCT process as specified in section 8.7.1.3 with the input variable n.
-            TRY(inverse_discrete_cosine_transform(column, log2_of_block_size));
+            TRY(inverse_discrete_cosine_transform<log2_of_block_size>(column));
             break;
         case TransformType::ADST:
             // 4. Otherwise (TxType is equal to ADST_DCT or TxType is equal to ADST_ADST), invoke the inverse ADST
             //    process as specified in section 8.7.1.9 with input variable n.
-            TRY(inverse_asymmetric_discrete_sine_transform(column, log2_of_block_size));
+            TRY(inverse_asymmetric_discrete_sine_transform<log2_of_block_size>(column));
             break;
         default:
             VERIFY_NOT_REACHED();
