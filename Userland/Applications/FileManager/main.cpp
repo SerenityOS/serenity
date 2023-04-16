@@ -384,6 +384,9 @@ ErrorOr<int> run_in_desktop_mode()
     window->set_window_type(GUI::WindowType::Desktop);
     window->set_has_alpha_channel(true);
 
+    auto desktop_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/desktop.png"sv));
+    window->set_icon(desktop_icon);
+
     auto desktop_widget = TRY(window->set_main_widget<FileManager::DesktopWidget>());
     TRY(desktop_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
