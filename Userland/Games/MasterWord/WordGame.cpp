@@ -48,6 +48,7 @@ void WordGame::reset()
             reset();
         }
     }
+    set_fixed_size(game_size());
     clear_message();
     update();
 }
