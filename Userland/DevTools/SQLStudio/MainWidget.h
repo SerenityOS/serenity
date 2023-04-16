@@ -22,7 +22,7 @@ class MainWidget : public GUI::Widget {
 public:
     virtual ~MainWidget() = default;
 
-    void initialize_menu(GUI::Window*);
+    ErrorOr<void> initialize_menu(GUI::Window*);
     void open_new_script();
     void open_script_from_file(LexicalPath const&);
 
