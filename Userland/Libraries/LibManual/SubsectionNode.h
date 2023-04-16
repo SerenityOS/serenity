@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibManual/PageNode.h>
 #include <LibManual/SectionNode.h>
 
 namespace Manual {
@@ -13,7 +14,7 @@ namespace Manual {
 // A non-toplevel (i.e. not numbered) manual section.
 class SubsectionNode : public SectionNode {
 public:
-    SubsectionNode(NonnullRefPtr<SectionNode const> parent, StringView name);
+    SubsectionNode(NonnullRefPtr<SectionNode const> parent, StringView name, RefPtr<PageNode> page = {});
     virtual ~SubsectionNode() = default;
 
     virtual Node const* parent() const override;
@@ -23,6 +24,9 @@ public:
 
 protected:
     NonnullRefPtr<SectionNode const> m_parent;
+
+private:
+    RefPtr<PageNode> m_page;
 };
 
 }

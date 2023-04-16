@@ -10,31 +10,16 @@
 
 namespace Manual {
 
-SubsectionNode::SubsectionNode(NonnullRefPtr<SectionNode const> parent, StringView name)
+SubsectionNode::SubsectionNode(NonnullRefPtr<SectionNode const> parent, StringView name, RefPtr<PageNode> page)
     : SectionNode(name, name)
     , m_parent(move(parent))
+    , m_page(move(page))
 {
 }
 
 Node const* SubsectionNode::parent() const { return m_parent; }
 
-PageNode const* SubsectionNode::document() const
-{
-    auto maybe_siblings = parent()->children();
-    if (maybe_siblings.is_error())
-        return nullptr;
-    auto siblings = maybe_siblings.release_value();
-    for (auto const& sibling : siblings) {
-        if (&*sibling == this)
-            continue;
-        auto sibling_name = sibling->name();
-        if (sibling_name.is_error())
-            continue;
-        if (sibling_name.value() == m_name && is<PageNode>(*sibling))
-            return static_cast<PageNode const*>(&*sibling);
-    }
-    return nullptr;
-}
+PageNode const* SubsectionNode::document() const { return m_page; }
 
 ErrorOr<String> SubsectionNode::name() const { return m_name; }
 
