@@ -45,6 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_double_buffering_enabled(false);
     window->set_title("MasterWord");
     window->set_resizable(false);
+    window->set_auto_shrink(true);
 
     auto main_widget = TRY(window->set_main_widget<GUI::Widget>());
     TRY(main_widget->load_from_gml(master_word_gml));
@@ -57,7 +58,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto shortest_word = game.shortest_word();
     auto longest_word = game.longest_word();
 
-    window->resize(game.game_size());
     window->set_focused_widget(&game);
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
@@ -86,7 +86,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             word_length = maybe_word_length.value();
             Config::write_i32("MasterWord"sv, ""sv, "word_length"sv, word_length);
             game.set_word_length(word_length);
-            window->resize(game.game_size());
         }
     })));
     TRY(settings_menu->try_add_action(GUI::Action::create("Set &Number Of Guesses", [&](auto&) {
@@ -102,7 +101,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             max_guesses = maybe_max_guesses.value();
             Config::write_i32("MasterWord"sv, ""sv, "max_guesses"sv, max_guesses);
             game.set_max_guesses(max_guesses);
-            window->resize(game.game_size());
         }
     })));
 
