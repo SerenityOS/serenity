@@ -81,9 +81,12 @@ private:
 
     // (8.6.2) Reconstruct process
     DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TransformSize transform_block_size, TransformSet);
+    template<u8 log2_of_block_size>
+    DecoderErrorOr<void> reconstruct_templated(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TransformSet);
 
     // (8.7) Inverse transform process
-    DecoderErrorOr<void> inverse_transform_2d(BlockContext const&, Span<Intermediate> dequantized, u8 log2_of_block_size, TransformSet);
+    template<u8 log2_of_block_size>
+    DecoderErrorOr<void> inverse_transform_2d(BlockContext const&, Span<Intermediate> dequantized, TransformSet);
 
     // (8.7.1) 1D Transforms
     // (8.7.1.1) Butterfly functions
@@ -107,16 +110,20 @@ private:
     inline DecoderErrorOr<void> inverse_walsh_hadamard_transform(Span<Intermediate> data, u8 log2_of_block_size, u8 shift);
 
     // (8.7.1.2) Inverse DCT array permutation process
-    inline DecoderErrorOr<void> inverse_discrete_cosine_transform_array_permutation(Span<Intermediate> data, u8 log2_of_block_size);
+    template<u8 log2_of_block_size>
+    inline DecoderErrorOr<void> inverse_discrete_cosine_transform_array_permutation(Span<Intermediate> data);
     // (8.7.1.3) Inverse DCT process
-    inline DecoderErrorOr<void> inverse_discrete_cosine_transform(Span<Intermediate> data, u8 log2_of_block_size);
+    template<u8 log2_of_block_size>
+    inline DecoderErrorOr<void> inverse_discrete_cosine_transform(Span<Intermediate> data);
 
     // (8.7.1.4) This process performs the in-place permutation of the array T of length 2 n which is required as the first step of
     // the inverse ADST.
-    inline void inverse_asymmetric_discrete_sine_transform_input_array_permutation(Span<Intermediate> data, u8 log2_of_block_size);
+    template<u8 log2_of_block_size>
+    inline void inverse_asymmetric_discrete_sine_transform_input_array_permutation(Span<Intermediate> data);
     // (8.7.1.5) This process performs the in-place permutation of the array T of length 2 n which is required before the final
     // step of the inverse ADST.
-    inline void inverse_asymmetric_discrete_sine_transform_output_array_permutation(Span<Intermediate> data, u8 log2_of_block_size);
+    template<u8 log2_of_block_size>
+    inline void inverse_asymmetric_discrete_sine_transform_output_array_permutation(Span<Intermediate> data);
 
     // (8.7.1.6) This process does an in-place transform of the array T to perform an inverse ADST.
     inline void inverse_asymmetric_discrete_sine_transform_4(Span<Intermediate> data);
@@ -127,7 +134,8 @@ private:
     // results.
     inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform_16(Span<Intermediate> data);
     // (8.7.1.9) This process performs an in-place inverse ADST process on the array T of size 2 n for 2 ≤ n ≤ 4.
-    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data, u8 log2_of_block_size);
+    template<u8 log2_of_block_size>
+    inline DecoderErrorOr<void> inverse_asymmetric_discrete_sine_transform(Span<Intermediate> data);
 
     /* (8.10) Reference Frame Update Process */
     DecoderErrorOr<void> update_reference_frames(FrameContext const&);
