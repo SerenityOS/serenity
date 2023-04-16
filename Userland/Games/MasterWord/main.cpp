@@ -41,7 +41,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto app_icon = TRY(GUI::Icon::try_create_default_icon("app-masterword"sv));
 
     auto window = TRY(GUI::Window::try_create());
-
+    window->set_icon(app_icon.bitmap_for_size(16));
     window->set_double_buffering_enabled(false);
     window->set_title("MasterWord");
     window->set_resizable(false);
@@ -152,8 +152,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     };
 
     window->show();
-
-    window->set_icon(app_icon.bitmap_for_size(16));
 
     return app->exec();
 }
