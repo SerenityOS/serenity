@@ -521,6 +521,7 @@ static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
     //       because we want to always keep their title buttons accessible.
     if (window.type() == WindowType::Normal) {
         auto palette = WindowManager::the().palette();
+        auto& title_font = Gfx::FontDatabase::the().window_title_font();
 
         int required_width = 0;
         // Padding on left and right of window title content.
@@ -535,8 +536,11 @@ static Gfx::IntSize calculate_minimum_size_for_window(Window const& window)
         // Maximize button
         if (window.is_resizable())
             required_width += palette.window_title_button_width();
+        // Title text and drop shadow
+        else
+            required_width += title_font.width_rounded_up(window.title()) + 4;
         // Minimize button
-        if (window.is_minimizable())
+        if (window.is_minimizable() && !window.is_modal())
             required_width += palette.window_title_button_width();
 
         return { required_width, 0 };
