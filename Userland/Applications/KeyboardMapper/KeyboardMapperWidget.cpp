@@ -55,7 +55,7 @@ void KeyboardMapperWidget::create_frame()
         tmp_button.set_enabled(keys[i].enabled);
 
         tmp_button.on_click = [this, &tmp_button]() {
-            DeprecatedString value;
+            String value;
             if (GUI::InputBox::show(window(), value, "New Character:"sv, "Select Character"sv) == GUI::InputBox::ExecResult::OK) {
                 int i = m_keys.find_first_index(&tmp_button).value_or(0);
                 VERIFY(i > 0);
@@ -63,13 +63,13 @@ void KeyboardMapperWidget::create_frame()
                 auto index = keys[i].map_index;
                 VERIFY(index > 0);
 
-                tmp_button.set_text(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+                tmp_button.set_text(value);
                 u32* map = map_from_name(m_current_map_name);
 
-                if (value.length() == 0)
+                if (value.is_empty())
                     map[index] = '\0'; // Empty string
                 else
-                    map[index] = value[0];
+                    map[index] = value.bytes().at(0);
 
                 window()->set_modified(true);
             }

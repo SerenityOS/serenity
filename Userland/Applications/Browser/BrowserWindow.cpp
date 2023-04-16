@@ -308,11 +308,11 @@ void BrowserWindow::build_menus()
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
-            auto homepage_url = Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "about:blank"sv);
+            String homepage_url = String::from_deprecated_string(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, "about:blank"sv)).release_value_but_fixme_should_propagate_errors();
             if (GUI::InputBox::show(this, homepage_url, "Enter URL"sv, "Change homepage URL"sv) == GUI::InputBox::ExecResult::OK) {
                 if (URL(homepage_url).is_valid()) {
                     Config::write_string("Browser"sv, "Preferences"sv, "Home"sv, homepage_url);
-                    Browser::g_home_url = homepage_url;
+                    Browser::g_home_url = homepage_url.to_deprecated_string();
                 } else {
                     GUI::MessageBox::show_error(this, "The URL you have entered is not valid"sv);
                 }
@@ -439,13 +439,13 @@ void BrowserWindow::build_menus()
     add_user_agent("Safari iOS Mobile", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_4_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1");
 
     auto custom_user_agent = GUI::Action::create_checkable("Custom...", [this](auto& action) {
-        DeprecatedString user_agent;
+        String user_agent;
         if (GUI::InputBox::show(this, user_agent, "Enter User Agent:"sv, "Custom User Agent"sv, GUI::InputType::NonemptyText) != GUI::InputBox::ExecResult::OK) {
             m_disable_user_agent_spoofing->activate();
             return;
         }
-        active_tab().view().debug_request("spoof-user-agent", user_agent);
-        action.set_status_tip(user_agent);
+        active_tab().view().debug_request("spoof-user-agent", user_agent.to_deprecated_string());
+        action.set_status_tip(user_agent.to_deprecated_string());
     });
     spoof_user_agent_menu.add_action(custom_user_agent);
     m_user_agent_spoof_actions.add_action(custom_user_agent);
@@ -530,22 +530,22 @@ ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
     }
 
     auto custom_search_engine_action = GUI::Action::create_checkable("Custom...", [&](auto& action) {
-        DeprecatedString search_engine;
+        String search_engine;
         if (GUI::InputBox::show(this, search_engine, "Enter URL template:"sv, "Custom Search Engine"sv, GUI::InputType::NonemptyText, "https://host/search?q={}"sv) != GUI::InputBox::ExecResult::OK) {
             m_disable_search_engine_action->activate();
             return;
         }
 
-        auto argument_count = search_engine.count("{}"sv);
+        auto argument_count = AK::StringUtils::count(search_engine, "{}"sv);
         if (argument_count != 1) {
             GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!"sv, "Error"sv, GUI::MessageBox::Type::Error);
             m_disable_search_engine_action->activate();
             return;
         }
 
-        g_search_engine = search_engine;
+        g_search_engine = search_engine.to_deprecated_string();
         Config::write_string("Browser"sv, "Preferences"sv, "SearchEngine"sv, g_search_engine);
-        action.set_status_tip(search_engine);
+        action.set_status_tip(search_engine.to_deprecated_string());
     });
     search_engine_menu.add_action(custom_search_engine_action);
     m_search_engine_actions.add_action(custom_search_engine_action);

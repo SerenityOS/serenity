@@ -11,116 +11,119 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
-#include <LibGfx/Font/Font.h>
 
 namespace GUI {
 
-InputBox::InputBox(Window* parent_window, DeprecatedString text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
-    : Dialog(parent_window)
-    , m_text_value(move(text_value))
-    , m_prompt(prompt)
-    , m_input_type(input_type)
-    , m_placeholder(placeholder)
+ErrorOr<NonnullRefPtr<InputBox>> InputBox::create(Window* parent_window, String text_value, StringView prompt, StringView title, InputType input_type)
 {
-    set_title(title);
-    build();
+    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, text_value, TRY(String::from_utf8(title)), TRY(String::from_utf8(prompt)), input_type)));
+    TRY(box->build());
+    return box;
 }
 
-Dialog::ExecResult InputBox::show(Window* parent_window, DeprecatedString& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
+InputBox::InputBox(Window* parent_window, String text_value, String title, String prompt, InputType input_type)
+    : Dialog(parent_window)
+    , m_text_value(move(text_value))
+    , m_prompt(move(prompt))
+    , m_input_type(input_type)
 {
-    auto box = InputBox::construct(parent_window, text_value, prompt, title, input_type, placeholder);
-    box->set_resizable(false);
+    set_title(move(title).to_deprecated_string());
+    set_resizable(false);
+    set_auto_shrink(true);
+}
+
+Dialog::ExecResult InputBox::show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
+{
+    return MUST(try_show(parent_window, text_value, prompt, title, input_type, placeholder));
+}
+
+ErrorOr<Dialog::ExecResult> InputBox::try_show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
+{
+    auto box = TRY(InputBox::create(parent_window, text_value, prompt, title, input_type));
     if (parent_window)
         box->set_icon(parent_window->icon());
+    box->set_placeholder(placeholder);
     auto result = box->exec();
     text_value = box->text_value();
     return result;
 }
 
-void InputBox::set_text_value(DeprecatedString text_value)
+void InputBox::set_placeholder(StringView view)
 {
-    m_text_editor->set_text(move(text_value));
+    m_text_editor->set_placeholder(view);
+}
+
+void InputBox::set_text_value(String value)
+{
+    if (m_text_value == value)
+        return;
+    m_text_value = move(value);
+    m_text_editor->set_text(m_text_value);
 }
 
 void InputBox::on_done(ExecResult result)
 {
-    if (result == ExecResult::OK) {
-        m_text_value = m_text_editor->text();
+    if (result != ExecResult::OK)
+        return;
 
-        switch (m_input_type) {
-        case InputType::Text:
-        case InputType::Password:
-            break;
+    if (auto value = String::from_deprecated_string(m_text_editor->text()); !value.is_error())
+        m_text_value = value.release_value();
 
-        case InputType::NonemptyText:
-            VERIFY(!m_text_value.is_empty());
-            break;
-        }
+    switch (m_input_type) {
+    case InputType::Text:
+    case InputType::Password:
+        break;
+
+    case InputType::NonemptyText:
+        VERIFY(!m_text_value.is_empty());
+        break;
     }
 }
 
-void InputBox::build()
+ErrorOr<void> InputBox::build()
 {
-    auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
+    auto main_widget = TRY(set_main_widget<Widget>());
+    TRY(main_widget->try_set_layout<VerticalBoxLayout>(4, 6));
+    main_widget->set_fill_with_background_color(true);
 
-    int text_width = widget->font().width(m_prompt);
-    int title_width = widget->font().width(title()) + 24 /* icon, plus a little padding -- not perfect */;
-    int max_width = max(text_width, title_width);
+    auto input_container = TRY(main_widget->try_add<Widget>());
+    input_container->set_layout<HorizontalBoxLayout>();
 
-    widget->set_layout<VerticalBoxLayout>(6, 6);
-    widget->set_fill_with_background_color(true);
-    widget->set_preferred_height(SpecialDimension::Fit);
+    m_prompt_label = TRY(input_container->try_add<Label>());
+    m_prompt_label->set_autosize(true);
+    m_prompt_label->set_text(move(m_prompt).to_deprecated_string());
 
-    auto& label_editor_container = widget->add<Widget>();
-    label_editor_container.set_layout<HorizontalBoxLayout>();
-    label_editor_container.set_preferred_height(SpecialDimension::Fit);
-
-    auto& label = label_editor_container.add<Label>(m_prompt);
-    label.set_preferred_width(text_width);
+    TRY(input_container->add_spacer());
 
     switch (m_input_type) {
     case InputType::Text:
     case InputType::NonemptyText:
-        m_text_editor = label_editor_container.add<TextBox>();
+        m_text_editor = TRY(input_container->try_add<TextBox>());
         break;
     case InputType::Password:
-        m_text_editor = label_editor_container.add<PasswordBox>();
+        m_text_editor = TRY(input_container->try_add<PasswordBox>());
         break;
     }
 
-    m_text_editor->set_text(m_text_value);
+    auto button_container = TRY(main_widget->try_add<Widget>());
+    TRY(button_container->try_set_layout<HorizontalBoxLayout>(0, 6));
+    TRY(button_container->add_spacer());
 
-    if (!m_placeholder.is_null())
-        m_text_editor->set_placeholder(m_placeholder);
-
-    auto& button_container_outer = widget->add<Widget>();
-    button_container_outer.set_preferred_height(SpecialDimension::Fit);
-    button_container_outer.set_layout<VerticalBoxLayout>();
-
-    auto& button_container_inner = button_container_outer.add<Widget>();
-    button_container_inner.set_layout<HorizontalBoxLayout>(GUI::Margins {}, 6);
-    button_container_inner.set_preferred_height(SpecialDimension::Fit);
-    button_container_inner.add_spacer().release_value_but_fixme_should_propagate_errors();
-
-    m_ok_button = button_container_inner.add<DialogButton>();
-    m_ok_button->set_text("OK"_short_string);
-    m_ok_button->on_click = [this](auto) {
-        dbgln("GUI::InputBox: OK button clicked");
-        done(ExecResult::OK);
-    };
+    m_ok_button = TRY(button_container->try_add<DialogButton>("OK"_short_string));
+    m_ok_button->on_click = [this](auto) { done(ExecResult::OK); };
     m_ok_button->set_default(true);
 
-    m_cancel_button = button_container_inner.add<DialogButton>();
-    m_cancel_button->set_text("Cancel"_short_string);
-    m_cancel_button->on_click = [this](auto) {
-        dbgln("GUI::InputBox: Cancel button clicked");
-        done(ExecResult::Cancel);
-    };
+    m_cancel_button = TRY(button_container->try_add<DialogButton>("Cancel"_short_string));
+    m_cancel_button->on_click = [this](auto) { done(ExecResult::Cancel); };
 
-    m_text_editor->on_escape_pressed = [this] {
-        m_cancel_button->click();
+    auto resize_editor = [this, button_container] {
+        auto width = button_container->effective_min_size().width().as_int();
+        m_text_editor->set_min_width(width);
     };
-    m_text_editor->set_focus(true);
+    resize_editor();
+    on_font_change = [resize_editor] { resize_editor(); };
+
+    m_text_editor->set_text(m_text_value);
 
     if (m_input_type == InputType::NonemptyText) {
         m_text_editor->on_change = [this] {
@@ -129,7 +132,10 @@ void InputBox::build()
         m_text_editor->on_change();
     }
 
-    set_rect(x(), y(), max_width + 140, widget->effective_preferred_size().height().as_int());
+    auto size = main_widget->effective_min_size();
+    resize(TRY(size.width().shrink_value()), TRY(size.height().shrink_value()));
+
+    return {};
 }
 
 }

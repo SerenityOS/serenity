@@ -163,7 +163,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
 
     auto mkdir_action = Action::create(
         "New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/mkdir.png"sv).release_value_but_fixme_should_propagate_errors(), [this](Action const&) {
-            DeprecatedString value;
+            String value;
             if (InputBox::show(this, value, "Enter name:"sv, "New directory"sv, GUI::InputType::NonemptyText) == InputBox::ExecResult::OK) {
                 auto new_dir_path = LexicalPath::canonicalized_path(DeprecatedString::formatted("{}/{}", m_model->root_path(), value));
                 int rc = mkdir(new_dir_path.characters(), 0777);
