@@ -34,6 +34,7 @@ protected:
 
     virtual void mousewheel_event(MouseEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
+    virtual Optional<UISize> calculated_min_size() const override;
 
 private:
     RefPtr<TextEditor> m_editor;
