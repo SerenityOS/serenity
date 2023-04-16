@@ -697,7 +697,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(go_menu->try_add_action(*m_go_to_glyph_action));
 
     auto view_menu = TRY(window.try_add_menu("&View"_short_string));
-    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
+    auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"_short_string));
     TRY(layout_menu->try_add_action(*m_show_toolbar_action));
     TRY(layout_menu->try_add_action(*m_show_statusbar_action));
     TRY(layout_menu->try_add_action(*m_show_metadata_action));
@@ -708,7 +708,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(view_menu->try_add_action(*m_highlight_modifications_action));
     TRY(view_menu->try_add_action(*m_show_system_emoji_action));
     TRY(view_menu->try_add_separator());
-    auto scale_menu = TRY(view_menu->try_add_submenu("&Scale"));
+    auto scale_menu = TRY(view_menu->try_add_submenu("&Scale"_short_string));
     scale_menu->set_icon(TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/scale.png"sv)));
     TRY(scale_menu->try_add_action(*m_scale_five_action));
     TRY(scale_menu->try_add_action(*m_scale_ten_action));

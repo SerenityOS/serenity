@@ -173,7 +173,7 @@ void BrowserWindow::build_menus()
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
-    m_zoom_menu = view_menu.add_submenu("&Zoom");
+    m_zoom_menu = view_menu.add_submenu("&Zoom"_short_string);
     m_zoom_menu->add_action(GUI::CommonActions::make_zoom_in_action(
         [this](auto&) {
             auto& tab = active_tab();
@@ -327,7 +327,7 @@ void BrowserWindow::build_menus()
         dbgln("Failed to open search-engines file: {}", load_search_engines_result.error());
     }
 
-    auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme");
+    auto& color_scheme_menu = settings_menu.add_submenu("&Color Scheme"_string.release_value_but_fixme_should_propagate_errors());
     color_scheme_menu.set_icon(g_icon_bag.color_chooser);
     {
         auto current_setting = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
@@ -413,7 +413,7 @@ void BrowserWindow::build_menus()
     }));
 
     m_user_agent_spoof_actions.set_exclusive(true);
-    auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent");
+    auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent"_string.release_value_but_fixme_should_propagate_errors());
     m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
         active_tab().view().debug_request("spoof-user-agent", Web::default_user_agent);
     });
@@ -483,7 +483,7 @@ void BrowserWindow::build_menus()
 ErrorOr<void> BrowserWindow::load_search_engines(GUI::Menu& settings_menu)
 {
     m_search_engine_actions.set_exclusive(true);
-    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
+    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine"_string.release_value_but_fixme_should_propagate_errors());
     search_engine_menu.set_icon(g_icon_bag.find);
     bool search_engine_set = false;
 

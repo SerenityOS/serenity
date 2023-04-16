@@ -43,11 +43,11 @@ public:
 
     ErrorOr<void> try_add_action(NonnullRefPtr<Action>);
     ErrorOr<void> try_add_separator();
-    ErrorOr<NonnullRefPtr<Menu>> try_add_submenu(DeprecatedString name);
+    ErrorOr<NonnullRefPtr<Menu>> try_add_submenu(String name);
 
     void add_action(NonnullRefPtr<Action>);
     void add_separator();
-    Menu& add_submenu(DeprecatedString name);
+    Menu& add_submenu(String name);
     void remove_all_actions();
 
     ErrorOr<void> add_recent_files_list(Function<void(Action&)>);

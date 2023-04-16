@@ -466,7 +466,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_editor->set_ruler_visible(show_ruler);
 
     auto& view_menu = window.add_menu("&View"_short_string);
-    auto& layout_menu = view_menu.add_submenu("&Layout");
+    auto& layout_menu = view_menu.add_submenu("&Layout"_short_string);
     layout_menu.add_action(*m_layout_toolbar_action);
     layout_menu.add_action(*m_layout_statusbar_action);
     layout_menu.add_action(*m_layout_ruler_action);
@@ -486,7 +486,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_separator();
 
     m_wrapping_mode_actions.set_exclusive(true);
-    auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode");
+    auto& wrapping_mode_menu = view_menu.add_submenu("&Wrapping Mode"_string.release_value_but_fixme_should_propagate_errors());
     m_no_wrapping_action = GUI::Action::create_checkable("&No Wrapping", [&](auto&) {
         m_editor->set_wrapping_mode(GUI::TextEditor::WrappingMode::NoWrap);
         Config::write_string("TextEditor"sv, "View"sv, "WrappingMode"sv, "None"sv);
@@ -521,7 +521,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     }
 
     m_soft_tab_width_actions.set_exclusive(true);
-    auto& soft_tab_width_menu = view_menu.add_submenu("&Tab Width");
+    auto& soft_tab_width_menu = view_menu.add_submenu("&Tab Width"_string.release_value_but_fixme_should_propagate_errors());
     m_soft_tab_1_width_action = GUI::Action::create_checkable("1", [&](auto&) {
         m_editor->set_soft_tab_width(1);
     });
@@ -599,7 +599,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
 
     syntax_actions.set_exclusive(true);
 
-    auto& syntax_menu = view_menu.add_submenu("&Syntax");
+    auto& syntax_menu = view_menu.add_submenu("&Syntax"_short_string);
     m_plain_text_highlight = GUI::Action::create_checkable("&Plain Text", [&](auto&) {
         m_statusbar->set_text(1, "Plain Text");
         m_editor->set_syntax_highlighter({});
@@ -694,12 +694,12 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     }));
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"sv), &window));
 
-    auto& wrapping_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Wrapping Mode");
+    auto& wrapping_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Wrapping Mode"_string.release_value_but_fixme_should_propagate_errors());
     wrapping_statusbar_menu.add_action(*m_no_wrapping_action);
     wrapping_statusbar_menu.add_action(*m_wrap_anywhere_action);
     wrapping_statusbar_menu.add_action(*m_wrap_at_words_action);
 
-    auto& tab_width_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Tab Width");
+    auto& tab_width_statusbar_menu = m_line_column_statusbar_menu->add_submenu("&Tab Width"_string.release_value_but_fixme_should_propagate_errors());
     tab_width_statusbar_menu.add_action(*m_soft_tab_1_width_action);
     tab_width_statusbar_menu.add_action(*m_soft_tab_2_width_action);
     tab_width_statusbar_menu.add_action(*m_soft_tab_4_width_action);

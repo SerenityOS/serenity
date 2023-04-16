@@ -220,7 +220,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(file_menu->try_add_action(*m_save_image_action));
     TRY(file_menu->try_add_action(*m_save_image_as_action));
 
-    m_export_submenu = TRY(file_menu->try_add_submenu("&Export"));
+    m_export_submenu = TRY(file_menu->try_add_submenu("&Export"_short_string));
 
     TRY(m_export_submenu->try_add_action(
         GUI::Action::create(
@@ -589,7 +589,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     vectorscope_action->set_checked(Config::read_bool("PixelPaint"sv, "Scopes"sv, "ShowVectorscope"sv, false));
     m_vectorscope_widget->parent_widget()->set_visible(vectorscope_action->is_checked());
 
-    auto scopes_menu = TRY(m_view_menu->try_add_submenu("&Scopes"));
+    auto scopes_menu = TRY(m_view_menu->try_add_submenu("&Scopes"_short_string));
     TRY(scopes_menu->try_add_action(histogram_action));
     TRY(scopes_menu->try_add_action(vectorscope_action));
 

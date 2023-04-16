@@ -104,12 +104,12 @@ void Menu::set_parent(Menu& menu, int submenu_index)
     m_index_in_parent_menu = submenu_index;
 }
 
-ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(DeprecatedString name)
+ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(String name)
 {
     // NOTE: We grow the vector first, to get allocation failure handled immediately.
     TRY(m_items.try_ensure_capacity(m_items.size() + 1));
 
-    auto submenu = TRY(Menu::try_create(TRY(String::from_deprecated_string(name))));
+    auto submenu = TRY(Menu::try_create(move(name)));
 
     auto item = TRY(adopt_nonnull_own_or_enomem(new (nothrow) MenuItem(m_menu_id, submenu)));
     submenu->set_parent(*this, m_items.size());
@@ -121,7 +121,7 @@ ErrorOr<NonnullRefPtr<Menu>> Menu::try_add_submenu(DeprecatedString name)
     return submenu;
 }
 
-Menu& Menu::add_submenu(DeprecatedString name)
+Menu& Menu::add_submenu(String name)
 {
     auto menu = MUST(try_add_submenu(move(name)));
     return menu;
