@@ -8,6 +8,7 @@
 #include "PageNode.h"
 #include "Path.h"
 #include "SubsectionNode.h"
+#include <AK/HashTable.h>
 #include <AK/LexicalPath.h>
 #include <AK/QuickSort.h>
 #include <LibCore/DirIterator.h>
@@ -43,7 +44,16 @@ ErrorOr<void> SectionNode::reify_if_needed() const
     m_reified = true;
 
     auto own_path = TRY(path());
-    Core::DirIterator dir_iter { own_path.to_deprecated_string(), Core::DirIterator::Flags::SkipDots };
+    Core::DirIterator dir_iterator { own_path.to_deprecated_string(), Core::DirIterator::Flags::SkipDots };
+    Vector<DeprecatedString> directories;
+    HashTable<DeprecatedString> files;
+    while (dir_iterator.has_next()) {
+        auto entry = dir_iterator.next();
+        if (entry->type == Core::DirectoryEntry::Type::Directory)
+            TRY(directories.try_append(entry->name));
+        else if (entry->type == Core::DirectoryEntry::Type::File && entry->name.ends_with(".md"sv, CaseSensitivity::CaseInsensitive))
+            TRY(files.try_set(entry->name));
+    }
 
     struct Child {
         NonnullRefPtr<Node const> node;
@@ -51,18 +61,21 @@ ErrorOr<void> SectionNode::reify_if_needed() const
     };
     Vector<Child> children;
 
-    while (dir_iter.has_next()) {
-        LexicalPath lexical_path(dir_iter.next_path());
-        if (lexical_path.extension() != "md") {
-            if (FileSystem::is_directory(LexicalPath::absolute_path(own_path.to_deprecated_string(), lexical_path.string()))) {
-                dbgln("Found subsection {}", lexical_path);
-                children.append({ .node = TRY(try_make_ref_counted<SubsectionNode>(*this, lexical_path.title())),
-                    .name_for_sorting = TRY(String::from_utf8(lexical_path.title())) });
-            }
-        } else {
-            children.append({ .node = TRY(try_make_ref_counted<PageNode>(*this, TRY(String::from_utf8(lexical_path.title())))),
-                .name_for_sorting = TRY(String::from_utf8(lexical_path.title())) });
-        }
+    for (auto const& directory : directories) {
+        LexicalPath lexical_path(directory);
+        RefPtr<PageNode> associated_page;
+        auto matching_page_name = DeprecatedString::formatted("{}.md", directory);
+        if (files.remove(matching_page_name))
+            associated_page = TRY(try_make_ref_counted<PageNode>(*this, TRY(String::from_utf8(lexical_path.title()))));
+
+        TRY(children.try_append({ .node = TRY(try_make_ref_counted<SubsectionNode>(*this, lexical_path.title(), associated_page)),
+            .name_for_sorting = TRY(String::from_utf8(lexical_path.title())) }));
+    }
+
+    for (auto const& file : files) {
+        LexicalPath lexical_path(file);
+        children.append({ .node = TRY(try_make_ref_counted<PageNode>(*this, TRY(String::from_utf8(lexical_path.title())))),
+            .name_for_sorting = TRY(String::from_utf8(lexical_path.title())) });
     }
 
     quick_sort(children, [](auto const& a, auto const& b) { return a.name_for_sorting < b.name_for_sorting; });
