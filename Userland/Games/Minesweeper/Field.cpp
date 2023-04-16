@@ -108,9 +108,9 @@ private:
     bool m_chord { false };
 };
 
-ErrorOr<NonnullRefPtr<Field>> Field::create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed)
+ErrorOr<NonnullRefPtr<Field>> Field::create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button)
 {
-    auto field = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Field(flag_label, time_label, face_button, move(on_size_changed))));
+    auto field = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) Field(flag_label, time_label, face_button)));
     field->m_mine_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/mine.png"sv));
     field->m_flag_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/flag.png"sv));
     field->m_badflag_bitmap = TRY(Gfx::Bitmap::load_from_file("/res/icons/minesweeper/badflag.png"sv));
@@ -124,12 +124,11 @@ ErrorOr<NonnullRefPtr<Field>> Field::create(GUI::Label& flag_label, GUI::Label& 
     return field;
 }
 
-Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button, Function<void(Gfx::IntSize)> on_size_changed)
+Field::Field(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button)
     : m_mine_palette(GUI::Application::the()->palette().impl().clone())
     , m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
-    , m_on_size_changed(move(on_size_changed))
 {
 }
 
@@ -568,9 +567,6 @@ void Field::set_field_size(Difficulty difficulty, size_t rows, size_t columns, s
     m_mine_count = mine_count;
     set_fixed_size(frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size());
     reset();
-    deferred_invoke([this] {
-        m_on_size_changed(Gfx::IntSize(min_size()));
-    });
 }
 
 void Field::set_single_chording(bool enabled)

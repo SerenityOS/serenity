@@ -47,20 +47,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     window->set_resizable(false);
     window->set_title("Minesweeper");
-    window->resize(139, 177);
+    window->set_auto_shrink(true);
 
     auto widget = TRY(window->set_main_widget<GUI::Widget>());
     TRY(widget->load_from_gml(minesweeper_window_gml));
 
-    auto& separator = *widget->find_descendant_of_type_named<GUI::HorizontalSeparator>("separator");
-    auto& container = *widget->find_descendant_of_type_named<GUI::Widget>("container");
     auto& flag_label = *widget->find_descendant_of_type_named<GUI::Label>("flag_label");
     auto& time_label = *widget->find_descendant_of_type_named<GUI::Label>("time_label");
     auto& face_button = *widget->find_descendant_of_type_named<GUI::Button>("face_button");
-    auto field = TRY(Field::create(flag_label, time_label, face_button, [&](auto size) {
-        size.set_height(size.height() + separator.height() + container.height());
-        window->resize(size);
-    }));
+    auto field = TRY(Field::create(flag_label, time_label, face_button));
     TRY(widget->try_add_child(field));
 
     auto game_menu = TRY(window->try_add_menu("&Game"));
