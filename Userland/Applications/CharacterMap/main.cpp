@@ -70,7 +70,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->resize(600, 400);
 
     auto character_map_widget = TRY(window->set_main_widget<CharacterMapWidget>());
-    character_map_widget->initialize_menubar(*window);
+    TRY(character_map_widget->initialize_menubar(*window));
 
     auto font_query = Config::read_string("CharacterMap"sv, "History"sv, "Font"sv, Gfx::FontDatabase::the().default_font_query());
     character_map_widget->set_font(Gfx::FontDatabase::the().get_by_name(font_query));

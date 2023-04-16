@@ -149,19 +149,20 @@ CharacterMapWidget::CharacterMapWidget()
     update_statusbar();
 }
 
-void CharacterMapWidget::initialize_menubar(GUI::Window& window)
+ErrorOr<void> CharacterMapWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File"_short_string);
-    file_menu.add_action(GUI::CommonActions::make_quit_action([](GUI::Action&) {
+    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
+    TRY(file_menu->try_add_action(GUI::CommonActions::make_quit_action([](GUI::Action&) {
         GUI::Application::the()->quit();
-    }));
+    })));
 
-    auto& help_menu = window.add_menu("&Help"_short_string);
-    help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
-    help_menu.add_action(GUI::CommonActions::make_help_action([&](auto&) {
+    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([&](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/CharacterMap.md"), "/bin/Help");
-    }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-character-map"sv), &window));
+    })));
+    TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Character Map", GUI::Icon::default_icon("app-character-map"sv), &window)));
+    return {};
 }
 
 void CharacterMapWidget::did_change_font()

@@ -17,7 +17,7 @@ class CharacterMapWidget final : public GUI::Widget {
 public:
     virtual ~CharacterMapWidget() override = default;
 
-    void initialize_menubar(GUI::Window& window);
+    ErrorOr<void> initialize_menubar(GUI::Window& window);
 
 private:
     CharacterMapWidget();
