@@ -2022,6 +2022,9 @@ void FlexFormattingContext::handle_align_content_stretch()
     for (auto& line : m_flex_lines)
         sum_of_flex_line_cross_sizes += line.cross_size;
 
+    // CSS-FLEXBOX-2: Account for gap between flex lines.
+    sum_of_flex_line_cross_sizes += cross_gap() * (m_flex_lines.size() - 1);
+
     if (sum_of_flex_line_cross_sizes >= inner_cross_size(flex_container()))
         return;
 
