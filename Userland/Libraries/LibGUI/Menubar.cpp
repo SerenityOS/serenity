@@ -16,16 +16,16 @@ ErrorOr<void> Menubar::try_add_menu(Badge<Window>, NonnullRefPtr<Menu> menu)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Menu>> Menubar::try_add_menu(Badge<Window>, DeprecatedString name)
+ErrorOr<NonnullRefPtr<Menu>> Menubar::try_add_menu(Badge<Window>, String name)
 {
-    auto menu = TRY(try_add<Menu>(TRY(String::from_deprecated_string(name))));
+    auto menu = TRY(try_add<Menu>(move(name)));
     TRY(m_menus.try_append(menu));
     return menu;
 }
 
-Menu& Menubar::add_menu(Badge<Window>, DeprecatedString name)
+Menu& Menubar::add_menu(Badge<Window>, String name)
 {
-    auto& menu = add<Menu>(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
+    auto& menu = add<Menu>(move(name));
     m_menus.append(menu);
     return menu;
 }

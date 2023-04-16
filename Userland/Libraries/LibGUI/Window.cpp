@@ -1326,7 +1326,7 @@ ErrorOr<void> Window::try_add_menu(NonnullRefPtr<Menu> menu)
 
 ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(DeprecatedString name)
 {
-    auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
+    auto menu = TRY(m_menubar->try_add_menu({}, TRY(String::from_deprecated_string(name))));
     if (m_window_id) {
         menu->realize_menu_if_needed();
         ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
