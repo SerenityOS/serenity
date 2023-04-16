@@ -34,15 +34,26 @@ u16 clip_1(u8 bit_depth, T x)
     return x;
 }
 
-template<typename T, typename C>
-inline T brev(C bit_count, T value)
+template<u8 bits>
+inline u8 brev(u8 value)
 {
-    T result = 0;
-    for (C i = 0; i < bit_count; i++) {
-        auto bit = (value >> i) & 1;
-        result |= bit << (bit_count - 1 - i);
-    }
-    return result;
+    static_assert(bits <= 8, "brev() expects an 8-bit value.");
+
+    static constexpr auto lookup_table = [] {
+        constexpr size_t value_count = 1 << bits;
+        Array<u8, value_count> the_table;
+        for (u8 lookup_value = 0; lookup_value < value_count; lookup_value++) {
+            u8 reversed = 0;
+            for (u8 bit_index = 0; bit_index < bits; bit_index++) {
+                auto bit = (lookup_value >> bit_index) & 1;
+                reversed |= bit << (bits - 1 - bit_index);
+            }
+            the_table[lookup_value] = reversed;
+        }
+        return the_table;
+    }();
+
+    return lookup_table[value];
 }
 
 inline BlockSubsize get_subsampled_block_size(BlockSubsize size, bool subsampling_x, bool subsampling_y)

@@ -1400,7 +1400,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_per
 
     // 1.2. T[ i ] is set equal to copyT[ brev( n, i ) ] for i = 0..((1<<n) - 1).
     for (auto i = 0u; i < block_size; i++)
-        data[i] = data_copy[brev(log2_of_block_size, i)];
+        data[i] = data_copy[brev<log2_of_block_size>(i)];
 
     return {};
 }
@@ -1432,7 +1432,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Inte
     // 2.6 Invoke B( n1+i, n0-1-i, 32-brev( 5, n1+i), 0 ) for i = 0..(n2-1).
     for (auto i = 0u; i < quarter_block_size; i++) {
         auto index = half_block_size + i;
-        butterfly_rotation_in_place(data, index, block_size - 1 - i, 32 - brev(5, index), false);
+        butterfly_rotation_in_place(data, index, block_size - 1 - i, 32 - brev<5>(index), false);
     }
 
     // 2.7 If n is greater than or equal to 3:
