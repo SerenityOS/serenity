@@ -89,11 +89,6 @@ void Menu::update_parent_menu_item()
     }
 }
 
-void Menu::set_name(DeprecatedString name)
-{
-    set_name(String::from_deprecated_string(name).release_value_but_fixme_should_propagate_errors());
-}
-
 void Menu::set_name(String name)
 {
     m_name = move(name);

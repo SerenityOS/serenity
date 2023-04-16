@@ -810,7 +810,7 @@ ErrorOr<void> BrowserWindow::take_screenshot(ScreenshotType type)
 void BrowserWindow::update_displayed_zoom_level()
 {
     VERIFY(m_zoom_menu);
-    auto zoom_level_text = DeprecatedString::formatted("&Zoom ({}%)", round_to<int>(active_tab().view().zoom_level() * 100));
+    auto zoom_level_text = String::formatted("&Zoom ({}%)", round_to<int>(active_tab().view().zoom_level() * 100)).release_value_but_fixme_should_propagate_errors();
     m_zoom_menu->set_name(zoom_level_text);
     active_tab().update_reset_zoom_button();
 }

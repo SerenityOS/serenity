@@ -34,7 +34,6 @@ public:
     int menu_id() const { return m_menu_id; }
 
     String const& name() const { return m_name; }
-    void set_name(DeprecatedString);
     void set_name(String);
 
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
