@@ -100,8 +100,8 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
         auto* sheet_ptr = m_tab_context_menu_sheet_view->sheet_if_available();
         VERIFY(sheet_ptr); // How did we get here without a sheet?
         auto& sheet = *sheet_ptr;
-        String new_name;
-        if (GUI::InputBox::show(window(), new_name, DeprecatedString::formatted("New name for '{}'", sheet.name()), "Rename sheet"sv) == GUI::Dialog::ExecResult::OK) {
+        String new_name = String::from_deprecated_string(sheet.name()).release_value_but_fixme_should_propagate_errors();
+        if (GUI::InputBox::show(window(), new_name, {}, "Rename sheet"sv, GUI::InputType::NonemptyText, "Name"sv) == GUI::Dialog::ExecResult::OK) {
             sheet.set_name(new_name);
             sheet.update();
             m_tab_widget->set_tab_title(static_cast<GUI::Widget&>(*m_tab_context_menu_sheet_view), new_name);
@@ -110,7 +110,8 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     m_tab_context_menu->add_action(*m_rename_action);
     m_tab_context_menu->add_action(GUI::Action::create("Add new sheet...", Gfx::Bitmap::load_from_file("/res/icons/16x16/new-tab.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
         String name;
-        if (GUI::InputBox::show(window(), name, "Name for new sheet"sv, "Create sheet"sv) == GUI::Dialog::ExecResult::OK) {
+        auto icon = Gfx::Bitmap::load_from_file("/res/icons/32x32/filetype-spreadsheet.png"sv).release_value_but_fixme_should_propagate_errors();
+        if (GUI::InputBox::show(window(), name, "Enter a name:"sv, "New sheet"sv, GUI::InputType::NonemptyText, {}, move(icon)) == GUI::Dialog::ExecResult::OK) {
             Vector<NonnullRefPtr<Sheet>> new_sheets;
             new_sheets.append(m_workbook->add_sheet(name));
             setup_tabs(move(new_sheets));
