@@ -80,8 +80,14 @@ ErrorOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Credentials const& creden
     // The default implementation simply treats the stored
     // contents as a path and resolves that. That is, it
     // behaves exactly how you would expect a symlink to work.
-    auto contents = TRY(read_entire());
-    return VirtualFileSystem::the().resolve_path(credentials, StringView { contents->bytes() }, base, out_parent, options, symlink_recursion_level);
+
+    // Make sure that our assumptions about the path length hold up.
+    // Note that this doesn't mean that the reported size can be trusted, some inodes just report zero.
+    VERIFY(size() <= MAXPATHLEN);
+
+    Array<u8, MAXPATHLEN> contents;
+    auto read_bytes = TRY(read_until_filled_or_end(0, contents.size(), UserOrKernelBuffer::for_kernel_buffer(contents.data()), nullptr));
+    return VirtualFileSystem::the().resolve_path(credentials, StringView { contents.span().trim(read_bytes) }, base, out_parent, options, symlink_recursion_level);
 }
 
 Inode::Inode(FileSystem& fs, InodeIndex index)
