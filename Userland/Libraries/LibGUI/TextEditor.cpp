@@ -893,8 +893,11 @@ Optional<UISize> TextEditor::calculated_min_size() const
 {
     if (is_multi_line())
         return AbstractScrollableWidget::calculated_min_size();
+    auto constexpr cursor_padding = 4;
     auto m = content_margins();
-    return UISize { m.left() + m.right(), m.top() + m.bottom() };
+    auto width = max(40, m.horizontal_total());
+    auto height = max(22, line_height() + m.vertical_total() + cursor_padding);
+    return UISize { width, height };
 }
 
 void TextEditor::select_all()

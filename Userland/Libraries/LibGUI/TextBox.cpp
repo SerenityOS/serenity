@@ -22,8 +22,8 @@ namespace GUI {
 TextBox::TextBox()
     : TextEditor(TextEditor::SingleLine)
 {
-    set_min_size({ 40, 22 });
-    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
+    set_min_size({ SpecialDimension::Shrink });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink });
 }
 
 void TextBox::keydown_event(GUI::KeyEvent& event)
