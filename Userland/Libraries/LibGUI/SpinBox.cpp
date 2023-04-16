@@ -16,8 +16,8 @@ namespace GUI {
 
 SpinBox::SpinBox()
 {
-    set_min_size({ 40, 22 });
-    set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
+    set_min_size({ SpecialDimension::Shrink });
+    set_preferred_size({ SpecialDimension::OpportunisticGrow, SpecialDimension::Shrink });
     m_editor = add<TextBox>();
     m_editor->set_text("0"sv);
     m_editor->on_change = [this, weak_this = make_weak_ptr()] {
@@ -125,6 +125,15 @@ void SpinBox::resize_event(ResizeEvent& event)
     m_increment_button->set_relative_rect(width() - button_width - frame_thickness, frame_thickness, button_width, button_height);
     m_decrement_button->set_relative_rect(width() - button_width - frame_thickness, frame_thickness + button_height, button_width, button_height);
     m_editor->set_relative_rect(0, 0, width(), height());
+}
+
+Optional<UISize> SpinBox::calculated_min_size() const
+{
+    auto constexpr button_width = 15;
+    auto width = m_editor->effective_min_size().width().as_int() + button_width;
+    auto height = m_editor->effective_min_size().height().as_int();
+
+    return UISize { width, height };
 }
 
 }
