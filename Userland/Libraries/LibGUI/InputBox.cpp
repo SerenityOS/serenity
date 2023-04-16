@@ -8,38 +8,40 @@
 
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 
 namespace GUI {
 
-ErrorOr<NonnullRefPtr<InputBox>> InputBox::create(Window* parent_window, String text_value, StringView prompt, StringView title, InputType input_type)
+ErrorOr<NonnullRefPtr<InputBox>> InputBox::create(Window* parent_window, String text_value, StringView prompt, StringView title, InputType input_type, RefPtr<Gfx::Bitmap const> icon)
 {
-    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, text_value, TRY(String::from_utf8(title)), TRY(String::from_utf8(prompt)), input_type)));
+    auto box = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) InputBox(parent_window, text_value, TRY(String::from_utf8(title)), TRY(String::from_utf8(prompt)), input_type, move(icon))));
     TRY(box->build());
     return box;
 }
 
-InputBox::InputBox(Window* parent_window, String text_value, String title, String prompt, InputType input_type)
+InputBox::InputBox(Window* parent_window, String text_value, String title, String prompt, InputType input_type, RefPtr<Gfx::Bitmap const> icon)
     : Dialog(parent_window)
     , m_text_value(move(text_value))
     , m_prompt(move(prompt))
     , m_input_type(input_type)
+    , m_icon(move(icon))
 {
     set_title(move(title).to_deprecated_string());
     set_resizable(false);
     set_auto_shrink(true);
 }
 
-Dialog::ExecResult InputBox::show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
+Dialog::ExecResult InputBox::show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder, RefPtr<Gfx::Bitmap const> icon)
 {
-    return MUST(try_show(parent_window, text_value, prompt, title, input_type, placeholder));
+    return MUST(try_show(parent_window, text_value, prompt, title, input_type, placeholder, move(icon)));
 }
 
-ErrorOr<Dialog::ExecResult> InputBox::try_show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder)
+ErrorOr<Dialog::ExecResult> InputBox::try_show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type, StringView placeholder, RefPtr<Gfx::Bitmap const> icon)
 {
-    auto box = TRY(InputBox::create(parent_window, text_value, prompt, title, input_type));
+    auto box = TRY(InputBox::create(parent_window, text_value, prompt, title, input_type, move(icon)));
     if (parent_window)
         box->set_icon(parent_window->icon());
     box->set_placeholder(placeholder);
@@ -86,14 +88,28 @@ ErrorOr<void> InputBox::build()
     TRY(main_widget->try_set_layout<VerticalBoxLayout>(4, 6));
     main_widget->set_fill_with_background_color(true);
 
-    auto input_container = TRY(main_widget->try_add<Widget>());
-    input_container->set_layout<HorizontalBoxLayout>();
+    auto top_container = TRY(main_widget->try_add<Widget>());
+    TRY(top_container->try_set_layout<HorizontalBoxLayout>(0, 8));
 
-    m_prompt_label = TRY(input_container->try_add<Label>());
-    m_prompt_label->set_autosize(true);
-    m_prompt_label->set_text(move(m_prompt).to_deprecated_string());
+    if (m_icon) {
+        auto image_widget = TRY(top_container->try_add<ImageWidget>());
+        image_widget->set_bitmap(m_icon);
+    }
 
+    auto input_container = TRY(top_container->try_add<Widget>());
+    auto orientation = m_icon ? Gfx::Orientation::Vertical : Gfx::Orientation::Horizontal;
+    TRY(input_container->try_set_layout<BoxLayout>(orientation));
     TRY(input_container->add_spacer());
+
+    if (!m_prompt.is_empty()) {
+        m_label_container = TRY(input_container->try_add<Widget>());
+        TRY(m_label_container->try_set_layout<HorizontalBoxLayout>());
+        m_prompt_label = TRY(m_label_container->try_add<Label>());
+        m_prompt_label->set_autosize(true);
+        m_prompt_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
+        m_prompt_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
+        m_prompt_label->set_text(move(m_prompt).to_deprecated_string());
+    }
 
     switch (m_input_type) {
     case InputType::Text:
@@ -104,6 +120,8 @@ ErrorOr<void> InputBox::build()
         m_text_editor = TRY(input_container->try_add<PasswordBox>());
         break;
     }
+
+    TRY(input_container->add_spacer());
 
     auto button_container = TRY(main_widget->try_add<Widget>());
     TRY(button_container->try_set_layout<HorizontalBoxLayout>(0, 6));
@@ -119,6 +137,8 @@ ErrorOr<void> InputBox::build()
     auto resize_editor = [this, button_container] {
         auto width = button_container->effective_min_size().width().as_int();
         m_text_editor->set_min_width(width);
+        if (!m_icon && m_label_container)
+            m_label_container->set_fixed_width(m_prompt_label->max_width());
     };
     resize_editor();
     on_font_change = [resize_editor] { resize_editor(); };

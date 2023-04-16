@@ -23,9 +23,9 @@ class InputBox : public Dialog {
 public:
     virtual ~InputBox() override = default;
 
-    static ExecResult show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type = InputType::Text, StringView placeholder = {});
-    static ErrorOr<ExecResult> try_show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type = InputType::Text, StringView placeholder = {});
-    static ErrorOr<NonnullRefPtr<InputBox>> create(Window* parent_window, String text_value, StringView prompt, StringView title, InputType input_type);
+    static ExecResult show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type = InputType::Text, StringView placeholder = {}, RefPtr<Gfx::Bitmap const> icon = nullptr);
+    static ErrorOr<ExecResult> try_show(Window* parent_window, String& text_value, StringView prompt, StringView title, InputType input_type = InputType::Text, StringView placeholder = {}, RefPtr<Gfx::Bitmap const> icon = nullptr);
+    static ErrorOr<NonnullRefPtr<InputBox>> create(Window* parent_window, String text_value, StringView prompt, StringView title, InputType input_type, RefPtr<Gfx::Bitmap const> icon = nullptr);
 
     String const& text_value() const { return m_text_value; }
     void set_text_value(String);
@@ -33,7 +33,7 @@ public:
     void set_placeholder(StringView);
 
 private:
-    InputBox(Window* parent_window, String text_value, String title, String prompt, InputType input_type);
+    InputBox(Window* parent_window, String text_value, String title, String prompt, InputType input_type, RefPtr<Gfx::Bitmap const> icon);
 
     virtual void on_done(ExecResult) override;
     ErrorOr<void> build();
@@ -46,6 +46,8 @@ private:
     RefPtr<Button> m_cancel_button;
     RefPtr<TextEditor> m_text_editor;
     RefPtr<Label> m_prompt_label;
+    RefPtr<Widget> m_label_container;
+    RefPtr<Gfx::Bitmap const> m_icon;
 };
 
 }
