@@ -9,7 +9,6 @@ set(SOURCES
     main.cpp
     Calculator.cpp
     CalculatorWidget.cpp
-    RoundingDialog.cpp
     Keypad.cpp
 )
 

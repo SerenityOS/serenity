@@ -5,7 +5,6 @@
  */
 
 #include "CalculatorWidget.h"
-#include "RoundingDialog.h"
 #include <LibCore/System.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibGUI/Action.h>
@@ -13,6 +12,7 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Window.h>
@@ -90,22 +90,23 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     constexpr auto format { "&Custom - {} ..."sv };
     auto round_custom = GUI::Action::create_checkable(DeprecatedString::formatted(format, 0), [&](auto& action) {
-        unsigned custom_rounding_length = widget->rounding_length();
-
-        if (RoundingDialog::show(window, "Choose custom rounding"sv, custom_rounding_length) == GUI::Dialog::ExecResult::OK) {
+        int custom_rounding_length = widget->rounding_length();
+        auto result = GUI::InputBox::show_numeric(window, custom_rounding_length, 0, 100, "Round to"sv);
+        if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
             action.set_text(DeprecatedString::formatted(format, custom_rounding_length));
             widget->set_rounding_length(custom_rounding_length);
             last_rounding_mode.clear();
         } else if (last_rounding_mode.has_value())
-            round_menu.action_at(last_rounding_mode.value())->activate();
+            round_menu.action_at(last_rounding_mode.value())
+                ->activate();
     });
 
     widget->set_rounding_custom(round_custom, format);
 
     auto shrink_action = GUI::Action::create("&Shrink...", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-cut.png"sv)), [&](auto&) {
-        unsigned shrink_length = widget->rounding_length();
-
-        if (RoundingDialog::show(window, "Choose shrinking length"sv, shrink_length) == GUI::Dialog::ExecResult::OK) {
+        int shrink_length = widget->rounding_length();
+        auto result = GUI::InputBox::show_numeric(window, shrink_length, 0, 100, "Shrink to"sv);
+        if (!result.is_error() && result.value() == GUI::Dialog::ExecResult::OK) {
             round_custom->set_checked(true);
             round_custom->set_text(DeprecatedString::formatted(format, shrink_length));
             widget->set_rounding_length(shrink_length);
