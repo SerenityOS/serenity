@@ -13,7 +13,7 @@
 namespace Video {
 
 ErrorOr<NonnullOwnPtr<SubsampledYUVFrame>> SubsampledYUVFrame::try_create(
-    Gfx::IntSize size,
+    Gfx::Size<u32> size,
     u8 bit_depth, CodingIndependentCodePoints cicp,
     bool subsampling_horizontal, bool subsampling_vertical,
     Span<u16> plane_y, Span<u16> plane_u, Span<u16> plane_v)
@@ -24,71 +24,126 @@ ErrorOr<NonnullOwnPtr<SubsampledYUVFrame>> SubsampledYUVFrame::try_create(
     return adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(size, bit_depth, cicp, subsampling_horizontal, subsampling_vertical, plane_y_array, plane_u_array, plane_v_array));
 }
 
-DecoderErrorOr<void> SubsampledYUVFrame::output_to_bitmap(Gfx::Bitmap& bitmap)
+template<u32 subsampling_horizontal>
+ALWAYS_INLINE void interpolate_row(u32 const row, u32 const width, u16 const* plane_u, u16 const* plane_v, u16* __restrict__ u_row, u16* __restrict__ v_row)
 {
-    size_t width = this->width();
-    size_t height = this->height();
-    auto u_sample_row = DECODER_TRY_ALLOC(FixedArray<u16>::create(width));
-    auto v_sample_row = DECODER_TRY_ALLOC(FixedArray<u16>::create(width));
-    size_t uv_width = width >> m_subsampling_horizontal;
+    // OPTIMIZATION: __restrict__ allows some load eliminations because the planes and the rows will not alias.
 
-    auto converter = TRY(ColorConverter::create(bit_depth(), cicp()));
+    constexpr auto horizontal_step = 1u << subsampling_horizontal;
+    auto const uv_width = (width + subsampling_horizontal) >> subsampling_horizontal;
+    // Set the first column to the first chroma samples.
+    u_row[0] = plane_u[row * uv_width];
+    v_row[0] = plane_v[row * uv_width];
 
-    for (size_t row = 0; row < height; row++) {
-        auto uv_row = row >> m_subsampling_vertical;
+    auto const columns_end = width - subsampling_horizontal;
+    // Interpolate the inner chroma columns.
+    for (u32 column = 1; column < columns_end; column += horizontal_step) {
+        auto uv_column = column >> subsampling_horizontal;
+        u_row[column] = plane_u[row * uv_width + uv_column];
+        v_row[column] = plane_v[row * uv_width + uv_column];
 
-        // Linearly interpolate the UV samples vertically first.
-        // This will write all UV samples that are located on the Y sample as well,
-        // so we only need to interpolate horizontally between UV samples in the next
-        // step.
-        if ((row & m_subsampling_vertical) == 0 || row == height - 1) {
-            for (size_t uv_column = 0; uv_column < uv_width; uv_column++) {
-                size_t column = uv_column << m_subsampling_horizontal;
-                size_t index = uv_row * uv_width + uv_column;
-                u_sample_row[column] = m_plane_u[index];
-                v_sample_row[column] = m_plane_v[index];
-            }
-        } else {
-            for (size_t uv_column = 0; uv_column < uv_width; uv_column++) {
-                size_t column = uv_column << m_subsampling_horizontal;
-                size_t index = (uv_row + 1) * uv_width + uv_column;
-                u_sample_row[column] = (u_sample_row[column] + m_plane_u[index]) >> 1;
-                v_sample_row[column] = (v_sample_row[column] + m_plane_v[index]) >> 1;
-            }
+        if constexpr (subsampling_horizontal != 0) {
+            u_row[column + 1] = (plane_u[row * uv_width + uv_column] + plane_u[row * uv_width + uv_column + 1]) >> 1;
+            v_row[column + 1] = (plane_v[row * uv_width + uv_column] + plane_v[row * uv_width + uv_column + 1]) >> 1;
         }
-        // Fill in the last pixel of the row which may not be applied by the above
-        // loops if the last pixel in each row is on an uneven index.
+    }
+
+    // If there is a last chroma sample that hasn't been set above, set it now.
+    if constexpr (subsampling_horizontal != 0) {
         if ((width & 1) == 0) {
-            u_sample_row[width - 1] = u_sample_row[width - 2];
-            v_sample_row[width - 1] = v_sample_row[width - 2];
+            u_row[width - 1] = u_row[width - 2];
+            v_row[width - 1] = v_row[width - 2];
         }
+    }
+}
 
-        // Interpolate the samples horizontally.
-        if (m_subsampling_horizontal) {
-            for (size_t column = 1; column < width - 1; column += 2) {
-                u_sample_row[column] = (u_sample_row[column - 1] + u_sample_row[column + 1]) >> 1;
-                v_sample_row[column] = (v_sample_row[column - 1] + v_sample_row[column + 1]) >> 1;
+template<u32 subsampling_horizontal, u32 subsampling_vertical>
+ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap(ColorConverter const& converter, u32 const width, u32 const height, FixedArray<u16> const& plane_y, FixedArray<u16> const& plane_u, FixedArray<u16> const& plane_v, Gfx::Bitmap& bitmap)
+{
+    VERIFY(bitmap.width() >= 0 && static_cast<u32>(bitmap.width()) == width);
+    VERIFY(bitmap.height() >= 0 && static_cast<u32>(bitmap.height()) == height);
+
+    auto temporary_buffer = DECODER_TRY_ALLOC(FixedArray<u16>::create(static_cast<size_t>(width) * 4));
+
+    // Above rows
+    auto* u_row_a = temporary_buffer.span().slice(static_cast<size_t>(width) * 0, width).data();
+    auto* v_row_a = temporary_buffer.span().slice(static_cast<size_t>(width) * 1, width).data();
+
+    // Below rows
+    auto* u_row_b = temporary_buffer.span().slice(static_cast<size_t>(width) * 2, width).data();
+    auto* v_row_b = temporary_buffer.span().slice(static_cast<size_t>(width) * 3, width).data();
+
+    u32 const vertical_step = 1 << subsampling_vertical;
+
+    interpolate_row<subsampling_horizontal>(0, width, plane_u.data(), plane_v.data(), u_row_a, v_row_a);
+
+    // Do interpolation for all inner rows.
+    const u32 rows_end = height - subsampling_vertical;
+    for (u32 row = 0; row < rows_end; row += vertical_step) {
+        // Horizontally scale the row if subsampled.
+        auto uv_row = row >> subsampling_vertical;
+        interpolate_row<subsampling_horizontal>(uv_row, width, plane_u.data(), plane_v.data(), u_row_b, v_row_b);
+
+        // If subsampled vertically, vertically interpolate the middle row between the above and below rows.
+        if constexpr (subsampling_vertical != 0) {
+            // OPTIMIZATION: Splitting these two lines into separate loops enables vectorization.
+            for (u32 column = 0; column < width; column++) {
+                u_row_a[column] = (u_row_a[column] + u_row_b[column]) >> 1;
+            }
+            for (u32 column = 0; column < width; column++) {
+                v_row_a[column] = (v_row_a[column] + v_row_b[column]) >> 1;
             }
         }
+
+        auto const* y_row_a = &plane_y[static_cast<size_t>(row) * width];
+        auto* scan_line_a = bitmap.scanline(static_cast<int>(row));
 
         for (size_t column = 0; column < width; column++) {
-            auto y_sample = m_plane_y[row * width + column];
-            auto u_sample = u_sample_row[column];
-            auto v_sample = v_sample_row[column];
+            scan_line_a[column] = converter.convert_yuv_to_full_range_rgb(y_row_a[column], u_row_a[column], v_row_a[column]).value();
+        }
+        if constexpr (subsampling_vertical != 0) {
+            auto const* y_row_b = &plane_y[static_cast<size_t>(row + 1) * width];
+            auto* scan_line_b = bitmap.scanline(static_cast<int>(row + 1));
+            for (size_t column = 0; column < width; column++) {
+                scan_line_b[column] = converter.convert_yuv_to_full_range_rgb(y_row_b[column], u_row_b[column], v_row_b[column]).value();
+            }
+        }
 
-            bitmap.set_pixel(Gfx::IntPoint(column, row), converter.convert_yuv_to_full_range_rgb(y_sample, u_sample, v_sample));
+        AK::TypedTransfer<RemoveReference<decltype(*u_row_a)>>::move(u_row_a, u_row_b, width);
+        AK::TypedTransfer<RemoveReference<decltype(*u_row_a)>>::move(v_row_a, v_row_b, width);
+    }
 
-            /*auto r_float = clamp(y_sample + (v_sample - 128) * 219.0f / 224.0f * 1.5748f, 0, 255);
-            auto g_float = clamp(y_sample + (u_sample - 128) * 219.0f / 224.0f * -0.0722f * 1.8556f / 0.7152f + (v_sample - 128) * 219.0f / 224.0f * -0.2126f * 1.5748f / 0.7152f, 0, 255);
-            auto b_float = clamp(y_sample + (u_sample - 128) * 219.0f / 224.0f * 1.8556f, 0, 255);
-            auto r = static_cast<u8>(r_float);
-            auto g = static_cast<u8>(g_float);
-            auto b = static_cast<u8>(b_float);
-            bitmap.set_pixel(Gfx::IntPoint(column, row), Color(r, g, b));*/
+    if constexpr (subsampling_vertical != 0) {
+        // If there is a final row that hasn't been set above, convert it now.
+        if ((height & 1) == 0) {
+            auto const* y_row = &plane_y[static_cast<size_t>(height - 1) * width];
+            auto* scan_line = bitmap.scanline(static_cast<int>(height - 1));
+            for (size_t column = 0; column < width; column++) {
+                scan_line[column] = converter.convert_yuv_to_full_range_rgb(y_row[column], u_row_a[column], v_row_a[column]).value();
+            }
         }
     }
 
     return {};
+}
+
+DecoderErrorOr<void> SubsampledYUVFrame::output_to_bitmap(Gfx::Bitmap& bitmap)
+{
+    auto converter = TRY(ColorConverter::create(bit_depth(), cicp()));
+
+    if (m_subsampling_horizontal && m_subsampling_vertical) {
+        return convert_to_bitmap<true, true>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
+    }
+
+    if (m_subsampling_horizontal && !m_subsampling_vertical) {
+        return convert_to_bitmap<true, false>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
+    }
+
+    if (!m_subsampling_horizontal && m_subsampling_vertical) {
+        return convert_to_bitmap<false, true>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
+    }
+
+    return convert_to_bitmap<false, false>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
 }
 
 }

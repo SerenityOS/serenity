@@ -63,7 +63,7 @@ class ColorConverter final {
 public:
     static DecoderErrorOr<ColorConverter> create(u8 bit_depth, CodingIndependentCodePoints cicp);
 
-    Gfx::Color convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v);
+    Gfx::Color convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v) const;
 
 private:
     static constexpr size_t to_linear_size = 64;
