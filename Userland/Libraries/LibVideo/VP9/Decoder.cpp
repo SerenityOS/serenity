@@ -207,6 +207,13 @@ DecoderErrorOr<NonnullOwnPtr<VideoFrame>> Decoder::get_decoded_frame()
     return m_video_frame_queue.dequeue();
 }
 
+template<typename T>
+static inline i32 rounded_right_shift(T value, u8 bits)
+{
+    value = (value + static_cast<T>(1u << (bits - 1u))) >> bits;
+    return static_cast<i32>(value);
+}
+
 u8 Decoder::merge_prob(u8 pre_prob, u32 count_0, u32 count_1, u8 count_sat, u8 max_update_factor)
 {
     auto total_decode_count = count_0 + count_1;
@@ -863,6 +870,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     auto x_scale = reference_frame.x_scale;
     auto y_scale = reference_frame.y_scale;
 
+    // The amount of subpixels between each sample of this block. Non-16 values will cause the output to be scaled.
     auto scaled_step_x = reference_frame.scaled_step_x;
     auto scaled_step_y = reference_frame.scaled_step_y;
 
@@ -901,68 +909,175 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     auto& reference_frame_buffer = reference_frame.frame_planes[plane];
     auto reference_frame_width = y_size_to_uv_size(subsampling_x, reference_frame.size.width()) + MV_BORDER * 2;
 
-    auto block_buffer_at = [&](u32 row, u32 column) -> u16& {
-        return block_buffer[row * width + column];
-    };
-
     // The variable lastX is set equal to ( (RefFrameWidth[ refIdx ] + subX) >> subX) - 1.
     // The variable lastY is set equal to ( (RefFrameHeight[ refIdx ] + subY) >> subY) - 1.
     // (lastX and lastY specify the coordinates of the bottom right sample of the reference plane.)
     // Ad-hoc: These variables are not needed, since the reference frame is expanded to contain the samples that
     // may be referenced by motion vectors on the edge of the frame.
 
-    // The variable intermediateHeight specifying the height required for the intermediate array is set equal to (((h -
-    // 1) * yStep + 15) >> 4) + 8.
-    static constexpr auto maximum_intermediate_height = (((maximum_block_dimensions - 1) * maximum_scaled_step + 15) >> 4) + 8;
-    auto intermediate_height = (((height - 1) * scaled_step_y + 15) >> 4) + 8;
-    VERIFY(intermediate_height <= maximum_intermediate_height);
     // The sub-sample interpolation is effected via two one-dimensional convolutions. First a horizontal filter is used
     // to build up a temporary array, and then this array is vertically filtered to obtain the final prediction. The
     // fractional parts of the motion vectors determine the filtering process. If the fractional part is zero, then the
     // filtering is equivalent to a straight sample copy.
     // The filtering is applied as follows:
+
+    constexpr auto sample_offset = 3;
+
+    auto subpixel_row_from_reference_row = [offset_scaled_block_y](u32 row) {
+        return (offset_scaled_block_y >> SUBPEL_BITS) + static_cast<i32>(row);
+    };
+    auto reference_index_for_row = [reference_frame_width](i32 row) {
+        return static_cast<size_t>(MV_BORDER + row) * reference_frame_width;
+    };
+
+    // The variable intermediateHeight specifying the height required for the intermediate array is set equal to (((h -
+    // 1) * yStep + 15) >> 4) + 8.
+    static constexpr auto maximum_intermediate_height = (((maximum_block_dimensions - 1) * maximum_scaled_step + 15) >> 4) + 8;
+    auto const intermediate_height = (((height - 1) * scaled_step_y + 15) >> 4) + 8;
+    VERIFY(intermediate_height <= maximum_intermediate_height);
+    // Check our reference frame bounds before starting the loop.
+    auto const last_possible_reference_index = reference_index_for_row(subpixel_row_from_reference_row(intermediate_height - sample_offset));
+    VERIFY(reference_frame_buffer.size() >= last_possible_reference_index);
+
+    VERIFY(block_buffer.size() >= static_cast<size_t>(width) * height);
+
+    auto const reference_block_x = MV_BORDER + (offset_scaled_block_x >> SUBPEL_BITS);
+    auto const reference_block_y = MV_BORDER + (offset_scaled_block_y >> SUBPEL_BITS);
+    auto const reference_subpixel_x = offset_scaled_block_x & SUBPEL_MASK;
+    auto const reference_subpixel_y = offset_scaled_block_y & SUBPEL_MASK;
+
+    // OPTIMIZATION: If the fractional part of a component of the motion vector is 0, we want to do a fast path
+    //               skipping one or both of the convolutions.
+    bool const copy_x = reference_subpixel_x == 0;
+    bool const copy_y = reference_subpixel_y == 0;
+    bool const unscaled_x = scaled_step_x == 16;
+    bool const unscaled_y = scaled_step_y == 16;
+
     // The array intermediate is specified as follows:
     // Note: Height is specified by `intermediate_height`, width is specified by `width`
     Array<u16, maximum_intermediate_height * maximum_block_dimensions> intermediate_buffer;
-    auto intermediate_buffer_at = [&](u32 row, u32 column) -> u16& {
-        return intermediate_buffer[row * width + column];
+    auto const bit_depth = block_context.frame_context.color_config.bit_depth;
+    auto const* reference_start = reference_frame_buffer.data() + reference_block_y * reference_frame_width + reference_block_x;
+
+    // FIXME: We are using 16-bit accumulators for speed in these loops, but when accumulating for a high bit-depth video, they will overflow.
+    //        Instead of hardcoding them, the Decoder class should have the bit depth as a template parameter, and the accumulators can select
+    //        a size based on whether the bit depth > 8.
+    if (unscaled_x && unscaled_y && bit_depth == 8) {
+        if (copy_x && copy_y) {
+            // We can memcpy here to avoid doing any real work.
+            auto const* reference_scan_line = &reference_frame_buffer[reference_block_y * reference_frame_width + reference_block_x];
+            auto* destination_scan_line = block_buffer.data();
+
+            for (auto row = 0u; row < height; row++) {
+                memcpy(destination_scan_line, reference_scan_line, width * sizeof(*destination_scan_line));
+                reference_scan_line += reference_frame_width;
+                destination_scan_line += width;
+            }
+
+            return {};
+        }
+
+        auto horizontal_convolution_unscaled = [](auto bit_depth, auto* destination, auto width, auto height, auto const* source, auto source_stride, auto filter, auto subpixel_x) {
+            source -= sample_offset;
+            auto const source_end_skip = source_stride - width;
+
+            for (auto row = 0u; row < height; row++) {
+                for (auto column = 0u; column < width; column++) {
+                    i16 accumulated_samples = 0;
+                    for (auto t = 0; t < 8; t++) {
+                        auto sample = source[t];
+                        accumulated_samples += subpel_filters[filter][subpixel_x][t] * sample;
+                    }
+
+                    *destination = clip_1(bit_depth, rounded_right_shift(accumulated_samples, 7));
+                    source++;
+                    destination++;
+                }
+                source += source_end_skip;
+            }
+        };
+
+        if (copy_y) {
+            horizontal_convolution_unscaled(bit_depth, block_buffer.data(), width, height, reference_start, reference_frame_width, block_context.interpolation_filter, reference_subpixel_x);
+            return {};
+        }
+
+        auto vertical_convolution_unscaled = [](auto bit_depth, auto* destination, auto width, auto height, auto const* source, auto source_stride, auto filter, auto subpixel_y) {
+            auto const source_end_skip = source_stride - width;
+
+            for (auto row = 0u; row < height; row++) {
+                for (auto column = 0u; column < width; column++) {
+                    auto const* scan_column = source;
+                    i16 accumulated_samples = 0;
+                    for (auto t = 0; t < 8; t++) {
+                        auto sample = *scan_column;
+                        accumulated_samples += subpel_filters[filter][subpixel_y][t] * sample;
+                        scan_column += source_stride;
+                    }
+                    *destination = clip_1(bit_depth, rounded_right_shift(accumulated_samples, 7));
+                    source++;
+                    destination++;
+                }
+                source += source_end_skip;
+            }
+        };
+
+        if (copy_x) {
+            vertical_convolution_unscaled(bit_depth, block_buffer.data(), width, height, reference_start - (sample_offset * reference_frame_width), reference_frame_width, block_context.interpolation_filter, reference_subpixel_y);
+            return {};
+        }
+
+        horizontal_convolution_unscaled(bit_depth, intermediate_buffer.data(), width, intermediate_height, reference_start - (sample_offset * reference_frame_width), reference_frame_width, block_context.interpolation_filter, reference_subpixel_x);
+        vertical_convolution_unscaled(bit_depth, block_buffer.data(), width, height, intermediate_buffer.data(), width, block_context.interpolation_filter, reference_subpixel_y);
+        return {};
+    }
+
+    // NOTE: Accumulators below are 32-bit to allow high bit-depth videos to decode without overflows.
+    //       These should be changed when the accumulators above are.
+
+    auto horizontal_convolution_scaled = [](auto bit_depth, auto* destination, auto width, auto height, auto const* source, auto source_stride, auto filter, auto subpixel_x, auto scale_x) {
+        source -= sample_offset;
+
+        for (auto row = 0u; row < height; row++) {
+            auto scan_subpixel = subpixel_x;
+            for (auto column = 0u; column < width; column++) {
+                auto const* scan_line = source + (scan_subpixel >> 4);
+                i32 accumulated_samples = 0;
+                for (auto t = 0; t < 8; t++) {
+                    auto sample = scan_line[t];
+                    accumulated_samples += subpel_filters[filter][scan_subpixel & SUBPEL_MASK][t] * sample;
+                }
+
+                *destination = clip_1(bit_depth, rounded_right_shift(accumulated_samples, 7));
+                destination++;
+                scan_subpixel += scale_x;
+            }
+            source += source_stride;
+        }
     };
 
-    // Check our reference frame bounds before starting the loop.
-    auto last_possible_reference = (MV_BORDER + (offset_scaled_block_y >> 4) + static_cast<i32>(intermediate_height - 1) - 3) * reference_frame_width;
-    VERIFY(reference_frame_buffer.size() >= last_possible_reference);
+    auto vertical_convolution_scaled = [](auto bit_depth, auto* destination, auto width, auto height, auto const* source, auto source_stride, auto filter, auto subpixel_y, auto scale_y) {
+        for (auto row = 0u; row < height; row++) {
+            auto const* source_column_base = source + (subpixel_y >> SUBPEL_BITS) * source_stride;
 
-    for (auto row = 0u; row < intermediate_height; row++) {
-        auto reference_row = (offset_scaled_block_y >> 4) + static_cast<i32>(row) - 3;
-        u16 const* scan_line = &reference_frame_buffer[static_cast<size_t>(MV_BORDER + reference_row) * reference_frame_width];
+            for (auto column = 0u; column < width; column++) {
+                auto const* scan_column = source_column_base + column;
+                i32 accumulated_samples = 0;
+                for (auto t = 0; t < 8; t++) {
+                    auto sample = *scan_column;
+                    accumulated_samples += subpel_filters[filter][subpixel_y & SUBPEL_MASK][t] * sample;
+                    scan_column += source_stride;
+                }
 
-        for (auto column = 0u; column < width; column++) {
-            auto samples_start = offset_scaled_block_x + static_cast<i32>(scaled_step_x * column);
-
-            i32 accumulated_samples = 0;
-            for (auto t = 0u; t < 8u; t++) {
-                auto sample = scan_line[MV_BORDER + (samples_start >> 4) + static_cast<i32>(t) - 3];
-                accumulated_samples += subpel_filters[block_context.interpolation_filter][samples_start & 15][t] * sample;
+                *destination = clip_1(bit_depth, rounded_right_shift(accumulated_samples, 7));
+                destination++;
             }
-            intermediate_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
+            subpixel_y += scale_y;
         }
-    }
+    };
 
-    for (auto row = 0u; row < height; row++) {
-        for (auto column = 0u; column < width; column++) {
-            auto samples_start = (offset_scaled_block_y & 15) + static_cast<i32>(scaled_step_y * row);
-            auto const* scan_column = &intermediate_buffer_at(samples_start >> 4, column);
-            auto const* subpel_filters_for_samples = subpel_filters[block_context.interpolation_filter][samples_start & 15];
-
-            i32 accumulated_samples = 0;
-            for (auto t = 0u; t < 8u; t++) {
-                auto sample = *scan_column;
-                accumulated_samples += subpel_filters_for_samples[t] * sample;
-                scan_column += width;
-            }
-            block_buffer_at(row, column) = clip_1(block_context.frame_context.color_config.bit_depth, rounded_right_shift(accumulated_samples, 7));
-        }
-    }
+    horizontal_convolution_scaled(bit_depth, intermediate_buffer.data(), width, intermediate_height, reference_start - (sample_offset * reference_frame_width), reference_frame_width, block_context.interpolation_filter, offset_scaled_block_x & SUBPEL_MASK, scaled_step_x);
+    vertical_convolution_scaled(bit_depth, block_buffer.data(), width, height, intermediate_buffer.data(), width, block_context.interpolation_filter, reference_subpixel_y, scaled_step_y);
 
     return {};
 }
@@ -1191,13 +1306,6 @@ inline i32 Decoder::sin64(u8 angle)
     if (angle < 32)
         angle += 128;
     return cos64(angle - 32u);
-}
-
-template<typename T>
-inline i32 Decoder::rounded_right_shift(T value, u8 bits)
-{
-    value = (value + static_cast<T>(1u << (bits - 1u))) >> bits;
-    return static_cast<i32>(value);
 }
 
 // (8.7.1.1) The function B( a, b, angle, 0 ) performs a butterfly rotation.

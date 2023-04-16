@@ -336,7 +336,7 @@ static constexpr u8 counter_to_context[19] = {
 };
 
 // Coefficients used by predict_inter
-static constexpr i32 subpel_filters[4][16][8] = {
+static constexpr i16 subpel_filters[4][16][8] = {
     { { 0, 0, 0, 128, 0, 0, 0, 0 },
         { 0, 1, -5, 126, 8, -3, 1, 0 },
         { -1, 3, -10, 122, 18, -6, 2, 0 },
