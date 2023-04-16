@@ -202,14 +202,6 @@ bool OpenFileDescription::can_read() const
     return m_file->can_read(*this, offset());
 }
 
-ErrorOr<NonnullOwnPtr<KBuffer>> OpenFileDescription::read_entire_file()
-{
-    // HACK ALERT: (This entire function)
-    VERIFY(m_file->is_inode());
-    VERIFY(m_inode);
-    return m_inode->read_entire(this);
-}
-
 ErrorOr<size_t> OpenFileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
 {
     if (!is_directory())

@@ -58,8 +58,6 @@ public:
 
     ErrorOr<size_t> get_dir_entries(UserOrKernelBuffer& buffer, size_t);
 
-    ErrorOr<NonnullOwnPtr<KBuffer>> read_entire_file();
-
     ErrorOr<NonnullOwnPtr<KString>> original_absolute_path() const;
     ErrorOr<NonnullOwnPtr<KString>> pseudo_path() const;
 
