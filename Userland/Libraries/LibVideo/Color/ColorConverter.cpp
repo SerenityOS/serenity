@@ -201,7 +201,7 @@ ALWAYS_INLINE FloatVector4 max_zero(FloatVector4 vector)
 }
 
 // Referencing https://en.wikipedia.org/wiki/YCbCr
-Gfx::Color ColorConverter::convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v)
+Gfx::Color ColorConverter::convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v) const
 {
     FloatVector4 color_vector = { static_cast<float>(y), static_cast<float>(u), static_cast<float>(v), 1.0f };
     color_vector = m_input_conversion_matrix * color_vector;
