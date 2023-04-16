@@ -29,11 +29,7 @@ SpinBox::SpinBox()
             m_editor->do_delete();
     };
     m_editor->on_focusout = [this] {
-        auto value = m_editor->text().to_int();
-        if (value.has_value())
-            set_value(value.value());
-        else
-            set_value(min());
+        set_value_from_current_text();
     };
     m_editor->on_up_pressed = [this] {
         set_value(m_value + 1);
@@ -42,6 +38,7 @@ SpinBox::SpinBox()
         set_value(m_value - 1);
     };
     m_editor->on_return_pressed = [this] {
+        set_value_from_current_text();
         if (on_return_pressed)
             on_return_pressed();
     };
@@ -66,6 +63,7 @@ SpinBox::SpinBox()
 void SpinBox::set_value(int value, AllowCallback allow_callback)
 {
     value = clamp(value, m_min, m_max);
+    m_editor->set_text(DeprecatedString::number(value));
     if (m_value == value)
         return;
     m_value = value;
@@ -73,10 +71,18 @@ void SpinBox::set_value(int value, AllowCallback allow_callback)
     m_increment_button->set_enabled(m_value < m_max);
     m_decrement_button->set_enabled(m_value > m_min);
 
-    m_editor->set_text(DeprecatedString::number(value));
     update();
     if (on_change && allow_callback == AllowCallback::Yes)
         on_change(value);
+}
+
+void SpinBox::set_value_from_current_text()
+{
+    auto value = m_editor->text().to_int();
+    if (value.has_value())
+        set_value(value.value());
+    else
+        set_value(min());
 }
 
 void SpinBox::set_range(int min, int max, AllowCallback allow_callback)
