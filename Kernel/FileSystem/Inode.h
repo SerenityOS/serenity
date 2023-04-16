@@ -57,6 +57,7 @@ public:
 
     ErrorOr<size_t> write_bytes(off_t, size_t, UserOrKernelBuffer const& data, OpenFileDescription*);
     ErrorOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, OpenFileDescription*) const;
+    ErrorOr<size_t> read_until_filled_or_end(off_t, size_t, UserOrKernelBuffer buffer, OpenFileDescription*) const;
 
     virtual ErrorOr<void> attach(OpenFileDescription&) { return {}; }
     virtual void detach(OpenFileDescription&) { }

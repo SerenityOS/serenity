@@ -118,6 +118,21 @@ ErrorOr<size_t> Inode::read_bytes(off_t offset, size_t length, UserOrKernelBuffe
     return read_bytes_locked(offset, length, buffer, open_description);
 }
 
+ErrorOr<size_t> Inode::read_until_filled_or_end(off_t offset, size_t length, UserOrKernelBuffer buffer, OpenFileDescription* open_description) const
+{
+    auto remaining_length = length;
+
+    while (remaining_length > 0) {
+        auto filled_bytes = TRY(read_bytes(offset, remaining_length, buffer, open_description));
+        if (filled_bytes == 0)
+            break;
+        offset += filled_bytes;
+        remaining_length -= filled_bytes;
+    }
+
+    return length - remaining_length;
+}
+
 ErrorOr<void> Inode::update_timestamps([[maybe_unused]] Optional<Time> atime, [[maybe_unused]] Optional<Time> ctime, [[maybe_unused]] Optional<Time> mtime)
 {
     return ENOTIMPL;
