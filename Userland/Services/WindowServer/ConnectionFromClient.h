@@ -93,8 +93,8 @@ private:
     void set_unresponsive(bool);
     void destroy_window(Window&, Vector<i32>& destroyed_window_ids);
 
-    virtual void create_menu(i32, DeprecatedString const&) override;
-    virtual void set_menu_name(i32, DeprecatedString const&) override;
+    virtual void create_menu(i32, String const&) override;
+    virtual void set_menu_name(i32, String const&) override;
     virtual void destroy_menu(i32) override;
     virtual void add_menu(i32, i32) override;
     virtual void add_menu_item(i32, i32, i32, DeprecatedString const&, bool, bool, bool, bool, bool, DeprecatedString const&, Gfx::ShareableBitmap const&, bool) override;

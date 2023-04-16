@@ -4,8 +4,8 @@
 
 endpoint WindowServer
 {
-    create_menu(i32 menu_id, [UTF8] DeprecatedString name) =|
-    set_menu_name(i32 menu_id, DeprecatedString name) =|
+    create_menu(i32 menu_id, [UTF8] String name) =|
+    set_menu_name(i32 menu_id, String name) =|
     destroy_menu(i32 menu_id) =|
 
     add_menu(i32 window_id, i32 menu_id) =|

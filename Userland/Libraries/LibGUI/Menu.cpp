@@ -93,7 +93,7 @@ void Menu::set_name(String name)
 {
     m_name = move(name);
     if (m_menu_id != -1) {
-        ConnectionToWindowServer::the().async_set_menu_name(m_menu_id, m_name.to_deprecated_string());
+        ConnectionToWindowServer::the().async_set_menu_name(m_menu_id, m_name);
         update_parent_menu_item();
     }
 }
@@ -168,7 +168,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
     unrealize_menu();
     m_menu_id = s_menu_id_allocator.allocate();
 
-    ConnectionToWindowServer::the().async_create_menu(m_menu_id, m_name.to_deprecated_string());
+    ConnectionToWindowServer::the().async_create_menu(m_menu_id, m_name);
 
     dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);
