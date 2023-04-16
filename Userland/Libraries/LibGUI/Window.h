@@ -99,6 +99,7 @@ public:
         Close,
     };
 
+    Function<void()> on_font_change;
     Function<void()> on_close;
     Function<CloseRequestDecision()> on_close_request;
     Function<void(bool is_preempted)> on_input_preemption_change;
