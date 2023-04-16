@@ -159,6 +159,13 @@ void FileSystemModel::Node::traverse_if_needed()
     }
 }
 
+bool FileSystemModel::Node::can_delete_or_move() const
+{
+    if (!m_can_delete_or_move.has_value())
+        m_can_delete_or_move = FileSystem::can_delete_or_move(full_path());
+    return m_can_delete_or_move.value();
+}
+
 OwnPtr<FileSystemModel::Node> FileSystemModel::Node::create_child(DeprecatedString const& child_name)
 {
     DeprecatedString child_path = LexicalPath::join(full_path(), child_name).string();
