@@ -38,7 +38,7 @@ u32 find_ampersand_shortcut_character(StringView string)
     return 0;
 }
 
-Menu::Menu(ConnectionFromClient* client, int menu_id, DeprecatedString name)
+Menu::Menu(ConnectionFromClient* client, int menu_id, String name)
     : Core::Object(client)
     , m_client(client)
     , m_menu_id(menu_id)
@@ -752,7 +752,7 @@ void Menu::set_hovered_index(int index, bool make_input)
         redraw(*old_hovered_item);
 }
 
-void Menu::set_name(DeprecatedString name)
+void Menu::set_name(String name)
 {
     m_name = move(name);
 }

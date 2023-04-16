@@ -58,8 +58,8 @@ public:
     void update_alt_shortcuts_for_items();
     void add_item(NonnullOwnPtr<MenuItem>);
 
-    DeprecatedString const& name() const { return m_name; }
-    void set_name(DeprecatedString);
+    String const& name() const { return m_name; }
+    void set_name(String);
 
     template<typename Callback>
     IterationDecision for_each_item(Callback callback)
@@ -138,7 +138,7 @@ public:
     Vector<size_t> const* items_with_alt_shortcut(u32 alt_shortcut) const;
 
 private:
-    Menu(ConnectionFromClient*, int menu_id, DeprecatedString name);
+    Menu(ConnectionFromClient*, int menu_id, String name);
 
     virtual void event(Core::Event&) override;
 
@@ -155,7 +155,7 @@ private:
 
     ConnectionFromClient* m_client { nullptr };
     int m_menu_id { 0 };
-    DeprecatedString m_name;
+    String m_name;
     u32 m_alt_shortcut_character { 0 };
     Gfx::IntRect m_rect_in_window_menubar;
     Gfx::IntPoint m_unadjusted_position;
