@@ -31,7 +31,7 @@ public:
         return lookup_table;
     }
 
-    float do_lookup(float value) const
+    ALWAYS_INLINE float do_lookup(float value) const
     {
         float float_index = value * (maximum_value / static_cast<float>(Scale));
         if (float_index > maximum_value) [[unlikely]]
@@ -42,7 +42,7 @@ public:
         return value;
     }
 
-    FloatVector4 do_lookup(FloatVector4 vector) const
+    ALWAYS_INLINE FloatVector4 do_lookup(FloatVector4 vector) const
     {
         return {
             do_lookup(vector.x()),
@@ -58,12 +58,97 @@ private:
     Array<float, N> m_lookup_table;
 };
 
+static auto hlg_ootf_lookup_table = InterpolatedLookupTable<32, 1000>::create(
+    [](float value) {
+        return AK::pow(value, 1.2f - 1.0f);
+    });
+
 class ColorConverter final {
+
+private:
+    // Tonemapping methods are outlined here:
+    // https://64.github.io/tonemapping/
+
+    template<typename T>
+    static ALWAYS_INLINE constexpr T scalar_to_color_vector(float value)
+    {
+        if constexpr (IsSame<T, Gfx::VectorN<4, float>>) {
+            return Gfx::VectorN<4, float>(value, value, value, 1.0f);
+        } else if constexpr (IsSame<T, Gfx::VectorN<3, float>>) {
+            return Gfx::VectorN<3, float>(value, value, value);
+        } else {
+            static_assert(IsFloatingPoint<T>);
+            return static_cast<T>(value);
+        }
+    }
+
+    template<typename T>
+    static ALWAYS_INLINE constexpr T hable_tonemapping_partial(T value)
+    {
+        constexpr auto a = scalar_to_color_vector<T>(0.15f);
+        constexpr auto b = scalar_to_color_vector<T>(0.5f);
+        constexpr auto c = scalar_to_color_vector<T>(0.1f);
+        constexpr auto d = scalar_to_color_vector<T>(0.2f);
+        constexpr auto e = scalar_to_color_vector<T>(0.02f);
+        constexpr auto f = scalar_to_color_vector<T>(0.3f);
+        return ((value * (a * value + c * b) + d * e) / (value * (a * value + b) + d * f)) - e / f;
+    }
+
+    template<typename T>
+    static ALWAYS_INLINE constexpr T hable_tonemapping(T value)
+    {
+        constexpr auto exposure_bias = scalar_to_color_vector<T>(2.0f);
+        value = hable_tonemapping_partial<T>(value * exposure_bias);
+        constexpr auto scale = scalar_to_color_vector<T>(1.0f) / scalar_to_color_vector<T>(hable_tonemapping_partial(11.2f));
+        return value * scale;
+    }
 
 public:
     static DecoderErrorOr<ColorConverter> create(u8 bit_depth, CodingIndependentCodePoints cicp);
 
-    Gfx::Color convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v) const;
+    // Referencing https://en.wikipedia.org/wiki/YCbCr
+    ALWAYS_INLINE Gfx::Color convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v) const
+    {
+        auto max_zero = [](FloatVector4 vector) {
+            return FloatVector4(max(0.0f, vector.x()), max(0.0f, vector.y()), max(0.0f, vector.z()), vector.w());
+        };
+
+        FloatVector4 color_vector = { static_cast<float>(y), static_cast<float>(u), static_cast<float>(v), 1.0f };
+        color_vector = m_input_conversion_matrix * color_vector;
+
+        if (m_should_skip_color_remapping) {
+            color_vector.clamp(0.0f, 1.0f);
+        } else {
+            color_vector = max_zero(color_vector);
+            color_vector = m_to_linear_lookup.do_lookup(color_vector);
+
+            if (m_cicp.transfer_characteristics() == TransferCharacteristics::HLG) {
+                // See: https://en.wikipedia.org/wiki/Hybrid_log-gamma under a bolded section "HLG reference OOTF"
+                float luminance = (0.2627f * color_vector.x() + 0.6780f * color_vector.y() + 0.0593f * color_vector.z()) * 1000.0f;
+                float coefficient = hlg_ootf_lookup_table.do_lookup(luminance);
+                color_vector = { color_vector.x() * coefficient, color_vector.y() * coefficient, color_vector.z() * coefficient, 1.0f };
+            }
+
+            // FIXME: We could implement gamut compression here:
+            //        https://github.com/jedypod/gamut-compress/blob/master/docs/gamut-compress-algorithm.md
+            //        This would allow the color values outside the output gamut to be
+            //        preserved relative to values within the gamut instead of clipping. The
+            //        downside is that this requires a pass over the image before conversion
+            //        back into gamut is done to find the maximum color values to compress.
+            //        The compression would have to be somewhat temporally consistent as well.
+            color_vector = m_color_space_conversion_matrix * color_vector;
+            color_vector = max_zero(color_vector);
+            if (m_should_tonemap)
+                color_vector = hable_tonemapping(color_vector);
+            color_vector = m_to_non_linear_lookup.do_lookup(color_vector);
+            color_vector = max_zero(color_vector);
+        }
+
+        u8 r = static_cast<u8>(color_vector.x() * 255.0f);
+        u8 g = static_cast<u8>(color_vector.y() * 255.0f);
+        u8 b = static_cast<u8>(color_vector.z() * 255.0f);
+        return Gfx::Color(r, g, b);
+    }
 
 private:
     static constexpr size_t to_linear_size = 64;
@@ -80,6 +165,7 @@ private:
         , m_to_non_linear_lookup(move(to_non_linear_lookup))
     {
     }
+
     u8 m_bit_depth;
     CodingIndependentCodePoints m_cicp;
     bool m_should_skip_color_remapping;
