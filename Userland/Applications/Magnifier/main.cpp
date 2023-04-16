@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     auto magnifier = TRY(window->set_main_widget<MagnifierWidget>());
 
-    auto file_menu = TRY(window->try_add_menu("&File"));
+    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
         AK::DeprecatedString filename = "file for saving";
         auto do_save = [&]() -> ErrorOr<void> {
@@ -140,7 +140,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     size_action_group->add_action(eight_x_action);
     size_action_group->set_exclusive(true);
 
-    auto view_menu = TRY(window->try_add_menu("&View"));
+    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
     TRY(view_menu->try_add_action(two_x_action));
     TRY(view_menu->try_add_action(four_x_action));
     TRY(view_menu->try_add_action(eight_x_action));
@@ -152,7 +152,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(view_menu->try_add_action(show_grid_action));
     TRY(view_menu->try_add_action(choose_grid_color_action));
 
-    auto timeline_menu = TRY(window->try_add_menu("&Timeline"));
+    auto timeline_menu = TRY(window->try_add_menu(TRY("&Timeline"_string)));
     auto previous_frame_action = GUI::Action::create(
         "&Previous frame", { Key_Left }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"sv)), [&](auto&) {
             pause_action->set_checked(true);
@@ -170,7 +170,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(window->try_add_menu(TRY(GUI::CommonMenus::make_accessibility_menu(magnifier))));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/Magnifier.md"), "/bin/Help");

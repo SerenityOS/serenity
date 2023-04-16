@@ -55,7 +55,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 {
     auto* window = this->window();
     // Set up the menu bar.
-    auto file_menu = TRY(window->try_add_menu("&File"));
+    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
     auto open_action = GUI::CommonActions::make_open_action([this](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(this->window());
         if (response.is_error())
@@ -68,7 +68,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
         GUI::Application::the()->quit();
     })));
 
-    auto presentation_menu = TRY(window->try_add_menu("&Presentation"));
+    auto presentation_menu = TRY(window->try_add_menu(TRY("&Presentation"_string)));
     m_next_slide_action = GUI::Action::create("&Next", { KeyCode::Key_Right }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         if (m_current_presentation) {
             m_current_presentation->next_frame();
@@ -95,7 +95,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
     TRY(presentation_menu->try_add_action(*m_previous_slide_action));
     TRY(presentation_menu->try_add_action(*m_present_from_first_slide_action));
 
-    auto view_menu = TRY(window->try_add_menu("&View"));
+    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
     m_full_screen_action = GUI::Action::create("Toggle &Full Screen", { KeyModifier::Mod_Shift, KeyCode::Key_F5 }, { KeyCode::Key_F11 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/fullscreen.png"sv)), [this](auto&) {
         auto* window = this->window();
         window->set_fullscreen(!window->is_fullscreen());
@@ -114,7 +114,7 @@ ErrorOr<void> PresenterWidget::initialize_menubar()
 
     update_slides_actions();
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Presenter", GUI::Icon::default_icon("app-presenter"sv))));
 
     return {};

@@ -649,7 +649,7 @@ void SpreadsheetWidget::clipboard_action(bool is_cut)
 
 ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"));
+    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(*m_new_action));
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
@@ -668,7 +668,7 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     }));
     TRY(file_menu->try_add_action(*m_quit_action));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"));
+    auto edit_menu = TRY(window.try_add_menu("&Edit"_short_string));
     TRY(edit_menu->try_add_action(*m_undo_action));
     TRY(edit_menu->try_add_action(*m_redo_action));
     TRY(edit_menu->try_add_separator());
@@ -677,7 +677,7 @@ ErrorOr<void> SpreadsheetWidget::initialize_menubar(GUI::Window& window)
     TRY(edit_menu->try_add_action(*m_paste_action));
     TRY(edit_menu->try_add_action(*m_insert_emoji_action));
 
-    auto help_menu = TRY(window.try_add_menu("&Help"));
+    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(*m_search_action));
     TRY(help_menu->try_add_action(*m_functions_help_action));
     TRY(help_menu->try_add_action(*m_about_action));

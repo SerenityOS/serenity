@@ -664,7 +664,7 @@ ErrorOr<void> MainWidget::initialize(DeprecatedString const& path, RefPtr<Gfx::B
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"));
+    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(*m_new_action));
     TRY(file_menu->try_add_action(*m_open_action));
     TRY(file_menu->try_add_action(*m_save_action));
@@ -676,7 +676,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     })));
 
-    auto edit_menu = TRY(window.try_add_menu("&Edit"));
+    auto edit_menu = TRY(window.try_add_menu("&Edit"_short_string));
     TRY(edit_menu->try_add_action(*m_undo_action));
     TRY(edit_menu->try_add_action(*m_redo_action));
     TRY(edit_menu->try_add_separator());
@@ -691,12 +691,12 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 
     m_context_menu = edit_menu;
 
-    auto go_menu = TRY(window.try_add_menu("&Go"));
+    auto go_menu = TRY(window.try_add_menu("&Go"_short_string));
     TRY(go_menu->try_add_action(*m_previous_glyph_action));
     TRY(go_menu->try_add_action(*m_next_glyph_action));
     TRY(go_menu->try_add_action(*m_go_to_glyph_action));
 
-    auto view_menu = TRY(window.try_add_menu("&View"));
+    auto view_menu = TRY(window.try_add_menu("&View"_short_string));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
     TRY(layout_menu->try_add_action(*m_show_toolbar_action));
     TRY(layout_menu->try_add_action(*m_show_statusbar_action));
@@ -714,7 +714,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(scale_menu->try_add_action(*m_scale_ten_action));
     TRY(scale_menu->try_add_action(*m_scale_fifteen_action));
 
-    auto help_menu = TRY(window.try_add_menu("&Help"));
+    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/FontEditor.md"), "/bin/Help");

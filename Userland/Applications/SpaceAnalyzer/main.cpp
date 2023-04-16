@@ -61,7 +61,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     tree_map_widget.set_focus(true);
 
-    auto file_menu = TRY(window->try_add_menu("&File"));
+    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::Action::create("&Analyze", { KeyCode::Key_F5 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         // FIXME: Just modify the tree in memory instead of traversing the entire file system
         if (auto result = tree_map_widget.analyze(statusbar); result.is_error()) {
@@ -73,7 +73,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app->quit();
     })));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action(APP_NAME, app_icon, window)));
 

@@ -352,7 +352,7 @@ void VideoPlayerWidget::set_seek_mode(Video::PlaybackManager::SeekMode seek_mode
 ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
 {
     // File menu
-    auto file_menu = TRY(window.try_add_menu("&File"));
+    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<DeprecatedString> path = GUI::FilePicker::get_open_filepath(&window, "Open video file...");
         if (path.has_value())
@@ -364,7 +364,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     })));
 
     // Playback menu
-    auto playback_menu = TRY(window.try_add_menu("&Playback"));
+    auto playback_menu = TRY(window.try_add_menu(TRY("&Playback"_string)));
 
     // FIXME: Maybe seek mode should be in an options dialog instead. The playback menu may get crowded.
     //        For now, leave it here for convenience.
@@ -373,7 +373,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     set_seek_mode(Video::PlaybackManager::DEFAULT_SEEK_MODE);
 
     // View menu
-    auto view_menu = TRY(window.try_add_menu("&View"));
+    auto view_menu = TRY(window.try_add_menu("&View"_short_string));
     TRY(view_menu->try_add_action(*m_toggle_fullscreen_action));
 
     auto sizing_mode_menu = TRY(view_menu->try_add_submenu("&Sizing mode"));
@@ -393,7 +393,7 @@ ErrorOr<void> VideoPlayerWidget::initialize_menubar(GUI::Window& window)
     TRY(sizing_mode_menu->try_add_action(*m_size_fullsize_action));
 
     // Help menu
-    auto help_menu = TRY(window.try_add_menu("&Help"));
+    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Video Player", TRY(GUI::Icon::try_create_default_icon("app-video-player"sv)), &window)));
 
     return {};

@@ -998,7 +998,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         refresh_tree_view();
     });
 
-    auto file_menu = TRY(window->try_add_menu("&File"));
+    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
     TRY(file_menu->try_add_action(mkdir_action));
     TRY(file_menu->try_add_action(touch_action));
     TRY(file_menu->try_add_action(focus_dependent_delete_action));
@@ -1010,7 +1010,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         GUI::Application::the()->quit();
     })));
 
-    auto edit_menu = TRY(window->try_add_menu("&Edit"));
+    auto edit_menu = TRY(window->try_add_menu("&Edit"_short_string));
     TRY(edit_menu->try_add_action(cut_action));
     TRY(edit_menu->try_add_action(copy_action));
     TRY(edit_menu->try_add_action(paste_action));
@@ -1033,7 +1033,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     show_dotfiles_action->set_checked(show_dotfiles);
     show_dotfiles_in_view(show_dotfiles);
 
-    auto view_menu = TRY(window->try_add_menu("&View"));
+    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
     auto layout_menu = TRY(view_menu->try_add_submenu("&Layout"));
     TRY(layout_menu->try_add_action(*layout_toolbar_action));
     TRY(layout_menu->try_add_action(*layout_location_action));
@@ -1054,7 +1054,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
         breadcrumbbar.show_location_text_box();
     });
 
-    auto go_menu = TRY(window->try_add_menu("&Go"));
+    auto go_menu = TRY(window->try_add_menu("&Go"_short_string));
     TRY(go_menu->try_add_action(go_back_action));
     TRY(go_menu->try_add_action(go_forward_action));
     TRY(go_menu->try_add_action(open_parent_directory_action));
@@ -1064,7 +1064,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
     TRY(go_menu->try_add_separator());
     TRY(go_menu->try_add_action(directory_view->open_terminal_action()));
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("File Manager"sv, GUI::Icon::default_icon("app-file-manager"sv), window)));
 

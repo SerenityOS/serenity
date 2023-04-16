@@ -218,8 +218,8 @@ public:
 
     void did_disable_focused_widget(Badge<Widget>);
 
-    Menu& add_menu(DeprecatedString name);
-    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(DeprecatedString name);
+    Menu& add_menu(String name);
+    ErrorOr<NonnullRefPtr<Menu>> try_add_menu(String name);
     ErrorOr<void> try_add_menu(NonnullRefPtr<Menu> menu);
     void flash_menubar_menu_for(MenuItem const&);
 

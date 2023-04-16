@@ -141,7 +141,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->set_most_recently_open_file(file.filename());
     };
 
-    auto file_menu = TRY(window->try_add_menu("&File"));
+    auto file_menu = TRY(window->try_add_menu("&File"_short_string));
 
     auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         auto response = FileSystemAccessClient::Client::the().save_file(window, "Untitled", "gml");
@@ -218,7 +218,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             app->quit();
     })));
 
-    auto edit_menu = TRY(window->try_add_menu("&Edit"));
+    auto edit_menu = TRY(window->try_add_menu("&Edit"_short_string));
     TRY(edit_menu->try_add_action(editor->undo_action()));
     TRY(edit_menu->try_add_action(editor->redo_action()));
     TRY(edit_menu->try_add_separator());
@@ -253,7 +253,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     vim_emulation_setting_action->set_checked(false);
     TRY(edit_menu->try_add_action(vim_emulation_setting_action));
 
-    auto view_menu = TRY(window->try_add_menu("&View"));
+    auto view_menu = TRY(window->try_add_menu("&View"_short_string));
     GUI::ActionGroup views_group;
     views_group.set_exclusive(true);
     views_group.set_unchecking_allowed(false);
@@ -285,7 +285,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         view_frame_action->activate();
     };
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/GMLPlayground.md"), "/bin/Help");

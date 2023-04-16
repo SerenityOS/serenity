@@ -208,7 +208,7 @@ PDFViewerWidget::PDFViewerWidget()
 
 void PDFViewerWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File");
+    auto& file_menu = window.add_menu("&File"_short_string);
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(&window);
         if (!response.is_error())
@@ -225,7 +225,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
-    auto& view_menu = window.add_menu("&View");
+    auto& view_menu = window.add_menu("&View"_short_string);
     view_menu.add_action(*m_toggle_sidebar_action);
     view_menu.add_separator();
     auto& view_mode_menu = view_menu.add_submenu("View &Mode");
@@ -236,7 +236,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Window& window)
     view_menu.add_action(*m_zoom_out_action);
     view_menu.add_action(*m_reset_zoom_action);
 
-    auto& help_menu = window.add_menu("&Help");
+    auto& help_menu = window.add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"sv), &window));
 }
