@@ -56,10 +56,10 @@ Optional<String> ManualModel::page_name(const GUI::ModelIndex& index) const
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<Manual::Node const*>(index.internal_data());
-    if (!node->is_page())
+    auto const* node = static_cast<Manual::Node const*>(index.internal_data());
+    auto const* page = node->document();
+    if (!page)
         return {};
-    auto* page = static_cast<Manual::PageNode const*>(node);
     auto path = page->name();
     if (path.is_error())
         return {};
@@ -103,11 +103,12 @@ Optional<String> ManualModel::page_and_section(const GUI::ModelIndex& index) con
 {
     if (!index.is_valid())
         return {};
-    auto* node = static_cast<Manual::Node const*>(index.internal_data());
-    if (!node->is_page())
+    auto const* node = static_cast<Manual::Node const*>(index.internal_data());
+    auto const* page = node->document();
+    if (!page)
         return {};
-    auto* page = static_cast<Manual::PageNode const*>(node);
-    auto* section = static_cast<Manual::SectionNode const*>(page->parent());
+
+    auto const* section = static_cast<Manual::SectionNode const*>(page->parent());
     auto page_name = page->name();
     if (page_name.is_error())
         return {};
