@@ -1,0 +1,7 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (1,1) content-size 798x176 children: not-inline
+    BlockContainer <body> at (10,10) content-size 780x158 children: not-inline
+      Box <div.flexbox> at (11,11) content-size 200x156 flex-container(column) children: not-inline
+        BlockContainer <div> at (12,12) content-size 50x50 flex-item children: not-inline
+        BlockContainer <div> at (12,64) content-size 50x50 flex-item children: not-inline
+        BlockContainer <div> at (12,116) content-size 50x50 flex-item children: not-inline
