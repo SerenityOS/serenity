@@ -1409,7 +1409,7 @@ void HackStudioWidget::update_recent_projects_submenu()
 
 ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File");
+    auto& file_menu = window.add_menu("&File"_short_string);
 
     auto& new_submenu = file_menu.add_submenu("&New...");
     new_submenu.add_action(*m_new_project_action);
@@ -1444,7 +1444,7 @@ ErrorOr<void> HackStudioWidget::create_file_menu(GUI::Window& window)
 
 ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 {
-    auto& edit_menu = window.add_menu("&Edit");
+    auto& edit_menu = window.add_menu("&Edit"_short_string);
     auto icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"sv));
     edit_menu.add_action(GUI::Action::create("&Find in Files...", { Mod_Ctrl | Mod_Shift, Key_F }, icon, [this](auto&) {
         reveal_action_tab(*m_find_in_files_widget);
@@ -1472,7 +1472,7 @@ ErrorOr<void> HackStudioWidget::create_edit_menu(GUI::Window& window)
 
 void HackStudioWidget::create_build_menu(GUI::Window& window)
 {
-    auto& build_menu = window.add_menu("&Build");
+    auto& build_menu = window.add_menu("&Build"_short_string);
     build_menu.add_action(*m_build_action);
     build_menu.add_separator();
     build_menu.add_action(*m_run_action);
@@ -1495,7 +1495,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
     });
     show_dotfiles_action->set_checked(Config::read_bool("HackStudio"sv, "Global"sv, "ShowDotfiles"sv, false));
 
-    auto& view_menu = window.add_menu("&View");
+    auto& view_menu = window.add_menu("&View"_short_string);
     view_menu.add_action(hide_action_tabs_action);
     view_menu.add_action(open_locator_action);
     view_menu.add_action(show_dotfiles_action);
@@ -1574,7 +1574,7 @@ ErrorOr<void> HackStudioWidget::create_view_menu(GUI::Window& window)
 
 void HackStudioWidget::create_help_menu(GUI::Window& window)
 {
-    auto& help_menu = window.add_menu("&Help");
+    auto& help_menu = window.add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"sv), &window));
 }

@@ -57,7 +57,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     widget->set_coordinates(Config::read_bool("Games"sv, "Chess"sv, "ShowCoordinates"sv, true));
     widget->set_show_available_moves(Config::read_bool("Games"sv, "Chess"sv, "ShowAvailableMoves"sv, true));
 
-    auto game_menu = TRY(window->try_add_menu("&Game"));
+    auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&Resign", { Mod_None, Key_F3 }, [&](auto&) {
         widget->resign();
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->quit();
     })));
 
-    auto engine_menu = TRY(window->try_add_menu("&Engine"));
+    auto engine_menu = TRY(window->try_add_menu("&Engine"_short_string));
 
     GUI::ActionGroup engines_action_group;
     engines_action_group.set_exclusive(true);
@@ -144,7 +144,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(engine_submenu->try_add_action(*action));
     }
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Chess.md"), "/bin/Help");

@@ -369,7 +369,7 @@ WebView::OutOfProcessWebView& MainWidget::ensure_web_view()
 
 void MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto& file_menu = window.add_menu("&File");
+    auto& file_menu = window.add_menu("&File"_short_string);
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -401,7 +401,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = window.add_menu("&Edit");
+    auto& edit_menu = window.add_menu("&Edit"_short_string);
     edit_menu.add_action(m_editor->undo_action());
     edit_menu.add_action(m_editor->redo_action());
     edit_menu.add_separator();
@@ -465,7 +465,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     m_layout_ruler_action->set_checked(show_ruler);
     m_editor->set_ruler_visible(show_ruler);
 
-    auto& view_menu = window.add_menu("&View");
+    auto& view_menu = window.add_menu("&View"_short_string);
     auto& layout_menu = view_menu.add_submenu("&Layout");
     layout_menu.add_action(*m_layout_toolbar_action);
     layout_menu.add_action(*m_layout_statusbar_action);
@@ -687,7 +687,7 @@ void MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_sql_highlight);
     syntax_menu.add_action(*m_sql_highlight);
 
-    auto& help_menu = window.add_menu("&Help");
+    auto& help_menu = window.add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(&window));
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/TextEditor.md"), "/bin/Help");

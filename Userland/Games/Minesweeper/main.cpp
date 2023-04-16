@@ -63,7 +63,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     }));
     TRY(widget->try_add_child(field));
 
-    auto game_menu = TRY(window->try_add_menu("&Game"));
+    auto game_menu = TRY(window->try_add_menu("&Game"_short_string));
 
     TRY(game_menu->try_add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/reload.png"sv)), [&](auto&) {
         field->reset();
@@ -83,7 +83,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         GUI::Application::the()->quit();
     })));
 
-    auto difficulty_menu = TRY(window->try_add_menu("&Difficulty"));
+    auto difficulty_menu = TRY(window->try_add_menu(TRY("&Difficulty"_string)));
     GUI::ActionGroup difficulty_actions;
     difficulty_actions.set_exclusive(true);
 
@@ -123,7 +123,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(difficulty_menu->try_add_action(action));
     difficulty_actions.add_action(action);
 
-    auto help_menu = TRY(window->try_add_menu("&Help"));
+    auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man6/Minesweeper.md"), "/bin/Help");

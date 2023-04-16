@@ -148,7 +148,7 @@ static constexpr int s_zoom_level_fit_image = 10;
 
 ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
 {
-    auto file_menu = TRY(window.try_add_menu("&File"));
+    auto file_menu = TRY(window.try_add_menu("&File"_short_string));
 
     m_new_image_action = GUI::Action::create(
         "&New Image...", { Mod_Ctrl, Key_N }, g_icon_bag.filetype_pixelpaint, [&](auto&) {
@@ -289,7 +289,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             GUI::Application::the()->quit();
     })));
 
-    m_edit_menu = TRY(window.try_add_menu("&Edit"));
+    m_edit_menu = TRY(window.try_add_menu("&Edit"_short_string));
 
     m_cut_action = GUI::CommonActions::make_cut_action([&](auto&) {
         auto* editor = current_image_editor();
@@ -477,7 +477,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
                 GUI::MessageBox::show_error(&window, MUST(String::formatted("Writing color palette failed: {}", result.release_error())));
         })));
 
-    m_view_menu = TRY(window.try_add_menu("&View"));
+    m_view_menu = TRY(window.try_add_menu("&View"_short_string));
 
     m_zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
@@ -593,14 +593,14 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(scopes_menu->try_add_action(histogram_action));
     TRY(scopes_menu->try_add_action(vectorscope_action));
 
-    m_tool_menu = TRY(window.try_add_menu("&Tool"));
+    m_tool_menu = TRY(window.try_add_menu("&Tool"_short_string));
     m_toolbox->for_each_tool([&](auto& tool) {
         if (tool.action())
             m_tool_menu->add_action(*tool.action());
         return IterationDecision::Continue;
     });
 
-    m_image_menu = TRY(window.try_add_menu("&Image"));
+    m_image_menu = TRY(window.try_add_menu("&Image"_short_string));
     TRY(m_image_menu->try_add_action(GUI::Action::create(
         "Flip Image &Vertically", g_icon_bag.edit_flip_vertical, [&](auto&) {
             auto* editor = current_image_editor();
@@ -697,7 +697,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Crop Image to Content"sv);
         })));
 
-    m_layer_menu = TRY(window.try_add_menu("&Layer"));
+    m_layer_menu = TRY(window.try_add_menu("&Layer"_short_string));
 
     m_layer_menu->on_visibility_change = [this](bool visible) {
         if (!visible)
@@ -1058,7 +1058,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
             editor->did_complete_action("Crop Layer to Content"sv);
         })));
 
-    m_filter_menu = TRY(window.try_add_menu("&Filter"));
+    m_filter_menu = TRY(window.try_add_menu("&Filter"_short_string));
 
     TRY(m_filter_menu->try_add_action(GUI::Action::create("Filter &Gallery", g_icon_bag.filter, [&](auto&) {
         auto* editor = current_image_editor();
@@ -1082,7 +1082,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
         }
     })));
 
-    auto help_menu = TRY(window.try_add_menu("&Help"));
+    auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_about_action("Pixel Paint", GUI::Icon::default_icon("app-pixel-paint"sv), &window)));
 

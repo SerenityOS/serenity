@@ -293,7 +293,7 @@ MainWidget::MainWidget()
 
 void MainWidget::initialize_menu(GUI::Window* window)
 {
-    auto& file_menu = window->add_menu("&File");
+    auto& file_menu = window->add_menu("&File"_short_string);
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -304,7 +304,7 @@ void MainWidget::initialize_menu(GUI::Window* window)
         GUI::Application::the()->quit();
     }));
 
-    auto& edit_menu = window->add_menu("&Edit");
+    auto& edit_menu = window->add_menu("&Edit"_short_string);
     edit_menu.add_action(*m_copy_action);
     edit_menu.add_action(*m_cut_action);
     edit_menu.add_action(*m_paste_action);
@@ -314,7 +314,7 @@ void MainWidget::initialize_menu(GUI::Window* window)
     edit_menu.add_separator();
     edit_menu.add_action(*m_run_script_action);
 
-    auto& help_menu = window->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_scheme("/usr/share/man/man1/SQLStudio.md"), "/bin/Help");

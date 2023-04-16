@@ -154,7 +154,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
 
 void BrowserWindow::build_menus()
 {
-    auto& file_menu = add_menu("&File");
+    auto& file_menu = add_menu("&File"_short_string);
     file_menu.add_action(WindowActions::the().create_new_tab_action());
     file_menu.add_action(WindowActions::the().create_new_window_action());
 
@@ -169,7 +169,7 @@ void BrowserWindow::build_menus()
         GUI::Application::the()->quit();
     }));
 
-    auto& view_menu = add_menu("&View");
+    auto& view_menu = add_menu("&View"_short_string);
     view_menu.add_action(WindowActions::the().show_bookmarks_bar_action());
     view_menu.add_action(WindowActions::the().vertical_tabs_action());
     view_menu.add_separator();
@@ -221,7 +221,7 @@ void BrowserWindow::build_menus()
     m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
     m_reload_action->set_status_tip("Reload current page");
 
-    auto& go_menu = add_menu("&Go");
+    auto& go_menu = add_menu("&Go"_short_string);
     go_menu.add_action(*m_go_back_action);
     go_menu.add_action(*m_go_forward_action);
     go_menu.add_action(*m_go_home_action);
@@ -276,7 +276,7 @@ void BrowserWindow::build_menus()
         this);
     m_take_full_screenshot_action->set_status_tip("Save a screenshot of the entirety of the current tab to the Downloads directory"sv);
 
-    auto& inspect_menu = add_menu("&Inspect");
+    auto& inspect_menu = add_menu("&Inspect"_string.release_value_but_fixme_should_propagate_errors());
     inspect_menu.add_action(*m_view_source_action);
     inspect_menu.add_action(*m_inspect_dom_tree_action);
 
@@ -304,7 +304,7 @@ void BrowserWindow::build_menus()
     storage_window_action->set_status_tip("Show History inspector for this tab");
     inspect_menu.add_action(history_window_action);
 
-    auto& settings_menu = add_menu("&Settings");
+    auto& settings_menu = add_menu("&Settings"_string.release_value_but_fixme_should_propagate_errors());
 
     m_change_homepage_action = GUI::Action::create(
         "Set Homepage URL...", g_icon_bag.go_home, [this](auto&) {
@@ -358,7 +358,7 @@ void BrowserWindow::build_menus()
         });
     settings_menu.add_action(move(open_settings_action));
 
-    auto& debug_menu = add_menu("&Debug");
+    auto& debug_menu = add_menu("&Debug"_short_string);
     debug_menu.add_action(GUI::Action::create(
         "Dump &DOM Tree", g_icon_bag.dom_tree, [this](auto&) {
             active_tab().view().debug_request("dump-dom-tree");
@@ -475,7 +475,7 @@ void BrowserWindow::build_menus()
     same_origin_policy_action->set_checked(false);
     debug_menu.add_action(same_origin_policy_action);
 
-    auto& help_menu = add_menu("&Help");
+    auto& help_menu = add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(this));
     help_menu.add_action(WindowActions::the().about_action());
 }

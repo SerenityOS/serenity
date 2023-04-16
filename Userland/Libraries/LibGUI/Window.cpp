@@ -1321,9 +1321,9 @@ ErrorOr<void> Window::try_add_menu(NonnullRefPtr<Menu> menu)
     return {};
 }
 
-ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(DeprecatedString name)
+ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(String name)
 {
-    auto menu = TRY(m_menubar->try_add_menu({}, TRY(String::from_deprecated_string(name))));
+    auto menu = TRY(m_menubar->try_add_menu({}, move(name)));
     if (m_window_id) {
         menu->realize_menu_if_needed();
         ConnectionToWindowServer::the().async_add_menu(m_window_id, menu->menu_id());
@@ -1331,7 +1331,7 @@ ErrorOr<NonnullRefPtr<Menu>> Window::try_add_menu(DeprecatedString name)
     return menu;
 }
 
-Menu& Window::add_menu(DeprecatedString name)
+Menu& Window::add_menu(String name)
 {
     auto menu = MUST(try_add_menu(move(name)));
     return *menu;

@@ -375,7 +375,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     time.set_x(widget->width() - time.width() - 6);
     widget->set_stat_label(time);
 
-    auto& file_menu = window->add_menu("&File");
+    auto& file_menu = window->add_menu("&File"_short_string);
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         auto response = FileSystemAccessClient::Client::the().open_file(window);
@@ -390,7 +390,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app->quit();
     }));
 
-    auto& view_menu = window->add_menu("&View");
+    auto& view_menu = window->add_menu("&View"_short_string);
     view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
@@ -448,7 +448,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     view_menu.add_action(*show_frame_rate_action);
 
-    auto& texture_menu = window->add_menu("&Texture");
+    auto& texture_menu = window->add_menu(TRY("&Texture"_string));
 
     auto texture_enabled_action = GUI::Action::create_checkable("&Enable Texture", [&widget](auto& action) {
         widget->set_texture_enabled(action.is_checked());
@@ -562,7 +562,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     texture_mag_filter_nearest_action->set_checked(true);
 
-    auto& help_menu = window->add_menu("&Help");
+    auto& help_menu = window->add_menu("&Help"_short_string);
     help_menu.add_action(GUI::CommonActions::make_command_palette_action(window));
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
 
