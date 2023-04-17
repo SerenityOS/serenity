@@ -164,7 +164,7 @@ ErrorOr<JsonValue> JsonParser::parse_array()
         if (peek() == ']')
             break;
         auto element = TRY(parse_helper());
-        array.must_append(move(element));
+        TRY(array.append(move(element)));
         ignore_while(is_space);
         if (peek() == ']')
             break;
