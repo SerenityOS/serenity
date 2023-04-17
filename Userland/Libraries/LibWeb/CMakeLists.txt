@@ -453,6 +453,7 @@ set(SOURCES
     Painting/VideoPaintable.cpp
     PerformanceTimeline/EntryTypes.cpp
     PerformanceTimeline/PerformanceEntry.cpp
+    PermissionsPolicy/AutoplayAllowlist.cpp
     Platform/EventLoopPlugin.cpp
     Platform/EventLoopPluginSerenity.cpp
     Platform/FontPlugin.cpp

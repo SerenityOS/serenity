@@ -600,6 +600,16 @@ void OutOfProcessWebView::set_content_filters(Vector<DeprecatedString> filters)
     client().async_set_content_filters(filters);
 }
 
+void OutOfProcessWebView::set_autoplay_allowed_on_all_websites()
+{
+    client().async_set_autoplay_allowed_on_all_websites();
+}
+
+void OutOfProcessWebView::set_autoplay_allowlist(Vector<String> allowlist)
+{
+    client().async_set_autoplay_allowlist(move(allowlist));
+}
+
 void OutOfProcessWebView::set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings)
 {
     client().async_set_proxy_mappings(move(proxies), move(mappings));

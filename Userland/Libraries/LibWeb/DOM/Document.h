@@ -74,6 +74,10 @@ struct ElementCreationOptions {
     DeprecatedString is;
 };
 
+enum class PolicyControlledFeature {
+    Autoplay,
+};
+
 class Document
     : public ParentNode
     , public NonElementParentNode<Document>
@@ -455,6 +459,8 @@ public:
     DocumentUnloadTimingInfo& previous_document_unload_timing() { return m_previous_document_unload_timing; }
     DocumentUnloadTimingInfo const& previous_document_unload_timing() const { return m_previous_document_unload_timing; }
     void set_previous_document_unload_timing(DocumentUnloadTimingInfo const& previous_document_unload_timing) { m_previous_document_unload_timing = previous_document_unload_timing; }
+
+    bool is_allowed_to_use_feature(PolicyControlledFeature) const;
 
     void did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>);
 
