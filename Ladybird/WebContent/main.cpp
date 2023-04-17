@@ -24,6 +24,7 @@
 #include <LibWeb/Loader/ContentFilter.h>
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <QGuiApplication>
 #include <QSocketNotifier>
@@ -33,6 +34,7 @@
 #include <WebContent/WebDriverConnection.h>
 
 static ErrorOr<void> load_content_filters();
+static ErrorOr<void> load_autoplay_allowlist();
 
 extern DeprecatedString s_serenity_resource_root;
 
@@ -85,6 +87,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (maybe_content_filter_error.is_error())
         dbgln("Failed to load content filters: {}", maybe_content_filter_error.error());
 
+    auto maybe_autoplay_allowlist_error = load_autoplay_allowlist();
+    if (maybe_autoplay_allowlist_error.is_error())
+        dbgln("Failed to load autoplay allowlist: {}", maybe_autoplay_allowlist_error.error());
+
     int webcontent_fd_passing_socket { -1 };
 
     Core::ArgsParser args_parser;
@@ -124,5 +130,34 @@ static ErrorOr<void> load_content_filters()
             Web::ContentFilter::the().add_pattern(line);
         }
     }
+    return {};
+}
+
+static ErrorOr<void> load_autoplay_allowlist()
+{
+    auto file_or_error = Core::File::open(TRY(String::formatted("{}/home/anon/.config/BrowserAutoplayAllowlist.txt", s_serenity_resource_root)), Core::File::OpenMode::Read);
+    if (file_or_error.is_error())
+        file_or_error = Core::File::open(TRY(String::formatted("{}/res/ladybird/BrowserAutoplayAllowlist.txt", s_serenity_resource_root)), Core::File::OpenMode::Read);
+    if (file_or_error.is_error())
+        return file_or_error.release_error();
+
+    auto file = file_or_error.release_value();
+    auto allowlist = TRY(Core::BufferedFile::create(move(file)));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+
+    Vector<String> origins;
+
+    while (TRY(allowlist->can_read_line())) {
+        auto line = TRY(allowlist->read_line(buffer));
+        if (line.is_empty())
+            continue;
+
+        auto domain = TRY(String::from_utf8(line));
+        TRY(origins.try_append(move(domain)));
+    }
+
+    auto& autoplay_allowlist = Web::PermissionsPolicy::AutoplayAllowlist::the();
+    TRY(autoplay_allowlist.enable_for_origins(origins));
+
     return {};
 }

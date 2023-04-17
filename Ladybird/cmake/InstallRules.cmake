@@ -81,6 +81,7 @@ install(DIRECTORY
 )
 
 install(FILES
+    "${SERENITY_SOURCE_DIR}/Base/home/anon/.config/BrowserAutoplayAllowlist.txt"
     "${SERENITY_SOURCE_DIR}/Base/home/anon/.config/BrowserContentFilters.txt"
   DESTINATION "${CMAKE_INSTALL_DATADIR}/res/ladybird"
   COMPONENT ladybird_Runtime
