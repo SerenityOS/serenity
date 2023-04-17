@@ -80,7 +80,7 @@ static ErrorOr<void> recusively_resolve_all_necessary_libraries(StringView inter
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    TRY(Core::System::pledge("stdio rpath"));
+    TRY(Core::System::pledge("stdio rpath map_fixed"));
 
     DeprecatedString path {};
     Optional<size_t> recursive_iteration_max;
