@@ -32,6 +32,14 @@ enum class FrameShowMode {
     DoNotShowFrame,
 };
 
+struct Quantizers {
+    u16 y_ac_quantizer { 0 };
+    u16 uv_ac_quantizer { 0 };
+
+    u16 y_dc_quantizer { 0 };
+    u16 uv_dc_quantizer { 0 };
+};
+
 struct FrameContext {
 public:
     static ErrorOr<FrameContext> create(ReadonlyBytes data,
@@ -126,15 +134,9 @@ public:
     Array<i8, MAX_REF_FRAMES> loop_filter_reference_deltas;
     Array<i8, 2> loop_filter_mode_deltas;
 
-    u8 base_quantizer_index { 0 };
-    i8 y_dc_quantizer_index_delta { 0 };
-    i8 uv_dc_quantizer_index_delta { 0 };
-    i8 uv_ac_quantizer_index_delta { 0 };
-    bool is_lossless() const
-    {
-        // From quantization_params( ) in the spec.
-        return base_quantizer_index == 0 && y_dc_quantizer_index_delta == 0 && uv_dc_quantizer_index_delta == 0 && uv_ac_quantizer_index_delta == 0;
-    }
+    // Set based on quantization_params( ) in the spec.
+    bool lossless { false };
+    Array<Quantizers, MAX_SEGMENTS> segment_quantizers;
 
     bool segmentation_enabled { false };
     // Note: We can use Optional<Array<...>> for these tree probabilities, but unfortunately it seems to have measurable performance overhead.

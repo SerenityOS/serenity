@@ -163,9 +163,9 @@ enum Token : u8 {
 
 enum class SegmentFeature : u8 {
     // SEG_LVL_ALT_Q
-    UseAlternativeQuantizerBase,
+    AlternativeQuantizerBase,
     // SEG_LVL_ALT_L
-    UseAlternativeLoopFilterBase,
+    AlternativeLoopFilterBase,
     // SEG_LVL_REF_FRAME
     ReferenceFrameOverride,
     // SEG_LVL_SKIP

@@ -1169,18 +1169,17 @@ inline u16 ac_q(u8 bit_depth, u8 b)
     return ac_qlookup[(bit_depth - 8) >> 1][clip_3<u8>(0, 255, b)];
 }
 
-u8 Decoder::get_base_quantizer_index(BlockContext const& block_context)
+u8 Decoder::get_base_quantizer_index(SegmentFeatureStatus alternative_quantizer_feature, bool should_use_absolute_segment_base_quantizer, u8 base_quantizer_index)
 {
     // The function get_qindex( ) returns the quantizer index for the current block and is specified by the following:
     // − If seg_feature_active( SEG_LVL_ALT_Q ) is equal to 1 the following ordered steps apply:
-    auto alternative_quantizer_feature = block_context.get_segment_feature(SegmentFeature::UseAlternativeQuantizerBase);
     if (alternative_quantizer_feature.enabled) {
         // 1. Set the variable data equal to FeatureData[ segment_id ][ SEG_LVL_ALT_Q ].
         auto data = alternative_quantizer_feature.value;
 
         // 2. If segmentation_abs_or_delta_update is equal to 0, set data equal to base_q_idx + data
-        if (!block_context.frame_context.should_use_absolute_segment_base_quantizer) {
-            data += block_context.frame_context.base_quantizer_index;
+        if (!should_use_absolute_segment_base_quantizer) {
+            data += base_quantizer_index;
         }
 
         // 3. Return Clip3( 0, 255, data ).
@@ -1188,33 +1187,29 @@ u8 Decoder::get_base_quantizer_index(BlockContext const& block_context)
     }
 
     // − Otherwise, return base_q_idx.
-    return block_context.frame_context.base_quantizer_index;
+    return base_quantizer_index;
 }
 
-u16 Decoder::get_dc_quantizer(BlockContext const& block_context, u8 plane)
+u16 Decoder::get_dc_quantizer(u8 bit_depth, u8 base, i8 delta)
 {
-    // FIXME: The result of this function can be cached. This does not change per frame.
+    // NOTE: Delta is selected by the caller based on whether it is for the Y or UV planes.
 
     // The function get_dc_quant( plane ) returns the quantizer value for the dc coefficient for a particular plane and
     // is derived as follows:
     // − If plane is equal to 0, return dc_q( get_qindex( ) + delta_q_y_dc ).
     // − Otherwise, return dc_q( get_qindex( ) + delta_q_uv_dc ).
-    // Instead of if { return }, select the value to add and return.
-    i8 offset = plane == 0 ? block_context.frame_context.y_dc_quantizer_index_delta : block_context.frame_context.uv_dc_quantizer_index_delta;
-    return dc_q(block_context.frame_context.color_config.bit_depth, static_cast<u8>(get_base_quantizer_index(block_context) + offset));
+    return dc_q(bit_depth, static_cast<u8>(base + delta));
 }
 
-u16 Decoder::get_ac_quantizer(BlockContext const& block_context, u8 plane)
+u16 Decoder::get_ac_quantizer(u8 bit_depth, u8 base, i8 delta)
 {
-    // FIXME: The result of this function can be cached. This does not change per frame.
+    // NOTE: Delta is selected by the caller based on whether it is for the Y or UV planes.
 
     // The function get_ac_quant( plane ) returns the quantizer value for the ac coefficient for a particular plane and
     // is derived as follows:
     // − If plane is equal to 0, return ac_q( get_qindex( ) ).
     // − Otherwise, return ac_q( get_qindex( ) + delta_q_uv_ac ).
-    // Instead of if { return }, select the value to add and return.
-    i8 offset = plane == 0 ? 0 : block_context.frame_context.uv_ac_quantizer_index_delta;
-    return ac_q(block_context.frame_context.color_config.bit_depth, static_cast<u8>(get_base_quantizer_index(block_context) + offset));
+    return ac_q(bit_depth, static_cast<u8>(base + delta));
 }
 
 DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_context, u32 transform_block_x, u32 transform_block_y, TransformSize transform_block_size, TransformSet transform_set)
@@ -1254,18 +1249,15 @@ DecoderErrorOr<void> Decoder::reconstruct_templated(u8 plane, BlockContext const
     // 1. Dequant[ i ][ j ] is set equal to ( Tokens[ i * n0 + j ] * get_ac_quant( plane ) ) / dqDenom
     //    for i = 0..(n0-1), for j = 0..(n0-1)
     Array<Intermediate, block_size * block_size> dequantized;
-    Intermediate ac_quant = get_ac_quantizer(block_context, plane);
-    for (auto i = 0u; i < block_size; i++) {
-        for (auto j = 0u; j < block_size; j++) {
-            auto index = i * block_size + j;
-            if (index == 0)
-                continue;
-            dequantized[index] = (block_context.residual_tokens[index] * ac_quant) / dq_denominator;
-        }
+    auto quantizers = block_context.frame_context.segment_quantizers[block_context.segment_id];
+    Intermediate ac_quant = plane == 0 ? quantizers.y_ac_quantizer : quantizers.uv_ac_quantizer;
+    auto const* tokens_raw = block_context.residual_tokens.data();
+    for (u32 i = 0; i < dequantized.size(); i++) {
+        dequantized[i] = (tokens_raw[i] * ac_quant) / dq_denominator;
     }
 
     // 2. Dequant[ 0 ][ 0 ] is set equal to ( Tokens[ 0 ] * get_dc_quant( plane ) ) / dqDenom
-    dequantized[0] = (block_context.residual_tokens[0] * get_dc_quantizer(block_context, plane)) / dq_denominator;
+    dequantized[0] = (block_context.residual_tokens[0] * (plane == 0 ? quantizers.y_dc_quantizer : quantizers.uv_dc_quantizer)) / dq_denominator;
 
     // It is a requirement of bitstream conformance that the values written into the Dequant array in steps 1 and 2
     // are representable by a signed integer with 8 + BitDepth bits.
@@ -1819,7 +1811,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
 
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 2.
-        if (block_context.frame_context.is_lossless()) {
+        if (block_context.frame_context.lossless) {
             TRY(inverse_walsh_hadamard_transform(row, log2_of_block_size, 2));
             continue;
         }
@@ -1857,7 +1849,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
 
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 0.
-        if (block_context.frame_context.is_lossless()) {
+        if (block_context.frame_context.lossless) {
             TRY(inverse_walsh_hadamard_transform(column, log2_of_block_size, 2));
             continue;
         }
@@ -1885,7 +1877,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
 
         // 6. Otherwise (Lossless is equal to 0), set Dequant[ i ][ j ] equal to Round2( T[ i ], Min( 6, n + 2 ) )
         //    for i = 0..(n0-1).
-        if (!block_context.frame_context.is_lossless()) {
+        if (!block_context.frame_context.lossless) {
             for (auto i = 0u; i < block_size; i++) {
                 auto index = i * block_size + j;
                 dequantized[index] = rounded_right_shift(dequantized[index], min(6, log2_of_block_size + 2));
