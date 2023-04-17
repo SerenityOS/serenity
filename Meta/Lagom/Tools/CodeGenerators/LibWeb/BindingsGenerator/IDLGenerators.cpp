@@ -815,6 +815,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto callback_function_generator = scoped_generator.fork();
         auto& callback_function = interface.callback_functions.find(parameter.type->name())->value;
 
+        if (callback_function.return_type->is_object() && callback_function.return_type->name() == "Promise")
+            callback_function_generator.set("operation_returns_promise", "OperationReturnsPromise::Yes");
+        else
+            callback_function_generator.set("operation_returns_promise", "OperationReturnsPromise::No");
+
         // An ECMAScript value V is converted to an IDL callback function type value by running the following algorithm:
         // 1. If the result of calling IsCallable(V) is false and the conversion to an IDL value is not being performed due to V being assigned to an attribute whose type is a nullable callback function that is annotated with [LegacyTreatNonObjectAsNull], then throw a TypeError.
         if (!callback_function.is_legacy_treat_non_object_as_null) {
@@ -828,11 +833,11 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             callback_function_generator.append(R"~~~(
     WebIDL::CallbackType* @cpp_name@ = nullptr;
     if (@js_name@@js_suffix@.is_object())
-        @cpp_name@ = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+        @cpp_name@ = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object(), @operation_returns_promise@);
 )~~~");
         } else {
             callback_function_generator.append(R"~~~(
-    auto @cpp_name@ = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object());
+    auto @cpp_name@ = vm.heap().allocate_without_realm<WebIDL::CallbackType>(@js_name@@js_suffix@.as_object(), HTML::incumbent_settings_object(), @operation_returns_promise@);
 )~~~");
         }
     } else if (parameter.type->name() == "sequence") {

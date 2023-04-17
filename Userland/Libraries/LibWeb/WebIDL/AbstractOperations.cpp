@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/PropertyKey.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/WebIDL/AbstractOperations.h>
+#include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::WebIDL {
 
@@ -82,8 +83,10 @@ ErrorOr<ByteBuffer> get_buffer_source_copy(JS::Object const& buffer_source)
 }
 
 // https://webidl.spec.whatwg.org/#call-user-object-operation-return
-inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored_settings, HTML::EnvironmentSettingsObject& relevant_settings, JS::Completion& completion)
+inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored_settings, HTML::EnvironmentSettingsObject& relevant_settings, JS::Completion& completion, OperationReturnsPromise operation_returns_promise)
 {
+    auto& realm = stored_settings.realm();
+
     // Return: at this point completion will be set to an ECMAScript completion value.
 
     // 1. Clean up after running a callback with stored settings.
@@ -97,12 +100,15 @@ inline JS::Completion clean_up_on_return(HTML::EnvironmentSettingsObject& stored
         return completion;
 
     // 4. If completion is an abrupt completion and the operation has a return type that is not a promise type, return completion.
-    // FIXME: This does not handle promises and thus always returns completion at this point.
-    return completion;
+    if (completion.is_abrupt() && operation_returns_promise == OperationReturnsPromise::No)
+        return completion;
 
-    // FIXME: 5. Let rejectedPromise be ! Call(%Promise.reject%, %Promise%, «completion.[[Value]]»).
+    // 5. Let rejectedPromise be ! Call(%Promise.reject%, %Promise%, «completion.[[Value]]»).
+    auto rejected_promise = create_rejected_promise(realm, *completion.release_value());
 
-    // FIXME: 6. Return the result of converting rejectedPromise to the operation’s return type.
+    // 6. Return the result of converting rejectedPromise to the operation’s return type.
+    // Note: The operation must return a promise, so no conversion is necessary
+    return JS::Value { rejected_promise->promise() };
 }
 
 JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, DeprecatedString const& operation_name, Optional<JS::Value> this_argument, JS::MarkedVector<JS::Value> args)
@@ -143,13 +149,13 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, Deprec
         // 2. If getResult is an abrupt completion, set completion to getResult and jump to the step labeled return.
         if (get_result.is_throw_completion()) {
             completion = get_result.throw_completion();
-            return clean_up_on_return(stored_settings, relevant_settings, completion);
+            return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
         }
 
         // 4. If ! IsCallable(X) is false, then set completion to a new Completion{[[Type]]: throw, [[Value]]: a newly created TypeError object, [[Target]]: empty}, and jump to the step labeled return.
         if (!get_result.value().is_function()) {
             completion = realm.vm().template throw_completion<JS::TypeError>(JS::ErrorType::NotAFunction, TRY_OR_THROW_OOM(realm.vm(), get_result.value().to_string_without_side_effects()));
-            return clean_up_on_return(stored_settings, relevant_settings, completion);
+            return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
         }
 
         // 3. Set X to getResult.[[Value]].
@@ -171,14 +177,14 @@ JS::Completion call_user_object_operation(WebIDL::CallbackType& callback, Deprec
     // 13. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {
         completion = call_result.throw_completion();
-        return clean_up_on_return(stored_settings, relevant_settings, completion);
+        return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
     }
 
     // 14. Set completion to the result of converting callResult.[[Value]] to an IDL value of the same type as the operation’s return type.
     // FIXME: This does no conversion.
     completion = call_result.value();
 
-    return clean_up_on_return(stored_settings, relevant_settings, completion);
+    return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
 }
 
 // https://webidl.spec.whatwg.org/#invoke-a-callback-function
@@ -229,14 +235,14 @@ JS::Completion invoke_callback(WebIDL::CallbackType& callback, Optional<JS::Valu
     // 12. If callResult is an abrupt completion, set completion to callResult and jump to the step labeled return.
     if (call_result.is_throw_completion()) {
         completion = call_result.throw_completion();
-        return clean_up_on_return(stored_settings, relevant_settings, completion);
+        return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
     }
 
     // 13. Set completion to the result of converting callResult.[[Value]] to an IDL value of the same type as the operation’s return type.
     // FIXME: This does no conversion.
     completion = call_result.value();
 
-    return clean_up_on_return(stored_settings, relevant_settings, completion);
+    return clean_up_on_return(stored_settings, relevant_settings, completion, callback.operation_returns_promise);
 }
 
 JS::Completion construct(WebIDL::CallbackType& callback, JS::MarkedVector<JS::Value> args)

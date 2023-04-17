@@ -9,6 +9,7 @@
 
 #include <LibJS/Heap/GCPtr.h>
 #include <LibWeb/Forward.h>
+#include <LibWeb/WebIDL/CallbackType.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebIDL/Promise.h>
 
@@ -107,7 +108,7 @@ bool is_non_negative_number(JS::Value);
 
 JS::Value create_close_sentinel();
 bool is_close_sentinel(JS::Value);
-JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key);
+JS::ThrowCompletionOr<JS::Handle<WebIDL::CallbackType>> property_to_callback(JS::VM& vm, JS::Value value, JS::PropertyKey const& property_key, WebIDL::OperationReturnsPromise);
 
 // https://streams.spec.whatwg.org/#value-with-size
 struct ValueWithSize {
