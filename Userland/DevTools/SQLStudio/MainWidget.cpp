@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Dylan Katz <dykatz@uw.edu>
  * Copyright (c) 2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,11 +60,19 @@ static Vector<DeprecatedString> lookup_database_names()
     return database_names;
 }
 
-MainWidget::MainWidget()
+ErrorOr<NonnullRefPtr<MainWidget>> MainWidget::create()
 {
-    load_from_gml(sql_studio_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(try_make_ref_counted<MainWidget>());
 
-    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    TRY(widget->load_from_gml(sql_studio_gml));
+    TRY(widget->setup());
+
+    return widget;
+}
+
+ErrorOr<void> MainWidget::setup()
+{
+    m_new_action = GUI::Action::create("&New", { Mod_Ctrl, Key_N }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"sv)), [this](auto&) {
         open_new_script();
     });
 
@@ -149,7 +158,7 @@ MainWidget::MainWidget()
         update_editor_actions(editor);
     });
 
-    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv).release_value_but_fixme_should_propagate_errors(), [this](auto&) {
+    m_connect_to_database_action = GUI::Action::create("Connect to Database"sv, { Mod_Alt, Key_C }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"sv)), [this](auto&) {
         auto database_name = m_databases_combo_box->text().trim_whitespace();
         if (database_name.is_empty())
             return;
@@ -171,7 +180,7 @@ MainWidget::MainWidget()
         }
     });
 
-    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv).release_value_but_fixme_should_propagate_errors(), [&](auto&) {
+    m_run_script_action = GUI::Action::create("Run script", { Mod_Alt, Key_F9 }, TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png"sv)), [&](auto&) {
         m_results.clear();
         m_current_line_for_parsing = 0;
         read_next_sql_statement_of_editor();
@@ -251,7 +260,7 @@ MainWidget::MainWidget()
         m_statusbar->set_override_text({});
     };
 
-    m_sql_client = SQL::SQLClient::try_create().release_value_but_fixme_should_propagate_errors();
+    m_sql_client = TRY(SQL::SQLClient::try_create());
     m_sql_client->on_execution_success = [this](auto result) {
         m_result_column_names = move(result.column_names);
         read_next_sql_statement_of_editor();
@@ -285,10 +294,12 @@ MainWidget::MainWidget()
             Vector<JsonValue> individual_result_as_json;
             for (auto& result_row_column : result_row)
                 individual_result_as_json.append(result_row_column);
-            query_results_model->add(move(individual_result_as_json));
+            MUST(query_results_model->add(move(individual_result_as_json)));
         }
         m_action_tab_widget->set_visible(true);
     };
+
+    return {};
 }
 
 ErrorOr<void> MainWidget::initialize_menu(GUI::Window* window)

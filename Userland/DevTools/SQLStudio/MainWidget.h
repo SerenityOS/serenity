@@ -17,10 +17,11 @@ namespace SQLStudio {
 class ScriptEditor;
 
 class MainWidget : public GUI::Widget {
-    C_OBJECT(MainWidget)
+    C_OBJECT_ABSTRACT(MainWidget)
 
 public:
     virtual ~MainWidget() = default;
+    static ErrorOr<NonnullRefPtr<MainWidget>> create();
 
     ErrorOr<void> initialize_menu(GUI::Window*);
     void open_new_script();
@@ -29,7 +30,7 @@ public:
     bool request_close();
 
 private:
-    MainWidget();
+    ErrorOr<void> setup();
 
     ScriptEditor* active_editor();
 
