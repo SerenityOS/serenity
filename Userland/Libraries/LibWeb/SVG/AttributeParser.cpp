@@ -130,12 +130,19 @@ void AttributeParser::parse_drawto()
     }
 }
 
+// https://www.w3.org/TR/SVG2/paths.html#PathDataMovetoCommands
 void AttributeParser::parse_moveto()
 {
     bool absolute = consume() == 'M';
     parse_whitespace();
-    for (auto& pair : parse_coordinate_pair_sequence())
-        m_instructions.append({ PathInstructionType::Move, absolute, pair });
+
+    bool is_first = true;
+    for (auto& pair : parse_coordinate_pair_sequence()) {
+        // NOTE: "M 1 2 3 4" is equivalent to "M 1 2 L 3 4".
+        auto type = is_first ? PathInstructionType::Move : PathInstructionType::Line;
+        m_instructions.append({ type, absolute, pair });
+        is_first = false;
+    }
 }
 
 void AttributeParser::parse_closepath()
