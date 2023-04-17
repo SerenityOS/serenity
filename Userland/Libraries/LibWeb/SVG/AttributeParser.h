@@ -67,6 +67,27 @@ struct Transform {
     Operation operation;
 };
 
+struct PreserveAspectRatio {
+    enum class Align {
+        None,
+        xMinYMin,
+        xMidYMin,
+        xMaxYMin,
+        xMinYMid,
+        xMidYMid,
+        xMaxYMid,
+        xMinYMax,
+        xMidYMax,
+        xMaxYMax
+    };
+    enum class MeetOrSlice {
+        Meet,
+        Slice
+    };
+    Align align { Align::xMidYMid };
+    MeetOrSlice meet_or_slice { MeetOrSlice::Meet };
+};
+
 class AttributeParser final {
 public:
     ~AttributeParser() = default;
@@ -77,6 +98,7 @@ public:
     static Vector<Gfx::FloatPoint> parse_points(StringView input);
     static Vector<PathInstruction> parse_path_data(StringView input);
     static Optional<Vector<Transform>> parse_transform(StringView input);
+    static Optional<PreserveAspectRatio> parse_preserve_aspect_ratio(StringView input);
 
 private:
     AttributeParser(StringView source);
