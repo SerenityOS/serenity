@@ -1,7 +1,5 @@
 include(${CMAKE_CURRENT_LIST_DIR}/common_compile_options.cmake)
 
-add_compile_options(-Wno-implicit-const-int-float-conversion)
-add_compile_options(-Wno-literal-suffix)
 add_compile_options(-Wno-maybe-uninitialized)
 add_compile_options(-Wno-shorten-64-to-32)
 add_compile_options(-fsigned-char)

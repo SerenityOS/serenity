@@ -31,19 +31,13 @@ add_compile_options(-gdwarf-4)
 add_compile_options(-g1)
 
 if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_compile_options(-Wno-literal-suffix)
     add_compile_options(-Wno-maybe-uninitialized)
-    # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
-    add_compile_options(-Wno-expansion-to-defined)
     add_compile_options(-Wcast-align)
     add_compile_options(-Wdouble-promotion)
 elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    add_compile_options(-Wno-user-defined-literals)
     add_compile_options(-Wno-atomic-alignment)
-    add_compile_options(-Wno-implicit-const-int-float-conversion)
     add_compile_options(-Wno-unused-const-variable)
     add_compile_options(-Wno-unused-private-field)
-    add_compile_options(-fconstexpr-steps=16777216)
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
     link_directories(${TOOLCHAIN_ROOT}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
