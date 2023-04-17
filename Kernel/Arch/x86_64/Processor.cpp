@@ -863,23 +863,11 @@ ErrorOr<Vector<FlatPtr, 32>> Processor::capture_stack_trace(Thread& thread, size
         case Thread::State::Blocked:
         case Thread::State::Dying:
         case Thread::State::Dead: {
-            // We need to retrieve ebp from what was last pushed to the kernel
-            // stack. Before switching out of that thread, it switch_context
-            // pushed the callee-saved registers, and the last of them happens
-            // to be ebp.
             ScopedAddressSpaceSwitcher switcher(thread.process());
             auto& regs = thread.regs();
-            auto* stack_top = reinterpret_cast<FlatPtr*>(regs.sp());
-            if (Memory::is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
-                if (copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]).is_error())
-                    frame_ptr = 0;
-            } else {
-                void* fault_at;
-                if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
-                    frame_ptr = 0;
-            }
 
             ip = regs.ip();
+            frame_ptr = regs.rbp;
 
             // TODO: We need to leave the scheduler lock here, but we also
             //       need to prevent the target thread from being run while
