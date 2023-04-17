@@ -13,10 +13,7 @@ namespace Web::CSS {
 
 ValueComparingNonnullRefPtr<LengthStyleValue> LengthStyleValue::create(Length const& length)
 {
-    if (length.is_auto()) {
-        static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_auto()));
-        return value;
-    }
+    VERIFY(!length.is_auto());
     if (length.is_px()) {
         if (length.raw_value() == 0) {
             static auto value = adopt_ref(*new LengthStyleValue(CSS::Length::make_px(0)));
