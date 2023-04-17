@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "AutoplaySettingsWidget.h"
 #include "BrowserSettingsWidget.h"
 #include "ContentFilterSettingsWidget.h"
 #include <LibConfig/Client.h>
@@ -27,6 +28,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/home", "r"));
+    TRY(Core::System::unveil("/home/anon/.config/BrowserAutoplayAllowlist.txt", "rwc"));
     TRY(Core::System::unveil("/home/anon/.config/BrowserContentFilters.txt", "rwc"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
@@ -36,6 +38,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     window->set_icon(app_icon.bitmap_for_size(16));
     (void)TRY(window->add_tab<BrowserSettingsWidget>("Browser"_short_string, "browser"sv));
     (void)TRY(window->add_tab<ContentFilterSettingsWidget>(TRY("Content Filtering"_string), "content-filtering"sv));
+    (void)TRY(window->add_tab(TRY(AutoplaySettingsWidget::create()), TRY("Autoplay"_string), "autoplay"sv));
     window->set_active_tab(selected_tab);
 
     window->show();
