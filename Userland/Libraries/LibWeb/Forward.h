@@ -475,6 +475,10 @@ namespace Web::PerformanceTimeline {
 class PerformanceEntry;
 }
 
+namespace Web::PermissionsPolicy {
+class AutoplayAllowlist;
+}
+
 namespace Web::Platform {
 class Timer;
 }

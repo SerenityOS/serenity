@@ -30,6 +30,7 @@
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/Painting/PaintableBox.h>
 #include <LibWeb/Painting/StackingContext.h>
+#include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/EventLoopPlugin.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
@@ -637,6 +638,18 @@ void ConnectionFromClient::set_content_filters(Vector<DeprecatedString> const& f
 {
     for (auto& filter : filters)
         Web::ContentFilter::the().add_pattern(filter);
+}
+
+void ConnectionFromClient::set_autoplay_allowed_on_all_websites()
+{
+    auto& autoplay_allowlist = Web::PermissionsPolicy::AutoplayAllowlist::the();
+    autoplay_allowlist.enable_globally();
+}
+
+void ConnectionFromClient::set_autoplay_allowlist(Vector<String> const& allowlist)
+{
+    auto& autoplay_allowlist = Web::PermissionsPolicy::AutoplayAllowlist::the();
+    autoplay_allowlist.enable_for_origins(allowlist).release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::set_proxy_mappings(Vector<DeprecatedString> const& proxies, HashMap<DeprecatedString, size_t> const& mappings)

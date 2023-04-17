@@ -55,6 +55,8 @@ endpoint WebContentServer
     select_all() =|
 
     set_content_filters(Vector<DeprecatedString> filters) =|
+    set_autoplay_allowed_on_all_websites() =|
+    set_autoplay_allowlist(Vector<String> allowlist) =|
     set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString,size_t> mappings) =|
     set_preferred_color_scheme(Web::CSS::PreferredColorScheme color_scheme) =|
     set_has_focus(bool has_focus) =|

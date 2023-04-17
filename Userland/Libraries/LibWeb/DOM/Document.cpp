@@ -72,6 +72,7 @@
 #include <LibWeb/Layout/Viewport.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
 #include <LibWeb/Platform/Timer.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/Selection/Selection.h>
@@ -2396,6 +2397,31 @@ void Document::unload(bool recursive_flag, Optional<DocumentUnloadTimingInfo> un
 
     // 13. Decrease document's unload counter by 1.
     m_unload_counter -= 1;
+}
+
+// https://html.spec.whatwg.org/multipage/iframe-embed-object.html#allowed-to-use
+bool Document::is_allowed_to_use_feature(PolicyControlledFeature feature) const
+{
+    // 1. If document's browsing context is null, then return false.
+    if (browsing_context() == nullptr)
+        return false;
+
+    // 2. If document is not fully active, then return false.
+    if (!is_fully_active())
+        return false;
+
+    // 3. If the result of running is feature enabled in document for origin on feature, document, and document's origin
+    //    is "Enabled", then return true.
+    // FIXME: This is ad-hoc. Implement the Permissions Policy specification.
+    switch (feature) {
+    case PolicyControlledFeature::Autoplay:
+        if (PermissionsPolicy::AutoplayAllowlist::the().is_allowed_for_origin(*this, origin()) == PermissionsPolicy::Decision::Enabled)
+            return true;
+        break;
+    }
+
+    // 4. Return false.
+    return false;
 }
 
 void Document::did_stop_being_active_document_in_browsing_context(Badge<HTML::BrowsingContext>)
