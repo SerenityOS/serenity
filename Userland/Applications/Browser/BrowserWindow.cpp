@@ -683,6 +683,14 @@ void BrowserWindow::content_filters_changed()
     });
 }
 
+void BrowserWindow::autoplay_allowlist_changed()
+{
+    tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
+        tab.autoplay_allowlist_changed();
+        return IterationDecision::Continue;
+    });
+}
+
 void BrowserWindow::proxy_mappings_changed()
 {
     tab_widget().for_each_child_of_type<Browser::Tab>([](auto& tab) {
@@ -729,6 +737,9 @@ void BrowserWindow::config_bool_did_change(DeprecatedString const& domain, Depre
     } else if (key == "EnableContentFilters") {
         Browser::g_content_filters_enabled = value;
         content_filters_changed();
+    } else if (key == "AllowAutoplayOnAllWebsites") {
+        Browser::g_autoplay_allowed_on_all_websites = value;
+        autoplay_allowlist_changed();
     }
 
     // NOTE: CloseDownloadWidgetOnFinish is read each time in DownloadWindow

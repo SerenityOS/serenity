@@ -45,6 +45,7 @@ public:
     GUI::Action& take_full_screenshot_action() { return *m_take_full_screenshot_action; }
 
     void content_filters_changed();
+    void autoplay_allowlist_changed();
     void proxy_mappings_changed();
 
     void broadcast_window_position(Gfx::IntPoint);

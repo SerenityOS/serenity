@@ -131,6 +131,8 @@ Tab::Tab(BrowserWindow& window)
     else
         m_web_content_view->set_content_filters({});
 
+    autoplay_allowlist_changed();
+
     m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);
     if (!g_webdriver_content_ipc_path.is_empty())
         enable_webdriver_mode();
@@ -659,6 +661,14 @@ void Tab::content_filters_changed()
         m_web_content_view->set_content_filters(g_content_filters);
     else
         m_web_content_view->set_content_filters({});
+}
+
+void Tab::autoplay_allowlist_changed()
+{
+    if (g_autoplay_allowed_on_all_websites)
+        m_web_content_view->set_autoplay_allowed_on_all_websites();
+    else
+        m_web_content_view->set_autoplay_allowlist(g_autoplay_allowlist);
 }
 
 void Tab::proxy_mappings_changed()
