@@ -74,7 +74,7 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (layout_mouse_position.has_value() && document().hovered_node() == &video_element)
         mouse_position = context.rounded_device_point(*layout_mouse_position);
 
-    auto paint_user_agent_controls = video_element.has_attribute(HTML::AttributeNames::controls);
+    auto paint_user_agent_controls = video_element.has_attribute(HTML::AttributeNames::controls) || video_element.is_scripting_disabled();
 
     if (auto const& bitmap = layout_box().dom_node().current_frame()) {
         context.painter().draw_scaled_bitmap(video_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
