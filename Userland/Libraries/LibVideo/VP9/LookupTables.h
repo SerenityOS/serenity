@@ -15,8 +15,8 @@ namespace Video::VP9 {
 
 static constexpr InterpolationFilter literal_to_type[4] = { EightTapSmooth, EightTap, EightTapSharp, Bilinear };
 static constexpr TransformSize tx_mode_to_biggest_tx_size[TX_MODES] = { Transform_4x4, Transform_8x8, Transform_16x16, Transform_32x32, Transform_32x32 };
-static constexpr u8 segmentation_feature_bits[SEG_LVL_MAX] = { 8, 6, 2, 0 };
-static constexpr bool segmentation_feature_signed[SEG_LVL_MAX] = { true, true, false, false };
+static constexpr u8 segmentation_feature_bits[to_underlying(SegmentFeature::Sentinel)] = { 8, 6, 2, 0 };
+static constexpr bool segmentation_feature_signed[to_underlying(SegmentFeature::Sentinel)] = { true, true, false, false };
 static constexpr u8 inv_map_table[MAX_PROB] = {
     7, 20, 33, 46, 59, 72, 85, 98, 111, 124, 137, 150, 163, 176, 189, 202, 215, 228, 241, 254,
     1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 23, 24, 25, 26, 27,

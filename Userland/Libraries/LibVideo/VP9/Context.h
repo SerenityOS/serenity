@@ -143,7 +143,11 @@ public:
     bool use_predicted_segment_id_tree { false };
     Array<u8, 3> predicted_segment_id_tree_probabilities;
     bool should_use_absolute_segment_base_quantizer { false };
-    Array<Array<SegmentFeature, SEG_LVL_MAX>, MAX_SEGMENTS> segmentation_features;
+    SegmentationFeatures segmentation_features;
+    SegmentFeatureStatus get_segment_feature(u8 segment_id, SegmentFeature feature) const
+    {
+        return segmentation_features[segment_id][to_underlying(feature)];
+    }
 
     u16 header_size_in_bytes { 0 };
 
@@ -334,6 +338,11 @@ struct BlockContext {
     SegmentationPredictionContextView above_segmentation_ids;
     NonZeroTokensView left_non_zero_tokens;
     SegmentationPredictionContextView left_segmentation_ids;
+
+    SegmentFeatureStatus get_segment_feature(SegmentFeature feature) const
+    {
+        return frame_context.get_segment_feature(segment_id, feature);
+    }
 };
 
 struct BlockMotionVectorCandidateSet {

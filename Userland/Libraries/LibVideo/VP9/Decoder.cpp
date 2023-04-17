@@ -1173,9 +1173,10 @@ u8 Decoder::get_base_quantizer_index(BlockContext const& block_context)
 {
     // The function get_qindex( ) returns the quantizer index for the current block and is specified by the following:
     // − If seg_feature_active( SEG_LVL_ALT_Q ) is equal to 1 the following ordered steps apply:
-    if (Parser::seg_feature_active(block_context, SEG_LVL_ALT_Q)) {
+    auto alternative_quantizer_feature = block_context.get_segment_feature(SegmentFeature::UseAlternativeQuantizerBase);
+    if (alternative_quantizer_feature.enabled) {
         // 1. Set the variable data equal to FeatureData[ segment_id ][ SEG_LVL_ALT_Q ].
-        auto data = block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_ALT_Q].value;
+        auto data = alternative_quantizer_feature.value;
 
         // 2. If segmentation_abs_or_delta_update is equal to 0, set data equal to base_q_idx + data
         if (!block_context.frame_context.should_use_absolute_segment_base_quantizer) {

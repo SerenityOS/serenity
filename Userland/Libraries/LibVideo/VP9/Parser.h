@@ -98,7 +98,6 @@ private:
     DecoderErrorOr<void> intra_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> set_intra_segment_id(BlockContext&);
     DecoderErrorOr<bool> read_should_skip_residuals(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
-    static bool seg_feature_active(BlockContext const&, u8 feature);
     DecoderErrorOr<TransformSize> read_tx_size(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select);
     DecoderErrorOr<void> inter_frame_mode_info(BlockContext&, FrameBlockContext above_context, FrameBlockContext left_context);
     DecoderErrorOr<void> set_inter_segment_id(BlockContext&);
@@ -130,7 +129,7 @@ private:
     Array<i8, MAX_REF_FRAMES> m_previous_loop_filter_ref_deltas;
     Array<i8, 2> m_previous_loop_filter_mode_deltas;
     bool m_previous_should_use_absolute_segment_base_quantizer;
-    Array<Array<SegmentFeature, SEG_LVL_MAX>, MAX_SEGMENTS> m_previous_segmentation_features;
+    SegmentationFeatures m_previous_segmentation_features;
 
     ReferenceFrame m_reference_frames[NUM_REF_FRAMES];
 
