@@ -3382,10 +3382,6 @@ Optional<Length> Parser::parse_length(ComponentValue const& component_value)
     if (dimension->is_length())
         return dimension->length();
 
-    // FIXME: auto isn't a length!
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_ascii_case("auto"sv))
-        return Length::make_auto();
-
     return {};
 }
 
@@ -3677,9 +3673,6 @@ RefPtr<StyleValue> Parser::parse_dimension_value(ComponentValue const& component
 
     if (component_value.is(Token::Type::Number) && !(m_context.in_quirks_mode() && property_has_quirk(m_context.current_property_id(), Quirk::UnitlessLength)))
         return {};
-
-    if (component_value.is(Token::Type::Ident) && component_value.token().ident().equals_ignoring_ascii_case("auto"sv))
-        return LengthStyleValue::create(Length::make_auto());
 
     auto dimension = parse_dimension(component_value);
     if (!dimension.has_value())
