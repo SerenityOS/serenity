@@ -73,6 +73,8 @@ void SVGSVGElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedS
 
     if (name.equals_ignoring_ascii_case(SVG::AttributeNames::viewBox))
         m_view_box = try_parse_view_box(value);
+    if (name.equals_ignoring_ascii_case(SVG::AttributeNames::preserveAspectRatio))
+        m_preserve_aspect_ratio = AttributeParser::parse_preserve_aspect_ratio(value);
 }
 
 }

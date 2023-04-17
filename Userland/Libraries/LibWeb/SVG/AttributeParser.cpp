@@ -397,16 +397,77 @@ int AttributeParser::parse_sign()
     return 1;
 }
 
-// https://drafts.csswg.org/css-transforms/#svg-syntax
-Optional<Vector<Transform>> AttributeParser::parse_transform()
+static bool whitespace(char c)
 {
     // wsp:
     // Either a U+000A LINE FEED, U+000D CARRIAGE RETURN, U+0009 CHARACTER TABULATION, or U+0020 SPACE.
-    auto wsp = [](char c) {
-        return AK::first_is_one_of(c, '\n', '\r', '\t', '\f', ' ');
-    };
+    return AK::first_is_one_of(c, '\n', '\r', '\t', '\f', ' ');
+}
+
+// https://svgwg.org/svg2-draft/coords.html#PreserveAspectRatioAttribute
+Optional<PreserveAspectRatio> AttributeParser::parse_preserve_aspect_ratio(StringView input)
+{
+    // <align> <meetOrSlice>?
+    GenericLexer lexer { input };
+    lexer.ignore_while(whitespace);
+    auto align_string = lexer.consume_until(whitespace);
+    if (align_string.is_empty())
+        return {};
+    lexer.ignore_while(whitespace);
+    auto meet_or_slice_string = lexer.consume_until(whitespace);
+
+    // <align> =
+    //     none
+    //     | xMinYMin | xMidYMin | xMaxYMin
+    //     | xMinYMid | xMidYMid | xMaxYMid
+    //     | xMinYMax | xMidYMax | xMaxYMax
+    auto align = [&]() -> Optional<PreserveAspectRatio::Align> {
+        if (align_string == "none"sv)
+            return PreserveAspectRatio::Align::None;
+        if (align_string == "xMinYMin"sv)
+            return PreserveAspectRatio::Align::xMinYMin;
+        if (align_string == "xMidYMin"sv)
+            return PreserveAspectRatio::Align::xMidYMin;
+        if (align_string == "xMaxYMin"sv)
+            return PreserveAspectRatio::Align::xMaxYMin;
+        if (align_string == "xMinYMid"sv)
+            return PreserveAspectRatio::Align::xMinYMid;
+        if (align_string == "xMidYMid"sv)
+            return PreserveAspectRatio::Align::xMidYMid;
+        if (align_string == "xMaxYMid"sv)
+            return PreserveAspectRatio::Align::xMaxYMid;
+        if (align_string == "xMinYMax"sv)
+            return PreserveAspectRatio::Align::xMinYMax;
+        if (align_string == "xMidYMax"sv)
+            return PreserveAspectRatio::Align::xMidYMax;
+        if (align_string == "xMaxYMax"sv)
+            return PreserveAspectRatio::Align::xMaxYMax;
+        return {};
+    }();
+
+    if (!align.has_value())
+        return {};
+
+    // <meetOrSlice> = meet | slice
+    auto meet_or_slice = [&]() -> Optional<PreserveAspectRatio::MeetOrSlice> {
+        if (meet_or_slice_string.is_empty() || meet_or_slice_string == "meet"sv)
+            return PreserveAspectRatio::MeetOrSlice::Meet;
+        if (meet_or_slice_string == "slice"sv)
+            return PreserveAspectRatio::MeetOrSlice::Slice;
+        return {};
+    }();
+
+    if (!meet_or_slice.has_value())
+        return {};
+
+    return PreserveAspectRatio { *align, *meet_or_slice };
+}
+
+// https://drafts.csswg.org/css-transforms/#svg-syntax
+Optional<Vector<Transform>> AttributeParser::parse_transform()
+{
     auto consume_whitespace = [&] {
-        m_lexer.consume_while(wsp);
+        m_lexer.ignore_while(whitespace);
     };
 
     auto consume_comma_whitespace = [&] {
