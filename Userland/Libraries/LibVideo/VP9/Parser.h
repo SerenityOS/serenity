@@ -30,6 +30,7 @@ struct FrameContext;
 struct TileContext;
 struct BlockContext;
 struct MotionVectorCandidate;
+struct QuantizationParameters;
 
 class Parser {
     friend class TreeParser;
@@ -61,10 +62,10 @@ private:
     DecoderErrorOr<void> compute_image_size(FrameContext&);
     DecoderErrorOr<InterpolationFilter> read_interpolation_filter(BigEndianInputBitStream&);
     DecoderErrorOr<void> loop_filter_params(FrameContext&);
-    DecoderErrorOr<void> quantization_params(FrameContext&);
     DecoderErrorOr<i8> read_delta_q(BigEndianInputBitStream&);
     DecoderErrorOr<void> segmentation_params(FrameContext&);
     DecoderErrorOr<u8> read_prob(BigEndianInputBitStream&);
+    static void precalculate_quantizers(FrameContext& frame_context, QuantizationParameters quantization_parameters);
     DecoderErrorOr<void> parse_tile_counts(FrameContext&);
     void setup_past_independence();
 

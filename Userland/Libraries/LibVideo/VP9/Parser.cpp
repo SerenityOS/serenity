@@ -143,6 +143,39 @@ DecoderErrorOr<VideoFullRangeFlag> Parser::read_video_full_range_flag(BigEndianI
     return VideoFullRangeFlag::Studio;
 }
 
+template<Signed T = i8>
+static ErrorOr<T> read_signed(BigEndianInputBitStream& bit_stream, u8 bits)
+{
+    auto value_unsigned = static_cast<T>(TRY(bit_stream.read_bits(bits)));
+    if (TRY(bit_stream.read_bit()))
+        return -value_unsigned;
+    return value_unsigned;
+}
+
+static DecoderErrorOr<i8> read_delta_q(BigEndianInputBitStream& bit_stream)
+{
+    if (TRY_READ(bit_stream.read_bit()))
+        return TRY_READ(read_signed(bit_stream, 4));
+    return 0;
+}
+
+struct QuantizationParameters {
+    u8 base_quantizer_index { 0 };
+    i8 y_dc_quantizer_index_delta { 0 };
+    i8 uv_dc_quantizer_index_delta { 0 };
+    i8 uv_ac_quantizer_index_delta { 0 };
+};
+
+static DecoderErrorOr<QuantizationParameters> quantization_params(BigEndianInputBitStream& bit_stream)
+{
+    QuantizationParameters result;
+    result.base_quantizer_index = TRY_READ(bit_stream.read_bits(8));
+    result.y_dc_quantizer_index_delta = TRY(read_delta_q(bit_stream));
+    result.uv_dc_quantizer_index_delta = TRY(read_delta_q(bit_stream));
+    result.uv_ac_quantizer_index_delta = TRY(read_delta_q(bit_stream));
+    return result;
+}
+
 /* (6.2) */
 DecoderErrorOr<void> Parser::uncompressed_header(FrameContext& frame_context)
 {
@@ -266,8 +299,10 @@ DecoderErrorOr<void> Parser::uncompressed_header(FrameContext& frame_context)
     frame_context.probability_context_index = probability_context_index;
 
     TRY(loop_filter_params(frame_context));
-    TRY(quantization_params(frame_context));
+    auto quantization_parameters = TRY(quantization_params(frame_context.bit_stream));
     TRY(segmentation_params(frame_context));
+    precalculate_quantizers(frame_context, quantization_parameters);
+
     TRY(parse_tile_counts(frame_context));
 
     frame_context.header_size_in_bytes = TRY_READ(frame_context.bit_stream.read_bits(16));
@@ -399,15 +434,6 @@ DecoderErrorOr<InterpolationFilter> Parser::read_interpolation_filter(BigEndianI
     return literal_to_type[TRY_READ(bit_stream.read_bits(2))];
 }
 
-template<Signed T = i8>
-static ErrorOr<T> read_signed(BigEndianInputBitStream& bit_stream, u8 bits)
-{
-    auto value_unsigned = static_cast<T>(TRY(bit_stream.read_bits(bits)));
-    if (TRY(bit_stream.read_bit()))
-        return -value_unsigned;
-    return value_unsigned;
-}
-
 DecoderErrorOr<void> Parser::loop_filter_params(FrameContext& frame_context)
 {
     // FIXME: These should be moved to their own struct to return here.
@@ -431,22 +457,6 @@ DecoderErrorOr<void> Parser::loop_filter_params(FrameContext& frame_context)
     frame_context.loop_filter_mode_deltas = mode_deltas;
 
     return {};
-}
-
-DecoderErrorOr<void> Parser::quantization_params(FrameContext& frame_context)
-{
-    frame_context.base_quantizer_index = TRY_READ(frame_context.bit_stream.read_bits(8));
-    frame_context.y_dc_quantizer_index_delta = TRY(read_delta_q(frame_context.bit_stream));
-    frame_context.uv_dc_quantizer_index_delta = TRY(read_delta_q(frame_context.bit_stream));
-    frame_context.uv_ac_quantizer_index_delta = TRY(read_delta_q(frame_context.bit_stream));
-    return {};
-}
-
-DecoderErrorOr<i8> Parser::read_delta_q(BigEndianInputBitStream& bit_stream)
-{
-    if (TRY_READ(bit_stream.read_bit()))
-        return TRY_READ(read_signed(bit_stream, 4));
-    return 0;
 }
 
 DecoderErrorOr<void> Parser::segmentation_params(FrameContext& frame_context)
@@ -499,6 +509,35 @@ DecoderErrorOr<u8> Parser::read_prob(BigEndianInputBitStream& bit_stream)
     if (TRY_READ(bit_stream.read_bit()))
         return TRY_READ(bit_stream.read_bits(8));
     return 255;
+}
+
+void Parser::precalculate_quantizers(FrameContext& frame_context, QuantizationParameters quantization_parameters)
+{
+    frame_context.lossless = quantization_parameters.base_quantizer_index == 0
+        && quantization_parameters.y_dc_quantizer_index_delta == 0
+        && quantization_parameters.uv_dc_quantizer_index_delta == 0
+        && quantization_parameters.uv_ac_quantizer_index_delta == 0;
+
+    // Pre-calculate the quantizers so that the decoder doesn't have to do it repeatedly.
+    for (u8 segment_id = 0; segment_id < MAX_SEGMENTS; segment_id++) {
+        auto alternative_quantizer_feature = frame_context.get_segment_feature(segment_id, SegmentFeature::AlternativeQuantizerBase);
+        auto base = Decoder::get_base_quantizer_index(alternative_quantizer_feature, frame_context.should_use_absolute_segment_base_quantizer, quantization_parameters.base_quantizer_index);
+
+        // The function get_ac_quant( plane ) returns the quantizer value for the ac coefficient for a particular plane and
+        // is derived as follows:
+        // − If plane is equal to 0, return ac_q( get_qindex( ) ).
+        // − Otherwise, return ac_q( get_qindex( ) + delta_q_uv_ac ).
+        auto& current_quantizers = frame_context.segment_quantizers[segment_id];
+        current_quantizers.y_ac_quantizer = Decoder::get_ac_quantizer(frame_context.color_config.bit_depth, base, 0);
+        current_quantizers.uv_ac_quantizer = Decoder::get_ac_quantizer(frame_context.color_config.bit_depth, base, quantization_parameters.uv_ac_quantizer_index_delta);
+
+        // The function get_dc_quant( plane ) returns the quantizer value for the dc coefficient for a particular plane and
+        // is derived as follows:
+        // − If plane is equal to 0, return dc_q( get_qindex( ) + delta_q_y_dc ).
+        // − Otherwise, return dc_q( get_qindex( ) + delta_q_uv_dc ).
+        current_quantizers.y_dc_quantizer = Decoder::get_dc_quantizer(frame_context.color_config.bit_depth, base, quantization_parameters.y_dc_quantizer_index_delta);
+        current_quantizers.uv_dc_quantizer = Decoder::get_dc_quantizer(frame_context.color_config.bit_depth, base, quantization_parameters.uv_dc_quantizer_index_delta);
+    }
 }
 
 static u16 calc_min_log2_of_tile_columns(u32 superblock_columns)
@@ -577,7 +616,7 @@ DecoderErrorOr<void> Parser::compressed_header(FrameContext& frame_context)
 
 DecoderErrorOr<TransformMode> Parser::read_tx_mode(BooleanDecoder& decoder, FrameContext const& frame_context)
 {
-    if (frame_context.is_lossless()) {
+    if (frame_context.lossless) {
         return TransformMode::Only_4x4;
     }
 
@@ -1373,7 +1412,7 @@ static TransformSet select_transform_type(BlockContext const& block_context, u8 
     if (plane > 0 || transform_size == Transform_32x32)
         return TransformSet { TransformType::DCT, TransformType::DCT };
     if (transform_size == Transform_4x4) {
-        if (block_context.frame_context.is_lossless() || block_context.is_inter_predicted())
+        if (block_context.frame_context.lossless || block_context.is_inter_predicted())
             return TransformSet { TransformType::DCT, TransformType::DCT };
 
         return mode_to_txfm_map[to_underlying(block_context.size < Block_8x8 ? block_context.sub_block_prediction_modes[block_index] : block_context.y_prediction_mode())];

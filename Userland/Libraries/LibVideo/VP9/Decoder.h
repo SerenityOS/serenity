@@ -73,11 +73,11 @@ private:
     /* (8.6) Reconstruction and Dequantization */
 
     // Returns the quantizer index for the current block
-    static u8 get_base_quantizer_index(BlockContext const&);
+    static u8 get_base_quantizer_index(SegmentFeatureStatus alternative_quantizer_feature, bool should_use_absolute_segment_base_quantizer, u8 base_quantizer_index);
     // Returns the quantizer value for the dc coefficient for a particular plane
-    static u16 get_dc_quantizer(BlockContext const&, u8 plane);
+    static u16 get_dc_quantizer(u8 bit_depth, u8 base, i8 delta);
     // Returns the quantizer value for the ac coefficient for a particular plane
-    static u16 get_ac_quantizer(BlockContext const&, u8 plane);
+    static u16 get_ac_quantizer(u8 bit_depth, u8 base, i8 delta);
 
     // (8.6.2) Reconstruct process
     DecoderErrorOr<void> reconstruct(u8 plane, BlockContext const&, u32 transform_block_x, u32 transform_block_y, TransformSize transform_block_size, TransformSet);
