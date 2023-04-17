@@ -7,6 +7,7 @@
 #include "ContentFilterSettingsWidget.h"
 
 #include <AK/NonnullRefPtr.h>
+#include <AK/String.h>
 #include <Applications/BrowserSettings/ContentFilterSettingsWidgetGML.h>
 #include <LibConfig/Client.h>
 #include <LibCore/StandardPaths.h>
@@ -19,15 +20,15 @@
 
 static constexpr bool s_default_enable_content_filtering = true;
 
-static DeprecatedString filter_list_file_path()
+ErrorOr<String> DomainListModel::filter_list_file_path() const
 {
-    return DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory());
+    return String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory());
 }
 
 ErrorOr<void> DomainListModel::load()
 {
     // FIXME: This should be somewhat shared with Browser.
-    auto file = TRY(Core::File::open(filter_list_file_path(), Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open(TRY(filter_list_file_path()), Core::File::OpenMode::Read));
     auto content_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
     while (TRY(content_filter_list->can_read_line())) {
@@ -49,7 +50,7 @@ ErrorOr<void> DomainListModel::save()
     for (auto const& domain : m_domain_list)
         TRY(builder.try_appendff("{}\n", domain));
 
-    auto file = TRY(Core::File::open(filter_list_file_path(), Core::File::OpenMode::Write));
+    auto file = TRY(Core::File::open(TRY(filter_list_file_path()), Core::File::OpenMode::Write));
     TRY(file->write_until_depleted(TRY(builder.to_byte_buffer()).bytes()));
     return {};
 }

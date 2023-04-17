@@ -13,9 +13,10 @@
 
 class DomainListModel : public GUI::Model {
 public:
+    virtual ErrorOr<String> filter_list_file_path() const;
     ErrorOr<void> load();
     ErrorOr<void> save();
-    void reset_default_values();
+    virtual void reset_default_values();
 
     virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_domain_list.size(); }
     virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return 1; }
@@ -24,7 +25,7 @@ public:
     void add_domain(DeprecatedString name);
     void delete_domain(size_t index);
 
-private:
+protected:
     bool m_was_modified { false };
     Vector<DeprecatedString> m_domain_list;
 };
