@@ -1723,6 +1723,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "shrq $32, %%rbx \n"
         "movl %%ebx, %[tss_rsp0h] \n"
         "movq %[to_rsp], %%rsp \n"
+        "movq %%rbp, %[from_rbp] \n"
         "pushq %[to_thread] \n"
         "pushq %[from_thread] \n"
         "pushq %[to_rip] \n"
@@ -1748,6 +1749,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "popq %%rbx \n"
         "popfq \n"
         : [from_rsp] "=m" (from_thread->regs().rsp),
+        [from_rbp] "=m" (from_thread->regs().rbp),
         [from_rip] "=m" (from_thread->regs().rip),
         [tss_rsp0l] "=m" (m_tss.rsp0l),
         [tss_rsp0h] "=m" (m_tss.rsp0h),
