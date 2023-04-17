@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021-2022, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,10 +58,18 @@ private:
     Vector<ColorScheme> m_color_schemes;
 };
 
-BrowserSettingsWidget::BrowserSettingsWidget()
+ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> BrowserSettingsWidget::create()
 {
-    load_from_gml(browser_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
+    auto widget = TRY(try_make_ref_counted<BrowserSettingsWidget>());
 
+    TRY(widget->load_from_gml(browser_settings_widget_gml));
+    TRY(widget->setup());
+
+    return widget;
+}
+
+ErrorOr<void> BrowserSettingsWidget::setup()
+{
     m_homepage_url_textbox = find_descendant_of_type_named<GUI::TextBox>("homepage_url_textbox");
     m_homepage_url_textbox->set_text(Config::read_string("Browser"sv, "Preferences"sv, "Home"sv, default_homepage_url), GUI::AllowCallback::No);
     m_homepage_url_textbox->on_change = [&]() { set_modified(true); };
@@ -101,7 +110,7 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     Vector<JsonValue> custom_search_engine;
     custom_search_engine.append("Custom...");
     custom_search_engine.append("");
-    search_engines_model->add(move(custom_search_engine));
+    TRY(search_engines_model->add(move(custom_search_engine)));
 
     m_search_engine_combobox->set_model(move(search_engines_model));
     m_search_engine_combobox->set_only_allow_values_from_model(true);
@@ -116,6 +125,8 @@ BrowserSettingsWidget::BrowserSettingsWidget()
     m_auto_close_download_windows_checkbox = find_descendant_of_type_named<GUI::CheckBox>("auto_close_download_windows_checkbox");
     m_auto_close_download_windows_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "CloseDownloadWidgetOnFinish"sv, default_auto_close_download_windows), GUI::AllowCallback::No);
     m_auto_close_download_windows_checkbox->on_checked = [&](auto) { set_modified(true); };
+
+    return {};
 }
 
 void BrowserSettingsWidget::set_color_scheme(StringView color_scheme)
