@@ -705,8 +705,10 @@ Optional<CSSPixels> FlexFormattingContext::specified_size_suggestion(FlexItem co
 {
     // If the item’s preferred main size is definite and not automatic,
     // then the specified size suggestion is that size. It is otherwise undefined.
-    if (has_definite_main_size(item.box))
-        return inner_main_size(item.box);
+    if (has_definite_main_size(item.box)) {
+        // NOTE: We use get_pixel_{width,height} to ensure that CSS box-sizing is respected.
+        return is_row_layout() ? get_pixel_width(item.box, computed_main_size(item.box)) : get_pixel_height(item.box, computed_main_size(item.box));
+    }
     return {};
 }
 
