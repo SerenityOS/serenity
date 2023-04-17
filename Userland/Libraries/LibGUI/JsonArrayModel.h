@@ -57,10 +57,10 @@ public:
     DeprecatedString const& json_path() const { return m_json_path; }
     void set_json_path(DeprecatedString const& json_path);
 
-    bool add(Vector<JsonValue> const&& fields);
-    bool set(int row, Vector<JsonValue>&& fields);
-    bool remove(int row);
-    bool store();
+    ErrorOr<void> add(Vector<JsonValue> const&& fields);
+    ErrorOr<void> set(int row, Vector<JsonValue>&& fields);
+    ErrorOr<void> remove(int row);
+    ErrorOr<void> store();
 
 private:
     JsonArrayModel(DeprecatedString const& json_path, Vector<FieldSpec>&& fields)

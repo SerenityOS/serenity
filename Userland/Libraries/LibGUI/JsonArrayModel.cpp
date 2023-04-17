@@ -1,111 +1,123 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibGUI/JsonArrayModel.h>
 
 namespace GUI {
 
 void JsonArrayModel::invalidate()
 {
-    auto file = Core::DeprecatedFile::construct(m_json_path);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        dbgln("Unable to open {}", file->filename());
+    auto invalidate_or_error = [this]() -> ErrorOr<void> {
+        auto file = TRY(Core::File::open(m_json_path, Core::File::OpenMode::Read));
+
+        auto file_contents = TRY(file->read_until_eof());
+
+        auto json = TRY(JsonValue::from_string(file_contents));
+
+        VERIFY(json.is_array());
+        m_array = json.as_array();
+
+        return {};
+    };
+
+    if (auto result = invalidate_or_error(); result.is_error()) {
+        dbgln("Unable to invalidate {}: {}", m_json_path, result.error());
         m_array.clear();
-        did_update();
-        return;
     }
-
-    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
-
-    VERIFY(json.is_array());
-    m_array = json.as_array();
 
     did_update();
 }
 
 void JsonArrayModel::update()
 {
-    auto file = Core::DeprecatedFile::construct(m_json_path);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        dbgln("Unable to open {}", file->filename());
+    auto update_or_error = [this]() -> ErrorOr<void> {
+        auto file = TRY(Core::File::open(m_json_path, Core::File::OpenMode::Read));
+        auto file_contents = TRY(file->read_until_eof());
+
+        auto json = TRY(JsonValue::from_string(file_contents));
+
+        VERIFY(json.is_array());
+        m_array = json.as_array();
+
+        return {};
+    };
+
+    if (auto result = update_or_error(); result.is_error()) {
+        dbgln("Unable to update {}: {}", m_json_path, result.error());
         m_array.clear();
         did_update();
         return;
     }
 
-    auto json = JsonValue::from_string(file->read_all()).release_value_but_fixme_should_propagate_errors();
-
-    VERIFY(json.is_array());
-    m_array = json.as_array();
-
     did_update(GUI::Model::UpdateFlag::DontInvalidateIndices);
 }
 
-bool JsonArrayModel::store()
+ErrorOr<void> JsonArrayModel::store()
 {
-    auto file = Core::DeprecatedFile::construct(m_json_path);
-    if (!file->open(Core::OpenMode::WriteOnly)) {
-        dbgln("Unable to open {}", file->filename());
-        return false;
-    }
+    auto file = TRY(Core::File::open(m_json_path, Core::File::OpenMode::Write));
+    ByteBuffer json_bytes = m_array.to_deprecated_string().to_byte_buffer();
 
-    file->write(m_array.to_deprecated_string());
+    TRY(file->write_until_depleted(json_bytes));
     file->close();
-    return true;
+    return {};
 }
 
-bool JsonArrayModel::add(Vector<JsonValue> const&& values)
+ErrorOr<void> JsonArrayModel::add(Vector<JsonValue> const&& fields)
 {
-    VERIFY(values.size() == m_fields.size());
-    JsonObject obj;
-    for (size_t i = 0; i < m_fields.size(); ++i) {
-        auto& field_spec = m_fields[i];
-        obj.set(field_spec.json_field_name, values.at(i));
-    }
-    m_array.must_append(move(obj));
-    did_update();
-    return true;
-}
-
-bool JsonArrayModel::set(int row, Vector<JsonValue>&& values)
-{
-    VERIFY(values.size() == m_fields.size());
-
-    if ((size_t)row >= m_array.size())
-        return false;
+    VERIFY(fields.size() == m_fields.size());
 
     JsonObject obj;
     for (size_t i = 0; i < m_fields.size(); ++i) {
         auto& field_spec = m_fields[i];
-        obj.set(field_spec.json_field_name, move(values.at(i)));
+        obj.set(field_spec.json_field_name, fields.at(i));
     }
 
-    m_array.must_set(row, move(obj));
+    TRY(m_array.append(move(obj)));
     did_update();
 
-    return true;
+    return {};
 }
 
-bool JsonArrayModel::remove(int row)
+ErrorOr<void> JsonArrayModel::set(int row, Vector<JsonValue>&& fields)
+{
+    VERIFY(fields.size() == m_fields.size());
+
+    if ((size_t)row >= m_array.size())
+        return Error::from_string_view(TRY(String::formatted("Row out of bounds: {} >= {}", row, m_array.size())));
+
+    JsonObject obj;
+    for (size_t i = 0; i < m_fields.size(); ++i) {
+        auto& field_spec = m_fields[i];
+        obj.set(field_spec.json_field_name, move(fields.at(i)));
+    }
+
+    TRY(m_array.set(row, move(obj)));
+    did_update();
+
+    return {};
+}
+
+ErrorOr<void> JsonArrayModel::remove(int row)
 {
     if ((size_t)row >= m_array.size())
-        return false;
+        return Error::from_string_view(TRY(String::formatted("Row out of bounds: {} >= {}", row, m_array.size())));
 
     JsonArray new_array;
     for (size_t i = 0; i < m_array.size(); ++i)
         if (i != (size_t)row)
-            new_array.must_append(m_array.at(i));
+            TRY(new_array.append(m_array.at(i)));
 
     m_array = new_array;
 
     did_update();
 
-    return true;
+    return {};
 }
 
 Variant JsonArrayModel::data(ModelIndex const& index, ModelRole role) const
