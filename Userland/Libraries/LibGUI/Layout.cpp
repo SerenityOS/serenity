@@ -34,7 +34,7 @@ Layout::Layout(Margins initial_margins, int spacing)
                 } else {
                     VERIFY_NOT_REACHED();
                 }
-                entries_array.append(move(entry_object));
+                entries_array.must_append(move(entry_object));
             }
             return entries_array;
         });

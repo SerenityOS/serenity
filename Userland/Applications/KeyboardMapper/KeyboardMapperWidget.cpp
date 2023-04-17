@@ -177,7 +177,7 @@ ErrorOr<void> KeyboardMapperWidget::save_to_file(StringView filename)
                 sb.append_code_point(values[i]);
 
             JsonValue val(sb.to_deprecated_string());
-            items.append(move(val));
+            items.must_append(move(val));
         }
         map_json.set(name, move(items));
     };

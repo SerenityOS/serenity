@@ -67,7 +67,7 @@ bool JsonArrayModel::add(Vector<JsonValue> const&& values)
         auto& field_spec = m_fields[i];
         obj.set(field_spec.json_field_name, values.at(i));
     }
-    m_array.append(move(obj));
+    m_array.must_append(move(obj));
     did_update();
     return true;
 }
@@ -85,7 +85,7 @@ bool JsonArrayModel::set(int row, Vector<JsonValue>&& values)
         obj.set(field_spec.json_field_name, move(values.at(i)));
     }
 
-    m_array.set(row, move(obj));
+    m_array.must_set(row, move(obj));
     did_update();
 
     return true;
@@ -99,7 +99,7 @@ bool JsonArrayModel::remove(int row)
     JsonArray new_array;
     for (size_t i = 0; i < m_array.size(); ++i)
         if (i != (size_t)row)
-            new_array.append(m_array.at(i));
+            new_array.must_append(m_array.at(i));
 
     m_array = new_array;
 

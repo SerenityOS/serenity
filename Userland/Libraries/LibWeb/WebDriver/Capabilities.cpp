@@ -347,7 +347,7 @@ Response process_capabilities(JsonValue const& parameters)
         all_first_match_capabilities = capabilities->as_array();
     } else {
         // a. If all first match capabilities is undefined, set the value to a JSON List with a single entry of an empty JSON Object.
-        all_first_match_capabilities.append(JsonObject {});
+        all_first_match_capabilities.must_append(JsonObject {});
     }
 
     // 4. Let validated first match capabilities be an empty JSON List.
@@ -360,7 +360,7 @@ Response process_capabilities(JsonValue const& parameters)
         auto validated_capabilities = TRY(validate_capabilities(first_match_capabilities));
 
         // b. Append validated capabilities to validated first match capabilities.
-        validated_first_match_capabilities.append(move(validated_capabilities));
+        validated_first_match_capabilities.must_append(move(validated_capabilities));
         return {};
     }));
 
@@ -374,7 +374,7 @@ Response process_capabilities(JsonValue const& parameters)
         auto merged = TRY(merge_capabilities(required_capabilities, first_match_capabilities.as_object()));
 
         // b. Append merged to merged capabilities.
-        merged_capabilities.append(move(merged));
+        merged_capabilities.must_append(move(merged));
         return {};
     }));
 

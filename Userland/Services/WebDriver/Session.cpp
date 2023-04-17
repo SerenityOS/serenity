@@ -162,7 +162,7 @@ Web::WebDriver::Response Session::get_window_handles() const
 
     // 2. For each top-level browsing context in the remote end, push the associated window handle onto handles.
     for (auto const& window_handle : m_windows.keys()) {
-        handles.append(JsonValue(window_handle));
+        handles.must_append(JsonValue(window_handle));
     }
 
     // 3. Return success with data handles.

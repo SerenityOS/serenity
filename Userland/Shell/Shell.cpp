@@ -2367,7 +2367,7 @@ void Shell::save_to(JsonObject& object)
         job_object.set("running_time", job_entry.value->timer().elapsed());
         job_object.set("command", job_entry.value->cmd());
         job_object.set("is_running_in_background", job_entry.value->is_running_in_background());
-        job_objects.append(move(job_object));
+        job_objects.must_append(move(job_object));
     }
     object.set("jobs", move(job_objects));
 }

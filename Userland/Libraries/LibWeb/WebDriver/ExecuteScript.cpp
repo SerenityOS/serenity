@@ -170,7 +170,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> clone_an_object(JS::Realm& re
                 return ExecuteScriptResultType::JavaScriptError;
             auto array = JsonArray {};
             for (size_t i = 0; i < length; ++i)
-                array.append(JsonValue {});
+                array.must_append(JsonValue {});
             return array;
         }
         // -> Otherwise
@@ -203,7 +203,7 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> clone_an_object(JS::Realm& re
                 [&](JsonArray& array) {
                     // NOTE: If this was a JS array, only indexed properties would be serialized anyway.
                     if (name.is_number())
-                        array.set(name.as_number(), cloned_property_result.value());
+                        array.must_set(name.as_number(), cloned_property_result.value());
                 },
                 [&](JsonObject& object) {
                     object.set(name.to_string(), cloned_property_result.value());
