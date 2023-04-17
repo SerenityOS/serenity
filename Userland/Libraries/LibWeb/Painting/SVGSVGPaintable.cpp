@@ -26,13 +26,15 @@ Layout::SVGSVGBox const& SVGSVGPaintable::layout_box() const
 
 void SVGSVGPaintable::before_children_paint(PaintContext& context, PaintPhase phase) const
 {
+    PaintableBox::before_children_paint(context, phase);
     if (phase != PaintPhase::Foreground)
         return;
 
     if (!context.has_svg_context())
         context.set_svg_context(SVGContext(absolute_rect()));
 
-    PaintableBox::before_children_paint(context, phase);
+    context.painter().save();
+    context.painter().add_clip_rect(context.enclosing_device_rect(absolute_rect()).to_type<int>());
 }
 
 void SVGSVGPaintable::after_children_paint(PaintContext& context, PaintPhase phase) const
@@ -40,6 +42,8 @@ void SVGSVGPaintable::after_children_paint(PaintContext& context, PaintPhase pha
     PaintableBox::after_children_paint(context, phase);
     if (phase != PaintPhase::Foreground)
         return;
+
+    context.painter().restore();
     context.clear_svg_context();
 }
 
