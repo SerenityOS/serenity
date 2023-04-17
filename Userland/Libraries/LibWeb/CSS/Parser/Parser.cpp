@@ -4579,6 +4579,8 @@ RefPtr<StyleValue> Parser::parse_single_background_size_value(TokenStream<Compon
     auto transaction = tokens.begin_transaction();
 
     auto get_length_percentage = [](StyleValue& style_value) -> Optional<LengthPercentage> {
+        if (style_value.has_auto())
+            return LengthPercentage { Length::make_auto() };
         if (style_value.is_percentage())
             return LengthPercentage { style_value.as_percentage().percentage() };
         if (style_value.has_length())
