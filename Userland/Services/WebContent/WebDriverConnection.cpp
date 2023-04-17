@@ -1521,7 +1521,7 @@ Messages::WebDriverClient::GetAllCookiesResponse WebDriverConnection::get_all_co
         auto serialized_cookie = serialize_cookie(cookie);
 
         // 2. Append serialized cookie to cookies
-        cookies.must_append(move(serialized_cookie));
+        TRY(cookies.append(move(serialized_cookie)));
     }
 
     // 5. Return success with data cookies.
@@ -1997,7 +1997,7 @@ ErrorOr<JsonArray, Web::WebDriver::Error> WebDriverConnection::find(StartNodeGet
 
     // 8. For each element in elements returned, append the web element reference object for element, to result.
     for (size_t i = 0; i < elements->length(); ++i)
-        result.must_append(web_element_reference_object(*elements->item(i)));
+        TRY(result.append(web_element_reference_object(*elements->item(i))));
 
     // 9. Return success with data result.
     return result;
