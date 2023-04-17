@@ -17,3 +17,15 @@ if (NOT CMAKE_HOST_SYSTEM_NAME MATCHES SerenityOS)
     #        Disable -Werror for now.
     add_compile_options(-Werror)
 endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
+    # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
+    add_compile_options(-fconstexpr-steps=16777216)
+
+    add_compile_options(-Wno-implicit-const-int-float-conversion)
+    add_compile_options(-Wno-user-defined-literals)
+elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
+    add_compile_options(-Wno-expansion-to-defined)
+    add_compile_options(-Wno-literal-suffix)
+endif()

@@ -131,8 +131,7 @@ if (ENABLE_LAGOM_LADYBIRD AND (ENABLE_FUZZERS OR ENABLE_COMPILER_EXPLORER_BUILD)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
-    # Clang's default constexpr-steps limit is 1048576(2^20), GCC doesn't have one
-    add_compile_options(-Wno-overloaded-virtual -Wno-user-defined-literals -fconstexpr-steps=16777216)
+    add_compile_options(-Wno-overloaded-virtual)
     # FIXME: Re-enable this check when the warning stops triggering, or document why we can't stop it from triggering.
     # For now, there is a lot of unused private fields in LibWeb that trigger this that could be removed.
     # See issue #14137 for details
@@ -144,7 +143,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    add_compile_options(-Wno-expansion-to-defined)
     if (ENABLE_FUZZERS_LIBFUZZER)
         message(FATAL_ERROR
             "Fuzzer Sanitizer (-fsanitize=fuzzer) is only supported for Fuzzer targets with LLVM. "
