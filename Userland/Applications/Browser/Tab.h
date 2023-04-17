@@ -108,8 +108,8 @@ private:
     BrowserWindow& window();
 
     void update_actions();
-    void bookmark_current_url();
-    void update_bookmark_button(DeprecatedString const& url);
+    ErrorOr<void> bookmark_current_url();
+    void update_bookmark_button(StringView url);
     void start_download(const URL& url);
     void view_source(const URL& url, DeprecatedString const& source);
     void update_status(Optional<DeprecatedString> text_override = {}, i32 count_waiting = 0);
