@@ -672,7 +672,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStre
     auto start_result = TRY(start_algorithm());
 
     // 10. Let startPromise be a promise resolved with startResult.
-    auto start_promise = WebIDL::create_resolved_promise(realm, start_result ? start_result->promise() : JS::js_undefined());
+    auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
 
     // 11. Upon fulfillment of startPromise,
     WebIDL::upon_fulfillment(start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
@@ -711,7 +711,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     auto controller = MUST_OR_THROW_OOM(stream.heap().allocate<ReadableStreamDefaultController>(realm, realm));
 
     // 2. Let startAlgorithm be an algorithm that returns undefined.
-    StartAlgorithm start_algorithm = [] { return JS::GCPtr<WebIDL::Promise> {}; };
+    StartAlgorithm start_algorithm = [] { return JS::js_undefined(); };
 
     // 3. Let pullAlgorithm be an algorithm that returns a promise resolved with undefined.
     PullAlgorithm pull_algorithm = [&realm]() {
@@ -725,10 +725,9 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
 
     // 5. If underlyingSourceDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSourceDict["start"] with argument list « controller » and callback this value underlyingSource.
     if (underlying_source.start) {
-        start_algorithm = [&, callback = underlying_source.start]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
-            return WebIDL::create_resolved_promise(realm, result);
+        start_algorithm = [&, callback = underlying_source.start]() -> WebIDL::ExceptionOr<JS::Value> {
+            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
+            return WebIDL::invoke_callback(*callback, underlying_source_value, controller);
         };
     }
 
@@ -1668,7 +1667,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller(WritableStre
     auto start_result = TRY(start_algorithm());
 
     // 16. Let startPromise be a promise resolved with startResult.
-    auto start_promise = WebIDL::create_resolved_promise(realm, start_result ? start_result->promise() : JS::js_undefined());
+    auto start_promise = WebIDL::create_resolved_promise(realm, start_result);
 
     // 17. Upon fulfillment of startPromise,
     WebIDL::upon_fulfillment(*start_promise, [&](auto const&) -> WebIDL::ExceptionOr<JS::Value> {
@@ -1712,7 +1711,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
     auto controller = MUST_OR_THROW_OOM(realm.heap().allocate<WritableStreamDefaultController>(realm, realm));
 
     // 2. Let startAlgorithm be an algorithm that returns undefined.
-    StartAlgorithm start_algorithm = [] { return JS::GCPtr<WebIDL::Promise> {}; };
+    StartAlgorithm start_algorithm = [] { return JS::js_undefined(); };
 
     // 3. Let writeAlgorithm be an algorithm that returns a promise resolved with undefined.
     WriteAlgorithm write_algorithm = [&realm](auto const&) {
@@ -1731,10 +1730,9 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
 
     // 6. If underlyingSinkDict["start"] exists, then set startAlgorithm to an algorithm which returns the result of invoking underlyingSinkDict["start"] with argument list « controller » and callback this value underlyingSink.
     if (underlying_sink.start) {
-        start_algorithm = [&, callback = underlying_sink.start]() -> WebIDL::ExceptionOr<JS::GCPtr<WebIDL::Promise>> {
-            // Note: callback return a promise, so invoke_callback will never return an abrupt completion
-            auto result = MUST_OR_THROW_OOM(WebIDL::invoke_callback(*callback, underlying_sink_value, controller)).release_value();
-            return WebIDL::create_resolved_promise(realm, result);
+        start_algorithm = [&, callback = underlying_sink.start]() -> WebIDL::ExceptionOr<JS::Value> {
+            // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
+            return WebIDL::invoke_callback(*callback, underlying_sink_value, controller);
         };
     }
 
