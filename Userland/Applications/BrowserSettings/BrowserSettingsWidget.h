@@ -13,15 +13,16 @@
 #include <LibGUI/TextBox.h>
 
 class BrowserSettingsWidget final : public GUI::SettingsWindow::Tab {
-    C_OBJECT(BrowserSettingsWidget)
+    C_OBJECT_ABSTRACT(BrowserSettingsWidget)
 public:
+    static ErrorOr<NonnullRefPtr<BrowserSettingsWidget>> create();
     virtual ~BrowserSettingsWidget() override = default;
 
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    BrowserSettingsWidget();
+    ErrorOr<void> setup();
 
     RefPtr<GUI::TextBox> m_homepage_url_textbox;
     RefPtr<GUI::TextBox> m_new_tab_url_textbox;
