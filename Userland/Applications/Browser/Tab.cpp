@@ -4,6 +4,7 @@
  * Copyright (c) 2021, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  * Copyright (c) 2022, networkException <networkexception@serenityos.org>
+ * Copyright (c) 2023, Cameron Youell <cameronyouell@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -195,7 +196,8 @@ Tab::Tab(BrowserWindow& window)
 
     auto bookmark_action = GUI::Action::create(
         "Bookmark current URL", { Mod_Ctrl, Key_D }, [this](auto&) {
-            bookmark_current_url();
+            if (auto result = bookmark_current_url(); result.is_error())
+                GUI::MessageBox::show_error(this->window().main_widget()->window(), MUST(String::formatted("Failed to bookmark URL: {}", result.error())));
         },
         this);
 
@@ -596,17 +598,19 @@ void Tab::update_actions()
     window.go_forward_action().set_enabled(m_history.can_go_forward());
 }
 
-void Tab::bookmark_current_url()
+ErrorOr<void> Tab::bookmark_current_url()
 {
     auto url = this->url().to_deprecated_string();
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
-        BookmarksBarWidget::the().remove_bookmark(url);
+        TRY(BookmarksBarWidget::the().remove_bookmark(url));
     } else {
-        BookmarksBarWidget::the().add_bookmark(url, m_title);
+        TRY(BookmarksBarWidget::the().add_bookmark(url, m_title));
     }
+
+    return {};
 }
 
-void Tab::update_bookmark_button(DeprecatedString const& url)
+void Tab::update_bookmark_button(StringView url)
 {
     if (BookmarksBarWidget::the().contains_bookmark(url)) {
         m_bookmark_button->set_icon(g_icon_bag.bookmark_filled);
