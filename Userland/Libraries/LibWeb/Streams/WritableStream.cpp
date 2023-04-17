@@ -30,7 +30,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<WritableStream>> WritableStream::construct_
     auto underlying_sink_dict = TRY(UnderlyingSink::from_value(vm, underlying_sink));
 
     // 3. If underlyingSinkDict["type"] exists, throw a RangeError exception.
-    if (!underlying_sink_dict.type.has_value())
+    if (underlying_sink_dict.type.has_value())
         return WebIDL::SimpleException { WebIDL::SimpleExceptionType::RangeError, "Invalid use of reserved key 'type'"sv };
 
     // 4. Perform ! InitializeWritableStream(this).
