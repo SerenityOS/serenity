@@ -10,9 +10,10 @@
 
 namespace Web::WebIDL {
 
-CallbackType::CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context)
+CallbackType::CallbackType(JS::Object& callback, HTML::EnvironmentSettingsObject& callback_context, OperationReturnsPromise operation_returns_promise)
     : callback(callback)
     , callback_context(callback_context)
+    , operation_returns_promise(operation_returns_promise)
 {
 }
 
