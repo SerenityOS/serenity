@@ -542,7 +542,7 @@ JsonObject Sheet::to_json() const
     if (!columns_are_standard()) {
         auto columns = JsonArray();
         for (auto& column : m_columns)
-            columns.append(column);
+            columns.must_append(column);
         object.set("columns", move(columns));
     }
     object.set("rows", bottom_right.row + 1);
@@ -587,7 +587,7 @@ JsonObject Sheet::to_json() const
             fmt_object.set("condition", fmt.condition);
             save_format(fmt, fmt_object);
 
-            conditional_formats.append(move(fmt_object));
+            conditional_formats.must_append(move(fmt_object));
         }
 
         data.set("conditional_formats", move(conditional_formats));

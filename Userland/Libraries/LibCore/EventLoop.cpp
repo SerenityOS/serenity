@@ -260,7 +260,7 @@ public:
             for (auto& object : Object::all_objects()) {
                 JsonObject json_object;
                 object.save_to(json_object);
-                objects.append(move(json_object));
+                objects.must_append(move(json_object));
             }
             response.set("objects", move(objects));
             send_response(response);

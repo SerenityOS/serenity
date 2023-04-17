@@ -335,8 +335,8 @@ requires IsBaseOf<Object, T>
         [this] {                                               \
             auto size = this->getter();                        \
             JsonArray size_array;                              \
-            size_array.append(size.width());                   \
-            size_array.append(size.height());                  \
+            size_array.must_append(size.width());              \
+            size_array.must_append(size.height());             \
             return size_array;                                 \
         },                                                     \
         {});
@@ -379,8 +379,8 @@ requires IsBaseOf<Object, T>
         [this] {                                              \
             auto size = this->getter();                       \
             JsonArray size_array;                             \
-            size_array.append(size.width());                  \
-            size_array.append(size.height());                 \
+            size_array.must_append(size.width());             \
+            size_array.must_append(size.height());            \
             return size_array;                                \
         },                                                    \
         [this](auto& value) {                                 \
