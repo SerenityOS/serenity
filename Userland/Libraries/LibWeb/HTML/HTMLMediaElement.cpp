@@ -335,7 +335,10 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
     }
 
     // FIXME: 7. Set the playbackRate attribute to the value of the defaultPlaybackRate attribute.
-    // FIXME: 8. Set the error attribute to null and the can autoplay flag to true.
+
+    // 8. Set the error attribute to null and the can autoplay flag to true.
+    // FIXME: Handle the error attribute.
+    m_can_autoplay = true;
 
     // 9. Invoke the media element's resource selection algorithm.
     TRY(select_resource());
@@ -934,13 +937,25 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
             dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::canplaythrough).release_value_but_fixme_should_propagate_errors());
         });
 
-        // FIXME: If the element is not eligible for autoplay, then the user agent must abort these substeps.
+        // If the element is not eligible for autoplay, then the user agent must abort these substeps.
+        if (!is_eligible_for_autoplay())
+            return;
 
-        // FIXME: The user agent may run the following substeps:
-        //            Set the paused attribute to false.
-        //            If the element's show poster flag is true, set it to false and run the time marches on steps.
-        //            Queue a media element task given the element to fire an event named play at the element.
-        //            Notify about playing for the element.
+        // The user agent may run the following substeps:
+        {
+            // Set the paused attribute to false.
+            set_paused(false);
+
+            // FIXME: If the element's show poster flag is true, set it to false and run the time marches on steps.
+
+            // Queue a media element task given the element to fire an event named play at the element.
+            queue_a_media_element_task([this]() {
+                dispatch_event(DOM::Event::create(realm(), HTML::EventNames::play).release_value_but_fixme_should_propagate_errors());
+            });
+
+            // Notify about playing for the element.
+            notify_about_playing();
+        }
 
         // FIXME: Alternatively, if the element is a video element, the user agent may start observing whether the element intersects the viewport. When the
         //        element starts intersecting the viewport, if the element is still eligible for autoplay, run the substeps above. Optionally, when the element
@@ -1003,7 +1018,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::play_element()
         });
     }
 
-    // FIXME: 5. Set the media element's can autoplay flag to false.
+    // 5. Set the media element's can autoplay flag to false.
+    m_can_autoplay = false;
 
     return {};
 }
@@ -1011,7 +1027,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::play_element()
 // https://html.spec.whatwg.org/multipage/media.html#internal-pause-steps
 WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
 {
-    // FIXME: 1. Set the media element's can autoplay flag to false.
+    // 1. Set the media element's can autoplay flag to false.
+    m_can_autoplay = false;
 
     // 2. If the media element's paused attribute is false, run the following steps:
     if (!paused()) {
@@ -1144,6 +1161,27 @@ void HTMLMediaElement::set_paused(bool paused)
 
     if (m_paused)
         on_paused();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#eligible-for-autoplay
+bool HTMLMediaElement::is_eligible_for_autoplay() const
+{
+    // A media element is said to be eligible for autoplay when all of the following conditions are met:
+    return (
+        // Its can autoplay flag is true.
+        m_can_autoplay &&
+
+        // Its paused attribute is true.
+        paused() &&
+
+        // It has an autoplay attribute specified.
+        has_attribute(HTML::AttributeNames::autoplay) &&
+
+        // Its node document's active sandboxing flag set does not have the sandboxed automatic features browsing context flag set.
+        (document().active_sandboxing_flag_set().flags & SandboxingFlagSet::SandboxedAutomaticFeatures) == 0 &&
+
+        // Its node document is allowed to use the "autoplay" feature.
+        document().is_allowed_to_use_feature(DOM::PolicyControlledFeature::Autoplay));
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#ended-playback

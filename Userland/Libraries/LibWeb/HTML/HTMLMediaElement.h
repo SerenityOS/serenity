@@ -106,6 +106,7 @@ private:
     void set_paused(bool);
     void set_duration(double);
 
+    bool is_eligible_for_autoplay() const;
     bool has_ended_playback() const;
     WebIDL::ExceptionOr<void> reached_end_of_media_playback();
 
@@ -167,6 +168,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#media-data
     ByteBuffer m_media_data;
+
+    // https://html.spec.whatwg.org/multipage/media.html#can-autoplay-flag
+    bool m_can_autoplay { true };
 
     bool m_running_time_update_event_handler { false };
     Optional<Time> m_last_time_update_event_time;
