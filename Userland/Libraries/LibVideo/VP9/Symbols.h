@@ -33,11 +33,6 @@ namespace Video::VP9 {
 #define COMP_MODE_CONTEXTS 5
 #define REF_CONTEXTS 5
 #define MAX_SEGMENTS 8
-#define SEG_LVL_ALT_Q 0
-#define SEG_LVL_ALT_L 1
-#define SEG_LVL_REF_FRAME 2
-#define SEG_LVL_SKIP 3
-#define SEG_LVL_MAX 4
 #define BLOCK_TYPES 2
 #define REF_TYPES 2
 #define COEF_BANDS 6

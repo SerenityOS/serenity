@@ -161,4 +161,17 @@ enum Token : u8 {
     DctValCat6 = 10,
 };
 
+enum class SegmentFeature : u8 {
+    // SEG_LVL_ALT_Q
+    UseAlternativeQuantizerBase,
+    // SEG_LVL_ALT_L
+    UseAlternativeLoopFilterBase,
+    // SEG_LVL_REF_FRAME
+    ReferenceFrameOverride,
+    // SEG_LVL_SKIP
+    SkipResidualsOverride,
+    // SEG_LVL_MAX
+    Sentinel,
+};
+
 }

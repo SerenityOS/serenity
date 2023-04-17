@@ -476,14 +476,14 @@ DecoderErrorOr<void> Parser::segmentation_params(FrameContext& frame_context)
         return {};
 
     frame_context.should_use_absolute_segment_base_quantizer = TRY_READ(frame_context.bit_stream.read_bit());
-    for (auto i = 0; i < MAX_SEGMENTS; i++) {
-        for (auto j = 0; j < SEG_LVL_MAX; j++) {
-            auto& feature = frame_context.segmentation_features[i][j];
+    for (auto segment_id = 0; segment_id < MAX_SEGMENTS; segment_id++) {
+        for (auto feature_id = 0; feature_id < to_underlying(SegmentFeature::Sentinel); feature_id++) {
+            auto& feature = frame_context.segmentation_features[segment_id][feature_id];
             feature.enabled = TRY_READ(frame_context.bit_stream.read_bit());
             if (feature.enabled) {
-                auto bits_to_read = segmentation_feature_bits[j];
+                auto bits_to_read = segmentation_feature_bits[feature_id];
                 feature.value = TRY_READ(frame_context.bit_stream.read_bits(bits_to_read));
-                if (segmentation_feature_signed[j]) {
+                if (segmentation_feature_signed[feature_id]) {
                     if (TRY_READ(frame_context.bit_stream.read_bit()))
                         feature.value = -feature.value;
                 }
@@ -1094,14 +1094,9 @@ DecoderErrorOr<void> Parser::set_intra_segment_id(BlockContext& block_context)
 
 DecoderErrorOr<bool> Parser::read_should_skip_residuals(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    if (seg_feature_active(block_context, SEG_LVL_SKIP))
+    if (block_context.get_segment_feature(SegmentFeature::SkipResidualsOverride).enabled)
         return true;
     return TRY_READ(TreeParser::parse_skip(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
-}
-
-bool Parser::seg_feature_active(BlockContext const& block_context, u8 feature)
-{
-    return block_context.frame_context.segmentation_features[block_context.segment_id][feature].enabled;
 }
 
 DecoderErrorOr<TransformSize> Parser::read_tx_size(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context, bool allow_select)
@@ -1176,8 +1171,9 @@ u8 Parser::get_segment_id(BlockContext const& block_context)
 
 DecoderErrorOr<bool> Parser::read_is_inter(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    if (seg_feature_active(block_context, SEG_LVL_REF_FRAME))
-        return block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value != ReferenceFrameType::None;
+    auto reference_frame_override_feature = block_context.get_segment_feature(SegmentFeature::ReferenceFrameOverride);
+    if (reference_frame_override_feature.enabled)
+        return reference_frame_override_feature.value != ReferenceFrameType::None;
     return TRY_READ(TreeParser::parse_block_is_inter_predicted(block_context.decoder, *m_probability_tables, block_context.counter, above_context, left_context));
 }
 
@@ -1221,7 +1217,7 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
         select_best_reference_motion_vectors(block_context, reference_motion_vectors, motion_vector_candidates, ReferenceIndex::Secondary);
     }
 
-    if (seg_feature_active(block_context, SEG_LVL_SKIP)) {
+    if (block_context.get_segment_feature(SegmentFeature::SkipResidualsOverride).enabled) {
         block_context.y_prediction_mode() = PredictionMode::ZeroMv;
     } else if (block_context.size >= Block_8x8) {
         block_context.y_prediction_mode() = TRY_READ(TreeParser::parse_inter_mode(block_context.decoder, *m_probability_tables, block_context.counter, block_context.mode_context[block_context.reference_frame_types.primary]));
@@ -1259,8 +1255,9 @@ DecoderErrorOr<void> Parser::inter_block_mode_info(BlockContext& block_context, 
 
 DecoderErrorOr<void> Parser::read_ref_frames(BlockContext& block_context, FrameBlockContext above_context, FrameBlockContext left_context)
 {
-    if (seg_feature_active(block_context, SEG_LVL_REF_FRAME)) {
-        block_context.reference_frame_types = { static_cast<ReferenceFrameType>(block_context.frame_context.segmentation_features[block_context.segment_id][SEG_LVL_REF_FRAME].value), ReferenceFrameType::None };
+    auto reference_frame_override_feature = block_context.get_segment_feature(SegmentFeature::ReferenceFrameOverride);
+    if (reference_frame_override_feature.enabled) {
+        block_context.reference_frame_types = { static_cast<ReferenceFrameType>(reference_frame_override_feature.value), ReferenceFrameType::None };
         return {};
     }
 

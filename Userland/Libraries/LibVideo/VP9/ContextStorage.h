@@ -243,10 +243,13 @@ struct PersistentBlockContext {
     u8 segment_id { 0 };
 };
 
-struct SegmentFeature {
+struct SegmentFeatureStatus {
     bool enabled { false };
     u8 value { 0 };
 };
+
+using SegmentFeatures = Array<SegmentFeatureStatus, to_underlying(SegmentFeature::Sentinel)>;
+using SegmentationFeatures = Array<SegmentFeatures, MAX_SEGMENTS>;
 
 struct ColorConfig {
     u8 bit_depth { 8 };
