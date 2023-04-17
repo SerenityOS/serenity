@@ -99,7 +99,10 @@ Thread& Scheduler::pull_next_runnable_thread()
             }
             priority_mask &= ~(1u << priority);
         }
-        return *Processor::idle_thread();
+
+        auto* idle_thread = Processor::idle_thread();
+        idle_thread->set_active(true);
+        return *idle_thread;
     });
 }
 
