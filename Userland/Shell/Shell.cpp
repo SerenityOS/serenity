@@ -2348,7 +2348,7 @@ void Shell::kill_job(Job const* job, int sig)
     }
 }
 
-void Shell::save_to(JsonObject& object)
+ErrorOr<void> Shell::save_to(JsonObject& object)
 {
     Core::Object::save_to(object);
     object.set("working_directory", cwd);
@@ -2367,9 +2367,11 @@ void Shell::save_to(JsonObject& object)
         job_object.set("running_time", job_entry.value->timer().elapsed());
         job_object.set("command", job_entry.value->cmd());
         job_object.set("is_running_in_background", job_entry.value->is_running_in_background());
-        job_objects.must_append(move(job_object));
+        TRY(job_objects.append(move(job_object)));
     }
     object.set("jobs", move(job_objects));
+
+    return {};
 }
 
 void Shell::possibly_print_error() const
