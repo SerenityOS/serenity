@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, Sam Atkins <atkinssj@serenityos.org>
  * Copyright (c) 2022, Tobias Christiansen <tobyase@serenityos.org>
  * Copyright (c) 2023, MacDue <macdue@dueutil.tech>
@@ -10,6 +10,7 @@
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/SVGFormattingContext.h>
 #include <LibWeb/Layout/SVGGeometryBox.h>
+#include <LibWeb/Layout/SVGSVGBox.h>
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 
@@ -128,7 +129,7 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
     return viewbox_transform;
 }
 
-void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] AvailableSpace const& available_space)
+void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
     // FIXME: This a bunch of this thing is an ad-hoc hack.
 
@@ -148,7 +149,7 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
         return IterationDecision::Continue;
     });
 
-    box.for_each_in_subtree_of_type<SVGBox>([&](SVGBox const& descendant) {
+    box.for_each_in_subtree_of_type<Box>([&](Box const& descendant) {
         if (is<SVGGeometryBox>(descendant)) {
             auto const& geometry_box = static_cast<SVGGeometryBox const&>(descendant);
             auto& geometry_box_state = m_state.get_mutable(geometry_box);
@@ -184,6 +185,9 @@ void SVGFormattingContext::run(Box const& box, LayoutMode, [[maybe_unused]] Avai
             geometry_box_state.set_content_offset(path_bounding_box.top_left());
             geometry_box_state.set_content_width(path_bounding_box.width());
             geometry_box_state.set_content_height(path_bounding_box.height());
+        } else if (is<SVGSVGBox>(descendant)) {
+            SVGFormattingContext nested_context(m_state, descendant, this);
+            nested_context.run(descendant, layout_mode, available_space);
         }
 
         return IterationDecision::Continue;
