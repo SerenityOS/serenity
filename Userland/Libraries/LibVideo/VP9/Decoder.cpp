@@ -793,6 +793,7 @@ DecoderErrorOr<void> Decoder::prepare_referenced_frame(Gfx::Size<u32> frame_size
     // A variable yScale is set equal to (RefFrameHeight[ refIdx ] << REF_SCALE_SHIFT) / FrameHeight.
     // (xScale and yScale specify the size of the reference frame relative to the current frame in units where 16 is
     // equivalent to the reference frame having the same size.)
+    // NOTE: This spec note above seems to be incorrect. The 1:1 scale value would be 16,384.
     i32 x_scale = (reference_frame.size.width() << REF_SCALE_SHIFT) / frame_size.width();
     i32 y_scale = (reference_frame.size.height() << REF_SCALE_SHIFT) / frame_size.height();
 
@@ -857,8 +858,11 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     auto reference_frame_index = block_context.frame_context.reference_frame_indices[block_context.reference_frame_types[reference_index] - ReferenceFrameType::LastFrame];
     auto const& reference_frame = m_parser->m_reference_frames[reference_frame_index];
 
+    // Scale values range from 8192 to 262144.
+    // 16384 = 1:1, higher values indicate the reference frame is larger than the current frame.
     auto x_scale = reference_frame.x_scale;
-    auto y_scale = reference_frame.x_scale;
+    auto y_scale = reference_frame.y_scale;
+
     auto scaled_step_x = reference_frame.scaled_step_x;
     auto scaled_step_y = reference_frame.scaled_step_y;
 
