@@ -54,6 +54,7 @@ private:
     {
         if (eof())
             return;
+        handle_heredoc_contents();
         m_token_index++;
     }
     bool eof() const

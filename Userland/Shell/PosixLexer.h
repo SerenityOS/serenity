@@ -321,6 +321,8 @@ struct Token {
             return Token::Type::Great;
         if (name == "<"sv)
             return Token::Type::Less;
+        if (name == "\n"sv)
+            return Token::Type::Newline;
 
         return {};
     }

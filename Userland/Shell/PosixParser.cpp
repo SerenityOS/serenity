@@ -698,6 +698,9 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_list()
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_and_or()
 {
+    while (peek().type == Token::Type::Newline)
+        skip();
+
     auto node = TRY(parse_pipeline());
     if (!node)
         return RefPtr<AST::Node> {};
