@@ -572,6 +572,15 @@ CSS::FlexBasisData FlexFormattingContext::used_flex_basis_for_item(FlexItem cons
         }
     }
 
+    // For example, percentage values of flex-basis are resolved against the flex item’s containing block
+    // (i.e. its flex container); and if that containing block’s size is indefinite,
+    // the used value for flex-basis is content.
+    if (flex_basis.type == CSS::FlexBasis::LengthPercentage
+        && flex_basis.length_percentage->is_percentage()
+        && !has_definite_main_size(flex_container())) {
+        flex_basis.type = CSS::FlexBasis::Content;
+    }
+
     return flex_basis;
 }
 
