@@ -40,6 +40,8 @@ public:
     };
     NetworkState network_state() const { return m_network_state; }
 
+    WebIDL::ExceptionOr<JS::NonnullGCPtr<TimeRanges>> buffered() const;
+
     WebIDL::ExceptionOr<Bindings::CanPlayTypeResult> can_play_type(DeprecatedString const& type) const;
 
     enum class ReadyState : u16 {
