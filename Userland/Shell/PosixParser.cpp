@@ -780,7 +780,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_command()
             return node;
 
         if (auto node = TRY(parse_simple_command()))
-            return node;
+            return make_ref_counted<AST::CastToCommand>(node->position(), *node);
 
         auto node = TRY(parse_compound_command());
         if (!node)
@@ -800,7 +800,7 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_command()
     if (!node)
         return nullptr;
 
-    return make_ref_counted<AST::CastToCommand>(node->position(), *node);
+    return node;
 }
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_function_definition()
@@ -929,19 +929,21 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_while_clause()
             "Expected 'do' after 'while'"_string.release_value_but_fixme_should_propagate_errors());
 
     // while foo; bar -> loop { if foo { bar } else { break } }
+    auto position = start_position.with_end(peek().position.value_or(empty_position()));
     return make_ref_counted<AST::ForLoop>(
-        start_position.with_end(peek().position.value_or(empty_position())),
+        position,
         Optional<AST::NameWithPosition> {},
         Optional<AST::NameWithPosition> {},
         nullptr,
-        make_ref_counted<AST::IfCond>(
-            start_position.with_end(peek().position.value_or(empty_position())),
-            Optional<AST::Position> {},
-            condition.release_nonnull(),
-            do_group.release_nonnull(),
-            make_ref_counted<AST::ContinuationControl>(
-                start_position,
-                AST::ContinuationControl::ContinuationKind::Break)));
+        make_ref_counted<AST::Execute>(position,
+            make_ref_counted<AST::IfCond>(
+                position,
+                Optional<AST::Position> {},
+                condition.release_nonnull(),
+                do_group.release_nonnull(),
+                make_ref_counted<AST::ContinuationControl>(
+                    start_position,
+                    AST::ContinuationControl::ContinuationKind::Break))));
 }
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_until_clause()
@@ -963,19 +965,21 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_until_clause()
             "Expected 'do' after 'until'"_string.release_value_but_fixme_should_propagate_errors());
 
     // until foo; bar -> loop { if foo { break } else { bar } }
+    auto position = start_position.with_end(peek().position.value_or(empty_position()));
     return make_ref_counted<AST::ForLoop>(
-        start_position.with_end(peek().position.value_or(empty_position())),
+        position,
         Optional<AST::NameWithPosition> {},
         Optional<AST::NameWithPosition> {},
         nullptr,
-        make_ref_counted<AST::IfCond>(
-            start_position.with_end(peek().position.value_or(empty_position())),
-            Optional<AST::Position> {},
-            condition.release_nonnull(),
-            make_ref_counted<AST::ContinuationControl>(
-                start_position,
-                AST::ContinuationControl::ContinuationKind::Break),
-            do_group.release_nonnull()));
+        make_ref_counted<AST::Execute>(position,
+            make_ref_counted<AST::IfCond>(
+                position,
+                Optional<AST::Position> {},
+                condition.release_nonnull(),
+                make_ref_counted<AST::ContinuationControl>(
+                    start_position,
+                    AST::ContinuationControl::ContinuationKind::Break),
+                do_group.release_nonnull())));
 }
 
 ErrorOr<RefPtr<AST::Node>> Parser::parse_brace_group()
@@ -1084,12 +1088,13 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_case_clause()
             syntax_error = nullptr;
         }
 
+        auto position = compound_list->position();
         entries.append(AST::MatchEntry {
             .options = move(result.nodes),
             .match_names = {},
             .match_as_position = {},
             .pipe_positions = move(result.pipe_positions),
-            .body = move(compound_list),
+            .body = make_ref_counted<AST::Execute>(position, compound_list.release_nonnull()),
         });
     }
 
