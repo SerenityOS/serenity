@@ -581,9 +581,13 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
         m_state.on_new_line = true;
 
         m_state.buffer.clear();
+        m_state.position.start_offset = m_state.position.end_offset;
+        m_state.position.start_line = m_state.position.end_line;
+
+        Vector<Token> tokens { move(token), Token::newline() };
 
         return ReductionResult {
-            .tokens = { move(token) },
+            .tokens = move(tokens),
             .next_reduction = Reduction::Start,
         };
     }
