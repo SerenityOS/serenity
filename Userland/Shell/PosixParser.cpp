@@ -1685,6 +1685,10 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_word()
             switch (ch) {
             case '\\':
                 if (!escape && i + 1 < string.length()) {
+                    if (run_start.has_value())
+                        TRY(append_string_literal(string.substring_view(*run_start, i - *run_start)));
+                    run_start = i + 1;
+
                     if (is_one_of(string[i + 1], '"', '\'', '$', '`', '\\')) {
                         escape = in_quote != Quote::Single;
                         continue;
