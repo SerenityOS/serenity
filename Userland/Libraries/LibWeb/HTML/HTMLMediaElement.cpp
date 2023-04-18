@@ -91,6 +91,14 @@ void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
 
     if (name == HTML::AttributeNames::src)
         load_element().release_value_but_fixme_should_propagate_errors();
+    else if (name == HTML::AttributeNames::crossorigin)
+        m_crossorigin = cors_setting_attribute_from_keyword(String::from_deprecated_string(value).release_value_but_fixme_should_propagate_errors());
+}
+
+void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
+{
+    if (name == HTML::AttributeNames::crossorigin)
+        m_crossorigin = cors_setting_attribute_from_keyword({});
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-buffered
@@ -572,8 +580,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
 
         // 3. Let request be the result of creating a potential-CORS request given current media resource's URL record, destination, and the current state
         //    of media element's crossorigin content attribute.
-        // FIXME: Parse the media element's crossorigin content attribute.
-        auto request = create_potential_CORS_request(vm, url_record, destination, CORSSettingAttribute::Anonymous);
+        auto request = create_potential_CORS_request(vm, url_record, destination, m_crossorigin);
 
         // 4. Set request's client to the media element's node document's relevant settings object.
         request->set_client(&document().relevant_settings_object());
@@ -640,6 +647,15 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
             //           ability to cache data.
 
             // 5. Otherwise, incrementally read response's body given updateMedia, processEndOfMedia, an empty algorithm, and global.
+
+            // FIXME: Spec issue: If the response is CORS-cross-origin, we need to read from its internal response instead.
+            //        https://github.com/whatwg/html/issues/3483
+            //        https://github.com/whatwg/html/issues/9066
+            if (response->type() == Fetch::Infrastructure::Response::Type::Opaque || response->type() == Fetch::Infrastructure::Response::Type::OpaqueRedirect) {
+                auto& filtered_response = static_cast<Fetch::Infrastructure::FilteredResponse&>(*response);
+                response = filtered_response.internal_response();
+            }
+
             VERIFY(response->body().has_value());
             auto empty_algorithm = [](auto&) {};
 

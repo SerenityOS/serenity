@@ -12,6 +12,7 @@
 #include <AK/Variant.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
+#include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
 #include <LibWeb/WebIDL/DOMException.h>
@@ -89,6 +90,7 @@ private:
     using ByteRange = Variant<EntireResource>; // FIXME: This will need to include "until end" and an actual byte range.
 
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     Task::Source media_element_event_task_source() const { return m_media_element_event_task_source.source; }
 
@@ -136,6 +138,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#media-element-event-task-source
     UniqueTaskSource m_media_element_event_task_source {};
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-crossorigin
+    CORSSettingAttribute m_crossorigin { CORSSettingAttribute::NoCORS };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-networkstate
     NetworkState m_network_state { NetworkState::Empty };
