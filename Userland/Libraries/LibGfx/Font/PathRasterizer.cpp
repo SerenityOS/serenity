@@ -102,7 +102,8 @@ void PathRasterizer::draw_line(Gfx::FloatPoint p0, Gfx::FloatPoint p1)
             // If x0 and x1 are within the same pixel, then area to the right is (1 - (mid(x0, x1) - x0_floor)) * dy
             float area = .5f * (x0 + x1) - x0_floor;
             m_data[line_offset + x0_floor_i] += directed_dy * (1.f - area);
-            m_data[line_offset + x0_floor_i + 1] += directed_dy * area;
+            if (x0_floor_i + 1 < static_cast<u32>(m_size.width()))
+                m_data[line_offset + x0_floor_i + 1] += directed_dy * area;
         } else {
             float x0_right = 1.f - (x0 - x0_floor);
             u32 x1_floor_i = floorf(x1);
