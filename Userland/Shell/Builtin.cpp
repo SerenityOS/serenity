@@ -215,6 +215,56 @@ ErrorOr<int> Shell::builtin_unalias(Main::Arguments arguments)
     return failed ? 1 : 0;
 }
 
+ErrorOr<int> Shell::builtin_break(Main::Arguments arguments)
+{
+    if (!m_in_posix_mode) {
+        raise_error(ShellError::EvaluatedSyntaxError, "break: Invalid use of builtin break in non-POSIX mode");
+        return 1;
+    }
+
+    unsigned count = 1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(count, "Number of loops to 'break' out of", "count", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    if (count != 1) {
+        raise_error(ShellError::EvaluatedSyntaxError, "break: count must be equal to 1 (NYI)");
+        return 1;
+    }
+
+    raise_error(ShellError::InternalControlFlowBreak, "POSIX break");
+
+    return 0;
+}
+
+ErrorOr<int> Shell::builtin_continue(Main::Arguments arguments)
+{
+    if (!m_in_posix_mode) {
+        raise_error(ShellError::EvaluatedSyntaxError, "break: Invalid use of builtin continue in non-POSIX mode");
+        return 1;
+    }
+
+    unsigned count = 1;
+
+    Core::ArgsParser parser;
+    parser.add_positional_argument(count, "Number of loops to 'continue' out of", "count", Core::ArgsParser::Required::No);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
+        return 1;
+
+    if (count != 0) {
+        raise_error(ShellError::EvaluatedSyntaxError, "continue: count must be equal to 1 (NYI)");
+        return 1;
+    }
+
+    raise_error(ShellError::InternalControlFlowContinue, "POSIX continue");
+
+    return 0;
+}
+
 ErrorOr<int> Shell::builtin_bg(Main::Arguments arguments)
 {
     int job_id = -1;
