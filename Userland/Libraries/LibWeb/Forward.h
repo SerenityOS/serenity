@@ -381,6 +381,7 @@ class Storage;
 class SubmitEvent;
 class TextMetrics;
 class Timer;
+class TimeRanges;
 class TrackEvent;
 class VideoTrack;
 class VideoTrackList;

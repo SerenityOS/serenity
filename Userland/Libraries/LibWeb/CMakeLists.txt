@@ -346,6 +346,7 @@ set(SOURCES
     HTML/TagNames.cpp
     HTML/TextMetrics.cpp
     HTML/Timer.cpp
+    HTML/TimeRanges.cpp
     HTML/TrackEvent.cpp
     HTML/VideoTrack.cpp
     HTML/VideoTrackList.cpp
