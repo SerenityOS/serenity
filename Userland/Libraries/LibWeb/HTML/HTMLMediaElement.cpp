@@ -22,6 +22,7 @@
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
+#include <LibWeb/HTML/TimeRanges.h>
 #include <LibWeb/HTML/TrackEvent.h>
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/HTML/VideoTrackList.h>
@@ -90,6 +91,19 @@ void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
 
     if (name == HTML::AttributeNames::src)
         load_element().release_value_but_fixme_should_propagate_errors();
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-buffered
+WebIDL::ExceptionOr<JS::NonnullGCPtr<TimeRanges>> HTMLMediaElement::buffered() const
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    // FIXME: The buffered attribute must return a new static normalized TimeRanges object that represents the ranges of the
+    //        media resource, if any, that the user agent has buffered, at the time the attribute is evaluated. Users agents
+    //        must accurately determine the ranges available, even for media streams where this can only be determined by
+    //        tedious inspection.
+    return TRY(vm.heap().allocate<TimeRanges>(realm, realm));
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dom-navigator-canplaytype

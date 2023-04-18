@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/TimeRanges.idl>
 #import <HTML/VideoTrackList.idl>
 
 enum CanPlayTypeResult {
@@ -18,6 +19,7 @@ interface HTMLMediaElement : HTMLElement {
     const unsigned short NETWORK_LOADING = 2;
     const unsigned short NETWORK_NO_SOURCE = 3;
     readonly attribute unsigned short networkState;
+    readonly attribute TimeRanges buffered;
     undefined load();
     CanPlayTypeResult canPlayType(DOMString type);
 
