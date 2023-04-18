@@ -715,6 +715,18 @@ struct Formatter<ErrorOr<T, ErrorType>> : Formatter<FormatString> {
     }
 };
 
+template<typename T>
+struct Formatter<Optional<T>> : Formatter<FormatString> {
+    static constexpr bool is_debug_only() { return true; }
+
+    ErrorOr<void> format(FormatBuilder& builder, Optional<T> const& optional)
+    {
+        if (optional.has_value())
+            return Formatter<FormatString>::format(builder, "Optional({})"sv, *optional);
+        return builder.put_literal("OptionalNone"sv);
+    }
+};
+
 } // namespace AK
 
 #if USING_AK_GLOBALLY

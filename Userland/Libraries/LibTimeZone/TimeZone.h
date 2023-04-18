@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Error.h>
+#include <AK/Format.h>
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <AK/Time.h>
@@ -74,3 +75,11 @@ StringView region_to_string(Region region);
 Vector<StringView> time_zones_in_region(StringView region);
 
 }
+
+template<>
+struct AK::Formatter<TimeZone::TimeZone> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, TimeZone::TimeZone const& time_zone)
+    {
+        return Formatter<FormatString>::format(builder, TimeZone::time_zone_to_string(time_zone));
+    }
+};
