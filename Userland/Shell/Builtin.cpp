@@ -15,6 +15,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DeprecatedFile.h>
 #include <LibCore/EventLoop.h>
+#include <LibCore/File.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -1777,6 +1778,97 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
     if (!user_parser.parse(descriptors, Core::ArgsParser::FailureBehavior::Ignore))
         return 1;
+
+    return 0;
+}
+
+ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
+{
+    if (!m_in_posix_mode) {
+        raise_error(ShellError::EvaluatedSyntaxError, "read: POSIX builtin used in non-POSIX mode");
+        return 1;
+    }
+
+    bool no_escape = false;
+    Vector<DeprecatedString> variables;
+
+    Core::ArgsParser parser;
+    parser.add_option(no_escape, "Do not interpret backslash escapes", "no-escape", 'r');
+    parser.add_positional_argument(variables, "Variables to read into", "variable", Core::ArgsParser::Required::Yes);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
+        return 1;
+
+    auto split_by_any_of = " \t\n"_short_string;
+
+    if (auto const* value_from_env = getenv("IFS"); value_from_env)
+        split_by_any_of = TRY(String::from_utf8({ value_from_env, strlen(value_from_env) }));
+    else if (auto split_by_variable = TRY(lookup_local_variable("IFS"sv)); split_by_variable)
+        split_by_any_of = TRY(const_cast<AST::Value&>(*split_by_variable).resolve_as_string(*this));
+
+    auto file = TRY(Core::File::standard_input());
+    auto buffered_stream = TRY(Core::BufferedFile::create(move(file)));
+
+    StringBuilder builder;
+    ByteBuffer buffer;
+
+    enum class LineState {
+        Done,
+        EscapedNewline,
+    };
+    auto read_line = [&]() -> ErrorOr<LineState> {
+        if (m_is_interactive && isatty(STDIN_FILENO)) {
+            // Show prompt
+            warn("read: ");
+        }
+        size_t attempted_line_size = 32;
+
+        for (;;) {
+            auto result = buffered_stream->read_line(TRY(buffer.get_bytes_for_writing(attempted_line_size)));
+            if (result.is_error() && result.error().is_errno() && result.error().code() == EMSGSIZE) {
+                attempted_line_size *= 2;
+                continue;
+            }
+
+            auto used_bytes = TRY(move(result));
+            if (!no_escape && used_bytes.ends_with("\\\n"sv)) {
+                builder.append(used_bytes.substring_view(0, used_bytes.length() - 2));
+                return LineState::EscapedNewline;
+            }
+
+            if (used_bytes.ends_with("\n"sv))
+                used_bytes = used_bytes.substring_view(0, used_bytes.length() - 1);
+
+            builder.append(used_bytes);
+            return LineState::Done;
+        }
+    };
+
+    LineState state;
+    do {
+        state = TRY(read_line());
+    } while (state == LineState::EscapedNewline);
+
+    auto line = builder.string_view();
+    if (variables.size() == 1) {
+        set_local_variable(variables[0], make_ref_counted<AST::StringValue>(TRY(String::from_utf8(line))));
+        return 0;
+    }
+
+    auto fields = line.split_view_if(is_any_of(split_by_any_of), SplitBehavior::KeepEmpty);
+
+    for (size_t i = 0; i < variables.size(); ++i) {
+        auto& variable = variables[i];
+        StringView variable_value;
+        if (i >= fields.size())
+            variable_value = ""sv;
+        else if (i == variables.size() - 1)
+            variable_value = line.substring_view_starting_from_substring(fields[i]);
+        else
+            variable_value = fields[i];
+
+        set_local_variable(variable, make_ref_counted<AST::StringValue>(TRY(String::from_utf8(variable_value))));
+    }
 
     return 0;
 }

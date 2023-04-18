@@ -56,6 +56,7 @@
     __ENUMERATE_SHELL_BUILTIN(noop)     \
     __ENUMERATE_SHELL_BUILTIN(break)    \
     __ENUMERATE_SHELL_BUILTIN(continue) \
+    __ENUMERATE_SHELL_BUILTIN(read)     \
     __ENUMERATE_SHELL_BUILTIN(argsparser_parse)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
