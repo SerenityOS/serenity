@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2023, Fabian Dellwing <fabian@dellwing.net>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -51,6 +52,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool udp_mode = false;
     DeprecatedString target;
     int port = 0;
+    int local_port = 0;
     int maximum_tcp_receive_buffer_size_input = -1;
 
     Core::ArgsParser args_parser;
@@ -59,9 +61,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(should_listen, "Listen instead of connecting", "listen", 'l');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
     args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
+    args_parser.add_option(local_port, "Local port for remote connections", nullptr, 'p', "port");
     args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
-    args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target");
-    args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
+    args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(port, "Port to connect to or listen on", "port", Core::ArgsParser::Required::No);
     args_parser.parse(arguments);
 
     if (udp_mode) {
@@ -90,11 +93,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int listen_fd = -1;
 
     if (should_listen) {
+        if ((!target.is_empty() && local_port > 0) || (!target.is_empty() && port == 0)) {
+            args_parser.print_usage(stderr, arguments.strings[0]);
+            return 1;
+        }
+
         listen_fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
 
         sockaddr_in sa {};
         sa.sin_family = AF_INET;
-        sa.sin_port = htons(port);
+
+        if (local_port > 0) {
+            sa.sin_port = htons(local_port);
+        } else if (port > 0) {
+            sa.sin_port = htons(port);
+        }
+
         sa.sin_addr.s_addr = htonl(INADDR_ANY);
         if (!target.is_empty()) {
             if (inet_pton(AF_INET, target.characters(), &sa.sin_addr) <= 0) {
@@ -117,6 +131,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str)), ntohs(sin.sin_port));
 
     } else {
+        if (target.is_empty() || port == 0) {
+            args_parser.print_usage(stderr, arguments.strings[0]);
+            return 1;
+        }
+
         fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
 
         struct timeval timeout {
@@ -135,6 +154,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dst_addr.sin_family = AF_INET;
         dst_addr.sin_port = htons(port);
         dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
+
+        // FIXME: Actually use the local_port for the outgoing connection once we have a working implementation of bind and connect
 
         if (verbose) {
             char addr_str[INET_ADDRSTRLEN];

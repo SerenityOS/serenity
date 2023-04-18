@@ -5,7 +5,7 @@ nc
 ## Synopsis
 
 ```sh
-$ nc [--length ] [--listen] [-N] [--udp] [--verbose] <target> <port>
+$ nc [--length ] [--listen] [-N] [--udp] [-p port] [--verbose] [target] [port]
 ```
 
 ## Description
@@ -18,6 +18,7 @@ Network cat: Connect to network sockets as if it were a file.
 * `-l`, `--listen`: Listen instead of connecting
 * `-N`: Close connection after reading stdin to the end
 * `-u`, `--udp`: UDP mode
+* `-p port`: Local port for remote connections
 * `-v`, `--verbose`: Log everything that's happening
 
 ## Arguments
