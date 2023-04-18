@@ -41,7 +41,7 @@ ErrorOr<Vector<Token>> Lexer::batch_next(Optional<Reduction> starting_reduction)
 ExpansionRange Lexer::range(ssize_t offset) const
 {
     return {
-        m_state.position.end_offset - m_state.position.start_offset + offset - 1,
+        m_state.position.end_offset - m_state.position.start_offset + offset,
         0,
     };
 }
@@ -358,15 +358,15 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_double_quoted_string()
         };
     case '$':
         if (m_lexer.next_is("("))
-            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
+            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range(-1) });
         else
-            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
+            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range(-1) });
         return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::Expansion,
         };
     case '`':
-        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
+        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range(-1) });
         return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
@@ -498,9 +498,9 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_heredoc_contents()
     if (!m_state.escaping && consume_specific('$')) {
         m_state.buffer.append('$');
         if (m_lexer.next_is("("))
-            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
+            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range(-1) });
         else
-            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
+            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range(-1) });
 
         return ReductionResult {
             .tokens = {},
@@ -510,7 +510,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_heredoc_contents()
 
     if (!m_state.escaping && consume_specific('`')) {
         m_state.buffer.append('`');
-        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
+        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range(-1) });
         return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
@@ -682,9 +682,9 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
     if (!m_state.escaping && consume_specific('$')) {
         m_state.buffer.append('$');
         if (m_lexer.next_is("("))
-            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
+            m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range(-1) });
         else
-            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range() });
+            m_state.expansions.empend(ParameterExpansion { .parameter = StringBuilder {}, .range = range(-1) });
 
         return ReductionResult {
             .tokens = {},
@@ -694,7 +694,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_start()
 
     if (!m_state.escaping && consume_specific('`')) {
         m_state.buffer.append('`');
-        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range() });
+        m_state.expansions.empend(CommandExpansion { .command = StringBuilder {}, .range = range(-1) });
         return ReductionResult {
             .tokens = {},
             .next_reduction = Reduction::CommandExpansion,
@@ -749,7 +749,7 @@ ErrorOr<Lexer::ReductionResult> Lexer::reduce_special_parameter_expansion()
     m_state.buffer.append(ch);
     m_state.expansions.last() = ParameterExpansion {
         .parameter = StringBuilder {},
-        .range = range(-1),
+        .range = range(-2),
     };
     auto& expansion = m_state.expansions.last().get<ParameterExpansion>();
     expansion.parameter.append(ch);

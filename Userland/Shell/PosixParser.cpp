@@ -417,7 +417,7 @@ Vector<Token> Parser::perform_expansions(Vector<Token> tokens)
                         }
 
                         return ResolvedParameterExpansion {
-                            .parameter = {},
+                            .parameter = String::from_code_point(text[0]),
                             .argument = {},
                             .range = expansion.range,
                             .op = op,
