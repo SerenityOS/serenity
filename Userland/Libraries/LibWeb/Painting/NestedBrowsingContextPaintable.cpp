@@ -51,7 +51,9 @@ void NestedBrowsingContextPaintable::paint(PaintContext& context, PaintPhase pha
         auto old_viewport_rect = context.device_viewport_rect();
 
         context.painter().add_clip_rect(clip_rect.to_type<int>());
-        context.painter().translate(absolute_rect.x().value(), absolute_rect.y().value());
+
+        auto absolute_device_rect = context.enclosing_device_rect(absolute_rect);
+        context.painter().translate(absolute_device_rect.x().value(), absolute_device_rect.y().value());
 
         context.set_device_viewport_rect({ {}, context.enclosing_device_size(layout_box().dom_node().nested_browsing_context()->size()) });
         const_cast<Layout::Viewport*>(hosted_layout_tree)->paint_all_phases(context);
