@@ -25,6 +25,12 @@ namespace Video {
 
 class FrameQueueItem {
 public:
+    FrameQueueItem()
+        : m_data(Empty())
+        , m_timestamp(Time::zero())
+    {
+    }
+
     static constexpr Time no_timestamp = Time::min();
 
     enum class Type {
@@ -55,6 +61,8 @@ public:
         return error;
     }
 
+    bool is_empty() const { return m_data.has<Empty>(); }
+
     DeprecatedString debug_string() const
     {
         if (is_error())
@@ -76,12 +84,12 @@ private:
     {
     }
 
-    Variant<Empty, RefPtr<Gfx::Bitmap>, DecoderError> m_data;
-    Time m_timestamp;
+    Variant<Empty, RefPtr<Gfx::Bitmap>, DecoderError> m_data { Empty() };
+    Time m_timestamp { no_timestamp };
 };
 
-static constexpr size_t FRAME_BUFFER_COUNT = 4;
-using VideoFrameQueue = Queue<FrameQueueItem, FRAME_BUFFER_COUNT>;
+static constexpr size_t frame_buffer_count = 4;
+using VideoFrameQueue = Core::SharedSingleProducerCircularQueue<FrameQueueItem, frame_buffer_count>;
 
 enum class PlaybackState {
     Playing,
@@ -92,6 +100,9 @@ enum class PlaybackState {
 };
 
 class PlaybackManager {
+    AK_MAKE_NONCOPYABLE(PlaybackManager);
+    AK_MAKE_NONMOVABLE(PlaybackManager);
+
 public:
     enum class SeekMode {
         Accurate,
@@ -105,7 +116,7 @@ public:
 
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(ReadonlyBytes data);
 
-    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, NonnullOwnPtr<VideoFrameQueue>&& frame_queue);
+    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, VideoFrameQueue&& frame_queue);
     ~PlaybackManager();
 
     void resume_playback();
@@ -145,12 +156,13 @@ private:
 
     static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create(NonnullOwnPtr<Demuxer> demuxer);
 
-    void start_timer(int milliseconds);
     void timer_callback();
+    // This must be called with m_demuxer_mutex locked!
     Optional<Time> seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample = OptionalNone());
 
-    bool decode_and_queue_one_sample();
-    void on_decode_timer();
+    Optional<FrameQueueItem> dequeue_one_frame();
+
+    void decode_and_queue_one_sample();
 
     void dispatch_decoder_error(DecoderError error);
     void dispatch_new_frame(RefPtr<Gfx::Bitmap> frame);
@@ -162,15 +174,20 @@ private:
     Time m_last_present_in_media_time = Time::zero();
 
     NonnullOwnPtr<Demuxer> m_demuxer;
+    Threading::Mutex m_demuxer_mutex;
     Track m_selected_video_track;
-    NonnullOwnPtr<VideoDecoder> m_decoder;
 
-    NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
+    VideoFrameQueue m_frame_queue;
 
     RefPtr<Core::Timer> m_present_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
-    RefPtr<Core::Timer> m_decode_timer;
+    RefPtr<Threading::Thread> m_decode_thread;
+    NonnullOwnPtr<VideoDecoder> m_decoder;
+    Atomic<bool> m_stop_decoding { false };
+    Threading::Mutex m_decode_wait_mutex;
+    Threading::ConditionVariable m_decode_wait_condition;
+    Atomic<bool> m_buffer_is_full { false };
 
     OwnPtr<PlaybackStateHandler> m_playback_handler;
     Optional<FrameQueueItem> m_next_frame;
@@ -200,7 +217,6 @@ private:
         virtual Time current_time() const;
 
         virtual ErrorOr<void> on_timer_callback() { return {}; };
-        virtual ErrorOr<void> on_buffer_filled() { return {}; };
 
     protected:
         template<class T, class... Args>
