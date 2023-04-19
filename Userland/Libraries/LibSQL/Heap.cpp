@@ -43,7 +43,7 @@ ErrorOr<void> Heap::open()
         file_size = stat_buffer.st_size;
     }
     if (file_size > 0)
-        m_next_block = m_end_of_file = file_size / BLOCKSIZE;
+        m_next_block = m_end_of_file = file_size / BLOCK_SIZE;
 
     auto file = TRY(Core::File::open(name(), Core::File::OpenMode::ReadWrite));
     m_file = TRY(Core::BufferedFile::create(move(file)));
@@ -58,8 +58,8 @@ ErrorOr<void> Heap::open()
     }
 
     // FIXME: We should more gracefully handle version incompatibilities. For now, we drop the database.
-    if (m_version != current_version) {
-        dbgln_if(SQL_DEBUG, "Heap file {} opened has incompatible version {}. Deleting for version {}.", name(), m_version, current_version);
+    if (m_version != VERSION) {
+        dbgln_if(SQL_DEBUG, "Heap file {} opened has incompatible version {}. Deleting for version {}.", name(), m_version, VERSION);
         m_file = nullptr;
 
         TRY(Core::System::unlink(name()));
@@ -88,7 +88,7 @@ ErrorOr<ByteBuffer> Heap::read_block(u32 block)
     dbgln_if(SQL_DEBUG, "Read heap block {}", block);
     TRY(seek_block(block));
 
-    auto buffer = TRY(ByteBuffer::create_uninitialized(BLOCKSIZE));
+    auto buffer = TRY(ByteBuffer::create_uninitialized(BLOCK_SIZE));
     TRY(m_file->read_until_filled(buffer));
 
     dbgln_if(SQL_DEBUG, "{:hex-dump}", buffer.bytes().trim(8));
@@ -106,17 +106,17 @@ ErrorOr<void> Heap::write_block(u32 block, ByteBuffer& buffer)
         warnln("Heap({})::write_block({}): block # out of range (> {})"sv, name(), block, m_next_block);
         return Error::from_string_literal("Heap()::write_block(): block # out of range");
     }
-    if (buffer.size() > BLOCKSIZE) {
-        warnln("Heap({})::write_block({}): Oversized block ({} > {})"sv, name(), block, buffer.size(), BLOCKSIZE);
+    if (buffer.size() > BLOCK_SIZE) {
+        warnln("Heap({})::write_block({}): Oversized block ({} > {})"sv, name(), block, buffer.size(), BLOCK_SIZE);
         return Error::from_string_literal("Heap()::write_block(): Oversized block");
     }
 
     dbgln_if(SQL_DEBUG, "Write heap block {} size {}", block, buffer.size());
     TRY(seek_block(block));
 
-    if (auto current_size = buffer.size(); current_size < BLOCKSIZE) {
-        TRY(buffer.try_resize(BLOCKSIZE));
-        memset(buffer.offset_pointer(current_size), 0, BLOCKSIZE - current_size);
+    if (auto current_size = buffer.size(); current_size < BLOCK_SIZE) {
+        TRY(buffer.try_resize(BLOCK_SIZE));
+        memset(buffer.offset_pointer(current_size), 0, BLOCK_SIZE - current_size);
     }
 
     dbgln_if(SQL_DEBUG, "{:hex-dump}", buffer.bytes().trim(8));
@@ -141,7 +141,7 @@ ErrorOr<void> Heap::seek_block(u32 block)
     if (block == m_end_of_file)
         TRY(m_file->seek(0, SeekMode::FromEndPosition));
     else
-        TRY(m_file->seek(block * BLOCKSIZE, SeekMode::SetPosition));
+        TRY(m_file->seek(block * BLOCK_SIZE, SeekMode::SetPosition));
 
     return {};
 }
@@ -238,7 +238,7 @@ void Heap::update_zero_block()
     }
 
     // FIXME: Handle an OOM failure here.
-    auto buffer = ByteBuffer::create_zeroed(BLOCKSIZE).release_value_but_fixme_should_propagate_errors();
+    auto buffer = ByteBuffer::create_zeroed(BLOCK_SIZE).release_value_but_fixme_should_propagate_errors();
     buffer.overwrite(0, FILE_ID.characters_without_null_termination(), FILE_ID.length());
     buffer.overwrite(VERSION_OFFSET, &m_version, sizeof(u32));
     buffer.overwrite(SCHEMAS_ROOT_OFFSET, &m_schemas_root, sizeof(u32));
@@ -252,7 +252,7 @@ void Heap::update_zero_block()
 
 void Heap::initialize_zero_block()
 {
-    m_version = current_version;
+    m_version = VERSION;
     m_schemas_root = 0;
     m_tables_root = 0;
     m_table_columns_root = 0;

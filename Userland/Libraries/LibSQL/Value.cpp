@@ -30,7 +30,7 @@ static_assert(to_underlying(SQLTypeWithCount::Count) <= 0x0f, "Too many SQL type
 
 // Adding to this list is fine, but changing the order of any value here will result in LibSQL
 // becoming unable to read existing .db files. If the order must absolutely be changed, be sure
-// to bump Heap::current_version.
+// to bump Heap::VERSION.
 enum class TypeData : u8 {
     Null = 1 << 4,
     Int8 = 2 << 4,

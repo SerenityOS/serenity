@@ -271,7 +271,7 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
             m_entries.insert(ix, key);
             VERIFY(is_leaf() == (right == nullptr));
             m_down.insert(ix + 1, DownPointer(this, right));
-            if (length() > BLOCKSIZE) {
+            if (length() > Heap::BLOCK_SIZE) {
                 split();
             } else {
                 dump_if(SQL_DEBUG, "To WAL");
@@ -283,7 +283,7 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
     m_entries.append(key);
     m_down.empend(this, right);
 
-    if (length() > BLOCKSIZE) {
+    if (length() > Heap::BLOCK_SIZE) {
         split();
     } else {
         dump_if(SQL_DEBUG, "To WAL");
