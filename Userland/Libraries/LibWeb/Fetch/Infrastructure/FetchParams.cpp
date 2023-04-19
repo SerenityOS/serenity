@@ -17,6 +17,7 @@ FetchParams::FetchParams(JS::NonnullGCPtr<Request> request, JS::NonnullGCPtr<Fet
     , m_controller(controller)
     , m_timing_info(timing_info)
 {
+    m_controller->set_fetch_params({}, *this);
 }
 
 JS::NonnullGCPtr<FetchParams> FetchParams::create(JS::VM& vm, JS::NonnullGCPtr<Request> request, JS::NonnullGCPtr<FetchTimingInfo> timing_info)
