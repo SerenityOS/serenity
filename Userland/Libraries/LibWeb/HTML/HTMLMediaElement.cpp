@@ -314,7 +314,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
 
         // 2. If a fetching process is in progress for the media element, the user agent should stop it.
         if (m_fetch_controller && m_fetch_controller->state() == Fetch::Infrastructure::FetchController::State::Ongoing)
-            m_fetch_controller->terminate();
+            m_fetch_controller->stop_fetch();
 
         // FIXME: 3. If the media element's assigned media provider object is a MediaSource object, then detach it.
         // FIXME: 4. Forget the media element's media-resource-specific tracks.
@@ -728,7 +728,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
     // -> If the media data can be fetched but is found by inspection to be in an unsupported format, or can otherwise not be rendered at all
     if (playback_manager.is_error()) {
         // 1. The user agent should cancel the fetching process.
-        m_fetch_controller->terminate();
+        m_fetch_controller->stop_fetch();
 
         // 2. Abort this subalgorithm, returning to the resource selection algorithm.
         failure_callback();
