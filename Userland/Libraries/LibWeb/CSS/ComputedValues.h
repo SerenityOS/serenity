@@ -41,6 +41,7 @@ public:
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
     static Color color() { return Color::Black; }
+    static Color stop_color() { return Color::Black; }
     static CSS::BackdropFilter backdrop_filter() { return BackdropFilter::make_none(); }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
@@ -259,6 +260,7 @@ public:
     Optional<Color> const& fill() const { return m_inherited.fill; }
     Optional<Color> const& stroke() const { return m_inherited.stroke; }
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
+    Color stop_color() const { return m_noninherited.stop_color; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
@@ -359,6 +361,7 @@ protected:
         CSS::Size row_gap { InitialValues::row_gap() };
         CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
         Vector<Vector<String>> grid_template_areas { InitialValues::grid_template_areas() };
+        Gfx::Color stop_color { InitialValues::stop_color() };
     } m_noninherited;
 };
 
@@ -446,6 +449,7 @@ public:
     void set_fill(Color value) { m_inherited.fill = value; }
     void set_stroke(Color value) { m_inherited.stroke = value; }
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
+    void set_stop_color(Color value) { m_noninherited.stop_color = value; }
 };
 
 }

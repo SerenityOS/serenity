@@ -650,6 +650,8 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
         computed_values.set_fill(fill->to_color(*this));
     if (auto stroke = computed_style.property(CSS::PropertyID::Stroke); stroke->has_color())
         computed_values.set_stroke(stroke->to_color(*this));
+    if (auto stop_color = computed_style.property(CSS::PropertyID::StopColor); stop_color->has_color())
+        computed_values.set_stop_color(stop_color->to_color(*this));
     auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth);
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits
