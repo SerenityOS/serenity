@@ -6,7 +6,9 @@
 
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/VM.h>
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
 #include <LibWeb/Fetch/Infrastructure/FetchController.h>
+#include <LibWeb/Fetch/Infrastructure/FetchParams.h>
 #include <LibWeb/WebIDL/DOMException.h>
 
 namespace Web::Fetch::Infrastructure {
@@ -22,6 +24,7 @@ void FetchController::visit_edges(JS::Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_full_timing_info);
+    visitor.visit(m_fetch_params);
 }
 
 // https://fetch.spec.whatwg.org/#finalize-and-report-timing
@@ -79,6 +82,20 @@ void FetchController::terminate()
 {
     // To terminate a fetch controller controller, set controller’s state to "terminated".
     m_state = State::Terminated;
+}
+
+void FetchController::stop_fetch()
+{
+    auto& vm = this->vm();
+
+    // AD-HOC: Some HTML elements need to stop an ongoing fetching process without causing any network error to be raised
+    //         (which abort() and terminate() will both do). This is tricky because the fetch process runs across several
+    //         nested Platform::EventLoopPlugin::deferred_invoke() invocations. For now, we "stop" the fetch process by
+    //         ignoring any callbacks.
+    if (m_fetch_params) {
+        auto fetch_algorithms = FetchAlgorithms::create(vm, {});
+        m_fetch_params->set_algorithms(fetch_algorithms);
+    }
 }
 
 }
