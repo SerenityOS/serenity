@@ -84,15 +84,20 @@ bool IdentifierStyleValue::has_color() const
     }
 }
 
-Color IdentifierStyleValue::to_color(Layout::NodeWithStyle const& node) const
+Color IdentifierStyleValue::to_color(Optional<Layout::NodeWithStyle const&> node) const
 {
     if (id() == CSS::ValueID::Currentcolor) {
-        if (!node.has_style())
+        if (!node.has_value() || !node->has_style())
             return Color::Black;
-        return node.computed_values().color();
+        return node->computed_values().color();
     }
 
-    auto& document = node.document();
+    if (!node.has_value()) {
+        // FIXME: Can't resolve palette colors without layout node.
+        return Color::Black;
+    }
+
+    auto& document = node->document();
     if (id() == CSS::ValueID::LibwebLink)
         return document.link_color();
 
