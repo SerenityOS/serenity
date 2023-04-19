@@ -310,6 +310,7 @@ private:
 class ListValue final : public Value {
 public:
     virtual ErrorOr<Vector<String>> resolve_as_list(RefPtr<Shell>) override;
+    virtual ErrorOr<String> resolve_as_string(RefPtr<Shell>) override;
     virtual ErrorOr<NonnullRefPtr<Value>> resolve_without_cast(RefPtr<Shell>) override;
     virtual ErrorOr<NonnullRefPtr<Value>> clone() const override { return TRY(try_make_ref_counted<ListValue>(m_contained_values))->set_slices(m_slices); }
     virtual ~ListValue();
