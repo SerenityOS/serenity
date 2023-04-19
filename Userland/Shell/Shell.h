@@ -191,15 +191,21 @@ public:
 
     RefPtr<Line::Editor> editor() const { return m_editor; }
 
+    enum class LocalFrameKind {
+        FunctionOrGlobal,
+        Block,
+    };
     struct LocalFrame {
-        LocalFrame(DeprecatedString name, HashMap<DeprecatedString, RefPtr<AST::Value>> variables)
+        LocalFrame(DeprecatedString name, HashMap<DeprecatedString, RefPtr<AST::Value>> variables, LocalFrameKind kind = LocalFrameKind::Block)
             : name(move(name))
             , local_variables(move(variables))
+            , is_function_frame(kind == LocalFrameKind::FunctionOrGlobal)
         {
         }
 
         DeprecatedString name;
         HashMap<DeprecatedString, RefPtr<AST::Value>> local_variables;
+        bool is_function_frame;
     };
 
     struct Frame {
@@ -218,7 +224,7 @@ public:
         bool should_destroy_frame { true };
     };
 
-    [[nodiscard]] Frame push_frame(DeprecatedString name);
+    [[nodiscard]] Frame push_frame(DeprecatedString name, LocalFrameKind = LocalFrameKind::Block);
     void pop_frame();
 
     struct Promise {
