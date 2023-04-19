@@ -120,27 +120,6 @@ void Tuple::extend(Tuple const& other)
     m_data.extend(other.m_data);
 }
 
-bool Tuple::is_compatible(Tuple const& other) const
-{
-    if ((m_descriptor->size() == 0) && (other.m_descriptor->size() == 0)) {
-        return true;
-    }
-    if (m_descriptor->size() != other.m_descriptor->size()) {
-        return false;
-    }
-    for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
-        auto& my_part = (*m_descriptor)[ix];
-        auto& other_part = (*other.m_descriptor)[ix];
-        if (my_part.type != other_part.type) {
-            return false;
-        }
-        if (my_part.order != other_part.order) {
-            return false;
-        }
-    }
-    return true;
-}
-
 size_t Tuple::length() const
 {
     size_t len = 2 * sizeof(u32);
