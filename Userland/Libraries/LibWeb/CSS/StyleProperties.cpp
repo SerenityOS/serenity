@@ -114,6 +114,9 @@ Optional<LengthPercentage> StyleProperties::length_percentage(CSS::PropertyID id
     if (value->has_length())
         return value->to_length();
 
+    if (value->has_auto())
+        return LengthPercentage { Length::make_auto() };
+
     return {};
 }
 
