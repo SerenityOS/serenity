@@ -166,6 +166,8 @@ static NonnullRefPtr<StyleValue const> value_or_default(Optional<StyleProperty> 
 
 static NonnullRefPtr<StyleValue const> style_value_for_length_percentage(LengthPercentage const& length_percentage)
 {
+    if (length_percentage.is_auto())
+        return IdentifierStyleValue::create(ValueID::Auto);
     if (length_percentage.is_percentage())
         return PercentageStyleValue::create(length_percentage.percentage());
     if (length_percentage.is_length())
@@ -595,11 +597,7 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     }
     case CSS::PropertyID::VerticalAlign:
         if (auto const* length_percentage = layout_node.computed_values().vertical_align().get_pointer<CSS::LengthPercentage>()) {
-            if (length_percentage->is_length())
-                return LengthStyleValue::create(length_percentage->length());
-            if (length_percentage->is_percentage())
-                return PercentageStyleValue::create(length_percentage->percentage());
-            VERIFY_NOT_REACHED();
+            return style_value_for_length_percentage(*length_percentage);
         }
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().vertical_align().get<CSS::VerticalAlign>()));
     case CSS::PropertyID::WhiteSpace:
