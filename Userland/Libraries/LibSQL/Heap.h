@@ -15,8 +15,6 @@
 
 namespace SQL {
 
-constexpr static u32 BLOCKSIZE = 1024;
-
 /**
  * A Heap is a logical container for database (SQL) data. Conceptually a
  * Heap can be a database file, or a memory block, or another storage medium.
@@ -32,7 +30,8 @@ class Heap : public Core::Object {
     C_OBJECT(Heap);
 
 public:
-    static constexpr inline u32 current_version = 3;
+    static constexpr u32 VERSION = 3;
+    static constexpr u32 BLOCK_SIZE = 1024;
 
     virtual ~Heap() override;
 
@@ -103,7 +102,7 @@ private:
     u32 m_schemas_root { 0 };
     u32 m_tables_root { 0 };
     u32 m_table_columns_root { 0 };
-    u32 m_version { current_version };
+    u32 m_version { VERSION };
     Array<u32, 16> m_user_values { 0 };
     HashMap<u32, ByteBuffer> m_write_ahead_log;
 };

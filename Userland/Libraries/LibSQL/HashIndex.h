@@ -104,7 +104,7 @@ public:
     void serialize(Serializer&) const;
     [[nodiscard]] u32 number_of_pointers() const { return min(max_pointers_in_node(), m_hash_index.size() - m_offset); }
     [[nodiscard]] bool is_last() const { return m_is_last; }
-    static constexpr size_t max_pointers_in_node() { return (BLOCKSIZE - 3 * sizeof(u32)) / (2 * sizeof(u32)); }
+    static constexpr size_t max_pointers_in_node() { return (Heap::BLOCK_SIZE - 3 * sizeof(u32)) / (2 * sizeof(u32)); }
 
 private:
     HashIndex& m_hash_index;

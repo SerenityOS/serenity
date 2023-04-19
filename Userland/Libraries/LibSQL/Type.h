@@ -13,7 +13,7 @@ namespace SQL {
 
 // Adding to this list is fine, but changing the order of any value here will result in LibSQL
 // becoming unable to read existing .db files. If the order must absolutely be changed, be sure
-// to bump Heap::current_version.
+// to bump Heap::VERSION.
 #define ENUMERATE_SQL_TYPES(S) \
     S("null", Null)            \
     S("text", Text)            \

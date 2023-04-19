@@ -132,7 +132,7 @@ bool HashBucket::insert(Key const& key)
         m_hash_index.serializer().deserialize_block_to(pointer(), *this);
     if (find_key_in_bucket(key).has_value())
         return false;
-    if ((length() + key.length()) > BLOCKSIZE) {
+    if ((length() + key.length()) > Heap::BLOCK_SIZE) {
         dbgln_if(SQL_DEBUG, "Adding key {} would make length exceed block size", key.to_deprecated_string());
         return false;
     }
@@ -247,9 +247,8 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
     do {
         dbgln_if(SQL_DEBUG, "HashIndex::get_bucket_for_insert({}) bucket {} of {}", key.to_deprecated_string(), key_hash % size(), size());
         auto bucket = get_bucket(key_hash % size());
-        if (bucket->length() + key.length() < BLOCKSIZE) {
+        if (bucket->length() + key.length() < Heap::BLOCK_SIZE)
             return bucket;
-        }
         dbgln_if(SQL_DEBUG, "Bucket is full (bucket size {}/length {} key length {}). Expanding directory", bucket->size(), bucket->length(), key.length());
 
         // We previously doubled the directory but the target bucket is
@@ -287,7 +286,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
             write_directory_to_write_ahead_log();
 
             auto bucket_after_redistribution = get_bucket(key_hash % size());
-            if (bucket_after_redistribution->length() + key.length() < BLOCKSIZE)
+            if (bucket_after_redistribution->length() + key.length() < Heap::BLOCK_SIZE)
                 return bucket_after_redistribution;
         }
         expand();
