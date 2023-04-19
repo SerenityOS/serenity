@@ -1399,7 +1399,7 @@ inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform_array_per
 }
 
 template<u8 log2_of_block_size>
-inline DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Intermediate> data)
+ALWAYS_INLINE DecoderErrorOr<void> Decoder::inverse_discrete_cosine_transform(Span<Intermediate> data)
 {
     static_assert(log2_of_block_size >= 2 && log2_of_block_size <= 5, "Block size out of range.");
 
@@ -1790,7 +1790,7 @@ inline DecoderErrorOr<void> Decoder::inverse_asymmetric_discrete_sine_transform(
 }
 
 template<u8 log2_of_block_size>
-DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, TransformSet transform_set)
+ALWAYS_INLINE DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_context, Span<Intermediate> dequantized, TransformSet transform_set)
 {
     static_assert(log2_of_block_size >= 2 && log2_of_block_size <= 5);
 
