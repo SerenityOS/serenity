@@ -1198,9 +1198,12 @@ ErrorOr<int> Shell::builtin_wait(Main::Arguments arguments)
 ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
 {
     Vector<DeprecatedString> vars;
+    bool unset_only_variables = false; // POSIX only.
 
     Core::ArgsParser parser;
     parser.add_positional_argument(vars, "List of variables", "variables", Core::ArgsParser::Required::Yes);
+    if (m_in_posix_mode)
+        parser.add_option(unset_only_variables, "Unset only variables", "variables", 'v');
 
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
@@ -1212,7 +1215,7 @@ ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
 
         if (TRY(lookup_local_variable(value)) != nullptr) {
             unset_local_variable(value);
-        } else {
+        } else if (!unset_only_variables) {
             unsetenv(value.characters());
         }
     }
