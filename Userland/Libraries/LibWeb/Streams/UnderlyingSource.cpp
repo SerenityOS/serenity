@@ -36,7 +36,7 @@ JS::ThrowCompletionOr<UnderlyingSource> UnderlyingSource::from_value(JS::VM& vm,
     }
 
     if (TRY(object.has_property("autoAllocateChunkSize")))
-        underlying_source.auto_allocate_chunk_size = TRY(TRY(object.get("autoAllocateChunkSize")).to_bigint_int64(vm));
+        underlying_source.auto_allocate_chunk_size = TRY(TRY(object.get("autoAllocateChunkSize")).to_bigint_uint64(vm));
 
     return underlying_source;
 }
