@@ -1366,20 +1366,6 @@ DecoderErrorOr<i32> Parser::read_single_motion_vector_component(BooleanDecoder& 
     return (mv_sign ? -1 : 1) * static_cast<i32>(magnitude);
 }
 
-Gfx::Point<size_t> Parser::get_decoded_point_for_plane(FrameContext const& frame_context, u32 column, u32 row, u8 plane)
-{
-    (void)frame_context;
-    if (plane == 0)
-        return { column * 8, row * 8 };
-    return { (column * 8) >> frame_context.color_config.subsampling_x, (row * 8) >> frame_context.color_config.subsampling_y };
-}
-
-Gfx::Size<size_t> Parser::get_decoded_size_for_plane(FrameContext const& frame_context, u8 plane)
-{
-    auto point = get_decoded_point_for_plane(frame_context, frame_context.columns(), frame_context.rows(), plane);
-    return { point.x(), point.y() };
-}
-
 static TransformSize get_uv_transform_size(TransformSize transform_size, BlockSubsize size_for_plane)
 {
     return min(transform_size, max_txsize_lookup[size_for_plane]);
