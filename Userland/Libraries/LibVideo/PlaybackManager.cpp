@@ -53,27 +53,45 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create(NonnullOw
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
 
     auto decoder = DECODER_TRY_ALLOC(try_make<VP9::Decoder>());
-    auto frame_queue = DECODER_TRY_ALLOC(try_make<VideoFrameQueue>());
+    auto frame_queue = DECODER_TRY_ALLOC(VideoFrameQueue::create());
     auto playback_manager = DECODER_TRY_ALLOC(try_make<PlaybackManager>(demuxer, track, move(decoder), move(frame_queue)));
 
     playback_manager->m_present_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.timer_callback(); }));
-    playback_manager->m_decode_timer = DECODER_TRY_ALLOC(Core::Timer::create_single_shot(0, [&self = *playback_manager] { self.on_decode_timer(); }));
+
+    playback_manager->m_decode_thread = DECODER_TRY_ALLOC(Threading::Thread::try_create([&self = *playback_manager] {
+        while (!self.m_stop_decoding.load())
+            self.decode_and_queue_one_sample();
+
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Media Decoder thread ended.");
+        return 0;
+    },
+        "Media Decoder"sv));
 
     playback_manager->m_playback_handler = make<SeekingStateHandler>(*playback_manager, false, Time::zero(), SeekMode::Fast);
     DECODER_TRY_ALLOC(playback_manager->m_playback_handler->on_enter());
 
+    playback_manager->m_decode_thread->start();
+
     return playback_manager;
 }
 
-PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, NonnullOwnPtr<VideoFrameQueue>&& frame_queue)
+PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, VideoFrameQueue&& frame_queue)
     : m_demuxer(move(demuxer))
     , m_selected_video_track(video_track)
-    , m_decoder(move(decoder))
     , m_frame_queue(move(frame_queue))
+    , m_decoder(move(decoder))
+    , m_decode_wait_condition(m_decode_wait_mutex)
 {
 }
 
-PlaybackManager::~PlaybackManager() = default;
+PlaybackManager::~PlaybackManager()
+{
+    m_stop_decoding.exchange(true);
+    m_decode_wait_condition.broadcast();
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Waiting for decode thread to end...");
+    (void)m_decode_thread->join();
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Successfully destroyed PlaybackManager.");
+}
 
 void PlaybackManager::resume_playback()
 {
@@ -96,7 +114,10 @@ Time PlaybackManager::current_playback_time()
 
 Time PlaybackManager::duration()
 {
-    auto duration_result = m_demuxer->duration();
+    auto duration_result = ({
+        auto demuxer_locker = Threading::MutexLocker(m_demuxer_mutex);
+        m_demuxer->duration();
+    });
     if (duration_result.is_error())
         dispatch_decoder_error(duration_result.release_error());
     return duration_result.release_value();
@@ -142,7 +163,7 @@ bool PlaybackManager::dispatch_frame_queue_item(FrameQueueItem&& item)
         return true;
     }
 
-    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation with timestamp {}ms", item.timestamp().to_milliseconds());
+    dbgln_if(PLAYBACK_MANAGER_DEBUG, "Sent frame for presentation with timestamp {}ms, late by {}ms", item.timestamp().to_milliseconds(), (current_playback_time() - item.timestamp()).to_milliseconds());
     dispatch_new_frame(item.bitmap());
     return false;
 }
@@ -165,11 +186,21 @@ void PlaybackManager::seek_to_timestamp(Time target_timestamp, SeekMode seek_mod
 
 Optional<Time> PlaybackManager::seek_demuxer_to_most_recent_keyframe(Time timestamp, Optional<Time> earliest_available_sample)
 {
-    // FIXME: When the demuxer is getting samples off the main thread in the future, this needs to
-    //        mutex so that seeking can't happen while that thread is getting a sample.
     auto result = m_demuxer->seek_to_most_recent_keyframe(m_selected_video_track, timestamp, move(earliest_available_sample));
     if (result.is_error())
         dispatch_decoder_error(result.release_error());
+    return result.release_value();
+}
+
+Optional<FrameQueueItem> PlaybackManager::dequeue_one_frame()
+{
+    auto result = m_frame_queue.dequeue();
+    m_decode_wait_condition.broadcast();
+    if (result.is_error()) {
+        if (result.error() != VideoFrameQueue::QueueStatus::Empty)
+            dispatch_fatal_error(Error::from_string_literal("Dequeue failed with an unexpected error"));
+        return {};
+    }
     return result.release_value();
 }
 
@@ -178,99 +209,116 @@ void PlaybackManager::restart_playback()
     seek_to_timestamp(Time::zero());
 }
 
-void PlaybackManager::start_timer(int milliseconds)
+void PlaybackManager::decode_and_queue_one_sample()
 {
-    m_present_timer->start(milliseconds);
-}
-
-bool PlaybackManager::decode_and_queue_one_sample()
-{
-    if (m_frame_queue->size() >= FRAME_BUFFER_COUNT) {
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Frame queue is full, stopping");
-        return false;
-    }
 #if PLAYBACK_MANAGER_DEBUG
     auto start_time = Time::now_monotonic();
 #endif
 
-    auto enqueue_error = [&](DecoderError&& error, Time timestamp) {
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Enqueued decoder error: {}", error.string_literal());
-        m_frame_queue->enqueue(FrameQueueItem::error_marker(move(error), timestamp));
-    };
+    FrameQueueItem item_to_enqueue;
 
-#define TRY_OR_ENQUEUE_ERROR(expression, timestamp)                                                  \
-    ({                                                                                               \
-        auto&& _temporary_result = (expression);                                                     \
-        if (_temporary_result.is_error()) {                                                          \
-            enqueue_error(_temporary_result.release_error(), (timestamp));                           \
-            return false;                                                                            \
-        }                                                                                            \
-        static_assert(!::AK::Detail::IsLvalueReference<decltype(_temporary_result.release_value())>, \
-            "Do not return a reference from a fallible expression");                                 \
-        _temporary_result.release_value();                                                           \
-    })
+    while (item_to_enqueue.is_empty()) {
+        // Get a sample to decode.
+        auto sample_result = [&]() {
+            // FIXME: Implement and use a class to enforce that this field is accessed through a mutex (like Kernel::MutexProtected).
+            Threading::MutexLocker demuxer_locker(m_demuxer_mutex);
+            return m_demuxer->get_next_video_sample_for_track(m_selected_video_track);
+        }();
+        if (sample_result.is_error()) {
+            item_to_enqueue = FrameQueueItem::error_marker(sample_result.release_error(), FrameQueueItem::no_timestamp);
+            break;
+        }
+        auto sample = sample_result.release_value();
 
-    auto frame_sample = TRY_OR_ENQUEUE_ERROR(m_demuxer->get_next_video_sample_for_track(m_selected_video_track), Time::min());
-    OwnPtr<VideoFrame> decoded_frame = nullptr;
-    while (!decoded_frame) {
-        TRY_OR_ENQUEUE_ERROR(m_decoder->receive_sample(frame_sample->data()), frame_sample->timestamp());
+        // Submit the sample to the decoder.
+        auto decode_result = m_decoder->receive_sample(sample->data());
+        if (decode_result.is_error()) {
+            item_to_enqueue = FrameQueueItem::error_marker(decode_result.release_error(), sample->timestamp());
+            break;
+        }
 
+        // Retrieve the last available frame to present.
+        OwnPtr<VideoFrame> decoded_frame = nullptr;
         while (true) {
             auto frame_result = m_decoder->get_decoded_frame();
 
             if (frame_result.is_error()) {
-                if (frame_result.error().category() == DecoderErrorCategory::NeedsMoreInput)
+                if (frame_result.error().category() == DecoderErrorCategory::NeedsMoreInput) {
                     break;
+                }
 
-                enqueue_error(frame_result.release_error(), frame_sample->timestamp());
-                return false;
+                item_to_enqueue = FrameQueueItem::error_marker(frame_result.release_error(), sample->timestamp());
+                break;
             }
 
             decoded_frame = frame_result.release_value();
-            VERIFY(decoded_frame);
+        }
+
+        // Convert the frame for display.
+        if (decoded_frame != nullptr) {
+            auto& cicp = decoded_frame->cicp();
+            cicp.adopt_specified_values(sample->container_cicp());
+            cicp.default_code_points_if_unspecified({ ColorPrimaries::BT709, TransferCharacteristics::BT709, MatrixCoefficients::BT709, VideoFullRangeFlag::Studio });
+
+            // BT.601, BT.709 and BT.2020 have a similar transfer function to sRGB, so other applications
+            // (Chromium, VLC) forgo transfer characteristics conversion. We will emulate that behavior by
+            // handling those as sRGB instead, which causes no transfer function change in the output,
+            // unless display color management is later implemented.
+            switch (cicp.transfer_characteristics()) {
+            case TransferCharacteristics::BT601:
+            case TransferCharacteristics::BT709:
+            case TransferCharacteristics::BT2020BitDepth10:
+            case TransferCharacteristics::BT2020BitDepth12:
+                cicp.set_transfer_characteristics(TransferCharacteristics::SRGB);
+                break;
+            default:
+                break;
+            }
+
+            auto bitmap_result = decoded_frame->to_bitmap();
+
+            if (bitmap_result.is_error())
+                item_to_enqueue = FrameQueueItem::error_marker(bitmap_result.release_error(), sample->timestamp());
+            else
+                item_to_enqueue = FrameQueueItem::frame(bitmap_result.release_value(), sample->timestamp());
+            break;
         }
     }
 
-    auto& cicp = decoded_frame->cicp();
-    cicp.adopt_specified_values(frame_sample->container_cicp());
-    cicp.default_code_points_if_unspecified({ ColorPrimaries::BT709, TransferCharacteristics::BT709, MatrixCoefficients::BT709, VideoFullRangeFlag::Studio });
-
-    // BT.601, BT.709 and BT.2020 have a similar transfer function to sRGB, so other applications
-    // (Chromium, VLC) forgo transfer characteristics conversion. We will emulate that behavior by
-    // handling those as sRGB instead, which causes no transfer function change in the output,
-    // unless display color management is later implemented.
-    switch (cicp.transfer_characteristics()) {
-    case TransferCharacteristics::BT601:
-    case TransferCharacteristics::BT709:
-    case TransferCharacteristics::BT2020BitDepth10:
-    case TransferCharacteristics::BT2020BitDepth12:
-        cicp.set_transfer_characteristics(TransferCharacteristics::SRGB);
-        break;
-    default:
-        break;
-    }
-
-    auto bitmap = TRY_OR_ENQUEUE_ERROR(decoded_frame->to_bitmap(), frame_sample->timestamp());
-    m_frame_queue->enqueue(FrameQueueItem::frame(bitmap, frame_sample->timestamp()));
-
+    VERIFY(!item_to_enqueue.is_empty());
 #if PLAYBACK_MANAGER_DEBUG
-    auto end_time = Time::now_monotonic();
-    dbgln("Decoding sample at {}ms took {}ms, queue contains {} items", frame_sample->timestamp().to_milliseconds(), (end_time - start_time).to_milliseconds(), m_frame_queue->size());
+    dbgln("Media Decoder: Sample at {}ms took {}ms to decode, queue contains ~{} items", item_to_enqueue.timestamp().to_milliseconds(), (Time::now_monotonic() - start_time).to_milliseconds(), m_frame_queue.weak_used());
 #endif
 
-    return true;
-}
+    auto wait = [&] {
+        auto wait_locker = Threading::MutexLocker(m_decode_wait_mutex);
+        m_decode_wait_condition.wait();
+    };
 
-void PlaybackManager::on_decode_timer()
-{
-    if (!decode_and_queue_one_sample()) {
-        // Note: When threading is implemented, this must be dispatched via an event loop.
-        TRY_OR_FATAL_ERROR(m_playback_handler->on_buffer_filled());
-        return;
+    bool had_error = item_to_enqueue.is_error();
+    while (true) {
+        if (m_frame_queue.can_enqueue()) {
+            MUST(m_frame_queue.enqueue(move(item_to_enqueue)));
+            break;
+        }
+
+        if (m_stop_decoding.load()) {
+            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Media Decoder: Received signal to stop, exiting decode function...");
+            return;
+        }
+
+        m_buffer_is_full.exchange(true);
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Media Decoder: Waiting for a frame to be dequeued...");
+        wait();
     }
 
-    // Continually decode until buffering is complete
-    m_decode_timer->start(0);
+    if (had_error) {
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Media Decoder: Encountered {}, waiting...", item_to_enqueue.error().category() == DecoderErrorCategory::EndOfStream ? "end of stream"sv : "error"sv);
+        m_buffer_is_full.exchange(true);
+        wait();
+    }
+
+    m_buffer_is_full.exchange(false);
 }
 
 Time PlaybackManager::PlaybackStateHandler::current_time() const
@@ -385,7 +433,7 @@ private:
             auto frame_time_ms = (manager().m_next_frame->timestamp() - current_time()).to_milliseconds();
             VERIFY(frame_time_ms <= NumericLimits<int>::max());
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Time until next frame is {}ms", frame_time_ms);
-            manager().start_timer(max(static_cast<int>(frame_time_ms), 0));
+            manager().m_present_timer->start(max(static_cast<int>(frame_time_ms), 0));
         };
 
         if (manager().m_next_frame.has_value() && current_time() < manager().m_next_frame->timestamp()) {
@@ -398,9 +446,10 @@ private:
         bool should_present_frame = false;
 
         // Skip frames until we find a frame past the current playback time, and keep the one that precedes it to display.
-        while (!manager().m_frame_queue->is_empty()) {
-            future_frame_item.emplace(manager().m_frame_queue->dequeue());
-            manager().m_decode_timer->start(0);
+        while (true) {
+            future_frame_item = manager().dequeue_one_frame();
+            if (!future_frame_item.has_value())
+                break;
 
             if (future_frame_item->timestamp() >= current_time() || future_frame_item->timestamp() == FrameQueueItem::no_timestamp) {
                 dbgln_if(PLAYBACK_MANAGER_DEBUG, "Should present frame, future {} is error or after {}ms", future_frame_item->debug_string(), current_time().to_milliseconds());
@@ -488,20 +537,31 @@ private:
     PlaybackState get_state() const override { return PlaybackState::Paused; }
 };
 
+// FIXME: This is a placeholder variable that could be scaled based on how long each frame decode takes to
+//        avoid triggering the timer to check the queue constantly. However, doing so may reduce the speed
+//        of seeking due to the decode thread having to wait for a signal to continue decoding.
+constexpr int buffering_or_seeking_decode_wait_time = 1;
+
 class PlaybackManager::BufferingStateHandler : public PlaybackManager::ResumingStateHandler {
     using PlaybackManager::ResumingStateHandler::ResumingStateHandler;
 
     ErrorOr<void> on_enter() override
     {
-        manager().m_decode_timer->start(0);
+        manager().m_present_timer->start(buffering_or_seeking_decode_wait_time);
         return {};
     }
 
     StringView name() override { return "Buffering"sv; }
 
-    ErrorOr<void> on_buffer_filled() override
+    ErrorOr<void> on_timer_callback() override
     {
-        return assume_next_state();
+        auto buffer_is_full = manager().m_buffer_is_full.load();
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Buffering timer callback has been called. Buffer is {}.", buffer_is_full ? "full, exiting"sv : "not full, waiting"sv);
+        if (buffer_is_full)
+            return assume_next_state();
+
+        manager().m_present_timer->start(buffering_or_seeking_decode_wait_time);
+        return {};
     }
 
     PlaybackState get_state() const override { return PlaybackState::Buffering; }
@@ -524,30 +584,32 @@ private:
         if (manager().m_next_frame.has_value() && manager().m_next_frame->timestamp() != FrameQueueItem::no_timestamp) {
             earliest_available_sample = min(earliest_available_sample, manager().m_next_frame->timestamp());
         }
-        auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp, earliest_available_sample);
+
+        {
+            Threading::MutexLocker demuxer_locker(manager().m_demuxer_mutex);
+            auto keyframe_timestamp = manager().seek_demuxer_to_most_recent_keyframe(m_target_timestamp, earliest_available_sample);
 
 #if PLAYBACK_MANAGER_DEBUG
-        auto seek_mode_name = m_seek_mode == SeekMode::Accurate ? "Accurate"sv : "Fast"sv;
-        if (keyframe_timestamp.has_value()) {
-            dbgln("{} seeking to timestamp target {}ms, selected keyframe at {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), keyframe_timestamp->to_milliseconds());
-        } else {
-            dbgln("{} seeking to timestamp target {}ms, demuxer kept its iterator position after {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), earliest_available_sample.to_milliseconds());
-        }
+            auto seek_mode_name = m_seek_mode == SeekMode::Accurate ? "Accurate"sv : "Fast"sv;
+            if (keyframe_timestamp.has_value())
+                dbgln("{} seeking to timestamp target {}ms, selected keyframe at {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), keyframe_timestamp->to_milliseconds());
+            else
+                dbgln("{} seeking to timestamp target {}ms, demuxer kept its iterator position after {}ms", seek_mode_name, m_target_timestamp.to_milliseconds(), earliest_available_sample.to_milliseconds());
 #endif
 
-        if (m_seek_mode == SeekMode::Fast) {
-            m_target_timestamp = keyframe_timestamp.value_or(manager().m_last_present_in_media_time);
-        }
+            if (m_seek_mode == SeekMode::Fast)
+                m_target_timestamp = keyframe_timestamp.value_or(manager().m_last_present_in_media_time);
 
-        if (keyframe_timestamp.has_value()) {
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Keyframe is nearer to the target than the current frames, clearing queue");
-            manager().m_frame_queue->clear();
-            manager().m_next_frame.clear();
-            manager().m_last_present_in_media_time = keyframe_timestamp.value();
-        } else if (m_target_timestamp >= manager().m_last_present_in_media_time && manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
-            dbgln_if(PLAYBACK_MANAGER_DEBUG, "Target timestamp is between the last presented frame and the next frame, exiting seek at {}ms", m_target_timestamp.to_milliseconds());
-            manager().m_last_present_in_media_time = m_target_timestamp;
-            return assume_next_state();
+            if (keyframe_timestamp.has_value()) {
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Keyframe is nearer to the target than the current frames, emptying queue");
+                while (manager().dequeue_one_frame().has_value()) { }
+                manager().m_next_frame.clear();
+                manager().m_last_present_in_media_time = keyframe_timestamp.value();
+            } else if (m_target_timestamp >= manager().m_last_present_in_media_time && manager().m_next_frame.has_value() && manager().m_next_frame.value().timestamp() > m_target_timestamp) {
+                dbgln_if(PLAYBACK_MANAGER_DEBUG, "Target timestamp is between the last presented frame and the next frame, exiting seek at {}ms", m_target_timestamp.to_milliseconds());
+                manager().m_last_present_in_media_time = m_target_timestamp;
+                return assume_next_state();
+            }
         }
 
         return skip_samples_until_timestamp();
@@ -555,9 +617,11 @@ private:
 
     ErrorOr<void> skip_samples_until_timestamp()
     {
-        while (!manager().m_frame_queue->is_empty()) {
-            auto item = manager().m_frame_queue->dequeue();
-            manager().m_decode_timer->start(0);
+        while (true) {
+            auto optional_item = manager().dequeue_one_frame();
+            if (!optional_item.has_value())
+                break;
+            auto item = optional_item.release_value();
 
             dbgln_if(PLAYBACK_MANAGER_DEBUG, "Dequeuing frame at {}ms and comparing to seek target {}ms", item.timestamp().to_milliseconds(), m_target_timestamp.to_milliseconds());
             if (manager().m_next_frame.has_value() && (item.timestamp() > m_target_timestamp || item.timestamp() == FrameQueueItem::no_timestamp)) {
@@ -579,8 +643,8 @@ private:
             manager().m_next_frame.emplace(item);
         }
 
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Frame queue is empty while seeking, waiting for buffer fill.");
-        manager().m_decode_timer->start(0);
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Frame queue is empty while seeking, waiting for buffer to fill.");
+        manager().m_present_timer->start(buffering_or_seeking_decode_wait_time);
         return {};
     }
 
@@ -599,9 +663,9 @@ private:
     }
 
     // We won't need this override when threaded, the queue can pause us in on_enter().
-    ErrorOr<void> on_buffer_filled() override
+    ErrorOr<void> on_timer_callback() override
     {
-        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Buffer filled while seeking, dequeuing until timestamp.");
+        dbgln_if(PLAYBACK_MANAGER_DEBUG, "Seeking wait finished, attempting to dequeue until timestamp.");
         return skip_samples_until_timestamp();
     }
 
@@ -629,11 +693,8 @@ private:
 
     ErrorOr<void> play() override
     {
-        manager().m_next_frame.clear();
-        manager().m_frame_queue->clear();
-        auto start_timestamp = manager().seek_demuxer_to_most_recent_keyframe(Time::zero());
-        VERIFY(start_timestamp.has_value());
-        manager().m_last_present_in_media_time = start_timestamp.release_value();
+        // When Stopped, the decoder thread will be waiting for a signal to start its loop going again.
+        manager().m_decode_wait_condition.broadcast();
         return replace_handler_and_delete_this<SeekingStateHandler>(true, Time::zero(), SeekMode::Fast);
     }
     bool is_playing() const override { return false; };
