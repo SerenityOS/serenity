@@ -836,7 +836,7 @@ do_dev() {
                     else
                         # The patch didn't apply, oh no!
                         # Ask the user to figure it out :shrug:
-                        git am "$patch" || true
+                        git am --keep-cr --keep-non-patch --3way "$patch" || true
                         >&2 echo "- This patch does not apply, you'll be dropped into a shell to investigate and fix this, quit the shell when the problem is resolved."
                         >&2 echo "Note that the patch needs to be committed into the current repository!"
                         launch_user_shell
