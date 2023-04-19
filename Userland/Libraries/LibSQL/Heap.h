@@ -70,13 +70,11 @@ public:
 
     u32 user_value(size_t index) const
     {
-        VERIFY(index < m_user_values.size());
         return m_user_values[index];
     }
 
     void set_user_value(size_t index, u32 value)
     {
-        VERIFY(index < m_user_values.size());
         m_user_values[index] = value;
         update_zero_block();
     }
