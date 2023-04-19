@@ -5128,17 +5128,6 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
         if (!value)
             return nullptr;
 
-        if (value->is_identifier() && property_accepts_value(PropertyID::Flex, *value)) {
-            switch (value->to_identifier()) {
-            case ValueID::None: {
-                auto zero = NumericStyleValue::create_integer(0);
-                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
-            }
-            default:
-                return value;
-            }
-        }
-
         if (property_accepts_value(PropertyID::FlexGrow, *value)) {
             // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
             // https://github.com/w3c/csswg-drafts/issues/5742
@@ -5150,6 +5139,17 @@ RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& compon
         if (property_accepts_value(PropertyID::FlexBasis, *value)) {
             auto one = NumericStyleValue::create_integer(1);
             return FlexStyleValue::create(one, one, *value);
+        }
+
+        if (value->is_identifier() && property_accepts_value(PropertyID::Flex, *value)) {
+            switch (value->to_identifier()) {
+            case ValueID::None: {
+                auto zero = NumericStyleValue::create_integer(0);
+                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
+            }
+            default:
+                return value;
+            }
         }
 
         return nullptr;
