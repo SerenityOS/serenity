@@ -1876,6 +1876,62 @@ ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
     return 0;
 }
 
+ErrorOr<int> Shell::builtin_run_with_env(Main::Arguments arguments)
+{
+    Vector<DeprecatedString> environment_variables;
+    Vector<StringView> command_and_arguments;
+
+    Core::ArgsParser parser;
+    parser.add_option(environment_variables, "Environment variables to set", "env", 'e', "NAME=VALUE");
+    parser.add_positional_argument(command_and_arguments, "Command and arguments to run", "command", Core::ArgsParser::Required::Yes);
+    parser.set_stop_on_first_non_option(true);
+
+    if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::Ignore))
+        return 1;
+
+    if (command_and_arguments.is_empty()) {
+        warnln("run_with_env: No command to run");
+        return 1;
+    }
+
+    AST::Command command;
+    TRY(command.argv.try_ensure_capacity(command_and_arguments.size()));
+    for (auto& arg : command_and_arguments)
+        command.argv.append(TRY(String::from_utf8(arg)));
+
+    auto commands = TRY(expand_aliases({ move(command) }));
+
+    HashMap<DeprecatedString, Optional<DeprecatedString>> old_environment_entries;
+    for (auto& variable : environment_variables) {
+        auto parts = variable.split_limit('=', 2, SplitBehavior::KeepEmpty);
+        if (parts.size() != 2) {
+            warnln("run_with_env: Invalid environment variable: '{}'", variable);
+            return 1;
+        }
+
+        DeprecatedString name = parts[0];
+        old_environment_entries.set(name, getenv(name.characters()) ?: Optional<DeprecatedString> {});
+
+        DeprecatedString value = parts[1];
+        setenv(name.characters(), value.characters(), 1);
+    }
+
+    int exit_code = 0;
+    for (auto& job : run_commands(commands)) {
+        block_on_job(job);
+        exit_code = job->exit_code();
+    }
+
+    for (auto& entry : old_environment_entries) {
+        if (entry.value.has_value())
+            setenv(entry.key.characters(), entry.value->characters(), 1);
+        else
+            unsetenv(entry.key.characters());
+    }
+
+    return exit_code;
+}
+
 bool Shell::has_builtin(StringView name) const
 {
     if (name == ":"sv)

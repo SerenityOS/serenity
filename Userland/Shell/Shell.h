@@ -23,40 +23,41 @@
 #include <LibMain/Main.h>
 #include <termios.h>
 
-#define ENUMERATE_SHELL_BUILTINS()      \
-    __ENUMERATE_SHELL_BUILTIN(alias)    \
-    __ENUMERATE_SHELL_BUILTIN(where)    \
-    __ENUMERATE_SHELL_BUILTIN(cd)       \
-    __ENUMERATE_SHELL_BUILTIN(cdh)      \
-    __ENUMERATE_SHELL_BUILTIN(pwd)      \
-    __ENUMERATE_SHELL_BUILTIN(type)     \
-    __ENUMERATE_SHELL_BUILTIN(exec)     \
-    __ENUMERATE_SHELL_BUILTIN(exit)     \
-    __ENUMERATE_SHELL_BUILTIN(export)   \
-    __ENUMERATE_SHELL_BUILTIN(glob)     \
-    __ENUMERATE_SHELL_BUILTIN(unalias)  \
-    __ENUMERATE_SHELL_BUILTIN(unset)    \
-    __ENUMERATE_SHELL_BUILTIN(history)  \
-    __ENUMERATE_SHELL_BUILTIN(umask)    \
-    __ENUMERATE_SHELL_BUILTIN(not )     \
-    __ENUMERATE_SHELL_BUILTIN(dirs)     \
-    __ENUMERATE_SHELL_BUILTIN(pushd)    \
-    __ENUMERATE_SHELL_BUILTIN(popd)     \
-    __ENUMERATE_SHELL_BUILTIN(setopt)   \
-    __ENUMERATE_SHELL_BUILTIN(shift)    \
-    __ENUMERATE_SHELL_BUILTIN(source)   \
-    __ENUMERATE_SHELL_BUILTIN(time)     \
-    __ENUMERATE_SHELL_BUILTIN(jobs)     \
-    __ENUMERATE_SHELL_BUILTIN(disown)   \
-    __ENUMERATE_SHELL_BUILTIN(fg)       \
-    __ENUMERATE_SHELL_BUILTIN(bg)       \
-    __ENUMERATE_SHELL_BUILTIN(wait)     \
-    __ENUMERATE_SHELL_BUILTIN(dump)     \
-    __ENUMERATE_SHELL_BUILTIN(kill)     \
-    __ENUMERATE_SHELL_BUILTIN(noop)     \
-    __ENUMERATE_SHELL_BUILTIN(break)    \
-    __ENUMERATE_SHELL_BUILTIN(continue) \
-    __ENUMERATE_SHELL_BUILTIN(read)     \
+#define ENUMERATE_SHELL_BUILTINS()          \
+    __ENUMERATE_SHELL_BUILTIN(alias)        \
+    __ENUMERATE_SHELL_BUILTIN(where)        \
+    __ENUMERATE_SHELL_BUILTIN(cd)           \
+    __ENUMERATE_SHELL_BUILTIN(cdh)          \
+    __ENUMERATE_SHELL_BUILTIN(pwd)          \
+    __ENUMERATE_SHELL_BUILTIN(type)         \
+    __ENUMERATE_SHELL_BUILTIN(exec)         \
+    __ENUMERATE_SHELL_BUILTIN(exit)         \
+    __ENUMERATE_SHELL_BUILTIN(export)       \
+    __ENUMERATE_SHELL_BUILTIN(glob)         \
+    __ENUMERATE_SHELL_BUILTIN(unalias)      \
+    __ENUMERATE_SHELL_BUILTIN(unset)        \
+    __ENUMERATE_SHELL_BUILTIN(history)      \
+    __ENUMERATE_SHELL_BUILTIN(umask)        \
+    __ENUMERATE_SHELL_BUILTIN(not )         \
+    __ENUMERATE_SHELL_BUILTIN(dirs)         \
+    __ENUMERATE_SHELL_BUILTIN(pushd)        \
+    __ENUMERATE_SHELL_BUILTIN(popd)         \
+    __ENUMERATE_SHELL_BUILTIN(setopt)       \
+    __ENUMERATE_SHELL_BUILTIN(shift)        \
+    __ENUMERATE_SHELL_BUILTIN(source)       \
+    __ENUMERATE_SHELL_BUILTIN(time)         \
+    __ENUMERATE_SHELL_BUILTIN(jobs)         \
+    __ENUMERATE_SHELL_BUILTIN(disown)       \
+    __ENUMERATE_SHELL_BUILTIN(fg)           \
+    __ENUMERATE_SHELL_BUILTIN(bg)           \
+    __ENUMERATE_SHELL_BUILTIN(wait)         \
+    __ENUMERATE_SHELL_BUILTIN(dump)         \
+    __ENUMERATE_SHELL_BUILTIN(kill)         \
+    __ENUMERATE_SHELL_BUILTIN(noop)         \
+    __ENUMERATE_SHELL_BUILTIN(break)        \
+    __ENUMERATE_SHELL_BUILTIN(continue)     \
+    __ENUMERATE_SHELL_BUILTIN(read)         \
+    __ENUMERATE_SHELL_BUILTIN(run_with_env) \
     __ENUMERATE_SHELL_BUILTIN(argsparser_parse)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
