@@ -33,6 +33,8 @@ public:
 
     void queue_a_media_element_task(JS::SafeFunction<void()> steps);
 
+    String const& current_src() const { return m_current_src; }
+
     enum class NetworkState : u16 {
         Empty,
         Idle,
@@ -141,6 +143,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-crossorigin
     CORSSettingAttribute m_crossorigin { CORSSettingAttribute::NoCORS };
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-currentsrc
+    String m_current_src;
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-networkstate
     NetworkState m_network_state { NetworkState::Empty };

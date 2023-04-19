@@ -378,6 +378,8 @@ enum class SelectMode {
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-algorithm
 WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 {
+    auto& vm = this->vm();
+
     // 1. Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
     m_network_state = NetworkState::NoSource;
 
@@ -463,7 +465,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
         //    the URL specified by the src attribute's value relative to the media element's node document when the src attribute was last changed.
         auto url_record = document().parse_url(source);
 
-        // FIXME: 3. ⌛ If urlString was obtained successfully, set the currentSrc attribute to urlString.
+        // 3. ⌛ If urlString was obtained successfully, set the currentSrc attribute to urlString.
+        if (url_record.is_valid())
+            m_current_src = TRY_OR_THROW_OOM(vm, String::from_deprecated_string(url_record.to_deprecated_string()));
 
         // 4. End the synchronous section, continuing the remaining steps in parallel.
 
