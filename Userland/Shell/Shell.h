@@ -308,6 +308,8 @@ public:
 
     void notify_child_event();
 
+    bool posix_mode() const { return m_in_posix_mode; }
+
     struct termios termios;
     struct termios default_termios;
     bool was_interrupted { false };
