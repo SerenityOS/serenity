@@ -1849,22 +1849,33 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
     while (peek().type == Token::Type::AssignmentWord) {
         definitions.append(peek().value);
 
-        if (!nodes.is_empty()) {
-            nodes.append(
-                make_ref_counted<AST::BarewordLiteral>(
-                    peek().position.value_or(empty_position()),
-                    consume().value));
-        } else {
-            // env (assignments) (command)
+        if (nodes.is_empty()) {
+            // run_with_env -e*(assignments) -- (command)
             nodes.append(make_ref_counted<AST::BarewordLiteral>(
                 empty_position(),
-                "env"_short_string));
-
-            nodes.append(
-                make_ref_counted<AST::BarewordLiteral>(
-                    peek().position.value_or(empty_position()),
-                    consume().value));
+                TRY("run_with_env"_string)));
         }
+
+        auto position = peek().position.value_or(empty_position());
+        nodes.append(make_ref_counted<AST::ImmediateExpression>(
+            position,
+            AST::NameWithPosition {
+                TRY("reexpand"_string),
+                position,
+            },
+            Vector<NonnullRefPtr<AST::Node>> {
+                make_ref_counted<AST::StringLiteral>(
+                    position,
+                    TRY(String::formatted("-e{}", consume().value)),
+                    AST::StringLiteral::EnclosureType::DoubleQuotes),
+            },
+            Optional<AST::Position> {}));
+    }
+
+    if (!definitions.is_empty()) {
+        nodes.append(make_ref_counted<AST::BarewordLiteral>(
+            empty_position(),
+            "--"_short_string));
     }
 
     // WORD or io_redirect: IO_NUMBER or io_file
@@ -1879,13 +1890,24 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_simple_command()
                 auto split_offset = equal_offset.value_or(definition.bytes().size());
                 auto name = make_ref_counted<AST::BarewordLiteral>(
                     empty_position(),
-                    definition.substring_from_byte_offset_with_shared_superstring(0, split_offset).release_value_but_fixme_should_propagate_errors());
+                    TRY(definition.substring_from_byte_offset_with_shared_superstring(0, split_offset)));
 
-                auto value = make_ref_counted<AST::BarewordLiteral>(
-                    empty_position(),
-                    definition.substring_from_byte_offset_with_shared_superstring(equal_offset.map([](auto x) { return x + 1; }).value_or(definition.bytes().size())).release_value_but_fixme_should_propagate_errors());
+                auto position = peek().position.value_or(empty_position());
+                auto expanded_value = make_ref_counted<AST::ImmediateExpression>(
+                    position,
+                    AST::NameWithPosition {
+                        TRY("reexpand"_string),
+                        position,
+                    },
+                    Vector<NonnullRefPtr<AST::Node>> {
+                        make_ref_counted<AST::StringLiteral>(
+                            position,
+                            TRY(definition.substring_from_byte_offset_with_shared_superstring(split_offset + 1)),
+                            AST::StringLiteral::EnclosureType::DoubleQuotes),
+                    },
+                    Optional<AST::Position> {});
 
-                variables.append({ move(name), move(value) });
+                variables.append({ move(name), move(expanded_value) });
             }
 
             return make_ref_counted<AST::VariableDeclarations>(empty_position(), move(variables));
