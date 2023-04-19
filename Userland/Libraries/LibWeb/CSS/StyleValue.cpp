@@ -336,4 +336,16 @@ ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRe
     return *this;
 }
 
+bool StyleValue::has_auto() const
+{
+    return is_identifier() && as_identifier().id() == ValueID::Auto;
+}
+
+ValueID StyleValue::to_identifier() const
+{
+    if (is_identifier())
+        return as_identifier().id();
+    return ValueID::Invalid;
+}
+
 }

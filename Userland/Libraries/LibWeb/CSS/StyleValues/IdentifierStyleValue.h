@@ -24,9 +24,6 @@ public:
 
     ValueID id() const { return m_id; }
 
-    virtual bool has_auto() const override { return m_id == ValueID::Auto; }
-    virtual bool has_identifier() const override { return true; }
-    virtual ValueID to_identifier() const override { return m_id; }
     virtual bool has_color() const override;
     virtual Color to_color(Layout::NodeWithStyle const& node) const override;
     virtual ErrorOr<String> to_string() const override;

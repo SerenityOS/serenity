@@ -4388,7 +4388,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_value(TokenStream<Co
             return zero_offset;
         };
 
-        if (value->has_identifier()) {
+        if (value->is_identifier()) {
             auto identifier = value->to_identifier();
             if (is_horizontal(identifier)) {
                 bool offset_provided = false;
@@ -4474,7 +4474,7 @@ RefPtr<StyleValue> Parser::parse_single_background_position_x_or_y_value(TokenSt
     };
 
     auto value = parse_value(tokens.next_token());
-    if (value->has_identifier()) {
+    if (value->is_identifier()) {
         auto identifier = value->to_identifier();
         if (identifier == ValueID::Center) {
             transaction.commit();

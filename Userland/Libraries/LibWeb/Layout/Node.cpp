@@ -334,7 +334,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 }
             }
 
-            if (auto attachment_value = value_for_layer(attachments, layer_index); attachment_value && attachment_value->has_identifier()) {
+            if (auto attachment_value = value_for_layer(attachments, layer_index); attachment_value && attachment_value->is_identifier()) {
                 switch (attachment_value->to_identifier()) {
                 case CSS::ValueID::Fixed:
                     layer.attachment = CSS::BackgroundAttachment::Fixed;
@@ -363,11 +363,11 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                 }
             };
 
-            if (auto origin_value = value_for_layer(origins, layer_index); origin_value && origin_value->has_identifier()) {
+            if (auto origin_value = value_for_layer(origins, layer_index); origin_value && origin_value->is_identifier()) {
                 layer.origin = as_box(origin_value->to_identifier());
             }
 
-            if (auto clip_value = value_for_layer(clips, layer_index); clip_value && clip_value->has_identifier()) {
+            if (auto clip_value = value_for_layer(clips, layer_index); clip_value && clip_value->is_identifier()) {
                 layer.clip = as_box(clip_value->to_identifier());
             }
 
@@ -389,7 +389,7 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
                     layer.size_type = CSS::BackgroundSize::LengthPercentage;
                     layer.size_x = size.size_x();
                     layer.size_y = size.size_y();
-                } else if (size_value->has_identifier()) {
+                } else if (size_value->is_identifier()) {
                     switch (size_value->to_identifier()) {
                     case CSS::ValueID::Contain:
                         layer.size_type = CSS::BackgroundSize::Contain;
