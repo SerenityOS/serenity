@@ -904,6 +904,12 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
 {
     ScopeGuard guard { [&] { m_ready_state = ready_state; } };
 
+    // When the ready state of a media element whose networkState is not NETWORK_EMPTY changes, the user agent must
+    // follow the steps given below:
+    if (m_network_state == NetworkState::Empty)
+        return;
+
+    // 1. Apply the first applicable set of substeps from the following list:
     // -> If the previous ready state was HAVE_NOTHING, and the new ready state is HAVE_METADATA
     if (m_ready_state == ReadyState::HaveNothing && ready_state == ReadyState::HaveMetadata) {
         // Queue a media element task given the media element to fire an event named loadedmetadata at the element.
