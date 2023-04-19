@@ -10,9 +10,7 @@
 #include <LibCore/IODevice.h>
 #include <LibCore/System.h>
 #include <LibSQL/Heap.h>
-#include <LibSQL/Serializer.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 
 namespace SQL {
 
@@ -169,9 +167,8 @@ ErrorOr<void> Heap::flush()
 {
     VERIFY(m_file);
     Vector<u32> blocks;
-    for (auto& wal_entry : m_write_ahead_log) {
+    for (auto& wal_entry : m_write_ahead_log)
         blocks.append(wal_entry.key);
-    }
     quick_sort(blocks);
     for (auto& block : blocks) {
         auto buffer_it = m_write_ahead_log.find(block);
@@ -221,9 +218,8 @@ ErrorOr<void> Heap::read_zero_block()
 
     memcpy(m_user_values.data(), buffer.offset_pointer(USER_VALUES_OFFSET), m_user_values.size() * sizeof(u32));
     for (auto ix = 0u; ix < m_user_values.size(); ix++) {
-        if (m_user_values[ix]) {
+        if (m_user_values[ix])
             dbgln_if(SQL_DEBUG, "User value {}: {}", ix, m_user_values[ix]);
-        }
     }
     return {};
 }
@@ -237,9 +233,8 @@ void Heap::update_zero_block()
     dbgln_if(SQL_DEBUG, "Table Columns root node: {}", m_table_columns_root);
     dbgln_if(SQL_DEBUG, "Free list: {}", m_free_list);
     for (auto ix = 0u; ix < m_user_values.size(); ix++) {
-        if (m_user_values[ix]) {
+        if (m_user_values[ix])
             dbgln_if(SQL_DEBUG, "User value {}: {}", ix, m_user_values[ix]);
-        }
     }
 
     // FIXME: Handle an OOM failure here.
@@ -263,9 +258,8 @@ void Heap::initialize_zero_block()
     m_table_columns_root = 0;
     m_next_block = 1;
     m_free_list = 0;
-    for (auto& user : m_user_values) {
+    for (auto& user : m_user_values)
         user = 0u;
-    }
     update_zero_block();
 }
 

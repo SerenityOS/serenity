@@ -36,7 +36,7 @@ struct TupleElementDescriptor {
 
     size_t length() const
     {
-        return (sizeof(u32) + name.length()) + 2 * sizeof(u8);
+        return sizeof(u32) + name.length() + 2 * sizeof(u8);
     }
 
     DeprecatedString to_deprecated_string() const
@@ -85,18 +85,16 @@ public:
     size_t length() const
     {
         size_t len = sizeof(u32);
-        for (auto& element : *this) {
+        for (auto& element : *this)
             len += element.length();
-        }
         return len;
     }
 
     DeprecatedString to_deprecated_string() const
     {
         Vector<DeprecatedString> elements;
-        for (auto& element : *this) {
+        for (auto& element : *this)
             elements.append(element.to_deprecated_string());
-        }
         return DeprecatedString::formatted("[\n{}\n]", DeprecatedString::join('\n', elements));
     }
 

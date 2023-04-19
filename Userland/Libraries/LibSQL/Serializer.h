@@ -10,7 +10,6 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Format.h>
-#include <AK/ScopeGuard.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
 #include <string.h>
@@ -155,9 +154,8 @@ private:
         StringBuilder builder;
         builder.appendff("{0} {1:04x} | ", prefix, sz);
         Vector<DeprecatedString> bytes;
-        for (auto ix = 0u; ix < sz; ++ix) {
+        for (auto ix = 0u; ix < sz; ++ix)
             bytes.append(DeprecatedString::formatted("{0:02x}", *(ptr + ix)));
-        }
         StringBuilder bytes_builder;
         bytes_builder.join(' ', bytes);
         builder.append(bytes_builder.to_deprecated_string());

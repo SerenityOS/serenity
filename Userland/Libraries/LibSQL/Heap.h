@@ -10,7 +10,6 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
-#include <AK/Vector.h>
 #include <LibCore/File.h>
 #include <LibCore/Object.h>
 

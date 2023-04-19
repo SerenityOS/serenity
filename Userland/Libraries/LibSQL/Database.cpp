@@ -6,8 +6,7 @@
  */
 
 #include <AK/DeprecatedString.h>
-#include <AK/RefPtr.h>
-
+#include <AK/NonnullRefPtr.h>
 #include <LibSQL/BTree.h>
 #include <LibSQL/Database.h>
 #include <LibSQL/Heap.h>
@@ -174,9 +173,8 @@ ErrorOr<Vector<Row>> Database::select_all(TableDef& table)
 {
     VERIFY(m_table_cache.get(table.key().hash()).has_value());
     Vector<Row> ret;
-    for (auto pointer = table.pointer(); pointer; pointer = ret.last().next_pointer()) {
+    for (auto pointer = table.pointer(); pointer; pointer = ret.last().next_pointer())
         ret.append(m_serializer.deserialize_block<Row>(pointer, table, pointer));
-    }
     return ret;
 }
 
