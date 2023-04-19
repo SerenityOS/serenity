@@ -6,7 +6,6 @@
 
 #include <AK/Debug.h>
 #include <AK/Format.h>
-#include <AK/NonnullOwnPtr.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/BTree.h>
 #include <LibSQL/Serializer.h>
@@ -145,9 +144,8 @@ size_t TreeNode::length() const
     if (!size())
         return 0;
     size_t len = sizeof(u32);
-    for (auto& key : m_entries) {
+    for (auto& key : m_entries)
         len += sizeof(u32) + key.length();
-    }
     return len;
 }
 
@@ -315,9 +313,8 @@ void TreeNode::split()
         auto down = m_down.take(median_index);
 
         // Reparent to new right node:
-        if (down.m_node != nullptr) {
+        if (down.m_node != nullptr)
             down.m_node->m_up = new_node;
-        }
         new_node->m_entries.append(entry);
         new_node->m_down.append(move(down));
     }
@@ -354,15 +351,13 @@ void TreeNode::dump_if(int flag, DeprecatedString&& msg)
             VERIFY(m_down[ix].pointer() == 0);
         builder.appendff("'{}' ", (DeprecatedString)m_entries[ix]);
     }
-    if (!is_leaf()) {
+    if (!is_leaf())
         builder.appendff("[v{}]", m_down[size()].pointer());
-    } else {
+    else
         VERIFY(m_down[size()].pointer() == 0);
-    }
     builder.appendff(" (size {}", (int)size());
-    if (is_leaf()) {
+    if (is_leaf())
         builder.append(", leaf"sv);
-    }
     builder.append(')');
     dbgln(builder.to_deprecated_string());
 }
@@ -370,22 +365,19 @@ void TreeNode::dump_if(int flag, DeprecatedString&& msg)
 void TreeNode::list_node(int indent)
 {
     auto do_indent = [&]() {
-        for (int i = 0; i < indent; ++i) {
+        for (int i = 0; i < indent; ++i)
             warn(" ");
-        }
     };
     do_indent();
     warnln("--> #{}", pointer());
     for (auto ix = 0u; ix < size(); ix++) {
-        if (!is_leaf()) {
+        if (!is_leaf())
             down_node(ix)->list_node(indent + 2);
-        }
         do_indent();
         warnln("{}", m_entries[ix].to_deprecated_string());
     }
-    if (!is_leaf()) {
+    if (!is_leaf())
         down_node(size())->list_node(indent + 2);
-    }
 }
 
 }

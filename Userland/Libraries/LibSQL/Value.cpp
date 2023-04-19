@@ -12,7 +12,6 @@
 #include <LibSQL/Serializer.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>
-#include <string.h>
 
 namespace SQL {
 
@@ -738,7 +737,6 @@ void Value::deserialize(Serializer& serializer)
     switch (m_type) {
     case SQLType::Null:
         VERIFY_NOT_REACHED();
-        break;
     case SQLType::Text:
         m_value = serializer.deserialize<DeprecatedString>();
         break;
@@ -770,7 +768,6 @@ void Value::deserialize(Serializer& serializer)
             break;
         default:
             VERIFY_NOT_REACHED();
-            break;
         }
         break;
     case SQLType::Float:

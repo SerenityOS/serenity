@@ -10,7 +10,7 @@ namespace SQL {
 
 void Serializer::serialize(DeprecatedString const& text)
 {
-    serialize<u32>((u32)text.length());
+    serialize<u32>(text.length());
     if (!text.is_empty())
         write((u8 const*)text.characters(), text.length());
 }

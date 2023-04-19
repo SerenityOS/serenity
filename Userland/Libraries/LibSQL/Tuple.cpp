@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <cstring>
-
 #include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <LibSQL/Serializer.h>
@@ -26,9 +24,8 @@ Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
     , m_data()
     , m_pointer(pointer)
 {
-    for (auto& element : *descriptor) {
+    for (auto& element : *descriptor)
         m_data.empend(element.type);
-    }
 }
 
 Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, Serializer& serializer)
@@ -42,10 +39,10 @@ void Tuple::deserialize(Serializer& serializer)
     dbgln_if(SQL_DEBUG, "deserialize tuple at offset {}", serializer.offset());
     serializer.deserialize_to<u32>(m_pointer);
     dbgln_if(SQL_DEBUG, "pointer: {}", m_pointer);
-    auto sz = serializer.deserialize<u32>();
+    auto number_of_elements = serializer.deserialize<u32>();
     m_data.clear();
     m_descriptor->clear();
-    for (auto ix = 0u; ix < sz; ++ix) {
+    for (auto ix = 0u; ix < number_of_elements; ++ix) {
         m_descriptor->append(serializer.deserialize<TupleElementDescriptor>());
         m_data.append(serializer.deserialize<Value>());
     }
@@ -56,11 +53,10 @@ void Tuple::serialize(Serializer& serializer) const
     VERIFY(m_descriptor->size() == m_data.size());
     dbgln_if(SQL_DEBUG, "Serializing tuple pointer {}", pointer());
     serializer.serialize<u32>(pointer());
-    serializer.serialize<u32>((u32)m_descriptor->size());
+    serializer.serialize<u32>(m_descriptor->size());
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
-        auto& key_part = m_data[ix];
         serializer.serialize<TupleElementDescriptor>((*m_descriptor)[ix]);
-        serializer.serialize<Value>(key_part);
+        serializer.serialize<Value>(m_data[ix]);
     }
 }
 
@@ -73,9 +69,8 @@ Tuple::Tuple(Tuple const& other)
 
 Tuple& Tuple::operator=(Tuple const& other)
 {
-    if (this != &other) {
+    if (this != &other)
         copy_from(other);
-    }
     return *this;
 }
 
@@ -83,9 +78,8 @@ Optional<size_t> Tuple::index_of(StringView name) const
 {
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
         auto& part = (*m_descriptor)[ix];
-        if (part.name == name) {
+        if (part.name == name)
             return ix;
-        }
     }
     return {};
 }
@@ -107,9 +101,8 @@ Value& Tuple::operator[](DeprecatedString const& name)
 void Tuple::append(Value const& value)
 {
     VERIFY(descriptor()->size() >= size());
-    if (descriptor()->size() == size()) {
+    if (descriptor()->size() == size())
         descriptor()->append(value.descriptor());
-    }
     m_data.append(value);
 }
 
@@ -122,9 +115,8 @@ Tuple& Tuple::operator+=(Value const& value)
 void Tuple::extend(Tuple const& other)
 {
     VERIFY((descriptor()->size() == size()) || (descriptor()->size() >= size() + other.size()));
-    if (descriptor()->size() == size()) {
+    if (descriptor()->size() == size())
         descriptor()->extend(other.descriptor());
-    }
     m_data.extend(other.m_data);
 }
 
@@ -165,14 +157,12 @@ DeprecatedString Tuple::to_deprecated_string() const
 {
     StringBuilder builder;
     for (auto& part : m_data) {
-        if (!builder.is_empty()) {
+        if (!builder.is_empty())
             builder.append('|');
-        }
         builder.append(part.to_deprecated_string());
     }
-    if (pointer() != 0) {
+    if (pointer() != 0)
         builder.appendff(":{}", pointer());
-    }
     return builder.to_deprecated_string();
 }
 
@@ -180,14 +170,12 @@ void Tuple::copy_from(Tuple const& other)
 {
     if (*m_descriptor != *other.m_descriptor) {
         m_descriptor->clear();
-        for (TupleElementDescriptor const& part : *other.m_descriptor) {
+        for (TupleElementDescriptor const& part : *other.m_descriptor)
             m_descriptor->append(part);
-        }
     }
     m_data.clear();
-    for (auto& part : other.m_data) {
+    for (auto& part : other.m_data)
         m_data.append(part);
-    }
     m_pointer = other.pointer();
 }
 

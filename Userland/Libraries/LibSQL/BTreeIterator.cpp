@@ -133,9 +133,8 @@ BTreeIterator BTreeIterator::next() const
 // end (which is really the beginning) of the tree.
 BTreeIterator BTreeIterator::previous() const
 {
-    if (is_end()) {
+    if (is_end())
         return end();
-    }
 
     auto node = m_current;
     auto ix = m_index;

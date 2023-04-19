@@ -86,9 +86,8 @@ void HashBucket::serialize(Serializer& serializer) const
         pointer(), index(), local_depth(), size());
     serializer.serialize<u32>(local_depth());
     serializer.serialize<u32>(size());
-    for (auto& key : m_entries) {
+    for (auto& key : m_entries)
         serializer.serialize<Key>(key);
-    }
 }
 
 void HashBucket::deserialize(Serializer& serializer)
@@ -111,9 +110,8 @@ void HashBucket::deserialize(Serializer& serializer)
 size_t HashBucket::length() const
 {
     size_t len = 2 * sizeof(u32);
-    for (auto& key : m_entries) {
+    for (auto& key : m_entries)
         len += key.length();
-    }
     return len;
 }
 
@@ -132,9 +130,8 @@ bool HashBucket::insert(Key const& key)
 {
     if (!m_inflated)
         m_hash_index.serializer().deserialize_block_to(pointer(), *this);
-    if (find_key_in_bucket(key).has_value()) {
+    if (find_key_in_bucket(key).has_value())
         return false;
-    }
     if ((length() + key.length()) > BLOCKSIZE) {
         dbgln_if(SQL_DEBUG, "Adding key {} would make length exceed block size", key.to_deprecated_string());
         return false;
@@ -148,9 +145,8 @@ Optional<size_t> HashBucket::find_key_in_bucket(Key const& key)
 {
     for (auto ix = 0u; ix < size(); ix++) {
         auto& k = entries()[ix];
-        if (k == key) {
+        if (k == key)
             return ix;
-        }
     }
     return {};
 }
@@ -199,9 +195,8 @@ void HashBucket::list_bucket()
 {
     warnln("Bucket #{} size {} local depth {} pointer {}{}",
         index(), size(), local_depth(), pointer(), (pointer() ? "" : " (VIRTUAL)"));
-    for (auto& key : entries()) {
+    for (auto& key : entries())
         warnln("  {} hash {}", key.to_deprecated_string(), key.hash());
-    }
 }
 
 HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 first_node)
@@ -209,9 +204,8 @@ HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> cons
     , m_nodes()
     , m_buckets()
 {
-    if (!first_node) {
+    if (!first_node)
         set_pointer(new_record_pointer());
-    }
     if (serializer.has_block(first_node)) {
         u32 pointer = first_node;
         do {
@@ -272,9 +266,8 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
                 auto moved = 0;
                 for (auto entry_index = (int)bucket->m_entries.size() - 1; entry_index >= 0; entry_index--) {
                     if (bucket->m_entries[entry_index].hash() % size() == ix) {
-                        if (!sub_bucket->pointer()) {
+                        if (!sub_bucket->pointer())
                             sub_bucket->set_pointer(new_record_pointer());
-                        }
                         sub_bucket->insert(bucket->m_entries.take(entry_index));
                         moved++;
                     }
@@ -389,18 +382,12 @@ void HashIndex::list_hash()
 {
     warnln("Number of buckets: {} (Global depth {})", size(), global_depth());
     warn("Directory pointer(s): ");
-    for (auto ptr : m_nodes) {
+    for (auto ptr : m_nodes)
         warn("{}, ", ptr);
-    }
     warnln();
 
-    bool first_bucket = true;
-    for (auto& bucket : m_buckets) {
-        if (first_bucket) {
-            first_bucket = false;
-        }
+    for (auto& bucket : m_buckets)
         bucket->list_bucket();
-    }
 }
 
 HashIndexIterator::HashIndexIterator(HashBucket const* bucket, size_t index)
