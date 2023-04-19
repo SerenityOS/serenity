@@ -2363,7 +2363,9 @@ ErrorOr<RefPtr<Value>> MatchExpr::run(RefPtr<Shell> shell)
             return move(result).get<RefPtr<Value>>();
     }
 
-    shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!", position());
+    // Non-exhaustive 'case' statements are valid in POSIX.
+    if (!shell || !shell->posix_mode())
+        shell->raise_error(Shell::ShellError::EvaluatedSyntaxError, "Non-exhaustive match rules!", position());
     return make_ref_counted<AST::ListValue>({});
 }
 
