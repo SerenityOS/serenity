@@ -384,7 +384,9 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
     m_network_state = NetworkState::NoSource;
 
     // FIXME: 2. Set the element's show poster flag to true.
-    // FIXME: 3. Set the media element's delaying-the-load-event flag to true (this delays the load event).
+
+    // 3. Set the media element's delaying-the-load-event flag to true (this delays the load event).
+    m_delaying_the_load_event.emplace(document());
 
     // FIXME: 4. Await a stable state, allowing the task that invoked this algorithm to continue. The synchronous section consists of all the remaining
     //           steps of this algorithm until the algorithm says the synchronous section has ended. (Steps in synchronous sections are marked with ⌛.)
@@ -407,7 +409,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
         // 1. ⌛ Set the networkState to NETWORK_EMPTY.
         m_network_state = NetworkState::Empty;
 
-        // FIXME: 2. ⌛ Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+        // 2. ⌛ Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+        m_delaying_the_load_event.clear();
 
         // 3. End the synchronous section and return.
         return {};
@@ -834,9 +837,6 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
         // 13. If there is no selected video track, then select a video track. This will cause a change event to be fired.
         if (m_video_tracks->selected_index() == -1)
             video_track->set_selected(true);
-
-        // FIXME: Once the readyState attribute reaches HAVE_CURRENT_DATA, after the loadeddata event has been fired, set the element's delaying-the-load-event
-        //        flag to false. This stops delaying the load event.
     }
 
     // -> Once the entire media resource has been fetched (but potentially before any of it has been decoded)
@@ -883,7 +883,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS:
     // 6. Reject pending play promises with promises and a "NotSupportedError" DOMException.
     reject_pending_play_promises<WebIDL::NotSupportedError>(promises, TRY_OR_THROW_OOM(vm, "Media is not supported"_fly_string));
 
-    // FIXME: 7. Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+    // 7. Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+    m_delaying_the_load_event.clear();
 
     return {};
 }
@@ -924,6 +925,11 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
                 dispatch_event(DOM::Event::create(this->realm(), HTML::EventNames::loadeddata).release_value_but_fixme_should_propagate_errors());
             });
         }
+
+        // https://html.spec.whatwg.org/multipage/media.html#loading-the-media-resource:dom-media-readystate-4
+        // Once the readyState attribute reaches HAVE_CURRENT_DATA, after the loadeddata event has been fired, set the
+        // element's delaying-the-load-event flag to false. This stops delaying the load event.
+        m_delaying_the_load_event.clear();
 
         // If the new ready state is HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA, then the relevant steps below must then be run also.
         if (ready_state != ReadyState::HaveFutureData && ready_state != ReadyState::HaveEnoughData)
