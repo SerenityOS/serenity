@@ -3691,6 +3691,17 @@ ErrorOr<Vector<String>> ListValue::resolve_as_list(RefPtr<Shell> shell)
     return resolve_slices(shell, move(values), m_slices);
 }
 
+ErrorOr<String> ListValue::resolve_as_string(RefPtr<Shell> shell)
+{
+    if (!shell || !shell->posix_mode())
+        return Value::resolve_as_string(shell);
+
+    if (m_contained_values.is_empty())
+        return resolve_slices(shell, String {}, m_slices);
+
+    return resolve_slices(shell, TRY(m_contained_values[0]->resolve_as_string(shell)), m_slices);
+}
+
 ErrorOr<NonnullRefPtr<Value>> ListValue::resolve_without_cast(RefPtr<Shell> shell)
 {
     Vector<NonnullRefPtr<Value>> values;
