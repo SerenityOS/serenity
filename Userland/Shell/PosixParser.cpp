@@ -1365,11 +1365,14 @@ ErrorOr<RefPtr<AST::Node>> Parser::parse_for_clause()
         iterated_expression = parse_word_list();
 
     if (saw_in) {
-        if (peek().type == Token::Type::Semicolon)
+        if (peek().type == Token::Type::Semicolon || peek().type == Token::Type::Newline)
             skip();
         else
             error(peek(), "Expected a semicolon, not {}", peek().type_name());
     }
+
+    while (peek().type == Token::Type::Newline)
+        skip();
 
     auto body = TRY(parse_do_group());
     return AST::make_ref_counted<AST::ForLoop>(
