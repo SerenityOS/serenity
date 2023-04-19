@@ -25,7 +25,7 @@ public:
     ValueID id() const { return m_id; }
 
     virtual bool has_color() const override;
-    virtual Color to_color(Layout::NodeWithStyle const& node) const override;
+    virtual Color to_color(Optional<Layout::NodeWithStyle const&> node) const override;
     virtual ErrorOr<String> to_string() const override;
 
     bool properties_equal(IdentifierStyleValue const& other) const { return m_id == other.m_id; }

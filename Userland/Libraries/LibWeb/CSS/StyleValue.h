@@ -285,7 +285,7 @@ public:
 
     virtual ValueComparingNonnullRefPtr<StyleValue const> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
 
-    virtual Color to_color(Layout::NodeWithStyle const&) const { return {}; }
+    virtual Color to_color(Optional<Layout::NodeWithStyle const&>) const { return {}; }
     ValueID to_identifier() const;
     virtual Length to_length() const { VERIFY_NOT_REACHED(); }
     virtual float to_number() const { return 0; }
