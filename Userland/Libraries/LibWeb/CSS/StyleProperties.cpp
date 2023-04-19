@@ -818,4 +818,15 @@ String StyleProperties::grid_area() const
     return value->as_string().to_string().release_value_but_fixme_should_propagate_errors();
 }
 
+Color StyleProperties::stop_color() const
+{
+    auto value = property(CSS::PropertyID::StopColor);
+    if (value->has_color()) {
+        // FIXME: This is used by the SVGStopElement, which does not participate in layout,
+        // so can't pass a layout node (so can't resolve some colors, e.g. palette ones or currentColor)
+        return value->to_color({});
+    }
+    return Color::Black;
+}
+
 }

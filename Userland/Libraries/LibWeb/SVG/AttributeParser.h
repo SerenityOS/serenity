@@ -88,12 +88,40 @@ struct PreserveAspectRatio {
     MeetOrSlice meet_or_slice { MeetOrSlice::Meet };
 };
 
+class NumberPercentage {
+public:
+    NumberPercentage(float value, bool is_percentage)
+        : m_value(is_percentage ? value / 100 : value)
+        , m_is_percentage(is_percentage)
+    {
+    }
+
+    static NumberPercentage create_percentage(float value)
+    {
+        return NumberPercentage(value, true);
+    }
+
+    static NumberPercentage create_number(float value)
+    {
+        return NumberPercentage(value, false);
+    }
+
+    float resolve_relative_to(float length);
+
+    float value() { return m_value; }
+
+private:
+    float m_value;
+    bool m_is_percentage { false };
+};
+
 class AttributeParser final {
 public:
     ~AttributeParser() = default;
 
     static Optional<float> parse_coordinate(StringView input);
     static Optional<float> parse_length(StringView input);
+    static Optional<NumberPercentage> parse_number_percentage(StringView input);
     static Optional<float> parse_positive_length(StringView input);
     static Vector<Gfx::FloatPoint> parse_points(StringView input);
     static Vector<PathInstruction> parse_path_data(StringView input);
@@ -137,6 +165,7 @@ private:
     bool match_comma_whitespace() const;
     bool match_coordinate() const;
     bool match_length() const;
+    bool match_number() const;
     bool match(char c) const { return !done() && ch() == c; }
 
     bool done() const { return m_lexer.is_eof(); }

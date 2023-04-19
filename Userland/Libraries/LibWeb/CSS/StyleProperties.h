@@ -98,6 +98,8 @@ public:
     Vector<CSS::Transformation> transformations() const;
     CSS::TransformOrigin transform_origin() const;
 
+    Color stop_color() const;
+
     Gfx::Font const& computed_font() const
     {
         VERIFY(m_font);

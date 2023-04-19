@@ -66,6 +66,30 @@ Optional<float> AttributeParser::parse_length(StringView input)
     return {};
 }
 
+float NumberPercentage::resolve_relative_to(float length)
+{
+    if (!m_is_percentage)
+        return m_value;
+    return m_value * length;
+}
+
+Optional<NumberPercentage> AttributeParser::parse_number_percentage(StringView input)
+{
+    AttributeParser parser { input };
+    parser.parse_whitespace();
+    if (parser.match_number()) {
+        float number = parser.parse_number();
+        bool is_percentage = parser.match('%');
+        if (is_percentage)
+            parser.consume();
+        parser.parse_whitespace();
+        if (parser.done())
+            return NumberPercentage(number, is_percentage);
+    }
+
+    return {};
+}
+
 Optional<float> AttributeParser::parse_positive_length(StringView input)
 {
     // FIXME: Where this is used, the spec usually (always?) says "A negative value is an error (see Error processing)."
@@ -482,11 +506,10 @@ Optional<Vector<Transform>> AttributeParser::parse_transform()
         m_lexer.consume_specific(',');
         consume_whitespace();
     };
-
     // FIXME: AttributeParser currently does not handle invalid parses in most cases (e.g. parse_number()) and just crashes.
     auto parse_optional_number = [&](float default_value = 0.0f) {
         consume_comma_whitespace();
-        if (m_lexer.next_is(isdigit))
+        if (match_number())
             return parse_number();
         return default_value;
     };
@@ -582,6 +605,11 @@ bool AttributeParser::match_comma_whitespace() const
 }
 
 bool AttributeParser::match_coordinate() const
+{
+    return match_length();
+}
+
+bool AttributeParser::match_number() const
 {
     return match_length();
 }

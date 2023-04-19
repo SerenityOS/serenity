@@ -1411,6 +1411,14 @@
       "none"
     ]
   },
+  "stop-color": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "black",
+    "valid-types": [
+      "color"
+    ]
+  },
   "stroke-width": {
     "affects-layout": false,
     "inherited": true,
