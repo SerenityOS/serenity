@@ -218,8 +218,9 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
 
     // FIXME: 4. Run report Content Security Policy violations for request.
     // FIXME: 5. Upgrade request to a potentially trustworthy URL, if appropriate.
+    // FIXME: 6. Upgrade a mixed content request to a potentially trustworthy URL, if appropriate.
 
-    // 6. If should request be blocked due to a bad port, should fetching request be blocked as mixed content, or
+    // 7. If should request be blocked due to a bad port, should fetching request be blocked as mixed content, or
     //    should request be blocked by Content Security Policy returns blocked, then set response to a network error.
     if (Infrastructure::block_bad_port(request) == Infrastructure::RequestOrResponseBlocking::Blocked
         || false // FIXME: "should fetching request be blocked as mixed content"
@@ -228,14 +229,14 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
         response = Infrastructure::Response::network_error(vm, "Request was blocked"sv);
     }
 
-    // 7. If request’s referrer policy is the empty string, then set request’s referrer policy to request’s policy
+    // 8. If request’s referrer policy is the empty string, then set request’s referrer policy to request’s policy
     //    container’s referrer policy.
     if (!request->referrer_policy().has_value()) {
         VERIFY(request->policy_container().has<HTML::PolicyContainer>());
         request->set_referrer_policy(request->policy_container().get<HTML::PolicyContainer>().referrer_policy);
     }
 
-    // 8. If request’s referrer is not "no-referrer", then set request’s referrer to the result of invoking determine
+    // 9. If request’s referrer is not "no-referrer", then set request’s referrer to the result of invoking determine
     //    request’s referrer.
     // NOTE: As stated in Referrer Policy, user agents can provide the end user with options to override request’s
     //       referrer to "no-referrer" or have it expose less sensitive information.
@@ -248,7 +249,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
             request->set_referrer(Infrastructure::Request::Referrer::NoReferrer);
     }
 
-    // 9. Set request’s current URL’s scheme to "https" if all of the following conditions are true:
+    // 10. Set request’s current URL’s scheme to "https" if all of the following conditions are true:
     if (
         // - request’s current URL’s scheme is "http"
         request->current_url().scheme() == "http"sv
@@ -361,19 +362,19 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
     };
 
     if (recursive == Recursive::Yes) {
-        // 11. If response is null, then set response to the result of running the steps corresponding to the first
+        // 12. If response is null, then set response to the result of running the steps corresponding to the first
         //     matching statement:
         auto pending_response = !response
             ? TRY(get_response())
             : PendingResponse::create(vm, request, *response);
 
-        // 12. If recursive is true, then return response.
+        // 13. If recursive is true, then return response.
         return pending_response;
     }
 
-    // 10. If recursive is false, then run the remaining steps in parallel.
+    // 11. If recursive is false, then run the remaining steps in parallel.
     Platform::EventLoopPlugin::the().deferred_invoke([&realm, &vm, &fetch_params, request, response, get_response = move(get_response)] {
-        // 11. If response is null, then set response to the result of running the steps corresponding to the first
+        // 12. If response is null, then set response to the result of running the steps corresponding to the first
         //     matching statement:
         auto pending_response = PendingResponse::create(vm, request, Infrastructure::Response::create(vm));
         if (!response) {
@@ -386,7 +387,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
             dbgln_if(WEB_FETCH_DEBUG, "Fetch: Running 'main fetch' pending_response load callback");
             if (response_was_null)
                 response = resolved_response;
-            // 13. If response is not a network error and response is not a filtered response, then:
+            // 14. If response is not a network error and response is not a filtered response, then:
             if (!response->is_network_error() && !is<Infrastructure::FilteredResponse>(*response)) {
                 // 1. If request’s response tainting is "cors", then:
                 if (request->response_tainting() == Infrastructure::Request::ResponseTainting::CORS) {
@@ -421,26 +422,26 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                 }());
             }
 
-            // 14. Let internalResponse be response, if response is a network error, and response’s internal response
+            // 15. Let internalResponse be response, if response is a network error, and response’s internal response
             //     otherwise.
             auto internal_response = response->is_network_error()
                 ? JS::NonnullGCPtr { *response }
                 : static_cast<Infrastructure::FilteredResponse&>(*response).internal_response();
 
-            // 15. If internalResponse’s URL list is empty, then set it to a clone of request’s URL list.
+            // 16. If internalResponse’s URL list is empty, then set it to a clone of request’s URL list.
             // NOTE: A response’s URL list can be empty (for example, when the response represents an about URL).
             if (internal_response->url_list().is_empty())
                 internal_response->set_url_list(request->url_list());
 
-            // 16. If request has a redirect-tainted origin, then set internalResponse’s has-cross-origin-redirects to true.
+            // 17. If request has a redirect-tainted origin, then set internalResponse’s has-cross-origin-redirects to true.
             if (request->has_redirect_tainted_origin())
                 internal_response->set_has_cross_origin_redirects(true);
 
-            // 17. If request’s timing allow failed flag is unset, then set internalResponse’s timing allow passed flag.
+            // 18. If request’s timing allow failed flag is unset, then set internalResponse’s timing allow passed flag.
             if (!request->timing_allow_failed())
                 internal_response->set_timing_allow_passed(true);
 
-            // 18. If response is not a network error and any of the following returns blocked
+            // 19. If response is not a network error and any of the following returns blocked
             if (!response->is_network_error() && (
                     // FIXME: - should internalResponse to request be blocked as mixed content
                     false
@@ -454,7 +455,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                 response = internal_response = Infrastructure::Response::network_error(vm, TRY_OR_IGNORE("Response was blocked"_string));
             }
 
-            // 19. If response’s type is "opaque", internalResponse’s status is 206, internalResponse’s range-requested
+            // 20. If response’s type is "opaque", internalResponse’s status is 206, internalResponse’s range-requested
             //     flag is set, and request’s header list does not contain `Range`, then set response and
             //     internalResponse to a network error.
             // NOTE: Traditionally, APIs accept a ranged response even if a range was not requested. This prevents a
@@ -467,14 +468,14 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
                 response = internal_response = Infrastructure::Response::network_error(vm, TRY_OR_IGNORE("Response has status 206 and 'range-requested' flag set, but request has no 'Range' header"_string));
             }
 
-            // 20. If response is not a network error and either request’s method is `HEAD` or `CONNECT`, or
+            // 21. If response is not a network error and either request’s method is `HEAD` or `CONNECT`, or
             //     internalResponse’s status is a null body status, set internalResponse’s body to null and disregard
             //     any enqueuing toward it (if any).
             // NOTE: This standardizes the error handling for servers that violate HTTP.
             if (!response->is_network_error() && (StringView { request->method() }.is_one_of("HEAD"sv, "CONNECT"sv) || Infrastructure::is_null_body_status(internal_response->status())))
                 internal_response->set_body({});
 
-            // 21. If request’s integrity metadata is not the empty string, then:
+            // 22. If request’s integrity metadata is not the empty string, then:
             if (!request->integrity_metadata().is_empty()) {
                 // 1. Let processBodyError be this step: run fetch response handover given fetchParams and a network
                 //    error.
@@ -495,7 +496,7 @@ WebIDL::ExceptionOr<Optional<JS::NonnullGCPtr<PendingResponse>>> main_fetch(JS::
 
                 // FIXME: 4. Fully read response’s body given processBody and processBodyError.
             }
-            // 22. Otherwise, run fetch response handover given fetchParams and response.
+            // 23. Otherwise, run fetch response handover given fetchParams and response.
             else {
                 TRY_OR_IGNORE(fetch_response_handover(realm, fetch_params, *response));
             }
