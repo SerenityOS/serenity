@@ -12,6 +12,7 @@
 #include <AK/Variant.h>
 #include <LibJS/Heap/MarkedVector.h>
 #include <LibJS/SafeFunction.h>
+#include <LibWeb/DOM/DocumentLoadEventDelayer.h>
 #include <LibWeb/HTML/CORSSettingAttribute.h>
 #include <LibWeb/HTML/EventLoop/Task.h>
 #include <LibWeb/HTML/HTMLElement.h>
@@ -183,6 +184,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#can-autoplay-flag
     bool m_can_autoplay { true };
+
+    // https://html.spec.whatwg.org/multipage/media.html#delaying-the-load-event-flag
+    Optional<DOM::DocumentLoadEventDelayer> m_delaying_the_load_event;
 
     bool m_running_time_update_event_handler { false };
     Optional<Time> m_last_time_update_event_time;
