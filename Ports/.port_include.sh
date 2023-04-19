@@ -773,7 +773,9 @@ do_dev() {
         exit 1
     fi
 
-    [ -d "$workdir" ] || (
+    local force_patch_regeneration='false'
+
+    [ -d "$workdir" ] || {
         do_fetch
         pushd "$workdir"
         if [ ! -d ".git" ]; then
@@ -840,6 +842,7 @@ do_dev() {
                         >&2 echo "- This patch does not apply, you'll be dropped into a shell to investigate and fix this, quit the shell when the problem is resolved."
                         >&2 echo "Note that the patch needs to be committed into the current repository!"
                         launch_user_shell
+                        force_patch_regeneration='true'
                     fi
 
                     if ! git diff --quiet >/dev/null 2>&1; then
@@ -860,7 +863,7 @@ do_dev() {
         git tag original
 
         popd
-    )
+    }
 
     [ -d "$workdir/.git" ] || {
         >&2 echo "$workdir does not appear to be a git repository."
@@ -876,7 +879,7 @@ do_dev() {
     local current_hash="$(git -C "$workdir" rev-parse HEAD)"
 
     # If the hashes are the same, we have no changes, otherwise generate patches
-    if [ "$original_hash" != "$current_hash" ]; then
+    if [ "$original_hash" != "$current_hash" ] || [ "${force_patch_regeneration}" = "true" ]; then
         >&2 echo "Note: Regenerating patches as there are changed commits in the port repo (started at $original_hash, now is $current_hash)"
         rm -fr "${PORT_META_DIR}"/patches/*.patch
         git -C "$workdir" format-patch --no-numbered --zero-commit --no-signature --full-index refs/tags/import -o "$(realpath "${PORT_META_DIR}/patches")"
