@@ -94,6 +94,20 @@ public:
     u32 columns() const { return m_columns; }
     u32 superblock_rows() const { return blocks_ceiled_to_superblocks(rows()); }
     u32 superblock_columns() const { return blocks_ceiled_to_superblocks(columns()); }
+    // Calculates the output size for each plane in the frame.
+    Gfx::Size<u32> decoded_size(bool uv) const
+    {
+        // NOTE: According to the spec, this would be `y_size_to_uv_size(subsampling, blocks_to_pixels(blocks_size))`.
+        // We are deviating from that by creating smaller buffers to fit just the data we will store in an output
+        // frame or reference frame buffer.
+        if (uv) {
+            return {
+                y_size_to_uv_size(color_config.subsampling_y, size().width()),
+                y_size_to_uv_size(color_config.subsampling_y, size().height()),
+            };
+        }
+        return size();
+    }
 
     Vector2D<FrameBlockContext> const& block_contexts() const { return m_block_contexts; }
 

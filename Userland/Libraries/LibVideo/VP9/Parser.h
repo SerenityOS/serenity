@@ -122,9 +122,6 @@ private:
     void add_motion_vector_if_reference_frame_type_is_same(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
     void add_motion_vector_if_reference_frame_type_is_different(BlockContext const&, MotionVector candidate_vector, ReferenceFrameType ref_frame, Vector<MotionVector, 2>& list, bool use_prev);
 
-    Gfx::Point<size_t> get_decoded_point_for_plane(FrameContext const&, u32 row, u32 column, u8 plane);
-    Gfx::Size<size_t> get_decoded_size_for_plane(FrameContext const&, u8 plane);
-
     bool m_is_first_compute_image_size_invoke { true };
     Gfx::Size<u32> m_previous_frame_size { 0, 0 };
     bool m_previous_show_frame { false };

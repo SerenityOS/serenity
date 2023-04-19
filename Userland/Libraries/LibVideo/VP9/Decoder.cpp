@@ -48,11 +48,6 @@ DecoderErrorOr<void> Decoder::receive_sample(ReadonlyBytes chunk_data)
     return {};
 }
 
-inline size_t index_from_row_and_column(u32 row, u32 column, u32 stride)
-{
-    return row * stride + column;
-}
-
 DecoderErrorOr<void> Decoder::decode_frame(ReadonlyBytes frame_data)
 {
     // 1. The syntax elements for the coded frame are extracted as specified in sections 6 and 7. The syntax
@@ -143,15 +138,20 @@ DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_conte
     // (8.9) Output process
 
     // FIXME: If show_existing_frame is set, output from FrameStore[frame_to_show_map_index] here instead.
+    if (frame_context.shows_existing_frame()) {
+        dbgln("FIXME: Show an existing reference frame.");
+    }
 
     // FIXME: The math isn't entirely accurate to spec. output_uv_size is probably incorrect for certain
     //        sizes, as the spec seems to prefer that the halved sizes be ceiled.
-    u32 decoded_y_width = frame_context.columns() * 8;
+    u32 decoded_y_width = frame_context.decoded_size(false).width();
+    auto decoded_uv_width = frame_context.decoded_size(true).width();
     Gfx::Size<u32> output_y_size = frame_context.size();
-    auto decoded_uv_width = decoded_y_width >> frame_context.color_config.subsampling_x;
+    auto subsampling_x = frame_context.color_config.subsampling_x;
+    auto subsampling_y = frame_context.color_config.subsampling_y;
     Gfx::Size<u32> output_uv_size = {
-        output_y_size.width() >> frame_context.color_config.subsampling_x,
-        output_y_size.height() >> frame_context.color_config.subsampling_y,
+        y_size_to_uv_size(subsampling_x, output_y_size.width()),
+        y_size_to_uv_size(subsampling_y, output_y_size.height()),
     };
     Array<FixedArray<u16>, 3> output_buffers = {
         DECODER_TRY_ALLOC(FixedArray<u16>::create(output_y_size.width() * output_y_size.height())),
@@ -175,31 +175,21 @@ DecoderErrorOr<void> Decoder::create_video_frame(FrameContext const& frame_conte
     auto frame = DECODER_TRY_ALLOC(adopt_nonnull_own_or_enomem(new (nothrow) SubsampledYUVFrame(
         { output_y_size.width(), output_y_size.height() },
         frame_context.color_config.bit_depth, get_cicp_color_space(frame_context),
-        frame_context.color_config.subsampling_x, frame_context.color_config.subsampling_y,
+        subsampling_x, subsampling_y,
         output_buffers[0], output_buffers[1], output_buffers[2])));
     m_video_frame_queue.enqueue(move(frame));
 
     return {};
 }
 
-inline size_t buffer_size(size_t width, size_t height)
-{
-    return width * height;
-}
-
-inline size_t buffer_size(Gfx::Size<size_t> size)
-{
-    return buffer_size(size.width(), size.height());
-}
-
 DecoderErrorOr<void> Decoder::allocate_buffers(FrameContext const& frame_context)
 {
     for (size_t plane = 0; plane < 3; plane++) {
-        auto size = m_parser->get_decoded_size_for_plane(frame_context, plane);
+        auto size = frame_context.decoded_size(plane > 0);
 
         auto& output_buffer = get_output_buffer(plane);
         output_buffer.clear_with_capacity();
-        DECODER_TRY_ALLOC(output_buffer.try_resize_and_keep_capacity(buffer_size(size)));
+        DECODER_TRY_ALLOC(output_buffer.try_resize_and_keep_capacity(size.width() * size.height()));
     }
     return {};
 }
@@ -372,14 +362,12 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     // If plane is greater than 0, then:
     //  − maxX is set equal to ((MiCols * 8) >> subsampling_x) - 1.
     //  − maxY is set equal to ((MiRows * 8) >> subsampling_y) - 1.
-    auto subsampling_x = plane > 0 ? block_context.frame_context.color_config.subsampling_x : false;
-    auto subsampling_y = plane > 0 ? block_context.frame_context.color_config.subsampling_y : false;
-    auto max_x = ((block_context.frame_context.columns() * 8u) >> subsampling_x) - 1u;
-    auto max_y = ((block_context.frame_context.rows() * 8u) >> subsampling_y) - 1u;
+    auto output_size = block_context.frame_context.decoded_size(plane > 0);
+    auto max_x = output_size.width() - 1;
+    auto max_y = output_size.height() - 1;
 
     auto const frame_buffer_at = [&](u32 row, u32 column) -> u16& {
-        const auto frame_stride = max_x + 1u;
-        return frame_buffer[index_from_row_and_column(row, column, frame_stride)];
+        return frame_buffer[row * output_size.width() + column];
     };
 
     // The array aboveRow[ i ] for i = 0..size-1 is specified by:
@@ -456,7 +444,7 @@ DecoderErrorOr<void> Decoder::predict_intra(u8 plane, BlockContext const& block_
     // A 2D array named pred containing the intra predicted samples is constructed as follows:
     Array<Intermediate, maximum_block_size> predicted_samples;
     auto const predicted_sample_at = [&](u32 row, u32 column) -> Intermediate& {
-        return predicted_samples[index_from_row_and_column(row, column, block_size)];
+        return predicted_samples[row * block_size + column];
     };
 
     // FIXME: One of the two below should be a simple memcpy of 1D arrays.
@@ -907,7 +895,7 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
     // A variable ref specifying the reference frame contents is set equal to FrameStore[ refIdx ].
     auto& reference_frame_buffer = reference_frame.frame_planes[plane];
-    auto reference_frame_width = (reference_frame.size.width() >> subsampling_x) + (MV_BORDER * 2);
+    auto reference_frame_width = y_size_to_uv_size(subsampling_x, reference_frame.size.width()) + MV_BORDER * 2;
 
     auto block_buffer_at = [&](u32 row, u32 column) -> u16& {
         return block_buffer[row * width + column];
@@ -1002,14 +990,13 @@ DecoderErrorOr<void> Decoder::predict_inter(u8 plane, BlockContext const& block_
     // The inter predicted samples are then derived as follows:
     auto& frame_buffer = get_output_buffer(plane);
     VERIFY(!frame_buffer.is_empty());
-    auto frame_width = (block_context.frame_context.columns() * 8u) >> (plane > 0 ? block_context.frame_context.color_config.subsampling_x : false);
-    auto frame_height = (block_context.frame_context.rows() * 8u) >> (plane > 0 ? block_context.frame_context.color_config.subsampling_y : false);
+    auto frame_size = block_context.frame_context.decoded_size(plane > 0);
     auto frame_buffer_at = [&](u32 row, u32 column) -> u16& {
-        return frame_buffer[row * frame_width + column];
+        return frame_buffer[row * frame_size.width() + column];
     };
 
-    auto width_in_frame_buffer = min(width, frame_width - x);
-    auto height_in_frame_buffer = min(height, frame_height - y);
+    auto width_in_frame_buffer = min(width, frame_size.width() - x);
+    auto height_in_frame_buffer = min(height, frame_size.height() - y);
 
     // The variable isCompound is set equal to ref_frame[ 1 ] > NONE.
     // − If isCompound is equal to 0, CurrFrame[ plane ][ y + i ][ x + j ] is set equal to preds[ 0 ][ i ][ j ] for i = 0..h-1
@@ -1127,7 +1114,7 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     Intermediate ac_quant = get_ac_quantizer(block_context, plane);
     for (auto i = 0u; i < block_size; i++) {
         for (auto j = 0u; j < block_size; j++) {
-            auto index = index_from_row_and_column(i, j, block_size);
+            auto index = i * block_size + j;
             if (index == 0)
                 continue;
             dequantized[index] = (block_context.residual_tokens[index] * ac_quant) / dq_denominator;
@@ -1149,17 +1136,14 @@ DecoderErrorOr<void> Decoder::reconstruct(u8 plane, BlockContext const& block_co
     // 4. CurrFrame[ plane ][ y + i ][ x + j ] is set equal to Clip1( CurrFrame[ plane ][ y + i ][ x + j ] + Dequant[ i ][ j ] )
     //    for i = 0..(n0-1) and j = 0..(n0-1).
     auto& current_buffer = get_output_buffer(plane);
-    auto subsampling_x = (plane > 0 ? block_context.frame_context.color_config.subsampling_x : 0);
-    auto subsampling_y = (plane > 0 ? block_context.frame_context.color_config.subsampling_y : 0);
-    auto frame_width = (block_context.frame_context.columns() * 8) >> subsampling_x;
-    auto frame_height = (block_context.frame_context.rows() * 8) >> subsampling_y;
-    auto width_in_frame_buffer = min(block_size, frame_width - transform_block_x);
-    auto height_in_frame_buffer = min(block_size, frame_height - transform_block_y);
+    auto frame_size = block_context.frame_context.decoded_size(plane > 0);
+    auto width_in_frame_buffer = min(block_size, frame_size.width() - transform_block_x);
+    auto height_in_frame_buffer = min(block_size, frame_size.height() - transform_block_y);
 
     for (auto i = 0u; i < height_in_frame_buffer; i++) {
         for (auto j = 0u; j < width_in_frame_buffer; j++) {
-            auto index = index_from_row_and_column(transform_block_y + i, transform_block_x + j, frame_width);
-            auto dequantized_value = dequantized[index_from_row_and_column(i, j, block_size)];
+            auto index = (transform_block_y + i) * frame_size.width() + transform_block_x + j;
+            auto dequantized_value = dequantized[i * block_size + j];
             current_buffer[index] = clip_1(block_context.frame_context.color_config.bit_depth, current_buffer[index] + dequantized_value);
         }
     }
@@ -1683,7 +1667,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
     for (auto i = 0u; i < block_size; i++) {
         // 1. Set T[ j ] equal to Dequant[ i ][ j ] for j = 0..(n0-1).
         for (auto j = 0u; j < block_size; j++)
-            row[j] = dequantized[index_from_row_and_column(i, j, block_size)];
+            row[j] = dequantized[i * block_size + j];
 
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 2.
@@ -1711,7 +1695,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
 
         // 5. Set Dequant[ i ][ j ] equal to T[ j ] for j = 0..(n0-1).
         for (auto j = 0u; j < block_size; j++)
-            dequantized[index_from_row_and_column(i, j, block_size)] = row[j];
+            dequantized[i * block_size + j] = row[j];
     }
 
     Array<Intermediate, maximum_transform_size> column_array;
@@ -1721,7 +1705,7 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
     for (auto j = 0u; j < block_size; j++) {
         // 1. Set T[ i ] equal to Dequant[ i ][ j ] for i = 0..(n0-1).
         for (auto i = 0u; i < block_size; i++)
-            column[i] = dequantized[index_from_row_and_column(i, j, block_size)];
+            column[i] = dequantized[i * block_size + j];
 
         // 2. If Lossless is equal to 1, invoke the Inverse WHT process as specified in section 8.7.1.10 with shift equal
         //    to 0.
@@ -1749,13 +1733,13 @@ DecoderErrorOr<void> Decoder::inverse_transform_2d(BlockContext const& block_con
 
         // 5. If Lossless is equal to 1, set Dequant[ i ][ j ] equal to T[ i ] for i = 0..(n0-1).
         for (auto i = 0u; i < block_size; i++)
-            dequantized[index_from_row_and_column(i, j, block_size)] = column[i];
+            dequantized[i * block_size + j] = column[i];
 
         // 6. Otherwise (Lossless is equal to 0), set Dequant[ i ][ j ] equal to Round2( T[ i ], Min( 6, n + 2 ) )
         //    for i = 0..(n0-1).
         if (!block_context.frame_context.is_lossless()) {
             for (auto i = 0u; i < block_size; i++) {
-                auto index = index_from_row_and_column(i, j, block_size);
+                auto index = i * block_size + j;
                 dequantized[index] = rounded_right_shift(dequantized[index], min(6, log2_of_block_size + 2));
             }
         }
@@ -1798,12 +1782,10 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
             for (auto plane = 0u; plane < 3; plane++) {
                 auto width = frame_context.size().width();
                 auto height = frame_context.size().height();
-                auto stride = frame_context.columns() * 8;
-
+                auto stride = frame_context.decoded_size(plane > 0).width();
                 if (plane > 0) {
-                    width = (width + frame_context.color_config.subsampling_x) >> frame_context.color_config.subsampling_x;
-                    height = (height + frame_context.color_config.subsampling_y) >> frame_context.color_config.subsampling_y;
-                    stride >>= frame_context.color_config.subsampling_x;
+                    width = y_size_to_uv_size(frame_context.color_config.subsampling_x, width);
+                    height = y_size_to_uv_size(frame_context.color_config.subsampling_y, height);
                 }
 
                 auto const& original_buffer = get_output_buffer(plane);
@@ -1818,24 +1800,24 @@ DecoderErrorOr<void> Decoder::update_reference_frames(FrameContext const& frame_
                     // This will create an extended border on the top and bottom of the reference frame to avoid having to bounds check
                     // inter-prediction.
                     auto source_y = min(destination_y >= MV_BORDER ? destination_y - MV_BORDER : 0, height - 1);
-                    auto const* source = &original_buffer[index_from_row_and_column(source_y, 0, stride)];
-                    auto* destination = &frame_store_buffer[index_from_row_and_column(destination_y, MV_BORDER, frame_store_width)];
+                    auto const* source = &original_buffer[source_y * stride];
+                    auto* destination = &frame_store_buffer[destination_y * frame_store_width + MV_BORDER];
                     AK::TypedTransfer<RemoveReference<decltype(*destination)>>::copy(destination, source, width);
                 }
 
                 for (auto destination_y = 0u; destination_y < frame_store_height; destination_y++) {
                     // Stretch the leftmost samples out into the border.
-                    auto sample = frame_store_buffer[index_from_row_and_column(destination_y, MV_BORDER, frame_store_width)];
+                    auto sample = frame_store_buffer[destination_y * frame_store_width + MV_BORDER];
 
                     for (auto destination_x = 0u; destination_x < MV_BORDER; destination_x++) {
-                        frame_store_buffer[index_from_row_and_column(destination_y, destination_x, frame_store_width)] = sample;
+                        frame_store_buffer[destination_y * frame_store_width + destination_x] = sample;
                     }
 
                     // Stretch the rightmost samples out into the border.
-                    sample = frame_store_buffer[index_from_row_and_column(destination_y, MV_BORDER + width - 1, frame_store_width)];
+                    sample = frame_store_buffer[destination_y * frame_store_width + MV_BORDER + width - 1];
 
                     for (auto destination_x = MV_BORDER + width; destination_x < frame_store_width; destination_x++) {
-                        frame_store_buffer[index_from_row_and_column(destination_y, destination_x, frame_store_width)] = sample;
+                        frame_store_buffer[destination_y * frame_store_width + destination_x] = sample;
                     }
                 }
             }
