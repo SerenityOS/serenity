@@ -5121,22 +5121,36 @@ RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> 
 RefPtr<StyleValue> Parser::parse_flex_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 1) {
+        // One-value syntax: <flex-grow> | <flex-basis> | none
         auto value = parse_css_value(component_values[0]);
         if (!value)
             return nullptr;
 
-        switch (value->to_identifier()) {
-        case ValueID::Auto: {
+        if (value->is_identifier() && property_accepts_value(PropertyID::Flex, *value)) {
+            switch (value->to_identifier()) {
+            case ValueID::None: {
+                auto zero = NumericStyleValue::create_integer(0);
+                return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
+            }
+            default:
+                return value;
+            }
+        }
+
+        if (property_accepts_value(PropertyID::FlexGrow, *value)) {
+            // NOTE: The spec says that flex-basis should be 0 here, but other engines currently use 0%.
+            // https://github.com/w3c/csswg-drafts/issues/5742
+            auto zero_percent = NumericStyleValue::create_integer(0);
             auto one = NumericStyleValue::create_integer(1);
-            return FlexStyleValue::create(one, one, IdentifierStyleValue::create(ValueID::Auto));
+            return FlexStyleValue::create(*value, one, zero_percent);
         }
-        case ValueID::None: {
-            auto zero = NumericStyleValue::create_integer(0);
-            return FlexStyleValue::create(zero, zero, IdentifierStyleValue::create(ValueID::Auto));
+
+        if (property_accepts_value(PropertyID::FlexBasis, *value)) {
+            auto one = NumericStyleValue::create_integer(1);
+            return FlexStyleValue::create(one, one, *value);
         }
-        default:
-            break;
-        }
+
+        return nullptr;
     }
 
     RefPtr<StyleValue> flex_grow;
