@@ -407,7 +407,16 @@ void Shell::set_local_variable(DeprecatedString const& name, RefPtr<AST::Value> 
         }
     }
 
-    m_local_frames.last()->local_variables.set(name, move(value));
+    LocalFrame* selected_frame = nullptr;
+    if (m_in_posix_mode) {
+        // POSIX mode: Drop everything in the closest function frame (or the global frame if there is no function frame).
+        auto& closest_function_frame = m_local_frames.last_matching([](auto& frame) { return frame->is_function_frame; }).value();
+        selected_frame = closest_function_frame.ptr();
+    } else {
+        selected_frame = m_local_frames.last().ptr();
+    }
+
+    selected_frame->local_variables.set(name, move(value));
 }
 
 void Shell::unset_local_variable(StringView name, bool only_in_current_frame)
@@ -458,7 +467,7 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
         return true;
     }
 
-    auto frame = push_frame(DeprecatedString::formatted("function {}", function.name));
+    auto frame = push_frame(DeprecatedString::formatted("function {}", function.name), LocalFrameKind::FunctionOrGlobal);
     size_t index = 0;
     for (auto& arg : function.arguments) {
         ++index;
@@ -487,9 +496,9 @@ DeprecatedString Shell::format(StringView source, ssize_t& cursor) const
     return result;
 }
 
-Shell::Frame Shell::push_frame(DeprecatedString name)
+Shell::Frame Shell::push_frame(DeprecatedString name, Shell::LocalFrameKind kind)
 {
-    m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}));
+    m_local_frames.append(make<LocalFrame>(name, decltype(LocalFrame::local_variables) {}, kind));
     dbgln_if(SH_DEBUG, "New frame '{}' at {:p}", name, &m_local_frames.last());
     return { m_local_frames, *m_local_frames.last() };
 }
@@ -2179,7 +2188,7 @@ void Shell::notify_child_event()
 Shell::Shell()
     : m_default_constructed(true)
 {
-    push_frame("main").leak_frame();
+    push_frame("main", LocalFrameKind::FunctionOrGlobal).leak_frame();
 
     int rc = gethostname(hostname, Shell::HostNameSize);
     if (rc < 0)
@@ -2223,7 +2232,7 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive, bool posix_mode)
     tcsetpgrp(0, getpgrp());
     m_pid = getpid();
 
-    push_frame("main").leak_frame();
+    push_frame("main", LocalFrameKind::FunctionOrGlobal).leak_frame();
 
     int rc = gethostname(hostname, Shell::HostNameSize);
     if (rc < 0)
