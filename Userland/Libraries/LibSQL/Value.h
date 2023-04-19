@@ -68,7 +68,6 @@ public:
 
     [[nodiscard]] auto const& value() const
     {
-        VERIFY(m_value.has_value());
         return *m_value;
     }
 

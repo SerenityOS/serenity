@@ -65,7 +65,6 @@ bool BTree::insert(Key const& key)
 {
     if (!m_root)
         initialize_root();
-    VERIFY(m_root);
     return m_root->insert(key);
 }
 
@@ -73,7 +72,6 @@ bool BTree::update_key_pointer(Key const& key)
 {
     if (!m_root)
         initialize_root();
-    VERIFY(m_root);
     return m_root->update_key_pointer(key);
 }
 
@@ -81,7 +79,6 @@ Optional<u32> BTree::get(Key& key)
 {
     if (!m_root)
         initialize_root();
-    VERIFY(m_root);
     return m_root->get(key);
 }
 
@@ -89,7 +86,6 @@ BTreeIterator BTree::find(Key const& key)
 {
     if (!m_root)
         initialize_root();
-    VERIFY(m_root);
     for (auto node = m_root->node_for(key); node; node = node->up()) {
         for (auto ix = 0u; ix < node->size(); ix++) {
             auto match = (*node)[ix].match(key);

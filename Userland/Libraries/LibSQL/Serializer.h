@@ -28,7 +28,6 @@ public:
 
     void get_block(u32 pointer)
     {
-        VERIFY(m_heap.ptr() != nullptr);
         auto buffer_or_error = m_heap->read_block(pointer);
         if (buffer_or_error.is_error())
             VERIFY_NOT_REACHED();
@@ -110,7 +109,7 @@ public:
     template<typename T>
     bool serialize_and_write(T const& t)
     {
-        VERIFY(m_heap.ptr() != nullptr);
+        VERIFY(!m_heap.is_null());
         reset();
         serialize<T>(t);
         m_heap->add_to_wal(t.pointer(), m_buffer);
@@ -120,20 +119,17 @@ public:
     [[nodiscard]] size_t offset() const { return m_current_offset; }
     u32 new_record_pointer()
     {
-        VERIFY(m_heap.ptr() != nullptr);
         return m_heap->new_record_pointer();
     }
 
     bool has_block(u32 pointer) const
     {
-        VERIFY(m_heap.ptr() != nullptr);
         return pointer < m_heap->size();
     }
 
     Heap& heap()
     {
-        VERIFY(m_heap.ptr() != nullptr);
-        return *(m_heap.ptr());
+        return *m_heap;
     }
 
 private:

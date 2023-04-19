@@ -187,13 +187,11 @@ Key const& HashBucket::operator[](size_t ix)
 {
     if (!m_inflated)
         m_hash_index.serializer().deserialize_block_to(pointer(), *this);
-    VERIFY(ix < size());
     return m_entries[ix];
 }
 
 Key const& HashBucket::operator[](size_t ix) const
 {
-    VERIFY(ix < m_entries.size());
     return m_entries[ix];
 }
 
