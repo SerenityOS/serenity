@@ -97,6 +97,8 @@ void HTMLMediaElement::parse_attribute(DeprecatedFlyString const& name, Deprecat
 
 void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
 {
+    Base::did_remove_attribute(name);
+
     if (name == HTML::AttributeNames::crossorigin)
         m_crossorigin = cors_setting_attribute_from_keyword({});
 }
