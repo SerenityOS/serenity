@@ -68,6 +68,7 @@ public:
     void set_current_playback_position(double);
 
     double duration() const;
+    bool show_poster() const { return m_show_poster; }
     bool paused() const { return m_paused; }
     bool ended() const;
     bool potentially_playing() const;
@@ -113,6 +114,7 @@ private:
     WebIDL::ExceptionOr<void> pause_element();
     void seek_element(double playback_position, MediaSeekMode = MediaSeekMode::Accurate);
     void notify_about_playing();
+    void set_show_poster(bool);
     void set_paused(bool);
     void set_duration(double);
 
@@ -170,6 +172,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#default-playback-start-position
     double m_default_playback_start_position { 0 };
+
+    // https://html.spec.whatwg.org/multipage/media.html#show-poster-flag
+    bool m_show_poster { true };
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-duration
     double m_duration { NAN };
