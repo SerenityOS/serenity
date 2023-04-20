@@ -76,7 +76,7 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
 
     auto paint_user_agent_controls = video_element.has_attribute(HTML::AttributeNames::controls) || video_element.is_scripting_disabled();
 
-    if (auto const& bitmap = layout_box().dom_node().current_frame()) {
+    if (auto const& bitmap = layout_box().dom_node().current_frame().frame) {
         context.painter().draw_scaled_bitmap(video_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
 
         if (paint_user_agent_controls)
