@@ -8,9 +8,15 @@
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/Bindings/Intrinsics.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Fetch/Fetching/Fetching.h>
+#include <LibWeb/Fetch/Infrastructure/FetchAlgorithms.h>
+#include <LibWeb/Fetch/Infrastructure/FetchController.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Responses.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/Layout/VideoBox.h>
+#include <LibWeb/Platform/ImageCodecPlugin.h>
 
 namespace Web::HTML {
 
@@ -33,6 +39,23 @@ void HTMLVideoElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_video_track);
+    visitor.visit(m_fetch_controller);
+}
+
+void HTMLVideoElement::parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value)
+{
+    Base::parse_attribute(name, value);
+
+    if (name == HTML::AttributeNames::poster)
+        determine_element_poster_frame(value).release_value_but_fixme_should_propagate_errors();
+}
+
+void HTMLVideoElement::did_remove_attribute(DeprecatedFlyString const& name)
+{
+    Base::did_remove_attribute(name);
+
+    if (name == HTML::AttributeNames::poster)
+        determine_element_poster_frame({}).release_value_but_fixme_should_propagate_errors();
 }
 
 JS::GCPtr<Layout::Node> HTMLVideoElement::create_layout_node(NonnullRefPtr<CSS::StyleProperties> style)
@@ -105,6 +128,81 @@ void HTMLVideoElement::on_seek(double position, MediaSeekMode seek_mode)
 {
     if (m_video_track)
         m_video_track->seek(Time::from_milliseconds(position * 1000.0), seek_mode);
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#attr-video-poster
+WebIDL::ExceptionOr<void> HTMLVideoElement::determine_element_poster_frame(Optional<StringView> const& poster)
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    m_poster_frame = nullptr;
+
+    // 1. If there is an existing instance of this algorithm running for this video element, abort that instance of
+    //    this algorithm without changing the poster frame.
+    if (m_fetch_controller)
+        m_fetch_controller->stop_fetch();
+
+    // 2. If the poster attribute's value is the empty string or if the attribute is absent, then there is no poster
+    //    frame; return.
+    if (!poster.has_value() || poster->is_empty())
+        return {};
+
+    // 3. Parse the poster attribute's value relative to the element's node document. If this fails, then there is no
+    //    poster frame; return.
+    auto url_record = document().parse_url(*poster);
+    if (!url_record.is_valid())
+        return {};
+
+    // 4. Let request be a new request whose URL is the resulting URL record, client is the element's node document's
+    //    relevant settings object, destination is "image", initiator type is "video", credentials mode is "include",
+    //    and whose use-URL-credentials flag is set.
+    auto request = Fetch::Infrastructure::Request::create(vm);
+    request->set_url(move(url_record));
+    request->set_client(&document().relevant_settings_object());
+    request->set_destination(Fetch::Infrastructure::Request::Destination::Image);
+    request->set_initiator_type(Fetch::Infrastructure::Request::InitiatorType::Video);
+    request->set_credentials_mode(Fetch::Infrastructure::Request::CredentialsMode::Include);
+    request->set_use_url_credentials(true);
+
+    // 5. Fetch request. This must delay the load event of the element's node document.
+    Fetch::Infrastructure::FetchAlgorithms::Input fetch_algorithms_input {};
+    m_load_event_delayer.emplace(document());
+
+    fetch_algorithms_input.process_response = [this](auto response) mutable {
+        ScopeGuard guard { [&] { m_load_event_delayer.clear(); } };
+
+        auto& realm = this->realm();
+        auto& global = document().realm().global_object();
+
+        if (response->is_network_error())
+            return;
+
+        if (response->type() == Fetch::Infrastructure::Response::Type::Opaque || response->type() == Fetch::Infrastructure::Response::Type::OpaqueRedirect) {
+            auto& filtered_response = static_cast<Fetch::Infrastructure::FilteredResponse&>(*response);
+            response = filtered_response.internal_response();
+        }
+
+        auto on_image_data_read = [this](auto image_data) mutable {
+            m_fetch_controller = nullptr;
+
+            // 6. If an image is thus obtained, the poster frame is that image. Otherwise, there is no poster frame.
+            auto image = Platform::ImageCodecPlugin::the().decode_image(image_data);
+            if (!image.has_value() || image->frames.is_empty())
+                return;
+
+            m_poster_frame = move(image.release_value().frames[0].bitmap);
+        };
+
+        VERIFY(response->body().has_value());
+        auto empty_algorithm = [](auto&) {};
+
+        response->body()->fully_read(realm, move(on_image_data_read), move(empty_algorithm), JS::NonnullGCPtr { global }).release_value_but_fixme_should_propagate_errors();
+    };
+
+    m_fetch_controller = TRY(Fetch::Fetching::fetch(realm, request, Fetch::Infrastructure::FetchAlgorithms::create(vm, move(fetch_algorithms_input))));
+
+    return {};
 }
 
 }
