@@ -211,18 +211,10 @@ ErrorOr<bool> DeflateDecompressor::CompressedBlock::try_read_more()
 
     auto const distance = TRY(m_decompressor.decode_distance(distance_symbol));
 
-    if (distance < length) {
-        for (size_t idx = 0; idx < length; ++idx) {
-            u8 byte = 0;
-            TRY(m_decompressor.m_output_buffer.read_with_seekback({ &byte, sizeof(byte) }, distance));
-            m_decompressor.m_output_buffer.write({ &byte, sizeof(byte) });
-        }
-    } else {
-        auto copied_length = TRY(m_decompressor.m_output_buffer.copy_from_seekback(distance, length));
+    auto copied_length = TRY(m_decompressor.m_output_buffer.copy_from_seekback(distance, length));
 
-        // TODO: What should we do if the output buffer is full?
-        VERIFY(copied_length == length);
-    }
+    // TODO: What should we do if the output buffer is full?
+    VERIFY(copied_length == length);
 
     return true;
 }
