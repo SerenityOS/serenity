@@ -51,6 +51,7 @@
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 
@@ -323,6 +324,12 @@ UnsetStyleValue const& StyleValue::as_unset() const
 {
     VERIFY(is_unset());
     return static_cast<UnsetStyleValue const&>(*this);
+}
+
+URLStyleValue const& StyleValue::as_url() const
+{
+    VERIFY(is_url());
+    return static_cast<URLStyleValue const&>(*this);
 }
 
 StyleValueList const& StyleValue::as_value_list() const

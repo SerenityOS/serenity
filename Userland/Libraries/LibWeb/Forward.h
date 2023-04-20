@@ -155,6 +155,7 @@ class TransformationStyleValue;
 class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
+class URLStyleValue;
 
 enum class MediaFeatureID;
 enum class PropertyID;

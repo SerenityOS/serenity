@@ -131,6 +131,7 @@ public:
         Transformation,
         Unresolved,
         Unset,
+        Url,
         ValueList
     };
 
@@ -180,6 +181,7 @@ public:
     bool is_transformation() const { return type() == Type::Transformation; }
     bool is_unresolved() const { return type() == Type::Unresolved; }
     bool is_unset() const { return type() == Type::Unset; }
+    bool is_url() const { return type() == Type::Url; }
     bool is_value_list() const { return type() == Type::ValueList; }
 
     bool is_builtin() const { return is_inherit() || is_initial() || is_unset(); }
@@ -228,6 +230,7 @@ public:
     TransformationStyleValue const& as_transformation() const;
     UnresolvedStyleValue const& as_unresolved() const;
     UnsetStyleValue const& as_unset() const;
+    URLStyleValue const& as_url() const;
     StyleValueList const& as_value_list() const;
 
     AbstractImageStyleValue& as_abstract_image() { return const_cast<AbstractImageStyleValue&>(const_cast<StyleValue const&>(*this).as_abstract_image()); }
@@ -274,6 +277,7 @@ public:
     TransformationStyleValue& as_transformation() { return const_cast<TransformationStyleValue&>(const_cast<StyleValue const&>(*this).as_transformation()); }
     UnresolvedStyleValue& as_unresolved() { return const_cast<UnresolvedStyleValue&>(const_cast<StyleValue const&>(*this).as_unresolved()); }
     UnsetStyleValue& as_unset() { return const_cast<UnsetStyleValue&>(const_cast<StyleValue const&>(*this).as_unset()); }
+    URLStyleValue& as_url() { return const_cast<URLStyleValue&>(const_cast<StyleValue const&>(*this).as_url()); }
     StyleValueList& as_value_list() { return const_cast<StyleValueList&>(const_cast<StyleValue const&>(*this).as_value_list()); }
 
     bool has_auto() const;
