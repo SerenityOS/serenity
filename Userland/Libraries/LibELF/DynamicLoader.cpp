@@ -581,6 +581,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
         }
         break;
     }
+    case R_AARCH64_IRELATIVE:
     case R_X86_64_IRELATIVE: {
         VirtualAddress resolver;
         if (relocation.addend_used())
