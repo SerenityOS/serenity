@@ -16,7 +16,7 @@ find "${SCRIPT_DIR}/input/" -type f -name "*.html" -print0 | while IFS= read -r 
     input_html_file=${input_html_path/${SCRIPT_DIR}"/input/"/}
     input_html_file=${input_html_file/".html"/}
 
-    output_layout_dump=$(cd "${LADYBIRD_BUILD_DIR}"; "${BROWSER_BINARY}" -d "${input_html_path}")
+    output_layout_dump=$(cd "${LADYBIRD_BUILD_DIR}"; timeout 300s "${BROWSER_BINARY}" -d "${input_html_path}")
     expected_layout_dump_path="${SCRIPT_DIR}/expected/${input_html_file}.txt"
 
     if cmp <(echo "${output_layout_dump}") "${expected_layout_dump_path}"; then
