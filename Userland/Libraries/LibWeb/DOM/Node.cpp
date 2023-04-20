@@ -1413,7 +1413,7 @@ Painting::PaintableBox const* Node::paint_box() const
         return nullptr;
     if (!layout_node()->is_box())
         return nullptr;
-    return static_cast<Layout::Box const&>(*layout_node()).paint_box();
+    return static_cast<Layout::Box const&>(*layout_node()).paintable_box();
 }
 
 // https://dom.spec.whatwg.org/#queue-a-mutation-record

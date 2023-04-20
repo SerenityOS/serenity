@@ -1327,7 +1327,7 @@ static ErrorOr<void> scroll_an_element_into_view(DOM::Element& element, Bindings
     if (!layout_node)
         return Error::from_string_view("Element has no parent layout node that is a box."sv);
 
-    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paint_box()->absolute_padding_box_rect());
+    page->client().page_did_request_scroll_into_view(verify_cast<Layout::Box>(*layout_node).paintable_box()->absolute_padding_box_rect());
 
     return {};
 }

@@ -92,7 +92,7 @@ bool ImageBox::renders_as_alt_text() const
 
 void ImageBox::browsing_context_did_set_viewport_rect(CSSPixelRect const& viewport_rect)
 {
-    m_image_loader.set_visible_in_viewport(paint_box() && viewport_rect.intersects(paint_box()->absolute_rect()));
+    m_image_loader.set_visible_in_viewport(paintable_box() && viewport_rect.intersects(paintable_box()->absolute_rect()));
 }
 
 JS::GCPtr<Painting::Paintable> ImageBox::create_paintable() const

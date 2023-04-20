@@ -68,8 +68,8 @@ void Box::set_scroll_offset(CSSPixelPoint offset)
 
 void Box::set_needs_display()
 {
-    if (paint_box())
-        browsing_context().set_needs_display(paint_box()->absolute_rect());
+    if (paintable_box())
+        browsing_context().set_needs_display(paintable_box()->absolute_rect());
 }
 
 bool Box::is_body() const
@@ -82,7 +82,7 @@ JS::GCPtr<Painting::Paintable> Box::create_paintable() const
     return Painting::PaintableBox::create(*this);
 }
 
-Painting::PaintableBox const* Box::paint_box() const
+Painting::PaintableBox const* Box::paintable_box() const
 {
     return static_cast<Painting::PaintableBox const*>(Node::paintable());
 }

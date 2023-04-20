@@ -43,11 +43,11 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
         // If the transform (or path) results in a empty box we can't display this.
         if (original_bounding_box.is_empty())
             return {};
-        auto scaled_width = paint_box()->content_width().value();
-        auto scaled_height = paint_box()->content_height().value();
+        auto scaled_width = paintable_box()->content_width().value();
+        auto scaled_height = paintable_box()->content_height().value();
         scaling = min(scaled_width / original_bounding_box.width(), scaled_height / original_bounding_box.height());
         auto scaled_bounding_box = original_bounding_box.scaled(scaling, scaling);
-        paint_offset = (paint_box()->absolute_rect().location() - svg_box->paint_box()->absolute_rect().location()).to_type<float>() - scaled_bounding_box.location();
+        paint_offset = (paintable_box()->absolute_rect().location() - svg_box->paint_box()->absolute_rect().location()).to_type<float>() - scaled_bounding_box.location();
     }
     return Gfx::AffineTransform {}.translate(paint_offset).scale(scaling, scaling).translate(-origin).multiply(transform);
 }
