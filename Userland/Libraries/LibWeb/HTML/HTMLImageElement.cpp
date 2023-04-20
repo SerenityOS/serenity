@@ -112,8 +112,8 @@ unsigned HTMLImageElement::width() const
     const_cast<DOM::Document&>(document()).update_layout();
 
     // Return the rendered width of the image, in CSS pixels, if the image is being rendered.
-    if (auto* paint_box = this->paint_box())
-        return paint_box->content_width().value();
+    if (auto* paintable_box = this->paintable_box())
+        return paintable_box->content_width().value();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
     auto width_attr = get_attribute(HTML::AttributeNames::width);
@@ -140,8 +140,8 @@ unsigned HTMLImageElement::height() const
     const_cast<DOM::Document&>(document()).update_layout();
 
     // Return the rendered height of the image, in CSS pixels, if the image is being rendered.
-    if (auto* paint_box = this->paint_box())
-        return paint_box->content_height().value();
+    if (auto* paintable_box = this->paintable_box())
+        return paintable_box->content_height().value();
 
     // NOTE: This step seems to not be in the spec, but all browsers do it.
     auto height_attr = get_attribute(HTML::AttributeNames::height);

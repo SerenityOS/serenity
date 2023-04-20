@@ -47,7 +47,7 @@ Optional<Gfx::AffineTransform> SVGGeometryBox::layout_transform() const
         auto scaled_height = paintable_box()->content_height().value();
         scaling = min(scaled_width / original_bounding_box.width(), scaled_height / original_bounding_box.height());
         auto scaled_bounding_box = original_bounding_box.scaled(scaling, scaling);
-        paint_offset = (paintable_box()->absolute_rect().location() - svg_box->paint_box()->absolute_rect().location()).to_type<float>() - scaled_bounding_box.location();
+        paint_offset = (paintable_box()->absolute_rect().location() - svg_box->paintable_box()->absolute_rect().location()).to_type<float>() - scaled_bounding_box.location();
     }
     return Gfx::AffineTransform {}.translate(paint_offset).scale(scaling, scaling).translate(-origin).multiply(transform);
 }

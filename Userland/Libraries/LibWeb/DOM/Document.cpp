@@ -2041,8 +2041,8 @@ void Document::decrement_number_of_things_delaying_the_load_event(Badge<Document
 
 void Document::invalidate_stacking_context_tree()
 {
-    if (auto* paint_box = this->paint_box())
-        const_cast<Painting::PaintableBox*>(paint_box)->invalidate_stacking_context();
+    if (auto* paintable_box = this->paintable_box())
+        const_cast<Painting::PaintableBox*>(paintable_box)->invalidate_stacking_context();
 }
 
 void Document::check_favicon_after_loading_link_resource()

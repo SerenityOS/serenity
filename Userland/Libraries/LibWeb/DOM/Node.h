@@ -175,7 +175,7 @@ public:
     Layout::Node const* layout_node() const { return m_layout_node; }
     Layout::Node* layout_node() { return m_layout_node; }
 
-    Painting::PaintableBox const* paint_box() const;
+    Painting::PaintableBox const* paintable_box() const;
     Painting::Paintable const* paintable() const;
 
     void set_layout_node(Badge<Layout::Node>, JS::NonnullGCPtr<Layout::Node>);

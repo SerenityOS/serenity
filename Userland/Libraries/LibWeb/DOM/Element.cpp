@@ -699,14 +699,14 @@ JS::NonnullGCPtr<Geometry::DOMRect> Element::get_bounding_client_rect() const
     const_cast<Document&>(document()).update_layout();
 
     // FIXME: Support inline layout nodes as well.
-    auto* paint_box = this->paint_box();
-    if (!paint_box)
+    auto* paintable_box = this->paintable_box();
+    if (!paintable_box)
         return Geometry::DOMRect::construct_impl(realm(), 0, 0, 0, 0).release_value_but_fixme_should_propagate_errors();
 
     VERIFY(document().browsing_context());
     auto viewport_offset = document().browsing_context()->viewport_scroll_offset();
 
-    return Geometry::DOMRect::create(realm(), paint_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>()).release_value_but_fixme_should_propagate_errors();
+    return Geometry::DOMRect::create(realm(), paintable_box->absolute_rect().translated(-viewport_offset.x(), -viewport_offset.y()).to_type<float>()).release_value_but_fixme_should_propagate_errors();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-getclientrects
@@ -784,12 +784,12 @@ int Element::client_width() const
     const_cast<Document&>(document()).update_layout();
 
     // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
-    if (!paint_box())
+    if (!paintable_box())
         return 0;
 
     // 3. Return the width of the padding edge excluding the width of any rendered scrollbar between the padding edge and the border edge,
     // ignoring any transforms that apply to the element and its ancestors.
-    return paint_box()->absolute_padding_box_rect().width().value();
+    return paintable_box()->absolute_padding_box_rect().width().value();
 }
 
 // https://drafts.csswg.org/cssom-view/#dom-element-clientheight
@@ -809,12 +809,12 @@ int Element::client_height() const
     const_cast<Document&>(document()).update_layout();
 
     // 1. If the element has no associated CSS layout box or if the CSS layout box is inline, return zero.
-    if (!paint_box())
+    if (!paintable_box())
         return 0;
 
     // 3. Return the height of the padding edge excluding the height of any rendered scrollbar between the padding edge and the border edge,
     //    ignoring any transforms that apply to the element and its ancestors.
-    return paint_box()->absolute_padding_box_rect().height().value();
+    return paintable_box()->absolute_padding_box_rect().height().value();
 }
 
 void Element::children_changed()

@@ -1407,7 +1407,7 @@ Painting::Paintable const* Node::paintable() const
     return layout_node()->paintable();
 }
 
-Painting::PaintableBox const* Node::paint_box() const
+Painting::PaintableBox const* Node::paintable_box() const
 {
     if (!layout_node())
         return nullptr;
