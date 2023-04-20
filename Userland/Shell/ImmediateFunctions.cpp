@@ -515,9 +515,14 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_null_or_alternative(AST::ImmediateEx
         return nullptr;
     }
 
-    auto value = TRY(TRY(const_cast<AST::Node&>(*arguments.first()).run(*this))->resolve_without_cast(*this));
+    auto name = TRY(TRY(const_cast<AST::Node&>(*arguments.first()).run(*this))->resolve_as_string(*this));
+    auto frame = find_frame_containing_local_variable(name);
+    if (!frame)
+        return make_ref_counted<AST::StringLiteral>(invoking_node.position(), ""_short_string, AST::StringLiteral::EnclosureType::None);
+
+    auto value = frame->local_variables.get(name.bytes_as_string_view()).value();
     if ((value->is_string() && TRY(value->resolve_as_string(*this)).is_empty()) || (value->is_list() && TRY(value->resolve_as_list(*this)).is_empty()))
-        return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), value);
+        return make_ref_counted<AST::SyntheticNode>(invoking_node.position(), *value);
 
     return arguments.last();
 }
