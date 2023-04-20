@@ -63,6 +63,8 @@ public:
 
     double current_time() const;
     void set_current_time(double);
+
+    double current_playback_position() const { return m_current_playback_position; }
     void set_current_playback_position(double);
 
     double duration() const;
