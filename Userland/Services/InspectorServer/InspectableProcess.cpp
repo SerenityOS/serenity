@@ -25,8 +25,14 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullOwnPtr<Core::LocalSocke
     // FIXME: Propagate errors
     MUST(m_socket->set_blocking(true));
 
-    m_socket->on_ready_to_read = [this] {
-        [[maybe_unused]] auto c = m_socket->read_value<char>().release_value_but_fixme_should_propagate_errors();
+    m_socket->on_ready_to_read = [&] {
+        auto read_value_or_error = m_socket->read_value<char>();
+        if (read_value_or_error.is_error()) {
+            dbgln("InspectableProcess : m_socket->read_value : {}, PID {}", read_value_or_error.error(), m_pid);
+            m_socket->close();
+            return;
+        }
+        [[maybe_unused]] auto c = read_value_or_error.release_value_but_fixme_should_propagate_errors();
 
         if (m_socket->is_eof()) {
             Core::deferred_invoke([pid = this->m_pid] { g_processes.remove(pid); });
