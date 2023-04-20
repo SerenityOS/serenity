@@ -247,7 +247,7 @@ Gfx::FloatMatrix4x4 StackingContext::get_transformation_matrix(CSS::Transformati
             });
     };
 
-    auto reference_box = paintable().absolute_rect();
+    auto reference_box = paintable_box().absolute_rect();
     auto width = CSS::Length::make_px(reference_box.width());
     auto height = CSS::Length::make_px(reference_box.height());
 
@@ -378,7 +378,7 @@ void StackingContext::paint(PaintContext& context) const
 
     if (opacity < 1.0f || !affine_transform.is_identity_or_translation()) {
         auto transform_origin = this->transform_origin();
-        auto source_rect = context.enclosing_device_rect(paintable().absolute_paint_rect()).to_type<int>().to_type<float>().translated(-transform_origin);
+        auto source_rect = context.enclosing_device_rect(paintable_box().absolute_paint_rect()).to_type<int>().to_type<float>().translated(-transform_origin);
         auto transformed_destination_rect = affine_transform.map(source_rect).translated(transform_origin);
         auto destination_rect = transformed_destination_rect.to_rounded<int>();
 
@@ -408,7 +408,7 @@ void StackingContext::paint(PaintContext& context) const
             return;
         auto bitmap = bitmap_or_error.release_value_but_fixme_should_propagate_errors();
         Gfx::Painter painter(bitmap);
-        painter.translate(context.rounded_device_point(-paintable().absolute_paint_rect().location() + destination_clipped_fixup).to_type<int>());
+        painter.translate(context.rounded_device_point(-paintable_box().absolute_paint_rect().location() + destination_clipped_fixup).to_type<int>());
         auto paint_context = context.clone(painter);
         paint_internal(paint_context);
 
@@ -427,7 +427,7 @@ Gfx::FloatPoint StackingContext::compute_transform_origin() const
 {
     auto style_value = m_box->computed_values().transform_origin();
     // FIXME: respect transform-box property
-    auto reference_box = paintable().absolute_border_box_rect();
+    auto reference_box = paintable_box().absolute_border_box_rect();
     auto x = reference_box.left() + style_value.x.resolved(m_box, CSS::Length::make_px(reference_box.width())).to_px(m_box);
     auto y = reference_box.top() + style_value.y.resolved(m_box, CSS::Length::make_px(reference_box.height())).to_px(m_box);
     return { x, y };
@@ -477,8 +477,8 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     auto transformed_position = affine_transform_matrix().inverse().value_or({}).map(offset_position).to_type<CSSPixels>() + transform_origin;
 
     // FIXME: Support more overflow variations.
-    if (paintable().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable().computed_values().overflow_y() == CSS::Overflow::Hidden) {
-        if (!paintable().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+    if (paintable_box().computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box().computed_values().overflow_y() == CSS::Overflow::Hidden) {
+        if (!paintable_box().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
             return {};
     }
 
@@ -498,7 +498,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     Optional<HitTestResult> result;
-    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](PaintableBox const& paint_box) {
+    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paint_box) {
         // FIXME: Support more overflow variations.
         if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
             if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
@@ -532,13 +532,13 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 5. the in-flow, inline-level, non-positioned descendants, including inline tables and inline blocks.
     if (m_box->children_are_inline() && is<Layout::BlockContainer>(*m_box)) {
-        auto result = paintable().hit_test(transformed_position, type);
+        auto result = paintable_box().hit_test(transformed_position, type);
         if (result.has_value() && result->paintable->visible_for_hit_testing())
             return result;
     }
 
     // 4. the non-positioned floats.
-    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](auto const& paint_box) {
+    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](auto const& paint_box) {
         // FIXME: Support more overflow variations.
         if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
             if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
@@ -559,7 +559,7 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!m_box->children_are_inline()) {
-        for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable(), [&](auto const& paint_box) {
+        for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](auto const& paint_box) {
             // FIXME: Support more overflow variations.
             if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
                 if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
@@ -591,9 +591,9 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     }
 
     // 1. the background and borders of the element forming the stacking context.
-    if (paintable().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
+    if (paintable_box().absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value())) {
         return HitTestResult {
-            .paintable = const_cast<PaintableBox&>(paintable()),
+            .paintable = const_cast<PaintableBox&>(paintable_box()),
         };
     }
 
@@ -605,7 +605,7 @@ void StackingContext::dump(int indent) const
     StringBuilder builder;
     for (int i = 0; i < indent; ++i)
         builder.append(' ');
-    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box->debug_description(), paintable().absolute_rect(), m_children.size());
+    builder.appendff("SC for {} {} [children: {}] (z-index: ", m_box->debug_description(), paintable_box().absolute_rect(), m_children.size());
     if (m_box->computed_values().z_index().has_value())
         builder.appendff("{}", m_box->computed_values().z_index().value());
     else
