@@ -1211,6 +1211,35 @@ void HTMLMediaElement::set_paused(bool paused)
         on_paused();
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#blocked-media-element
+bool HTMLMediaElement::blocked() const
+{
+    // A media element is a blocked media element if its readyState attribute is in the HAVE_NOTHING state, the HAVE_METADATA
+    // state, or the HAVE_CURRENT_DATA state, or if the element has paused for user interaction or paused for in-band content.
+    switch (m_ready_state) {
+    case ReadyState::HaveNothing:
+    case ReadyState::HaveMetadata:
+    case ReadyState::HaveCurrentData:
+        return true;
+    default:
+        break;
+    }
+
+    // FIXME: Implement "paused for user interaction" (namely "the user agent has reached a point in the media resource
+    //        where the user has to make a selection for the resource to continue").
+    // FIXME: Implement "paused for in-band content".
+    return false;
+}
+
+// https://html.spec.whatwg.org/multipage/media.html#potentially-playing
+bool HTMLMediaElement::potentially_playing() const
+{
+    // A media element is said to be potentially playing when its paused attribute is false, the element has not ended
+    // playback, playback has not stopped due to errors, and the element is not a blocked media element.
+    // FIXME: Implement "stopped due to errors".
+    return !paused() && !ended() && !blocked();
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#eligible-for-autoplay
 bool HTMLMediaElement::is_eligible_for_autoplay() const
 {

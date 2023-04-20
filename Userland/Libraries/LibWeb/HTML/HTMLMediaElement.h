@@ -70,6 +70,7 @@ public:
     double duration() const;
     bool paused() const { return m_paused; }
     bool ended() const;
+    bool potentially_playing() const;
     WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> play();
     WebIDL::ExceptionOr<void> pause();
 
@@ -115,6 +116,7 @@ private:
     void set_paused(bool);
     void set_duration(double);
 
+    bool blocked() const;
     bool is_eligible_for_autoplay() const;
     bool has_ended_playback() const;
     WebIDL::ExceptionOr<void> reached_end_of_media_playback();
