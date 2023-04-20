@@ -1,15 +1,17 @@
 /*
- * Copyright (c) 2021-2022, Tim Flynn <trflynn89@serenityos.org>
+ * Copyright (c) 2021-2023, Tim Flynn <trflynn89@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include "Forward.h"
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/Optional.h>
+#include <AK/Traits.h>
 #include <LibCore/DateTime.h>
 #include <LibSQL/Type.h>
 #include <LibWeb/Cookie/Cookie.h>
@@ -18,6 +20,14 @@
 namespace Browser {
 
 class Database;
+
+struct CookieStorageKey {
+    bool operator==(CookieStorageKey const&) const = default;
+
+    DeprecatedString name;
+    DeprecatedString domain;
+    DeprecatedString path;
+};
 
 class CookieJar {
     struct Statements {
@@ -29,8 +39,16 @@ class CookieJar {
         SQL::StatementID select_all_cookies { 0 };
     };
 
+    struct PersistedStorage {
+        Database& database;
+        Statements statements;
+    };
+
+    using TransientStorage = HashMap<CookieStorageKey, Web::Cookie::Cookie>;
+
 public:
-    static ErrorOr<CookieJar> create(Database& database);
+    static ErrorOr<CookieJar> create(Database&);
+    static CookieJar create();
 
     DeprecatedString get_cookie(const URL& url, Web::Cookie::Source source);
     void set_cookie(const URL& url, Web::Cookie::ParsedCookie const& parsed_cookie, Web::Cookie::Source source);
@@ -41,7 +59,8 @@ public:
     Optional<Web::Cookie::Cookie> get_named_cookie(URL const& url, DeprecatedString const& name);
 
 private:
-    CookieJar(Database& database, Statements statements);
+    explicit CookieJar(PersistedStorage);
+    explicit CookieJar(TransientStorage);
 
     static Optional<DeprecatedString> canonicalize_domain(const URL& url);
     static bool domain_matches(DeprecatedString const& string, DeprecatedString const& domain_string);
@@ -68,8 +87,19 @@ private:
 
     void purge_expired_cookies();
 
-    Database& m_database;
-    Statements m_statements;
+    Variant<PersistedStorage, TransientStorage> m_storage;
 };
 
 }
+
+template<>
+struct AK::Traits<Browser::CookieStorageKey> : public AK::GenericTraits<Browser::CookieStorageKey> {
+    static unsigned hash(Browser::CookieStorageKey const& key)
+    {
+        unsigned hash = 0;
+        hash = pair_int_hash(hash, string_hash(key.name.characters(), key.name.length()));
+        hash = pair_int_hash(hash, string_hash(key.domain.characters(), key.domain.length()));
+        hash = pair_int_hash(hash, string_hash(key.path.characters(), key.path.length()));
+        return hash;
+    }
+};
