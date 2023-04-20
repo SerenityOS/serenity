@@ -726,8 +726,8 @@ void dump_tree(StringBuilder& builder, Painting::Paintable const& paintable, boo
     builder.appendff("{}{} ({})", paintable.class_name(), color_off, paintable.layout_node().debug_description());
 
     if (paintable.layout_node().is_box()) {
-        auto const& paint_box = static_cast<Painting::PaintableBox const&>(paintable);
-        builder.appendff(" {}", paint_box.absolute_border_box_rect());
+        auto const& paintable_box = static_cast<Painting::PaintableBox const&>(paintable);
+        builder.appendff(" {}", paintable_box.absolute_border_box_rect());
     }
     builder.append("\n"sv);
     for (auto const* child = paintable.first_child(); child; child = child->next_sibling()) {

@@ -176,38 +176,38 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // NOTE: Non-positioned descendants that establish stacking contexts with z-index `0` or `auto` are also painted here.
     // FIXME: There's more to this step that we have yet to understand and implement.
-    m_box->paintable_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
-        auto const& z_index = paint_box.computed_values().z_index();
-        if (auto* child = paint_box.stacking_context()) {
+    m_box->paintable_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paintable_box) {
+        auto const& z_index = paintable_box.computed_values().z_index();
+        if (auto* child = paintable_box.stacking_context()) {
             if (!z_index.has_value() || z_index.value() == 0)
                 paint_child(child);
             return TraversalDecision::SkipChildrenAndContinue;
         }
         if (z_index.has_value() && z_index.value() != 0)
             return TraversalDecision::Continue;
-        if (!paint_box.layout_box().is_positioned())
+        if (!paintable_box.layout_box().is_positioned())
             return TraversalDecision::Continue;
-        // At this point, `paint_box` is a positioned descendant with z-index: auto
+        // At this point, `paintable_box` is a positioned descendant with z-index: auto
         // but no stacking context of its own.
         // FIXME: This is basically duplicating logic found elsewhere in this same function. Find a way to make this more elegant.
-        auto parent = paint_box.layout_node().parent();
+        auto parent = paintable_box.layout_node().parent();
         auto* parent_paintable = parent ? parent->paintable() : nullptr;
         if (parent_paintable)
             parent_paintable->before_children_paint(context, PaintPhase::Foreground);
-        auto containing_block = paint_box.layout_node().containing_block();
+        auto containing_block = paintable_box.layout_node().containing_block();
         auto* containing_block_paintable = containing_block ? containing_block->paintable() : nullptr;
         if (containing_block_paintable)
             containing_block_paintable->apply_clip_overflow_rect(context, PaintPhase::Foreground);
-        paint_node(paint_box.layout_box(), context, PaintPhase::Background);
-        paint_node(paint_box.layout_box(), context, PaintPhase::Border);
-        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::BackgroundAndBorders);
-        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::Floats);
-        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
-        paint_node(paint_box.layout_box(), context, PaintPhase::Foreground);
-        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::Foreground);
-        paint_node(paint_box.layout_box(), context, PaintPhase::FocusOutline);
-        paint_node(paint_box.layout_box(), context, PaintPhase::Overlay);
-        paint_descendants(context, paint_box.layout_box(), StackingContextPaintPhase::FocusAndOverlay);
+        paint_node(paintable_box.layout_box(), context, PaintPhase::Background);
+        paint_node(paintable_box.layout_box(), context, PaintPhase::Border);
+        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::BackgroundAndBorders);
+        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::Floats);
+        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::BackgroundAndBordersForInlineLevelAndReplaced);
+        paint_node(paintable_box.layout_box(), context, PaintPhase::Foreground);
+        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::Foreground);
+        paint_node(paintable_box.layout_box(), context, PaintPhase::FocusOutline);
+        paint_node(paintable_box.layout_box(), context, PaintPhase::Overlay);
+        paint_descendants(context, paintable_box.layout_box(), StackingContextPaintPhase::FocusAndOverlay);
         if (parent_paintable)
             parent_paintable->after_children_paint(context, PaintPhase::Foreground);
         if (containing_block_paintable)
@@ -498,26 +498,26 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 6. the child stacking contexts with stack level 0 and the positioned descendants with stack level 0.
     Optional<HitTestResult> result;
-    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paint_box) {
+    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
         // FIXME: Support more overflow variations.
-        if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+        if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
-        auto const& z_index = paint_box.computed_values().z_index();
-        auto& layout_box = paint_box.layout_box();
-        if (z_index.value_or(0) == 0 && layout_box.is_positioned() && !paint_box.stacking_context()) {
-            auto candidate = paint_box.hit_test(transformed_position, type);
+        auto const& z_index = paintable_box.computed_values().z_index();
+        auto& layout_box = paintable_box.layout_box();
+        if (z_index.value_or(0) == 0 && layout_box.is_positioned() && !paintable_box.stacking_context()) {
+            auto candidate = paintable_box.hit_test(transformed_position, type);
             if (candidate.has_value() && candidate->paintable->visible_for_hit_testing()) {
                 result = move(candidate);
                 return TraversalDecision::Break;
             }
         }
 
-        if (paint_box.stacking_context()) {
+        if (paintable_box.stacking_context()) {
             if (z_index.value_or(0) == 0) {
-                auto candidate = paint_box.stacking_context()->hit_test(transformed_position, type);
+                auto candidate = paintable_box.stacking_context()->hit_test(transformed_position, type);
                 if (candidate.has_value() && candidate->paintable->visible_for_hit_testing()) {
                     result = move(candidate);
                     return TraversalDecision::Break;
@@ -538,16 +538,16 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
     }
 
     // 4. the non-positioned floats.
-    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](auto const& paint_box) {
+    for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
         // FIXME: Support more overflow variations.
-        if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-            if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+        if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+            if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
                 return TraversalDecision::SkipChildrenAndContinue;
         }
 
-        auto& layout_box = paint_box.layout_box();
+        auto& layout_box = paintable_box.layout_box();
         if (layout_box.is_floating()) {
-            if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value()) {
+            if (auto candidate = paintable_box.hit_test(transformed_position, type); candidate.has_value()) {
                 result = move(candidate);
                 return TraversalDecision::Break;
             }
@@ -559,16 +559,16 @@ Optional<HitTestResult> StackingContext::hit_test(CSSPixelPoint position, HitTes
 
     // 3. the in-flow, non-inline-level, non-positioned descendants.
     if (!m_box->children_are_inline()) {
-        for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](auto const& paint_box) {
+        for_each_in_subtree_of_type_within_same_stacking_context_in_reverse<PaintableBox>(paintable_box(), [&](PaintableBox const& paintable_box) {
             // FIXME: Support more overflow variations.
-            if (paint_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paint_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
-                if (!paint_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
+            if (paintable_box.computed_values().overflow_x() == CSS::Overflow::Hidden && paintable_box.computed_values().overflow_y() == CSS::Overflow::Hidden) {
+                if (!paintable_box.absolute_border_box_rect().contains(transformed_position.x().value(), transformed_position.y().value()))
                     return TraversalDecision::SkipChildrenAndContinue;
             }
 
-            auto& layout_box = paint_box.layout_box();
+            auto& layout_box = paintable_box.layout_box();
             if (!layout_box.is_absolutely_positioned() && !layout_box.is_floating()) {
-                if (auto candidate = paint_box.hit_test(transformed_position, type); candidate.has_value()) {
+                if (auto candidate = paintable_box.hit_test(transformed_position, type); candidate.has_value()) {
                     result = move(candidate);
                     return TraversalDecision::Break;
                 }
