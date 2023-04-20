@@ -30,11 +30,12 @@ VideoTrack::VideoTrack(JS::Realm& realm, JS::NonnullGCPtr<HTMLMediaElement> medi
     , m_playback_manager(move(playback_manager))
 {
     m_playback_manager->on_video_frame = [this](auto frame) {
-        if (is<HTMLVideoElement>(*m_media_element))
-            verify_cast<HTMLVideoElement>(*m_media_element).set_current_frame({}, move(frame));
+        auto playback_position = static_cast<double>(position().to_milliseconds()) / 1000.0;
 
-        auto playback_position_ms = static_cast<double>(position().to_milliseconds());
-        m_media_element->set_current_playback_position(playback_position_ms / 1000.0);
+        if (is<HTMLVideoElement>(*m_media_element))
+            verify_cast<HTMLVideoElement>(*m_media_element).set_current_frame({}, move(frame), playback_position);
+
+        m_media_element->set_current_playback_position(playback_position);
     };
 
     m_playback_manager->on_playback_state_change = [this]() {

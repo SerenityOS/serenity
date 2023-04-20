@@ -13,6 +13,11 @@
 
 namespace Web::HTML {
 
+struct VideoFrame {
+    RefPtr<Gfx::Bitmap> frame;
+    double position { 0.0 };
+};
+
 class HTMLVideoElement final : public HTMLMediaElement {
     WEB_PLATFORM_OBJECT(HTMLVideoElement, HTMLMediaElement);
 
@@ -30,8 +35,8 @@ public:
 
     void set_video_track(JS::GCPtr<VideoTrack>);
 
-    void set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame);
-    RefPtr<Gfx::Bitmap> const& current_frame() const { return m_current_frame; }
+    void set_current_frame(Badge<VideoTrack>, RefPtr<Gfx::Bitmap> frame, double position);
+    VideoFrame const& current_frame() const { return m_current_frame; }
 
     void set_layout_mouse_position(Badge<Painting::VideoPaintable>, Optional<CSSPixelPoint> mouse_position) { m_mouse_position = move(mouse_position); }
     Optional<CSSPixelPoint> const& layout_mouse_position(Badge<Painting::VideoPaintable>) const { return m_mouse_position; }
@@ -56,7 +61,7 @@ private:
     virtual void on_seek(double, MediaSeekMode) override;
 
     JS::GCPtr<HTML::VideoTrack> m_video_track;
-    RefPtr<Gfx::Bitmap> m_current_frame;
+    VideoFrame m_current_frame;
 
     u32 m_video_width { 0 };
     u32 m_video_height { 0 };
