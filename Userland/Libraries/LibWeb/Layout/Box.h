@@ -22,7 +22,7 @@ class Box : public NodeWithStyleAndBoxModelMetrics {
     JS_CELL(Box, NodeWithStyleAndBoxModelMetrics);
 
 public:
-    Painting::PaintableBox const* paint_box() const;
+    Painting::PaintableBox const* paintable_box() const;
 
     virtual void set_needs_display() override;
 

@@ -75,7 +75,7 @@ void LayoutState::commit()
         // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box const&>(node);
-            auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paint_box());
+            auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
             paint_box.set_offset(used_values.offset);
             paint_box.set_content_size(used_values.content_width(), used_values.content_height());
             paint_box.set_overflow_data(move(used_values.overflow_data));

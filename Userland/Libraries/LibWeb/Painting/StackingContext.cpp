@@ -79,7 +79,7 @@ void StackingContext::paint_descendants(PaintContext& context, Layout::Node cons
 
     box.for_each_child([&](auto& child) {
         // If `child` establishes its own stacking context, skip over it.
-        if (is<Layout::Box>(child) && child.paintable() && static_cast<Layout::Box const&>(child).paint_box()->stacking_context())
+        if (is<Layout::Box>(child) && child.paintable() && static_cast<Layout::Box const&>(child).paintable_box()->stacking_context())
             return;
         // If `child` is positioned with a z-index of `0` or `auto`, skip over it.
         if (child.is_positioned()) {
@@ -176,7 +176,7 @@ void StackingContext::paint_internal(PaintContext& context) const
     // Draw positioned descendants with z-index `0` or `auto` in tree order. (step 8)
     // NOTE: Non-positioned descendants that establish stacking contexts with z-index `0` or `auto` are also painted here.
     // FIXME: There's more to this step that we have yet to understand and implement.
-    m_box->paint_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
+    m_box->paintable_box()->for_each_in_subtree_of_type<PaintableBox>([&](PaintableBox const& paint_box) {
         auto const& z_index = paint_box.computed_values().z_index();
         if (auto* child = paint_box.stacking_context()) {
             if (!z_index.has_value() || z_index.value() == 0)

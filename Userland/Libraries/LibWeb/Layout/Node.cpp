@@ -193,11 +193,11 @@ void Node::set_needs_display()
     auto* containing_block = this->containing_block();
     if (!containing_block)
         return;
-    if (!containing_block->paint_box())
+    if (!containing_block->paintable_box())
         return;
-    if (!is<Painting::PaintableWithLines>(*containing_block->paint_box()))
+    if (!is<Painting::PaintableWithLines>(*containing_block->paintable_box()))
         return;
-    static_cast<Painting::PaintableWithLines const&>(*containing_block->paint_box()).for_each_fragment([&](auto& fragment) {
+    static_cast<Painting::PaintableWithLines const&>(*containing_block->paintable_box()).for_each_fragment([&](auto& fragment) {
         if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
             browsing_context().set_needs_display(fragment.absolute_rect());
         }
@@ -208,12 +208,12 @@ void Node::set_needs_display()
 CSSPixelPoint Node::box_type_agnostic_position() const
 {
     if (is<Box>(*this))
-        return verify_cast<Box>(*this).paint_box()->absolute_position();
+        return verify_cast<Box>(*this).paintable_box()->absolute_position();
     VERIFY(is_inline());
     CSSPixelPoint position;
     if (auto* block = containing_block()) {
         if (is<Painting::PaintableWithLines>(*block)) {
-            static_cast<Painting::PaintableWithLines const&>(*block->paint_box()).for_each_fragment([&](auto& fragment) {
+            static_cast<Painting::PaintableWithLines const&>(*block->paintable_box()).for_each_fragment([&](auto& fragment) {
                 if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
                     position = fragment.absolute_rect().location();
                     return IterationDecision::Break;

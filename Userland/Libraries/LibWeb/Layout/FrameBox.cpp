@@ -33,7 +33,7 @@ void FrameBox::did_set_rect()
     ReplacedBox::did_set_rect();
 
     VERIFY(dom_node().nested_browsing_context());
-    dom_node().nested_browsing_context()->set_size(paint_box()->content_size());
+    dom_node().nested_browsing_context()->set_size(paintable_box()->content_size());
 }
 
 JS::GCPtr<Painting::Paintable> FrameBox::create_paintable() const

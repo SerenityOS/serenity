@@ -23,7 +23,7 @@ BlockContainer::~BlockContainer() = default;
 
 Painting::PaintableWithLines const* BlockContainer::paint_box() const
 {
-    return static_cast<Painting::PaintableWithLines const*>(Box::paint_box());
+    return static_cast<Painting::PaintableWithLines const*>(Box::paintable_box());
 }
 
 JS::GCPtr<Painting::Paintable> BlockContainer::create_paintable() const

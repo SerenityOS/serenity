@@ -495,9 +495,9 @@ Messages::WebContentServer::InspectDomNodeResponse ConnectionFromClient::inspect
             MUST(serializer.add("border_right"sv, box_model.border.right.value()));
             MUST(serializer.add("border_bottom"sv, box_model.border.bottom.value()));
             MUST(serializer.add("border_left"sv, box_model.border.left.value()));
-            if (auto* paint_box = box->paint_box()) {
-                MUST(serializer.add("content_width"sv, paint_box->content_width().value()));
-                MUST(serializer.add("content_height"sv, paint_box->content_height().value()));
+            if (auto* paintable_box = box->paintable_box()) {
+                MUST(serializer.add("content_width"sv, paintable_box->content_width().value()));
+                MUST(serializer.add("content_height"sv, paintable_box->content_height().value()));
             } else {
                 MUST(serializer.add("content_width"sv, 0));
                 MUST(serializer.add("content_height"sv, 0));

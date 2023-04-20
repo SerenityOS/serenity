@@ -38,7 +38,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
         auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
-        auto containing_block_position_in_absolute_coordinates = containing_block()->paint_box()->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
             CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
@@ -89,7 +89,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             .left = computed_values().border_left(),
         };
 
-        auto containing_block_position_in_absolute_coordinates = containing_block()->paint_box()->absolute_position();
+        auto containing_block_position_in_absolute_coordinates = containing_block()->paintable_box()->absolute_position();
 
         for_each_fragment([&](auto const& fragment, bool is_first_fragment, bool is_last_fragment) {
             CSSPixelRect absolute_fragment_rect { containing_block_position_in_absolute_coordinates.translated(fragment.offset()), fragment.size() };
@@ -132,7 +132,7 @@ void InlinePaintable::for_each_fragment(Callback callback) const
 {
     // FIXME: This will be slow if the containing block has a lot of fragments!
     Vector<Layout::LineBoxFragment const&> fragments;
-    verify_cast<PaintableWithLines>(*containing_block()->paint_box()).for_each_fragment([&](auto& fragment) {
+    verify_cast<PaintableWithLines>(*containing_block()->paintable_box()).for_each_fragment([&](auto& fragment) {
         if (layout_node().is_inclusive_ancestor_of(fragment.layout_node()))
             fragments.append(fragment);
         return IterationDecision::Continue;

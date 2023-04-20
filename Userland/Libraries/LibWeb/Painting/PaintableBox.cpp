@@ -76,7 +76,7 @@ CSSPixelPoint PaintableBox::effective_offset() const
 {
     CSSPixelPoint offset;
     if (containing_block() && m_containing_line_box_fragment.has_value()) {
-        auto& paintable_with_lines = *verify_cast<PaintableWithLines>(containing_block()->paint_box());
+        auto& paintable_with_lines = *verify_cast<PaintableWithLines>(containing_block()->paintable_box());
         auto const& fragment = paintable_with_lines.line_boxes()[m_containing_line_box_fragment->line_box_index].fragments()[m_containing_line_box_fragment->fragment_index];
         offset = fragment.offset();
     } else {
@@ -93,7 +93,7 @@ CSSPixelRect PaintableBox::compute_absolute_rect() const
 {
     CSSPixelRect rect { effective_offset(), content_size() };
     for (auto const* block = containing_block(); block && block->paintable(); block = block->paintable()->containing_block())
-        rect.translate_by(block->paint_box()->effective_offset());
+        rect.translate_by(block->paintable_box()->effective_offset());
     return rect;
 }
 
@@ -137,8 +137,8 @@ Painting::StackingContext* PaintableBox::enclosing_stacking_context()
         if (!is<Layout::Box>(ancestor))
             continue;
         auto& ancestor_box = static_cast<Layout::Box&>(const_cast<Layout::NodeWithStyle&>(*ancestor));
-        if (auto* ancestor_paint_box = ancestor_box.paint_box(); ancestor_paint_box && ancestor_paint_box->stacking_context())
-            return const_cast<StackingContext*>(ancestor_paint_box->stacking_context());
+        if (auto* ancestor_paintable_box = ancestor_box.paintable_box(); ancestor_paintable_box && ancestor_paintable_box->stacking_context())
+            return const_cast<StackingContext*>(ancestor_paintable_box->stacking_context());
     }
     // We should always reach the Layout::Viewport stacking context.
     VERIFY_NOT_REACHED();
@@ -321,8 +321,8 @@ Optional<CSSPixelRect> PaintableBox::calculate_overflow_clipped_rect() const
         // transforms doesn't make sense
         // TODO: figure out if there are cases when stacking context should be
         // crossed to calculate correct clip rect
-        if (!stacking_context() && containing_block() && containing_block()->paint_box()) {
-            m_clip_rect = containing_block()->paint_box()->calculate_overflow_clipped_rect();
+        if (!stacking_context() && containing_block() && containing_block()->paintable_box()) {
+            m_clip_rect = containing_block()->paintable_box()->calculate_overflow_clipped_rect();
         }
 
         auto overflow_x = computed_values().overflow_x();
@@ -702,7 +702,7 @@ Optional<HitTestResult> PaintableWithLines::hit_test(CSSPixelPoint position, Hit
     Optional<HitTestResult> last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paint_box()->stacking_context())
+            if (is<Layout::Box>(fragment.layout_node()) && static_cast<Layout::Box const&>(fragment.layout_node()).paintable_box()->stacking_context())
                 continue;
             if (!fragment.layout_node().containing_block()) {
                 dbgln("FIXME: PaintableWithLines::hit_test(): Missing containing block on {}", fragment.layout_node().debug_description());
