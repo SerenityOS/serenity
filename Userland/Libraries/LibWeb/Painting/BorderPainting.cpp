@@ -293,10 +293,10 @@ void paint_all_borders(PaintContext& context, CSSPixelRect const& bordered_rect,
     border_color_no_alpha.set_alpha(255);
 
     // Paint the strait line part of the border:
-    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, border_radii_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, border_radii_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, border_radii_data, borders_data);
-    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, border_radii_data, borders_data);
+    paint_border(context, BorderEdge::Top, top_border_rect, border_radii_data, borders_data);
+    paint_border(context, BorderEdge::Right, right_border_rect, border_radii_data, borders_data);
+    paint_border(context, BorderEdge::Bottom, bottom_border_rect, border_radii_data, borders_data);
+    paint_border(context, BorderEdge::Left, left_border_rect, border_radii_data, borders_data);
 
     if (!top_left && !top_right && !bottom_left && !bottom_right)
         return;

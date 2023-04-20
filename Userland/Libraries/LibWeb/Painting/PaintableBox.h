@@ -105,7 +105,7 @@ public:
 
     StackingContext* stacking_context() { return m_stacking_context; }
     StackingContext const* stacking_context() const { return m_stacking_context; }
-    void set_stacking_context(NonnullOwnPtr<Painting::StackingContext>);
+    void set_stacking_context(NonnullOwnPtr<StackingContext>);
     StackingContext* enclosing_stacking_context();
 
     DOM::Node const* dom_node() const { return layout_box().dom_node(); }
@@ -139,7 +139,7 @@ protected:
         No
     };
 
-    Painting::BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
+    BorderRadiiData normalized_border_radii_data(ShrinkRadiiForBorders shrink = ShrinkRadiiForBorders::No) const;
 
     Vector<ShadowData> resolve_box_shadow_data() const;
 
@@ -152,7 +152,7 @@ private:
     // Some boxes hang off of line box fragments. (inline-block, inline-table, replaced, etc)
     Optional<Layout::LineBoxFragmentCoordinate> m_containing_line_box_fragment;
 
-    OwnPtr<Painting::StackingContext> m_stacking_context;
+    OwnPtr<StackingContext> m_stacking_context;
 
     Optional<CSSPixelRect> mutable m_absolute_rect;
     Optional<CSSPixelRect> mutable m_absolute_paint_rect;

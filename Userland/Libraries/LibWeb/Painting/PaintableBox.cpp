@@ -131,7 +131,7 @@ void PaintableBox::set_containing_line_box_fragment(Optional<Layout::LineBoxFrag
     m_containing_line_box_fragment = fragment_coordinate;
 }
 
-Painting::StackingContext* PaintableBox::enclosing_stacking_context()
+StackingContext* PaintableBox::enclosing_stacking_context()
 {
     for (auto* ancestor = layout_box().parent(); ancestor; ancestor = ancestor->parent()) {
         if (!is<Layout::Box>(ancestor))
@@ -236,7 +236,7 @@ void PaintableBox::paint_backdrop_filter(PaintContext& context) const
 {
     auto& backdrop_filter = computed_values().backdrop_filter();
     if (!backdrop_filter.is_none())
-        Painting::apply_backdrop_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), backdrop_filter);
+        apply_backdrop_filter(context, layout_node(), absolute_border_box_rect(), normalized_border_radii_data(), backdrop_filter);
 }
 
 void PaintableBox::paint_background(PaintContext& context) const
@@ -508,11 +508,11 @@ static void paint_text_decoration(PaintContext& context, Gfx::Painter& painter, 
     }
 }
 
-static void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, Painting::PaintPhase phase)
+static void paint_text_fragment(PaintContext& context, Layout::TextNode const& text_node, Layout::LineBoxFragment const& fragment, PaintPhase phase)
 {
     auto& painter = context.painter();
 
-    if (phase == Painting::PaintPhase::Foreground) {
+    if (phase == PaintPhase::Foreground) {
         auto fragment_absolute_rect = fragment.absolute_rect();
         auto fragment_absolute_device_rect = context.enclosing_device_rect(fragment_absolute_rect);
 
@@ -594,7 +594,7 @@ void PaintableWithLines::paint(PaintContext& context, PaintPhase phase) const
                                 ShadowPlacement::Outer);
                         }
                         context.painter().set_font(fragment.layout_node().font());
-                        Painting::paint_text_shadow(context, fragment, resolved_shadow_data);
+                        paint_text_shadow(context, fragment, resolved_shadow_data);
                     }
                 }
             }
