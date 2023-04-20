@@ -146,14 +146,14 @@ Painting::PaintableBox* EventHandler::paint_root()
 {
     if (!m_browsing_context->active_document())
         return nullptr;
-    return const_cast<Painting::PaintableBox*>(m_browsing_context->active_document()->paint_box());
+    return const_cast<Painting::PaintableBox*>(m_browsing_context->active_document()->paintable_box());
 }
 
 Painting::PaintableBox const* EventHandler::paint_root() const
 {
     if (!m_browsing_context->active_document())
         return nullptr;
-    return const_cast<Painting::PaintableBox*>(m_browsing_context->active_document()->paint_box());
+    return const_cast<Painting::PaintableBox*>(m_browsing_context->active_document()->paintable_box());
 }
 
 bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, unsigned buttons, unsigned int modifiers, int wheel_delta_x, int wheel_delta_y)
@@ -385,7 +385,7 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
     }
 
     // NOTE: Dispatching an event may have disturbed the world.
-    if (!paint_root() || paint_root() != node->document().paint_box())
+    if (!paint_root() || paint_root() != node->document().paintable_box())
         return true;
 
     if (button == GUI::MouseButton::Primary) {
@@ -499,7 +499,7 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
             auto page_offset = compute_mouse_event_page_offset(client_offset);
             node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::mousemove, offset, client_offset, page_offset, buttons).release_value_but_fixme_should_propagate_errors());
             // NOTE: Dispatching an event may have disturbed the world.
-            if (!paint_root() || paint_root() != node->document().paint_box())
+            if (!paint_root() || paint_root() != node->document().paintable_box())
                 return true;
         }
         if (m_in_mouse_selection) {
@@ -589,7 +589,7 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
     node->dispatch_event(UIEvents::MouseEvent::create_from_platform_event(node->realm(), UIEvents::EventNames::dblclick, offset, client_offset, page_offset, buttons, button).release_value_but_fixme_should_propagate_errors());
 
     // NOTE: Dispatching an event may have disturbed the world.
-    if (!paint_root() || paint_root() != node->document().paint_box())
+    if (!paint_root() || paint_root() != node->document().paintable_box())
         return true;
 
     if (button == GUI::MouseButton::Primary) {
