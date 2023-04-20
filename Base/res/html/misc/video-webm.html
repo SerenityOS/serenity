@@ -73,14 +73,43 @@
                 </tr>
             </tbody>
         </table>
+
+        <fieldset>
+            <legend>Select a video playback option:</legend>
+            <div>
+              <input type=radio id=option-default value=default name=options>
+              <label for=option-default>Default</label>
+            </div>
+            <div>
+              <input type=radio id=option-autoplay value=autoplay name=options>
+              <label for=option-autoplay>Autoplay</label>
+            </div>
+            <div>
+              <input type=radio id=option-poster value=poster name=options>
+              <label for=option-poster>Poster</label>
+            </div>
+        </fieldset>
     </div>
 
     <br />
 
-    <video id=video autoplay controls src="file:///home/anon/Videos/test-webm.webm"></video>
+    <video id=video controls src="../../../home/anon/Videos/test-webm.webm"></video>
 
     <script type="text/javascript">
         let video = document.getElementById('video');
+
+        const params = new URLSearchParams(document.location.search);
+        const option = params.get('option');
+
+        if (option === 'autoplay') {
+            document.getElementById('option-autoplay').setAttribute('checked', '');
+            video.setAttribute('autoplay', '');
+        } else if (option === 'poster') {
+            document.getElementById('option-poster').setAttribute('checked', '');
+            video.setAttribute('poster', '../../wallpapers/grid.png');
+        } else {
+            document.getElementById('option-default').setAttribute('checked', '');
+        }
 
         video.videoTracks.onaddtrack = (event) => {
             document.getElementById('id').textContent = event.track.id;
@@ -112,6 +141,17 @@
             document.getElementById('state').textContent = 'paused';
             document.getElementById('ended').textContent = video.ended;
         });
+
+        for (const option of document.getElementsByName('options')) {
+            option.addEventListener('change', function() {
+                if (!this.checked) {
+                    return;
+                }
+
+                const location = `${window.location.pathname}?option=${this.value}`;
+                window.location.href = location;
+            });
+        }
     </script>
 </body>
 </html>
