@@ -1460,6 +1460,8 @@ Messages::WebDriverClient::ExecuteScriptResponse WebDriverConnection::execute_sc
     case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
     case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::JavascriptError, "Script returned an error", move(result.value));
+    case Web::WebDriver::ExecuteScriptResultType::BrowsingContextDiscarded:
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::StaleElementReference, "Browsing context has been discarded", move(result.value));
     }
 
     VERIFY_NOT_REACHED();
@@ -1492,6 +1494,8 @@ Messages::WebDriverClient::ExecuteAsyncScriptResponse WebDriverConnection::execu
     case Web::WebDriver::ExecuteScriptResultType::PromiseRejected:
     case Web::WebDriver::ExecuteScriptResultType::JavaScriptError:
         return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::JavascriptError, "Script returned an error", move(result.value));
+    case Web::WebDriver::ExecuteScriptResultType::BrowsingContextDiscarded:
+        return Web::WebDriver::Error::from_code(Web::WebDriver::ErrorCode::StaleElementReference, "Browsing context has been discarded", move(result.value));
     }
 
     VERIFY_NOT_REACHED();

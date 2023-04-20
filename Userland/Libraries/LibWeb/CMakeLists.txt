@@ -521,6 +521,7 @@ set(SOURCES
     WebAssembly/WebAssembly.cpp
     WebDriver/Capabilities.cpp
     WebDriver/Client.cpp
+    WebDriver/Contexts.cpp
     WebDriver/ElementLocationStrategies.cpp
     WebDriver/Error.cpp
     WebDriver/ExecuteScript.cpp
