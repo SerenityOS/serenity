@@ -58,7 +58,7 @@ void BrowsingContextGroup::append(BrowsingContext& browsing_context)
     VERIFY(browsing_context.is_top_level());
 
     // 1. Append browsingContext to group's browsing context set.
-    m_browsing_context_set.set(&browsing_context);
+    m_browsing_context_set.set(browsing_context);
 
     // 2. Set browsingContext's group to group.
     browsing_context.set_group(this);

@@ -80,7 +80,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_top_level_browsi
     auto group = BrowsingContextGroup::create_a_new_browsing_context_group(page);
 
     // 2. Return group's browsing context set[0].
-    return *(*group->browsing_context_set().begin());
+    return *group->browsing_context_set().begin();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-browsing-context
@@ -858,7 +858,7 @@ void BrowsingContext::remove()
     set_group(nullptr);
 
     // 4. Remove browsingContext from group's browsing context set.
-    group->browsing_context_set().remove(this);
+    group->browsing_context_set().remove(*this);
 
     // 5. If group's browsing context set is empty, then remove group from the user agent's browsing context group set.
     // NOTE: This is done by ~BrowsingContextGroup() when the refcount reaches 0.
