@@ -34,6 +34,8 @@ public:
     JS::GCPtr<Window> window() const { return m_window; }
     void set_window(Badge<BrowsingContext>, JS::NonnullGCPtr<Window>);
 
+    JS::NonnullGCPtr<BrowsingContext> associated_browsing_context() const;
+
 private:
     explicit WindowProxy(JS::Realm&);
 

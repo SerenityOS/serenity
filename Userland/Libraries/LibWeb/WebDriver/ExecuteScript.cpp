@@ -27,6 +27,7 @@
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/Page/Page.h>
+#include <LibWeb/WebDriver/Contexts.h>
 #include <LibWeb/WebDriver/ExecuteScript.h>
 
 namespace Web::WebDriver {
@@ -104,10 +105,22 @@ static ErrorOr<JsonValue, ExecuteScriptResultType> internal_json_clone_algorithm
     if (value.is_bigint() || value.is_symbol())
         return ExecuteScriptResultType::JavaScriptError;
 
-    // FIXME: - a collection
-    // FIXME: - instance of element
-    // FIXME: - instance of shadow root
-    // FIXME: - a WindowProxy object
+    // FIXME: -> a collection
+    // FIXME: -> instance of element
+    // FIXME: -> instance of shadow root
+
+    // -> a WindowProxy object
+    if (is<HTML::WindowProxy>(value.as_object())) {
+        auto const& window_proxy = static_cast<HTML::WindowProxy&>(value.as_object());
+
+        // If the associated browsing context of the WindowProxy object in value has been discarded, return error with
+        // error code stale element reference.
+        if (window_proxy.associated_browsing_context()->has_been_discarded())
+            return ExecuteScriptResultType::BrowsingContextDiscarded;
+
+        // Otherwise return success with data set to WindowProxy reference object for value.
+        return window_proxy_reference_object(window_proxy);
+    }
 
     // -> has an own property named "toJSON" that is a Function
     auto to_json = value.as_object().get_without_side_effects(vm.names.toJSON);

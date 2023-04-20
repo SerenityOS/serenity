@@ -10,6 +10,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/PropertyDescriptor.h>
 #include <LibJS/Runtime/PropertyKey.h>
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/CrossOrigin/AbstractOperations.h>
 #include <LibWeb/HTML/CrossOrigin/Reporting.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
@@ -258,6 +259,11 @@ void WindowProxy::visit_edges(JS::Cell::Visitor& visitor)
 void WindowProxy::set_window(Badge<BrowsingContext>, JS::NonnullGCPtr<Window> window)
 {
     m_window = window;
+}
+
+JS::NonnullGCPtr<BrowsingContext> WindowProxy::associated_browsing_context() const
+{
+    return *m_window->associated_document().browsing_context();
 }
 
 }

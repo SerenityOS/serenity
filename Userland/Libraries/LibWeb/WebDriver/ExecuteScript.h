@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2022-2023, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +19,7 @@ enum class ExecuteScriptResultType {
     PromiseRejected,
     Timeout,
     JavaScriptError,
+    BrowsingContextDiscarded,
 };
 
 struct ExecuteScriptResult {
