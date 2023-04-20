@@ -214,10 +214,12 @@ public:
     template<Unsigned T = u64>
     ErrorOr<T> peek_bits(size_t count)
     {
-        if (count > m_bit_count)
-            TRY(refill_buffer_from_stream());
+        while (count > m_bit_count) {
+            if (!TRY(refill_buffer_from_stream()))
+                return Error::from_string_literal("Reached end-of-stream without collecting the required number of bits");
+        }
 
-        return lsb_aligned_buffer() & lsb_mask<T>(min(count, m_bit_count));
+        return lsb_aligned_buffer() & lsb_mask<T>(count);
     }
 
     ALWAYS_INLINE void discard_previously_peeked_bits(u8 count)
@@ -244,8 +246,11 @@ public:
     }
 
 private:
-    ErrorOr<void> refill_buffer_from_stream()
+    ErrorOr<bool> refill_buffer_from_stream()
     {
+        if (m_stream->is_eof())
+            return false;
+
         size_t bits_to_read = bit_buffer_size - m_bit_count;
         size_t bytes_to_read = bits_to_read / bits_per_byte;
 
@@ -256,7 +261,7 @@ private:
         m_bit_count += bytes.size() * bits_per_byte;
         m_bit_offset = 0;
 
-        return {};
+        return true;
     }
 };
 
