@@ -106,7 +106,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::bind(listen_fd, (struct sockaddr*)&sa, sizeof(sa)));
         TRY(Core::System::listen(listen_fd, 1));
 
-        char addr_str[INET_ADDRSTRLEN];
         sockaddr_in sin;
         socklen_t len;
 
@@ -114,7 +113,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(Core::System::getsockname(listen_fd, (struct sockaddr*)&sin, &len));
 
         if (verbose)
-            warnln("waiting for a connection on {}:{}", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
+            warnln("waiting for a connection on {}:{}", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
     } else {
         fd = TRY(Core::System::socket(AF_INET, SOCK_STREAM, 0));
@@ -136,10 +135,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         dst_addr.sin_port = htons(port);
         dst_addr.sin_addr.s_addr = *(in_addr_t const*)hostent->h_addr_list[0];
 
-        if (verbose) {
-            char addr_str[INET_ADDRSTRLEN];
-            warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(dst_addr.sin_port));
-        }
+        if (verbose)
+            warnln("connecting to {}:{}", inet_ntoa(dst_addr.sin_addr), ntohs(dst_addr.sin_port));
 
         TRY(Core::System::connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)));
         if (verbose)
@@ -250,7 +247,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         }
 
         if (!listen_fd_closed && FD_ISSET(listen_fd, &readfds)) {
-            char client_str[INET_ADDRSTRLEN];
             sockaddr_in client;
             socklen_t clientlen = sizeof(client);
 
@@ -258,7 +254,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             connected_clients.set(new_client);
 
             if (verbose)
-                warnln("got connection from {}:{}", inet_ntop(client.sin_family, &client.sin_addr, client_str, sizeof(client_str) - 1), ntohs(client.sin_port));
+                warnln("got connection from {}:{}", inet_ntoa(client.sin_addr), ntohs(client.sin_port));
         }
 
         if (has_clients) {
