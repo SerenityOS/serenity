@@ -1123,7 +1123,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         for (auto& type : types) {
             if (type->name() == "BufferSource") {
                 union_generator.append(R"~~~(
-            if (is<JS::ArrayBuffer>(@js_name@@js_suffix@_object))
+            if (is<JS::TypedArrayBase>(@js_name@@js_suffix@_object) || is<JS::ArrayBuffer>(@js_name@@js_suffix@_object) || is<JS::DataView>(@js_name@@js_suffix@_object))
                 return JS::make_handle(@js_name@@js_suffix@_object);
 )~~~");
             }
