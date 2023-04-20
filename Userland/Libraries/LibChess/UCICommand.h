@@ -247,7 +247,7 @@ private:
 class InfoCommand : public Command {
 public:
     explicit InfoCommand()
-        : Command(Command::Type::BestMove)
+        : Command(Command::Type::Info)
     {
     }
 
