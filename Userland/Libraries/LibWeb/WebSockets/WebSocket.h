@@ -58,7 +58,7 @@ public:
     void set_binary_type(DeprecatedString const& type) { m_binary_type = type; };
 
     WebIDL::ExceptionOr<void> close(Optional<u16> code, Optional<DeprecatedString> reason);
-    WebIDL::ExceptionOr<void> send(DeprecatedString const& data);
+    WebIDL::ExceptionOr<void> send(Variant<JS::Handle<JS::Object>, JS::Handle<FileAPI::Blob>, DeprecatedString> const& data);
 
 private:
     void on_open();

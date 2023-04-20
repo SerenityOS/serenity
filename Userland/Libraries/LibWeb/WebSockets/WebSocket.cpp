@@ -11,12 +11,14 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
 #include <LibWeb/DOM/IDLEventListener.h>
+#include <LibWeb/FileAPI/Blob.h>
 #include <LibWeb/HTML/CloseEvent.h>
 #include <LibWeb/HTML/EventHandler.h>
 #include <LibWeb/HTML/EventNames.h>
 #include <LibWeb/HTML/MessageEvent.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Window.h>
+#include <LibWeb/WebIDL/AbstractOperations.h>
 #include <LibWeb/WebIDL/DOMException.h>
 #include <LibWeb/WebIDL/ExceptionOr.h>
 #include <LibWeb/WebSockets/WebSocket.h>
@@ -185,13 +187,30 @@ WebIDL::ExceptionOr<void> WebSocket::close(Optional<u16> code, Optional<Deprecat
 }
 
 // https://websockets.spec.whatwg.org/#dom-websocket-send
-WebIDL::ExceptionOr<void> WebSocket::send(DeprecatedString const& data)
+WebIDL::ExceptionOr<void> WebSocket::send(Variant<JS::Handle<JS::Object>, JS::Handle<FileAPI::Blob>, DeprecatedString> const& data)
 {
     auto state = ready_state();
     if (state == WebSocket::ReadyState::Connecting)
         return WebIDL::InvalidStateError::create(realm(), "Websocket is still CONNECTING");
     if (state == WebSocket::ReadyState::Open) {
-        m_websocket->send(data);
+        TRY_OR_THROW_OOM(vm(),
+            data.visit(
+                [this](DeprecatedString const& string) -> ErrorOr<void> {
+                    m_websocket->send(string);
+                    return {};
+                },
+                [this](JS::Handle<JS::Object> const& buffer_source) -> ErrorOr<void> {
+                    // FIXME: While the spec doesn't say to do this, it's not observable except from potentially throwing OOM.
+                    //        Can we avoid this copy?
+                    auto data_buffer = TRY(WebIDL::get_buffer_source_copy(*buffer_source.cell()));
+                    m_websocket->send(data_buffer, false);
+                    return {};
+                },
+                [this](JS::Handle<FileAPI::Blob> const& blob) -> ErrorOr<void> {
+                    auto byte_buffer = TRY(ByteBuffer::copy(blob->bytes()));
+                    m_websocket->send(byte_buffer, false);
+                    return {};
+                }));
         // TODO : If the data cannot be sent, e.g. because it would need to be buffered but the buffer is full, the user agent must flag the WebSocket as full and then close the WebSocket connection.
         // TODO : Any invocation of this method with a string argument that does not throw an exception must increase the bufferedAmount attribute by the number of bytes needed to express the argument as UTF-8.
     }
