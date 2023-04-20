@@ -505,6 +505,7 @@ set(SOURCES
     SVG/SVGPolylineElement.cpp
     SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
+    SVG/SVGStopElement.cpp
     SVG/SVGTextContentElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp
