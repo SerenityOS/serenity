@@ -42,6 +42,7 @@ namespace Web::SVG::AttributeNames {
     E(maskContentUnits)             \
     E(maskUnits)                    \
     E(numOctaves)                   \
+    E(offset)                       \
     E(pathLength)                   \
     E(patternContentUnits)          \
     E(patternTransform)             \
@@ -59,9 +60,9 @@ namespace Web::SVG::AttributeNames {
     E(repeatCount)                  \
     E(repeatDur)                    \
     E(requiredExtensions)           \
+    E(requiredFeatures)             \
     E(rx)                           \
     E(ry)                           \
-    E(requiredFeatures)             \
     E(specularConstant)             \
     E(specularExponent)             \
     E(spreadMethod)                 \
