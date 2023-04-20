@@ -29,11 +29,11 @@ Layout::InlineNode const& InlinePaintable::layout_node() const
     return static_cast<Layout::InlineNode const&>(Paintable::layout_node());
 }
 
-void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) const
+void InlinePaintable::paint(PaintContext& context, PaintPhase phase) const
 {
     auto& painter = context.painter();
 
-    if (phase == Painting::PaintPhase::Background) {
+    if (phase == PaintPhase::Background) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
@@ -54,11 +54,11 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                 absolute_fragment_rect.set_width(absolute_fragment_rect.width() + extra_end_width);
             }
 
-            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
-            Painting::paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), computed_values().image_rendering(), &computed_values().background_layers(), border_radii_data);
+            auto border_radii_data = normalized_border_radii_data(layout_node(), absolute_fragment_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            paint_background(context, layout_node(), absolute_fragment_rect, computed_values().background_color(), computed_values().image_rendering(), &computed_values().background_layers(), border_radii_data);
 
             if (auto computed_box_shadow = computed_values().box_shadow(); !computed_box_shadow.is_empty()) {
-                Vector<Painting::ShadowData> resolved_box_shadow_data;
+                Vector<ShadowData> resolved_box_shadow_data;
                 resolved_box_shadow_data.ensure_capacity(computed_box_shadow.size());
                 for (auto const& layer : computed_box_shadow) {
                     resolved_box_shadow_data.empend(
@@ -67,22 +67,22 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
                         layer.offset_y.to_px(layout_node()),
                         layer.blur_radius.to_px(layout_node()),
                         layer.spread_distance.to_px(layout_node()),
-                        layer.placement == CSS::ShadowPlacement::Outer ? Painting::ShadowPlacement::Outer : Painting::ShadowPlacement::Inner);
+                        layer.placement == CSS::ShadowPlacement::Outer ? ShadowPlacement::Outer : ShadowPlacement::Inner);
                 }
-                Painting::paint_box_shadow(context, absolute_fragment_rect, border_radii_data, resolved_box_shadow_data);
+                paint_box_shadow(context, absolute_fragment_rect, border_radii_data, resolved_box_shadow_data);
             }
 
             return IterationDecision::Continue;
         });
     }
 
-    if (phase == Painting::PaintPhase::Border) {
+    if (phase == PaintPhase::Border) {
         auto top_left_border_radius = computed_values().border_top_left_radius();
         auto top_right_border_radius = computed_values().border_top_right_radius();
         auto bottom_right_border_radius = computed_values().border_bottom_right_radius();
         auto bottom_left_border_radius = computed_values().border_bottom_left_radius();
 
-        auto borders_data = Painting::BordersData {
+        auto borders_data = BordersData {
             .top = computed_values().border_top(),
             .right = computed_values().border_right(),
             .bottom = computed_values().border_bottom(),
@@ -106,9 +106,9 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
             }
 
             auto bordered_rect = absolute_fragment_rect.inflated(borders_data.top.width, borders_data.right.width, borders_data.bottom.width, borders_data.left.width);
-            auto border_radii_data = Painting::normalized_border_radii_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
+            auto border_radii_data = normalized_border_radii_data(layout_node(), bordered_rect, top_left_border_radius, top_right_border_radius, bottom_right_border_radius, bottom_left_border_radius);
 
-            Painting::paint_all_borders(context, bordered_rect, border_radii_data, borders_data);
+            paint_all_borders(context, bordered_rect, border_radii_data, borders_data);
 
             return IterationDecision::Continue;
         });
@@ -116,7 +116,7 @@ void InlinePaintable::paint(PaintContext& context, Painting::PaintPhase phase) c
 
     // FIXME: We check for a non-null dom_node(), since pseudo-elements have a null one and were getting
     //        highlighted incorrectly. A better solution will be needed if we want to inspect them too.
-    if (phase == Painting::PaintPhase::Overlay && layout_node().dom_node() && layout_node().document().inspected_node() == layout_node().dom_node()) {
+    if (phase == PaintPhase::Overlay && layout_node().dom_node() && layout_node().document().inspected_node() == layout_node().dom_node()) {
         // FIXME: This paints a double-thick border between adjacent fragments, where ideally there
         //        would be none. Once we implement non-rectangular outlines for the `outline` CSS
         //        property, we can use that here instead.

@@ -28,7 +28,7 @@ enum class PaintPhase {
 };
 
 struct HitTestResult {
-    JS::Handle<Painting::Paintable> paintable;
+    JS::Handle<Paintable> paintable;
     int index_in_node { 0 };
 
     enum InternalPosition {
