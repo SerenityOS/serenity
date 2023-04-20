@@ -385,7 +385,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
     // 1. Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
     m_network_state = NetworkState::NoSource;
 
-    // FIXME: 2. Set the element's show poster flag to true.
+    // 2. Set the element's show poster flag to true.
+    set_show_poster(true);
 
     // 3. Set the media element's delaying-the-load-event flag to true (this delays the load event).
     m_delaying_the_load_event.emplace(document());
@@ -877,7 +878,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS:
     // 3. Set the element's networkState attribute to the NETWORK_NO_SOURCE value.
     m_network_state = NetworkState::NoSource;
 
-    // FIXME: 4. Set the element's show poster flag to true.
+    // 4. Set the element's show poster flag to true.
+    set_show_poster(true);
 
     // 5. Fire an event named error at the media element.
     dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::error)));
@@ -994,7 +996,11 @@ void HTMLMediaElement::set_ready_state(ReadyState ready_state)
             // Set the paused attribute to false.
             set_paused(false);
 
-            // FIXME: If the element's show poster flag is true, set it to false and run the time marches on steps.
+            // If the element's show poster flag is true, set it to false and run the time marches on steps.
+            if (m_show_poster) {
+                set_show_poster(false);
+                time_marches_on();
+            }
 
             // Queue a media element task given the element to fire an event named play at the element.
             queue_a_media_element_task([this]() {
@@ -1034,7 +1040,11 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::play_element()
         // 1. Change the value of paused to false.
         set_paused(false);
 
-        // FIXME: 2. If the show poster flag is true, set the element's show poster flag to false and run the time marches on steps.
+        // 2. If the show poster flag is true, set the element's show poster flag to false and run the time marches on steps.
+        if (m_show_poster) {
+            set_show_poster(false);
+            time_marches_on();
+        }
 
         // 3. Queue a media element task given the media element to fire an event named play at the element.
         queue_a_media_element_task([this]() {
@@ -1110,7 +1120,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::pause_element()
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-seek
 void HTMLMediaElement::seek_element(double playback_position, MediaSeekMode seek_mode)
 {
-    // FIXME: 1. Set the media element's show poster flag to false.
+    // 1. Set the media element's show poster flag to false.
+    set_show_poster(false);
 
     // 2. If the media element's readyState is HAVE_NOTHING, return.
     if (m_ready_state == ReadyState::HaveNothing)
@@ -1198,6 +1209,17 @@ void HTMLMediaElement::notify_about_playing()
     });
 
     on_playing();
+}
+
+void HTMLMediaElement::set_show_poster(bool show_poster)
+{
+    if (m_show_poster == show_poster)
+        return;
+
+    m_show_poster = show_poster;
+
+    if (auto* layout_node = this->layout_node())
+        layout_node->set_needs_display();
 }
 
 void HTMLMediaElement::set_paused(bool paused)
