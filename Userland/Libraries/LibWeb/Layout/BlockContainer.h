@@ -20,7 +20,7 @@ public:
     BlockContainer(DOM::Document&, DOM::Node*, CSS::ComputedValues);
     virtual ~BlockContainer() override;
 
-    Painting::PaintableWithLines const* paint_box() const;
+    Painting::PaintableWithLines const* paintable_with_lines() const;
 
     virtual JS::GCPtr<Painting::Paintable> create_paintable() const override;
 

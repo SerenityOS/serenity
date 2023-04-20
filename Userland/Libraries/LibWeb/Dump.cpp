@@ -241,8 +241,8 @@ void dump_tree(StringBuilder& builder, Layout::Node const& layout_node, bool sho
 
     if (is<Layout::BlockContainer>(layout_node) && static_cast<Layout::BlockContainer const&>(layout_node).children_are_inline()) {
         auto& block = static_cast<Layout::BlockContainer const&>(layout_node);
-        for (size_t line_box_index = 0; block.paint_box() && line_box_index < block.paint_box()->line_boxes().size(); ++line_box_index) {
-            auto& line_box = block.paint_box()->line_boxes()[line_box_index];
+        for (size_t line_box_index = 0; block.paintable_with_lines() && line_box_index < block.paintable_with_lines()->line_boxes().size(); ++line_box_index) {
+            auto& line_box = block.paintable_with_lines()->line_boxes()[line_box_index];
             for (size_t i = 0; i < indent; ++i)
                 builder.append("  "sv);
             builder.appendff("  {}line {}{} width: {}, height: {}, bottom: {}, baseline: {}\n",

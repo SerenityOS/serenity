@@ -40,7 +40,7 @@ void Label::handle_mouseup_on_label(Badge<Painting::TextPaintable>, CSSPixelPoin
 
     if (auto* control = labeled_control(); control) {
         bool is_inside_control = control->paintable_box()->absolute_rect().contains(position);
-        bool is_inside_label = paint_box()->absolute_rect().contains(position);
+        bool is_inside_label = paintable_box()->absolute_rect().contains(position);
 
         if (is_inside_control || is_inside_label)
             control->paintable()->handle_associated_label_mouseup({});
@@ -56,7 +56,7 @@ void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, CSSPixelPo
 
     if (auto* control = labeled_control(); control) {
         bool is_inside_control = control->paintable_box()->absolute_rect().contains(position);
-        bool is_inside_label = paint_box()->absolute_rect().contains(position);
+        bool is_inside_label = paintable_box()->absolute_rect().contains(position);
 
         control->paintable()->handle_associated_label_mousemove({}, is_inside_control || is_inside_label);
     }
@@ -65,7 +65,7 @@ void Label::handle_mousemove_on_label(Badge<Painting::TextPaintable>, CSSPixelPo
 bool Label::is_inside_associated_label(LabelableNode const& control, CSSPixelPoint position)
 {
     if (auto* label = label_for_control_node(control); label)
-        return label->paint_box()->absolute_rect().contains(position);
+        return label->paintable_box()->absolute_rect().contains(position);
     return false;
 }
 

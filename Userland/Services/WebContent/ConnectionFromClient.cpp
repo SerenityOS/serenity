@@ -352,7 +352,7 @@ void ConnectionFromClient::debug_request(DeprecatedString const& request, Deprec
     if (request == "dump-stacking-context-tree") {
         if (auto* doc = page().top_level_browsing_context().active_document()) {
             if (auto* viewport = doc->layout_node()) {
-                if (auto* stacking_context = viewport->paint_box()->stacking_context())
+                if (auto* stacking_context = viewport->paintable_box()->stacking_context())
                     stacking_context->dump();
             }
         }
