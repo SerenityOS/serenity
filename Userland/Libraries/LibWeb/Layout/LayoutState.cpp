@@ -75,11 +75,11 @@ void LayoutState::commit()
         // For boxes, transfer all the state needed for painting.
         if (is<Layout::Box>(node)) {
             auto& box = static_cast<Layout::Box const&>(node);
-            auto& paint_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
-            paint_box.set_offset(used_values.offset);
-            paint_box.set_content_size(used_values.content_width(), used_values.content_height());
-            paint_box.set_overflow_data(move(used_values.overflow_data));
-            paint_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
+            auto& paintable_box = const_cast<Painting::PaintableBox&>(*box.paintable_box());
+            paintable_box.set_offset(used_values.offset);
+            paintable_box.set_content_size(used_values.content_width(), used_values.content_height());
+            paintable_box.set_overflow_data(move(used_values.overflow_data));
+            paintable_box.set_containing_line_box_fragment(used_values.containing_line_box_fragment);
 
             if (is<Layout::BlockContainer>(box)) {
                 for (auto& line_box : used_values.line_boxes) {
@@ -88,7 +88,7 @@ void LayoutState::commit()
                             text_nodes.set(static_cast<Layout::TextNode*>(const_cast<Layout::Node*>(&fragment.layout_node())));
                     }
                 }
-                static_cast<Painting::PaintableWithLines&>(paint_box).set_line_boxes(move(used_values.line_boxes));
+                static_cast<Painting::PaintableWithLines&>(paintable_box).set_line_boxes(move(used_values.line_boxes));
             }
         }
     }

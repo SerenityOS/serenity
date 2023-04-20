@@ -26,14 +26,14 @@ JS::GCPtr<Selection::Selection> Viewport::selection() const
 
 void Viewport::build_stacking_context_tree_if_needed()
 {
-    if (paint_box()->stacking_context())
+    if (paintable_box()->stacking_context())
         return;
     build_stacking_context_tree();
 }
 
 void Viewport::build_stacking_context_tree()
 {
-    const_cast<Painting::PaintableWithLines*>(paint_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
+    const_cast<Painting::PaintableBox*>(paintable_box())->set_stacking_context(make<Painting::StackingContext>(*this, nullptr));
 
     for_each_in_subtree_of_type<Box>([&](Box& box) {
         if (!box.paintable_box())
@@ -49,15 +49,15 @@ void Viewport::build_stacking_context_tree()
         return IterationDecision::Continue;
     });
 
-    const_cast<Painting::PaintableWithLines*>(paint_box())->stacking_context()->sort();
+    const_cast<Painting::PaintableBox*>(paintable_box())->stacking_context()->sort();
 }
 
 void Viewport::paint_all_phases(PaintContext& context)
 {
     build_stacking_context_tree_if_needed();
-    context.painter().fill_rect(context.enclosing_device_rect(paint_box()->absolute_rect()).to_type<int>(), document().background_color(context.palette()));
+    context.painter().fill_rect(context.enclosing_device_rect(paintable_box()->absolute_rect()).to_type<int>(), document().background_color(context.palette()));
     context.painter().translate(-context.device_viewport_rect().location().to_type<int>());
-    paint_box()->stacking_context()->paint(context);
+    paintable_box()->stacking_context()->paint(context);
 }
 
 void Viewport::recompute_selection_states()

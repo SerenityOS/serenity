@@ -21,7 +21,7 @@ BlockContainer::BlockContainer(DOM::Document& document, DOM::Node* node, CSS::Co
 
 BlockContainer::~BlockContainer() = default;
 
-Painting::PaintableWithLines const* BlockContainer::paint_box() const
+Painting::PaintableWithLines const* BlockContainer::paintable_with_lines() const
 {
     return static_cast<Painting::PaintableWithLines const*>(Box::paintable_box());
 }
