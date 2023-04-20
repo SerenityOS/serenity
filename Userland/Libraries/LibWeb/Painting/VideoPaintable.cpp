@@ -11,9 +11,9 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
+#include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/Layout/VideoBox.h>
 #include <LibWeb/Painting/BorderRadiusCornerClipper.h>
-#include <LibWeb/Painting/InputColors.h>
 #include <LibWeb/Painting/VideoPaintable.h>
 
 namespace Web::Painting {
@@ -74,19 +74,104 @@ void VideoPaintable::paint(PaintContext& context, PaintPhase phase) const
     if (layout_mouse_position.has_value() && document().hovered_node() == &video_element)
         mouse_position = context.rounded_device_point(*layout_mouse_position);
 
+    auto const& current_frame = video_element.current_frame();
+    auto const& poster_frame = video_element.poster_frame();
+
+    auto current_playback_position = video_element.current_playback_position();
+    auto ready_state = video_element.ready_state();
+
+    enum class Representation {
+        Unknown,
+        FirstVideoFrame,
+        CurrentVideoFrame,
+        LastRenderedVideoFrame,
+        PosterFrame,
+        TransparentBlack,
+    };
+
+    auto representation = Representation::Unknown;
+
+    // https://html.spec.whatwg.org/multipage/media.html#the-video-element:the-video-element-7
+    // A video element represents what is given for the first matching condition in the list below:
+
+    // -> When no video data is available (the element's readyState attribute is either HAVE_NOTHING, or HAVE_METADATA
+    //    but no video data has yet been obtained at all, or the element's readyState attribute is any subsequent value
+    //    but the media resource does not have a video channel)
+    if (ready_state == HTML::HTMLMediaElement::ReadyState::HaveNothing
+        || (ready_state >= HTML::HTMLMediaElement::ReadyState::HaveMetadata && video_element.video_tracks()->length() == 0)) {
+        // The video element represents its poster frame, if any, or else transparent black with no intrinsic dimensions.
+        representation = poster_frame ? Representation::PosterFrame : Representation::TransparentBlack;
+    }
+
+    // -> When the video element is paused, the current playback position is the first frame of video, and the element's
+    //    show poster flag is set
+    else if (video_element.paused() && current_playback_position == 0 && video_element.show_poster()) {
+        // The video element represents its poster frame, if any, or else the first frame of the video.
+        representation = poster_frame ? Representation::PosterFrame : Representation::FirstVideoFrame;
+    }
+
+    // -> When the video element is paused, and the frame of video corresponding to the current playback position
+    //    is not available (e.g. because the video is seeking or buffering)
+    // -> When the video element is neither potentially playing nor paused (e.g. when seeking or stalled)
+    else if (
+        (video_element.paused() && current_playback_position != current_frame.position)
+        || (!video_element.potentially_playing() && !video_element.paused())) {
+        // The video element represents the last frame of the video to have been rendered.
+        representation = Representation::LastRenderedVideoFrame;
+    }
+
+    // -> When the video element is paused
+    else if (video_element.paused()) {
+        // The video element represents the frame of video corresponding to the current playback position.
+        representation = Representation::CurrentVideoFrame;
+    }
+
+    // -> Otherwise (the video element has a video channel and is potentially playing)
+    else {
+        // The video element represents the frame of video at the continuously increasing "current" position. When the
+        // current playback position changes such that the last frame rendered is no longer the frame corresponding to
+        // the current playback position in the video, the new frame must be rendered.
+        representation = Representation::CurrentVideoFrame;
+    }
+
+    auto paint_frame = [&](auto const& frame) {
+        context.painter().draw_scaled_bitmap(video_rect.to_type<int>(), *frame, frame->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
+    };
+
+    auto paint_transparent_black = [&]() {
+        static constexpr auto transparent_black = Gfx::Color::from_argb(0x00'00'00'00);
+        context.painter().fill_rect(video_rect.to_type<int>(), transparent_black);
+    };
+
     auto paint_user_agent_controls = video_element.has_attribute(HTML::AttributeNames::controls) || video_element.is_scripting_disabled();
 
-    if (auto const& bitmap = layout_box().dom_node().current_frame().frame) {
-        context.painter().draw_scaled_bitmap(video_rect.to_type<int>(), *bitmap, bitmap->rect(), 1.0f, to_gfx_scaling_mode(computed_values().image_rendering()));
-
+    switch (representation) {
+    case Representation::FirstVideoFrame:
+    case Representation::CurrentVideoFrame:
+    case Representation::LastRenderedVideoFrame:
+        // FIXME: We likely need to cache all (or a subset of) decoded video frames along with their position. We at least
+        //        will need the first video frame and the last-rendered video frame.
+        if (current_frame.frame)
+            paint_frame(current_frame.frame);
         if (paint_user_agent_controls)
             paint_loaded_video_controls(context, video_element, video_rect, mouse_position);
-    } else {
-        auto input_colors = compute_input_colors(context.palette(), computed_values().accent_color());
-        context.painter().fill_rect(video_rect.to_type<int>(), input_colors.light_gray);
+        break;
 
+    case Representation::PosterFrame:
+        VERIFY(poster_frame);
+        paint_frame(poster_frame);
         if (paint_user_agent_controls)
             paint_placeholder_video_controls(context, video_rect, mouse_position);
+        break;
+
+    case Representation::TransparentBlack:
+        paint_transparent_black();
+        if (paint_user_agent_controls)
+            paint_placeholder_video_controls(context, video_rect, mouse_position);
+        break;
+
+    case Representation::Unknown:
+        VERIFY_NOT_REACHED();
     }
 }
 
