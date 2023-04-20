@@ -470,6 +470,7 @@ set(SOURCES
     RequestIdleCallback/IdleDeadline.cpp
     ResizeObserver/ResizeObserver.cpp
     SecureContexts/AbstractOperations.cpp
+    SRI/SRI.cpp
     Streams/AbstractOperations.cpp
     Streams/ReadableByteStreamController.cpp
     Streams/ReadableStream.cpp
