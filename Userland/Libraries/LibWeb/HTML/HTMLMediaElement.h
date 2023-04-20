@@ -81,6 +81,9 @@ protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;
 
+    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
+    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
+
     // Override in subclasses to handle implementation-specific behavior when the element state changes
     // to playing or paused, e.g. to start/stop play timers.
     virtual void on_playing() { }
@@ -93,9 +96,6 @@ protected:
 private:
     struct EntireResource { };
     using ByteRange = Variant<EntireResource>; // FIXME: This will need to include "until end" and an actual byte range.
-
-    virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
-    virtual void did_remove_attribute(DeprecatedFlyString const&) override;
 
     Task::Source media_element_event_task_source() const { return m_media_element_event_task_source.source; }
 
