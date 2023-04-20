@@ -128,7 +128,7 @@ CSSPixelRect PaintableBox::absolute_paint_rect() const
 
 void PaintableBox::set_containing_line_box_fragment(Optional<Layout::LineBoxFragmentCoordinate> fragment_coordinate)
 {
-    m_containing_line_box_fragment = fragment_coordinate;
+    m_containing_line_box_fragment = move(fragment_coordinate);
 }
 
 StackingContext* PaintableBox::enclosing_stacking_context()
