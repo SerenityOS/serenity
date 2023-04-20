@@ -316,9 +316,12 @@ mostly match the [available options](#options):
 
 - `pre_fetch`
 - `post_fetch`
+- `pre_patch`
 - `pre_configure`
-- `configure`.
+- `configure`
+- `post_configure`
 - `build`
+- `pre_install`
 - `install`
 - `post_install`
 - `clean`
