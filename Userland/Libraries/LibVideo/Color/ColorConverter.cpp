@@ -14,14 +14,12 @@
 
 namespace Video {
 
-DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndependentCodePoints cicp)
+DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndependentCodePoints input_cicp, CodingIndependentCodePoints output_cicp)
 {
     // We'll need to apply tonemapping for linear HDR values.
     bool should_tonemap = false;
-    switch (cicp.transfer_characteristics()) {
+    switch (input_cicp.transfer_characteristics()) {
     case TransferCharacteristics::SMPTE2084:
-        should_tonemap = true;
-        break;
     case TransferCharacteristics::HLG:
         should_tonemap = true;
         break;
@@ -34,7 +32,7 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
     //    float 0..1 range.
     //    This can be done with a 3x3 scaling matrix.
     size_t maximum_value = (1u << bit_depth) - 1;
-    float scale = 1.0 / maximum_value;
+    float scale = 1.0f / maximum_value;
     FloatMatrix4x4 integer_scaling_matrix = {
         scale, 0.0f, 0.0f, 0.0f, // y
         0.0f, scale, 0.0f, 0.0f, // u
@@ -50,7 +48,7 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
     float y_max;
     float uv_min;
     float uv_max;
-    if (cicp.video_full_range_flag() == VideoFullRangeFlag::Studio) {
+    if (input_cicp.video_full_range_flag() == VideoFullRangeFlag::Studio) {
         y_min = 16.0f / 255.0f;
         y_max = 235.0f / 255.0f;
         uv_min = y_min;
@@ -77,7 +75,7 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
     FloatMatrix4x4 color_conversion_matrix;
 
     // https://kdashg.github.io/misc/colors/from-coeffs.html
-    switch (cicp.matrix_coefficients()) {
+    switch (input_cicp.matrix_coefficients()) {
     case MatrixCoefficients::BT709:
         color_conversion_matrix = {
             1.0f, 0.0f, 0.78740f, 0.0f,       // y
@@ -104,7 +102,7 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
         };
         break;
     default:
-        return DecoderError::format(DecoderErrorCategory::Invalid, "Matrix coefficients {} not supported", matrix_coefficients_to_string(cicp.matrix_coefficients()));
+        return DecoderError::format(DecoderErrorCategory::Invalid, "Matrix coefficients {} not supported", matrix_coefficients_to_string(input_cicp.matrix_coefficients()));
     }
 
     // 4. Apply the inverse transfer function to convert RGB values to the
@@ -113,23 +111,21 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
     //    up the conversion.
     auto to_linear_lookup_table = InterpolatedLookupTable<to_linear_size>::create(
         [&](float value) {
-            return TransferCharacteristicsConversion::to_linear_luminance(value, cicp.transfer_characteristics());
+            return TransferCharacteristicsConversion::to_linear_luminance(value, input_cicp.transfer_characteristics());
         });
 
     // 5. Convert the RGB color to CIE XYZ coordinates using the input color
     //    primaries and then to the output color primaries.
     //    This is done with two 3x3 matrices that can be combined into one
     //    matrix multiplication.
-    ColorPrimaries output_cp = ColorPrimaries::BT709;
-    FloatMatrix3x3 color_primaries_matrix = TRY(get_conversion_matrix(cicp.color_primaries(), output_cp));
+    FloatMatrix3x3 color_primaries_matrix = TRY(get_conversion_matrix(input_cicp.color_primaries(), output_cicp.color_primaries()));
 
     // 6. Apply the output transfer function. For HDR color spaces, this
     //    should apply tonemapping as well.
     //    Use a lookup table as with step 3.
-    TransferCharacteristics output_tc = TransferCharacteristics::SRGB;
     auto to_non_linear_lookup_table = InterpolatedLookupTable<to_non_linear_size>::create(
         [&](float value) {
-            return TransferCharacteristicsConversion::to_non_linear_luminance(value, output_tc);
+            return TransferCharacteristicsConversion::to_non_linear_luminance(value, output_cicp.transfer_characteristics());
         });
 
     // Expand color primaries matrix with identity elements.
@@ -152,10 +148,10 @@ DecoderErrorOr<ColorConverter> ColorConverter::create(u8 bit_depth, CodingIndepe
         1.0f, // w
     };
 
-    bool should_skip_color_remapping = output_cp == cicp.color_primaries() && output_tc == cicp.transfer_characteristics();
+    bool should_skip_color_remapping = output_cicp.color_primaries() == input_cicp.color_primaries() && output_cicp.transfer_characteristics() == input_cicp.transfer_characteristics();
     FloatMatrix4x4 input_conversion_matrix = color_conversion_matrix * range_scaling_matrix * integer_scaling_matrix;
 
-    return ColorConverter(bit_depth, cicp, should_skip_color_remapping, should_tonemap, input_conversion_matrix, to_linear_lookup_table, color_primaries_matrix_4x4, to_non_linear_lookup_table);
+    return ColorConverter(bit_depth, input_cicp, should_skip_color_remapping, should_tonemap, input_conversion_matrix, to_linear_lookup_table, color_primaries_matrix_4x4, to_non_linear_lookup_table);
 }
 
 }

@@ -57,8 +57,8 @@ ALWAYS_INLINE void interpolate_row(u32 const row, u32 const width, u16 const* pl
     }
 }
 
-template<u32 subsampling_horizontal, u32 subsampling_vertical>
-ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap(ColorConverter const& converter, u32 const width, u32 const height, FixedArray<u16> const& plane_y, FixedArray<u16> const& plane_u, FixedArray<u16> const& plane_v, Gfx::Bitmap& bitmap)
+template<u32 subsampling_horizontal, u32 subsampling_vertical, typename Convert>
+ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap_subsampled(Convert convert, u32 const width, u32 const height, FixedArray<u16> const& plane_y, FixedArray<u16> const& plane_u, FixedArray<u16> const& plane_v, Gfx::Bitmap& bitmap)
 {
     VERIFY(bitmap.width() >= 0 && static_cast<u32>(bitmap.width()) == width);
     VERIFY(bitmap.height() >= 0 && static_cast<u32>(bitmap.height()) == height);
@@ -99,13 +99,13 @@ ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap(ColorConverter const& conve
         auto* scan_line_a = bitmap.scanline(static_cast<int>(row));
 
         for (size_t column = 0; column < width; column++) {
-            scan_line_a[column] = converter.convert_yuv_to_full_range_rgb(y_row_a[column], u_row_a[column], v_row_a[column]).value();
+            scan_line_a[column] = convert(y_row_a[column], u_row_a[column], v_row_a[column]).value();
         }
         if constexpr (subsampling_vertical != 0) {
             auto const* y_row_b = &plane_y[static_cast<size_t>(row + 1) * width];
             auto* scan_line_b = bitmap.scanline(static_cast<int>(row + 1));
             for (size_t column = 0; column < width; column++) {
-                scan_line_b[column] = converter.convert_yuv_to_full_range_rgb(y_row_b[column], u_row_b[column], v_row_b[column]).value();
+                scan_line_b[column] = convert(y_row_b[column], u_row_b[column], v_row_b[column]).value();
             }
         }
 
@@ -119,7 +119,7 @@ ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap(ColorConverter const& conve
             auto const* y_row = &plane_y[static_cast<size_t>(height - 1) * width];
             auto* scan_line = bitmap.scanline(static_cast<int>(height - 1));
             for (size_t column = 0; column < width; column++) {
-                scan_line[column] = converter.convert_yuv_to_full_range_rgb(y_row[column], u_row_a[column], v_row_a[column]).value();
+                scan_line[column] = convert(y_row[column], u_row_a[column], v_row_a[column]).value();
             }
         }
     }
@@ -127,23 +127,49 @@ ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap(ColorConverter const& conve
     return {};
 }
 
+template<u32 subsampling_horizontal, u32 subsampling_vertical>
+static ALWAYS_INLINE DecoderErrorOr<void> convert_to_bitmap_selecting_converter(CodingIndependentCodePoints cicp, u8 bit_depth, u32 const width, u32 const height, FixedArray<u16> const& plane_y, FixedArray<u16> const& plane_u, FixedArray<u16> const& plane_v, Gfx::Bitmap& bitmap)
+{
+    constexpr auto output_cicp = CodingIndependentCodePoints(ColorPrimaries::BT709, TransferCharacteristics::SRGB, MatrixCoefficients::BT709, VideoFullRangeFlag::Full);
+
+    if (bit_depth == 8 && cicp.transfer_characteristics() == output_cicp.transfer_characteristics() && cicp.color_primaries() == output_cicp.color_primaries() && cicp.video_full_range_flag() == VideoFullRangeFlag::Studio) {
+        switch (cicp.matrix_coefficients()) {
+        case MatrixCoefficients::BT709:
+            return convert_to_bitmap_subsampled<subsampling_horizontal, subsampling_vertical>([](u16 y, u16 u, u16 v) { return ColorConverter::convert_simple_yuv_to_rgb<MatrixCoefficients::BT709, VideoFullRangeFlag::Studio>(y, u, v); }, width, height, plane_y, plane_u, plane_v, bitmap);
+        case MatrixCoefficients::BT601:
+            return convert_to_bitmap_subsampled<subsampling_horizontal, subsampling_vertical>([](u16 y, u16 u, u16 v) { return ColorConverter::convert_simple_yuv_to_rgb<MatrixCoefficients::BT601, VideoFullRangeFlag::Studio>(y, u, v); }, width, height, plane_y, plane_u, plane_v, bitmap);
+        case MatrixCoefficients::BT2020ConstantLuminance:
+        case MatrixCoefficients::BT2020NonConstantLuminance:
+            return convert_to_bitmap_subsampled<subsampling_horizontal, subsampling_vertical>([](u16 y, u16 u, u16 v) { return ColorConverter::convert_simple_yuv_to_rgb<MatrixCoefficients::BT2020ConstantLuminance, VideoFullRangeFlag::Studio>(y, u, v); }, width, height, plane_y, plane_u, plane_v, bitmap);
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
+    auto converter = TRY(ColorConverter::create(bit_depth, cicp, output_cicp));
+    return convert_to_bitmap_subsampled<subsampling_horizontal, subsampling_vertical>([&](u16 y, u16 u, u16 v) { return converter.convert_yuv(y, u, v); }, width, height, plane_y, plane_u, plane_v, bitmap);
+}
+
+static DecoderErrorOr<void> convert_to_bitmap_selecting_subsampling(bool subsampling_horizontal, bool subsampling_vertical, CodingIndependentCodePoints cicp, u8 bit_depth, u32 const width, u32 const height, FixedArray<u16> const& plane_y, FixedArray<u16> const& plane_u, FixedArray<u16> const& plane_v, Gfx::Bitmap& bitmap)
+{
+    if (subsampling_horizontal && subsampling_vertical) {
+        return convert_to_bitmap_selecting_converter<true, true>(cicp, bit_depth, width, height, plane_y, plane_u, plane_v, bitmap);
+    }
+
+    if (subsampling_horizontal && !subsampling_vertical) {
+        return convert_to_bitmap_selecting_converter<true, false>(cicp, bit_depth, width, height, plane_y, plane_u, plane_v, bitmap);
+    }
+
+    if (!subsampling_horizontal && subsampling_vertical) {
+        return convert_to_bitmap_selecting_converter<false, true>(cicp, bit_depth, width, height, plane_y, plane_u, plane_v, bitmap);
+    }
+
+    return convert_to_bitmap_selecting_converter<false, false>(cicp, bit_depth, width, height, plane_y, plane_u, plane_v, bitmap);
+}
+
 DecoderErrorOr<void> SubsampledYUVFrame::output_to_bitmap(Gfx::Bitmap& bitmap)
 {
-    auto converter = TRY(ColorConverter::create(bit_depth(), cicp()));
-
-    if (m_subsampling_horizontal && m_subsampling_vertical) {
-        return convert_to_bitmap<true, true>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
-    }
-
-    if (m_subsampling_horizontal && !m_subsampling_vertical) {
-        return convert_to_bitmap<true, false>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
-    }
-
-    if (!m_subsampling_horizontal && m_subsampling_vertical) {
-        return convert_to_bitmap<false, true>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
-    }
-
-    return convert_to_bitmap<false, false>(converter, width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
+    return convert_to_bitmap_selecting_subsampling(m_subsampling_horizontal, m_subsampling_vertical, cicp(), bit_depth(), width(), height(), m_plane_y, m_plane_u, m_plane_v, bitmap);
 }
 
 }

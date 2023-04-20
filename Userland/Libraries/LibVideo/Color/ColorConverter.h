@@ -104,10 +104,10 @@ private:
     }
 
 public:
-    static DecoderErrorOr<ColorConverter> create(u8 bit_depth, CodingIndependentCodePoints cicp);
+    static DecoderErrorOr<ColorConverter> create(u8 bit_depth, CodingIndependentCodePoints input_cicp, CodingIndependentCodePoints output_cicp);
 
     // Referencing https://en.wikipedia.org/wiki/YCbCr
-    ALWAYS_INLINE Gfx::Color convert_yuv_to_full_range_rgb(u16 y, u16 u, u16 v) const
+    ALWAYS_INLINE Gfx::Color convert_yuv(u16 y, u16 u, u16 v) const
     {
         auto max_zero = [](FloatVector4 vector) {
             return FloatVector4(max(0.0f, vector.x()), max(0.0f, vector.y()), max(0.0f, vector.z()), vector.w());
@@ -148,6 +148,99 @@ public:
         u8 g = static_cast<u8>(color_vector.y() * 255.0f);
         u8 b = static_cast<u8>(color_vector.z() * 255.0f);
         return Gfx::Color(r, g, b);
+    }
+
+    // Fast conversion of 8-bit YUV to full-range RGB.
+    template<MatrixCoefficients MC, VideoFullRangeFlag FR, Unsigned T>
+    static ALWAYS_INLINE Gfx::Color convert_simple_yuv_to_rgb(T y_in, T u_in, T v_in)
+    {
+        static constexpr i32 bit_depth = 8;
+        static constexpr i32 maximum_value = (1 << bit_depth) - 1;
+        static constexpr i32 one = 1 << 14;
+        static constexpr auto fraction = [](i32 numerator, i32 denominator) constexpr {
+            auto temp = static_cast<i64>(numerator) * one;
+            return static_cast<i32>(temp / denominator);
+        };
+        static constexpr auto coef = [](i32 hundred_thousandths) constexpr {
+            return fraction(hundred_thousandths, 100'000);
+        };
+        static constexpr auto multiply = [](i32 a, i32 b) constexpr {
+            return (a * b) / one;
+        };
+
+        struct RangeFactors {
+            i32 y_offset, y_scale;
+            i32 uv_offset, uv_scale;
+        };
+
+        constexpr auto range_factors = [] {
+            RangeFactors range_factors;
+
+            i32 min = 0;
+            i32 y_max = 255;
+            i32 uv_max = 255;
+
+            if constexpr (FR == VideoFullRangeFlag::Studio) {
+                min = 16;
+                y_max = 235;
+                uv_max = 240;
+            }
+
+            range_factors.y_offset = -min * maximum_value / 255;
+            range_factors.y_scale = fraction(255, y_max - min);
+            range_factors.uv_offset = -((min + uv_max) * maximum_value) / (255 * 2);
+            range_factors.uv_scale = fraction(255, uv_max - min) * 2;
+
+            range_factors.y_scale = multiply(range_factors.y_scale, fraction(255, maximum_value));
+            range_factors.uv_scale = multiply(range_factors.uv_scale, fraction(255, maximum_value));
+
+            return range_factors;
+        }();
+
+        i32 y = y_in + range_factors.y_offset;
+        i32 u = u_in + range_factors.uv_offset;
+        i32 v = v_in + range_factors.uv_offset;
+
+        i32 red;
+        i32 green;
+        i32 blue;
+
+        constexpr i32 y_scale = range_factors.y_scale;
+        constexpr i32 uv_scale = range_factors.uv_scale;
+
+        // The equations below will have the following effects:
+        //  - Scale the Y, U and V values into the range 0...maximum_value*one for these fixed-point operations.
+        //  - Scale the values by the color range defined by VideoFullRangeFlag.
+        //  - Scale the U and V values by 2 to put them in the actual YCbCr coordinate space.
+        //  - Multiply by the YCbCr coefficients to convert to RGB.
+        if constexpr (MC == MatrixCoefficients::BT709) {
+            red = y * y_scale + v * multiply(coef(78740), uv_scale);
+            green = y * y_scale + u * multiply(coef(-9366), uv_scale) + v * multiply(coef(-23406), uv_scale);
+            blue = y * y_scale + u * multiply(coef(92780), uv_scale);
+        }
+
+        if constexpr (MC == MatrixCoefficients::BT601) {
+            red = y * y_scale + v * multiply(coef(70100), uv_scale);
+            green = y * y_scale + u * multiply(coef(-17207), uv_scale) + v * multiply(coef(-35707), uv_scale);
+            blue = y * y_scale + u * multiply(coef(88600), uv_scale);
+        }
+
+        if constexpr (MC == MatrixCoefficients::BT2020ConstantLuminance) {
+            red = y * y_scale + v * multiply(coef(73730), uv_scale);
+            green = y * y_scale + u * multiply(coef(-8228), uv_scale) + v * multiply(coef(-28568), uv_scale);
+            blue = y * y_scale + u * multiply(coef(94070), uv_scale);
+        }
+
+        red = clamp(red, 0, maximum_value * one);
+        green = clamp(green, 0, maximum_value * one);
+        blue = clamp(blue, 0, maximum_value * one);
+
+        // This compiles down to a bit shift if maximum_value == 255
+        red /= fraction(maximum_value, 255);
+        green /= fraction(maximum_value, 255);
+        blue /= fraction(maximum_value, 255);
+
+        return Gfx::Color(u8(red), u8(green), u8(blue));
     }
 
 private:
