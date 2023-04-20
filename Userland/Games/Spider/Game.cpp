@@ -145,7 +145,7 @@ void Game::detect_full_stacks()
         uint8_t last_value;
         Color color;
         for (size_t i = current_pile.stack().size(); i > 0; i--) {
-            auto& card = current_pile.stack().at(i - 1);
+            auto card = current_pile.stack().at(i - 1);
             if (card->is_upside_down())
                 break;
 
