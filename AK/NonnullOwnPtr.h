@@ -129,10 +129,8 @@ public:
 private:
     void clear()
     {
-        if (!m_ptr)
-            return;
-        delete m_ptr;
-        m_ptr = nullptr;
+        auto* ptr = exchange(m_ptr, nullptr);
+        delete ptr;
     }
 
     T* m_ptr = nullptr;

@@ -21,3 +21,15 @@ TEST_CASE(should_call_custom_deleter)
     ptr.clear();
     EXPECT_EQ(1u, deleter_call_count);
 }
+
+TEST_CASE(destroy_self_owning_object)
+{
+    struct SelfOwning {
+        OwnPtr<SelfOwning> self;
+    };
+    OwnPtr<SelfOwning> object = make<SelfOwning>();
+    auto* object_ptr = object.ptr();
+    object->self = move(object);
+    object = nullptr;
+    object_ptr->self = nullptr;
+}
