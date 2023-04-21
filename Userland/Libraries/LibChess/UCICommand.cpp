@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -323,16 +324,178 @@ ErrorOr<String> BestMoveCommand::to_string() const
     return builder.to_string();
 }
 
-ErrorOr<NonnullOwnPtr<InfoCommand>> InfoCommand::from_string([[maybe_unused]] StringView command)
+ErrorOr<NonnullOwnPtr<InfoCommand>> InfoCommand::from_string(StringView command)
 {
-    // FIXME: Implement this.
-    VERIFY_NOT_REACHED();
+    auto tokens = command.split_view(' ');
+    VERIFY(tokens[0] == "info");
+
+    auto info_command = TRY(try_make<InfoCommand>());
+
+    auto parse_integer_token = [](StringView value_token) -> ErrorOr<int> {
+        auto value_as_integer = value_token.to_int();
+        if (!value_as_integer.has_value())
+            return Error::from_string_literal("Expected integer token");
+
+        return value_as_integer.release_value();
+    };
+
+    auto parse_line = [](auto const& move_tokens) -> ErrorOr<Vector<Chess::Move>> {
+        Vector<Chess::Move> moves;
+        TRY(moves.try_ensure_capacity(move_tokens.size()));
+        for (auto move_token : move_tokens)
+            moves.unchecked_append({ move_token });
+
+        return moves;
+    };
+
+    size_t i = 1;
+    while (i < tokens.size()) {
+        auto name = tokens[i++];
+        if (name == "depth"sv) {
+            info_command->m_depth = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "seldepth"sv) {
+            info_command->m_seldepth = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "time"sv) {
+            info_command->m_time = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "nodes"sv) {
+            info_command->m_nodes = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "multipv"sv) {
+            info_command->m_multipv = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "score"sv) {
+            auto score_type_string = tokens[i++];
+            ScoreType score_type;
+            if (score_type_string == "cp"sv) {
+                score_type = ScoreType::Centipawns;
+            } else if (score_type_string == "mate"sv) {
+                score_type = ScoreType::Mate;
+            } else {
+                return Error::from_string_literal("Invalid score type");
+            }
+            auto score_value = TRY(parse_integer_token(tokens[i++]));
+            auto maybe_score_bound_string = tokens[i];
+            auto score_bound = ScoreBound::None;
+            if (maybe_score_bound_string == "upperbound"sv)
+                score_bound = ScoreBound::Upper;
+            else if (maybe_score_bound_string == "lowerbound"sv)
+                score_bound = ScoreBound::Lower;
+
+            if (score_bound != ScoreBound::None)
+                i++;
+
+            info_command->m_score = Score { score_type, score_value, score_bound };
+        } else if (name == "currmove"sv) {
+            info_command->m_currmove = Chess::Move { tokens[i++] };
+        } else if (name == "currmovenumber"sv) {
+            info_command->m_currmovenumber = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "hashfull"sv) {
+            info_command->m_hashfull = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "nps"sv) {
+            info_command->m_nps = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "tbhits"sv) {
+            info_command->m_tbhits = TRY(parse_integer_token(tokens[i++]));
+        } else if (name == "cpuload"sv) {
+            info_command->m_cpuload = TRY(parse_integer_token(tokens[i++]));
+        }
+        // We assume the info types: pv, string, refutation, and currline, are the final info type in a command.
+        else if (name == "pv"sv) {
+            info_command->m_pv = TRY(parse_line(tokens.span().slice(i)));
+            break;
+        } else if (name == "string"sv) {
+            info_command->m_string = TRY(String::join(' ', tokens.span().slice(i)));
+            break;
+        } else if (name == "refutation"sv) {
+            info_command->m_refutation = TRY(parse_line(tokens.span().slice(i)));
+            break;
+        } else if (name == "currline"sv) {
+            info_command->m_currline = TRY(parse_line(tokens.span().slice(i)));
+            break;
+        } else {
+            return Error::from_string_literal("Unknown info type");
+        }
+    }
+
+    return info_command;
 }
 
 ErrorOr<String> InfoCommand::to_string() const
 {
-    // FIXME: Implement this.
-    VERIFY_NOT_REACHED();
+    StringBuilder builder;
+
+    auto append_moves = [&](Vector<Chess::Move> const& moves) -> ErrorOr<void> {
+        bool first = true;
+        for (auto const& move : moves) {
+            if (!first)
+                TRY(builder.try_append(' '));
+
+            first = false;
+            TRY(builder.try_append(TRY(move.to_long_algebraic())));
+        }
+        return {};
+    };
+
+    TRY(builder.try_append("info"sv));
+    if (m_depth.has_value())
+        TRY(builder.try_appendff(" depth {}", m_depth.value()));
+    if (m_seldepth.has_value())
+        TRY(builder.try_appendff(" seldepth {}", m_seldepth.value()));
+    if (m_time.has_value())
+        TRY(builder.try_appendff(" time {}", m_time.value()));
+    if (m_nodes.has_value())
+        TRY(builder.try_appendff(" nodes {}", m_nodes.value()));
+    if (m_multipv.has_value())
+        TRY(builder.try_appendff(" multipv {}", m_multipv.value()));
+    if (m_score.has_value()) {
+        TRY(builder.try_append(" score"sv));
+        switch (m_score->type) {
+        case ScoreType::Centipawns:
+            TRY(builder.try_append(" cp"sv));
+            break;
+        case ScoreType::Mate:
+            TRY(builder.try_append(" mate"sv));
+            break;
+        }
+
+        TRY(builder.try_appendff(" {}", m_score->value));
+
+        switch (m_score->bound) {
+        case ScoreBound::None:
+            break;
+        case ScoreBound::Lower:
+            TRY(builder.try_append(" lowerbound"sv));
+            break;
+        case ScoreBound::Upper:
+            TRY(builder.try_append(" upperbound"sv));
+            break;
+        }
+    }
+    if (m_currmove.has_value())
+        TRY(builder.try_appendff(" currmove {}", TRY(m_currmove->to_long_algebraic())));
+    if (m_currmovenumber.has_value())
+        TRY(builder.try_appendff(" currmovenumber {}", m_currmovenumber.value()));
+    if (m_hashfull.has_value())
+        TRY(builder.try_appendff(" hashfull {}", m_hashfull.value()));
+    if (m_nps.has_value())
+        TRY(builder.try_appendff(" nps {}", m_nps.value()));
+    if (m_tbhits.has_value())
+        TRY(builder.try_appendff(" tbhits {}", m_tbhits.value()));
+    if (m_cpuload.has_value())
+        TRY(builder.try_appendff(" cpuload {}", m_cpuload.value()));
+    if (m_string.has_value())
+        TRY(builder.try_appendff(" string {}", m_string.value()));
+    if (m_pv.has_value()) {
+        TRY(builder.try_append(" pv "sv));
+        TRY(append_moves(m_pv.value()));
+    }
+    if (m_refutation.has_value()) {
+        TRY(builder.try_append(" refutation "sv));
+        TRY(append_moves(m_refutation.value()));
+    }
+    if (m_currline.has_value()) {
+        TRY(builder.try_append(" currline "sv));
+        TRY(append_moves(m_currline.value()));
+    }
+
+    return builder.to_string();
 }
 
 ErrorOr<NonnullOwnPtr<QuitCommand>> QuitCommand::from_string(StringView command)

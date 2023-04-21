@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -246,6 +247,23 @@ private:
 
 class InfoCommand : public Command {
 public:
+    enum class ScoreType {
+        Centipawns,
+        Mate
+    };
+
+    enum class ScoreBound {
+        None,
+        Lower,
+        Upper
+    };
+
+    struct Score {
+        ScoreType type;
+        int value;
+        ScoreBound bound;
+    };
+
     explicit InfoCommand()
         : Command(Command::Type::Info)
     {
@@ -255,18 +273,23 @@ public:
 
     virtual ErrorOr<String> to_string() const override;
 
-    Optional<int> depth;
-    Optional<int> seldepth;
-    Optional<int> time;
-    Optional<int> nodes;
-    Optional<Vector<Chess::Move>> pv;
-    // FIXME: Add multipv.
-    Optional<int> score_cp;
-    Optional<int> score_mate;
-    // FIXME: Add score bounds.
-    Optional<Chess::Move> currmove;
-    Optional<int> currmove_number;
-    // FIXME: Add additional fields.
+private:
+    Optional<int> m_depth;
+    Optional<int> m_seldepth;
+    Optional<int> m_time;
+    Optional<int> m_nodes;
+    Optional<Vector<Chess::Move>> m_pv;
+    Optional<int> m_multipv;
+    Optional<Score> m_score;
+    Optional<Chess::Move> m_currmove;
+    Optional<int> m_currmovenumber;
+    Optional<int> m_hashfull;
+    Optional<int> m_nps;
+    Optional<int> m_tbhits;
+    Optional<int> m_cpuload;
+    Optional<String> m_string;
+    Optional<Vector<Chess::Move>> m_refutation;
+    Optional<Vector<Chess::Move>> m_currline;
 };
 
 class QuitCommand : public Command {
