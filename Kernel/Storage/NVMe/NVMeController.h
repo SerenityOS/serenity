@@ -59,8 +59,8 @@ private:
 
     ErrorOr<void> identify_and_init_namespaces();
     Tuple<u64, u8> get_ns_features(IdentifyNamespace& identify_data_struct);
-    ErrorOr<void> create_admin_queue(Optional<u8> irq);
-    ErrorOr<void> create_io_queue(u8 qid, Optional<u8> irq);
+    ErrorOr<void> create_admin_queue(QueueType queue_type);
+    ErrorOr<void> create_io_queue(u8 qid, QueueType queue_type);
     void calculate_doorbell_stride()
     {
         m_dbl_stride = (m_controller_regs->cap >> CAP_DBL_SHIFT) & CAP_DBL_MASK;
@@ -77,6 +77,7 @@ private:
     AK::Time m_ready_timeout;
     u32 m_bar { 0 };
     u8 m_dbl_stride { 0 };
+    QueueType m_queue_type { QueueType::IRQ };
     static Atomic<u8> s_controller_id;
 };
 }

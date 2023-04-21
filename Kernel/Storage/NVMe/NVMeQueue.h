@@ -26,6 +26,11 @@ struct DoorbellRegister {
     u32 cq_head;
 };
 
+enum class QueueType {
+    Polled,
+    IRQ
+};
+
 class AsyncBlockDeviceRequest;
 
 struct NVMeIO {
@@ -36,7 +41,7 @@ struct NVMeIO {
 
 class NVMeQueue : public AtomicRefCounted<NVMeQueue> {
 public:
-    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(u16 qid, Optional<u8> irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs);
+    static ErrorOr<NonnullLockRefPtr<NVMeQueue>> try_create(u16 qid, u8 irq, u32 q_depth, OwnPtr<Memory::Region> cq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_page, OwnPtr<Memory::Region> sq_dma_region, Vector<NonnullRefPtr<Memory::PhysicalPage>> sq_dma_page, Memory::TypedMapping<DoorbellRegister volatile> db_regs, QueueType queue_type);
     bool is_admin_queue() { return m_admin_queue; };
     u16 submit_sync_sqe(NVMeSubmission&);
     void read(AsyncBlockDeviceRequest& request, u16 nsid, u64 index, u32 count);
