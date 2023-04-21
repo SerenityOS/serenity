@@ -18,13 +18,13 @@ namespace Ladybird {
 EventLoopPluginQt::EventLoopPluginQt() = default;
 EventLoopPluginQt::~EventLoopPluginQt() = default;
 
-void EventLoopPluginQt::spin_until(Function<bool()> goal_condition)
+void EventLoopPluginQt::spin_until(JS::SafeFunction<bool()> goal_condition)
 {
     while (!goal_condition())
         QCoreApplication::processEvents(QEventLoop::ProcessEventsFlag::AllEvents | QEventLoop::ProcessEventsFlag::WaitForMoreEvents);
 }
 
-void EventLoopPluginQt::deferred_invoke(Function<void()> function)
+void EventLoopPluginQt::deferred_invoke(JS::SafeFunction<void()> function)
 {
     VERIFY(function);
     QTimer::singleShot(0, [function = move(function)] {

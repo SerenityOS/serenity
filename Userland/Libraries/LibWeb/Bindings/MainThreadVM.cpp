@@ -499,7 +499,7 @@ NonnullOwnPtr<JS::ExecutionContext> create_a_new_javascript_realm(JS::VM& vm, Fu
     return realm_execution_context;
 }
 
-void WebEngineCustomData::spin_event_loop_until(Function<bool()> goal_condition)
+void WebEngineCustomData::spin_event_loop_until(JS::SafeFunction<bool()> goal_condition)
 {
     Platform::EventLoopPlugin::the().spin_until(move(goal_condition));
 }
