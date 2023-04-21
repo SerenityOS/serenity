@@ -835,6 +835,7 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
 
 static ErrorOr<void> read_icc_profile(Stream& stream, JPEGLoadingContext& context, int bytes_to_read)
 {
+    // https://www.color.org/technotes/ICC-Technote-ProfileEmbedding.pdf, page 5, "JFIF".
     if (bytes_to_read <= 2)
         return Error::from_string_literal("icc marker too small");
 
@@ -937,6 +938,7 @@ static ErrorOr<void> read_colour_encoding(Stream& stream, [[maybe_unused]] JPEGL
 
 static ErrorOr<void> read_app_marker(Stream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
+    // B.2.4.6 - Application data syntax
     i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
 
     if (bytes_to_read <= 2)
@@ -945,8 +947,10 @@ static ErrorOr<void> read_app_marker(Stream& stream, JPEGLoadingContext& context
 
     StringBuilder builder;
     for (;;) {
-        if (bytes_to_read == 0)
-            return Error::from_string_literal("app marker size too small for identifier");
+        if (bytes_to_read == 0) {
+            dbgln_if(JPEG_DEBUG, "app marker {} does not start with zero-terminated string", app_marker_number);
+            return {};
+        }
 
         auto c = TRY(stream.read_value<char>());
         bytes_to_read--;
