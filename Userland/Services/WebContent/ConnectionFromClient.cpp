@@ -636,8 +636,7 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
 
 void ConnectionFromClient::set_content_filters(Vector<DeprecatedString> const& filters)
 {
-    for (auto& filter : filters)
-        Web::ContentFilter::the().add_pattern(filter);
+    Web::ContentFilter::the().set_patterns(filters).release_value_but_fixme_should_propagate_errors();
 }
 
 void ConnectionFromClient::set_autoplay_allowed_on_all_websites()

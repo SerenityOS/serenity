@@ -16,7 +16,7 @@ public:
     static ContentFilter& the();
 
     bool is_filtered(const AK::URL&) const;
-    void add_pattern(DeprecatedString const&);
+    ErrorOr<void> set_patterns(ReadonlySpan<DeprecatedString>);
 
 private:
     ContentFilter();

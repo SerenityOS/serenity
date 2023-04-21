@@ -121,15 +121,24 @@ static ErrorOr<void> load_content_filters()
         file_or_error = Core::File::open(DeprecatedString::formatted("{}/res/ladybird/BrowserContentFilters.txt", s_serenity_resource_root), Core::File::OpenMode::Read);
     if (file_or_error.is_error())
         return file_or_error.release_error();
+
     auto file = file_or_error.release_value();
     auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+
+    Vector<DeprecatedString> patterns;
+
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));
-        if (!line.is_empty()) {
-            Web::ContentFilter::the().add_pattern(line);
-        }
+        if (line.is_empty())
+            continue;
+
+        TRY(patterns.try_append(line));
     }
+
+    auto& content_filter = Web::ContentFilter::the();
+    TRY(content_filter.set_patterns(patterns));
+
     return {};
 }
 
