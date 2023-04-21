@@ -28,3 +28,21 @@ TEST_CASE(compile_time_iterable)
     constexpr Array<int, 8> array = { 0, 1, 2, 3, 4, 5, 6, 7 };
     static_assert(constexpr_sum(array) == 28);
 }
+
+TEST_CASE(contains_slow)
+{
+    constexpr Array<int, 8> array = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    EXPECT(array.contains_slow(0));
+    EXPECT(array.contains_slow(4));
+    EXPECT(array.contains_slow(7));
+    EXPECT(!array.contains_slow(42));
+}
+
+TEST_CASE(first_index_of)
+{
+    constexpr Array<int, 8> array = { 0, 1, 2, 3, 4, 5, 6, 7 };
+    EXPECT(array.first_index_of(0) == 0u);
+    EXPECT(array.first_index_of(4) == 4u);
+    EXPECT(array.first_index_of(7) == 7u);
+    EXPECT(!array.first_index_of(42).has_value());
+}
