@@ -89,31 +89,31 @@ NonnullOwnPtr<Command> Endpoint::read_command()
     dbgln_if(UCI_DEBUG, "{} Received UCI Command: {}", class_name(), line);
 
     if (line == "uci") {
-        return make<UCICommand>(UCICommand::from_string(line));
+        return UCICommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("debug"sv)) {
-        return make<DebugCommand>(DebugCommand::from_string(line));
+        return DebugCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("isready"sv)) {
-        return make<IsReadyCommand>(IsReadyCommand::from_string(line));
+        return IsReadyCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("setoption"sv)) {
-        return make<SetOptionCommand>(SetOptionCommand::from_string(line));
+        return SetOptionCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("position"sv)) {
-        return make<PositionCommand>(PositionCommand::from_string(line));
+        return PositionCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("go"sv)) {
-        return make<GoCommand>(GoCommand::from_string(line));
+        return GoCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("stop"sv)) {
-        return make<StopCommand>(StopCommand::from_string(line));
+        return StopCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("id"sv)) {
-        return make<IdCommand>(IdCommand::from_string(line));
+        return IdCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("uciok"sv)) {
-        return make<UCIOkCommand>(UCIOkCommand::from_string(line));
+        return UCIOkCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("readyok"sv)) {
-        return make<ReadyOkCommand>(ReadyOkCommand::from_string(line));
+        return ReadyOkCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("bestmove"sv)) {
-        return make<BestMoveCommand>(BestMoveCommand::from_string(line));
+        return BestMoveCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("info"sv)) {
-        return make<InfoCommand>(InfoCommand::from_string(line));
+        return InfoCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("quit"sv)) {
-        return make<QuitCommand>(QuitCommand::from_string(line));
+        return QuitCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     }
 
     dbgln("command line: {}", line);
