@@ -15,6 +15,8 @@
 #include <Kernel/API/InodeWatcherEvent.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/Forward.h>
+#include <Kernel/Locking/MutexProtected.h>
+#include <Kernel/Locking/SpinlockProtected.h>
 
 namespace Kernel {
 
@@ -63,20 +65,22 @@ public:
 private:
     explicit InodeWatcher() { }
 
-    mutable Mutex m_lock;
-
     struct Event {
         int wd { 0 };
         InodeWatcherEvent::Type type { InodeWatcherEvent::Type::Invalid };
         OwnPtr<KString> path;
     };
-    CircularQueue<Event, 32> m_queue;
+    SpinlockProtected<CircularQueue<Event, 32>, LockRank::None> m_queue;
     Checked<int> m_wd_counter { 1 };
 
     // NOTE: These two hashmaps provide two different ways of reaching the same
     // watch description, so they will overlap.
-    HashMap<int, NonnullOwnPtr<WatchDescription>> m_wd_to_watches;
-    HashMap<InodeIdentifier, WatchDescription*> m_inode_to_watches;
+    struct WatchMaps {
+        HashMap<int, NonnullOwnPtr<WatchDescription>> wd_to_watches;
+        HashMap<InodeIdentifier, WatchDescription*> inode_to_watches;
+    };
+
+    mutable SpinlockProtected<WatchMaps, LockRank::None> m_watch_maps;
 };
 
 }
