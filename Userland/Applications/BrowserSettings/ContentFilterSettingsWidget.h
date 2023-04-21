@@ -31,17 +31,20 @@ protected:
 };
 
 class ContentFilterSettingsWidget : public GUI::SettingsWindow::Tab {
-    C_OBJECT(ContentFilterSettingsWidget)
+    C_OBJECT_ABSTRACT(ContentFilterSettingsWidget)
+
 public:
+    static ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> create();
+
     virtual void apply_settings() override;
     virtual void reset_default_values() override;
 
 private:
-    ContentFilterSettingsWidget();
+    explicit ContentFilterSettingsWidget(NonnullRefPtr<DomainListModel>);
 
     RefPtr<GUI::Menu> m_entry_context_menu;
     RefPtr<GUI::CheckBox> m_enable_content_filtering_checkbox;
     RefPtr<GUI::Button> m_add_new_domain_button;
     RefPtr<GUI::ListView> m_domain_list_view;
-    RefPtr<DomainListModel> m_domain_list_model;
+    NonnullRefPtr<DomainListModel> m_domain_list_model;
 };
