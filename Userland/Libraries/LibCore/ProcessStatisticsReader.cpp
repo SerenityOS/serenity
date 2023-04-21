@@ -36,7 +36,6 @@ ErrorOr<AllProcessesStatistics> ProcessStatisticsReader::get_all(SeekableStream&
         process.uid = process_object.get_u32("uid"sv).value_or(0);
         process.gid = process_object.get_u32("gid"sv).value_or(0);
         process.ppid = process_object.get_u32("ppid"sv).value_or(0);
-        process.nfds = process_object.get_u32("nfds"sv).value_or(0);
         process.kernel = process_object.get_bool("kernel"sv).value_or(false);
         process.name = process_object.get_deprecated_string("name"sv).value_or("");
         process.executable = process_object.get_deprecated_string("executable"sv).value_or("");
