@@ -33,7 +33,7 @@ bool ContentFilter::is_filtered(const AK::URL& url) const
     return false;
 }
 
-ErrorOr<void> ContentFilter::set_patterns(ReadonlySpan<DeprecatedString> patterns)
+ErrorOr<void> ContentFilter::set_patterns(ReadonlySpan<String> patterns)
 {
     m_patterns.clear_with_capacity();
 
@@ -46,7 +46,7 @@ ErrorOr<void> ContentFilter::set_patterns(ReadonlySpan<DeprecatedString> pattern
         if (!pattern.ends_with('*'))
             TRY(builder.try_append('*'));
 
-        TRY(m_patterns.try_empend(builder.to_deprecated_string()));
+        TRY(m_patterns.try_empend(TRY(builder.to_string())));
     }
 
     return {};

@@ -126,14 +126,15 @@ static ErrorOr<void> load_content_filters()
     auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
-    Vector<DeprecatedString> patterns;
+    Vector<String> patterns;
 
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));
         if (line.is_empty())
             continue;
 
-        TRY(patterns.try_append(line));
+        auto pattern = TRY(String::from_utf8(line));
+        TRY(patterns.try_append(move(pattern)));
     }
 
     auto& content_filter = Web::ContentFilter::the();

@@ -595,9 +595,9 @@ OrderedHashMap<DeprecatedString, DeprecatedString> OutOfProcessWebView::get_sess
     return client().get_session_storage_entries();
 }
 
-void OutOfProcessWebView::set_content_filters(Vector<DeprecatedString> filters)
+void OutOfProcessWebView::set_content_filters(Vector<String> filters)
 {
-    client().async_set_content_filters(filters);
+    client().async_set_content_filters(move(filters));
 }
 
 void OutOfProcessWebView::set_autoplay_allowed_on_all_websites()

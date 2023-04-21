@@ -15,7 +15,7 @@ namespace Browser {
 extern DeprecatedString g_home_url;
 extern DeprecatedString g_new_tab_url;
 extern DeprecatedString g_search_engine;
-extern Vector<DeprecatedString> g_content_filters;
+extern Vector<String> g_content_filters;
 extern bool g_content_filters_enabled;
 extern Vector<String> g_autoplay_allowlist;
 extern bool g_autoplay_allowed_on_all_websites;

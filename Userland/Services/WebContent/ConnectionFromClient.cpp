@@ -634,7 +634,7 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
     return builder.to_deprecated_string();
 }
 
-void ConnectionFromClient::set_content_filters(Vector<DeprecatedString> const& filters)
+void ConnectionFromClient::set_content_filters(Vector<String> const& filters)
 {
     Web::ContentFilter::the().set_patterns(filters).release_value_but_fixme_should_propagate_errors();
 }
