@@ -38,7 +38,7 @@ steps:
     - script: |
         set -e
         brew update
-        brew install bash ninja wabt ccache unzip qt llvm@15
+        brew install coreutils bash ninja wabt ccache unzip qt llvm@15
       displayName: 'Install Dependencies'
 
   - ${{ if eq(parameters.os, 'Android') }}:
