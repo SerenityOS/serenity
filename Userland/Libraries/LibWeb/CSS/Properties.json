@@ -630,7 +630,7 @@
     "inherited": true,
     "initial": "black",
     "valid-types": [
-      "color"
+      "paint"
     ],
     "valid-identifiers": [
       "none"

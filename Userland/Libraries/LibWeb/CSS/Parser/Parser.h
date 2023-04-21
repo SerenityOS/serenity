@@ -267,6 +267,7 @@ private:
         Font,
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
+    RefPtr<StyleValue> parse_url_value(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
     Optional<Vector<LinearColorStopListElement>> parse_linear_color_stop_list(TokenStream<ComponentValue>&);
     Optional<Vector<AngularColorStopListElement>> parse_angular_color_stop_list(TokenStream<ComponentValue>&);
