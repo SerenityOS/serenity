@@ -55,7 +55,7 @@ ErrorOr<NonnullRefPtr<AutoplaySettingsWidget>> AutoplaySettingsWidget::create()
         String text;
 
         if (GUI::InputBox::show(widget->window(), text, "Website:"sv, "Add website to autoplay allowlist"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
-            widget->m_allowlist_model->add_domain(text.to_deprecated_string());
+            widget->m_allowlist_model->add_domain(move(text));
             widget->set_modified(true);
         }
     };
