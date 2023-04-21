@@ -30,7 +30,7 @@ DebugCommand DebugCommand::from_string(StringView command)
     if (tokens[1] == "on")
         return DebugCommand(Flag::On);
     if (tokens[1] == "off")
-        return DebugCommand(Flag::On);
+        return DebugCommand(Flag::Off);
 
     VERIFY_NOT_REACHED();
 }
