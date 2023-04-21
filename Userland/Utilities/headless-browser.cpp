@@ -45,6 +45,7 @@
 #if !defined(AK_OS_SERENITY)
 #    include <Ladybird/HelperProcess.h>
 #    include <QCoreApplication>
+#    include <QTimer>
 #endif
 
 class HeadlessWebContentView final : public WebView::ViewImplementation {
@@ -58,6 +59,16 @@ public:
 #else
         auto candidate_web_content_paths = TRY(get_paths_for_helper_process("WebContent"sv));
         view->m_client_state.client = TRY(view->launch_web_content_process(candidate_web_content_paths));
+
+        struct DeferredInvokerQt final : IPC::DeferredInvoker {
+            virtual ~DeferredInvokerQt() = default;
+            virtual void schedule(Function<void()> callback) override
+            {
+                QTimer::singleShot(0, std::move(callback));
+            }
+        };
+
+        view->m_client_state.client->set_deferred_invoker(make<DeferredInvokerQt>());
 #endif
 
         view->client().async_update_system_theme(move(theme));
