@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -38,15 +39,15 @@ public:
         Info,
         Option,
     };
+    virtual DeprecatedString to_deprecated_string() const = 0;
 
+    virtual ~Command() = default;
+
+protected:
     explicit Command(Type type)
         : Core::Event(to_underlying(type))
     {
     }
-
-    virtual DeprecatedString to_deprecated_string() const = 0;
-
-    virtual ~Command() = default;
 };
 
 class UCICommand : public Command {
@@ -56,7 +57,7 @@ public:
     {
     }
 
-    static UCICommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<UCICommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 };
@@ -74,7 +75,7 @@ public:
     {
     }
 
-    static DebugCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<DebugCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -91,7 +92,7 @@ public:
     {
     }
 
-    static IsReadyCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<IsReadyCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 };
@@ -105,7 +106,7 @@ public:
     {
     }
 
-    static SetOptionCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<SetOptionCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -126,7 +127,7 @@ public:
     {
     }
 
-    static PositionCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<PositionCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -145,7 +146,7 @@ public:
     {
     }
 
-    static GoCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<GoCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -170,7 +171,7 @@ public:
     {
     }
 
-    static StopCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<StopCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 };
@@ -189,7 +190,7 @@ public:
     {
     }
 
-    static IdCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<IdCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -208,7 +209,7 @@ public:
     {
     }
 
-    static UCIOkCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<UCIOkCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 };
@@ -220,7 +221,7 @@ public:
     {
     }
 
-    static ReadyOkCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<ReadyOkCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 };
@@ -233,7 +234,7 @@ public:
     {
     }
 
-    static BestMoveCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<BestMoveCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -250,7 +251,7 @@ public:
     {
     }
 
-    static InfoCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<InfoCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 
@@ -275,7 +276,7 @@ public:
     {
     }
 
-    static QuitCommand from_string(StringView command);
+    static ErrorOr<NonnullOwnPtr<QuitCommand>> from_string(StringView command);
 
     virtual DeprecatedString to_deprecated_string() const override;
 };
