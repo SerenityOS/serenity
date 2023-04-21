@@ -51,7 +51,7 @@ EventLoop& main_thread_event_loop()
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#spin-the-event-loop
-void EventLoop::spin_until(Function<bool()> goal_condition)
+void EventLoop::spin_until(JS::SafeFunction<bool()> goal_condition)
 {
     // FIXME: 1. Let task be the event loop's currently running task.
 

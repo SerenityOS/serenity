@@ -15,8 +15,8 @@ public:
     EventLoopPluginQt();
     virtual ~EventLoopPluginQt() override;
 
-    virtual void spin_until(Function<bool()> goal_condition) override;
-    virtual void deferred_invoke(Function<void()>) override;
+    virtual void spin_until(JS::SafeFunction<bool()> goal_condition) override;
+    virtual void deferred_invoke(JS::SafeFunction<void()>) override;
     virtual NonnullRefPtr<Web::Platform::Timer> create_timer() override;
     virtual void quit() override;
 };

@@ -38,7 +38,7 @@ struct CustomElementReactionsStack {
 struct WebEngineCustomData final : public JS::VM::CustomData {
     virtual ~WebEngineCustomData() override = default;
 
-    virtual void spin_event_loop_until(Function<bool()> goal_condition) override;
+    virtual void spin_event_loop_until(JS::SafeFunction<bool()> goal_condition) override;
 
     HTML::EventLoop event_loop;
 
