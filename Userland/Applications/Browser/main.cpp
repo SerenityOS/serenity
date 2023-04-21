@@ -50,6 +50,9 @@ static ErrorOr<void> load_content_filters()
     auto file = TRY(Core::File::open(DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::File::OpenMode::Read));
     auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+
+    Browser::g_content_filters.clear_with_capacity();
+
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));
         if (!line.is_empty())

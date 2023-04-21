@@ -33,15 +33,23 @@ bool ContentFilter::is_filtered(const AK::URL& url) const
     return false;
 }
 
-void ContentFilter::add_pattern(DeprecatedString const& pattern)
+ErrorOr<void> ContentFilter::set_patterns(ReadonlySpan<DeprecatedString> patterns)
 {
-    StringBuilder builder;
-    if (!pattern.starts_with('*'))
-        builder.append('*');
-    builder.append(pattern);
-    if (!pattern.ends_with('*'))
-        builder.append('*');
-    m_patterns.empend(builder.to_deprecated_string());
+    m_patterns.clear_with_capacity();
+
+    for (auto const& pattern : patterns) {
+        StringBuilder builder;
+
+        if (!pattern.starts_with('*'))
+            TRY(builder.try_append('*'));
+        TRY(builder.try_append(pattern));
+        if (!pattern.ends_with('*'))
+            TRY(builder.try_append('*'));
+
+        TRY(m_patterns.try_empend(builder.to_deprecated_string()));
+    }
+
+    return {};
 }
 
 }
