@@ -130,7 +130,7 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
     m_add_new_domain_button->on_click = [&](unsigned) {
         String text;
 
-        if (GUI::InputBox::show(window(), text, "Enter domain name"sv, "Add domain to Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
+        if (GUI::InputBox::show(window(), text, "Domain:"sv, "Add domain to Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
             m_domain_list_model->add_domain(move(text));
             set_modified(true);
         }
