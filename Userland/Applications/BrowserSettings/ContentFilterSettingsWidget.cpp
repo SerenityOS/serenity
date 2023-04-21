@@ -31,10 +31,16 @@ ErrorOr<void> DomainListModel::load()
     auto file = TRY(Core::File::open(TRY(filter_list_file_path()), Core::File::OpenMode::Read));
     auto content_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
+
+    m_domain_list.clear_with_capacity();
+
     while (TRY(content_filter_list->can_read_line())) {
         auto line = TRY(content_filter_list->read_line(buffer));
-        if (!line.is_empty())
-            m_domain_list.append(line);
+        if (line.is_empty())
+            continue;
+
+        auto pattern = TRY(String::from_utf8(line));
+        TRY(m_domain_list.try_append(move(pattern)));
     }
 
     return {};
@@ -55,7 +61,7 @@ ErrorOr<void> DomainListModel::save()
     return {};
 }
 
-void DomainListModel::add_domain(DeprecatedString name)
+void DomainListModel::add_domain(String name)
 {
     begin_insert_rows({}, m_domain_list.size(), m_domain_list.size());
     m_domain_list.append(move(name));
@@ -76,32 +82,37 @@ void DomainListModel::delete_domain(size_t index)
 void DomainListModel::reset_default_values()
 {
     // FIXME: This probably should not be hardcoded.
-    m_domain_list = {
-        "207.net",
-        "247realmedia.com",
-        "2o7.net",
-        "adbrite.com",
-        "admob.com",
-        "adthis.com",
-        "advertising.com",
-        "aquantive.com",
-        "atwola.com",
-        "channelintelligence.com",
-        "doubleclick.com",
-        "doubleclick.net",
-        "esomniture.com",
-        "google-analytics.com",
-        "googleadservices.com",
-        "googlesyndication.com",
-        "gravity.com",
-        "hitbox.com",
-        "intellitxt.com",
-        "nielsen-online.com",
-        "omniture.com",
-        "quantcast.com",
-        "quantserve.com",
-        "scorecardresearch.com",
+    static constexpr Array default_domain_list {
+        "207.net"sv,
+        "247realmedia.com"sv,
+        "2o7.net"sv,
+        "adbrite.com"sv,
+        "admob.com"sv,
+        "adthis.com"sv,
+        "advertising.com"sv,
+        "aquantive.com"sv,
+        "atwola.com"sv,
+        "channelintelligence.com"sv,
+        "doubleclick.com"sv,
+        "doubleclick.net"sv,
+        "esomniture.com"sv,
+        "google-analytics.com"sv,
+        "googleadservices.com"sv,
+        "googlesyndication.com"sv,
+        "gravity.com"sv,
+        "hitbox.com"sv,
+        "intellitxt.com"sv,
+        "nielsen-online.com"sv,
+        "omniture.com"sv,
+        "quantcast.com"sv,
+        "quantserve.com"sv,
+        "scorecardresearch.com"sv,
     };
+
+    m_domain_list.clear_with_capacity();
+    for (auto domain : default_domain_list)
+        m_domain_list.append(String::from_utf8(domain).release_value_but_fixme_should_propagate_errors());
+
     m_was_modified = true;
     did_update(UpdateFlag::InvalidateAllIndices);
 }
@@ -120,14 +131,13 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
         String text;
 
         if (GUI::InputBox::show(window(), text, "Enter domain name"sv, "Add domain to Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
-            m_domain_list_model->add_domain(move(text).to_deprecated_string());
+            m_domain_list_model->add_domain(move(text));
             set_modified(true);
         }
     };
 
     m_domain_list_model = make_ref_counted<DomainListModel>();
-    // FIXME: Propagate errors
-    MUST(m_domain_list_model->load());
+    m_domain_list_model->load().release_value_but_fixme_should_propagate_errors();
     m_domain_list_view->set_model(m_domain_list_model);
 
     auto delete_action = GUI::CommonActions::make_delete_action([&](GUI::Action const&) {
@@ -147,8 +157,7 @@ ContentFilterSettingsWidget::ContentFilterSettingsWidget()
 
 void ContentFilterSettingsWidget::apply_settings()
 {
-    // FIXME: Propagate errors
-    MUST(m_domain_list_model->save());
+    m_domain_list_model->save().release_value_but_fixme_should_propagate_errors();
     Config::write_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, m_enable_content_filtering_checkbox->is_checked());
 }
 
