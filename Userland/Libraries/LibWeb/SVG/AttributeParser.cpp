@@ -494,6 +494,19 @@ Optional<PreserveAspectRatio> AttributeParser::parse_preserve_aspect_ratio(Strin
     return PreserveAspectRatio { *align, *meet_or_slice };
 }
 
+// https://svgwg.org/svg2-draft/pservers.html#LinearGradientElementGradientUnitsAttribute
+Optional<GradientUnits> AttributeParser::parse_gradient_units(StringView input)
+{
+    GenericLexer lexer { input };
+    lexer.ignore_while(whitespace);
+    auto gradient_units_string = lexer.consume_until(whitespace);
+    if (gradient_units_string == "userSpaceOnUse"sv)
+        return GradientUnits::UserSpaceOnUse;
+    if (gradient_units_string == "objectBoundingBox"sv)
+        return GradientUnits::ObjectBoundingBox;
+    return {};
+}
+
 // https://drafts.csswg.org/css-transforms/#svg-syntax
 Optional<Vector<Transform>> AttributeParser::parse_transform()
 {
