@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,9 +18,9 @@ ErrorOr<NonnullOwnPtr<UCICommand>> UCICommand::from_string(StringView command)
     return adopt_nonnull_own_or_enomem(new (nothrow) UCICommand);
 }
 
-DeprecatedString UCICommand::to_deprecated_string() const
+ErrorOr<String> UCICommand::to_string() const
 {
-    return "uci\n";
+    return "uci\n"_short_string;
 }
 
 ErrorOr<NonnullOwnPtr<DebugCommand>> DebugCommand::from_string(StringView command)
@@ -35,12 +36,12 @@ ErrorOr<NonnullOwnPtr<DebugCommand>> DebugCommand::from_string(StringView comman
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString DebugCommand::to_deprecated_string() const
+ErrorOr<String> DebugCommand::to_string() const
 {
     if (flag() == Flag::On) {
-        return "debug on\n";
+        return "debug on\n"_string;
     } else {
-        return "debug off\n";
+        return "debug off\n"_string;
     }
 }
 
@@ -52,9 +53,9 @@ ErrorOr<NonnullOwnPtr<IsReadyCommand>> IsReadyCommand::from_string(StringView co
     return adopt_nonnull_own_or_enomem(new (nothrow) IsReadyCommand);
 }
 
-DeprecatedString IsReadyCommand::to_deprecated_string() const
+ErrorOr<String> IsReadyCommand::to_string() const
 {
-    return "isready\n";
+    return "isready\n"_string;
 }
 
 ErrorOr<NonnullOwnPtr<SetOptionCommand>> SetOptionCommand::from_string(StringView command)
@@ -92,20 +93,22 @@ ErrorOr<NonnullOwnPtr<SetOptionCommand>> SetOptionCommand::from_string(StringVie
 
     VERIFY(!name.is_empty());
 
-    return adopt_nonnull_own_or_enomem(new (nothrow) SetOptionCommand(name.to_deprecated_string().trim_whitespace(), value.to_deprecated_string().trim_whitespace()));
+    return adopt_nonnull_own_or_enomem(new (nothrow) SetOptionCommand(
+        TRY(String::from_utf8(name.string_view().trim_whitespace())),
+        TRY(String::from_utf8(value.string_view().trim_whitespace()))));
 }
 
-DeprecatedString SetOptionCommand::to_deprecated_string() const
+ErrorOr<String> SetOptionCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("setoption name "sv);
-    builder.append(name());
+    TRY(builder.try_append("setoption name "sv));
+    TRY(builder.try_append(name()));
     if (value().has_value()) {
-        builder.append(" value "sv);
-        builder.append(value().value());
+        TRY(builder.try_append(" value "sv));
+        TRY(builder.try_append(value().value()));
     }
-    builder.append('\n');
-    return builder.to_deprecated_string();
+    TRY(builder.try_append('\n'));
+    return builder.to_string();
 }
 
 ErrorOr<NonnullOwnPtr<PositionCommand>> PositionCommand::from_string(StringView command)
@@ -115,9 +118,9 @@ ErrorOr<NonnullOwnPtr<PositionCommand>> PositionCommand::from_string(StringView 
     VERIFY(tokens[0] == "position");
     VERIFY(tokens[2] == "moves");
 
-    Optional<DeprecatedString> fen;
+    Optional<String> fen;
     if (tokens[1] != "startpos")
-        fen = tokens[1];
+        fen = TRY(String::from_utf8(tokens[1]));
 
     Vector<Move> moves;
     for (size_t i = 3; i < tokens.size(); ++i) {
@@ -126,22 +129,22 @@ ErrorOr<NonnullOwnPtr<PositionCommand>> PositionCommand::from_string(StringView 
     return adopt_nonnull_own_or_enomem(new (nothrow) PositionCommand(fen, moves));
 }
 
-DeprecatedString PositionCommand::to_deprecated_string() const
+ErrorOr<String> PositionCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("position "sv);
+    TRY(builder.try_append("position "sv));
     if (fen().has_value()) {
-        builder.append(fen().value());
+        TRY(builder.try_append(fen().value()));
     } else {
-        builder.append("startpos "sv);
+        TRY(builder.try_append("startpos "sv));
     }
-    builder.append("moves"sv);
+    TRY(builder.try_append("moves"sv));
     for (auto& move : moves()) {
-        builder.append(' ');
-        builder.append(move.to_long_algebraic());
+        TRY(builder.try_append(' '));
+        TRY(builder.try_append(move.to_long_algebraic()));
     }
-    builder.append('\n');
-    return builder.to_deprecated_string();
+    TRY(builder.try_append('\n'));
+    return builder.to_string();
 }
 
 ErrorOr<NonnullOwnPtr<GoCommand>> GoCommand::from_string(StringView command)
@@ -190,44 +193,44 @@ ErrorOr<NonnullOwnPtr<GoCommand>> GoCommand::from_string(StringView command)
     return go_command;
 }
 
-DeprecatedString GoCommand::to_deprecated_string() const
+ErrorOr<String> GoCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("go"sv);
+    TRY(builder.try_append("go"sv));
 
     if (searchmoves.has_value()) {
-        builder.append(" searchmoves"sv);
+        TRY(builder.try_append(" searchmoves"sv));
         for (auto& move : searchmoves.value()) {
-            builder.append(' ');
-            builder.append(move.to_long_algebraic());
+            TRY(builder.try_append(' '));
+            TRY(builder.try_append(move.to_long_algebraic()));
         }
     }
 
     if (ponder)
-        builder.append(" ponder"sv);
+        TRY(builder.try_append(" ponder"sv));
     if (wtime.has_value())
-        builder.appendff(" wtime {}", wtime.value());
+        TRY(builder.try_appendff(" wtime {}", wtime.value()));
     if (btime.has_value())
-        builder.appendff(" btime {}", btime.value());
+        TRY(builder.try_appendff(" btime {}", btime.value()));
     if (winc.has_value())
-        builder.appendff(" winc {}", winc.value());
+        TRY(builder.try_appendff(" winc {}", winc.value()));
     if (binc.has_value())
-        builder.appendff(" binc {}", binc.value());
+        TRY(builder.try_appendff(" binc {}", binc.value()));
     if (movestogo.has_value())
-        builder.appendff(" movestogo {}", movestogo.value());
+        TRY(builder.try_appendff(" movestogo {}", movestogo.value()));
     if (depth.has_value())
-        builder.appendff(" depth {}", depth.value());
+        TRY(builder.try_appendff(" depth {}", depth.value()));
     if (nodes.has_value())
-        builder.appendff(" nodes {}", nodes.value());
+        TRY(builder.try_appendff(" nodes {}", nodes.value()));
     if (mate.has_value())
-        builder.appendff(" mate {}", mate.value());
+        TRY(builder.try_appendff(" mate {}", mate.value()));
     if (movetime.has_value())
-        builder.appendff(" movetime {}", movetime.value());
+        TRY(builder.try_appendff(" movetime {}", movetime.value()));
     if (infinite)
-        builder.append(" infinite"sv);
+        TRY(builder.try_append(" infinite"sv));
 
-    builder.append('\n');
-    return builder.to_deprecated_string();
+    TRY(builder.try_append('\n'));
+    return builder.to_string();
 }
 
 ErrorOr<NonnullOwnPtr<StopCommand>> StopCommand::from_string(StringView command)
@@ -238,9 +241,9 @@ ErrorOr<NonnullOwnPtr<StopCommand>> StopCommand::from_string(StringView command)
     return adopt_nonnull_own_or_enomem(new (nothrow) StopCommand);
 }
 
-DeprecatedString StopCommand::to_deprecated_string() const
+ErrorOr<String> StopCommand::to_string() const
 {
-    return "stop\n";
+    return "stop\n"_short_string;
 }
 
 ErrorOr<NonnullOwnPtr<IdCommand>> IdCommand::from_string(StringView command)
@@ -256,25 +259,25 @@ ErrorOr<NonnullOwnPtr<IdCommand>> IdCommand::from_string(StringView command)
     }
 
     if (tokens[1] == "name") {
-        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Name, value.to_deprecated_string()));
+        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Name, TRY(value.to_string())));
     } else if (tokens[1] == "author") {
-        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Author, value.to_deprecated_string()));
+        return adopt_nonnull_own_or_enomem(new (nothrow) IdCommand(Type::Author, TRY(value.to_string())));
     }
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString IdCommand::to_deprecated_string() const
+ErrorOr<String> IdCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("id "sv);
+    TRY(builder.try_append("id "sv));
     if (field_type() == Type::Name) {
-        builder.append("name "sv);
+        TRY(builder.try_append("name "sv));
     } else {
-        builder.append("author "sv);
+        TRY(builder.try_append("author "sv));
     }
-    builder.append(value());
-    builder.append('\n');
-    return builder.to_deprecated_string();
+    TRY(builder.try_append(value()));
+    TRY(builder.try_append('\n'));
+    return builder.to_string();
 }
 
 ErrorOr<NonnullOwnPtr<UCIOkCommand>> UCIOkCommand::from_string(StringView command)
@@ -285,9 +288,9 @@ ErrorOr<NonnullOwnPtr<UCIOkCommand>> UCIOkCommand::from_string(StringView comman
     return adopt_nonnull_own_or_enomem(new (nothrow) UCIOkCommand);
 }
 
-DeprecatedString UCIOkCommand::to_deprecated_string() const
+ErrorOr<String> UCIOkCommand::to_string() const
 {
-    return "uciok\n";
+    return "uciok\n"_short_string;
 }
 
 ErrorOr<NonnullOwnPtr<ReadyOkCommand>> ReadyOkCommand::from_string(StringView command)
@@ -298,9 +301,9 @@ ErrorOr<NonnullOwnPtr<ReadyOkCommand>> ReadyOkCommand::from_string(StringView co
     return adopt_nonnull_own_or_enomem(new (nothrow) ReadyOkCommand);
 }
 
-DeprecatedString ReadyOkCommand::to_deprecated_string() const
+ErrorOr<String> ReadyOkCommand::to_string() const
 {
-    return "readyok\n";
+    return "readyok\n"_string;
 }
 
 ErrorOr<NonnullOwnPtr<BestMoveCommand>> BestMoveCommand::from_string(StringView command)
@@ -311,13 +314,13 @@ ErrorOr<NonnullOwnPtr<BestMoveCommand>> BestMoveCommand::from_string(StringView 
     return adopt_nonnull_own_or_enomem(new (nothrow) BestMoveCommand(Move(tokens[1])));
 }
 
-DeprecatedString BestMoveCommand::to_deprecated_string() const
+ErrorOr<String> BestMoveCommand::to_string() const
 {
     StringBuilder builder;
-    builder.append("bestmove "sv);
-    builder.append(move().to_long_algebraic());
-    builder.append('\n');
-    return builder.to_deprecated_string();
+    TRY(builder.try_append("bestmove "sv));
+    TRY(builder.try_append(move().to_long_algebraic()));
+    TRY(builder.try_append('\n'));
+    return builder.to_string();
 }
 
 ErrorOr<NonnullOwnPtr<InfoCommand>> InfoCommand::from_string([[maybe_unused]] StringView command)
@@ -326,11 +329,10 @@ ErrorOr<NonnullOwnPtr<InfoCommand>> InfoCommand::from_string([[maybe_unused]] St
     VERIFY_NOT_REACHED();
 }
 
-DeprecatedString InfoCommand::to_deprecated_string() const
+ErrorOr<String> InfoCommand::to_string() const
 {
     // FIXME: Implement this.
     VERIFY_NOT_REACHED();
-    return "info";
 }
 
 ErrorOr<NonnullOwnPtr<QuitCommand>> QuitCommand::from_string(StringView command)
@@ -341,9 +343,9 @@ ErrorOr<NonnullOwnPtr<QuitCommand>> QuitCommand::from_string(StringView command)
     return adopt_nonnull_own_or_enomem(new (nothrow) QuitCommand);
 }
 
-DeprecatedString QuitCommand::to_deprecated_string() const
+ErrorOr<String> QuitCommand::to_string() const
 {
-    return "quit\n";
+    return "quit\n"_short_string;
 }
 
 }

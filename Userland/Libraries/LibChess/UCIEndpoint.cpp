@@ -22,8 +22,9 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
 
 void Endpoint::send_command(Command const& command)
 {
-    dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), DeprecatedString(command.to_deprecated_string().characters(), Chomp));
-    m_out->write(command.to_deprecated_string());
+    auto command_string = command.to_string().release_value_but_fixme_should_propagate_errors();
+    dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), command_string);
+    m_out->write(command_string);
 }
 
 void Endpoint::event(Core::Event& event)
