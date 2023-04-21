@@ -517,6 +517,9 @@ void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
     auto result = m_workbook->open_file(filename, file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
+        if (!m_workbook->has_sheets()) {
+            add_sheet();
+        }
         return;
     }
 
