@@ -101,8 +101,8 @@ class SetOptionCommand : public Command {
 public:
     explicit SetOptionCommand(String name, Optional<String> value = {})
         : Command(Command::Type::SetOption)
-        , m_name(name)
-        , m_value(value)
+        , m_name(move(name))
+        , m_value(move(value))
     {
     }
 
@@ -120,10 +120,10 @@ private:
 
 class PositionCommand : public Command {
 public:
-    explicit PositionCommand(Optional<String> const& fen, Vector<Chess::Move> const& moves)
+    explicit PositionCommand(Optional<String> fen, Vector<Move> moves)
         : Command(Command::Type::Position)
-        , m_fen(fen)
-        , m_moves(moves)
+        , m_fen(move(fen))
+        , m_moves(move(moves))
     {
     }
 
@@ -186,7 +186,7 @@ public:
     explicit IdCommand(Type field_type, String value)
         : Command(Command::Type::Id)
         , m_field_type(field_type)
-        , m_value(value)
+        , m_value(move(value))
     {
     }
 
@@ -228,9 +228,9 @@ public:
 
 class BestMoveCommand : public Command {
 public:
-    explicit BestMoveCommand(Chess::Move const& move)
+    explicit BestMoveCommand(Chess::Move move)
         : Command(Command::Type::BestMove)
-        , m_move(move)
+        , m_move(::move(move))
     {
     }
 
