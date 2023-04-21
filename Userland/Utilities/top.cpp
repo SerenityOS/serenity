@@ -46,7 +46,6 @@ struct ThreadData {
     uid_t uid;
     gid_t gid;
     pid_t ppid;
-    unsigned nfds;
     DeprecatedString name;
     DeprecatedString tty;
     size_t amount_virtual;
@@ -105,7 +104,6 @@ static ErrorOr<Snapshot> get_snapshot()
             thread_data.uid = process.uid;
             thread_data.gid = process.gid;
             thread_data.ppid = process.ppid;
-            thread_data.nfds = process.nfds;
             thread_data.name = process.name;
             thread_data.tty = process.tty;
             thread_data.amount_virtual = process.amount_virtual;

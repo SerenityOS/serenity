@@ -43,7 +43,6 @@ struct ProcessStatistics {
     uid_t uid;
     gid_t gid;
     pid_t ppid;
-    unsigned nfds;
     bool kernel;
     DeprecatedString name;
     DeprecatedString executable;
