@@ -21,37 +21,27 @@
 
 namespace Gfx {
 
-struct ImagePluginInitializer {
-    bool (*sniff)(ReadonlyBytes) = nullptr;
-    ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
-};
-
-static constexpr ImagePluginInitializer s_initializers[] = {
-    { PNGImageDecoderPlugin::sniff, PNGImageDecoderPlugin::create },
-    { GIFImageDecoderPlugin::sniff, GIFImageDecoderPlugin::create },
-    { BMPImageDecoderPlugin::sniff, BMPImageDecoderPlugin::create },
-    { PBMImageDecoderPlugin::sniff, PBMImageDecoderPlugin::create },
-    { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
-    { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
-    { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
-    { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
-    { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
-    { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
-    { WebPImageDecoderPlugin::sniff, WebPImageDecoderPlugin::create },
-};
-
-struct ImagePluginWithMIMETypeInitializer {
-    ErrorOr<bool> (*validate_before_create)(ReadonlyBytes) = nullptr;
-    ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
-    StringView mime_type;
-};
-
-static constexpr ImagePluginWithMIMETypeInitializer s_initializers_with_mime_type[] = {
-    { TGAImageDecoderPlugin::validate_before_create, TGAImageDecoderPlugin::create, "image/x-targa"sv },
-};
-
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(ReadonlyBytes bytes)
 {
+    struct ImagePluginInitializer {
+        bool (*sniff)(ReadonlyBytes) = nullptr;
+        ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
+    };
+
+    static constexpr ImagePluginInitializer s_initializers[] = {
+        { PNGImageDecoderPlugin::sniff, PNGImageDecoderPlugin::create },
+        { GIFImageDecoderPlugin::sniff, GIFImageDecoderPlugin::create },
+        { BMPImageDecoderPlugin::sniff, BMPImageDecoderPlugin::create },
+        { PBMImageDecoderPlugin::sniff, PBMImageDecoderPlugin::create },
+        { PGMImageDecoderPlugin::sniff, PGMImageDecoderPlugin::create },
+        { PPMImageDecoderPlugin::sniff, PPMImageDecoderPlugin::create },
+        { ICOImageDecoderPlugin::sniff, ICOImageDecoderPlugin::create },
+        { JPEGImageDecoderPlugin::sniff, JPEGImageDecoderPlugin::create },
+        { DDSImageDecoderPlugin::sniff, DDSImageDecoderPlugin::create },
+        { QOIImageDecoderPlugin::sniff, QOIImageDecoderPlugin::create },
+        { WebPImageDecoderPlugin::sniff, WebPImageDecoderPlugin::create },
+    };
+
     for (auto& plugin : s_initializers) {
         auto sniff_result = plugin.sniff(bytes);
         if (!sniff_result)
@@ -65,6 +55,16 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin(Readonl
 
 static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_known_mime_type(StringView mime_type, ReadonlyBytes bytes)
 {
+    struct ImagePluginWithMIMETypeInitializer {
+        ErrorOr<bool> (*validate_before_create)(ReadonlyBytes) = nullptr;
+        ErrorOr<NonnullOwnPtr<ImageDecoderPlugin>> (*create)(ReadonlyBytes) = nullptr;
+        StringView mime_type;
+    };
+
+    static constexpr ImagePluginWithMIMETypeInitializer s_initializers_with_mime_type[] = {
+        { TGAImageDecoderPlugin::validate_before_create, TGAImageDecoderPlugin::create, "image/x-targa"sv },
+    };
+
     for (auto& plugin : s_initializers_with_mime_type) {
         if (plugin.mime_type != mime_type)
             continue;
