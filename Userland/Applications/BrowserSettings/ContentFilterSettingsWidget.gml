@@ -28,7 +28,7 @@
             @GUI::Button {
                 name: "add_new_domain_button"
                 fixed_width: 100
-                text: "Add new domain"
+                text: "Add domain..."
             }
         }
     }
