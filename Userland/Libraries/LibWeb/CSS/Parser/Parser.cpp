@@ -72,6 +72,7 @@
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/DOM/Document.h>
@@ -2359,6 +2360,14 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     }
 
     return {};
+}
+
+RefPtr<StyleValue> Parser::parse_url_value(ComponentValue const& component_value, AllowedDataUrlType allowed_data_url_type)
+{
+    auto url = parse_url_function(component_value, allowed_data_url_type);
+    if (!url.has_value())
+        return {};
+    return URLStyleValue::create(*url);
 }
 
 template<typename TElement>
@@ -6738,6 +6747,14 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parse_value = parse_transform_origin_value(component_values))
             return parse_value.release_nonnull();
         return ParseError ::SyntaxError;
+    case PropertyID::Fill:
+        if (component_values.size() == 1) {
+            if (auto parsed_url = parse_url_value(component_values.first()))
+                return parsed_url.release_nonnull();
+        }
+        // Allow normal value parsing to continue.
+        // URL is done here to avoid ambiguity with images.
+        break;
     default:
         break;
     }

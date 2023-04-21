@@ -519,6 +519,12 @@ bool property_accepts_value(PropertyID property_id, StyleValue& style_value)
                             output_numeric_value_check(property_generator, "is_time"sv, "as_time().time().to_seconds()"sv, Array { "Time"sv }, min_value, max_value);
                         } else if (type_name == "url") {
                             // FIXME: Handle urls!
+                        } else if (type_name == "paint") {
+                            // https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
+                            property_generator.append(R"~~~(
+        if (style_value.has_color() || style_value.is_url())
+            return true;
+)~~~");
                         } else {
                             // Assume that any other type names are defined in Enums.json.
                             // If they're not, the output won't compile, but that's fine since it's invalid.
