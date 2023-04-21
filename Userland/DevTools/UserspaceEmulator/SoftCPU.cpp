@@ -195,7 +195,7 @@ ValueWithShadow<u256> SoftCPU::read_memory256(X86::LogicalAddress address)
 
 void SoftCPU::write_memory8(X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
-    VERIFY(address.selector() == 0x23 || address.selector() == 0x2b);
+    VERIFY(address.selector() == 0x23 || address.selector() == 0x2b || address.selector() == 0x1b);
     outln_if(MEMORY_DEBUG, "\033[36;1mwrite_memory8: @{:#04x}:{:p} <- {:#02x} ({:#02x})\033[0m", address.selector(), address.offset(), value, value.shadow_as_value());
     m_emulator.mmu().write8(address, value);
 }
