@@ -33,7 +33,6 @@ configopts=(
     '--disable-ipv6'
     '--enable-shared'
     '--without-ensurepip'
-    '--with-build-python=python3'
     'ac_cv_file__dev_ptmx=no'
     'ac_cv_file__dev_ptc=no'
 )
@@ -41,14 +40,18 @@ configopts=(
 export BLDSHARED="${CC} -shared"
 
 configure() {
-    run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/config.guess)" "${configopts[@]}"
+    run ./configure --host="${SERENITY_ARCH}-pc-serenity" "--with-build-python=${PYTHON_BIN}" --build="$($workdir/config.guess)" "${configopts[@]}"
 }
 
 # Note: The showproperty command is used when linting ports, we don't actually need python at this time.
 if [ "$1" != "showproperty" ]; then
-    if [ -x "$(command -v python3)" ]; then
+    PYTHON_BIN="python3"
+    PYTHON_VERSION_SHORT=$(echo $PYTHON_VERSION | cut -f1-2 -d".")
+    if [ -x "$(command -v python${PYTHON_VERSION_SHORT})" ]; then
+        PYTHON_BIN="python${PYTHON_VERSION_SHORT}"
+    elif [ -x "$(command -v ${PYTHON_BIN})" ]; then
         # Check if major and minor version of python3 are matching
-        if ! python3 -c "import sys; major, minor = map(int, '${PYTHON_VERSION}'.split('.')[:2]); sys.exit(not (sys.version_info.major == major and sys.version_info.minor == minor))"; then
+        if ! ${PYTHON_BIN} -c "import sys; major, minor = map(int, '${PYTHON_VERSION_SHORT}'.split('.')); sys.exit(not (sys.version_info.major == major and sys.version_info.minor == minor))"; then
             echo "Error: python3 version does not match needed version to build ${PYTHON_VERSION}" >&2
             echo "Build this Python version on your host using Toolchain/BuildPython.sh or install it otherwise and try again." >&2
             exit 1
