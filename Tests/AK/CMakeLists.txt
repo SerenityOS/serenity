@@ -51,6 +51,7 @@ set(AK_TEST_SOURCES
     TestMemory.cpp
     TestMemoryStream.cpp
     TestNeverDestroyed.cpp
+    TestNonnullOwnPtr.cpp
     TestNonnullRefPtr.cpp
     TestNumberFormat.cpp
     TestOptional.cpp

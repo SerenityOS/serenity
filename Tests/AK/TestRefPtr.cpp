@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -152,4 +152,16 @@ TEST_CASE(adopt_ref_if_nonnull)
     SelfAwareObject* null_object = nullptr;
     RefPtr<SelfAwareObject> failed_allocation = adopt_ref_if_nonnull(null_object);
     EXPECT_EQ(failed_allocation.is_null(), true);
+}
+
+TEST_CASE(destroy_self_owning_refcounted_object)
+{
+    struct SelfOwningRefCounted : public RefCounted<SelfOwningRefCounted> {
+        RefPtr<SelfOwningRefCounted> self;
+    };
+    RefPtr object = make_ref_counted<SelfOwningRefCounted>();
+    auto* object_ptr = object.ptr();
+    object->self = object;
+    object = nullptr;
+    object_ptr->self = nullptr;
 }

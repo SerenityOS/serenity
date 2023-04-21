@@ -155,3 +155,9 @@ TEST_CASE(intrusive_nonnull_ref_ptr_intrusive)
 
     EXPECT(nonnull_ref_list.is_empty());
 }
+
+TEST_CASE(destroy_nonempty_intrusive_list)
+{
+    IntrusiveNonnullRefPtrList nonnull_ref_list;
+    nonnull_ref_list.append(adopt_ref(*new IntrusiveNonnullRefPtrItem));
+}

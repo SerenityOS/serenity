@@ -106,8 +106,8 @@ public:
 
     void clear()
     {
-        TDeleter {}(m_ptr);
-        m_ptr = nullptr;
+        auto* ptr = exchange(m_ptr, nullptr);
+        TDeleter {}(ptr);
     }
 
     bool operator!() const { return !m_ptr; }

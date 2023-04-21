@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -220,8 +220,8 @@ public:
 
     ALWAYS_INLINE void clear()
     {
-        unref_if_not_null(m_ptr);
-        m_ptr = nullptr;
+        auto* ptr = exchange(m_ptr, nullptr);
+        unref_if_not_null(ptr);
     }
 
     bool operator!() const { return !m_ptr; }
