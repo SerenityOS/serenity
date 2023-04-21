@@ -34,7 +34,7 @@ namespace Browser {
 DeprecatedString g_search_engine;
 DeprecatedString g_home_url;
 DeprecatedString g_new_tab_url;
-Vector<DeprecatedString> g_content_filters;
+Vector<String> g_content_filters;
 bool g_content_filters_enabled { true };
 Vector<String> g_autoplay_allowlist;
 bool g_autoplay_allowed_on_all_websites { false };
@@ -47,7 +47,7 @@ DeprecatedString g_webdriver_content_ipc_path;
 
 static ErrorOr<void> load_content_filters()
 {
-    auto file = TRY(Core::File::open(DeprecatedString::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory()), Core::File::OpenMode::Read));
+    auto file = TRY(Core::File::open(TRY(String::formatted("{}/BrowserContentFilters.txt", Core::StandardPaths::config_directory())), Core::File::OpenMode::Read));
     auto ad_filter_list = TRY(Core::BufferedFile::create(move(file)));
     auto buffer = TRY(ByteBuffer::create_uninitialized(4096));
 
@@ -55,8 +55,11 @@ static ErrorOr<void> load_content_filters()
 
     while (TRY(ad_filter_list->can_read_line())) {
         auto line = TRY(ad_filter_list->read_line(buffer));
-        if (!line.is_empty())
-            Browser::g_content_filters.append(line);
+        if (line.is_empty())
+            continue;
+
+        auto pattern = TRY(String::from_utf8(line));
+        TRY(Browser::g_content_filters.try_append(move(pattern)));
     }
 
     return {};

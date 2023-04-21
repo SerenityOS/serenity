@@ -126,11 +126,7 @@ Tab::Tab(BrowserWindow& window)
     auto preferred_color_scheme = Web::CSS::preferred_color_scheme_from_string(Config::read_string("Browser"sv, "Preferences"sv, "ColorScheme"sv, "auto"sv));
     m_web_content_view->set_preferred_color_scheme(preferred_color_scheme);
 
-    if (g_content_filters_enabled)
-        m_web_content_view->set_content_filters(g_content_filters);
-    else
-        m_web_content_view->set_content_filters({});
-
+    content_filters_changed();
     autoplay_allowlist_changed();
 
     m_web_content_view->set_proxy_mappings(g_proxies, g_proxy_mappings);

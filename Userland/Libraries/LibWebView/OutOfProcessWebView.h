@@ -42,7 +42,7 @@ public:
     OrderedHashMap<DeprecatedString, DeprecatedString> get_local_storage_entries();
     OrderedHashMap<DeprecatedString, DeprecatedString> get_session_storage_entries();
 
-    void set_content_filters(Vector<DeprecatedString>);
+    void set_content_filters(Vector<String>);
     void set_autoplay_allowed_on_all_websites();
     void set_autoplay_allowlist(Vector<String>);
     void set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString, size_t> mappings);

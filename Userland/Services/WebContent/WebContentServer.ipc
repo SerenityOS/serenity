@@ -54,7 +54,7 @@ endpoint WebContentServer
     get_selected_text() => (DeprecatedString selection)
     select_all() =|
 
-    set_content_filters(Vector<DeprecatedString> filters) =|
+    set_content_filters(Vector<String> filters) =|
     set_autoplay_allowed_on_all_websites() =|
     set_autoplay_allowlist(Vector<String> allowlist) =|
     set_proxy_mappings(Vector<DeprecatedString> proxies, HashMap<DeprecatedString,size_t> mappings) =|
