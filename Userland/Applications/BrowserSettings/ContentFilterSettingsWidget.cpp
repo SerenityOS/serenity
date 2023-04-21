@@ -117,42 +117,52 @@ void DomainListModel::reset_default_values()
     did_update(UpdateFlag::InvalidateAllIndices);
 }
 
-ContentFilterSettingsWidget::ContentFilterSettingsWidget()
+ErrorOr<NonnullRefPtr<ContentFilterSettingsWidget>> ContentFilterSettingsWidget::create()
 {
-    load_from_gml(content_filter_settings_widget_gml).release_value_but_fixme_should_propagate_errors();
-    m_enable_content_filtering_checkbox = find_descendant_of_type_named<GUI::CheckBox>("enable_content_filtering_checkbox");
-    m_domain_list_view = find_descendant_of_type_named<GUI::ListView>("domain_list_view");
-    m_add_new_domain_button = find_descendant_of_type_named<GUI::Button>("add_new_domain_button");
+    auto domain_list_model = TRY(try_make_ref_counted<DomainListModel>());
+    TRY(domain_list_model->load());
 
-    m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, s_default_enable_content_filtering), GUI::AllowCallback::No);
-    m_enable_content_filtering_checkbox->on_checked = [&](auto) { set_modified(true); };
+    auto widget = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) ContentFilterSettingsWidget(move(domain_list_model))));
+    TRY(widget->load_from_gml(content_filter_settings_widget_gml));
 
-    m_add_new_domain_button->on_click = [&](unsigned) {
+    widget->m_enable_content_filtering_checkbox = widget->find_descendant_of_type_named<GUI::CheckBox>("enable_content_filtering_checkbox");
+    widget->m_enable_content_filtering_checkbox->set_checked(Config::read_bool("Browser"sv, "Preferences"sv, "EnableContentFilters"sv, s_default_enable_content_filtering), GUI::AllowCallback::No);
+    widget->m_enable_content_filtering_checkbox->on_checked = [widget](auto) {
+        widget->set_modified(true);
+    };
+
+    widget->m_domain_list_view = widget->find_descendant_of_type_named<GUI::ListView>("domain_list_view");
+    widget->m_domain_list_view->set_model(widget->m_domain_list_model);
+    widget->m_domain_list_view->on_context_menu_request = [widget](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
+        widget->m_domain_list_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
+        widget->m_entry_context_menu->popup(event.screen_position());
+    };
+
+    widget->m_add_new_domain_button = widget->find_descendant_of_type_named<GUI::Button>("add_new_domain_button");
+    widget->m_add_new_domain_button->on_click = [widget](unsigned) {
         String text;
 
-        if (GUI::InputBox::show(window(), text, "Domain:"sv, "Add domain to Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
-            m_domain_list_model->add_domain(move(text));
-            set_modified(true);
+        if (GUI::InputBox::show(widget->window(), text, "Domain:"sv, "Add domain to Content Filter"sv, GUI::InputType::NonemptyText) == GUI::Dialog::ExecResult::OK) {
+            widget->m_domain_list_model->add_domain(move(text));
+            widget->set_modified(true);
         }
     };
 
-    m_domain_list_model = make_ref_counted<DomainListModel>();
-    m_domain_list_model->load().release_value_but_fixme_should_propagate_errors();
-    m_domain_list_view->set_model(m_domain_list_model);
-
-    auto delete_action = GUI::CommonActions::make_delete_action([&](GUI::Action const&) {
-        if (!m_domain_list_view->selection().is_empty()) {
-            m_domain_list_model->delete_domain(m_domain_list_view->selection().first().row());
-            set_modified(true);
+    auto delete_action = GUI::CommonActions::make_delete_action([widget](GUI::Action const&) {
+        if (!widget->m_domain_list_view->selection().is_empty()) {
+            widget->m_domain_list_model->delete_domain(widget->m_domain_list_view->selection().first().row());
+            widget->set_modified(true);
         }
     });
-    m_entry_context_menu = GUI::Menu::construct();
-    m_entry_context_menu->add_action(delete_action);
+    widget->m_entry_context_menu = GUI::Menu::construct();
+    widget->m_entry_context_menu->add_action(delete_action);
 
-    m_domain_list_view->on_context_menu_request = [&](GUI::ModelIndex const& index, GUI::ContextMenuEvent const& event) {
-        m_domain_list_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
-        m_entry_context_menu->popup(event.screen_position());
-    };
+    return widget;
+}
+
+ContentFilterSettingsWidget::ContentFilterSettingsWidget(NonnullRefPtr<DomainListModel> domain_list_model)
+    : m_domain_list_model(move(domain_list_model))
+{
 }
 
 void ContentFilterSettingsWidget::apply_settings()
