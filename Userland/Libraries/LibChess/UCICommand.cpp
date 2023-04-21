@@ -126,7 +126,7 @@ ErrorOr<NonnullOwnPtr<PositionCommand>> PositionCommand::from_string(StringView 
     for (size_t i = 3; i < tokens.size(); ++i) {
         TRY(moves.try_append(Move(tokens[i])));
     }
-    return adopt_nonnull_own_or_enomem(new (nothrow) PositionCommand(fen, moves));
+    return adopt_nonnull_own_or_enomem(new (nothrow) PositionCommand(move(fen), move(moves)));
 }
 
 ErrorOr<String> PositionCommand::to_string() const
