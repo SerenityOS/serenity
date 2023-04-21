@@ -1896,11 +1896,17 @@ void SoftCPU::LDS_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::LDS_reg32_mem32(const X86::Instruction&) { TODO_INSN(); }
 void SoftCPU::LEAVE16(const X86::Instruction&) { TODO_INSN(); }
 
-void SoftCPU::LEAVE32(const X86::Instruction&)
+void SoftCPU::LEAVE32(const X86::Instruction& insn)
 {
-    auto new_ebp = read_memory32({ ss(), ebp().value() });
-    set_esp({ ebp().value() + 4, ebp().shadow() });
-    set_ebp(new_ebp);
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        auto new_rbp = read_memory64({ ss(), rbp().value() });
+        set_rsp({ rbp().value() + 8, rbp().shadow() });
+        set_rbp(new_rbp);
+    }  else {
+        auto new_ebp = read_memory32({ ss(), ebp().value() });
+        set_esp({ ebp().value() + 4, ebp().shadow() });
+        set_ebp(new_ebp);
+    }
 }
 
 void SoftCPU::LEA_reg16_mem16(const X86::Instruction& insn)
@@ -2380,7 +2386,11 @@ void SoftCPU::POP_reg16(const X86::Instruction& insn)
 
 void SoftCPU::POP_reg32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = pop32();
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        gpr64(insn.reg64()) = pop64();
+    }  else {
+        gpr32(insn.reg32()) = pop32();
+    }
 }
 
 FPU_INSTRUCTION(POR_mm1_mm2m64);
@@ -2523,7 +2533,11 @@ void SoftCPU::PUSH_reg16(const X86::Instruction& insn)
 
 void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
 {
-    push32(gpr32(insn.reg32()));
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        push64(gpr64(insn.reg64()));
+    }  else {
+        push32(gpr32(insn.reg32()));
+    }
 }
 
 FPU_INSTRUCTION(PXOR_mm1_mm2m64);
