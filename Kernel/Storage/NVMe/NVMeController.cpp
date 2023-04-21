@@ -36,7 +36,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 {
     // Nr of queues = one queue per core
     auto nr_of_queues = Processor::count();
-    auto irq = is_queue_polled ? Optional<u8> {} : device_identifier().interrupt_line().value();
+    auto queue_type = is_queue_polled ? QueueType::Polled : QueueType::IRQ;
 
     PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
@@ -52,7 +52,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     m_ready_timeout = Time::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
 
     calculate_doorbell_stride();
-    TRY(create_admin_queue(irq));
+    TRY(create_admin_queue(queue_type));
     VERIFY(m_admin_queue_ready == true);
 
     VERIFY(IO_QUEUE_SIZE < MQES(caps));
@@ -61,7 +61,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     // Create an IO queue per core
     for (u32 cpuid = 0; cpuid < nr_of_queues; ++cpuid) {
         // qid is zero is used for admin queue
-        TRY(create_io_queue(cpuid + 1, irq));
+        TRY(create_io_queue(cpuid + 1, queue_type));
     }
     TRY(identify_and_init_namespaces());
     return {};
@@ -249,7 +249,7 @@ void NVMeController::complete_current_request([[maybe_unused]] AsyncDeviceReques
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> irq)
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queue_type)
 {
     auto qdepth = get_admin_q_dept();
     OwnPtr<Memory::Region> cq_dma_region;
@@ -287,13 +287,13 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(Optional<u8> i
         return maybe_error;
     }
     set_admin_queue_ready_flag();
-    m_admin_queue = TRY(NVMeQueue::try_create(0, irq, qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs)));
+    m_admin_queue = TRY(NVMeQueue::try_create(0, device_identifier().interrupt_line().value(), qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type));
 
     dbgln_if(NVME_DEBUG, "NVMe: Admin queue created");
     return {};
 }
 
-UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<u8> irq)
+UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType queue_type)
 {
     OwnPtr<Memory::Region> cq_dma_region;
     Vector<NonnullRefPtr<Memory::PhysicalPage>> cq_dma_pages;
@@ -323,7 +323,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
         sub.create_cq.cqid = qid;
         // The queue size is 0 based
         sub.create_cq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
-        auto flags = irq.has_value() ? QUEUE_IRQ_ENABLED : QUEUE_IRQ_DISABLED;
+        auto flags = (queue_type == QueueType::IRQ) ? QUEUE_IRQ_ENABLED : QUEUE_IRQ_DISABLED;
         flags |= QUEUE_PHY_CONTIGUOUS;
         // TODO: Eventually move to MSI.
         // For now using pin based interrupts. Clear the first 16 bits
@@ -347,7 +347,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, Optional<
     auto queue_doorbell_offset = REG_SQ0TDBL_START + ((2 * qid) * (4 << m_dbl_stride));
     auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + queue_doorbell_offset)));
 
-    m_queues.append(TRY(NVMeQueue::try_create(qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs))));
+    m_queues.append(TRY(NVMeQueue::try_create(qid, device_identifier().interrupt_line().value(), IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type)));
     dbgln_if(NVME_DEBUG, "NVMe: Created IO Queue with QID{}", m_queues.size());
     return {};
 }
