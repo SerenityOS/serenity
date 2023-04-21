@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <AK/DeprecatedString.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <LibChess/Chess.h>
 #include <LibCore/Event.h>
 
@@ -39,7 +39,7 @@ public:
         Info,
         Option,
     };
-    virtual DeprecatedString to_deprecated_string() const = 0;
+    virtual ErrorOr<String> to_string() const = 0;
 
     virtual ~Command() = default;
 
@@ -59,7 +59,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<UCICommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 };
 
 class DebugCommand : public Command {
@@ -77,7 +77,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<DebugCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     Flag flag() const { return m_flag; }
 
@@ -94,12 +94,12 @@ public:
 
     static ErrorOr<NonnullOwnPtr<IsReadyCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 };
 
 class SetOptionCommand : public Command {
 public:
-    explicit SetOptionCommand(StringView name, Optional<DeprecatedString> value = {})
+    explicit SetOptionCommand(String name, Optional<String> value = {})
         : Command(Command::Type::SetOption)
         , m_name(name)
         , m_value(value)
@@ -108,19 +108,19 @@ public:
 
     static ErrorOr<NonnullOwnPtr<SetOptionCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
-    DeprecatedString const& name() const { return m_name; }
-    Optional<DeprecatedString> const& value() const { return m_value; }
+    String const& name() const { return m_name; }
+    Optional<String> const& value() const { return m_value; }
 
 private:
-    DeprecatedString m_name;
-    Optional<DeprecatedString> m_value;
+    String m_name;
+    Optional<String> m_value;
 };
 
 class PositionCommand : public Command {
 public:
-    explicit PositionCommand(Optional<DeprecatedString> const& fen, Vector<Chess::Move> const& moves)
+    explicit PositionCommand(Optional<String> const& fen, Vector<Chess::Move> const& moves)
         : Command(Command::Type::Position)
         , m_fen(fen)
         , m_moves(moves)
@@ -129,13 +129,13 @@ public:
 
     static ErrorOr<NonnullOwnPtr<PositionCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
-    Optional<DeprecatedString> const& fen() const { return m_fen; }
+    Optional<String> const& fen() const { return m_fen; }
     Vector<Chess::Move> const& moves() const { return m_moves; }
 
 private:
-    Optional<DeprecatedString> m_fen;
+    Optional<String> m_fen;
     Vector<Chess::Move> m_moves;
 };
 
@@ -148,7 +148,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<GoCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     Optional<Vector<Chess::Move>> searchmoves;
     bool ponder { false };
@@ -173,7 +173,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<StopCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 };
 
 class IdCommand : public Command {
@@ -183,7 +183,7 @@ public:
         Author,
     };
 
-    explicit IdCommand(Type field_type, StringView value)
+    explicit IdCommand(Type field_type, String value)
         : Command(Command::Type::Id)
         , m_field_type(field_type)
         , m_value(value)
@@ -192,14 +192,14 @@ public:
 
     static ErrorOr<NonnullOwnPtr<IdCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     Type field_type() const { return m_field_type; }
-    DeprecatedString const& value() const { return m_value; }
+    String const& value() const { return m_value; }
 
 private:
     Type m_field_type;
-    DeprecatedString m_value;
+    String m_value;
 };
 
 class UCIOkCommand : public Command {
@@ -211,7 +211,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<UCIOkCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 };
 
 class ReadyOkCommand : public Command {
@@ -223,7 +223,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<ReadyOkCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 };
 
 class BestMoveCommand : public Command {
@@ -236,7 +236,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<BestMoveCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     Chess::Move move() const { return m_move; }
 
@@ -253,7 +253,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<InfoCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 
     Optional<int> depth;
     Optional<int> seldepth;
@@ -278,7 +278,7 @@ public:
 
     static ErrorOr<NonnullOwnPtr<QuitCommand>> from_string(StringView command);
 
-    virtual DeprecatedString to_deprecated_string() const override;
+    virtual ErrorOr<String> to_string() const override;
 };
 
 }
