@@ -34,6 +34,8 @@ public:
 
     void queue_a_media_element_task(JS::SafeFunction<void()> steps);
 
+    JS::GCPtr<MediaError> error() const { return m_error; }
+
     String const& current_src() const { return m_current_src; }
 
     enum class NetworkState : u16 {
@@ -103,10 +105,10 @@ private:
 
     WebIDL::ExceptionOr<void> load_element();
     WebIDL::ExceptionOr<void> select_resource();
-    WebIDL::ExceptionOr<void> fetch_resource(AK::URL const&, Function<void()> failure_callback);
+    WebIDL::ExceptionOr<void> fetch_resource(AK::URL const&, Function<void(String)> failure_callback);
     static bool verify_response(JS::NonnullGCPtr<Fetch::Infrastructure::Response>, ByteRange const&);
-    WebIDL::ExceptionOr<void> process_media_data(Function<void()> failure_callback);
-    WebIDL::ExceptionOr<void> handle_media_source_failure(Span<JS::NonnullGCPtr<WebIDL::Promise>> promises);
+    WebIDL::ExceptionOr<void> process_media_data(Function<void(String)> failure_callback);
+    WebIDL::ExceptionOr<void> handle_media_source_failure(Span<JS::NonnullGCPtr<WebIDL::Promise>> promises, String error_message);
     void forget_media_resource_specific_tracks();
     void set_ready_state(ReadyState);
 
@@ -147,6 +149,9 @@ private:
 
     // https://html.spec.whatwg.org/multipage/media.html#media-element-event-task-source
     UniqueTaskSource m_media_element_event_task_source {};
+
+    // https://html.spec.whatwg.org/multipage/media.html#dom-media-error
+    JS::GCPtr<MediaError> m_error;
 
     // https://html.spec.whatwg.org/multipage/media.html#dom-media-crossorigin
     CORSSettingAttribute m_crossorigin { CORSSettingAttribute::NoCORS };

@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/HTMLAudioElement.h>
 #include <LibWeb/HTML/HTMLMediaElement.h>
 #include <LibWeb/HTML/HTMLVideoElement.h>
+#include <LibWeb/HTML/MediaError.h>
 #include <LibWeb/HTML/PotentialCORSRequest.h>
 #include <LibWeb/HTML/Scripting/Environments.h>
 #include <LibWeb/HTML/TimeRanges.h>
@@ -81,6 +82,7 @@ void HTMLMediaElement::queue_a_media_element_task(JS::SafeFunction<void()> steps
 void HTMLMediaElement::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
+    visitor.visit(m_error);
     visitor.visit(m_fetch_controller);
     visitor.visit(m_video_tracks);
 }
@@ -251,8 +253,14 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> HTMLMediaElement::play()
 
     // FIXME: 1. If the media element is not allowed to play, then return a promise rejected with a "NotAllowedError" DOMException.
 
-    // FIXME: 2. If the media element's error attribute is not null and its code is MEDIA_ERR_SRC_NOT_SUPPORTED, then return a promise
-    //           rejected with a "NotSupportedError" DOMException.
+    // 2. If the media element's error attribute is not null and its code is MEDIA_ERR_SRC_NOT_SUPPORTED, then return a promise
+    //    rejected with a "NotSupportedError" DOMException.
+    if (m_error && m_error->code() == MediaError::Code::SrcNotSupported) {
+        auto error = WebIDL::NotSupportedError::create(realm, m_error->message().to_deprecated_string());
+        auto promise = WebIDL::create_rejected_promise(realm, error);
+
+        return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise->promise()) };
+    }
 
     // 3. Let promise be a new promise and append promise to the list of pending play promises.
     auto promise = WebIDL::create_promise(realm);
@@ -361,7 +369,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::load_element()
     // FIXME: 7. Set the playbackRate attribute to the value of the defaultPlaybackRate attribute.
 
     // 8. Set the error attribute to null and the can autoplay flag to true.
-    // FIXME: Handle the error attribute.
+    m_error = nullptr;
     m_can_autoplay = true;
 
     // 9. Invoke the media element's resource selection algorithm.
@@ -444,14 +452,14 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
 
     // -> If mode is attribute
     case SelectMode::Attribute: {
-        auto failed_with_attribute = [this]() {
+        auto failed_with_attribute = [this](auto error_message) {
             bool ran_media_element_task = false;
 
             // 6. Failed with attribute: Reaching this step indicates that the media resource failed to load or that the given URL could not be parsed. Take
             //    pending play promises and queue a media element task given the media element to run the dedicated media source failure steps with the result.
-            queue_a_media_element_task([this, &ran_media_element_task]() {
+            queue_a_media_element_task([this, &ran_media_element_task, error_message = move(error_message)]() mutable {
                 auto promises = take_pending_play_promises();
-                handle_media_source_failure(promises).release_value_but_fixme_should_propagate_errors();
+                handle_media_source_failure(promises, move(error_message)).release_value_but_fixme_should_propagate_errors();
 
                 ran_media_element_task = true;
             });
@@ -463,7 +471,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
         // 1. ⌛ If the src attribute's value is the empty string, then end the synchronous section, and jump down to the failed with attribute step below.
         auto source = attribute(HTML::AttributeNames::src);
         if (source.is_empty()) {
-            failed_with_attribute();
+            failed_with_attribute(TRY_OR_THROW_OOM(vm, "The 'src' attribute is empty"_string));
             return {};
         }
 
@@ -484,7 +492,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::select_resource()
             return {};
         }
 
-        failed_with_attribute();
+        failed_with_attribute(TRY_OR_THROW_OOM(vm, "Failed to parse 'src' attribute as a URL"_string));
 
         // 8. Return. The element won't attempt to load another resource until this algorithm is triggered again.
         return {};
@@ -553,7 +561,7 @@ enum class FetchMode {
 };
 
 // https://html.spec.whatwg.org/multipage/media.html#concept-media-load-resource
-WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_record, Function<void()> failure_callback)
+WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_record, Function<void(String)> failure_callback)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
@@ -623,7 +631,8 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::fetch_resource(AK::URL const& url_re
             // 4. If the result of verifying response given the current media resource and byteRange is false, then abort these steps.
             // NOTE: We do this step before creating the updateMedia task so that we can invoke the failure callback.
             if (!verify_response(response, byte_range)) {
-                failure_callback();
+                auto error_message = response->network_error_message().value_or("Failed to fetch media resource"sv);
+                failure_callback(String::from_utf8(error_message).release_value_but_fixme_should_propagate_errors());
                 return;
             }
 
@@ -718,7 +727,7 @@ bool HTMLMediaElement::verify_response(JS::NonnullGCPtr<Fetch::Infrastructure::R
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#media-data-processing-steps-list
-WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> failure_callback)
+WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(String)> failure_callback)
 {
     auto& realm = this->realm();
     auto& vm = realm.vm();
@@ -734,7 +743,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
         m_fetch_controller->stop_fetch();
 
         // 2. Abort this subalgorithm, returning to the resource selection algorithm.
-        failure_callback();
+        failure_callback(TRY_OR_THROW_OOM(vm, String::from_utf8(playback_manager.error().description())));
 
         return {};
     }
@@ -866,11 +875,13 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void()> 
 }
 
 // https://html.spec.whatwg.org/multipage/media.html#dedicated-media-source-failure-steps
-WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS::NonnullGCPtr<WebIDL::Promise>> promises)
+WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS::NonnullGCPtr<WebIDL::Promise>> promises, String error_message)
 {
-    auto& vm = this->vm();
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
 
-    // FIXME: 1. Set the error attribute to the result of creating a MediaError with MEDIA_ERR_SRC_NOT_SUPPORTED.
+    // 1. Set the error attribute to the result of creating a MediaError with MEDIA_ERR_SRC_NOT_SUPPORTED.
+    m_error = TRY(vm.heap().allocate<MediaError>(realm, realm, MediaError::Code::SrcNotSupported, move(error_message)));
 
     // 2. Forget the media element's media-resource-specific tracks.
     forget_media_resource_specific_tracks();
@@ -882,7 +893,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::handle_media_source_failure(Span<JS:
     set_show_poster(true);
 
     // 5. Fire an event named error at the media element.
-    dispatch_event(TRY(DOM::Event::create(realm(), HTML::EventNames::error)));
+    dispatch_event(TRY(DOM::Event::create(realm, HTML::EventNames::error)));
 
     // 6. Reject pending play promises with promises and a "NotSupportedError" DOMException.
     reject_pending_play_promises<WebIDL::NotSupportedError>(promises, TRY_OR_THROW_OOM(vm, "Media is not supported"_fly_string));
