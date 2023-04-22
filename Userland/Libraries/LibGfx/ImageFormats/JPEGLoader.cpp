@@ -135,10 +135,10 @@ struct MacroblockMeta {
 
 struct Component {
     // B.2.2 - Frame header syntax
-    u8 id { 0 };             // Ci, Component identifier
-    u8 hsample_factor { 1 }; // Hi, Horizontal sampling factor
-    u8 vsample_factor { 1 }; // Vi, Vertical sampling factor
-    u8 qtable_id { 0 };      // Tqi, Quantization table destination selector
+    u8 id { 0 };                    // Ci, Component identifier
+    u8 hsample_factor { 1 };        // Hi, Horizontal sampling factor
+    u8 vsample_factor { 1 };        // Vi, Vertical sampling factor
+    u8 quantization_table_id { 0 }; // Tqi, Quantization table destination selector
 
     // The JPEG specification does not specify which component corresponds to
     // Y, Cb or Cr. This field (actually the index in the parent Vector) will
@@ -1063,7 +1063,7 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
             }
         }
 
-        component.qtable_id = TRY(stream.read_value<u8>());
+        component.quantization_table_id = TRY(stream.read_value<u8>());
 
         context.components.append(move(component));
     }
@@ -1128,12 +1128,12 @@ static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>&
             for (u32 i = 0; i < context.components.size(); i++) {
                 auto const& component = context.components[i];
 
-                if (!context.quantization_tables[component.qtable_id].has_value()) {
-                    dbgln_if(JPEG_DEBUG, "Unknown quantization table id: {}!", component.qtable_id);
+                if (!context.quantization_tables[component.quantization_table_id].has_value()) {
+                    dbgln_if(JPEG_DEBUG, "Unknown quantization table id: {}!", component.quantization_table_id);
                     return Error::from_string_literal("Unknown quantization table id");
                 }
 
-                auto const& table = context.quantization_tables[component.qtable_id].value();
+                auto const& table = context.quantization_tables[component.quantization_table_id].value();
 
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
