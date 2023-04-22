@@ -13,3 +13,7 @@ pre_configure() {
 post_configure() {
     run_replace_in_file "s/define HAVE_PRCTL 1/undef HAVE_PRCTL/" config.h
 }
+
+post_install() {
+    cp "${PORT_META_DIR}/zshrc" "${SERENITY_INSTALL_ROOT}/etc/"
+}
