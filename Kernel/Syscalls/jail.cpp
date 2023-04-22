@@ -101,6 +101,14 @@ ErrorOr<FlatPtr> Process::sys$jail_configure(Userspace<Syscall::SC_jail_configur
             }));
             return 0;
         }
+        case JailConfigureRequest::SetCleanOnLastDetach: {
+            jail->set_clean_on_last_detach();
+            return 0;
+        }
+        case JailConfigureRequest::UnsetCleanOnLastDetach: {
+            jail->unset_clean_on_last_detach();
+            return 0;
+        }
         default:
             return EINVAL;
         }

@@ -33,6 +33,13 @@ public:
     SpinlockProtected<OwnPtr<UnveilData>, LockRank::None>& unveil_data();
     bool has_unveil_isolation_enforced() const { return m_has_unveil_isolation_enforced; }
 
+    void unset_clean_on_last_detach()
+    {
+        m_clean_on_last_detach.with([](auto& flag) { flag = false; });
+    }
+
+    void set_clean_on_last_detach();
+
     static RefPtr<Jail> find_by_index(JailIndex);
     static ErrorOr<NonnullRefPtr<Jail>> create(NonnullOwnPtr<KString> name, unsigned flags);
     static ErrorOr<void> for_each_when_process_is_not_jailed(Function<ErrorOr<void>(Jail const&)> callback);
@@ -60,6 +67,7 @@ private:
     // can be changed, but the pointer should be set in the construction
     // point only.
     bool const m_has_unveil_isolation_enforced { false };
+    SpinlockProtected<bool, LockRank::None> m_clean_on_last_detach { true };
     SpinlockProtected<OwnPtr<UnveilData>, LockRank::None> m_unveil_data;
 
     SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };

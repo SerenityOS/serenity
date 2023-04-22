@@ -89,6 +89,20 @@ Jail::Jail(NonnullOwnPtr<KString> name, JailIndex index, RefPtr<ProcessList> pro
     });
 }
 
+void Jail::set_clean_on_last_detach()
+{
+    VERIFY(ref_count() > 0);
+    m_attach_count.with([&](auto& my_attach_count) {
+        m_clean_on_last_detach.with([&](auto& flag) {
+            flag = true;
+            // NOTE: If we have attach count of 0, remove us immediately.
+            if (my_attach_count == 0) {
+                m_list_node.remove();
+            }
+        });
+    });
+}
+
 void Jail::detach(Badge<Process>)
 {
     VERIFY(ref_count() > 0);
@@ -96,7 +110,10 @@ void Jail::detach(Badge<Process>)
         VERIFY(my_attach_count > 0);
         my_attach_count--;
         if (my_attach_count == 0) {
-            m_list_node.remove();
+            m_clean_on_last_detach.with([&](auto& flag) {
+                if (flag)
+                    m_list_node.remove();
+            });
         }
     });
 }

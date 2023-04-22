@@ -21,4 +21,6 @@ enum class JailConfigureRequest : u32 {
     Invalid = 0,
     UnveilPath = 1,
     LockUnveil = 2,
+    SetCleanOnLastDetach = 3,
+    UnsetCleanOnLastDetach = 4,
 };
