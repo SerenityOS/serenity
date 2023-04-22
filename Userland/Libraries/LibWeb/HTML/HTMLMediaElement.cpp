@@ -105,6 +105,40 @@ void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
         m_crossorigin = cors_setting_attribute_from_keyword({});
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#fatal-decode-error
+WebIDL::ExceptionOr<void> HTMLMediaElement::set_decoder_error(String error_message)
+{
+    auto& realm = this->realm();
+    auto& vm = realm.vm();
+
+    // -> If the media data is corrupted
+    // Fatal errors in decoding the media data that occur after the user agent has established whether the current media
+    // resource is usable (i.e. once the media element's readyState attribute is no longer HAVE_NOTHING) must cause the
+    // user agent to execute the following steps:
+    if (m_ready_state == ReadyState::HaveNothing)
+        return {};
+
+    // 1. The user agent should cancel the fetching process.
+    if (m_fetch_controller)
+        m_fetch_controller->stop_fetch();
+
+    // 2. Set the error attribute to the result of creating a MediaError with MEDIA_ERR_DECODE.
+    m_error = TRY(vm.heap().allocate<MediaError>(realm, realm, MediaError::Code::Decode, move(error_message)));
+
+    // 3. Set the element's networkState attribute to the NETWORK_IDLE value.
+    m_network_state = NetworkState::Idle;
+
+    // 4. Set the element's delaying-the-load-event flag to false. This stops delaying the load event.
+    m_delaying_the_load_event.clear();
+
+    // 5. Fire an event named error at the media element.
+    dispatch_event(TRY(DOM::Event::create(realm, HTML::EventNames::error)));
+
+    // FIXME: 6. Abort the overall resource selection algorithm.
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#dom-media-buffered
 WebIDL::ExceptionOr<JS::NonnullGCPtr<TimeRanges>> HTMLMediaElement::buffered() const
 {
@@ -865,7 +899,6 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
     }
 
     // FIXME: -> If the connection is interrupted after some media data has been received, causing the user agent to give up trying to fetch the resource
-    // FIXME: -> If the media data is corrupted
     // FIXME: -> If the media data fetching process is aborted by the user
     // FIXME: -> If the media data can be fetched but has non-fatal errors or uses, in part, codecs that are unsupported, preventing the user agent from
     //           rendering the content completely correctly but not preventing playback altogether

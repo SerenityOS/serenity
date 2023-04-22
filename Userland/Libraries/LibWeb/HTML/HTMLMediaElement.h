@@ -35,6 +35,7 @@ public:
     void queue_a_media_element_task(JS::SafeFunction<void()> steps);
 
     JS::GCPtr<MediaError> error() const { return m_error; }
+    WebIDL::ExceptionOr<void> set_decoder_error(String error_message);
 
     String const& current_src() const { return m_current_src; }
 
