@@ -314,9 +314,6 @@ public:
     Optional<SymbolLookupResult> lookup_symbol(StringView name) const;
     Optional<SymbolLookupResult> lookup_symbol(HashSymbol const& symbol) const;
 
-    // Will be called from _fixup_plt_entry, as part of the PLT trampoline
-    VirtualAddress patch_plt_entry(u32 relocation_offset);
-
     bool elf_is_dynamic() const { return m_is_elf_dynamic; }
 
     void* symbol_for_name(StringView name);

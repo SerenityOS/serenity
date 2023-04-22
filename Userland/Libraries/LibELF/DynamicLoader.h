@@ -40,6 +40,8 @@ enum class ShouldInitializeWeak {
     No
 };
 
+extern "C" FlatPtr _fixup_plt_entry(DynamicObject* object, u32 relocation_offset);
+
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
     static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, DeprecatedString filepath);
@@ -113,6 +115,8 @@ private:
         ElfW(Phdr) m_program_header; // Explicitly a copy of the PHDR in the image
     };
 
+    friend FlatPtr _fixup_plt_entry(DynamicObject*, u32);
+
     // Stage 1
     void load_program_headers();
 
@@ -133,7 +137,8 @@ private:
         Success = 1,
         ResolveLater = 2,
     };
-    RelocationResult do_relocation(DynamicObject::Relocation const&, ShouldInitializeWeak should_initialize_weak);
+    RelocationResult do_direct_relocation(DynamicObject::Relocation const&, ShouldInitializeWeak);
+    static RelocationResult do_plt_relocation(DynamicObject::Relocation const&);
     void do_relr_relocations();
     void find_tls_size_and_alignment();
 
