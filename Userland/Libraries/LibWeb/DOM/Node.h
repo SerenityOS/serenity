@@ -135,6 +135,8 @@ public:
     DeprecatedString node_value() const;
     void set_node_value(DeprecatedString const&);
 
+    JS::GCPtr<HTML::Navigable> navigable() const;
+
     Document& document() { return *m_document; }
     Document const& document() const { return *m_document; }
 
