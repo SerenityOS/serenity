@@ -212,7 +212,8 @@ static ErrorOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, 
     });
 
     if (main_program_header.e_type == ET_DYN) {
-        return random_load_offset_in_range(load_range_start, load_range_size);
+        return load_range_start;
+//        return random_load_offset_in_range(load_range_start, load_range_size);
     }
 
     if (main_program_header.e_type != ET_EXEC)

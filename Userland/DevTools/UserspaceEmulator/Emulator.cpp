@@ -522,7 +522,8 @@ void Emulator::dump_backtrace(Vector<FlatPtr> const& backtrace)
 
 void Emulator::dump_backtrace()
 {
-    dump_backtrace(raw_backtrace());
+    // TODO this hangs the EU
+//    dump_backtrace(raw_backtrace());
 }
 
 void Emulator::emit_profile_sample(Stream& output)

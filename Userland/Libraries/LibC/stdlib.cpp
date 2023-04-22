@@ -382,15 +382,17 @@ void _abort()
 
 void abort()
 {
-    // For starters, send ourselves a SIGABRT.
-    raise(SIGABRT);
-    // If that didn't kill us, try harder.
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, SIGABRT);
-    sigprocmask(SIG_UNBLOCK, &set, nullptr);
-    raise(SIGABRT);
-    _abort();
+    // TODO make this work for the UE
+//    // For starters, send ourselves a SIGABRT.
+//    raise(SIGABRT);
+//    // If that didn't kill us, try harder.
+//    sigset_t set;
+//    sigemptyset(&set);
+//    sigaddset(&set, SIGABRT);
+//    sigprocmask(SIG_UNBLOCK, &set, nullptr);
+//    raise(SIGABRT);
+//    _abort();
+    exit(1);
 }
 
 static HashTable<FlatPtr> s_malloced_environment_variables;

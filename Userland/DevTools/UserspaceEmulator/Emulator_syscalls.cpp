@@ -1137,6 +1137,7 @@ int Emulator::virt$ioctl([[maybe_unused]] int fd, unsigned request, [[maybe_unus
 
 int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
 {
+    dbgln("virt$:emuctl: {}", arg1);
     auto* tracer = malloc_tracer();
     if (arg1 <= 4 && !tracer)
         return 0;
