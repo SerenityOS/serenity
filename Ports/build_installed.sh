@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 . ".hosted_defs.sh"
 
-packagesdb="${SERENITY_INSTALL_ROOT}/usr/Ports/packages.db"
+installedpackagesdb="${SERENITY_INSTALL_ROOT}/usr/Ports/installed.db"
 
 clean=false
 case "$1" in
@@ -33,7 +33,7 @@ while IFS= read -r line; do
         echo "ERROR: Previously installed port $port doesn't exist!"
         some_failed=true
     fi
-done < <(grep -E "^(auto|manual)" "$packagesdb")
+done < <(grep -E "^(auto|manual)" "$installedpackagesdb")
 
 if [ "$some_failed" == false ]; then
     exit 0
