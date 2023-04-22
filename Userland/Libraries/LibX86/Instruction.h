@@ -544,7 +544,6 @@ public:
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const {
-        dbgln("reg8: {}, {}", m_has_rex_prefix, register_index());
         if (m_has_rex_prefix && register_index() >= 4 && register_index() <= 7)
         {
             return static_cast<RegisterIndex8>(register_index() + 12);
@@ -699,7 +698,6 @@ public:
     RegisterIndex32 reg32() const { return static_cast<RegisterIndex32>(register_index()); }
     RegisterIndex16 reg16() const { return static_cast<RegisterIndex16>(register_index()); }
     RegisterIndex8 reg8() const {
-        dbgln("reg8: {}, {}", m_has_rex_prefix, register_index());
         if (m_has_rex_prefix && register_index() >= 4 && register_index() <= 7)
         {
             return static_cast<RegisterIndex8>(register_index() + 12);

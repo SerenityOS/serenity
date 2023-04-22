@@ -22,7 +22,6 @@ bool g_report_to_debug = false;
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    dbgln("b1");
     Vector<StringView> positional_arguments;
     bool pause_on_startup { false };
     DeprecatedString profile_dump_path;
@@ -95,11 +94,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     emulator.set_profiling_details(dump_profile, profile_instruction_interval, profile_stream, profile_strings, profile_string_id_map);
     emulator.set_in_region_of_interest(!enable_roi_mode);
 
-    dbgln("b2");
     if (!emulator.load_elf())
         return 1;
-
-    dbgln("b3");
 
     StringBuilder builder;
     builder.append("(UE) "sv);
@@ -112,9 +108,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (pause_on_startup)
         emulator.pause();
 
-    dbgln("b4");
     int rc = emulator.exec();
-    dbgln("b5");
 
     if (dump_profile) {
         emulator.profile_stream().write_until_depleted("], \"strings\": ["sv.bytes()).release_value_but_fixme_should_propagate_errors();
