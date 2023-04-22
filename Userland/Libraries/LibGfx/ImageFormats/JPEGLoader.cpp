@@ -237,8 +237,8 @@ struct JPEGLoadingContext {
 
     State state { State::NotDecoded };
 
-    u32 luma_table[64] = { 0 };
-    u32 chroma_table[64] = { 0 };
+    Array<Optional<Array<u16, 64>>, 4> quantization_tables {};
+
     StartOfFrame frame;
     u8 hsample_factor { 0 };
     u8 vsample_factor { 0 };
@@ -1064,10 +1064,6 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
         }
 
         component.qtable_id = TRY(stream.read_value<u8>());
-        if (component.qtable_id > 1) {
-            dbgln_if(JPEG_DEBUG, "Unsupported quantization table id: {}!", component.qtable_id);
-            return Error::from_string_literal("Unsupported quantization table id");
-        }
 
         context.components.append(move(component));
     }
@@ -1077,6 +1073,8 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
 
 static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext& context)
 {
+    // B.2.4.1 - Quantization table-specification syntax
+
     u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     while (bytes_to_read > 0) {
         u8 const info_byte = TRY(stream.read_value<u8>());
@@ -1086,11 +1084,19 @@ static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext&
             return Error::from_string_literal("Unsupported unit hint in quantization table");
         }
         u8 const table_id = info_byte & 0x0F;
-        if (table_id > 1) {
+
+        if (table_id > 3) {
             dbgln_if(JPEG_DEBUG, "Unsupported quantization table id: {}!", table_id);
             return Error::from_string_literal("Unsupported quantization table id");
         }
-        u32* const table = table_id == 0 ? context.luma_table : context.chroma_table;
+
+        auto& maybe_table = context.quantization_tables[table_id];
+
+        if (!maybe_table.has_value())
+            maybe_table = Array<u16, 64> {};
+
+        auto& table = maybe_table.value();
+
         for (int i = 0; i < 64; i++) {
             if (element_unit_hint == 0)
                 table[zigzag_map[i]] = TRY(stream.read_value<u8>());
@@ -1115,13 +1121,20 @@ static ErrorOr<void> skip_segment(Stream& stream)
     return {};
 }
 
-static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
+static ErrorOr<void> dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             for (u32 i = 0; i < context.components.size(); i++) {
-                auto& component = context.components[i];
-                u32 const* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
+                auto const& component = context.components[i];
+
+                if (!context.quantization_tables[component.qtable_id].has_value()) {
+                    dbgln_if(JPEG_DEBUG, "Unknown quantization table id: {}!", component.qtable_id);
+                    return Error::from_string_literal("Unknown quantization table id");
+                }
+
+                auto const& table = context.quantization_tables[component.qtable_id].value();
+
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 macroblock_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
@@ -1134,6 +1147,8 @@ static void dequantize(JPEGLoadingContext& context, Vector<Macroblock>& macroblo
             }
         }
     }
+
+    return {};
 }
 
 static void inverse_dct(JPEGLoadingContext const& context, Vector<Macroblock>& macroblocks)
@@ -1706,7 +1721,7 @@ static ErrorOr<void> decode_jpeg(JPEGLoadingContext& context)
 {
     TRY(decode_header(context));
     auto macroblocks = TRY(construct_macroblocks(context));
-    dequantize(context, macroblocks);
+    TRY(dequantize(context, macroblocks));
     inverse_dct(context, macroblocks);
     TRY(handle_color_transform(context, macroblocks));
     TRY(compose_bitmap(context, macroblocks));
