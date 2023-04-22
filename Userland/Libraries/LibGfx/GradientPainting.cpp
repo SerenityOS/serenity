@@ -297,6 +297,23 @@ static auto make_sample_non_relative(IntPoint draw_location, auto sample)
     return [=, sample = move(sample)](IntPoint point) { return sample(point.translated(draw_location)); };
 }
 
+static auto make_linear_gradient_between_two_points(FloatPoint p0, FloatPoint p1, ReadonlySpan<ColorStop> color_stops, Optional<float> repeat_length)
+{
+    auto delta = p1 - p0;
+    auto angle = AK::atan2(delta.y(), delta.x());
+    float sin_angle, cos_angle;
+    AK::sincos(angle, sin_angle, cos_angle);
+    int gradient_length = ceilf(p1.distance_from(p0));
+    auto rotated_start_point_x = p0.x() * cos_angle - p0.y() * -sin_angle;
+
+    return Gradient {
+        GradientLine(gradient_length, color_stops, repeat_length, UsePremultipliedAlpha::No),
+        [=](int x, int y) {
+            return (x * cos_angle - y * -sin_angle) - rotated_start_point_x;
+        }
+    };
+}
+
 void CanvasLinearGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunction paint) const
 {
     // If x0 = x1 and y0 = y1, then the linear gradient must paint nothing.
@@ -307,21 +324,41 @@ void CanvasLinearGradientPaintStyle::paint(IntRect physical_bounding_box, PaintF
     if (color_stops().size() < 2)
         return paint([this](IntPoint) { return color_stops().first().color; });
 
-    auto delta = m_p1 - m_p0;
-    auto angle = AK::atan2(delta.y(), delta.x());
-    float sin_angle, cos_angle;
-    AK::sincos(angle, sin_angle, cos_angle);
-    int gradient_length = ceilf(m_p1.distance_from(m_p0));
-    auto rotated_start_point_x = m_p0.x() * cos_angle - m_p0.y() * -sin_angle;
-
-    Gradient linear_gradient {
-        GradientLine(gradient_length, color_stops(), repeat_length(), UsePremultipliedAlpha::No),
-        [=](int x, int y) {
-            return (x * cos_angle - y * -sin_angle) - rotated_start_point_x;
-        }
-    };
-
+    auto linear_gradient = make_linear_gradient_between_two_points(m_p0, m_p1, color_stops(), repeat_length());
     paint(make_sample_non_relative(physical_bounding_box.location(), linear_gradient.sample_function()));
+}
+
+void SVGLinearGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunction paint) const
+{
+    if (color_stops().is_empty())
+        return;
+    // If ‘x1’ = ‘x2’ and ‘y1’ = ‘y2’, then the area to be painted will be painted as
+    // a single color using the color and opacity of the last gradient stop.
+    if (m_p0 == m_p1)
+        return paint([this](IntPoint) { return color_stops().last().color; });
+    if (color_stops().size() < 2)
+        return paint([this](IntPoint) { return color_stops().first().color; });
+
+    // Note: The scaling is removed so enough points on the gradient line are generated.
+    // Otherwise, if you scale a tiny path the gradient looks pixelated.
+    FloatPoint scale { 1, 1 };
+    auto sample_transform = gradient_transform().map([&](auto& transform) {
+        if (auto inverse = transform.inverse(); inverse.has_value()) {
+            scale = transform.scale();
+            return Gfx::AffineTransform {}.scale(scale).multiply(*inverse);
+        }
+        return Gfx::AffineTransform {};
+    });
+
+    auto linear_gradient = make_linear_gradient_between_two_points(m_p0.scaled(scale), m_p1.scaled(scale), color_stops(), repeat_length());
+
+    paint([&, sampler = linear_gradient.sample_function()](auto point) {
+        point.translate_by(physical_bounding_box.location());
+        if (sample_transform.has_value())
+            point = sample_transform->map(point);
+
+        return sampler(point);
+    });
 }
 
 void CanvasConicGradientPaintStyle::paint(IntRect physical_bounding_box, PaintFunction paint) const
