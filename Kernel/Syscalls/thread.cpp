@@ -63,10 +63,21 @@ ErrorOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<Sys
     regs.set_flags(0x0202);
     regs.cr3 = address_space().with([](auto& space) { return space->page_directory().cr3(); });
 
-    regs.rdi = params.rdi;
-    regs.rsi = params.rsi;
-    regs.rdx = params.rdx;
-    regs.rcx = params.rcx;
+    // Set up the argument registers expected by pthread_create_helper.
+    regs.rdi = (FlatPtr)params.entry;
+    regs.rsi = (FlatPtr)params.entry_argument;
+    regs.rdx = (FlatPtr)params.stack_location;
+    regs.rcx = (FlatPtr)params.stack_size;
+#elif ARCH(AARCH64)
+    regs.ttbr0_el1 = address_space().with([](auto& space) { return space->page_directory().ttbr0(); });
+
+    // Set up the argument registers expected by pthread_create_helper.
+    regs.x[0] = (FlatPtr)params.entry;
+    regs.x[1] = (FlatPtr)params.entry_argument;
+    regs.x[2] = (FlatPtr)params.stack_location;
+    regs.x[3] = (FlatPtr)params.stack_size;
+#else
+#    error Unknown architecture
 #endif
 
     TRY(thread->make_thread_specific_region({}));
