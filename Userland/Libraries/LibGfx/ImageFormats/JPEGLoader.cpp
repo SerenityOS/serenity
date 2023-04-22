@@ -700,6 +700,15 @@ static inline ErrorOr<Marker> read_marker_at_cursor(Stream& stream)
     return is_supported_marker(marker) ? marker : JPEG_INVALID;
 }
 
+static ErrorOr<u16> read_effective_chunk_size(Stream& stream)
+{
+    // The stored chunk size includes the size of `stored_size` itself.
+    u16 const stored_size = TRY(stream.read_value<BigEndian<u16>>());
+    if (stored_size < 2)
+        return Error::from_string_literal("Stored chunk size is too small");
+    return stored_size - 2;
+}
+
 static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& context)
 {
     // B.2.3 - Scan header syntax
@@ -707,7 +716,7 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
     if (context.state < JPEGLoadingContext::State::FrameDecoded)
         return Error::from_string_literal("SOS found before reading a SOF");
 
-    [[maybe_unused]] u16 const bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
     u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
@@ -774,7 +783,7 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
 static ErrorOr<void> read_restart_interval(Stream& stream, JPEGLoadingContext& context)
 {
     // B.2.4.4 - Restart interval definition syntax
-    u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
     if (bytes_to_read != 2) {
         dbgln_if(JPEG_DEBUG, "Malformed DRI marker found!");
         return Error::from_string_literal("Malformed DRI marker found");
@@ -785,8 +794,8 @@ static ErrorOr<void> read_restart_interval(Stream& stream, JPEGLoadingContext& c
 
 static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& context)
 {
-    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
-    bytes_to_read -= 2;
+    u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
+
     while (bytes_to_read > 0) {
         HuffmanTableSpec table;
         u8 table_info = TRY(stream.read_value<u8>());
@@ -940,11 +949,8 @@ static ErrorOr<void> read_colour_encoding(Stream& stream, [[maybe_unused]] JPEGL
 static ErrorOr<void> read_app_marker(Stream& stream, JPEGLoadingContext& context, int app_marker_number)
 {
     // B.2.4.6 - Application data syntax
-    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
 
-    if (bytes_to_read <= 2)
-        return Error::from_string_literal("app marker size too small");
-    bytes_to_read -= 2;
+    u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     StringBuilder builder;
     for (;;) {
@@ -1008,7 +1014,7 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
         return Error::from_string_literal("SOF repeated");
     }
 
-    [[maybe_unused]] u16 const bytes_to_read = TRY(stream.read_value<BigEndian<u16>>());
+    [[maybe_unused]] u16 const bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     context.frame.precision = TRY(stream.read_value<u8>());
     if (context.frame.precision != 8) {
@@ -1075,7 +1081,8 @@ static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext&
 {
     // B.2.4.1 - Quantization table-specification syntax
 
-    u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
+
     while (bytes_to_read > 0) {
         u8 const info_byte = TRY(stream.read_value<u8>());
         u8 const element_unit_hint = info_byte >> 4;
