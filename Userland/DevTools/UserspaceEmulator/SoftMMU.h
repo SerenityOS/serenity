@@ -76,6 +76,7 @@ public:
             return m_tls_region.ptr();
 
         size_t page_index = address.offset() / PAGE_SIZE;
+        VERIFY(page_index < number_of_pages);
         return m_page_to_region_map[page_index];
     }
 
@@ -140,7 +141,8 @@ public:
 private:
     Emulator& m_emulator;
 
-    Region* m_page_to_region_map[786432] = { nullptr };
+    static constexpr auto number_of_pages = 786432;
+    Region* m_page_to_region_map[number_of_pages] = { nullptr };
 
     OwnPtr<Region> m_tls_region;
     Vector<NonnullOwnPtr<Region>> m_regions;
