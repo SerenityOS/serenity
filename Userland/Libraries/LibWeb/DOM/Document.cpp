@@ -2006,22 +2006,23 @@ void Document::set_referrer(DeprecatedString referrer)
     m_referrer = referrer;
 }
 
-// https://html.spec.whatwg.org/multipage/browsers.html#fully-active
+// https://html.spec.whatwg.org/multipage/document-sequences.html#fully-active
 bool Document::is_fully_active() const
 {
-    // A Document d is said to be fully active when d's browsing context is non-null, d's browsing context's active document is d,
-    // and either d's browsing context is a top-level browsing context, or d's browsing context's container document is fully active.
-    auto* browsing_context = this->browsing_context();
-    if (!browsing_context)
+    // A Document d is said to be fully active when d is the active document of a navigable navigable, and either
+    // navigable is a top-level traversable or navigable's container document is fully active.
+    auto navigable = this->navigable();
+    if (!navigable)
         return false;
-    if (browsing_context->active_document() != this)
-        return false;
-    if (browsing_context->is_top_level())
+
+    auto traversable = navigable->traversable_navigable();
+    if (navigable == traversable && traversable->is_top_level_traversable())
         return true;
-    if (auto* navigable_container_document = browsing_context->container_document()) {
-        if (navigable_container_document->is_fully_active())
-            return true;
-    }
+
+    auto container_document = navigable->container_document();
+    if (container_document && container_document->is_fully_active())
+        return true;
+
     return false;
 }
 
