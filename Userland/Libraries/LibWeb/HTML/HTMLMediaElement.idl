@@ -1,4 +1,5 @@
 #import <HTML/HTMLElement.idl>
+#import <HTML/MediaError.idl>
 #import <HTML/TimeRanges.idl>
 #import <HTML/VideoTrackList.idl>
 
@@ -11,6 +12,9 @@ enum CanPlayTypeResult {
 // https://html.spec.whatwg.org/multipage/media.html#htmlmediaelement
 [Exposed=Window]
 interface HTMLMediaElement : HTMLElement {
+
+    // error state
+    readonly attribute MediaError? error;
 
     // network state
     [Reflect, CEReactions] attribute DOMString src;
