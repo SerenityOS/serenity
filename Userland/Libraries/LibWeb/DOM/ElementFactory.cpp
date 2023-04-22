@@ -88,6 +88,7 @@
 #include <LibWeb/SVG/SVGForeignObjectElement.h>
 #include <LibWeb/SVG/SVGGElement.h>
 #include <LibWeb/SVG/SVGLineElement.h>
+#include <LibWeb/SVG/SVGLinearGradientElement.h>
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGPolygonElement.h>
 #include <LibWeb/SVG/SVGPolylineElement.h>
@@ -432,6 +433,8 @@ static WebIDL::ExceptionOr<JS::GCPtr<SVG::SVGElement>> create_svg_element(JS::Re
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGForeignObjectElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::line)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGLineElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::linearGradient)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGLinearGradientElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::path)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGPathElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::polygon)
