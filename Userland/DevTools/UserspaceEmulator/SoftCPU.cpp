@@ -3210,6 +3210,7 @@ VPU_INSTRUCTION(PMAXSB_xmm1_xmm2m128);
 VPU_INSTRUCTION(PSADBB_mm1_mm2m64);
 VPU_INSTRUCTION(PSADBB_xmm1_xmm2m128);
 VPU_INSTRUCTION(MASKMOVQ_mm1_mm2m64);
+VPU_INSTRUCTION(MOVDQA_xmm1_xmm2m128);
 
 void SoftCPU::MOVUPD_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::MOVSD_xmm1_xmm2m32(X86::Instruction const&) { TODO_INSN(); }
@@ -3258,7 +3259,6 @@ void SoftCPU::MAXPD_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::MAXSD_xmm1_xmm2m32(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::PUNPCKLQDQ_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::PUNPCKHQDQ_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
-void SoftCPU::MOVDQA_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::MOVDQU_xmm1_xmm2m128(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::PSHUFD_xmm1_xmm2m128_imm8(X86::Instruction const&) { TODO_INSN(); }
 void SoftCPU::PSHUFHW_xmm1_xmm2m128_imm8(X86::Instruction const&) { TODO_INSN(); }

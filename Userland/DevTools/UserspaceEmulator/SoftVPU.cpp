@@ -796,4 +796,16 @@ void SoftVPU::PSADBB_mm1_mm2m64(X86::Instruction const&) { TODO(); }
 void SoftVPU::PSADBB_xmm1_xmm2m128(X86::Instruction const&) { TODO(); }
 
 void SoftVPU::MASKMOVQ_mm1_mm2m64(X86::Instruction const&) { TODO(); }
+
+void SoftVPU::MOVDQA_xmm1_xmm2m128(X86::Instruction const& insn)
+{
+    u8 xmm1 = insn.modrm().reg();
+    if (insn.modrm().is_register()) {
+        m_xmm[xmm1] = m_xmm[insn.modrm().rm()];
+    } else {
+        // FIXME: Alignment-check 16
+        auto temp = insn.modrm().read128(m_cpu, insn);
+        m_xmm[xmm1].puqw = bit_cast<u64x2>(temp.value());
+    }
+}
 }

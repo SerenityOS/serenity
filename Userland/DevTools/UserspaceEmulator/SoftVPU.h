@@ -149,6 +149,7 @@ private:
     void PSADBB_mm1_mm2m64(X86::Instruction const&);
     void PSADBB_xmm1_xmm2m128(X86::Instruction const&);
     void MASKMOVQ_mm1_mm2m64(X86::Instruction const&);
+    void MOVDQA_xmm1_xmm2m128(X86::Instruction const&);
 };
 
 }
