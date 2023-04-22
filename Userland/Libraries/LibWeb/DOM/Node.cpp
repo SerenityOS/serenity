@@ -32,6 +32,7 @@
 #include <LibWeb/HTML/CustomElements/CustomElementReactionNames.h>
 #include <LibWeb/HTML/HTMLAnchorElement.h>
 #include <LibWeb/HTML/HTMLStyleElement.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigableContainer.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
@@ -236,6 +237,14 @@ void Node::set_node_value(DeprecatedString const& value)
     }
 
     // Otherwise, do nothing.
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#node-navigable
+JS::GCPtr<HTML::Navigable> Node::navigable() const
+{
+    // To get the node navigable of a node node, return the navigable whose active document is node's node document,
+    // or null if there is no such navigable.
+    return HTML::Navigable::navigable_with_active_document(const_cast<Document&>(document()));
 }
 
 void Node::invalidate_style()
