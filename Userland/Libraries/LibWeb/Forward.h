@@ -365,6 +365,7 @@ class HTMLUnknownElement;
 class HTMLVideoElement;
 class ImageData;
 class Location;
+class MediaError;
 class MessageChannel;
 class MessageEvent;
 class MessagePort;
