@@ -2177,7 +2177,11 @@ void SoftCPU::MOV_reg32_DR(const X86::Instruction&) { TODO_INSN(); }
 
 void SoftCPU::MOV_reg32_RM32(const X86::Instruction& insn)
 {
-    gpr32(insn.reg32()) = insn.modrm().read32(*this, insn);
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        gpr64(insn.reg64()) = insn.modrm().read64(*this, insn);
+    } else {
+        gpr32(insn.reg32()) = insn.modrm().read32(*this, insn);
+    }
 }
 
 void SoftCPU::MOV_reg32_RM32_sign_extend(const X86::Instruction& insn)
