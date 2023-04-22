@@ -817,9 +817,9 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         auto& callback_function = interface.callback_functions.find(parameter.type->name())->value;
 
         if (callback_function.return_type->is_object() && callback_function.return_type->name() == "Promise")
-            callback_function_generator.set("operation_returns_promise", "OperationReturnsPromise::Yes");
+            callback_function_generator.set("operation_returns_promise", "WebIDL::OperationReturnsPromise::Yes");
         else
-            callback_function_generator.set("operation_returns_promise", "OperationReturnsPromise::No");
+            callback_function_generator.set("operation_returns_promise", "WebIDL::OperationReturnsPromise::No");
 
         // An ECMAScript value V is converted to an IDL callback function type value by running the following algorithm:
         // 1. If the result of calling IsCallable(V) is false and the conversion to an IDL value is not being performed due to V being assigned to an attribute whose type is a nullable callback function that is annotated with [LegacyTreatNonObjectAsNull], then throw a TypeError.
@@ -3288,6 +3288,7 @@ void generate_constructor_implementation(IDL::Interface const& interface, String
 #elif __has_include(<LibWeb/URL/@name@.h>)
 #    include <LibWeb/URL/@name@.h>
 #endif
+#include <LibWeb/WebIDL/CallbackType.h>
 
 )~~~");
 
