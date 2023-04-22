@@ -140,15 +140,10 @@ DeprecatedString strip_ansi(StringView format_string)
 template<typename... Args>
 ErrorOr<void> js_out(JS::PrintContext& print_context, CheckedFormatString<Args...> format_string, Args const&... args)
 {
-    DeprecatedString formatted;
     if (print_context.strip_ansi)
-        formatted = DeprecatedString::formatted(strip_ansi(format_string.view()), args...);
+        TRY(print_context.stream.format(strip_ansi(format_string.view()), args...));
     else
-        formatted = DeprecatedString::formatted(format_string.view(), args...);
-
-    auto bytes = formatted.bytes();
-    while (!bytes.is_empty())
-        bytes = bytes.slice(TRY(print_context.stream.write_some(bytes)));
+        TRY(print_context.stream.format(format_string.view(), args...));
 
     return {};
 }
