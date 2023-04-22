@@ -66,7 +66,7 @@ Emulator::Emulator(DeprecatedString const& executable_path, Vector<StringView> c
     VERIFY(!s_the);
     s_the = this;
     // setup_stack(arguments, environment);
-    register_signal_handlers();
+//    register_signal_handlers();
     setup_signal_trampoline();
 }
 
