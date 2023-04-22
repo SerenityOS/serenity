@@ -22,7 +22,7 @@
 #include <Kernel/Credentials.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/OpenFileDescription.h>
-#include <Kernel/FileSystem/UnveilNode.h>
+#include <Kernel/FileSystem/UnveilData.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
 #include <Kernel/Jail.h>
@@ -76,13 +76,6 @@ enum class Pledge : u32 {
 #define __ENUMERATE_PLEDGE_PROMISE(x) x,
     ENUMERATE_PLEDGE_PROMISES
 #undef __ENUMERATE_PLEDGE_PROMISE
-};
-
-enum class VeilState {
-    None,
-    Dropped,
-    Locked,
-    LockedInherited,
 };
 
 static constexpr FlatPtr futex_key_private_flag = 0b1;
@@ -452,6 +445,7 @@ public:
     ErrorOr<FlatPtr> sys$fstatvfs(int fd, statvfs* buf);
     ErrorOr<FlatPtr> sys$map_time_page();
     ErrorOr<FlatPtr> sys$jail_create(Userspace<Syscall::SC_jail_create_params*> user_params);
+    ErrorOr<FlatPtr> sys$jail_configure(Userspace<Syscall::SC_jail_configure_params const*> user_params);
     ErrorOr<FlatPtr> sys$jail_attach(Userspace<Syscall::SC_jail_attach_params const*> user_params);
     ErrorOr<FlatPtr> sys$get_root_session_id(pid_t force_sid);
 
@@ -529,15 +523,6 @@ public:
     {
         return m_unveil_data.with([&](auto const& unveil_data) { return unveil_data.state; });
     }
-
-    struct UnveilData {
-        explicit UnveilData(UnveilNode&& p)
-            : paths(move(p))
-        {
-        }
-        VeilState state { VeilState::None };
-        UnveilNode paths;
-    };
 
     auto& unveil_data() { return m_unveil_data; }
     auto const& unveil_data() const { return m_unveil_data; }

@@ -15,6 +15,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Try.h>
 #include <AK/Types.h>
+#include <Kernel/FileSystem/UnveilData.h>
 #include <Kernel/KString.h>
 #include <Kernel/Locking/SpinlockProtected.h>
 #include <Kernel/Process.h>
@@ -29,6 +30,8 @@ class Jail : public AtomicRefCounted<Jail> {
 
 public:
     RefPtr<ProcessList> process_list();
+    SpinlockProtected<OwnPtr<UnveilData>, LockRank::None>& unveil_data();
+    bool has_unveil_isolation_enforced() const { return m_has_unveil_isolation_enforced; }
 
     static RefPtr<Jail> find_by_index(JailIndex);
     static ErrorOr<NonnullRefPtr<Jail>> create(NonnullOwnPtr<KString> name, unsigned flags);
@@ -41,7 +44,7 @@ public:
     SpinlockProtected<size_t, LockRank::None>& attach_count() { return m_attach_count; }
 
 private:
-    Jail(NonnullOwnPtr<KString>, JailIndex, RefPtr<ProcessList>);
+    Jail(NonnullOwnPtr<KString>, JailIndex, RefPtr<ProcessList>, OwnPtr<UnveilData>);
 
     NonnullOwnPtr<KString> m_name;
     JailIndex const m_index;
@@ -53,6 +56,11 @@ public:
 
 private:
     RefPtr<ProcessList> const m_process_list;
+    // NOTE: We actually use a SpinlockProtected because the unveil data
+    // can be changed, but the pointer should be set in the construction
+    // point only.
+    bool const m_has_unveil_isolation_enforced { false };
+    SpinlockProtected<OwnPtr<UnveilData>, LockRank::None> m_unveil_data;
 
     SpinlockProtected<size_t, LockRank::None> m_attach_count { 0 };
 };

@@ -622,25 +622,42 @@ ErrorOr<void> Process::do_exec(NonnullRefPtr<OpenFileDescription> main_program_d
 
     m_environment = move(environment);
 
-    TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
-        TRY(m_exec_unveil_data.with([&](auto& exec_unveil_data) -> ErrorOr<void> {
-            // Note: If we have exec unveil data being waiting to be dispatched
-            // to the current execve'd program, then we apply the unveil data and
-            // ensure it is locked in the new program.
-            if (exec_unveil_data.state == VeilState::Dropped) {
-                unveil_data.state = VeilState::LockedInherited;
-                exec_unveil_data.state = VeilState::None;
-                unveil_data.paths = TRY(exec_unveil_data.paths.deep_copy());
-            } else {
-                unveil_data.state = VeilState::None;
-                exec_unveil_data.state = VeilState::None;
-                unveil_data.paths.clear();
-                unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
-            }
-            exec_unveil_data.paths.clear();
-            exec_unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
-            return {};
-        }));
+    TRY(m_attached_jail.with([&](auto& parent_jail) -> ErrorOr<void> {
+        if (parent_jail && parent_jail->has_unveil_isolation_enforced()) {
+            // NOTE: If we execve, and we happen to be under a jail that enforces
+            // filesystem separation via unveil, then copy that unveil data instead
+            // of the parent exec unveil data.
+            TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
+                TRY(parent_jail->unveil_data().with([&](auto& parent_jail_unveil_data) -> ErrorOr<void> {
+                    unveil_data.state = parent_jail_unveil_data->state;
+                    unveil_data.paths = TRY(parent_jail_unveil_data->paths.deep_copy());
+                    return {};
+                }));
+                return {};
+            }));
+        } else {
+            TRY(m_unveil_data.with([&](auto& unveil_data) -> ErrorOr<void> {
+                TRY(m_exec_unveil_data.with([&](auto& exec_unveil_data) -> ErrorOr<void> {
+                    // Note: If we have exec unveil data being waiting to be dispatched
+                    // to the current execve'd program, then we apply the unveil data and
+                    // ensure it is locked in the new program.
+                    if (exec_unveil_data.state == VeilState::Dropped) {
+                        unveil_data.state = VeilState::LockedInherited;
+                        exec_unveil_data.state = VeilState::None;
+                        unveil_data.paths = TRY(exec_unveil_data.paths.deep_copy());
+                    } else {
+                        unveil_data.state = VeilState::None;
+                        exec_unveil_data.state = VeilState::None;
+                        unveil_data.paths.clear();
+                        unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
+                    }
+                    exec_unveil_data.paths.clear();
+                    exec_unveil_data.paths.set_metadata({ TRY(KString::try_create("/"sv)), UnveilAccess::None, false });
+                    return {};
+                }));
+                return {};
+            }));
+        }
         return {};
     }));
 

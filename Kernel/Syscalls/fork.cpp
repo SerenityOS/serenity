@@ -35,20 +35,36 @@ ErrorOr<FlatPtr> Process::sys$fork(RegisterState& regs)
     // NOTE: All user processes have a leaked ref on them. It's balanced by Thread::WaitBlockerSet::finalize().
     child->ref();
 
-    TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
-        return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
-            child_unveil_data.state = parent_unveil_data.state;
-            child_unveil_data.paths = TRY(parent_unveil_data.paths.deep_copy());
-            return {};
-        });
-    }));
+    TRY(m_attached_jail.with([&](auto& parent_jail) -> ErrorOr<void> {
+        if (parent_jail && parent_jail->has_unveil_isolation_enforced()) {
+            // NOTE: If we fork, and we happen to be under a jail that enforces
+            // filesystem separation via unveil, then copy that unveil data instead
+            // of the parent unveil data.
+            TRY(parent_jail->unveil_data().with([&](auto& parent_jail_unveil_data) -> ErrorOr<void> {
+                return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
+                    child_unveil_data.state = parent_jail_unveil_data->state;
+                    child_unveil_data.paths = TRY(parent_jail_unveil_data->paths.deep_copy());
+                    return {};
+                });
+            }));
+        } else {
+            TRY(m_unveil_data.with([&](auto& parent_unveil_data) -> ErrorOr<void> {
+                return child->m_unveil_data.with([&](auto& child_unveil_data) -> ErrorOr<void> {
+                    child_unveil_data.state = parent_unveil_data.state;
+                    child_unveil_data.paths = TRY(parent_unveil_data.paths.deep_copy());
+                    return {};
+                });
+            }));
 
-    TRY(m_exec_unveil_data.with([&](auto& parent_exec_unveil_data) -> ErrorOr<void> {
-        return child->m_exec_unveil_data.with([&](auto& child_exec_unveil_data) -> ErrorOr<void> {
-            child_exec_unveil_data.state = parent_exec_unveil_data.state;
-            child_exec_unveil_data.paths = TRY(parent_exec_unveil_data.paths.deep_copy());
-            return {};
-        });
+            TRY(m_exec_unveil_data.with([&](auto& parent_exec_unveil_data) -> ErrorOr<void> {
+                return child->m_exec_unveil_data.with([&](auto& child_exec_unveil_data) -> ErrorOr<void> {
+                    child_exec_unveil_data.state = parent_exec_unveil_data.state;
+                    child_exec_unveil_data.paths = TRY(parent_exec_unveil_data.paths.deep_copy());
+                    return {};
+                });
+            }));
+        }
+        return {};
     }));
 
     // Note: We take the spinlock of Process::all_instances list because we need

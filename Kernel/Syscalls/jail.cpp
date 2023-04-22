@@ -6,6 +6,7 @@
 
 #include <AK/Userspace.h>
 #include <Kernel/API/Jail.h>
+#include <Kernel/FileSystem/Unveil.h>
 #include <Kernel/Jail.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
@@ -39,6 +40,74 @@ ErrorOr<FlatPtr> Process::sys$jail_create(Userspace<Syscall::SC_jail_create_para
     return 0;
 }
 
+ErrorOr<FlatPtr> Process::sys$jail_configure(Userspace<Syscall::SC_jail_configure_params const*> user_params)
+{
+    VERIFY_NO_PROCESS_BIG_LOCK(this);
+    TRY(require_promise(Pledge::jail));
+    auto credentials = this->credentials();
+    if (!credentials->is_superuser())
+        return EPERM;
+    auto params = TRY(copy_typed_from_user(user_params));
+    return m_attached_jail.with([&](auto& my_jail) -> ErrorOr<FlatPtr> {
+        // Note: If we are already in a jail, don't let the process escape it even if
+        // it knows there are other jails.
+        // Note: To ensure the process doesn't try to maliciously enumerate all jails
+        // in the system, just return EPERM before doing anything else.
+        if (my_jail)
+            return EPERM;
+        auto jail = Jail::find_by_index(static_cast<JailIndex>(params.index));
+        if (!jail)
+            return EINVAL;
+
+        switch (static_cast<JailConfigureRequest>(params.request)) {
+        case JailConfigureRequest::UnveilPath: {
+            if (!jail->has_unveil_isolation_enforced())
+                return ENOBUFS;
+
+            Userspace<Syscall::StringArgument const*> user_path_params((FlatPtr)params.arg1);
+            auto path_params = TRY(copy_typed_from_user(user_path_params));
+
+            Userspace<Syscall::StringArgument const*> user_permissions_string((FlatPtr)params.arg2);
+            auto permissions_string = TRY(copy_typed_from_user(user_permissions_string));
+
+            if (!path_params.characters || !permissions_string.characters)
+                return EINVAL;
+
+            if (permissions_string.length > 5)
+                return EINVAL;
+
+            auto path = TRY(get_syscall_path_argument(path_params));
+            if (path->is_empty() || !path->view().starts_with('/'))
+                return EINVAL;
+
+            auto permissions = TRY(try_copy_kstring_from_user(permissions_string));
+
+            UnveilAccess new_permissions;
+            TRY(prepare_parameters_for_new_jail_unveiled_path(path->view(), permissions->view(), new_permissions));
+            TRY(jail->unveil_data().with([&](auto& unveil_data) -> ErrorOr<void> {
+                VERIFY(unveil_data);
+                TRY(update_unveil_data(*unveil_data.ptr(), path->view(), new_permissions));
+                return {};
+            }));
+            return 0;
+        }
+        case JailConfigureRequest::LockUnveil: {
+            if (!jail->has_unveil_isolation_enforced())
+                return ENOBUFS;
+            TRY(jail->unveil_data().with([](auto& unveil_data) -> ErrorOr<void> {
+                VERIFY(unveil_data);
+                unveil_data->state = VeilState::Locked;
+                return {};
+            }));
+            return 0;
+        }
+        default:
+            return EINVAL;
+        }
+        return 0;
+    });
+}
+
 ErrorOr<FlatPtr> Process::sys$jail_attach(Userspace<Syscall::SC_jail_attach_params const*> user_params)
 {
     VERIFY_NO_PROCESS_BIG_LOCK(this);
@@ -66,6 +135,18 @@ ErrorOr<FlatPtr> Process::sys$jail_attach(Userspace<Syscall::SC_jail_attach_para
         auto jail = Jail::find_by_index(static_cast<JailIndex>(params.index));
         if (!jail)
             return EINVAL;
+        // NOTE: It might seem like a good idea to just attach the process
+        // without considering the jail unveil data being complete, but
+        // this is likely to be a security problem so let's prohibit this.
+        if (jail->has_unveil_isolation_enforced()) {
+            TRY(jail->unveil_data().with([&](auto& unveil_data) -> ErrorOr<void> {
+                VERIFY(unveil_data);
+                VERIFY(unveil_data->state != VeilState::LockedInherited);
+                if (unveil_data->state != VeilState::Locked)
+                    return EACCES;
+                return {};
+            }));
+        }
         my_jail = *jail;
         my_jail->attach_count().with([&](auto& attach_count) {
             attach_count++;

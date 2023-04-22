@@ -144,6 +144,7 @@ set(KERNEL_SOURCES
     FileSystem/ISO9660FS/Inode.cpp
     FileSystem/Mount.cpp
     FileSystem/OpenFileDescription.cpp
+    FileSystem/Unveil.cpp
     FileSystem/Plan9FS/FileSystem.cpp
     FileSystem/Plan9FS/Inode.cpp
     FileSystem/Plan9FS/Message.cpp

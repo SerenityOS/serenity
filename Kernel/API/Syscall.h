@@ -115,6 +115,7 @@ enum class NeedsBigProcessLock {
     S(ioctl, NeedsBigProcessLock::Yes)                     \
     S(join_thread, NeedsBigProcessLock::Yes)               \
     S(jail_create, NeedsBigProcessLock::No)                \
+    S(jail_configure, NeedsBigProcessLock::No)             \
     S(jail_attach, NeedsBigProcessLock::No)                \
     S(kill, NeedsBigProcessLock::No)                       \
     S(kill_thread, NeedsBigProcessLock::Yes)               \
@@ -344,6 +345,13 @@ struct SC_jail_create_params {
     u64 index;
     StringArgument name;
     int flags;
+};
+
+struct SC_jail_configure_params {
+    u64 index;
+    u64 request;
+    FlatPtr arg1;
+    FlatPtr arg2;
 };
 
 struct SC_jail_attach_params {

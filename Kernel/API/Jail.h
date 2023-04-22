@@ -12,6 +12,13 @@
 enum class JailIsolationFlags : u32 {
     None = 0,
     PIDIsolation = 1 << 0,
+    FileSystemUnveilIsolation = 1 << 1,
 };
 
 AK_ENUM_BITWISE_OPERATORS(JailIsolationFlags);
+
+enum class JailConfigureRequest : u32 {
+    Invalid = 0,
+    UnveilPath = 1,
+    LockUnveil = 2,
+};
