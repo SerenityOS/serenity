@@ -602,7 +602,7 @@ bool readable_stream_default_controller_should_call_pull(ReadableStreamDefaultCo
     VERIFY(desired_size.has_value());
 
     // 7. If desiredSize > 0, return true.
-    if (desired_size.release_value() > 0)
+    if (desired_size.release_value() > 0.0)
         return true;
 
     // 8. Return false.
@@ -643,7 +643,7 @@ void readable_stream_default_controller_error(ReadableStreamDefaultController& c
 }
 
 // https://streams.spec.whatwg.org/#readable-stream-default-controller-get-desired-size
-Optional<float> readable_stream_default_controller_get_desired_size(ReadableStreamDefaultController& controller)
+Optional<double> readable_stream_default_controller_get_desired_size(ReadableStreamDefaultController& controller)
 {
     auto stream = controller.stream();
 
@@ -655,7 +655,7 @@ Optional<float> readable_stream_default_controller_get_desired_size(ReadableStre
 
     // 3. If state is "closed", return 0.
     if (stream->is_closed())
-        return 0.0f;
+        return 0.0;
 
     // 4. Return controller.[[strategyHWM]] − controller.[[queueTotalSize]].
     return controller.strategy_hwm() - controller.queue_total_size();
@@ -942,7 +942,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_fill_read_request_from
     auto& realm = controller.realm();
 
     // 1. Assert: controller.[[queueTotalSize]] > 0.
-    VERIFY(controller.queue_total_size() > 0);
+    VERIFY(controller.queue_total_size() > 0.0);
 
     // 2. Let entry be controller.[[queue]][0].
     // 3. Remove entry from controller.[[queue]].
@@ -988,7 +988,7 @@ WebIDL::ExceptionOr<void> readable_byte_stream_controller_handle_queue_drain(Rea
     VERIFY(controller.stream()->state() == ReadableStream::State::Readable);
 
     // 2. If controller.[[queueTotalSize]] is 0 and controller.[[closeRequested]] is true,
-    if (controller.queue_total_size() == 0 && controller.close_requested()) {
+    if (controller.queue_total_size() == 0.0 && controller.close_requested()) {
         // 1. Perform ! ReadableByteStreamControllerClearAlgorithms(controller).
         readable_byte_stream_controller_clear_algorithms(controller);
 
