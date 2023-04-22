@@ -8,6 +8,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Format.h>
 #include <AK/Stream.h>
+#include <AK/StringBuilder.h>
 
 namespace AK {
 
@@ -94,6 +95,16 @@ ErrorOr<void> Stream::write_until_depleted(ReadonlyBytes buffer)
         nwritten += result.value();
     }
 
+    return {};
+}
+
+ErrorOr<void> Stream::format_impl(StringView fmtstr, TypeErasedFormatParams& parameters)
+{
+    StringBuilder builder;
+    TRY(vformat(builder, fmtstr, parameters));
+
+    auto const string = builder.string_view();
+    TRY(write_until_depleted(string.bytes()));
     return {};
 }
 

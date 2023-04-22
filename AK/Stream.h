@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Traits.h>
 
@@ -74,6 +75,16 @@ public:
     ErrorOr<void> write_value(T const& value)
     {
         return write_until_depleted({ &value, sizeof(value) });
+    }
+
+    virtual ErrorOr<void> format_impl(StringView, TypeErasedFormatParams&);
+
+    template<typename... Parameters>
+    ErrorOr<void> format(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+    {
+        VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
+        TRY(format_impl(fmtstr.view(), variadic_format_params));
+        return {};
     }
 
     /// Returns whether the stream has reached the end of file. For sockets,
