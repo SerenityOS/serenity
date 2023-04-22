@@ -2117,12 +2117,20 @@ void SoftCPU::MOV_RM16_seg(X86::Instruction const& insn)
 
 void SoftCPU::MOV_RM32_imm32(const X86::Instruction& insn)
 {
-    insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(insn.imm32()));
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        insn.modrm().write64(*this, insn, shadow_wrap_as_initialized(insn.imm64()));
+    } else {
+        insn.modrm().write32(*this, insn, shadow_wrap_as_initialized(insn.imm32()));
+    }
 }
 
 void SoftCPU::MOV_RM32_reg32(const X86::Instruction& insn)
 {
-    insn.modrm().write32(*this, insn, const_gpr32(insn.reg32()));
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        insn.modrm().write64(*this, insn, const_gpr64(insn.reg64()));
+    } else {
+        insn.modrm().write32(*this, insn, const_gpr32(insn.reg32()));
+    }
 }
 
 void SoftCPU::MOV_RM8_imm8(const X86::Instruction& insn)

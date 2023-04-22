@@ -911,7 +911,10 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write32(CPU& cpu, Instruction cons
 template<typename CPU, typename T>
 ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, Instruction const& insn, T value)
 {
-    VERIFY(!is_register());
+    if (is_register()) {
+        cpu.gpr64(reg64()) = value;
+        return;
+    }
     auto address = resolve(cpu, insn);
     cpu.write_memory64(address, value);
 }

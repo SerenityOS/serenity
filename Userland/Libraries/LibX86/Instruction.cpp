@@ -1308,14 +1308,14 @@ DeprecatedString MemoryOrRegisterReference::to_deprecated_string_o32(Instruction
 {
     if (is_register())
         return register_name(reg32());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return DeprecatedString::formatted("DWORD PTR[{}]", to_deprecated_string(insn));
 }
 
 DeprecatedString MemoryOrRegisterReference::to_deprecated_string_o64(Instruction const& insn) const
 {
     if (is_register())
         return register_name(reg64());
-    return DeprecatedString::formatted("[{}]", to_deprecated_string(insn));
+    return DeprecatedString::formatted("QWORD PTR [{}]", to_deprecated_string(insn));
 }
 
 DeprecatedString MemoryOrRegisterReference::to_deprecated_string_fpu_reg() const
