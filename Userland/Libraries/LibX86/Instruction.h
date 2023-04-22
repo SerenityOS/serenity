@@ -604,7 +604,7 @@ private:
     template<typename CPU>
     LogicalAddress resolve16(const CPU&, Optional<SegmentRegister>);
     template<typename CPU>
-    LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>, ProcessorMode);
+    LogicalAddress resolve32(const CPU&, Optional<SegmentRegister>, ProcessorMode, bool address_size_override);
 
     template<typename CPU>
     u32 evaluate_sib(const CPU&, SegmentRegister& default_segment) const;
@@ -795,15 +795,20 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve16(const CPU& cpu
 }
 
 template<typename CPU>
-ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix, ProcessorMode processor_mode)
+ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu, Optional<SegmentRegister> segment_prefix, ProcessorMode processor_mode, bool address_size_override)
 {
     auto default_segment = SegmentRegister::DS;
-    u32 offset = 0;
+    FlatPtr offset = 0;
 
     switch (rm()) {
     case 0 ... 3:
     case 6 ... 7:
-        offset = cpu.const_gpr32((RegisterIndex32)(rm())).value() + m_displacement32;
+        if (processor_mode == ProcessorMode::Long && !address_size_override)
+        {
+            offset = cpu.const_gpr64((RegisterIndex64)(rm())).value() + sign_extended_to<u64>(static_cast<i32>(m_displacement32));
+        } else {
+            offset = cpu.const_gpr32((RegisterIndex32)(rm())).value() + m_displacement32;
+        }
         break;
     case 4:
         offset = evaluate_sib(cpu, default_segment);
@@ -812,14 +817,14 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve32(const CPU& cpu
         if (mod() == 0) {
             if (processor_mode == ProcessorMode::Long) {
                 default_segment = SegmentRegister::CS;
-                offset = cpu.rip() + m_displacement32;
+                offset = cpu.rip() + sign_extended_to<u64>(static_cast<i32>(m_displacement32));
             } else {
                 offset = m_displacement32;
             };
             break;
         } else {
             default_segment = SegmentRegister::SS;
-            offset = cpu.rbp().value() + m_displacement32;
+            offset = cpu.rbp().value() + sign_extended_to<u64>(static_cast<i32>(m_displacement32));
             break;
         }
         break;
@@ -1335,7 +1340,7 @@ ALWAYS_INLINE LogicalAddress MemoryOrRegisterReference::resolve(const CPU& cpu, 
     case AddressSize::Size16:
         return resolve16(cpu, insn.segment_prefix());
     case AddressSize::Size32:
-        return resolve32(cpu, insn.segment_prefix(), insn.mode());
+        return resolve32(cpu, insn.segment_prefix(), insn.mode(), insn.has_address_size_override_prefix());
     default:
         VERIFY_NOT_REACHED();
     }
