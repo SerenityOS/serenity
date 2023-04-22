@@ -1918,7 +1918,11 @@ void SoftCPU::LEA_reg16_mem16(const X86::Instruction& insn)
 void SoftCPU::LEA_reg32_mem32(const X86::Instruction& insn)
 {
     // FIXME: Respect shadow values
-    gpr32(insn.reg32()) = shadow_wrap_as_initialized<u32>(insn.modrm().resolve(*this, insn).offset());
+    if (insn.operand_size() == X86::OperandSize::Size64) {
+        gpr64(insn.reg64()) = shadow_wrap_as_initialized<u64>(insn.modrm().resolve(*this, insn).offset());
+    } else {
+        gpr32(insn.reg32()) = shadow_wrap_as_initialized<u32>(insn.modrm().resolve(*this, insn).offset());
+    }
 }
 
 void SoftCPU::LES_reg16_mem16(const X86::Instruction&) { TODO_INSN(); }
