@@ -2548,7 +2548,19 @@ void SoftCPU::PUSH_reg32(const X86::Instruction& insn)
     }
 }
 
-FPU_INSTRUCTION(PXOR_mm1_mm2m64);
+void SoftCPU::PXOR_mm1_mm2m64(const X86::Instruction&)
+{
+    VERIFY_NOT_REACHED();
+}
+
+void SoftCPU::PXOR(const X86::Instruction& insn)
+{
+    if (insn.has_operand_size_override_prefix()) {
+        m_vpu.XORPS_xmm1_xmm2m128(insn);
+    } else {
+        m_fpu.PXOR_mm1_mm2m64(insn);
+    }
+}
 
 template<typename T, bool cf>
 ALWAYS_INLINE static T op_rcl_impl(SoftCPU& cpu, T data, ValueWithShadow<u8> steps)

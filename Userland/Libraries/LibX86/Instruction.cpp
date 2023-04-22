@@ -1193,7 +1193,8 @@ static void build_sse_66_slash(u8 op, u8 slash, char const* mnemonic, Instructio
     build_0f(0xED, "PADDSW", OP_mm1_mm2m64, &Interpreter::PADDSW_mm1_mm2m64);
     build_sse_np(0xEE, "PMAXSB", OP_mm1_mm2m64, &Interpreter::PMAXSB_mm1_mm2m64);
     build_sse_66(0xEE, "PMAXSB", OP_xmm1_xmm2m128, &Interpreter::PMAXSB_xmm1_xmm2m128);
-    build_0f(0xEF, "PXOR", OP_mm1_mm2m64, &Interpreter::PXOR_mm1_mm2m64);
+//    build_0f(0xEF, "PXOR", OP_mm1_mm2m64, &Interpreter::PXOR_mm1_mm2m64);
+    build_0f(0xEF, "PXOR", OP_mm1_mm2m64, &Interpreter::PXOR);
 
     build_0f(0xF1, "PSLLW", OP_mm1_mm2m64, &Interpreter::PSLLW_mm1_mm2m64);
     build_0f(0xF2, "PSLLD", OP_mm1_mm2m64, &Interpreter::PSLLD_mm1_mm2m64);

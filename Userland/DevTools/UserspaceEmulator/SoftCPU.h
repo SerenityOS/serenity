@@ -1031,6 +1031,7 @@ private:
     virtual void PUSH_reg16(const X86::Instruction&) override;
     virtual void PUSH_reg32(const X86::Instruction&) override;
     virtual void PXOR_mm1_mm2m64(const X86::Instruction&) override;
+    virtual void PXOR(const X86::Instruction&) override;
     virtual void RCL_RM16_1(const X86::Instruction&) override;
     virtual void RCL_RM16_CL(const X86::Instruction&) override;
     virtual void RCL_RM16_imm8(const X86::Instruction&) override;

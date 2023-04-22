@@ -482,6 +482,7 @@ public:
     virtual void PUSH_reg16(Instruction const&) = 0;
     virtual void PUSH_reg32(Instruction const&) = 0;
     virtual void PXOR_mm1_mm2m64(Instruction const&) = 0;
+    virtual void PXOR(Instruction const&) = 0;
     virtual void RCL_RM16_1(Instruction const&) = 0;
     virtual void RCL_RM16_CL(Instruction const&) = 0;
     virtual void RCL_RM16_imm8(Instruction const&) = 0;
