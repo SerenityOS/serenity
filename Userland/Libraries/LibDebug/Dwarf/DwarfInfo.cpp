@@ -161,6 +161,13 @@ ErrorOr<AttributeValue> DwarfInfo::get_attribute_value(AttributeDataForm form, s
         value.m_data.as_unsigned = data + unit->offset();
         break;
     }
+    case AttributeDataForm::RefUData: {
+        auto data = TRY(debug_info_stream.read_value<LEB128<size_t>>());
+        value.m_type = AttributeValue::Type::DieReference;
+        VERIFY(unit);
+        value.m_data.as_unsigned = data + unit->offset();
+        break;
+    }
     case AttributeDataForm::FlagPresent: {
         value.m_type = AttributeValue::Type::Boolean;
         value.m_data.as_bool = true;
