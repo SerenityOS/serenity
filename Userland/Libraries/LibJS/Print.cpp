@@ -7,7 +7,6 @@
  */
 
 #include <AK/Concepts.h>
-#include <AK/DeprecatedString.h>
 #include <AK/Stream.h>
 #include <LibJS/Print.h>
 #include <LibJS/Runtime/Array.h>
@@ -117,10 +116,10 @@ ErrorOr<void> print_value(JS::PrintContext& print_context, JS::ThrowCompletionOr
     return print_value(print_context, value_or_error.release_value(), seen_objects);
 }
 
-DeprecatedString strip_ansi(StringView format_string)
+ErrorOr<String> strip_ansi(StringView format_string)
 {
     if (format_string.is_empty())
-        return DeprecatedString::empty();
+        return String();
 
     StringBuilder builder;
     size_t i;
@@ -129,21 +128,23 @@ DeprecatedString strip_ansi(StringView format_string)
             while (i < format_string.length() && format_string[i] != 'm')
                 ++i;
         } else {
-            builder.append(format_string[i]);
+            TRY(builder.try_append(format_string[i]));
         }
     }
     if (i < format_string.length())
-        builder.append(format_string[i]);
-    return builder.to_deprecated_string();
+        TRY(builder.try_append(format_string[i]));
+    return builder.to_string();
 }
 
 template<typename... Args>
 ErrorOr<void> js_out(JS::PrintContext& print_context, CheckedFormatString<Args...> format_string, Args const&... args)
 {
-    if (print_context.strip_ansi)
-        TRY(print_context.stream.format(strip_ansi(format_string.view()), args...));
-    else
+    if (print_context.strip_ansi) {
+        auto format_string_without_ansi = TRY(strip_ansi(format_string.view()));
+        TRY(print_context.stream.format(format_string_without_ansi, args...));
+    } else {
         TRY(print_context.stream.format(format_string.view(), args...));
+    }
 
     return {};
 }
