@@ -80,17 +80,15 @@ static OwnPtr<ImageDecoderPlugin> probe_and_sniff_for_appropriate_plugin_with_kn
 
 RefPtr<ImageDecoder> ImageDecoder::try_create_for_raw_bytes(ReadonlyBytes bytes, Optional<DeprecatedString> mime_type)
 {
-    OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes);
-    if (!plugin) {
-        if (mime_type.has_value()) {
-            plugin = probe_and_sniff_for_appropriate_plugin_with_known_mime_type(mime_type.value(), bytes);
-            if (!plugin)
-                return {};
-        } else {
-            return {};
-        }
+    if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin(bytes); plugin)
+        return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
+
+    if (mime_type.has_value()) {
+        if (OwnPtr<ImageDecoderPlugin> plugin = probe_and_sniff_for_appropriate_plugin_with_known_mime_type(mime_type.value(), bytes); plugin)
+            return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
     }
-    return adopt_ref_if_nonnull(new (nothrow) ImageDecoder(plugin.release_nonnull()));
+
+    return {};
 }
 
 ImageDecoder::ImageDecoder(NonnullOwnPtr<ImageDecoderPlugin> plugin)
