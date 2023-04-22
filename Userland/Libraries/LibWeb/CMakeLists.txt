@@ -309,6 +309,7 @@ set(SOURCES
     HTML/HTMLVideoElement.cpp
     HTML/ImageData.cpp
     HTML/Location.cpp
+    HTML/MediaError.cpp
     HTML/MessageChannel.cpp
     HTML/MessageEvent.cpp
     HTML/MessagePort.cpp
