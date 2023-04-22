@@ -196,6 +196,7 @@ ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, Sear
 #ifdef AK_OS_SERENITY
 ErrorOr<void> join_jail(u64 jail_index);
 ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags);
+ErrorOr<void> configure_jail(u64 jail_index, u64 request, u64 arg1, u64 arg2);
 #endif
 
 ErrorOr<int> socket(int domain, int type, int protocol);

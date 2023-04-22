@@ -1178,6 +1178,13 @@ ErrorOr<u64> create_jail(StringView jail_name, JailIsolationFlags flags)
     int rc = syscall(SC_jail_create, &params);
     HANDLE_SYSCALL_RETURN_VALUE("jail_create", rc, static_cast<u64>(params.index));
 }
+
+ErrorOr<void> configure_jail(u64 jail_index, u64 request, u64 arg1, u64 arg2)
+{
+    Syscall::SC_jail_configure_params params { jail_index, request, arg1, arg2 };
+    int rc = syscall(SC_jail_configure, &params);
+    HANDLE_SYSCALL_RETURN_VALUE("jail_configure", rc, {});
+}
 #endif
 
 ErrorOr<void> exec(StringView filename, ReadonlySpan<StringView> arguments, SearchInPath search_in_path, Optional<ReadonlySpan<StringView>> environment)
