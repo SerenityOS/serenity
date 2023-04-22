@@ -1076,27 +1076,25 @@ static ErrorOr<void> read_start_of_frame(Stream& stream, JPEGLoadingContext& con
 
 static ErrorOr<void> read_quantization_table(Stream& stream, JPEGLoadingContext& context)
 {
-    i32 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
+    u16 bytes_to_read = TRY(stream.read_value<BigEndian<u16>>()) - 2;
     while (bytes_to_read > 0) {
-        u8 info_byte = TRY(stream.read_value<u8>());
-        u8 element_unit_hint = info_byte >> 4;
+        u8 const info_byte = TRY(stream.read_value<u8>());
+        u8 const element_unit_hint = info_byte >> 4;
         if (element_unit_hint > 1) {
             dbgln_if(JPEG_DEBUG, "Unsupported unit hint in quantization table: {}!", element_unit_hint);
             return Error::from_string_literal("Unsupported unit hint in quantization table");
         }
-        u8 table_id = info_byte & 0x0F;
+        u8 const table_id = info_byte & 0x0F;
         if (table_id > 1) {
             dbgln_if(JPEG_DEBUG, "Unsupported quantization table id: {}!", table_id);
             return Error::from_string_literal("Unsupported quantization table id");
         }
-        u32* table = table_id == 0 ? context.luma_table : context.chroma_table;
+        u32* const table = table_id == 0 ? context.luma_table : context.chroma_table;
         for (int i = 0; i < 64; i++) {
-            if (element_unit_hint == 0) {
-                u8 tmp = TRY(stream.read_value<u8>());
-                table[zigzag_map[i]] = tmp;
-            } else {
+            if (element_unit_hint == 0)
+                table[zigzag_map[i]] = TRY(stream.read_value<u8>());
+            else
                 table[zigzag_map[i]] = TRY(stream.read_value<BigEndian<u16>>());
-            }
         }
 
         bytes_to_read -= 1 + (element_unit_hint == 0 ? 64 : 128);
