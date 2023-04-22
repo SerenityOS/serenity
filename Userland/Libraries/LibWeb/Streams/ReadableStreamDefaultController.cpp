@@ -22,7 +22,7 @@ ReadableStreamDefaultController::ReadableStreamDefaultController(JS::Realm& real
 }
 
 // https://streams.spec.whatwg.org/#rs-default-controller-desired-size
-Optional<float> ReadableStreamDefaultController::desired_size()
+Optional<double> ReadableStreamDefaultController::desired_size()
 {
     // 1. Return ! ReadableStreamDefaultControllerGetDesiredSize(this).
     return readable_stream_default_controller_get_desired_size(*this);

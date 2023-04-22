@@ -52,7 +52,7 @@ bool readable_stream_default_controller_should_call_pull(ReadableStreamDefaultCo
 void readable_stream_default_controller_clear_algorithms(ReadableStreamDefaultController&);
 
 void readable_stream_default_controller_error(ReadableStreamDefaultController&, JS::Value error);
-Optional<float> readable_stream_default_controller_get_desired_size(ReadableStreamDefaultController&);
+Optional<double> readable_stream_default_controller_get_desired_size(ReadableStreamDefaultController&);
 bool readable_stream_default_controller_can_close_or_enqueue(ReadableStreamDefaultController&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller(ReadableStream&, ReadableStreamDefaultController&, StartAlgorithm&&, PullAlgorithm&&, CancelAlgorithm&&, double high_water_mark, SizeAlgorithm&&);
 WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underlying_source(ReadableStream&, JS::Value underlying_source_value, UnderlyingSource, double high_water_mark, SizeAlgorithm&&);

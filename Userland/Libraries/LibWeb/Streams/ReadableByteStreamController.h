@@ -105,14 +105,14 @@ public:
 
     SinglyLinkedList<ReadableByteStreamQueueEntry>& queue() { return m_queue; }
 
-    u32 queue_total_size() const { return m_queue_total_size; }
-    void set_queue_total_size(u32 size) { m_queue_total_size = size; }
+    double queue_total_size() const { return m_queue_total_size; }
+    void set_queue_total_size(double size) { m_queue_total_size = size; }
 
     bool started() const { return m_started; }
     void set_started(bool value) { m_started = value; }
 
-    u32 strategy_hwm() const { return m_strategy_hwm; }
-    void set_strategy_hwm(u32 value) { m_strategy_hwm = value; }
+    double strategy_hwm() const { return m_strategy_hwm; }
+    void set_strategy_hwm(double value) { m_strategy_hwm = value; }
 
     JS::GCPtr<ReadableStream const> stream() const { return m_stream; }
     JS::GCPtr<ReadableStream> stream() { return m_stream; }
@@ -165,7 +165,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-queuetotalsize
     // The total size of all the chunks stored in [[queue]]
-    u32 m_queue_total_size { 0 };
+    double m_queue_total_size { 0 };
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-started
     // A boolean flag indicating whether the underlying source has finished starting
@@ -173,7 +173,7 @@ private:
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-strategyhwm
     // A number supplied to the constructor as part of the stream’s queuing strategy, indicating the point at which the stream will apply backpressure to its underlying source
-    u32 m_strategy_hwm { 0 };
+    double m_strategy_hwm { 0 };
 
     // https://streams.spec.whatwg.org/#readablestreamdefaultcontroller-stream
     // The ReadableStream instance controlled
