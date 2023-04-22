@@ -889,6 +889,12 @@ WebIDL::ExceptionOr<void> Navigable::navigate(
         // FIXME: 1. Let unloadPromptCanceled be the result of checking if unloading is user-canceled for navigable's active document's inclusive descendant navigables.
 
         // FIXME: 2. If unloadPromptCanceled is true, or navigable's ongoing navigation is no longer navigationId, then:
+        if (!ongoing_navigation().has<String>() || ongoing_navigation().get<String>() != navigation_id) {
+            // FIXME: 1. Invoke WebDriver BiDi navigation failed with targetBrowsingContext and a new WebDriver BiDi navigation status whose id is navigationId, status is "canceled", and url is url.
+
+            // 2. Abort these steps.
+            return;
+        }
 
         // 3. Queue a global task on the navigation and traversal task source given navigable's active window to abort navigable's active document.
         queue_global_task(Task::Source::NavigationAndTraversal, *active_window(), [this] {
