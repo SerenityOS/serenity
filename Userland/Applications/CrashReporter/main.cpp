@@ -131,8 +131,15 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
     builder.appendff("r12={:p} r13={:p} r14={:p} r15={:p}\n", regs.r12, regs.r13, regs.r14, regs.r15);
     builder.appendff("rip={:p} rflags={:p}", regs.rip, regs.rflags);
 #elif ARCH(AARCH64)
-    (void)regs;
-    TODO_AARCH64();
+    builder.appendff("Stack pointer   sp={:p}\n", regs.sp);
+    builder.appendff("Program counter pc={:p}\n", regs.pc);
+    builder.appendff(" x0={:p}  x1={:p}  x2={:p}  x3={:p}  x4={:p}\n", regs.x[0], regs.x[1], regs.x[2], regs.x[3], regs.x[4]);
+    builder.appendff(" x5={:p}  x6={:p}  x7={:p}  x8={:p}  x9={:p}\n", regs.x[5], regs.x[6], regs.x[7], regs.x[8], regs.x[9]);
+    builder.appendff("x10={:p} x11={:p} x12={:p} x13={:p} x14={:p}\n", regs.x[10], regs.x[11], regs.x[12], regs.x[13], regs.x[14]);
+    builder.appendff("x15={:p} x16={:p} x17={:p} x18={:p} x19={:p}\n", regs.x[15], regs.x[16], regs.x[17], regs.x[18], regs.x[19]);
+    builder.appendff("x20={:p} x21={:p} x22={:p} x23={:p} x24={:p}\n", regs.x[20], regs.x[21], regs.x[22], regs.x[23], regs.x[24]);
+    builder.appendff("x25={:p} x26={:p} x27={:p} x28={:p} x29={:p}\n", regs.x[25], regs.x[26], regs.x[27], regs.x[28], regs.x[29]);
+    builder.appendff("x30={:p}", regs.x[30]);
 #else
 #    error Unknown architecture
 #endif
