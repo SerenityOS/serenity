@@ -80,7 +80,7 @@ host_env() {
     enable_ccache
 }
 
-packagesdb="${DESTDIR}/usr/Ports/packages.db"
+installedpackagesdb="${DESTDIR}/usr/Ports/installed.db"
 
 makeopts=("-j${MAKEJOBS}")
 installopts=()
@@ -454,27 +454,27 @@ addtodb() {
         return
     fi
     if [ "${1:-}" = "--auto" ]; then
-        echo "auto $port $version" >> "$packagesdb"
+        echo "auto $port $version" >> "$installedpackagesdb"
     else
-        echo "manual $port $version" >> "$packagesdb"
+        echo "manual $port $version" >> "$installedpackagesdb"
     fi
     if [ "${#depends[@]}" -gt 0 ]; then
-        echo "dependency $port ${depends[@]}" >> "$packagesdb"
+        echo "dependency $port ${depends[@]}" >> "$installedpackagesdb"
     fi
     echo "Successfully installed $port $version."
 }
-ensure_packagesdb() {
-    if [ ! -f "$packagesdb" ]; then
-        mkdir -p "$(dirname $packagesdb)"
-        touch "$packagesdb"
+ensure_installedpackagesdb() {
+    if [ ! -f "$installedpackagesdb" ]; then
+        mkdir -p "$(dirname $installedpackagesdb)"
+        touch "$installedpackagesdb"
     fi
 }
 package_install_state() {
     local port=$1
     local version=${2:-}
 
-    ensure_packagesdb
-    grep -E "^(auto|manual) $port $version" "$packagesdb" | cut -d' ' -f1
+    ensure_installedpackagesdb
+    grep -E "^(auto|manual) $port $version" "$installedpackagesdb" | cut -d' ' -f1
 }
 installdepends() {
     for depend in "${depends[@]}"; do
@@ -514,8 +514,8 @@ uninstall() {
         esac
     done
     # Without || true, mv will not be executed if you are uninstalling your only remaining port.
-    grep -v "^manual $port " "$packagesdb" > packages.db.tmp || true
-    mv packages.db.tmp "$packagesdb"
+    grep -v "^manual $port " "$installedpackagesdb" > installed.db.tmp || true
+    mv installed.db.tmp "$installedpackagesdb"
 }
 do_installdepends() {
     buildstep_intro "Installing dependencies of $port..."
