@@ -90,18 +90,9 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     while (((uintptr_t)stack - 16) % 16 != 0)
         push_on_stack(nullptr);
 
-#if ARCH(X86_64)
-    thread_params->rdi = (FlatPtr)entry;
-    thread_params->rsi = (FlatPtr)argument;
-    thread_params->rdx = (FlatPtr)thread_params->stack_location;
-    thread_params->rcx = thread_params->stack_size;
-#elif ARCH(AARCH64)
-    (void)entry;
-    (void)argument;
-    TODO_AARCH64();
-#else
-#    error Unknown architecture
-#endif
+    thread_params->entry = entry;
+    thread_params->entry_argument = argument;
+
     VERIFY((uintptr_t)stack % 16 == 0);
 
     // Push a fake return address

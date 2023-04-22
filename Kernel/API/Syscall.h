@@ -370,12 +370,8 @@ struct SC_create_thread_params {
     unsigned int reported_guard_page_size = 0; // The lie we tell callers
     unsigned int stack_size = 1 * MiB;         // Equal to Thread::default_userspace_stack_size
     void* stack_location;                      // nullptr means any, o.w. process virtual address
-#    if ARCH(X86_64)
-    FlatPtr rdi;
-    FlatPtr rsi;
-    FlatPtr rcx;
-    FlatPtr rdx;
-#    endif
+    void* (*entry)(void*);
+    void* entry_argument;
 };
 
 struct SC_realpath_params {
