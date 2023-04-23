@@ -10,18 +10,18 @@
 
 namespace SQL {
 
-Index::Index(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, u32 pointer)
+Index::Index(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, Block::Index block_index)
     : m_serializer(serializer)
     , m_descriptor(descriptor)
     , m_unique(unique)
-    , m_pointer(pointer)
+    , m_block_index(block_index)
 {
 }
 
-Index::Index(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
+Index::Index(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, Block::Index block_index)
     : m_serializer(serializer)
     , m_descriptor(descriptor)
-    , m_pointer(pointer)
+    , m_block_index(block_index)
 {
 }
 

@@ -74,25 +74,25 @@ public:
     bool has_block(Block::Index) const;
     [[nodiscard]] Block::Index request_new_block_index() { return m_next_block++; }
 
-    u32 schemas_root() const { return m_schemas_root; }
+    Block::Index schemas_root() const { return m_schemas_root; }
 
-    void set_schemas_root(u32 root)
+    void set_schemas_root(Block::Index root)
     {
         m_schemas_root = root;
         update_zero_block().release_value_but_fixme_should_propagate_errors();
     }
 
-    u32 tables_root() const { return m_tables_root; }
+    Block::Index tables_root() const { return m_tables_root; }
 
-    void set_tables_root(u32 root)
+    void set_tables_root(Block::Index root)
     {
         m_tables_root = root;
         update_zero_block().release_value_but_fixme_should_propagate_errors();
     }
 
-    u32 table_columns_root() const { return m_table_columns_root; }
+    Block::Index table_columns_root() const { return m_table_columns_root; }
 
-    void set_table_columns_root(u32 root)
+    void set_table_columns_root(Block::Index root)
     {
         m_table_columns_root = root;
         update_zero_block().release_value_but_fixme_should_propagate_errors();
@@ -130,13 +130,13 @@ private:
 
     OwnPtr<Core::BufferedFile> m_file;
     Block::Index m_highest_block_written { 0 };
-    u32 m_next_block { 1 };
-    u32 m_schemas_root { 0 };
-    u32 m_tables_root { 0 };
-    u32 m_table_columns_root { 0 };
+    Block::Index m_next_block { 1 };
+    Block::Index m_schemas_root { 0 };
+    Block::Index m_tables_root { 0 };
+    Block::Index m_table_columns_root { 0 };
     u32 m_version { VERSION };
     Array<u32, 16> m_user_values { 0 };
-    HashMap<u32, ByteBuffer> m_write_ahead_log;
+    HashMap<Block::Index, ByteBuffer> m_write_ahead_log;
 };
 
 }

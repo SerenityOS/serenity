@@ -153,7 +153,7 @@ void insert_and_get_to_and_from_btree(int num_keys)
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(btree->descriptor());
             k[0] = keys[ix];
-            k.set_pointer(pointers[ix]);
+            k.set_block_index(pointers[ix]);
             btree->insert(k);
         }
 #ifdef LIST_TREE
@@ -189,7 +189,7 @@ void insert_into_and_scan_btree(int num_keys)
         for (auto ix = 0; ix < num_keys; ix++) {
             SQL::Key k(btree->descriptor());
             k[0] = keys[ix];
-            k.set_pointer(pointers[ix]);
+            k.set_block_index(pointers[ix]);
             btree->insert(k);
         }
 
@@ -213,7 +213,7 @@ void insert_into_and_scan_btree(int num_keys)
             auto key_value = key[0].to_int<i32>();
             for (auto ix = 0; ix < num_keys; ix++) {
                 if (keys[ix] == key_value) {
-                    EXPECT_EQ(key.pointer(), pointers[ix]);
+                    EXPECT_EQ(key.block_index(), pointers[ix]);
                     break;
                 }
             }

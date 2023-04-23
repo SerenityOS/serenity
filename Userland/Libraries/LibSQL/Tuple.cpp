@@ -19,10 +19,10 @@ Tuple::Tuple()
 {
 }
 
-Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
+Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, Block::Index block_index)
     : m_descriptor(descriptor)
     , m_data()
-    , m_pointer(pointer)
+    , m_block_index(block_index)
 {
     for (auto& element : *descriptor)
         m_data.empend(element.type);
@@ -37,8 +37,8 @@ Tuple::Tuple(NonnullRefPtr<TupleDescriptor> const& descriptor, Serializer& seria
 void Tuple::deserialize(Serializer& serializer)
 {
     dbgln_if(SQL_DEBUG, "deserialize tuple at offset {}", serializer.offset());
-    serializer.deserialize_to<u32>(m_pointer);
-    dbgln_if(SQL_DEBUG, "pointer: {}", m_pointer);
+    serializer.deserialize_to<u32>(m_block_index);
+    dbgln_if(SQL_DEBUG, "block_index: {}", m_block_index);
     auto number_of_elements = serializer.deserialize<u32>();
     m_data.clear();
     m_descriptor->clear();
@@ -51,8 +51,8 @@ void Tuple::deserialize(Serializer& serializer)
 void Tuple::serialize(Serializer& serializer) const
 {
     VERIFY(m_descriptor->size() == m_data.size());
-    dbgln_if(SQL_DEBUG, "Serializing tuple pointer {}", pointer());
-    serializer.serialize<u32>(pointer());
+    dbgln_if(SQL_DEBUG, "Serializing tuple with block_index {}", block_index());
+    serializer.serialize<u32>(block_index());
     serializer.serialize<u32>(m_descriptor->size());
     for (auto ix = 0u; ix < m_descriptor->size(); ix++) {
         serializer.serialize<TupleElementDescriptor>((*m_descriptor)[ix]);
@@ -140,8 +140,8 @@ DeprecatedString Tuple::to_deprecated_string() const
             builder.append('|');
         builder.append(part.to_deprecated_string());
     }
-    if (pointer() != 0)
-        builder.appendff(":{}", pointer());
+    if (block_index() != 0)
+        builder.appendff(":{}", block_index());
     return builder.to_deprecated_string();
 }
 
@@ -155,7 +155,7 @@ void Tuple::copy_from(Tuple const& other)
     m_data.clear();
     for (auto& part : other.m_data)
         m_data.append(part);
-    m_pointer = other.pointer();
+    m_block_index = other.block_index();
 }
 
 int Tuple::compare(Tuple const& other) const

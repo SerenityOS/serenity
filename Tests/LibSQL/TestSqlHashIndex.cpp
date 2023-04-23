@@ -127,12 +127,12 @@ NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Serializer& serializer)
     tuple_descriptor->append({ "schema", "table", "key_value", SQL::SQLType::Integer, SQL::Order::Ascending });
     tuple_descriptor->append({ "schema", "table", "text_value", SQL::SQLType::Text, SQL::Order::Ascending });
 
-    auto directory_pointer = serializer.heap().user_value(0);
-    if (!directory_pointer) {
-        directory_pointer = serializer.heap().request_new_block_index();
-        serializer.heap().set_user_value(0, directory_pointer);
+    auto directory_block_index = serializer.heap().user_value(0);
+    if (!directory_block_index) {
+        directory_block_index = serializer.heap().request_new_block_index();
+        serializer.heap().set_user_value(0, directory_block_index);
     }
-    auto hash_index = SQL::HashIndex::construct(serializer, tuple_descriptor, directory_pointer);
+    auto hash_index = SQL::HashIndex::construct(serializer, tuple_descriptor, directory_block_index);
     return hash_index;
 }
 
@@ -149,7 +149,7 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
             SQL::Key k(hash_index->descriptor());
             k[0] = keys[ix];
             k[1] = DeprecatedString::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
-            k.set_pointer(pointers[ix]);
+            k.set_block_index(pointers[ix]);
             hash_index->insert(k);
         }
 #ifdef LIST_HASH_INDEX
@@ -247,7 +247,7 @@ void insert_into_and_scan_hash_index(int num_keys)
             SQL::Key k(hash_index->descriptor());
             k[0] = keys[ix];
             k[1] = DeprecatedString::formatted("The key value is {} and the pointer is {}", keys[ix], pointers[ix]);
-            k.set_pointer(pointers[ix]);
+            k.set_block_index(pointers[ix]);
             hash_index->insert(k);
         }
 #ifdef LIST_HASH_INDEX
@@ -273,7 +273,7 @@ void insert_into_and_scan_hash_index(int num_keys)
 
             for (auto ix = 0; ix < num_keys; ix++) {
                 if (keys[ix] == key_value) {
-                    EXPECT_EQ(key.pointer(), pointers[ix]);
+                    EXPECT_EQ(key.block_index(), pointers[ix]);
                     if (found[ix])
                         FAIL(DeprecatedString::formatted("Key {}, index {} already found previously", *key_value, ix));
                     found[ix] = true;

@@ -9,14 +9,14 @@
 
 namespace SQL {
 
-BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, u32 pointer)
-    : Index(serializer, descriptor, unique, pointer)
+BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, bool unique, Block::Index block_index)
+    : Index(serializer, descriptor, unique, block_index)
     , m_root(nullptr)
 {
 }
 
-BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 pointer)
-    : BTree(serializer, descriptor, true, pointer)
+BTree::BTree(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, Block::Index block_index)
+    : BTree(serializer, descriptor, true, block_index)
 {
 }
 
@@ -35,16 +35,16 @@ BTreeIterator BTree::end()
 
 void BTree::initialize_root()
 {
-    if (pointer()) {
-        if (serializer().has_block(pointer())) {
-            serializer().read_storage(pointer());
-            m_root = serializer().make_and_deserialize<TreeNode>(*this, pointer());
+    if (block_index()) {
+        if (serializer().has_block(block_index())) {
+            serializer().read_storage(block_index());
+            m_root = serializer().make_and_deserialize<TreeNode>(*this, block_index());
         } else {
-            m_root = make<TreeNode>(*this, nullptr, pointer());
+            m_root = make<TreeNode>(*this, nullptr, block_index());
         }
     } else {
-        set_pointer(request_new_block_index());
-        m_root = make<TreeNode>(*this, nullptr, pointer());
+        set_block_index(request_new_block_index());
+        m_root = make<TreeNode>(*this, nullptr, block_index());
         if (on_new_root)
             on_new_root();
     }
@@ -53,8 +53,8 @@ void BTree::initialize_root()
 
 TreeNode* BTree::new_root()
 {
-    set_pointer(request_new_block_index());
-    m_root = make<TreeNode>(*this, nullptr, m_root.leak_ptr(), pointer());
+    set_block_index(request_new_block_index());
+    m_root = make<TreeNode>(*this, nullptr, m_root.leak_ptr(), block_index());
     serializer().serialize_and_write(*m_root.ptr());
     if (on_new_root)
         on_new_root();

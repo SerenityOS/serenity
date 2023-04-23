@@ -9,23 +9,23 @@
 
 namespace SQL {
 
-Row::Row(NonnullRefPtr<TableDef> table, u32 pointer)
+Row::Row(NonnullRefPtr<TableDef> table, Block::Index block_index)
     : Tuple(table->to_tuple_descriptor())
     , m_table(move(table))
 {
-    set_pointer(pointer);
+    set_block_index(block_index);
 }
 
 void Row::deserialize(Serializer& serializer)
 {
     Tuple::deserialize(serializer);
-    m_next_pointer = serializer.deserialize<u32>();
+    m_next_block_index = serializer.deserialize<Block::Index>();
 }
 
 void Row::serialize(Serializer& serializer) const
 {
     Tuple::serialize(serializer);
-    serializer.serialize<u32>(next_pointer());
+    serializer.serialize<Block::Index>(next_block_index());
 }
 
 }

@@ -12,6 +12,7 @@
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
 #include <LibSQL/Forward.h>
+#include <LibSQL/Heap.h>
 #include <LibSQL/Type.h>
 #include <LibSQL/Value.h>
 
@@ -27,29 +28,29 @@ class Relation : public Core::Object {
 
 public:
     u32 hash() const;
-    u32 pointer() const { return m_pointer; }
-    void set_pointer(u32 pointer) { m_pointer = pointer; }
+    Block::Index block_index() const { return m_block_index; }
+    void set_block_index(Block::Index block_index) { m_block_index = block_index; }
     ~Relation() override = default;
     virtual Key key() const = 0;
     Relation const* parent_relation() const { return dynamic_cast<Relation const*>(parent()); }
 
 protected:
-    Relation(DeprecatedString name, u32 pointer, Relation* parent = nullptr)
+    Relation(DeprecatedString name, Block::Index block_index, Relation* parent = nullptr)
         : Core::Object(parent)
-        , m_pointer(pointer)
+        , m_block_index(block_index)
     {
         set_name(move(name));
     }
 
     explicit Relation(DeprecatedString name, Relation* parent = nullptr)
         : Core::Object(parent)
-        , m_pointer(0)
+        , m_block_index(0)
     {
         set_name(move(name));
     }
 
 private:
-    u32 m_pointer { 0 };
+    Block::Index m_block_index { 0 };
 };
 
 class SchemaDef : public Relation {

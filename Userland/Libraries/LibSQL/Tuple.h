@@ -27,7 +27,7 @@ namespace SQL {
 class Tuple {
 public:
     Tuple();
-    explicit Tuple(NonnullRefPtr<TupleDescriptor> const&, u32 pointer = 0);
+    explicit Tuple(NonnullRefPtr<TupleDescriptor> const&, Block::Index = 0);
     Tuple(NonnullRefPtr<TupleDescriptor> const&, Serializer&);
     Tuple(Tuple const&);
     virtual ~Tuple() = default;
@@ -55,8 +55,8 @@ public:
     Tuple& operator+=(Value const&);
     void extend(Tuple const&);
 
-    [[nodiscard]] u32 pointer() const { return m_pointer; }
-    void set_pointer(u32 ptr) { m_pointer = ptr; }
+    [[nodiscard]] Block::Index block_index() const { return m_block_index; }
+    void set_block_index(Block::Index index) { m_block_index = index; }
 
     [[nodiscard]] size_t size() const { return m_data.size(); }
     [[nodiscard]] virtual size_t length() const;
@@ -77,7 +77,7 @@ protected:
 private:
     NonnullRefPtr<TupleDescriptor> m_descriptor;
     Vector<Value> m_data;
-    u32 m_pointer { 2 * sizeof(u32) };
+    Block::Index m_block_index { 0 };
 
     friend Serializer;
 };

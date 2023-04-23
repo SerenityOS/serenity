@@ -25,22 +25,22 @@ namespace SQL {
  */
 class Row : public Tuple {
 public:
-    explicit Row(NonnullRefPtr<TableDef>, u32 pointer = 0);
+    explicit Row(NonnullRefPtr<TableDef>, Block::Index block_index = 0);
     virtual ~Row() override = default;
 
-    [[nodiscard]] u32 next_pointer() const { return m_next_pointer; }
-    void set_next_pointer(u32 ptr) { m_next_pointer = ptr; }
+    [[nodiscard]] Block::Index next_block_index() const { return m_next_block_index; }
+    void set_next_block_index(Block::Index index) { m_next_block_index = index; }
 
     TableDef const& table() const { return *m_table; }
     TableDef& table() { return *m_table; }
 
-    [[nodiscard]] virtual size_t length() const override { return Tuple::length() + sizeof(u32); }
+    [[nodiscard]] virtual size_t length() const override { return Tuple::length() + sizeof(Block::Index); }
     virtual void serialize(Serializer&) const override;
     virtual void deserialize(Serializer&) override;
 
 private:
     NonnullRefPtr<TableDef> m_table;
-    u32 m_next_pointer { 0 };
+    Block::Index m_next_block_index { 0 };
 };
 
 }
