@@ -5,6 +5,7 @@ set(SOURCES
     ARIA/ARIAMixin.cpp
     ARIA/ARIAMixin.idl
     ARIA/Roles.cpp
+    ARIA/StateAndProperties.cpp
     Bindings/AudioConstructor.cpp
     Bindings/HostDefined.cpp
     Bindings/ImageConstructor.cpp
