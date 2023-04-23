@@ -725,7 +725,7 @@ NEVER_INLINE void signal_trampoline_dummy()
         "call ecx\n"
         // drop the 4 arguments
         "add esp, 16\n"
-        // Current stack state is just saved_eax, ucontext, signal_info, fpu_state?.
+        // Current stack state is just saved_result, ucontext, signal_info, fpu_state?.
         // syscall SC_sigreturn
         "mov eax, %P0\n"
         "int 0x82\n"

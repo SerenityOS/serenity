@@ -1352,7 +1352,7 @@ int Emulator::virt$sigreturn()
     };
 
     // State from signal trampoline (note that we're assuming i386 here):
-    // saved_ax, ucontext, signal_info, fpu_state.
+    // saved_result, ucontext, signal_info, fpu_state.
 
     // Drop the FPU state
     // FIXME: Read and restore from this.
