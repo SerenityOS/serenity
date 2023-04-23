@@ -14,27 +14,7 @@ VALIDATE_IS_X86()
 
 namespace Kernel {
 
-struct [[gnu::packed]] TSS32 {
-    u16 backlink, __blh;
-    u32 esp0;
-    u16 ss0, __ss0h;
-    u32 esp1;
-    u16 ss1, __ss1h;
-    u32 esp2;
-    u16 ss2, __ss2h;
-    u32 cr3, eip, eflags;
-    u32 eax, ecx, edx, ebx, esp, ebp, esi, edi;
-    u16 es, __esh;
-    u16 cs, __csh;
-    u16 ss, __ssh;
-    u16 ds, __dsh;
-    u16 fs, __fsh;
-    u16 gs, __gsh;
-    u16 ldt, __ldth;
-    u16 trace, iomapbase;
-};
-
-struct [[gnu::packed]] TSS64 {
+struct [[gnu::packed]] TSS {
     u32 __1; // Link?
     u32 rsp0l;
     u32 rsp0h;
@@ -61,7 +41,5 @@ struct [[gnu::packed]] TSS64 {
     u16 __4;
     u16 iomapbase;
 };
-
-using TSS = TSS64;
 
 }
