@@ -40,6 +40,7 @@ interface HTMLMediaElement : HTMLElement {
 
     // playback state
     attribute double currentTime;
+    undefined fastSeek(double time);
     readonly attribute unrestricted double duration;
     readonly attribute boolean paused;
     readonly attribute boolean ended;

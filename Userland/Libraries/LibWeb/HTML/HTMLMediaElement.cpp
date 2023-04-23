@@ -208,6 +208,13 @@ void HTMLMediaElement::set_current_time(double current_time)
     }
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#dom-media-fastseek
+void HTMLMediaElement::fast_seek(double time)
+{
+    // The fastSeek(time) method must seek to the time given by time, with the approximate-for-speed flag set.
+    seek_element(time, MediaSeekMode::ApproximateForSpeed);
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:current-playback-position-13
 void HTMLMediaElement::set_current_playback_position(double playback_position)
 {
