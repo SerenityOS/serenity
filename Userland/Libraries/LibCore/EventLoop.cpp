@@ -25,6 +25,7 @@
 #include <LibCore/Promise.h>
 #include <LibCore/SessionManagement.h>
 #include <LibCore/Socket.h>
+#include <LibCore/ThreadEventQueue.h>
 #include <LibThreading/Mutex.h>
 #include <LibThreading/MutexProtected.h>
 #include <errno.h>
@@ -65,6 +66,12 @@ struct EventLoopTimer {
 
 struct EventLoop::Private {
     Threading::Mutex lock;
+    ThreadEventQueue& thread_event_queue;
+
+    Private()
+        : thread_event_queue(ThreadEventQueue::current())
+    {
+    }
 };
 
 static Threading::MutexProtected<NeverDestroyed<IDAllocator>> s_id_allocator;
@@ -78,7 +85,6 @@ static thread_local HashTable<Notifier*>* s_notifiers;
 // While wake() pushes zero into the pipe, signal numbers (by defintion nonzero, see signal_numbers.h) are pushed into the pipe verbatim.
 thread_local int EventLoop::s_wake_pipe_fds[2];
 thread_local bool EventLoop::s_wake_pipe_initialized { false };
-thread_local bool s_warned_promise_count { false };
 
 void EventLoop::initialize_wake_pipes()
 {
@@ -421,7 +427,6 @@ public:
         : m_event_loop(event_loop)
     {
         if (EventLoop::has_been_instantiated()) {
-            m_event_loop.take_pending_events_from(EventLoop::current());
             s_event_loop_stack->append(event_loop);
         }
     }
@@ -429,12 +434,6 @@ public:
     {
         if (EventLoop::has_been_instantiated()) {
             s_event_loop_stack->take_last();
-            for (auto& job : m_event_loop.m_pending_promises) {
-                // When this event loop was not running below another event loop, the jobs may very well have finished in the meantime.
-                if (!job->is_resolved())
-                    job->cancel(Error::from_string_view("EventLoop is exiting"sv));
-            }
-            EventLoop::current().take_pending_events_from(m_event_loop);
         }
     }
 
@@ -462,72 +461,21 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
 
 size_t EventLoop::pump(WaitMode mode)
 {
+    // Pumping the event loop from another thread is not allowed.
+    VERIFY(&m_private->thread_event_queue == &ThreadEventQueue::current());
+
     wait_for_event(mode);
-
-    decltype(m_queued_events) events;
-    {
-        Threading::MutexLocker locker(m_private->lock);
-        events = move(m_queued_events);
-    }
-
-    m_pending_promises.remove_all_matching([](auto& job) { return job->is_resolved() || job->is_canceled(); });
-
-    size_t processed_events = 0;
-    for (size_t i = 0; i < events.size(); ++i) {
-        auto& queued_event = events.at(i);
-        auto receiver = queued_event.receiver.strong_ref();
-        auto& event = *queued_event.event;
-        if (receiver)
-            dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: {} event {}", *receiver, event.type());
-
-        if (!receiver) {
-            switch (event.type()) {
-            case Event::Quit:
-                VERIFY_NOT_REACHED();
-            default:
-                dbgln_if(EVENTLOOP_DEBUG, "Event type {} with no receiver :(", event.type());
-                break;
-            }
-        } else if (event.type() == Event::Type::DeferredInvoke) {
-            dbgln_if(DEFERRED_INVOKE_DEBUG, "DeferredInvoke: receiver = {}", *receiver);
-            static_cast<DeferredInvocationEvent&>(event).m_invokee();
-        } else {
-            NonnullRefPtr<Object> protector(*receiver);
-            receiver->dispatch_event(event);
-        }
-        ++processed_events;
-
-        if (m_exit_requested) {
-            Threading::MutexLocker locker(m_private->lock);
-            dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Exit requested. Rejigging {} events.", events.size() - i);
-            decltype(m_queued_events) new_event_queue;
-            new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
-            for (++i; i < events.size(); ++i)
-                new_event_queue.unchecked_append(move(events[i]));
-            new_event_queue.extend(move(m_queued_events));
-            m_queued_events = move(new_event_queue);
-            break;
-        }
-    }
-
-    if (m_pending_promises.size() > 30 && !s_warned_promise_count) {
-        s_warned_promise_count = true;
-        dbgln("EventLoop {:p} warning: Job queue wasn't designed for this load ({} promises). Please begin optimizing EventLoop::pump() -> m_pending_promises.remove_all_matching", this, m_pending_promises.size());
-    }
-
-    return processed_events;
+    return m_private->thread_event_queue.process();
 }
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
-    Threading::MutexLocker lock(m_private->lock);
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receiver={}, event={}", m_queued_events.size(), receiver, event);
-    m_queued_events.empend(receiver, move(event));
+    m_private->thread_event_queue.post_event(receiver, move(event));
 }
 
 void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise)
 {
-    m_pending_promises.append(move(job_promise));
+    ThreadEventQueue::current().add_job(move(job_promise));
 }
 
 SignalHandlers::SignalHandlers(int signo, void (*handle_signal)(int))
@@ -711,18 +659,14 @@ retry:
             VERIFY_NOT_REACHED();
     }
 
-    bool queued_events_is_empty;
-    {
-        Threading::MutexLocker locker(m_private->lock);
-        queued_events_is_empty = m_queued_events.is_empty();
-    }
+    bool has_pending_events = m_private->thread_event_queue.has_pending_events();
 
     // Figure out how long to wait at maximum.
     // This mainly depends on the WaitMode and whether we have pending events, but also the next expiring timer.
     Time now;
     struct timeval timeout = { 0, 0 };
     bool should_wait_forever = false;
-    if (mode == WaitMode::WaitForEvents && queued_events_is_empty) {
+    if (mode == WaitMode::WaitForEvents && !has_pending_events) {
         auto next_timer_expiration = get_next_timer_expiration();
         if (next_timer_expiration.has_value()) {
             now = Time::now_monotonic_coarse();
@@ -903,18 +847,6 @@ void EventLoop::wake()
         perror("EventLoop::wake: write");
         VERIFY_NOT_REACHED();
     }
-}
-
-EventLoop::QueuedEvent::QueuedEvent(Object& receiver, NonnullOwnPtr<Event> event)
-    : receiver(receiver)
-    , event(move(event))
-{
-}
-
-EventLoop::QueuedEvent::QueuedEvent(QueuedEvent&& other)
-    : receiver(other.receiver)
-    , event(move(other.event))
-{
 }
 
 }
