@@ -847,4 +847,15 @@ void EventLoop::wake()
     }
 }
 
+void EventLoop::deferred_invoke(Function<void()> invokee)
+{
+    auto context = DeferredInvocationContext::construct();
+    post_event(context, make<Core::DeferredInvocationEvent>(context, move(invokee)));
+}
+
+void deferred_invoke(Function<void()> invokee)
+{
+    EventLoop::current().deferred_invoke(move(invokee));
+}
+
 }

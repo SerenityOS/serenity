@@ -17,7 +17,6 @@
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/DeferredInvocationContext.h>
 #include <LibCore/Event.h>
 #include <LibCore/Forward.h>
 #include <LibThreading/MutexProtected.h>
@@ -82,11 +81,7 @@ public:
 
     void add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise);
 
-    void deferred_invoke(Function<void()> invokee)
-    {
-        auto context = DeferredInvocationContext::construct();
-        post_event(context, make<Core::DeferredInvocationEvent>(context, move(invokee)));
-    }
+    void deferred_invoke(Function<void()>);
 
     void wake();
 
@@ -134,9 +129,6 @@ private:
     NonnullOwnPtr<Private> m_private;
 };
 
-inline void deferred_invoke(Function<void()> invokee)
-{
-    EventLoop::current().deferred_invoke(move(invokee));
-}
+void deferred_invoke(Function<void()>);
 
 }
