@@ -753,7 +753,7 @@ void GridFormattingContext::calculate_sizes_of_columns(Box const& box, Available
             }
         }
 
-        if (!grid_column.min_track_sizing_function.is_intrinsic_track_sizing()) {
+        if (!grid_column.min_track_sizing_function.is_intrinsic_track_sizing() && !grid_column.max_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
         }
@@ -1257,7 +1257,7 @@ void GridFormattingContext::calculate_sizes_of_rows(Box const& box)
             }
         }
 
-        if (!grid_row.min_track_sizing_function.is_intrinsic_track_sizing()) {
+        if (!grid_row.min_track_sizing_function.is_intrinsic_track_sizing() && !grid_row.max_track_sizing_function.is_intrinsic_track_sizing()) {
             ++index;
             continue;
         }
