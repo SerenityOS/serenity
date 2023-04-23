@@ -2094,7 +2094,7 @@ void Document::check_favicon_after_loading_link_resource()
     dbgln_if(SPAM_DEBUG, "No favicon found to be used");
 }
 
-void Document::set_window(Badge<HTML::BrowsingContext>, HTML::Window& window)
+void Document::set_window(HTML::Window& window)
 {
     m_window = &window;
 }

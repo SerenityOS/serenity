@@ -300,7 +300,7 @@ public:
 
     HTML::Window& window() const { return const_cast<HTML::Window&>(*m_window); }
 
-    void set_window(Badge<HTML::BrowsingContext>, HTML::Window&);
+    void set_window(HTML::Window&);
 
     WebIDL::ExceptionOr<void> write(Vector<DeprecatedString> const& strings);
     WebIDL::ExceptionOr<void> writeln(Vector<DeprecatedString> const& strings);

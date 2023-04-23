@@ -40,6 +40,14 @@ public:
     static JS::NonnullGCPtr<BrowsingContext> create_a_new_browsing_context(Page&, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, BrowsingContextGroup&);
     static JS::NonnullGCPtr<BrowsingContext> create_a_new_top_level_browsing_context(Page&);
 
+    struct BrowsingContextAndDocument {
+        JS::NonnullGCPtr<BrowsingContext> browsing_context;
+        JS::NonnullGCPtr<DOM::Document> document;
+    };
+
+    static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_browsing_context_and_document(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, JS::NonnullGCPtr<BrowsingContextGroup> group);
+    static WebIDL::ExceptionOr<BrowsingContextAndDocument> create_a_new_auxiliary_browsing_context_and_document(Page& page, JS::NonnullGCPtr<HTML::BrowsingContext> opener);
+
     virtual ~BrowsingContext() override;
 
     JS::NonnullGCPtr<HTML::TraversableNavigable> top_level_traversable() const;
@@ -128,6 +136,8 @@ public:
 
     virtual HTML::WindowProxy* window_proxy() override;
     virtual HTML::WindowProxy const* window_proxy() const override;
+
+    void set_window_proxy(JS::GCPtr<WindowProxy>);
 
     HTML::Window* active_window();
     HTML::Window const* active_window() const;
