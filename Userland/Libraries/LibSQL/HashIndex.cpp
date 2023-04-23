@@ -132,7 +132,7 @@ bool HashBucket::insert(Key const& key)
         m_hash_index.serializer().deserialize_block_to(pointer(), *this);
     if (find_key_in_bucket(key).has_value())
         return false;
-    if ((length() + key.length()) > Heap::BLOCK_SIZE) {
+    if (length() + key.length() > Block::DATA_SIZE) {
         dbgln_if(SQL_DEBUG, "Adding key {} would make length exceed block size", key.to_deprecated_string());
         return false;
     }
@@ -205,7 +205,7 @@ HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> cons
     , m_buckets()
 {
     if (!first_node)
-        set_pointer(new_record_pointer());
+        set_pointer(request_new_block_index());
     if (serializer.has_block(first_node)) {
         u32 pointer = first_node;
         do {
@@ -216,14 +216,14 @@ HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> cons
             pointer = m_nodes.last(); // FIXME Ugly
         } while (pointer);
     } else {
-        auto bucket = append_bucket(0u, 1u, new_record_pointer());
+        auto bucket = append_bucket(0u, 1u, request_new_block_index());
         bucket->m_inflated = true;
         serializer.serialize_and_write(*bucket);
-        bucket = append_bucket(1u, 1u, new_record_pointer());
+        bucket = append_bucket(1u, 1u, request_new_block_index());
         bucket->m_inflated = true;
         serializer.serialize_and_write(*bucket);
         m_nodes.append(first_node);
-        write_directory_to_write_ahead_log();
+        write_directory();
     }
 }
 
@@ -247,7 +247,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
     do {
         dbgln_if(SQL_DEBUG, "HashIndex::get_bucket_for_insert({}) bucket {} of {}", key.to_deprecated_string(), key_hash % size(), size());
         auto bucket = get_bucket(key_hash % size());
-        if (bucket->length() + key.length() < Heap::BLOCK_SIZE)
+        if (bucket->length() + key.length() < Block::DATA_SIZE)
             return bucket;
         dbgln_if(SQL_DEBUG, "Bucket is full (bucket size {}/length {} key length {}). Expanding directory", bucket->size(), bucket->length(), key.length());
 
@@ -266,7 +266,7 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
                 for (auto entry_index = (int)bucket->m_entries.size() - 1; entry_index >= 0; entry_index--) {
                     if (bucket->m_entries[entry_index].hash() % size() == ix) {
                         if (!sub_bucket->pointer())
-                            sub_bucket->set_pointer(new_record_pointer());
+                            sub_bucket->set_pointer(request_new_block_index());
                         sub_bucket->insert(bucket->m_entries.take(entry_index));
                         moved++;
                     }
@@ -283,10 +283,10 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
                 dbgln_if(SQL_DEBUG, "Nothing redistributed from bucket #{}", base_index);
             bucket->set_local_depth(bucket->local_depth() + 1);
             serializer().serialize_and_write(*bucket);
-            write_directory_to_write_ahead_log();
+            write_directory();
 
             auto bucket_after_redistribution = get_bucket(key_hash % size());
-            if (bucket_after_redistribution->length() + key.length() < Heap::BLOCK_SIZE)
+            if (bucket_after_redistribution->length() + key.length() < Block::DATA_SIZE)
                 return bucket_after_redistribution;
         }
         expand();
@@ -304,14 +304,14 @@ void HashIndex::expand()
         bucket->m_inflated = true;
     }
     m_global_depth++;
-    write_directory_to_write_ahead_log();
+    write_directory();
 }
 
-void HashIndex::write_directory_to_write_ahead_log()
+void HashIndex::write_directory()
 {
     auto num_nodes_required = (size() / HashDirectoryNode::max_pointers_in_node()) + 1;
     while (m_nodes.size() < num_nodes_required)
-        m_nodes.append(new_record_pointer());
+        m_nodes.append(request_new_block_index());
 
     size_t offset = 0u;
     size_t num_node = 0u;

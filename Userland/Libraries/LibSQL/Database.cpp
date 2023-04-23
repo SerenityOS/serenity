@@ -197,9 +197,9 @@ ErrorOr<Vector<Row>> Database::match(TableDef& table, Key const& key)
 ErrorOr<void> Database::insert(Row& row)
 {
     VERIFY(m_table_cache.get(row.table().key().hash()).has_value());
-    // TODO Check constraints
+    // TODO: implement table constraints such as unique, foreign key, etc.
 
-    row.set_pointer(m_heap->new_record_pointer());
+    row.set_pointer(m_heap->request_new_block_index());
     row.set_next_pointer(row.table().pointer());
     TRY(update(row));
 
@@ -244,7 +244,8 @@ ErrorOr<void> Database::remove(Row& row)
 ErrorOr<void> Database::update(Row& tuple)
 {
     VERIFY(m_table_cache.get(tuple.table().key().hash()).has_value());
-    // TODO Check constraints
+    // TODO: implement table constraints such as unique, foreign key, etc.
+
     m_serializer.reset();
     m_serializer.serialize_and_write<Tuple>(tuple);
 

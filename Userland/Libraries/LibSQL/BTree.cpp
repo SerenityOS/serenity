@@ -37,13 +37,13 @@ void BTree::initialize_root()
 {
     if (pointer()) {
         if (serializer().has_block(pointer())) {
-            serializer().get_block(pointer());
+            serializer().read_storage(pointer());
             m_root = serializer().make_and_deserialize<TreeNode>(*this, pointer());
         } else {
             m_root = make<TreeNode>(*this, nullptr, pointer());
         }
     } else {
-        set_pointer(new_record_pointer());
+        set_pointer(request_new_block_index());
         m_root = make<TreeNode>(*this, nullptr, pointer());
         if (on_new_root)
             on_new_root();
@@ -53,7 +53,7 @@ void BTree::initialize_root()
 
 TreeNode* BTree::new_root()
 {
-    set_pointer(new_record_pointer());
+    set_pointer(request_new_block_index());
     m_root = make<TreeNode>(*this, nullptr, m_root.leak_ptr(), pointer());
     serializer().serialize_and_write(*m_root.ptr());
     if (on_new_root)

@@ -48,8 +48,7 @@ protected:
 
     [[nodiscard]] Serializer& serializer() { return m_serializer; }
     void set_pointer(u32 pointer) { m_pointer = pointer; }
-    u32 new_record_pointer() { return m_serializer.new_record_pointer(); }
-    //    ByteBuffer read_block(u32);
+    u32 request_new_block_index() { return m_serializer.request_new_block_index(); }
 
 private:
     Serializer m_serializer;

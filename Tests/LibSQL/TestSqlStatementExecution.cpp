@@ -234,6 +234,24 @@ TEST_CASE(insert_with_placeholders)
     }
 }
 
+TEST_CASE(insert_and_retrieve_long_text_value)
+{
+    ScopeGuard guard([]() { unlink(db_name); });
+    auto database = SQL::Database::construct(db_name);
+    EXPECT(!database->open().is_error());
+    create_table(database);
+
+    StringBuilder sb;
+    MUST(sb.try_append_repeated('x', 8192));
+    auto long_string = sb.string_view();
+    auto result = execute(database, DeprecatedString::formatted("INSERT INTO TestSchema.TestTable VALUES ('{}', 0);", long_string));
+    EXPECT(result.size() == 1);
+
+    result = execute(database, "SELECT TextColumn FROM TestSchema.TestTable;");
+    EXPECT_EQ(result.size(), 1u);
+    EXPECT_EQ(result[0].row[0], long_string);
+}
+
 TEST_CASE(select_from_empty_table)
 {
     ScopeGuard guard([]() { unlink(db_name); });
