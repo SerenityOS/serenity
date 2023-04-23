@@ -49,6 +49,7 @@ private:
 
 class DeferredInvocationEvent : public Event {
     friend class EventLoop;
+    friend class ThreadEventQueue;
 
 public:
     DeferredInvocationEvent(NonnullRefPtr<DeferredInvocationContext> context, Function<void()> invokee)

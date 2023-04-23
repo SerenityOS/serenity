@@ -111,11 +111,6 @@ public:
     };
     static void notify_forked(ForkEvent);
 
-    void take_pending_events_from(EventLoop& other)
-    {
-        m_queued_events.extend(move(other.m_queued_events));
-    }
-
     static EventLoop& current();
 
 private:
@@ -124,20 +119,6 @@ private:
     static void dispatch_signal(int);
     static void handle_signal(int);
 
-    struct QueuedEvent {
-        AK_MAKE_NONCOPYABLE(QueuedEvent);
-
-    public:
-        QueuedEvent(Object& receiver, NonnullOwnPtr<Event>);
-        QueuedEvent(QueuedEvent&&);
-        ~QueuedEvent() = default;
-
-        WeakPtr<Object> receiver;
-        NonnullOwnPtr<Event> event;
-    };
-
-    Vector<QueuedEvent, 64> m_queued_events;
-    Vector<NonnullRefPtr<Promise<NonnullRefPtr<Object>>>> m_pending_promises;
     static pid_t s_pid;
 
     bool m_exit_requested { false };
