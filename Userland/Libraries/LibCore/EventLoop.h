@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, kleines Filmröllchen <filmroellchen@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
@@ -55,11 +55,6 @@ public:
         Yes,
     };
 
-    enum class ShouldWake {
-        No,
-        Yes
-    };
-
     enum class WaitMode {
         WaitForEvents,
         PollForEvents,
@@ -82,9 +77,8 @@ public:
     // Pump the event loop until some condition is met.
     void spin_until(Function<bool()>);
 
-    // Post an event to this event loop and possibly wake the loop.
-    void post_event(Object& receiver, NonnullOwnPtr<Event>&&, ShouldWake = ShouldWake::No);
-    void wake_once(Object& receiver, int custom_event_type);
+    // Post an event to this event loop.
+    void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
 
     void add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise);
 
