@@ -70,7 +70,7 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, void const* src_ptr, size_t n, voi
             "safe_memcpy_ins_1: \n"
             "rep movsq \n"
             ".globl safe_memcpy_1_faulted \n"
-            "safe_memcpy_1_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
+            "safe_memcpy_1_faulted: \n" // handle_safe_access_fault() set rdx to the fault address!
             : "=S"(src),
             "=D"(dest),
             "=c"(remainder),
@@ -92,7 +92,7 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, void const* src_ptr, size_t n, voi
         "safe_memcpy_ins_2: \n"
         "rep movsb \n"
         ".globl safe_memcpy_2_faulted \n"
-        "safe_memcpy_2_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
+        "safe_memcpy_2_faulted: \n" // handle_safe_access_fault() set rdx to the fault address!
         : "=c"(remainder),
         [fault_at] "=d"(fault_at)
         : "S"(src),
@@ -126,7 +126,7 @@ NEVER_INLINE ssize_t safe_strnlen(char const* str, size_t max_n, void*& fault_at
         "inc %[count] \n"
         "jmp 1b \n"
         ".globl safe_strnlen_faulted \n"
-        "safe_strnlen_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
+        "safe_strnlen_faulted: \n" // handle_safe_access_fault() set rdx to the fault address!
         "xor %[count_on_error], %[count_on_error] \n"
         "dec %[count_on_error] \n" // return -1 on fault
         "2:"
@@ -161,7 +161,7 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
             "safe_memset_ins_1: \n"
             "rep stosq \n"
             ".globl safe_memset_1_faulted \n"
-            "safe_memset_1_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
+            "safe_memset_1_faulted: \n" // handle_safe_access_fault() set rdx to the fault address!
             : "=D"(dest),
             "=c"(remainder),
             [fault_at] "=d"(fault_at)
@@ -182,7 +182,7 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         "safe_memset_ins_2: \n"
         "rep stosb \n"
         ".globl safe_memset_2_faulted \n"
-        "safe_memset_2_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
+        "safe_memset_2_faulted: \n" // handle_safe_access_fault() set rdx to the fault address!
         : "=D"(dest),
         "=c"(remainder),
         [fault_at] "=d"(fault_at)
@@ -322,7 +322,7 @@ bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
     if (ip >= (FlatPtr)&start_of_safemem_atomic_text && ip < (FlatPtr)&end_of_safemem_atomic_text) {
         // If we detect that a fault happened in one of the atomic safe_
         // functions, resume at the appropriate _faulted label and set
-        // the edx/rdx register to 1 to indicate an error
+        // the rdx register to 1 to indicate an error
         if (ip == (FlatPtr)safe_atomic_fetch_add_relaxed_ins)
             ip = (FlatPtr)safe_atomic_fetch_add_relaxed_faulted;
         else if (ip == (FlatPtr)safe_atomic_exchange_relaxed_ins)

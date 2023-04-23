@@ -85,7 +85,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
     auto stack_ptr = registers.userspace_sp();
 
     // Stack state (created by the signal trampoline):
-    // saved_ax, ucontext, signal_info, fpu_state?.
+    // saved_result, ucontext, signal_info, fpu_state?.
 
     // The FPU state is at the top here, pop it off and restore it.
     // FIXME: The stack alignment is off by 8 bytes here, figure this out and remove this excessively aligned object.
@@ -99,7 +99,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
     auto ucontext = TRY(copy_typed_from_user<__ucontext>(stack_ptr));
     stack_ptr += sizeof(__ucontext);
 
-    auto saved_ax = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
+    auto saved_result = TRY(copy_typed_from_user<FlatPtr>(stack_ptr));
 
     Thread::current()->m_signal_mask = ucontext.uc_sigmask;
     Thread::current()->m_currently_handled_signal = 0;
@@ -114,7 +114,7 @@ ErrorOr<FlatPtr> Process::sys$sigreturn(RegisterState& registers)
     registers.rsp = sp;
 #endif
 
-    return saved_ax;
+    return saved_result;
 }
 
 ErrorOr<void> Process::remap_range_as_stack(FlatPtr address, size_t size)

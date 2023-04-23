@@ -401,7 +401,7 @@ void signal_trampoline_dummy()
         // Note that the stack is currently aligned to 16 bytes as we popped the extra entries above.
         // call the signal handler
         "call rcx\n"
-        // Current stack state is just saved_rax, ucontext, signal_info, fpu_state.
+        // Current stack state is just saved_result, ucontext, signal_info, fpu_state.
         // syscall SC_sigreturn
         "mov rax, %P0\n"
         "syscall\n"

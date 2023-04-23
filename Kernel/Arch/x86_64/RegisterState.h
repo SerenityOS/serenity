@@ -62,7 +62,7 @@ struct [[gnu::packed]] RegisterState {
 
     void capture_syscall_params(FlatPtr& function, FlatPtr& arg1, FlatPtr& arg2, FlatPtr& arg3, FlatPtr& arg4) const
     {
-        // The syscall instruction clobbers rcx, so we must use a different calling convention to 32-bit.
+        // The syscall instruction clobbers rcx, so it cannot be used here, cf. `invoke` functions in Syscall.h.
         function = rax;
         arg1 = rdx;
         arg2 = rdi;
