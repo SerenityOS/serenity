@@ -256,9 +256,9 @@ void WindowProxy::visit_edges(JS::Cell::Visitor& visitor)
     visitor.visit(m_window.ptr());
 }
 
-void WindowProxy::set_window(Badge<BrowsingContext>, JS::NonnullGCPtr<Window> window)
+void WindowProxy::set_window(JS::NonnullGCPtr<Window> window)
 {
-    m_window = window;
+    m_window = move(window);
 }
 
 JS::NonnullGCPtr<BrowsingContext> WindowProxy::associated_browsing_context() const

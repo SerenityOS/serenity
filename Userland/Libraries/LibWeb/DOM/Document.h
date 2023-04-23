@@ -468,6 +468,8 @@ public:
 
     DeprecatedString dump_accessibility_tree_as_json();
 
+    void make_active();
+
 protected:
     virtual JS::ThrowCompletionOr<void> initialize(JS::Realm&) override;
     virtual void visit_edges(Cell::Visitor&) override;

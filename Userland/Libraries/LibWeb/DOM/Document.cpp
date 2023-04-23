@@ -58,11 +58,13 @@
 #include <LibWeb/HTML/HTMLTitleElement.h>
 #include <LibWeb/HTML/Location.h>
 #include <LibWeb/HTML/MessageEvent.h>
+#include <LibWeb/HTML/Navigable.h>
 #include <LibWeb/HTML/NavigationParams.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/ExceptionReporter.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
+#include <LibWeb/HTML/TraversableNavigable.h>
 #include <LibWeb/HTML/Window.h>
 #include <LibWeb/HTML/WindowProxy.h>
 #include <LibWeb/HighResolutionTime/TimeOrigin.h>
@@ -2512,6 +2514,24 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<Attr>> Document::create_attribute_ns(Deprec
     // 2. Return a new attribute whose namespace is namespace, namespace prefix is prefix, local name is localName, and node document is this.
 
     return Attr::create(*this, extracted_qualified_name);
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#make-active
+void Document::make_active()
+{
+    // 1. Let window be document's relevant global object.
+    auto& window = verify_cast<HTML::Window>(HTML::relevant_global_object(*this));
+
+    // 2. Set document's browsing context's WindowProxy's [[Window]] internal slot value to window.
+    m_browsing_context->window_proxy()->set_window(window);
+
+    // 3. Set document's visibility state to document's node navigable's traversable navigable's system visibility state.
+    if (navigable()) {
+        m_visibility_state = navigable()->traversable_navigable()->system_visibility_state();
+    }
+
+    // 4. Set window's relevant settings object's execution ready flag.
+    HTML::relevant_settings_object(window).execution_ready = true;
 }
 
 }

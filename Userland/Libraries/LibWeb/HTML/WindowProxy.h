@@ -32,7 +32,7 @@ public:
     virtual JS::ThrowCompletionOr<JS::MarkedVector<JS::Value>> internal_own_property_keys() const override;
 
     JS::GCPtr<Window> window() const { return m_window; }
-    void set_window(Badge<BrowsingContext>, JS::NonnullGCPtr<Window>);
+    void set_window(JS::NonnullGCPtr<Window>);
 
     JS::NonnullGCPtr<BrowsingContext> associated_browsing_context() const;
 
