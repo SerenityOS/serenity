@@ -160,6 +160,7 @@ private:
 
     ByteBuffer m_buffer {};
     size_t m_current_offset { 0 };
+    // FIXME: make this a NonnullRefPtr<Heap> so we can get rid of the null checks
     RefPtr<Heap> m_heap { nullptr };
 };
 
