@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,36 +11,36 @@
 
 namespace Core {
 
-class Notifier : public Object {
-    C_OBJECT(Notifier)
+class Notifier final : public Object {
+    C_OBJECT(Notifier);
+
 public:
-    enum Event {
-        None = 0,
-        Read = 1,
-        Write = 2,
-        Exceptional = 4,
+    enum class Type {
+        None,
+        Read,
+        Write,
+        Exceptional,
     };
 
     virtual ~Notifier() override;
 
     void set_enabled(bool);
 
-    Function<void()> on_ready_to_read;
-    Function<void()> on_ready_to_write;
+    Function<void()> on_activation;
 
     void close();
 
     int fd() const { return m_fd; }
-    unsigned event_mask() const { return m_event_mask; }
-    void set_event_mask(unsigned event_mask) { m_event_mask = event_mask; }
+    Type type() const { return m_type; }
+    void set_type(Type type) { m_type = type; }
 
     void event(Core::Event&) override;
 
 private:
-    Notifier(int fd, unsigned event_mask, Object* parent = nullptr);
+    Notifier(int fd, Type type, Object* parent = nullptr);
 
     int m_fd { -1 };
-    unsigned m_event_mask { 0 };
+    Type m_type { Type::None };
 };
 
 }

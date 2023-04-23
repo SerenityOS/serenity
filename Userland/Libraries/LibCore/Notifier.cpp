@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,10 +10,10 @@
 
 namespace Core {
 
-Notifier::Notifier(int fd, unsigned event_mask, Object* parent)
+Notifier::Notifier(int fd, Type type, Object* parent)
     : Object(parent)
     , m_fd(fd)
-    , m_event_mask(event_mask)
+    , m_type(type)
 {
     set_enabled(true);
 }
@@ -43,13 +43,12 @@ void Notifier::close()
 
 void Notifier::event(Core::Event& event)
 {
-    if (event.type() == Core::Event::NotifierRead && on_ready_to_read) {
-        on_ready_to_read();
-    } else if (event.type() == Core::Event::NotifierWrite && on_ready_to_write) {
-        on_ready_to_write();
-    } else {
-        Object::event(event);
+    if (event.type() == Core::Event::NotifierActivation) {
+        if (on_activation)
+            on_activation();
+        return;
     }
+    Object::event(event);
 }
 
 }

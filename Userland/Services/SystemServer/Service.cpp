@@ -82,8 +82,8 @@ void Service::setup_notifier()
     VERIFY(m_sockets.size() == 1);
     VERIFY(!m_socket_notifier);
 
-    m_socket_notifier = Core::Notifier::construct(m_sockets[0].fd, Core::Notifier::Event::Read, this);
-    m_socket_notifier->on_ready_to_read = [this] {
+    m_socket_notifier = Core::Notifier::construct(m_sockets[0].fd, Core::Notifier::Type::Read, this);
+    m_socket_notifier->on_activation = [this] {
         if (auto result = handle_socket_connection(); result.is_error())
             dbgln("{}", result.release_error());
     };

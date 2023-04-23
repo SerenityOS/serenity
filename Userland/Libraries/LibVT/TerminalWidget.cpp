@@ -47,8 +47,8 @@ void TerminalWidget::set_pty_master_fd(int fd)
         m_notifier = nullptr;
         return;
     }
-    m_notifier = Core::Notifier::construct(m_ptm_fd, Core::Notifier::Read);
-    m_notifier->on_ready_to_read = [this] {
+    m_notifier = Core::Notifier::construct(m_ptm_fd, Core::Notifier::Type::Read);
+    m_notifier->on_activation = [this] {
         u8 buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
         if (nread < 0) {

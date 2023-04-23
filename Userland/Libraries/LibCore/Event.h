@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2023, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2022, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -21,8 +21,7 @@ public:
         Invalid = 0,
         Quit,
         Timer,
-        NotifierRead,
-        NotifierWrite,
+        NotifierActivation,
         DeferredInvoke,
         ChildAdded,
         ChildRemoved,
@@ -79,29 +78,14 @@ private:
     int m_timer_id;
 };
 
-class NotifierReadEvent final : public Event {
+class NotifierActivationEvent final : public Event {
 public:
-    explicit NotifierReadEvent(int fd)
-        : Event(Event::NotifierRead)
+    explicit NotifierActivationEvent(int fd)
+        : Event(Event::NotifierActivation)
         , m_fd(fd)
     {
     }
-    ~NotifierReadEvent() = default;
-
-    int fd() const { return m_fd; }
-
-private:
-    int m_fd;
-};
-
-class NotifierWriteEvent final : public Event {
-public:
-    explicit NotifierWriteEvent(int fd)
-        : Event(Event::NotifierWrite)
-        , m_fd(fd)
-    {
-    }
-    ~NotifierWriteEvent() = default;
+    ~NotifierActivationEvent() = default;
 
     int fd() const { return m_fd; }
 

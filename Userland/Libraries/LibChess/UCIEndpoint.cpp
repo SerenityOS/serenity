@@ -15,7 +15,7 @@ namespace Chess::UCI {
 Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
     : m_in(in)
     , m_out(out)
-    , m_in_notifier(Core::Notifier::construct(in->fd(), Core::Notifier::Read))
+    , m_in_notifier(Core::Notifier::construct(in->fd(), Core::Notifier::Type::Read))
 {
     set_in_notifier();
 }
@@ -70,8 +70,8 @@ void Endpoint::custom_event(Core::CustomEvent& custom_event)
 
 void Endpoint::set_in_notifier()
 {
-    m_in_notifier = Core::Notifier::construct(m_in->fd(), Core::Notifier::Read);
-    m_in_notifier->on_ready_to_read = [this] {
+    m_in_notifier = Core::Notifier::construct(m_in->fd(), Core::Notifier::Type::Read);
+    m_in_notifier->on_activation = [this] {
         if (!m_in->can_read_line()) {
             Core::EventLoop::current().post_event(*this, make<Core::CustomEvent>(EndpointEventType::UnexpectedEof));
             m_in_notifier->set_enabled(false);

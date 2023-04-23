@@ -610,7 +610,7 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
 
     QObject::connect(&m_web_content_notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
         if (auto notifier = new_client->socket().notifier())
-            notifier->on_ready_to_read();
+            notifier->on_activation();
     });
 
     struct DeferredInvokerQt final : IPC::DeferredInvoker {

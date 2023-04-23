@@ -69,8 +69,8 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         VERIFY_NOT_REACHED();
     }
 
-    m_notifier = Core::Notifier::construct(helper_pipe_fd, Core::Notifier::Read);
-    m_notifier->on_ready_to_read = [this] {
+    m_notifier = Core::Notifier::construct(helper_pipe_fd, Core::Notifier::Type::Read);
+    m_notifier->on_activation = [this] {
         auto line_buffer_or_error = ByteBuffer::create_zeroed(1 * KiB);
         if (line_buffer_or_error.is_error()) {
             did_error("Failed to allocate ByteBuffer for reading data."sv);
@@ -211,7 +211,7 @@ void FileOperationProgressWidget::close_pipe()
     m_helper_pipe = nullptr;
     if (m_notifier) {
         m_notifier->set_enabled(false);
-        m_notifier->on_ready_to_read = nullptr;
+        m_notifier->on_activation = nullptr;
     }
     m_notifier = nullptr;
 }

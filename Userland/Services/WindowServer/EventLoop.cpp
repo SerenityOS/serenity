@@ -27,15 +27,15 @@ EventLoop::EventLoop()
     m_wm_server = MUST(IPC::MultiServer<WMConnectionFromClient>::try_create("/tmp/portal/wm"));
 
     if (m_keyboard_fd >= 0) {
-        m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Read);
-        m_keyboard_notifier->on_ready_to_read = [this] { drain_keyboard(); };
+        m_keyboard_notifier = Core::Notifier::construct(m_keyboard_fd, Core::Notifier::Type::Read);
+        m_keyboard_notifier->on_activation = [this] { drain_keyboard(); };
     } else {
         dbgln("Couldn't open /dev/input/keyboard/0");
     }
 
     if (m_mouse_fd >= 0) {
-        m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Read);
-        m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
+        m_mouse_notifier = Core::Notifier::construct(m_mouse_fd, Core::Notifier::Type::Read);
+        m_mouse_notifier->on_activation = [this] { drain_mouse(); };
     } else {
         dbgln("Couldn't open /dev/input/mouse/0");
     }

@@ -25,7 +25,7 @@ void Request::stream_into(Stream& stream)
     VERIFY(!m_internal_stream_data);
 
     m_internal_stream_data = make<InternalStreamData>(MUST(Core::File::adopt_fd(fd(), Core::File::OpenMode::Read)));
-    m_internal_stream_data->read_notifier = Core::Notifier::construct(fd(), Core::Notifier::Read);
+    m_internal_stream_data->read_notifier = Core::Notifier::construct(fd(), Core::Notifier::Type::Read);
 
     auto user_on_finish = move(on_finish);
     on_finish = [this](auto success, auto total_size) {
@@ -41,7 +41,7 @@ void Request::stream_into(Stream& stream)
             user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
         }
     };
-    m_internal_stream_data->read_notifier->on_ready_to_read = [this, &stream] {
+    m_internal_stream_data->read_notifier->on_activation = [this, &stream] {
         constexpr size_t buffer_size = 256 * KiB;
         static char buf[buffer_size];
         do {
