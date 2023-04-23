@@ -29,7 +29,7 @@ Key SchemaDef::key() const
 {
     auto key = Key(index_def()->to_tuple_descriptor());
     key["schema_name"] = name();
-    key.set_pointer(pointer());
+    key.set_block_index(block_index());
     return key;
 }
 
@@ -171,7 +171,7 @@ Key TableDef::key() const
     auto key = Key(index_def()->to_tuple_descriptor());
     key["schema_hash"] = parent_relation()->key().hash();
     key["table_name"] = name();
-    key.set_pointer(pointer());
+    key.set_block_index(block_index());
     return key;
 }
 

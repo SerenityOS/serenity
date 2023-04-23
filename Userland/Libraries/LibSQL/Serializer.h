@@ -42,16 +42,16 @@ public:
     }
 
     template<typename T, typename... Args>
-    T deserialize_block(u32 pointer, Args&&... args)
+    T deserialize_block(Block::Index block_index, Args&&... args)
     {
-        read_storage(pointer);
+        read_storage(block_index);
         return deserialize<T>(forward<Args>(args)...);
     }
 
     template<typename T>
-    void deserialize_block_to(u32 pointer, T& t)
+    void deserialize_block_to(Block::Index block_index, T& t)
     {
-        read_storage(pointer);
+        read_storage(block_index);
         return deserialize_to<T>(t);
     }
 
@@ -107,7 +107,7 @@ public:
         VERIFY(!m_heap.is_null());
         reset();
         serialize<T>(t);
-        m_heap->write_storage(t.pointer(), m_buffer).release_value_but_fixme_should_propagate_errors();
+        m_heap->write_storage(t.block_index(), m_buffer).release_value_but_fixme_should_propagate_errors();
         return true;
     }
 

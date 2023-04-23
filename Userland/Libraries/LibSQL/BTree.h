@@ -32,28 +32,28 @@ namespace SQL {
  */
 class DownPointer {
 public:
-    explicit DownPointer(TreeNode*, u32 = 0);
+    explicit DownPointer(TreeNode*, Block::Index = 0);
     DownPointer(TreeNode*, TreeNode*);
     DownPointer(DownPointer&&);
     DownPointer(TreeNode*, DownPointer&);
     ~DownPointer() = default;
-    [[nodiscard]] u32 pointer() const { return m_pointer; }
+    [[nodiscard]] Block::Index block_index() const { return m_block_index; }
     TreeNode* node();
 
 private:
     void deserialize(Serializer&);
 
     TreeNode* m_owner;
-    u32 m_pointer { 0 };
+    Block::Index m_block_index { 0 };
     OwnPtr<TreeNode> m_node { nullptr };
     friend TreeNode;
 };
 
 class TreeNode : public IndexNode {
 public:
-    TreeNode(BTree&, u32 = 0);
-    TreeNode(BTree&, TreeNode*, u32 = 0);
-    TreeNode(BTree&, TreeNode*, TreeNode*, u32 = 0);
+    TreeNode(BTree&, Block::Index = 0);
+    TreeNode(BTree&, TreeNode*, Block::Index = 0);
+    TreeNode(BTree&, TreeNode*, TreeNode*, Block::Index = 0);
     ~TreeNode() override = default;
 
     [[nodiscard]] BTree& tree() const { return m_tree; }
@@ -61,7 +61,7 @@ public:
     [[nodiscard]] size_t size() const { return m_entries.size(); }
     [[nodiscard]] size_t length() const;
     [[nodiscard]] Vector<Key> entries() const { return m_entries; }
-    [[nodiscard]] u32 down_pointer(size_t) const;
+    [[nodiscard]] Block::Index down_pointer(size_t) const;
     [[nodiscard]] TreeNode* down_node(size_t);
     [[nodiscard]] bool is_leaf() const { return m_is_leaf; }
 
@@ -97,7 +97,7 @@ class BTree : public Index {
 public:
     ~BTree() override = default;
 
-    u32 root() const { return (m_root) ? m_root->pointer() : 0; }
+    Block::Index root() const { return m_root ? m_root->block_index() : 0; }
     bool insert(Key const&);
     bool update_key_pointer(Key const&);
     Optional<u32> get(Key&);
@@ -109,8 +109,8 @@ public:
     Function<void(void)> on_new_root;
 
 private:
-    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, bool unique, u32 pointer);
-    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, u32 pointer);
+    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, bool unique, Block::Index);
+    BTree(Serializer&, NonnullRefPtr<TupleDescriptor> const&, Block::Index);
     void initialize_root();
     TreeNode* new_root();
     OwnPtr<TreeNode> m_root { nullptr };

@@ -107,7 +107,7 @@ BTreeIterator BTreeIterator::next() const
             for (size_t i = 0; i < up->size(); i++) {
                 // One level up, try to find the entry with the current
                 // node's pointer as the left pointer:
-                if (up->down_pointer(i) == node->pointer())
+                if (up->down_pointer(i) == node->block_index())
                     // Found it. This is the iterator's next value:
                     return BTreeIterator(up, (int)i);
             }
@@ -182,7 +182,7 @@ BTreeIterator BTreeIterator::previous() const
             for (size_t i = up->size(); i > 0; i--) {
                 // One level up, try to find the entry with the current
                 // node's pointer as the right pointer:
-                if (up->down_pointer(i) == node->pointer()) {
+                if (up->down_pointer(i) == node->block_index()) {
                     // Found it. This is the iterator's next value:
                     node = up;
                     ix = (int)i - 1;
@@ -218,7 +218,7 @@ bool BTreeIterator::update(Key const& new_value)
 {
     if (is_end())
         return false;
-    if ((cmp(new_value) == 0) && (key().pointer() == new_value.pointer()))
+    if ((cmp(new_value) == 0) && (key().block_index() == new_value.block_index()))
         return true;
     auto previous_iter = previous();
     auto next_iter = next();

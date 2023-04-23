@@ -66,13 +66,13 @@ void HashDirectoryNode::serialize(Serializer& serializer) const
     serializer.serialize<u32>(next_node);
     for (auto ix = 0u; ix < number_of_pointers(); ix++) {
         auto& bucket = m_hash_index.m_buckets[m_offset + ix];
-        dbgln_if(SQL_DEBUG, "Bucket index #{} pointer {} local depth {} size {}", ix, bucket->pointer(), bucket->local_depth(), bucket->size());
-        serializer.serialize<u32>(bucket->pointer());
+        dbgln_if(SQL_DEBUG, "Bucket index #{} block_index {} local depth {} size {}", ix, bucket->block_index(), bucket->local_depth(), bucket->size());
+        serializer.serialize<u32>(bucket->block_index());
         serializer.serialize<u32>(bucket->local_depth());
     }
 }
 
-HashBucket::HashBucket(HashIndex& hash_index, u32 index, u32 local_depth, u32 pointer)
+HashBucket::HashBucket(HashIndex& hash_index, Block::Index index, u32 local_depth, Block::Index pointer)
     : IndexNode(pointer)
     , m_hash_index(hash_index)
     , m_local_depth(local_depth)
@@ -82,8 +82,8 @@ HashBucket::HashBucket(HashIndex& hash_index, u32 index, u32 local_depth, u32 po
 
 void HashBucket::serialize(Serializer& serializer) const
 {
-    dbgln_if(SQL_DEBUG, "Serializing bucket: pointer {}, index #{}, local depth {} size {}",
-        pointer(), index(), local_depth(), size());
+    dbgln_if(SQL_DEBUG, "Serializing bucket: block_index {}, index #{}, local depth {} size {}",
+        block_index(), index(), local_depth(), size());
     serializer.serialize<u32>(local_depth());
     serializer.serialize<u32>(size());
     for (auto& key : m_entries)
@@ -92,9 +92,9 @@ void HashBucket::serialize(Serializer& serializer) const
 
 void HashBucket::deserialize(Serializer& serializer)
 {
-    if (m_inflated || !pointer())
+    if (m_inflated || !block_index())
         return;
-    dbgln_if(SQL_DEBUG, "Inflating Hash Bucket {}", pointer());
+    dbgln_if(SQL_DEBUG, "Inflating Hash Bucket {}", block_index());
     m_local_depth = serializer.deserialize<u32>();
     dbgln_if(SQL_DEBUG, "Bucket Local Depth {}", m_local_depth);
     auto size = serializer.deserialize<u32>();
@@ -120,8 +120,8 @@ Optional<u32> HashBucket::get(Key& key)
     auto optional_index = find_key_in_bucket(key);
     if (optional_index.has_value()) {
         auto& k = m_entries[optional_index.value()];
-        key.set_pointer(k.pointer());
-        return k.pointer();
+        key.set_block_index(k.block_index());
+        return k.block_index();
     }
     return {};
 }
@@ -129,7 +129,7 @@ Optional<u32> HashBucket::get(Key& key)
 bool HashBucket::insert(Key const& key)
 {
     if (!m_inflated)
-        m_hash_index.serializer().deserialize_block_to(pointer(), *this);
+        m_hash_index.serializer().deserialize_block_to(block_index(), *this);
     if (find_key_in_bucket(key).has_value())
         return false;
     if (length() + key.length() > Block::DATA_SIZE) {
@@ -155,7 +155,7 @@ HashBucket const* HashBucket::next_bucket()
 {
     for (auto ix = m_index + 1; ix < m_hash_index.size(); ix++) {
         auto bucket = m_hash_index.get_bucket_by_index(ix);
-        m_hash_index.serializer().deserialize_block_to<HashBucket>(bucket->pointer(), *bucket);
+        m_hash_index.serializer().deserialize_block_to<HashBucket>(bucket->block_index(), *bucket);
         if (bucket->size())
             return bucket;
     }
@@ -166,7 +166,7 @@ HashBucket const* HashBucket::previous_bucket()
 {
     for (auto ix = m_index - 1; ix > 0; ix--) {
         auto bucket = m_hash_index.get_bucket_by_index(ix);
-        if (bucket->pointer())
+        if (bucket->block_index() > 0)
             return bucket;
     }
     return nullptr;
@@ -175,14 +175,14 @@ HashBucket const* HashBucket::previous_bucket()
 Vector<Key> const& HashBucket::entries()
 {
     if (!m_inflated)
-        m_hash_index.serializer().deserialize_block_to(pointer(), *this);
+        m_hash_index.serializer().deserialize_block_to(block_index(), *this);
     return m_entries;
 }
 
 Key const& HashBucket::operator[](size_t ix)
 {
     if (!m_inflated)
-        m_hash_index.serializer().deserialize_block_to(pointer(), *this);
+        m_hash_index.serializer().deserialize_block_to(block_index(), *this);
     return m_entries[ix];
 }
 
@@ -193,28 +193,26 @@ Key const& HashBucket::operator[](size_t ix) const
 
 void HashBucket::list_bucket()
 {
-    warnln("Bucket #{} size {} local depth {} pointer {}{}",
-        index(), size(), local_depth(), pointer(), (pointer() ? "" : " (VIRTUAL)"));
+    warnln("Bucket #{} size {} local depth {} block_index {}{}",
+        index(), size(), local_depth(), block_index(), (block_index() > 0 ? "" : " (VIRTUAL)"));
     for (auto& key : entries())
         warnln("  {} hash {}", key.to_deprecated_string(), key.hash());
 }
 
-HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, u32 first_node)
+HashIndex::HashIndex(Serializer& serializer, NonnullRefPtr<TupleDescriptor> const& descriptor, Block::Index first_node)
     : Index(serializer, descriptor, true, first_node)
-    , m_nodes()
-    , m_buckets()
 {
-    if (!first_node)
-        set_pointer(request_new_block_index());
+    if (first_node == 0)
+        set_block_index(request_new_block_index());
     if (serializer.has_block(first_node)) {
-        u32 pointer = first_node;
+        Block::Index block_index = first_node;
         do {
-            VERIFY(serializer.has_block(pointer));
-            auto node = serializer.deserialize_block<HashDirectoryNode>(pointer, *this, pointer);
+            VERIFY(serializer.has_block(block_index));
+            auto node = serializer.deserialize_block<HashDirectoryNode>(block_index, *this, block_index);
             if (node.is_last())
                 break;
-            pointer = m_nodes.last(); // FIXME Ugly
-        } while (pointer);
+            block_index = m_nodes.last(); // FIXME Ugly
+        } while (block_index);
     } else {
         auto bucket = append_bucket(0u, 1u, request_new_block_index());
         bucket->m_inflated = true;
@@ -231,7 +229,7 @@ HashBucket* HashIndex::get_bucket(u32 index)
 {
     VERIFY(index < m_buckets.size());
     auto divisor = size() / 2;
-    while (!m_buckets[index]->pointer()) {
+    while (m_buckets[index]->block_index() == 0) {
         VERIFY(divisor > 1);
         index = index % divisor;
         divisor /= 2;
@@ -265,8 +263,8 @@ HashBucket* HashIndex::get_bucket_for_insert(Key const& key)
                 auto moved = 0;
                 for (auto entry_index = (int)bucket->m_entries.size() - 1; entry_index >= 0; entry_index--) {
                     if (bucket->m_entries[entry_index].hash() % size() == ix) {
-                        if (!sub_bucket->pointer())
-                            sub_bucket->set_pointer(request_new_block_index());
+                        if (!sub_bucket->block_index())
+                            sub_bucket->set_block_index(request_new_block_index());
                         sub_bucket->insert(bucket->m_entries.take(entry_index));
                         moved++;
                     }
