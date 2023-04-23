@@ -567,11 +567,12 @@ void WebContentView::hideEvent(QHideEvent* event)
     client().async_set_system_visibility_state(false);
 }
 
-static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget)
+static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget, WebContentView::PaletteMode mode)
 {
     auto qt_palette = widget.palette();
 
-    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/Default.ini", s_serenity_resource_root)).release_value_but_fixme_should_propagate_errors();
+    auto theme_file = mode == WebContentView::PaletteMode::Default ? "Default"sv : "Dark"sv;
+    auto theme = Gfx::load_system_theme(DeprecatedString::formatted("{}/res/themes/{}.ini", s_serenity_resource_root, theme_file)).release_value_but_fixme_should_propagate_errors();
     auto palette_impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
     auto palette = Gfx::Palette(move(palette_impl));
 
@@ -594,9 +595,9 @@ static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget)
     return theme;
 }
 
-void WebContentView::update_palette()
+void WebContentView::update_palette(PaletteMode mode)
 {
-    client().async_update_system_theme(make_system_theme_from_qt_palette(*this));
+    client().async_update_system_theme(make_system_theme_from_qt_palette(*this, mode));
 }
 
 void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_callgrind_profiling)

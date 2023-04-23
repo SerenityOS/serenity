@@ -98,6 +98,8 @@ public:
     void show_js_console();
     void show_inspector();
 
+    Ladybird::ConsoleWidget* console() { return m_console_widget; };
+
     ErrorOr<String> dump_layout_tree();
 
     void set_viewport_rect(Gfx::IntRect);
@@ -106,6 +108,12 @@ public:
 
     Gfx::IntPoint to_content(Gfx::IntPoint) const;
     Gfx::IntPoint to_widget(Gfx::IntPoint) const;
+
+    enum class PaletteMode {
+        Default,
+        Dark,
+    };
+    void update_palette(PaletteMode = PaletteMode::Default);
 
     virtual void notify_server_did_layout(Badge<WebContentClient>, Gfx::IntSize content_size) override;
     virtual void notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id) override;
@@ -197,8 +205,6 @@ private:
 
     bool is_inspector_open() const;
     void close_sub_widgets();
-
-    void update_palette();
 
     qreal m_inverse_pixel_scaling_ratio { 1.0 };
     bool m_should_show_line_box_borders { false };
