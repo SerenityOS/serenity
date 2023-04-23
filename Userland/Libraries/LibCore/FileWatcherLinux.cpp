@@ -97,7 +97,7 @@ ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(FileWatcherFlags flags)
     if (watcher_fd < 0)
         return Error::from_errno(errno);
 
-    auto notifier = TRY(Notifier::try_create(watcher_fd, Notifier::Event::Read));
+    auto notifier = TRY(Notifier::try_create(watcher_fd, Notifier::Type::Read));
     return adopt_nonnull_ref_or_enomem(new (nothrow) FileWatcher(watcher_fd, move(notifier)));
 }
 
@@ -105,7 +105,7 @@ FileWatcher::FileWatcher(int watcher_fd, NonnullRefPtr<Notifier> notifier)
     : FileWatcherBase(watcher_fd)
     , m_notifier(move(notifier))
 {
-    m_notifier->on_ready_to_read = [this] {
+    m_notifier->on_activation = [this] {
         auto maybe_event = get_event_from_fd(m_notifier->fd(), m_wd_to_path);
         if (maybe_event.has_value()) {
             auto event = maybe_event.value();

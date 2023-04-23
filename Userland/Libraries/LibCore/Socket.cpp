@@ -186,7 +186,7 @@ ErrorOr<void> PosixSocketHelper::set_receive_timeout(Time timeout)
 void PosixSocketHelper::setup_notifier()
 {
     if (!m_notifier)
-        m_notifier = Core::Notifier::construct(m_fd, Core::Notifier::Read);
+        m_notifier = Core::Notifier::construct(m_fd, Core::Notifier::Type::Read);
 }
 
 ErrorOr<NonnullOwnPtr<TCPSocket>> TCPSocket::connect(DeprecatedString const& host, u16 port)

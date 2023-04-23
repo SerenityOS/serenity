@@ -651,11 +651,11 @@ retry:
     max_fd = max(max_fd, max_fd_added);
 
     for (auto& notifier : *s_notifiers) {
-        if (notifier->event_mask() & Notifier::Read)
+        if (notifier->type() == Notifier::Type::Read)
             add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->event_mask() & Notifier::Write)
+        if (notifier->type() == Notifier::Type::Write)
             add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->event_mask() & Notifier::Exceptional)
+        if (notifier->type() == Notifier::Type::Exceptional)
             VERIFY_NOT_REACHED();
     }
 
@@ -757,13 +757,11 @@ try_select_again:
 
     // Handle file system notifiers by making them normal events.
     for (auto& notifier : *s_notifiers) {
-        if (FD_ISSET(notifier->fd(), &rfds)) {
-            if (notifier->event_mask() & Notifier::Event::Read)
-                post_event(*notifier, make<NotifierReadEvent>(notifier->fd()));
+        if (notifier->type() == Notifier::Type::Read && FD_ISSET(notifier->fd(), &rfds)) {
+            post_event(*notifier, make<NotifierActivationEvent>(notifier->fd()));
         }
-        if (FD_ISSET(notifier->fd(), &wfds)) {
-            if (notifier->event_mask() & Notifier::Event::Write)
-                post_event(*notifier, make<NotifierWriteEvent>(notifier->fd()));
+        if (notifier->type() == Notifier::Type::Write && FD_ISSET(notifier->fd(), &wfds)) {
+            post_event(*notifier, make<NotifierActivationEvent>(notifier->fd()));
         }
     }
 }

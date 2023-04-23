@@ -204,7 +204,7 @@ private:
         VERIFY(is_open());
 
         m_helper.setup_notifier();
-        m_helper.notifier()->on_ready_to_read = [this] {
+        m_helper.notifier()->on_activation = [this] {
             if (on_ready_to_read)
                 on_ready_to_read();
         };
@@ -278,7 +278,7 @@ private:
         VERIFY(is_open());
 
         m_helper.setup_notifier();
-        m_helper.notifier()->on_ready_to_read = [this] {
+        m_helper.notifier()->on_activation = [this] {
             if (on_ready_to_read)
                 on_ready_to_read();
         };
@@ -352,7 +352,7 @@ private:
         VERIFY(is_open());
 
         m_helper.setup_notifier();
-        m_helper.notifier()->on_ready_to_read = [this] {
+        m_helper.notifier()->on_activation = [this] {
             if (on_ready_to_read)
                 on_ready_to_read();
         };

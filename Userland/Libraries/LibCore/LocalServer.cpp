@@ -49,8 +49,8 @@ ErrorOr<void> LocalServer::take_over_from_system_server(DeprecatedString const& 
 
 void LocalServer::setup_notifier()
 {
-    m_notifier = Notifier::construct(m_fd, Notifier::Event::Read, this);
-    m_notifier->on_ready_to_read = [this] {
+    m_notifier = Notifier::construct(m_fd, Notifier::Type::Read, this);
+    m_notifier->on_activation = [this] {
         if (on_accept) {
             auto maybe_client_socket = accept();
             if (maybe_client_socket.is_error()) {

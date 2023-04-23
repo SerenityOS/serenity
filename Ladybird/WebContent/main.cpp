@@ -51,7 +51,7 @@ static void proxy_socket_through_notifier(ClientType& client, QSocketNotifier& n
     notifier.setEnabled(true);
 
     QObject::connect(&notifier, &QSocketNotifier::activated, [&client]() mutable {
-        client.socket().notifier()->on_ready_to_read();
+        client.socket().notifier()->on_activation();
     });
 
     client.set_deferred_invoker(make<DeferredInvokerQt>());

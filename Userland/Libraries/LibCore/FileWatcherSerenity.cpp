@@ -188,7 +188,7 @@ ErrorOr<NonnullRefPtr<FileWatcher>> FileWatcher::create(FileWatcherFlags flags)
     if (watcher_fd < 0)
         return Error::from_errno(errno);
 
-    auto notifier = Notifier::construct(watcher_fd, Notifier::Event::Read);
+    auto notifier = Notifier::construct(watcher_fd, Notifier::Type::Read);
     return adopt_ref(*new FileWatcher(watcher_fd, move(notifier)));
 }
 
@@ -196,7 +196,7 @@ FileWatcher::FileWatcher(int watcher_fd, NonnullRefPtr<Notifier> notifier)
     : FileWatcherBase(watcher_fd)
     , m_notifier(move(notifier))
 {
-    m_notifier->on_ready_to_read = [this] {
+    m_notifier->on_activation = [this] {
         auto maybe_event = get_event_from_fd(m_notifier->fd(), m_wd_to_path);
         if (maybe_event.has_value()) {
             auto event = maybe_event.value();
@@ -214,7 +214,7 @@ FileWatcher::FileWatcher(int watcher_fd, NonnullRefPtr<Notifier> notifier)
 
 FileWatcher::~FileWatcher()
 {
-    m_notifier->on_ready_to_read = nullptr;
+    m_notifier->on_activation = nullptr;
     close(m_notifier->fd());
     dbgln_if(FILE_WATCHER_DEBUG, "Stopped watcher at fd {}", m_notifier->fd());
 }

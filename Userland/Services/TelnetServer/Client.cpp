@@ -21,7 +21,7 @@ Client::Client(int id, NonnullOwnPtr<Core::TCPSocket> socket, int ptm_fd)
     : m_id(id)
     , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)
-    , m_ptm_notifier(Core::Notifier::construct(ptm_fd, Core::Notifier::Read))
+    , m_ptm_notifier(Core::Notifier::construct(ptm_fd, Core::Notifier::Type::Read))
 {
     m_socket->on_ready_to_read = [this] {
         auto result = drain_socket();
@@ -31,7 +31,7 @@ Client::Client(int id, NonnullOwnPtr<Core::TCPSocket> socket, int ptm_fd)
         }
     };
 
-    m_ptm_notifier->on_ready_to_read = [this] {
+    m_ptm_notifier->on_activation = [this] {
         auto result = drain_pty();
         if (result.is_error()) {
             dbgln("Failed to drain the PTY: {}", result.error());

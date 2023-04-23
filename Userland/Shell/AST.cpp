@@ -1742,7 +1742,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
 
         Core::EventLoop loop;
 
-        auto notifier = Core::Notifier::construct(pipefd[0], Core::Notifier::Read);
+        auto notifier = Core::Notifier::construct(pipefd[0], Core::Notifier::Type::Read);
         AllocatingMemoryStream stream;
 
         enum CheckResult {
@@ -1788,18 +1788,18 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
             return NothingLeft;
         };
 
-        notifier->on_ready_to_read = [&]() -> void {
+        notifier->on_activation = [&]() -> void {
             constexpr static auto buffer_size = 16;
             u8 buffer[buffer_size];
             size_t remaining_size = buffer_size;
 
             for (;;) {
-                notifier->set_event_mask(Core::Notifier::None);
+                notifier->set_type(Core::Notifier::Type::None);
                 bool should_enable_notifier = false;
 
                 ScopeGuard notifier_enabler { [&] {
                     if (should_enable_notifier)
-                        notifier->set_event_mask(Core::Notifier::Read);
+                        notifier->set_type(Core::Notifier::Type::Read);
                 } };
 
                 if (check_and_call().release_value_but_fixme_should_propagate_errors() == Break) {
@@ -1841,7 +1841,7 @@ ErrorOr<void> Execute::for_each_entry(RefPtr<Shell> shell, Function<ErrorOr<Iter
 
         auto exit_reason = loop.exec();
 
-        notifier->on_ready_to_read = nullptr;
+        notifier->on_activation = nullptr;
 
         if (close(pipefd[0]) < 0) {
             dbgln("close() failed: {}", strerror(errno));

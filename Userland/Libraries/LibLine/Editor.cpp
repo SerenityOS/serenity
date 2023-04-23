@@ -747,9 +747,9 @@ auto Editor::get_line(DeprecatedString const& prompt) -> Result<DeprecatedString
 
     Core::EventLoop loop;
 
-    m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
+    m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Type::Read);
 
-    m_notifier->on_ready_to_read = [&] {
+    m_notifier->on_activation = [&] {
         if (try_update_once().is_error())
             loop.quit(Exit);
     };

@@ -19,8 +19,8 @@ SpiceAgent::SpiceAgent(int fd, ConnectionToClipboardServer& connection)
     : m_fd(fd)
     , m_clipboard_connection(connection)
 {
-    m_notifier = Core::Notifier::construct(fd, Core::Notifier::Read);
-    m_notifier->on_ready_to_read = [this] {
+    m_notifier = Core::Notifier::construct(fd, Core::Notifier::Type::Read);
+    m_notifier->on_activation = [this] {
         on_message_received();
     };
     m_clipboard_connection.on_data_changed = [this] {
