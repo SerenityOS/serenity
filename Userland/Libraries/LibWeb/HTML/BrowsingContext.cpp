@@ -206,7 +206,7 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
     auto document = DOM::Document::create(window->realm()).release_value_but_fixme_should_propagate_errors();
 
     // Non-standard
-    document->set_window({}, *window);
+    document->set_window(*window);
     window->set_associated_document(*document);
 
     document->set_quirks_mode(DOM::QuirksMode::Yes);
@@ -254,6 +254,183 @@ JS::NonnullGCPtr<BrowsingContext> BrowsingContext::create_a_new_browsing_context
 
     // 24. Return browsingContext.
     return *browsing_context;
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-auxiliary-browsing-context
+WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext::create_a_new_auxiliary_browsing_context_and_document(Page& page, JS::NonnullGCPtr<HTML::BrowsingContext> opener)
+{
+    // 1. Let openerTopLevelBrowsingContext be opener's top-level traversable's active browsing context.
+    auto opener_top_level_browsing_context = opener->top_level_traversable()->active_browsing_context();
+
+    // 2. Let group be openerTopLevelBrowsingContext's group.
+    auto group = opener_top_level_browsing_context->group();
+
+    // 3. Assert: group is non-null, as navigating invokes this directly.
+    VERIFY(group);
+
+    // 4. Set browsingContext and document be the result of creating a new browsing context and document with opener's active document, null, and group.
+    auto [browsing_context, document] = TRY(create_a_new_browsing_context_and_document(page, opener->active_document(), nullptr, *group));
+
+    // FIXME: 5. Set browsingContext's is auxiliary to true.
+
+    // 6. Append browsingContext to group.
+    group->append(browsing_context);
+
+    // 7. Set browsingContext's opener browsing context to opener.
+    browsing_context->set_opener_browsing_context(opener);
+
+    // FIXME: 8. Set browsingContext's virtual browsing context group ID to openerTopLevelBrowsingContext's virtual browsing context group ID.
+
+    // FIXME: 9. Set browsingContext's opener origin at creation to opener's active document's origin.
+
+    // 10. Return browsingContext and document.
+    return BrowsingContext::BrowsingContextAndDocument { browsing_context, document };
+}
+
+// https://html.spec.whatwg.org/multipage/document-sequences.html#creating-a-new-browsing-context
+WebIDL::ExceptionOr<BrowsingContext::BrowsingContextAndDocument> BrowsingContext::create_a_new_browsing_context_and_document(Page& page, JS::GCPtr<DOM::Document> creator, JS::GCPtr<DOM::Element> embedder, JS::NonnullGCPtr<BrowsingContextGroup> group)
+{
+    auto& vm = group->vm();
+
+    // 1. Let browsingContext be a new browsing context.
+    JS::NonnullGCPtr<BrowsingContext> browsing_context = *vm.heap().allocate_without_realm<BrowsingContext>(page, nullptr);
+
+    // 2. Let unsafeContextCreationTime be the unsafe shared current time.
+    [[maybe_unused]] auto unsafe_context_creation_time = HighResolutionTime::unsafe_shared_current_time();
+
+    // 3. Let creatorOrigin be null.
+    Optional<Origin> creator_origin = {};
+
+    // 4. If creator is non-null, then:
+    if (creator) {
+        // 1. Set creatorOrigin to creator's origin.
+        creator_origin = creator->origin();
+
+        // FIXME: 2. Set browsingContext's creator base URL to an algorithm which returns creator's base URL.
+
+        // FIXME: 3. Set browsingContext's virtual browsing context group ID to creator's browsing context's top-level browsing context's virtual browsing context group ID.
+    }
+
+    // FIXME: 5. Let sandboxFlags be the result of determining the creation sandboxing flags given browsingContext and embedder.
+    SandboxingFlagSet sandbox_flags;
+
+    // 6. Let origin be the result of determining the origin given about:blank, sandboxFlags, creatorOrigin, and null.
+    auto origin = determine_the_origin(AK::URL("about:blank"sv), sandbox_flags, creator_origin, {});
+
+    // FIXME: 7. Let permissionsPolicy be the result of creating a permissions policy given browsingContext and origin. [PERMISSIONSPOLICY]
+
+    // FIXME: 8. Let agent be the result of obtaining a similar-origin window agent given origin, group, and false.
+
+    JS::GCPtr<Window> window;
+
+    // 9. Let realm execution context be the result of creating a new JavaScript realm given agent and the following customizations:
+    auto realm_execution_context = Bindings::create_a_new_javascript_realm(
+        Bindings::main_thread_vm(),
+        [&](JS::Realm& realm) -> JS::Object* {
+            auto window_proxy = realm.heap().allocate<WindowProxy>(realm, realm);
+            browsing_context->set_window_proxy(window_proxy.release_allocated_value_but_fixme_should_propagate_errors());
+
+            // - For the global object, create a new Window object.
+            window = Window::create(realm).release_value_but_fixme_should_propagate_errors();
+            return window.ptr();
+        },
+        [&](JS::Realm&) -> JS::Object* {
+            // - For the global this binding, use browsingContext's WindowProxy object.
+            return browsing_context->window_proxy();
+        });
+
+    // 10. Let topLevelCreationURL be about:blank if embedder is null; otherwise embedder's relevant settings object's top-level creation URL.
+    auto top_level_creation_url = !embedder ? AK::URL("about:blank") : relevant_settings_object(*embedder).top_level_creation_url;
+
+    // 11. Let topLevelOrigin be origin if embedder is null; otherwise embedder's relevant settings object's top-level origin.
+    auto top_level_origin = !embedder ? origin : relevant_settings_object(*embedder).origin();
+
+    // 12. Set up a window environment settings object with about:blank, realm execution context, null, topLevelCreationURL, and topLevelOrigin.
+    TRY(WindowEnvironmentSettingsObject::setup(
+        AK::URL("about:blank"),
+        move(realm_execution_context),
+        {},
+        top_level_creation_url,
+        top_level_origin));
+
+    // 13. Let loadTimingInfo be a new document load timing info with its navigation start time set to the result of calling
+    //     coarsen time with unsafeContextCreationTime and the new environment settings object's cross-origin isolated capability.
+    auto load_timing_info = DOM::DocumentLoadTimingInfo();
+    load_timing_info.navigation_start_time = HighResolutionTime::coarsen_time(
+        unsafe_context_creation_time,
+        verify_cast<WindowEnvironmentSettingsObject>(Bindings::host_defined_environment_settings_object(window->realm())).cross_origin_isolated_capability() == CanUseCrossOriginIsolatedAPIs::Yes);
+
+    // 14. Let document be a new Document, with:
+    auto document = TRY(DOM::Document::create(window->realm()));
+
+    // Non-standard
+    document->set_window(*window);
+    window->set_associated_document(*document);
+
+    // type: "html"
+    document->set_document_type(DOM::Document::Type::HTML);
+
+    // content type: "text/html"
+    document->set_content_type("text/html");
+
+    // mode: "quirks"
+    document->set_quirks_mode(DOM::QuirksMode::Yes);
+
+    // origin: origin
+    document->set_origin(origin);
+
+    // browsing context: browsingContext
+    document->set_browsing_context(browsing_context);
+
+    // FIXME: permissions policy: permissionsPolicy
+
+    // FIXME: active sandboxing flag set: sandboxFlags
+
+    // load timing info: loadTimingInfo
+    document->set_load_timing_info(load_timing_info);
+
+    // is initial about:blank: true
+    document->set_is_initial_about_blank(true);
+
+    // 15. If creator is non-null, then:
+    if (creator) {
+        // 1. Set document's referrer to the serialization of creator's URL.
+        document->set_referrer(creator->url().serialize());
+
+        // FIXME: 2. Set document's policy container to a clone of creator's policy container.
+
+        // 3. If creator's origin is same origin with creator's relevant settings object's top-level origin,
+        if (creator->origin().is_same_origin(creator->relevant_settings_object().top_level_origin)) {
+            // then set document's cross-origin opener policy to creator's browsing context's top-level browsing context's active document's cross-origin opener policy.
+            VERIFY(creator->browsing_context());
+            VERIFY(creator->browsing_context()->top_level_browsing_context().active_document());
+            document->set_cross_origin_opener_policy(creator->browsing_context()->top_level_browsing_context().active_document()->cross_origin_opener_policy());
+        }
+    }
+
+    // 16. Assert: document's URL and document's relevant settings object's creation URL are about:blank.
+    VERIFY(document->url() == "about:blank"sv);
+    VERIFY(document->relevant_settings_object().creation_url == "about:blank"sv);
+
+    // 17. Mark document as ready for post-load tasks.
+    document->set_ready_for_post_load_tasks(true);
+
+    // 18. Ensure that document has a single child html node, which itself has two empty child nodes: a head element, and a body element.
+    auto html_node = TRY(DOM::create_element(document, HTML::TagNames::html, Namespace::HTML));
+    auto head_element = TRY(DOM::create_element(document, HTML::TagNames::head, Namespace::HTML));
+    TRY(html_node->append_child(head_element));
+    auto body_element = TRY(DOM::create_element(document, HTML::TagNames::body, Namespace::HTML));
+    TRY(html_node->append_child(body_element));
+    TRY(document->append_child(html_node));
+
+    // 19. Make active document.
+    document->make_active();
+
+    // 20. Completely finish loading document.
+    document->completely_finish_loading();
+
+    // 21. Return browsingContext and document.
+    return BrowsingContext::BrowsingContextAndDocument { browsing_context, document };
 }
 
 BrowsingContext::BrowsingContext(Page& page, HTML::NavigableContainer* container)
@@ -344,7 +521,7 @@ void BrowsingContext::set_active_document(JS::NonnullGCPtr<DOM::Document> docume
     document->set_visibility_state({}, top_level_browsing_context().system_visibility_state());
 
     // 3. Set browsingContext's active window to window.
-    m_window_proxy->set_window({}, window);
+    m_window_proxy->set_window(window);
 
     // 4. Set window's associated Document to document.
     window.set_associated_document(document);
@@ -854,6 +1031,11 @@ HTML::WindowProxy* BrowsingContext::window_proxy()
 HTML::WindowProxy const* BrowsingContext::window_proxy() const
 {
     return m_window_proxy.ptr();
+}
+
+void BrowsingContext::set_window_proxy(JS::GCPtr<WindowProxy> window_proxy)
+{
+    m_window_proxy = move(window_proxy);
 }
 
 void BrowsingContext::scroll_offset_did_change()
