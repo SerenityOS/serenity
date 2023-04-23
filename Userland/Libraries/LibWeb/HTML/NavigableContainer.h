@@ -14,6 +14,8 @@ class NavigableContainer : public HTMLElement {
     WEB_PLATFORM_OBJECT(NavigableContainer, HTMLElement);
 
 public:
+    static JS::GCPtr<NavigableContainer> navigable_container_with_content_navigable(JS::NonnullGCPtr<Navigable> navigable);
+
     virtual ~NavigableContainer() override;
 
     static HashTable<NavigableContainer*>& all_instances();

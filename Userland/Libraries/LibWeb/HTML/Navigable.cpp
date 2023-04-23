@@ -190,12 +190,7 @@ String Navigable::target_name() const
 JS::GCPtr<NavigableContainer> Navigable::container() const
 {
     // The container of a navigable navigable is the navigable container whose nested navigable is navigable, or null if there is no such element.
-    return m_container;
-}
-
-void Navigable::set_container(JS::GCPtr<NavigableContainer> container)
-{
-    m_container = container;
+    return NavigableContainer::navigable_container_with_content_navigable(const_cast<Navigable&>(*this));
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-traversable
