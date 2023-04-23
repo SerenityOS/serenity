@@ -27,14 +27,27 @@ HashTable<NavigableContainer*>& NavigableContainer::all_instances()
 NavigableContainer::NavigableContainer(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
+    all_instances().set(this);
 }
 
-NavigableContainer::~NavigableContainer() = default;
+NavigableContainer::~NavigableContainer()
+{
+    all_instances().remove(this);
+}
 
 void NavigableContainer::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_nested_browsing_context);
+}
+
+JS::GCPtr<NavigableContainer> NavigableContainer::navigable_container_with_content_navigable(JS::NonnullGCPtr<Navigable> navigable)
+{
+    for (auto* navigable_container : all_instances()) {
+        if (navigable_container->content_navigable() == navigable)
+            return navigable_container;
+    }
+    return nullptr;
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#creating-a-new-nested-browsing-context
