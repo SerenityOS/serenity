@@ -118,8 +118,6 @@ public:
 
     static EventLoop& current();
 
-    static void wake_current();
-
 private:
     void wait_for_event(WaitMode);
     Optional<Time> get_next_timer_expiration();

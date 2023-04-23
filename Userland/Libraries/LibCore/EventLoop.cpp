@@ -894,11 +894,6 @@ void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
     s_notifiers->remove(&notifier);
 }
 
-void EventLoop::wake_current()
-{
-    EventLoop::current().wake();
-}
-
 void EventLoop::wake()
 {
     dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::wake()");
