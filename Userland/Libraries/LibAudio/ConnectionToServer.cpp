@@ -69,7 +69,8 @@ ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
     update_good_sleep_time();
     m_user_queue->append(move(samples));
     // Wake the background thread to make sure it starts enqueuing audio.
-    m_enqueuer_loop->wake_once(*this, 0);
+    m_enqueuer_loop->post_event(*this, make<Core::CustomEvent>(0));
+    m_enqueuer_loop->wake();
     async_start_playback();
 
     return {};
