@@ -129,7 +129,7 @@ NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Serializer& serializer)
 
     auto directory_pointer = serializer.heap().user_value(0);
     if (!directory_pointer) {
-        directory_pointer = serializer.heap().new_record_pointer();
+        directory_pointer = serializer.heap().request_new_block_index();
         serializer.heap().set_user_value(0, directory_pointer);
     }
     auto hash_index = SQL::HashIndex::construct(serializer, tuple_descriptor, directory_pointer);

@@ -51,7 +51,7 @@ void DownPointer::deserialize(Serializer& serializer)
 {
     if (m_node || !m_pointer)
         return;
-    serializer.get_block(m_pointer);
+    serializer.read_storage(m_pointer);
     m_node = serializer.make_and_deserialize<TreeNode>(m_owner->tree(), m_owner, m_pointer);
 }
 
@@ -87,7 +87,7 @@ TreeNode::TreeNode(BTree& tree, TreeNode* up, DownPointer& left, u32 pointer)
     m_down.append(DownPointer(this, left));
     m_is_leaf = left.pointer() == 0;
     if (!pointer)
-        set_pointer(m_tree.new_record_pointer());
+        set_pointer(m_tree.request_new_block_index());
 }
 
 TreeNode::TreeNode(BTree& tree, TreeNode* up, TreeNode* left, u32 pointer)
@@ -271,7 +271,7 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
             m_entries.insert(ix, key);
             VERIFY(is_leaf() == (right == nullptr));
             m_down.insert(ix + 1, DownPointer(this, right));
-            if (length() > Heap::BLOCK_SIZE) {
+            if (length() > Block::DATA_SIZE) {
                 split();
             } else {
                 dump_if(SQL_DEBUG, "To WAL");
@@ -283,7 +283,7 @@ void TreeNode::just_insert(Key const& key, TreeNode* right)
     m_entries.append(key);
     m_down.empend(this, right);
 
-    if (length() > Heap::BLOCK_SIZE) {
+    if (length() > Block::DATA_SIZE) {
         split();
     } else {
         dump_if(SQL_DEBUG, "To WAL");

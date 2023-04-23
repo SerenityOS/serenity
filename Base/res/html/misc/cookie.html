@@ -6,6 +6,7 @@
     <br /><input type=button onclick="setCookie(this.value)" value="cookie4=value4;SameSite=Lax" />
     <br /><input type=button onclick="setCookie(this.value)" value="cookie5=value5;SameSite=Strict" />
     <br /><input type=button onclick="setCookie(this.value)" value="cookie6=value6;SameSite=None" />
+    <br /><input type=button onclick="setPrettyLargeCookie()" value="cookie7=xxxxx..[2048 x's]" />
     <br />
 
     <h3>Invalid cookies (the browser should reject these):</h3>
@@ -34,6 +35,10 @@
         function setCookie(cookie) {
             document.cookie = cookie;
             document.getElementById('cookies').innerHTML = document.cookie;
+        }
+
+        function setPrettyLargeCookie() {
+            setCookie('cookie7=' + 'x'.repeat(2048));
         }
 
         function setTooLargeCookie() {

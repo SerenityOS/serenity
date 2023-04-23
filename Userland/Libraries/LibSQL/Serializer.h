@@ -12,7 +12,6 @@
 #include <AK/Format.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Heap.h>
-#include <string.h>
 
 namespace SQL {
 
@@ -25,12 +24,9 @@ public:
     {
     }
 
-    void get_block(u32 pointer)
+    void read_storage(Block::Index block_index)
     {
-        auto buffer_or_error = m_heap->read_block(pointer);
-        if (buffer_or_error.is_error())
-            VERIFY_NOT_REACHED();
-        m_buffer = buffer_or_error.value();
+        m_buffer = m_heap->read_storage(block_index).release_value_but_fixme_should_propagate_errors();
         m_current_offset = 0;
     }
 
@@ -48,14 +44,14 @@ public:
     template<typename T, typename... Args>
     T deserialize_block(u32 pointer, Args&&... args)
     {
-        get_block(pointer);
+        read_storage(pointer);
         return deserialize<T>(forward<Args>(args)...);
     }
 
     template<typename T>
     void deserialize_block_to(u32 pointer, T& t)
     {
-        get_block(pointer);
+        read_storage(pointer);
         return deserialize_to<T>(t);
     }
 
@@ -111,19 +107,19 @@ public:
         VERIFY(!m_heap.is_null());
         reset();
         serialize<T>(t);
-        m_heap->add_to_wal(t.pointer(), m_buffer);
+        m_heap->write_storage(t.pointer(), m_buffer).release_value_but_fixme_should_propagate_errors();
         return true;
     }
 
     [[nodiscard]] size_t offset() const { return m_current_offset; }
-    u32 new_record_pointer()
+    u32 request_new_block_index()
     {
-        return m_heap->new_record_pointer();
+        return m_heap->request_new_block_index();
     }
 
     bool has_block(u32 pointer) const
     {
-        return pointer < m_heap->size();
+        return m_heap->has_block(pointer);
     }
 
     Heap& heap()
