@@ -73,18 +73,42 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
         return;
 
     auto paint_transform = Gfx::AffineTransform {}.scale(css_scale, css_scale).multiply(*transform);
-    Gfx::Path path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path().copy_transformed(paint_transform);
+    auto const& original_path = const_cast<SVG::SVGGeometryElement&>(geometry_element).get_path();
+    Gfx::Path path = original_path.copy_transformed(paint_transform);
 
-    if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
+    // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
+    auto closed_path = [&] {
         // We need to fill the path before applying the stroke, however the filled
         // path must be closed, whereas the stroke path may not necessary be closed.
         // Copy the path and close it for filling, but use the previous path for stroke
-        auto closed_path = path;
-        closed_path.close();
+        auto copy = path;
+        copy.close();
+        return copy;
+    };
 
-        // Fills are computed as though all paths are closed (https://svgwg.org/svg2-draft/painting.html#FillProperties)
+    // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
+    auto viewbox_scale = paint_transform.x_scale();
+
+    auto svg_viewport = [&] {
+        if (maybe_view_box.has_value())
+            return Gfx::FloatRect { maybe_view_box->min_x, maybe_view_box->min_y, maybe_view_box->width, maybe_view_box->height };
+        return Gfx::FloatRect { { 0, 0 }, svg_context.svg_element_size().to_type<float>() };
+    }();
+
+    SVG::SVGPaintContext paint_context {
+        .viewport = svg_viewport,
+        .path_bounding_box = original_path.bounding_box(),
+        .transform = paint_transform
+    };
+
+    if (auto paint_style = geometry_element.fill_paint_style(paint_context); paint_style.has_value()) {
         painter.fill_path(
-            closed_path,
+            closed_path(),
+            *paint_style,
+            Gfx::Painter::WindingRule::EvenOdd);
+    } else if (auto fill_color = geometry_element.fill_color().value_or(svg_context.fill_color()); fill_color.alpha() > 0) {
+        painter.fill_path(
+            closed_path(),
             fill_color,
             Gfx::Painter::WindingRule::EvenOdd);
     }
@@ -94,7 +118,7 @@ void SVGGeometryPaintable::paint(PaintContext& context, PaintPhase phase) const
             path,
             stroke_color,
             // Note: This is assuming .x_scale() == .y_scale() (which it does currently).
-            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * paint_transform.x_scale());
+            geometry_element.stroke_width().value_or(svg_context.stroke_width()) * viewbox_scale);
     }
 }
 

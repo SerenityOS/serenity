@@ -29,6 +29,7 @@ public:
     void set_stroke_width(float width) { state().stroke_width = width; }
 
     CSSPixelPoint svg_element_position() const { return m_svg_element_bounds.top_left(); }
+    CSSPixelSize svg_element_size() const { return m_svg_element_bounds.size(); }
 
     void save() { m_states.append(m_states.last()); }
     void restore() { m_states.take_last(); }
