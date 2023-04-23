@@ -90,6 +90,27 @@ enum class BackgroundSize {
     LengthPercentage,
 };
 
+// https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
+class SVGPaint {
+public:
+    SVGPaint(Color color)
+        : m_value(color)
+    {
+    }
+    SVGPaint(AK::URL const& url)
+        : m_value(url)
+    {
+    }
+
+    bool is_color() const { return m_value.has<Color>(); }
+    bool is_url() const { return m_value.has<AK::URL>(); }
+    Color as_color() const { return m_value.get<Color>(); }
+    AK::URL const& as_url() const { return m_value.get<AK::URL>(); }
+
+private:
+    Variant<AK::URL, Color> m_value;
+};
+
 struct BackgroundLayerData {
     RefPtr<CSS::AbstractImageStyleValue const> background_image { nullptr };
     CSS::BackgroundAttachment attachment { CSS::BackgroundAttachment::Scroll };
@@ -257,8 +278,8 @@ public:
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
-    Optional<Color> const& fill() const { return m_inherited.fill; }
-    Optional<Color> const& stroke() const { return m_inherited.stroke; }
+    Optional<SVGPaint> const& fill() const { return m_inherited.fill; }
+    Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
     Color stop_color() const { return m_noninherited.stop_color; }
 
@@ -293,8 +314,8 @@ protected:
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
         CSS::Visibility visibility { InitialValues::visibility() };
 
-        Optional<Color> fill;
-        Optional<Color> stroke;
+        Optional<SVGPaint> fill;
+        Optional<SVGPaint> stroke;
         Optional<LengthPercentage> stroke_width;
     } m_inherited;
 
@@ -446,8 +467,8 @@ public:
     void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_noninherited.border_collapse = border_collapse; }
     void set_grid_template_areas(Vector<Vector<String>> const& grid_template_areas) { m_noninherited.grid_template_areas = grid_template_areas; }
 
-    void set_fill(Color value) { m_inherited.fill = value; }
-    void set_stroke(Color value) { m_inherited.stroke = value; }
+    void set_fill(SVGPaint value) { m_inherited.fill = value; }
+    void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
     void set_stop_color(Color value) { m_noninherited.stop_color = value; }
 };
