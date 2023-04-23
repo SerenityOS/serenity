@@ -12,9 +12,11 @@ namespace Web::HTML {
 
 // https://html.spec.whatwg.org/multipage/browsing-the-web.html#post-resource
 struct POSTResource {
+    enum class RequestBodyFailureTag {};
+
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#post-resource-request-body
     // A request body, a byte sequence or failure.
-    Optional<ByteBuffer> request_body;
+    Variant<Empty, RequestBodyFailureTag, ByteBuffer> request_body;
 
     enum class RequestContentType {
         ApplicationXWWWFormUrlencoded,
