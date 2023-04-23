@@ -93,6 +93,10 @@ InspectorWidget::InspectorWidget()
     auto& accessibility_tree_container = top_tab_widget.add_tab<GUI::Widget>("Accessibility"_string.release_value_but_fixme_should_propagate_errors());
     accessibility_tree_container.set_layout<GUI::VerticalBoxLayout>(4);
     m_accessibility_tree_view = accessibility_tree_container.add<GUI::TreeView>();
+    m_accessibility_tree_view->on_selection_change = [this] {
+        const auto& index = m_accessibility_tree_view->selection().first();
+        set_selection(index);
+    };
 
     auto& bottom_tab_widget = splitter.add<GUI::TabWidget>();
 
@@ -214,8 +218,6 @@ void InspectorWidget::clear_style_json()
 void InspectorWidget::set_accessibility_json(StringView json)
 {
     m_accessibility_tree_view->set_model(WebView::AccessibilityTreeModel::create(json, *m_accessibility_tree_view));
-
-    // TODO: Support selections from accessibility tab
 }
 
 }
