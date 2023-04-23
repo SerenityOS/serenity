@@ -8,6 +8,7 @@
  */
 
 #include "BrowserWindow.h"
+#include "ConsoleWidget.h"
 #include "Settings.h"
 #include "SettingsDialog.h"
 #include "Utilities.h"
@@ -546,8 +547,13 @@ void BrowserWindow::reset_zoom()
 
 void BrowserWindow::select_all()
 {
-    if (auto* tab = m_current_tab)
-        tab->view().select_all();
+    if (!m_current_tab)
+        return;
+
+    if (auto* console = m_current_tab->view().console(); console && console->isActiveWindow())
+        console->view().select_all();
+    else
+        m_current_tab->view().select_all();
 }
 
 void BrowserWindow::update_displayed_zoom_level()
@@ -560,11 +566,18 @@ void BrowserWindow::update_displayed_zoom_level()
 
 void BrowserWindow::copy_selected_text()
 {
-    if (auto* tab = m_current_tab) {
-        auto text = tab->view().selected_text();
-        auto* clipboard = QGuiApplication::clipboard();
-        clipboard->setText(qstring_from_ak_deprecated_string(text));
-    }
+    if (!m_current_tab)
+        return;
+
+    DeprecatedString text;
+
+    if (auto* console = m_current_tab->view().console(); console && console->isActiveWindow())
+        text = console->view().selected_text();
+    else
+        text = m_current_tab->view().selected_text();
+
+    auto* clipboard = QGuiApplication::clipboard();
+    clipboard->setText(qstring_from_ak_deprecated_string(text));
 }
 
 void BrowserWindow::resizeEvent(QResizeEvent* event)
