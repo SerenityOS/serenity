@@ -34,8 +34,6 @@ struct IdentifyNamespace {
     u64 rsvd3[488];
 };
 
-// BAR
-static constexpr u32 BAR_ADDR_MASK = 0xFFFFFFF0;
 // DOORBELL
 static constexpr u32 REG_SQ0TDBL_START = 0x1000;
 static constexpr u32 REG_SQ0TDBL_END = 0x1003;

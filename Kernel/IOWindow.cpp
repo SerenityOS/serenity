@@ -101,7 +101,7 @@ ErrorOr<NonnullOwnPtr<IOWindow>> IOWindow::create_for_pci_device_bar(PCI::Device
         return Error::from_errno(EOVERFLOW);
     if (pci_bar_space_type == PCI::BARSpaceType::Memory64BitSpace && Checked<u64>::addition_would_overflow(pci_bar_value, space_length))
         return Error::from_errno(EOVERFLOW);
-    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<u8 volatile>(PhysicalAddress(pci_bar_value & 0xfffffff0), space_length, Memory::Region::Access::ReadWrite));
+    auto memory_mapped_range = TRY(Memory::adopt_new_nonnull_own_typed_mapping<u8 volatile>(PhysicalAddress(pci_bar_value & PCI::bar_address_mask), space_length, Memory::Region::Access::ReadWrite));
     return TRY(adopt_nonnull_own_or_enomem(new (nothrow) IOWindow(move(memory_mapped_range))));
 }
 

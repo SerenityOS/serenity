@@ -78,6 +78,7 @@ static constexpr u16 value_port = 0xcfc;
 static constexpr size_t mmio_device_space_size = 4096;
 static constexpr u16 none_value = 0xffff;
 static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
+static constexpr u32 bar_address_mask = 0xfffffff0;
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
