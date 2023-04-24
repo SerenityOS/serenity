@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
@@ -13,23 +14,27 @@
 
 namespace Chess {
 
-StringView char_for_piece(Chess::Type type)
+Optional<char> char_for_piece(Type type, Notation notation)
 {
     switch (type) {
     case Type::Knight:
-        return "N"sv;
+        return 'N';
     case Type::Bishop:
-        return "B"sv;
+        return 'B';
     case Type::Rook:
-        return "R"sv;
+        return 'R';
     case Type::Queen:
-        return "Q"sv;
+        return 'Q';
     case Type::King:
-        return "K"sv;
+        return 'K';
     case Type::Pawn:
-    default:
-        return ""sv;
+        if (notation == Notation::FEN)
+            return 'P';
+        return {};
+    case Type::None:
+        return {};
     }
+    VERIFY_NOT_REACHED();
 }
 
 Chess::Type piece_for_char_promotion(StringView str)
@@ -97,7 +102,8 @@ DeprecatedString Move::to_long_algebraic() const
     StringBuilder builder;
     builder.append(from.to_algebraic());
     builder.append(to.to_algebraic());
-    builder.append(DeprecatedString(char_for_piece(promote_to)).to_lowercase());
+    if (auto promoted_char = char_for_piece(promote_to, Notation::Algebraic); promoted_char.has_value())
+        builder.append(to_ascii_lowercase(promoted_char.value()));
     return builder.to_deprecated_string();
 }
 
@@ -187,7 +193,8 @@ DeprecatedString Move::to_algebraic() const
 
     StringBuilder builder;
 
-    builder.append(char_for_piece(piece.type));
+    if (auto piece_char = char_for_piece(piece.type, Notation::Algebraic); piece_char.has_value())
+        builder.append(*piece_char);
 
     if (is_ambiguous) {
         if (from.file != ambiguous.file)
@@ -206,9 +213,9 @@ DeprecatedString Move::to_algebraic() const
 
     builder.append(to.to_algebraic());
 
-    if (promote_to != Type::None) {
+    if (promote_to != Type::None && promote_to != Type::Pawn) {
         builder.append('=');
-        builder.append(char_for_piece(promote_to));
+        builder.append(char_for_piece(promote_to, Notation::Algebraic).value());
     }
 
     if (is_mate)
@@ -286,9 +293,9 @@ DeprecatedString Board::to_fen() const
                 builder.append(DeprecatedString::number(empty));
                 empty = 0;
             }
-            auto const piece = char_for_piece(p.type);
+            auto const piece = char_for_piece(p.type, Notation::FEN).value();
             if (p.color == Color::Black)
-                builder.append(DeprecatedString(piece).to_lowercase());
+                builder.append(to_ascii_lowercase(piece));
             else
                 builder.append(piece);
         }
