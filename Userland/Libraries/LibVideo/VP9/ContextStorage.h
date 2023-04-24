@@ -200,43 +200,44 @@ private:
     T* m_storage { nullptr };
 };
 
+// Block context that is kept between frames until explicitly cleared.
+struct PersistentBlockContext {
+    bool available;
+    ReferenceFramePair ref_frames;
+    u8 segment_id;
+    MotionVectorPair primary_motion_vector_pair;
+};
+static_assert(IsPOD<PersistentBlockContext>);
+
 // Block context that is kept for the lifetime of a frame.
 struct FrameBlockContext {
     bool is_intra_predicted() const { return ref_frames.primary == ReferenceFrameType::None; }
     bool is_single_reference() const { return ref_frames.secondary == ReferenceFrameType::None; }
     MotionVectorPair primary_motion_vector_pair() const { return sub_block_motion_vectors[3]; }
 
-    bool is_available { false };
-    bool skip_coefficients { false };
-    TransformSize transform_size { Transform_4x4 };
-    PredictionMode y_mode { PredictionMode::DcPred };
-    Array<PredictionMode, 4> sub_modes { PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred };
-    InterpolationFilter interpolation_filter { InterpolationFilter::EightTap };
-    ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
-    u8 segment_id { 0 };
+    // This is done as an operator to make PersistentBlockContext a POD type
+    explicit operator PersistentBlockContext() const
+    {
+        return {
+            .available = is_available,
+            .ref_frames = ref_frames,
+            .segment_id = segment_id,
+            .primary_motion_vector_pair = primary_motion_vector_pair()
+        };
+    }
+
+    bool is_available;
+    bool skip_coefficients;
+    TransformSize transform_size;
+    PredictionMode y_mode;
+    Array<PredictionMode, 4> sub_modes;
+    InterpolationFilter interpolation_filter;
+    ReferenceFramePair ref_frames;
+    u8 segment_id;
     Array<MotionVectorPair, 4> sub_block_motion_vectors;
 };
 
-// Block context that is kept between frames until explicitly cleared.
-struct PersistentBlockContext {
-    PersistentBlockContext()
-        : available(false)
-    {
-    }
-
-    PersistentBlockContext(FrameBlockContext const& frame_context)
-        : available(frame_context.is_available)
-        , ref_frames(frame_context.ref_frames)
-        , segment_id(frame_context.segment_id)
-        , primary_motion_vector_pair(frame_context.primary_motion_vector_pair())
-    {
-    }
-
-    bool available { false };
-    ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
-    u8 segment_id { 0 };
-    MotionVectorPair primary_motion_vector_pair {};
-};
+static_assert(IsPOD<FrameBlockContext>);
 
 struct SegmentFeature {
     bool enabled { false };
@@ -264,13 +265,13 @@ using PartitionContext = FixedArray<u8>;
 using PartitionContextView = Span<u8>;
 
 struct ReferenceFrame {
+    bool is_valid() const { return bit_depth > 0; }
+
     Gfx::Size<u32> size { 0, 0 };
     bool subsampling_x { false };
     bool subsampling_y { false };
     u8 bit_depth { 0 };
     Array<Vector<u16>, 3> frame_planes {};
-
-    bool is_valid() const { return bit_depth > 0; }
 
     // These values are set at the start of each inter frame to be used during prediction.
     i32 x_scale { 0 };
