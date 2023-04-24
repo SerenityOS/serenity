@@ -5,6 +5,11 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# shellcheck source=/dev/null
+. "${DIR}/../Meta/shell_include.sh"
+
+exit_if_running_as_root "Do not run BuildPython.sh as root, parts of your Toolchain directory will become root-owned"
+
 PREFIX_DIR="$DIR/Local/python"
 BUILD_DIR="$DIR/Build/python"
 TARBALLS_DIR="$DIR/Tarballs"

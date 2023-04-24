@@ -6,6 +6,11 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# shellcheck source=/dev/null
+. "${DIR}/../Meta/shell_include.sh"
+
+exit_if_running_as_root "Do not run BuildMold.sh as root, parts of your Toolchain directory will become root-owned"
+
 NPROC="nproc"
 SYSTEM_NAME="$(uname -s)"
 
