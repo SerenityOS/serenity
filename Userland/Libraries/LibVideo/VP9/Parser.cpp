@@ -1028,7 +1028,7 @@ DecoderErrorOr<void> Parser::decode_block(TileContext& tile_context, u32 row, u3
 
     for (size_t y = 0; y < block_context.contexts_view.height(); y++) {
         for (size_t x = 0; x < block_context.contexts_view.width(); x++) {
-            auto sub_block_context = FrameBlockContext { true, block_context.should_skip_residuals, block_context.transform_size, block_context.y_prediction_mode(), block_context.sub_block_prediction_modes, block_context.interpolation_filter, block_context.reference_frame_types, block_context.sub_block_motion_vectors, block_context.segment_id };
+            auto sub_block_context = FrameBlockContext { true, block_context.should_skip_residuals, block_context.transform_size, block_context.y_prediction_mode(), block_context.sub_block_prediction_modes, block_context.interpolation_filter, block_context.reference_frame_types, block_context.segment_id, block_context.sub_block_motion_vectors };
             block_context.contexts_view.at(y, x) = sub_block_context;
             VERIFY(block_context.frame_block_contexts().at(row + y, column + x).transform_size == sub_block_context.transform_size);
         }

@@ -213,8 +213,8 @@ struct FrameBlockContext {
     Array<PredictionMode, 4> sub_modes { PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred, PredictionMode::DcPred };
     InterpolationFilter interpolation_filter { InterpolationFilter::EightTap };
     ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
-    Array<MotionVectorPair, 4> sub_block_motion_vectors;
     u8 segment_id { 0 };
+    Array<MotionVectorPair, 4> sub_block_motion_vectors;
 };
 
 // Block context that is kept between frames until explicitly cleared.
@@ -227,15 +227,15 @@ struct PersistentBlockContext {
     PersistentBlockContext(FrameBlockContext const& frame_context)
         : available(frame_context.is_available)
         , ref_frames(frame_context.ref_frames)
-        , primary_motion_vector_pair(frame_context.primary_motion_vector_pair())
         , segment_id(frame_context.segment_id)
+        , primary_motion_vector_pair(frame_context.primary_motion_vector_pair())
     {
     }
 
     bool available { false };
     ReferenceFramePair ref_frames { ReferenceFrameType::None, ReferenceFrameType::None };
-    MotionVectorPair primary_motion_vector_pair {};
     u8 segment_id { 0 };
+    MotionVectorPair primary_motion_vector_pair {};
 };
 
 struct SegmentFeature {
