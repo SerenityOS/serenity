@@ -98,7 +98,7 @@ ErrorOr<void> Stream::write_until_depleted(ReadonlyBytes buffer)
     return {};
 }
 
-ErrorOr<void> Stream::format_impl(StringView fmtstr, TypeErasedFormatParams& parameters)
+ErrorOr<void> Stream::write_formatted_impl(StringView fmtstr, TypeErasedFormatParams& parameters)
 {
     StringBuilder builder;
     TRY(vformat(builder, fmtstr, parameters));

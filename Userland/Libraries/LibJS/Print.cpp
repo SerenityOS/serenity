@@ -141,9 +141,9 @@ ErrorOr<void> js_out(JS::PrintContext& print_context, CheckedFormatString<Args..
 {
     if (print_context.strip_ansi) {
         auto format_string_without_ansi = TRY(strip_ansi(format_string.view()));
-        TRY(print_context.stream.format(format_string_without_ansi, args...));
+        TRY(print_context.stream.write_formatted(format_string_without_ansi, args...));
     } else {
-        TRY(print_context.stream.format(format_string.view(), args...));
+        TRY(print_context.stream.write_formatted(format_string.view(), args...));
     }
 
     return {};

@@ -77,13 +77,11 @@ public:
         return write_until_depleted({ &value, sizeof(value) });
     }
 
-    virtual ErrorOr<void> format_impl(StringView, TypeErasedFormatParams&);
-
     template<typename... Parameters>
-    ErrorOr<void> format(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
+    ErrorOr<void> write_formatted(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
     {
         VariadicFormatParams<AllowDebugOnlyFormatters::No, Parameters...> variadic_format_params { parameters... };
-        TRY(format_impl(fmtstr.view(), variadic_format_params));
+        TRY(write_formatted_impl(fmtstr.view(), variadic_format_params));
         return {};
     }
 
@@ -108,6 +106,9 @@ protected:
     /// content size to be in order to reduce allocations (does not affect
     /// actual reading).
     ErrorOr<ByteBuffer> read_until_eof_impl(size_t block_size, size_t expected_file_size = 0);
+
+private:
+    ErrorOr<void> write_formatted_impl(StringView, TypeErasedFormatParams&);
 };
 
 enum class SeekMode {
