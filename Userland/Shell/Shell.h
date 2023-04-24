@@ -401,8 +401,6 @@ private:
 
     bool is_allowed_to_modify_termios(const AST::Command&) const;
 
-    // FIXME: Port to Core::Property
-    ErrorOr<void> save_to(JsonObject&);
     void bring_cursor_to_beginning_of_a_line() const;
 
     Optional<int> resolve_job_spec(StringView);

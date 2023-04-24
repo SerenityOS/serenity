@@ -157,8 +157,6 @@ public:
 
     void deferred_invoke(Function<void()>);
 
-    void save_to(JsonObject&);
-
     bool set_property(DeprecatedString const& name, JsonValue const& value);
     JsonValue property(DeprecatedString const& name) const;
     HashMap<DeprecatedString, NonnullOwnPtr<Property>> const& properties() const { return m_properties; }

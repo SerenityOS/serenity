@@ -266,9 +266,6 @@ private:
         Retry
     };
 
-    // FIXME: Port to Core::Property
-    void save_to(JsonObject&);
-
     ErrorOr<void> try_update_once();
     void handle_interrupt_event();
     ErrorOr<void> handle_read_event();
