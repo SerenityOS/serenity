@@ -66,11 +66,6 @@ Usage: $NAME COMMAND [TARGET] [TOOLCHAIN] [ARGS...]
 EOF
 }
 
-die() {
-    >&2 echo "die: $*"
-    exit 1
-}
-
 usage() {
     >&2 print_help
     exit 1
@@ -84,9 +79,12 @@ if [ "$CMD" = "help" ]; then
     exit 0
 fi
 
-if [ "$(id -u)" -eq 0 ]; then
-   die "Do not run serenity.sh as root, your Build directory will become root-owned"
-fi
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# shellcheck source=/dev/null
+. "${DIR}/shell_include.sh"
+
+exit_if_running_as_root "Do not run serenity.sh as root, your Build directory will become root-owned"
 
 if [ -n "$1" ]; then
     TARGET="$1"; shift
