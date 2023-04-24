@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibMain/Main.h>
 #include <ctype.h>
@@ -795,12 +796,17 @@ void build(StringBuilder& builder, Vector<Endpoint> const& endpoints)
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    if (arguments.argc != 2) {
-        outln("usage: {} <IPC endpoint definition file>", arguments.strings[0]);
-        return 1;
-    }
+    StringView ipc_file;
+    StringView output_file = "-"sv;
 
-    auto file = TRY(Core::File::open(arguments.strings[1], Core::File::OpenMode::Read));
+    Core::ArgsParser parser;
+    parser.add_positional_argument(ipc_file, "IPC endpoint definition file", "input");
+    parser.add_option(output_file, "Place to write file", "output", 'o', "output-file");
+    parser.parse(arguments);
+
+    auto output = TRY(Core::File::open_file_or_standard_stream(output_file, Core::File::OpenMode::Write));
+
+    auto file = TRY(Core::File::open(ipc_file, Core::File::OpenMode::Read));
 
     auto file_contents = TRY(file->read_until_eof());
 
@@ -809,7 +815,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringBuilder builder;
     build(builder, endpoints);
 
-    outln("{}", builder.string_view());
+    TRY(output->write_until_depleted(builder.string_view().bytes()));
 
     if constexpr (GENERATE_DEBUG) {
         for (auto& endpoint : endpoints) {
