@@ -6,252 +6,76 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Assertions.h>
 #include <AK/Badge.h>
-#include <AK/Debug.h>
-#include <AK/Format.h>
-#include <AK/IDAllocator.h>
-#include <AK/JsonObject.h>
-#include <AK/JsonValue.h>
-#include <AK/NeverDestroyed.h>
-#include <AK/Singleton.h>
-#include <AK/TemporaryChange.h>
-#include <AK/Time.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/LocalServer.h>
-#include <LibCore/Notifier.h>
+#include <LibCore/EventLoopImplementationUnix.h>
 #include <LibCore/Object.h>
 #include <LibCore/Promise.h>
-#include <LibCore/SessionManagement.h>
-#include <LibCore/Socket.h>
 #include <LibCore/ThreadEventQueue.h>
-#include <LibThreading/Mutex.h>
-#include <LibThreading/MutexProtected.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <signal.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <time.h>
-#include <unistd.h>
-
-#ifdef AK_OS_SERENITY
-#    include <LibCore/Account.h>
-
-extern bool s_global_initializers_ran;
-#endif
 
 namespace Core {
 
-struct EventLoopTimer {
-    int timer_id { 0 };
-    Time interval;
-    Time fire_time;
-    bool should_reload { false };
-    TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
-    WeakPtr<Object> owner;
-
-    void reload(Time const& now);
-    bool has_expired(Time const& now) const;
-};
-
-struct EventLoop::Private {
-    ThreadEventQueue& thread_event_queue;
-
-    Private()
-        : thread_event_queue(ThreadEventQueue::current())
-    {
-    }
-};
-
-static Threading::MutexProtected<NeverDestroyed<IDAllocator>> s_id_allocator;
-
-// Each thread has its own event loop stack, its own timers, notifiers and a wake pipe.
-static thread_local Vector<EventLoop&>* s_event_loop_stack;
-static thread_local HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
-static thread_local HashTable<Notifier*>* s_notifiers;
-// The wake pipe is both responsible for notifying us when someone calls wake(), as well as POSIX signals.
-// While wake() pushes zero into the pipe, signal numbers (by defintion nonzero, see signal_numbers.h) are pushed into the pipe verbatim.
-thread_local int EventLoop::s_wake_pipe_fds[2];
-thread_local bool EventLoop::s_wake_pipe_initialized { false };
-
-void EventLoop::initialize_wake_pipes()
+namespace {
+thread_local Vector<EventLoop&>* s_event_loop_stack;
+Vector<EventLoop&>& event_loop_stack()
 {
-    if (!s_wake_pipe_initialized) {
-#if defined(SOCK_NONBLOCK)
-        int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
-#else
-        int rc = pipe(s_wake_pipe_fds);
-        fcntl(s_wake_pipe_fds[0], F_SETFD, FD_CLOEXEC);
-        fcntl(s_wake_pipe_fds[1], F_SETFD, FD_CLOEXEC);
-
-#endif
-        VERIFY(rc == 0);
-        s_wake_pipe_initialized = true;
-    }
+    if (!s_event_loop_stack)
+        s_event_loop_stack = new Vector<EventLoop&>;
+    return *s_event_loop_stack;
 }
-
-bool EventLoop::has_been_instantiated()
+bool has_event_loop()
 {
-    return s_event_loop_stack != nullptr && !s_event_loop_stack->is_empty();
+    return !event_loop_stack().is_empty();
 }
-
-class SignalHandlers : public RefCounted<SignalHandlers> {
-    AK_MAKE_NONCOPYABLE(SignalHandlers);
-    AK_MAKE_NONMOVABLE(SignalHandlers);
-
-public:
-    SignalHandlers(int signo, void (*handle_signal)(int));
-    ~SignalHandlers();
-
-    void dispatch();
-    int add(Function<void(int)>&& handler);
-    bool remove(int handler_id);
-
-    bool is_empty() const
-    {
-        if (m_calling_handlers) {
-            for (auto& handler : m_handlers_pending) {
-                if (handler.value)
-                    return false; // an add is pending
-            }
-        }
-        return m_handlers.is_empty();
-    }
-
-    bool have(int handler_id) const
-    {
-        if (m_calling_handlers) {
-            auto it = m_handlers_pending.find(handler_id);
-            if (it != m_handlers_pending.end()) {
-                if (!it->value)
-                    return false; // a deletion is pending
-            }
-        }
-        return m_handlers.contains(handler_id);
-    }
-
-    int m_signo;
-    void (*m_original_handler)(int); // TODO: can't use sighandler_t?
-    HashMap<int, Function<void(int)>> m_handlers;
-    HashMap<int, Function<void(int)>> m_handlers_pending;
-    bool m_calling_handlers { false };
-};
-
-struct SignalHandlersInfo {
-    HashMap<int, NonnullRefPtr<SignalHandlers>> signal_handlers;
-    int next_signal_id { 0 };
-};
-
-static Singleton<SignalHandlersInfo> s_signals;
-template<bool create_if_null = true>
-inline SignalHandlersInfo* signals_info()
-{
-    return s_signals.ptr();
 }
-
-pid_t EventLoop::s_pid;
 
 EventLoop::EventLoop()
-    : m_wake_pipe_fds(&s_wake_pipe_fds)
-    , m_private(make<Private>())
+    : m_impl(make<EventLoopImplementationUnix>())
 {
-#ifdef AK_OS_SERENITY
-    if (!s_global_initializers_ran) {
-        // NOTE: Trying to have an event loop as a global variable will lead to initialization-order fiascos,
-        //       as the event loop constructor accesses and/or sets other global variables.
-        //       Therefore, we crash the program before ASAN catches us.
-        //       If you came here because of the assertion failure, please redesign your program to not have global event loops.
-        //       The common practice is to initialize the main event loop in the main function, and if necessary,
-        //       pass event loop references around or access them with EventLoop::with_main_locked() and EventLoop::current().
-        VERIFY_NOT_REACHED();
+    if (event_loop_stack().is_empty()) {
+        event_loop_stack().append(*this);
     }
-#endif
-
-    if (!s_event_loop_stack) {
-        s_event_loop_stack = new Vector<EventLoop&>;
-        s_timers = new HashMap<int, NonnullOwnPtr<EventLoopTimer>>;
-        s_notifiers = new HashTable<Notifier*>;
-    }
-
-    if (s_event_loop_stack->is_empty()) {
-        s_pid = getpid();
-        s_event_loop_stack->append(*this);
-    }
-
-    initialize_wake_pipes();
-
-    dbgln_if(EVENTLOOP_DEBUG, "{} Core::EventLoop constructed :)", getpid());
 }
 
 EventLoop::~EventLoop()
 {
-    if (!s_event_loop_stack->is_empty() && &s_event_loop_stack->last() == this)
-        s_event_loop_stack->take_last();
+    if (!event_loop_stack().is_empty() && &event_loop_stack().last() == this) {
+        event_loop_stack().take_last();
+    }
 }
-
-#define VERIFY_EVENT_LOOP_INITIALIZED()                                              \
-    do {                                                                             \
-        if (!s_event_loop_stack) {                                                   \
-            warnln("EventLoop static API was called without prior EventLoop init!"); \
-            VERIFY_NOT_REACHED();                                                    \
-        }                                                                            \
-    } while (0)
 
 EventLoop& EventLoop::current()
 {
-    VERIFY_EVENT_LOOP_INITIALIZED();
-    return s_event_loop_stack->last();
+    return event_loop_stack().last();
 }
 
 void EventLoop::quit(int code)
 {
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::quit({})", code);
-    m_exit_requested = true;
-    m_exit_code = code;
+    m_impl->quit(code);
 }
 
 void EventLoop::unquit()
 {
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::unquit()");
-    m_exit_requested = false;
-    m_exit_code = 0;
+    m_impl->unquit();
 }
 
 struct EventLoopPusher {
 public:
     EventLoopPusher(EventLoop& event_loop)
-        : m_event_loop(event_loop)
     {
-        if (EventLoop::has_been_instantiated()) {
-            s_event_loop_stack->append(event_loop);
-        }
+        event_loop_stack().append(event_loop);
     }
     ~EventLoopPusher()
     {
-        if (EventLoop::has_been_instantiated()) {
-            s_event_loop_stack->take_last();
-        }
+        event_loop_stack().take_last();
     }
-
-private:
-    EventLoop& m_event_loop;
 };
 
 int EventLoop::exec()
 {
     EventLoopPusher pusher(*this);
-    for (;;) {
-        if (m_exit_requested)
-            return m_exit_code;
-        pump();
-    }
-    VERIFY_NOT_REACHED();
+    return m_impl->exec();
 }
 
 void EventLoop::spin_until(Function<bool()> goal_condition)
@@ -263,16 +87,12 @@ void EventLoop::spin_until(Function<bool()> goal_condition)
 
 size_t EventLoop::pump(WaitMode mode)
 {
-    // Pumping the event loop from another thread is not allowed.
-    VERIFY(&m_private->thread_event_queue == &ThreadEventQueue::current());
-
-    wait_for_event(mode);
-    return m_private->thread_event_queue.process();
+    return m_impl->pump(mode == WaitMode::WaitForEvents ? EventLoopImplementation::PumpMode::WaitForEvents : EventLoopImplementation::PumpMode::DontWaitForEvents);
 }
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
-    m_private->thread_event_queue.post_event(receiver, move(event));
+    m_impl->post_event(receiver, move(event));
 }
 
 void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise)
@@ -280,373 +100,56 @@ void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promis
     ThreadEventQueue::current().add_job(move(job_promise));
 }
 
-SignalHandlers::SignalHandlers(int signo, void (*handle_signal)(int))
-    : m_signo(signo)
-    , m_original_handler(signal(signo, handle_signal))
+int EventLoop::register_signal(int signal_number, Function<void(int)> handler)
 {
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Registered handler for signal {}", m_signo);
-}
-
-SignalHandlers::~SignalHandlers()
-{
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Unregistering handler for signal {}", m_signo);
-    signal(m_signo, m_original_handler);
-}
-
-void SignalHandlers::dispatch()
-{
-    TemporaryChange change(m_calling_handlers, true);
-    for (auto& handler : m_handlers)
-        handler.value(m_signo);
-    if (!m_handlers_pending.is_empty()) {
-        // Apply pending adds/removes
-        for (auto& handler : m_handlers_pending) {
-            if (handler.value) {
-                auto result = m_handlers.set(handler.key, move(handler.value));
-                VERIFY(result == AK::HashSetResult::InsertedNewEntry);
-            } else {
-                m_handlers.remove(handler.key);
-            }
-        }
-        m_handlers_pending.clear();
-    }
-}
-
-int SignalHandlers::add(Function<void(int)>&& handler)
-{
-    int id = ++signals_info()->next_signal_id; // TODO: worry about wrapping and duplicates?
-    if (m_calling_handlers)
-        m_handlers_pending.set(id, move(handler));
-    else
-        m_handlers.set(id, move(handler));
-    return id;
-}
-
-bool SignalHandlers::remove(int handler_id)
-{
-    VERIFY(handler_id != 0);
-    if (m_calling_handlers) {
-        auto it = m_handlers.find(handler_id);
-        if (it != m_handlers.end()) {
-            // Mark pending remove
-            m_handlers_pending.set(handler_id, {});
-            return true;
-        }
-        it = m_handlers_pending.find(handler_id);
-        if (it != m_handlers_pending.end()) {
-            if (!it->value)
-                return false; // already was marked as deleted
-            it->value = nullptr;
-            return true;
-        }
-        return false;
-    }
-    return m_handlers.remove(handler_id);
-}
-
-void EventLoop::dispatch_signal(int signo)
-{
-    auto& info = *signals_info();
-    auto handlers = info.signal_handlers.find(signo);
-    if (handlers != info.signal_handlers.end()) {
-        // Make sure we bump the ref count while dispatching the handlers!
-        // This allows a handler to unregister/register while the handlers
-        // are being called!
-        auto handler = handlers->value;
-        dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: dispatching signal {}", signo);
-        handler->dispatch();
-    }
-}
-
-void EventLoop::handle_signal(int signo)
-{
-    VERIFY(signo != 0);
-    // We MUST check if the current pid still matches, because there
-    // is a window between fork() and exec() where a signal delivered
-    // to our fork could be inadvertently routed to the parent process!
-    if (getpid() == s_pid) {
-        int nwritten = write(s_wake_pipe_fds[1], &signo, sizeof(signo));
-        if (nwritten < 0) {
-            perror("EventLoop::register_signal: write");
-            VERIFY_NOT_REACHED();
-        }
-    } else {
-        // We're a fork who received a signal, reset s_pid
-        s_pid = 0;
-    }
-}
-
-int EventLoop::register_signal(int signo, Function<void(int)> handler)
-{
-    VERIFY(signo != 0);
-    auto& info = *signals_info();
-    auto handlers = info.signal_handlers.find(signo);
-    if (handlers == info.signal_handlers.end()) {
-        auto signal_handlers = adopt_ref(*new SignalHandlers(signo, EventLoop::handle_signal));
-        auto handler_id = signal_handlers->add(move(handler));
-        info.signal_handlers.set(signo, move(signal_handlers));
-        return handler_id;
-    } else {
-        return handlers->value->add(move(handler));
-    }
+    if (!has_event_loop())
+        return 0;
+    return current().m_impl->register_signal(signal_number, move(handler));
 }
 
 void EventLoop::unregister_signal(int handler_id)
 {
-    VERIFY(handler_id != 0);
-    int remove_signo = 0;
-    auto& info = *signals_info();
-    for (auto& h : info.signal_handlers) {
-        auto& handlers = *h.value;
-        if (handlers.remove(handler_id)) {
-            if (handlers.is_empty())
-                remove_signo = handlers.m_signo;
-            break;
-        }
-    }
-    if (remove_signo != 0)
-        info.signal_handlers.remove(remove_signo);
-}
-
-void EventLoop::notify_forked(ForkEvent event)
-{
-    VERIFY_EVENT_LOOP_INITIALIZED();
-    switch (event) {
-    case ForkEvent::Child:
-        s_event_loop_stack->clear();
-        s_timers->clear();
-        s_notifiers->clear();
-        s_wake_pipe_initialized = false;
-        initialize_wake_pipes();
-        if (auto* info = signals_info<false>()) {
-            info->signal_handlers.clear();
-            info->next_signal_id = 0;
-        }
-        s_pid = 0;
+    if (!has_event_loop())
         return;
-    }
-
-    VERIFY_NOT_REACHED();
+    current().m_impl->unregister_signal(handler_id);
 }
 
-void EventLoop::wait_for_event(WaitMode mode)
+void EventLoop::notify_forked(ForkEvent)
 {
-    fd_set rfds;
-    fd_set wfds;
-retry:
-
-    // Set up the file descriptors for select().
-    // Basically, we translate high-level event information into low-level selectable file descriptors.
-    FD_ZERO(&rfds);
-    FD_ZERO(&wfds);
-
-    int max_fd = 0;
-    auto add_fd_to_set = [&max_fd](int fd, fd_set& set) {
-        FD_SET(fd, &set);
-        if (fd > max_fd)
-            max_fd = fd;
-    };
-
-    int max_fd_added = -1;
-    // The wake pipe informs us of POSIX signals as well as manual calls to wake()
-    add_fd_to_set(s_wake_pipe_fds[0], rfds);
-    max_fd = max(max_fd, max_fd_added);
-
-    for (auto& notifier : *s_notifiers) {
-        if (notifier->type() == Notifier::Type::Read)
-            add_fd_to_set(notifier->fd(), rfds);
-        if (notifier->type() == Notifier::Type::Write)
-            add_fd_to_set(notifier->fd(), wfds);
-        if (notifier->type() == Notifier::Type::Exceptional)
-            VERIFY_NOT_REACHED();
-    }
-
-    bool has_pending_events = m_private->thread_event_queue.has_pending_events();
-
-    // Figure out how long to wait at maximum.
-    // This mainly depends on the WaitMode and whether we have pending events, but also the next expiring timer.
-    Time now;
-    struct timeval timeout = { 0, 0 };
-    bool should_wait_forever = false;
-    if (mode == WaitMode::WaitForEvents && !has_pending_events) {
-        auto next_timer_expiration = get_next_timer_expiration();
-        if (next_timer_expiration.has_value()) {
-            now = Time::now_monotonic_coarse();
-            auto computed_timeout = next_timer_expiration.value() - now;
-            if (computed_timeout.is_negative())
-                computed_timeout = Time::zero();
-            timeout = computed_timeout.to_timeval();
-        } else {
-            should_wait_forever = true;
-        }
-    }
-
-try_select_again:
-    // select() and wait for file system events, calls to wake(), POSIX signals, or timer expirations.
-    int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
-    // Because POSIX, we might spuriously return from select() with EINTR; just select again.
-    if (marked_fd_count < 0) {
-        int saved_errno = errno;
-        if (saved_errno == EINTR) {
-            if (m_exit_requested)
-                return;
-            goto try_select_again;
-        }
-        dbgln("Core::EventLoop::wait_for_event: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
-        VERIFY_NOT_REACHED();
-    }
-
-    // We woke up due to a call to wake() or a POSIX signal.
-    // Handle signals and see whether we need to handle events as well.
-    if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
-        int wake_events[8];
-        ssize_t nread;
-        // We might receive another signal while read()ing here. The signal will go to the handle_signal properly,
-        // but we get interrupted. Therefore, just retry while we were interrupted.
-        do {
-            errno = 0;
-            nread = read(s_wake_pipe_fds[0], wake_events, sizeof(wake_events));
-            if (nread == 0)
-                break;
-        } while (nread < 0 && errno == EINTR);
-        if (nread < 0) {
-            perror("Core::EventLoop::wait_for_event: read from wake pipe");
-            VERIFY_NOT_REACHED();
-        }
-        VERIFY(nread > 0);
-        bool wake_requested = false;
-        int event_count = nread / sizeof(wake_events[0]);
-        for (int i = 0; i < event_count; i++) {
-            if (wake_events[i] != 0)
-                dispatch_signal(wake_events[i]);
-            else
-                wake_requested = true;
-        }
-
-        if (!wake_requested && nread == sizeof(wake_events))
-            goto retry;
-    }
-
-    if (!s_timers->is_empty()) {
-        now = Time::now_monotonic_coarse();
-    }
-
-    // Handle expired timers.
-    for (auto& it : *s_timers) {
-        auto& timer = *it.value;
-        if (!timer.has_expired(now))
-            continue;
-        auto owner = timer.owner.strong_ref();
-        if (timer.fire_when_not_visible == TimerShouldFireWhenNotVisible::No
-            && owner && !owner->is_visible_for_timer_purposes()) {
-            continue;
-        }
-
-        dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Timer {} has expired, sending Core::TimerEvent to {}", timer.timer_id, *owner);
-
-        if (owner)
-            post_event(*owner, make<TimerEvent>(timer.timer_id));
-        if (timer.should_reload) {
-            timer.reload(now);
-        } else {
-            // FIXME: Support removing expired timers that don't want to reload.
-            VERIFY_NOT_REACHED();
-        }
-    }
-
-    if (!marked_fd_count)
-        return;
-
-    // Handle file system notifiers by making them normal events.
-    for (auto& notifier : *s_notifiers) {
-        if (notifier->type() == Notifier::Type::Read && FD_ISSET(notifier->fd(), &rfds)) {
-            post_event(*notifier, make<NotifierActivationEvent>(notifier->fd()));
-        }
-        if (notifier->type() == Notifier::Type::Write && FD_ISSET(notifier->fd(), &wfds)) {
-            post_event(*notifier, make<NotifierActivationEvent>(notifier->fd()));
-        }
-    }
-}
-
-bool EventLoopTimer::has_expired(Time const& now) const
-{
-    return now > fire_time;
-}
-
-void EventLoopTimer::reload(Time const& now)
-{
-    fire_time = now + interval;
-}
-
-Optional<Time> EventLoop::get_next_timer_expiration()
-{
-    auto now = Time::now_monotonic_coarse();
-    Optional<Time> soonest {};
-    for (auto& it : *s_timers) {
-        auto& fire_time = it.value->fire_time;
-        auto owner = it.value->owner.strong_ref();
-        if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
-            && owner && !owner->is_visible_for_timer_purposes()) {
-            continue;
-        }
-        // OPTIMIZATION: If we have a timer that needs to fire right away, we can stop looking here.
-        // FIXME: This whole operation could be O(1) with a better data structure.
-        if (fire_time < now)
-            return now;
-        if (!soonest.has_value() || fire_time < soonest.value())
-            soonest = fire_time;
-    }
-    return soonest;
+    current().m_impl->notify_forked_and_in_child();
 }
 
 int EventLoop::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
-    VERIFY_EVENT_LOOP_INITIALIZED();
-    VERIFY(milliseconds >= 0);
-    auto timer = make<EventLoopTimer>();
-    timer->owner = object;
-    timer->interval = Time::from_milliseconds(milliseconds);
-    timer->reload(Time::now_monotonic_coarse());
-    timer->should_reload = should_reload;
-    timer->fire_when_not_visible = fire_when_not_visible;
-    int timer_id = s_id_allocator.with_locked([](auto& allocator) { return allocator->allocate(); });
-    timer->timer_id = timer_id;
-    s_timers->set(timer_id, move(timer));
-    return timer_id;
+    if (!has_event_loop())
+        return 0;
+    return current().m_impl->register_timer(object, milliseconds, should_reload, fire_when_not_visible);
 }
 
 bool EventLoop::unregister_timer(int timer_id)
 {
-    VERIFY_EVENT_LOOP_INITIALIZED();
-    s_id_allocator.with_locked([&](auto& allocator) { allocator->deallocate(timer_id); });
-    auto it = s_timers->find(timer_id);
-    if (it == s_timers->end())
+    if (!has_event_loop())
         return false;
-    s_timers->remove(it);
-    return true;
+    return current().m_impl->unregister_timer(timer_id);
 }
 
 void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
 {
-    VERIFY_EVENT_LOOP_INITIALIZED();
-    s_notifiers->set(&notifier);
+    if (!has_event_loop())
+        return;
+    current().m_impl->register_notifier(notifier);
 }
 
 void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 {
-    VERIFY_EVENT_LOOP_INITIALIZED();
-    s_notifiers->remove(&notifier);
+    if (!has_event_loop())
+        return;
+    current().m_impl->unregister_notifier(notifier);
 }
 
 void EventLoop::wake()
 {
-    dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::wake()");
-    int wake_event = 0;
-    int nwritten = write((*m_wake_pipe_fds)[1], &wake_event, sizeof(wake_event));
-    if (nwritten < 0) {
-        perror("EventLoop::wake: write");
-        VERIFY_NOT_REACHED();
-    }
+    m_impl->wake();
 }
 
 void EventLoop::deferred_invoke(Function<void()> invokee)
@@ -658,6 +161,11 @@ void EventLoop::deferred_invoke(Function<void()> invokee)
 void deferred_invoke(Function<void()> invokee)
 {
     EventLoop::current().deferred_invoke(move(invokee));
+}
+
+bool EventLoop::was_exit_requested() const
+{
+    return m_impl->was_exit_requested();
 }
 
 }

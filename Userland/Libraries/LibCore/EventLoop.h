@@ -18,6 +18,8 @@
 
 namespace Core {
 
+class EventLoopImplementation;
+
 // The event loop enables asynchronous (not parallel or multi-threaded) computing by efficiently handling events from various sources.
 // Event loops are most important for GUI programs, where the various GUI updates and action callbacks run on the EventLoop,
 // as well as services, where asynchronous remote procedure calls of multiple clients are handled.
@@ -48,9 +50,6 @@ public:
     EventLoop();
     ~EventLoop();
 
-    static void initialize_wake_pipes();
-    static bool has_been_instantiated();
-
     // Pump the event loop until its exit is requested.
     int exec();
 
@@ -73,7 +72,7 @@ public:
 
     void quit(int);
     void unquit();
-    bool was_exit_requested() const { return m_exit_requested; }
+    bool was_exit_requested() const;
 
     // The registration functions act upon the current loop of the current thread.
     static int register_timer(Object&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
@@ -102,17 +101,7 @@ private:
 
     static pid_t s_pid;
 
-    bool m_exit_requested { false };
-    int m_exit_code { 0 };
-
-    static thread_local int s_wake_pipe_fds[2];
-    static thread_local bool s_wake_pipe_initialized;
-
-    // The wake pipe of this event loop needs to be accessible from other threads.
-    int (*m_wake_pipe_fds)[2];
-
-    struct Private;
-    NonnullOwnPtr<Private> m_private;
+    NonnullOwnPtr<EventLoopImplementation> m_impl;
 };
 
 void deferred_invoke(Function<void()>);

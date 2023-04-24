@@ -92,7 +92,7 @@ size_t ThreadEventQueue::process()
             case Event::Quit:
                 VERIFY_NOT_REACHED();
             default:
-                dbgln("ThreadEventQueue::process: Event of type {} with no receiver", event.type());
+                // Receiver disappeared, drop the event on the floor.
                 break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
