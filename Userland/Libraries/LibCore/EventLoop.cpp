@@ -48,10 +48,6 @@ extern bool s_global_initializers_ran;
 
 namespace Core {
 
-class InspectorServerConnection;
-
-[[maybe_unused]] static bool connect_to_inspector_server();
-
 struct EventLoopTimer {
     int timer_id { 0 };
     Time interval;
@@ -74,7 +70,6 @@ struct EventLoop::Private {
 };
 
 static Threading::MutexProtected<NeverDestroyed<IDAllocator>> s_id_allocator;
-static Threading::MutexProtected<RefPtr<InspectorServerConnection>> s_inspector_server_connection;
 
 // Each thread has its own event loop stack, its own timers, notifiers and a wake pipe.
 static thread_local Vector<EventLoop&>* s_event_loop_stack;
@@ -162,145 +157,7 @@ inline SignalHandlersInfo* signals_info()
 
 pid_t EventLoop::s_pid;
 
-class InspectorServerConnection : public Object {
-    C_OBJECT(InspectorServerConnection)
-private:
-    explicit InspectorServerConnection(NonnullOwnPtr<LocalSocket> socket)
-        : m_socket(move(socket))
-    {
-#ifdef AK_OS_SERENITY
-        m_socket->on_ready_to_read = [this] {
-            u32 length;
-            auto maybe_bytes_read = m_socket->read_some({ (u8*)&length, sizeof(length) });
-            if (maybe_bytes_read.is_error()) {
-                dbgln("InspectorServerConnection: Failed to read message length from inspector server connection: {}", maybe_bytes_read.error());
-                return;
-            }
-
-            auto bytes_read = maybe_bytes_read.release_value();
-            if (bytes_read.is_empty()) {
-                dbgln_if(EVENTLOOP_DEBUG, "RPC client disconnected");
-                return;
-            }
-
-            VERIFY(bytes_read.size() == sizeof(length));
-
-            auto request_buffer = ByteBuffer::create_uninitialized(length).release_value();
-            maybe_bytes_read = m_socket->read_some(request_buffer.bytes());
-            if (maybe_bytes_read.is_error()) {
-                dbgln("InspectorServerConnection: Failed to read message content from inspector server connection: {}", maybe_bytes_read.error());
-                return;
-            }
-
-            bytes_read = maybe_bytes_read.release_value();
-
-            auto request_json = JsonValue::from_string(request_buffer);
-            if (request_json.is_error() || !request_json.value().is_object()) {
-                dbgln("RPC client sent invalid request");
-                return;
-            }
-
-            handle_request(request_json.value().as_object());
-        };
-#else
-        warnln("RPC Client constructed outside serenity, this is very likely a bug!");
-#endif
-    }
-    virtual ~InspectorServerConnection() override
-    {
-        if (auto inspected_object = m_inspected_object.strong_ref())
-            inspected_object->decrement_inspector_count({});
-    }
-
-public:
-    void send_response(JsonObject const& response)
-    {
-        auto serialized = response.to_deprecated_string();
-        auto bytes_to_send = serialized.bytes();
-        u32 length = bytes_to_send.size();
-        // FIXME: Propagate errors
-        MUST(m_socket->write_value(length));
-        while (!bytes_to_send.is_empty()) {
-            size_t bytes_sent = MUST(m_socket->write_some(bytes_to_send));
-            bytes_to_send = bytes_to_send.slice(bytes_sent);
-        }
-    }
-
-    void handle_request(JsonObject const& request)
-    {
-        auto type = request.get_deprecated_string("type"sv);
-
-        if (!type.has_value()) {
-            dbgln("RPC client sent request without type field");
-            return;
-        }
-
-        if (type == "Identify") {
-            JsonObject response;
-            response.set("type", type.value());
-            response.set("pid", getpid());
-#ifdef AK_OS_SERENITY
-            char buffer[1024];
-            if (get_process_name(buffer, sizeof(buffer)) >= 0) {
-                response.set("process_name", buffer);
-            } else {
-                response.set("process_name", JsonValue());
-            }
-#endif
-            send_response(response);
-            return;
-        }
-
-        if (type == "GetAllObjects") {
-            JsonObject response;
-            response.set("type", type.value());
-            JsonArray objects;
-            for (auto& object : Object::all_objects()) {
-                JsonObject json_object;
-                object.save_to(json_object);
-                objects.must_append(move(json_object));
-            }
-            response.set("objects", move(objects));
-            send_response(response);
-            return;
-        }
-
-        if (type == "SetInspectedObject") {
-            auto address = request.get_addr("address"sv);
-            for (auto& object : Object::all_objects()) {
-                if ((FlatPtr)&object == address) {
-                    if (auto inspected_object = m_inspected_object.strong_ref())
-                        inspected_object->decrement_inspector_count({});
-                    m_inspected_object = object;
-                    object.increment_inspector_count({});
-                    break;
-                }
-            }
-            return;
-        }
-
-        if (type == "SetProperty") {
-            auto address = request.get_addr("address"sv);
-            for (auto& object : Object::all_objects()) {
-                if ((FlatPtr)&object == address) {
-                    bool success = object.set_property(request.get_deprecated_string("name"sv).value(), request.get("value"sv).value());
-                    JsonObject response;
-                    response.set("type", "SetProperty");
-                    response.set("success", success);
-                    send_response(response);
-                    break;
-                }
-            }
-            return;
-        }
-    }
-
-private:
-    NonnullOwnPtr<LocalSocket> m_socket;
-    WeakPtr<Object> m_inspected_object;
-};
-
-EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
+EventLoop::EventLoop()
     : m_wake_pipe_fds(&s_wake_pipe_fds)
     , m_private(make<Private>())
 {
@@ -325,19 +182,6 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
     if (s_event_loop_stack->is_empty()) {
         s_pid = getpid();
         s_event_loop_stack->append(*this);
-
-#ifdef AK_OS_SERENITY
-        if (getuid() != 0) {
-            if (getenv("MAKE_INSPECTABLE") == "1"sv)
-                make_inspectable = Core::EventLoop::MakeInspectable::Yes;
-
-            if (make_inspectable == MakeInspectable::Yes
-                && !s_inspector_server_connection.with_locked([](auto inspector_server_connection) { return inspector_server_connection; })) {
-                if (!connect_to_inspector_server())
-                    dbgln("Core::EventLoop: Failed to connect to InspectorServer");
-            }
-        }
-#endif
     }
 
     initialize_wake_pipes();
@@ -349,29 +193,6 @@ EventLoop::~EventLoop()
 {
     if (!s_event_loop_stack->is_empty() && &s_event_loop_stack->last() == this)
         s_event_loop_stack->take_last();
-}
-
-bool connect_to_inspector_server()
-{
-#ifdef AK_OS_SERENITY
-    auto maybe_path = SessionManagement::parse_path_with_sid("/tmp/session/%sid/portal/inspectables"sv);
-    if (maybe_path.is_error()) {
-        dbgln("connect_to_inspector_server: {}", maybe_path.error());
-        return false;
-    }
-    auto inspector_server_path = maybe_path.value();
-    auto maybe_socket = LocalSocket::connect(inspector_server_path, Socket::PreventSIGPIPE::Yes);
-    if (maybe_socket.is_error()) {
-        dbgln("connect_to_inspector_server: Failed to connect: {}", maybe_socket.error());
-        return false;
-    }
-    s_inspector_server_connection.with_locked([&](auto& inspector_server_connection) {
-        inspector_server_connection = InspectorServerConnection::construct(maybe_socket.release_value());
-    });
-    return true;
-#else
-    VERIFY_NOT_REACHED();
-#endif
 }
 
 #define VERIFY_EVENT_LOOP_INITIALIZED()                                              \

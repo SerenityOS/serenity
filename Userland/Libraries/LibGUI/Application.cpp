@@ -70,11 +70,11 @@ Application* Application::the()
     return *s_the;
 }
 
-Application::Application(int argc, char** argv, Core::EventLoop::MakeInspectable make_inspectable)
+Application::Application(int argc, char** argv)
 {
     VERIFY(!*s_the);
     *s_the = *this;
-    m_event_loop = make<Core::EventLoop>(make_inspectable);
+    m_event_loop = make<Core::EventLoop>();
     ConnectionToWindowServer::the();
     Clipboard::initialize({});
     if (argc > 0)

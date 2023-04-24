@@ -41,8 +41,6 @@ $ watch -n 1 -- bt 124
 
 ## See also
 
-* [`Inspector`(1)](help://man/1/Applications/Inspector)
-
 * [`Profiler`(1)](help://man/1/Applications/Profiler)
 
 * [`watch`(1)](help://man/1/watch)

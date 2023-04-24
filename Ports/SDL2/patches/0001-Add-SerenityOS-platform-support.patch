@@ -300,7 +300,7 @@ index 0000000000000000000000000000000000000000..8a5abd58967dee12619c45d0e0d6cfc8
 +
 +    // We need to create our audio connection and event loop here, in order to register them with SDL's audio thread
 +    if (!h->event_loop)
-+        h->event_loop = make<Core::EventLoop>(Core::EventLoop::MakeInspectable::No);
++        h->event_loop = make<Core::EventLoop>();
 +    if (!h->client)
 +        h->client = MUST(Audio::ConnectionToServer::try_create());
 +

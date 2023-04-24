@@ -52,11 +52,6 @@ This is a list of useful tips and tricks to help you make the most out of Sereni
 
 ## Development
 * Supplying `# profile` with a process identifier (PID) of `-1` as root enables systemwide profiling.
-* Make applications inspectable by including `MAKE_INSPECTABLE=1` in their environment. Inspectable processes can be examined with [Inspector](help://man/1/Applications/Inspector) via remote procedure calls (RPCs). For example, to make the Eyes application inspectable, enter the following Shell commands:
-```sh
-$ export MAKE_INSPECTABLE=1
-$ Eyes &
-```
 
 ## See also
 * [Keyboard Shortcuts](help://man/7/KeyboardShortcuts)
