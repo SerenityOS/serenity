@@ -15,6 +15,7 @@
 #include <LibCore/Event.h>
 #include <LibCore/Object.h>
 #include <LibDSP/Music.h>
+#include <LibThreading/MutexProtected.h>
 #include <LibThreading/Thread.h>
 
 class TrackManager;
