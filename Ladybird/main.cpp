@@ -5,6 +5,7 @@
  */
 
 #include "BrowserWindow.h"
+#include "EventLoopImplementationQt.h"
 #include "HelperProcess.h"
 #include "Settings.h"
 #include "Utilities.h"
@@ -51,13 +52,12 @@ static ErrorOr<void> handle_attached_debugger()
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    // NOTE: This is only used for the Core::Socket inside the IPC connections.
-    // FIXME: Refactor things so we can get rid of this somehow.
+    QApplication app(arguments.argc, arguments.argv);
+
+    Core::EventLoop::make_implementation = Ladybird::EventLoopImplementationQt::create;
     Core::EventLoop event_loop;
 
     TRY(handle_attached_debugger());
-
-    QApplication app(arguments.argc, arguments.argv);
 
     platform_init();
 
@@ -110,5 +110,5 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         window.view().load(TRY(get_formatted_url(home_url.bytes_as_string_view())));
     }
 
-    return app.exec();
+    return event_loop.exec();
 }

@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+
+#include "../EventLoopImplementationQt.h"
 #include "../EventLoopPluginQt.h"
 #include "../FontPluginQt.h"
 #include "../ImageCodecPluginLadybird.h"
@@ -59,11 +61,10 @@ static void proxy_socket_through_notifier(ClientType& client, QSocketNotifier& n
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
-    // NOTE: This is only used for the Core::Socket inside the IPC connection.
-    // FIXME: Refactor things so we can get rid of this somehow.
-    Core::EventLoop event_loop;
-
     QGuiApplication app(arguments.argc, arguments.argv);
+
+    Core::EventLoop::make_implementation = Ladybird::EventLoopImplementationQt::create;
+    Core::EventLoop event_loop;
 
     platform_init();
 
@@ -109,7 +110,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         proxy_socket_through_notifier(webdriver, webdriver_notifier);
     };
 
-    return app.exec();
+    return event_loop.exec();
 }
 
 static ErrorOr<void> load_content_filters()

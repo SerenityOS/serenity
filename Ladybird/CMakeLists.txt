@@ -83,6 +83,7 @@ set(SOURCES
     ${BROWSER_SOURCE_DIR}/History.cpp
     BrowserWindow.cpp
     ConsoleWidget.cpp
+    EventLoopImplementationQt.cpp
     HelperProcess.cpp
     InspectorWidget.cpp
     LocationEdit.cpp
