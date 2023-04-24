@@ -17,6 +17,12 @@ die() {
     exit 1
 }
 
+exit_if_running_as_root() {
+    if [ "$(id -u)" -eq 0 ]; then
+       die "$*"
+    fi
+}
+
 find_executable() {
   paths=("/usr/sbin" "/sbin")
 
