@@ -24,7 +24,7 @@ function(compile_ipc source output)
     endif()
     add_custom_command(
         OUTPUT ${output}
-        COMMAND $<TARGET_FILE:Lagom::IPCCompiler> ${source} > ${output}.tmp
+        COMMAND $<TARGET_FILE:Lagom::IPCCompiler> ${source} -o ${output}.tmp
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different ${output}.tmp ${output}
         COMMAND "${CMAKE_COMMAND}" -E remove ${output}.tmp
         VERBATIM
