@@ -605,27 +605,9 @@ void WebContentView::create_client(WebView::EnableCallgrindProfiling enable_call
     auto candidate_web_content_paths = get_paths_for_helper_process("WebContent"sv).release_value_but_fixme_should_propagate_errors();
     auto new_client = launch_web_content_process(candidate_web_content_paths, enable_callgrind_profiling).release_value_but_fixme_should_propagate_errors();
 
-    m_web_content_notifier.setSocket(new_client->socket().fd().value());
-    m_web_content_notifier.setEnabled(true);
-
-    QObject::connect(&m_web_content_notifier, &QSocketNotifier::activated, [new_client = new_client.ptr()] {
-        if (auto notifier = new_client->socket().notifier())
-            notifier->on_activation();
-    });
-
-    struct DeferredInvokerQt final : IPC::DeferredInvoker {
-        virtual ~DeferredInvokerQt() = default;
-        virtual void schedule(Function<void()> callback) override
-        {
-            QTimer::singleShot(0, std::move(callback));
-        }
-    };
-
-    new_client->set_deferred_invoker(make<DeferredInvokerQt>());
-
     m_client_state.client = new_client;
     m_client_state.client->on_web_content_process_crash = [this] {
-        QTimer::singleShot(0, [this] {
+        Core::deferred_invoke([this] {
             handle_web_content_process_crash();
         });
     };
