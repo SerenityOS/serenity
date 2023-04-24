@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2020-2022, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2023, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-
 #include "../EventLoopImplementationQt.h"
-#include "../EventLoopPluginQt.h"
 #include "../FontPluginQt.h"
 #include "../ImageCodecPluginLadybird.h"
 #include "../RequestManagerQt.h"
@@ -25,9 +23,9 @@
 #include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/PermissionsPolicy/AutoplayAllowlist.h>
+#include <LibWeb/Platform/EventLoopPluginSerenity.h>
 #include <LibWeb/WebSockets/WebSocket.h>
 #include <QGuiApplication>
-#include <QSocketNotifier>
 #include <QTimer>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
@@ -38,27 +36,6 @@ static ErrorOr<void> load_autoplay_allowlist();
 
 extern DeprecatedString s_serenity_resource_root;
 
-struct DeferredInvokerQt final : IPC::DeferredInvoker {
-    virtual ~DeferredInvokerQt() = default;
-    virtual void schedule(Function<void()> callback) override
-    {
-        QTimer::singleShot(0, move(callback));
-    }
-};
-
-template<typename ClientType>
-static void proxy_socket_through_notifier(ClientType& client, QSocketNotifier& notifier)
-{
-    notifier.setSocket(client.socket().fd().value());
-    notifier.setEnabled(true);
-
-    QObject::connect(&notifier, &QSocketNotifier::activated, [&client]() mutable {
-        client.socket().notifier()->on_activation();
-    });
-
-    client.set_deferred_invoker(make<DeferredInvokerQt>());
-}
-
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     QGuiApplication app(arguments.argc, arguments.argv);
@@ -68,7 +45,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     platform_init();
 
-    Web::Platform::EventLoopPlugin::install(*new Ladybird::EventLoopPluginQt);
+    Web::Platform::EventLoopPlugin::install(*new Web::Platform::EventLoopPluginSerenity);
     Web::Platform::ImageCodecPlugin::install(*new Ladybird::ImageCodecPluginLadybird);
 
     Web::ResourceLoader::initialize(RequestManagerQt::create());
@@ -101,14 +78,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto webcontent_socket = TRY(Core::take_over_socket_from_system_server("WebContent"sv));
     auto webcontent_client = TRY(WebContent::ConnectionFromClient::try_create(move(webcontent_socket)));
     webcontent_client->set_fd_passing_socket(TRY(Core::LocalSocket::adopt_fd(webcontent_fd_passing_socket)));
-
-    QSocketNotifier webcontent_notifier(QSocketNotifier::Type::Read);
-    proxy_socket_through_notifier(*webcontent_client, webcontent_notifier);
-
-    QSocketNotifier webdriver_notifier(QSocketNotifier::Type::Read);
-    webcontent_client->page_host().on_webdriver_connection = [&](auto& webdriver) {
-        proxy_socket_through_notifier(webdriver, webdriver_notifier);
-    };
 
     return event_loop.exec();
 }
