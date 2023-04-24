@@ -116,9 +116,10 @@ void PageHost::paint(Web::DevicePixelRect const& content_rect, Gfx::Bitmap& targ
     if (auto* document = page().top_level_browsing_context().active_document())
         document->update_layout();
 
+    painter.fill_rect(bitmap_rect, palette().base());
+
     auto* layout_root = this->layout_root();
     if (!layout_root) {
-        painter.fill_rect(bitmap_rect, palette().base());
         return;
     }
 

@@ -179,7 +179,7 @@ public:
     Page* page();
     Page const* page() const;
 
-    Color background_color(Gfx::Palette const&) const;
+    Color background_color() const;
     Vector<CSS::BackgroundLayerData> const* background_layers() const;
 
     Color link_color() const;
