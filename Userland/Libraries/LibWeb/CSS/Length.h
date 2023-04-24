@@ -17,24 +17,31 @@ namespace Web::CSS {
 class Length {
 public:
     enum class Type {
-        Auto,
-        Cm,
-        In,
-        Mm,
-        Q,
-        Px,
-        Pt,
-        Pc,
-        Ex,
+        // Font-relative
         Em,
-        Ch,
         Rem,
-        Vh,
-        Vw,
-        Vmax,
-        Vmin,
+        Ex,
+        Ch,
         Lh,
         Rlh,
+
+        // Viewport-relative
+        Vw,
+        Vh,
+        Vmin,
+        Vmax,
+
+        // Absolute
+        Cm,
+        Mm,
+        Q,
+        In,
+        Pt,
+        Pc,
+        Px,
+
+        // FIXME: Remove auto somehow
+        Auto,
     };
 
     static Optional<Type> unit_from_name(StringView);
