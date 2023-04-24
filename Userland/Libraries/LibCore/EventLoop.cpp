@@ -168,9 +168,6 @@ class InspectorServerConnection : public Object {
 private:
     explicit InspectorServerConnection(NonnullOwnPtr<LocalSocket> socket)
         : m_socket(move(socket))
-        , m_client_id(s_id_allocator.with_locked([](auto& allocator) {
-            return allocator->allocate();
-        }))
     {
 #ifdef AK_OS_SERENITY
         m_socket->on_ready_to_read = [this] {
@@ -178,14 +175,12 @@ private:
             auto maybe_bytes_read = m_socket->read_some({ (u8*)&length, sizeof(length) });
             if (maybe_bytes_read.is_error()) {
                 dbgln("InspectorServerConnection: Failed to read message length from inspector server connection: {}", maybe_bytes_read.error());
-                shutdown();
                 return;
             }
 
             auto bytes_read = maybe_bytes_read.release_value();
             if (bytes_read.is_empty()) {
                 dbgln_if(EVENTLOOP_DEBUG, "RPC client disconnected");
-                shutdown();
                 return;
             }
 
@@ -195,7 +190,6 @@ private:
             maybe_bytes_read = m_socket->read_some(request_buffer.bytes());
             if (maybe_bytes_read.is_error()) {
                 dbgln("InspectorServerConnection: Failed to read message content from inspector server connection: {}", maybe_bytes_read.error());
-                shutdown();
                 return;
             }
 
@@ -204,7 +198,6 @@ private:
             auto request_json = JsonValue::from_string(request_buffer);
             if (request_json.is_error() || !request_json.value().is_object()) {
                 dbgln("RPC client sent invalid request");
-                shutdown();
                 return;
             }
 
@@ -301,22 +294,11 @@ public:
             }
             return;
         }
-
-        if (type == "Disconnect") {
-            shutdown();
-            return;
-        }
-    }
-
-    void shutdown()
-    {
-        s_id_allocator.with_locked([this](auto& allocator) { allocator->deallocate(m_client_id); });
     }
 
 private:
     NonnullOwnPtr<LocalSocket> m_socket;
     WeakPtr<Object> m_inspected_object;
-    int m_client_id { -1 };
 };
 
 EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
