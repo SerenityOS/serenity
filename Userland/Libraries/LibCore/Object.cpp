@@ -174,14 +174,6 @@ void Object::deferred_invoke(Function<void()> invokee)
     Core::deferred_invoke([invokee = move(invokee), strong_this = NonnullRefPtr(*this)] { invokee(); });
 }
 
-void Object::save_to(JsonObject& json)
-{
-    for (auto& it : m_properties) {
-        auto& property = it.value;
-        json.set(property->name(), property->get());
-    }
-}
-
 JsonValue Object::property(DeprecatedString const& name) const
 {
     auto it = m_properties.find(name);

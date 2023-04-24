@@ -346,56 +346,6 @@ ErrorOr<NonnullRefPtr<Service>> Service::try_create(Core::ConfigFile const& conf
     return service;
 }
 
-void Service::save_to(JsonObject& json)
-{
-    Core::Object::save_to(json);
-
-    json.set("executable_path", m_executable_path);
-
-    // FIXME: This crashes Inspector.
-    /*
-    JsonArray extra_args;
-    for (String& arg : m_extra_arguments)
-        extra_args.append(arg);
-    json.set("extra_arguments", move(extra_args));
-
-    JsonArray system_modes;
-    for (String& mode : m_system_modes)
-        system_modes.append(mode);
-    json.set("system_modes", system_modes);
-
-    JsonArray environment;
-    for (String& env : m_environment)
-        system_modes.append(env);
-    json.set("environment", environment);
-
-    JsonArray sockets;
-    for (SocketDescriptor &socket : m_sockets) {
-        JsonObject socket_obj;
-        socket_obj.set("path", socket.path);
-        socket_obj.set("permissions", socket.permissions);
-        sockets.append(socket);
-    }
-    json.set("sockets", sockets);
-    */
-
-    json.set("stdio_file_path", m_stdio_file_path);
-    json.set("priority", m_priority);
-    json.set("keep_alive", m_keep_alive);
-    json.set("lazy", m_lazy);
-    json.set("user", m_user);
-    json.set("multi_instance", m_multi_instance);
-    json.set("accept_socket_connections", m_accept_socket_connections);
-
-    if (m_pid > 0)
-        json.set("pid", m_pid);
-    else
-        json.set("pid", nullptr);
-
-    json.set("restart_attempts", m_restart_attempts);
-    json.set("working_directory", m_working_directory);
-}
-
 bool Service::is_enabled() const
 {
     extern DeprecatedString g_system_mode;
