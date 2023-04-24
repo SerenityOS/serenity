@@ -388,8 +388,18 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
         auto const eob_base = symbol >> 4;
         auto const additional_value = TRY(read_huffman_bits(scan.huffman_stream, eob_base));
 
-        scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
+        u64 eob_run_count = additional_value + (1ull << eob_base) - 1;
 
+        // Divide EOB run into multiple runs of length 32767 followed by a final run
+        while (eob_run_count > 32767) {
+            scan.end_of_bands_run_count += 32767;
+            // end_of_bands_run_count is decremented at the end of `build_macroblocks`.
+            // And we need to now that we reached End of Block in `add_ac`.
+            ++scan.end_of_bands_run_count;
+            eob_run_count -= 32767;
+        }
+
+        scan.end_of_bands_run_count += eob_run_count;
         // end_of_bands_run_count is decremented at the end of `build_macroblocks`.
         // And we need to now that we reached End of Block in `add_ac`.
         ++scan.end_of_bands_run_count;
