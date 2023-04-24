@@ -12,6 +12,8 @@ namespace Core {
 
 class EventLoopImplementationUnix final : public EventLoopImplementation {
 public:
+    static NonnullOwnPtr<EventLoopImplementationUnix> create() { return make<EventLoopImplementationUnix>(); }
+
     EventLoopImplementationUnix();
     virtual ~EventLoopImplementationUnix();
 

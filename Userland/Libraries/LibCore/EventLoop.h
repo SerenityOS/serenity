@@ -93,6 +93,8 @@ public:
 
     static EventLoop& current();
 
+    static Function<NonnullOwnPtr<EventLoopImplementation>()> make_implementation;
+
 private:
     void wait_for_event(WaitMode);
     Optional<Time> get_next_timer_expiration();

@@ -30,8 +30,10 @@ bool has_event_loop()
 }
 }
 
+Function<NonnullOwnPtr<EventLoopImplementation>()> EventLoop::make_implementation = EventLoopImplementationUnix::create;
+
 EventLoop::EventLoop()
-    : m_impl(make<EventLoopImplementationUnix>())
+    : m_impl(make_implementation())
 {
     if (event_loop_stack().is_empty()) {
         event_loop_stack().append(*this);
