@@ -35,7 +35,7 @@ Everyone is encouraged to make use of tooling (spell checkers, etc) to make this
 
 ## Code submission policy
 
-Nobody is perfect, and sometimes we mess things up. That said, here are some good dos & dont's to try and stick to:
+Nobody is perfect, and sometimes we mess things up. That said, here are some good dos & don'ts to try and stick to:
 
 **Do:**
 
