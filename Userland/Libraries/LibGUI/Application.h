@@ -97,9 +97,9 @@ public:
     void register_recent_file_actions(Badge<GUI::Menu>, Vector<NonnullRefPtr<GUI::Action>>);
 
 private:
-    Application(int argc, char** argv, Core::EventLoop::MakeInspectable = Core::EventLoop::MakeInspectable::No);
-    Application(Main::Arguments const& arguments, Core::EventLoop::MakeInspectable inspectable = Core::EventLoop::MakeInspectable::No)
-        : Application(arguments.argc, arguments.argv, inspectable)
+    Application(int argc, char** argv);
+    Application(Main::Arguments const& arguments)
+        : Application(arguments.argc, arguments.argv)
     {
     }
 

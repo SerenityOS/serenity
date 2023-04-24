@@ -1,7 +1,7 @@
 serenity_component(
     SystemMonitor
     REQUIRED
-    TARGETS SystemMonitor Profiler Inspector
+    TARGETS SystemMonitor Profiler
 )
 
 compile_gml(SystemMonitor.gml SystemMonitorGML.h system_monitor_gml)

@@ -26,7 +26,6 @@ Note that many applications can be disabled at SerenityOS build time if desired.
 - [GML Playground](help://man/1/Applications/GMLPlayground)
 - [Hex Editor](help://man/1/Applications/HexEditor)
 - [Image Viewer](help://man/1/Applications/ImageViewer)
-- [Inspector](help://man/1/Applications/Inspector)
 - [Magnifier](help://man/1/Applications/Magnifier)
 - [Mail](help://man/1/Applications/Mail)
 - [Mouse Settings](help://man/1/Applications/MouseSettings)

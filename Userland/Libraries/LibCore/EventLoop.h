@@ -36,23 +36,16 @@ namespace Core {
 // - Fork events, because the child process event loop needs to clear its events and handlers.
 // - Quit events, i.e. the event loop should exit.
 // Any event that the event loop needs to wait on or needs to repeatedly handle is stored in a handle, e.g. s_timers.
-//
-// EventLoop has one final responsibility: Handling the InspectorServer connection and processing requests to the Object hierarchy.
 class EventLoop {
     friend struct EventLoopPusher;
 
 public:
-    enum class MakeInspectable {
-        No,
-        Yes,
-    };
-
     enum class WaitMode {
         WaitForEvents,
         PollForEvents,
     };
 
-    explicit EventLoop(MakeInspectable = MakeInspectable::No);
+    EventLoop();
     ~EventLoop();
 
     static void initialize_wake_pipes();

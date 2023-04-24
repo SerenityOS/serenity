@@ -263,7 +263,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return result.release_error();
 
     TRY(Core::System::unveil("/bin/Profiler", "rx"));
-    TRY(Core::System::unveil("/bin/Inspector", "rx"));
     TRY(Core::System::unveil("/bin/HackStudio", "rx"));
     TRY(Core::System::unveil(nullptr, nullptr));
 
