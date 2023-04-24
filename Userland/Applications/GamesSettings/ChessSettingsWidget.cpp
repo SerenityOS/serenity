@@ -180,15 +180,18 @@ private:
                 painter.fill_rect(square_rect, square.is_light() ? m_light_square_color : m_dark_square_color);
 
                 if (m_show_coordinates) {
-                    auto coord = square.to_algebraic();
                     auto text_color = square.is_light() ? m_dark_square_color : m_light_square_color;
                     auto shrunken_rect = square_rect.shrunken(4, 4);
 
-                    if (square.rank == 0)
-                        painter.draw_text(shrunken_rect, coord.substring_view(0, 1), coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
+                    if (square.rank == 0) {
+                        auto file_char = square.file_char();
+                        painter.draw_text(shrunken_rect, { &file_char, 1 }, coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
+                    }
 
-                    if (square.file == 0)
-                        painter.draw_text(shrunken_rect, coord.substring_view(1, 1), coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
+                    if (square.file == 0) {
+                        auto rank_char = square.rank_char();
+                        painter.draw_text(shrunken_rect, { &rank_char, 1 }, coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
+                    }
                 }
             }
         }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -89,6 +90,9 @@ struct Square {
 
     bool in_bounds() const { return rank >= 0 && file >= 0 && rank < 8 && file < 8; }
     bool is_light() const { return (rank % 2) != (file % 2); }
+
+    char file_char() const;
+    char rank_char() const;
     DeprecatedString to_algebraic() const;
 };
 

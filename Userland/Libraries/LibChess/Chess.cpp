@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -81,6 +82,16 @@ Square::Square(StringView name)
     } else {
         VERIFY_NOT_REACHED();
     }
+}
+
+char Square::file_char() const
+{
+    return file + 'a';
+}
+
+char Square::rank_char() const
+{
+    return rank + '1';
 }
 
 DeprecatedString Square::to_algebraic() const
@@ -200,16 +211,16 @@ DeprecatedString Move::to_algebraic() const
 
     if (is_ambiguous) {
         if (from.file != ambiguous.file)
-            builder.append(from.to_algebraic().substring(0, 1));
+            builder.append(from.file_char());
         else if (from.rank != ambiguous.rank)
-            builder.append(from.to_algebraic().substring(1, 1));
+            builder.append(from.rank_char());
         else
             builder.append(from.to_algebraic());
     }
 
     if (is_capture) {
         if (piece.type == Type::Pawn && !is_ambiguous)
-            builder.append(from.to_algebraic().substring(0, 1));
+            builder.append(from.file_char());
         builder.append('x');
     }
 
