@@ -257,7 +257,7 @@ void PaintableBox::paint_background(PaintContext& context) const
         // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.
         if (document().html_element()->should_use_body_background_properties()) {
             background_layers = document().background_layers();
-            background_color = document().background_color(context.palette());
+            background_color = document().background_color();
         }
     } else {
         background_rect = absolute_padding_box_rect();

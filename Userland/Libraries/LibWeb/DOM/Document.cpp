@@ -722,7 +722,7 @@ void Document::tear_down_layout_tree()
     m_layout_root = nullptr;
 }
 
-Color Document::background_color(Gfx::Palette const& palette) const
+Color Document::background_color() const
 {
     // CSS2 says we should use the HTML element's background color unless it's transparent...
     if (auto* html_element = this->html_element(); html_element && html_element->layout_node()) {
@@ -734,12 +734,12 @@ Color Document::background_color(Gfx::Palette const& palette) const
     // ...in which case we use the BODY element's background color.
     if (auto* body_element = body(); body_element && body_element->layout_node()) {
         auto color = body_element->layout_node()->computed_values().background_color();
-        if (color.alpha())
-            return color;
+        return color;
     }
 
-    // If both HTML and BODY are transparent, we fall back to the system's "base" palette color.
-    return palette.base();
+    // By default, the document is transparent.
+    // The outermost canvas is colored by the PageHost.
+    return Color::Transparent;
 }
 
 Vector<CSS::BackgroundLayerData> const* Document::background_layers() const
