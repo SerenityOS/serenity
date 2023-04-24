@@ -693,15 +693,15 @@ MotionVector Decoder::select_motion_vector(u8 plane, BlockContext const& block_c
     auto round_mv_comp_q2 = [&](MotionVector in) {
         // return (value < 0 ? value - 1 : value + 1) / 2
         return MotionVector {
-            (in.row() < 0 ? in.row() - 1 : in.row() + 1) >> 1,
-            (in.column() < 0 ? in.column() - 1 : in.column() + 1) >> 1
+            (in.row < 0 ? in.row - 1 : in.row + 1) >> 1,
+            (in.column < 0 ? in.column - 1 : in.column + 1) >> 1
         };
     };
     auto round_mv_comp_q4 = [&](MotionVector in) {
         // return (value < 0 ? value - 2 : value + 2) / 4
         return MotionVector {
-            (in.row() < 0 ? in.row() - 2 : in.row() + 2) >> 2,
-            (in.column() < 0 ? in.column() - 2 : in.column() + 2) >> 2
+            (in.row < 0 ? in.row - 2 : in.row + 2) >> 2,
+            (in.column < 0 ? in.column - 2 : in.column + 2) >> 2
         };
     };
 
@@ -761,8 +761,8 @@ MotionVector Decoder::clamp_motion_vector(u8 plane, BlockContext const& block_co
     i32 subpel_top = (INTERP_EXTEND + ((blocks_high * MI_SIZE) >> subsampling_y)) << SUBPEL_BITS;
     i32 subpel_bottom = subpel_top - SUBPEL_SHIFTS;
     return {
-        clip_3(mb_to_top_edge - subpel_top, mb_to_bottom_edge + subpel_bottom, (2 * vector.row()) >> subsampling_y),
-        clip_3(mb_to_left_edge - subpel_left, mb_to_right_edge + subpel_right, (2 * vector.column()) >> subsampling_x)
+        clip_3(mb_to_top_edge - subpel_top, mb_to_bottom_edge + subpel_bottom, (2 * vector.row) >> subsampling_y),
+        clip_3(mb_to_left_edge - subpel_left, mb_to_right_edge + subpel_right, (2 * vector.column) >> subsampling_x)
     };
 }
 
@@ -897,8 +897,8 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     // The variable dX is set equal to ( (clampedMv[ 1 ] * xScale) >> REF_SCALE_SHIFT) + fracX.
     // The variable dY is set equal to ( (clampedMv[ 0 ] * yScale) >> REF_SCALE_SHIFT) + fracY.
     // (dX and dY specify a scaled motion vector.)
-    i32 scaled_vector_x = ((clamped_vector.column() * x_scale) >> REF_SCALE_SHIFT) + frac_x;
-    i32 scaled_vector_y = ((clamped_vector.row() * y_scale) >> REF_SCALE_SHIFT) + frac_y;
+    i32 scaled_vector_x = ((clamped_vector.column * x_scale) >> REF_SCALE_SHIFT) + frac_x;
+    i32 scaled_vector_y = ((clamped_vector.row * y_scale) >> REF_SCALE_SHIFT) + frac_y;
 
     // The output variable startX is set equal to (baseX << SUBPEL_BITS) + dX.
     // The output variable startY is set equal to (baseY << SUBPEL_BITS) + dY.

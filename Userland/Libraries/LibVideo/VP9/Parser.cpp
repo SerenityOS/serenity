@@ -1318,7 +1318,7 @@ DecoderErrorOr<MotionVectorPair> Parser::get_motion_vector(BlockContext const& b
 // use_mv_hp( deltaMv ) in the spec.
 static bool should_use_high_precision_motion_vector(MotionVector const& delta_vector)
 {
-    return (abs(delta_vector.row()) >> 3) < COMPANDED_MVREF_THRESH && (abs(delta_vector.column()) >> 3) < COMPANDED_MVREF_THRESH;
+    return (abs(delta_vector.row) >> 3) < COMPANDED_MVREF_THRESH && (abs(delta_vector.column) >> 3) < COMPANDED_MVREF_THRESH;
 }
 
 // read_mv( ref ) in the spec.
@@ -1328,9 +1328,9 @@ DecoderErrorOr<MotionVector> Parser::read_motion_vector(BlockContext const& bloc
     MotionVector delta_vector;
     auto joint = TRY_READ(TreeParser::parse_motion_vector_joint(block_context.decoder, *m_probability_tables, block_context.counter));
     if ((joint & MotionVectorNonZeroRow) != 0)
-        delta_vector.set_row(TRY(read_single_motion_vector_component(block_context.decoder, block_context.counter, 0, use_high_precision)));
+        delta_vector.row = TRY(read_single_motion_vector_component(block_context.decoder, block_context.counter, 0, use_high_precision));
     if ((joint & MotionVectorNonZeroColumn) != 0)
-        delta_vector.set_column(TRY(read_single_motion_vector_component(block_context.decoder, block_context.counter, 1, use_high_precision)));
+        delta_vector.column = TRY(read_single_motion_vector_component(block_context.decoder, block_context.counter, 1, use_high_precision));
 
     return candidates[reference_index].best_vector + delta_vector;
 }
@@ -1547,12 +1547,12 @@ DecoderErrorOr<i32> Parser::read_coef(BooleanDecoder& decoder, u8 bit_depth, Tok
 // is_inside( candidateR, candidateC ) in the spec.
 static bool motion_vector_is_inside_tile(TileContext const& tile_context, MotionVector vector)
 {
-    if (vector.row() < 0)
+    if (vector.row < 0)
         return false;
-    if (vector.column() < 0)
+    if (vector.column < 0)
         return false;
-    u32 row_positive = vector.row();
-    u32 column_positive = vector.column();
+    u32 row_positive = vector.row;
+    u32 column_positive = vector.column;
     return row_positive < tile_context.frame_context.rows() && column_positive >= tile_context.columns_start && column_positive < tile_context.columns_end;
 }
 
@@ -1571,11 +1571,11 @@ static void add_motion_vector_to_list_deduped(MotionVector const& vector, Vector
 MotionVectorCandidate Parser::get_motion_vector_from_current_or_previous_frame(BlockContext const& block_context, MotionVector candidate_vector, ReferenceIndex reference_index, bool use_prev)
 {
     if (use_prev) {
-        auto const& prev_context = m_previous_block_contexts.at(candidate_vector.row(), candidate_vector.column());
+        auto const& prev_context = m_previous_block_contexts.at(candidate_vector.row, candidate_vector.column);
         return { prev_context.ref_frames[reference_index], prev_context.primary_motion_vector_pair[reference_index] };
     }
 
-    auto const& current_context = block_context.frame_block_contexts().at(candidate_vector.row(), candidate_vector.column());
+    auto const& current_context = block_context.frame_block_contexts().at(candidate_vector.row, candidate_vector.column);
     return { current_context.ref_frames[reference_index], current_context.primary_motion_vector_pair()[reference_index] };
 }
 
@@ -1628,8 +1628,8 @@ static MotionVector clamp_motion_vector(BlockContext const& block_context, Motio
     i32 mb_to_right_edge = 8 * ((static_cast<i32>(block_context.frame_context.columns()) - blocks_wide - static_cast<i32>(block_context.column)) * MI_SIZE);
 
     return {
-        clip_3(mb_to_top_edge - border, mb_to_bottom_edge + border, vector.row()),
-        clip_3(mb_to_left_edge - border, mb_to_right_edge + border, vector.column())
+        clip_3(mb_to_top_edge - border, mb_to_bottom_edge + border, vector.row),
+        clip_3(mb_to_left_edge - border, mb_to_right_edge + border, vector.column)
     };
 }
 
@@ -1646,7 +1646,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
 
     Vector<MotionVector, 2> list;
 
-    MotionVector base_coordinates = MotionVector(block_context.row, block_context.column);
+    MotionVector base_coordinates { static_cast<i32>(block_context.row), static_cast<i32>(block_context.column) };
 
     for (auto i = 0u; i < 2; i++) {
         auto offset_vector = mv_ref_blocks[block_context.size][i];
@@ -1654,7 +1654,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
 
         if (motion_vector_is_inside_tile(block_context.tile_context, candidate)) {
             different_ref_found = true;
-            auto context = block_context.frame_block_contexts().at(candidate.row(), candidate.column());
+            auto context = block_context.frame_block_contexts().at(candidate.row, candidate.column);
             context_counter += mode_2_counter[to_underlying(context.y_mode)];
 
             for (auto i = 0u; i < 2; i++) {
@@ -1667,7 +1667,7 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
                         { 3, 2 },
                         { 3, 3 }
                     };
-                    auto index = block >= 0 ? idx_n_column_to_subblock[block][offset_vector.column() == 0] : 3;
+                    auto index = block >= 0 ? idx_n_column_to_subblock[block][offset_vector.column == 0] : 3;
 
                     add_motion_vector_to_list_deduped(context.sub_block_motion_vectors[index][reference_index], list);
                     break;
@@ -1714,8 +1714,8 @@ MotionVectorPair Parser::find_reference_motion_vectors(BlockContext& block_conte
 static void select_best_reference_motion_vectors(BlockContext& block_context, MotionVectorPair reference_motion_vectors, BlockMotionVectorCandidates& candidates, ReferenceIndex reference_index)
 {
     auto adjust_and_clamp_vector = [&](MotionVector& vector) {
-        auto delta_row = vector.row();
-        auto delta_column = vector.column();
+        auto delta_row = vector.row;
+        auto delta_column = vector.column;
         if (!block_context.frame_context.high_precision_motion_vectors_allowed || !should_use_high_precision_motion_vector(vector)) {
             if ((delta_row & 1) != 0)
                 delta_row += delta_row > 0 ? -1 : 1;
