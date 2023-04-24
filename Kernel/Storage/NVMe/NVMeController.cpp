@@ -40,7 +40,7 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
 
     PCI::enable_memory_space(device_identifier());
     PCI::enable_bus_mastering(device_identifier());
-    m_bar = PCI::get_BAR0(device_identifier()) & BAR_ADDR_MASK;
+    m_bar = PCI::get_BAR0(device_identifier()) & PCI::bar_address_mask;
     static_assert(sizeof(ControllerRegister) == REG_SQ0TDBL_START);
     static_assert(sizeof(NVMeSubmission) == (1 << SQ_WIDTH));
 

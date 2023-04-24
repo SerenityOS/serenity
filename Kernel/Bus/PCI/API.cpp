@@ -227,7 +227,7 @@ size_t get_BAR_space_size(DeviceIdentifier const& identifier, HeaderType0BaseReg
     write32_offsetted(identifier, field, 0xFFFFFFFF);
     u32 space_size = read32_offsetted(identifier, field);
     write32_offsetted(identifier, field, bar_reserved);
-    space_size &= 0xfffffff0;
+    space_size &= bar_address_mask;
     space_size = (~space_size) + 1;
     return space_size;
 }
@@ -240,7 +240,7 @@ size_t get_expansion_rom_space_size(DeviceIdentifier const& identifier)
     write32_offsetted(identifier, field, 0xFFFFFFFF);
     u32 space_size = read32_offsetted(identifier, field);
     write32_offsetted(identifier, field, bar_reserved);
-    space_size &= 0xfffffff0;
+    space_size &= bar_address_mask;
     space_size = (~space_size) + 1;
     return space_size;
 }

@@ -47,8 +47,8 @@ ErrorOr<void> IntelNativeGraphicsAdapter::initialize_adapter()
     dmesgln_pci(*this, "framebuffer @ {}", PhysicalAddress(PCI::get_BAR2(device_identifier())));
 
     using MMIORegion = IntelDisplayConnectorGroup::MMIORegion;
-    MMIORegion first_region { MMIORegion::BARAssigned::BAR0, PhysicalAddress(PCI::get_BAR0(device_identifier()) & 0xfffffff0), bar0_space_size };
-    MMIORegion second_region { MMIORegion::BARAssigned::BAR2, PhysicalAddress(PCI::get_BAR2(device_identifier()) & 0xfffffff0), bar2_space_size };
+    MMIORegion first_region { MMIORegion::BARAssigned::BAR0, PhysicalAddress(PCI::get_BAR0(device_identifier()) & PCI::bar_address_mask), bar0_space_size };
+    MMIORegion second_region { MMIORegion::BARAssigned::BAR2, PhysicalAddress(PCI::get_BAR2(device_identifier()) & PCI::bar_address_mask), bar2_space_size };
 
     PCI::enable_bus_mastering(device_identifier());
     PCI::enable_io_space(device_identifier());
