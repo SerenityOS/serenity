@@ -66,16 +66,20 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
         }
 
         if (m_coordinates) {
-            auto coord = sq.to_algebraic();
             auto text_color = (sq.is_light()) ? board_theme().dark_square_color : board_theme().light_square_color;
 
             auto shrunken_rect = tile_rect;
             shrunken_rect.shrink(4, 4);
-            if (sq.rank == coord_rank_file)
-                painter.draw_text(shrunken_rect, coord.substring_view(0, 1), coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
 
-            if (sq.file == coord_rank_file)
-                painter.draw_text(shrunken_rect, coord.substring_view(1, 1), coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
+            if (sq.rank == coord_rank_file) {
+                auto file_char = sq.file_char();
+                painter.draw_text(shrunken_rect, { &file_char, 1 }, coordinate_font, Gfx::TextAlignment::BottomRight, text_color);
+            }
+
+            if (sq.file == coord_rank_file) {
+                auto rank_char = sq.rank_char();
+                painter.draw_text(shrunken_rect, { &rank_char, 1 }, coordinate_font, Gfx::TextAlignment::TopLeft, text_color);
+            }
         }
 
         for (auto& m : m_board_markings) {
