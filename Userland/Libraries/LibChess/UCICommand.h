@@ -229,9 +229,10 @@ public:
 
 class BestMoveCommand : public Command {
 public:
-    explicit BestMoveCommand(Chess::Move move)
+    explicit BestMoveCommand(Chess::Move move, Optional<Chess::Move> move_to_ponder = {})
         : Command(Command::Type::BestMove)
         , m_move(::move(move))
+        , m_move_to_ponder(::move(move_to_ponder))
     {
     }
 
@@ -240,9 +241,11 @@ public:
     virtual ErrorOr<String> to_string() const override;
 
     Chess::Move move() const { return m_move; }
+    Optional<Chess::Move> move_to_ponder() const { return m_move_to_ponder; }
 
 private:
     Chess::Move m_move;
+    Optional<Chess::Move> m_move_to_ponder;
 };
 
 class InfoCommand : public Command {

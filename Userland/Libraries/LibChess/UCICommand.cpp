@@ -311,8 +311,15 @@ ErrorOr<NonnullOwnPtr<BestMoveCommand>> BestMoveCommand::from_string(StringView 
 {
     auto tokens = command.split_view(' ');
     VERIFY(tokens[0] == "bestmove");
-    VERIFY(tokens.size() == 2);
-    return adopt_nonnull_own_or_enomem(new (nothrow) BestMoveCommand(Move(tokens[1])));
+    VERIFY(tokens.size() == 2 || tokens.size() == 4);
+    auto best_move = Move(tokens[1]);
+    Optional<Move> move_to_ponder;
+    if (tokens.size() == 4) {
+        VERIFY(tokens[2] == "ponder");
+        move_to_ponder = Move(tokens[3]);
+    }
+
+    return adopt_nonnull_own_or_enomem(new (nothrow) BestMoveCommand(best_move, move_to_ponder));
 }
 
 ErrorOr<String> BestMoveCommand::to_string() const
@@ -320,6 +327,10 @@ ErrorOr<String> BestMoveCommand::to_string() const
     StringBuilder builder;
     TRY(builder.try_append("bestmove "sv));
     TRY(builder.try_append(TRY(move().to_long_algebraic())));
+    if (move_to_ponder().has_value()) {
+        TRY(builder.try_append(" ponder "sv));
+        TRY(builder.try_append(TRY(move_to_ponder()->to_long_algebraic())));
+    }
     TRY(builder.try_append('\n'));
     return builder.to_string();
 }
