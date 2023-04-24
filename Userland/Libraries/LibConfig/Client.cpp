@@ -14,7 +14,6 @@ static RefPtr<Client> s_the = nullptr;
 Client& Client::the()
 {
     if (!s_the || !s_the->is_open()) {
-        VERIFY(Core::EventLoop::has_been_instantiated());
         s_the = Client::try_create().release_value_but_fixme_should_propagate_errors();
     }
     return *s_the;

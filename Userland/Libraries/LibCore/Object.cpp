@@ -149,7 +149,9 @@ void Object::stop_timer()
     if (!m_timer_id)
         return;
     bool success = Core::EventLoop::unregister_timer(m_timer_id);
-    VERIFY(success);
+    if (!success) {
+        dbgln("{} {:p} could not unregister timer {}", class_name(), this, m_timer_id);
+    }
     m_timer_id = 0;
 }
 

@@ -11,6 +11,8 @@ set(SOURCES
     ElapsedTimer.cpp
     Event.cpp
     EventLoop.cpp
+    EventLoopImplementation.cpp
+    EventLoopImplementationUnix.cpp
     File.cpp
     IODevice.cpp
     LockFile.cpp
