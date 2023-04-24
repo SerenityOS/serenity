@@ -10,18 +10,11 @@
 
 #include <AK/Forward.h>
 #include <AK/Function.h>
-#include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/NonnullRefPtr.h>
 #include <AK/Time.h>
-#include <AK/Vector.h>
-#include <AK/WeakPtr.h>
 #include <LibCore/Event.h>
 #include <LibCore/Forward.h>
-#include <LibThreading/MutexProtected.h>
-#include <sys/time.h>
-#include <sys/types.h>
 
 namespace Core {
 

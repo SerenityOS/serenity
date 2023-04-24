@@ -8,6 +8,7 @@
 #include <LibCore/System.h>
 #include <LibIPC/Connection.h>
 #include <LibIPC/Stub.h>
+#include <sched.h>
 #include <sys/select.h>
 
 namespace IPC {
