@@ -25,7 +25,11 @@ enum class Type : u8 {
     None,
 };
 
-StringView char_for_piece(Type type);
+enum class Notation {
+    Algebraic,
+    FEN,
+};
+Optional<char> char_for_piece(Type, Notation);
 Chess::Type piece_for_char_promotion(StringView str);
 
 enum class Color : u8 {
