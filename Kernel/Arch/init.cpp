@@ -133,7 +133,7 @@ READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
 READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
 READONLY_AFTER_INIT Memory::PageTableEntry* boot_pd_kernel_pt1023;
-READONLY_AFTER_INIT char const* kernel_cmdline;
+READONLY_AFTER_INIT StringView kernel_cmdline;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
 READONLY_AFTER_INIT size_t multiboot_memory_map_count;
@@ -166,7 +166,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     boot_pd0 = PhysicalAddress { boot_info.boot_pd0 };
     boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
     boot_pd_kernel_pt1023 = (Memory::PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
-    kernel_cmdline = (char const*)boot_info.kernel_cmdline;
+    char const* cmdline = (char const*)boot_info.kernel_cmdline;
+    kernel_cmdline = StringView { cmdline, strlen(cmdline) };
     multiboot_flags = boot_info.multiboot_flags;
     multiboot_memory_map = (multiboot_memory_map_t*)boot_info.multiboot_memory_map;
     multiboot_memory_map_count = boot_info.multiboot_memory_map_count;
@@ -192,7 +193,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_module_entry_t modules[] = {};
     multiboot_modules = modules;
     multiboot_modules_count = 0;
-    kernel_cmdline = "";
+    kernel_cmdline = ""sv;
 #endif
 
     setup_serial_debug();
@@ -442,7 +443,7 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     // serial_debug will output all the dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
-    if (StringView { kernel_cmdline, strlen(kernel_cmdline) }.contains("serial_debug"sv)) {
+    if (kernel_cmdline.contains("serial_debug"sv)) {
         set_serial_debug_enabled(true);
     }
 }

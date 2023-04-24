@@ -52,7 +52,7 @@ enum class AHCIResetMode {
 class CommandLine {
 
 public:
-    static void early_initialize(char const* cmd_line);
+    static void early_initialize(StringView cmd_line);
     static void initialize();
     static bool was_initialized();
 

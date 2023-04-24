@@ -16,15 +16,9 @@ static char s_cmd_line[1024];
 static constexpr StringView s_embedded_cmd_line = ""sv;
 static CommandLine* s_the;
 
-UNMAP_AFTER_INIT void CommandLine::early_initialize(char const* cmd_line)
+UNMAP_AFTER_INIT void CommandLine::early_initialize(StringView cmd_line)
 {
-    if (!cmd_line)
-        return;
-    size_t length = strlen(cmd_line);
-    if (length >= sizeof(s_cmd_line))
-        length = sizeof(s_cmd_line) - 1;
-    memcpy(s_cmd_line, cmd_line, length);
-    s_cmd_line[length] = '\0';
+    (void)cmd_line.copy_characters_to_buffer(s_cmd_line, sizeof(s_cmd_line));
 }
 
 bool CommandLine::was_initialized()
