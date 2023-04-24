@@ -103,17 +103,14 @@ class Vector2D {
 public:
     ~Vector2D()
     {
-        if (m_storage)
-            free(m_storage);
-        m_storage = nullptr;
-        m_width = 0;
-        m_height = 0;
+        clear_storage();
     }
 
     ErrorOr<void> try_resize(u32 height, u32 width)
     {
         if (height != m_height && width != m_width) {
-            this->~Vector2D();
+            clear_storage();
+
             size_t size = height * width;
             auto* new_storage = static_cast<T*>(malloc(size * sizeof(T)));
             if (!new_storage)
@@ -195,6 +192,15 @@ public:
     }
 
 private:
+    void clear_storage()
+    {
+        if (m_storage)
+            free(m_storage);
+        m_storage = nullptr;
+        m_width = 0;
+        m_height = 0;
+    }
+
     u32 m_height { 0 };
     u32 m_width { 0 };
     T* m_storage { nullptr };
