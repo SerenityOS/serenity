@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define AK_DONT_REPLACE_STD
-
 #include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Platform.h>

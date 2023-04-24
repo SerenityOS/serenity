@@ -66,6 +66,7 @@ else()
     set(SERENITY_SOURCE_DIR "${SERENITY_PROJECT_ROOT}")
 endif()
 
+add_compile_options(-DAK_DONT_REPLACE_STD)
 add_compile_options(-Wno-expansion-to-defined)
 add_compile_options(-Wno-user-defined-literals)
 

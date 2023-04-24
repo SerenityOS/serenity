@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define AK_DONT_REPLACE_STD
-
 #include "EventLoopPluginQt.h"
 #include "TimerQt.h"
 #include <AK/Function.h>

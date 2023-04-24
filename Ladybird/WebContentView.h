@@ -7,8 +7,6 @@
 
 #pragma once
 
-#define AK_DONT_REPLACE_STD
-
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
