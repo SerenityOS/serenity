@@ -141,7 +141,7 @@ ErrorOr<String> PositionCommand::to_string() const
     TRY(builder.try_append("moves"sv));
     for (auto& move : moves()) {
         TRY(builder.try_append(' '));
-        TRY(builder.try_append(move.to_long_algebraic()));
+        TRY(builder.try_append(TRY(move.to_long_algebraic())));
     }
     TRY(builder.try_append('\n'));
     return builder.to_string();
@@ -202,7 +202,7 @@ ErrorOr<String> GoCommand::to_string() const
         TRY(builder.try_append(" searchmoves"sv));
         for (auto& move : searchmoves.value()) {
             TRY(builder.try_append(' '));
-            TRY(builder.try_append(move.to_long_algebraic()));
+            TRY(builder.try_append(TRY(move.to_long_algebraic())));
         }
     }
 
@@ -318,7 +318,7 @@ ErrorOr<String> BestMoveCommand::to_string() const
 {
     StringBuilder builder;
     TRY(builder.try_append("bestmove "sv));
-    TRY(builder.try_append(move().to_long_algebraic()));
+    TRY(builder.try_append(TRY(move().to_long_algebraic())));
     TRY(builder.try_append('\n'));
     return builder.to_string();
 }

@@ -93,7 +93,7 @@ struct Square {
 
     char file_char() const;
     char rank_char() const;
-    DeprecatedString to_algebraic() const;
+    ErrorOr<String> to_algebraic() const;
 };
 
 class Board;
@@ -118,8 +118,8 @@ struct Move {
     bool operator==(Move const& other) const { return from == other.from && to == other.to && promote_to == other.promote_to; }
 
     static Move from_algebraic(StringView algebraic, const Color turn, Board const& board);
-    DeprecatedString to_long_algebraic() const;
-    DeprecatedString to_algebraic() const;
+    ErrorOr<String> to_long_algebraic() const;
+    ErrorOr<String> to_algebraic() const;
 };
 
 class Board {
@@ -138,7 +138,7 @@ public:
     bool apply_move(Move const&, Color color = Color::None);
     Optional<Move> const& last_move() const { return m_last_move; }
 
-    DeprecatedString to_fen() const;
+    ErrorOr<String> to_fen() const;
 
     enum class Result {
         CheckMate,
