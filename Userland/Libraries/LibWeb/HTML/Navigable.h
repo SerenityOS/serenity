@@ -45,10 +45,19 @@ public:
 
     static JS::GCPtr<Navigable> navigable_with_active_document(JS::NonnullGCPtr<DOM::Document>);
 
+    enum class Traversal {
+        Tag
+    };
+
+    Variant<Empty, Traversal, String> ongoing_navigation() const { return m_ongoing_navigation; }
+
 protected:
     Navigable();
 
     virtual void visit_edges(Cell::Visitor&) override;
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#ongoing-navigation
+    Variant<Empty, Traversal, String> m_ongoing_navigation;
 
 private:
     // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-id
