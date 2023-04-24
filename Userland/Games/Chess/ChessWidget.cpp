@@ -535,7 +535,7 @@ void ChessWidget::playback_move(PlaybackDirection direction)
 
 DeprecatedString ChessWidget::get_fen() const
 {
-    return m_playback ? m_board_playback.to_fen() : m_board.to_fen();
+    return (m_playback ? m_board_playback.to_fen() : m_board.to_fen()).release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 }
 
 ErrorOr<void> ChessWidget::import_pgn(Core::File& file)
@@ -659,10 +659,10 @@ ErrorOr<void> ChessWidget::export_pgn(Core::File& file) const
 
     // Movetext Section
     for (size_t i = 0, move_no = 1; i < m_board.moves().size(); i += 2, move_no++) {
-        const DeprecatedString white = m_board.moves().at(i).to_algebraic();
+        const DeprecatedString white = m_board.moves().at(i).to_algebraic().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
 
         if (i + 1 < m_board.moves().size()) {
-            const DeprecatedString black = m_board.moves().at(i + 1).to_algebraic();
+            const DeprecatedString black = m_board.moves().at(i + 1).to_algebraic().release_value_but_fixme_should_propagate_errors().to_deprecated_string();
             TRY(file.write_until_depleted(DeprecatedString::formatted("{}. {} {} ", move_no, white, black).bytes()));
         } else {
             TRY(file.write_until_depleted(DeprecatedString::formatted("{}. {} ", move_no, white).bytes()));
