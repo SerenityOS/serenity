@@ -112,7 +112,7 @@ public:
             clear_storage();
 
             size_t size = height * width;
-            auto* new_storage = static_cast<T*>(malloc(size * sizeof(T)));
+            auto* new_storage = new (nothrow) T[size];
             if (!new_storage)
                 return Error::from_errno(ENOMEM);
             m_storage = new_storage;
@@ -194,8 +194,7 @@ public:
 private:
     void clear_storage()
     {
-        if (m_storage)
-            free(m_storage);
+        delete[] m_storage;
         m_storage = nullptr;
         m_width = 0;
         m_height = 0;
