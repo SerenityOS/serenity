@@ -6,8 +6,6 @@
 
 #pragma once
 
-#define AK_DONT_REPLACE_STD
-
 #include <QLineEdit>
 
 class LocationEdit final : public QLineEdit {

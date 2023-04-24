@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define AK_DONT_REPLACE_STD
-
 #include "TimerQt.h"
 #include <AK/NonnullRefPtr.h>
 #include <QTimer>

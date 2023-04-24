@@ -6,8 +6,6 @@
 
 #pragma once
 
-#define AK_DONT_REPLACE_STD
-
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkReply>

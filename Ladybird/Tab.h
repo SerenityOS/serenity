@@ -7,8 +7,6 @@
 
 #pragma once
 
-#define AK_DONT_REPLACE_STD
-
 #include "LocationEdit.h"
 #include "WebContentView.h"
 #include <Browser/History.h>

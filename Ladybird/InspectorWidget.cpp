@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define AK_DONT_REPLACE_STD
-
 #include <LibWebView/AccessibilityTreeModel.h>
 #include <LibWebView/DOMTreeModel.h>
 #include <LibWebView/StylePropertiesModel.h>

@@ -5,17 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Platform.h>
-
-#if !defined(AK_OS_SERENITY)
-#    define AK_DONT_REPLACE_STD
-#endif
-
 #include <AK/Badge.h>
 #include <AK/DeprecatedString.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/Platform.h>
 #include <AK/String.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>

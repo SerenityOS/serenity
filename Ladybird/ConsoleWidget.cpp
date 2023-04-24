@@ -7,8 +7,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define AK_DONT_REPLACE_STD
-
 #include "ConsoleWidget.h"
 #include "Utilities.h"
 #include "WebContentView.h"

@@ -5,8 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#define AK_DONT_REPLACE_STD
-
 #include "FontPluginQt.h"
 #include <AK/DeprecatedString.h>
 #include <AK/String.h>
