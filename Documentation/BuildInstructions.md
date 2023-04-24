@@ -131,11 +131,11 @@ Ports might also have additional dependencies. Most prominently, you may need:
 `libgpg-error-dev`, `libtool`, `lzip`, `meson`, `nasm` (or another assembler), `qt6-base-dev`, `rename`, `zip`.
 
 For select ports you might need slightly more exotic dependencies such as:
-- ´file` (version 5.44 exactly, for file)
-- ´libpython3-dev` (most prominently for boost)
-- ´lua` (for luarocks)
-- ´openjdk-17-jdk` (to compile OpenJDK)
-- ´rake` (to build mruby).
+- `file` (version 5.44 exactly, for file)
+- `libpython3-dev` (most prominently for boost)
+- `lua` (for luarocks)
+- `openjdk-17-jdk` (to compile OpenJDK)
+- `rake` (to build mruby).
 
 You may also need a symlink from "/usr/bin/python" to "/usr/bin/python3"; some ports depend on "python" existing, most notably ninja.
 
