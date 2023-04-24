@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/StringView.h>
 #include <AK/Types.h>
 
 namespace Kernel::RPi {
@@ -51,6 +52,9 @@ public:
     bool send_queue(void* queue, u32 queue_size) const;
 
     u32 query_firmware_version();
+
+    // Returns the kernel command line as a StringView into the given buffer.
+    StringView query_kernel_command_line(Bytes buffer);
 };
 
 }

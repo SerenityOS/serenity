@@ -149,6 +149,10 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 
 Atomic<Graphics::Console*> g_boot_console;
 
+#if ARCH(AARCH64)
+READONLY_AFTER_INIT static u8 s_command_line_buffer[512];
+#endif
+
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo const& boot_info)
 {
     g_in_early_boot = true;
@@ -193,7 +197,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_module_entry_t modules[] = {};
     multiboot_modules = modules;
     multiboot_modules_count = 0;
-    kernel_cmdline = ""sv;
+    // FIXME: Read the /chosen/bootargs property.
+    kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #endif
 
     setup_serial_debug();

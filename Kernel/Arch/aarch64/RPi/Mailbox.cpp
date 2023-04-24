@@ -130,4 +130,40 @@ u32 Mailbox::query_firmware_version()
     return message_queue.query_firmware_version.version;
 }
 
+// https://github.com/raspberrypi/firmware/wiki/Mailbox-property-interface#get-command-line
+//
+// Note: This function is called very early in the boot process, before the heap or the console
+//       is initialized. Please ensure that it does the minimum amount of work possible.
+StringView Mailbox::query_kernel_command_line(Bytes buffer)
+{
+    // We want to use the user-provided buffer rather than a fixed-size one on the stack,
+    // so we need to construct the message manually.
+    auto aligned_buffer = buffer.align_to(16);
+    if (aligned_buffer.size() < 24)
+        return ""sv;
+
+    auto max_response_length = aligned_buffer.size() - 24;
+
+    auto* message = reinterpret_cast<u32*>(aligned_buffer.data());
+    message[0] = aligned_buffer.size();
+    message[1] = MBOX_REQUEST;
+
+    message[2] = 0x0005'0001; // Query command line
+    message[3] = max_response_length;
+    message[4] = max_response_length;
+
+    message[aligned_buffer.size() / sizeof(u32) - 1] = 0;
+
+    if (!the().send_queue(message, aligned_buffer.size()))
+        return ""sv;
+
+    // Bit 31 indicates that this is a response, the rest denote the length.
+    auto response_length = message[4] & 0x7fff'ffff;
+
+    if (response_length > max_response_length)
+        return ""sv; // The buffer was too small to hold the response.
+
+    return StringView { (char const*)&message[5], response_length };
+}
+
 }
