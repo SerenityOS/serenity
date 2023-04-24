@@ -62,15 +62,19 @@ Length Length::resolved(Layout::Node const& layout_node) const
 CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
 {
     switch (m_type) {
-    case Type::Ex:
-        return m_value * font_metrics.x_height;
     case Type::Em:
         return m_value * font_size;
+    case Type::Rem:
+        return m_value * root_font_size;
+    case Type::Ex:
+        return m_value * font_metrics.x_height;
     case Type::Ch:
         // FIXME: Use layout_node.font().pixel_size() when writing-mode is not horizontal-tb (it has to be implemented first)
         return m_value * (font_metrics.advance_of_ascii_zero + font_metrics.glyph_spacing);
-    case Type::Rem:
-        return m_value * root_font_size;
+    case Type::Lh:
+        return m_value * line_height;
+    case Type::Rlh:
+        return m_value * root_line_height;
     case Type::Vw:
         return viewport_rect.width() * (m_value / 100);
     case Type::Vh:
@@ -79,10 +83,6 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::
         return min(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
     case Type::Vmax:
         return max(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
-    case Type::Lh:
-        return m_value * line_height;
-    case Type::Rlh:
-        return m_value * root_line_height;
     default:
         VERIFY_NOT_REACHED();
     }
@@ -112,82 +112,82 @@ ErrorOr<String> Length::to_string() const
 char const* Length::unit_name() const
 {
     switch (m_type) {
-    case Type::Cm:
-        return "cm";
-    case Type::In:
-        return "in";
-    case Type::Px:
-        return "px";
-    case Type::Pt:
-        return "pt";
-    case Type::Mm:
-        return "mm";
-    case Type::Q:
-        return "Q";
-    case Type::Pc:
-        return "pc";
-    case Type::Ex:
-        return "ex";
     case Type::Em:
         return "em";
-    case Type::Ch:
-        return "ch";
     case Type::Rem:
         return "rem";
-    case Type::Auto:
-        return "auto";
-    case Type::Vh:
-        return "vh";
-    case Type::Vw:
-        return "vw";
-    case Type::Vmax:
-        return "vmax";
-    case Type::Vmin:
-        return "vmin";
+    case Type::Ex:
+        return "ex";
+    case Type::Ch:
+        return "ch";
     case Type::Lh:
         return "lh";
     case Type::Rlh:
         return "rlh";
+    case Type::Vw:
+        return "vw";
+    case Type::Vh:
+        return "vh";
+    case Type::Vmin:
+        return "vmin";
+    case Type::Vmax:
+        return "vmax";
+    case Type::Cm:
+        return "cm";
+    case Type::Mm:
+        return "mm";
+    case Type::Q:
+        return "Q";
+    case Type::In:
+        return "in";
+    case Type::Pt:
+        return "pt";
+    case Type::Pc:
+        return "pc";
+    case Type::Px:
+        return "px";
+    case Type::Auto:
+        return "auto";
     }
     VERIFY_NOT_REACHED();
 }
 
 Optional<Length::Type> Length::unit_from_name(StringView name)
 {
-    if (name.equals_ignoring_ascii_case("px"sv)) {
-        return Length::Type::Px;
-    } else if (name.equals_ignoring_ascii_case("pt"sv)) {
-        return Length::Type::Pt;
-    } else if (name.equals_ignoring_ascii_case("pc"sv)) {
-        return Length::Type::Pc;
-    } else if (name.equals_ignoring_ascii_case("mm"sv)) {
-        return Length::Type::Mm;
+    if (name.equals_ignoring_ascii_case("em"sv)) {
+        return Length::Type::Em;
     } else if (name.equals_ignoring_ascii_case("rem"sv)) {
         return Length::Type::Rem;
-    } else if (name.equals_ignoring_ascii_case("em"sv)) {
-        return Length::Type::Em;
     } else if (name.equals_ignoring_ascii_case("ex"sv)) {
         return Length::Type::Ex;
     } else if (name.equals_ignoring_ascii_case("ch"sv)) {
         return Length::Type::Ch;
-    } else if (name.equals_ignoring_ascii_case("vw"sv)) {
-        return Length::Type::Vw;
-    } else if (name.equals_ignoring_ascii_case("vh"sv)) {
-        return Length::Type::Vh;
-    } else if (name.equals_ignoring_ascii_case("vmax"sv)) {
-        return Length::Type::Vmax;
-    } else if (name.equals_ignoring_ascii_case("vmin"sv)) {
-        return Length::Type::Vmin;
-    } else if (name.equals_ignoring_ascii_case("cm"sv)) {
-        return Length::Type::Cm;
-    } else if (name.equals_ignoring_ascii_case("in"sv)) {
-        return Length::Type::In;
-    } else if (name.equals_ignoring_ascii_case("Q"sv)) {
-        return Length::Type::Q;
     } else if (name.equals_ignoring_ascii_case("lh"sv)) {
         return Length::Type::Lh;
     } else if (name.equals_ignoring_ascii_case("rlh"sv)) {
         return Length::Type::Rlh;
+    } else if (name.equals_ignoring_ascii_case("vw"sv)) {
+        return Length::Type::Vw;
+    } else if (name.equals_ignoring_ascii_case("vh"sv)) {
+        return Length::Type::Vh;
+    } else if (name.equals_ignoring_ascii_case("vmin"sv)) {
+        return Length::Type::Vmin;
+    } else if (name.equals_ignoring_ascii_case("vmax"sv)) {
+        return Length::Type::Vmax;
+    } else if (name.equals_ignoring_ascii_case("cm"sv)) {
+        return Length::Type::Cm;
+    } else if (name.equals_ignoring_ascii_case("mm"sv)) {
+        return Length::Type::Mm;
+    } else if (name.equals_ignoring_ascii_case("Q"sv)) {
+        return Length::Type::Q;
+    } else if (name.equals_ignoring_ascii_case("in"sv)) {
+        return Length::Type::In;
+    } else if (name.equals_ignoring_ascii_case("pt"sv)) {
+        return Length::Type::Pt;
+    } else if (name.equals_ignoring_ascii_case("pc"sv)) {
+        return Length::Type::Pc;
+    } else if (name.equals_ignoring_ascii_case("px"sv)) {
+        return Length::Type::Px;
     }
 
     return {};
