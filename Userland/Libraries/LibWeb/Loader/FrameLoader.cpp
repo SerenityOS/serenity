@@ -267,10 +267,6 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     if (type == Type::IFrame)
         return true;
 
-    auto* document = browsing_context().active_document();
-    if (document && document->has_active_favicon())
-        return true;
-
     if (url.scheme() == "http" || url.scheme() == "https") {
         AK::URL favicon_url;
         favicon_url.set_scheme(url.scheme());
