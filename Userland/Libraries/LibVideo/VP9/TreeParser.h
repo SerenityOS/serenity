@@ -64,16 +64,4 @@ public:
     static ErrorOr<Token> parse_token(BooleanDecoder&, ProbabilityTables const&, SyntaxElementCounter&, TokensContext const& context);
 };
 
-struct PartitionTreeContext {
-    bool has_rows;
-    bool has_columns;
-    BlockSubsize block_subsize;
-    u8 num_8x8;
-    Vector<u8> const& above_partition_context;
-    Vector<u8> const& left_partition_context;
-    u32 row;
-    u32 column;
-    bool frame_is_intra;
-};
-
 }
