@@ -46,8 +46,6 @@ public:
 
     static Optional<Type> unit_from_name(StringView);
 
-    // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
-    // this file already. To break the cyclic dependency, we must move all method definitions out.
     Length(int value, Type type);
     Length(float value, Type type);
     ~Length();
@@ -64,26 +62,26 @@ public:
     bool is_absolute() const
     {
         return m_type == Type::Cm
-            || m_type == Type::In
             || m_type == Type::Mm
-            || m_type == Type::Px
+            || m_type == Type::Q
+            || m_type == Type::In
             || m_type == Type::Pt
             || m_type == Type::Pc
-            || m_type == Type::Q;
+            || m_type == Type::Px;
     }
 
     bool is_relative() const
     {
-        return m_type == Type::Ex
-            || m_type == Type::Em
-            || m_type == Type::Ch
+        return m_type == Type::Em
             || m_type == Type::Rem
-            || m_type == Type::Vh
-            || m_type == Type::Vw
-            || m_type == Type::Vmax
-            || m_type == Type::Vmin
+            || m_type == Type::Ex
+            || m_type == Type::Ch
             || m_type == Type::Lh
-            || m_type == Type::Rlh;
+            || m_type == Type::Rlh
+            || m_type == Type::Vw
+            || m_type == Type::Vh
+            || m_type == Type::Vmin
+            || m_type == Type::Vmax;
     }
 
     Type type() const { return m_type; }
