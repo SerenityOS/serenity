@@ -37,21 +37,22 @@ Optional<char> char_for_piece(Type type, Notation notation)
     VERIFY_NOT_REACHED();
 }
 
-Chess::Type piece_for_char_promotion(StringView str)
+Type piece_from_char(char c)
 {
-    DeprecatedString string = DeprecatedString(str).to_lowercase();
-    if (string == "")
-        return Type::None;
-    if (string == "n")
+    switch (to_ascii_lowercase(c)) {
+    case 'n':
         return Type::Knight;
-    if (string == "b")
+    case 'b':
         return Type::Bishop;
-    if (string == "r")
+    case 'r':
         return Type::Rook;
-    if (string == "q")
+    case 'q':
         return Type::Queen;
-    if (string == "k")
+    case 'k':
         return Type::King;
+    case 'p':
+        return Type::Pawn;
+    }
 
     return Type::None;
 }
@@ -93,7 +94,7 @@ DeprecatedString Square::to_algebraic() const
 Move::Move(StringView long_algebraic)
     : from(long_algebraic.substring_view(0, 2))
     , to(long_algebraic.substring_view(2, 2))
-    , promote_to(piece_for_char_promotion((long_algebraic.length() >= 5) ? long_algebraic.substring_view(4, 1) : ""sv))
+    , promote_to((long_algebraic.length() >= 5) ? piece_from_char(long_algebraic[4]) : Type::None)
 {
 }
 
@@ -130,8 +131,9 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& b
     }
 
     if (algebraic.contains('=')) {
-        move.promote_to = piece_for_char_promotion(move_string.split('=').at(1).substring(0, 1));
-        move_string = move_string.split('=').at(0);
+        auto parts = move_string.split_view('=');
+        move.promote_to = piece_from_char(parts[1][0]);
+        move_string = parts[0];
     }
 
     move.to = Square(move_string.substring(move_string.length() - 2, 2));
@@ -145,7 +147,7 @@ Move Move::from_algebraic(StringView algebraic, const Color turn, Board const& b
     if (move_string.is_empty() || move_string.characters()[0] >= 'a') {
         move.piece = Piece(turn, Type::Pawn);
     } else {
-        move.piece = Piece(turn, piece_for_char_promotion(move_string.substring(0, 1)));
+        move.piece = Piece(turn, piece_from_char(move_string[0]));
         move_string = move_string.substring(1, move_string.length() - 1);
     }
 

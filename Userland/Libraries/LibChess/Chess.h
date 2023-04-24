@@ -30,7 +30,7 @@ enum class Notation {
     FEN,
 };
 Optional<char> char_for_piece(Type, Notation);
-Chess::Type piece_for_char_promotion(StringView str);
+Type piece_from_char(char);
 
 enum class Color : u8 {
     White,
