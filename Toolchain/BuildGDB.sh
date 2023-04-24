@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 set -e
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# shellcheck source=/dev/null
+. "${DIR}/../Meta/shell_include.sh"
+
+exit_if_running_as_root "Do not run BuildGDB.sh as root, parts of your Toolchain directory will become root-owned"
+
 GDB_VERSION="13.1"
 GDB_MD5SUM="4aaad768ff2585464173c091947287ec"
 GDB_NAME="gdb-$GDB_VERSION"
 GDB_PKG="${GDB_NAME}.tar.xz"
 GDB_BASE_URL="https://ftp.gnu.org/gnu/gdb"
-
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 ARCH=${1:-"x86_64"}
 TARGET="$ARCH-pc-serenity"

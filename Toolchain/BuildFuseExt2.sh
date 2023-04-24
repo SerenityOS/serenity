@@ -3,6 +3,12 @@ set -e
 # This file will need to be run in bash.
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# shellcheck source=/dev/null
+. "${DIR}/../Meta/shell_include.sh"
+
+exit_if_running_as_root "Do not run BuildFuseExt2.sh as root, parts of your Toolchain directory will become root-owned"
+
 export PATH="/usr/local/opt/m4/bin:$PATH"
 
 die() {

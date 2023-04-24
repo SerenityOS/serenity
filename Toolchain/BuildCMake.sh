@@ -5,6 +5,11 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+# shellcheck source=/dev/null
+. "${DIR}/../Meta/shell_include.sh"
+
+exit_if_running_as_root "Do not run BuildCMake.sh as root, parts of your Toolchain directory will become root-owned"
+
 PREFIX_DIR="$DIR/Local/cmake"
 BUILD_DIR="$DIR/Build/cmake"
 TARBALLS_DIR="$DIR/Tarballs"
