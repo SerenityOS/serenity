@@ -65,7 +65,6 @@ struct EventLoopTimer {
 };
 
 struct EventLoop::Private {
-    Threading::Mutex lock;
     ThreadEventQueue& thread_event_queue;
 
     Private()
