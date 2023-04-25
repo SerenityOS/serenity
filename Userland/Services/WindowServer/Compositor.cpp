@@ -873,7 +873,7 @@ void Compositor::update_wallpaper_bitmap()
             auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, screen.size(), screen.scale_factor()).release_value_but_fixme_should_propagate_errors();
 
             Gfx::Painter painter(*bitmap);
-            painter.draw_scaled_bitmap(bitmap->rect(), *m_wallpaper, m_wallpaper->rect());
+            painter.draw_scaled_bitmap(bitmap->rect(), *m_wallpaper, m_wallpaper->rect(), 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
 
             screen_data.m_wallpaper_bitmap = move(bitmap);
         }
