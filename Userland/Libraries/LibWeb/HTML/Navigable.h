@@ -21,6 +21,8 @@ class Navigable : public JS::Cell {
 public:
     virtual ~Navigable() override;
 
+    ErrorOr<void> initialize_navigable(JS::NonnullGCPtr<DocumentState> document_state, JS::GCPtr<Navigable> parent);
+
     String const& id() const { return m_id; };
     JS::GCPtr<Navigable> parent() const { return m_parent; };
 
