@@ -94,17 +94,9 @@ public:
 
     static EventLoop& current();
 
-    void did_post_event(Badge<ThreadEventQueue>);
     EventLoopImplementation& impl() { return *m_impl; }
 
 private:
-    void wait_for_event(WaitMode);
-    Optional<Time> get_next_timer_expiration();
-    static void dispatch_signal(int);
-    static void handle_signal(int);
-
-    static pid_t s_pid;
-
     NonnullOwnPtr<EventLoopImplementation> m_impl;
 };
 
