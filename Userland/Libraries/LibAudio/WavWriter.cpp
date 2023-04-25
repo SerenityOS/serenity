@@ -58,7 +58,7 @@ void WavWriter::finalize()
     VERIFY(!m_finalized);
     m_finalized = true;
 
-    if (m_file->is_open()) {
+    if (m_file && m_file->is_open()) {
         auto result = [&]() -> ErrorOr<void> {
             TRY(m_file->seek(0, SeekMode::SetPosition));
             return TRY(write_header());
