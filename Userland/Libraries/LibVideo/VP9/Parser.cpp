@@ -930,10 +930,16 @@ DecoderErrorOr<void> Parser::decode_tiles(FrameContext& frame_context)
     }
 
     // Decode the first column in this thread.
-    TRY(decode_tile_column(tile_workloads[0]));
+    auto result = decode_tile_column(tile_workloads[0]);
 
-    for (auto& worker_thread : m_worker_threads)
-        TRY(worker_thread->wait_until_task_is_finished());
+    for (auto& worker_thread : m_worker_threads) {
+        auto task_result = worker_thread->wait_until_task_is_finished();
+        if (!result.is_error() && task_result.is_error())
+            result = move(task_result);
+    }
+
+    if (result.is_error())
+        return result;
 #else
     for (auto& column_workloads : tile_workloads)
         TRY(decode_tile_column(column_workloads));
