@@ -25,39 +25,19 @@ namespace Video {
         _fatal_expression.release_value();                                                           \
     })
 
-class DefaultPlaybackTimer final : public PlaybackTimer {
-public:
-    static ErrorOr<NonnullOwnPtr<DefaultPlaybackTimer>> create(int interval_ms, Function<void()>&& timeout_handler)
-    {
-        auto timer = TRY(Core::Timer::create_single_shot(interval_ms, move(timeout_handler)));
-        return adopt_nonnull_own_or_enomem(new (nothrow) DefaultPlaybackTimer(move(timer)));
-    }
-
-    virtual void start() override { m_timer->start(); }
-    virtual void start(int interval_ms) override { m_timer->start(interval_ms); }
-
-private:
-    explicit DefaultPlaybackTimer(NonnullRefPtr<Core::Timer> timer)
-        : m_timer(move(timer))
-    {
-    }
-
-    NonnullRefPtr<Core::Timer> m_timer;
-};
-
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(StringView filename, PlaybackTimerCreator playback_timer_creator)
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_file(StringView filename)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_file(filename));
-    return create_with_demuxer(move(demuxer), move(playback_timer_creator));
+    return create_with_demuxer(move(demuxer));
 }
 
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_data(ReadonlyBytes data, PlaybackTimerCreator playback_timer_creator)
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::from_data(ReadonlyBytes data)
 {
     auto demuxer = TRY(Matroska::MatroskaDemuxer::from_data(data));
-    return create_with_demuxer(move(demuxer), move(playback_timer_creator));
+    return create_with_demuxer(move(demuxer));
 }
 
-DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer, PlaybackTimerCreator playback_timer_creator)
+DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer)
 {
     auto video_tracks = TRY(demuxer->get_tracks_for_type(TrackType::Video));
     if (video_tracks.is_empty())
@@ -66,26 +46,23 @@ DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> PlaybackManager::create_with_demu
 
     dbgln_if(PLAYBACK_MANAGER_DEBUG, "Selecting video track number {}", track.identifier());
 
-    return make<PlaybackManager>(demuxer, track, make<VP9::Decoder>(), move(playback_timer_creator));
+    return make<PlaybackManager>(demuxer, track, make<VP9::Decoder>());
 }
 
-PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, PlaybackTimerCreator playback_timer_creator)
+PlaybackManager::PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder)
     : m_demuxer(move(demuxer))
     , m_selected_video_track(video_track)
     , m_decoder(move(decoder))
     , m_frame_queue(make<VideoFrameQueue>())
     , m_playback_handler(make<SeekingStateHandler>(*this, false, Time::zero(), SeekMode::Fast))
 {
-    if (playback_timer_creator) {
-        m_present_timer = playback_timer_creator(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
-        m_decode_timer = playback_timer_creator(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
-    } else {
-        m_present_timer = DefaultPlaybackTimer::create(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
-        m_decode_timer = DefaultPlaybackTimer::create(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
-    }
+    m_present_timer = Core::Timer::create_single_shot(0, [&] { timer_callback(); }).release_value_but_fixme_should_propagate_errors();
+    m_decode_timer = Core::Timer::create_single_shot(0, [&] { on_decode_timer(); }).release_value_but_fixme_should_propagate_errors();
 
     TRY_OR_FATAL_ERROR(m_playback_handler->on_enter());
 }
+
+PlaybackManager::~PlaybackManager() = default;
 
 void PlaybackManager::resume_playback()
 {
