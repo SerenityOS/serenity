@@ -50,6 +50,33 @@ JS::GCPtr<Navigable> Navigable::navigable_with_active_document(JS::NonnullGCPtr<
     return nullptr;
 }
 
+// https://html.spec.whatwg.org/multipage/document-sequences.html#initialize-the-navigable
+ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> document_state, JS::GCPtr<Navigable> parent)
+{
+    static int next_id = 0;
+    m_id = TRY(String::number(next_id++));
+
+    // 1. Let entry be a new session history entry, with
+    JS::NonnullGCPtr<SessionHistoryEntry> entry = *heap().allocate_without_realm<SessionHistoryEntry>();
+
+    // URL: document's URL
+    entry->url = document_state->document()->url();
+
+    // document state: documentState
+    entry->document_state = document_state;
+
+    // 2. Set navigable's current session history entry to entry.
+    m_current_session_history_entry = entry;
+
+    // 3. Set navigable's active session history entry to entry.
+    m_active_session_history_entry = entry;
+
+    // 4. Set navigable's parent to parent.
+    m_parent = parent;
+
+    return {};
+}
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
 JS::GCPtr<DOM::Document> Navigable::active_document()
 {
