@@ -89,16 +89,24 @@ ErrorOr<NonnullRefPtr<Node const>> Node::try_find_from_help_url(URL const& url)
         return Error::from_string_view("Section number out of bounds"sv);
 
     NonnullRefPtr<Node const> current_node = sections[section_number - 1];
-
+    bool child_node_found;
     for (size_t i = 1; i < url.path_segment_count(); i++) {
+        child_node_found = false;
         auto children = TRY(current_node->children());
         for (auto const& child : children) {
             if (TRY(child->name()) == url.path_segment_at_index(i).view()) {
+                child_node_found = true;
                 current_node = child;
                 break;
             }
         }
+
+        if (!child_node_found)
+            break;
     }
+
+    if (!child_node_found)
+        return Error::from_string_view("Page not found"sv);
 
     return current_node;
 }
