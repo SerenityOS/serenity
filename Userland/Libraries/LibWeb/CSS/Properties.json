@@ -602,7 +602,9 @@
     "initial": "inline",
     "valid-identifiers": [
       "block",
+      "contents",
       "flex",
+      "flow-root",
       "grid",
       "inline",
       "inline-block",
@@ -610,6 +612,8 @@
       "inline-table",
       "list-item",
       "none",
+      "ruby",
+      "run-in",
       "table",
       "table-caption",
       "table-cell",
