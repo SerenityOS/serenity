@@ -39,6 +39,10 @@
 #    include <shadow.h>
 #endif
 
+#ifdef AK_OS_FREEBSD
+#    include <sys/ucred.h>
+#endif
+
 #ifdef AK_OS_SOLARIS
 #    include <sys/filio.h>
 #    include <ucred.h>
