@@ -27,7 +27,7 @@ Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
  src/SDL_error.c                               |   7 +-
  src/audio/SDL_audio.c                         |   3 +
  src/audio/SDL_sysaudio.h                      |   1 +
- src/audio/serenity/SDL_serenityaudio.cpp      | 160 +++++
+ src/audio/serenity/SDL_serenityaudio.cpp      | 166 +++++
  src/audio/serenity/SDL_serenityaudio.h        |  38 ++
  src/stdlib/SDL_stdlib.c                       |   2 +-
  src/video/SDL_sysvideo.h                      |   1 +
@@ -40,7 +40,7 @@ Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
  src/video/serenity/SDL_serenityvideo.cpp      | 611 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1306 insertions(+), 25 deletions(-)
+ 20 files changed, 1312 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -213,10 +213,10 @@ index 6afaae195c6cedb6f9d7b00ca840907e280c0575..6c7009afd966ab384848a63b51c35ec2
  
 diff --git a/src/audio/serenity/SDL_serenityaudio.cpp b/src/audio/serenity/SDL_serenityaudio.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..8a5abd58967dee12619c45d0e0d6cfc8e00f5445
+index 0000000000000000000000000000000000000000..e1cd5348b67c23c49b25f99f4f36e020658aa049
 --- /dev/null
 +++ b/src/audio/serenity/SDL_serenityaudio.cpp
-@@ -0,0 +1,160 @@
+@@ -0,0 +1,166 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -261,6 +261,12 @@ index 0000000000000000000000000000000000000000..8a5abd58967dee12619c45d0e0d6cfc8
 +
 +static void SERENITYAUDIO_CloseDevice(_THIS)
 +{
++    dbgln("SERENITYAUDIO_CloseDevice");
++
++    struct SDL_PrivateAudioData* h = that->hidden;
++    if (h->client)
++        h->client->die();
++
 +    SDL_free(that->hidden->mixbuf);
 +    SDL_free(that->hidden);
 +}
@@ -866,7 +872,7 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..9c7d4f3f5cedf86ae885330aaf6fae7ec88be286
+index 0000000000000000000000000000000000000000..d3ebc9917e880488862b86aebf93c7e3105e3a4e
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
 @@ -0,0 +1,611 @@
