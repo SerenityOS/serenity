@@ -22,6 +22,12 @@ ErrorOr<NonnullRefPtr<PageNode const>> Node::try_create_from_query(Vector<String
     if (query_parameters.size() > 2)
         return Error::from_string_literal("Queries longer than 2 strings are not supported yet");
 
+    if (query_parameters.size() == 1 && query_parameters[0].starts_with("help://"sv)) {
+        auto help_url = URL::create_with_url_or_path(query_parameters[0].trim("/"sv, TrimMode::Right));
+        auto node_from_url = TRY(Manual::Node::try_find_from_help_url(help_url));
+        return *node_from_url->document();
+    }
+
     auto query_parameter_iterator = query_parameters.begin();
 
     if (query_parameter_iterator.is_end())
