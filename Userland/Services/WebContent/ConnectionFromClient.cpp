@@ -626,6 +626,7 @@ Messages::WebContentServer::DumpLayoutTreeResponse ConnectionFromClient::dump_la
     auto* document = page().top_level_browsing_context().active_document();
     if (!document)
         return DeprecatedString { "(no DOM tree)" };
+    document->update_layout();
     auto* layout_root = document->layout_node();
     if (!layout_root)
         return DeprecatedString { "(no layout tree)" };
