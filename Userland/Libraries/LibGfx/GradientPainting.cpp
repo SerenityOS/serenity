@@ -213,18 +213,28 @@ static auto create_conic_gradient(ReadonlySpan<ColorStop> color_stops, FloatPoin
     };
 }
 
-static auto create_radial_gradient(IntRect const& physical_rect, ReadonlySpan<ColorStop> color_stops, IntPoint center, IntSize size, Optional<float> repeat_length)
+static auto create_radial_gradient(IntRect const& physical_rect, ReadonlySpan<ColorStop> color_stops, IntPoint center, IntSize size, Optional<float> repeat_length, Optional<float> rotation_angle = {})
 {
     // A conservative guesstimate on how many colors we need to generate:
     auto max_dimension = max(physical_rect.width(), physical_rect.height());
     auto max_visible_gradient = max(max_dimension / 2, min(size.width(), max_dimension));
     GradientLine gradient_line(max_visible_gradient, color_stops, repeat_length);
     auto center_point = FloatPoint { center }.translated(0.5, 0.5);
+    AffineTransform rotation_transform;
+    if (rotation_angle.has_value()) {
+        auto angle_as_radians = rotation_angle.value() * (AK::Pi<float> / 180);
+        rotation_transform.rotate_radians(angle_as_radians);
+    }
+
     return Gradient {
         move(gradient_line),
         [=](int x, int y) {
             // FIXME: See if there's a more efficient calculation we do there :^)
             auto point = FloatPoint(x, y) - center_point;
+
+            if (rotation_angle.has_value())
+                point.transform_by(rotation_transform);
+
             auto gradient_x = point.x() / size.width();
             auto gradient_y = point.y() / size.height();
             return AK::sqrt(gradient_x * gradient_x + gradient_y * gradient_y) * max_visible_gradient;
@@ -257,12 +267,13 @@ void Painter::fill_rect_with_conic_gradient(IntRect const& rect, ReadonlySpan<Co
     conic_gradient.paint(*this, a_rect);
 }
 
-void Painter::fill_rect_with_radial_gradient(IntRect const& rect, ReadonlySpan<ColorStop> color_stops, IntPoint center, IntSize size, Optional<float> repeat_length)
+void Painter::fill_rect_with_radial_gradient(IntRect const& rect, ReadonlySpan<ColorStop> color_stops, IntPoint center, IntSize size, Optional<float> repeat_length, Optional<float> rotation_angle)
 {
     auto a_rect = to_physical(rect);
     if (a_rect.intersected(clip_rect() * scale()).is_empty())
         return;
-    auto radial_gradient = create_radial_gradient(a_rect, color_stops, center * scale(), size * scale(), repeat_length);
+
+    auto radial_gradient = create_radial_gradient(a_rect, color_stops, center * scale(), size * scale(), repeat_length, rotation_angle);
     radial_gradient.paint(*this, a_rect);
 }
 
