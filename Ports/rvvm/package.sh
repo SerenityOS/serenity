@@ -7,10 +7,11 @@ auth_type='sha256'
 workdir="RVVM-${version}"
 depends=('sdl12-compat')
 
-build() {
-    run make OS=SerenityOS USE_SDL=1 USE_NET=1 GIT_COMMIT=76796ba all lib
-}
-
-install() {
-    run make OS=SerenityOS USE_SDL=1 USE_NET=1 GIT_COMMIT=76796ba DESTDIR="${DESTDIR}" install
-}
+build_opts=(
+    'GIT_COMMIT=76796ba'
+    'OS=SerenityOS'
+    'USE_NET=1'
+    'USE_SDL=1'
+)
+makeopts+=("${build_opts[@]}" 'all' 'lib')
+installopts+=("${build_opts[@]}")
