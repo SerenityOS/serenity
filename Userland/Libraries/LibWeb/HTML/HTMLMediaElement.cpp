@@ -28,30 +28,9 @@
 #include <LibWeb/HTML/VideoTrack.h>
 #include <LibWeb/HTML/VideoTrackList.h>
 #include <LibWeb/MimeSniff/MimeType.h>
-#include <LibWeb/Platform/Timer.h>
 #include <LibWeb/WebIDL/Promise.h>
 
 namespace Web::HTML {
-
-class MediaElementPlaybackTimer final : public Video::PlaybackTimer {
-public:
-    static ErrorOr<NonnullOwnPtr<MediaElementPlaybackTimer>> create(int interval_ms, Function<void()> timeout_handler)
-    {
-        auto timer = Platform::Timer::create_single_shot(interval_ms, move(timeout_handler));
-        return adopt_nonnull_own_or_enomem(new (nothrow) MediaElementPlaybackTimer(move(timer)));
-    }
-
-    virtual void start() override { m_timer->start(); }
-    virtual void start(int interval_ms) override { m_timer->start(interval_ms); }
-
-private:
-    explicit MediaElementPlaybackTimer(NonnullRefPtr<Platform::Timer> timer)
-        : m_timer(move(timer))
-    {
-    }
-
-    NonnullRefPtr<Platform::Timer> m_timer;
-};
 
 HTMLMediaElement::HTMLMediaElement(DOM::Document& document, DOM::QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
@@ -773,9 +752,7 @@ WebIDL::ExceptionOr<void> HTMLMediaElement::process_media_data(Function<void(Str
     auto& realm = this->realm();
     auto& vm = realm.vm();
 
-    auto playback_manager = Video::PlaybackManager::from_data(m_media_data, [](auto interval_ms, auto timeout_handler) {
-        return MediaElementPlaybackTimer::create(interval_ms, move(timeout_handler));
-    });
+    auto playback_manager = Video::PlaybackManager::from_data(m_media_data);
 
     // -> If the media data cannot be fetched at all, due to network errors, causing the user agent to give up trying to fetch the resource
     // -> If the media data can be fetched but is found by inspection to be in an unsupported format, or can otherwise not be rendered at all
