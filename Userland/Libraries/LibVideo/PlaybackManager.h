@@ -83,14 +83,6 @@ private:
 static constexpr size_t FRAME_BUFFER_COUNT = 4;
 using VideoFrameQueue = Queue<FrameQueueItem, FRAME_BUFFER_COUNT>;
 
-class PlaybackTimer {
-public:
-    virtual ~PlaybackTimer() = default;
-
-    virtual void start() = 0;
-    virtual void start(int interval_ms) = 0;
-};
-
 enum class PlaybackState {
     Playing,
     Paused,
@@ -108,12 +100,11 @@ public:
 
     static constexpr SeekMode DEFAULT_SEEK_MODE = SeekMode::Accurate;
 
-    using PlaybackTimerCreator = Function<ErrorOr<NonnullOwnPtr<PlaybackTimer>>(int, Function<void()>)>;
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(StringView file);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(ReadonlyBytes data);
 
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_file(StringView file, PlaybackTimerCreator = nullptr);
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> from_data(ReadonlyBytes data, PlaybackTimerCreator = nullptr);
-
-    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder, PlaybackTimerCreator);
+    PlaybackManager(NonnullOwnPtr<Demuxer>& demuxer, Track video_track, NonnullOwnPtr<VideoDecoder>&& decoder);
+    ~PlaybackManager();
 
     void resume_playback();
     void pause_playback();
@@ -150,7 +141,7 @@ private:
     class SeekingStateHandler;
     class StoppedStateHandler;
 
-    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer, PlaybackTimerCreator playback_timer_creator);
+    static DecoderErrorOr<NonnullOwnPtr<PlaybackManager>> create_with_demuxer(NonnullOwnPtr<Demuxer> demuxer);
 
     void start_timer(int milliseconds);
     void timer_callback();
@@ -174,10 +165,10 @@ private:
 
     NonnullOwnPtr<VideoFrameQueue> m_frame_queue;
 
-    OwnPtr<PlaybackTimer> m_present_timer;
+    RefPtr<Core::Timer> m_present_timer;
     unsigned m_decoding_buffer_time_ms = 16;
 
-    OwnPtr<PlaybackTimer> m_decode_timer;
+    RefPtr<Core::Timer> m_decode_timer;
 
     NonnullOwnPtr<PlaybackStateHandler> m_playback_handler;
     Optional<FrameQueueItem> m_next_frame;
