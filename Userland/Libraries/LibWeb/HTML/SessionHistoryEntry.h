@@ -32,6 +32,14 @@ struct SessionHistoryEntry final : public JS::Cell {
 
     void visit_edges(Cell::Visitor&) override;
 
+    enum class Pending {
+        Tag,
+    };
+
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#she-step
+    // step, a non-negative integer or "pending", initially "pending".
+    Variant<int, Pending> step { Pending::Tag };
+
     // URL, a URL
     AK::URL url;
 
