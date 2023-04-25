@@ -7,7 +7,7 @@ auth_type=sha256
 depends=("freetype" "libiconv" "libjpeg" "libmad" "libmpeg2" "libpng" "libtheora" "SDL2")
 configopts=(
     "--enable-engine=monkey4"
-    "--enable-optimizations"
+    "--enable-release"
     "--with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local"
 )
 launcher_name=ScummVM
