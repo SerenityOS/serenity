@@ -38,9 +38,9 @@ Co-Authored-By: kleines Filmröllchen <filmroellchen@serenityos.org>
  src/video/serenity/SDL_serenitymessagebox.h   |  38 ++
  src/video/serenity/SDL_serenitymouse.cpp      | 142 ++++
  src/video/serenity/SDL_serenitymouse.h        |  39 ++
- src/video/serenity/SDL_serenityvideo.cpp      | 611 ++++++++++++++++++
+ src/video/serenity/SDL_serenityvideo.cpp      | 607 ++++++++++++++++++
  src/video/serenity/SDL_serenityvideo.h        | 101 +++
- 20 files changed, 1312 insertions(+), 25 deletions(-)
+ 20 files changed, 1308 insertions(+), 25 deletions(-)
  create mode 100644 src/audio/serenity/SDL_serenityaudio.cpp
  create mode 100644 src/audio/serenity/SDL_serenityaudio.h
  create mode 100644 src/video/serenity/SDL_serenityevents.cpp
@@ -872,10 +872,10 @@ index 0000000000000000000000000000000000000000..039f0361b3d1b248e218ea69495f58e5
 +/* vi: set ts=4 sw=4 expandtab: */
 diff --git a/src/video/serenity/SDL_serenityvideo.cpp b/src/video/serenity/SDL_serenityvideo.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..d3ebc9917e880488862b86aebf93c7e3105e3a4e
+index 0000000000000000000000000000000000000000..f26040845dd05f425ba464af385e133c6c3eab93
 --- /dev/null
 +++ b/src/video/serenity/SDL_serenityvideo.cpp
-@@ -0,0 +1,611 @@
+@@ -0,0 +1,607 @@
 +/*
 +  Simple DirectMedia Layer
 +  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
@@ -1266,12 +1266,8 @@ index 0000000000000000000000000000000000000000..d3ebc9917e880488862b86aebf93c7e3
 +    w->window()->set_double_buffering_enabled(false);
 +    w->widget()->set_fill_with_background_color(false);
 +    w->window()->set_main_widget(w->widget());
-+    w->window()->on_close = [&window] {
++    w->window()->on_close_request = [window] {
 +        SDL_SendWindowEvent(window, SDL_WINDOWEVENT_CLOSE, 0, 0);
-+    };
-+    w->window()->on_close_request = [] {
-+        if (SDL_SendQuit())
-+            return GUI::Window::CloseRequestDecision::Close;
 +        return GUI::Window::CloseRequestDecision::StayOpen;
 +    };
 +    w->window()->on_active_window_change = [window](bool is_active_window) {
