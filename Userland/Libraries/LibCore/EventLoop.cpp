@@ -24,16 +24,10 @@ Vector<EventLoop&>& event_loop_stack()
         s_event_loop_stack = new Vector<EventLoop&>;
     return *s_event_loop_stack;
 }
-bool has_event_loop()
-{
-    return !event_loop_stack().is_empty();
 }
-}
-
-Function<NonnullOwnPtr<EventLoopImplementation>()> EventLoop::make_implementation = EventLoopImplementationUnix::create;
 
 EventLoop::EventLoop()
-    : m_impl(make_implementation())
+    : m_impl(EventLoopManager::the().make_implementation())
 {
     if (event_loop_stack().is_empty()) {
         event_loop_stack().append(*this);
@@ -94,7 +88,7 @@ size_t EventLoop::pump(WaitMode mode)
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
-    m_impl->post_event(receiver, move(event));
+    EventLoopManager::the().post_event(receiver, move(event));
 }
 
 void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise)
@@ -104,16 +98,12 @@ void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promis
 
 int EventLoop::register_signal(int signal_number, Function<void(int)> handler)
 {
-    if (!has_event_loop())
-        return 0;
-    return current().m_impl->register_signal(signal_number, move(handler));
+    return EventLoopManager::the().register_signal(signal_number, move(handler));
 }
 
 void EventLoop::unregister_signal(int handler_id)
 {
-    if (!has_event_loop())
-        return;
-    current().m_impl->unregister_signal(handler_id);
+    EventLoopManager::the().unregister_signal(handler_id);
 }
 
 void EventLoop::notify_forked(ForkEvent)
@@ -123,30 +113,22 @@ void EventLoop::notify_forked(ForkEvent)
 
 int EventLoop::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
-    if (!has_event_loop())
-        return 0;
-    return current().m_impl->register_timer(object, milliseconds, should_reload, fire_when_not_visible);
+    return EventLoopManager::the().register_timer(object, milliseconds, should_reload, fire_when_not_visible);
 }
 
 bool EventLoop::unregister_timer(int timer_id)
 {
-    if (!has_event_loop())
-        return false;
-    return current().m_impl->unregister_timer(timer_id);
+    return EventLoopManager::the().unregister_timer(timer_id);
 }
 
 void EventLoop::register_notifier(Badge<Notifier>, Notifier& notifier)
 {
-    if (!has_event_loop())
-        return;
-    current().m_impl->register_notifier(notifier);
+    EventLoopManager::the().register_notifier(notifier);
 }
 
 void EventLoop::unregister_notifier(Badge<Notifier>, Notifier& notifier)
 {
-    if (!has_event_loop())
-        return;
-    current().m_impl->unregister_notifier(notifier);
+    EventLoopManager::the().unregister_notifier(notifier);
 }
 
 void EventLoop::wake()
@@ -168,11 +150,6 @@ void deferred_invoke(Function<void()> invokee)
 bool EventLoop::was_exit_requested() const
 {
     return m_impl->was_exit_requested();
-}
-
-void EventLoop::did_post_event(Badge<Core::ThreadEventQueue>)
-{
-    m_impl->did_post_event();
 }
 
 }

@@ -54,7 +54,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     QApplication app(arguments.argc, arguments.argv);
 
-    Core::EventLoop::make_implementation = Ladybird::EventLoopImplementationQt::create;
+    Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
     static_cast<Ladybird::EventLoopImplementationQt&>(event_loop.impl()).set_main_loop();
 

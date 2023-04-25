@@ -6,6 +6,7 @@
 
 #include <AK/Vector.h>
 #include <LibCore/DeferredInvocationContext.h>
+#include <LibCore/EventLoopImplementation.h>
 #include <LibCore/Object.h>
 #include <LibCore/Promise.h>
 #include <LibCore/ThreadEventQueue.h>
@@ -66,7 +67,7 @@ void ThreadEventQueue::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Ev
         Threading::MutexLocker lock(m_private->mutex);
         m_private->queued_events.empend(receiver, move(event));
     }
-    Core::EventLoop::current().did_post_event({});
+    Core::EventLoopManager::the().did_post_event();
 }
 
 void ThreadEventQueue::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> promise)

@@ -35,11 +35,6 @@ struct ThreadData {
 
 EventLoopImplementationQt::EventLoopImplementationQt()
 {
-    m_process_core_events_timer.setSingleShot(true);
-    m_process_core_events_timer.setInterval(0);
-    QObject::connect(&m_process_core_events_timer, &QTimer::timeout, [] {
-        Core::ThreadEventQueue::current().process();
-    });
 }
 
 EventLoopImplementationQt::~EventLoopImplementationQt() = default;
@@ -79,7 +74,7 @@ void EventLoopImplementationQt::wake()
         m_event_loop.wakeUp();
 }
 
-void EventLoopImplementationQt::deferred_invoke(Function<void()> function)
+void EventLoopManagerQt::deferred_invoke(Function<void()> function)
 {
     VERIFY(function);
     QTimer::singleShot(0, [function = move(function)] {
@@ -97,7 +92,7 @@ static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible sho
     object.dispatch_event(event);
 }
 
-int EventLoopImplementationQt::register_timer(Core::Object& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
+int EventLoopManagerQt::register_timer(Core::Object& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
 {
     auto& thread_data = ThreadData::the();
     auto timer = make<QTimer>();
@@ -116,7 +111,7 @@ int EventLoopImplementationQt::register_timer(Core::Object& object, int millisec
     return timer_id;
 }
 
-bool EventLoopImplementationQt::unregister_timer(int timer_id)
+bool EventLoopManagerQt::unregister_timer(int timer_id)
 {
     auto& thread_data = ThreadData::the();
     thread_data.timer_id_allocator.deallocate(timer_id);
@@ -129,7 +124,7 @@ static void qt_notifier_activated(Core::Notifier& notifier)
     notifier.dispatch_event(event);
 }
 
-void EventLoopImplementationQt::register_notifier(Core::Notifier& notifier)
+void EventLoopManagerQt::register_notifier(Core::Notifier& notifier)
 {
     QSocketNotifier::Type type;
     switch (notifier.type()) {
@@ -150,14 +145,34 @@ void EventLoopImplementationQt::register_notifier(Core::Notifier& notifier)
     ThreadData::the().notifiers.set(&notifier, move(socket_notifier));
 }
 
-void EventLoopImplementationQt::unregister_notifier(Core::Notifier& notifier)
+void EventLoopManagerQt::unregister_notifier(Core::Notifier& notifier)
 {
     ThreadData::the().notifiers.remove(&notifier);
 }
 
-void EventLoopImplementationQt::did_post_event()
+void EventLoopManagerQt::did_post_event()
 {
     m_process_core_events_timer.start();
+}
+
+EventLoopManagerQt::EventLoopManagerQt()
+{
+    m_process_core_events_timer.setSingleShot(true);
+    m_process_core_events_timer.setInterval(0);
+    QObject::connect(&m_process_core_events_timer, &QTimer::timeout, [] {
+        Core::ThreadEventQueue::current().process();
+    });
+}
+
+EventLoopManagerQt::~EventLoopManagerQt() = default;
+
+void EventLoopManagerQt::wake()
+{
+}
+
+NonnullOwnPtr<Core::EventLoopImplementation> EventLoopManagerQt::make_implementation()
+{
+    return adopt_own(*new EventLoopImplementationQt);
 }
 
 }

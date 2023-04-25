@@ -7,18 +7,36 @@
 #include <AK/NonnullOwnPtr.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoopImplementation.h>
+#include <LibCore/EventLoopImplementationUnix.h>
 #include <LibCore/ThreadEventQueue.h>
 
 namespace Core {
 
-EventLoopImplementation::EventLoopImplementation()
+EventLoopImplementation::EventLoopImplementation() = default;
+
+EventLoopImplementation::~EventLoopImplementation() = default;
+
+static EventLoopManager* s_event_loop_manager;
+EventLoopManager& EventLoopManager::the()
+{
+    if (!s_event_loop_manager)
+        s_event_loop_manager = new EventLoopManagerUnix;
+    return *s_event_loop_manager;
+}
+
+void EventLoopManager::install(Core::EventLoopManager& manager)
+{
+    s_event_loop_manager = &manager;
+}
+
+EventLoopManager::EventLoopManager()
     : m_thread_event_queue(ThreadEventQueue::current())
 {
 }
 
-EventLoopImplementation::~EventLoopImplementation() = default;
+EventLoopManager::~EventLoopManager() = default;
 
-void EventLoopImplementation::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
+void EventLoopManager::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
     m_thread_event_queue.post_event(receiver, move(event));
 

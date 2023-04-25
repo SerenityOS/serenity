@@ -40,7 +40,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     QGuiApplication app(arguments.argc, arguments.argv);
 
-    Core::EventLoop::make_implementation = Ladybird::EventLoopImplementationQt::create;
+    Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
 
     platform_init();

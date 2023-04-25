@@ -94,8 +94,6 @@ public:
 
     static EventLoop& current();
 
-    static Function<NonnullOwnPtr<EventLoopImplementation>()> make_implementation;
-
     void did_post_event(Badge<ThreadEventQueue>);
     EventLoopImplementation& impl() { return *m_impl; }
 

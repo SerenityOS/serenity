@@ -105,11 +105,8 @@ int EventLoopImplementationUnix::exec()
 
 size_t EventLoopImplementationUnix::pump(PumpMode mode)
 {
-    // We can only pump the event loop of the current thread.
-    VERIFY(&m_thread_event_queue == &ThreadEventQueue::current());
-
-    wait_for_events(mode);
-    return m_thread_event_queue.process();
+    static_cast<EventLoopManagerUnix&>(EventLoopManager::the()).wait_for_events(mode);
+    return ThreadEventQueue::current().process();
 }
 
 void EventLoopImplementationUnix::quit(int code)
@@ -135,14 +132,20 @@ void EventLoopImplementationUnix::wake()
     MUST(Core::System::write((*m_wake_pipe_fds)[1], { &wake_event, sizeof(wake_event) }));
 }
 
-void EventLoopImplementationUnix::deferred_invoke(Function<void()> invokee)
+void EventLoopManagerUnix::wake()
+{
+    int wake_event = 0;
+    MUST(Core::System::write(ThreadData::the().wake_pipe_fds[1], { &wake_event, sizeof(wake_event) }));
+}
+
+void EventLoopManagerUnix::deferred_invoke(Function<void()> invokee)
 {
     // FIXME: Get rid of the useless DeferredInvocationContext object.
     auto context = DeferredInvocationContext::construct();
     post_event(context, make<DeferredInvocationEvent>(context, move(invokee)));
 }
 
-void EventLoopImplementationUnix::wait_for_events(PumpMode mode)
+void EventLoopManagerUnix::wait_for_events(EventLoopImplementation::PumpMode mode)
 {
     auto& thread_data = ThreadData::the();
 
@@ -177,7 +180,7 @@ retry:
     Time now;
     struct timeval timeout = { 0, 0 };
     bool should_wait_forever = false;
-    if (mode == PumpMode::WaitForEvents && !has_pending_events) {
+    if (mode == EventLoopImplementation::PumpMode::WaitForEvents && !has_pending_events) {
         auto next_timer_expiration = get_next_timer_expiration();
         if (next_timer_expiration.has_value()) {
             now = Time::now_monotonic_coarse();
@@ -196,11 +199,8 @@ try_select_again:
     // Because POSIX, we might spuriously return from select() with EINTR; just select again.
     if (marked_fd_count < 0) {
         int saved_errno = errno;
-        if (saved_errno == EINTR) {
-            if (m_exit_requested)
-                return;
+        if (saved_errno == EINTR)
             goto try_select_again;
-        }
         dbgln("EventLoopImplementationUnix::wait_for_events: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
         VERIFY_NOT_REACHED();
     }
@@ -329,7 +329,7 @@ inline SignalHandlersInfo* signals_info()
     return s_signals.ptr();
 }
 
-void EventLoopImplementationUnix::dispatch_signal(int signal_number)
+void EventLoopManagerUnix::dispatch_signal(int signal_number)
 {
     auto& info = *signals_info();
     auto handlers = info.signal_handlers.find(signal_number);
@@ -355,7 +355,7 @@ void EventLoopImplementationUnix::notify_forked_and_in_child()
     thread_data.pid = getpid();
 }
 
-Optional<Time> EventLoopImplementationUnix::get_next_timer_expiration()
+Optional<Time> EventLoopManagerUnix::get_next_timer_expiration()
 {
     auto now = Time::now_monotonic_coarse();
     Optional<Time> soonest {};
@@ -438,7 +438,7 @@ bool SignalHandlers::remove(int handler_id)
     return m_handlers.remove(handler_id);
 }
 
-void EventLoopImplementationUnix::handle_signal(int signal_number)
+void EventLoopManagerUnix::handle_signal(int signal_number)
 {
     VERIFY(signal_number != 0);
     auto& thread_data = ThreadData::the();
@@ -457,13 +457,13 @@ void EventLoopImplementationUnix::handle_signal(int signal_number)
     }
 }
 
-int EventLoopImplementationUnix::register_signal(int signal_number, Function<void(int)> handler)
+int EventLoopManagerUnix::register_signal(int signal_number, Function<void(int)> handler)
 {
     VERIFY(signal_number != 0);
     auto& info = *signals_info();
     auto handlers = info.signal_handlers.find(signal_number);
     if (handlers == info.signal_handlers.end()) {
-        auto signal_handlers = adopt_ref(*new SignalHandlers(signal_number, EventLoopImplementationUnix::handle_signal));
+        auto signal_handlers = adopt_ref(*new SignalHandlers(signal_number, EventLoopManagerUnix::handle_signal));
         auto handler_id = signal_handlers->add(move(handler));
         info.signal_handlers.set(signal_number, move(signal_handlers));
         return handler_id;
@@ -472,7 +472,7 @@ int EventLoopImplementationUnix::register_signal(int signal_number, Function<voi
     }
 }
 
-void EventLoopImplementationUnix::unregister_signal(int handler_id)
+void EventLoopManagerUnix::unregister_signal(int handler_id)
 {
     VERIFY(handler_id != 0);
     int remove_signal_number = 0;
@@ -489,7 +489,7 @@ void EventLoopImplementationUnix::unregister_signal(int handler_id)
         info.signal_handlers.remove(remove_signal_number);
 }
 
-int EventLoopImplementationUnix::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
+int EventLoopManagerUnix::register_timer(Object& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     VERIFY(milliseconds >= 0);
     auto& thread_data = ThreadData::the();
@@ -505,25 +505,32 @@ int EventLoopImplementationUnix::register_timer(Object& object, int milliseconds
     return timer_id;
 }
 
-bool EventLoopImplementationUnix::unregister_timer(int timer_id)
+bool EventLoopManagerUnix::unregister_timer(int timer_id)
 {
     auto& thread_data = ThreadData::the();
     thread_data.id_allocator.deallocate(timer_id);
     return thread_data.timers.remove(timer_id);
 }
 
-void EventLoopImplementationUnix::register_notifier(Notifier& notifier)
+void EventLoopManagerUnix::register_notifier(Notifier& notifier)
 {
     ThreadData::the().notifiers.set(&notifier);
 }
 
-void EventLoopImplementationUnix::unregister_notifier(Notifier& notifier)
+void EventLoopManagerUnix::unregister_notifier(Notifier& notifier)
 {
     ThreadData::the().notifiers.remove(&notifier);
 }
 
-void EventLoopImplementationUnix::did_post_event()
+void EventLoopManagerUnix::did_post_event()
 {
+}
+
+EventLoopManagerUnix::~EventLoopManagerUnix() = default;
+
+NonnullOwnPtr<EventLoopImplementation> EventLoopManagerUnix::make_implementation()
+{
+    return adopt_own(*new EventLoopImplementationUnix);
 }
 
 }
