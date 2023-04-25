@@ -17,3 +17,14 @@ Build: Fix `char*` vs. `const char*` arguments
 These arguments are of the wrong constness, which will trip our
 compiler.
 
+## `0004-System-Make-sure-to-exit-the-loop-on-receiving-SDL_Q.patch`
+
+System: Make sure to exit the loop on receiving SDL_QUIT
+
+This is fixed in more modern adaptations, as can be seen here:
+
+https://github.com/laanwj/gltron/blob/336dbbb75afe0aed1d9faaa5bbaa867b2b13d10b/nebu/base/system.c#L135
+
+Since we work with the original source material, we better patch this
+ourselves.
+
