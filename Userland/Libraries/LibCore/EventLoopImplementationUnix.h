@@ -31,6 +31,8 @@ public:
     virtual void register_notifier(Notifier&) override;
     virtual void unregister_notifier(Notifier&) override;
 
+    virtual void did_post_event() override;
+
     virtual void unquit() override;
     virtual bool was_exit_requested() const override;
     virtual void notify_forked_and_in_child() override;

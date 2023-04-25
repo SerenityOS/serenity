@@ -62,8 +62,11 @@ ThreadEventQueue::~ThreadEventQueue() = default;
 
 void ThreadEventQueue::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Event> event)
 {
-    Threading::MutexLocker lock(m_private->mutex);
-    m_private->queued_events.empend(receiver, move(event));
+    {
+        Threading::MutexLocker lock(m_private->mutex);
+        m_private->queued_events.empend(receiver, move(event));
+    }
+    Core::EventLoop::current().did_post_event({});
 }
 
 void ThreadEventQueue::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> promise)

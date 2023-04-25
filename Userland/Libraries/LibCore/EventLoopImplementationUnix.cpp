@@ -522,4 +522,8 @@ void EventLoopImplementationUnix::unregister_notifier(Notifier& notifier)
     ThreadData::the().notifiers.remove(&notifier);
 }
 
+void EventLoopImplementationUnix::did_post_event()
+{
+}
+
 }

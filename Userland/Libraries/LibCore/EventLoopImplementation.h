@@ -37,6 +37,8 @@ public:
     virtual void register_notifier(Notifier&) = 0;
     virtual void unregister_notifier(Notifier&) = 0;
 
+    virtual void did_post_event() = 0;
+
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() = 0;
     virtual bool was_exit_requested() const = 0;

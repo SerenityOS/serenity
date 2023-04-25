@@ -19,6 +19,7 @@
 namespace Core {
 
 class EventLoopImplementation;
+class ThreadEventQueue;
 
 // The event loop enables asynchronous (not parallel or multi-threaded) computing by efficiently handling events from various sources.
 // Event loops are most important for GUI programs, where the various GUI updates and action callbacks run on the EventLoop,
@@ -94,6 +95,9 @@ public:
     static EventLoop& current();
 
     static Function<NonnullOwnPtr<EventLoopImplementation>()> make_implementation;
+
+    void did_post_event(Badge<ThreadEventQueue>);
+    EventLoopImplementation& impl() { return *m_impl; }
 
 private:
     void wait_for_event(WaitMode);

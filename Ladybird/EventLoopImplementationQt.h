@@ -35,6 +35,8 @@ public:
     virtual void register_notifier(Core::Notifier&) override;
     virtual void unregister_notifier(Core::Notifier&) override;
 
+    virtual void did_post_event() override;
+
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() override { }
     virtual bool was_exit_requested() const override { return false; }
@@ -42,12 +44,15 @@ public:
     virtual int register_signal(int, Function<void(int)>) override { return 0; }
     virtual void unregister_signal(int) override { }
 
-protected:
-    EventLoopImplementationQt();
+    void set_main_loop() { m_main_loop = true; }
 
 private:
+    EventLoopImplementationQt();
+    bool is_main_loop() const { return m_main_loop; }
+
     QEventLoop m_event_loop;
-    Optional<int> m_exit_code;
+    QTimer m_process_core_events_timer;
+    bool m_main_loop { false };
 };
 
 }

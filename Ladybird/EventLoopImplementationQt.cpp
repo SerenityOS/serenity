@@ -10,6 +10,7 @@
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
 #include <LibCore/ThreadEventQueue.h>
+#include <QCoreApplication>
 #include <QTimer>
 
 namespace Ladybird {
@@ -34,38 +35,48 @@ struct ThreadData {
 
 EventLoopImplementationQt::EventLoopImplementationQt()
 {
+    m_process_core_events_timer.setSingleShot(true);
+    m_process_core_events_timer.setInterval(0);
+    QObject::connect(&m_process_core_events_timer, &QTimer::timeout, [] {
+        Core::ThreadEventQueue::current().process();
+    });
 }
 
 EventLoopImplementationQt::~EventLoopImplementationQt() = default;
 
 int EventLoopImplementationQt::exec()
 {
-    // NOTE: We don't use QEventLoop::exec() here since it wouldn't process the Core::ThreadEventQueue.
-    while (!m_exit_code.has_value()) {
-        pump(PumpMode::WaitForEvents);
-    }
-    return m_exit_code.value();
+    if (is_main_loop())
+        return QCoreApplication::exec();
+    return m_event_loop.exec();
 }
 
 size_t EventLoopImplementationQt::pump(PumpMode mode)
 {
-    bool result = Core::ThreadEventQueue::current().process() != 0;
-    if (mode == PumpMode::WaitForEvents)
-        result |= m_event_loop.processEvents(QEventLoop::WaitForMoreEvents);
-    else
-        result |= m_event_loop.processEvents();
-    Core::ThreadEventQueue::current().process();
+    auto result = Core::ThreadEventQueue::current().process();
+    if (mode == PumpMode::WaitForEvents) {
+        if (is_main_loop())
+            QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents);
+        else
+            m_event_loop.processEvents(QEventLoop::WaitForMoreEvents);
+    } else {
+    }
+    result += Core::ThreadEventQueue::current().process();
     return result;
 }
 
 void EventLoopImplementationQt::quit(int code)
 {
-    m_exit_code = code;
+    if (is_main_loop())
+        QCoreApplication::exit(code);
+    else
+        m_event_loop.exit(code);
 }
 
 void EventLoopImplementationQt::wake()
 {
-    m_event_loop.wakeUp();
+    if (!is_main_loop())
+        m_event_loop.wakeUp();
 }
 
 void EventLoopImplementationQt::deferred_invoke(Function<void()> function)
@@ -74,6 +85,16 @@ void EventLoopImplementationQt::deferred_invoke(Function<void()> function)
     QTimer::singleShot(0, [function = move(function)] {
         function();
     });
+}
+
+static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible, Core::Object& object)
+{
+    if (should_fire_when_not_visible == Core::TimerShouldFireWhenNotVisible::No) {
+        if (!object.is_visible_for_timer_purposes())
+            return;
+    }
+    Core::TimerEvent event(timer_id);
+    object.dispatch_event(event);
 }
 
 int EventLoopImplementationQt::register_timer(Core::Object& object, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible)
@@ -88,11 +109,7 @@ int EventLoopImplementationQt::register_timer(Core::Object& object, int millisec
         auto object = weak_object.strong_ref();
         if (!object)
             return;
-        if (should_fire_when_not_visible == Core::TimerShouldFireWhenNotVisible::No) {
-            if (!object->is_visible_for_timer_purposes())
-                return;
-        }
-        Core::ThreadEventQueue::current().post_event(*object, make<Core::TimerEvent>(timer_id));
+        qt_timer_fired(timer_id, should_fire_when_not_visible, *object);
     });
     timer->start();
     thread_data.timers.set(timer_id, move(timer));
@@ -104,6 +121,12 @@ bool EventLoopImplementationQt::unregister_timer(int timer_id)
     auto& thread_data = ThreadData::the();
     thread_data.timer_id_allocator.deallocate(timer_id);
     return thread_data.timers.remove(timer_id);
+}
+
+static void qt_notifier_activated(Core::Notifier& notifier)
+{
+    Core::NotifierActivationEvent event(notifier.fd());
+    notifier.dispatch_event(event);
 }
 
 void EventLoopImplementationQt::register_notifier(Core::Notifier& notifier)
@@ -120,8 +143,8 @@ void EventLoopImplementationQt::register_notifier(Core::Notifier& notifier)
         TODO();
     }
     auto socket_notifier = make<QSocketNotifier>(notifier.fd(), type);
-    QObject::connect(socket_notifier, &QSocketNotifier::activated, [fd = notifier.fd(), &notifier] {
-        Core::ThreadEventQueue::current().post_event(notifier, make<Core::NotifierActivationEvent>(fd));
+    QObject::connect(socket_notifier, &QSocketNotifier::activated, [&notifier] {
+        qt_notifier_activated(notifier);
     });
 
     ThreadData::the().notifiers.set(&notifier, move(socket_notifier));
@@ -130,6 +153,11 @@ void EventLoopImplementationQt::register_notifier(Core::Notifier& notifier)
 void EventLoopImplementationQt::unregister_notifier(Core::Notifier& notifier)
 {
     ThreadData::the().notifiers.remove(&notifier);
+}
+
+void EventLoopImplementationQt::did_post_event()
+{
+    m_process_core_events_timer.start();
 }
 
 }

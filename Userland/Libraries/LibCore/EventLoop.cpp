@@ -170,4 +170,9 @@ bool EventLoop::was_exit_requested() const
     return m_impl->was_exit_requested();
 }
 
+void EventLoop::did_post_event(Badge<Core::ThreadEventQueue>)
+{
+    m_impl->did_post_event();
+}
+
 }
