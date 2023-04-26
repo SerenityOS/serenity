@@ -1487,18 +1487,12 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
         break;
     case BoxTypeTransformation::Blockify:
         if (!display.is_block_outside()) {
-            // FIXME: We only want to change the outer display type here, but we don't have a nice API
-            //        to do that specifically. For now, we simply check for "inline-flex" and convert
-            //        that to "flex".
-            if (display.is_flex_inside())
-                style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Block, CSS::Display::Inside::Flex }));
-            else
-                style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Block, CSS::Display::Inside::Block }));
+            style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Block, display.inside(), display.list_item() }));
         }
         break;
     case BoxTypeTransformation::Inlinify:
         if (!display.is_inline_outside())
-            style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }));
+            style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Inline, display.inside(), display.list_item() }));
         break;
     }
 }
