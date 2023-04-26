@@ -139,12 +139,6 @@ void EventLoopImplementationUnix::wake()
     MUST(Core::System::write((*m_wake_pipe_fds)[1], { &wake_event, sizeof(wake_event) }));
 }
 
-void EventLoopManagerUnix::wake()
-{
-    int wake_event = 0;
-    MUST(Core::System::write(ThreadData::the().wake_pipe_fds[1], { &wake_event, sizeof(wake_event) }));
-}
-
 void EventLoopManagerUnix::wait_for_events(EventLoopImplementation::PumpMode mode)
 {
     auto& thread_data = ThreadData::the();
