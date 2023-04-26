@@ -5,6 +5,7 @@
  */
 
 #include "ManualModel.h"
+#include <AK/FuzzyMatch.h>
 #include <AK/Try.h>
 #include <AK/Utf8View.h>
 #include <LibManual/Node.h>
@@ -213,7 +214,8 @@ TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Vari
     if (!name.has_value())
         return TriState::False;
 
-    if (name.value().bytes_as_string_view().contains(term.as_string(), CaseSensitivity::CaseInsensitive))
+    auto match_result = fuzzy_match(term.as_string(), name.value());
+    if (match_result.score > 0)
         return TriState::True;
 
     auto path = page_path(index);
