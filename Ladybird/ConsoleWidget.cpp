@@ -12,6 +12,7 @@
 #include "WebContentView.h"
 #include <AK/StringBuilder.h>
 #include <LibJS/MarkupGenerator.h>
+#include <QFontDatabase>
 #include <QLineEdit>
 #include <QPalette>
 #include <QPushButton>
@@ -41,7 +42,7 @@ ConsoleWidget::ConsoleWidget()
     if (is_using_dark_system_theme(*this))
         m_output_view->update_palette(WebContentView::PaletteMode::Dark);
 
-    m_output_view->load("data:text/html,<html></html>"sv);
+    m_output_view->load("data:text/html,<html style=\"font: 10pt monospace;\"></html>"sv);
     // Wait until our output WebView is loaded, and then request any messages that occurred before we existed
     m_output_view->on_load_finish = [this](auto&) {
         if (on_request_messages)
@@ -56,6 +57,7 @@ ConsoleWidget::ConsoleWidget()
     layout()->addWidget(bottom_container);
 
     m_input = new QLineEdit(bottom_container);
+    m_input->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
     bottom_container->layout()->addWidget(m_input);
 
     QObject::connect(m_input, &QLineEdit::returnPressed, [this] {
