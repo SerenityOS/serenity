@@ -208,23 +208,26 @@ void ManualModel::update_section_node_on_toggle(const GUI::ModelIndex& index, bo
         static_cast<Manual::SectionNode*>(node)->set_open(open);
 }
 
-TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
+GUI::Model::MatchResult ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Variant& term) const
 {
     auto name = page_name(index);
     if (!name.has_value())
-        return TriState::False;
+        return { TriState::False };
 
     auto match_result = fuzzy_match(term.as_string(), name.value());
     if (match_result.score > 0)
-        return TriState::True;
+        return { TriState::True, match_result.score };
 
     auto path = page_path(index);
     // NOTE: This is slightly inaccurate, as page_path can also fail due to OOM. We consider it acceptable to have a data mismatch in that case.
     if (!path.has_value())
-        return TriState::False;
+        return { TriState::False };
     auto view_result = page_view(path.release_value());
     if (view_result.is_error() || view_result.value().is_empty())
-        return TriState::False;
+        return { TriState::False };
 
-    return view_result.value().contains(term.as_string(), CaseSensitivity::CaseInsensitive) ? TriState::True : TriState::False;
+    if (view_result.value().contains(term.as_string(), CaseSensitivity::CaseInsensitive))
+        return { TriState::True, 0 };
+
+    return { TriState::False };
 }

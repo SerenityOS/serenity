@@ -72,17 +72,18 @@ GUI::Variant HistoryModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     VERIFY_NOT_REACHED();
 }
 
-TriState HistoryModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
+GUI::Model::MatchResult HistoryModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
 {
     auto needle = term.as_string();
     if (needle.is_empty())
-        return TriState::True;
+        return { TriState::True };
 
     auto const& history_entry = m_entries[index.row()];
     auto haystack = DeprecatedString::formatted("{} {}", history_entry.title, history_entry.url.serialize());
-    if (fuzzy_match(needle, haystack).score > 0)
-        return TriState::True;
-    return TriState::False;
+    auto match_result = fuzzy_match(needle, haystack);
+    if (match_result.score > 0)
+        return { TriState::True, match_result.score };
+    return { TriState::False };
 }
 
 }
