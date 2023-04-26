@@ -6,6 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibCore/MimeData.h>
 
 namespace Core {
@@ -184,4 +185,19 @@ Optional<DeprecatedString> guess_mime_type_based_on_sniffed_bytes(ReadonlyBytes 
 #undef __ENUMERATE_MIME_TYPE_HEADER
     return {};
 }
+
+Optional<DeprecatedString> guess_mime_type_based_on_sniffed_bytes(Core::File& file)
+{
+    // Read accounts for longest possible offset + signature we currently match against (extra/iso-9660)
+    auto maybe_buffer = ByteBuffer::create_uninitialized(0x9006);
+    if (maybe_buffer.is_error())
+        return {};
+
+    auto maybe_bytes = file.read_some(maybe_buffer.value());
+    if (maybe_bytes.is_error())
+        return {};
+
+    return Core::guess_mime_type_based_on_sniffed_bytes(maybe_bytes.value());
+}
+
 }
