@@ -30,7 +30,7 @@ protected:
     virtual StringView class_name() const { return "VirtIO::Device"sv; }
     explicit Device(PCI::DeviceIdentifier const&);
 
-    Configuration const* get_config(ConfigurationType cfg_type, u32 index = 0) const
+    ErrorOr<Configuration const*> get_config(ConfigurationType cfg_type, u32 index = 0) const
     {
         for (auto const& cfg : m_configs) {
             if (cfg.cfg_type != cfg_type)
@@ -41,7 +41,7 @@ protected:
             }
             return &cfg;
         }
-        return nullptr;
+        return Error::from_errno(ENXIO);
     }
 
     template<typename F>

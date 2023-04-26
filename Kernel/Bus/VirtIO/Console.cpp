@@ -22,9 +22,7 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<Console> Console::must_create(PCI::DeviceIden
 UNMAP_AFTER_INIT ErrorOr<void> Console::initialize_virtio_resources()
 {
     TRY(Device::initialize_virtio_resources());
-    auto const* cfg = get_config(VirtIO::ConfigurationType::Device);
-    if (!cfg)
-        return Error::from_errno(ENODEV);
+    auto const* cfg = TRY(get_config(VirtIO::ConfigurationType::Device));
     bool success = negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
         if (is_feature_set(supported_features, VIRTIO_CONSOLE_F_SIZE))
