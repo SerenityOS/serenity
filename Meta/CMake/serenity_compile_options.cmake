@@ -36,7 +36,8 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang$")
     add_compile_options(-Wno-unused-private-field)
 
     # Clang doesn't add compiler_rt to the search path when compiling with -nostdlib.
-    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${CMAKE_CXX_COMPILER_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
+    string(REGEX REPLACE "\\.(.*)" "" LLVM_MAJOR_VERSION "${CMAKE_CXX_COMPILER_VERSION}")
+    link_directories(${TOOLCHAIN_ROOT}/lib/clang/${LLVM_MAJOR_VERSION}/lib/${SERENITY_ARCH}-pc-serenity/)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
