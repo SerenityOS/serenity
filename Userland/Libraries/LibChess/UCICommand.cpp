@@ -348,4 +348,17 @@ ErrorOr<String> QuitCommand::to_string() const
     return "quit\n"_short_string;
 }
 
+ErrorOr<NonnullOwnPtr<UCINewGameCommand>> UCINewGameCommand::from_string(StringView command)
+{
+    auto tokens = command.split_view(' ');
+    VERIFY(tokens[0] == "ucinewgame");
+    VERIFY(tokens.size() == 1);
+    return adopt_nonnull_own_or_enomem(new (nothrow) UCINewGameCommand);
+}
+
+ErrorOr<String> UCINewGameCommand::to_string() const
+{
+    return "ucinewgame\n"_string;
+}
+
 }
