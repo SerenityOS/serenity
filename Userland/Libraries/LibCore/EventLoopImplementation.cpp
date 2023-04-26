@@ -12,7 +12,10 @@
 
 namespace Core {
 
-EventLoopImplementation::EventLoopImplementation() = default;
+EventLoopImplementation::EventLoopImplementation()
+    : m_thread_event_queue(ThreadEventQueue::current())
+{
+}
 
 EventLoopImplementation::~EventLoopImplementation() = default;
 
@@ -29,20 +32,8 @@ void EventLoopManager::install(Core::EventLoopManager& manager)
     s_event_loop_manager = &manager;
 }
 
-EventLoopManager::EventLoopManager()
-    : m_thread_event_queue(ThreadEventQueue::current())
-{
-}
+EventLoopManager::EventLoopManager() = default;
 
 EventLoopManager::~EventLoopManager() = default;
-
-void EventLoopManager::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
-{
-    m_thread_event_queue.post_event(receiver, move(event));
-
-    // Wake up this EventLoopImplementation if this is a cross-thread event posting.
-    if (&ThreadEventQueue::current() != &m_thread_event_queue)
-        wake();
-}
 
 }

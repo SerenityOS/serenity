@@ -88,7 +88,7 @@ size_t EventLoop::pump(WaitMode mode)
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
-    EventLoopManager::the().post_event(receiver, move(event));
+    m_impl->post_event(receiver, move(event));
 }
 
 void EventLoop::add_job(NonnullRefPtr<Promise<NonnullRefPtr<Object>>> job_promise)

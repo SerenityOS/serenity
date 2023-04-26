@@ -126,6 +126,13 @@ bool EventLoopImplementationUnix::was_exit_requested() const
     return m_exit_requested;
 }
 
+void EventLoopImplementationUnix::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
+{
+    m_thread_event_queue.post_event(receiver, move(event));
+    if (&m_thread_event_queue != &ThreadEventQueue::current())
+        wake();
+}
+
 void EventLoopImplementationUnix::wake()
 {
     int wake_event = 0;
@@ -136,13 +143,6 @@ void EventLoopManagerUnix::wake()
 {
     int wake_event = 0;
     MUST(Core::System::write(ThreadData::the().wake_pipe_fds[1], { &wake_event, sizeof(wake_event) }));
-}
-
-void EventLoopManagerUnix::deferred_invoke(Function<void()> invokee)
-{
-    // FIXME: Get rid of the useless DeferredInvocationContext object.
-    auto context = DeferredInvocationContext::construct();
-    post_event(context, make<DeferredInvocationEvent>(context, move(invokee)));
 }
 
 void EventLoopManagerUnix::wait_for_events(EventLoopImplementation::PumpMode mode)
