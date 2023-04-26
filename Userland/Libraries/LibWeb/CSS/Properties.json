@@ -609,6 +609,7 @@
       "inline",
       "inline-block",
       "inline-flex",
+      "inline-grid",
       "inline-table",
       "list-item",
       "none",
