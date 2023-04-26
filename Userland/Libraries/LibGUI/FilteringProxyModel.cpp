@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/InsertionSort.h>
 #include <LibGUI/FilteringProxyModel.h>
 
 namespace GUI {
@@ -30,7 +31,7 @@ int FilteringProxyModel::column_count(ModelIndex const& index) const
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
         return 0;
 
-    return m_model->column_count(m_matching_indices[index.row()]);
+    return m_model->column_count(m_matching_indices[index.row()].index);
 }
 
 String FilteringProxyModel::column_name(int column) const
@@ -46,7 +47,7 @@ Variant FilteringProxyModel::data(ModelIndex const& index, ModelRole role) const
     if ((size_t)index.row() > m_matching_indices.size() || index.row() < 0)
         return {};
 
-    auto matching_index = m_matching_indices[index.row()];
+    auto matching_index = m_matching_indices[index.row()].index;
     auto underlying_index = m_model->index(matching_index.row(), index.column(), matching_index.parent());
     return underlying_index.data(role);
 }
@@ -67,15 +68,18 @@ void FilteringProxyModel::filter()
             if (!index.is_valid())
                 continue;
 
-            auto filter_matches = m_model->data_matches(index, m_filter_term);
-            bool matches = filter_matches == TriState::True;
-            if (filter_matches == TriState::Unknown) {
+            auto match_result = m_model->data_matches(index, m_filter_term);
+            bool matches = match_result.matched == TriState::True;
+            auto score = match_result.score;
+            if (match_result.matched == TriState::Unknown) {
                 auto data = index.data();
-                if (data.is_string() && data.as_string().contains(m_filter_term))
+                if (data.is_string() && data.as_string().contains(m_filter_term)) {
                     matches = true;
+                    score = 0;
+                }
             }
             if (matches)
-                m_matching_indices.append(index);
+                m_matching_indices.append({ index, score });
 
             add_matching(index);
         }
@@ -83,6 +87,9 @@ void FilteringProxyModel::filter()
 
     ModelIndex parent_index;
     add_matching(parent_index);
+    if (has_flag(m_filtering_options, FilteringOptions::SortByScore))
+        // Use a stable sort, so that indices with equal scores don't swap positions.
+        insertion_sort(m_matching_indices, [](auto const& a, auto const& b) { return b.score < a.score; });
 }
 
 void FilteringProxyModel::set_filter_term(StringView term)
@@ -100,7 +107,7 @@ ModelIndex FilteringProxyModel::map(ModelIndex const& index) const
 
     auto row = index.row();
     if (m_matching_indices.size() > (size_t)row)
-        return m_matching_indices[row];
+        return m_matching_indices[row].index;
 
     return {};
 }

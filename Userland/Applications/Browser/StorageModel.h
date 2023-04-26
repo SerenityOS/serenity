@@ -25,7 +25,7 @@ public:
     virtual String column_name(int column) const override;
     virtual GUI::ModelIndex index(int row, int column = 0, GUI::ModelIndex const& = GUI::ModelIndex()) const override;
     virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role = GUI::ModelRole::Display) const override;
-    virtual TriState data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override;
+    virtual GUI::Model::MatchResult data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override;
 
 private:
     OrderedHashMap<DeprecatedString, DeprecatedString> m_local_storage_entries;

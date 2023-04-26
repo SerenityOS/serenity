@@ -62,13 +62,18 @@ public:
         MatchFull = 1 << 3,
     };
 
+    struct MatchResult {
+        TriState matched { TriState::Unknown };
+        int score { 0 };
+    };
+
     virtual ~Model();
 
     virtual int row_count(ModelIndex const& = ModelIndex()) const = 0;
     virtual int column_count(ModelIndex const& = ModelIndex()) const = 0;
     virtual String column_name(int) const { return {}; }
     virtual Variant data(ModelIndex const&, ModelRole = ModelRole::Display) const = 0;
-    virtual TriState data_matches(ModelIndex const&, Variant const&) const { return TriState::Unknown; }
+    virtual MatchResult data_matches(ModelIndex const&, Variant const&) const { return {}; }
     virtual void invalidate();
     virtual ModelIndex parent_index(ModelIndex const&) const { return {}; }
     virtual ModelIndex index(int row, int column = 0, ModelIndex const& parent = ModelIndex()) const;
