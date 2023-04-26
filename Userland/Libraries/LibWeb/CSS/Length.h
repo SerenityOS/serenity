@@ -70,18 +70,27 @@ public:
             || m_type == Type::Px;
     }
 
-    bool is_relative() const
+    bool is_font_relative() const
     {
         return m_type == Type::Em
             || m_type == Type::Rem
             || m_type == Type::Ex
             || m_type == Type::Ch
             || m_type == Type::Lh
-            || m_type == Type::Rlh
-            || m_type == Type::Vw
+            || m_type == Type::Rlh;
+    }
+
+    bool is_viewport_relative() const
+    {
+        return m_type == Type::Vw
             || m_type == Type::Vh
             || m_type == Type::Vmin
             || m_type == Type::Vmax;
+    }
+
+    bool is_relative() const
+    {
+        return is_font_relative() || is_viewport_relative();
     }
 
     Type type() const { return m_type; }
