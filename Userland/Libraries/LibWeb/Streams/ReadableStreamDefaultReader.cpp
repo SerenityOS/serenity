@@ -32,6 +32,7 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<ReadableStreamDefaultReader>> ReadableStrea
 
 ReadableStreamDefaultReader::ReadableStreamDefaultReader(JS::Realm& realm)
     : Bindings::PlatformObject(realm)
+    , ReadableStreamGenericReaderMixin(realm)
 {
 }
 
