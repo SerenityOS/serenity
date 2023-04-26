@@ -40,7 +40,7 @@ public:
     static ErrorOr<bool> probe(PCI::DeviceIdentifier const&);
     static ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> create(PCI::DeviceIdentifier const&);
 
-    virtual void initialize() override;
+    virtual ErrorOr<void> initialize_virtio_resources() override;
 
     virtual StringView device_name() const override { return "VirtIOGraphicsAdapter"sv; }
 

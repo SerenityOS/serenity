@@ -24,7 +24,7 @@ class Device
 public:
     virtual ~Device() override = default;
 
-    virtual void initialize();
+    virtual ErrorOr<void> initialize_virtio_resources();
 
 protected:
     virtual StringView class_name() const { return "VirtIO::Device"sv; }

@@ -14,23 +14,22 @@ UNMAP_AFTER_INIT NonnullLockRefPtr<RNG> RNG::must_create(PCI::DeviceIdentifier c
     return adopt_lock_ref_if_nonnull(new RNG(device_identifier)).release_nonnull();
 }
 
-UNMAP_AFTER_INIT void RNG::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> RNG::initialize_virtio_resources()
 {
-    Device::initialize();
+    TRY(Device::initialize_virtio_resources());
     bool success = negotiate_features([&](auto) {
         return 0;
     });
-    if (success) {
-        success = setup_queues(1);
-    }
-    if (success) {
-        finish_init();
-        m_entropy_buffer = MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG"sv, Memory::Region::Access::ReadWrite).release_value();
-        if (m_entropy_buffer) {
-            memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
-            request_entropy_from_host();
-        }
-    }
+    if (!success)
+        return Error::from_errno(EIO);
+    success = setup_queues(1);
+    if (!success)
+        return Error::from_errno(EIO);
+    finish_init();
+    m_entropy_buffer = TRY(MM.allocate_contiguous_kernel_region(PAGE_SIZE, "VirtIO::RNG"sv, Memory::Region::Access::ReadWrite));
+    memset(m_entropy_buffer->vaddr().as_ptr(), 0, m_entropy_buffer->size());
+    request_entropy_from_host();
+    return {};
 }
 
 UNMAP_AFTER_INIT RNG::RNG(PCI::DeviceIdentifier const& device_identifier)

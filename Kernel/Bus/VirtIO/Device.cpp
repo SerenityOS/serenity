@@ -27,12 +27,12 @@ UNMAP_AFTER_INIT void detect()
         switch (device_identifier.hardware_id().device_id) {
         case PCI::DeviceID::VirtIOConsole: {
             auto& console = Console::must_create(device_identifier).leak_ref();
-            console.initialize();
+            MUST(console.initialize_virtio_resources());
             break;
         }
         case PCI::DeviceID::VirtIOEntropy: {
             auto& rng = RNG::must_create(device_identifier).leak_ref();
-            rng.initialize();
+            MUST(rng.initialize_virtio_resources());
             break;
         }
         case PCI::DeviceID::VirtIOGPU: {
@@ -86,7 +86,7 @@ static StringView determine_device_class(PCI::DeviceIdentifier const& device_ide
     }
 }
 
-UNMAP_AFTER_INIT void Device::initialize()
+UNMAP_AFTER_INIT ErrorOr<void> Device::initialize_virtio_resources()
 {
     enable_bus_mastering(device_identifier());
 
@@ -112,7 +112,7 @@ UNMAP_AFTER_INIT void Device::initialize()
                 continue;
             if (raw_config_type < static_cast<u8>(ConfigurationType::Common) || raw_config_type > static_cast<u8>(ConfigurationType::PCICapabilitiesAccess)) {
                 dbgln("{}: Unknown capability configuration type: {}", m_class_name, raw_config_type);
-                return;
+                return Error::from_errno(ENXIO);
             }
             config.cfg_type = static_cast<ConfigurationType>(raw_config_type);
             auto cap_length = capability.read8(0x2);
@@ -148,14 +148,14 @@ UNMAP_AFTER_INIT void Device::initialize()
 
     if (m_use_mmio) {
         for (auto& cfg : m_configs) {
-            auto mapping_io_window = IOWindow::create_for_pci_device_bar(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)).release_value_but_fixme_should_propagate_errors();
+            auto mapping_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)));
             m_register_bases[cfg.bar] = move(mapping_io_window);
         }
         m_common_cfg = get_config(ConfigurationType::Common, 0);
         m_notify_cfg = get_config(ConfigurationType::Notify, 0);
         m_isr_cfg = get_config(ConfigurationType::ISR, 0);
     } else {
-        auto mapping_io_window = IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR0).release_value_but_fixme_should_propagate_errors();
+        auto mapping_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
         m_register_bases[0] = move(mapping_io_window);
     }
 
@@ -169,6 +169,7 @@ UNMAP_AFTER_INIT void Device::initialize()
     set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
 
     set_status_bit(DEVICE_STATUS_DRIVER);
+    return {};
 }
 
 UNMAP_AFTER_INIT VirtIO::Device::Device(PCI::DeviceIdentifier const& device_identifier)
