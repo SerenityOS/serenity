@@ -600,6 +600,7 @@
   "display": {
     "inherited": false,
     "initial": "inline",
+    "max-values": 3,
     "valid-identifiers": [
       "block",
       "contents",
