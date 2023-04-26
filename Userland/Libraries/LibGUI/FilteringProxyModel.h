@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/DeprecatedString.h>
+#include <AK/EnumBits.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <LibGUI/Model.h>
@@ -17,9 +18,14 @@ namespace GUI {
 class FilteringProxyModel final : public Model
     , public ModelClient {
 public:
-    static ErrorOr<NonnullRefPtr<FilteringProxyModel>> create(NonnullRefPtr<Model> model)
+    enum class FilteringOptions {
+        None,
+        SortByScore = 1 << 1
+    };
+
+    static ErrorOr<NonnullRefPtr<FilteringProxyModel>> create(NonnullRefPtr<Model> model, FilteringOptions filtering_options = FilteringOptions::None)
     {
-        return adopt_nonnull_ref_or_enomem(new (nothrow) FilteringProxyModel(move(model)));
+        return adopt_nonnull_ref_or_enomem(new (nothrow) FilteringProxyModel(move(model), filtering_options));
     }
 
     virtual ~FilteringProxyModel() override
@@ -44,9 +50,15 @@ protected:
     virtual void model_did_update([[maybe_unused]] unsigned flags) override { invalidate(); }
 
 private:
+    struct ModelIndexWithScore {
+        ModelIndex index;
+        int score { 0 };
+    };
+
     void filter();
-    explicit FilteringProxyModel(NonnullRefPtr<Model> model)
+    explicit FilteringProxyModel(NonnullRefPtr<Model> model, FilteringOptions filtering_options = FilteringOptions::None)
         : m_model(move(model))
+        , m_filtering_options(filtering_options)
     {
         m_model->register_client(*this);
     }
@@ -54,9 +66,12 @@ private:
     NonnullRefPtr<Model> m_model;
 
     // Maps row to actual model index.
-    Vector<ModelIndex> m_matching_indices;
+    Vector<ModelIndexWithScore> m_matching_indices;
 
     DeprecatedString m_filter_term;
+    FilteringOptions m_filtering_options;
 };
+
+AK_ENUM_BITWISE_OPERATORS(FilteringProxyModel::FilteringOptions);
 
 }

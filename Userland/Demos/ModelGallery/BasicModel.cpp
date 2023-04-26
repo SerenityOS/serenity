@@ -16,15 +16,19 @@ GUI::Variant BasicModel::data(GUI::ModelIndex const& index, GUI::ModelRole role)
     return m_items.at(index.row());
 }
 
-TriState BasicModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& data) const
+GUI::Model::MatchResult BasicModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& data) const
 {
     if (!is_within_range(index))
-        return TriState::False;
+        return { TriState::False };
     if (!data.is_string())
-        return TriState::False;
+        return { TriState::False };
 
     auto& value = m_items.at(index.row());
-    return value.contains(data.as_string()) ? TriState::True : TriState::False;
+
+    if (value.contains(data.as_string()))
+        return { TriState::True };
+
+    return { TriState::False };
 }
 
 void BasicModel::invalidate()

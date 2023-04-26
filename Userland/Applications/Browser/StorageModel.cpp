@@ -75,20 +75,21 @@ GUI::Variant StorageModel::data(GUI::ModelIndex const& index, GUI::ModelRole rol
     VERIFY_NOT_REACHED();
 }
 
-TriState StorageModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
+GUI::Model::MatchResult StorageModel::data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const
 {
     auto needle = term.as_string();
     if (needle.is_empty())
-        return TriState::True;
+        return { TriState::True };
 
     auto const& keys = m_local_storage_entries.keys();
     auto const& local_storage_key = keys[index.row()];
     auto const& local_storage_value = m_local_storage_entries.get(local_storage_key).value_or({});
 
     auto haystack = DeprecatedString::formatted("{} {}", local_storage_key, local_storage_value);
-    if (fuzzy_match(needle, haystack).score > 0)
-        return TriState::True;
-    return TriState::False;
+    auto match_result = fuzzy_match(needle, haystack);
+    if (match_result.score > 0)
+        return { TriState::True, match_result.score };
+    return { TriState::False };
 }
 
 }

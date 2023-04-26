@@ -135,16 +135,17 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    virtual TriState data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override
+    virtual GUI::Model::MatchResult data_matches(GUI::ModelIndex const& index, GUI::Variant const& term) const override
     {
         auto needle = term.as_string();
         if (needle.is_empty())
-            return TriState::True;
+            return { TriState::True };
 
         auto haystack = DeprecatedString::formatted("{} {}", menu_name(index), action_text(index));
-        if (fuzzy_match(needle, haystack).score > 0)
-            return TriState::True;
-        return TriState::False;
+        auto match_result = fuzzy_match(needle, haystack);
+        if (match_result.score > 0)
+            return { TriState::True, match_result.score };
+        return { TriState::False };
     }
 
     static DeprecatedString action_text(ModelIndex const& index)
