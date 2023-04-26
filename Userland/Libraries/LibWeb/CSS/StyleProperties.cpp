@@ -216,8 +216,16 @@ Optional<int> StyleProperties::z_index() const
     auto value = property(CSS::PropertyID::ZIndex);
     if (value->has_auto())
         return {};
-    if (value->has_integer())
-        return value->to_integer();
+    if (value->has_integer()) {
+        // Clamp z-index to the range of a signed 32-bit integer for consistency with other engines.
+        // NOTE: Casting between 32-bit float and 32-bit integer is finicky here, since INT32_MAX is not representable as a 32-bit float!
+        auto integer = value->to_integer();
+        if (integer >= static_cast<float>(NumericLimits<int>::max()))
+            return NumericLimits<int>::max();
+        if (integer <= static_cast<float>(NumericLimits<int>::min()))
+            return NumericLimits<int>::min();
+        return static_cast<int>(integer);
+    }
     return {};
 }
 
