@@ -230,7 +230,7 @@ ErrorOr<void> MainWidget::initialize_fallibles(GUI::Window& window)
 
     m_manual_model = TRY(ManualModel::create());
     m_browse_view->set_model(*m_manual_model);
-    m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model));
+    m_filter_model = TRY(GUI::FilteringProxyModel::create(*m_manual_model, GUI::FilteringProxyModel::FilteringOptions::SortByScore));
     m_search_view->set_model(*m_filter_model);
     m_filter_model->set_filter_term(""sv);
 
