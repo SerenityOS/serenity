@@ -68,9 +68,19 @@ void FontPluginQt::update_generic_fonts()
 
     m_generic_font_names.resize(static_cast<size_t>(Web::Platform::GenericFont::__Count));
 
-    auto update_mapping = [&](Web::Platform::GenericFont generic_font, QFont::StyleHint qfont_style_hint, Vector<DeprecatedString> fallbacks = {}) {
+    auto update_mapping = [&](Web::Platform::GenericFont generic_font, QFont::StyleHint qfont_style_hint, ReadonlySpan<DeprecatedString> fallbacks) {
         QFont qt_font;
         qt_font.setStyleHint(qfont_style_hint);
+
+        // NOTE: This is a workaround for setStyleHint being a no-op on X11 systems. See:
+        //       https://doc.qt.io/qt-6/qfont.html#setStyleHint
+        if (generic_font == Web::Platform::GenericFont::Monospace)
+            qt_font.setFamily("monospace");
+        else if (generic_font == Web::Platform::GenericFont::Fantasy)
+            qt_font.setFamily("fantasy");
+        else if (generic_font == Web::Platform::GenericFont::Cursive)
+            qt_font.setFamily("cursive");
+
         QFontInfo qt_info(qt_font);
         auto qt_font_family = qt_info.family();
 
