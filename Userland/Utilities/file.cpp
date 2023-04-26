@@ -210,8 +210,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.parse(arguments);
 
     bool all_ok = true;
-    // Read accounts for longest possible offset + signature we currently match against.
-    auto buffer = TRY(ByteBuffer::create_uninitialized(0x9006));
 
     for (auto const& path : paths) {
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
@@ -230,9 +228,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         } else if (!file_size_in_bytes) {
             outln("{}: empty", path);
         } else {
-            auto bytes = TRY(file->read_some(buffer));
             auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
-            auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes).value_or(file_name_guess);
+            auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(*file).value_or(file_name_guess);
             auto human_readable_description = get_description_from_mime_type(mime_type, path).value_or(mime_type);
             outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
         }
