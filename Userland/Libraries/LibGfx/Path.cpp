@@ -363,7 +363,7 @@ Path Path::copy_transformed(Gfx::AffineTransform const& transform) const
                 transform.map(segment->point()),
                 transform.map(arc_segment.center()),
                 transform.map(arc_segment.radii()),
-                arc_segment.x_axis_rotation(),
+                arc_segment.x_axis_rotation() + transform.rotation(),
                 arc_segment.theta_1(),
                 arc_segment.theta_delta(),
                 arc_segment.large_arc(),
