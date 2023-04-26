@@ -513,7 +513,8 @@ WebIDL::ExceptionOr<void> readable_stream_default_controller_enqueue(ReadableStr
             readable_stream_default_controller_error(controller, throw_completion.value().value());
 
             // 2. Return enqueueResult.
-            return enqueue_result;
+            // Note: We need to return the throw_completion object here, as enqueue needs to throw the same object that the controller is errored with
+            return throw_completion;
         }
     }
 
