@@ -406,6 +406,20 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
     case CSS::PropertyID::Float:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
+    case CSS::PropertyID::FontSize:
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().font_size()));
+    case CSS::PropertyID::FontVariant: {
+        auto font_variant = layout_node.computed_values().font_variant();
+        switch (font_variant) {
+        case FontVariant::Normal:
+            return IdentifierStyleValue::create(ValueID::Normal);
+        case FontVariant::SmallCaps:
+            return IdentifierStyleValue::create(ValueID::SmallCaps);
+        }
+        VERIFY_NOT_REACHED();
+    }
+    case CSS::PropertyID::FontWeight:
+        return NumericStyleValue::create_integer(layout_node.computed_values().font_weight());
     case CSS::PropertyID::GridArea: {
         auto maybe_grid_row_start = property(CSS::PropertyID::GridRowStart);
         auto maybe_grid_column_start = property(CSS::PropertyID::GridColumnStart);
@@ -482,6 +496,8 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::Left:
         return style_value_for_length_percentage(layout_node.computed_values().inset().left());
+    case CSS::PropertyID::LineHeight:
+        return LengthStyleValue::create(Length::make_px(layout_node.line_height()));
     case CSS::PropertyID::ListStyleType:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().list_style_type()));
     case CSS::PropertyID::Margin: {
