@@ -14,16 +14,16 @@ protection and position-independent code by default.
  clang/lib/Driver/Driver.cpp              |   4 +
  clang/lib/Driver/ToolChain.cpp           |   2 +
  clang/lib/Driver/ToolChains/Serenity.cpp | 336 +++++++++++++++++++++++
- clang/lib/Driver/ToolChains/Serenity.h   |  99 +++++++
- 8 files changed, 467 insertions(+)
+ clang/lib/Driver/ToolChains/Serenity.h   | 100 +++++++
+ 7 files changed, 467 insertions(+)
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.cpp
  create mode 100644 clang/lib/Driver/ToolChains/Serenity.h
 
 diff --git a/clang/lib/Basic/Targets.cpp b/clang/lib/Basic/Targets.cpp
-index 2d6ef998485ae1404e561dc12f962ce1bef2996d..06abf1dfdd5b91c2a0051363e2f04ec9b3f3285f 100644
+index 8400774db..f105bed29 100644
 --- a/clang/lib/Basic/Targets.cpp
 +++ b/clang/lib/Basic/Targets.cpp
-@@ -151,6 +151,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -153,6 +153,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new NetBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
      case llvm::Triple::OpenBSD:
        return new OpenBSDTargetInfo<AArch64leTargetInfo>(Triple, Opts);
@@ -32,7 +32,7 @@ index 2d6ef998485ae1404e561dc12f962ce1bef2996d..06abf1dfdd5b91c2a0051363e2f04ec9
      case llvm::Triple::Win32:
        switch (Triple.getEnvironment()) {
        case llvm::Triple::GNU:
-@@ -540,6 +542,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -542,6 +544,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new MCUX86_32TargetInfo(Triple, Opts);
      case llvm::Triple::Hurd:
        return new HurdTargetInfo<X86_32TargetInfo>(Triple, Opts);
@@ -41,7 +41,7 @@ index 2d6ef998485ae1404e561dc12f962ce1bef2996d..06abf1dfdd5b91c2a0051363e2f04ec9
      default:
        return new X86_32TargetInfo(Triple, Opts);
      }
-@@ -594,6 +598,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
+@@ -596,6 +600,8 @@ TargetInfo *AllocateTarget(const llvm::Triple &Triple,
        return new PS4OSTargetInfo<X86_64TargetInfo>(Triple, Opts);
      case llvm::Triple::PS5:
        return new PS5OSTargetInfo<X86_64TargetInfo>(Triple, Opts);
@@ -51,10 +51,10 @@ index 2d6ef998485ae1404e561dc12f962ce1bef2996d..06abf1dfdd5b91c2a0051363e2f04ec9
        return new X86_64TargetInfo(Triple, Opts);
      }
 diff --git a/clang/lib/Basic/Targets/OSTargets.h b/clang/lib/Basic/Targets/OSTargets.h
-index a814f681b1468c7628daf6f5c9c6d723155821b0..927eeb66446a451b3cd9b08d9cdcfd6f8d4064ba 100644
+index fd372cb12..27a3f9797 100644
 --- a/clang/lib/Basic/Targets/OSTargets.h
 +++ b/clang/lib/Basic/Targets/OSTargets.h
-@@ -1013,6 +1013,24 @@ public:
+@@ -1005,6 +1005,24 @@ public:
    }
  };
  
@@ -80,10 +80,10 @@ index a814f681b1468c7628daf6f5c9c6d723155821b0..927eeb66446a451b3cd9b08d9cdcfd6f
  } // namespace clang
  #endif // LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 diff --git a/clang/lib/Driver/CMakeLists.txt b/clang/lib/Driver/CMakeLists.txt
-index 18c9b2d042f6c6e27382a4c72119250533e93482..ed7178e510584a465e695f64716bd399f3b131db 100644
+index ba56a9323..4d0ffe88c 100644
 --- a/clang/lib/Driver/CMakeLists.txt
 +++ b/clang/lib/Driver/CMakeLists.txt
-@@ -74,6 +74,7 @@ add_clang_library(clangDriver
+@@ -78,6 +78,7 @@ add_clang_library(clangDriver
    ToolChains/OpenBSD.cpp
    ToolChains/PS4CPU.cpp
    ToolChains/RISCVToolchain.cpp
@@ -92,7 +92,7 @@ index 18c9b2d042f6c6e27382a4c72119250533e93482..ed7178e510584a465e695f64716bd399
    ToolChains/SPIRV.cpp
    ToolChains/TCE.cpp
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
-index 3f29afd359718a1c21e9c9911f0e6ad5f1002a3a..18433655172bc90a97a24b619f11a3d9eba0d327 100644
+index a268f2fa8..df54be3de 100644
 --- a/clang/lib/Driver/Driver.cpp
 +++ b/clang/lib/Driver/Driver.cpp
 @@ -45,6 +45,7 @@
@@ -103,7 +103,7 @@ index 3f29afd359718a1c21e9c9911f0e6ad5f1002a3a..18433655172bc90a97a24b619f11a3d9
  #include "ToolChains/SPIRV.h"
  #include "ToolChains/Solaris.h"
  #include "ToolChains/TCE.h"
-@@ -6009,6 +6010,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
+@@ -6041,6 +6042,9 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
      case llvm::Triple::Fuchsia:
        TC = std::make_unique<toolchains::Fuchsia>(*this, Target, Args);
        break;
@@ -114,10 +114,10 @@ index 3f29afd359718a1c21e9c9911f0e6ad5f1002a3a..18433655172bc90a97a24b619f11a3d9
        TC = std::make_unique<toolchains::Solaris>(*this, Target, Args);
        break;
 diff --git a/clang/lib/Driver/ToolChain.cpp b/clang/lib/Driver/ToolChain.cpp
-index 7a4319ea680f97dde074b21afa2ee6f75c350091..8db07d9dd0754bffeddf00afe365fe7d011cc602 100644
+index bc70205a6..3d5c856ab 100644
 --- a/clang/lib/Driver/ToolChain.cpp
 +++ b/clang/lib/Driver/ToolChain.cpp
-@@ -452,6 +452,8 @@ StringRef ToolChain::getOSLibName() const {
+@@ -482,6 +482,8 @@ StringRef ToolChain::getOSLibName() const {
      return "sunos";
    case llvm::Triple::AIX:
      return "aix";
@@ -128,7 +128,7 @@ index 7a4319ea680f97dde074b21afa2ee6f75c350091..8db07d9dd0754bffeddf00afe365fe7d
    }
 diff --git a/clang/lib/Driver/ToolChains/Serenity.cpp b/clang/lib/Driver/ToolChains/Serenity.cpp
 new file mode 100644
-index 0000000000000000000000000000000000000000..4fdf45a19eb2704d00a03e7b2f34f87f63a0a074
+index 000000000..4fdf45a19
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.cpp
 @@ -0,0 +1,336 @@
@@ -470,10 +470,10 @@ index 0000000000000000000000000000000000000000..4fdf45a19eb2704d00a03e7b2f34f87f
 +}
 diff --git a/clang/lib/Driver/ToolChains/Serenity.h b/clang/lib/Driver/ToolChains/Serenity.h
 new file mode 100644
-index 0000000000000000000000000000000000000000..d414f836601c8ea8b43d64e9b111bffa2b71cd54
+index 000000000..feb31a0d6
 --- /dev/null
 +++ b/clang/lib/Driver/ToolChains/Serenity.h
-@@ -0,0 +1,99 @@
+@@ -0,0 +1,100 @@
 +//===---- Serenity.h - SerenityOS ToolChain Implementation ------*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
@@ -551,8 +551,9 @@ index 0000000000000000000000000000000000000000..d414f836601c8ea8b43d64e9b111bffa
 +
 +  bool IsMathErrnoDefault() const override { return false; }
 +
-+  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override {
-+    return true;
++  UnwindTableLevel
++  getDefaultUnwindTableLevel(const llvm::opt::ArgList &Args) const override {
++    return UnwindTableLevel::Asynchronous;
 +  }
 +
 +  bool useRelaxRelocations() const override { return true; }

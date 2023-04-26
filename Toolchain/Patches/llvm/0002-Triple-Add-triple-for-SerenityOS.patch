@@ -4,15 +4,15 @@ Date: Thu, 14 Apr 2022 09:51:24 +0200
 Subject: [PATCH] [Triple] Add triple for SerenityOS
 
 ---
- llvm/include/llvm/ADT/Triple.h | 8 +++++++-
- llvm/lib/Support/Triple.cpp    | 2 ++
+ llvm/include/llvm/TargetParser/Triple.h | 8 +++++++-
+ llvm/lib/TargetParser/Triple.cpp        | 2 ++
  2 files changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/llvm/include/llvm/ADT/Triple.h b/llvm/include/llvm/ADT/Triple.h
-index ba4584dc60faf1b9a170493bbe3075c08d5ff2a8..56e793cc0c0afa7c5f6bdd2e019a61dc518964f4 100644
---- a/llvm/include/llvm/ADT/Triple.h
-+++ b/llvm/include/llvm/ADT/Triple.h
-@@ -219,7 +219,8 @@ public:
+diff --git a/llvm/include/llvm/TargetParser/Triple.h b/llvm/include/llvm/TargetParser/Triple.h
+index 59513fa2f..951d69010 100644
+--- a/llvm/include/llvm/TargetParser/Triple.h
++++ b/llvm/include/llvm/TargetParser/Triple.h
+@@ -223,7 +223,8 @@ public:
      WASI,       // Experimental WebAssembly OS
      Emscripten,
      ShaderModel, // DirectX ShaderModel
@@ -22,7 +22,7 @@ index ba4584dc60faf1b9a170493bbe3075c08d5ff2a8..56e793cc0c0afa7c5f6bdd2e019a61dc
    };
    enum EnvironmentType {
      UnknownEnvironment,
-@@ -652,6 +653,11 @@ public:
+@@ -670,6 +671,11 @@ public:
      return getOS() == Triple::AIX;
    }
  
@@ -34,11 +34,11 @@ index ba4584dc60faf1b9a170493bbe3075c08d5ff2a8..56e793cc0c0afa7c5f6bdd2e019a61dc
    /// Tests whether the OS uses the ELF binary format.
    bool isOSBinFormatELF() const {
      return getObjectFormat() == Triple::ELF;
-diff --git a/llvm/lib/Support/Triple.cpp b/llvm/lib/Support/Triple.cpp
-index 6696d158b2c1ae3d31f0819880ec0814f74a3a16..5292164d7aaed944c934a89fe3e809fc427218eb 100644
---- a/llvm/lib/Support/Triple.cpp
-+++ b/llvm/lib/Support/Triple.cpp
-@@ -234,6 +234,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
+diff --git a/llvm/lib/TargetParser/Triple.cpp b/llvm/lib/TargetParser/Triple.cpp
+index a68035989..1ee9ea3b1 100644
+--- a/llvm/lib/TargetParser/Triple.cpp
++++ b/llvm/lib/TargetParser/Triple.cpp
+@@ -237,6 +237,7 @@ StringRef Triple::getOSTypeName(OSType Kind) {
    case PS5: return "ps5";
    case RTEMS: return "rtems";
    case Solaris: return "solaris";
@@ -46,7 +46,7 @@ index 6696d158b2c1ae3d31f0819880ec0814f74a3a16..5292164d7aaed944c934a89fe3e809fc
    case TvOS: return "tvos";
    case WASI: return "wasi";
    case WatchOS: return "watchos";
-@@ -587,6 +588,7 @@ static Triple::OSType parseOS(StringRef OSName) {
+@@ -596,6 +597,7 @@ static Triple::OSType parseOS(StringRef OSName) {
      .StartsWith("wasi", Triple::WASI)
      .StartsWith("emscripten", Triple::Emscripten)
      .StartsWith("shadermodel", Triple::ShaderModel)
