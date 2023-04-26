@@ -142,6 +142,7 @@
   "inline",
   "inline-block",
   "inline-flex",
+  "inline-grid",
   "inline-table",
   "inset",
   "inside",
