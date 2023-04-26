@@ -165,10 +165,6 @@ EventLoopManagerQt::EventLoopManagerQt()
 
 EventLoopManagerQt::~EventLoopManagerQt() = default;
 
-void EventLoopManagerQt::wake()
-{
-}
-
 NonnullOwnPtr<Core::EventLoopImplementation> EventLoopManagerQt::make_implementation()
 {
     return adopt_own(*new EventLoopImplementationQt);

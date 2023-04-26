@@ -27,8 +27,6 @@ public:
     virtual int register_signal(int signal_number, Function<void(int)> handler) override;
     virtual void unregister_signal(int handler_id) override;
 
-    virtual void wake() override;
-
     void wait_for_events(EventLoopImplementation::PumpMode);
     static Optional<Time> get_next_timer_expiration();
 

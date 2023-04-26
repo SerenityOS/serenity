@@ -30,8 +30,6 @@ public:
 
     virtual void did_post_event() override;
 
-    virtual void wake() override;
-
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual int register_signal(int, Function<void(int)>) override { return 0; }
     virtual void unregister_signal(int) override { }
