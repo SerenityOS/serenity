@@ -82,7 +82,7 @@ public:
         return copy;
     }
 
-    ptrdiff_t operator-(LineIterator other) const { return m_iterator - other.m_iterator; }
+    ptrdiff_t operator-(LineIterator const& other) const { return m_iterator - other.m_iterator; }
 
     FakePtr<StringView> operator->() const { return FakePtr<StringView>(operator*()); }
 
