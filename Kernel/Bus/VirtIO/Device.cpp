@@ -151,9 +151,9 @@ UNMAP_AFTER_INIT ErrorOr<void> Device::initialize_virtio_resources()
             auto mapping_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), static_cast<PCI::HeaderType0BaseRegister>(cfg.bar)));
             m_register_bases[cfg.bar] = move(mapping_io_window);
         }
-        m_common_cfg = get_config(ConfigurationType::Common, 0);
-        m_notify_cfg = get_config(ConfigurationType::Notify, 0);
-        m_isr_cfg = get_config(ConfigurationType::ISR, 0);
+        m_common_cfg = TRY(get_config(ConfigurationType::Common, 0));
+        m_notify_cfg = TRY(get_config(ConfigurationType::Notify, 0));
+        m_isr_cfg = TRY(get_config(ConfigurationType::ISR, 0));
     } else {
         auto mapping_io_window = TRY(IOWindow::create_for_pci_device_bar(device_identifier(), PCI::HeaderType0BaseRegister::BAR0));
         m_register_bases[0] = move(mapping_io_window);

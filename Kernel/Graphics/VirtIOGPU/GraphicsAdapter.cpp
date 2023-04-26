@@ -146,9 +146,7 @@ VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device
 ErrorOr<void> VirtIOGraphicsAdapter::initialize_virtio_resources()
 {
     TRY(VirtIO::Device::initialize_virtio_resources());
-    auto* config = get_config(VirtIO::ConfigurationType::Device);
-    if (!config)
-        return Error::from_errno(ENODEV);
+    auto* config = TRY(get_config(VirtIO::ConfigurationType::Device));
     m_device_configuration = config;
     bool success = negotiate_features([&](u64 supported_features) {
         u64 negotiated = 0;
