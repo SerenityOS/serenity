@@ -8,7 +8,7 @@ Subject: [PATCH] Add SerenityOS to config.guess
  1 file changed, 3 insertions(+)
 
 diff --git a/llvm/cmake/config.guess b/llvm/cmake/config.guess
-index 60d3f588d6f7e8b341b47b7b379a6b5be299b4b6..bdbd1e323d95a73307cf7f8188ca3c419cd8c0e8 100644
+index 71abbf939..f48962367 100644
 --- a/llvm/cmake/config.guess
 +++ b/llvm/cmake/config.guess
 @@ -816,6 +816,9 @@ EOF
