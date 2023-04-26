@@ -32,6 +32,8 @@ public:
     virtual bool is_default_reader() const { return false; }
 
 protected:
+    explicit ReadableStreamGenericReaderMixin(JS::Realm&);
+
     void visit_edges(JS::Cell::Visitor&);
 
     // https://streams.spec.whatwg.org/#readablestreamgenericreader-closedpromise
@@ -41,6 +43,8 @@ protected:
     // https://streams.spec.whatwg.org/#readablestreamgenericreader-stream
     // A ReadableStream instance that owns this reader
     JS::GCPtr<ReadableStream> m_stream;
+
+    JS::Realm& m_realm;
 };
 
 }

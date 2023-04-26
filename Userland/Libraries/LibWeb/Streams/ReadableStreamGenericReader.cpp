@@ -26,15 +26,19 @@ WebIDL::ExceptionOr<JS::NonnullGCPtr<JS::Promise>> ReadableStreamGenericReaderMi
 {
     // 1. If this.[[stream]] is undefined, return a promise rejected with a TypeError exception.
     if (!m_stream) {
-        auto& realm = stream()->realm();
-        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(realm, "No stream present to cancel"sv));
-        auto promise_capability = WebIDL::create_rejected_promise(realm, exception);
+        auto exception = MUST_OR_THROW_OOM(JS::TypeError::create(m_realm, "No stream present to cancel"sv));
+        auto promise_capability = WebIDL::create_rejected_promise(m_realm, exception);
         return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
     }
 
     // 2. Return ! ReadableStreamReaderGenericCancel(this, reason).
     auto promise_capability = TRY(readable_stream_reader_generic_cancel(*this, reason));
     return JS::NonnullGCPtr { verify_cast<JS::Promise>(*promise_capability->promise().ptr()) };
+}
+
+ReadableStreamGenericReaderMixin::ReadableStreamGenericReaderMixin(JS::Realm& realm)
+    : m_realm(realm)
+{
 }
 
 void ReadableStreamGenericReaderMixin::visit_edges(JS::Cell::Visitor& visitor)
