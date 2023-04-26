@@ -41,6 +41,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
@@ -4941,6 +4942,164 @@ RefPtr<StyleValue> Parser::parse_content_value(Vector<ComponentValue> const& com
     return ContentStyleValue::create(StyleValueList::create(move(content_values), StyleValueList::Separator::Space), move(alt_text));
 }
 
+// https://www.w3.org/TR/css-display-3/#the-display-properties
+RefPtr<StyleValue> Parser::parse_display_value(Vector<ComponentValue> const& component_values)
+{
+    auto parse_inside = [](ValueID identifier) -> Optional<Display::Inside> {
+        switch (identifier) {
+        case ValueID::Flow:
+            return Display::Inside::Flow;
+        case ValueID::FlowRoot:
+            return Display::Inside::FlowRoot;
+        case ValueID::Table:
+            return Display::Inside::Table;
+        case ValueID::Flex:
+            return Display::Inside::Flex;
+        case ValueID::Grid:
+            return Display::Inside::Grid;
+        case ValueID::Ruby:
+            return Display::Inside::Ruby;
+        default:
+            return {};
+        }
+    };
+    auto parse_outside = [](ValueID identifier) -> Optional<Display::Outside> {
+        switch (identifier) {
+        case ValueID::Block:
+            return Display::Outside::Block;
+        case ValueID::Inline:
+            return Display::Outside::Inline;
+        case ValueID::RunIn:
+            return Display::Outside::RunIn;
+        default:
+            return {};
+        }
+    };
+
+    auto parse_single_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
+        if (auto identifier = parse_identifier_value(component_values.first())) {
+            switch (identifier->to_identifier()) {
+
+            // display-outside
+            case ValueID::Block:
+                return Display::from_short(Display::Short::Block);
+            case ValueID::Inline:
+                return Display::from_short(Display::Short::Inline);
+            case ValueID::RunIn:
+                return Display::from_short(Display::Short::RunIn);
+
+            // display-inside
+            case ValueID::Flow:
+                return Display::from_short(Display::Short::Flow);
+            case ValueID::FlowRoot:
+                return Display::from_short(Display::Short::FlowRoot);
+            case ValueID::Table:
+                return Display::from_short(Display::Short::Table);
+            case ValueID::Flex:
+                return Display::from_short(Display::Short::Flex);
+            case ValueID::Grid:
+                return Display::from_short(Display::Short::Grid);
+            case ValueID::Ruby:
+                return Display::from_short(Display::Short::Ruby);
+
+            // display-listitem
+            case ValueID::ListItem:
+                return Display::from_short(Display::Short::ListItem);
+
+            // display-internal
+            case ValueID::TableRowGroup:
+                return Display { Display::Internal::TableRowGroup };
+            case ValueID::TableHeaderGroup:
+                return Display { Display::Internal::TableHeaderGroup };
+            case ValueID::TableFooterGroup:
+                return Display { Display::Internal::TableFooterGroup };
+            case ValueID::TableRow:
+                return Display { Display::Internal::TableRow };
+            case ValueID::TableCell:
+                return Display { Display::Internal::TableCell };
+            case ValueID::TableColumnGroup:
+                return Display { Display::Internal::TableColumnGroup };
+            case ValueID::TableColumn:
+                return Display { Display::Internal::TableColumn };
+            case ValueID::TableCaption:
+                return Display { Display::Internal::TableCaption };
+            case ValueID::RubyBase:
+                return Display { Display::Internal::RubyBase };
+            case ValueID::RubyText:
+                return Display { Display::Internal::RubyText };
+            case ValueID::RubyBaseContainer:
+                return Display { Display::Internal::RubyBaseContainer };
+            case ValueID::RubyTextContainer:
+                return Display { Display::Internal::RubyTextContainer };
+
+            // display-box
+            case ValueID::Contents:
+                // FIXME this should be Display::Short::Contents but contents is currently not implemented
+                return Display::from_short(Display::Short::Flow);
+            case ValueID::None:
+                return Display::from_short(Display::Short::None);
+
+            // display-legacy
+            case ValueID::InlineBlock:
+                return Display::from_short(Display::Short::InlineBlock);
+            case ValueID::InlineTable:
+                return Display::from_short(Display::Short::InlineTable);
+            case ValueID::InlineFlex:
+                return Display::from_short(Display::Short::InlineFlex);
+            case ValueID::InlineGrid:
+                return Display::from_short(Display::Short::InlineGrid);
+
+            default:
+                return {};
+            }
+        }
+        return {};
+    };
+
+    auto parse_multi_component_display = [&](Vector<ComponentValue> const& component_values) -> Optional<Display> {
+        auto list_item = Display::ListItem::No;
+        Display::Inside inside = Display::Inside::Flow;
+        Display::Outside outside = Display::Outside::Block;
+
+        for (size_t i = 0; i < component_values.size(); ++i) {
+            if (auto value = parse_identifier_value(component_values[i])) {
+                auto identifier = value->to_identifier();
+                if (ValueID::ListItem == identifier) {
+                    list_item = Display::ListItem::Yes;
+                    continue;
+                }
+                auto inside_value = parse_inside(identifier);
+                if (inside_value.has_value()) {
+                    inside = inside_value.value();
+                    continue;
+                }
+                auto outside_value = parse_outside(identifier);
+                if (outside_value.has_value()) {
+                    outside = outside_value.value();
+                }
+            }
+        }
+
+        // The spec does not allow any other inside values to be combined with list-item
+        // <display-outside>? && [ flow | flow-root ]? && list-item
+        if (list_item == Display::ListItem::Yes && inside != Display::Inside::Flow && inside != Display::Inside::FlowRoot)
+            return {};
+
+        return Display { outside, inside, list_item };
+    };
+
+    Optional<Display> display;
+    if (component_values.size() == 1)
+        display = parse_single_component_display(component_values);
+    else
+        display = parse_multi_component_display(component_values);
+
+    if (display.has_value())
+        return DisplayStyleValue::create(display.value());
+
+    return {};
+}
+
 RefPtr<StyleValue> Parser::parse_filter_value_list_value(Vector<ComponentValue> const& component_values)
 {
     if (component_values.size() == 1 && component_values.first().is(Token::Type::Ident)) {
@@ -6706,6 +6865,10 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         return ParseError::SyntaxError;
     case PropertyID::Content:
         if (auto parsed_value = parse_content_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
+    case PropertyID::Display:
+        if (auto parsed_value = parse_display_value(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::Flex:

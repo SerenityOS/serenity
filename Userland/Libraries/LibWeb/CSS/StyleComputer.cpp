@@ -30,6 +30,7 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/BorderStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
+#include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexStyleValue.h>
@@ -1490,14 +1491,14 @@ void StyleComputer::transform_box_type_if_needed(StyleProperties& style, DOM::El
             //        to do that specifically. For now, we simply check for "inline-flex" and convert
             //        that to "flex".
             if (display.is_flex_inside())
-                style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Flex));
+                style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Block, CSS::Display::Inside::Flex }));
             else
-                style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Block));
+                style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Block, CSS::Display::Inside::Block }));
         }
         break;
     case BoxTypeTransformation::Inlinify:
         if (!display.is_inline_outside())
-            style.set_property(CSS::PropertyID::Display, IdentifierStyleValue::create(CSS::ValueID::Inline));
+            style.set_property(CSS::PropertyID::Display, DisplayStyleValue::create({ CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }));
         break;
     }
 }
@@ -1510,7 +1511,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     absolutize_values(style, nullptr, {});
     style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())));
     style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())));
-    style->set_property(CSS::PropertyID::Display, CSS::IdentifierStyleValue::create(CSS::ValueID::Block));
+    style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)));
     return style;
 }
 

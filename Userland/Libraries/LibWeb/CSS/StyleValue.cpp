@@ -20,6 +20,7 @@
 #include <LibWeb/CSS/StyleValues/ColorStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ConicGradientStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FilterValueListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/FlexFlowStyleValue.h>
@@ -139,6 +140,12 @@ ContentStyleValue const& StyleValue::as_content() const
 {
     VERIFY(is_content());
     return static_cast<ContentStyleValue const&>(*this);
+}
+
+DisplayStyleValue const& StyleValue::as_display() const
+{
+    VERIFY(is_display());
+    return static_cast<DisplayStyleValue const&>(*this);
 }
 
 EdgeStyleValue const& StyleValue::as_edge() const

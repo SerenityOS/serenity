@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/StyleProperties.h>
 #include <LibWeb/CSS/StyleValues/AngleStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ContentStyleValue.h>
+#include <LibWeb/CSS/StyleValues/DisplayStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
@@ -598,51 +599,13 @@ Optional<CSS::Visibility> StyleProperties::visibility() const
     return value_id_to_visibility(value->to_identifier());
 }
 
-CSS::Display StyleProperties::display() const
+Display StyleProperties::display() const
 {
-    auto value = property(CSS::PropertyID::Display);
-    if (!value->is_identifier())
-        return CSS::Display::from_short(CSS::Display::Short::Inline);
-    switch (value->to_identifier()) {
-    case CSS::ValueID::None:
-        return CSS::Display::from_short(CSS::Display::Short::None);
-    case CSS::ValueID::Block:
-        return CSS::Display::from_short(CSS::Display::Short::Block);
-    case CSS::ValueID::Inline:
-        return CSS::Display::from_short(CSS::Display::Short::Inline);
-    case CSS::ValueID::InlineBlock:
-        return CSS::Display::from_short(CSS::Display::Short::InlineBlock);
-    case CSS::ValueID::ListItem:
-        return CSS::Display::from_short(CSS::Display::Short::ListItem);
-    case CSS::ValueID::Table:
-        return CSS::Display::from_short(CSS::Display::Short::Table);
-    case CSS::ValueID::InlineTable:
-        return CSS::Display::from_short(CSS::Display::Short::InlineTable);
-    case CSS::ValueID::TableRow:
-        return CSS::Display { CSS::Display::Internal::TableRow };
-    case CSS::ValueID::TableCell:
-        return CSS::Display { CSS::Display::Internal::TableCell };
-    case CSS::ValueID::TableColumn:
-        return CSS::Display { CSS::Display::Internal::TableColumn };
-    case CSS::ValueID::TableColumnGroup:
-        return CSS::Display { CSS::Display::Internal::TableColumnGroup };
-    case CSS::ValueID::TableCaption:
-        return CSS::Display { CSS::Display::Internal::TableCaption };
-    case CSS::ValueID::TableRowGroup:
-        return CSS::Display { CSS::Display::Internal::TableRowGroup };
-    case CSS::ValueID::TableHeaderGroup:
-        return CSS::Display { CSS::Display::Internal::TableHeaderGroup };
-    case CSS::ValueID::TableFooterGroup:
-        return CSS::Display { CSS::Display::Internal::TableFooterGroup };
-    case CSS::ValueID::Flex:
-        return CSS::Display::from_short(CSS::Display::Short::Flex);
-    case CSS::ValueID::InlineFlex:
-        return CSS::Display::from_short(CSS::Display::Short::InlineFlex);
-    case CSS::ValueID::Grid:
-        return CSS::Display::from_short(CSS::Display::Short::Grid);
-    default:
-        return CSS::Display::from_short(CSS::Display::Short::Block);
+    auto value = property(PropertyID::Display);
+    if (value->is_display()) {
+        return value->as_display().display();
     }
+    return Display::from_short(Display::Short::Inline);
 }
 
 Vector<CSS::TextDecorationLine> StyleProperties::text_decoration_line() const
