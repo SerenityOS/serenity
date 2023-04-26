@@ -70,6 +70,11 @@ public:
         None,
     };
 
+    enum class ListItem {
+        No,
+        Yes,
+    };
+
     enum class Type {
         OutsideAndInside,
         Internal,
@@ -107,7 +112,14 @@ public:
     bool is_block_outside() const { return is_outside_and_inside() && outside() == Outside::Block; }
     bool is_inline_outside() const { return is_outside_and_inside() && outside() == Outside::Inline; }
     bool is_inline_block() const { return is_inline_outside() && is_flow_root_inside(); }
-    bool is_list_item() const { return is_outside_and_inside() && m_value.outside_inside.list_item == ListItem::Yes; }
+
+    ListItem list_item() const
+    {
+        VERIFY(is_outside_and_inside());
+        return m_value.outside_inside.list_item;
+    }
+
+    bool is_list_item() const { return is_outside_and_inside() && list_item() == ListItem::Yes; }
 
     Inside inside() const
     {
@@ -140,11 +152,6 @@ public:
         BlockRuby,
         Table,
         InlineTable,
-    };
-
-    enum class ListItem {
-        No,
-        Yes,
     };
 
     static Display from_short(Short short_)
