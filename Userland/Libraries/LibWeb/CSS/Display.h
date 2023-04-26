@@ -138,6 +138,7 @@ public:
         None,
         Contents,
         Block,
+        Flow,
         FlowRoot,
         Inline,
         InlineBlock,
@@ -149,7 +150,6 @@ public:
         Grid,
         InlineGrid,
         Ruby,
-        BlockRuby,
         Table,
         InlineTable,
     };
@@ -163,10 +163,12 @@ public:
             return Display { Box::Contents };
         case Short::Block:
             return Display { Outside::Block, Inside::Flow };
-        case Short::FlowRoot:
-            return Display { Outside::Block, Inside::FlowRoot };
         case Short::Inline:
             return Display { Outside::Inline, Inside::Flow };
+        case Short::Flow:
+            return Display { Outside::Block, Inside::Flow };
+        case Short::FlowRoot:
+            return Display { Outside::Block, Inside::FlowRoot };
         case Short::InlineBlock:
             return Display { Outside::Inline, Inside::FlowRoot };
         case Short::RunIn:
@@ -185,8 +187,6 @@ public:
             return Display { Outside::Inline, Inside::Grid };
         case Short::Ruby:
             return Display { Outside::Inline, Inside::Ruby };
-        case Short::BlockRuby:
-            return Display { Outside::Block, Inside::Ruby };
         case Short::Table:
             return Display { Outside::Block, Inside::Table };
         case Short::InlineTable:

@@ -84,6 +84,7 @@ class CSSStyleRule;
 class CSSStyleSheet;
 class CSSSupportsRule;
 class Display;
+class DisplayStyleValue;
 class EdgeStyleValue;
 class ElementInlineCSSStyleDeclaration;
 class ExplicitGridTrack;
