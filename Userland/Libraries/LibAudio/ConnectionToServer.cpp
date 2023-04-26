@@ -63,6 +63,8 @@ ErrorOr<void> ConnectionToServer::async_enqueue(FixedArray<Sample>&& samples)
 {
     if (!m_background_audio_enqueuer->is_started()) {
         m_background_audio_enqueuer->start();
+        while (!m_enqueuer_loop)
+            usleep(1);
         TRY(m_background_audio_enqueuer->set_priority(THREAD_PRIORITY_MAX));
     }
 
