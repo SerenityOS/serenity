@@ -439,6 +439,9 @@ void ChessWidget::reset()
     m_board = Chess::Board();
     m_side = (get_random<u32>() % 2) ? Chess::Color::White : Chess::Color::Black;
     m_drag_enabled = true;
+    if (m_engine)
+        m_engine->start_new_game();
+
     input_engine_move();
     update();
 }

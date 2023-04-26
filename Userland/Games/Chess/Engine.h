@@ -38,6 +38,15 @@ public:
         m_bestmove_callback = move(callback);
     }
 
+    void start_new_game()
+    {
+        if (!m_connected)
+            return;
+
+        Chess::UCI::UCINewGameCommand ucinewgame_command;
+        send_command(ucinewgame_command);
+    }
+
 private:
     void quit();
     void connect_to_engine_service();
