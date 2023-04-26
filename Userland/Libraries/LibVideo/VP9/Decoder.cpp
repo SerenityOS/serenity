@@ -959,9 +959,13 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
     auto const bit_depth = block_context.frame_context.color_config.bit_depth;
     auto const* reference_start = reference_frame_buffer.data() + reference_block_y * reference_frame_width + reference_block_x;
 
-    // FIXME: We are using 16-bit accumulators for speed in these loops, but when accumulating for a high bit-depth video, they will overflow.
-    //        Instead of hardcoding them, the Decoder class should have the bit depth as a template parameter, and the accumulators can select
-    //        a size based on whether the bit depth > 8.
+    // FIXME: We are using 16-bit products to vectorize the filter loops, but when filtering in a high bit-depth video, they will truncate.
+    //        Instead of hardcoding them, we should have the bit depth as a template parameter, and the accumulators can select a size based
+    //        on whether the bit depth > 8.
+    //        Note that we only get a benefit from this on the default CPU target. If we enable AVX2 here, we may want to specialize the
+    //        function for the CPU target and remove the cast to i16 so that it doesn't have to truncate on AVX2, where it can do the full
+    //        unrolled 32-bit product loops in one vector.
+
     if (unscaled_x && unscaled_y && bit_depth == 8) {
         if (copy_x && copy_y) {
             // We can memcpy here to avoid doing any real work.
@@ -983,10 +987,10 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
 
             for (auto row = 0u; row < height; row++) {
                 for (auto column = 0u; column < width; column++) {
-                    i16 accumulated_samples = 0;
+                    i32 accumulated_samples = 0;
                     for (auto t = 0; t < 8; t++) {
                         auto sample = source[t];
-                        accumulated_samples += subpel_filters[filter][subpixel_x][t] * sample;
+                        accumulated_samples += static_cast<i16>(subpel_filters[filter][subpixel_x][t] * sample);
                     }
 
                     *destination = clip_1(bit_depth, rounded_right_shift(accumulated_samples, 7));
@@ -1008,10 +1012,10 @@ DecoderErrorOr<void> Decoder::predict_inter_block(u8 plane, BlockContext const& 
             for (auto row = 0u; row < height; row++) {
                 for (auto column = 0u; column < width; column++) {
                     auto const* scan_column = source;
-                    i16 accumulated_samples = 0;
+                    i32 accumulated_samples = 0;
                     for (auto t = 0; t < 8; t++) {
                         auto sample = *scan_column;
-                        accumulated_samples += subpel_filters[filter][subpixel_y][t] * sample;
+                        accumulated_samples += static_cast<i16>(subpel_filters[filter][subpixel_y][t] * sample);
                         scan_column += source_stride;
                     }
                     *destination = clip_1(bit_depth, rounded_right_shift(accumulated_samples, 7));
