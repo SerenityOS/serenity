@@ -11,6 +11,7 @@
 #include "../Utilities.h"
 #include "../WebSocketClientManagerLadybird.h"
 #include <AK/LexicalPath.h>
+#include <AK/Platform.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalServer.h>
@@ -31,6 +32,10 @@
 #include <WebContent/PageHost.h>
 #include <WebContent/WebDriverConnection.h>
 
+#if defined(AK_OS_MACOS)
+#    include "MacOSSetup.h"
+#endif
+
 static ErrorOr<void> load_content_filters();
 static ErrorOr<void> load_autoplay_allowlist();
 
@@ -39,6 +44,10 @@ extern DeprecatedString s_serenity_resource_root;
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     QGuiApplication app(arguments.argc, arguments.argv);
+
+#if defined(AK_OS_MACOS)
+    prohibit_interaction();
+#endif
 
     Core::EventLoopManager::install(*new Ladybird::EventLoopManagerQt);
     Core::EventLoop event_loop;
