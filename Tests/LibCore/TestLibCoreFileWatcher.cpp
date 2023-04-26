@@ -12,8 +12,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-// FIXME: Figure out why this breaks on macOS.
-#ifndef AK_OS_MACOS
 TEST_CASE(file_watcher_child_events)
 {
     auto event_loop = Core::EventLoop();
@@ -64,4 +62,3 @@ TEST_CASE(file_watcher_child_events)
 
     event_loop.exec();
 }
-#endif
