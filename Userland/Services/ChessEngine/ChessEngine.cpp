@@ -74,3 +74,9 @@ void ChessEngine::handle_unexpected_eof()
     if (on_quit)
         on_quit(EPIPE);
 }
+
+void ChessEngine::handle_ucinewgame()
+{
+    m_board = Chess::Board();
+    m_last_tree = {};
+}
