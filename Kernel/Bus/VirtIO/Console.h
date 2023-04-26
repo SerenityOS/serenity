@@ -29,7 +29,7 @@ public:
         return m_device_id;
     }
 
-    virtual void initialize() override;
+    virtual ErrorOr<void> initialize_virtio_resources() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIOConsole"sv; }

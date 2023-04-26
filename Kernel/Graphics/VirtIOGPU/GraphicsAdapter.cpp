@@ -37,7 +37,7 @@ ErrorOr<NonnullLockRefPtr<GenericGraphicsAdapter>> VirtIOGraphicsAdapter::create
 
     auto active_context_ids = TRY(Bitmap::create(VREND_MAX_CTX, false));
     auto adapter = TRY(adopt_nonnull_lock_ref_or_enomem(new (nothrow) VirtIOGraphicsAdapter(device_identifier, move(active_context_ids), move(scratch_space_region))));
-    adapter->initialize();
+    TRY(adapter->initialize_virtio_resources());
     TRY(adapter->initialize_adapter());
     return adapter;
 }
@@ -143,34 +143,35 @@ VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::DeviceIdentifier const& device
     });
 }
 
-void VirtIOGraphicsAdapter::initialize()
+ErrorOr<void> VirtIOGraphicsAdapter::initialize_virtio_resources()
 {
-    VirtIO::Device::initialize();
-    if (auto* config = get_config(VirtIO::ConfigurationType::Device)) {
-        m_device_configuration = config;
-        bool success = negotiate_features([&](u64 supported_features) {
-            u64 negotiated = 0;
-            if (is_feature_set(supported_features, VIRTIO_GPU_F_VIRGL)) {
-                dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: VirGL is available, enabling");
-                negotiated |= VIRTIO_GPU_F_VIRGL;
-                m_has_virgl_support = true;
-            }
-            if (is_feature_set(supported_features, VIRTIO_GPU_F_EDID))
-                negotiated |= VIRTIO_GPU_F_EDID;
-            return negotiated;
-        });
-        if (success) {
-            read_config_atomic([&]() {
-                m_num_scanouts = config_read32(*config, DEVICE_NUM_SCANOUTS);
-            });
-            dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
-            success = setup_queues(2); // CONTROLQ + CURSORQ
+    TRY(VirtIO::Device::initialize_virtio_resources());
+    auto* config = get_config(VirtIO::ConfigurationType::Device);
+    if (!config)
+        return Error::from_errno(ENODEV);
+    m_device_configuration = config;
+    bool success = negotiate_features([&](u64 supported_features) {
+        u64 negotiated = 0;
+        if (is_feature_set(supported_features, VIRTIO_GPU_F_VIRGL)) {
+            dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: VirGL is available, enabling");
+            negotiated |= VIRTIO_GPU_F_VIRGL;
+            m_has_virgl_support = true;
         }
-        VERIFY(success);
-        finish_init();
-    } else {
-        VERIFY_NOT_REACHED();
+        if (is_feature_set(supported_features, VIRTIO_GPU_F_EDID))
+            negotiated |= VIRTIO_GPU_F_EDID;
+        return negotiated;
+    });
+    if (success) {
+        read_config_atomic([&]() {
+            m_num_scanouts = config_read32(*config, DEVICE_NUM_SCANOUTS);
+        });
+        dbgln_if(VIRTIO_DEBUG, "VirtIO::GraphicsAdapter: num_scanouts: {}", m_num_scanouts);
+        success = setup_queues(2); // CONTROLQ + CURSORQ
     }
+    if (!success)
+        return Error::from_errno(EIO);
+    finish_init();
+    return {};
 }
 
 bool VirtIOGraphicsAdapter::handle_device_config_change()
