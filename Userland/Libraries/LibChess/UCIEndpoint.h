@@ -31,6 +31,7 @@ public:
     virtual void handle_bestmove(BestMoveCommand const&) { }
     virtual void handle_info(InfoCommand const&) { }
     virtual void handle_quit() { }
+    virtual void handle_ucinewgame() { }
     virtual void handle_unexpected_eof() { }
 
     void send_command(Command const&);

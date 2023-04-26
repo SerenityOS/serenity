@@ -281,4 +281,16 @@ public:
     virtual ErrorOr<String> to_string() const override;
 };
 
+class UCINewGameCommand : public Command {
+public:
+    explicit UCINewGameCommand()
+        : Command(Command::Type::UCINewGame)
+    {
+    }
+
+    static ErrorOr<NonnullOwnPtr<UCINewGameCommand>> from_string(StringView command);
+
+    virtual ErrorOr<String> to_string() const override;
+};
+
 }
