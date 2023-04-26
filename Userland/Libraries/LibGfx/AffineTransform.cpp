@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Math.h>
 #include <AK/Optional.h>
 #include <LibGfx/AffineTransform.h>
 #include <LibGfx/Quad.h>
@@ -227,6 +228,16 @@ Quad<float> AffineTransform::map_to_quad(Rect<float> const& rect) const
         map(rect.bottom_right()),
         map(rect.bottom_left()),
     };
+}
+
+float AffineTransform::rotation() const
+{
+    auto rotation = AK::atan2(b(), a());
+    while (rotation < -AK::Pi<float>)
+        rotation += 2.0f * AK::Pi<float>;
+    while (rotation > AK::Pi<float>)
+        rotation -= 2.0f * AK::Pi<float>;
+    return rotation;
 }
 
 }
