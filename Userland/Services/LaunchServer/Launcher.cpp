@@ -179,16 +179,11 @@ Vector<DeprecatedString> Launcher::handlers_with_details_for_url(const URL& url)
 
 Optional<DeprecatedString> Launcher::mime_type_for_file(DeprecatedString path)
 {
-    auto file_or_error = Core::DeprecatedFile::open(path, Core::OpenMode::ReadOnly);
-    if (file_or_error.is_error()) {
+    auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
+    if (file_or_error.is_error())
         return {};
-    } else {
-        auto file = file_or_error.release_value();
-        // Read accounts for longest possible offset + signature we currently match against.
-        auto bytes = file->read(0x9006);
 
-        return Core::guess_mime_type_based_on_sniffed_bytes(bytes.bytes());
-    }
+    return Core::guess_mime_type_based_on_sniffed_bytes(*file_or_error.release_value());
 }
 
 bool Launcher::open_url(const URL& url, DeprecatedString const& handler_name)
