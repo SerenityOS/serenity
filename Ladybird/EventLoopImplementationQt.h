@@ -22,8 +22,6 @@ public:
     virtual ~EventLoopManagerQt() override;
     virtual NonnullOwnPtr<Core::EventLoopImplementation> make_implementation() override;
 
-    virtual void deferred_invoke(Function<void()>) override;
-
     virtual int register_timer(Core::Object&, int milliseconds, bool should_reload, Core::TimerShouldFireWhenNotVisible) override;
     virtual bool unregister_timer(int timer_id) override;
 
@@ -52,6 +50,7 @@ public:
     virtual size_t pump(PumpMode) override;
     virtual void quit(int) override;
     virtual void wake() override;
+    virtual void post_event(Core::Object& receiver, NonnullOwnPtr<Core::Event>&&) override;
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() override { }

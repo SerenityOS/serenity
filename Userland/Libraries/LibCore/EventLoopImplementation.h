@@ -29,10 +29,7 @@ public:
     virtual void register_notifier(Notifier&) = 0;
     virtual void unregister_notifier(Notifier&) = 0;
 
-    void post_event(Object& receiver, NonnullOwnPtr<Event>&&);
     virtual void did_post_event() = 0;
-
-    virtual void deferred_invoke(Function<void()>) = 0;
 
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual int register_signal(int signal_number, Function<void(int)> handler) = 0;
@@ -42,7 +39,6 @@ public:
 
 protected:
     EventLoopManager();
-    ThreadEventQueue& m_thread_event_queue;
 };
 
 class EventLoopImplementation {
@@ -59,6 +55,8 @@ public:
     virtual void quit(int) = 0;
     virtual void wake() = 0;
 
+    virtual void post_event(Object& receiver, NonnullOwnPtr<Event>&&) = 0;
+
     // FIXME: These APIs only exist for obscure use-cases inside SerenityOS. Try to get rid of them.
     virtual void unquit() = 0;
     virtual bool was_exit_requested() const = 0;
@@ -66,6 +64,7 @@ public:
 
 protected:
     EventLoopImplementation();
+    ThreadEventQueue& m_thread_event_queue;
 };
 
 }

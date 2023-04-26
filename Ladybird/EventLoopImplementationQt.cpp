@@ -74,12 +74,11 @@ void EventLoopImplementationQt::wake()
         m_event_loop.wakeUp();
 }
 
-void EventLoopManagerQt::deferred_invoke(Function<void()> function)
+void EventLoopImplementationQt::post_event(Core::Object& receiver, NonnullOwnPtr<Core::Event>&& event)
 {
-    VERIFY(function);
-    QTimer::singleShot(0, [function = move(function)] {
-        function();
-    });
+    m_thread_event_queue.post_event(receiver, move(event));
+    if (&m_thread_event_queue != &Core::ThreadEventQueue::current())
+        wake();
 }
 
 static void qt_timer_fired(int timer_id, Core::TimerShouldFireWhenNotVisible should_fire_when_not_visible, Core::Object& object)
