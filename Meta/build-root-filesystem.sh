@@ -42,7 +42,6 @@ else
 fi
 
 SERENITY_ARCH="${SERENITY_ARCH:-x86_64}"
-LLVM_VERSION="${LLVM_VERSION:-14.0.1}"
 
 if [ "$SERENITY_TOOLCHAIN" = "Clang" ]; then
     TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR"/Toolchain/Local/clang/
