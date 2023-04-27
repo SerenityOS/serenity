@@ -372,7 +372,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         auto file_or_error = Core::File::open(path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             s_error_string = DeprecatedString::formatted("Unable to open file {}", path);
-            return Error::from_string_view(s_error_string);
+            return Error::from_string_view(s_error_string.view());
         }
         auto file = file_or_error.release_value();
         auto string = MUST(file->read_until_eof());
@@ -429,7 +429,7 @@ static ErrorOr<ExposedTo> parse_exposure_set(IDL::Interface& interface)
     auto maybe_exposed = interface.extended_attributes.get("Exposed");
     if (!maybe_exposed.has_value()) {
         s_error_string = DeprecatedString::formatted("Interface {} is missing extended attribute Exposed", interface.name);
-        return Error::from_string_view(s_error_string);
+        return Error::from_string_view(s_error_string.view());
     }
     auto exposed = maybe_exposed.value().trim_whitespace();
     if (exposed == "*"sv)
@@ -459,18 +459,18 @@ static ErrorOr<ExposedTo> parse_exposure_set(IDL::Interface& interface)
                 whom |= ExposedTo::AudioWorklet;
             } else {
                 s_error_string = DeprecatedString::formatted("Unknown Exposed attribute candidate {} in {} in {}", candidate, exposed, interface.name);
-                return Error::from_string_view(s_error_string);
+                return Error::from_string_view(s_error_string.view());
             }
         }
         if (whom == ExposedTo::Nobody) {
             s_error_string = DeprecatedString::formatted("Unknown Exposed attribute {} in {}", exposed, interface.name);
-            return Error::from_string_view(s_error_string);
+            return Error::from_string_view(s_error_string.view());
         }
         return whom;
     }
 
     s_error_string = DeprecatedString::formatted("Unknown Exposed attribute {} in {}", exposed, interface.name);
-    return Error::from_string_view(s_error_string);
+    return Error::from_string_view(s_error_string.view());
 }
 
 ErrorOr<void> add_to_interface_sets(IDL::Interface& interface, Vector<IDL::Interface&>& intrinsics, Vector<IDL::Interface&>& window_exposed, Vector<IDL::Interface&>& dedicated_worker_exposed, Vector<IDL::Interface&>& shared_worker_exposed)

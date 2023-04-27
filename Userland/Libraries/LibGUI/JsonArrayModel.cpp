@@ -89,7 +89,7 @@ ErrorOr<void> JsonArrayModel::set(int row, Vector<JsonValue>&& fields)
     VERIFY(fields.size() == m_fields.size());
 
     if ((size_t)row >= m_array.size())
-        return Error::from_string_view(TRY(String::formatted("Row out of bounds: {} >= {}", row, m_array.size())));
+        return Error::from_string_view("Row out of bounds"sv);
 
     JsonObject obj;
     for (size_t i = 0; i < m_fields.size(); ++i) {
@@ -106,7 +106,7 @@ ErrorOr<void> JsonArrayModel::set(int row, Vector<JsonValue>&& fields)
 ErrorOr<void> JsonArrayModel::remove(int row)
 {
     if ((size_t)row >= m_array.size())
-        return Error::from_string_view(TRY(String::formatted("Row out of bounds: {} >= {}", row, m_array.size())));
+        return Error::from_string_view("Row out of bounds"sv);
 
     JsonArray new_array;
     for (size_t i = 0; i < m_array.size(); ++i)

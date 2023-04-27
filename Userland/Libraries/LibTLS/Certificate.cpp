@@ -12,11 +12,16 @@
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
 
+namespace {
+static String s_error_string;
+}
+
 namespace TLS {
 
-#define ERROR_WITH_SCOPE(error)                                                                 \
-    do {                                                                                        \
-        return Error::from_string_view(TRY(String::formatted("{}: {}", current_scope, error))); \
+#define ERROR_WITH_SCOPE(error)                                                  \
+    do {                                                                         \
+        s_error_string = TRY(String::formatted("{}: {}", current_scope, error)); \
+        return Error::from_string_view(s_error_string.bytes_as_string_view());   \
     } while (0)
 
 #define ENTER_TYPED_SCOPE(tag_kind_name, scope)                                                                                                               \
@@ -77,7 +82,7 @@ static ErrorOr<SupportedGroup> oid_to_curve(Vector<int> curve)
     else if (curve == curve_prime256)
         return SupportedGroup::SECP256R1;
 
-    return Error::from_string_view(TRY(String::formatted("Unknown curve oid {}", curve)));
+    return Error::from_string_view("Unknown curve oid"sv);
 }
 
 static ErrorOr<Crypto::UnsignedBigInteger> parse_version(Crypto::ASN1::Decoder& decoder, Vector<StringView> current_scope)

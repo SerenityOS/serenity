@@ -45,7 +45,7 @@ static ErrorOr<int> weekday_index(StringView weekday_name)
     if (auto numeric_weekday = AK::StringUtils::convert_to_int(weekday_name); numeric_weekday.has_value())
         return numeric_weekday.value();
 
-    return Error::from_string_view(TRY(String::formatted("Unknown weekday name: '{}'", weekday_name)));
+    return Error::from_string_view("Unknown weekday name"sv);
 }
 
 static ErrorOr<int> default_weekday_start()
