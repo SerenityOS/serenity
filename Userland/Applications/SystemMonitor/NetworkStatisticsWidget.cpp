@@ -76,7 +76,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
             "Open in Network Settings...", MUST(Gfx::Bitmap::load_from_file("/res/icons/16x16/network.png"sv)), [this](GUI::Action&) {
                 m_adapter_table_view->selection().for_each_index([this](GUI::ModelIndex const& index) {
                     auto adapter_name = index.sibling_at_column(1).data().as_string();
-                    GUI::Process::spawn_or_show_error(window(), "/bin/Escalator"sv, Array { "/bin/NetworkSettings", adapter_name.characters() });
+                    GUI::Process::spawn_or_show_error(window(), "/bin/NetworkSettings"sv, Array { adapter_name.characters() });
                 });
             },
             this));
