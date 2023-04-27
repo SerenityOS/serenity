@@ -610,37 +610,35 @@ void ArgsParser::add_positional_argument(StringView& value, char const* help_str
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(int& value, char const* help_string, char const* name, Required required)
+template<Integral I>
+void ArgsParser::add_positional_argument(I& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
         name,
         required == Required::Yes ? 1 : 0,
         1,
-        [&value](StringView s) {
-            auto opt = s.to_int();
+        [&value](StringView view) {
+            Optional<I> opt;
+            if constexpr (IsSigned<I>)
+                opt = view.to_int<I>();
+            else
+                opt = view.to_uint<I>();
             value = opt.value_or(0);
             return opt.has_value();
-        }
+        },
     };
     add_positional_argument(move(arg));
 }
 
-void ArgsParser::add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required)
-{
-    Arg arg {
-        help_string,
-        name,
-        required == Required::Yes ? 1 : 0,
-        1,
-        [&value](StringView s) {
-            auto opt = s.to_uint();
-            value = opt.value_or(0);
-            return opt.has_value();
-        }
-    };
-    add_positional_argument(move(arg));
-}
+template void ArgsParser::add_positional_argument(int&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(long&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(long long&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(short&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(unsigned&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(unsigned long&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(unsigned long long&, char const*, char const*, Required);
+template void ArgsParser::add_positional_argument(unsigned short&, char const*, char const*, Required);
 
 void ArgsParser::add_positional_argument(double& value, char const* help_string, char const* name, Required required)
 {
