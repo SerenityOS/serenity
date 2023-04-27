@@ -10,7 +10,6 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Font/Font.h>
 #include <LibThreading/BackgroundAction.h>
 
 REGISTER_WIDGET(DisplaySettings, MonitorWidget)
@@ -156,28 +155,6 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
 
     painter.blit({ 0, 0 }, *m_monitor_bitmap, m_monitor_bitmap->rect());
     painter.blit(m_monitor_rect.location(), *m_desktop_bitmap, m_desktop_bitmap->rect());
-
-#if 0
-    if (!m_desktop_resolution.is_null()) {
-        auto displayed_resolution_string = Gfx::IntSize { m_desktop_resolution.width(), m_desktop_resolution.height() }.to_deprecated_string();
-
-        // Render text label scaled with scale factor to hint at its effect.
-        // FIXME: Once bitmaps have intrinsic scale factors, we could create a bitmap with an intrinsic scale factor of m_desktop_scale_factor
-        // and that should give us the same effect with less code.
-        auto text_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, Gfx::IntSize { painter.font().width(displayed_resolution_string) + 1, painter.font().pixel_size_rounded_up() + 1 });
-        GUI::Painter text_painter(*text_bitmap);
-        text_painter.set_font(painter.font());
-
-        text_painter.draw_text({}, displayed_resolution_string, Gfx::TextAlignment::BottomRight, Color::Black);
-        text_painter.draw_text({}, displayed_resolution_string, Gfx::TextAlignment::TopLeft, Color::White);
-
-        Gfx::IntRect text_rect = text_bitmap->rect();
-        text_rect.set_width(text_rect.width() * m_desktop_scale_factor);
-        text_rect.set_height(text_rect.height() * m_desktop_scale_factor);
-        text_rect.center_within(m_monitor_rect);
-        painter.draw_scaled_bitmap(text_rect, *text_bitmap, text_bitmap->rect());
-    }
-#endif
 }
 
 }
