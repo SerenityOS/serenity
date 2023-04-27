@@ -21,6 +21,7 @@ enum class Language {
     HTML,
     INI,
     JavaScript,
+    Markdown,
     PlainText,
     Shell,
     SQL,

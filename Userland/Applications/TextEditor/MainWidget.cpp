@@ -40,6 +40,7 @@
 #include <LibGfx/Painter.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
+#include <LibMarkdown/SyntaxHighlighter.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
@@ -672,6 +673,13 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     syntax_actions.add_action(*m_ini_highlight);
     TRY(syntax_menu->try_add_action(*m_ini_highlight));
 
+    m_markdown_highlight = GUI::Action::create_checkable("Ma&rkdown", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<Markdown::SyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_markdown_highlight);
+    TRY(syntax_menu->try_add_action(*m_markdown_highlight));
+
     m_shell_highlight = GUI::Action::create_checkable("Sh&ell File", [&](auto&) {
         m_editor->set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
         m_editor->update();
@@ -718,6 +726,7 @@ ErrorOr<void> MainWidget::initialize_menubar(GUI::Window& window)
     TRY(m_syntax_statusbar_menu->try_add_action(*m_html_highlight));
     TRY(m_syntax_statusbar_menu->try_add_action(*m_ini_highlight));
     TRY(m_syntax_statusbar_menu->try_add_action(*m_js_highlight));
+    TRY(m_syntax_statusbar_menu->try_add_action(*m_markdown_highlight));
     TRY(m_syntax_statusbar_menu->try_add_action(*m_shell_highlight));
     TRY(m_syntax_statusbar_menu->try_add_action(*m_sql_highlight));
 
@@ -752,6 +761,8 @@ void MainWidget::set_path(StringView path)
         m_gml_highlight->activate();
     } else if (m_extension == "ini" || m_extension == "af") {
         m_ini_highlight->activate();
+    } else if (m_extension == "md") {
+        m_markdown_highlight->activate();
     } else if (m_extension == "sh" || m_extension == "bash") {
         m_shell_highlight->activate();
     } else if (m_extension == "sql") {
