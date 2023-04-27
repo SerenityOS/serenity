@@ -222,6 +222,10 @@ public:
 
     ALWAYS_INLINE void discard_previously_peeked_bits(u8 count)
     {
+        // We allow "retrieving" more bits than we can provide, but we need to make sure that we don't underflow the current bit counter.
+        if (count > m_bit_count)
+            count = m_bit_count;
+
         m_bit_offset += count;
         m_bit_count -= count;
     }
