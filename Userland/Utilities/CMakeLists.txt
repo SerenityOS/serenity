@@ -2,7 +2,7 @@ file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
 list(APPEND SPECIAL_TARGETS test install)
 list(APPEND REQUIRED_TARGETS
     arp base64 basename cat chmod chown clear comm cp cut date dd df diff dirname dmesg du echo env expr false
-    file find grep groups head host hostname id ifconfig kill killall ln logout ls mkdir mount mv nproc
+    file find grep groups head host hostname id ifconfig kill killall ln logout ls mkdir mount mv network-settings nproc
     pgrep pidof ping pkill pmap ps readlink realpath reboot rm rmdir sed route seq shutdown sleep sort stat stty su tail test
     touch tr true umount uname uniq uptime w wc which whoami xargs yes
 )
@@ -115,6 +115,7 @@ target_link_libraries(markdown-check PRIVATE LibFileSystem LibMarkdown)
 target_link_libraries(matroska PRIVATE LibVideo)
 target_link_libraries(md PRIVATE LibMarkdown)
 target_link_libraries(mv PRIVATE LibFileSystem)
+target_link_libraries(network-settings PRIVATE LibCore LibMain)
 target_link_libraries(notify PRIVATE LibGfx LibGUI)
 target_link_libraries(open PRIVATE LibDesktop)
 target_link_libraries(passwd PRIVATE LibCrypt)
