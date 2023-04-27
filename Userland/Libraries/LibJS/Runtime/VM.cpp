@@ -938,15 +938,22 @@ ThrowCompletionOr<NonnullGCPtr<Module>> VM::resolve_imported_module(ScriptOrModu
 
     dbgln_if(JS_MODULE_DEBUG, "[JS MODULE] reading and parsing module {}", filename);
 
-    auto file_or_error = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(filename, Core::File::OpenMode::Read);
 
     if (file_or_error.is_error()) {
         return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);
     }
 
     // FIXME: Don't read the file in one go.
-    auto file_content = file_or_error.value()->read_all();
-    StringView content_view { file_content.data(), file_content.size() };
+    auto file_content_or_error = file_or_error.value()->read_until_eof();
+
+    if (file_content_or_error.is_error()) {
+        if (file_content_or_error.error().code() == ENOMEM)
+            return throw_completion<JS::InternalError>(error_message(::JS::VM::ErrorMessage::OutOfMemory));
+        return throw_completion<SyntaxError>(ErrorType::ModuleNotFound, module_request.module_specifier);
+    }
+
+    StringView const content_view { file_content_or_error.value().bytes() };
 
     auto module = TRY([&]() -> ThrowCompletionOr<NonnullGCPtr<Module>> {
         // If assertions has an entry entry such that entry.[[Key]] is "type", let type be entry.[[Value]]. The following requirements apply:
