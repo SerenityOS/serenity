@@ -140,7 +140,7 @@ void MonitorWidget::redraw_desktop_if_needed()
     } else if (m_desktop_wallpaper_mode == "Tile"sv) {
         painter.draw_tiled_bitmap(m_desktop_bitmap->rect(), *scaled_bitmap);
     } else if (m_desktop_wallpaper_mode == "Stretch"sv) {
-        painter.draw_scaled_bitmap(m_desktop_bitmap->rect(), *m_wallpaper_bitmap, m_wallpaper_bitmap->rect());
+        painter.draw_scaled_bitmap(m_desktop_bitmap->rect(), *m_wallpaper_bitmap, m_wallpaper_bitmap->rect(), 1.f, Gfx::Painter::ScalingMode::BilinearBlend);
     } else {
         VERIFY_NOT_REACHED();
     }
