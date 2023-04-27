@@ -762,7 +762,7 @@ WebIDL::ExceptionOr<void> set_up_readable_stream_default_controller_from_underly
     if (underlying_source.start) {
         start_algorithm = [controller, underlying_source_value, callback = underlying_source.start]() -> WebIDL::ExceptionOr<JS::Value> {
             // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
-            return WebIDL::invoke_callback(*callback, underlying_source_value, controller);
+            return TRY(WebIDL::invoke_callback(*callback, underlying_source_value, controller)).release_value();
         };
     }
 
@@ -1937,7 +1937,7 @@ WebIDL::ExceptionOr<void> set_up_writable_stream_default_controller_from_underly
     if (underlying_sink.start) {
         start_algorithm = [controller, underlying_sink_value, callback = underlying_sink.start]() -> WebIDL::ExceptionOr<JS::Value> {
             // Note: callback does not return a promise, so invoke_callback may return an abrupt completion
-            return WebIDL::invoke_callback(*callback, underlying_sink_value, controller);
+            return TRY(WebIDL::invoke_callback(*callback, underlying_sink_value, controller)).release_value();
         };
     }
 
