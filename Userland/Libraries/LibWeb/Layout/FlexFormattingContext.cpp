@@ -1099,7 +1099,7 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
         }
 
         auto cross_size = [&]() {
-            if (item.box->computed_values().box_sizing() == CSS::BoxSizing::BorderBox) {
+            if (item.box->computed_values().box_sizing() == CSS::BoxSizing::BorderBox && !should_treat_cross_size_as_auto(item.box)) {
                 return max(CSSPixels(0.0f), resolved_definite_cross_size(item) - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after);
             }
 
