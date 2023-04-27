@@ -52,8 +52,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool udp_mode = false;
     bool numeric_mode = false;
     DeprecatedString target;
-    int port = 0;
-    int local_port = 0;
+    u16 port = 0;
+    u16 local_port = 0;
     int maximum_tcp_receive_buffer_size_input = -1;
 
     Core::ArgsParser args_parser;
