@@ -170,12 +170,8 @@ bool EventHandler::handle_mousewheel(CSSPixelPoint position, unsigned button, un
     bool handled_event = false;
 
     JS::GCPtr<Painting::Paintable> paintable;
-    if (m_mouse_event_tracking_layout_node) {
-        paintable = m_mouse_event_tracking_layout_node->paintable();
-    } else {
-        if (auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact); result.has_value())
-            paintable = result->paintable;
-    }
+    if (auto result = target_for_mouse_position(position); result.has_value())
+        paintable = result->paintable;
 
     if (paintable) {
         paintable->handle_mousewheel({}, position, buttons, modifiers, wheel_delta_x, wheel_delta_y);
@@ -218,12 +214,8 @@ bool EventHandler::handle_mouseup(CSSPixelPoint position, unsigned button, unsig
     bool handled_event = false;
 
     JS::GCPtr<Painting::Paintable> paintable;
-    if (m_mouse_event_tracking_layout_node) {
-        paintable = m_mouse_event_tracking_layout_node->paintable();
-    } else {
-        if (auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact); result.has_value())
-            paintable = result->paintable;
-    }
+    if (auto result = target_for_mouse_position(position); result.has_value())
+        paintable = result->paintable;
 
     if (paintable && paintable->wants_mouse_events()) {
         if (paintable->handle_mouseup({}, position, button, modifiers) == Painting::Paintable::DispatchEventOfSameName::No)
@@ -337,14 +329,10 @@ bool EventHandler::handle_mousedown(CSSPixelPoint position, unsigned button, uns
 
     {
         JS::GCPtr<Painting::Paintable> paintable;
-        if (m_mouse_event_tracking_layout_node) {
-            paintable = m_mouse_event_tracking_layout_node->paintable();
-        } else {
-            auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
-            if (!result.has_value())
-                return false;
+        if (auto result = target_for_mouse_position(position); result.has_value())
             paintable = result->paintable;
-        }
+        else
+            return false;
 
         auto pointer_events = paintable->computed_values().pointer_events();
         // FIXME: Handle other values for pointer-events.
@@ -435,13 +423,10 @@ bool EventHandler::handle_mousemove(CSSPixelPoint position, unsigned buttons, un
 
     JS::GCPtr<Painting::Paintable> paintable;
     Optional<int> start_index;
-    if (m_mouse_event_tracking_layout_node) {
-        paintable = m_mouse_event_tracking_layout_node->paintable();
-    } else {
-        if (auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact); result.has_value()) {
-            paintable = result->paintable;
-            start_index = result->index_in_node;
-        }
+
+    if (auto result = target_for_mouse_position(position); result.has_value()) {
+        paintable = result->paintable;
+        start_index = result->index_in_node;
     }
 
     const HTML::HTMLAnchorElement* hovered_link_element = nullptr;
@@ -548,14 +533,10 @@ bool EventHandler::handle_doubleclick(CSSPixelPoint position, unsigned button, u
         return false;
 
     JS::GCPtr<Painting::Paintable> paintable;
-    if (m_mouse_event_tracking_layout_node) {
-        paintable = m_mouse_event_tracking_layout_node->paintable();
-    } else {
-        auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact);
-        if (!result.has_value())
-            return false;
+    if (auto result = target_for_mouse_position(position); result.has_value())
         paintable = result->paintable;
-    }
+    else
+        return false;
 
     auto pointer_events = paintable->computed_values().pointer_events();
     // FIXME: Handle other values for pointer-events.
@@ -830,4 +811,20 @@ CSSPixelPoint EventHandler::compute_mouse_event_page_offset(CSSPixelPoint event_
     // 3. Return the sum of offset and the value of the event’s clientX attribute.
     return event_client_offset.translated(scroll_offset);
 }
+
+Optional<EventHandler::Target> EventHandler::target_for_mouse_position(CSSPixelPoint position)
+{
+    if (m_mouse_event_tracking_layout_node) {
+        if (m_mouse_event_tracking_layout_node->paintable()->wants_mouse_events())
+            return Target { m_mouse_event_tracking_layout_node->paintable(), {} };
+
+        m_mouse_event_tracking_layout_node = nullptr;
+    }
+
+    if (auto result = paint_root()->hit_test(position, Painting::HitTestType::Exact); result.has_value())
+        return Target { result->paintable.ptr(), result->index_in_node };
+
+    return {};
+}
+
 }
