@@ -1425,7 +1425,7 @@ enum class BoxTypeTransformation {
     Inlinify,
 };
 
-static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const&)
+static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const& pseudo_element)
 {
     // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
     if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
@@ -1433,9 +1433,12 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
 
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
 
+    // NOTE: If we're computing style for a pseudo-element, the effective parent will be the originating element itself, not its parent.
+    auto const* parent = pseudo_element.has_value() ? &element : element.parent_element();
+
     // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
-    if (element.parent_element() && element.parent_element()->computed_css_values()) {
-        auto const& parent_display = element.parent_element()->computed_css_values()->display();
+    if (parent && parent->computed_css_values()) {
+        auto const& parent_display = parent->computed_css_values()->display();
         if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
             return BoxTypeTransformation::Blockify;
     }
