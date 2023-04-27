@@ -425,6 +425,16 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
         row.used_height = max(row.used_height, cell_state.border_box_height());
         row.baseline = max(row.baseline, cell.baseline);
     }
+
+    for (auto& row : m_rows) {
+        auto row_computed_height = row.box->computed_values().height();
+        if (row_computed_height.is_length()) {
+            auto height_of_containing_block = m_state.get(*row.box->containing_block()).content_height();
+            auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
+            auto row_used_height = row_computed_height.resolved(row.box, height_of_containing_block_as_length).to_px(row.box);
+            row.used_height = max(row.used_height, row_used_height);
+        }
+    }
 }
 
 void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
