@@ -19,8 +19,8 @@ ErrorOr<int> serenity_main(Main::Arguments args)
 {
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd unix proc exec"));
 
-    TRY(Core::System::unveil("/bin/NetworkServer", "x"));
-    TRY(Core::System::unveil("/etc/Network.ini", "rwc"));
+    TRY(Core::System::unveil("/bin/Escalator", "x"));
+    TRY(Core::System::unveil("/etc/Network.ini", "r"));
     TRY(Core::System::unveil("/sys/kernel/net/adapters", "r"));
     TRY(Core::System::unveil("/res", "r"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/clipboard", "rw"));

@@ -1,16 +1,18 @@
 /*
  * Copyright (c) 2022, Maciej <sppmacd@pm.me>
+ * Copyright (c) 2023, Fabian Dellwing <fabian@dellwing.net>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "NetworkSettingsWidget.h"
-
 #include <AK/DeprecatedString.h>
 #include <AK/IPv4Address.h>
+#include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <Applications/NetworkSettings/NetworkSettingsGML.h>
 #include <LibCore/Command.h>
+#include <LibCore/System.h>
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/ItemListModel.h>
@@ -18,6 +20,7 @@
 #include <LibGUI/Process.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/TextBox.h>
+#include <unistd.h>
 
 namespace NetworkSettings {
 
@@ -134,27 +137,68 @@ void NetworkSettingsWidget::on_switch_enabled_or_dhcp()
 
 void NetworkSettingsWidget::apply_settings()
 {
-    auto config_file = Core::ConfigFile::open_for_system("Network", Core::ConfigFile::AllowWriting::Yes).release_value_but_fixme_should_propagate_errors();
-    for (auto const& adapter_data : m_network_adapters) {
-        auto netmask = IPv4Address::netmask_from_cidr(adapter_data.value.cidr).to_deprecated_string();
-        config_file->write_bool_entry(adapter_data.key, "Enabled", adapter_data.value.enabled);
-        config_file->write_bool_entry(adapter_data.key, "DHCP", adapter_data.value.dhcp);
-        if (adapter_data.value.enabled && !adapter_data.value.dhcp) {
-            if (!IPv4Address::from_string(adapter_data.value.ip_address).has_value()) {
-                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Invalid IPv4 address for adapter {}", adapter_data.key));
-                return;
-            }
-            if (!IPv4Address::from_string(adapter_data.value.default_gateway).has_value()) {
-                GUI::MessageBox::show_error(window(), DeprecatedString::formatted("Invalid IPv4 gateway for adapter {}", adapter_data.key));
-                return;
-            }
-        }
-        config_file->write_entry(adapter_data.key, "IPv4Address", adapter_data.value.ip_address);
-        config_file->write_entry(adapter_data.key, "IPv4Netmask", netmask);
-        config_file->write_entry(adapter_data.key, "IPv4Gateway", adapter_data.value.default_gateway);
+    auto result = apply_settings_impl();
+    if (result.is_error()) {
+        GUI::MessageBox::show_error(window(), result.release_error().string_literal());
+        return;
+    }
+}
+
+ErrorOr<void> NetworkSettingsWidget::apply_settings_impl()
+{
+    auto maybe_json = TRY(create_settings_object());
+    if (!maybe_json.has_value() || maybe_json.value().is_empty())
+        return {};
+    auto json = maybe_json.release_value();
+
+    auto pipefds = TRY(Core::System::pipe2(O_CLOEXEC));
+    ScopeGuard guard_fd1 { [&] { close(pipefds[1]); } };
+    {
+        posix_spawn_file_actions_t file_actions;
+        posix_spawn_file_actions_init(&file_actions);
+        posix_spawn_file_actions_adddup2(&file_actions, pipefds[0], STDIN_FILENO);
+
+        ScopeGuard guard_fd0_and_file_actions { [&]() {
+            posix_spawn_file_actions_destroy(&file_actions);
+            close(pipefds[0]);
+        } };
+
+        char const* argv[] = { "/bin/Escalator", "-I", "-P", "To apply these changes please enter your password:", "/bin/network-settings", nullptr };
+        (void)TRY(Core::System::posix_spawn("/bin/Escalator"sv, &file_actions, nullptr, const_cast<char**>(argv), environ));
+
+        auto outfile = TRY(Core::File::adopt_fd(pipefds[1], Core::File::OpenMode::Write, Core::File::ShouldCloseFileDescriptor::No));
+        TRY(outfile->write_until_depleted(json.serialized<StringBuilder>().bytes()));
     }
 
-    GUI::Process::spawn_or_show_error(window(), "/bin/NetworkServer"sv);
+    return {};
+}
+
+ErrorOr<Optional<JsonObject>> NetworkSettingsWidget::create_settings_object()
+{
+    auto json = JsonObject();
+    for (auto const& adapter_data : m_network_adapters) {
+        auto netmask = TRY(IPv4Address::netmask_from_cidr(adapter_data.value.cidr).to_string());
+        if (adapter_data.value.enabled && !adapter_data.value.dhcp) {
+            if (!IPv4Address::from_string(adapter_data.value.ip_address).has_value()) {
+                GUI::MessageBox::show_error(window(), TRY(String::formatted("Invalid IPv4 address for adapter {}", adapter_data.key)));
+                return Optional<JsonObject> {};
+            }
+            if (!IPv4Address::from_string(adapter_data.value.default_gateway).has_value()) {
+                GUI::MessageBox::show_error(window(), TRY(String::formatted("Invalid IPv4 gateway for adapter {}", adapter_data.key)));
+                return Optional<JsonObject> {};
+            }
+        }
+
+        auto adapter = JsonObject();
+        adapter.set("Enabled", adapter_data.value.enabled);
+        adapter.set("DHCP", adapter_data.value.dhcp);
+        adapter.set("IPv4Address", adapter_data.value.ip_address);
+        adapter.set("IPv4Netmask", netmask.to_deprecated_string());
+        adapter.set("IPv4Gateway", adapter_data.value.default_gateway);
+        json.set(adapter_data.key, move(adapter));
+    }
+
+    return json;
 }
 
 void NetworkSettingsWidget::switch_adapter(DeprecatedString const& adapter)
