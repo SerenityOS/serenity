@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/DeprecatedString.h>
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
 #include <AK/Vector.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibMain/Main.h>
 
 // Exit code is bitwise-or of these values:
@@ -25,32 +26,49 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     HashMap<u32, Vector<DeprecatedString>> inverse_hashes;
     bool had_errors = false;
     for (auto filename : arguments.strings.slice(1)) {
-        auto file_or_error = Core::DeprecatedFile::open(filename, Core::OpenMode::ReadOnly);
+
+        auto const open_file = [](StringView filename) -> ErrorOr<NonnullOwnPtr<Core::BufferedFile>> {
+            auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
+            return Core::BufferedFile::create(move(file));
+        };
+
+        auto file_or_error = open_file(filename);
+
         if (file_or_error.is_error()) {
             warnln("Error: Cannot open '{}': {}", filename, file_or_error.error());
             had_errors = true;
             continue; // next file
         }
-        auto file = file_or_error.value();
+
+        auto file = file_or_error.release_value();
+
         DeprecatedString endpoint_name;
-        while (true) {
-            DeprecatedString line = file->read_line();
-            if (file->error() != 0 || line.is_null())
-                break;
-            if (!line.starts_with("endpoint "sv))
-                continue;
-            auto line_endpoint_name = line.substring("endpoint "sv.length());
-            if (!endpoint_name.is_null()) {
-                // Note: If there are three or more endpoints defined in a file, these errors will look a bit wonky.
-                // However, that's fine, because it shouldn't happen in the first place.
-                warnln("Error: Multiple endpoints in file '{}': Found {} and {}", filename, file->error());
-                had_errors = true;
-                continue; // next line
+
+        auto const read_lines = [&]() -> ErrorOr<void> {
+            while (TRY(file->can_read_line())) {
+                Array<u8, 1024> buffer;
+                auto line = TRY(file->read_line(buffer));
+
+                if (!line.starts_with("endpoint "sv))
+                    continue;
+                auto line_endpoint_name = line.substring_view("endpoint "sv.length());
+                if (!endpoint_name.is_null()) {
+                    // Note: If there are three or more endpoints defined in a file, these errors will look a bit wonky.
+                    // However, that's fine, because it shouldn't happen in the first place.
+                    warnln("Error: Multiple endpoints in file '{}': Found {} and {}", filename, line_endpoint_name);
+                    had_errors = true;
+                    continue; // next line
+                }
+                endpoint_name = line_endpoint_name;
             }
-            endpoint_name = line_endpoint_name;
-        }
-        if (file->error() != 0) {
-            warnln("Error: Failed to read '{}': {}", filename, file->error());
+
+            return {};
+        };
+
+        auto maybe_error = read_lines();
+
+        if (maybe_error.is_error()) {
+            warnln("Error: Failed to read '{}': {}", filename, maybe_error.release_error());
             had_errors = true;
             continue; // next file
         }
