@@ -129,6 +129,11 @@ if [ -f mnt/boot/Kernel.debug ]; then
     chmod 0400 mnt/boot/Kernel.debug
 fi
 
+if [ -f mnt/bin/network-settings ]; then
+    chown 0:0 mnt/bin/network-settings
+    chmod 500 mnt/bin/network-settings
+fi
+
 chmod 600 mnt/etc/shadow
 chmod 755 mnt/res/devel/templates/*.postcreate
 echo "done"
