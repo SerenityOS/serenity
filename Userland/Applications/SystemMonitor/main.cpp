@@ -248,6 +248,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::unveil("/dev", "r"));
     TRY(Core::System::unveil("/bin", "r"));
     TRY(Core::System::unveil("/bin/Escalator", "x"));
+    TRY(Core::System::unveil("/bin/NetworkSettings", "x"));
     TRY(Core::System::unveil("/usr/lib", "r"));
 
     // This directory only exists if ports are installed

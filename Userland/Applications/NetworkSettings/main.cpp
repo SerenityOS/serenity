@@ -6,9 +6,6 @@
 
 #include "NetworkSettingsWidget.h"
 #include <LibCore/ArgsParser.h>
-#include <LibGUI/MessageBox.h>
-#include <unistd.h>
-
 #include <LibCore/System.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
@@ -34,11 +31,6 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     parser.parse(args);
 
     auto app = TRY(GUI::Application::create(args));
-
-    if (getuid() != 0) {
-        GUI::MessageBox::show_error(nullptr, "You need to be root to run Network Settings!"sv);
-        return 1;
-    }
 
     TRY(Core::System::pledge("stdio rpath wpath cpath recvfd sendfd proc exec"));
 
