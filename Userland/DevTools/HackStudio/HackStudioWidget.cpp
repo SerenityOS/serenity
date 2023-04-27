@@ -1801,7 +1801,7 @@ ErrorOr<NonnullRefPtr<GUI::Action>> HackStudioWidget::create_open_project_config
 
             if (FileSystem::exists(parent_directory) && !FileSystem::is_directory(parent_directory)) {
                 formatted_error_string_holder = DeprecatedString::formatted("Cannot create the '{}' directory because there is already a file with that name", parent_directory);
-                return Error::from_string_view(formatted_error_string_holder);
+                return Error::from_string_view(formatted_error_string_holder.view());
             }
 
             auto maybe_error = Core::System::mkdir(LexicalPath::absolute_path(m_project->root_path(), parent_directory), 0755);
