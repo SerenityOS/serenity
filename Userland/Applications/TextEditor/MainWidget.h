@@ -136,6 +136,7 @@ private:
     RefPtr<GUI::Action> m_git_highlight;
     RefPtr<GUI::Action> m_gml_highlight;
     RefPtr<GUI::Action> m_ini_highlight;
+    RefPtr<GUI::Action> m_markdown_highlight;
     RefPtr<GUI::Action> m_shell_highlight;
     RefPtr<GUI::Action> m_sql_highlight;
 

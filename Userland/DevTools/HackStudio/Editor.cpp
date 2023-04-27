@@ -34,6 +34,7 @@
 #include <LibGUI/Window.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
+#include <LibMarkdown/SyntaxHighlighter.h>
 #include <LibSQL/AST/SyntaxHighlighter.h>
 #include <LibSyntax/Language.h>
 #include <LibWeb/CSS/SyntaxHighlighter/SyntaxHighlighter.h>
@@ -653,11 +654,14 @@ void Editor::set_syntax_highlighter_for(CodeDocument const& document)
     case Syntax::Language::HTML:
         set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
         break;
+    case Syntax::Language::INI:
+        set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
+        break;
     case Syntax::Language::JavaScript:
         set_syntax_highlighter(make<JS::SyntaxHighlighter>());
         break;
-    case Syntax::Language::INI:
-        set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
+    case Syntax::Language::Markdown:
+        set_syntax_highlighter(make<Markdown::SyntaxHighlighter>());
         break;
     case Syntax::Language::Shell:
         set_syntax_highlighter(make<Shell::SyntaxHighlighter>());

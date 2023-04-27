@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2020-2023, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,6 +32,8 @@ StringView language_to_string(Language language)
         return "INI"sv;
     case Language::JavaScript:
         return "JavaScript"sv;
+    case Language::Markdown:
+        return "Markdown"sv;
     case Language::PlainText:
         return "Plain Text"sv;
     case Language::Shell:
@@ -63,6 +65,8 @@ StringView common_language_extension(Language language)
         return "ini"sv;
     case Language::JavaScript:
         return "js"sv;
+    case Language::Markdown:
+        return "md"sv;
     case Language::PlainText:
         return "txt"sv;
     case Language::Shell:
@@ -93,6 +97,8 @@ Optional<Language> language_from_name(StringView name)
         return Language::INI;
     if (name.equals_ignoring_ascii_case("JavaScript"sv))
         return Language::JavaScript;
+    if (name.equals_ignoring_ascii_case("Markdown"sv))
+        return Language::Markdown;
     if (name.equals_ignoring_ascii_case("PlainText"sv))
         return Language::PlainText;
     if (name.equals_ignoring_ascii_case("SQL"sv))
@@ -126,6 +132,8 @@ Optional<Language> language_from_filename(LexicalPath const& file)
         return Language::INI;
     if (extension.is_one_of("js"sv, "mjs"sv, "json"sv))
         return Language::JavaScript;
+    if (extension == "md"sv)
+        return Language::Markdown;
     if (extension.is_one_of("sh"sv, "bash"sv))
         return Language::Shell;
     if (extension == "sql"sv)

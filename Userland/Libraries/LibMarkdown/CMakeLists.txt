@@ -9,9 +9,10 @@ set(SOURCES
     LineIterator.cpp
     List.cpp
     Paragraph.cpp
+    SyntaxHighlighter.cpp
     Table.cpp
     Text.cpp
 )
 
 serenity_lib(LibMarkdown markdown)
-target_link_libraries(LibMarkdown PRIVATE LibJS LibRegex)
+target_link_libraries(LibMarkdown PRIVATE LibJS LibRegex LibSyntax)
