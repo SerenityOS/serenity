@@ -71,6 +71,7 @@ public:
     DeprecatedString debug_description() const;
 
     bool has_style() const { return m_has_style; }
+    bool has_style_or_parent_with_style() const;
 
     virtual bool can_have_children() const { return true; }
 
@@ -233,8 +234,15 @@ private:
 template<>
 inline bool Node::fast_is<NodeWithStyleAndBoxModelMetrics>() const { return is_node_with_style_and_box_model_metrics(); }
 
+inline bool Node::has_style_or_parent_with_style() const
+{
+    return m_has_style || (parent() != nullptr && parent()->has_style_or_parent_with_style());
+}
+
 inline Gfx::Font const& Node::font() const
 {
+    VERIFY(has_style_or_parent_with_style());
+
     if (m_has_style)
         return static_cast<NodeWithStyle const*>(this)->font();
     return parent()->font();
@@ -247,6 +255,8 @@ inline Gfx::Font const& Node::scaled_font(PaintContext& context) const
 
 inline const CSS::ImmutableComputedValues& Node::computed_values() const
 {
+    VERIFY(has_style_or_parent_with_style());
+
     if (m_has_style)
         return static_cast<NodeWithStyle const*>(this)->computed_values();
     return parent()->computed_values();
@@ -254,6 +264,8 @@ inline const CSS::ImmutableComputedValues& Node::computed_values() const
 
 inline CSSPixels Node::line_height() const
 {
+    VERIFY(has_style_or_parent_with_style());
+
     if (m_has_style)
         return static_cast<NodeWithStyle const*>(this)->line_height();
     return parent()->line_height();
