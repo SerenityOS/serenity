@@ -48,6 +48,15 @@ CSSPixels BlockFormattingContext::automatic_content_height() const
     return compute_auto_height_for_block_formatting_context_root(root());
 }
 
+static bool margins_collapse_through(Box const& box, LayoutState& state)
+{
+    // FIXME: A box's own margins collapse if the 'min-height' property is zero, and it has neither top or bottom borders
+    // nor top or bottom padding, and it has a 'height' of either 0 or 'auto', and it does not contain a line box, and
+    // all of its in-flow children's margins (if any) collapse.
+    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
+    return state.get(box).border_box_height() == 0;
+}
+
 void BlockFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
     if (is<Viewport>(root())) {
@@ -64,6 +73,8 @@ void BlockFormattingContext::run(Box const&, LayoutMode layout_mode, AvailableSp
     if (m_margin_state.current_collapsed_margin() != 0) {
         for (auto* child_box = root().last_child_of_type<Box>(); child_box; child_box = child_box->previous_sibling_of_type<Box>()) {
             if (child_box->is_absolutely_positioned() || child_box->is_floating())
+                continue;
+            if (margins_collapse_through(*child_box, m_state))
                 continue;
             m_state.get_mutable(*child_box).margin_bottom = m_margin_state.current_collapsed_margin().value();
             break;
@@ -377,15 +388,6 @@ void BlockFormattingContext::layout_inline_children(BlockContainer const& block_
         block_container_state.set_content_width(context.automatic_content_width());
     if (!block_container_state.has_definite_height())
         block_container_state.set_content_height(context.automatic_content_height());
-}
-
-static bool margins_collapse_through(Box const& box, LayoutState& state)
-{
-    // FIXME: A box's own margins collapse if the 'min-height' property is zero, and it has neither top or bottom borders
-    // nor top or bottom padding, and it has a 'height' of either 0 or 'auto', and it does not contain a line box, and
-    // all of its in-flow children's margins (if any) collapse.
-    // https://www.w3.org/TR/CSS22/box.html#collapsing-margins
-    return state.get(box).border_box_height() == 0;
 }
 
 CSSPixels BlockFormattingContext::compute_auto_height_for_block_level_element(Box const& box, AvailableSpace const& available_space)
