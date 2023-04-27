@@ -473,9 +473,11 @@ void ArgsParser::add_option(I& value, char const* help_string, char const* long_
 template void ArgsParser::add_option(int&, char const*, char const*, char, char const*, OptionHideMode);
 template void ArgsParser::add_option(long&, char const*, char const*, char, char const*, OptionHideMode);
 template void ArgsParser::add_option(long long&, char const*, char const*, char, char const*, OptionHideMode);
+template void ArgsParser::add_option(short&, char const*, char const*, char, char const*, OptionHideMode);
 template void ArgsParser::add_option(unsigned&, char const*, char const*, char, char const*, OptionHideMode);
 template void ArgsParser::add_option(unsigned long&, char const*, char const*, char, char const*, OptionHideMode);
 template void ArgsParser::add_option(unsigned long long&, char const*, char const*, char, char const*, OptionHideMode);
+template void ArgsParser::add_option(unsigned short&, char const*, char const*, char, char const*, OptionHideMode);
 
 void ArgsParser::add_option(double& value, char const* help_string, char const* long_name, char short_name, char const* value_name, OptionHideMode hide_mode)
 {
