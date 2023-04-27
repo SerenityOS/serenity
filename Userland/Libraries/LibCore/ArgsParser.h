@@ -102,8 +102,8 @@ public:
     void add_positional_argument(Arg&&);
     void add_positional_argument(DeprecatedString& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(int& value, char const* help_string, char const* name, Required required = Required::Yes);
-    void add_positional_argument(unsigned& value, char const* help_string, char const* name, Required required = Required::Yes);
+    template<Integral I>
+    void add_positional_argument(I& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(double& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<DeprecatedString>& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(Vector<StringView>& value, char const* help_string, char const* name, Required required = Required::Yes);
