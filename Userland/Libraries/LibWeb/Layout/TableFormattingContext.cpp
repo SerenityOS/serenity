@@ -388,6 +388,7 @@ void TableFormattingContext::determine_intrisic_size_of_table_container(Availabl
 void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
 {
     for (auto& cell : m_cells) {
+        auto& row = m_rows[cell.row_index];
         auto& cell_state = m_state.get_mutable(cell.box);
 
         CSSPixels span_width = 0;
@@ -396,6 +397,8 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
 
         auto width_of_containing_block = m_state.get(*cell.box->containing_block()).content_width();
         auto width_of_containing_block_as_length = CSS::Length::make_px(width_of_containing_block);
+        auto height_of_containing_block = m_state.get(*cell.box->containing_block()).content_height();
+        auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
 
         cell_state.padding_top = cell.box->computed_values().padding().top().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
         cell_state.padding_bottom = cell.box->computed_values().padding().bottom().resolved(cell.box, width_of_containing_block_as_length).to_px(cell.box);
@@ -413,6 +416,14 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
         cell_state.border_left = (should_hide_borders && is_left_most_cell) ? 0 : cell.box->computed_values().border_left().width;
         cell_state.border_right = (should_hide_borders && is_right_most_cell) ? 0 : cell.box->computed_values().border_right().width;
 
+        auto cell_computed_height = cell.box->computed_values().height();
+        if (cell_computed_height.is_length()) {
+            auto cell_used_height = cell_computed_height.resolved(cell.box, height_of_containing_block_as_length).to_px(cell.box);
+            cell_state.set_content_height(cell_used_height - cell_state.border_box_top() - cell_state.border_box_bottom());
+
+            row.used_height = max(row.used_height, cell_used_height);
+        }
+
         cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
         if (auto independent_formatting_context = layout_inside(cell.box, layout_mode, cell_state.available_inner_space_or_constraints_from(*m_available_space))) {
             cell_state.set_content_height(independent_formatting_context->automatic_content_height());
@@ -421,7 +432,6 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
 
         cell.baseline = box_baseline(m_state, cell.box);
 
-        auto& row = m_rows[cell.row_index];
         row.used_height = max(row.used_height, cell_state.border_box_height());
         row.baseline = max(row.baseline, cell.baseline);
     }
