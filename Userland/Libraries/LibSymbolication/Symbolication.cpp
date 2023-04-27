@@ -10,7 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
-#include <LibCore/DeprecatedFile.h>
+#include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
 #include <LibDebug/DebugInfo.h>
 #include <LibFileSystem/FileSystem.h>
@@ -38,12 +38,19 @@ static KernelBaseState s_kernel_base_state = KernelBaseState::Uninitialized;
 Optional<FlatPtr> kernel_base()
 {
     if (s_kernel_base_state == KernelBaseState::Uninitialized) {
-        auto file = Core::DeprecatedFile::open("/sys/kernel/constants/load_base", Core::OpenMode::ReadOnly);
+        auto file = Core::File::open("/sys/kernel/constants/load_base"sv, Core::File::OpenMode::Read);
         if (file.is_error()) {
             s_kernel_base_state = KernelBaseState::Invalid;
             return {};
         }
-        auto kernel_base_str = DeprecatedString { file.value()->read_all(), NoChomp };
+
+        auto file_content = file.value()->read_until_eof();
+        if (file_content.is_error()) {
+            s_kernel_base_state = KernelBaseState::Invalid;
+            return {};
+        }
+
+        auto kernel_base_str = DeprecatedString { file_content.value(), NoChomp };
         using AddressType = u64;
         auto maybe_kernel_base = kernel_base_str.to_uint<AddressType>();
         if (!maybe_kernel_base.has_value()) {
@@ -148,13 +155,19 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
     {
         auto stack_path = DeprecatedString::formatted("/proc/{}/stacks/{}", pid, tid);
-        auto file_or_error = Core::DeprecatedFile::open(stack_path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::File::open(stack_path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", stack_path, file_or_error.error());
             return {};
         }
 
-        auto json = JsonValue::from_string(file_or_error.value()->read_all());
+        auto file_content = file_or_error.value()->read_until_eof();
+        if (file_content.is_error()) {
+            warnln("Could not read {}: {}", stack_path, file_or_error.error());
+            return {};
+        }
+
+        auto json = JsonValue::from_string(file_content.value());
         if (json.is_error() || !json.value().is_array()) {
             warnln("Invalid contents in {}", stack_path);
             return {};
@@ -168,13 +181,19 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid, IncludeSourcePosition in
 
     {
         auto vm_path = DeprecatedString::formatted("/proc/{}/vm", pid);
-        auto file_or_error = Core::DeprecatedFile::open(vm_path, Core::OpenMode::ReadOnly);
+        auto file_or_error = Core::File::open(vm_path, Core::File::OpenMode::Read);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", vm_path, file_or_error.error());
             return {};
         }
 
-        auto json = JsonValue::from_string(file_or_error.value()->read_all());
+        auto file_content = file_or_error.value()->read_until_eof();
+        if (file_content.is_error()) {
+            warnln("Could not read {}: {}", vm_path, file_or_error.error());
+            return {};
+        }
+
+        auto json = JsonValue::from_string(file_content.value());
         if (json.is_error() || !json.value().is_array()) {
             warnln("Invalid contents in {}", vm_path);
             return {};
