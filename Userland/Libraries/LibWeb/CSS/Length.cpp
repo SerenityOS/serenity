@@ -76,8 +76,12 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
         return m_value * root_font_metrics.font_size;
     case Type::Ex:
         return m_value * font_metrics.x_height;
+    case Type::Rex:
+        return m_value * root_font_metrics.x_height;
     case Type::Ch:
         return m_value * font_metrics.zero_advance;
+    case Type::Rch:
+        return m_value * root_font_metrics.zero_advance;
     case Type::Lh:
         return m_value * font_metrics.line_height;
     case Type::Rlh:
@@ -137,8 +141,12 @@ char const* Length::unit_name() const
         return "rem";
     case Type::Ex:
         return "ex";
+    case Type::Rex:
+        return "rex";
     case Type::Ch:
         return "ch";
+    case Type::Rch:
+        return "rch";
     case Type::Lh:
         return "lh";
     case Type::Rlh:
@@ -179,8 +187,12 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
         return Length::Type::Rem;
     } else if (name.equals_ignoring_ascii_case("ex"sv)) {
         return Length::Type::Ex;
+    } else if (name.equals_ignoring_ascii_case("rex"sv)) {
+        return Length::Type::Rex;
     } else if (name.equals_ignoring_ascii_case("ch"sv)) {
         return Length::Type::Ch;
+    } else if (name.equals_ignoring_ascii_case("rch"sv)) {
+        return Length::Type::Rch;
     } else if (name.equals_ignoring_ascii_case("lh"sv)) {
         return Length::Type::Lh;
     } else if (name.equals_ignoring_ascii_case("rlh"sv)) {
