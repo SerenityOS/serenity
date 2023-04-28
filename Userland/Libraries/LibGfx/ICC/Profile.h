@@ -87,6 +87,7 @@ enum class ColorSpace : u32 {
 };
 StringView data_color_space_name(ColorSpace);
 StringView profile_connection_space_name(ColorSpace);
+unsigned number_of_components_in_color_space(ColorSpace);
 
 // ICC v4, 7.2.10 Primary platform field, Table 20 — Primary platforms
 enum class PrimaryPlatform : u32 {

@@ -421,7 +421,19 @@ StringView data_color_space_name(ColorSpace color_space)
     VERIFY_NOT_REACHED();
 }
 
-static int number_of_components_in_color_space(ColorSpace color_space)
+StringView profile_connection_space_name(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::PCSXYZ:
+        return "PCSXYZ"sv;
+    case ColorSpace::PCSLAB:
+        return "PCSLAB"sv;
+    default:
+        return data_color_space_name(color_space);
+    }
+}
+
+unsigned number_of_components_in_color_space(ColorSpace color_space)
 {
     switch (color_space) {
     case ColorSpace::Gray:
@@ -466,18 +478,6 @@ static int number_of_components_in_color_space(ColorSpace color_space)
         return 15;
     }
     VERIFY_NOT_REACHED();
-}
-
-StringView profile_connection_space_name(ColorSpace color_space)
-{
-    switch (color_space) {
-    case ColorSpace::PCSXYZ:
-        return "PCSXYZ"sv;
-    case ColorSpace::PCSLAB:
-        return "PCSLAB"sv;
-    default:
-        return data_color_space_name(color_space);
-    }
 }
 
 StringView primary_platform_name(PrimaryPlatform primary_platform)
@@ -1178,7 +1178,7 @@ ErrorOr<void> Profile::check_tag_types()
         // "The device representation corresponds to the header’s “data colour space” field.
         //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type.
         //  If this field is 0, device coordinates are not provided."
-        if (int number_of_device_coordinates = static_cast<NamedColor2TagData const&>(*type.value()).number_of_device_coordinates();
+        if (auto number_of_device_coordinates = static_cast<NamedColor2TagData const&>(*type.value()).number_of_device_coordinates();
             number_of_device_coordinates != 0 && number_of_device_coordinates != number_of_components_in_color_space(data_color_space())) {
             return Error::from_string_literal("ICC::Profile: namedColor2Tag number of device coordinates inconsistent with data color space");
         }
