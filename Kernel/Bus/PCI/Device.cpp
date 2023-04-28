@@ -13,6 +13,7 @@ namespace Kernel::PCI {
 Device::Device(DeviceIdentifier const& pci_identifier)
     : m_pci_identifier(pci_identifier)
 {
+    m_pci_identifier->initialize();
 }
 
 bool Device::is_msi_capable() const
