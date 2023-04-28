@@ -220,4 +220,12 @@ void initialize_interrupts()
     }
 }
 
+// Sets the reserved flag on `number_of_irqs` if it finds unused interrupt handler on
+// a contiguous range.
+ErrorOr<u8> reserve_interrupt_handlers([[maybe_unused]] u8 number_of_irqs)
+{
+    TODO();
+    return Error::from_errno(EINVAL);
+}
+
 }
