@@ -89,6 +89,12 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
         return m_value * font_metrics.zero_advance;
     case Type::Rch:
         return m_value * root_font_metrics.zero_advance;
+    case Type::Ic:
+        // FIXME: Use the "advance measure of the “水” (CJK water ideograph, U+6C34) glyph"
+        return m_value * font_metrics.font_size;
+    case Type::Ric:
+        // FIXME: Use the "advance measure of the “水” (CJK water ideograph, U+6C34) glyph"
+        return m_value * root_font_metrics.font_size;
     case Type::Lh:
         return m_value * font_metrics.line_height;
     case Type::Rlh:
@@ -158,6 +164,10 @@ char const* Length::unit_name() const
         return "ch";
     case Type::Rch:
         return "rch";
+    case Type::Ic:
+        return "ic";
+    case Type::Ric:
+        return "ric";
     case Type::Lh:
         return "lh";
     case Type::Rlh:
@@ -208,6 +218,10 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
         return Length::Type::Ch;
     } else if (name.equals_ignoring_ascii_case("rch"sv)) {
         return Length::Type::Rch;
+    } else if (name.equals_ignoring_ascii_case("ic"sv)) {
+        return Length::Type::Ic;
+    } else if (name.equals_ignoring_ascii_case("ric"sv)) {
+        return Length::Type::Ric;
     } else if (name.equals_ignoring_ascii_case("lh"sv)) {
         return Length::Type::Lh;
     } else if (name.equals_ignoring_ascii_case("rlh"sv)) {
