@@ -21,6 +21,9 @@ namespace Web::CSS {
 Length::FontMetrics::FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const& pixel_metrics, CSSPixels line_height)
     : font_size(font_size)
     , x_height(pixel_metrics.x_height)
+    // FIXME: This is only approximately the cap height. The spec suggests measuring the "O" glyph:
+    //        https://www.w3.org/TR/css-values-4/#cap
+    , cap_height(pixel_metrics.ascent)
     , zero_advance(pixel_metrics.advance_of_ascii_zero + pixel_metrics.glyph_spacing)
     , line_height(line_height)
 {
@@ -78,6 +81,10 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
         return m_value * font_metrics.x_height;
     case Type::Rex:
         return m_value * root_font_metrics.x_height;
+    case Type::Cap:
+        return m_value * font_metrics.cap_height;
+    case Type::Rcap:
+        return m_value * root_font_metrics.cap_height;
     case Type::Ch:
         return m_value * font_metrics.zero_advance;
     case Type::Rch:
@@ -143,6 +150,10 @@ char const* Length::unit_name() const
         return "ex";
     case Type::Rex:
         return "rex";
+    case Type::Cap:
+        return "cap";
+    case Type::Rcap:
+        return "rcap";
     case Type::Ch:
         return "ch";
     case Type::Rch:
@@ -189,6 +200,10 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
         return Length::Type::Ex;
     } else if (name.equals_ignoring_ascii_case("rex"sv)) {
         return Length::Type::Rex;
+    } else if (name.equals_ignoring_ascii_case("cap"sv)) {
+        return Length::Type::Cap;
+    } else if (name.equals_ignoring_ascii_case("rcap"sv)) {
+        return Length::Type::Rcap;
     } else if (name.equals_ignoring_ascii_case("ch"sv)) {
         return Length::Type::Ch;
     } else if (name.equals_ignoring_ascii_case("rch"sv)) {
