@@ -18,8 +18,8 @@
 #include <AK/Error.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/Devices/AsyncDeviceRequest.h>
-#include <Kernel/FileSystem/DeviceFileTypes.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/SysFS/Registry.h>
 #include <Kernel/FileSystem/SysFS/Subsystems/DeviceIdentifiers/DeviceComponent.h>
