@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2022, Eli Youngs <eli.m.youngs@gmail.com>
  * Copyright (c) 2023, Rodrigo Tobar <rtobarc@gmail.com>
+ * Copyright (c) 2023, kleines Filmröllchen <filmroellchen@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Format.h>
 #include <AK/GenericLexer.h>
+#include <AK/LexicalPath.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Tuple.h>
@@ -16,6 +18,8 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/System.h>
+#include <LibFileSystem/FileSystem.h>
+#include <LibFileSystem/TempFile.h>
 #include <LibMain/Main.h>
 #include <LibRegex/RegexMatcher.h>
 #include <LibRegex/RegexOptions.h>
@@ -605,28 +609,55 @@ enum class CycleDecision {
     Quit
 };
 
-class InputFile {
-    AK_MAKE_NONCOPYABLE(InputFile);
+// In most cases, just an input to sed. However, files are also written to when the -i option is used.
+class File {
+    AK_MAKE_NONCOPYABLE(File);
 
-    InputFile(NonnullOwnPtr<Core::BufferedFile>&& file)
-        : m_file(move(file))
+    File(LexicalPath input_file_path, NonnullOwnPtr<Core::BufferedFile>&& file, OwnPtr<Core::File>&& output, OwnPtr<FileSystem::TempFile>&& temp_file)
+        : m_input_file_path(move(input_file_path))
+        , m_file(move(file))
+        , m_output(move(output))
+        , m_output_temp_file(move(temp_file))
     {
     }
 
 public:
-    static ErrorOr<InputFile> create(NonnullOwnPtr<Core::File>&& file)
+    // Used for -i mode.
+    static ErrorOr<File> create_with_output_file(LexicalPath input_path, NonnullOwnPtr<Core::File>&& file)
     {
         auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
-        return InputFile(move(buffered_file));
+        auto temp_file = TRY(FileSystem::TempFile::create_temp_file());
+        // Open the file as read-write, since we need to later copy its contents to the original file.
+        auto output_file = TRY(Core::File::open(temp_file->path(), Core::File::OpenMode::ReadWrite | Core::File::OpenMode::Truncate));
+        return File { move(input_path), move(buffered_file), move(output_file), move(temp_file) };
     }
 
-    static ErrorOr<InputFile> create_from_stdin()
+    // Used for non -i mode.
+    static ErrorOr<File> create(LexicalPath input_path, NonnullOwnPtr<Core::File>&& file)
     {
-        return create(TRY(Core::File::standard_input()));
+        auto buffered_file = TRY(Core::BufferedFile::create(move(file)));
+        return File { move(input_path), move(buffered_file), nullptr, nullptr };
     }
 
-    InputFile(InputFile&&) = default;
-    InputFile& operator=(InputFile&&) = default;
+    static ErrorOr<File> create_from_stdin()
+    {
+        // While this path is correct, we don't ever use it since there's no output file to be copied over.
+        return create(LexicalPath { "/proc/self/fd/0" }, TRY(Core::File::standard_input()));
+    }
+
+    static ErrorOr<File> create_from_stdout()
+    {
+        // We hack standard output into `File` to avoid having two versions of `write_pattern_space`.
+        return File {
+            LexicalPath { "/proc/self/fd/1" },
+            TRY(Core::BufferedFile::create(TRY(Core::File::standard_input()))),
+            TRY(Core::File::standard_output()),
+            nullptr,
+        };
+    }
+
+    File(File&&) = default;
+    File& operator=(File&&) = default;
 
     ErrorOr<bool> has_next() const
     {
@@ -641,17 +672,44 @@ public:
         return m_current_line;
     }
 
+    ErrorOr<void> write_until_depleted(ReadonlyBytes buffer)
+    {
+        // If we're not in -i mode, stdout, not us, is responsible for writing the output.
+        if (!m_output)
+            return {};
+        return m_output->write_until_depleted(buffer);
+    }
+
     size_t line_number() const { return m_line_number; }
 
+    ErrorOr<void> copy_output_to_original_file()
+    {
+        if (!m_output)
+            return {};
+        VERIFY(m_output->is_open());
+
+        TRY(m_output->seek(0, SeekMode::SetPosition));
+        auto source_stat = TRY(Core::System::stat(m_output_temp_file->path()));
+        return FileSystem::copy_file(
+            m_input_file_path.string(), m_output_temp_file->path(), source_stat, *m_output,
+            FileSystem::PreserveMode::Ownership | FileSystem::PreserveMode::Permissions);
+    }
+
 private:
+    LexicalPath m_input_file_path;
     NonnullOwnPtr<Core::BufferedFile> m_file;
+
+    // Only in use if we're editing in place.
+    OwnPtr<Core::File> m_output;
+    OwnPtr<FileSystem::TempFile> m_output_temp_file;
+
     size_t m_line_number { 0 };
     DeprecatedString m_current_line;
     constexpr static size_t MAX_SUPPORTED_LINE_SIZE = 4096;
     Array<u8, MAX_SUPPORTED_LINE_SIZE> m_buffer;
 };
 
-static ErrorOr<void> write_pattern_space(Core::File& output, StringBuilder& pattern_space)
+static ErrorOr<void> write_pattern_space(File& output, StringBuilder& pattern_space)
 {
     TRY(output.write_until_depleted(pattern_space.string_view().bytes()));
     TRY(output.write_until_depleted("\n"sv.bytes()));
@@ -699,9 +757,8 @@ static void print_unambiguous(StringView pattern_space)
     outln("{}$", unambiguous_output.string_view());
 }
 
-static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& pattern_space, StringBuilder& hold_space, InputFile& input, bool suppress_default_output)
+static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& pattern_space, StringBuilder& hold_space, File& input, File& stdout, bool suppress_default_output)
 {
-    auto stdout = TRY(Core::File::standard_output());
     auto cycle_decision = CycleDecision::None;
 
     switch (command.function) {
@@ -731,19 +788,20 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         break;
     case 'n':
         if (!suppress_default_output)
-            TRY(write_pattern_space(*stdout, pattern_space));
+            TRY(write_pattern_space(stdout, pattern_space));
+        TRY(write_pattern_space(input, pattern_space));
         if (TRY(input.has_next())) {
             pattern_space.clear();
             pattern_space.append(TRY(input.next()));
         }
         break;
     case 'p':
-        TRY(write_pattern_space(*stdout, pattern_space));
+        TRY(write_pattern_space(stdout, pattern_space));
         break;
     case 'P': {
         auto pattern_sv = pattern_space.string_view();
         auto newline_position = pattern_sv.find('\n').value_or(pattern_sv.length() - 1);
-        TRY(stdout->write_until_depleted(pattern_sv.substring_view(0, newline_position + 1).bytes()));
+        TRY(stdout.write_until_depleted(pattern_sv.substring_view(0, newline_position + 1).bytes()));
         break;
     }
     case 'q':
@@ -757,7 +815,8 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
         pattern_space.clear();
         pattern_space.append(result);
         if (replacement_made && s_args.print)
-            TRY(write_pattern_space(*stdout, pattern_space));
+            TRY(write_pattern_space(stdout, pattern_space));
+        TRY(write_pattern_space(input, pattern_space));
         break;
     }
     case 'x':
@@ -776,16 +835,17 @@ static ErrorOr<CycleDecision> apply(Command const& command, StringBuilder& patte
     return cycle_decision;
 }
 
-static ErrorOr<void> run(Vector<InputFile>& inputs, Script& script, bool suppress_default_output)
+static ErrorOr<void> run(Vector<File>& inputs, Script& script, bool suppress_default_output)
 {
     // TODO: verify all commands are valid
 
     StringBuilder pattern_space;
     StringBuilder hold_space;
-    auto stdout = TRY(Core::File::standard_output());
 
     // TODO: extend to multiple input files
     auto& input = inputs[0];
+    auto stdout = TRY(File::create_from_stdout());
+
     // main loop
     while (TRY(input.has_next())) {
 
@@ -805,7 +865,7 @@ static ErrorOr<void> run(Vector<InputFile>& inputs, Script& script, bool suppres
         for (auto& command : script.commands()) {
             if (!command.is_enabled())
                 continue;
-            auto command_cycle_decision = TRY(apply(command, pattern_space, hold_space, input, suppress_default_output));
+            auto command_cycle_decision = TRY(apply(command, pattern_space, hold_space, input, stdout, suppress_default_output));
             if (command_cycle_decision == CycleDecision::Next || command_cycle_decision == CycleDecision::Quit) {
                 cycle_decision = command_cycle_decision;
                 break;
@@ -818,7 +878,7 @@ static ErrorOr<void> run(Vector<InputFile>& inputs, Script& script, bool suppres
             break;
 
         if (!suppress_default_output)
-            TRY(write_pattern_space(*stdout, pattern_space));
+            TRY(write_pattern_space(stdout, pattern_space));
         pattern_space.clear();
     }
     return {};
@@ -826,9 +886,10 @@ static ErrorOr<void> run(Vector<InputFile>& inputs, Script& script, bool suppres
 
 ErrorOr<int> serenity_main(Main::Arguments args)
 {
-    TRY(Core::System::pledge("stdio cpath rpath wpath"));
+    TRY(Core::System::pledge("stdio cpath rpath wpath fattr chown"));
 
     bool suppress_default_output = false;
+    bool edit_in_place = false;
     Core::ArgsParser arg_parser;
     Script script;
     Vector<StringView> pos_args;
@@ -862,8 +923,16 @@ ErrorOr<int> serenity_main(Main::Arguments args)
             return script.add_script_part(script_argument);
         },
     });
+    arg_parser.add_option(edit_in_place, "Edit file in place, implies -n", "in-place", 'i');
     arg_parser.add_positional_argument(pos_args, "script and/or file", "...", Core::ArgsParser::Required::No);
     arg_parser.parse(args);
+
+    // When editing in-place, there's also no default output.
+    suppress_default_output |= edit_in_place;
+
+    // We only need fattr and chown for in-place editing.
+    if (!edit_in_place)
+        TRY(Core::System::pledge("stdio cpath rpath wpath"));
 
     if (script.commands().is_empty()) {
         if (pos_args.is_empty()) {
@@ -877,28 +946,36 @@ ErrorOr<int> serenity_main(Main::Arguments args)
     }
 
     for (auto const& input_filename : TRY(script.input_filenames())) {
-        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(input_filename)), "r"sv));
+        TRY(Core::System::unveil(TRY(FileSystem::absolute_path(input_filename)), edit_in_place ? "rwc"sv : "r"sv));
     }
     for (auto const& output_filename : TRY(script.output_filenames())) {
         TRY(Core::System::unveil(TRY(FileSystem::absolute_path(output_filename)), "w"sv));
     }
+    TRY(Core::System::unveil("/tmp"sv, "rwc"sv));
 
-    Vector<InputFile> inputs;
+    Vector<File> inputs;
     for (auto const& filename : pos_args) {
         if (filename == "-"sv) {
-            inputs.empend(TRY(InputFile::create_from_stdin()));
+            inputs.empend(TRY(File::create_from_stdin()));
         } else {
             TRY(Core::System::unveil(TRY(FileSystem::absolute_path(filename)), edit_in_place ? "rwc"sv : "r"sv));
             auto file = TRY(Core::File::open(filename, Core::File::OpenMode::Read));
-            inputs.empend(TRY(InputFile::create(move(file))));
+            if (edit_in_place)
+                inputs.empend(TRY(File::create_with_output_file(LexicalPath { filename }, move(file))));
+            else
+                inputs.empend(TRY(File::create(LexicalPath { filename }, move(file))));
         }
     }
     TRY(Core::System::unveil(nullptr, nullptr));
 
     if (inputs.is_empty()) {
-        inputs.empend(TRY(InputFile::create_from_stdin()));
+        inputs.empend(TRY(File::create_from_stdin()));
     }
 
     TRY(run(inputs, script, suppress_default_output));
+
+    for (auto& input : inputs)
+        TRY(input.copy_output_to_original_file());
+
     return 0;
 }
