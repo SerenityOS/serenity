@@ -111,10 +111,17 @@ public:
     };
 
 private:
+    enum class ClaimDrawBehavior {
+        Always,
+        Prompt
+    };
+
     ChessWidget() = default;
 
     virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
     virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
+
+    bool check_game_over(ClaimDrawBehavior);
 
     Chess::Board m_board;
     Chess::Board m_board_playback;
