@@ -423,6 +423,15 @@ public:
         return element;
     }
 
+    [[nodiscard]] Vector<T> values() const
+    {
+        Vector<T> list;
+        list.ensure_capacity(size());
+        for (auto& value : *this)
+            list.unchecked_append(value);
+        return list;
+    }
+
 private:
     bool should_grow() const { return ((m_size + 1) * 100) >= (m_capacity * grow_at_load_factor_percent); }
     static constexpr size_t size_in_bytes(size_t capacity) { return sizeof(BucketType) * capacity; }
