@@ -33,22 +33,22 @@ using u16Fixed16Number = u32;
 
 // ICC V4, 4.14 XYZNumber
 struct XYZNumber {
-    BigEndian<s15Fixed16Number> x;
-    BigEndian<s15Fixed16Number> y;
-    BigEndian<s15Fixed16Number> z;
+    BigEndian<s15Fixed16Number> X;
+    BigEndian<s15Fixed16Number> Y;
+    BigEndian<s15Fixed16Number> Z;
 
     XYZNumber() = default;
 
     XYZNumber(XYZ const& xyz)
-        : x(round(xyz.x * 0x1'0000))
-        , y(round(xyz.y * 0x1'0000))
-        , z(round(xyz.z * 0x1'0000))
+        : X(round(xyz.X * 0x1'0000))
+        , Y(round(xyz.Y * 0x1'0000))
+        , Z(round(xyz.Z * 0x1'0000))
     {
     }
 
     operator XYZ() const
     {
-        return XYZ { x / (float)0x1'0000, y / (float)0x1'0000, z / (float)0x1'0000 };
+        return XYZ { X / (float)0x1'0000, Y / (float)0x1'0000, Z / (float)0x1'0000 };
     }
 };
 

@@ -21,9 +21,9 @@ using S15Fixed16 = FixedPoint<16, i32>;
 using U16Fixed16 = FixedPoint<16, u32>;
 
 struct XYZ {
-    float x { 0 };
-    float y { 0 };
-    float z { 0 };
+    float X { 0 };
+    float Y { 0 };
+    float Z { 0 };
 
     bool operator==(const XYZ&) const = default;
 };
@@ -906,6 +906,6 @@ template<>
 struct AK::Formatter<Gfx::ICC::XYZ> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Gfx::ICC::XYZ const& xyz)
     {
-        return Formatter<FormatString>::format(builder, "X = {}, Y = {}, Z = {}"sv, xyz.x, xyz.y, xyz.z);
+        return Formatter<FormatString>::format(builder, "X = {}, Y = {}, Z = {}"sv, xyz.X, xyz.Y, xyz.Z);
     }
 };
