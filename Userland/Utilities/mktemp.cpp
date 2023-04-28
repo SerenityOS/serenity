@@ -77,7 +77,6 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             auto const* cwd_ptr = getcwd(nullptr, 0);
             target_directory = StringView { cwd_ptr, strlen(cwd_ptr) };
         } else {
-            LexicalPath template_path(file_template);
             char const* env_directory = getenv("TMPDIR");
             target_directory = env_directory && *env_directory ? StringView { env_directory, strlen(env_directory) } : "/tmp"sv;
         }
