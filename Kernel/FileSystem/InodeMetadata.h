@@ -9,7 +9,7 @@
 #include <AK/Error.h>
 #include <AK/Span.h>
 #include <AK/Time.h>
-#include <Kernel/FileSystem/DeviceFileTypes.h>
+#include <Kernel/API/DeviceFileTypes.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/UnixTypes.h>
