@@ -100,12 +100,24 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
     case Type::Rlh:
         return m_value * root_font_metrics.line_height;
     case Type::Vw:
+    case Type::Svw:
+    case Type::Lvw:
+    case Type::Dvw:
         return viewport_rect.width() * (m_value / 100);
     case Type::Vh:
+    case Type::Svh:
+    case Type::Lvh:
+    case Type::Dvh:
         return viewport_rect.height() * (m_value / 100);
     case Type::Vmin:
+    case Type::Svmin:
+    case Type::Lvmin:
+    case Type::Dvmin:
         return min(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
     case Type::Vmax:
+    case Type::Svmax:
+    case Type::Lvmax:
+    case Type::Dvmax:
         return max(viewport_rect.width(), viewport_rect.height()) * (m_value / 100);
     default:
         VERIFY_NOT_REACHED();
@@ -174,12 +186,36 @@ char const* Length::unit_name() const
         return "rlh";
     case Type::Vw:
         return "vw";
+    case Type::Svw:
+        return "svw";
+    case Type::Lvw:
+        return "lvw";
+    case Type::Dvw:
+        return "dvw";
     case Type::Vh:
         return "vh";
+    case Type::Svh:
+        return "svh";
+    case Type::Lvh:
+        return "lvh";
+    case Type::Dvh:
+        return "dvh";
     case Type::Vmin:
         return "vmin";
+    case Type::Svmin:
+        return "svmin";
+    case Type::Lvmin:
+        return "lvmin";
+    case Type::Dvmin:
+        return "dvmin";
     case Type::Vmax:
         return "vmax";
+    case Type::Svmax:
+        return "svmax";
+    case Type::Lvmax:
+        return "lvmax";
+    case Type::Dvmax:
+        return "dvmax";
     case Type::Cm:
         return "cm";
     case Type::Mm:
@@ -228,12 +264,36 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
         return Length::Type::Rlh;
     } else if (name.equals_ignoring_ascii_case("vw"sv)) {
         return Length::Type::Vw;
+    } else if (name.equals_ignoring_ascii_case("svw"sv)) {
+        return Length::Type::Svw;
+    } else if (name.equals_ignoring_ascii_case("lvw"sv)) {
+        return Length::Type::Lvw;
+    } else if (name.equals_ignoring_ascii_case("dvw"sv)) {
+        return Length::Type::Dvw;
     } else if (name.equals_ignoring_ascii_case("vh"sv)) {
         return Length::Type::Vh;
+    } else if (name.equals_ignoring_ascii_case("svh"sv)) {
+        return Length::Type::Svh;
+    } else if (name.equals_ignoring_ascii_case("lvh"sv)) {
+        return Length::Type::Lvh;
+    } else if (name.equals_ignoring_ascii_case("dvh"sv)) {
+        return Length::Type::Dvh;
     } else if (name.equals_ignoring_ascii_case("vmin"sv)) {
         return Length::Type::Vmin;
+    } else if (name.equals_ignoring_ascii_case("svmin"sv)) {
+        return Length::Type::Svmin;
+    } else if (name.equals_ignoring_ascii_case("lvmin"sv)) {
+        return Length::Type::Lvmin;
+    } else if (name.equals_ignoring_ascii_case("dvmin"sv)) {
+        return Length::Type::Dvmin;
     } else if (name.equals_ignoring_ascii_case("vmax"sv)) {
         return Length::Type::Vmax;
+    } else if (name.equals_ignoring_ascii_case("svmax"sv)) {
+        return Length::Type::Svmax;
+    } else if (name.equals_ignoring_ascii_case("lvmax"sv)) {
+        return Length::Type::Lvmax;
+    } else if (name.equals_ignoring_ascii_case("dvmax"sv)) {
+        return Length::Type::Dvmax;
     } else if (name.equals_ignoring_ascii_case("cm"sv)) {
         return Length::Type::Cm;
     } else if (name.equals_ignoring_ascii_case("mm"sv)) {

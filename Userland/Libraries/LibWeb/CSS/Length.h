@@ -33,9 +33,21 @@ public:
 
         // Viewport-relative
         Vw,
+        Svw,
+        Lvw,
+        Dvw,
         Vh,
+        Svh,
+        Lvh,
+        Dvh,
         Vmin,
+        Svmin,
+        Lvmin,
+        Dvmin,
         Vmax,
+        Svmax,
+        Lvmax,
+        Dvmax,
 
         // Absolute
         Cm,
@@ -105,9 +117,21 @@ public:
     bool is_viewport_relative() const
     {
         return m_type == Type::Vw
+            || m_type == Type::Svw
+            || m_type == Type::Lvw
+            || m_type == Type::Dvw
             || m_type == Type::Vh
+            || m_type == Type::Svh
+            || m_type == Type::Lvh
+            || m_type == Type::Dvh
             || m_type == Type::Vmin
-            || m_type == Type::Vmax;
+            || m_type == Type::Svmin
+            || m_type == Type::Lvmin
+            || m_type == Type::Dvmin
+            || m_type == Type::Vmax
+            || m_type == Type::Svmax
+            || m_type == Type::Lvmax
+            || m_type == Type::Dvmax;
     }
 
     bool is_relative() const
