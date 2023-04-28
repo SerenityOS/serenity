@@ -75,6 +75,8 @@ def read_port_dirs():
             print(f"Ports/{entry} is neither a port (not a directory) nor an ignored file?!")
             all_good = False
             continue
+        if os.listdir(entry) == []:
+            continue
         if not os.path.exists(entry + '/package.sh'):
             print(f"Ports/{entry}/ is missing its package.sh?!")
             all_good = False
