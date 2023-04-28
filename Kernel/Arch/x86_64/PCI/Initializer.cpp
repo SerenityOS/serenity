@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/x86_64/IO.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/Bus/PCI/Access.h>
@@ -69,6 +70,16 @@ UNMAP_AFTER_INIT void initialize()
     }
 
     PCIBusSysFSDirectory::initialize();
+
+    // IRQ from pin-based interrupt should be set as reserved as soon as possible so that the PCI device
+    // that chooses to use MSI(x) based interrupt can avoid sharing the IRQ with other devices.
+    MUST(PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
+        // A simple sanity check to avoid getting a panic in get_interrupt_handler() before setting the IRQ as reserved.
+        if (auto irq = device_identifier.interrupt_line().value(); irq < GENERIC_INTERRUPT_HANDLERS_COUNT) {
+            auto& handler = get_interrupt_handler(irq);
+            handler.set_reserved();
+        }
+    }));
 
     MUST(PCI::enumerate([&](DeviceIdentifier const& device_identifier) {
         dmesgln("{} {}", device_identifier.address(), device_identifier.hardware_id());
