@@ -183,7 +183,6 @@ add_link_options(-Wno-unused-command-line-argument)
 
 include_directories(.)
 include_directories(Userland/Libraries)
-include_directories(Userland/Libraries/LibC)
 include_directories(Userland/Libraries/LibCrypt)
 include_directories(Userland/Libraries/LibSystem)
 include_directories(Userland/Services)

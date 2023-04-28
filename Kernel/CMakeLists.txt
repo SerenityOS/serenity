@@ -693,9 +693,10 @@ add_compile_definitions(KERNEL)
 add_link_options(LINKER:-z,notext)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
+add_dependencies(kernel_heap install_libc_headers)
 
 add_executable(Kernel ${SOURCES})
-add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header)
+add_dependencies(Kernel generate_EscapeSequenceStateMachine.h generate_version_header install_libc_headers)
 
 if (NOT "${SERENITY_ARCH}" STREQUAL "aarch64")
     add_custom_command(
