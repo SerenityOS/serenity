@@ -179,7 +179,9 @@ int posix_spawn_file_actions_destroy(posix_spawn_file_actions_t* actions)
 // https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn_file_actions_init.html
 int posix_spawn_file_actions_init(posix_spawn_file_actions_t* actions)
 {
-    actions->state = new posix_spawn_file_actions_state;
+    actions->state = new (nothrow) posix_spawn_file_actions_state;
+    if (actions->state == nullptr)
+        return ENOMEM;
     return 0;
 }
 
