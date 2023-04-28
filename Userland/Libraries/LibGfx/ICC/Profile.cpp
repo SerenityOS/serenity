@@ -1356,4 +1356,122 @@ Crypto::Hash::MD5::DigestType Profile::compute_id(ReadonlyBytes bytes)
     return md5.digest();
 }
 
+static TagSignature tag_for_rendering_intent(RenderingIntent rendering_intent)
+{
+    // ICCv4, Table 25 — Profile type/profile tag and defined rendering intents
+    // This function assumes a profile class of InputDevice, DisplayDevice, OutputDevice, or ColorSpace.
+    switch (rendering_intent) {
+    case RenderingIntent::Perceptual:
+        return AToB0Tag;
+    case RenderingIntent::MediaRelativeColorimetric:
+    case RenderingIntent::ICCAbsoluteColorimetric:
+        return AToB1Tag;
+    case RenderingIntent::Saturation:
+        return AToB2Tag;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color)
+{
+    if (color.size() != number_of_components_in_color_space(data_color_space()))
+        return Error::from_string_literal("ICC::Profile: input color doesn't match color space size");
+
+    auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
+    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
+
+    switch (device_class()) {
+    case DeviceClass::InputDevice:
+    case DeviceClass::DisplayDevice:
+    case DeviceClass::OutputDevice:
+    case DeviceClass::ColorSpace: {
+        // ICC v4, 8.10 Precedence order of tag usage
+        // "There are several methods of colour transformation that can function within a single CMM. If data for more than
+        //  one method are included in the same profile, the following selection algorithm shall be used by the software
+        //  implementation."
+        // ICC v4, 8.10.2 Input, display, output, or colour space profile types
+        // "a) Use the BToD0Tag, BToD1Tag, BToD2Tag, BToD3Tag, DToB0Tag, DToB1Tag, DToB2Tag, or
+        //     DToB3Tag designated for the rendering intent if the tag is present, except where this tag is not needed or
+        //     supported by the CMM (if a particular processing element within the tag is not supported the tag is not
+        //     supported)."
+        // FIXME: Implement multiProcessElementsType one day.
+
+        // "b) Use the BToA0Tag, BToA1Tag, BToA2Tag, AToB0Tag, AToB1Tag, or AToB2Tag designated for the
+        //     rendering intent if present, when the tag in a) is not used."
+        if (has_tag(tag_for_rendering_intent(rendering_intent()))) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
+        }
+
+        // "c) Use the BToA0Tag or AToB0Tag if present, when the tags in a) and b) are not used."
+        // AToB0Tag is for the conversion _to_ PCS (BToA0Tag is for conversion _from_ PCS, so not needed in this function).
+        if (has_tag(AToB0Tag)) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
+        }
+
+        // "d) Use TRCs (redTRCTag, greenTRCTag, blueTRCTag, or grayTRCTag) and colorants
+        //     (redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag) when tags in a), b), and c) are not
+        //     used."
+        if (data_color_space() == ColorSpace::Gray) {
+            // ICC v4, F.2 grayTRCTag
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::to_pcs: Gray handling not yet implemented");
+        }
+
+        // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
+        if (data_color_space() == ColorSpace::RGB) {
+            if (!has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag }))
+                return Error::from_string_literal("ICC::Profile::to_pcs: RGB color space but neither LUT-based nor matrix-based tags present");
+            VERIFY(color.size() == 3); // True because of color.size() check further up.
+
+            // ICC v4, F.3 Three-component matrix-based profiles
+            // "linear_r = redTRC[device_r]
+            //  linear_g = greenTRC[device_g]
+            //  linear_b = blueTRC[device_b]
+            //  [connection_X] = [redMatrixColumn_X greenMatrixColumn_X blueMatrixColumn_X]   [ linear_r ]
+            //  [connection_Y] = [redMatrixColumn_Y greenMatrixColumn_Y blueMatrixColumn_Y] * [ linear_g ]
+            //  [connection_Z] = [redMatrixColumn_Z greenMatrixColumn_Z blueMatrixColumn_Z]   [ linear_b ]"
+            auto evaluate_curve = [this](TagSignature curve_tag, float f) {
+                auto const& trc = *m_tag_table.get(curve_tag).value();
+                VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
+                if (trc.type() == CurveTagData::Type)
+                    return static_cast<CurveTagData const&>(trc).evaluate(f);
+                return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
+            };
+
+            float linear_r = evaluate_curve(redTRCTag, color[0] / 255.f);
+            float linear_g = evaluate_curve(greenTRCTag, color[1] / 255.f);
+            float linear_b = evaluate_curve(blueTRCTag, color[2] / 255.f);
+
+            auto const& redMatrixColumn = red_matrix_column();
+            auto const& greenMatrixColumn = green_matrix_column();
+            auto const& blueMatrixColumn = blue_matrix_column();
+
+            float X = redMatrixColumn.x * linear_r + greenMatrixColumn.x * linear_g + blueMatrixColumn.x * linear_b;
+            float Y = redMatrixColumn.y * linear_r + greenMatrixColumn.y * linear_g + blueMatrixColumn.y * linear_b;
+            float Z = redMatrixColumn.z * linear_r + greenMatrixColumn.z * linear_g + blueMatrixColumn.z * linear_b;
+
+            return FloatVector3 { X, Y, Z };
+        }
+
+        return Error::from_string_literal("ICC::Profile::to_pcs: What happened?!");
+    }
+
+    case DeviceClass::DeviceLink:
+    case DeviceClass::Abstract:
+        // ICC v4, 8.10.3 DeviceLink or Abstract profile types
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: conversion for DeviceLink and Abstract not implemented");
+
+    case DeviceClass::NamedColor:
+        return Error::from_string_literal("ICC::Profile::to_pcs: to_pcs with NamedColor profile does not make sense");
+    }
+    VERIFY_NOT_REACHED();
+}
+
+XYZ const& Profile::red_matrix_column() const { return xyz_data(redMatrixColumnTag); }
+XYZ const& Profile::green_matrix_column() const { return xyz_data(greenMatrixColumnTag); }
+XYZ const& Profile::blue_matrix_column() const { return xyz_data(blueMatrixColumnTag); }
+
 }

@@ -16,6 +16,7 @@
 #include <LibCrypto/Hash/MD5.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
 #include <LibGfx/ICC/TagTypes.h>
+#include <LibGfx/Vector3.h>
 
 namespace Gfx::ICC {
 
@@ -257,11 +258,31 @@ public:
     bool is_v2() const { return version().major_version() == 2; }
     bool is_v4() const { return version().major_version() == 4; }
 
+    // FIXME: The color conversion stuff should be in some other class.
+
+    // Converts an 8-bits-per-channel color to the profile connection space.
+    // The color's number of channels must match number_of_components_in_color_space(data_color_space()).
+    // Do not call for DeviceLink or NamedColor profiles. (XXX others?)
+    // Call connection_space() to find out the space the result is in.
+    ErrorOr<FloatVector3> to_pcs(ReadonlyBytes);
+
+    // Only call these if you know that this is an RGB matrix-based profile.
+    XYZ const& red_matrix_column() const;
+    XYZ const& green_matrix_column() const;
+    XYZ const& blue_matrix_column() const;
+
 private:
     Profile(ProfileHeader const& header, OrderedHashMap<TagSignature, NonnullRefPtr<TagData>> tag_table)
         : m_header(header)
         , m_tag_table(move(tag_table))
     {
+    }
+
+    XYZ const& xyz_data(TagSignature tag) const
+    {
+        auto const& data = *m_tag_table.get(tag).value();
+        VERIFY(data.type() == XYZTagData::Type);
+        return static_cast<XYZTagData const&>(data).xyz();
     }
 
     ErrorOr<void> check_required_tags();
