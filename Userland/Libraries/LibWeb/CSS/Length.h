@@ -40,6 +40,14 @@ public:
         Svh,
         Lvh,
         Dvh,
+        Vi,
+        Svi,
+        Lvi,
+        Dvi,
+        Vb,
+        Svb,
+        Lvb,
+        Dvb,
         Vmin,
         Svmin,
         Lvmin,
@@ -124,6 +132,14 @@ public:
             || m_type == Type::Svh
             || m_type == Type::Lvh
             || m_type == Type::Dvh
+            || m_type == Type::Vi
+            || m_type == Type::Svi
+            || m_type == Type::Lvi
+            || m_type == Type::Dvi
+            || m_type == Type::Vb
+            || m_type == Type::Svb
+            || m_type == Type::Lvb
+            || m_type == Type::Dvb
             || m_type == Type::Vmin
             || m_type == Type::Svmin
             || m_type == Type::Lvmin
