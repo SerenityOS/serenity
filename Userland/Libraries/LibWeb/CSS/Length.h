@@ -164,8 +164,10 @@ public:
     {
         if (is_auto())
             return 0;
-        if (is_relative())
-            return relative_length_to_px(viewport_rect, font_metrics, root_font_metrics);
+        if (is_font_relative())
+            return font_relative_length_to_px(font_metrics, root_font_metrics);
+        if (is_viewport_relative())
+            return viewport_relative_length_to_px(viewport_rect);
         return absolute_length_to_px();
     }
 
@@ -200,7 +202,8 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
-    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
+    CSSPixels font_relative_length_to_px(FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
+    CSSPixels viewport_relative_length_to_px(CSSPixelRect const& viewport_rect) const;
 
     // Returns empty optional if it's already absolute.
     Optional<Length> absolutize(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
