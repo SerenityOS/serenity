@@ -87,24 +87,82 @@ def read_port_dirs():
 PORT_PROPERTIES = ('port', 'version', 'files', 'auth_type')
 
 
+def resolve_script_values(value: str, props: dict) -> str:
+    """Resolve all ${...} values in a string.
+
+    Args:
+        value (str): string to resolve
+        props (dict): dict of properties to resolve from
+
+    Returns:
+        str: resolved string
+    """
+    for match in re.finditer(r'\$\{([^}]+)\}', value):
+        key = match.group(1)
+        if key in props:
+            value = value.replace(match.group(0), props[key])
+    return value
+
+
+def get_script_props(dir: str, script_name: str, props: dict, depth: int = 0, max_depth: int = 10) -> dict:
+    """Parse a script file and return a dict of properties.
+
+    Args:
+        dir (str): root directory of script
+        script_name (str): name of script to parse
+        props (dict): dict of properties to resolve from
+        depth (int): current depth of recursion
+        max_depth (int): maximum depth of recursion
+
+    Returns:
+        dict: dict of properties
+    """
+    if depth > max_depth:
+        print(f"Maximum recursion depth exceeded while parsing {dir}/{script_name}")
+        return props
+
+    buffer: str = ""
+    for line in open(f"{dir}/{script_name}", 'r'):
+        # Ignore comments (search in reverse to ignore # in strings)
+        if line.rfind("#") > min(line.rfind('"'), line.rfind("'"), 0):
+            line = line[0:line.rfind("#")]
+
+        line = line.rstrip()
+        buffer += line
+
+        if "=" in buffer:
+            [key, value] = buffer.split("=", 1)
+
+            if (key.startswith(" ") or key.isspace()):
+                buffer = ""
+                continue
+
+            if (value.startswith(('"', "'"))):
+                if (value.endswith(value[0])):
+                    value = value[1:-1]
+                else:
+                    buffer += "\n"
+                    continue
+
+            props[key] = resolve_script_values(value, props)
+            buffer = ""
+        elif buffer.startswith('source'):
+            resolved_path = resolve_script_values(buffer, props).split(' ', 1)[1]
+            props = get_script_props(dir, resolved_path, props, depth + 1, max_depth)
+            buffer = ""
+        else:
+            buffer = ""
+    return props
+
+
 def get_port_properties(port):
     """Retrieves common port properties from its package.sh file.
 
     Returns:
         dict: keys are values from PORT_PROPERTIES, values are from the package.sh file
     """
-
-    package_sh_command = f"./package.sh showproperty {' '.join(PORT_PROPERTIES)}"
-    res = subprocess.run(f"cd {port}; exec {package_sh_command}", shell=True, capture_output=True)
-    if res.returncode == 0:
-        results = res.stdout.decode('utf-8').split('\n\n')
-        props = {prop: results[i].strip() for i, prop in enumerate(PORT_PROPERTIES)}
-    else:
-        print((
-            f'Executing "{package_sh_command}" script for port {port} failed with '
-            f'exit code {res.returncode}, output from stderr:\n{res.stderr.decode("utf-8").strip()}'
-        ))
-        props = {x: '' for x in PORT_PROPERTIES}
+    props = get_script_props(port, 'package.sh', {})
+    props = {prop: props[prop] if prop in props else '' for prop in PORT_PROPERTIES}
     return props
 
 
