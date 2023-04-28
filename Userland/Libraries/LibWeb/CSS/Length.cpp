@@ -18,6 +18,14 @@
 
 namespace Web::CSS {
 
+Length::FontMetrics::FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const& pixel_metrics, CSSPixels line_height)
+    : font_size(font_size)
+    , x_height(pixel_metrics.x_height)
+    , zero_advance(pixel_metrics.advance_of_ascii_zero + pixel_metrics.glyph_spacing)
+    , line_height(line_height)
+{
+}
+
 Length::Length(int value, Type type)
     : m_type(type)
     , m_value(value)
@@ -59,22 +67,21 @@ Length Length::resolved(Layout::Node const& layout_node) const
     return *this;
 }
 
-CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
 {
     switch (m_type) {
     case Type::Em:
-        return m_value * font_size;
+        return m_value * font_metrics.font_size;
     case Type::Rem:
-        return m_value * root_font_size;
+        return m_value * root_font_metrics.font_size;
     case Type::Ex:
         return m_value * font_metrics.x_height;
     case Type::Ch:
-        // FIXME: Use layout_node.font().pixel_size() when writing-mode is not horizontal-tb (it has to be implemented first)
-        return m_value * (font_metrics.advance_of_ascii_zero + font_metrics.glyph_spacing);
+        return m_value * font_metrics.zero_advance;
     case Type::Lh:
-        return m_value * line_height;
+        return m_value * font_metrics.line_height;
     case Type::Rlh:
-        return m_value * root_line_height;
+        return m_value * root_font_metrics.line_height;
     case Type::Vw:
         return viewport_rect.width() * (m_value / 100);
     case Type::Vh:
@@ -99,7 +106,19 @@ CSSPixels Length::to_px(Layout::Node const& layout_node) const
     auto* root_element = layout_node.document().document_element();
     if (!root_element || !root_element->layout_node())
         return 0;
-    return to_px(viewport_rect, layout_node.font().pixel_metrics(), layout_node.computed_values().font_size(), root_element->layout_node()->computed_values().font_size(), layout_node.line_height(), root_element->layout_node()->line_height());
+
+    FontMetrics font_metrics {
+        layout_node.computed_values().font_size(),
+        layout_node.font().pixel_metrics(),
+        layout_node.line_height()
+    };
+    FontMetrics root_font_metrics {
+        root_element->layout_node()->computed_values().font_size(),
+        root_element->layout_node()->font().pixel_metrics(),
+        root_element->layout_node()->line_height()
+    };
+
+    return to_px(viewport_rect, font_metrics, root_font_metrics);
 }
 
 ErrorOr<String> Length::to_string() const
@@ -193,20 +212,20 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
     return {};
 }
 
-Optional<Length> Length::absolutize(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+Optional<Length> Length::absolutize(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
 {
     if (is_px())
         return {};
     if (is_absolute() || is_relative()) {
-        auto px = to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+        auto px = to_px(viewport_rect, font_metrics, root_font_metrics);
         return CSS::Length::make_px(px);
     }
     return {};
 }
 
-Length Length::absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+Length Length::absolutized(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
 {
-    return absolutize(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height).value_or(*this);
+    return absolutize(viewport_rect, font_metrics, root_font_metrics).value_or(*this);
 }
 
 }

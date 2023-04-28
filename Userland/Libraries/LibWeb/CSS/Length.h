@@ -44,6 +44,15 @@ public:
         Auto,
     };
 
+    struct FontMetrics {
+        FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const&, CSSPixels line_height);
+
+        CSSPixels font_size;
+        CSSPixels x_height;
+        CSSPixels zero_advance;
+        CSSPixels line_height;
+    };
+
     static Optional<Type> unit_from_name(StringView);
 
     Length(int value, Type type);
@@ -98,12 +107,12 @@ public:
 
     CSSPixels to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
     {
         if (is_auto())
             return 0;
         if (is_relative())
-            return relative_length_to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+            return relative_length_to_px(viewport_rect, font_metrics, root_font_metrics);
         return absolute_length_to_px();
     }
 
@@ -138,11 +147,11 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
-    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
+    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
 
     // Returns empty optional if it's already absolute.
-    Optional<Length> absolutize(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
-    Length absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
+    Optional<Length> absolutize(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
+    Length absolutized(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
 
 private:
     char const* unit_name() const;

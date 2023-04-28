@@ -167,11 +167,10 @@ bool MediaFeature::compare(HTML::Window const& window, MediaFeatureValue left, C
 
             auto const& initial_font = window.associated_document().style_computer().initial_font();
             Gfx::FontPixelMetrics const& initial_font_metrics = initial_font.pixel_metrics();
-            float initial_font_size = initial_font.presentation_size();
-            float initial_line_height = initial_font_metrics.line_spacing();
+            Length::FontMetrics font_metrics { static_cast<CSSPixels>(initial_font.presentation_size()), initial_font_metrics, initial_font_metrics.line_spacing() };
 
-            left_px = left.length().to_px(viewport_rect, initial_font_metrics, initial_font_size, initial_font_size, initial_line_height, initial_line_height);
-            right_px = right.length().to_px(viewport_rect, initial_font_metrics, initial_font_size, initial_font_size, initial_line_height, initial_line_height);
+            left_px = left.length().to_px(viewport_rect, font_metrics, font_metrics);
+            right_px = right.length().to_px(viewport_rect, font_metrics, font_metrics);
         }
 
         switch (comparison) {

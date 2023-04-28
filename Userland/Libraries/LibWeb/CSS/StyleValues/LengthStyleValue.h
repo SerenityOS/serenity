@@ -23,7 +23,7 @@ public:
     virtual bool has_length() const override { return true; }
     virtual ErrorOr<String> to_string() const override { return m_length.to_string(); }
     virtual Length to_length() const override { return m_length; }
-    virtual ValueComparingNonnullRefPtr<StyleValue const> absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const override;
+    virtual ValueComparingNonnullRefPtr<StyleValue const> absolutized(CSSPixelRect const& viewport_rect, Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const override;
 
     bool properties_equal(LengthStyleValue const& other) const { return m_length == other.m_length; }
 
