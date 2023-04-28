@@ -358,8 +358,17 @@ void TableFormattingContext::distribute_width_to_columns()
         }
 
         auto width_to_distribute = available_width - columns_total_used_width();
-        for (auto& column : m_columns) {
-            column.used_width += width_to_distribute * column.max_width / grid_max;
+        if (grid_max == 0) {
+            // If total max width of columns is zero then divide distributable width equally among them
+            auto column_width = width_to_distribute / m_columns.size();
+            for (auto& column : m_columns) {
+                column.used_width = column_width;
+            }
+        } else {
+            // Distribute width to columns proportionally to their max width
+            for (auto& column : m_columns) {
+                column.used_width += width_to_distribute * column.max_width / grid_max;
+            }
         }
     }
 }

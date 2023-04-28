@@ -1,0 +1,7 @@
+Viewport <#document> at (0,0) content-size 800x600 children: not-inline
+  BlockContainer <html> at (0,0) content-size 800x16 children: not-inline
+    BlockContainer <body> at (8,8) content-size 784x0 children: not-inline
+      TableWrapper <(anonymous)> at (8,8) content-size 200x0 children: not-inline
+        TableBox <div.table> at (8,8) content-size 200x0 children: not-inline
+          TableRowBox <div.row> at (8,8) content-size 200x0 children: not-inline
+            TableCellBox <div.cell> at (8,8) content-size 200x0 children: not-inline
