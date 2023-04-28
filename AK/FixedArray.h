@@ -142,7 +142,7 @@ public:
 
     void swap(FixedArray<T>& other)
     {
-        ::swap(m_storage, other.m_storage);
+        AK::swap(m_storage, other.m_storage);
     }
 
     void fill_with(T const& value)

@@ -110,13 +110,13 @@ public:
 
     void swap(NonnullOwnPtr& other)
     {
-        ::swap(m_ptr, other.m_ptr);
+        AK::swap(m_ptr, other.m_ptr);
     }
 
     template<typename U>
     void swap(NonnullOwnPtr<U>& other)
     {
-        ::swap(m_ptr, other.m_ptr);
+        AK::swap(m_ptr, other.m_ptr);
     }
 
     template<typename U>
