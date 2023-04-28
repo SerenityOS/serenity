@@ -95,3 +95,61 @@ TEST_CASE(built_in_sRGB)
         i = AK::convert_between_host_and_big_endian(i);
     EXPECT(memmem(serialized_bytes.data(), serialized_bytes.size(), sf32, sizeof(sf32)) != nullptr);
 }
+
+TEST_CASE(to_pcs)
+{
+    auto sRGB = MUST(Gfx::ICC::sRGB());
+    EXPECT(sRGB->data_color_space() == Gfx::ICC::ColorSpace::RGB);
+    EXPECT(sRGB->connection_space() == Gfx::ICC::ColorSpace::PCSXYZ);
+
+    auto sRGB_curve_pointer = MUST(Gfx::ICC::sRGB_curve());
+    VERIFY(sRGB_curve_pointer->type() == Gfx::ICC::ParametricCurveTagData::Type);
+    auto const& sRGB_curve = static_cast<Gfx::ICC::ParametricCurveTagData const&>(*sRGB_curve_pointer);
+    EXPECT_EQ(sRGB_curve.evaluate(0.f), 0.f);
+    EXPECT_EQ(sRGB_curve.evaluate(1.f), 1.f);
+
+    auto xyz_from_sRGB = [sRGB](u8 r, u8 g, u8 b) {
+        u8 rgb[3] = { r, g, b };
+        return MUST(sRGB->to_pcs(rgb));
+    };
+
+    auto vec3_from_xyz = [](Gfx::ICC::XYZ const& xyz) {
+        return FloatVector3 { xyz.x, xyz.y, xyz.z };
+    };
+
+#define EXPECT_APPROXIMATE_VECTOR3(v1, v2) \
+    EXPECT_APPROXIMATE((v1)[0], (v2)[0]);  \
+    EXPECT_APPROXIMATE((v1)[1], (v2)[1]);  \
+    EXPECT_APPROXIMATE((v1)[2], (v2)[2]);
+
+    // At 0 and 255, the gamma curve is (exactly) 0 and 1, so these just test the matrix part.
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(0, 0, 0), FloatVector3(0, 0, 0));
+
+    auto r_xyz = vec3_from_xyz(sRGB->red_matrix_column());
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(255, 0, 0), r_xyz);
+
+    auto g_xyz = vec3_from_xyz(sRGB->green_matrix_column());
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(0, 255, 0), g_xyz);
+
+    auto b_xyz = vec3_from_xyz(sRGB->blue_matrix_column());
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(0, 0, 255), b_xyz);
+
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(255, 255, 0), r_xyz + g_xyz);
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(255, 0, 255), r_xyz + b_xyz);
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(0, 255, 255), g_xyz + b_xyz);
+
+    // FIXME: This should also be equal to sRGB->pcs_illuminant() and to the profiles mediaWhitePointTag,
+    // but at the moment it's off by a bit too much. See also FIXME in WellKnownProfiles.cpp.
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(255, 255, 255), r_xyz + g_xyz + b_xyz);
+
+    // These test the curve part.
+    float f64 = sRGB_curve.evaluate(64 / 255.f);
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(64, 64, 64), (r_xyz + g_xyz + b_xyz) * f64);
+
+    float f128 = sRGB_curve.evaluate(128 / 255.f);
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(128, 128, 128), (r_xyz + g_xyz + b_xyz) * f128);
+
+    // Test for curve and matrix combined.
+    float f192 = sRGB_curve.evaluate(192 / 255.f);
+    EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(64, 128, 192), r_xyz * f64 + g_xyz * f128 + b_xyz * f192);
+}
