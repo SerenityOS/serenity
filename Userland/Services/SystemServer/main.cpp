@@ -155,39 +155,6 @@ static ErrorOr<void> create_devtmpfs_char_device(StringView name, mode_t mode, u
     return Core::System::mknod(name, mode | S_IFCHR, makedev(major, minor));
 }
 
-static ErrorOr<void> populate_devtmpfs_char_devices_based_on_sysfs()
-{
-    Core::DirIterator di("/sys/dev/char/", Core::DirIterator::SkipParentAndBaseDir);
-    if (di.has_error()) {
-        auto error = di.error();
-        warnln("Failed to open /sys/dev/char - {}", error);
-        return error;
-    }
-    while (di.has_next()) {
-        auto entry_name = di.next_path().split(':');
-        VERIFY(entry_name.size() == 2);
-        auto major_number = entry_name[0].to_uint<unsigned>().value();
-        auto minor_number = entry_name[1].to_uint<unsigned>().value();
-        switch (major_number) {
-        case 2: {
-            switch (minor_number) {
-            case 10: {
-                TRY(create_devtmpfs_char_device("/dev/devctl"sv, 0660, 2, 10));
-                break;
-            }
-            default:
-                warnln("Unknown character device {}:{}", major_number, minor_number);
-            }
-            break;
-        }
-
-        default:
-            break;
-        }
-    }
-    return {};
-}
-
 static ErrorOr<bool> read_one_or_eof(NonnullOwnPtr<Core::File>& file, DeviceEvent& event)
 {
     auto const read_buf = TRY(file->read_some({ (u8*)&event, sizeof(DeviceEvent) }));
@@ -393,43 +360,43 @@ static ErrorOr<void> populate_devtmpfs()
 {
     mode_t old_mask = umask(0);
     printf("Changing umask %#o\n", old_mask);
-    TRY(populate_devtmpfs_char_devices_based_on_sysfs());
+    TRY(create_devtmpfs_char_device("/dev/devctl"sv, 0660, 2, 10));
     TRY(populate_devtmpfs_devices_based_on_devctl());
     umask(old_mask);
+    TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
     return {};
 }
 
-static ErrorOr<void> prepare_synthetic_filesystems()
+static ErrorOr<void> prepare_bare_minimum_filesystem_mounts()
 {
     TRY(Core::System::remount("/"sv, MS_NODEV | MS_NOSUID | MS_RDONLY));
     // FIXME: Find a better way to all of this stuff, without hardcoding all of this!
     TRY(Core::System::mount(-1, "/proc"sv, "proc"sv, MS_NOSUID));
     TRY(Core::System::mount(-1, "/sys"sv, "sys"sv, 0));
     TRY(Core::System::mount(-1, "/dev"sv, "ram"sv, MS_NOSUID | MS_NOEXEC | MS_NOREGULAR));
-
     TRY(Core::System::mount(-1, "/tmp"sv, "ram"sv, MS_NOSUID | MS_NODEV));
     // NOTE: Set /tmp to have a sticky bit with 0777 permissions.
     TRY(Core::System::chmod("/tmp"sv, 01777));
+    return {};
+}
 
+static ErrorOr<void> prepare_bare_minimum_devtmpfs_directory_structure()
+{
     TRY(Core::System::mkdir("/dev/audio"sv, 0755));
     TRY(Core::System::mkdir("/dev/input"sv, 0755));
     TRY(Core::System::mkdir("/dev/input/keyboard"sv, 0755));
     TRY(Core::System::mkdir("/dev/input/mouse"sv, 0755));
-
     TRY(Core::System::symlink("/proc/self/fd/0"sv, "/dev/stdin"sv));
     TRY(Core::System::symlink("/proc/self/fd/1"sv, "/dev/stdout"sv));
     TRY(Core::System::symlink("/proc/self/fd/2"sv, "/dev/stderr"sv));
-
     TRY(Core::System::mkdir("/dev/gpu"sv, 0755));
-
-    TRY(populate_devtmpfs());
-
     TRY(Core::System::mkdir("/dev/pts"sv, 0755));
-
     TRY(Core::System::mount(-1, "/dev/pts"sv, "devpts"sv, 0));
+    return {};
+}
 
-    TRY(Core::System::symlink("/dev/random"sv, "/dev/urandom"sv));
-
+static ErrorOr<void> prepare_permissions_after_populating_devtmpfs()
+{
     TRY(Core::System::chmod("/dev/urandom"sv, 0666));
 
     auto phys_group = TRY(Core::System::getgrnam("phys"sv));
@@ -458,21 +425,16 @@ static ErrorOr<void> prepare_synthetic_filesystems()
     VERIFY(audio_group.has_value());
     TRY(Core::System::chown("/dev/audio"sv, 0, audio_group->gr_gid));
     TRY(chown_all_matching_device_nodes_under_specific_directory("/dev/audio"sv, audio_group.release_value()));
-
-    // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
-    // because otherwise these file descriptors won't have a custody, making
-    // the ProcFS file descriptor links (at /proc/PID/fd/{0,1,2}) to have an
-    // absolute path of "device:1,3" instead of something like "/dev/null".
-    // This affects also every other process that inherits the file descriptors
-    // from SystemServer, so it is important for other things (also for ProcFS
-    // tests that are running in CI mode).
-    int stdin_new_fd = TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
-
-    TRY(Core::System::dup2(stdin_new_fd, 0));
-    TRY(Core::System::dup2(stdin_new_fd, 1));
-    TRY(Core::System::dup2(stdin_new_fd, 2));
-
     TRY(Core::System::endgrent());
+    return {};
+}
+
+static ErrorOr<void> prepare_synthetic_filesystems()
+{
+    TRY(prepare_bare_minimum_filesystem_mounts());
+    TRY(prepare_bare_minimum_devtmpfs_directory_structure());
+    TRY(populate_devtmpfs());
+    TRY(prepare_permissions_after_populating_devtmpfs());
     return {};
 }
 
@@ -520,6 +482,22 @@ static ErrorOr<void> create_tmp_semaphore_directory()
     return {};
 }
 
+static ErrorOr<void> reopen_base_file_descriptors()
+{
+    // Note: We open the /dev/null device and set file descriptors 0, 1, 2 to it
+    // because otherwise these file descriptors won't have a custody, making
+    // the ProcFS file descriptor links (at /proc/PID/fd/{0,1,2}) to have an
+    // absolute path of "device:1,3" instead of something like "/dev/null".
+    // This affects also every other process that inherits the file descriptors
+    // from SystemServer, so it is important for other things (also for ProcFS
+    // tests that are running in CI mode).
+    int stdin_new_fd = TRY(Core::System::open("/dev/null"sv, O_NONBLOCK));
+    TRY(Core::System::dup2(stdin_new_fd, 0));
+    TRY(Core::System::dup2(stdin_new_fd, 1));
+    TRY(Core::System::dup2(stdin_new_fd, 2));
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     bool user = false;
@@ -530,6 +508,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!user) {
         TRY(mount_all_filesystems());
         TRY(prepare_synthetic_filesystems());
+        TRY(reopen_base_file_descriptors());
     }
 
     TRY(Core::System::pledge("stdio proc exec tty accept unix rpath wpath cpath chown fattr id sigaction"));
