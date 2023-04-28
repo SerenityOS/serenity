@@ -114,7 +114,7 @@ TEST_CASE(to_pcs)
     };
 
     auto vec3_from_xyz = [](Gfx::ICC::XYZ const& xyz) {
-        return FloatVector3 { xyz.x, xyz.y, xyz.z };
+        return FloatVector3 { xyz.X, xyz.Y, xyz.Z };
     };
 
 #define EXPECT_APPROXIMATE_VECTOR3(v1, v2) \

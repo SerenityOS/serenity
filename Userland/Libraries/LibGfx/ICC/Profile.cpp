@@ -273,7 +273,7 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
     XYZ xyz = (XYZ)header.pcs_illuminant;
 
     /// "The value, when rounded to four decimals, shall be X = 0,9642, Y = 1,0 and Z = 0,8249."
-    if (round(xyz.x * 10'000) != 9'642 || round(xyz.y * 10'000) != 10'000 || round(xyz.z * 10'000) != 8'249)
+    if (round(xyz.X * 10'000) != 9'642 || round(xyz.Y * 10'000) != 10'000 || round(xyz.Z * 10'000) != 8'249)
         return Error::from_string_literal("ICC::Profile: Invalid pcs illuminant");
 
     return xyz;
@@ -1124,9 +1124,9 @@ ErrorOr<void> Profile::check_tag_types()
         auto& xyz_type = static_cast<XYZTagData const&>(*type.value());
         if (xyz_type.xyzs().size() != 1)
             return Error::from_string_literal("ICC::Profile: luminanceTag has unexpected size");
-        if (is_v4() && xyz_type.xyzs()[0].x != 0)
+        if (is_v4() && xyz_type.xyzs()[0].X != 0)
             return Error::from_string_literal("ICC::Profile: luminanceTag.x unexpectedly not 0");
-        if (is_v4() && xyz_type.xyzs()[0].z != 0)
+        if (is_v4() && xyz_type.xyzs()[0].Z != 0)
             return Error::from_string_literal("ICC::Profile: luminanceTag.z unexpectedly not 0");
     }
 
@@ -1448,9 +1448,9 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color)
             auto const& greenMatrixColumn = green_matrix_column();
             auto const& blueMatrixColumn = blue_matrix_column();
 
-            float X = redMatrixColumn.x * linear_r + greenMatrixColumn.x * linear_g + blueMatrixColumn.x * linear_b;
-            float Y = redMatrixColumn.y * linear_r + greenMatrixColumn.y * linear_g + blueMatrixColumn.y * linear_b;
-            float Z = redMatrixColumn.z * linear_r + greenMatrixColumn.z * linear_g + blueMatrixColumn.z * linear_b;
+            float X = redMatrixColumn.X * linear_r + greenMatrixColumn.X * linear_g + blueMatrixColumn.X * linear_b;
+            float Y = redMatrixColumn.Y * linear_r + greenMatrixColumn.Y * linear_g + blueMatrixColumn.Y * linear_b;
+            float Z = redMatrixColumn.Z * linear_r + greenMatrixColumn.Z * linear_g + blueMatrixColumn.Z * linear_b;
 
             return FloatVector3 { X, Y, Z };
         }
