@@ -238,6 +238,9 @@ public:
     u8 read8(size_t offset) const;
     u16 read16(size_t offset) const;
     u32 read32(size_t offset) const;
+    void write8(size_t offset, u8 value) const;
+    void write16(size_t offset, u16 value) const;
+    void write32(size_t offset, u32 value) const;
 
 private:
     const Address m_address;

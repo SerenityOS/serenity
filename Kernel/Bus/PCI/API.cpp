@@ -285,6 +285,27 @@ u32 Capability::read32(size_t offset) const
     return read32_offsetted(identifier, m_ptr + offset);
 }
 
+void Capability::write8(size_t offset, u8 value) const
+{
+    auto& identifier = get_device_identifier(m_address);
+    SpinlockLocker locker(identifier.operation_lock());
+    write8_offsetted(identifier, m_ptr + offset, value);
+}
+
+void Capability::write16(size_t offset, u16 value) const
+{
+    auto& identifier = get_device_identifier(m_address);
+    SpinlockLocker locker(identifier.operation_lock());
+    write16_offsetted(identifier, m_ptr + offset, value);
+}
+
+void Capability::write32(size_t offset, u32 value) const
+{
+    auto& identifier = get_device_identifier(m_address);
+    SpinlockLocker locker(identifier.operation_lock());
+    write32_offsetted(identifier, m_ptr + offset, value);
+}
+
 DeviceIdentifier const& get_device_identifier(Address address)
 {
     return Access::the().get_device_identifier(address);
