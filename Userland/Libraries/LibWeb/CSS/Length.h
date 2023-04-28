@@ -21,7 +21,9 @@ public:
         Em,
         Rem,
         Ex,
+        Rex,
         Ch,
+        Rch,
         Lh,
         Rlh,
 
@@ -84,7 +86,9 @@ public:
         return m_type == Type::Em
             || m_type == Type::Rem
             || m_type == Type::Ex
+            || m_type == Type::Rex
             || m_type == Type::Ch
+            || m_type == Type::Rch
             || m_type == Type::Lh
             || m_type == Type::Rlh;
     }
