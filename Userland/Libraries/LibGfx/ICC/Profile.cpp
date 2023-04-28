@@ -744,7 +744,7 @@ ErrorOr<void> Profile::check_required_tags()
         //  [...] Only the PCSXYZ encoding can be used with matrix/TRC models.
         //  8.3.4 Monochrome Input profiles
         //  In addition to the tags listed in 8.2, a monochrome Input profile shall contain the following tag:
-        //  - grayTRCTag (see 9.2.29).
+        //  - grayTRCTag (see 9.2.29)."
         bool has_n_component_lut_based_tags = has_tag(AToB0Tag);
         bool has_three_component_matrix_based_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
         bool has_monochrome_tags = has_tag(grayTRCTag);
