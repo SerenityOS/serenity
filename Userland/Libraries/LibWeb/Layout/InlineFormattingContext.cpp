@@ -256,6 +256,7 @@ void InlineFormattingContext::generate_line_boxes(LayoutMode layout_mode)
             break;
         case InlineLevelIterator::Item::Type::Element: {
             auto& box = verify_cast<Layout::Box>(*item.node);
+            compute_inset(box);
             line_builder.break_if_needed(item.border_box_width());
             line_builder.append_box(box, item.border_start + item.padding_start, item.padding_end + item.border_end, item.margin_start, item.margin_end);
             break;
