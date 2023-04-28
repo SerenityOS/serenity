@@ -235,10 +235,6 @@ static ErrorOr<void> populate_devtmpfs_devices_based_on_devctl()
                     TRY(create_devtmpfs_char_device("/dev/input/mouse/0"sv, 0666, 10, 0));
                     break;
                 }
-                case 183: {
-                    TRY(create_devtmpfs_char_device("/dev/hwrng"sv, 0666, 10, 183));
-                    break;
-                }
                 default:
                     warnln("Unknown character device {}:{}", major_number, minor_number);
                 }
