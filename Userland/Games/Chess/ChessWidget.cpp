@@ -262,62 +262,10 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
         m_playback_move_number = board().moves().size();
         m_playback = false;
         m_board_playback = m_board;
-
-        if (board().game_result() != Chess::Board::Result::NotFinished) {
-            bool over = true;
-            StringView msg;
-            switch (board().game_result()) {
-            case Chess::Board::Result::CheckMate:
-                if (board().turn() == Chess::Color::White) {
-                    msg = "Black wins by Checkmate."sv;
-                } else {
-                    msg = "White wins by Checkmate."sv;
-                }
-                break;
-            case Chess::Board::Result::StaleMate:
-                msg = "Draw by Stalemate."sv;
-                break;
-            case Chess::Board::Result::FiftyMoveRule:
-                update();
-                if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?"sv, "Claim Draw?"sv,
-                        GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
-                    == GUI::Dialog::ExecResult::Yes) {
-                    msg = "Draw by 50 move rule."sv;
-                } else {
-                    over = false;
-                }
-                break;
-            case Chess::Board::Result::SeventyFiveMoveRule:
-                msg = "Draw by 75 move rule."sv;
-                break;
-            case Chess::Board::Result::ThreeFoldRepetition:
-                update();
-                if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?"sv, "Claim Draw?"sv,
-                        GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
-                    == GUI::Dialog::ExecResult::Yes) {
-                    msg = "Draw by threefold repetition."sv;
-                } else {
-                    over = false;
-                }
-                break;
-            case Chess::Board::Result::FiveFoldRepetition:
-                msg = "Draw by fivefold repetition."sv;
-                break;
-            case Chess::Board::Result::InsufficientMaterial:
-                msg = "Draw by insufficient material."sv;
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-            if (over) {
-                set_override_cursor(Gfx::StandardCursor::None);
-                set_drag_enabled(false);
-                update();
-                GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
-            }
-        } else {
+        // If two humans are playing, ask whether they wish to accept a draw.
+        auto claim_draw_behavior = m_engine.is_null() ? ClaimDrawBehavior::Prompt : ClaimDrawBehavior::Always;
+        if (!check_game_over(claim_draw_behavior))
             input_engine_move();
-        }
     }
 
     update();
@@ -485,8 +433,11 @@ void ChessWidget::input_engine_move()
         if (!want_engine_move())
             return;
         set_drag_enabled(drag_was_enabled);
-        if (!move.is_error())
+        if (!move.is_error()) {
             VERIFY(board().apply_move(move.release_value()));
+            if (check_game_over(ClaimDrawBehavior::Prompt))
+                return;
+        }
 
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
@@ -711,6 +662,47 @@ int ChessWidget::resign()
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;
+}
+
+bool ChessWidget::check_game_over(ClaimDrawBehavior claim_draw_behavior)
+{
+    if (board().game_result() == Chess::Board::Result::NotFinished)
+        return false;
+
+    auto over = true;
+    switch (board().game_result()) {
+    case Chess::Board::Result::FiftyMoveRule:
+        if (claim_draw_behavior == ClaimDrawBehavior::Prompt) {
+            update();
+            auto dialog_result = GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?"sv, "Claim Draw?"sv,
+                GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo);
+
+            if (dialog_result != GUI::Dialog::ExecResult::Yes)
+                over = false;
+        }
+        break;
+    case Chess::Board::Result::ThreeFoldRepetition:
+        if (claim_draw_behavior == ClaimDrawBehavior::Prompt) {
+            update();
+            auto dialog_result = GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?"sv, "Claim Draw?"sv,
+                GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo);
+            if (dialog_result != GUI::Dialog::ExecResult::Yes)
+                over = false;
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (!over)
+        return false;
+
+    set_override_cursor(Gfx::StandardCursor::None);
+    set_drag_enabled(false);
+    update();
+    auto msg = Chess::Board::result_to_string(board().game_result(), board().turn());
+    GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
+    return true;
 }
 
 void ChessWidget::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)
