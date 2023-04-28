@@ -890,6 +890,12 @@ public:
 
     Vector<XYZ, 1> const& xyzs() const { return m_xyzs; }
 
+    XYZ const& xyz() const
+    {
+        VERIFY(m_xyzs.size() == 1);
+        return m_xyzs[0];
+    }
+
 private:
     Vector<XYZ, 1> m_xyzs;
 };
