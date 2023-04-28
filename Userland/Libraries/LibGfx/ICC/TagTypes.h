@@ -21,9 +21,9 @@ using S15Fixed16 = FixedPoint<16, i32>;
 using U16Fixed16 = FixedPoint<16, u32>;
 
 struct XYZ {
-    double x { 0 };
-    double y { 0 };
-    double z { 0 };
+    float x { 0 };
+    float y { 0 };
+    float z { 0 };
 
     bool operator==(const XYZ&) const = default;
 };

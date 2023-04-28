@@ -48,7 +48,7 @@ struct XYZNumber {
 
     operator XYZ() const
     {
-        return XYZ { x / (double)0x1'0000, y / (double)0x1'0000, z / (double)0x1'0000 };
+        return XYZ { x / (float)0x1'0000, y / (float)0x1'0000, z / (float)0x1'0000 };
     }
 };
 
