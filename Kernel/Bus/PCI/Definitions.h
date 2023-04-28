@@ -79,6 +79,9 @@ static constexpr size_t mmio_device_space_size = 4096;
 static constexpr u16 none_value = 0xffff;
 static constexpr size_t memory_range_per_bus = mmio_device_space_size * to_underlying(Limits::MaxFunctionsPerDevice) * to_underlying(Limits::MaxDevicesPerBus);
 static constexpr u32 bar_address_mask = 0xfffffff0;
+static constexpr u16 msix_control_table_mask = 0x07ff;
+static constexpr u8 msix_table_bir_mask = 0x7;
+static constexpr u16 msix_table_offset_mask = 0xfff8;
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {
@@ -319,6 +322,22 @@ protected:
     Vector<Capability> m_capabilities;
 };
 
+class MSIxInfo {
+public:
+    MSIxInfo(u16 table_size, u8 table_bar, u32 table_offset)
+        : table_size(table_size)
+        , table_bar(table_bar)
+        , table_offset(table_offset)
+    {
+    }
+
+    MSIxInfo() = default;
+
+    u16 table_size {};
+    u8 table_bar {};
+    u32 table_offset {};
+};
+
 class DeviceIdentifier
     : public RefCounted<DeviceIdentifier>
     , public EnumerableDeviceIdentifier {
@@ -326,6 +345,11 @@ class DeviceIdentifier
 
 public:
     static ErrorOr<NonnullRefPtr<DeviceIdentifier>> from_enumerable_identifier(EnumerableDeviceIdentifier const& other_identifier);
+
+    void initialize();
+    bool is_msix_capable() const { return m_msix_info.table_size > 0; }
+    u8 get_msix_table_bar() const { return m_msix_info.table_bar; }
+    u32 get_msix_table_offset() const { return m_msix_info.table_offset; }
 
     Spinlock<LockRank::None>& operation_lock() { return m_operation_lock; }
     Spinlock<LockRank::None>& operation_lock() const { return m_operation_lock; }
@@ -349,6 +373,7 @@ private:
     }
 
     mutable Spinlock<LockRank::None> m_operation_lock;
+    MSIxInfo m_msix_info {};
 };
 
 class Domain;
