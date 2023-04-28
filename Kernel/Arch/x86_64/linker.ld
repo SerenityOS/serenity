@@ -69,8 +69,6 @@ SECTIONS
         start_of_kernel_data = .;
         *(.data*)
         end_of_kernel_data = .;
-        . = ALIGN(4K);
-        *(.heap)
     } :data
 
     .ro_after_init ALIGN(4K) : AT(ADDR(.ro_after_init))
@@ -87,6 +85,9 @@ SECTIONS
         *(COMMON)
         *(.bss*)
         end_of_kernel_bss = .;
+
+        . = ALIGN(4K);
+        *(.heap)
     } :bss
 
     .dynamic ALIGN(4K) : AT (ADDR(.dynamic))

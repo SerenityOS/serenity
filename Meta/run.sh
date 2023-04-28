@@ -328,9 +328,16 @@ if [ "$NATIVE_WINDOWS_QEMU" -ne "1" ]; then
     -qmp unix:qmp-sock,server,nowait"
 fi
 
-SERENITY_KERNEL_AND_INITRD="
+if [ "$SERENITY_ARCH" = "aarch64" ]; then
+    SERENITY_KERNEL_AND_INITRD="
     -kernel Kernel/Kernel
     "
+else
+    SERENITY_KERNEL_AND_INITRD="
+    -kernel Kernel/Prekernel/Prekernel
+    -initrd Kernel/Kernel
+    "
+fi
 
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="

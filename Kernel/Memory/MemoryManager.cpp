@@ -38,6 +38,9 @@ extern u8 end_of_unmap_after_init[];
 extern u8 start_of_kernel_ksyms[];
 extern u8 end_of_kernel_ksyms[];
 
+extern multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
+extern size_t multiboot_copy_boot_modules_count;
+
 namespace Kernel::Memory {
 
 ErrorOr<FlatPtr> page_round_up(FlatPtr x)
@@ -267,6 +270,15 @@ UNMAP_AFTER_INIT void MemoryManager::parse_memory_map()
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::LowMemory, PhysicalAddress(0x00000000), PhysicalAddress(1 * MiB) });
 #endif
         global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::Kernel, PhysicalAddress(virtual_to_low_physical((FlatPtr)start_of_kernel_image)), PhysicalAddress(page_round_up(virtual_to_low_physical((FlatPtr)end_of_kernel_image)).release_value_but_fixme_should_propagate_errors()) });
+
+        if (multiboot_flags & 0x4) {
+            auto* bootmods_start = multiboot_copy_boot_modules_array;
+            auto* bootmods_end = bootmods_start + multiboot_copy_boot_modules_count;
+
+            for (auto* bootmod = bootmods_start; bootmod < bootmods_end; bootmod++) {
+                global_data.used_memory_ranges.append(UsedMemoryRange { UsedMemoryRangeType::BootModule, PhysicalAddress(bootmod->start), PhysicalAddress(bootmod->end) });
+            }
+        }
 
         auto* mmap_begin = multiboot_memory_map;
         auto* mmap_end = multiboot_memory_map + multiboot_memory_map_count;
