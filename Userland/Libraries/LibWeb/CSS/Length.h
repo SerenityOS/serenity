@@ -26,6 +26,8 @@ public:
         Rcap,
         Ch,
         Rch,
+        Ic,
+        Ric,
         Lh,
         Rlh,
 
@@ -94,6 +96,8 @@ public:
             || m_type == Type::Rcap
             || m_type == Type::Ch
             || m_type == Type::Rch
+            || m_type == Type::Ic
+            || m_type == Type::Ric
             || m_type == Type::Lh
             || m_type == Type::Rlh;
     }
