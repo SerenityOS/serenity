@@ -22,6 +22,8 @@ public:
         Rem,
         Ex,
         Rex,
+        Cap,
+        Rcap,
         Ch,
         Rch,
         Lh,
@@ -51,6 +53,7 @@ public:
 
         CSSPixels font_size;
         CSSPixels x_height;
+        CSSPixels cap_height;
         CSSPixels zero_advance;
         CSSPixels line_height;
     };
@@ -87,6 +90,8 @@ public:
             || m_type == Type::Rem
             || m_type == Type::Ex
             || m_type == Type::Rex
+            || m_type == Type::Cap
+            || m_type == Type::Rcap
             || m_type == Type::Ch
             || m_type == Type::Rch
             || m_type == Type::Lh
