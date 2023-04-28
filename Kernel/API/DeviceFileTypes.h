@@ -8,9 +8,5 @@
 
 #include <AK/DistinctNumeric.h>
 
-namespace Kernel {
-
 AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MajorNumber);
 AK_TYPEDEF_DISTINCT_ORDERED_ID(unsigned, MinorNumber);
-
-}
