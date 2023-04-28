@@ -394,8 +394,20 @@ void TableFormattingContext::determine_intrisic_size_of_table_container(Availabl
     }
 }
 
-void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
+void TableFormattingContext::compute_table_height(LayoutMode layout_mode)
 {
+    // First pass of row height calculation:
+    for (auto& row : m_rows) {
+        auto row_computed_height = row.box->computed_values().height();
+        if (row_computed_height.is_length()) {
+            auto height_of_containing_block = m_state.get(*row.box->containing_block()).content_height();
+            auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
+            auto row_used_height = row_computed_height.resolved(row.box, height_of_containing_block_as_length).to_px(row.box);
+            row.base_height = max(row.base_height, row_used_height);
+        }
+    }
+
+    // First pass of cells layout:
     for (auto& cell : m_cells) {
         auto& row = m_rows[cell.row_index];
         auto& cell_state = m_state.get_mutable(cell.box);
@@ -430,7 +442,7 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
             auto cell_used_height = cell_computed_height.resolved(cell.box, height_of_containing_block_as_length).to_px(cell.box);
             cell_state.set_content_height(cell_used_height - cell_state.border_box_top() - cell_state.border_box_bottom());
 
-            row.used_height = max(row.used_height, cell_used_height);
+            row.base_height = max(row.base_height, cell_used_height);
         }
 
         cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
@@ -441,17 +453,134 @@ void TableFormattingContext::calculate_row_heights(LayoutMode layout_mode)
 
         cell.baseline = box_baseline(m_state, cell.box);
 
-        row.used_height = max(row.used_height, cell_state.border_box_height());
+        row.base_height = max(row.base_height, cell_state.border_box_height());
         row.baseline = max(row.baseline, cell.baseline);
     }
 
+    CSSPixels sum_rows_height = 0;
+    for (auto& row : m_rows) {
+        sum_rows_height += row.base_height;
+    }
+
+    // The height of a table is the sum of the row heights plus any cell spacing or borders.
+    m_table_height = sum_rows_height;
+
+    if (!table_box().computed_values().height().is_auto()) {
+        // If the table has a height property with a value other than auto, it is treated as a minimum height for the
+        // table grid, and will eventually be distributed to the height of the rows if their collective minimum height
+        // ends up smaller than this number.
+        CSSPixels height_of_table_containing_block = m_state.get(*table_wrapper().containing_block()).content_height();
+        auto specified_table_height = table_box().computed_values().height().resolved(table_box(), CSS::Length::make_px(height_of_table_containing_block)).to_px(table_box());
+        if (m_table_height < specified_table_height) {
+            m_table_height = specified_table_height;
+        }
+    }
+
+    for (auto& row : m_rows) {
+        // Reference size is the largest of
+        // - its initial base height and
+        // - its new base height (the one evaluated during the second layout pass, where percentages used in
+        //   rowgroups/rows/cells' specified heights were resolved according to the table height, instead of
+        //   being ignored as 0px).
+
+        // Assign reference size to base size. Later reference size might change to largee value during
+        // second pass of rows layout.
+        row.reference_height = row.base_height;
+    }
+
+    // Second pass of rows height calculation:
+    // At this point percentage row height can be resolved because final table height is calculated.
     for (auto& row : m_rows) {
         auto row_computed_height = row.box->computed_values().height();
-        if (row_computed_height.is_length()) {
-            auto height_of_containing_block = m_state.get(*row.box->containing_block()).content_height();
-            auto height_of_containing_block_as_length = CSS::Length::make_px(height_of_containing_block);
-            auto row_used_height = row_computed_height.resolved(row.box, height_of_containing_block_as_length).to_px(row.box);
-            row.used_height = max(row.used_height, row_used_height);
+        if (row_computed_height.is_percentage()) {
+            auto row_used_height = row_computed_height.resolved(row.box, CSS::Length::make_px(m_table_height)).to_px(row.box);
+            row.reference_height = max(row.reference_height, row_used_height);
+        } else {
+            continue;
+        }
+    }
+
+    // Second pass cells layout:
+    // At this point percantage cell height can be resolved because final table heigh is calculated.
+    for (auto& cell : m_cells) {
+        auto& row = m_rows[cell.row_index];
+        auto& cell_state = m_state.get_mutable(cell.box);
+
+        CSSPixels span_width = 0;
+        for (size_t i = 0; i < cell.column_span; ++i)
+            span_width += m_columns[cell.column_index + i].used_width;
+
+        auto height_of_containing_block_as_length = CSS::Length::make_px(m_table_height);
+
+        auto cell_computed_height = cell.box->computed_values().height();
+        if (cell_computed_height.is_percentage()) {
+            auto cell_used_height = cell_computed_height.resolved(cell.box, height_of_containing_block_as_length).to_px(cell.box);
+            cell_state.set_content_height(cell_used_height - cell_state.border_box_top() - cell_state.border_box_bottom());
+
+            row.reference_height = max(row.reference_height, cell_used_height);
+        } else {
+            continue;
+        }
+
+        cell_state.set_content_width((span_width - cell_state.border_box_left() - cell_state.border_box_right()));
+        if (auto independent_formatting_context = layout_inside(cell.box, layout_mode, cell_state.available_inner_space_or_constraints_from(*m_available_space))) {
+            independent_formatting_context->parent_context_did_dimension_child_root_box();
+        }
+
+        cell.baseline = box_baseline(m_state, cell.box);
+
+        row.reference_height = max(row.reference_height, cell_state.border_box_height());
+        row.baseline = max(row.baseline, cell.baseline);
+    }
+}
+
+void TableFormattingContext::distribute_height_to_rows()
+{
+    CSSPixels sum_reference_height = 0;
+    for (auto& row : m_rows) {
+        sum_reference_height += row.reference_height;
+    }
+
+    if (sum_reference_height == 0)
+        return;
+
+    Vector<Row&> rows_with_auto_height;
+    for (auto& row : m_rows) {
+        if (row.box->computed_values().height().is_auto()) {
+            rows_with_auto_height.append(row);
+        }
+    }
+
+    if (m_table_height <= sum_reference_height) {
+        // If the table height is equal or smaller than sum of reference sizes, the final height assigned to each row
+        // will be the weighted mean of the base and the reference size that yields the correct total height.
+
+        for (auto& row : m_rows) {
+            auto weight = row.reference_height / sum_reference_height;
+            auto final_height = m_table_height * weight;
+            row.final_height = final_height;
+        }
+    } else if (rows_with_auto_height.size() > 0) {
+        // Else, if the table owns any “auto-height” row (a row whose size is only determined by its content size and
+        // none of the specified heights), each non-auto-height row receives its reference height and auto-height rows
+        // receive their reference size plus some increment which is equal to the height missing to amount to the
+        // specified table height divided by the amount of such rows.
+
+        for (auto& row : m_rows) {
+            row.final_height = row.reference_height;
+        }
+
+        auto auto_height_rows_increment = (m_table_height - sum_reference_height) / rows_with_auto_height.size();
+        for (auto& row : rows_with_auto_height) {
+            row.final_height += auto_height_rows_increment;
+        }
+    } else {
+        // Else, all rows receive their reference size plus some increment which is equal to the height missing to
+        // amount to the specified table height divided by the amount of rows.
+
+        auto increment = (m_table_height - sum_reference_height) / m_rows.size();
+        for (auto& row : m_rows) {
+            row.final_height = row.reference_height + increment;
         }
     }
 }
@@ -470,7 +599,7 @@ void TableFormattingContext::position_row_boxes(CSSPixels& total_content_height)
             row_width += column.used_width;
         }
 
-        row_state.set_content_height(row.used_height);
+        row_state.set_content_height(row.final_height);
         row_state.set_content_width(row_width);
         row_state.set_content_x(row_left_offset);
         row_state.set_content_y(row_top_offset);
@@ -563,7 +692,10 @@ void TableFormattingContext::run(Box const& box, LayoutMode layout_mode, Availab
     // Distribute the width of the table among columns.
     distribute_width_to_columns();
 
-    calculate_row_heights(layout_mode);
+    compute_table_height(layout_mode);
+
+    distribute_height_to_rows();
+
     position_row_boxes(total_content_height);
     position_cell_boxes();
 
