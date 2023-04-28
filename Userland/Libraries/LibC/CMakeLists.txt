@@ -76,6 +76,25 @@ set(LIBC_SOURCES
     wstdio.cpp
 )
 
+file(GLOB_RECURSE LIBC_HEADERS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "*.h")
+list(APPEND LIBC_HEADERS "../LibELF/ELFABI.h" "../LibRegex/RegexDefs.h")
+
+add_custom_target(install_libc_headers)
+
+# Copy LibC's headers into the sysroot to satisfy libc++'s include priority requirements.
+foreach(RELATIVE_HEADER_PATH IN LISTS LIBC_HEADERS)
+    get_filename_component(directory ${RELATIVE_HEADER_PATH} DIRECTORY)
+    string(REPLACE "../" "" subdirectory "${directory}")
+    file(MAKE_DIRECTORY "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}")
+    add_custom_command(
+        TARGET install_libc_headers
+        PRE_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${RELATIVE_HEADER_PATH}" "${CMAKE_STAGING_PREFIX}/${CMAKE_INSTALL_INCLUDEDIR}/${subdirectory}"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        VERBATIM
+    )
+endforeach()
+
 file(GLOB ELF_SOURCES CONFIGURE_DEPENDS "../LibELF/*.cpp")
 
 if ("${SERENITY_ARCH}" STREQUAL "aarch64")
@@ -98,12 +117,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
 # Since all native serenity applications use dynamic libraries, prevent coverage on libc.a as well
 
 add_library(crt0 STATIC crt0.cpp)
+add_dependencies(crt0 install_libc_headers)
 target_link_libraries(crt0 PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0
     COMMAND "${CMAKE_COMMAND}" -E copy $<TARGET_OBJECTS:crt0> ${CMAKE_INSTALL_PREFIX}/usr/lib/crt0.o
 )
 add_library(crt0_shared STATIC crt0_shared.cpp)
+add_dependencies(crt0_shared install_libc_headers)
 target_link_libraries(crt0_shared PRIVATE NoCoverage)
 add_custom_command(
     TARGET crt0_shared
@@ -126,6 +147,7 @@ add_custom_command(
 
 set_source_files_properties (ssp_nonshared.cpp PROPERTIES COMPILE_FLAGS "-fno-stack-protector")
 add_library(ssp_nonshared STATIC ssp_nonshared.cpp)
+add_dependencies(ssp_nonshared install_libc_headers)
 target_link_libraries(ssp_nonshared PRIVATE NoCoverage)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libssp_nonshared.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
 
@@ -164,7 +186,7 @@ set_property(
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -nolibc")
 serenity_libc(LibC c)
-add_dependencies(LibC crti crt0 crt0_shared crtn)
+add_dependencies(LibC crti crt0 crt0_shared crtn install_libc_headers)
 target_link_libraries(LibC PRIVATE LibSystem LibTimeZone)
 
 # We mark LibCStatic as a dependency of LibC because this triggers the build of the LibCStatic target

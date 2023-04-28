@@ -18,6 +18,10 @@ __BEGIN_DECLS
 #    define WEOF (0xffffffffu)
 #endif
 
+#ifdef __cplusplus
+#    define _LIBCPP_WCHAR_H_HAS_CONST_OVERLOADS
+#endif
+
 typedef __WINT_TYPE__ wint_t;
 typedef unsigned long int wctype_t;
 

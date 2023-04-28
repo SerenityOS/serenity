@@ -12,6 +12,10 @@
 
 __BEGIN_DECLS
 
+#ifdef __cplusplus
+#    define __CORRECT_ISO_CPP_STRING_H_PROTO
+#endif
+
 // A few C Standard Libraries include this header in <string.h>, and hence expect
 // `strcasecmp` etcetera to be available as part of a <string.h> include, so let's
 // do the same here to maintain compatibility
