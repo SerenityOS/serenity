@@ -109,6 +109,18 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
     case Type::Lvh:
     case Type::Dvh:
         return viewport_rect.height() * (m_value / 100);
+    case Type::Vi:
+    case Type::Svi:
+    case Type::Lvi:
+    case Type::Dvi:
+        // FIXME: Select the width or height based on which is the inline axis.
+        return viewport_rect.width() * (m_value / 100);
+    case Type::Vb:
+    case Type::Svb:
+    case Type::Lvb:
+    case Type::Dvb:
+        // FIXME: Select the width or height based on which is the block axis.
+        return viewport_rect.height() * (m_value / 100);
     case Type::Vmin:
     case Type::Svmin:
     case Type::Lvmin:
@@ -200,6 +212,22 @@ char const* Length::unit_name() const
         return "lvh";
     case Type::Dvh:
         return "dvh";
+    case Type::Vi:
+        return "vi";
+    case Type::Svi:
+        return "svi";
+    case Type::Lvi:
+        return "lvi";
+    case Type::Dvi:
+        return "dvi";
+    case Type::Vb:
+        return "vb";
+    case Type::Svb:
+        return "svb";
+    case Type::Lvb:
+        return "lvb";
+    case Type::Dvb:
+        return "dvb";
     case Type::Vmin:
         return "vmin";
     case Type::Svmin:
@@ -278,6 +306,22 @@ Optional<Length::Type> Length::unit_from_name(StringView name)
         return Length::Type::Lvh;
     } else if (name.equals_ignoring_ascii_case("dvh"sv)) {
         return Length::Type::Dvh;
+    } else if (name.equals_ignoring_ascii_case("vi"sv)) {
+        return Length::Type::Vi;
+    } else if (name.equals_ignoring_ascii_case("svi"sv)) {
+        return Length::Type::Svi;
+    } else if (name.equals_ignoring_ascii_case("lvi"sv)) {
+        return Length::Type::Lvi;
+    } else if (name.equals_ignoring_ascii_case("dvi"sv)) {
+        return Length::Type::Dvi;
+    } else if (name.equals_ignoring_ascii_case("vb"sv)) {
+        return Length::Type::Vb;
+    } else if (name.equals_ignoring_ascii_case("svb"sv)) {
+        return Length::Type::Svb;
+    } else if (name.equals_ignoring_ascii_case("lvb"sv)) {
+        return Length::Type::Lvb;
+    } else if (name.equals_ignoring_ascii_case("dvb"sv)) {
+        return Length::Type::Dvb;
     } else if (name.equals_ignoring_ascii_case("vmin"sv)) {
         return Length::Type::Vmin;
     } else if (name.equals_ignoring_ascii_case("svmin"sv)) {
