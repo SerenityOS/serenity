@@ -70,7 +70,7 @@ Length Length::resolved(Layout::Node const& layout_node) const
     return *this;
 }
 
-CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
+CSSPixels Length::font_relative_length_to_px(Length::FontMetrics const& font_metrics, Length::FontMetrics const& root_font_metrics) const
 {
     switch (m_type) {
     case Type::Em:
@@ -99,6 +99,14 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
         return m_value * font_metrics.line_height;
     case Type::Rlh:
         return m_value * root_font_metrics.line_height;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+CSSPixels Length::viewport_relative_length_to_px(CSSPixelRect const& viewport_rect) const
+{
+    switch (m_type) {
     case Type::Vw:
     case Type::Svw:
     case Type::Lvw:
@@ -138,28 +146,40 @@ CSSPixels Length::relative_length_to_px(CSSPixelRect const& viewport_rect, FontM
 
 CSSPixels Length::to_px(Layout::Node const& layout_node) const
 {
+    if (is_auto()) {
+        // FIXME: We really, really shouldn't end up here, but we do, and so frequently that
+        //        adding a dbgln() here outputs a couple hundred lines loading `welcome.html`.
+        return 0;
+    }
+
     if (is_absolute())
         return absolute_length_to_px();
 
     if (!layout_node.document().browsing_context())
         return 0;
+
+    if (is_font_relative()) {
+        auto* root_element = layout_node.document().document_element();
+        if (!root_element || !root_element->layout_node())
+            return 0;
+
+        FontMetrics font_metrics {
+            layout_node.computed_values().font_size(),
+            layout_node.font().pixel_metrics(),
+            layout_node.line_height()
+        };
+        FontMetrics root_font_metrics {
+            root_element->layout_node()->computed_values().font_size(),
+            root_element->layout_node()->font().pixel_metrics(),
+            root_element->layout_node()->line_height()
+        };
+
+        return font_relative_length_to_px(font_metrics, root_font_metrics);
+    }
+
+    VERIFY(is_viewport_relative());
     auto const& viewport_rect = layout_node.document().browsing_context()->viewport_rect();
-    auto* root_element = layout_node.document().document_element();
-    if (!root_element || !root_element->layout_node())
-        return 0;
-
-    FontMetrics font_metrics {
-        layout_node.computed_values().font_size(),
-        layout_node.font().pixel_metrics(),
-        layout_node.line_height()
-    };
-    FontMetrics root_font_metrics {
-        root_element->layout_node()->computed_values().font_size(),
-        root_element->layout_node()->font().pixel_metrics(),
-        root_element->layout_node()->line_height()
-    };
-
-    return to_px(viewport_rect, font_metrics, root_font_metrics);
+    return viewport_relative_length_to_px(viewport_rect);
 }
 
 ErrorOr<String> Length::to_string() const
