@@ -53,9 +53,13 @@ if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
 fi
 
+EXTRA_ARGS=""
 if [[ $(uname) == "Darwin" ]]
 then
     UI_LIB=cocoa
+
+    # SDL causes a crash on startup: "NSWindow drag regions should only be invalidated on the Main Thread!"
+    EXTRA_ARGS="--disable-sdl"
 else
     UI_LIB=gtk
 fi
@@ -66,7 +70,8 @@ pushd "$DIR/Build/qemu"
     "$DIR"/Tarballs/qemu-"${QEMU_VERSION}"/configure --prefix="$PREFIX" \
                                             --target-list=aarch64-softmmu,x86_64-softmmu \
                                             --enable-$UI_LIB \
-                                            --enable-slirp || exit 1
+                                            --enable-slirp \
+                                            $EXTRA_ARGS || exit 1
     make -j "$MAKEJOBS" || exit 1
     make install || exit 1
 popd
