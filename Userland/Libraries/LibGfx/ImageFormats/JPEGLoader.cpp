@@ -187,10 +187,115 @@ struct HuffmanTableSpec {
     Vector<u16> codes;
 };
 
-struct HuffmanStream {
-    Vector<u8> stream;
-    u8 bit_offset { 0 };
-    size_t byte_offset { 0 };
+class HuffmanStream {
+public:
+    static ErrorOr<HuffmanStream> create(SeekableStream& stream)
+    {
+        HuffmanStream huffman {};
+
+        u8 last_byte {};
+        u8 current_byte = TRY(stream.read_value<u8>());
+
+        for (;;) {
+            last_byte = current_byte;
+            current_byte = TRY(stream.read_value<u8>());
+
+            if (last_byte == 0xFF) {
+                if (current_byte == 0xFF)
+                    continue;
+                if (current_byte == 0x00) {
+                    current_byte = TRY(stream.read_value<u8>());
+                    huffman.m_stream.append(last_byte);
+                    continue;
+                }
+                Marker marker = 0xFF00 | current_byte;
+                if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
+                    huffman.m_stream.append(marker);
+                    current_byte = TRY(stream.read_value<u8>());
+                    continue;
+                }
+
+                // Rollback the marker we just read
+                TRY(stream.seek(-2, AK::SeekMode::FromCurrentPosition));
+                return huffman;
+            }
+
+            huffman.m_stream.append(last_byte);
+        }
+
+        VERIFY_NOT_REACHED();
+    }
+
+    ErrorOr<u8> next_symbol(HuffmanTableSpec const& table)
+    {
+        unsigned code = 0;
+        u64 code_cursor = 0;
+
+        for (int i = 0; i < 16; i++) { // Codes can't be longer than 16 bits.
+            auto result = TRY(read_bits());
+            code = (code << 1) | result;
+            for (int j = 0; j < table.code_counts[i]; j++) {
+                if (code == table.codes[code_cursor])
+                    return table.symbols[code_cursor];
+                code_cursor++;
+            }
+        }
+
+        dbgln_if(JPEG_DEBUG, "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
+        return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
+    }
+
+    ErrorOr<u16> read_bits(u8 count = 1)
+    {
+
+        if (count > NumericLimits<u16>::digits()) {
+            dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
+            return Error::from_string_literal("Reading too much huffman bits at once");
+        }
+
+        u16 value = 0;
+        while (count--) {
+            if (m_byte_offset >= m_stream.size()) {
+                dbgln_if(JPEG_DEBUG, "Huffman stream exhausted. This could be an error!");
+                return Error::from_string_literal("Huffman stream exhausted.");
+            }
+
+            u8 const current_byte = m_stream[m_byte_offset];
+            u8 const current_bit = 1u & (current_byte >> (7 - m_bit_offset)); // MSB first.
+
+            m_bit_offset++;
+            value = (value << 1) | current_bit;
+
+            if (m_bit_offset == 8) {
+                m_byte_offset++;
+                m_bit_offset = 0;
+            }
+        }
+        return value;
+    }
+
+    void advance_to_byte_boundary()
+    {
+        if (m_bit_offset > 0) {
+            m_bit_offset = 0;
+            m_byte_offset++;
+        }
+    }
+
+    void skip_byte()
+    {
+        m_byte_offset++;
+    }
+
+    u64 byte_offset() const
+    {
+        return m_byte_offset;
+    }
+
+private:
+    Vector<u8> m_stream;
+    u8 m_bit_offset { 0 };
+    u64 m_byte_offset { 0 };
 };
 
 struct ICCMultiChunkState {
@@ -270,48 +375,6 @@ static void generate_huffman_codes(HuffmanTableSpec& table)
     }
 }
 
-static ErrorOr<size_t> read_huffman_bits(HuffmanStream& hstream, size_t count = 1)
-{
-    if (count > (8 * sizeof(size_t))) {
-        dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
-        return Error::from_string_literal("Reading too much huffman bits at once");
-    }
-    size_t value = 0;
-    while (count--) {
-        if (hstream.byte_offset >= hstream.stream.size()) {
-            dbgln_if(JPEG_DEBUG, "Huffman stream exhausted. This could be an error!");
-            return Error::from_string_literal("Huffman stream exhausted.");
-        }
-        u8 current_byte = hstream.stream[hstream.byte_offset];
-        u8 current_bit = 1u & (u32)(current_byte >> (7 - hstream.bit_offset)); // MSB first.
-        hstream.bit_offset++;
-        value = (value << 1) | (size_t)current_bit;
-        if (hstream.bit_offset == 8) {
-            hstream.byte_offset++;
-            hstream.bit_offset = 0;
-        }
-    }
-    return value;
-}
-
-static ErrorOr<u8> get_next_symbol(HuffmanStream& hstream, HuffmanTableSpec const& table)
-{
-    unsigned code = 0;
-    size_t code_cursor = 0;
-    for (int i = 0; i < 16; i++) { // Codes can't be longer than 16 bits.
-        auto result = TRY(read_huffman_bits(hstream));
-        code = (code << 1) | (i32)result;
-        for (int j = 0; j < table.code_counts[i]; j++) {
-            if (code == table.codes[code_cursor])
-                return table.symbols[code_cursor];
-            code_cursor++;
-        }
-    }
-
-    dbgln_if(JPEG_DEBUG, "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
-    return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
-}
-
 static inline auto* get_component(Macroblock& block, unsigned component)
 {
     switch (component) {
@@ -332,7 +395,7 @@ static ErrorOr<void> refine_coefficient(Scan& scan, auto& coefficient)
 {
     // G.1.2.3 - Coding model for subsequent scans of successive approximation
     // See the correction bit from rule b.
-    u8 const bit = TRY(read_huffman_bits(scan.huffman_stream, 1));
+    u8 const bit = TRY(scan.huffman_stream.read_bits(1));
     if (bit == 1)
         coefficient |= 1 << scan.successive_approximation_low;
 
@@ -359,14 +422,14 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     }
 
     // For DC coefficients, symbol encodes the length of the coefficient.
-    auto dc_length = TRY(get_next_symbol(scan.huffman_stream, dc_table));
+    auto dc_length = TRY(scan.huffman_stream.next_symbol(dc_table));
     if (dc_length > 11) {
         dbgln_if(JPEG_DEBUG, "DC coefficient too long: {}!", dc_length);
         return Error::from_string_literal("DC coefficient too long");
     }
 
     // DC coefficients are encoded as the difference between previous and current DC values.
-    i16 dc_diff = TRY(read_huffman_bits(scan.huffman_stream, dc_length));
+    i16 dc_diff = TRY(scan.huffman_stream.read_bits(dc_length));
 
     // If MSB in diff is 0, the difference is -ve. Otherwise +ve.
     if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
@@ -387,7 +450,7 @@ static ErrorOr<bool> read_eob(Scan& scan, u32 symbol)
     if (auto const eob = symbol & 0x0F; eob == 0 && symbol != JPEG_ZRL) {
         // We encountered an EOB marker
         auto const eob_base = symbol >> 4;
-        auto const additional_value = TRY(read_huffman_bits(scan.huffman_stream, eob_base));
+        auto const additional_value = TRY(scan.huffman_stream.read_bits(eob_base));
 
         scan.end_of_bands_run_count = additional_value + (1 << eob_base) - 1;
 
@@ -439,7 +502,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
         // number of zeroes to be stuffed before reading the coefficient. Low 4
         // bits represent the magnitude of the coefficient.
         if (!in_zrl && scan.end_of_bands_run_count == 0 && !saved_symbol.has_value()) {
-            saved_symbol = TRY(get_next_symbol(scan.huffman_stream, ac_table));
+            saved_symbol = TRY(scan.huffman_stream.next_symbol(ac_table));
 
             if (!TRY(read_eob(scan, *saved_symbol))) {
                 to_skip = *saved_symbol >> 4;
@@ -453,7 +516,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
                 if (!in_zrl && is_progressive(context.frame.type) && scan.successive_approximation_high != 0) {
                     // G.1.2.3 - Coding model for subsequent scans of successive approximation
                     // Bit sign from rule a
-                    saved_bit_for_rule_a = TRY(read_huffman_bits(scan.huffman_stream, 1));
+                    saved_bit_for_rule_a = TRY(scan.huffman_stream.read_bits(1));
                 }
             }
         }
@@ -492,7 +555,7 @@ static ErrorOr<void> add_ac(JPEGLoadingContext& context, Macroblock& macroblock,
             }
 
             if (coeff_length != 0) {
-                i32 ac_coefficient = TRY(read_huffman_bits(scan.huffman_stream, coeff_length));
+                i32 ac_coefficient = TRY(scan.huffman_stream.read_bits(coeff_length));
                 if (ac_coefficient < (1 << (coeff_length - 1)))
                     ac_coefficient -= (1 << coeff_length) - 1;
 
@@ -614,23 +677,17 @@ static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<M
 
                     // Restart markers are stored in byte boundaries. Advance the huffman stream cursor to
                     //  the 0th bit of the next byte.
-                    if (huffman_stream.byte_offset < huffman_stream.stream.size()) {
-                        if (huffman_stream.bit_offset > 0) {
-                            huffman_stream.bit_offset = 0;
-                            huffman_stream.byte_offset++;
-                        }
+                    huffman_stream.advance_to_byte_boundary();
 
-                        // Skip the restart marker (RSTn).
-                        huffman_stream.byte_offset++;
-                    }
+                    // Skip the restart marker (RSTn).
+                    huffman_stream.skip_byte();
                 }
             }
 
             if (auto result = build_macroblocks(context, macroblocks, hcursor, vcursor); result.is_error()) {
                 if constexpr (JPEG_DEBUG) {
                     dbgln("Failed to build Macroblock {}: {}", i, result.error());
-                    dbgln("Huffman stream byte offset {}", huffman_stream.byte_offset);
-                    dbgln("Huffman stream bit offset {}", huffman_stream.bit_offset);
+                    dbgln("Huffman stream byte offset {}", huffman_stream.byte_offset());
                 }
                 return result.release_error();
             }
@@ -720,7 +777,6 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
     u8 const component_count = TRY(stream.read_value<u8>());
 
     Scan current_scan;
-    current_scan.huffman_stream.stream.ensure_capacity(50 * KiB);
 
     Optional<u8> last_read;
     u8 component_read = 0;
@@ -775,6 +831,7 @@ static ErrorOr<void> read_start_of_scan(Stream& stream, JPEGLoadingContext& cont
         return Error::from_string_literal("Spectral selection is not [0,63] or successive approximation is not null");
     }
 
+    current_scan.huffman_stream = TRY(HuffmanStream::create(*context.stream));
     context.current_scan = move(current_scan);
 
     return {};
@@ -1640,41 +1697,6 @@ static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, HuffmanStream& huffman_stream)
-{
-    u8 last_byte;
-    u8 current_byte = TRY(stream.read_value<u8>());
-
-    for (;;) {
-        last_byte = current_byte;
-        current_byte = TRY(stream.read_value<u8>());
-
-        if (last_byte == 0xFF) {
-            if (current_byte == 0xFF)
-                continue;
-            if (current_byte == 0x00) {
-                current_byte = TRY(stream.read_value<u8>());
-                huffman_stream.stream.append(last_byte);
-                continue;
-            }
-            Marker marker = 0xFF00 | current_byte;
-            if (marker >= JPEG_RST0 && marker <= JPEG_RST7) {
-                huffman_stream.stream.append(marker);
-                current_byte = TRY(stream.read_value<u8>());
-                continue;
-            }
-
-            // Rollback the marker we just read
-            TRY(stream.seek(-2, AK::SeekMode::FromCurrentPosition));
-            return {};
-        } else {
-            huffman_stream.stream.append(last_byte);
-        }
-    }
-
-    VERIFY_NOT_REACHED();
-}
-
 static ErrorOr<void> decode_header(JPEGLoadingContext& context)
 {
     if (context.state < JPEGLoadingContext::State::HeaderDecoded) {
@@ -1711,7 +1733,6 @@ static ErrorOr<Vector<Macroblock>> construct_macroblocks(JPEGLoadingContext& con
             TRY(handle_miscellaneous_or_table(*context.stream, context, marker));
         } else if (marker == JPEG_SOS) {
             TRY(read_start_of_scan(*context.stream, context));
-            TRY(scan_huffman_stream(*context.stream, context.current_scan.huffman_stream));
             TRY(decode_huffman_stream(context, macroblocks));
         } else if (marker == JPEG_EOI) {
             return macroblocks;
