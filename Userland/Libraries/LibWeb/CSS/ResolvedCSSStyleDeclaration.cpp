@@ -23,7 +23,7 @@
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
@@ -485,9 +485,9 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
     case CSS::PropertyID::GridRowStart:
         return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_start());
     case CSS::PropertyID::GridTemplateColumns:
-        return GridTrackSizeStyleValue::create(layout_node.computed_values().grid_template_columns());
+        return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_columns());
     case CSS::PropertyID::GridTemplateRows:
-        return GridTrackSizeStyleValue::create(layout_node.computed_values().grid_template_rows());
+        return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_rows());
     case CSS::PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());
     case CSS::PropertyID::ImageRendering:

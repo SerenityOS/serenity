@@ -14,21 +14,21 @@
 
 namespace Web::CSS {
 
-class GridTrackSizeStyleValue final : public StyleValueWithDefaultOperators<GridTrackSizeStyleValue> {
+class GridTrackSizeListStyleValue final : public StyleValueWithDefaultOperators<GridTrackSizeListStyleValue> {
 public:
-    static ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
-    virtual ~GridTrackSizeStyleValue() override = default;
+    static ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue> create(CSS::GridTrackSizeList grid_track_size_list);
+    virtual ~GridTrackSizeListStyleValue() override = default;
 
-    static ValueComparingNonnullRefPtr<GridTrackSizeStyleValue> make_auto();
+    static ValueComparingNonnullRefPtr<GridTrackSizeListStyleValue> make_auto();
 
     CSS::GridTrackSizeList grid_track_size_list() const { return m_grid_track_size_list; }
 
     virtual ErrorOr<String> to_string() const override;
 
-    bool properties_equal(GridTrackSizeStyleValue const& other) const { return m_grid_track_size_list == other.m_grid_track_size_list; }
+    bool properties_equal(GridTrackSizeListStyleValue const& other) const { return m_grid_track_size_list == other.m_grid_track_size_list; }
 
 private:
-    explicit GridTrackSizeStyleValue(CSS::GridTrackSizeList grid_track_size_list)
+    explicit GridTrackSizeListStyleValue(CSS::GridTrackSizeList grid_track_size_list)
         : StyleValueWithDefaultOperators(Type::GridTrackSizeList)
         , m_grid_track_size_list(grid_track_size_list)
     {
