@@ -1245,7 +1245,7 @@ ErrorOr<RefPtr<AST::Node>> Shell::immediate_math(AST::ImmediateExpression& invok
             [&](String const& name) -> ErrorOr<i64> {
                 size_t resolution_attempts_remaining = 100;
                 for (auto resolved_name = name; resolution_attempts_remaining > 0; --resolution_attempts_remaining) {
-                    auto value = TRY(lookup_local_variable(resolved_name.bytes_as_string_view()));
+                    auto value = TRY(look_up_local_variable(resolved_name.bytes_as_string_view()));
                     if (!value)
                         break;
 

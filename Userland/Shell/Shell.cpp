@@ -352,7 +352,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(StringView name)
     return nullptr;
 }
 
-ErrorOr<RefPtr<AST::Value const>> Shell::lookup_local_variable(StringView name) const
+ErrorOr<RefPtr<AST::Value const>> Shell::look_up_local_variable(StringView name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -369,7 +369,7 @@ ErrorOr<RefPtr<AST::Value const>> Shell::get_argument(size_t index) const
         return adopt_ref(*new AST::StringValue(TRY(String::from_deprecated_string(current_script))));
 
     --index;
-    if (auto argv = TRY(lookup_local_variable("ARGV"sv))) {
+    if (auto argv = TRY(look_up_local_variable("ARGV"sv))) {
         if (argv->is_list_without_resolution()) {
             AST::ListValue const* list = static_cast<AST::ListValue const*>(argv.ptr());
             if (list->values().size() <= index)
@@ -389,7 +389,7 @@ ErrorOr<RefPtr<AST::Value const>> Shell::get_argument(size_t index) const
 
 ErrorOr<DeprecatedString> Shell::local_variable_or(StringView name, DeprecatedString const& replacement) const
 {
-    auto value = TRY(lookup_local_variable(name));
+    auto value = TRY(look_up_local_variable(name));
     if (value) {
         StringBuilder builder;
         builder.join(' ', TRY(const_cast<AST::Value&>(*value).resolve_as_list(const_cast<Shell&>(*this))));
@@ -1095,7 +1095,7 @@ bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const
     if (command.argv.is_empty())
         return false;
 
-    auto value = lookup_local_variable("PROGRAMS_ALLOWED_TO_MODIFY_DEFAULT_TERMIOS"sv);
+    auto value = look_up_local_variable("PROGRAMS_ALLOWED_TO_MODIFY_DEFAULT_TERMIOS"sv);
     if (value.is_error())
         return false;
 

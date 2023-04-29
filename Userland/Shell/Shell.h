@@ -183,7 +183,7 @@ public:
     static bool has_history_event(StringView);
 
     ErrorOr<RefPtr<AST::Value const>> get_argument(size_t) const;
-    ErrorOr<RefPtr<AST::Value const>> lookup_local_variable(StringView) const;
+    ErrorOr<RefPtr<AST::Value const>> look_up_local_variable(StringView) const;
     ErrorOr<DeprecatedString> local_variable_or(StringView, DeprecatedString const&) const;
     void set_local_variable(DeprecatedString const&, RefPtr<AST::Value>, bool only_in_current_frame = false);
     void unset_local_variable(StringView, bool only_in_current_frame = false);

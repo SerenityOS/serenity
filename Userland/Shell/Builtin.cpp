@@ -83,13 +83,13 @@ static Vector<DeprecatedString> find_matching_executables_in_path(StringView fil
 
 ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
 {
-    Vector<StringView> values_to_lookup;
+    Vector<StringView> values_to_look_up;
     bool do_only_path_search { false };
     bool do_follow_symlinks { false };
     bool do_print_only_type { false };
 
     Core::ArgsParser parser;
-    parser.add_positional_argument(values_to_lookup, "List of shell builtins, aliases or executables", "arguments");
+    parser.add_positional_argument(values_to_look_up, "List of shell builtins, aliases or executables", "arguments");
     parser.add_option(do_only_path_search, "Search only for executables in the PATH environment variable", "path-only", 'p');
     parser.add_option(do_follow_symlinks, "Follow symlinks and print the symlink free path", "follow-symlink", 's');
     parser.add_option(do_print_only_type, "Print the argument type instead of a human readable description", "type", 'w');
@@ -97,13 +97,13 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
     if (!parser.parse(arguments, Core::ArgsParser::FailureBehavior::PrintUsage))
         return 1;
 
-    auto const lookup_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
+    auto const look_up_alias = [do_only_path_search, &m_aliases = this->m_aliases](StringView alias) -> Optional<DeprecatedString> {
         if (do_only_path_search)
             return {};
         return m_aliases.get(alias);
     };
 
-    auto const lookup_builtin = [do_only_path_search](StringView builtin) -> Optional<DeprecatedString> {
+    auto const look_up_builtin = [do_only_path_search](StringView builtin) -> Optional<DeprecatedString> {
         if (do_only_path_search)
             return {};
         for (auto const& _builtin : builtin_names) {
@@ -115,8 +115,8 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
     };
 
     bool at_least_one_succeded { false };
-    for (auto const& argument : values_to_lookup) {
-        auto const alias = lookup_alias(argument);
+    for (auto const& argument : values_to_look_up) {
+        auto const alias = look_up_alias(argument);
         if (alias.has_value()) {
             if (do_print_only_type)
                 outln("{}: alias", argument);
@@ -125,7 +125,7 @@ ErrorOr<int> Shell::builtin_where(Main::Arguments arguments)
             at_least_one_succeded = true;
         }
 
-        auto const builtin = lookup_builtin(argument);
+        auto const builtin = look_up_builtin(argument);
         if (builtin.has_value()) {
             if (do_print_only_type)
                 outln("{}: builtin", builtin.value());
@@ -588,7 +588,7 @@ ErrorOr<int> Shell::builtin_export(Main::Arguments arguments)
         }
 
         if (parts.size() == 1) {
-            auto value = TRY(lookup_local_variable(parts[0]));
+            auto value = TRY(look_up_local_variable(parts[0]));
             if (value) {
                 auto values = TRY(const_cast<AST::Value&>(*value).resolve_as_list(*this));
                 StringBuilder builder;
@@ -974,7 +974,7 @@ ErrorOr<int> Shell::builtin_shift(Main::Arguments arguments)
     if (count < 1)
         return 0;
 
-    auto argv_ = TRY(lookup_local_variable("ARGV"sv));
+    auto argv_ = TRY(look_up_local_variable("ARGV"sv));
     if (!argv_) {
         warnln("shift: ARGV is unset");
         return 1;
@@ -1007,7 +1007,7 @@ ErrorOr<int> Shell::builtin_source(Main::Arguments arguments)
     if (!parser.parse(arguments))
         return 1;
 
-    auto previous_argv = TRY(lookup_local_variable("ARGV"sv));
+    auto previous_argv = TRY(look_up_local_variable("ARGV"sv));
     ScopeGuard guard { [&] {
         if (!args.is_empty())
             set_local_variable("ARGV", const_cast<AST::Value&>(*previous_argv));
@@ -1203,7 +1203,7 @@ ErrorOr<int> Shell::builtin_unset(Main::Arguments arguments)
         if (!did_touch_path && value == "PATH"sv)
             did_touch_path = true;
 
-        if (TRY(lookup_local_variable(value)) != nullptr) {
+        if (TRY(look_up_local_variable(value)) != nullptr) {
             unset_local_variable(value);
         } else if (!unset_only_variables) {
             unsetenv(value.characters());
@@ -1412,7 +1412,7 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
     };
 
     auto enlist = [&](auto name, auto value) -> ErrorOr<NonnullRefPtr<AST::Value>> {
-        auto variable = TRY(lookup_local_variable(name));
+        auto variable = TRY(look_up_local_variable(name));
         if (variable) {
             auto list = TRY(const_cast<AST::Value&>(*variable).resolve_as_list(*this));
             auto new_value = TRY(value->resolve_as_string(*this));
@@ -1791,7 +1791,7 @@ ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
 
     if (auto const* value_from_env = getenv("IFS"); value_from_env)
         split_by_any_of = TRY(String::from_utf8({ value_from_env, strlen(value_from_env) }));
-    else if (auto split_by_variable = TRY(lookup_local_variable("IFS"sv)); split_by_variable)
+    else if (auto split_by_variable = TRY(look_up_local_variable("IFS"sv)); split_by_variable)
         split_by_any_of = TRY(const_cast<AST::Value&>(*split_by_variable).resolve_as_string(*this));
 
     auto file = TRY(Core::File::standard_input());

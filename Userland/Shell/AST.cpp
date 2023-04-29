@@ -3842,7 +3842,7 @@ ErrorOr<NonnullRefPtr<Value>> SimpleVariableValue::resolve_without_cast(RefPtr<S
 {
     VERIFY(shell);
 
-    if (auto value = TRY(shell->lookup_local_variable(m_name))) {
+    if (auto value = TRY(shell->look_up_local_variable(m_name))) {
         auto result = value.release_nonnull();
         // If a slice is applied, add it.
         if (!m_slices.is_empty())
@@ -3884,11 +3884,11 @@ ErrorOr<Vector<String>> SpecialVariableValue::resolve_as_list(RefPtr<Shell> shel
     case '$':
         return { resolve_slices(shell, Vector { TRY(String::number(getpid())) }, m_slices) };
     case '*':
-        if (auto argv = TRY(shell->lookup_local_variable("ARGV"sv)))
+        if (auto argv = TRY(shell->look_up_local_variable("ARGV"sv)))
             return resolve_slices(shell, TRY(const_cast<Value&>(*argv).resolve_as_list(shell)), m_slices);
         return resolve_slices(shell, Vector<String> {}, m_slices);
     case '#':
-        if (auto argv = TRY(shell->lookup_local_variable("ARGV"sv))) {
+        if (auto argv = TRY(shell->look_up_local_variable("ARGV"sv))) {
             if (argv->is_list()) {
                 auto list_argv = static_cast<AST::ListValue const*>(argv.ptr());
                 return { resolve_slices(shell, Vector { TRY(String::number(list_argv->values().size())) }, m_slices) };
