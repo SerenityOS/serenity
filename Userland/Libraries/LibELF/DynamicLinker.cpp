@@ -17,22 +17,22 @@
 #include <AK/Vector.h>
 #include <Kernel/API/VirtualMemoryAnnotations.h>
 #include <Kernel/API/prctl_numbers.h>
-#include <LibC/bits/pthread_integration.h>
-#include <LibC/link.h>
-#include <LibC/sys/mman.h>
-#include <LibC/unistd.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/DynamicLinker.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Hashes.h>
 #include <bits/dlfcn_integration.h>
+#include <bits/pthread_integration.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <link.h>
 #include <pthread.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <syscall.h>
+#include <unistd.h>
 
 namespace ELF {
 
