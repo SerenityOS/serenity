@@ -456,7 +456,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     TRY(row_widget->load_from_gml(alignment_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                    name_label.set_text(to_string(role));
+                    name_label.set_text(TRY(String::from_utf8(to_string(role))));
 
                     auto& alignment_picker = *row_widget->find_descendant_of_type_named<GUI::ComboBox>("combo_box");
                     alignment_picker.set_model(*m_alignment_model);
@@ -473,7 +473,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     TRY(row_widget->load_from_gml(color_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                    name_label.set_text(to_string(role));
+                    name_label.set_text(TRY(String::from_utf8(to_string(role))));
 
                     auto& color_input = *row_widget->find_descendant_of_type_named<GUI::ColorInput>("color_input");
                     color_input.on_change = [&, role] {
@@ -503,7 +503,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     TRY(row_widget->load_from_gml(metric_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                    name_label.set_text(to_string(role));
+                    name_label.set_text(TRY(String::from_utf8(to_string(role))));
 
                     auto& spin_box = *row_widget->find_descendant_of_type_named<GUI::SpinBox>("spin_box");
                     spin_box.on_change = [&, role](int value) {
@@ -519,7 +519,7 @@ ErrorOr<void> MainWidget::add_property_tab(PropertyTab const& property_tab)
                     TRY(row_widget->load_from_gml(path_property_gml));
 
                     auto& name_label = *row_widget->find_descendant_of_type_named<GUI::Label>("name");
-                    name_label.set_text(to_string(role));
+                    name_label.set_text(TRY(String::from_utf8(to_string(role))));
 
                     auto& path_input = *row_widget->find_descendant_of_type_named<GUI::TextBox>("path_input");
                     path_input.on_change = [&, role] {

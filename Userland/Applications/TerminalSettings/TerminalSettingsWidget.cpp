@@ -101,13 +101,13 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
     else
         m_font = Gfx::FontDatabase::the().get_by_name(font_name);
     m_original_font = m_font;
-    font_text.set_text(m_font->human_readable_name());
+    font_text.set_text(String::from_deprecated_string(m_font->human_readable_name()).release_value_but_fixme_should_propagate_errors());
     font_text.set_font(m_font);
     font_button.on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), m_font.ptr(), true);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
             m_font = picker->font();
-            font_text.set_text(m_font->human_readable_name());
+            font_text.set_text(String::from_deprecated_string(m_font->human_readable_name()).release_value_but_fixme_should_propagate_errors());
             font_text.set_font(m_font);
             Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
             set_modified(true);
@@ -120,7 +120,7 @@ TerminalSettingsViewWidget::TerminalSettingsViewWidget()
         if (use_default_font) {
             font_selection.set_enabled(false);
             m_font = Gfx::FontDatabase::the().default_fixed_width_font();
-            font_text.set_text(m_font->human_readable_name());
+            font_text.set_text(String::from_deprecated_string(m_font->human_readable_name()).release_value_but_fixme_should_propagate_errors());
             font_text.set_font(m_font);
             Config::write_string("Terminal"sv, "Text"sv, "Font"sv, m_font->qualified_name());
         } else {

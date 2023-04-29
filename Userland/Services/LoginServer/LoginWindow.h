@@ -26,7 +26,7 @@ public:
     DeprecatedString password() const { return m_password->text(); }
     void set_password(StringView password) { m_password->set_text(password); }
 
-    void set_fail_message(StringView message) { m_fail_message->set_text(message); }
+    void set_fail_message(StringView message) { m_fail_message->set_text(String::from_utf8(message).release_value_but_fixme_should_propagate_errors()); }
 
 private:
     LoginWindow(GUI::Window* parent = nullptr);

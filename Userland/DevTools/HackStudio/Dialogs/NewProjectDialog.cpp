@@ -113,18 +113,18 @@ void NewProjectDialog::update_dialog()
     m_input_valid = true;
 
     if (project_template) {
-        m_description_label->set_text(project_template->description());
+        m_description_label->set_text(String::from_deprecated_string(project_template->description()).release_value_but_fixme_should_propagate_errors());
     } else {
-        m_description_label->set_text("Select a project template to continue.");
+        m_description_label->set_text("Select a project template to continue."_string.release_value_but_fixme_should_propagate_errors());
         m_input_valid = false;
     }
 
     auto maybe_project_path = get_project_full_path();
 
     if (maybe_project_path.has_value()) {
-        m_full_path_label->set_text(maybe_project_path.value());
+        m_full_path_label->set_text(String::from_deprecated_string(maybe_project_path.value()).release_value_but_fixme_should_propagate_errors());
     } else {
-        m_full_path_label->set_text("Invalid name or creation directory.");
+        m_full_path_label->set_text("Invalid name or creation directory."_string.release_value_but_fixme_should_propagate_errors());
         m_input_valid = false;
     }
 

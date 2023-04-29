@@ -77,7 +77,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     threshold_container->set_fixed_height(20);
     (void)TRY(threshold_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-    auto threshold_label = TRY(threshold_container->try_add<GUI::Label>("Threshold:"));
+    auto threshold_label = TRY(threshold_container->try_add<GUI::Label>(TRY("Threshold:"_string)));
     threshold_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     threshold_label->set_fixed_size(80, 20);
 
@@ -95,7 +95,7 @@ ErrorOr<GUI::Widget*> WandSelectTool::get_properties_widget()
     (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
     auto mode_label = TRY(mode_container->try_add<GUI::Label>());
-    mode_label->set_text("Mode:");
+    mode_label->set_text("Mode:"_short_string);
     mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     mode_label->set_fixed_size(80, 20);
 

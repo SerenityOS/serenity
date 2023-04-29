@@ -19,7 +19,7 @@ REGISTER_WIDGET(GUI, LinkLabel)
 
 namespace GUI {
 
-LinkLabel::LinkLabel(DeprecatedString text)
+LinkLabel::LinkLabel(String text)
     : Label(move(text))
 {
     set_foreground_role(Gfx::ColorRole::Link);
@@ -102,7 +102,7 @@ void LinkLabel::did_change_text()
 void LinkLabel::update_tooltip_if_needed()
 {
     if (width() < font().width(text())) {
-        set_tooltip(text());
+        set_tooltip(text().to_deprecated_string());
     } else {
         set_tooltip({});
     }

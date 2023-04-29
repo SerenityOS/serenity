@@ -32,7 +32,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     board_size_spinbox->set_value(m_board_size);
 
     auto tile_value_label = main_widget->find_descendant_of_type_named<GUI::Label>("tile_value_label");
-    tile_value_label->set_text(DeprecatedString::number(target_tile()));
+    tile_value_label->set_text(String::number(target_tile()).release_value_but_fixme_should_propagate_errors());
     auto target_spinbox = main_widget->find_descendant_of_type_named<GUI::SpinBox>("target_spinbox");
     target_spinbox->set_max(Game::max_power_for_board(m_board_size));
     target_spinbox->set_value(m_target_tile_power);
@@ -44,7 +44,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
 
     target_spinbox->on_change = [this, tile_value_label](auto value) {
         m_target_tile_power = value;
-        tile_value_label->set_text(DeprecatedString::number(target_tile()));
+        tile_value_label->set_text(String::number(target_tile()).release_value_but_fixme_should_propagate_errors());
     };
 
     auto evil_ai_checkbox = main_widget->find_descendant_of_type_named<GUI::CheckBox>("evil_ai_checkbox");

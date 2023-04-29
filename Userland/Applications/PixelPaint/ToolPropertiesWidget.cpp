@@ -36,7 +36,7 @@ void ToolPropertiesWidget::set_active_tool(Tool* tool)
     auto active_tool_widget_or_error = tool->get_properties_widget();
     if (active_tool_widget_or_error.is_error()) {
         m_active_tool_widget = nullptr;
-        m_error_label->set_text(DeprecatedString::formatted("Error creating tool properties: {}", active_tool_widget_or_error.release_error()));
+        m_error_label->set_text(String::formatted("Error creating tool properties: {}", active_tool_widget_or_error.release_error()).release_value_but_fixme_should_propagate_errors());
         m_tool_widget_stack->set_active_widget(m_error_label);
         return;
     }

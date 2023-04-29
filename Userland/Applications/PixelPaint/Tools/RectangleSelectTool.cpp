@@ -161,7 +161,7 @@ ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
     (void)TRY(feather_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
     auto feather_label = TRY(feather_container->try_add<GUI::Label>());
-    feather_label->set_text("Feather:");
+    feather_label->set_text(TRY("Feather:"_string));
     feather_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     feather_label->set_fixed_size(80, 20);
 
@@ -180,7 +180,7 @@ ErrorOr<GUI::Widget*> RectangleSelectTool::get_properties_widget()
     (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
     auto mode_label = TRY(mode_container->try_add<GUI::Label>());
-    mode_label->set_text("Mode:");
+    mode_label->set_text("Mode:"_short_string);
     mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     mode_label->set_fixed_size(80, 20);
 

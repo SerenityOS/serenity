@@ -100,7 +100,7 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"));
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_short_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
@@ -117,7 +117,7 @@ ErrorOr<GUI::Widget*> SprayTool::get_properties_widget()
         density_container->set_fixed_height(20);
         (void)TRY(density_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto density_label = TRY(density_container->try_add<GUI::Label>("Density:"));
+        auto density_label = TRY(density_container->try_add<GUI::Label>(TRY("Density:"_string)));
         density_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         density_label->set_fixed_size(80, 20);
 

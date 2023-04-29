@@ -63,7 +63,7 @@ GalleryWidget::GalleryWidget()
     };
 
     m_frame_shape_combobox->on_return_pressed = [&]() {
-        m_enabled_label->set_text(m_frame_shape_combobox->text());
+        m_enabled_label->set_text(String::from_deprecated_string(m_frame_shape_combobox->text()).release_value_but_fixme_should_propagate_errors());
     };
 
     m_thickness_spinbox = basics_tab->find_descendant_of_type_named<GUI::SpinBox>("thickness_spinbox");

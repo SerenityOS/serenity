@@ -32,7 +32,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
 
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto& name_label = main_widget->add<GUI::Label>("Name:");
+    auto& name_label = main_widget->add<GUI::Label>("Name:"_short_string);
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_name_textbox = main_widget->add<GUI::TextBox>();
@@ -42,12 +42,12 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
     auto default_name = Config::read_string("PixelPaint"sv, "NewImage"sv, "Name"sv);
     m_name_textbox->set_text(default_name);
 
-    auto& width_label = main_widget->add<GUI::Label>("Width:");
+    auto& width_label = main_widget->add<GUI::Label>("Width:"_short_string);
     width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& width_spinbox = main_widget->add<GUI::SpinBox>();
 
-    auto& height_label = main_widget->add<GUI::Label>("Height:");
+    auto& height_label = main_widget->add<GUI::Label>("Height:"_short_string);
     height_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& height_spinbox = main_widget->add<GUI::SpinBox>();
@@ -80,7 +80,7 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         return BackgroundIndex::Custom;
     }();
 
-    auto& background_label = main_widget->add<GUI::Label>("Background:");
+    auto& background_label = main_widget->add<GUI::Label>("Background:"_string.release_value_but_fixme_should_propagate_errors());
     background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     auto& background_color_combo = main_widget->add<GUI::ComboBox>();
     auto& background_color_input = main_widget->add<GUI::ColorInput>();

@@ -16,7 +16,7 @@ REGISTER_WIDGET(GUI, Label)
 
 namespace GUI {
 
-Label::Label(DeprecatedString text)
+Label::Label(String text)
     : m_text(move(text))
 {
     REGISTER_TEXT_ALIGNMENT_PROPERTY("text_alignment", text_alignment, set_text_alignment);
@@ -31,7 +31,7 @@ Label::Label(DeprecatedString text)
 
     set_foreground_role(Gfx::ColorRole::WindowText);
 
-    REGISTER_DEPRECATED_STRING_PROPERTY("text", text, set_text);
+    REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
     REGISTER_WRITE_ONLY_STRING_PROPERTY("icon", set_icon_from_path);
 }
@@ -54,7 +54,7 @@ void Label::set_icon(Gfx::Bitmap const* icon)
     update();
 }
 
-void Label::set_icon_from_path(DeprecatedString const& path)
+void Label::set_icon_from_path(StringView path)
 {
     auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
     if (maybe_bitmap.is_error()) {
@@ -64,7 +64,7 @@ void Label::set_icon_from_path(DeprecatedString const& path)
     set_icon(maybe_bitmap.release_value());
 }
 
-void Label::set_text(DeprecatedString text)
+void Label::set_text(String text)
 {
     if (text == m_text)
         return;

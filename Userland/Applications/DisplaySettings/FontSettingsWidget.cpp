@@ -72,7 +72,7 @@ ErrorOr<void> FontSettingsWidget::setup_interface()
 
 static void update_label_with_font(GUI::Label& label, Gfx::Font const& font)
 {
-    label.set_text(font.human_readable_name());
+    label.set_text(String::from_deprecated_string(font.human_readable_name()).release_value_but_fixme_should_propagate_errors());
     label.set_font(font);
 }
 

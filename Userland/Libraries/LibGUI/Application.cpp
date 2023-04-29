@@ -27,7 +27,7 @@ class Application::TooltipWindow final : public Window {
 public:
     void set_tooltip(DeprecatedString const& tooltip)
     {
-        m_label->set_text(Gfx::parse_ampersand_string(tooltip));
+        m_label->set_text(String::from_deprecated_string(Gfx::parse_ampersand_string(tooltip)).release_value_but_fixme_should_propagate_errors());
         int tooltip_width = m_label->effective_min_size().width().as_int() + 10;
         int line_count = m_label->text().count("\n"sv);
         int font_size = m_label->font().pixel_size_rounded_up();

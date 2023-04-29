@@ -209,7 +209,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
             auto& horizontal_alignment_label = horizontal_alignment_selection_container.add<GUI::Label>();
             horizontal_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-            horizontal_alignment_label.set_text("Horizontal text alignment");
+            horizontal_alignment_label.set_text("Horizontal text alignment"_string.release_value_but_fixme_should_propagate_errors());
 
             auto& horizontal_combobox = alignment_tab.add<GUI::ComboBox>();
             horizontal_combobox.set_only_allow_values_from_model(true);
@@ -240,7 +240,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
             auto& vertical_alignment_label = vertical_alignment_container.add<GUI::Label>();
             vertical_alignment_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-            vertical_alignment_label.set_text("Vertical text alignment");
+            vertical_alignment_label.set_text("Vertical text alignment"_string.release_value_but_fixme_should_propagate_errors());
 
             auto& vertical_combobox = alignment_tab.add<GUI::ComboBox>();
             vertical_combobox.set_only_allow_values_from_model(true);
@@ -281,7 +281,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
                 auto& foreground_label = foreground_container.add<GUI::Label>();
                 foreground_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-                foreground_label.set_text("Static foreground color");
+                foreground_label.set_text("Static foreground color"_string.release_value_but_fixme_should_propagate_errors());
 
                 auto& foreground_selector = foreground_container.add<GUI::ColorInput>();
                 if (m_static_format.foreground_color.has_value())
@@ -300,7 +300,7 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, Vector<Position> const& po
 
                 auto& background_label = background_container.add<GUI::Label>();
                 background_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
-                background_label.set_text("Static background color");
+                background_label.set_text("Static background color"_string.release_value_but_fixme_should_propagate_errors());
 
                 auto& background_selector = background_container.add<GUI::ColorInput>();
                 if (m_static_format.background_color.has_value())

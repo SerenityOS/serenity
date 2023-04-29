@@ -153,7 +153,7 @@ void DirectoryView::setup_model()
 {
     m_model->on_directory_change_error = [this](int, char const* error_string) {
         auto failed_path = m_model->root_path();
-        auto error_message = DeprecatedString::formatted("Could not read {}:\n{}", failed_path, error_string);
+        auto error_message = String::formatted("Could not read {}:\n{}", failed_path, error_string).release_value_but_fixme_should_propagate_errors();
         m_error_label->set_text(error_message);
         set_active_widget(m_error_label);
 

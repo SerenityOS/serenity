@@ -17,7 +17,7 @@ public:
     Function<void()> on_click;
 
 private:
-    explicit LinkLabel(DeprecatedString text = {});
+    explicit LinkLabel(String text = {});
 
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;

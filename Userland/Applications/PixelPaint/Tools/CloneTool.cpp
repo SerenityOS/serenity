@@ -135,7 +135,7 @@ ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"));
+        auto size_label = TRY(size_container->try_add<GUI::Label>("Size:"_short_string));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
@@ -154,7 +154,7 @@ ErrorOr<GUI::Widget*> CloneTool::get_properties_widget()
         hardness_container->set_fixed_height(20);
         (void)TRY(hardness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"));
+        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>(TRY("Hardness:"_string)));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         hardness_label->set_fixed_size(80, 20);
 

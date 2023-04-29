@@ -28,7 +28,7 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP:
     }
     set_tooltip(m_parameter.name().to_deprecated_string());
     if (m_value_label != nullptr)
-        m_value_label->set_text(DeprecatedString::formatted("{:.2f}", static_cast<double>(m_parameter)));
+        m_value_label->set_text(String::formatted("{:.2f}", static_cast<double>(m_parameter)).release_value_but_fixme_should_propagate_errors());
 
     on_change = [this](auto raw_value) {
         if (m_currently_setting_from_ui)
@@ -43,13 +43,9 @@ ProcessorParameterSlider::ProcessorParameterSlider(Orientation orientation, DSP:
         m_parameter.set_value(real_value);
         if (m_value_label) {
             double value = static_cast<double>(m_parameter);
-            DeprecatedString label_text = DeprecatedString::formatted("{:.2f}", value);
-            // FIXME: This is a magic value; we know that with normal font sizes, the label will disappear starting from approximately this length.
-            //        Can we do this dynamically?
-            if (label_text.length() > 7)
-                m_value_label->set_text(DeprecatedString::formatted("{:.0f}", value));
-            else
-                m_value_label->set_text(label_text);
+            auto label_text = String::formatted("{:.2f}", value).release_value_but_fixme_should_propagate_errors();
+            m_value_label->set_autosize(true);
+            m_value_label->set_text(label_text);
         }
         m_currently_setting_from_ui = false;
     };

@@ -24,7 +24,7 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize suggested_size, GUI::Win
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto& name_label = main_widget->add<GUI::Label>("Name:");
+    auto& name_label = main_widget->add<GUI::Label>("Name:"_short_string);
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     m_name_textbox = main_widget->add<GUI::TextBox>();
@@ -34,12 +34,12 @@ CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize suggested_size, GUI::Win
         m_layer_name = m_name_textbox->text();
     };
 
-    auto& width_label = main_widget->add<GUI::Label>("Width:");
+    auto& width_label = main_widget->add<GUI::Label>("Width:"_short_string);
     width_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& width_spinbox = main_widget->add<GUI::SpinBox>();
 
-    auto& height_label = main_widget->add<GUI::Label>("Height:");
+    auto& height_label = main_widget->add<GUI::Label>("Height:"_short_string);
     height_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& height_spinbox = main_widget->add<GUI::SpinBox>();
