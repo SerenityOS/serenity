@@ -16,10 +16,10 @@
             fixed_width: 32
             layout: @GUI::VerticalBoxLayout {}
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/icons/32x32/app-keyboard-mapper.png"
+                bitmap: "/res/icons/32x32/app-keyboard-mapper.png"
             }
         }
 
@@ -69,10 +69,10 @@
             fixed_width: 32
             layout: @GUI::VerticalBoxLayout {}
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/icons/32x32/app-keyboard-settings.png"
+                bitmap: "/res/icons/32x32/app-keyboard-settings.png"
             }
         }
 
@@ -113,10 +113,10 @@
             spacing: 16
         }
 
-        @GUI::Label {
+        @GUI::ImageWidget {
             fixed_width: 32
             fixed_height: 32
-            icon: "/res/icons/32x32/app-calculator.png"
+            bitmap: "/res/icons/32x32/app-calculator.png"
         }
 
         @GUI::CheckBox {

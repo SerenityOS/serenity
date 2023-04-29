@@ -6,6 +6,7 @@
  */
 
 #include <LibGUI/Button.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/PasswordInputDialog.h>
 #include <LibGUI/PasswordInputDialogGML.h>
@@ -25,9 +26,9 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
     auto widget = set_main_widget<Widget>().release_value_but_fixme_should_propagate_errors();
     widget->load_from_gml(password_input_dialog_gml).release_value_but_fixme_should_propagate_errors();
 
-    auto& key_icon_label = *widget->find_descendant_of_type_named<GUI::Label>("key_icon_label");
+    auto& key_icon = *widget->find_descendant_of_type_named<GUI::ImageWidget>("key_icon");
 
-    key_icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/key.png"sv).release_value_but_fixme_should_propagate_errors());
+    key_icon.set_bitmap(Gfx::Bitmap::load_from_file("/res/icons/32x32/key.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& server_label = *widget->find_descendant_of_type_named<GUI::Label>("server_label");
     server_label.set_text(String::from_deprecated_string(server).release_value_but_fixme_should_propagate_errors());

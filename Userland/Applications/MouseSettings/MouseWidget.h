@@ -32,7 +32,7 @@ private:
     RefPtr<GUI::HorizontalSlider> m_double_click_speed_slider;
     RefPtr<GUI::Label> m_double_click_speed_label;
     RefPtr<GUI::CheckBox> m_switch_buttons_checkbox;
-    RefPtr<GUI::Label> m_switch_buttons_image_label;
+    RefPtr<GUI::ImageWidget> m_switch_buttons_image;
     RefPtr<GUI::CheckBox> m_natural_scroll_checkbox;
     RefPtr<MouseSettings::DoubleClickArrowWidget> m_double_click_arrow_widget;
 };

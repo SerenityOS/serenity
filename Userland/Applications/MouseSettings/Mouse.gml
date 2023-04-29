@@ -17,10 +17,10 @@
                 spacing: 16
             }
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/mouse-cursor-speed.png"
+                bitmap: "/res/graphics/mouse-cursor-speed.png"
             }
 
             @GUI::Label {
@@ -65,10 +65,10 @@
                 spacing: 16
             }
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/scroll-wheel-step-size.png"
+                bitmap: "/res/graphics/scroll-wheel-step-size.png"
             }
 
             @GUI::Label {
@@ -175,10 +175,10 @@
                 spacing: 16
             }
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                name: "switch_buttons_image_label"
+                name: "switch_buttons_image"
             }
 
             @GUI::CheckBox {
