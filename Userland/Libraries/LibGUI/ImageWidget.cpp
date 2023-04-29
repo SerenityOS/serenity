@@ -44,9 +44,10 @@ void ImageWidget::set_bitmap(Gfx::Bitmap const* bitmap)
 
 void ImageWidget::set_auto_resize(bool value)
 {
+    if (m_auto_resize == value)
+        return;
     m_auto_resize = value;
-
-    if (m_bitmap)
+    if (m_bitmap && m_auto_resize)
         set_fixed_size(m_bitmap->size());
 }
 
