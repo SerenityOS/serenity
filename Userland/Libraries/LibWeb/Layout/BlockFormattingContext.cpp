@@ -210,6 +210,11 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
     };
 
     auto input_width = [&] {
+        if (is<ReplacedBox>(box)) {
+            // NOTE: Replaced elements had their width calculated independently above.
+            //       We use that width as the input here to ensure that margins get resolved.
+            return CSS::Length::make_px(box_state.content_width());
+        }
         if (is<TableWrapper>(box))
             return CSS::Length::make_px(compute_width_for_table_wrapper(box, available_space));
         if (should_treat_width_as_auto(box, available_space))
