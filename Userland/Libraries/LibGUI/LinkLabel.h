@@ -11,13 +11,18 @@
 namespace GUI {
 
 class LinkLabel : public Label {
-    C_OBJECT(LinkLabel);
+    C_OBJECT_ABSTRACT(LinkLabel);
 
 public:
+    static ErrorOr<NonnullRefPtr<LinkLabel>> try_create(String text = {});
+
     Function<void()> on_click;
 
 private:
     explicit LinkLabel(String text = {});
+
+    ErrorOr<void> create_actions();
+    ErrorOr<void> create_menus();
 
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
@@ -30,7 +35,6 @@ private:
     virtual void did_change_text() override;
 
     void update_tooltip_if_needed();
-    void setup_actions();
     void set_hovered(bool);
 
     RefPtr<Menu> m_context_menu;

@@ -19,24 +19,41 @@ REGISTER_WIDGET(GUI, LinkLabel)
 
 namespace GUI {
 
+ErrorOr<NonnullRefPtr<LinkLabel>> LinkLabel::try_create(String text)
+{
+    auto label = TRY(adopt_nonnull_ref_or_enomem(new (nothrow) LinkLabel(move(text))));
+    TRY(label->create_actions());
+    TRY(label->create_menus());
+    return label;
+}
+
 LinkLabel::LinkLabel(String text)
     : Label(move(text))
 {
     set_foreground_role(Gfx::ColorRole::Link);
     set_focus_policy(FocusPolicy::TabFocus);
-    setup_actions();
 }
 
-void LinkLabel::setup_actions()
+ErrorOr<void> LinkLabel::create_actions()
 {
     m_open_action = GUI::Action::create(
-        "Show in File Manager", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
+        "Show in File Manager", TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"sv)), [&](const GUI::Action&) {
             if (on_click)
                 on_click();
         },
         this);
 
     m_copy_action = CommonActions::make_copy_action([this](auto&) { Clipboard::the().set_plain_text(text()); }, this);
+    return {};
+}
+
+ErrorOr<void> LinkLabel::create_menus()
+{
+    m_context_menu = TRY(Menu::try_create());
+    TRY(m_context_menu->try_add_action(*m_open_action));
+    TRY(m_context_menu->try_add_separator());
+    TRY(m_context_menu->try_add_action(*m_copy_action));
+    return {};
 }
 
 void LinkLabel::set_hovered(bool hover)
@@ -116,12 +133,6 @@ void LinkLabel::resize_event(ResizeEvent& event)
 
 void LinkLabel::context_menu_event(ContextMenuEvent& event)
 {
-    if (!m_context_menu) {
-        m_context_menu = Menu::construct();
-        m_context_menu->add_action(*m_open_action);
-        m_context_menu->add_separator();
-        m_context_menu->add_action(*m_copy_action);
-    }
     m_context_menu->popup(event.screen_position(), m_open_action);
 }
 
