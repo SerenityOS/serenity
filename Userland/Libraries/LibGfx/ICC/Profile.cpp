@@ -5,6 +5,7 @@
  */
 
 #include <AK/Endian.h>
+#include <LibGfx/CIELAB.h>
 #include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
@@ -1470,7 +1471,7 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<Profile::CIELAB> Profile::to_lab(ReadonlyBytes color)
+ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color)
 {
     auto pcs = TRY(to_pcs(color));
     if (connection_space() == ColorSpace::PCSLAB)
