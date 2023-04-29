@@ -6,13 +6,9 @@
 
 #pragma once
 
+#include "RegexDefs.h"
 #include <AK/Types.h>
 #include <stdio.h>
-#ifdef AK_OS_SERENITY
-#    include <bits/regex_defs.h>
-#else
-#    include <LibC/bits/regex_defs.h>
-#endif
 
 namespace regex {
 
