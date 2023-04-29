@@ -8,6 +8,7 @@
 #include <AK/Format.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/Delay.h>
+#include <Kernel/Arch/Interrupts.h>
 #include <Kernel/Arch/SafeMem.h>
 #include <Kernel/Bus/PCI/API.h>
 #include <Kernel/CommandLine.h>
@@ -52,6 +53,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::initialize(bool is_queue_polled)
     m_ready_timeout = Time::from_milliseconds((CAP_TO(caps) + 1) * 500); // CAP.TO is in 500ms units
 
     calculate_doorbell_stride();
+    // IO queues + 1 admin queue
+    m_irq_type = TRY(reserve_irqs(nr_of_queues + 1, true));
+
     TRY(create_admin_queue(queue_type));
     VERIFY(m_admin_queue_ready == true);
 
@@ -281,13 +285,15 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_admin_queue(QueueType queu
     m_controller_regs->acq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(cq_dma_pages.first()->paddr().as_ptr()));
     m_controller_regs->asq = reinterpret_cast<u64>(AK::convert_between_host_and_little_endian(sq_dma_pages.first()->paddr().as_ptr()));
 
+    auto irq = TRY(allocate_irq(0)); // Admin queue always uses the 0th index when using MSIx
+
     maybe_error = start_controller();
     if (maybe_error.is_error()) {
         dmesgln_pci(*this, "Failed to restart the NVMe controller");
         return maybe_error;
     }
     set_admin_queue_ready_flag();
-    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, device_identifier().interrupt_line().value(), qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type));
+    m_admin_queue = TRY(NVMeQueue::try_create(*this, 0, irq, qdepth, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type));
 
     dbgln_if(NVME_DEBUG, "NVMe: Admin queue created");
     return {};
@@ -325,9 +331,8 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
         sub.create_cq.qsize = AK::convert_between_host_and_little_endian(IO_QUEUE_SIZE - 1);
         auto flags = (queue_type == QueueType::IRQ) ? QUEUE_IRQ_ENABLED : QUEUE_IRQ_DISABLED;
         flags |= QUEUE_PHY_CONTIGUOUS;
-        // TODO: Eventually move to MSI.
-        // For now using pin based interrupts. Clear the first 16 bits
-        // to use pin-based interrupts.
+        // When using MSIx interrupts, qid is used as an index into the interrupt table
+        sub.create_cq.irq_vector = (m_irq_type == PCI::InterruptType::PIN) ? 0 : qid;
         sub.create_cq.cq_flags = AK::convert_between_host_and_little_endian(flags & 0xFFFF);
         submit_admin_command(sub, true);
     }
@@ -346,8 +351,9 @@ UNMAP_AFTER_INIT ErrorOr<void> NVMeController::create_io_queue(u8 qid, QueueType
 
     auto queue_doorbell_offset = REG_SQ0TDBL_START + ((2 * qid) * (4 << m_dbl_stride));
     auto doorbell_regs = TRY(Memory::map_typed_writable<DoorbellRegister volatile>(PhysicalAddress(m_bar + queue_doorbell_offset)));
+    auto irq = TRY(allocate_irq(qid));
 
-    m_queues.append(TRY(NVMeQueue::try_create(*this, qid, device_identifier().interrupt_line().value(), IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type)));
+    m_queues.append(TRY(NVMeQueue::try_create(*this, qid, irq, IO_QUEUE_SIZE, move(cq_dma_region), cq_dma_pages, move(sq_dma_region), sq_dma_pages, move(doorbell_regs), queue_type)));
     dbgln_if(NVME_DEBUG, "NVMe: Created IO Queue with QID{}", m_queues.size());
     return {};
 }
