@@ -24,11 +24,7 @@ Label::Label(String text)
 
     set_preferred_size({ SpecialDimension::OpportunisticGrow });
     set_min_size({ SpecialDimension::Shrink });
-
-    set_frame_thickness(0);
-    set_frame_shadow(Gfx::FrameShadow::Plain);
-    set_frame_shape(Gfx::FrameShape::NoFrame);
-
+    set_frame_style(Gfx::FrameStyle::NoFrame);
     set_foreground_role(Gfx::ColorRole::WindowText);
 
     REGISTER_STRING_PROPERTY("text", text, set_text);

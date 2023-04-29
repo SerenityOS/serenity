@@ -79,7 +79,7 @@ public:
     virtual RefPtr<Widget> create_widget() override
     {
         auto textbox = TextBox::construct();
-        textbox->set_frame_shape(Gfx::FrameShape::NoFrame);
+        textbox->set_frame_style(Gfx::FrameStyle::NoFrame);
 
         textbox->on_return_pressed = [this] {
             commit();

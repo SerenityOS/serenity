@@ -48,7 +48,7 @@ public:
     private:
         Segment();
 
-        void set_frame_shape(Gfx::FrameShape shape) { m_shape = shape; }
+        void set_frame_style(Gfx::FrameStyle style) { m_style = style; }
         void set_restored_width(int width) { m_restored_width = width; }
         int restored_width() const { return m_restored_width; }
         DeprecatedString const& override_text() const { return m_override_text; }
@@ -58,9 +58,8 @@ public:
         DeprecatedString m_restored_text;
         bool m_clickable { false };
         int m_restored_width { 0 };
-        int m_thickness { 1 };
         Mode m_mode { Mode::Proportional };
-        Gfx::FrameShape m_shape { Gfx::FrameShape::Panel };
+        Gfx::FrameStyle m_style { Gfx::FrameStyle::SunkenPanel };
     };
 
     Segment& segment(size_t index) { return m_segments.at(index); }

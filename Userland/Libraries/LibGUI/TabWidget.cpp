@@ -243,7 +243,7 @@ void TabWidget::paint_event(PaintEvent& event)
     painter.fill_rect(event.rect(), palette().button());
 
     if (!m_container_margins.is_null()) {
-        Gfx::StylePainter::paint_frame(painter, container_rect(), palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
+        Gfx::StylePainter::paint_frame(painter, container_rect(), palette(), Gfx::FrameStyle::RaisedContainer);
     }
 
     auto paint_tab_icon_if_needed = [&](auto& icon, auto& button_rect, auto& text_rect) {
@@ -284,7 +284,7 @@ void TabWidget::paint_event(PaintEvent& event)
             auto close_button_rect = this->close_button_rect(i);
 
             if (hovered_close_button)
-                Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
+                Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), pressed_close_button ? Gfx::FrameStyle::SunkenPanel : Gfx::FrameStyle::RaisedPanel);
 
             Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
             if (!m_tabs[i].modified) {
@@ -358,7 +358,7 @@ void TabWidget::paint_event(PaintEvent& event)
         }
 
         if (hovered_close_button)
-            Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
+            Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), pressed_close_button ? Gfx::FrameStyle::SunkenPanel : Gfx::FrameStyle::RaisedPanel);
 
         Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
         if (!m_tabs[i].modified) {

@@ -241,12 +241,12 @@ void ClassicStylePainter::paint_button(Painter& painter, IntRect const& rect, Pa
     }
 }
 
-void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Palette const& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
+void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Palette const& palette, FrameStyle style, bool skip_vertical_lines)
 {
-    if (shape == Gfx::FrameShape::NoFrame)
+    if (style == Gfx::FrameStyle::NoFrame)
         return;
 
-    if (shape == FrameShape::Window) {
+    if (style == FrameStyle::Window) {
         StylePainter::paint_window_frame(painter, rect, palette);
         return;
     }
@@ -256,48 +256,50 @@ void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Pal
     Color dark_shade = palette.threed_shadow1();
     Color light_shade = palette.threed_highlight();
 
-    if (shape == FrameShape::Container && thickness >= 2) {
-        if (shadow == FrameShadow::Raised) {
-            dark_shade = palette.threed_shadow2();
-        }
-    }
+    if (style == FrameStyle::RaisedContainer)
+        dark_shade = palette.threed_shadow2();
 
-    if (shadow == FrameShadow::Raised) {
+    switch (style) {
+    case FrameStyle::RaisedContainer:
+    case FrameStyle::RaisedBox:
+    case FrameStyle::RaisedPanel:
         top_left_color = light_shade;
         bottom_right_color = dark_shade;
-    } else if (shadow == FrameShadow::Sunken) {
+        break;
+    case FrameStyle::SunkenContainer:
+    case FrameStyle::SunkenBox:
+    case FrameStyle::SunkenPanel:
         top_left_color = dark_shade;
         bottom_right_color = light_shade;
-    } else if (shadow == FrameShadow::Plain) {
+        break;
+    case FrameStyle::Plain:
         top_left_color = dark_shade;
         bottom_right_color = dark_shade;
+        break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 
-    if (thickness >= 1) {
-        painter.draw_line(rect.top_left(), rect.top_right(), top_left_color);
-        painter.draw_line(rect.bottom_left(), rect.bottom_right(), bottom_right_color);
+    painter.draw_line(rect.top_left(), rect.top_right(), top_left_color);
+    painter.draw_line(rect.bottom_left(), rect.bottom_right(), bottom_right_color);
 
-        if (shape != FrameShape::Panel || !skip_vertical_lines) {
-            painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), top_left_color);
-            painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), bottom_right_color);
-        }
+    if ((style != FrameStyle::SunkenPanel && style != FrameStyle::RaisedPanel) || !skip_vertical_lines) {
+        painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), top_left_color);
+        painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), bottom_right_color);
     }
 
-    if (shape == FrameShape::Container && thickness >= 2) {
+    if (style == FrameStyle::RaisedContainer || style == FrameStyle::SunkenContainer) {
         Color top_left_color;
         Color bottom_right_color;
         Color dark_shade = palette.threed_shadow2();
         Color light_shade = palette.button();
-        if (shadow == FrameShadow::Raised) {
+        if (style == FrameStyle::RaisedContainer) {
             dark_shade = palette.threed_shadow1();
             top_left_color = light_shade;
             bottom_right_color = dark_shade;
-        } else if (shadow == FrameShadow::Sunken) {
+        } else if (style == FrameStyle::SunkenContainer) {
             top_left_color = dark_shade;
             bottom_right_color = light_shade;
-        } else if (shadow == FrameShadow::Plain) {
-            top_left_color = dark_shade;
-            bottom_right_color = dark_shade;
         }
         IntRect inner_container_frame_rect = rect.shrunken(2, 2);
         painter.draw_line(inner_container_frame_rect.top_left(), inner_container_frame_rect.top_right(), top_left_color);
@@ -306,7 +308,7 @@ void ClassicStylePainter::paint_frame(Painter& painter, IntRect const& rect, Pal
         painter.draw_line(inner_container_frame_rect.top_right(), inner_container_frame_rect.bottom_right().translated(0, -1), bottom_right_color);
     }
 
-    if (shape == FrameShape::Box && thickness >= 2) {
+    if (style == FrameStyle::RaisedBox || style == FrameStyle::SunkenBox) {
         swap(top_left_color, bottom_right_color);
         IntRect inner_rect = rect.shrunken(2, 2);
         painter.draw_line(inner_rect.top_left(), inner_rect.top_right(), top_left_color);
@@ -555,7 +557,7 @@ static constexpr Gfx::CharacterBitmap s_checked_bitmap {
 void ClassicStylePainter::paint_check_box(Painter& painter, IntRect const& rect, Palette const& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
 {
     painter.fill_rect(rect, is_enabled ? palette.base() : palette.window());
-    paint_frame(painter, rect, palette, Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+    paint_frame(painter, rect, palette, Gfx::FrameStyle::SunkenContainer);
 
     if (is_being_pressed) {
         // FIXME: This color should not be hard-coded.

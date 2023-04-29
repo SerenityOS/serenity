@@ -20,9 +20,7 @@ namespace Taskbar {
 
 ClockWidget::ClockWidget()
 {
-    set_frame_shape(Gfx::FrameShape::Box);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-    set_frame_thickness(1);
+    set_frame_style(Gfx::FrameStyle::SunkenPanel);
 
     update_format(Config::read_string("Taskbar"sv, "Clock"sv, "TimeFormat"sv, "%T"sv));
 
@@ -44,7 +42,7 @@ ClockWidget::ClockWidget()
     auto root_container = m_calendar_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
     root_container->set_fill_with_background_color(true);
     root_container->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 2, 0 }, 0);
-    root_container->set_frame_shape(Gfx::FrameShape::Window);
+    root_container->set_frame_style(Gfx::FrameStyle::Window);
 
     auto& navigation_container = root_container->add<GUI::Widget>();
     navigation_container.set_fixed_height(24);

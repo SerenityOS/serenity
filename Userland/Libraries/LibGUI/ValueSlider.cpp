@@ -87,7 +87,7 @@ void ValueSlider::paint_event(PaintEvent& event)
     unfilled_rect.set_left(knob_rect().right());
     painter.fill_rect(unfilled_rect, palette().base());
 
-    Gfx::StylePainter::paint_frame(painter, bar_rect(), palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+    Gfx::StylePainter::paint_frame(painter, bar_rect(), palette(), Gfx::FrameStyle::SunkenContainer);
     Gfx::StylePainter::paint_button(painter, knob_rect(), palette(), Gfx::ButtonStyle::Normal, false, m_hovered);
 
     auto paint_knurl = [&](int x, int y) {

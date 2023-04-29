@@ -84,7 +84,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     auto inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
     inline_widget->set_fill_with_background_color(true);
     inline_widget->set_layout<GUI::VerticalBoxLayout>(4);
-    inline_widget->set_frame_shape(Gfx::FrameShape::Box);
+    inline_widget->set_frame_style(Gfx::FrameStyle::Plain);
     m_inline_documentation_label = inline_widget->add<GUI::Label>();
     m_inline_documentation_label->set_fill_with_background_color(true);
     m_inline_documentation_label->set_autosize(false);

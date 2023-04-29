@@ -53,7 +53,6 @@ private:
 
     RefPtr<GUI::Frame> m_label_frame;
     RefPtr<GUI::Label> m_enabled_label;
-    RefPtr<GUI::SpinBox> m_thickness_spinbox;
     RefPtr<GUI::ColorInput> m_font_colorinput;
     RefPtr<GUI::TableView> m_icons_tableview;
     RefPtr<GUI::TableView> m_cursors_tableview;

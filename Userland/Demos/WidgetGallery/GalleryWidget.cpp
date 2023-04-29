@@ -43,34 +43,25 @@ GalleryWidget::GalleryWidget()
     m_label_frame = basics_tab->find_descendant_of_type_named<GUI::Frame>("label_frame");
 
     m_frame_shapes.append("No Frame");
-    m_frame_shapes.append("Plain Box");
-    m_frame_shapes.append("Plain Container");
-    m_frame_shapes.append("Plain Panel");
+    m_frame_shapes.append("Window");
+    m_frame_shapes.append("Plain");
     m_frame_shapes.append("Raised Box");
-    m_frame_shapes.append("Raised Container");
-    m_frame_shapes.append("Raised Panel");
     m_frame_shapes.append("Sunken Box");
+    m_frame_shapes.append("Raised Container");
     m_frame_shapes.append("Sunken Container");
+    m_frame_shapes.append("Raised Panel");
     m_frame_shapes.append("Sunken Panel");
 
-    m_frame_shape_combobox = basics_tab->find_descendant_of_type_named<GUI::ComboBox>("frame_shape_combobox");
+    m_frame_shape_combobox = basics_tab->find_descendant_of_type_named<GUI::ComboBox>("frame_style_combobox");
     m_frame_shape_combobox->set_model(*GUI::ItemListModel<DeprecatedString>::create(m_frame_shapes));
 
     m_frame_shape_combobox->on_change = [&](auto&, auto const& index) {
-        m_label_frame->set_frame_shape(static_cast<Gfx::FrameShape>((index.row() - 1) % 3 + 1));
-        m_label_frame->set_frame_shadow(static_cast<Gfx::FrameShadow>((index.row() - 1) / 3));
+        m_label_frame->set_frame_style(static_cast<Gfx::FrameStyle>(index.row()));
         m_label_frame->update();
     };
 
     m_frame_shape_combobox->on_return_pressed = [&]() {
         m_enabled_label->set_text(String::from_deprecated_string(m_frame_shape_combobox->text()).release_value_but_fixme_should_propagate_errors());
-    };
-
-    m_thickness_spinbox = basics_tab->find_descendant_of_type_named<GUI::SpinBox>("thickness_spinbox");
-    m_thickness_spinbox->set_value(1);
-
-    m_thickness_spinbox->on_change = [&](auto value) {
-        m_label_frame->set_frame_thickness(value);
     };
 
     m_button_icons.append(Gfx::Bitmap::load_from_file("/res/icons/16x16/book-open.png"sv).release_value_but_fixme_should_propagate_errors());

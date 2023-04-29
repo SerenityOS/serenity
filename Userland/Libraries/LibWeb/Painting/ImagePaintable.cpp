@@ -44,7 +44,7 @@ void ImagePaintable::paint(PaintContext& context, PaintPhase phase) const
             auto& image_element = verify_cast<HTML::HTMLImageElement>(*dom_node());
             auto enclosing_rect = context.enclosing_device_rect(absolute_rect()).to_type<int>();
             context.painter().set_font(Platform::FontPlugin::the().default_font());
-            Gfx::StylePainter::paint_frame(context.painter(), enclosing_rect, context.palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+            Gfx::StylePainter::paint_frame(context.painter(), enclosing_rect, context.palette(), Gfx::FrameStyle::SunkenContainer);
             auto alt = image_element.alt();
             if (alt.is_empty())
                 alt = image_element.src();

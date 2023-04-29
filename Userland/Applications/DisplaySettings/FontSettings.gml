@@ -19,9 +19,7 @@
 
         @GUI::Label {
             background_role: "Base"
-            shadow: "Sunken"
-            shape: "Container"
-            thickness: 2
+            style: "SunkenContainer"
             fill_with_background_color: true
             name: "default_font_label"
         }
@@ -47,9 +45,7 @@
 
         @GUI::Label {
             background_role: "Base"
-            shadow: "Sunken"
-            shape: "Container"
-            thickness: 2
+            style: "SunkenContainer"
             fill_with_background_color: true
             name: "window_title_font_label"
         }
@@ -75,9 +71,7 @@
 
         @GUI::Label {
             background_role: "Base"
-            shadow: "Sunken"
-            shape: "Container"
-            thickness: 2
+            style: "SunkenContainer"
             fill_with_background_color: true
             name: "fixed_width_font_label"
         }
