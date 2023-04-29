@@ -250,7 +250,7 @@ struct JPEGLoadingContext {
     u16 dc_restart_interval { 0 };
     HashMap<u8, HuffmanTableSpec> dc_tables;
     HashMap<u8, HuffmanTableSpec> ac_tables;
-    Array<i32, 4> previous_dc_values {};
+    Array<i16, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
     OwnPtr<FixedMemoryStream> stream;
 
@@ -366,7 +366,7 @@ static ErrorOr<void> add_dc(JPEGLoadingContext& context, Macroblock& macroblock,
     }
 
     // DC coefficients are encoded as the difference between previous and current DC values.
-    i32 dc_diff = TRY(read_huffman_bits(scan.huffman_stream, dc_length));
+    i16 dc_diff = TRY(read_huffman_bits(scan.huffman_stream, dc_length));
 
     // If MSB in diff is 0, the difference is -ve. Otherwise +ve.
     if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
