@@ -206,6 +206,8 @@ void TableFormattingContext::compute_table_measures()
 
 void TableFormattingContext::compute_table_width()
 {
+    // https://drafts.csswg.org/css-tables-3/#computing-the-table-width
+
     auto& table_box_state = m_state.get_mutable(table_box());
 
     auto& computed_values = table_box().computed_values();
@@ -239,7 +241,6 @@ void TableFormattingContext::compute_table_width()
         // If the table-root has 'width: auto', the used width is the greater of
         // min(GRIDMAX, the table’s containing block width), the used min-width of the table.
         used_width = max(min(grid_max, width_of_table_containing_block), used_min_width);
-        table_box_state.set_content_width(used_width);
     } else {
         // If the table-root’s width property has a computed value (resolving to
         // resolved-table-width) other than auto, the used width is the greater
@@ -248,8 +249,11 @@ void TableFormattingContext::compute_table_width()
         used_width = max(resolved_table_width, used_min_width);
         if (!computed_values.max_width().is_none())
             used_width = min(used_width, computed_values.max_width().resolved(table_box(), CSS::Length::make_px(width_of_table_containing_block)).to_px(table_box()));
-        table_box_state.set_content_width(used_width);
     }
+
+    // The assignable table width is the used width of the table minus the total horizontal border spacing (if any).
+    // This is the width that we will be able to allocate to the columns.
+    table_box_state.set_content_width(used_width - table_box_state.border_left - table_box_state.border_right);
 }
 
 void TableFormattingContext::distribute_width_to_columns()
