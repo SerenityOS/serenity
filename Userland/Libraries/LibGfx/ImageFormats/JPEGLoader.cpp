@@ -187,7 +187,7 @@ struct HuffmanTableSpec {
     Vector<u16> codes;
 };
 
-struct HuffmanStreamState {
+struct HuffmanStream {
     Vector<u8> stream;
     u8 bit_offset { 0 };
     size_t byte_offset { 0 };
@@ -207,7 +207,7 @@ struct Scan {
     u8 successive_approximation_high {}; // Ah
     u8 successive_approximation_low {};  // Al
 
-    HuffmanStreamState huffman_stream;
+    HuffmanStream huffman_stream;
 
     u64 end_of_bands_run_count { 0 };
 
@@ -270,7 +270,7 @@ static void generate_huffman_codes(HuffmanTableSpec& table)
     }
 }
 
-static ErrorOr<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t count = 1)
+static ErrorOr<size_t> read_huffman_bits(HuffmanStream& hstream, size_t count = 1)
 {
     if (count > (8 * sizeof(size_t))) {
         dbgln_if(JPEG_DEBUG, "Can't read {} bits at once!", count);
@@ -294,7 +294,7 @@ static ErrorOr<size_t> read_huffman_bits(HuffmanStreamState& hstream, size_t cou
     return value;
 }
 
-static ErrorOr<u8> get_next_symbol(HuffmanStreamState& hstream, HuffmanTableSpec const& table)
+static ErrorOr<u8> get_next_symbol(HuffmanStream& hstream, HuffmanTableSpec const& table)
 {
     unsigned code = 0;
     size_t code_cursor = 0;
@@ -1640,7 +1640,7 @@ static ErrorOr<void> parse_header(Stream& stream, JPEGLoadingContext& context)
     VERIFY_NOT_REACHED();
 }
 
-static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, HuffmanStreamState& huffman_stream)
+static ErrorOr<void> scan_huffman_stream(AK::SeekableStream& stream, HuffmanStream& huffman_stream)
 {
     u8 last_byte;
     u8 current_byte = TRY(stream.read_value<u8>());
