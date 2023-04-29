@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/Math.h>
 #include <AK/MemoryStream.h>
+#include <AK/NumericLimits.h>
 #include <AK/String.h>
 #include <AK/Try.h>
 #include <AK/Vector.h>
@@ -253,25 +254,36 @@ public:
             return Error::from_string_literal("Reading too much huffman bits at once");
         }
 
-        u16 value = 0;
-        while (count--) {
-            if (m_byte_offset >= m_stream.size()) {
-                dbgln_if(JPEG_DEBUG, "Huffman stream exhausted. This could be an error!");
-                return Error::from_string_literal("Huffman stream exhausted.");
-            }
-
-            u8 const current_byte = m_stream[m_byte_offset];
-            u8 const current_bit = 1u & (current_byte >> (7 - m_bit_offset)); // MSB first.
-
-            m_bit_offset++;
-            value = (value << 1) | current_bit;
-
-            if (m_bit_offset == 8) {
-                m_byte_offset++;
-                m_bit_offset = 0;
-            }
-        }
+        u16 const value = peek_bits(count);
+        discard_bits(count);
         return value;
+    }
+
+    u16 peek_bits(u8 count) const
+    {
+        using BufferType = u32;
+
+        constexpr static auto max = NumericLimits<BufferType>::max();
+
+        auto const mask = max >> (8 + m_bit_offset);
+
+        BufferType msb_buffer {};
+        if (m_byte_offset + 0 < m_stream.size())
+            msb_buffer |= (static_cast<BufferType>(m_stream[m_byte_offset + 0]) << (2 * 8));
+        if (m_byte_offset + 1 < m_stream.size())
+            msb_buffer |= (static_cast<BufferType>(m_stream[m_byte_offset + 1]) << (1 * 8));
+        if (m_byte_offset + 2 < m_stream.size())
+            msb_buffer |= (static_cast<BufferType>(m_stream[m_byte_offset + 2]) << (0 * 8));
+
+        return (mask & msb_buffer) >> (3 * 8 - m_bit_offset - count);
+    }
+
+    void discard_bits(u8 count)
+    {
+        m_bit_offset += count;
+        auto const carry = m_bit_offset / 8;
+        m_bit_offset -= 8 * carry;
+        m_byte_offset += carry;
     }
 
     void advance_to_byte_boundary()
