@@ -229,15 +229,16 @@ public:
 
     ErrorOr<u8> next_symbol(HuffmanTableSpec const& table)
     {
-        unsigned code = 0;
+        u16 const code = peek_bits(16);
         u64 code_cursor = 0;
 
         for (int i = 0; i < 16; i++) { // Codes can't be longer than 16 bits.
-            auto result = TRY(read_bits());
-            code = (code << 1) | result;
+            auto const result = code >> (15 - i);
             for (int j = 0; j < table.code_counts[i]; j++) {
-                if (code == table.codes[code_cursor])
+                if (result == table.codes[code_cursor]) {
+                    discard_bits(i + 1);
                     return table.symbols[code_cursor];
+                }
                 code_cursor++;
             }
         }
