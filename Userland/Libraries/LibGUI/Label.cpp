@@ -33,7 +33,6 @@ Label::Label(String text)
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
     REGISTER_BOOL_PROPERTY("autosize", is_autosize, set_autosize);
-    REGISTER_WRITE_ONLY_STRING_PROPERTY("icon", set_icon_from_path);
 }
 
 void Label::set_autosize(bool autosize, size_t padding)
@@ -44,24 +43,6 @@ void Label::set_autosize(bool autosize, size_t padding)
     m_autosize_padding = padding;
     if (m_autosize)
         size_to_fit();
-}
-
-void Label::set_icon(Gfx::Bitmap const* icon)
-{
-    if (m_icon == icon)
-        return;
-    m_icon = icon;
-    update();
-}
-
-void Label::set_icon_from_path(StringView path)
-{
-    auto maybe_bitmap = Gfx::Bitmap::load_from_file(path);
-    if (maybe_bitmap.is_error()) {
-        dbgln("Unable to load bitmap `{}` for label icon", path);
-        return;
-    }
-    set_icon(maybe_bitmap.release_value());
 }
 
 void Label::set_text(String text)
@@ -87,15 +68,6 @@ void Label::paint_event(PaintEvent& event)
 
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-
-    if (m_icon) {
-        if (m_should_stretch_icon) {
-            painter.draw_scaled_bitmap(frame_inner_rect(), *m_icon, m_icon->rect());
-        } else {
-            auto icon_location = frame_inner_rect().center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2));
-            painter.blit(icon_location, *m_icon, m_icon->rect());
-        }
-    }
 
     if (text().is_empty())
         return;

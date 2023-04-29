@@ -14,7 +14,7 @@
 
 class Field;
 class SquareButton;
-class SquareLabel;
+class SquareImage;
 
 class Square {
     AK_MAKE_NONCOPYABLE(Square);
@@ -32,7 +32,7 @@ public:
     size_t column { 0 };
     size_t number { 0 };
     RefPtr<SquareButton> button;
-    RefPtr<SquareLabel> label;
+    RefPtr<SquareImage> image;
 
     template<typename Callback>
     void for_each_neighbor(Callback);
@@ -41,7 +41,7 @@ public:
 class Field final : public GUI::Frame {
     C_OBJECT(Field)
     friend class Square;
-    friend class SquareLabel;
+    friend class SquareImage;
 
 public:
     static ErrorOr<NonnullRefPtr<Field>> create(GUI::Label& flag_label, GUI::Label& time_label, GUI::Button& face_button);

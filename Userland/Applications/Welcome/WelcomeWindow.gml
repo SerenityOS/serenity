@@ -34,10 +34,10 @@
                     fixed_width: 60
                     layout: @GUI::VerticalBoxLayout {}
 
-                    @GUI::Label {
-                        name: "light_bulb_label"
+                    @GUI::ImageWidget {
                         fixed_height: 60
-                        icon: "/res/icons/32x32/app-welcome.png"
+                        auto_resize: false
+                        bitmap: "/res/icons/32x32/app-welcome.png"
                     }
                 }
 
