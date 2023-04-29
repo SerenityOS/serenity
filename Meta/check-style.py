@@ -29,11 +29,6 @@ LICENSE_HEADER_CHECK_EXCLUDES = {
     'Userland/Libraries/LibCpp/Tests/parser/',
     'Userland/Libraries/LibCpp/Tests/preprocessor/'
 }
-LIBC_CHECK_EXCLUDES = {
-    'Kernel/',
-    'Userland/Libraries/LibELF/',
-    'Userland/Libraries/LibRegex/'
-}
 
 # We check that "#pragma once" is present
 PRAGMA_ONCE_STRING = '#pragma once'
@@ -122,9 +117,8 @@ def run():
             else:
                 # Bad, the '#pragma once' is missing completely.
                 errors_pragma_once_missing.append(filename)
-        if not is_in_prefix_list(filename, LIBC_CHECK_EXCLUDES):
-            if BAD_INCLUDE_LIBC.search(file_content):
-                errors_include_libc.append(filename)
+        if BAD_INCLUDE_LIBC.search(file_content):
+            errors_include_libc.append(filename)
         if BAD_INCLUDE_COMPLEX.search(file_content):
             errors_include_bad_complex.append(filename)
         if not is_in_prefix_list(filename, INCLUDE_CHECK_EXCLUDES):

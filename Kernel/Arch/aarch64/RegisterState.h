@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibC/sys/arch/aarch64/regs.h>
+#include <sys/arch/aarch64/regs.h>
 
 #include <Kernel/Security/ExecutionMode.h>
 
