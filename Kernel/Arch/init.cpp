@@ -194,8 +194,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_memory_map = mmap;
     multiboot_memory_map_count = 1;
 
-    multiboot_module_entry_t modules[] = {};
-    multiboot_modules = modules;
+    multiboot_modules = nullptr;
     multiboot_modules_count = 0;
     // FIXME: Read the /chosen/bootargs property.
     kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
@@ -206,7 +205,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
     CommandLine::early_initialize(kernel_cmdline);
-    memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
+    if (multiboot_modules_count > 0) {
+        VERIFY(multiboot_modules);
+        memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
+    }
     multiboot_copy_boot_modules_count = multiboot_modules_count;
 
     new (&bsp_processor()) Processor();
