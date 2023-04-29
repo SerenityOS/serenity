@@ -176,7 +176,8 @@ void GradientTool::on_second_paint(Layer const* layer, GUI::PaintEvent& event)
 
     GUI::Painter painter(*m_editor);
     painter.add_clip_rect(event.rect());
-    draw_gradient(painter, true, m_editor->content_to_frame_position(layer->location()), m_editor->scale(), m_editor->content_rect());
+    auto gradient_clip_rect = m_editor->content_to_frame_rect(layer->relative_rect()).to_type<int>().intersected(m_editor->content_rect());
+    draw_gradient(painter, true, m_editor->content_to_frame_position(layer->location()), m_editor->scale(), gradient_clip_rect);
 }
 
 void GradientTool::on_primary_color_change(Color)
