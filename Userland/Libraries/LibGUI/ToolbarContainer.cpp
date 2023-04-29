@@ -18,11 +18,7 @@ ToolbarContainer::ToolbarContainer(Gfx::Orientation orientation)
     : m_orientation(orientation)
 {
     set_fill_with_background_color(true);
-
-    set_frame_thickness(2);
-    set_frame_shape(Gfx::FrameShape::Box);
-    set_frame_shadow(Gfx::FrameShadow::Sunken);
-
+    set_frame_style(Gfx::FrameStyle::SunkenBox);
     set_layout<VerticalBoxLayout>(GUI::Margins {}, 2);
     set_shrink_to_fit(true);
 }

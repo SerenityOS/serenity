@@ -22,7 +22,7 @@ PresenterWidget::PresenterWidget()
     set_min_size(200, 120);
     set_fill_with_background_color(true);
     m_web_view = add<WebView::OutOfProcessWebView>();
-    m_web_view->set_frame_thickness(0);
+    m_web_view->set_frame_style(Gfx::FrameStyle::NoFrame);
     m_web_view->set_scrollbars_enabled(false);
     m_web_view->set_focus_policy(GUI::FocusPolicy::NoFocus);
     m_web_view->set_content_scales_to_viewport(true);

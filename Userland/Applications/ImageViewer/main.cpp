@@ -115,7 +115,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     widget->on_doubleclick = [&] {
         window->set_fullscreen(!window->is_fullscreen());
         toolbar_container->set_visible(!window->is_fullscreen());
-        widget->set_frame_thickness(window->is_fullscreen() ? 0 : 2);
+        widget->set_frame_style(window->is_fullscreen() ? Gfx::FrameStyle::NoFrame : Gfx::FrameStyle::SunkenContainer);
     };
 
     // Actions

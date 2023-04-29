@@ -25,10 +25,7 @@ CalculatorWidget::CalculatorWidget()
     m_entry->set_text_alignment(Gfx::TextAlignment::CenterRight);
 
     m_label = *find_descendant_of_type_named<GUI::Label>("label");
-
-    m_label->set_frame_shadow(Gfx::FrameShadow::Sunken);
-    m_label->set_frame_shape(Gfx::FrameShape::Container);
-    m_label->set_frame_thickness(2);
+    m_label->set_frame_style(Gfx::FrameStyle::SunkenContainer);
 
     for (int i = 0; i < 10; i++) {
         m_digit_button[i] = *find_descendant_of_type_named<GUI::Button>(DeprecatedString::formatted("{}_button", i));

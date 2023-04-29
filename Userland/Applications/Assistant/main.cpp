@@ -176,7 +176,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     auto container = TRY(window->set_main_widget<GUI::Frame>());
     container->set_fill_with_background_color(true);
-    container->set_frame_shape(Gfx::FrameShape::Window);
+    container->set_frame_style(Gfx::FrameStyle::Window);
     container->set_layout<GUI::VerticalBoxLayout>(8);
 
     auto& text_box = container->add<GUI::TextBox>();

@@ -83,7 +83,7 @@ private:
         m_root_container = TRY(m_slider_window->set_main_widget<GUI::Frame>());
         m_root_container->set_fill_with_background_color(true);
         m_root_container->set_layout<GUI::VerticalBoxLayout>(4, 0);
-        m_root_container->set_frame_shape(Gfx::FrameShape::Window);
+        m_root_container->set_frame_style(Gfx::FrameStyle::Window);
 
         m_percent_box = m_root_container->add<GUI::CheckBox>("\xE2\x84\xB9"_short_string);
         m_percent_box->set_tooltip(m_show_percent ? "Hide percent" : "Show percent");

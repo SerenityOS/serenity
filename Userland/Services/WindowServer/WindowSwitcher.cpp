@@ -191,7 +191,7 @@ void WindowSwitcher::draw()
             rect_text_color = palette.selection_text().with_alpha(0xcc);
         } else {
             if (static_cast<int>(index) == m_hovered_index)
-                Gfx::StylePainter::paint_frame(painter, item_rect, palette, Gfx::FrameShape::Panel, Gfx::FrameShadow::Raised, 2);
+                Gfx::StylePainter::paint_frame(painter, item_rect, palette, Gfx::FrameStyle::RaisedPanel);
             text_color = Color::White;
             rect_text_color = Color(Color::White).with_alpha(0xcc);
         }

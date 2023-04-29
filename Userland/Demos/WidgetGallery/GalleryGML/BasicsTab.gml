@@ -17,9 +17,7 @@
 
             @GUI::Frame {
                 name: "label_frame"
-                shape: "Panel"
-                shadow: "Sunken"
-                thickness: 1
+                style: "SunkenPanel"
                 layout: @GUI::VerticalBoxLayout {
                     margins: [3, 4]
                 }
@@ -59,7 +57,7 @@
             layout: @GUI::HorizontalBoxLayout {}
 
             @GUI::ComboBox {
-                name: "frame_shape_combobox"
+                name: "frame_style_combobox"
                 placeholder: "Combo box"
             }
 
@@ -70,11 +68,7 @@
 
             @GUI::VerticalSeparator {}
 
-            @GUI::SpinBox {
-                name: "thickness_spinbox"
-                min: 0
-                max: 2
-            }
+            @GUI::SpinBox {}
 
             @GUI::SpinBox {
                 enabled: false

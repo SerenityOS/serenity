@@ -85,7 +85,7 @@ void Statusbar::update_segment(size_t index)
                 m_segments[i]->set_visible(true);
         }
         segment->set_text(String::from_utf8(segment->restored_text()).release_value_but_fixme_should_propagate_errors());
-        segment->set_frame_shape(Gfx::FrameShape::Panel);
+        segment->set_frame_style(Gfx::FrameStyle::SunkenPanel);
         if (segment->mode() != Segment::Mode::Proportional)
             segment->set_fixed_width(segment->restored_width());
     } else {
@@ -94,7 +94,7 @@ void Statusbar::update_segment(size_t index)
                 m_segments[i]->set_visible(false);
         }
         segment->set_text(String::from_utf8(segment->override_text()).release_value_but_fixme_should_propagate_errors());
-        segment->set_frame_shape(Gfx::FrameShape::NoFrame);
+        segment->set_frame_style(Gfx::FrameStyle::NoFrame);
         if (segment->mode() != Segment::Mode::Proportional)
             segment->set_fixed_width(SpecialDimension::Grow);
     }
@@ -152,7 +152,7 @@ void Statusbar::Segment::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     bool skip_vertical_lines = window()->is_maximized() && spans_entire_window_horizontally();
-    Gfx::StylePainter::current().paint_frame(painter, rect(), palette(), m_shape, Gfx::FrameShadow::Sunken, m_thickness, skip_vertical_lines);
+    Gfx::StylePainter::current().paint_frame(painter, rect(), palette(), m_style, skip_vertical_lines);
 
     if (is_clickable())
         Button::paint_event(event);

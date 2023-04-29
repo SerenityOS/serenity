@@ -20,9 +20,7 @@ ImageWidget::ImageWidget(StringView)
     : m_timer(Core::Timer::try_create().release_value_but_fixme_should_propagate_errors())
 
 {
-    set_frame_thickness(0);
-    set_frame_shadow(Gfx::FrameShadow::Plain);
-    set_frame_shape(Gfx::FrameShape::NoFrame);
+    set_frame_style(Gfx::FrameStyle::NoFrame);
     set_auto_resize(true);
 
     REGISTER_BOOL_PROPERTY("auto_resize", auto_resize, set_auto_resize);

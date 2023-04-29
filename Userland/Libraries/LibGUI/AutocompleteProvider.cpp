@@ -97,8 +97,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
     main_widget->set_layout<GUI::VerticalBoxLayout>();
 
     m_suggestion_view = main_widget->add<GUI::TableView>();
-    m_suggestion_view->set_frame_shadow(Gfx::FrameShadow::Plain);
-    m_suggestion_view->set_frame_thickness(1);
+    m_suggestion_view->set_frame_style(Gfx::FrameStyle::Plain);
     m_suggestion_view->set_column_headers_visible(false);
     m_suggestion_view->set_visible(false);
     m_suggestion_view->on_activation = [&](GUI::ModelIndex const& index) {

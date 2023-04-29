@@ -18,7 +18,7 @@ PromotionDialog::PromotionDialog(ChessWidget& chess_widget)
     resize(70 * 4, 70);
 
     auto main_widget = set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
-    main_widget->set_frame_shape(Gfx::FrameShape::Container);
+    main_widget->set_frame_style(Gfx::FrameStyle::SunkenContainer);
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout<GUI::HorizontalBoxLayout>();
 
