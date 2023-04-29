@@ -218,11 +218,6 @@ ErrorOr<int> Shell::builtin_unalias(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_break(Main::Arguments arguments)
 {
-    if (!m_in_posix_mode) {
-        raise_error(ShellError::EvaluatedSyntaxError, "break: Invalid use of builtin break in non-POSIX mode");
-        return 1;
-    }
-
     unsigned count = 1;
 
     Core::ArgsParser parser;
@@ -243,11 +238,6 @@ ErrorOr<int> Shell::builtin_break(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_continue(Main::Arguments arguments)
 {
-    if (!m_in_posix_mode) {
-        raise_error(ShellError::EvaluatedSyntaxError, "break: Invalid use of builtin continue in non-POSIX mode");
-        return 1;
-    }
-
     unsigned count = 1;
 
     Core::ArgsParser parser;
@@ -1337,7 +1327,7 @@ ErrorOr<bool> Shell::run_builtin(const AST::Command& command, Vector<NonnullRefP
     if (name == ":"sv)
         name = "noop"sv;
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin)                               \
+#define __ENUMERATE_SHELL_BUILTIN(builtin, _mode)                        \
     if (name == #builtin) {                                              \
         retval = TRY(builtin_##builtin(arguments_object));               \
         if (!has_error(ShellError::None))                                \
@@ -1787,11 +1777,6 @@ ErrorOr<int> Shell::builtin_argsparser_parse(Main::Arguments arguments)
 
 ErrorOr<int> Shell::builtin_read(Main::Arguments arguments)
 {
-    if (!m_in_posix_mode) {
-        raise_error(ShellError::EvaluatedSyntaxError, "read: POSIX builtin used in non-POSIX mode");
-        return 1;
-    }
-
     bool no_escape = false;
     Vector<DeprecatedString> variables;
 
@@ -1937,9 +1922,11 @@ bool Shell::has_builtin(StringView name) const
     if (name == ":"sv)
         return true;
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin) \
-    if (name == #builtin) {                \
-        return true;                       \
+#define __ENUMERATE_SHELL_BUILTIN(builtin, mode)                            \
+    if (name == #builtin) {                                                 \
+        if (POSIXModeRequirement::mode == POSIXModeRequirement::InAllModes) \
+            return true;                                                    \
+        return m_in_posix_mode;                                             \
     }
 
     ENUMERATE_SHELL_BUILTINS();

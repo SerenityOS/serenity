@@ -23,42 +23,42 @@
 #include <LibMain/Main.h>
 #include <termios.h>
 
-#define ENUMERATE_SHELL_BUILTINS()          \
-    __ENUMERATE_SHELL_BUILTIN(alias)        \
-    __ENUMERATE_SHELL_BUILTIN(where)        \
-    __ENUMERATE_SHELL_BUILTIN(cd)           \
-    __ENUMERATE_SHELL_BUILTIN(cdh)          \
-    __ENUMERATE_SHELL_BUILTIN(pwd)          \
-    __ENUMERATE_SHELL_BUILTIN(type)         \
-    __ENUMERATE_SHELL_BUILTIN(exec)         \
-    __ENUMERATE_SHELL_BUILTIN(exit)         \
-    __ENUMERATE_SHELL_BUILTIN(export)       \
-    __ENUMERATE_SHELL_BUILTIN(glob)         \
-    __ENUMERATE_SHELL_BUILTIN(unalias)      \
-    __ENUMERATE_SHELL_BUILTIN(unset)        \
-    __ENUMERATE_SHELL_BUILTIN(history)      \
-    __ENUMERATE_SHELL_BUILTIN(umask)        \
-    __ENUMERATE_SHELL_BUILTIN(not )         \
-    __ENUMERATE_SHELL_BUILTIN(dirs)         \
-    __ENUMERATE_SHELL_BUILTIN(pushd)        \
-    __ENUMERATE_SHELL_BUILTIN(popd)         \
-    __ENUMERATE_SHELL_BUILTIN(setopt)       \
-    __ENUMERATE_SHELL_BUILTIN(shift)        \
-    __ENUMERATE_SHELL_BUILTIN(source)       \
-    __ENUMERATE_SHELL_BUILTIN(time)         \
-    __ENUMERATE_SHELL_BUILTIN(jobs)         \
-    __ENUMERATE_SHELL_BUILTIN(disown)       \
-    __ENUMERATE_SHELL_BUILTIN(fg)           \
-    __ENUMERATE_SHELL_BUILTIN(bg)           \
-    __ENUMERATE_SHELL_BUILTIN(wait)         \
-    __ENUMERATE_SHELL_BUILTIN(dump)         \
-    __ENUMERATE_SHELL_BUILTIN(kill)         \
-    __ENUMERATE_SHELL_BUILTIN(noop)         \
-    __ENUMERATE_SHELL_BUILTIN(break)        \
-    __ENUMERATE_SHELL_BUILTIN(continue)     \
-    __ENUMERATE_SHELL_BUILTIN(read)         \
-    __ENUMERATE_SHELL_BUILTIN(run_with_env) \
-    __ENUMERATE_SHELL_BUILTIN(argsparser_parse)
+#define ENUMERATE_SHELL_BUILTINS()                           \
+    __ENUMERATE_SHELL_BUILTIN(alias, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(where, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(cd, InAllModes)                \
+    __ENUMERATE_SHELL_BUILTIN(cdh, InAllModes)               \
+    __ENUMERATE_SHELL_BUILTIN(pwd, InAllModes)               \
+    __ENUMERATE_SHELL_BUILTIN(type, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(exec, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(exit, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(export, InAllModes)            \
+    __ENUMERATE_SHELL_BUILTIN(glob, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(unalias, InAllModes)           \
+    __ENUMERATE_SHELL_BUILTIN(unset, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(history, InAllModes)           \
+    __ENUMERATE_SHELL_BUILTIN(umask, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(not, InAllModes)               \
+    __ENUMERATE_SHELL_BUILTIN(dirs, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(pushd, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(popd, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(setopt, InAllModes)            \
+    __ENUMERATE_SHELL_BUILTIN(shift, InAllModes)             \
+    __ENUMERATE_SHELL_BUILTIN(source, InAllModes)            \
+    __ENUMERATE_SHELL_BUILTIN(time, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(jobs, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(disown, InAllModes)            \
+    __ENUMERATE_SHELL_BUILTIN(fg, InAllModes)                \
+    __ENUMERATE_SHELL_BUILTIN(bg, InAllModes)                \
+    __ENUMERATE_SHELL_BUILTIN(wait, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(dump, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(kill, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(noop, InAllModes)              \
+    __ENUMERATE_SHELL_BUILTIN(break, OnlyInPOSIXMode)        \
+    __ENUMERATE_SHELL_BUILTIN(continue, OnlyInPOSIXMode)     \
+    __ENUMERATE_SHELL_BUILTIN(read, OnlyInPOSIXMode)         \
+    __ENUMERATE_SHELL_BUILTIN(run_with_env, OnlyInPOSIXMode) \
+    __ENUMERATE_SHELL_BUILTIN(argsparser_parse, InAllModes)
 
 #define ENUMERATE_SHELL_OPTIONS()                                                                                    \
     __ENUMERATE_SHELL_OPTION(inline_exec_keep_empty_segments, false, "Keep empty segments in inline execute $(...)") \
@@ -90,6 +90,11 @@
 namespace Shell {
 
 class Shell;
+
+enum class POSIXModeRequirement {
+    OnlyInPOSIXMode,
+    InAllModes,
+};
 
 class Shell : public Core::Object {
     C_OBJECT(Shell);
@@ -443,7 +448,7 @@ private:
 
     ErrorOr<RefPtr<AST::Node>> immediate_length_impl(AST::ImmediateExpression& invoking_node, Vector<NonnullRefPtr<AST::Node>> const&, bool across);
 
-#define __ENUMERATE_SHELL_BUILTIN(builtin) \
+#define __ENUMERATE_SHELL_BUILTIN(builtin, _mode) \
     ErrorOr<int> builtin_##builtin(Main::Arguments);
 
     ENUMERATE_SHELL_BUILTINS();
@@ -451,7 +456,7 @@ private:
 #undef __ENUMERATE_SHELL_BUILTIN
 
     static constexpr Array builtin_names = {
-#define __ENUMERATE_SHELL_BUILTIN(builtin) #builtin##sv,
+#define __ENUMERATE_SHELL_BUILTIN(builtin, _mode) #builtin##sv,
 
         ENUMERATE_SHELL_BUILTINS()
 
