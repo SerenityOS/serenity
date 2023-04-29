@@ -153,3 +153,53 @@ TEST_CASE(to_pcs)
     float f192 = sRGB_curve.evaluate(192 / 255.f);
     EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(64, 128, 192), r_xyz * f64 + g_xyz * f128 + b_xyz * f192);
 }
+
+TEST_CASE(to_lab)
+{
+    auto sRGB = MUST(Gfx::ICC::sRGB());
+    auto lab_from_sRGB = [sRGB](u8 r, u8 g, u8 b) {
+        u8 rgb[3] = { r, g, b };
+        return MUST(sRGB->to_lab(rgb));
+    };
+
+    // The `expected` numbers are from https://colorjs.io/notebook/ for this snippet of code:
+    //     new Color("srgb", [0, 0, 0]).lab.toString();
+    //
+    //     new Color("srgb", [1, 0, 0]).lab.toString();
+    //     new Color("srgb", [0, 1, 0]).lab.toString();
+    //     new Color("srgb", [0, 0, 1]).lab.toString();
+    //
+    //     new Color("srgb", [1, 1, 0]).lab.toString();
+    //     new Color("srgb", [1, 0, 1]).lab.toString();
+    //     new Color("srgb", [0, 1, 1]).lab.toString();
+    //
+    //     new Color("srgb", [1, 1, 1]).lab.toString();
+
+    Gfx::ICC::Profile::CIELAB expected[] = {
+        { 0, 0, 0 },
+        { 54.29054294696968, 80.80492033462421, 69.89098825896275 },
+        { 87.81853633115202, -79.27108223854806, 80.99459785152247 },
+        { 29.56829715344471, 68.28740665215547, -112.02971798617645 },
+        { 97.60701009682253, -15.749846639252663, 93.39361164266089 },
+        { 60.16894098715946, 93.53959546199253, -60.50080231921204 },
+        { 90.66601315791455, -50.65651077286893, -14.961666625736525 },
+        { 100.00000139649632, -0.000007807961277528364, 0.000006766250648659877 },
+    };
+
+    // We're off by more than the default EXPECT_APPROXIMATE() error, so use EXPECT_APPROXIMATE_WITH_ERROR().
+    // The difference is not too bad: ranges for L*, a*, b* are [0, 100], [-125, 125], [-125, 125],
+    // so this is an error of considerably less than 0.1 for u8 channels.
+#define EXPECT_APPROXIMATE_LAB(l1, l2)                   \
+    EXPECT_APPROXIMATE_WITH_ERROR((l1).L, (l2).L, 0.01); \
+    EXPECT_APPROXIMATE_WITH_ERROR((l1).a, (l2).a, 0.03); \
+    EXPECT_APPROXIMATE_WITH_ERROR((l1).b, (l2).b, 0.02);
+
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(0, 0, 0), expected[0]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(255, 0, 0), expected[1]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(0, 255, 0), expected[2]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(0, 0, 255), expected[3]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(255, 255, 0), expected[4]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(255, 0, 255), expected[5]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(0, 255, 255), expected[6]);
+    EXPECT_APPROXIMATE_LAB(lab_from_sRGB(255, 255, 255), expected[7]);
+}

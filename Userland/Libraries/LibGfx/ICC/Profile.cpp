@@ -1470,6 +1470,59 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color)
     VERIFY_NOT_REACHED();
 }
 
+ErrorOr<Profile::CIELAB> Profile::to_lab(ReadonlyBytes color)
+{
+    auto pcs = TRY(to_pcs(color));
+    if (connection_space() == ColorSpace::PCSLAB)
+        return CIELAB { pcs[0], pcs[1], pcs[2] };
+
+    if (connection_space() != ColorSpace::PCSXYZ) {
+        VERIFY(device_class() == DeviceClass::DeviceLink);
+        return Error::from_string_literal("ICC::Profile::to_lab: conversion for DeviceLink not implemented");
+    }
+
+    // 6.3.2.2 Translation between media-relative colorimetric data and ICC-absolute colorimetric data
+    // 6.3.2.3 Computation of PCSLAB
+    // 6.3.4 Colour space encodings for the PCS
+    // A.3 PCS encodings
+
+    auto f = [](float x) {
+        if (x > powf(6.f / 29.f, 3))
+            return cbrtf(x);
+        return x / (3 * powf(6.f / 29.f, 2)) + 4.f / 29.f;
+    };
+
+    // "X/Xn is replaced by Xr/Xi (or Xa/Xmw)"
+
+    // 6.3.2.2 Translation between media-relative colorimetric data and ICC-absolute colorimetric data
+    // "The translation from ICC-absolute colorimetric data to media-relative colorimetry data is given by Equations
+    //      Xr = (Xi/Xmw) * Xa
+    //  where
+    //      Xr   media-relative colorimetric data (i.e. PCSXYZ);
+    //      Xa   ICC-absolute colorimetric data (i.e. nCIEXYZ);
+    //      Xmw  nCIEXYZ values of the media white point as specified in the mediaWhitePointTag;
+    //      Xi   PCSXYZ values of the PCS white point defined in 6.3.4.3."
+    // 6.3.4.3 PCS encodings for white and black
+    // "Table 14 — Encodings of PCS white point: X 0,9642 Y 1,0000 Z 0,8249"
+    // That's identical to the values in 7.2.16 PCS illuminant field (Bytes 68 to 79).
+    // 9.2.36 mediaWhitePointTag
+    // "For displays, the values specified shall be those of the PCS illuminant as defined in 7.2.16."
+    // ...so for displays, this is all equivalent I think? It's maybe different for OutputDevice profiles?
+
+    float Xn = pcs_illuminant().X;
+    float Yn = pcs_illuminant().Y;
+    float Zn = pcs_illuminant().Z;
+
+    float x = pcs[0] / Xn;
+    float y = pcs[1] / Yn;
+    float z = pcs[2] / Zn;
+
+    float L = 116 * f(y) - 16;
+    float a = 500 * (f(x) - f(y));
+    float b = 200 * (f(y) - f(z));
+    return CIELAB { L, a, b };
+}
+
 XYZ const& Profile::red_matrix_column() const { return xyz_data(redMatrixColumnTag); }
 XYZ const& Profile::green_matrix_column() const { return xyz_data(greenMatrixColumnTag); }
 XYZ const& Profile::blue_matrix_column() const { return xyz_data(blueMatrixColumnTag); }
