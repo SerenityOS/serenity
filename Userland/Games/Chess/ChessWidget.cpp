@@ -697,7 +697,7 @@ bool ChessWidget::check_game_over(ClaimDrawBehavior claim_draw_behavior)
     case Chess::Board::Result::FiftyMoveRule:
         if (claim_draw_behavior == ClaimDrawBehavior::Prompt) {
             update();
-            auto dialog_result = GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?"sv, "Claim Draw?"sv,
+            auto dialog_result = GUI::MessageBox::show(window(), "50 moves have elapsed without a capture or pawn advance. Claim Draw?"sv, "Claim Draw?"sv,
                 GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo);
 
             if (dialog_result != GUI::Dialog::ExecResult::Yes)

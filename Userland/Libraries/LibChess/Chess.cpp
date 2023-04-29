@@ -774,9 +774,11 @@ Board::Result Board::game_result() const
     });
 
     if (are_legal_moves) {
-        if (m_moves_since_capture >= 75 * 2)
+        if (m_moves_since_capture >= 75 * 2 && m_moves_since_pawn_advance >= 75 * 2)
             return Result::SeventyFiveMoveRule;
-        if (m_moves_since_capture == 50 * 2)
+
+        if ((m_moves_since_capture >= 50 * 2 && m_moves_since_pawn_advance == 50 * 2)
+            || (m_moves_since_pawn_advance >= 50 * 2 && m_moves_since_capture == 50 * 2))
             return Result::FiftyMoveRule;
 
         auto repeats = m_previous_states.get(Traits<Board>::hash(*this));
