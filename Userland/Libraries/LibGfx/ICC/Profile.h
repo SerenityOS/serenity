@@ -14,6 +14,7 @@
 #include <AK/Span.h>
 #include <AK/URL.h>
 #include <LibCrypto/Hash/MD5.h>
+#include <LibGfx/CIELAB.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
 #include <LibGfx/ICC/TagTypes.h>
 #include <LibGfx/Vector3.h>
@@ -266,11 +267,6 @@ public:
     // Call connection_space() to find out the space the result is in.
     ErrorOr<FloatVector3> to_pcs(ReadonlyBytes);
 
-    struct CIELAB {
-        float L; // L*
-        float a; // a*
-        float b; // b*
-    };
     ErrorOr<CIELAB> to_lab(ReadonlyBytes);
 
     // Only call these if you know that this is an RGB matrix-based profile.

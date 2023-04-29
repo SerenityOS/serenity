@@ -175,7 +175,7 @@ TEST_CASE(to_lab)
     //
     //     new Color("srgb", [1, 1, 1]).lab.toString();
 
-    Gfx::ICC::Profile::CIELAB expected[] = {
+    Gfx::CIELAB expected[] = {
         { 0, 0, 0 },
         { 54.29054294696968, 80.80492033462421, 69.89098825896275 },
         { 87.81853633115202, -79.27108223854806, 80.99459785152247 },
