@@ -84,6 +84,25 @@ void HTMLMediaElement::did_remove_attribute(DeprecatedFlyString const& name)
         m_crossorigin = cors_setting_attribute_from_keyword({});
 }
 
+// https://html.spec.whatwg.org/multipage/media.html#playing-the-media-resource:media-element-83
+void HTMLMediaElement::removed_from(DOM::Node* node)
+{
+    Base::removed_from(node);
+
+    // When a media element is removed from a Document, the user agent must run the following steps:
+
+    // FIXME: 1. Await a stable state, allowing the task that removed the media element from the Document to continue. The
+    //           synchronous section consists of all the remaining steps of this algorithm. (Steps in the synchronous section
+    //           are marked with ⌛.)
+
+    // 2. ⌛ If the media element is in a document, return.
+    if (in_a_document_tree())
+        return;
+
+    // 3. ⌛ Run the internal pause steps for the media element.
+    pause_element().release_value_but_fixme_should_propagate_errors();
+}
+
 // https://html.spec.whatwg.org/multipage/media.html#fatal-decode-error
 WebIDL::ExceptionOr<void> HTMLMediaElement::set_decoder_error(String error_message)
 {

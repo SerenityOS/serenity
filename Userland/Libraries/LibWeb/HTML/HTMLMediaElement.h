@@ -89,6 +89,7 @@ protected:
 
     virtual void parse_attribute(DeprecatedFlyString const& name, DeprecatedString const& value) override;
     virtual void did_remove_attribute(DeprecatedFlyString const&) override;
+    virtual void removed_from(DOM::Node*) override;
 
     // Override in subclasses to handle implementation-specific behavior when the element state changes
     // to playing or paused, e.g. to start/stop play timers.
