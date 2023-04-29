@@ -10,7 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <Kernel/Arch/RegisterState.h>
 #include <Kernel/Forward.h>
-#include <LibC/sys/arch/regs.h>
+#include <sys/arch/regs.h>
 
 namespace Kernel {
 
