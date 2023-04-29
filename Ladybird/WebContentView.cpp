@@ -53,6 +53,8 @@
 #include <QTimer>
 #include <QToolTip>
 
+bool is_using_dark_system_theme(QWidget&);
+
 WebContentView::WebContentView(StringView webdriver_content_ipc_path, WebView::EnableCallgrindProfiling enable_callgrind_profiling)
     : m_webdriver_content_ipc_path(webdriver_content_ipc_path)
 {
@@ -589,6 +591,8 @@ static Core::AnonymousBuffer make_system_theme_from_qt_palette(QWidget& widget, 
     translate(Gfx::ColorRole::ButtonText, QPalette::ColorRole::ButtonText);
     translate(Gfx::ColorRole::Selection, QPalette::ColorRole::Highlight);
     translate(Gfx::ColorRole::SelectionText, QPalette::ColorRole::HighlightedText);
+
+    palette.set_flag(Gfx::FlagRole::IsDark, is_using_dark_system_theme(widget));
 
     return theme;
 }
