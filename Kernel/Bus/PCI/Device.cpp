@@ -24,9 +24,7 @@ bool Device::is_msi_capable() const
 }
 bool Device::is_msix_capable() const
 {
-    return AK::any_of(
-        m_pci_identifier->capabilities(),
-        [](auto const& capability) { return capability.id().value() == PCI::Capabilities::ID::MSIX; });
+    return m_pci_identifier->is_msix_capable();
 }
 
 void Device::enable_pin_based_interrupts() const
