@@ -82,6 +82,8 @@ static constexpr u32 bar_address_mask = 0xfffffff0;
 static constexpr u16 msix_control_table_mask = 0x07ff;
 static constexpr u8 msix_table_bir_mask = 0x7;
 static constexpr u16 msix_table_offset_mask = 0xfff8;
+static constexpr u8 msi_control_offset = 2;
+static constexpr u16 msix_control_enable = 0x8000;
 
 // Taken from https://pcisig.com/sites/default/files/files/PCI_Code-ID_r_1_11__v24_Jan_2019.pdf
 enum class ClassID {

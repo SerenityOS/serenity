@@ -44,13 +44,21 @@ void Device::disable_message_signalled_interrupts()
 {
     TODO();
 }
+
 void Device::enable_extended_message_signalled_interrupts()
 {
-    TODO();
+    for (auto& capability : m_pci_identifier->capabilities()) {
+        if (capability.id().value() == PCI::Capabilities::ID::MSIX)
+            capability.write16(msi_control_offset, capability.read16(msi_control_offset) | msix_control_enable);
+    }
 }
+
 void Device::disable_extended_message_signalled_interrupts()
 {
-    TODO();
+    for (auto& capability : m_pci_identifier->capabilities()) {
+        if (capability.id().value() == PCI::Capabilities::ID::MSIX)
+            capability.write16(msi_control_offset, capability.read16(msi_control_offset) & ~(msix_control_enable));
+    }
 }
 
 }
