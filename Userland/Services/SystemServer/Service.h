@@ -20,9 +20,11 @@ public:
     static ErrorOr<NonnullRefPtr<Service>> try_create(Core::ConfigFile const& config, StringView name);
     ~Service();
 
-    bool is_enabled() const;
+    bool is_enabled_for_system_mode(StringView) const;
     ErrorOr<void> activate();
     ErrorOr<void> did_exit(int exit_code);
+
+    ErrorOr<void> setup_sockets();
 
     static Service* find_by_pid(pid_t);
 
@@ -86,7 +88,6 @@ private:
     int m_restart_attempts { 0 };
 
     ErrorOr<void> setup_socket(SocketDescriptor&);
-    ErrorOr<void> setup_sockets();
     void setup_notifier();
     ErrorOr<void> handle_socket_connection();
 };
