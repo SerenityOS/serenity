@@ -39,10 +39,10 @@ LoginWindow::LoginWindow(GUI::Window* parent)
 
     m_fail_message = *widget->find_descendant_of_type_named<GUI::Label>("fail_message");
     m_username->on_change = [&] {
-        m_fail_message->set_text("");
+        m_fail_message->set_text({});
     };
     m_password->on_change = [&] {
         if (!m_password->text().is_empty())
-            m_fail_message->set_text("");
+            m_fail_message->set_text({});
     };
 }

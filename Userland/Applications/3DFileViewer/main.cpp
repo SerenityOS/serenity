@@ -266,7 +266,7 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     if ((m_cycles % 30) == 0) {
         auto render_time = static_cast<double>(m_accumulated_time.to_milliseconds()) / 30.0;
         auto frame_rate = render_time > 0 ? 1000 / render_time : 0;
-        m_stats->set_text(DeprecatedString::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time));
+        m_stats->set_text(String::formatted("{:.0f} fps, {:.1f} ms", frame_rate, render_time).release_value_but_fixme_should_propagate_errors());
         m_accumulated_time = {};
 
         glEnable(GL_LIGHT0);

@@ -152,9 +152,9 @@ void CalculatorWidget::update_display()
 {
     m_entry->set_text(m_keypad.to_deprecated_string());
     if (m_calculator.has_error())
-        m_label->set_text("E");
+        m_label->set_text("E"_short_string);
     else
-        m_label->set_text("");
+        m_label->set_text({});
 }
 
 void CalculatorWidget::keydown_event(GUI::KeyEvent& event)

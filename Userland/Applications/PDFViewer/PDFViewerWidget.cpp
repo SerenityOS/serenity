@@ -387,7 +387,7 @@ PDF::PDFErrorOr<void> PDFViewerWidget::try_open_file(StringView path, NonnullOwn
     TRY(document->initialize());
     TRY(m_viewer->set_document(document));
 
-    m_total_page_label->set_text(DeprecatedString::formatted("of {}", document->get_page_count()));
+    m_total_page_label->set_text(TRY(String::formatted("of {}", document->get_page_count())));
 
     m_page_text_box->set_enabled(true);
     m_page_text_box->set_current_number(1, GUI::AllowCallback::No);

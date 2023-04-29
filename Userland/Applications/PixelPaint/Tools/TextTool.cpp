@@ -111,16 +111,16 @@ ErrorOr<GUI::Widget*> TextTool::get_properties_widget()
     auto properties_widget = TRY(GUI::Widget::try_create());
     (void)TRY(properties_widget->try_set_layout<GUI::VerticalBoxLayout>());
 
-    auto font_header = TRY(properties_widget->try_add<GUI::Label>("Current Font:"));
+    auto font_header = TRY(properties_widget->try_add<GUI::Label>(TRY("Current Font:"_string)));
     font_header->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
-    m_font_label = TRY(properties_widget->try_add<GUI::Label>(m_selected_font->human_readable_name()));
+    m_font_label = TRY(properties_widget->try_add<GUI::Label>(TRY(String::from_deprecated_string(m_selected_font->human_readable_name()))));
 
     auto change_font_button = TRY(properties_widget->try_add<GUI::Button>(TRY("Change Font..."_string)));
     change_font_button->on_click = [this](auto) {
         auto picker = GUI::FontPicker::construct(nullptr, m_selected_font, false);
         if (picker->exec() == GUI::Dialog::ExecResult::OK) {
-            m_font_label->set_text(picker->font()->human_readable_name());
+            m_font_label->set_text(String::from_deprecated_string(picker->font()->human_readable_name()).release_value_but_fixme_should_propagate_errors());
             m_selected_font = picker->font();
             m_text_editor->set_font(m_selected_font);
             m_editor->set_focus(true);

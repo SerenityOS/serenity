@@ -136,7 +136,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         thickness_container->set_fixed_height(20);
         (void)TRY(thickness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"));
+        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>(TRY("Thickness:"_string)));
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
@@ -152,7 +152,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(70);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_short_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
         auto mode_radio_container = TRY(mode_container->try_add<GUI::Widget>());
@@ -180,7 +180,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
         aspect_container->set_fixed_height(20);
         (void)TRY(aspect_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>("Aspect Ratio:"));
+        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>(TRY("Aspect Ratio:"_string)));
         aspect_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         aspect_label->set_fixed_size(80, 20);
 
@@ -197,7 +197,7 @@ ErrorOr<GUI::Widget*> EllipseTool::get_properties_widget()
             }
         };
 
-        auto multiply_label = TRY(aspect_container->try_add<GUI::Label>("x"));
+        auto multiply_label = TRY(aspect_container->try_add<GUI::Label>("x"_short_string));
         multiply_label->set_text_alignment(Gfx::TextAlignment::Center);
         multiply_label->set_fixed_size(10, 20);
 

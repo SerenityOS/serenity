@@ -19,11 +19,11 @@ class Label : public Frame {
 public:
     virtual ~Label() override = default;
 
-    DeprecatedString text() const { return m_text; }
-    void set_text(DeprecatedString);
+    String const& text() const { return m_text; }
+    void set_text(String);
 
     void set_icon(Gfx::Bitmap const*);
-    void set_icon_from_path(DeprecatedString const&);
+    void set_icon_from_path(StringView);
     Gfx::Bitmap const* icon() const { return m_icon.ptr(); }
 
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
@@ -46,7 +46,7 @@ public:
     Gfx::IntRect text_rect() const;
 
 protected:
-    explicit Label(DeprecatedString text = {});
+    explicit Label(String text = {});
 
     virtual void paint_event(PaintEvent&) override;
     virtual void did_change_font() override;
@@ -55,7 +55,7 @@ protected:
 private:
     void size_to_fit();
 
-    DeprecatedString m_text;
+    String m_text;
     RefPtr<Gfx::Bitmap const> m_icon;
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     Gfx::TextWrapping m_text_wrapping { Gfx::TextWrapping::Wrap };

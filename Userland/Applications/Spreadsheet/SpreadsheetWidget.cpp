@@ -41,7 +41,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     auto& top_bar = container.add<GUI::Frame>();
     top_bar.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 1);
     top_bar.set_preferred_height(26);
-    auto& current_cell_label = top_bar.add<GUI::Label>("");
+    auto& current_cell_label = top_bar.add<GUI::Label>();
     current_cell_label.set_fixed_width(50);
 
     auto& help_button = top_bar.add<GUI::Button>();
@@ -361,7 +361,7 @@ void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                m_current_cell_label->set_text(position.to_cell_identifier(sheet));
+                m_current_cell_label->set_text(String::from_deprecated_string(position.to_cell_identifier(sheet)).release_value_but_fixme_should_propagate_errors());
 
                 auto& cell = sheet.ensure(position);
                 m_cell_value_editor->on_change = nullptr;
@@ -382,7 +382,7 @@ void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
             // There are many cells selected, change all of them.
             StringBuilder builder;
             builder.appendff("<{}>", selection.size());
-            m_current_cell_label->set_text(builder.string_view());
+            m_current_cell_label->set_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
 
             Vector<Cell&> cells;
             for (auto& position : selection)
@@ -456,7 +456,7 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     if (text.is_empty()) {
         m_inline_documentation_window->hide();
     } else {
-        m_inline_documentation_label->set_text(move(text));
+        m_inline_documentation_label->set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
         m_inline_documentation_window->show();
     }
 }
@@ -524,7 +524,7 @@ void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
     }
 
     m_cell_value_editor->on_change = nullptr;
-    m_current_cell_label->set_text("");
+    m_current_cell_label->set_text({});
     m_should_change_selected_cells = false;
     while (auto* widget = m_tab_widget->active_widget()) {
         m_tab_widget->remove_tab(*widget);
@@ -549,7 +549,7 @@ void SpreadsheetWidget::import_sheets(String const& filename, Core::File& file)
     window()->set_modified(true);
 
     m_cell_value_editor->on_change = nullptr;
-    m_current_cell_label->set_text("");
+    m_current_cell_label->set_text({});
     m_should_change_selected_cells = false;
     while (auto* widget = m_tab_widget->active_widget()) {
         m_tab_widget->remove_tab(*widget);

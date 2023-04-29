@@ -73,7 +73,7 @@ ErrorOr<RefPtr<GUI::Window>> MainWidget::create_preview_window()
 
     m_preview_textbox = find_descendant_of_type_named<GUI::TextBox>("preview_textbox");
     m_preview_textbox->on_change = [&] {
-        auto preview = DeprecatedString::formatted("{}\n{}", m_preview_textbox->text(), Unicode::to_unicode_uppercase_full(m_preview_textbox->text()).release_value_but_fixme_should_propagate_errors());
+        auto preview = String::formatted("{}\n{}", m_preview_textbox->text(), Unicode::to_unicode_uppercase_full(m_preview_textbox->text()).release_value_but_fixme_should_propagate_errors()).release_value_but_fixme_should_propagate_errors();
         m_preview_label->set_text(preview);
     };
     m_preview_textbox->set_text(pangrams[0]);

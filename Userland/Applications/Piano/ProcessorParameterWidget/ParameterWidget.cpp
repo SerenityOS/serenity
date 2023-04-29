@@ -15,11 +15,11 @@ ProcessorParameterWidget::ProcessorParameterWidget(DSP::ProcessorParameter& raw_
     : m_parameter(raw_parameter)
 {
     set_layout<GUI::VerticalBoxLayout>();
-    m_label = add<GUI::Label>(raw_parameter.name().to_deprecated_string());
+    m_label = add<GUI::Label>(raw_parameter.name());
     switch (raw_parameter.type()) {
     case DSP::ParameterType::Range: {
         auto& parameter = static_cast<DSP::ProcessorRangeParameter&>(raw_parameter);
-        m_value_label = add<GUI::Label>(DeprecatedString::number(static_cast<double>(parameter.value())));
+        m_value_label = add<GUI::Label>(String::number(static_cast<double>(parameter.value())).release_value_but_fixme_should_propagate_errors());
         m_parameter_modifier = add<ProcessorParameterSlider>(Orientation::Vertical, parameter, m_value_label);
         break;
     }

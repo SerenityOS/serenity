@@ -119,5 +119,5 @@ void ClockSettingsWidget::update_time_format_string()
 
 void ClockSettingsWidget::update_clock_preview()
 {
-    m_clock_preview->set_text(Core::DateTime::now().to_deprecated_string(m_time_format));
+    m_clock_preview->set_text(Core::DateTime::now().to_string(m_time_format).release_value_but_fixme_should_propagate_errors());
 }

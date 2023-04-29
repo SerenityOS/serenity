@@ -263,7 +263,7 @@ void VideoPlayerWidget::set_time_label(Time timestamp)
         string_builder.append(" / --:--:--"sv);
     }
 
-    m_timestamp_label->set_text(string_builder.string_view());
+    m_timestamp_label->set_text(string_builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void VideoPlayerWidget::drop_event(GUI::DropEvent& event)

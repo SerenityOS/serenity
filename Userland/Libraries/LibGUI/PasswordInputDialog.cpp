@@ -30,10 +30,10 @@ PasswordInputDialog::PasswordInputDialog(Window* parent_window, DeprecatedString
     key_icon_label.set_icon(Gfx::Bitmap::load_from_file("/res/icons/32x32/key.png"sv).release_value_but_fixme_should_propagate_errors());
 
     auto& server_label = *widget->find_descendant_of_type_named<GUI::Label>("server_label");
-    server_label.set_text(move(server));
+    server_label.set_text(String::from_deprecated_string(server).release_value_but_fixme_should_propagate_errors());
 
     auto& username_label = *widget->find_descendant_of_type_named<GUI::Label>("username_label");
-    username_label.set_text(move(username));
+    username_label.set_text(String::from_deprecated_string(username).release_value_but_fixme_should_propagate_errors());
 
     auto& password_box = *widget->find_descendant_of_type_named<GUI::PasswordBox>("password_box");
 

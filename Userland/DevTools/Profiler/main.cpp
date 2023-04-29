@@ -317,11 +317,11 @@ static bool prompt_to_stop_profiling(pid_t pid, DeprecatedString const& process_
     widget->set_fill_with_background_color(true);
     widget->set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 0, 0, 16 });
 
-    auto& timer_label = widget->add<GUI::Label>("...");
+    auto& timer_label = widget->add<GUI::Label>("..."_short_string);
     Core::ElapsedTimer clock;
     clock.start();
     auto update_timer = Core::Timer::create_repeating(100, [&] {
-        timer_label.set_text(DeprecatedString::formatted("{:.1} seconds", static_cast<float>(clock.elapsed()) / 1000.0f));
+        timer_label.set_text(String::formatted("{:.1} seconds", static_cast<float>(clock.elapsed()) / 1000.0f).release_value_but_fixme_should_propagate_errors());
     }).release_value_but_fixme_should_propagate_errors();
     update_timer->start();
 

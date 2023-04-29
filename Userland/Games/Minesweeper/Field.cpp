@@ -137,7 +137,7 @@ void Field::initialize()
     m_timer = Core::Timer::create_repeating(
         1000, [this] {
             ++m_time_elapsed;
-            m_time_label.set_text(human_readable_digital_time(m_time_elapsed));
+            m_time_label.set_text(String::from_deprecated_string(human_readable_digital_time(m_time_elapsed)).release_value_but_fixme_should_propagate_errors());
         },
         this)
                   .release_value_but_fixme_should_propagate_errors();
@@ -213,9 +213,9 @@ void Field::reset()
     m_first_click = true;
     set_updates_enabled(false);
     m_time_elapsed = 0;
-    m_time_label.set_text("00:00");
+    m_time_label.set_text("00:00"_short_string);
     m_flags_left = m_mine_count;
-    m_flag_label.set_text(DeprecatedString::number(m_flags_left));
+    m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     m_timer->stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
@@ -461,7 +461,7 @@ void Field::set_flag(Square& square, bool flag)
     }
     square.has_flag = flag;
 
-    m_flag_label.set_text(DeprecatedString::number(m_flags_left));
+    m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
     square.button->update();
 }
@@ -473,7 +473,7 @@ void Field::on_square_middle_clicked(Square& square)
     if (square.has_flag) {
         ++m_flags_left;
         square.has_flag = false;
-        m_flag_label.set_text(DeprecatedString::number(m_flags_left));
+        m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     }
     square.is_considering = !square.is_considering;
     square.button->set_icon(square.is_considering ? m_consider_bitmap : nullptr);

@@ -36,7 +36,7 @@ GitWidget::GitWidget()
     refresh_button.on_click = [this](int) { refresh(); };
 
     auto& unstaged_label = unstaged_header.add<GUI::Label>();
-    unstaged_label.set_text("Unstaged");
+    unstaged_label.set_text("Unstaged"_string.release_value_but_fixme_should_propagate_errors());
 
     unstaged_header.set_fixed_height(20);
     m_unstaged_files = unstaged.add<GitFilesView>(
@@ -64,7 +64,7 @@ GitWidget::GitWidget()
     commit_button.on_click = [this](int) { commit(); };
 
     auto& staged_label = staged_header.add<GUI::Label>();
-    staged_label.set_text("Staged");
+    staged_label.set_text("Staged"_short_string);
 
     staged_header.set_fixed_height(20);
     m_staged_files = staged.add<GitFilesView>(

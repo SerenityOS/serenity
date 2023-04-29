@@ -239,7 +239,7 @@ void SoundPlayerWidgetAdvancedView::shuffle_mode_changed(Player::ShuffleMode)
 
 void SoundPlayerWidgetAdvancedView::time_elapsed(int seconds)
 {
-    m_timestamp_label->set_text(DeprecatedString::formatted("Elapsed: {:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60));
+    m_timestamp_label->set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", seconds / 3600, seconds / 60, seconds % 60).release_value_but_fixme_should_propagate_errors());
 }
 
 void SoundPlayerWidgetAdvancedView::file_name_changed(StringView name)
@@ -275,7 +275,7 @@ void SoundPlayerWidgetAdvancedView::sound_buffer_played(FixedArray<Audio::Sample
 
 void SoundPlayerWidgetAdvancedView::volume_changed(double volume)
 {
-    m_volume_label->set_text(DeprecatedString::formatted("{}%", static_cast<int>(volume * 100)));
+    m_volume_label->set_text(String::formatted("{}%", static_cast<int>(volume * 100)).release_value_but_fixme_should_propagate_errors());
 }
 
 void SoundPlayerWidgetAdvancedView::playlist_loaded(StringView path, bool loaded)

@@ -38,7 +38,7 @@ ErrorOr<void> ExportProgressWindow::initialize_fallibles()
 
 void ExportProgressWindow::set_filename(StringView filename)
 {
-    m_label->set_text(DeprecatedString::formatted("Rendering audio to {}…", filename));
+    m_label->set_text(String::formatted("Rendering audio to {}…", filename).release_value_but_fixme_should_propagate_errors());
     update();
 }
 

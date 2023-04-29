@@ -129,7 +129,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         thickness_container->set_fixed_height(20);
         (void)TRY(thickness_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>("Thickness:"));
+        auto thickness_label = TRY(thickness_container->try_add<GUI::Label>(TRY("Thickness:"_string)));
         thickness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         thickness_label->set_fixed_size(80, 20);
 
@@ -146,7 +146,7 @@ ErrorOr<GUI::Widget*> LineTool::get_properties_widget()
         mode_container->set_fixed_height(20);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_short_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 

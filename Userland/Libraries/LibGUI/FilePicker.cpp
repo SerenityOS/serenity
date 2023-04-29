@@ -272,7 +272,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, StringView filename, St
     };
 
     m_model->on_directory_change_error = [&](int, char const* error_string) {
-        m_error_label->set_text(DeprecatedString::formatted("Could not open {}:\n{}", m_model->root_path(), error_string));
+        m_error_label->set_text(String::formatted("Could not open {}:\n{}", m_model->root_path(), error_string).release_value_but_fixme_should_propagate_errors());
         m_view->set_active_widget(m_error_label);
 
         m_view->view_as_icons_action().set_enabled(false);

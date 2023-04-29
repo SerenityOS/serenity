@@ -54,16 +54,16 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
 
     switch (m_operation) {
     case FileOperation::Copy:
-        files_copied_label.set_text("Copying files...");
-        current_file_action_label.set_text("Copying: ");
+        files_copied_label.set_text("Copying files..."_string.release_value_but_fixme_should_propagate_errors());
+        current_file_action_label.set_text("Copying: "_string.release_value_but_fixme_should_propagate_errors());
         break;
     case FileOperation::Move:
-        files_copied_label.set_text("Moving files...");
-        current_file_action_label.set_text("Moving: ");
+        files_copied_label.set_text("Moving files..."_string.release_value_but_fixme_should_propagate_errors());
+        current_file_action_label.set_text("Moving: "_string.release_value_but_fixme_should_propagate_errors());
         break;
     case FileOperation::Delete:
-        files_copied_label.set_text("Deleting files...");
-        current_file_action_label.set_text("Deleting: ");
+        files_copied_label.set_text("Deleting files..."_string.release_value_but_fixme_should_propagate_errors());
+        current_file_action_label.set_text("Deleting: "_string.release_value_but_fixme_should_propagate_errors());
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -179,23 +179,23 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
     auto& overall_progressbar = *find_descendant_of_type_named<GUI::Progressbar>("overall_progressbar");
     auto& estimated_time_label = *find_descendant_of_type_named<GUI::Label>("estimated_time_label");
 
-    current_file_label.set_text(current_filename);
+    current_file_label.set_text(String::from_utf8(current_filename).release_value_but_fixme_should_propagate_errors());
 
     switch (m_operation) {
     case FileOperation::Copy:
-        files_copied_label.set_text(DeprecatedString::formatted("Copying file {} of {}", files_done, total_file_count));
+        files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count).release_value_but_fixme_should_propagate_errors());
         break;
     case FileOperation::Move:
-        files_copied_label.set_text(DeprecatedString::formatted("Moving file {} of {}", files_done, total_file_count));
+        files_copied_label.set_text(String::formatted("Moving file {} of {}", files_done, total_file_count).release_value_but_fixme_should_propagate_errors());
         break;
     case FileOperation::Delete:
-        files_copied_label.set_text(DeprecatedString::formatted("Deleting file {} of {}", files_done, total_file_count));
+        files_copied_label.set_text(String::formatted("Deleting file {} of {}", files_done, total_file_count).release_value_but_fixme_should_propagate_errors());
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
-    estimated_time_label.set_text(estimate_time(bytes_done, total_byte_count));
+    estimated_time_label.set_text(String::from_deprecated_string(estimate_time(bytes_done, total_byte_count)).release_value_but_fixme_should_propagate_errors());
 
     if (total_byte_count) {
         window()->set_progress(100.0f * bytes_done / total_byte_count);

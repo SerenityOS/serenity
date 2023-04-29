@@ -64,7 +64,7 @@ FilterGallery::FilterGallery(GUI::Window* parent_window, ImageEditor* editor)
 
         auto settings_widget_or_error = m_selected_filter->get_settings_widget();
         if (settings_widget_or_error.is_error()) {
-            m_error_label->set_text(DeprecatedString::formatted("Error creating settings: {}", settings_widget_or_error.error()));
+            m_error_label->set_text(String::formatted("Error creating settings: {}", settings_widget_or_error.error()).release_value_but_fixme_should_propagate_errors());
             m_selected_filter_config_widget = m_error_label;
         } else {
             m_selected_filter_config_widget = settings_widget_or_error.release_value();

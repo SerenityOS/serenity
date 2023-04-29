@@ -206,7 +206,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(20);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Gradient Type:"));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>(TRY("Gradient Type:"_string)));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(80, 20);
 
@@ -236,7 +236,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
         size_container->set_fixed_height(20);
         (void)TRY(size_container->try_set_layout<GUI::HorizontalBoxLayout>());
 
-        auto size_label = TRY(size_container->try_add<GUI::Label>("Opacity:"));
+        auto size_label = TRY(size_container->try_add<GUI::Label>(TRY("Opacity:"_string)));
         size_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         size_label->set_fixed_size(80, 20);
 
@@ -270,7 +270,7 @@ ErrorOr<GUI::Widget*> GradientTool::get_properties_widget()
             hardness_container->set_visible(m_mode == GradientMode::Radial);
         };
 
-        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>("Hardness:"));
+        auto hardness_label = TRY(hardness_container->try_add<GUI::Label>(TRY("Hardness:"_string)));
         hardness_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
         auto hardness_slider = TRY(hardness_container->try_add<GUI::HorizontalOpacitySlider>());
