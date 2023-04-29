@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -191,25 +192,28 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
+    auto square = mouse_to_square(event);
     if (event.button() == GUI::MouseButton::Secondary) {
         if (m_dragging_piece) {
             m_dragging_piece = false;
             set_override_cursor(Gfx::StandardCursor::None);
             m_available_moves.clear();
-        } else {
-            m_current_marking.from = mouse_to_square(event);
+        } else if (square.has_value()) {
+            m_current_marking.from = square.release_value();
         }
         return;
     }
     m_board_markings.clear();
 
-    auto square = mouse_to_square(event);
-    auto piece = board().get_piece(square);
+    if (!square.has_value())
+        return;
+
+    auto piece = board().get_piece(square.value());
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;
         set_override_cursor(Gfx::StandardCursor::Drag);
         m_drag_point = { event.position().x() - widget_offset_x, event.position().y() - widget_offset_y };
-        m_moving_square = square;
+        m_moving_square = square.value();
 
         m_board.generate_moves([&](Chess::Move move) {
             if (move.from == m_moving_square) {
@@ -227,10 +231,14 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
+    auto target_square = mouse_to_square(event);
     if (event.button() == GUI::MouseButton::Secondary) {
+        if (!target_square.has_value())
+            return;
+
         m_current_marking.secondary_color = event.shift();
         m_current_marking.alternate_color = event.ctrl();
-        m_current_marking.to = mouse_to_square(event);
+        m_current_marking.to = target_square.release_value();
         auto match_index = m_board_markings.find_first_index(m_current_marking);
         if (match_index.has_value()) {
             m_board_markings.remove(match_index.value());
@@ -249,9 +257,12 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     set_override_cursor(Gfx::StandardCursor::Hand);
     m_available_moves.clear();
 
-    auto target_square = mouse_to_square(event);
+    if (!target_square.has_value()) {
+        update();
+        return;
+    }
 
-    Chess::Move move = { m_moving_square, target_square };
+    Chess::Move move = { m_moving_square, target_square.release_value() };
     if (board().is_promotion_move(move)) {
         auto promotion_dialog = PromotionDialog::construct(*this);
         if (promotion_dialog->exec() == PromotionDialog::ExecResult::OK)
@@ -285,9 +296,12 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 
     if (!m_dragging_piece) {
         auto square = mouse_to_square(event);
-        if (!square.in_bounds())
+        if (!square.has_value()) {
+            set_override_cursor(Gfx::StandardCursor::None);
             return;
-        auto piece = board().get_piece(square);
+        }
+
+        auto piece = board().get_piece(square.release_value());
         if (piece.color == board().turn())
             set_override_cursor(Gfx::StandardCursor::Hand);
         else
@@ -357,20 +371,29 @@ void ChessWidget::set_piece_set(StringView set)
     m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"sv));
 }
 
-Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
+Optional<Chess::Square> ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
 {
     int const min_size = min(width(), height());
     int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
+    auto x = event.x() - widget_offset_x;
+    auto y = event.y() - widget_offset_y;
+    if (x < 0 || y < 0 || x > min_size || y > min_size)
+        return {};
+
     int square_width = min_size / 8;
     int square_height = min_size / 8;
 
-    if (side() == Chess::Color::White) {
-        return { 7 - ((event.y() - widget_offset_y) / square_height), (event.x() - widget_offset_x) / square_width };
-    } else {
-        return { (event.y() - widget_offset_y) / square_height, 7 - ((event.x() - widget_offset_x) / square_width) };
-    }
+    auto rank = y / square_height;
+    auto file = x / square_width;
+    if (rank < 0 || file < 0 || rank > 7 || file > 7)
+        return {};
+
+    if (side() == Chess::Color::White)
+        return Chess::Square { 7 - rank, file };
+
+    return Chess::Square { rank, 7 - file };
 }
 
 RefPtr<Gfx::Bitmap const> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
