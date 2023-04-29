@@ -318,7 +318,7 @@ private:
     RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_track_sizes(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_grid_track_size_list(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_template_areas_value(Vector<ComponentValue> const&);

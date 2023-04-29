@@ -30,7 +30,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
@@ -230,10 +230,10 @@ LengthStyleValue const& StyleValue::as_length() const
     return static_cast<LengthStyleValue const&>(*this);
 }
 
-GridTrackSizeStyleValue const& StyleValue::as_grid_track_size_list() const
+GridTrackSizeListStyleValue const& StyleValue::as_grid_track_size_list() const
 {
     VERIFY(is_grid_track_size_list());
-    return static_cast<GridTrackSizeStyleValue const&>(*this);
+    return static_cast<GridTrackSizeListStyleValue const&>(*this);
 }
 
 LinearGradientStyleValue const& StyleValue::as_linear_gradient() const

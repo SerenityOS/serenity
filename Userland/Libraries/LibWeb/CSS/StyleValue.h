@@ -208,7 +208,7 @@ public:
     GridTemplateAreaStyleValue const& as_grid_template_area() const;
     GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
-    GridTrackSizeStyleValue const& as_grid_track_size_list() const;
+    GridTrackSizeListStyleValue const& as_grid_track_size_list() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
     InheritStyleValue const& as_inherit() const;
@@ -255,7 +255,7 @@ public:
     GridTemplateAreaStyleValue& as_grid_template_area() { return const_cast<GridTemplateAreaStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_template_area()); }
     GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
-    GridTrackSizeStyleValue& as_grid_track_size_list() { return const_cast<GridTrackSizeStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list()); }
+    GridTrackSizeListStyleValue& as_grid_track_size_list() { return const_cast<GridTrackSizeListStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }
     InheritStyleValue& as_inherit() { return const_cast<InheritStyleValue&>(const_cast<StyleValue const&>(*this).as_inherit()); }

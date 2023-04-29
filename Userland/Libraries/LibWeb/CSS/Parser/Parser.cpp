@@ -51,7 +51,7 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
@@ -6269,7 +6269,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
     }
 }
 
-RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values)
 {
     Vector<CSS::ExplicitGridTrack> track_list;
     Vector<Vector<String>> line_names_list;
@@ -6279,11 +6279,11 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
         auto token = tokens.next_token();
         if (token.is_block()) {
             if (last_object_was_line_names)
-                return GridTrackSizeStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto();
             last_object_was_line_names = true;
             Vector<String> line_names;
             if (!token.block().is_square())
-                return GridTrackSizeStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto();
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
@@ -6298,7 +6298,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             last_object_was_line_names = false;
             auto track_sizing_function = parse_track_sizing_function(token);
             if (!track_sizing_function.has_value())
-                return GridTrackSizeStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto();
             // FIXME: Handle multiple repeat values (should combine them here, or remove
             // any other ones if the first one is auto-fill, etc.)
             track_list.append(track_sizing_function.value());
@@ -6306,7 +6306,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
     }
     while (line_names_list.size() <= track_list.size())
         line_names_list.append({});
-    return GridTrackSizeStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
+    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
@@ -6709,11 +6709,11 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
-        if (auto parsed_value = parse_grid_track_sizes(component_values))
+        if (auto parsed_value = parse_grid_track_size_list(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateRows:
-        if (auto parsed_value = parse_grid_track_sizes(component_values))
+        if (auto parsed_value = parse_grid_track_size_list(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
