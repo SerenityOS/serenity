@@ -109,6 +109,7 @@ public:
         GridTrackPlacement,
         GridTrackPlacementShorthand,
         GridTrackSizeList,
+        GridTrackSizeListShorthand,
         Identifier,
         Image,
         Inherit,
@@ -160,6 +161,7 @@ public:
     bool is_grid_track_placement() const { return type() == Type::GridTrackPlacement; }
     bool is_grid_track_placement_shorthand() const { return type() == Type::GridTrackPlacementShorthand; }
     bool is_grid_track_size_list() const { return type() == Type::GridTrackSizeList; }
+    bool is_grid_track_size_list_shorthand() const { return type() == Type::GridTrackSizeListShorthand; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
     bool is_inherit() const { return type() == Type::Inherit; }
@@ -208,6 +210,7 @@ public:
     GridTemplateAreaStyleValue const& as_grid_template_area() const;
     GridTrackPlacementShorthandStyleValue const& as_grid_track_placement_shorthand() const;
     GridTrackPlacementStyleValue const& as_grid_track_placement() const;
+    GridTrackSizeListShorthandStyleValue const& as_grid_track_size_list_shorthand() const;
     GridTrackSizeListStyleValue const& as_grid_track_size_list() const;
     IdentifierStyleValue const& as_identifier() const;
     ImageStyleValue const& as_image() const;
@@ -255,6 +258,7 @@ public:
     GridTemplateAreaStyleValue& as_grid_template_area() { return const_cast<GridTemplateAreaStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_template_area()); }
     GridTrackPlacementShorthandStyleValue& as_grid_track_placement_shorthand() { return const_cast<GridTrackPlacementShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement_shorthand()); }
     GridTrackPlacementStyleValue& as_grid_track_placement() { return const_cast<GridTrackPlacementStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_placement()); }
+    GridTrackSizeListShorthandStyleValue& as_grid_track_size_list_shorthand() { return const_cast<GridTrackSizeListShorthandStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list_shorthand()); }
     GridTrackSizeListStyleValue& as_grid_track_size_list() { return const_cast<GridTrackSizeListStyleValue&>(const_cast<StyleValue const&>(*this).as_grid_track_size_list()); }
     IdentifierStyleValue& as_identifier() { return const_cast<IdentifierStyleValue&>(const_cast<StyleValue const&>(*this).as_identifier()); }
     ImageStyleValue& as_image() { return const_cast<ImageStyleValue&>(const_cast<StyleValue const&>(*this).as_image()); }

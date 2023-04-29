@@ -37,6 +37,8 @@
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
@@ -620,6 +622,20 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         style.set_property(CSS::PropertyID::GridRowStart, value);
         style.set_property(CSS::PropertyID::GridRowEnd, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::GridTemplate) {
+        if (value.is_grid_track_size_list_shorthand()) {
+            auto const& shorthand = value.as_grid_track_size_list_shorthand();
+            style.set_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas());
+            style.set_property(CSS::PropertyID::GridTemplateRows, shorthand.rows());
+            style.set_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns());
+            return;
+        }
+        style.set_property(CSS::PropertyID::GridTemplateAreas, value);
+        style.set_property(CSS::PropertyID::GridTemplateRows, value);
+        style.set_property(CSS::PropertyID::GridTemplateColumns, value);
         return;
     }
 
