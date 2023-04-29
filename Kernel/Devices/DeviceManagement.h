@@ -36,8 +36,6 @@ public:
     bool is_console_device_attached() const { return !m_console_device.is_null(); }
     void attach_console_device(ConsoleDevice const&);
 
-    Optional<DeviceEvent> dequeue_top_device_event(Badge<DeviceControlDevice>);
-
     void after_inserting_device(Badge<Device>, Device&);
     void before_device_removal(Badge<Device>, Device&);
 
@@ -68,14 +66,14 @@ public:
         return device;
     }
 
+    SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None>& event_queue(Badge<DeviceControlDevice>);
+
 private:
     LockRefPtr<NullDevice> m_null_device;
     LockRefPtr<ConsoleDevice> m_console_device;
     LockRefPtr<DeviceControlDevice> m_device_control_device;
     SpinlockProtected<HashMap<u64, Device*>, LockRank::None> m_devices {};
-
-    mutable Spinlock<LockRank::None> m_event_queue_lock {};
-    CircularQueue<DeviceEvent, 100> m_event_queue;
+    SpinlockProtected<CircularQueue<DeviceEvent, 100>, LockRank::None> m_event_queue {};
 };
 
 }

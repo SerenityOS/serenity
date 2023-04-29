@@ -364,7 +364,6 @@ ErrorOr<NonnullRefPtr<Service>> Service::try_create(Core::ConfigFile const& conf
 
 bool Service::is_enabled_for_system_mode(StringView mode) const
 {
-    extern DeprecatedString g_system_mode;
     return m_system_modes.contains_slow(mode);
 }
 
