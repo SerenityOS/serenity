@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -25,10 +26,12 @@ public:
     Function<void(int)> on_quit;
 
 private:
-    ChessEngine() = default;
     ChessEngine(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
         : Endpoint(in, out)
     {
+        on_command_read_error = [](auto command, auto error) {
+            outln("{}: '{}'", error, command);
+        };
     }
 
     Chess::Board m_board;

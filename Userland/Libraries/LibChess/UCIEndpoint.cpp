@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -80,49 +81,60 @@ void Endpoint::set_in_notifier()
             return;
         }
 
-        while (m_in->can_read_line())
-            Core::EventLoop::current().post_event(*this, read_command());
+        while (m_in->can_read_line()) {
+            auto line = m_in->read_line(4096).trim_whitespace();
+            if (line.is_empty())
+                continue;
+
+            auto maybe_command = read_command(line);
+            if (maybe_command.is_error()) {
+                dbgln_if(UCI_DEBUG, "{} Error while parsing UCI command: {}, error: {}", class_name(), maybe_command.error(), line);
+                if (on_command_read_error)
+                    on_command_read_error(move(line), maybe_command.release_error());
+
+                continue;
+            }
+
+            Core::EventLoop::current().post_event(*this, maybe_command.release_value());
+        }
     };
 }
 
-NonnullOwnPtr<Command> Endpoint::read_command()
+ErrorOr<NonnullOwnPtr<Command>> Endpoint::read_command(StringView line) const
 {
-    DeprecatedString line(ReadonlyBytes(m_in->read_line(4096).bytes()), Chomp);
-
     dbgln_if(UCI_DEBUG, "{} Received UCI Command: {}", class_name(), line);
 
     if (line == "uci") {
-        return UCICommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return UCICommand::from_string(line);
     } else if (line.starts_with("debug"sv)) {
-        return DebugCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return DebugCommand::from_string(line);
     } else if (line.starts_with("isready"sv)) {
-        return IsReadyCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return IsReadyCommand::from_string(line);
     } else if (line.starts_with("setoption"sv)) {
-        return SetOptionCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return SetOptionCommand::from_string(line);
     } else if (line.starts_with("position"sv)) {
-        return PositionCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return PositionCommand::from_string(line);
     } else if (line.starts_with("go"sv)) {
-        return GoCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return GoCommand::from_string(line);
     } else if (line.starts_with("stop"sv)) {
-        return StopCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return StopCommand::from_string(line);
     } else if (line.starts_with("id"sv)) {
-        return IdCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return IdCommand::from_string(line);
     } else if (line.starts_with("uciok"sv)) {
-        return UCIOkCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return UCIOkCommand::from_string(line);
     } else if (line.starts_with("readyok"sv)) {
-        return ReadyOkCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return ReadyOkCommand::from_string(line);
     } else if (line.starts_with("bestmove"sv)) {
-        return BestMoveCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return BestMoveCommand::from_string(line);
     } else if (line.starts_with("info"sv)) {
-        return InfoCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return InfoCommand::from_string(line);
     } else if (line.starts_with("quit"sv)) {
-        return QuitCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return QuitCommand::from_string(line);
     } else if (line.starts_with("ucinewgame"sv)) {
-        return UCINewGameCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+        return UCINewGameCommand::from_string(line);
     }
 
-    dbgln("command line: {}", line);
-    VERIFY_NOT_REACHED();
+    return Error::from_string_literal("Unknown command");
 }
 
 };
