@@ -180,7 +180,7 @@ struct StartOfFrame {
     u16 width { 0 };
 };
 
-struct HuffmanTableSpec {
+struct HuffmanTable {
     u8 type { 0 };
     u8 destination_id { 0 };
     u8 code_counts[16] = { 0 };
@@ -227,7 +227,7 @@ public:
         VERIFY_NOT_REACHED();
     }
 
-    ErrorOr<u8> next_symbol(HuffmanTableSpec const& table)
+    ErrorOr<u8> next_symbol(HuffmanTable const& table)
     {
         u16 const code = peek_bits(16);
         u64 code_cursor = 0;
@@ -366,8 +366,8 @@ struct JPEGLoadingContext {
     Vector<Component, 4> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_restart_interval { 0 };
-    HashMap<u8, HuffmanTableSpec> dc_tables;
-    HashMap<u8, HuffmanTableSpec> ac_tables;
+    HashMap<u8, HuffmanTable> dc_tables;
+    HashMap<u8, HuffmanTable> ac_tables;
     Array<i16, 4> previous_dc_values {};
     MacroblockMeta mblock_meta;
     OwnPtr<FixedMemoryStream> stream;
@@ -378,7 +378,7 @@ struct JPEGLoadingContext {
     Optional<ByteBuffer> icc_data;
 };
 
-static void generate_huffman_codes(HuffmanTableSpec& table)
+static void generate_huffman_codes(HuffmanTable& table)
 {
     unsigned code = 0;
     for (auto number_of_codes : table.code_counts) {
@@ -867,7 +867,7 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
     u16 bytes_to_read = TRY(read_effective_chunk_size(stream));
 
     while (bytes_to_read > 0) {
-        HuffmanTableSpec table;
+        HuffmanTable table;
         u8 table_info = TRY(stream.read_value<u8>());
         u8 table_type = table_info >> 4;
         u8 table_destination_id = table_info & 0x0F;
