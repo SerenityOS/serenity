@@ -701,6 +701,9 @@ template<>
 struct Formatter<Error> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
     {
+        if (auto maybe_error_payload = error.generic_error_payload(); maybe_error_payload.has_value())
+            return maybe_error_payload->format(*this, builder);
+
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
         return Formatter<FormatString>::format(builder, "Error(errno={})"sv, error.code());
 #else

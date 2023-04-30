@@ -17,10 +17,33 @@
 #    include <string.h>
 #endif
 
+// TODO: We don't have a way to use something like dynamic_cast with -fno-rtti.
+//       This limits the ability of the Kernel and the DynamicLoader to check whether a payload is of a specific type.
+#if !defined(KERNEL) && !defined(_DYNAMIC_LOADER)
+#    define AK_ERROR_SUPPORTS_DYNAMIC
+#endif
+
 namespace AK {
+
+class ErrorPayload {
+public:
+    virtual ErrorOr<void> format(Formatter<FormatString>& formatter, FormatBuilder& builder) const = 0;
+
+#ifdef AK_ERROR_SUPPORTS_DYNAMIC
+    virtual bool operator==(ErrorPayload const&) const = 0;
+#endif
+
+    virtual ~ErrorPayload() = default;
+};
 
 class [[nodiscard]] Error {
 public:
+    // Arbitrarily chosen size, which should fit a vtable pointer and a standard uintptr_t.
+    // Bump as necessary if required for larger error payloads, but double-check the performance impact.
+    static constexpr size_t MAXIMUM_ERROR_PAYLOAD_SIZE = sizeof(void*) + sizeof(uintptr_t);
+
+    using RawErrorPayload = Array<u8, MAXIMUM_ERROR_PAYLOAD_SIZE>;
+
     ALWAYS_INLINE Error(Error&&) = default;
     ALWAYS_INLINE Error& operator=(Error&&) = default;
 
@@ -28,6 +51,12 @@ public:
     {
         VERIFY(code != 0);
         return Error(code);
+    }
+
+    template<DerivedFrom<ErrorPayload> T>
+    [[nodiscard]] static Error from_error_payload(T error_payload)
+    {
+        return Error(move(error_payload));
     }
 
     // NOTE: For calling this method from within kernel code, we will simply print
@@ -94,6 +123,32 @@ public:
     {
         return m_payload.has<int>();
     }
+
+    Optional<ErrorPayload const&> generic_error_payload() const
+    {
+        if (!m_payload.has<RawErrorPayload>())
+            return {};
+
+        return *bit_cast<ErrorPayload const*>(m_payload.get<RawErrorPayload>().data());
+    }
+
+#ifdef AK_ERROR_SUPPORTS_DYNAMIC
+    template<typename T>
+    Optional<T const&> error_payload() const
+    {
+        if (!m_payload.has<RawErrorPayload>())
+            return {};
+
+        auto const* error_payload = bit_cast<ErrorPayload const*>(m_payload.get<RawErrorPayload>().data());
+        auto const* typed_error_payload = dynamic_cast<T const*>(error_payload);
+
+        if (!typed_error_payload)
+            return {};
+
+        return *typed_error_payload;
+    }
+#endif
+
 #ifndef KERNEL
     bool is_syscall() const
     {
@@ -109,6 +164,17 @@ protected:
     Error(int code)
         : m_payload(code)
     {
+    }
+
+    template<DerivedFrom<ErrorPayload> T>
+    Error(T error_payload)
+        : m_payload(RawErrorPayload {})
+    {
+        static_assert(sizeof(T) <= MAXIMUM_ERROR_PAYLOAD_SIZE);
+
+        // We made sure that the type we are given inherits from ErrorPayload and that it doesn't exceed the size of our storage.
+        // Therefore, we should be able to store it in the Variant without risking slicing off bits.
+        new (m_payload.get<RawErrorPayload>().data()) T(move(error_payload));
     }
 
 private:
@@ -133,7 +199,7 @@ private:
     StringView m_string_literal;
 #endif
 
-    Variant<Empty, int> m_payload { Empty {} };
+    Variant<Empty, int, RawErrorPayload> m_payload { Empty {} };
 
 #ifndef KERNEL
     bool m_syscall { false };
@@ -219,4 +285,5 @@ public:
 #if USING_AK_GLOBALLY
 using AK::Error;
 using AK::ErrorOr;
+using AK::ErrorPayload;
 #endif
