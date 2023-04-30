@@ -279,8 +279,6 @@ private:
     void flip(Vector<Gfx::IntRect, 32> const& dirty_rects);
     void force_update();
 
-    bool are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const&, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const&) const;
-
     WeakPtr<Widget> m_previously_focused_widget;
 
     OwnPtr<WindowBackingStore> m_front_store;

@@ -336,18 +336,9 @@ void Window::make_window_manager(unsigned event_mask)
     GUI::ConnectionToWindowManagerServer::the().async_set_manager_window(m_window_id);
 }
 
-bool Window::are_cursors_the_same(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& left, AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> const& right) const
-{
-    if (left.has<Gfx::StandardCursor>() != right.has<Gfx::StandardCursor>())
-        return false;
-    if (left.has<Gfx::StandardCursor>())
-        return left.get<Gfx::StandardCursor>() == right.get<Gfx::StandardCursor>();
-    return left.get<NonnullRefPtr<Gfx::Bitmap const>>().ptr() == right.get<NonnullRefPtr<Gfx::Bitmap const>>().ptr();
-}
-
 void Window::set_cursor(Gfx::StandardCursor cursor)
 {
-    if (are_cursors_the_same(m_cursor, cursor))
+    if (m_cursor == cursor)
         return;
     m_cursor = cursor;
     update_cursor();
@@ -355,7 +346,7 @@ void Window::set_cursor(Gfx::StandardCursor cursor)
 
 void Window::set_cursor(NonnullRefPtr<Gfx::Bitmap const> cursor)
 {
-    if (are_cursors_the_same(m_cursor, cursor))
+    if (m_cursor == cursor)
         return;
     m_cursor = cursor;
     update_cursor();
@@ -1281,7 +1272,7 @@ void Window::update_cursor()
             new_cursor = widget->override_cursor();
     }
 
-    if (are_cursors_the_same(m_effective_cursor, new_cursor))
+    if (m_effective_cursor == new_cursor)
         return;
     m_effective_cursor = new_cursor;
 
