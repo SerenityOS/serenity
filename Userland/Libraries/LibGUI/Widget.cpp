@@ -1128,15 +1128,7 @@ Gfx::IntRect Widget::children_clip_rect() const
 
 void Widget::set_override_cursor(AK::Variant<Gfx::StandardCursor, NonnullRefPtr<Gfx::Bitmap const>> cursor)
 {
-    auto const& are_cursors_the_same = [](auto const& a, auto const& b) {
-        if (a.template has<Gfx::StandardCursor>() != b.template has<Gfx::StandardCursor>())
-            return false;
-        if (a.template has<Gfx::StandardCursor>())
-            return a.template get<Gfx::StandardCursor>() == b.template get<Gfx::StandardCursor>();
-        return a.template get<NonnullRefPtr<Gfx::Bitmap const>>().ptr() == b.template get<NonnullRefPtr<Gfx::Bitmap const>>().ptr();
-    };
-
-    if (are_cursors_the_same(m_override_cursor, cursor))
+    if (m_override_cursor == cursor)
         return;
 
     m_override_cursor = move(cursor);
