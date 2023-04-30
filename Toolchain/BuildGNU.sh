@@ -270,6 +270,7 @@ pushd "$DIR/Build/$ARCH"
             "$SRC_ROOT"/Kernel/API \
             "$SRC_ROOT"/Kernel/Arch \
             "$SRC_ROOT"/Userland/Libraries/LibC \
+            "$SRC_ROOT"/Userland/Libraries/LibELF/ELFABI.h \
             "$SRC_ROOT"/Userland/Libraries/LibRegex/RegexDefs.h \
             -name '*.h' -print)
         for header in $FILES; do
@@ -277,6 +278,7 @@ pushd "$DIR/Build/$ARCH"
                 -e "s|$SRC_ROOT/AK/|AK/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
                 -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
+                -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibRegex/|LibRegex/|")
             buildstep "system_headers" mkdir -p "$(dirname "Root/usr/include/$target")"
             buildstep "system_headers" $INSTALL "$header" "Root/usr/include/$target"

@@ -250,6 +250,7 @@ SRC_ROOT=$($REALPATH "$DIR"/..)
 FILES=$(find \
     "$SRC_ROOT"/Kernel/API \
     "$SRC_ROOT"/Userland/Libraries/LibC \
+    "$SRC_ROOT"/Userland/Libraries/LibELF/ELFABI.h \
     "$SRC_ROOT"/Userland/Libraries/LibRegex/RegexDefs.h \
     -name '*.h' -print)
 for arch in $ARCHS; do
@@ -260,6 +261,7 @@ for arch in $ARCHS; do
             target=$(echo "$header" | "$SED" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibC||" \
                 -e "s|$SRC_ROOT/Kernel/|Kernel/|" \
+                -e "s|$SRC_ROOT/Userland/Libraries/LibELF/|LibELF/|" \
                 -e "s|$SRC_ROOT/Userland/Libraries/LibRegex/|LibRegex/|")
             buildstep "system_headers" "$INSTALL" -D "$header" "Root/usr/include/$target"
         done
