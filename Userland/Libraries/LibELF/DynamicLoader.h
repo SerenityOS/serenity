@@ -11,8 +11,8 @@
 #include <AK/DeprecatedString.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefCounted.h>
-#include <LibC/elf.h>
 #include <LibELF/DynamicObject.h>
+#include <LibELF/ELFABI.h>
 #include <LibELF/Image.h>
 #include <bits/dlfcn_integration.h>
 #include <sys/mman.h>
