@@ -22,4 +22,12 @@ Error Error::from_string_view_or_print_error_and_return_errno(StringView string_
 #endif
 }
 
+StringView Error::custom_error_as_string() const
+{
+    switch (m_code.get<CustomError>()) {
+    }
+
+    VERIFY_NOT_REACHED();
+}
+
 }

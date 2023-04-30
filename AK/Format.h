@@ -690,6 +690,9 @@ template<>
 struct Formatter<Error> : Formatter<FormatString> {
     ErrorOr<void> format(FormatBuilder& builder, Error const& error)
     {
+        if (error.is_custom_error())
+            return Formatter<FormatString>::format(builder, "{}"sv, error.custom_error_as_string());
+
 #if defined(AK_OS_SERENITY) && defined(KERNEL)
         return Formatter<FormatString>::format(builder, "Error(errno={})"sv, error.code());
 #else

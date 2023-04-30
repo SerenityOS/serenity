@@ -21,10 +21,15 @@ namespace AK {
 
 class Error {
 public:
+    // The Variant can't get any smaller than its largest member (errno), so we might as well just specify `int` here.
+    enum CustomError : int {
+    };
+
     ALWAYS_INLINE Error(Error&&) = default;
     ALWAYS_INLINE Error& operator=(Error&&) = default;
 
     [[nodiscard]] static Error from_errno(int code) { return Error(code); }
+    [[nodiscard]] static Error from_custom_error(CustomError custom_error) { return Error(custom_error); }
 
     // NOTE: For calling this method from within kernel code, we will simply print
     // the error message and return the errno code.
@@ -90,6 +95,11 @@ public:
     {
         return m_code.has<int>();
     }
+
+    CustomError custom_error() const { return m_code.get<CustomError>(); }
+    StringView custom_error_as_string() const;
+    bool is_custom_error() const { return m_code.has<CustomError>(); }
+
 #ifndef KERNEL
     bool is_syscall() const
     {
@@ -104,6 +114,11 @@ public:
 protected:
     Error(int code)
         : m_code(code)
+    {
+    }
+
+    Error(CustomError custom_error)
+        : m_code(custom_error)
     {
     }
 
@@ -129,7 +144,7 @@ private:
     StringView m_string_literal;
 #endif
 
-    Variant<Empty, int> m_code { Empty {} };
+    Variant<Empty, int, CustomError> m_code { Empty {} };
 
 #ifndef KERNEL
     bool m_syscall { false };
