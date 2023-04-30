@@ -177,7 +177,7 @@ void DynamicObject::parse()
         case DT_SYMBOLIC:
             break;
         default:
-            dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{} ({})", name_for_dtag(entry.tag()), entry.tag());
+            dbgln("DynamicObject: DYNAMIC tag handling not implemented for DT_{} ({}) in {}", name_for_dtag(entry.tag()), entry.tag(), m_filepath);
             break;
         }
     });
