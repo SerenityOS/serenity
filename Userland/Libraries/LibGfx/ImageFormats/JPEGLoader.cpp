@@ -892,6 +892,7 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
         }
 
         table.codes.ensure_capacity(total_codes);
+        table.symbols.ensure_capacity(total_codes);
 
         // Read symbols. Read X bytes, where X is the sum of the counts of codes read in the previous step.
         for (u32 i = 0; i < total_codes; i++) {
