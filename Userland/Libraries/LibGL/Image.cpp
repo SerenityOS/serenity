@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, Jelle Raaijmakers <jelle@gmta.nl>
+ * Copyright (c) 2022-2023, Jelle Raaijmakers <jelle@gmta.nl>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -281,6 +281,7 @@ GPU::PixelFormat pixel_format_for_internal_format(GLenum internal_format)
     case GL_RGBA:
     case GL_RGBA2:
     case GL_RGBA4:
+    case GL_RGB5_A1:
     case GL_RGBA8:
     case GL_RGB10_A2:
     case GL_RGBA12:
@@ -288,6 +289,8 @@ GPU::PixelFormat pixel_format_for_internal_format(GLenum internal_format)
     case GL_COMPRESSED_RGBA:
         return GPU::PixelFormat::RGBA;
     }
+
+    dbgln("{}({:#x}): unsupported internal format", __FUNCTION__, internal_format);
     VERIFY_NOT_REACHED();
 }
 
