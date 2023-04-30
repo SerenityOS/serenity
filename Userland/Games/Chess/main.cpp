@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -9,6 +10,7 @@
 #include <LibConfig/Client.h>
 #include <LibCore/System.h>
 #include <LibDesktop/Launcher.h>
+#include <LibFileSystem/FileSystem.h>
 #include <LibFileSystemAccessClient/Client.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
@@ -20,6 +22,32 @@
 #include <LibGUI/Process.h>
 #include <LibGUI/Window.h>
 #include <LibMain/Main.h>
+
+struct EngineDetails {
+    StringView command;
+    StringView name { command };
+    String path {};
+};
+
+static Vector<EngineDetails> s_all_engines {
+    { "ChessEngine"sv },
+    { "stockfish"sv, "Stockfish"sv },
+};
+
+static ErrorOr<Vector<EngineDetails>> available_engines()
+{
+    Vector<EngineDetails> available_engines;
+    for (auto& engine : s_all_engines) {
+        auto path_or_error = FileSystem::resolve_executable_from_environment(engine.command);
+        if (path_or_error.is_error())
+            continue;
+
+        engine.path = path_or_error.release_value();
+        TRY(available_engines.try_append(engine));
+    }
+
+    return available_engines;
+}
 
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
@@ -38,8 +66,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto window = TRY(GUI::Window::try_create());
     auto widget = TRY(window->set_main_widget<ChessWidget>());
 
+    auto engines = TRY(available_engines());
+    for (auto const& engine : engines)
+        TRY(Core::System::unveil(engine.path, "x"sv));
+
     TRY(Core::System::unveil("/res", "r"));
-    TRY(Core::System::unveil("/bin/ChessEngine", "x"));
     TRY(Core::System::unveil("/bin/GamesSettings", "x"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/launch", "rw"));
     TRY(Core::System::unveil("/tmp/session/%sid/portal/filesystemaccess", "rw"));
@@ -135,24 +166,25 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     engines_action_group.add_action(human_engine_checkbox);
     TRY(engine_submenu->try_add_action(human_engine_checkbox));
 
-    auto action = GUI::Action::create_checkable("ChessEngine", [&](auto& action) {
-        auto new_engine = Engine::construct(action.text());
-        new_engine->on_connection_lost = [&]() {
-            if (!widget->want_engine_move())
-                return;
+    for (auto const& engine : engines) {
+        auto action = GUI::Action::create_checkable(engine.name, [&](auto&) {
+            auto new_engine = Engine::construct(engine.path);
+            new_engine->on_connection_lost = [&]() {
+                if (!widget->want_engine_move())
+                    return;
 
-            auto rc = GUI::MessageBox::show(window, "Connection to the chess engine was lost while waiting for a move. Do you want to try again?"sv, "Chess"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
-            if (rc == GUI::Dialog::ExecResult::Yes)
-                widget->input_engine_move();
-            else
-                human_engine_checkbox->activate();
-        };
-        widget->set_engine(move(new_engine));
-        widget->input_engine_move();
-    });
-    engines_action_group.add_action(*action);
-
-    TRY(engine_submenu->try_add_action(*action));
+                auto rc = GUI::MessageBox::show(window, "Connection to the chess engine was lost while waiting for a move. Do you want to try again?"sv, "Chess"sv, GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                if (rc == GUI::Dialog::ExecResult::Yes)
+                    widget->input_engine_move();
+                else
+                    human_engine_checkbox->activate();
+            };
+            widget->set_engine(move(new_engine));
+            widget->input_engine_move();
+        });
+        engines_action_group.add_action(*action);
+        TRY(engine_submenu->try_add_action(*action));
+    }
 
     auto help_menu = TRY(window->try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(window)));
