@@ -1373,7 +1373,7 @@ static TagSignature tag_for_rendering_intent(RenderingIntent rendering_intent)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color)
+ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 {
     if (color.size() != number_of_components_in_color_space(data_color_space()))
         return Error::from_string_literal("ICC::Profile: input color doesn't match color space size");
@@ -1471,7 +1471,7 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color)
     VERIFY_NOT_REACHED();
 }
 
-ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color)
+ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color) const
 {
     auto pcs = TRY(to_pcs(color));
     if (connection_space() == ColorSpace::PCSLAB)
