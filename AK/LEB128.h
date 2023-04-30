@@ -31,7 +31,7 @@ public:
         size_t num_bytes = 0;
         while (true) {
             if (stream.is_eof())
-                return Error::from_string_literal("Stream reached end-of-file while reading LEB128 value");
+                return Error::from_error_payload(StreamError(StreamErrorCode::NotEnoughData));
 
             auto byte = TRY(stream.read_value<u8>());
 
@@ -67,7 +67,7 @@ public:
 
         do {
             if (stream.is_eof())
-                return Error::from_string_literal("Stream reached end-of-file while reading LEB128 value");
+                return Error::from_error_payload(StreamError(StreamErrorCode::NotEnoughData));
 
             byte = TRY(stream.read_value<u8>());
 

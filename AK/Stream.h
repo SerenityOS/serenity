@@ -8,11 +8,18 @@
 #pragma once
 
 #include <AK/Error.h>
+#include <AK/ErrorPayloadWithEnum.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
 #include <AK/Traits.h>
 
 namespace AK {
+
+enum StreamErrorCode {
+    NotEnoughData,
+};
+
+using StreamError = ErrorPayloadWithEnum<StreamErrorCode>;
 
 /// The base, abstract class for stream operations. This class defines the
 /// operations one can perform on every stream.
@@ -138,8 +145,15 @@ public:
     virtual ErrorOr<void> discard(size_t discarded_bytes) override;
 };
 
+template<>
+struct Formatter<StreamErrorCode> : Formatter<FormatString> {
+    ErrorOr<void> format(FormatBuilder& builder, StreamErrorCode const& error);
+};
+
 }
 
 #if USING_AK_GLOBALLY
 using AK::SeekMode;
+using AK::StreamError;
+using AK::StreamErrorCode;
 #endif

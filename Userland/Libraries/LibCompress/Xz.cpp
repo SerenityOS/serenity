@@ -217,7 +217,7 @@ ErrorOr<bool> XzDecompressor::load_next_stream()
             // Read the first byte until we either get a non-null byte or reach EOF.
             auto byte_or_error = m_stream->read_value<u8>();
 
-            if (byte_or_error.is_error() && m_stream->is_eof())
+            if (byte_or_error.is_error() && byte_or_error.error().error_payload<StreamError>() == StreamErrorCode::NotEnoughData)
                 break;
 
             auto byte = TRY(byte_or_error);
