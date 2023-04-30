@@ -187,6 +187,13 @@ struct HuffmanTable {
     Vector<u8> symbols;
     Vector<u16> codes;
 
+    // Note: The value 8 is chosen quite arbitrarily, the only current constraint
+    //       is that both the symbol and the size fit in an u16. I've tested more
+    //       values but none stand out, and 8 is the value used by libjpeg-turbo.
+    static constexpr u8 bits_per_cached_code = 8;
+    static constexpr u8 maximum_bits_per_code = 16;
+    u8 first_non_cached_code_index {};
+
     void generate_codes()
     {
         unsigned code = 0;
@@ -195,7 +202,59 @@ struct HuffmanTable {
                 codes.append(code++);
             code <<= 1;
         }
+
+        generate_lookup_table();
     }
+
+    struct SymbolAndSize {
+        u8 symbol {};
+        u8 size {};
+    };
+
+    ErrorOr<SymbolAndSize> symbol_from_code(u16 code) const
+    {
+        static constexpr u8 shift_for_cache = maximum_bits_per_code - bits_per_cached_code;
+
+        if (lookup_table[code >> shift_for_cache] != invalid_entry) {
+            u8 const code_length = lookup_table[code >> shift_for_cache] >> bits_per_cached_code;
+            return SymbolAndSize { static_cast<u8>(lookup_table[code >> shift_for_cache]), code_length };
+        }
+
+        u64 code_cursor = first_non_cached_code_index;
+
+        for (u8 i = HuffmanTable::bits_per_cached_code; i < 16; i++) {
+            auto const result = code >> (maximum_bits_per_code - 1 - i);
+            for (u32 j = 0; j < code_counts[i]; j++) {
+                if (result == codes[code_cursor])
+                    return SymbolAndSize { symbols[code_cursor], static_cast<u8>(i + 1) };
+
+                code_cursor++;
+            }
+        }
+
+        return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
+    }
+
+private:
+    static constexpr u16 invalid_entry = 0xFF;
+
+    void generate_lookup_table()
+    {
+        lookup_table.fill(invalid_entry);
+
+        u32 code_offset = 0;
+        for (u8 code_length = 1; code_length <= bits_per_cached_code; code_length++) {
+            for (u32 i = 0; i < code_counts[code_length - 1]; i++, code_offset++) {
+                u32 code_key = codes[code_offset] << (bits_per_cached_code - code_length);
+                for (u8 duplicate_count = 1 << (bits_per_cached_code - code_length); duplicate_count > 0; duplicate_count--) {
+                    lookup_table[code_key] = (code_length << bits_per_cached_code) | symbols[code_offset];
+                    code_key++;
+                }
+            }
+        }
+    }
+
+    Array<u16, 1 << bits_per_cached_code> lookup_table {};
 };
 
 class HuffmanStream {
@@ -239,22 +298,12 @@ public:
 
     ErrorOr<u8> next_symbol(HuffmanTable const& table)
     {
-        u16 const code = peek_bits(16);
-        u64 code_cursor = 0;
+        u16 const code = peek_bits(HuffmanTable::maximum_bits_per_code);
 
-        for (int i = 0; i < 16; i++) { // Codes can't be longer than 16 bits.
-            auto const result = code >> (15 - i);
-            for (int j = 0; j < table.code_counts[i]; j++) {
-                if (result == table.codes[code_cursor]) {
-                    discard_bits(i + 1);
-                    return table.symbols[code_cursor];
-                }
-                code_cursor++;
-            }
-        }
+        auto const symbol_and_size = TRY(table.symbol_from_code(code));
 
-        dbgln_if(JPEG_DEBUG, "If you're seeing this...the jpeg decoder needs to support more kinds of JPEGs!");
-        return Error::from_string_literal("This kind of JPEG is not yet supported by the decoder");
+        discard_bits(symbol_and_size.size);
+        return symbol_and_size.symbol;
     }
 
     ErrorOr<u16> read_bits(u8 count = 1)
@@ -879,6 +928,8 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
 
         // Read code counts. At each index K, the value represents the number of K+1 bit codes in this header.
         for (int i = 0; i < 16; i++) {
+            if (i == HuffmanTable::bits_per_cached_code)
+                table.first_non_cached_code_index = total_codes;
             u8 count = TRY(stream.read_value<u8>());
             total_codes += count;
             table.code_counts[i] = count;
