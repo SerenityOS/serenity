@@ -1134,6 +1134,8 @@ void TextEditor::keydown_event(KeyEvent& event)
             int erase_count = 1;
             if (event.modifiers() == Mod_Ctrl) {
                 auto word_break_pos = document().first_word_break_before(m_cursor, true);
+                if (!word_break_pos.is_valid())
+                    word_break_pos.set_column(0);
                 erase_count = m_cursor.column() - word_break_pos.column();
             } else if (current_line().first_non_whitespace_column() >= m_cursor.column()) {
                 int new_column;

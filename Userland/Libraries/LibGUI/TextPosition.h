@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <AK/NumericLimits.h>
 
 namespace GUI {
 
@@ -19,7 +20,7 @@ public:
     {
     }
 
-    bool is_valid() const { return m_line != 0xffffffffu && m_column != 0xffffffffu; }
+    bool is_valid() const { return m_line != AK::NumericLimits<size_t>::max() && m_column != AK::NumericLimits<size_t>::max(); }
 
     size_t line() const { return m_line; }
     size_t column() const { return m_column; }
@@ -34,8 +35,8 @@ public:
     bool operator>=(TextPosition const& other) const { return *this > other || (*this == other); }
 
 private:
-    size_t m_line { 0xffffffff };
-    size_t m_column { 0xffffffff };
+    size_t m_line { AK::NumericLimits<size_t>::max() };
+    size_t m_column { AK::NumericLimits<size_t>::max() };
 };
 
 }

@@ -755,7 +755,8 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
     target.set_column(target.column() - modifier);
 
     while (target.column() < line.length()) {
-        if (auto index = Unicode::previous_word_segmentation_boundary(line.view(), target.column()); index.has_value()) {
+        auto index = Unicode::previous_word_segmentation_boundary(line.view(), target.column());
+        if (index.has_value()) {
             auto view_between_target_and_index = line.view().substring_view(*index, target.column() - *index);
 
             if (should_continue_beyond_word(view_between_target_and_index)) {
@@ -764,6 +765,8 @@ TextPosition TextDocument::first_word_break_before(TextPosition const& position,
             }
 
             target.set_column(*index);
+            break;
+        } else {
             break;
         }
     }
