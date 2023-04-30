@@ -24,13 +24,13 @@
 
             @GUI::Button {
                 name: "import_button"
-                text: "Import"
+                text: "Import..."
                 fixed_width: 80
             }
 
             @GUI::Button {
                 name: "export_button"
-                text: "Export"
+                text: "Export..."
                 fixed_width: 80
                 enabled: false
             }
