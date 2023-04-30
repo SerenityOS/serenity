@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,6 +20,7 @@ Engine::~Engine()
 Engine::Engine(StringView command)
     : m_command(command)
 {
+    connect_to_engine_service();
 }
 
 void Engine::connect_to_engine_service()
