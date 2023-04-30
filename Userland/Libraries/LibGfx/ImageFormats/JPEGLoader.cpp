@@ -186,6 +186,16 @@ struct HuffmanTable {
     u8 code_counts[16] = { 0 };
     Vector<u8> symbols;
     Vector<u16> codes;
+
+    void generate_codes()
+    {
+        unsigned code = 0;
+        for (auto number_of_codes : code_counts) {
+            for (int i = 0; i < number_of_codes; i++)
+                codes.append(code++);
+            code <<= 1;
+        }
+    }
 };
 
 class HuffmanStream {
@@ -377,16 +387,6 @@ struct JPEGLoadingContext {
     Optional<ICCMultiChunkState> icc_multi_chunk_state;
     Optional<ByteBuffer> icc_data;
 };
-
-static void generate_huffman_codes(HuffmanTable& table)
-{
-    unsigned code = 0;
-    for (auto number_of_codes : table.code_counts) {
-        for (int i = 0; i < number_of_codes; i++)
-            table.codes.append(code++);
-        code <<= 1;
-    }
-}
 
 static inline auto* get_component(Macroblock& block, unsigned component)
 {
@@ -671,13 +671,6 @@ static void reset_decoder(JPEGLoadingContext& context)
 
 static ErrorOr<void> decode_huffman_stream(JPEGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    // Compute huffman codes for DC and AC tables.
-    for (auto it = context.dc_tables.begin(); it != context.dc_tables.end(); ++it)
-        generate_huffman_codes(it->value);
-
-    for (auto it = context.ac_tables.begin(); it != context.ac_tables.end(); ++it)
-        generate_huffman_codes(it->value);
-
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
             u32 i = vcursor * context.mblock_meta.hpadded_count + hcursor;
@@ -899,6 +892,8 @@ static ErrorOr<void> read_huffman_table(Stream& stream, JPEGLoadingContext& cont
             u8 symbol = TRY(stream.read_value<u8>());
             table.symbols.append(symbol);
         }
+
+        table.generate_codes();
 
         auto& huffman_table = table.type == 0 ? context.dc_tables : context.ac_tables;
         huffman_table.set(table.destination_id, table);
