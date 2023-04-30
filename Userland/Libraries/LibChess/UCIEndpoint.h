@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,6 +18,8 @@ class Endpoint : public Core::Object {
     C_OBJECT(Endpoint)
 public:
     virtual ~Endpoint() override = default;
+
+    Function<void(DeprecatedString, Error)> on_command_read_error;
 
     virtual void handle_uci() { }
     virtual void handle_debug(DebugCommand const&) { }
@@ -58,7 +61,7 @@ private:
         UnexpectedEof
     };
     void set_in_notifier();
-    NonnullOwnPtr<Command> read_command();
+    ErrorOr<NonnullOwnPtr<Command>> read_command(StringView line) const;
 
     RefPtr<Core::IODevice> m_in;
     RefPtr<Core::IODevice> m_out;
