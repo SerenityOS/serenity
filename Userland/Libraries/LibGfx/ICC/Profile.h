@@ -265,9 +265,9 @@ public:
     // The color's number of channels must match number_of_components_in_color_space(data_color_space()).
     // Do not call for DeviceLink or NamedColor profiles. (XXX others?)
     // Call connection_space() to find out the space the result is in.
-    ErrorOr<FloatVector3> to_pcs(ReadonlyBytes);
+    ErrorOr<FloatVector3> to_pcs(ReadonlyBytes) const;
 
-    ErrorOr<CIELAB> to_lab(ReadonlyBytes);
+    ErrorOr<CIELAB> to_lab(ReadonlyBytes) const;
 
     // Only call these if you know that this is an RGB matrix-based profile.
     XYZ const& red_matrix_column() const;
