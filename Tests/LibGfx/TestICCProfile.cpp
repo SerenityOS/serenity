@@ -108,7 +108,7 @@ TEST_CASE(to_pcs)
     EXPECT_EQ(sRGB_curve.evaluate(0.f), 0.f);
     EXPECT_EQ(sRGB_curve.evaluate(1.f), 1.f);
 
-    auto xyz_from_sRGB = [sRGB](u8 r, u8 g, u8 b) {
+    auto xyz_from_sRGB = [&sRGB](u8 r, u8 g, u8 b) {
         u8 rgb[3] = { r, g, b };
         return MUST(sRGB->to_pcs(rgb));
     };
@@ -157,7 +157,7 @@ TEST_CASE(to_pcs)
 TEST_CASE(to_lab)
 {
     auto sRGB = MUST(Gfx::ICC::sRGB());
-    auto lab_from_sRGB = [sRGB](u8 r, u8 g, u8 b) {
+    auto lab_from_sRGB = [&sRGB](u8 r, u8 g, u8 b) {
         u8 rgb[3] = { r, g, b };
         return MUST(sRGB->to_lab(rgb));
     };
