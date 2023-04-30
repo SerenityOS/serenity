@@ -85,10 +85,10 @@ public:
 #endif
     }
 
-    int code() const { return m_code; }
+    int code() const { return m_code.get<int>(); }
     bool is_errno() const
     {
-        return m_code != 0;
+        return m_code.has<int>();
     }
 #ifndef KERNEL
     bool is_syscall() const
@@ -129,7 +129,7 @@ private:
     StringView m_string_literal;
 #endif
 
-    int m_code { 0 };
+    Variant<Empty, int> m_code { Empty {} };
 
 #ifndef KERNEL
     bool m_syscall { false };
