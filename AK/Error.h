@@ -23,6 +23,7 @@ class Error {
 public:
     // The Variant can't get any smaller than its largest member (errno), so we might as well just specify `int` here.
     enum CustomError : int {
+        NotEnoughData,
     };
 
     ALWAYS_INLINE Error(Error&&) = default;

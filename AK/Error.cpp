@@ -25,6 +25,8 @@ Error Error::from_string_view_or_print_error_and_return_errno(StringView string_
 StringView Error::custom_error_as_string() const
 {
     switch (m_code.get<CustomError>()) {
+    case CustomError::NotEnoughData:
+        return "Not enough data to read value"sv;
     }
 
     VERIFY_NOT_REACHED();
