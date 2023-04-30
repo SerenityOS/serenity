@@ -8,9 +8,9 @@
 #include <AK/Debug.h>
 #include <AK/DeprecatedString.h>
 #include <AK/StringBuilder.h>
-#include <LibC/elf.h>
 #include <LibELF/DynamicLoader.h>
 #include <LibELF/DynamicObject.h>
+#include <LibELF/ELFABI.h>
 #include <LibELF/Hashes.h>
 #include <string.h>
 
