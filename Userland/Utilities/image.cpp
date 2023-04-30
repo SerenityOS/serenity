@@ -36,7 +36,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     StringView convert_color_profile_path;
     args_parser.add_option(convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
 
-    bool strip_color_profile;
+    bool strip_color_profile = false;
     args_parser.add_option(strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
 
     args_parser.parse(arguments);
