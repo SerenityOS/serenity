@@ -28,9 +28,9 @@ void StylePainter::paint_button(Painter& painter, IntRect const& rect, Palette c
     current().paint_button(painter, rect, palette, button_style, pressed, hovered, checked, enabled, focused, default_button);
 }
 
-void StylePainter::paint_frame(Painter& painter, IntRect const& rect, Palette const& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
+void StylePainter::paint_frame(Painter& painter, IntRect const& rect, Palette const& palette, FrameStyle style, bool skip_vertical_lines)
 {
-    current().paint_frame(painter, rect, palette, shape, shadow, thickness, skip_vertical_lines);
+    current().paint_frame(painter, rect, palette, style, skip_vertical_lines);
 }
 
 void StylePainter::paint_window_frame(Painter& painter, IntRect const& rect, Palette const& palette)

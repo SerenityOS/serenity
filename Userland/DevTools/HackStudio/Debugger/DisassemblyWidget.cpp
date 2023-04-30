@@ -30,7 +30,7 @@ DisassemblyWidget::DisassemblyWidget()
     m_top_container->set_layout<GUI::HorizontalBoxLayout>();
     m_top_container->set_fixed_height(20);
 
-    m_function_name_label = m_top_container->add<GUI::Label>("");
+    m_function_name_label = m_top_container->add<GUI::Label>();
 
     m_disassembly_view = add<GUI::TableView>();
 
@@ -49,9 +49,9 @@ void DisassemblyWidget::update_state(Debug::DebugSession const& debug_session, P
             return;
         auto containing_function = lib->debug_info->get_containing_function(regs.ip() - lib->base_address);
         if (containing_function.has_value())
-            m_function_name_label->set_text(containing_function.value().name);
+            m_function_name_label->set_text(String::from_deprecated_string(containing_function.value().name).release_value_but_fixme_should_propagate_errors());
         else
-            m_function_name_label->set_text("<missing>");
+            m_function_name_label->set_text("<missing>"_string.release_value_but_fixme_should_propagate_errors());
         show_disassembly();
     } else {
         hide_disassembly("No disassembly to show for this function");
@@ -61,7 +61,7 @@ void DisassemblyWidget::update_state(Debug::DebugSession const& debug_session, P
 void DisassemblyWidget::program_stopped()
 {
     m_disassembly_view->set_model({});
-    m_function_name_label->set_text("");
+    m_function_name_label->set_text({});
     hide_disassembly("Program isn't running");
 }
 

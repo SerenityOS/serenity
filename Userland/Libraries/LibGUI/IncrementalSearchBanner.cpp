@@ -93,7 +93,7 @@ void IncrementalSearchBanner::search(TextEditor::SearchDirection direction)
     auto needle = m_search_textbox->text();
     if (needle.is_empty()) {
         m_editor->reset_search_results();
-        m_index_label->set_text(DeprecatedString::empty());
+        m_index_label->set_text({});
         return;
     }
 
@@ -107,9 +107,9 @@ void IncrementalSearchBanner::search(TextEditor::SearchDirection direction)
     auto result = m_editor->find_text(needle, direction, m_wrap_search, false, m_match_case);
     index = m_editor->search_result_index().value_or(0) + 1;
     if (result.is_valid())
-        m_index_label->set_text(DeprecatedString::formatted("{} of {}", index, m_editor->search_results().size()));
+        m_index_label->set_text(String::formatted("{} of {}", index, m_editor->search_results().size()).release_value_but_fixme_should_propagate_errors());
     else
-        m_index_label->set_text(DeprecatedString::empty());
+        m_index_label->set_text({});
 }
 
 void IncrementalSearchBanner::paint_event(PaintEvent& event)

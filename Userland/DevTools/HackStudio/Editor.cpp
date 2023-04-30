@@ -542,7 +542,7 @@ void Editor::LanguageServerAidedAutocompleteProvider::provide_completions(Functi
         data.value().position.column());
 }
 
-void Editor::will_execute(GUI::TextDocumentUndoCommand const& command)
+void Editor::after_execute(GUI::TextDocumentUndoCommand const& command)
 {
     if (!m_language_client)
         return;
@@ -568,7 +568,7 @@ void Editor::will_execute(GUI::TextDocumentUndoCommand const& command)
         return;
     }
 
-    VERIFY_NOT_REACHED();
+    flush_file_content_to_langauge_server();
 }
 
 void Editor::undo()

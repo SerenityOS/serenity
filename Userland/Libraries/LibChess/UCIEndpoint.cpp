@@ -56,6 +56,8 @@ void Endpoint::event(Core::Event& event)
         return handle_info(static_cast<InfoCommand const&>(event));
     case Command::Type::Quit:
         return handle_quit();
+    case Command::Type::UCINewGame:
+        return handle_ucinewgame();
     default:
         Object::event(event);
         break;
@@ -115,6 +117,8 @@ NonnullOwnPtr<Command> Endpoint::read_command()
         return InfoCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     } else if (line.starts_with("quit"sv)) {
         return QuitCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
+    } else if (line.starts_with("ucinewgame"sv)) {
+        return UCINewGameCommand::from_string(line).release_value_but_fixme_should_propagate_errors();
     }
 
     dbgln("command line: {}", line);

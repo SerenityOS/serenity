@@ -167,6 +167,16 @@ public:
         return { this->m_values, min(size(), length) };
     }
 
+    [[nodiscard]] Span align_to(size_t alignment) const
+    {
+        auto* start = reinterpret_cast<T*>(align_up_to((FlatPtr)data(), alignment));
+        auto* end = reinterpret_cast<T*>(align_down_to((FlatPtr)(data() + size()), alignment));
+        if (end < start)
+            return {};
+        size_t length = end - start;
+        return { start, length };
+    }
+
     [[nodiscard]] ALWAYS_INLINE constexpr T* offset(size_t start) const
     {
         VERIFY(start < this->m_size);

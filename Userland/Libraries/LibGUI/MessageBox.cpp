@@ -87,7 +87,7 @@ ErrorOr<Dialog::ExecResult> MessageBox::try_ask_about_unsaved_changes(Window* pa
 
 void MessageBox::set_text(String text)
 {
-    m_text_label->set_text(move(text).to_deprecated_string());
+    m_text_label->set_text(move(text));
 }
 
 MessageBox::MessageBox(Window* parent_window, Type type, InputType input_type)

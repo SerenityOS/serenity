@@ -45,7 +45,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
 
     set_layout<GUI::VerticalBoxLayout>(GUI::Margins { 8, 0, 0 }, 3);
 
-    auto build_widgets_for_label = [this](DeprecatedString const& description) -> RefPtr<GUI::Label> {
+    auto build_widgets_for_label = [this](String const& description) -> RefPtr<GUI::Label> {
         auto& container = add<GUI::Widget>();
         container.set_layout<GUI::HorizontalBoxLayout>();
         container.set_fixed_size(275, 12);
@@ -57,12 +57,12 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget* graph)
         return label;
     };
 
-    m_physical_pages_label = build_widgets_for_label("Physical memory:");
-    m_physical_pages_committed_label = build_widgets_for_label("Committed memory:");
-    m_kmalloc_space_label = build_widgets_for_label("Kernel heap:");
-    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc:");
-    m_kfree_count_label = build_widgets_for_label("Calls kfree:");
-    m_kmalloc_difference_label = build_widgets_for_label("Difference:");
+    m_physical_pages_label = build_widgets_for_label("Physical memory:"_string.release_value_but_fixme_should_propagate_errors());
+    m_physical_pages_committed_label = build_widgets_for_label("Committed memory:"_string.release_value_but_fixme_should_propagate_errors());
+    m_kmalloc_space_label = build_widgets_for_label("Kernel heap:"_string.release_value_but_fixme_should_propagate_errors());
+    m_kmalloc_count_label = build_widgets_for_label("Calls kmalloc:"_string.release_value_but_fixme_should_propagate_errors());
+    m_kfree_count_label = build_widgets_for_label("Calls kfree:"_string.release_value_but_fixme_should_propagate_errors());
+    m_kmalloc_difference_label = build_widgets_for_label("Difference:"_string.release_value_but_fixme_should_propagate_errors());
 
     refresh();
 }
@@ -125,12 +125,12 @@ void MemoryStatsWidget::refresh()
     u64 physical_pages_in_use = physical_allocated;
     u64 total_userphysical_and_swappable_pages = physical_allocated + physical_committed + physical_uncommitted;
 
-    m_kmalloc_space_label->set_text(DeprecatedString::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)));
-    m_physical_pages_label->set_text(DeprecatedString::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))));
-    m_physical_pages_committed_label->set_text(DeprecatedString::formatted("{}", human_readable_size(page_count_to_bytes(physical_committed))));
-    m_kmalloc_count_label->set_text(DeprecatedString::formatted("{}", kmalloc_call_count));
-    m_kfree_count_label->set_text(DeprecatedString::formatted("{}", kfree_call_count));
-    m_kmalloc_difference_label->set_text(DeprecatedString::formatted("{:+}", kmalloc_call_count - kfree_call_count));
+    m_kmalloc_space_label->set_text(String::formatted("{}/{}", human_readable_size(kmalloc_allocated), human_readable_size(kmalloc_bytes_total)).release_value_but_fixme_should_propagate_errors());
+    m_physical_pages_label->set_text(String::formatted("{}/{}", human_readable_size(page_count_to_bytes(physical_pages_in_use)), human_readable_size(page_count_to_bytes(physical_pages_total))).release_value_but_fixme_should_propagate_errors());
+    m_physical_pages_committed_label->set_text(String::formatted("{}", human_readable_size(page_count_to_bytes(physical_committed))).release_value_but_fixme_should_propagate_errors());
+    m_kmalloc_count_label->set_text(String::formatted("{}", kmalloc_call_count).release_value_but_fixme_should_propagate_errors());
+    m_kfree_count_label->set_text(String::formatted("{}", kfree_call_count).release_value_but_fixme_should_propagate_errors());
+    m_kmalloc_difference_label->set_text(String::formatted("{:+}", kmalloc_call_count - kfree_call_count).release_value_but_fixme_should_propagate_errors());
 
     // Because the initialization order of us and the graph is unknown, we might get a couple of updates where the graph widget lookup fails.
     // Therefore, we can retry indefinitely. (Should not be too much of a performance hit, as we don't update that often.)

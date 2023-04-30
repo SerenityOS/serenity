@@ -63,9 +63,7 @@
             }
 
             @GUI::Label {
-                shape: "Container"
-                thickness: 2
-                shadow: "Sunken"
+                style: "SunkenContainer"
                 name: "clock_preview"
                 text: "12:34:56"
             }

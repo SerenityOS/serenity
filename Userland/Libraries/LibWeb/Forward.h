@@ -105,7 +105,8 @@ class GridTrackPlacement;
 class GridTrackPlacementShorthandStyleValue;
 class GridTrackPlacementStyleValue;
 class GridTrackSizeList;
-class GridTrackSizeStyleValue;
+class GridTrackSizeListShorthandStyleValue;
+class GridTrackSizeListStyleValue;
 class IdentifierStyleValue;
 class ImageStyleValue;
 class InheritStyleValue;
@@ -155,6 +156,7 @@ class TransformationStyleValue;
 class UnicodeRange;
 class UnresolvedStyleValue;
 class UnsetStyleValue;
+class URLStyleValue;
 
 enum class MediaFeatureID;
 enum class PropertyID;

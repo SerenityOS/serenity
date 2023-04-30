@@ -133,7 +133,7 @@ READONLY_AFTER_INIT PhysicalAddress boot_pdpt;
 READONLY_AFTER_INIT PhysicalAddress boot_pd0;
 READONLY_AFTER_INIT PhysicalAddress boot_pd_kernel;
 READONLY_AFTER_INIT Memory::PageTableEntry* boot_pd_kernel_pt1023;
-READONLY_AFTER_INIT char const* kernel_cmdline;
+READONLY_AFTER_INIT StringView kernel_cmdline;
 READONLY_AFTER_INIT u32 multiboot_flags;
 READONLY_AFTER_INIT multiboot_memory_map_t* multiboot_memory_map;
 READONLY_AFTER_INIT size_t multiboot_memory_map_count;
@@ -148,6 +148,10 @@ READONLY_AFTER_INIT u8 multiboot_framebuffer_type;
 }
 
 Atomic<Graphics::Console*> g_boot_console;
+
+#if ARCH(AARCH64)
+READONLY_AFTER_INIT static u8 s_command_line_buffer[512];
+#endif
 
 extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo const& boot_info)
 {
@@ -166,7 +170,8 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     boot_pd0 = PhysicalAddress { boot_info.boot_pd0 };
     boot_pd_kernel = PhysicalAddress { boot_info.boot_pd_kernel };
     boot_pd_kernel_pt1023 = (Memory::PageTableEntry*)boot_info.boot_pd_kernel_pt1023;
-    kernel_cmdline = (char const*)boot_info.kernel_cmdline;
+    char const* cmdline = (char const*)boot_info.kernel_cmdline;
+    kernel_cmdline = StringView { cmdline, strlen(cmdline) };
     multiboot_flags = boot_info.multiboot_flags;
     multiboot_memory_map = (multiboot_memory_map_t*)boot_info.multiboot_memory_map;
     multiboot_memory_map_count = boot_info.multiboot_memory_map_count;
@@ -189,10 +194,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     multiboot_memory_map = mmap;
     multiboot_memory_map_count = 1;
 
-    multiboot_module_entry_t modules[] = {};
-    multiboot_modules = modules;
+    multiboot_modules = nullptr;
     multiboot_modules_count = 0;
-    kernel_cmdline = "";
+    // FIXME: Read the /chosen/bootargs property.
+    kernel_cmdline = RPi::Mailbox::the().query_kernel_command_line(s_command_line_buffer);
 #endif
 
     setup_serial_debug();
@@ -200,7 +205,10 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init([[maybe_unused]] BootInfo con
     // We need to copy the command line before kmalloc is initialized,
     // as it may overwrite parts of multiboot!
     CommandLine::early_initialize(kernel_cmdline);
-    memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
+    if (multiboot_modules_count > 0) {
+        VERIFY(multiboot_modules);
+        memcpy(multiboot_copy_boot_modules_array, multiboot_modules, multiboot_modules_count * sizeof(multiboot_module_entry_t));
+    }
     multiboot_copy_boot_modules_count = multiboot_modules_count;
 
     new (&bsp_processor()) Processor();
@@ -421,6 +429,10 @@ void init_stage2(void*)
     g_init_pid = init_process->pid();
     init_thread->set_priority(THREAD_PRIORITY_HIGH);
 
+    NetworkTask::spawn();
+
+    // NOTE: All kernel processes must be created before enabling boot profiling.
+    //       This is so profiling_enable() can emit process created performance events for them.
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
         MutexLocker mutex_locker(Process::current().big_lock());
@@ -428,8 +440,6 @@ void init_stage2(void*)
         auto result = Process::current().profiling_enable(-1, enable_all);
         VERIFY(!result.is_error());
     }
-
-    NetworkTask::spawn();
 
     Process::current().sys$exit(0);
     VERIFY_NOT_REACHED();
@@ -440,7 +450,7 @@ UNMAP_AFTER_INIT void setup_serial_debug()
     // serial_debug will output all the dbgln() data to COM1 at
     // 8-N-1 57600 baud. this is particularly useful for debugging the boot
     // process on live hardware.
-    if (StringView { kernel_cmdline, strlen(kernel_cmdline) }.contains("serial_debug"sv)) {
+    if (kernel_cmdline.contains("serial_debug"sv)) {
         set_serial_debug_enabled(true);
     }
 }

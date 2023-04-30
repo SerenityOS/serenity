@@ -37,12 +37,12 @@ CoverWizardPage::CoverWizardPage()
 
 void CoverWizardPage::set_header_text(DeprecatedString const& text)
 {
-    m_header_label->set_text(text);
+    m_header_label->set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
 }
 
 void CoverWizardPage::set_body_text(DeprecatedString const& text)
 {
-    m_body_label->set_text(text);
+    m_body_label->set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
 }
 
 }

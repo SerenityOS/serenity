@@ -5,6 +5,7 @@
  */
 
 #include <AK/Endian.h>
+#include <LibGfx/CIELAB.h>
 #include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
@@ -273,7 +274,7 @@ ErrorOr<XYZ> parse_pcs_illuminant(ICCHeader const& header)
     XYZ xyz = (XYZ)header.pcs_illuminant;
 
     /// "The value, when rounded to four decimals, shall be X = 0,9642, Y = 1,0 and Z = 0,8249."
-    if (round(xyz.x * 10'000) != 9'642 || round(xyz.y * 10'000) != 10'000 || round(xyz.z * 10'000) != 8'249)
+    if (round(xyz.X * 10'000) != 9'642 || round(xyz.Y * 10'000) != 10'000 || round(xyz.Z * 10'000) != 8'249)
         return Error::from_string_literal("ICC::Profile: Invalid pcs illuminant");
 
     return xyz;
@@ -421,7 +422,19 @@ StringView data_color_space_name(ColorSpace color_space)
     VERIFY_NOT_REACHED();
 }
 
-static int number_of_components_in_color_space(ColorSpace color_space)
+StringView profile_connection_space_name(ColorSpace color_space)
+{
+    switch (color_space) {
+    case ColorSpace::PCSXYZ:
+        return "PCSXYZ"sv;
+    case ColorSpace::PCSLAB:
+        return "PCSLAB"sv;
+    default:
+        return data_color_space_name(color_space);
+    }
+}
+
+unsigned number_of_components_in_color_space(ColorSpace color_space)
 {
     switch (color_space) {
     case ColorSpace::Gray:
@@ -466,18 +479,6 @@ static int number_of_components_in_color_space(ColorSpace color_space)
         return 15;
     }
     VERIFY_NOT_REACHED();
-}
-
-StringView profile_connection_space_name(ColorSpace color_space)
-{
-    switch (color_space) {
-    case ColorSpace::PCSXYZ:
-        return "PCSXYZ"sv;
-    case ColorSpace::PCSLAB:
-        return "PCSLAB"sv;
-    default:
-        return data_color_space_name(color_space);
-    }
 }
 
 StringView primary_platform_name(PrimaryPlatform primary_platform)
@@ -744,7 +745,7 @@ ErrorOr<void> Profile::check_required_tags()
         //  [...] Only the PCSXYZ encoding can be used with matrix/TRC models.
         //  8.3.4 Monochrome Input profiles
         //  In addition to the tags listed in 8.2, a monochrome Input profile shall contain the following tag:
-        //  - grayTRCTag (see 9.2.29).
+        //  - grayTRCTag (see 9.2.29)."
         bool has_n_component_lut_based_tags = has_tag(AToB0Tag);
         bool has_three_component_matrix_based_tags = has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag });
         bool has_monochrome_tags = has_tag(grayTRCTag);
@@ -1124,9 +1125,9 @@ ErrorOr<void> Profile::check_tag_types()
         auto& xyz_type = static_cast<XYZTagData const&>(*type.value());
         if (xyz_type.xyzs().size() != 1)
             return Error::from_string_literal("ICC::Profile: luminanceTag has unexpected size");
-        if (is_v4() && xyz_type.xyzs()[0].x != 0)
+        if (is_v4() && xyz_type.xyzs()[0].X != 0)
             return Error::from_string_literal("ICC::Profile: luminanceTag.x unexpectedly not 0");
-        if (is_v4() && xyz_type.xyzs()[0].z != 0)
+        if (is_v4() && xyz_type.xyzs()[0].Z != 0)
             return Error::from_string_literal("ICC::Profile: luminanceTag.z unexpectedly not 0");
     }
 
@@ -1178,7 +1179,7 @@ ErrorOr<void> Profile::check_tag_types()
         // "The device representation corresponds to the header’s “data colour space” field.
         //  This representation should be consistent with the “number of device coordinates” field in the namedColor2Type.
         //  If this field is 0, device coordinates are not provided."
-        if (int number_of_device_coordinates = static_cast<NamedColor2TagData const&>(*type.value()).number_of_device_coordinates();
+        if (auto number_of_device_coordinates = static_cast<NamedColor2TagData const&>(*type.value()).number_of_device_coordinates();
             number_of_device_coordinates != 0 && number_of_device_coordinates != number_of_components_in_color_space(data_color_space())) {
             return Error::from_string_literal("ICC::Profile: namedColor2Tag number of device coordinates inconsistent with data color space");
         }
@@ -1355,5 +1356,176 @@ Crypto::Hash::MD5::DigestType Profile::compute_id(ReadonlyBytes bytes)
     md5.update(bytes.slice(100));
     return md5.digest();
 }
+
+static TagSignature tag_for_rendering_intent(RenderingIntent rendering_intent)
+{
+    // ICCv4, Table 25 — Profile type/profile tag and defined rendering intents
+    // This function assumes a profile class of InputDevice, DisplayDevice, OutputDevice, or ColorSpace.
+    switch (rendering_intent) {
+    case RenderingIntent::Perceptual:
+        return AToB0Tag;
+    case RenderingIntent::MediaRelativeColorimetric:
+    case RenderingIntent::ICCAbsoluteColorimetric:
+        return AToB1Tag;
+    case RenderingIntent::Saturation:
+        return AToB2Tag;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
+{
+    if (color.size() != number_of_components_in_color_space(data_color_space()))
+        return Error::from_string_literal("ICC::Profile: input color doesn't match color space size");
+
+    auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
+    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
+
+    switch (device_class()) {
+    case DeviceClass::InputDevice:
+    case DeviceClass::DisplayDevice:
+    case DeviceClass::OutputDevice:
+    case DeviceClass::ColorSpace: {
+        // ICC v4, 8.10 Precedence order of tag usage
+        // "There are several methods of colour transformation that can function within a single CMM. If data for more than
+        //  one method are included in the same profile, the following selection algorithm shall be used by the software
+        //  implementation."
+        // ICC v4, 8.10.2 Input, display, output, or colour space profile types
+        // "a) Use the BToD0Tag, BToD1Tag, BToD2Tag, BToD3Tag, DToB0Tag, DToB1Tag, DToB2Tag, or
+        //     DToB3Tag designated for the rendering intent if the tag is present, except where this tag is not needed or
+        //     supported by the CMM (if a particular processing element within the tag is not supported the tag is not
+        //     supported)."
+        // FIXME: Implement multiProcessElementsType one day.
+
+        // "b) Use the BToA0Tag, BToA1Tag, BToA2Tag, AToB0Tag, AToB1Tag, or AToB2Tag designated for the
+        //     rendering intent if present, when the tag in a) is not used."
+        if (has_tag(tag_for_rendering_intent(rendering_intent()))) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
+        }
+
+        // "c) Use the BToA0Tag or AToB0Tag if present, when the tags in a) and b) are not used."
+        // AToB0Tag is for the conversion _to_ PCS (BToA0Tag is for conversion _from_ PCS, so not needed in this function).
+        if (has_tag(AToB0Tag)) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
+        }
+
+        // "d) Use TRCs (redTRCTag, greenTRCTag, blueTRCTag, or grayTRCTag) and colorants
+        //     (redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag) when tags in a), b), and c) are not
+        //     used."
+        if (data_color_space() == ColorSpace::Gray) {
+            // ICC v4, F.2 grayTRCTag
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::to_pcs: Gray handling not yet implemented");
+        }
+
+        // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
+        if (data_color_space() == ColorSpace::RGB) {
+            if (!has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag }))
+                return Error::from_string_literal("ICC::Profile::to_pcs: RGB color space but neither LUT-based nor matrix-based tags present");
+            VERIFY(color.size() == 3); // True because of color.size() check further up.
+
+            // ICC v4, F.3 Three-component matrix-based profiles
+            // "linear_r = redTRC[device_r]
+            //  linear_g = greenTRC[device_g]
+            //  linear_b = blueTRC[device_b]
+            //  [connection_X] = [redMatrixColumn_X greenMatrixColumn_X blueMatrixColumn_X]   [ linear_r ]
+            //  [connection_Y] = [redMatrixColumn_Y greenMatrixColumn_Y blueMatrixColumn_Y] * [ linear_g ]
+            //  [connection_Z] = [redMatrixColumn_Z greenMatrixColumn_Z blueMatrixColumn_Z]   [ linear_b ]"
+            auto evaluate_curve = [this](TagSignature curve_tag, float f) {
+                auto const& trc = *m_tag_table.get(curve_tag).value();
+                VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
+                if (trc.type() == CurveTagData::Type)
+                    return static_cast<CurveTagData const&>(trc).evaluate(f);
+                return static_cast<ParametricCurveTagData const&>(trc).evaluate(f);
+            };
+
+            float linear_r = evaluate_curve(redTRCTag, color[0] / 255.f);
+            float linear_g = evaluate_curve(greenTRCTag, color[1] / 255.f);
+            float linear_b = evaluate_curve(blueTRCTag, color[2] / 255.f);
+
+            auto const& redMatrixColumn = red_matrix_column();
+            auto const& greenMatrixColumn = green_matrix_column();
+            auto const& blueMatrixColumn = blue_matrix_column();
+
+            float X = redMatrixColumn.X * linear_r + greenMatrixColumn.X * linear_g + blueMatrixColumn.X * linear_b;
+            float Y = redMatrixColumn.Y * linear_r + greenMatrixColumn.Y * linear_g + blueMatrixColumn.Y * linear_b;
+            float Z = redMatrixColumn.Z * linear_r + greenMatrixColumn.Z * linear_g + blueMatrixColumn.Z * linear_b;
+
+            return FloatVector3 { X, Y, Z };
+        }
+
+        return Error::from_string_literal("ICC::Profile::to_pcs: What happened?!");
+    }
+
+    case DeviceClass::DeviceLink:
+    case DeviceClass::Abstract:
+        // ICC v4, 8.10.3 DeviceLink or Abstract profile types
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::to_pcs: conversion for DeviceLink and Abstract not implemented");
+
+    case DeviceClass::NamedColor:
+        return Error::from_string_literal("ICC::Profile::to_pcs: to_pcs with NamedColor profile does not make sense");
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color) const
+{
+    auto pcs = TRY(to_pcs(color));
+    if (connection_space() == ColorSpace::PCSLAB)
+        return CIELAB { pcs[0], pcs[1], pcs[2] };
+
+    if (connection_space() != ColorSpace::PCSXYZ) {
+        VERIFY(device_class() == DeviceClass::DeviceLink);
+        return Error::from_string_literal("ICC::Profile::to_lab: conversion for DeviceLink not implemented");
+    }
+
+    // 6.3.2.2 Translation between media-relative colorimetric data and ICC-absolute colorimetric data
+    // 6.3.2.3 Computation of PCSLAB
+    // 6.3.4 Colour space encodings for the PCS
+    // A.3 PCS encodings
+
+    auto f = [](float x) {
+        if (x > powf(6.f / 29.f, 3))
+            return cbrtf(x);
+        return x / (3 * powf(6.f / 29.f, 2)) + 4.f / 29.f;
+    };
+
+    // "X/Xn is replaced by Xr/Xi (or Xa/Xmw)"
+
+    // 6.3.2.2 Translation between media-relative colorimetric data and ICC-absolute colorimetric data
+    // "The translation from ICC-absolute colorimetric data to media-relative colorimetry data is given by Equations
+    //      Xr = (Xi/Xmw) * Xa
+    //  where
+    //      Xr   media-relative colorimetric data (i.e. PCSXYZ);
+    //      Xa   ICC-absolute colorimetric data (i.e. nCIEXYZ);
+    //      Xmw  nCIEXYZ values of the media white point as specified in the mediaWhitePointTag;
+    //      Xi   PCSXYZ values of the PCS white point defined in 6.3.4.3."
+    // 6.3.4.3 PCS encodings for white and black
+    // "Table 14 — Encodings of PCS white point: X 0,9642 Y 1,0000 Z 0,8249"
+    // That's identical to the values in 7.2.16 PCS illuminant field (Bytes 68 to 79).
+    // 9.2.36 mediaWhitePointTag
+    // "For displays, the values specified shall be those of the PCS illuminant as defined in 7.2.16."
+    // ...so for displays, this is all equivalent I think? It's maybe different for OutputDevice profiles?
+
+    float Xn = pcs_illuminant().X;
+    float Yn = pcs_illuminant().Y;
+    float Zn = pcs_illuminant().Z;
+
+    float x = pcs[0] / Xn;
+    float y = pcs[1] / Yn;
+    float z = pcs[2] / Zn;
+
+    float L = 116 * f(y) - 16;
+    float a = 500 * (f(x) - f(y));
+    float b = 200 * (f(y) - f(z));
+    return CIELAB { L, a, b };
+}
+
+XYZ const& Profile::red_matrix_column() const { return xyz_data(redMatrixColumnTag); }
+XYZ const& Profile::green_matrix_column() const { return xyz_data(greenMatrixColumnTag); }
+XYZ const& Profile::blue_matrix_column() const { return xyz_data(blueMatrixColumnTag); }
 
 }

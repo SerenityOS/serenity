@@ -30,7 +30,7 @@ ThrowCompletionOr<void> AsyncFromSyncIterator::initialize(Realm& realm)
 
 void AsyncFromSyncIterator::visit_edges(Cell::Visitor& visitor)
 {
-    Object::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_sync_iterator_record.iterator);
     visitor.visit(m_sync_iterator_record.next_method);
 }

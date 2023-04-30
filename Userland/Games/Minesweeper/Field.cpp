@@ -15,6 +15,7 @@
 #include <LibConfig/Client.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
@@ -46,8 +47,8 @@ private:
     }
 };
 
-class SquareLabel final : public GUI::Label {
-    C_OBJECT(SquareLabel);
+class SquareImage final : public GUI::ImageWidget {
+    C_OBJECT(SquareImage);
 
 public:
     Function<void()> on_chord_click;
@@ -68,7 +69,7 @@ public:
                 }
             });
         }
-        GUI::Label::mousedown_event(event);
+        GUI::ImageWidget::mousedown_event(event);
     }
 
     virtual void mousemove_event(GUI::MouseEvent& event) override
@@ -80,7 +81,7 @@ public:
                 m_square.field->set_chord_preview(m_square, false);
             }
         }
-        GUI::Label::mousemove_event(event);
+        GUI::ImageWidget::mousemove_event(event);
     }
 
     virtual void mouseup_event(GUI::MouseEvent& event) override
@@ -95,11 +96,11 @@ public:
             }
         }
         m_square.field->set_chord_preview(m_square, m_chord);
-        GUI::Label::mouseup_event(event);
+        GUI::ImageWidget::mouseup_event(event);
     }
 
 private:
-    explicit SquareLabel(Square& square)
+    explicit SquareImage(Square& square)
         : m_square(square)
     {
     }
@@ -137,7 +138,7 @@ void Field::initialize()
     m_timer = Core::Timer::create_repeating(
         1000, [this] {
             ++m_time_elapsed;
-            m_time_label.set_text(human_readable_digital_time(m_time_elapsed));
+            m_time_label.set_text(String::from_deprecated_string(human_readable_digital_time(m_time_elapsed)).release_value_but_fixme_should_propagate_errors());
         },
         this)
                   .release_value_but_fixme_should_propagate_errors();
@@ -213,9 +214,9 @@ void Field::reset()
     m_first_click = true;
     set_updates_enabled(false);
     m_time_elapsed = 0;
-    m_time_label.set_text("00:00");
+    m_time_label.set_text("00:00"_short_string);
     m_flags_left = m_mine_count;
-    m_flag_label.set_text(DeprecatedString::number(m_flags_left));
+    m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     m_timer->stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
@@ -225,7 +226,7 @@ void Field::reset()
     for (int i = rows() * columns(); i < static_cast<int>(m_squares.size()); ++i) {
         auto& square = m_squares[i];
         square->button->set_visible(false);
-        square->label->set_visible(false);
+        square->image->set_visible(false);
     }
 
     size_t i = 0;
@@ -242,15 +243,15 @@ void Field::reset()
             square.has_flag = false;
             square.is_considering = false;
             square.is_swept = false;
-            if (!square.label) {
-                square.label = add<SquareLabel>(square);
-                square.label->set_palette(m_mine_palette);
-                square.label->set_background_role(Gfx::ColorRole::Base);
+            if (!square.image) {
+                square.image = add<SquareImage>(square);
+                square.image->set_palette(m_mine_palette);
+                square.image->set_background_role(Gfx::ColorRole::Base);
             }
-            square.label->set_fill_with_background_color(false);
-            square.label->set_relative_rect(rect);
-            square.label->set_visible(false);
-            square.label->set_icon(nullptr);
+            square.image->set_fill_with_background_color(false);
+            square.image->set_relative_rect(rect);
+            square.image->set_visible(false);
+            square.image->set_bitmap(nullptr);
             if (!square.button) {
                 square.button = add<SquareButton>();
                 square.button->on_click = [this, &square](auto) {
@@ -262,7 +263,7 @@ void Field::reset()
                 square.button->on_middle_click = [this, &square] {
                     on_square_middle_clicked(square);
                 };
-                square.label->on_chord_click = [this, &square] {
+                square.image->on_chord_click = [this, &square] {
                     on_square_chorded(square);
                 };
             }
@@ -325,9 +326,9 @@ void Field::generate_field(size_t start_row, size_t start_column)
             });
             square.number = number;
             if (square.has_mine) {
-                square.label->set_icon(m_mine_bitmap);
+                square.image->set_bitmap(m_mine_bitmap);
             } else if (square.number) {
-                square.label->set_icon(m_number_bitmap[square.number - 1]);
+                square.image->set_bitmap(m_number_bitmap[square.number - 1]);
             }
         }
     }
@@ -395,9 +396,9 @@ void Field::on_square_clicked_impl(Square& square, bool should_flood_fill)
     update();
     square.is_swept = true;
     square.button->set_visible(false);
-    square.label->set_visible(true);
+    square.image->set_visible(true);
     if (square.has_mine) {
-        square.label->set_fill_with_background_color(true);
+        square.image->set_fill_with_background_color(true);
         game_over();
         return;
     }
@@ -461,7 +462,7 @@ void Field::set_flag(Square& square, bool flag)
     }
     square.has_flag = flag;
 
-    m_flag_label.set_text(DeprecatedString::number(m_flags_left));
+    m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
     square.button->update();
 }
@@ -473,7 +474,7 @@ void Field::on_square_middle_clicked(Square& square)
     if (square.has_flag) {
         ++m_flags_left;
         square.has_flag = false;
-        m_flag_label.set_text(DeprecatedString::number(m_flags_left));
+        m_flag_label.set_text(String::number(m_flags_left).release_value_but_fixme_should_propagate_errors());
     }
     square.is_considering = !square.is_considering;
     square.button->set_icon(square.is_considering ? m_consider_bitmap : nullptr);
@@ -507,12 +508,12 @@ void Field::reveal_mines()
             auto& square = this->square(r, c);
             if (square.has_mine && !square.has_flag) {
                 square.button->set_visible(false);
-                square.label->set_visible(true);
+                square.image->set_visible(true);
             }
             if (!square.has_mine && square.has_flag) {
                 square.button->set_icon(*m_badflag_bitmap);
                 square.button->set_visible(true);
-                square.label->set_visible(false);
+                square.image->set_visible(false);
             }
         }
     }

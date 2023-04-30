@@ -11,6 +11,7 @@
 #include <LibWeb/CSS/StyleValues/BorderRadiusStyleValue.h>
 #include <LibWeb/CSS/StyleValues/EdgeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/StyleValueList.h>
+#include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/HTML/BrowsingContext.h>
@@ -646,10 +647,16 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& computed_style)
     computed_values.set_grid_row_start(computed_style.grid_row_start());
     computed_values.set_grid_template_areas(computed_style.grid_template_areas());
 
-    if (auto fill = computed_style.property(CSS::PropertyID::Fill); fill->has_color())
+    auto fill = computed_style.property(CSS::PropertyID::Fill);
+    if (fill->has_color())
         computed_values.set_fill(fill->to_color(*this));
+    else if (fill->is_url())
+        computed_values.set_fill(fill->as_url().url());
+    // TODO: Allow url()s for strokes
     if (auto stroke = computed_style.property(CSS::PropertyID::Stroke); stroke->has_color())
         computed_values.set_stroke(stroke->to_color(*this));
+    if (auto stop_color = computed_style.property(CSS::PropertyID::StopColor); stop_color->has_color())
+        computed_values.set_stop_color(stop_color->to_color(*this));
     auto stroke_width = computed_style.property(CSS::PropertyID::StrokeWidth);
     // FIXME: Converting to pixels isn't really correct - values should be in "user units"
     //        https://svgwg.org/svg2-draft/coords.html#TermUserUnits

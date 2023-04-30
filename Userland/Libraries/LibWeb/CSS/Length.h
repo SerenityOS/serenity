@@ -17,30 +17,71 @@ namespace Web::CSS {
 class Length {
 public:
     enum class Type {
-        Auto,
-        Cm,
-        In,
-        Mm,
-        Q,
-        Px,
-        Pt,
-        Pc,
-        Ex,
+        // Font-relative
         Em,
-        Ch,
         Rem,
-        Vh,
-        Vw,
-        Vmax,
-        Vmin,
+        Ex,
+        Rex,
+        Cap,
+        Rcap,
+        Ch,
+        Rch,
+        Ic,
+        Ric,
         Lh,
         Rlh,
+
+        // Viewport-relative
+        Vw,
+        Svw,
+        Lvw,
+        Dvw,
+        Vh,
+        Svh,
+        Lvh,
+        Dvh,
+        Vi,
+        Svi,
+        Lvi,
+        Dvi,
+        Vb,
+        Svb,
+        Lvb,
+        Dvb,
+        Vmin,
+        Svmin,
+        Lvmin,
+        Dvmin,
+        Vmax,
+        Svmax,
+        Lvmax,
+        Dvmax,
+
+        // Absolute
+        Cm,
+        Mm,
+        Q,
+        In,
+        Pt,
+        Pc,
+        Px,
+
+        // FIXME: Remove auto somehow
+        Auto,
+    };
+
+    struct FontMetrics {
+        FontMetrics(CSSPixels font_size, Gfx::FontPixelMetrics const&, CSSPixels line_height);
+
+        CSSPixels font_size;
+        CSSPixels x_height;
+        CSSPixels cap_height;
+        CSSPixels zero_advance;
+        CSSPixels line_height;
     };
 
     static Optional<Type> unit_from_name(StringView);
 
-    // We have a RefPtr<CalculatedStyleValue> member, but can't include the header StyleValue.h as it includes
-    // this file already. To break the cyclic dependency, we must move all method definitions out.
     Length(int value, Type type);
     Length(float value, Type type);
     ~Length();
@@ -57,26 +98,61 @@ public:
     bool is_absolute() const
     {
         return m_type == Type::Cm
-            || m_type == Type::In
             || m_type == Type::Mm
-            || m_type == Type::Px
+            || m_type == Type::Q
+            || m_type == Type::In
             || m_type == Type::Pt
             || m_type == Type::Pc
-            || m_type == Type::Q;
+            || m_type == Type::Px;
+    }
+
+    bool is_font_relative() const
+    {
+        return m_type == Type::Em
+            || m_type == Type::Rem
+            || m_type == Type::Ex
+            || m_type == Type::Rex
+            || m_type == Type::Cap
+            || m_type == Type::Rcap
+            || m_type == Type::Ch
+            || m_type == Type::Rch
+            || m_type == Type::Ic
+            || m_type == Type::Ric
+            || m_type == Type::Lh
+            || m_type == Type::Rlh;
+    }
+
+    bool is_viewport_relative() const
+    {
+        return m_type == Type::Vw
+            || m_type == Type::Svw
+            || m_type == Type::Lvw
+            || m_type == Type::Dvw
+            || m_type == Type::Vh
+            || m_type == Type::Svh
+            || m_type == Type::Lvh
+            || m_type == Type::Dvh
+            || m_type == Type::Vi
+            || m_type == Type::Svi
+            || m_type == Type::Lvi
+            || m_type == Type::Dvi
+            || m_type == Type::Vb
+            || m_type == Type::Svb
+            || m_type == Type::Lvb
+            || m_type == Type::Dvb
+            || m_type == Type::Vmin
+            || m_type == Type::Svmin
+            || m_type == Type::Lvmin
+            || m_type == Type::Dvmin
+            || m_type == Type::Vmax
+            || m_type == Type::Svmax
+            || m_type == Type::Lvmax
+            || m_type == Type::Dvmax;
     }
 
     bool is_relative() const
     {
-        return m_type == Type::Ex
-            || m_type == Type::Em
-            || m_type == Type::Ch
-            || m_type == Type::Rem
-            || m_type == Type::Vh
-            || m_type == Type::Vw
-            || m_type == Type::Vmax
-            || m_type == Type::Vmin
-            || m_type == Type::Lh
-            || m_type == Type::Rlh;
+        return is_font_relative() || is_viewport_relative();
     }
 
     Type type() const { return m_type; }
@@ -84,12 +160,14 @@ public:
 
     CSSPixels to_px(Layout::Node const&) const;
 
-    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const
+    ALWAYS_INLINE CSSPixels to_px(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const
     {
         if (is_auto())
             return 0;
-        if (is_relative())
-            return relative_length_to_px(viewport_rect, font_metrics, font_size, root_font_size, line_height, root_line_height);
+        if (is_font_relative())
+            return font_relative_length_to_px(font_metrics, root_font_metrics);
+        if (is_viewport_relative())
+            return viewport_relative_length_to_px(viewport_rect);
         return absolute_length_to_px();
     }
 
@@ -124,11 +202,12 @@ public:
         return m_type == other.m_type && m_value == other.m_value;
     }
 
-    CSSPixels relative_length_to_px(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
+    CSSPixels font_relative_length_to_px(FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
+    CSSPixels viewport_relative_length_to_px(CSSPixelRect const& viewport_rect) const;
 
     // Returns empty optional if it's already absolute.
-    Optional<Length> absolutize(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
-    Length absolutized(CSSPixelRect const& viewport_rect, Gfx::FontPixelMetrics const& font_metrics, CSSPixels font_size, CSSPixels root_font_size, CSSPixels line_height, CSSPixels root_line_height) const;
+    Optional<Length> absolutize(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
+    Length absolutized(CSSPixelRect const& viewport_rect, FontMetrics const& font_metrics, FontMetrics const& root_font_metrics) const;
 
 private:
     char const* unit_name() const;

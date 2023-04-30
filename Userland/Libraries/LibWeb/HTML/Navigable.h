@@ -35,17 +35,21 @@ public:
     JS::GCPtr<SessionHistoryEntry> active_session_history_entry() const { return m_active_session_history_entry; };
     JS::GCPtr<SessionHistoryEntry> current_session_history_entry() const { return m_current_session_history_entry; };
 
+    Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& get_session_history_entries() const;
+
     JS::GCPtr<DOM::Document> active_document();
     JS::GCPtr<BrowsingContext> active_browsing_context();
     JS::GCPtr<WindowProxy> active_window_proxy();
     JS::GCPtr<Window> active_window();
+
+    JS::GCPtr<SessionHistoryEntry> get_the_target_history_entry(int target_step) const;
 
     String target_name() const;
 
     JS::GCPtr<NavigableContainer> container() const;
     void set_container(JS::GCPtr<NavigableContainer>);
 
-    JS::GCPtr<TraversableNavigable> traversable_navigable();
+    JS::GCPtr<TraversableNavigable> traversable_navigable() const;
     JS::GCPtr<TraversableNavigable> top_level_traversable();
 
     static JS::GCPtr<Navigable> navigable_with_active_document(JS::NonnullGCPtr<DOM::Document>);

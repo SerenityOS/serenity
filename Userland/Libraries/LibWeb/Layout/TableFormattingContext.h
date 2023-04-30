@@ -34,10 +34,12 @@ private:
     void compute_table_width();
     void distribute_width_to_columns();
     void determine_intrisic_size_of_table_container(AvailableSpace const& available_space);
-    void calculate_row_heights(LayoutMode layout_mode);
+    void compute_table_height(LayoutMode layout_mode);
+    void distribute_height_to_rows();
     void position_row_boxes(CSSPixels&);
     void position_cell_boxes();
 
+    CSSPixels m_table_height { 0 };
     CSSPixels m_automatic_content_height { 0 };
 
     Optional<AvailableSpace> m_available_space;
@@ -59,7 +61,9 @@ private:
 
     struct Row {
         JS::NonnullGCPtr<Box> box;
-        CSSPixels used_height { 0 };
+        CSSPixels base_height { 0 };
+        CSSPixels reference_height { 0 };
+        CSSPixels final_height { 0 };
         CSSPixels baseline { 0 };
     };
 

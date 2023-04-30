@@ -40,7 +40,7 @@ void GroupBox::paint_event(PaintEvent& event)
         0, (!m_title.is_empty() ? font().pixel_size_rounded_up() / 2 : 0),
         width(), height() - (!m_title.is_empty() ? font().pixel_size_rounded_up() / 2 : 0)
     };
-    Gfx::StylePainter::paint_frame(painter, frame_rect, palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
+    Gfx::StylePainter::paint_frame(painter, frame_rect, palette(), Gfx::FrameStyle::SunkenBox);
 
     if (!m_title.is_empty()) {
         Gfx::IntRect text_rect { 6, 1, font().width_rounded_up(m_title) + 6, font().pixel_size_rounded_up() };

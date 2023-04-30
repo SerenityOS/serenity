@@ -22,7 +22,7 @@ WindowEnvironmentSettingsObject::~WindowEnvironmentSettingsObject() = default;
 
 void WindowEnvironmentSettingsObject::visit_edges(JS::Cell::Visitor& visitor)
 {
-    EnvironmentSettingsObject::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_window.ptr());
 }
 

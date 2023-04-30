@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -191,25 +192,28 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
+    auto square = mouse_to_square(event);
     if (event.button() == GUI::MouseButton::Secondary) {
         if (m_dragging_piece) {
             m_dragging_piece = false;
             set_override_cursor(Gfx::StandardCursor::None);
             m_available_moves.clear();
-        } else {
-            m_current_marking.from = mouse_to_square(event);
+        } else if (square.has_value()) {
+            m_current_marking.from = square.release_value();
         }
         return;
     }
     m_board_markings.clear();
 
-    auto square = mouse_to_square(event);
-    auto piece = board().get_piece(square);
+    if (!square.has_value())
+        return;
+
+    auto piece = board().get_piece(square.value());
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;
         set_override_cursor(Gfx::StandardCursor::Drag);
         m_drag_point = { event.position().x() - widget_offset_x, event.position().y() - widget_offset_y };
-        m_moving_square = square;
+        m_moving_square = square.value();
 
         m_board.generate_moves([&](Chess::Move move) {
             if (move.from == m_moving_square) {
@@ -227,10 +231,14 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
+    auto target_square = mouse_to_square(event);
     if (event.button() == GUI::MouseButton::Secondary) {
+        if (!target_square.has_value())
+            return;
+
         m_current_marking.secondary_color = event.shift();
         m_current_marking.alternate_color = event.ctrl();
-        m_current_marking.to = mouse_to_square(event);
+        m_current_marking.to = target_square.release_value();
         auto match_index = m_board_markings.find_first_index(m_current_marking);
         if (match_index.has_value()) {
             m_board_markings.remove(match_index.value());
@@ -249,9 +257,12 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
     set_override_cursor(Gfx::StandardCursor::Hand);
     m_available_moves.clear();
 
-    auto target_square = mouse_to_square(event);
+    if (!target_square.has_value()) {
+        update();
+        return;
+    }
 
-    Chess::Move move = { m_moving_square, target_square };
+    Chess::Move move = { m_moving_square, target_square.release_value() };
     if (board().is_promotion_move(move)) {
         auto promotion_dialog = PromotionDialog::construct(*this);
         if (promotion_dialog->exec() == PromotionDialog::ExecResult::OK)
@@ -262,62 +273,10 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
         m_playback_move_number = board().moves().size();
         m_playback = false;
         m_board_playback = m_board;
-
-        if (board().game_result() != Chess::Board::Result::NotFinished) {
-            bool over = true;
-            StringView msg;
-            switch (board().game_result()) {
-            case Chess::Board::Result::CheckMate:
-                if (board().turn() == Chess::Color::White) {
-                    msg = "Black wins by Checkmate."sv;
-                } else {
-                    msg = "White wins by Checkmate."sv;
-                }
-                break;
-            case Chess::Board::Result::StaleMate:
-                msg = "Draw by Stalemate."sv;
-                break;
-            case Chess::Board::Result::FiftyMoveRule:
-                update();
-                if (GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?"sv, "Claim Draw?"sv,
-                        GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
-                    == GUI::Dialog::ExecResult::Yes) {
-                    msg = "Draw by 50 move rule."sv;
-                } else {
-                    over = false;
-                }
-                break;
-            case Chess::Board::Result::SeventyFiveMoveRule:
-                msg = "Draw by 75 move rule."sv;
-                break;
-            case Chess::Board::Result::ThreeFoldRepetition:
-                update();
-                if (GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?"sv, "Claim Draw?"sv,
-                        GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo)
-                    == GUI::Dialog::ExecResult::Yes) {
-                    msg = "Draw by threefold repetition."sv;
-                } else {
-                    over = false;
-                }
-                break;
-            case Chess::Board::Result::FiveFoldRepetition:
-                msg = "Draw by fivefold repetition."sv;
-                break;
-            case Chess::Board::Result::InsufficientMaterial:
-                msg = "Draw by insufficient material."sv;
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-            if (over) {
-                set_override_cursor(Gfx::StandardCursor::None);
-                set_drag_enabled(false);
-                update();
-                GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
-            }
-        } else {
+        // If two humans are playing, ask whether they wish to accept a draw.
+        auto claim_draw_behavior = m_engine.is_null() ? ClaimDrawBehavior::Prompt : ClaimDrawBehavior::Always;
+        if (!check_game_over(claim_draw_behavior))
             input_engine_move();
-        }
     }
 
     update();
@@ -337,9 +296,12 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 
     if (!m_dragging_piece) {
         auto square = mouse_to_square(event);
-        if (!square.in_bounds())
+        if (!square.has_value()) {
+            set_override_cursor(Gfx::StandardCursor::None);
             return;
-        auto piece = board().get_piece(square);
+        }
+
+        auto piece = board().get_piece(square.release_value());
         if (piece.color == board().turn())
             set_override_cursor(Gfx::StandardCursor::Hand);
         else
@@ -409,20 +371,29 @@ void ChessWidget::set_piece_set(StringView set)
     m_pieces.set({ Chess::Color::Black, Chess::Type::King }, get_piece(set, "black-king.png"sv));
 }
 
-Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
+Optional<Chess::Square> ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
 {
     int const min_size = min(width(), height());
     int const widget_offset_x = (window()->width() - min_size) / 2;
     int const widget_offset_y = (window()->height() - min_size) / 2;
 
+    auto x = event.x() - widget_offset_x;
+    auto y = event.y() - widget_offset_y;
+    if (x < 0 || y < 0 || x > min_size || y > min_size)
+        return {};
+
     int square_width = min_size / 8;
     int square_height = min_size / 8;
 
-    if (side() == Chess::Color::White) {
-        return { 7 - ((event.y() - widget_offset_y) / square_height), (event.x() - widget_offset_x) / square_width };
-    } else {
-        return { (event.y() - widget_offset_y) / square_height, 7 - ((event.x() - widget_offset_x) / square_width) };
-    }
+    auto rank = y / square_height;
+    auto file = x / square_width;
+    if (rank < 0 || file < 0 || rank > 7 || file > 7)
+        return {};
+
+    if (side() == Chess::Color::White)
+        return Chess::Square { 7 - rank, file };
+
+    return Chess::Square { rank, 7 - file };
 }
 
 RefPtr<Gfx::Bitmap const> ChessWidget::get_piece_graphic(Chess::Piece const& piece) const
@@ -439,6 +410,9 @@ void ChessWidget::reset()
     m_board = Chess::Board();
     m_side = (get_random<u32>() % 2) ? Chess::Color::White : Chess::Color::Black;
     m_drag_enabled = true;
+    if (m_engine)
+        m_engine->start_new_game();
+
     input_engine_move();
     update();
 }
@@ -482,8 +456,11 @@ void ChessWidget::input_engine_move()
         if (!want_engine_move())
             return;
         set_drag_enabled(drag_was_enabled);
-        if (!move.is_error())
+        if (!move.is_error()) {
             VERIFY(board().apply_move(move.release_value()));
+            if (check_game_over(ClaimDrawBehavior::Prompt))
+                return;
+        }
 
         m_playback_move_number = m_board.moves().size();
         m_playback = false;
@@ -708,6 +685,47 @@ int ChessWidget::resign()
     GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
 
     return 0;
+}
+
+bool ChessWidget::check_game_over(ClaimDrawBehavior claim_draw_behavior)
+{
+    if (board().game_result() == Chess::Board::Result::NotFinished)
+        return false;
+
+    auto over = true;
+    switch (board().game_result()) {
+    case Chess::Board::Result::FiftyMoveRule:
+        if (claim_draw_behavior == ClaimDrawBehavior::Prompt) {
+            update();
+            auto dialog_result = GUI::MessageBox::show(window(), "50 moves have elapsed without a capture. Claim Draw?"sv, "Claim Draw?"sv,
+                GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo);
+
+            if (dialog_result != GUI::Dialog::ExecResult::Yes)
+                over = false;
+        }
+        break;
+    case Chess::Board::Result::ThreeFoldRepetition:
+        if (claim_draw_behavior == ClaimDrawBehavior::Prompt) {
+            update();
+            auto dialog_result = GUI::MessageBox::show(window(), "The same board state has repeated three times. Claim Draw?"sv, "Claim Draw?"sv,
+                GUI::MessageBox::Type::Information, GUI::MessageBox::InputType::YesNo);
+            if (dialog_result != GUI::Dialog::ExecResult::Yes)
+                over = false;
+        }
+        break;
+    default:
+        break;
+    }
+
+    if (!over)
+        return false;
+
+    set_override_cursor(Gfx::StandardCursor::None);
+    set_drag_enabled(false);
+    update();
+    auto msg = Chess::Board::result_to_string(board().game_result(), board().turn());
+    GUI::MessageBox::show(window(), msg, "Game Over"sv, GUI::MessageBox::Type::Information);
+    return true;
 }
 
 void ChessWidget::config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value)

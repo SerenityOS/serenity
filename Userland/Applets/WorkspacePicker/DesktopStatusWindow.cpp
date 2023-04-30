@@ -55,7 +55,7 @@ public:
                 auto rect = rect_for_desktop(row, column);
                 painter.fill_rect(rect,
                     (row == current_row() && column == current_column()) ? active_color : inactive_color);
-                Gfx::StylePainter::current().paint_frame(painter, rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 1);
+                Gfx::StylePainter::current().paint_frame(painter, rect, palette(), Gfx::FrameStyle::SunkenPanel);
             }
         }
     }

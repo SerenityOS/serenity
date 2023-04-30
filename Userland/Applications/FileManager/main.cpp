@@ -661,9 +661,7 @@ ErrorOr<int> run_in_windowed_mode(DeprecatedString const& initial_location, Depr
 
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     progressbar.set_format(GUI::Progressbar::Format::ValueSlashMax);
-    progressbar.set_frame_shape(Gfx::FrameShape::Panel);
-    progressbar.set_frame_shadow(Gfx::FrameShadow::Sunken);
-    progressbar.set_frame_thickness(1);
+    progressbar.set_frame_style(Gfx::FrameStyle::SunkenPanel);
 
     auto refresh_tree_view = [&] {
         directories_model->invalidate();

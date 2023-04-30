@@ -298,7 +298,7 @@ ErrorOr<GUI::Widget*> MoveTool::get_properties_widget()
         auto selection_mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         (void)TRY(selection_mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
         selection_mode_container->set_fixed_height(46);
-        auto selection_mode_label = TRY(selection_mode_container->try_add<GUI::Label>("Selection Mode:"));
+        auto selection_mode_label = TRY(selection_mode_container->try_add<GUI::Label>(TRY("Selection Mode:"_string)));
         selection_mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         selection_mode_label->set_fixed_size(80, 40);
 

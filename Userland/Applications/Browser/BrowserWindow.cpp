@@ -206,11 +206,10 @@ void BrowserWindow::build_menus()
             tab.m_toolbar_container->set_visible(!is_fullscreen);
             tab.m_statusbar->set_visible(!is_fullscreen);
 
-            if (is_fullscreen) {
-                tab.view().set_frame_thickness(0);
-            } else {
-                tab.view().set_frame_thickness(2);
-            }
+            if (is_fullscreen)
+                tab.view().set_frame_style(Gfx::FrameStyle::NoFrame);
+            else
+                tab.view().set_frame_style(Gfx::FrameStyle::SunkenContainer);
         },
         this));
 

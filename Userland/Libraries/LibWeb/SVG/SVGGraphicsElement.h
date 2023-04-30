@@ -7,10 +7,12 @@
 
 #pragma once
 
+#include <LibGfx/PaintStyle.h>
 #include <LibGfx/Path.h>
 #include <LibWeb/DOM/Node.h>
 #include <LibWeb/SVG/AttributeParser.h>
 #include <LibWeb/SVG/SVGElement.h>
+#include <LibWeb/SVG/SVGGradientElement.h>
 #include <LibWeb/SVG/TagNames.h>
 
 namespace Web::SVG {
@@ -36,6 +38,8 @@ public:
     }
 
     Gfx::AffineTransform get_transform() const;
+
+    Optional<Gfx::PaintStyle const&> fill_paint_style(SVGPaintContext const&) const;
 
 protected:
     SVGGraphicsElement(DOM::Document&, DOM::QualifiedName);

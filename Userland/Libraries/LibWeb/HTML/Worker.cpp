@@ -40,9 +40,14 @@ JS::ThrowCompletionOr<void> Worker::initialize(JS::Realm& realm)
 void Worker::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_document.ptr());
-    visitor.visit(m_implicit_port.ptr());
-    visitor.visit(m_outside_port.ptr());
+    visitor.visit(m_document);
+    visitor.visit(m_inner_settings);
+    visitor.visit(m_implicit_port);
+    visitor.visit(m_outside_port);
+
+    // These are in a separate VM and shouldn't be visited
+    visitor.ignore(m_worker_realm);
+    visitor.ignore(m_worker_scope);
 }
 
 // https://html.spec.whatwg.org/multipage/workers.html#dom-worker

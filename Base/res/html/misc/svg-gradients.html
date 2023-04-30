@@ -1,0 +1,78 @@
+
+<h3>Some simple SVG gradient test cases</h3>
+<b>Linear gradient using percentages + inline CSS, gradientUnits=objectBoundingBox</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgb(255,0,0);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="70" rx="85" ry="55" fill="url(#grad1)" />
+</svg>
+<br>
+<b>Linear gradient using numbers, gradientUnits=objectBoundingBox</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="red"/>
+      <stop offset="1" stop-color="blue"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="70" rx="85" ry="55" fill="url(#grad2)" />
+</svg>
+<br>
+<b>Linear gradient with gradientUnits=userSpaceOnUse using numbers</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad3" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="cyan"/>
+      <stop offset="1" stop-color="yellow"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="70" rx="85" ry="55" fill="url(#grad3)" />
+</svg>
+<br>
+<b>Linear gradient with gradientUnits=userSpaceOnUse using percentages</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad4" x1="0" y1="0" x2="70%" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="black"/>
+      <stop offset="1" stop-color="orange"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="200" cy="70" rx="85" ry="55" fill="url(#grad4)" />
+</svg>
+<br>
+<b>Linear gradient scaled by viewbox</b><br>
+<svg height="150" width="400" viewbox="0 0 20 20">
+  <defs>
+    <linearGradient id="grad5" x1="0" y1="0" x2="70%" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="black"/>
+      <stop offset="1" stop-color="red"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="5" cy="10" rx="10" ry="5" fill="url(#grad5)" />
+</svg>
+<br>
+<b>Linear gradient with gradientTransform</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad6" x1="0" y1="0" x2="70%" y2="0" gradientTransform="rotate(30)">
+      <stop offset="0" stop-color="pink"/>
+      <stop offset="1" stop-color="purple"/>
+    </linearGradient>
+  </defs>
+  <rect x="115" y="15" width="210" height="110" fill="url(#grad6)" />
+</svg>
+<br>
+<b>Linear gradient + transform</b><br>
+<svg height="150" width="400">
+  <defs>
+    <linearGradient id="grad7" x1="0" y1="0" x2="70%" y2="0">
+      <stop offset="0" stop-color="blue"/>
+      <stop offset="1" stop-color="magenta"/>
+    </linearGradient>
+  </defs>
+  <rect x="115" y="15" width="170" height="110" fill="url(#grad7)" transform="rotate(45 200 70)" />
+</svg>

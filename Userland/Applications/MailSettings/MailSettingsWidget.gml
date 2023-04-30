@@ -17,10 +17,10 @@
                 spacing: 16
             }
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/mail-server-settings.png"
+                bitmap: "/res/graphics/mail-server-settings.png"
             }
 
             @GUI::Label {
@@ -100,10 +100,10 @@
                 spacing: 16
             }
 
-            @GUI::Label {
+            @GUI::ImageWidget {
                 fixed_width: 32
                 fixed_height: 32
-                icon: "/res/graphics/mail-user-settings.png"
+                bitmap: "/res/graphics/mail-user-settings.png"
             }
 
             @GUI::Label {

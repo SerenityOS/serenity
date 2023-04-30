@@ -19,8 +19,7 @@ TimelineHeader::TimelineHeader(Profile& profile, Process const& process)
     : m_profile(profile)
     , m_process(process)
 {
-    set_frame_shape(Gfx::FrameShape::Panel);
-    set_frame_shadow(Gfx::FrameShadow::Raised);
+    set_frame_style(Gfx::FrameStyle::RaisedPanel);
     set_fixed_size(200, 40);
     update_selection();
 

@@ -98,18 +98,20 @@ void current_test_case_did_fail();
         }                                                                                            \
     } while (false)
 
-#define EXPECT_APPROXIMATE(a, b)                                                                                \
+#define EXPECT_APPROXIMATE_WITH_ERROR(a, b, err)                                                                \
     do {                                                                                                        \
         auto expect_close_lhs = a;                                                                              \
         auto expect_close_rhs = b;                                                                              \
         auto expect_close_diff = static_cast<double>(expect_close_lhs) - static_cast<double>(expect_close_rhs); \
-        if (AK::fabs(expect_close_diff) > 0.0000005) {                                                          \
+        if (AK::fabs(expect_close_diff) > (err)) {                                                              \
             ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: EXPECT_APPROXIMATE({}, {})"                             \
                          " failed with lhs={}, rhs={}, (lhs-rhs)={}",                                           \
                 __FILE__, __LINE__, #a, #b, expect_close_lhs, expect_close_rhs, expect_close_diff);             \
             ::Test::current_test_case_did_fail();                                                               \
         }                                                                                                       \
     } while (false)
+
+#define EXPECT_APPROXIMATE(a, b) EXPECT_APPROXIMATE_WITH_ERROR(a, b, 0.0000005)
 
 #define FAIL(message)                                                                  \
     do {                                                                               \

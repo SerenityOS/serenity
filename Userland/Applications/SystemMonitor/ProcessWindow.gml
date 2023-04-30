@@ -11,8 +11,8 @@
             spacing: 8
         }
 
-        @GUI::Label {
-            name: "icon_label"
+        @GUI::ImageWidget {
+            name: "process_icon"
             fixed_size: [32, 32]
         }
 

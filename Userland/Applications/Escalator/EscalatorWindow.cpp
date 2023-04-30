@@ -36,13 +36,13 @@ EscalatorWindow::EscalatorWindow(StringView executable, Vector<StringView> argum
 
     RefPtr<GUI::Label> app_label = *main_widget->find_descendant_of_type_named<GUI::Label>("description");
 
-    DeprecatedString prompt;
+    String prompt;
     if (options.description.is_empty())
-        prompt = DeprecatedString::formatted("{} requires root access. Please enter password for user \"{}\".", m_arguments[0], m_current_user.username());
+        prompt = String::formatted("{} requires root access. Please enter password for user \"{}\".", m_arguments[0], m_current_user.username()).release_value_but_fixme_should_propagate_errors();
     else
-        prompt = options.description;
+        prompt = String::from_utf8(options.description).release_value_but_fixme_should_propagate_errors();
 
-    app_label->set_text(prompt);
+    app_label->set_text(move(prompt));
 
     m_icon_image_widget = *main_widget->find_descendant_of_type_named<GUI::ImageWidget>("icon");
     m_icon_image_widget->set_bitmap(app_icon.bitmap_for_size(32));

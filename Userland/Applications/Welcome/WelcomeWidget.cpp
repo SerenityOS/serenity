@@ -50,7 +50,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
         m_tip_index++;
         if (m_tip_index >= m_tips.size())
             m_tip_index = 0;
-        m_tip_label->set_text(m_tips[m_tip_index].to_deprecated_string());
+        m_tip_label->set_text(m_tips[m_tip_index]);
     };
 
     m_help_button = find_descendant_of_type_named<GUI::Button>("help_button");
@@ -82,7 +82,7 @@ ErrorOr<void> WelcomeWidget::create_widgets()
     if (auto result = open_and_parse_tips_file(); result.is_error()) {
         auto path = TRY(String::formatted("{}/tips.txt", Core::StandardPaths::documents_directory()));
         auto error = TRY(String::formatted("Opening \"{}\" failed: {}", path, result.error()));
-        m_tip_label->set_text(error.to_deprecated_string());
+        m_tip_label->set_text(error);
         warnln(error);
     }
 
@@ -114,7 +114,7 @@ void WelcomeWidget::set_random_tip()
         return;
 
     m_tip_index = get_random_uniform(m_tips.size());
-    m_tip_label->set_text(m_tips[m_tip_index].to_deprecated_string());
+    m_tip_label->set_text(m_tips[m_tip_index]);
 }
 
 void WelcomeWidget::paint_event(GUI::PaintEvent& event)

@@ -77,6 +77,26 @@ ErrorOr<void> Navigable::initialize_navigable(JS::NonnullGCPtr<DocumentState> do
     return {};
 }
 
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-the-target-history-entry
+JS::GCPtr<SessionHistoryEntry> Navigable::get_the_target_history_entry(int target_step) const
+{
+    // 1. Let entries be the result of getting session history entries for navigable.
+    auto& entries = get_session_history_entries();
+
+    // 2. Return the item in entries that has the greatest step less than or equal to step.
+    JS::GCPtr<SessionHistoryEntry> result = nullptr;
+    for (auto& entry : entries) {
+        auto entry_step = entry->step.get<int>();
+        if (entry_step <= target_step) {
+            if (!result || result->step.get<int>() < entry_step) {
+                result = entry;
+            }
+        }
+    }
+
+    return result;
+}
+
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-document
 JS::GCPtr<DOM::Document> Navigable::active_document()
 {
@@ -133,10 +153,10 @@ void Navigable::set_container(JS::GCPtr<NavigableContainer> container)
 }
 
 // https://html.spec.whatwg.org/multipage/document-sequences.html#nav-traversable
-JS::GCPtr<TraversableNavigable> Navigable::traversable_navigable()
+JS::GCPtr<TraversableNavigable> Navigable::traversable_navigable() const
 {
     // 1. Let navigable be inputNavigable.
-    auto navigable = this;
+    auto navigable = const_cast<Navigable*>(this);
 
     // 2. While navigable is not a traversable navigable, set navigable to navigable's parent.
     while (navigable && !is<TraversableNavigable>(*navigable))
@@ -158,6 +178,44 @@ JS::GCPtr<TraversableNavigable> Navigable::top_level_traversable()
 
     // 3. Return navigable.
     return verify_cast<TraversableNavigable>(navigable);
+}
+
+// https://html.spec.whatwg.org/multipage/browsing-the-web.html#getting-session-history-entries
+Vector<JS::NonnullGCPtr<SessionHistoryEntry>>& Navigable::get_session_history_entries() const
+{
+    // 1. Let traversable be navigable's traversable navigable.
+    auto traversable = traversable_navigable();
+
+    // FIXME 2. Assert: this is running within traversable's session history traversal queue.
+
+    // 3. If navigable is traversable, return traversable's session history entries.
+    if (this == traversable)
+        return traversable->session_history_entries();
+
+    // 4. Let docStates be an empty ordered set of document states.
+    Vector<JS::GCPtr<DocumentState>> doc_states;
+
+    // 5. For each entry of traversable's session history entries, append entry's document state to docStates.
+    for (auto& entry : traversable->session_history_entries())
+        doc_states.append(entry->document_state);
+
+    // 6. For each docState of docStates:
+    while (!doc_states.is_empty()) {
+        auto doc_state = doc_states.take_first();
+
+        // 1. For each nestedHistory of docState's nested histories:
+        for (auto& nested_history : doc_state->nested_histories()) {
+            // 1. If nestedHistory's id equals navigable's id, return nestedHistory's entries.
+            if (nested_history.id == id())
+                return nested_history.entries;
+
+            // 2. For each entry of nestedHistory's entries, append entry's document state to docStates.
+            for (auto& entry : nested_history.entries)
+                doc_states.append(entry->document_state);
+        }
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 // To navigate a navigable navigable to a URL url using a Document sourceDocument,

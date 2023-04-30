@@ -102,8 +102,7 @@ private:
     void for_each_stylesheet(CascadeOrigin, Callback) const;
 
     CSSPixelRect viewport_rect() const;
-    CSSPixels root_element_font_size() const;
-    CSSPixels root_element_line_height() const;
+    Length::FontMetrics root_element_font_metrics() const;
     CSSPixels parent_or_root_element_line_height(DOM::Element const*, Optional<CSS::Selector::PseudoElement>) const;
 
     struct MatchingRuleSet {

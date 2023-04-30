@@ -37,6 +37,8 @@
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ListStyleStyleValue.h>
@@ -623,6 +625,20 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::GridTemplate) {
+        if (value.is_grid_track_size_list_shorthand()) {
+            auto const& shorthand = value.as_grid_track_size_list_shorthand();
+            style.set_property(CSS::PropertyID::GridTemplateAreas, shorthand.areas());
+            style.set_property(CSS::PropertyID::GridTemplateRows, shorthand.rows());
+            style.set_property(CSS::PropertyID::GridTemplateColumns, shorthand.columns());
+            return;
+        }
+        style.set_property(CSS::PropertyID::GridTemplateAreas, value);
+        style.set_property(CSS::PropertyID::GridTemplateRows, value);
+        style.set_property(CSS::PropertyID::GridTemplateColumns, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Gap || property_id == CSS::PropertyID::GridGap) {
         if (value.is_value_list()) {
             auto const& values_list = value.as_value_list();
@@ -1035,41 +1051,26 @@ void StyleComputer::compute_defaulted_values(StyleProperties& style, DOM::Elemen
     }
 }
 
-CSSPixels StyleComputer::root_element_font_size() const
+Length::FontMetrics StyleComputer::root_element_font_metrics() const
 {
-    constexpr float default_root_element_font_size = 16;
+    Length::FontMetrics const default_font_metrics { 16, Gfx::FontDatabase::default_font().pixel_metrics(), 16 };
 
     auto const* root_element = m_document->first_child_of_type<HTML::HTMLHtmlElement>();
     if (!root_element)
-        return default_root_element_font_size;
+        return default_font_metrics;
 
     auto const* computed_root_style = root_element->computed_css_values();
     if (!computed_root_style)
-        return default_root_element_font_size;
+        return default_font_metrics;
 
     auto root_value = computed_root_style->property(CSS::PropertyID::FontSize);
 
-    auto font_metrics = computed_root_style->computed_font().pixel_metrics();
-    auto line_height = font_metrics.line_spacing();
-    return root_value->to_length().to_px(viewport_rect(), font_metrics, default_root_element_font_size, default_root_element_font_size, line_height, line_height);
-}
+    auto font_pixel_metrics = computed_root_style->computed_font().pixel_metrics();
+    Length::FontMetrics font_metrics { default_font_metrics.font_size, font_pixel_metrics, font_pixel_metrics.line_spacing() };
+    font_metrics.font_size = root_value->to_length().to_px(viewport_rect(), font_metrics, font_metrics);
+    font_metrics.line_height = computed_root_style->line_height(viewport_rect(), font_metrics, font_metrics);
 
-CSSPixels StyleComputer::root_element_line_height() const
-{
-    constexpr float default_root_element_line_height = 16;
-
-    auto const* root_element = m_document->first_child_of_type<HTML::HTMLHtmlElement>();
-    if (!root_element)
-        return default_root_element_line_height;
-
-    auto const* computed_root_style = root_element->computed_css_values();
-    if (!computed_root_style)
-        return default_root_element_line_height;
-
-    auto font_metrics = computed_root_style->computed_font().pixel_metrics();
-    auto font_size = root_element_font_size();
-    auto line_height = font_metrics.line_spacing();
-    return computed_root_style->line_height(viewport_rect(), font_metrics, font_size, font_size, line_height, line_height);
+    return font_metrics;
 }
 
 void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
@@ -1215,14 +1216,13 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         font_size_in_px *= multiplier;
 
     } else {
-        auto root_font_size = root_element_font_size();
-        auto root_line_height = root_element_line_height();
+        auto root_font_metrics = root_element_font_metrics();
 
-        Gfx::FontPixelMetrics font_metrics;
+        Gfx::FontPixelMetrics font_pixel_metrics;
         if (parent_element && parent_element->computed_css_values())
-            font_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
+            font_pixel_metrics = parent_element->computed_css_values()->computed_font().pixel_metrics();
         else
-            font_metrics = Platform::FontPlugin::the().default_font().pixel_metrics();
+            font_pixel_metrics = Platform::FontPlugin::the().default_font().pixel_metrics();
 
         auto parent_font_size = [&]() -> CSSPixels {
             if (!parent_element || !parent_element->computed_css_values())
@@ -1231,8 +1231,10 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
             if (value->is_length()) {
                 auto length = static_cast<LengthStyleValue const&>(*value).to_length();
                 auto parent_line_height = parent_or_root_element_line_height(parent_element, {});
-                if (length.is_absolute() || length.is_relative())
-                    return length.to_px(viewport_rect(), font_metrics, font_size_in_px, root_font_size, parent_line_height, root_line_height);
+                if (length.is_absolute() || length.is_relative()) {
+                    Length::FontMetrics font_metrics { font_size_in_px, font_pixel_metrics, parent_line_height };
+                    return length.to_px(viewport_rect(), font_metrics, root_font_metrics);
+                }
             }
             return font_size_in_px;
         };
@@ -1251,7 +1253,8 @@ void StyleComputer::compute_font(StyleProperties& style, DOM::Element const* ele
         }
         if (maybe_length.has_value()) {
             auto parent_line_height = parent_or_root_element_line_height(element, pseudo_element);
-            auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, parent_font_size(), root_font_size, parent_line_height, root_line_height).value();
+            Length::FontMetrics font_metrics { parent_font_size(), font_pixel_metrics, parent_line_height };
+            auto px = maybe_length.value().to_px(viewport_rect(), font_metrics, root_font_metrics).value();
             if (px != 0)
                 font_size_in_px = px;
         }
@@ -1373,27 +1376,33 @@ Gfx::Font const& StyleComputer::initial_font() const
 
 CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
+    auto root_font_metrics = root_element_font_metrics();
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
     if (!parent_element)
-        return root_element_line_height();
-    auto root_font_size = root_element_font_size();
-    auto root_line_height = root_element_line_height();
+        return root_font_metrics.line_height;
     auto* computed_values = parent_element->computed_css_values();
+    auto parent_font_pixel_metrics = parent_element->layout_node()
+        ? parent_element->layout_node()->font().pixel_metrics()
+        : Gfx::FontDatabase::default_font().pixel_metrics();
     auto parent_font_size = computed_values->property(CSS::PropertyID::FontSize)->to_length();
     // FIXME: Can the parent font size be non-absolute here?
-    auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : root_font_size;
+    auto parent_font_size_value = parent_font_size.is_absolute() ? parent_font_size.absolute_length_to_px() : root_font_metrics.font_size;
     auto parent_parent_line_height = parent_or_root_element_line_height(parent_element, {});
-    return computed_values->line_height(viewport_rect(), computed_values->computed_font().pixel_metrics(), parent_font_size_value, root_font_size, parent_parent_line_height, root_line_height);
+    Length::FontMetrics parent_font_metrics { parent_font_size_value, parent_font_pixel_metrics, parent_parent_line_height };
+    return computed_values->line_height(viewport_rect(), parent_font_metrics, root_font_metrics);
 }
 
 void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
-    auto root_line_height = root_element_line_height();
     auto parent_or_root_line_height = parent_or_root_element_line_height(element, pseudo_element);
 
-    auto font_metrics = style.computed_font().pixel_metrics();
-    auto root_font_size = root_element_font_size();
-    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_size, root_font_size, parent_or_root_line_height, root_line_height);
+    auto font_pixel_metrics = style.computed_font().pixel_metrics();
+    auto root_font_metrics = root_element_font_metrics();
+
+    Length::FontMetrics font_metrics { root_font_metrics.font_size, font_pixel_metrics, parent_or_root_line_height };
+
+    auto font_size = style.property(CSS::PropertyID::FontSize)->to_length().to_px(viewport_rect(), font_metrics, root_font_metrics);
+    font_metrics.font_size = font_size;
 
     // NOTE: Percentage line-height values are relative to the font-size of the element.
     //       We have to resolve them right away, so that the *computed* line-height is ready for inheritance.
@@ -1405,7 +1414,8 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
             Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction()));
     }
 
-    auto line_height = style.line_height(viewport_rect(), font_metrics, font_size.value(), root_font_size.value(), parent_or_root_line_height, root_line_height);
+    auto line_height = style.line_height(viewport_rect(), font_metrics, root_font_metrics);
+    font_metrics.line_height = line_height;
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
     if (line_height_value_slot && line_height_value_slot->is_length())
@@ -1415,7 +1425,7 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, font_size.value(), root_font_size.value(), line_height, root_line_height);
+        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, root_font_metrics);
     }
 }
 
@@ -1425,7 +1435,7 @@ enum class BoxTypeTransformation {
     Inlinify,
 };
 
-static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const&)
+static BoxTypeTransformation required_box_type_transformation(StyleProperties const& style, DOM::Element const& element, Optional<CSS::Selector::PseudoElement> const& pseudo_element)
 {
     // Absolute positioning or floating an element blockifies the box’s display type. [CSS2]
     if (style.position() == CSS::Position::Absolute || style.position() == CSS::Position::Fixed || style.float_() != CSS::Float::None)
@@ -1433,9 +1443,12 @@ static BoxTypeTransformation required_box_type_transformation(StyleProperties co
 
     // FIXME: Containment in a ruby container inlinifies the box’s display type, as described in [CSS-RUBY-1].
 
+    // NOTE: If we're computing style for a pseudo-element, the effective parent will be the originating element itself, not its parent.
+    auto const* parent = pseudo_element.has_value() ? &element : element.parent_element();
+
     // A parent with a grid or flex display value blockifies the box’s display type. [CSS-GRID-1] [CSS-FLEXBOX-1]
-    if (element.parent_element() && element.parent_element()->computed_css_values()) {
-        auto const& parent_display = element.parent_element()->computed_css_values()->display();
+    if (parent && parent->computed_css_values()) {
+        auto const& parent_display = parent->computed_css_values()->display();
         if (parent_display.is_grid_inside() || parent_display.is_flex_inside())
             return BoxTypeTransformation::Blockify;
     }

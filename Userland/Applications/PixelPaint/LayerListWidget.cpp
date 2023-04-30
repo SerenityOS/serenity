@@ -183,7 +183,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
     if (m_moving_gadget_index.has_value())
         paint_gadget(m_gadgets[m_moving_gadget_index.value()]);
 
-    Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameShape::Box, Gfx::FrameShadow::Sunken, 2);
+    Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameStyle::SunkenBox);
 }
 
 Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint position)

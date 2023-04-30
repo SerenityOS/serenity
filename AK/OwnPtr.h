@@ -152,13 +152,13 @@ public:
 
     void swap(OwnPtr& other)
     {
-        ::swap(m_ptr, other.m_ptr);
+        AK::swap(m_ptr, other.m_ptr);
     }
 
     template<typename U>
     void swap(OwnPtr<U>& other)
     {
-        ::swap(m_ptr, other.m_ptr);
+        AK::swap(m_ptr, other.m_ptr);
     }
 
     static OwnPtr lift(T* ptr)

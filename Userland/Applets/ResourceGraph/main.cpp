@@ -35,7 +35,7 @@ private:
     GraphWidget(GraphType graph_type, Optional<Gfx::Color> graph_color, Optional<Gfx::Color> graph_error_color)
         : m_graph_type(graph_type)
     {
-        set_frame_thickness(1);
+        set_frame_style(Gfx::FrameStyle::SunkenPanel);
         m_graph_color = graph_color.value_or(palette().menu_selection());
         m_graph_error_color = graph_error_color.value_or(Color::Red);
         start_timer(1000);

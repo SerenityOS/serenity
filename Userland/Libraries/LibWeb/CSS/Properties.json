@@ -630,7 +630,7 @@
     "inherited": true,
     "initial": "black",
     "valid-types": [
-      "color"
+      "paint"
     ],
     "valid-identifiers": [
       "none"
@@ -939,6 +939,23 @@
     ],
     "valid-types": [
       "string"
+    ]
+  },
+  "grid-template": {
+    "inherited": false,
+    "initial": "auto",
+    "valid-identifiers": [
+      "auto"
+    ],
+    "valid-types": [
+      "length",
+      "percentage",
+      "string"
+    ],
+    "longhands": [
+      "grid-template-areas",
+      "grid-template-rows",
+      "grid-template-columns"
     ]
   },
   "grid-template-areas": {
@@ -1409,6 +1426,14 @@
     ],
     "valid-identifiers": [
       "none"
+    ]
+  },
+  "stop-color": {
+    "affects-layout": false,
+    "inherited": false,
+    "initial": "black",
+    "valid-types": [
+      "color"
     ]
   },
   "stroke-width": {

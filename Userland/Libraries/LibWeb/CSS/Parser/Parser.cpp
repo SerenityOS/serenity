@@ -51,7 +51,8 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
@@ -72,6 +73,7 @@
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 #include <LibWeb/DOM/Document.h>
@@ -2359,6 +2361,14 @@ Optional<AK::URL> Parser::parse_url_function(ComponentValue const& component_val
     }
 
     return {};
+}
+
+RefPtr<StyleValue> Parser::parse_url_value(ComponentValue const& component_value, AllowedDataUrlType allowed_data_url_type)
+{
+    auto url = parse_url_function(component_value, allowed_data_url_type);
+    if (!url.has_value())
+        return {};
+    return URLStyleValue::create(*url);
 }
 
 template<typename TElement>
@@ -6260,7 +6270,7 @@ Optional<CSS::ExplicitGridTrack> Parser::parse_track_sizing_function(ComponentVa
     }
 }
 
-RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& component_values)
+RefPtr<StyleValue> Parser::parse_grid_track_size_list(Vector<ComponentValue> const& component_values, bool allow_separate_line_name_blocks)
 {
     Vector<CSS::ExplicitGridTrack> track_list;
     Vector<Vector<String>> line_names_list;
@@ -6269,12 +6279,12 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
     while (tokens.has_next_token()) {
         auto token = tokens.next_token();
         if (token.is_block()) {
-            if (last_object_was_line_names)
-                return GridTrackSizeStyleValue::make_auto();
+            if (last_object_was_line_names && !allow_separate_line_name_blocks)
+                return GridTrackSizeListStyleValue::make_auto();
             last_object_was_line_names = true;
             Vector<String> line_names;
             if (!token.block().is_square())
-                return GridTrackSizeStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto();
             TokenStream block_tokens { token.block().values() };
             while (block_tokens.has_next_token()) {
                 auto current_block_token = block_tokens.next_token();
@@ -6289,7 +6299,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
             last_object_was_line_names = false;
             auto track_sizing_function = parse_track_sizing_function(token);
             if (!track_sizing_function.has_value())
-                return GridTrackSizeStyleValue::make_auto();
+                return GridTrackSizeListStyleValue::make_auto();
             // FIXME: Handle multiple repeat values (should combine them here, or remove
             // any other ones if the first one is auto-fill, etc.)
             track_list.append(track_sizing_function.value());
@@ -6297,7 +6307,7 @@ RefPtr<StyleValue> Parser::parse_grid_track_sizes(Vector<ComponentValue> const& 
     }
     while (line_names_list.size() <= track_list.size())
         line_names_list.append({});
-    return GridTrackSizeStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
+    return GridTrackSizeListStyleValue::create(CSS::GridTrackSizeList(track_list, line_names_list));
 }
 
 RefPtr<StyleValue> Parser::parse_grid_track_placement(Vector<ComponentValue> const& component_values)
@@ -6434,6 +6444,53 @@ RefPtr<StyleValue> Parser::parse_grid_track_placement_shorthand_value(Vector<Com
         return GridTrackPlacementShorthandStyleValue::create(parsed_start_value.release_nonnull()->as_grid_track_placement(), parsed_end_value.release_nonnull()->as_grid_track_placement());
 
     return {};
+}
+
+// https://www.w3.org/TR/css-grid-2/#explicit-grid-shorthand
+// 7.4. Explicit Grid Shorthand: the grid-template property
+RefPtr<StyleValue> Parser::parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const& component_values)
+{
+    // The grid-template property is a shorthand for setting grid-template-columns, grid-template-rows,
+    // and grid-template-areas in a single declaration. It has several distinct syntax forms:
+    // none
+    //    - Sets all three properties to their initial values (none).
+    // <'grid-template-rows'> / <'grid-template-columns'>
+    //    - Sets grid-template-rows and grid-template-columns to the specified values, respectively, and sets grid-template-areas to none.
+    // [ <line-names>? <string> <track-size>? <line-names>? ]+ [ / <explicit-track-list> ]?
+    //    - Sets grid-template-areas to the strings listed.
+    //    - Sets grid-template-rows to the <track-size>s following each string (filling in auto for any missing sizes),
+    //      and splicing in the named lines defined before/after each size.
+    //    - Sets grid-template-columns to the track listing specified after the slash (or none, if not specified).
+    Vector<ComponentValue> template_rows_tokens;
+    Vector<ComponentValue> template_columns_tokens;
+    Vector<ComponentValue> template_area_tokens;
+
+    int forward_slash_index = -1;
+    for (size_t x = 0; x < component_values.size(); x++) {
+        if (component_values[x].is_token() && component_values[x].token().is(Token::Type::Delim) && component_values[x].token().delim() == "/"sv) {
+            forward_slash_index = x;
+            break;
+        }
+    }
+
+    for (size_t x = 0; x < (forward_slash_index > -1 ? forward_slash_index : component_values.size()); x++) {
+        if (component_values[x].is_token() && component_values[x].token().is(Token::Type::String))
+            template_area_tokens.append(component_values[x]);
+        else
+            template_rows_tokens.append(component_values[x]);
+    }
+    if (forward_slash_index > -1) {
+        for (size_t x = forward_slash_index + 1; x < component_values.size(); x++)
+            template_columns_tokens.append(component_values[x]);
+    }
+
+    auto parsed_template_areas_values = parse_grid_template_areas_value(template_area_tokens);
+    auto parsed_template_rows_values = parse_grid_track_size_list(template_rows_tokens, true);
+    auto parsed_template_columns_values = parse_grid_track_size_list(template_columns_tokens);
+    return GridTrackSizeListShorthandStyleValue::create(
+        parsed_template_areas_values.release_nonnull()->as_grid_template_area(),
+        parsed_template_rows_values.release_nonnull()->as_grid_track_size_list(),
+        parsed_template_columns_values.release_nonnull()->as_grid_track_size_list());
 }
 
 RefPtr<StyleValue> Parser::parse_grid_area_shorthand_value(Vector<ComponentValue> const& component_values)
@@ -6699,12 +6756,16 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parsed_value = parse_grid_track_placement(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
+    case PropertyID::GridTemplate:
+        if (auto parsed_value = parse_grid_track_size_list_shorthand_value(component_values))
+            return parsed_value.release_nonnull();
+        return ParseError::SyntaxError;
     case PropertyID::GridTemplateColumns:
-        if (auto parsed_value = parse_grid_track_sizes(component_values))
+        if (auto parsed_value = parse_grid_track_size_list(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::GridTemplateRows:
-        if (auto parsed_value = parse_grid_track_sizes(component_values))
+        if (auto parsed_value = parse_grid_track_size_list(component_values))
             return parsed_value.release_nonnull();
         return ParseError::SyntaxError;
     case PropertyID::ListStyle:
@@ -6738,6 +6799,14 @@ Parser::ParseErrorOr<NonnullRefPtr<StyleValue>> Parser::parse_css_value(Property
         if (auto parse_value = parse_transform_origin_value(component_values))
             return parse_value.release_nonnull();
         return ParseError ::SyntaxError;
+    case PropertyID::Fill:
+        if (component_values.size() == 1) {
+            if (auto parsed_url = parse_url_value(component_values.first()))
+                return parsed_url.release_nonnull();
+        }
+        // Allow normal value parsing to continue.
+        // URL is done here to avoid ambiguity with images.
+        break;
     default:
         break;
     }

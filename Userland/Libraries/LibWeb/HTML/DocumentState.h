@@ -21,6 +21,11 @@ class DocumentState final : public JS::Cell {
     JS_CELL(DocumentState, JS::Cell);
 
 public:
+    struct NestedHistory {
+        String id;
+        Vector<JS::NonnullGCPtr<SessionHistoryEntry>> entries;
+    };
+
     virtual ~DocumentState();
 
     enum class Client {
@@ -48,6 +53,9 @@ public:
 
     [[nodiscard]] Optional<HTML::Origin> origin() const { return m_origin; }
     void set_origin(Optional<HTML::Origin> origin) { m_origin = move(origin); }
+
+    [[nodiscard]] Vector<NestedHistory> const& nested_histories() const { return m_nested_histories; }
+    [[nodiscard]] Vector<NestedHistory>& nested_histories() { return m_nested_histories; }
 
     [[nodiscard]] bool reload_pending() const { return m_reload_pending; }
     void set_reload_pending(bool reload_pending) { m_reload_pending = reload_pending; }
@@ -81,7 +89,8 @@ private:
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-origin
     Optional<HTML::Origin> m_origin;
 
-    // FIXME: https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-nested-histories
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-nested-histories
+    Vector<NestedHistory> m_nested_histories;
 
     // FIXME: https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-resource
 

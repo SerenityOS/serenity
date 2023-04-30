@@ -27,9 +27,7 @@
 
             @GUI::Label {
                 background_role: "Base"
-                shape: "Container"
-                shadow: "Sunken"
-                thickness: 2
+                style: "SunkenContainer"
                 fill_with_background_color: true
                 name: "terminal_font_label"
             }

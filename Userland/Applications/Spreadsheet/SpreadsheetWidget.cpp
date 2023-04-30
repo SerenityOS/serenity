@@ -41,7 +41,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     auto& top_bar = container.add<GUI::Frame>();
     top_bar.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 1);
     top_bar.set_preferred_height(26);
-    auto& current_cell_label = top_bar.add<GUI::Label>("");
+    auto& current_cell_label = top_bar.add<GUI::Label>();
     current_cell_label.set_fixed_width(50);
 
     auto& help_button = top_bar.add<GUI::Button>();
@@ -84,7 +84,7 @@ SpreadsheetWidget::SpreadsheetWidget(GUI::Window& parent_window, Vector<NonnullR
     auto inline_widget = m_inline_documentation_window->set_main_widget<GUI::Frame>().release_value_but_fixme_should_propagate_errors();
     inline_widget->set_fill_with_background_color(true);
     inline_widget->set_layout<GUI::VerticalBoxLayout>(4);
-    inline_widget->set_frame_shape(Gfx::FrameShape::Box);
+    inline_widget->set_frame_style(Gfx::FrameStyle::Plain);
     m_inline_documentation_label = inline_widget->add<GUI::Label>();
     m_inline_documentation_label->set_fill_with_background_color(true);
     m_inline_documentation_label->set_autosize(false);
@@ -361,7 +361,7 @@ void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
 
             if (selection.size() == 1) {
                 auto& position = selection.first();
-                m_current_cell_label->set_text(position.to_cell_identifier(sheet));
+                m_current_cell_label->set_text(String::from_deprecated_string(position.to_cell_identifier(sheet)).release_value_but_fixme_should_propagate_errors());
 
                 auto& cell = sheet.ensure(position);
                 m_cell_value_editor->on_change = nullptr;
@@ -382,7 +382,7 @@ void SpreadsheetWidget::setup_tabs(Vector<NonnullRefPtr<Sheet>> new_sheets)
             // There are many cells selected, change all of them.
             StringBuilder builder;
             builder.appendff("<{}>", selection.size());
-            m_current_cell_label->set_text(builder.string_view());
+            m_current_cell_label->set_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
 
             Vector<Cell&> cells;
             for (auto& position : selection)
@@ -456,7 +456,7 @@ void SpreadsheetWidget::try_generate_tip_for_input_expression(StringView source,
     if (text.is_empty()) {
         m_inline_documentation_window->hide();
     } else {
-        m_inline_documentation_label->set_text(move(text));
+        m_inline_documentation_label->set_text(String::from_deprecated_string(text).release_value_but_fixme_should_propagate_errors());
         m_inline_documentation_window->show();
     }
 }
@@ -485,12 +485,18 @@ void SpreadsheetWidget::change_cell_static_color_format(Spreadsheet::FormatType 
 
     auto dialog = GUI::ColorPicker::construct(Color::White, window(), "Select Color");
     if (dialog->exec() == GUI::Dialog::ExecResult::OK) {
+        Vector<CellChange> cell_changes;
         for (auto& position : current_worksheet_if_available()->selected_cells()) {
+            auto* cell = current_worksheet_if_available()->at(position);
+            auto previous_type_metadata = cell->type_metadata();
             if (format_type == Spreadsheet::FormatType::Background)
-                current_worksheet_if_available()->at(position)->type_metadata().static_format.background_color = dialog->color();
+                cell->type_metadata().static_format.background_color = dialog->color();
             else
-                current_worksheet_if_available()->at(position)->type_metadata().static_format.foreground_color = dialog->color();
+                cell->type_metadata().static_format.foreground_color = dialog->color();
+            cell_changes.append(CellChange(*cell, previous_type_metadata));
         }
+        undo_stack().push(make<CellsUndoMetadataCommand>(move(cell_changes)));
+        window()->set_modified(true);
     }
 }
 
@@ -511,11 +517,14 @@ void SpreadsheetWidget::load_file(String const& filename, Core::File& file)
     auto result = m_workbook->open_file(filename, file);
     if (result.is_error()) {
         GUI::MessageBox::show_error(window(), result.error());
+        if (!m_workbook->has_sheets()) {
+            add_sheet();
+        }
         return;
     }
 
     m_cell_value_editor->on_change = nullptr;
-    m_current_cell_label->set_text("");
+    m_current_cell_label->set_text({});
     m_should_change_selected_cells = false;
     while (auto* widget = m_tab_widget->active_widget()) {
         m_tab_widget->remove_tab(*widget);
@@ -540,7 +549,7 @@ void SpreadsheetWidget::import_sheets(String const& filename, Core::File& file)
     window()->set_modified(true);
 
     m_cell_value_editor->on_change = nullptr;
-    m_current_cell_label->set_text("");
+    m_current_cell_label->set_text({});
     m_should_change_selected_cells = false;
     while (auto* widget = m_tab_widget->active_widget()) {
         m_tab_widget->remove_tab(*widget);

@@ -23,7 +23,7 @@ TimelineTrack::TimelineTrack(TimelineView const& view, Profile const& profile, P
     set_background_role(Gfx::ColorRole::Base);
     set_fixed_height(40);
     set_scale(view.scale());
-    set_frame_thickness(1);
+    set_frame_style(Gfx::FrameStyle::SunkenPanel);
 }
 
 void TimelineTrack::set_scale(float scale)

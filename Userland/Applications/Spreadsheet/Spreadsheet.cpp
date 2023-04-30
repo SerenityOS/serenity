@@ -770,4 +770,11 @@ CellChange::CellChange(Cell& cell, DeprecatedString const& previous_data)
     m_new_data = cell.data();
 }
 
+CellChange::CellChange(Cell& cell, CellTypeMetadata const& previous_type_metadata)
+    : m_cell(cell)
+    , m_previous_type_metadata(previous_type_metadata)
+{
+    m_new_type_metadata = cell.type_metadata();
+}
+
 }

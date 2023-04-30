@@ -11,10 +11,10 @@
         }
         fixed_height: 40
 
-        @GUI::Label {
+        @GUI::ImageWidget {
             fixed_width: 32
             fixed_height: 32
-            icon: "/res/icons/32x32/network.png"
+            bitmap: "/res/icons/32x32/network.png"
         }
 
         @GUI::Label {

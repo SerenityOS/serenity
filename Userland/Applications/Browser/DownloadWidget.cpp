@@ -69,7 +69,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_browser_image->load_from_file("/res/graphics/download-animation.gif"sv);
     animation_container.add_spacer().release_value_but_fixme_should_propagate_errors();
 
-    auto& source_label = add<GUI::Label>(DeprecatedString::formatted("From: {}", url));
+    auto& source_label = add<GUI::Label>(String::formatted("From: {}", url).release_value_but_fixme_should_propagate_errors());
     source_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     source_label.set_fixed_height(16);
 
@@ -80,7 +80,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     m_progress_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_progress_label->set_fixed_height(16);
 
-    auto& destination_label = add<GUI::Label>(DeprecatedString::formatted("To: {}", m_destination_path));
+    auto& destination_label = add<GUI::Label>(String::formatted("To: {}", m_destination_path).release_value_but_fixme_should_propagate_errors());
     destination_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     destination_label.set_fixed_height(16);
 
@@ -127,7 +127,7 @@ void DownloadWidget::did_progress(Optional<u32> total_size, u32 downloaded_size)
         builder.append("Downloaded "sv);
         builder.append(human_readable_size(downloaded_size));
         builder.appendff(" in {} sec", m_elapsed_timer.elapsed_time().to_seconds());
-        m_progress_label->set_text(builder.to_deprecated_string());
+        m_progress_label->set_text(builder.to_string().release_value_but_fixme_should_propagate_errors());
     }
 
     {

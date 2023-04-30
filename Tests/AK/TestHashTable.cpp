@@ -10,6 +10,7 @@
 #include <AK/DeprecatedString.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtr.h>
+#include <AK/Vector.h>
 
 TEST_CASE(construct)
 {
@@ -433,4 +434,19 @@ TEST_CASE(ordered_infinite_loop_clang_regression)
             break;
         }
     }
+}
+
+TEST_CASE(values)
+{
+    OrderedHashTable<int> table;
+    table.set(10);
+    table.set(30);
+    table.set(20);
+
+    Vector<int> values = table.values();
+
+    EXPECT_EQ(values.size(), table.size());
+    EXPECT_EQ(values[0], 10);
+    EXPECT_EQ(values[1], 30);
+    EXPECT_EQ(values[2], 20);
 }

@@ -7,6 +7,7 @@ set(SOURCES
     ClassicWindowTheme.cpp
     Color.cpp
     CursorParams.cpp
+    DeltaE.cpp
     FillPathImplementation.cpp
     Filters/ColorBlindnessFilter.cpp
     Filters/FastBoxBlurFilter.cpp

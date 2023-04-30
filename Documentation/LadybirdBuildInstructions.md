@@ -27,7 +27,12 @@ On Fedora or derivatives:
 sudo dnf install cmake libglvnd-devel ninja-build qt6-qtbase-devel qt6-qttools-devel qt6-qtwayland-devel
 ```
 
-On Nix/NixOS
+On openSUSE:
+```
+sudo zypper install cmake libglvnd-devel ninja qt6-base-devel qt6-tools-devel qt6-wayland-devel
+```
+
+On Nix/NixOS:
 ```
 nix-shell ladybird.nix
 ```

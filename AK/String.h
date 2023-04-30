@@ -138,6 +138,8 @@ public:
     // Returns a StringView covering the full length of the string. Note that iterating this will go byte-at-a-time, not code-point-at-a-time.
     [[nodiscard]] StringView bytes_as_string_view() const;
 
+    [[nodiscard]] size_t count(StringView needle) const { return StringUtils::count(bytes_as_string_view(), needle); }
+
     ErrorOr<String> replace(StringView needle, StringView replacement, ReplaceMode replace_mode) const;
     ErrorOr<String> reverse() const;
 

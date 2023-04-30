@@ -33,7 +33,7 @@ struct Context {
 
 struct ValidationError : public Error {
     ValidationError(DeprecatedString error)
-        : Error(Error::from_string_view(error))
+        : Error(Error::from_string_view(error.view()))
         , error_string(move(error))
     {
     }

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2022, the SerenityOS developers.
  * Copyright (c) 2023, Sam Atkins <atkinssj@serenityos.org>
+ * Copyright (c) 2023, Tim Ledbetter <timledbetter@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -44,7 +45,7 @@ public:
     void set_piece_set(StringView set);
     DeprecatedString const& piece_set() const { return m_piece_set; };
 
-    Chess::Square mouse_to_square(GUI::MouseEvent& event) const;
+    Optional<Chess::Square> mouse_to_square(GUI::MouseEvent& event) const;
 
     bool drag_enabled() const { return m_drag_enabled; }
     void set_drag_enabled(bool e) { m_drag_enabled = e; }
@@ -111,10 +112,17 @@ public:
     };
 
 private:
+    enum class ClaimDrawBehavior {
+        Always,
+        Prompt
+    };
+
     ChessWidget() = default;
 
     virtual void config_string_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, DeprecatedString const& value) override;
     virtual void config_bool_did_change(DeprecatedString const& domain, DeprecatedString const& group, DeprecatedString const& key, bool value) override;
+
+    bool check_game_over(ClaimDrawBehavior);
 
     Chess::Board m_board;
     Chess::Board m_board_playback;

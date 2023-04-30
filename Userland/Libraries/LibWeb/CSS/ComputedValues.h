@@ -41,6 +41,7 @@ public:
     static CSS::TextTransform text_transform() { return CSS::TextTransform::None; }
     static CSS::Display display() { return CSS::Display { CSS::Display::Outside::Inline, CSS::Display::Inside::Flow }; }
     static Color color() { return Color::Black; }
+    static Color stop_color() { return Color::Black; }
     static CSS::BackdropFilter backdrop_filter() { return BackdropFilter::make_none(); }
     static Color background_color() { return Color::Transparent; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
@@ -87,6 +88,27 @@ enum class BackgroundSize {
     Contain,
     Cover,
     LengthPercentage,
+};
+
+// https://svgwg.org/svg2-draft/painting.html#SpecifyingPaint
+class SVGPaint {
+public:
+    SVGPaint(Color color)
+        : m_value(color)
+    {
+    }
+    SVGPaint(AK::URL const& url)
+        : m_value(url)
+    {
+    }
+
+    bool is_color() const { return m_value.has<Color>(); }
+    bool is_url() const { return m_value.has<AK::URL>(); }
+    Color as_color() const { return m_value.get<Color>(); }
+    AK::URL const& as_url() const { return m_value.get<AK::URL>(); }
+
+private:
+    Variant<AK::URL, Color> m_value;
 };
 
 struct BackgroundLayerData {
@@ -256,9 +278,10 @@ public:
 
     CSS::ListStyleType list_style_type() const { return m_inherited.list_style_type; }
 
-    Optional<Color> const& fill() const { return m_inherited.fill; }
-    Optional<Color> const& stroke() const { return m_inherited.stroke; }
+    Optional<SVGPaint> const& fill() const { return m_inherited.fill; }
+    Optional<SVGPaint> const& stroke() const { return m_inherited.stroke; }
     Optional<LengthPercentage> const& stroke_width() const { return m_inherited.stroke_width; }
+    Color stop_color() const { return m_noninherited.stop_color; }
 
     Vector<CSS::Transformation> const& transformations() const { return m_noninherited.transformations; }
     CSS::TransformOrigin const& transform_origin() const { return m_noninherited.transform_origin; }
@@ -291,8 +314,8 @@ protected:
         CSS::ListStyleType list_style_type { InitialValues::list_style_type() };
         CSS::Visibility visibility { InitialValues::visibility() };
 
-        Optional<Color> fill;
-        Optional<Color> stroke;
+        Optional<SVGPaint> fill;
+        Optional<SVGPaint> stroke;
         Optional<LengthPercentage> stroke_width;
     } m_inherited;
 
@@ -359,6 +382,7 @@ protected:
         CSS::Size row_gap { InitialValues::row_gap() };
         CSS::BorderCollapse border_collapse { InitialValues::border_collapse() };
         Vector<Vector<String>> grid_template_areas { InitialValues::grid_template_areas() };
+        Gfx::Color stop_color { InitialValues::stop_color() };
     } m_noninherited;
 };
 
@@ -443,9 +467,10 @@ public:
     void set_border_collapse(CSS::BorderCollapse const& border_collapse) { m_noninherited.border_collapse = border_collapse; }
     void set_grid_template_areas(Vector<Vector<String>> const& grid_template_areas) { m_noninherited.grid_template_areas = grid_template_areas; }
 
-    void set_fill(Color value) { m_inherited.fill = value; }
-    void set_stroke(Color value) { m_inherited.stroke = value; }
+    void set_fill(SVGPaint value) { m_inherited.fill = value; }
+    void set_stroke(SVGPaint value) { m_inherited.stroke = value; }
     void set_stroke_width(LengthPercentage value) { m_inherited.stroke_width = value; }
+    void set_stop_color(Color value) { m_noninherited.stop_color = value; }
 };
 
 }

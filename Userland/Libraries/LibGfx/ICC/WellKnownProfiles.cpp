@@ -52,6 +52,7 @@ ErrorOr<NonnullRefPtr<Profile>> sRGB()
 
     // FIXME: There are many different sRGB ICC profiles in the wild.
     //        Explain why, and why this picks the numbers it does.
+    //        In the meantime, https://github.com/SerenityOS/serenity/pull/17714 has a few notes.
 
     auto header = rgb_header();
 

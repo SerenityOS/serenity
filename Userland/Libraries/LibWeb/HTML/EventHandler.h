@@ -14,6 +14,8 @@
 namespace Web::HTML {
 
 class EventHandler final : public JS::Cell {
+    JS_CELL(EventHandler, JS::Cell);
+
 public:
     explicit EventHandler(DeprecatedString);
     explicit EventHandler(WebIDL::CallbackType&);
@@ -29,7 +31,6 @@ public:
     JS::GCPtr<DOM::DOMEventListener> listener;
 
 private:
-    virtual StringView class_name() const override { return "EventHandler"sv; }
     virtual void visit_edges(Cell::Visitor&) override;
 };
 

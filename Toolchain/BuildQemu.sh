@@ -37,13 +37,19 @@ pushd "$DIR/Tarballs"
         exit 1
     fi
 
-    if [ ! -d "$QEMU_VERSION" ]; then
-        echo "Extracting qemu..."
-        tar -xf "${QEMU_ARCHIVE}"
-    else
-        echo "Skipped extracting qemu"
+    # If the source directory exists, re-extract it again in case the patches have changed.
+    if [ -d "qemu-$QEMU_VERSION" ]; then
+        rm -rf "qemu-$QEMU_VERSION"
     fi
 
+    echo "Extracting qemu..."
+    tar -xf "${QEMU_ARCHIVE}"
+
+    pushd "qemu-$QEMU_VERSION"
+        for patch in "${DIR}"/Patches/qemu/*.patch; do
+            patch -p1 < "${patch}" > /dev/null
+        done
+    popd
 popd
 
 mkdir -p "$PREFIX"
@@ -53,9 +59,13 @@ if [ -z "$MAKEJOBS" ]; then
     MAKEJOBS=$(nproc)
 fi
 
+EXTRA_ARGS=""
 if [[ $(uname) == "Darwin" ]]
 then
     UI_LIB=cocoa
+
+    # SDL causes a crash on startup: "NSWindow drag regions should only be invalidated on the Main Thread!"
+    EXTRA_ARGS="--disable-sdl"
 else
     UI_LIB=gtk
 fi
@@ -66,7 +76,8 @@ pushd "$DIR/Build/qemu"
     "$DIR"/Tarballs/qemu-"${QEMU_VERSION}"/configure --prefix="$PREFIX" \
                                             --target-list=aarch64-softmmu,x86_64-softmmu \
                                             --enable-$UI_LIB \
-                                            --enable-slirp || exit 1
+                                            --enable-slirp \
+                                            $EXTRA_ARGS || exit 1
     make -j "$MAKEJOBS" || exit 1
     make install || exit 1
 popd

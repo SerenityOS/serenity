@@ -84,9 +84,7 @@ ErrorOr<void> TaskbarWindow::populate_taskbar()
     m_default_icon = TRY(Gfx::Bitmap::load_from_file("/res/icons/16x16/window.png"sv));
 
     m_applet_area_container = TRY(main_widget->try_add<GUI::Frame>());
-    m_applet_area_container->set_frame_thickness(1);
-    m_applet_area_container->set_frame_shape(Gfx::FrameShape::Box);
-    m_applet_area_container->set_frame_shadow(Gfx::FrameShadow::Sunken);
+    m_applet_area_container->set_frame_style(Gfx::FrameStyle::SunkenPanel);
 
     m_clock_widget = TRY(main_widget->try_add<Taskbar::ClockWidget>());
 

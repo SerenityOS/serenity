@@ -74,6 +74,7 @@ struct Cell : public Weakable<Cell> {
 
     void set_type(StringView name);
     void set_type(CellType const*);
+    void set_type_metadata(CellTypeMetadata const&);
     void set_type_metadata(CellTypeMetadata&&);
 
     Position const& position() const { return m_position; }

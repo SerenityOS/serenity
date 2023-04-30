@@ -51,7 +51,7 @@ PrimitiveString::~PrimitiveString()
 
 void PrimitiveString::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     if (m_is_rope) {
         visitor.visit(m_lhs);
         visitor.visit(m_rhs);

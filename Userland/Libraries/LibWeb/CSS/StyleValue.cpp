@@ -30,7 +30,8 @@
 #include <LibWeb/CSS/StyleValues/GridTemplateAreaStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/ImageStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InheritStyleValue.h>
@@ -51,6 +52,7 @@
 #include <LibWeb/CSS/StyleValues/TextDecorationStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TimeStyleValue.h>
 #include <LibWeb/CSS/StyleValues/TransformationStyleValue.h>
+#include <LibWeb/CSS/StyleValues/URLStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnresolvedStyleValue.h>
 #include <LibWeb/CSS/StyleValues/UnsetStyleValue.h>
 
@@ -229,10 +231,16 @@ LengthStyleValue const& StyleValue::as_length() const
     return static_cast<LengthStyleValue const&>(*this);
 }
 
-GridTrackSizeStyleValue const& StyleValue::as_grid_track_size_list() const
+GridTrackSizeListStyleValue const& StyleValue::as_grid_track_size_list() const
 {
     VERIFY(is_grid_track_size_list());
-    return static_cast<GridTrackSizeStyleValue const&>(*this);
+    return static_cast<GridTrackSizeListStyleValue const&>(*this);
+}
+
+GridTrackSizeListShorthandStyleValue const& StyleValue::as_grid_track_size_list_shorthand() const
+{
+    VERIFY(is_grid_track_size_list_shorthand());
+    return static_cast<GridTrackSizeListShorthandStyleValue const&>(*this);
 }
 
 LinearGradientStyleValue const& StyleValue::as_linear_gradient() const
@@ -325,13 +333,19 @@ UnsetStyleValue const& StyleValue::as_unset() const
     return static_cast<UnsetStyleValue const&>(*this);
 }
 
+URLStyleValue const& StyleValue::as_url() const
+{
+    VERIFY(is_url());
+    return static_cast<URLStyleValue const&>(*this);
+}
+
 StyleValueList const& StyleValue::as_value_list() const
 {
     VERIFY(is_value_list());
     return static_cast<StyleValueList const&>(*this);
 }
 
-ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Gfx::FontPixelMetrics const&, CSSPixels, CSSPixels, CSSPixels, CSSPixels) const
+ValueComparingNonnullRefPtr<StyleValue const> StyleValue::absolutized(CSSPixelRect const&, Length::FontMetrics const&, Length::FontMetrics const&) const
 {
     return *this;
 }

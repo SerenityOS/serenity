@@ -166,6 +166,28 @@ constexpr bool is_constant_evaluated()
 #endif
 }
 
+template<typename T>
+ALWAYS_INLINE constexpr void taint_for_optimizer(T& value)
+requires(IsIntegral<T>)
+{
+    if (!is_constant_evaluated()) {
+        asm volatile(""
+                     : "+r"(value));
+    }
+}
+
+template<typename T>
+ALWAYS_INLINE constexpr void taint_for_optimizer(T& value)
+requires(!IsIntegral<T>)
+{
+    if (!is_constant_evaluated()) {
+        asm volatile(""
+                     :
+                     : "m"(value)
+                     : "memory");
+    }
+}
+
 // These can't be exported into the global namespace as they would clash with the C standard library.
 
 #define __DEFINE_GENERIC_ABS(type, zero, intrinsic) \

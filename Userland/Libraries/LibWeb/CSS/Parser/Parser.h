@@ -267,6 +267,7 @@ private:
         Font,
     };
     Optional<AK::URL> parse_url_function(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
+    RefPtr<StyleValue> parse_url_value(ComponentValue const&, AllowedDataUrlType = AllowedDataUrlType::None);
 
     Optional<Vector<LinearColorStopListElement>> parse_linear_color_stop_list(TokenStream<ComponentValue>&);
     Optional<Vector<AngularColorStopListElement>> parse_angular_color_stop_list(TokenStream<ComponentValue>&);
@@ -317,7 +318,8 @@ private:
     RefPtr<StyleValue> parse_text_decoration_line_value(TokenStream<ComponentValue>&);
     RefPtr<StyleValue> parse_transform_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_transform_origin_value(Vector<ComponentValue> const&);
-    RefPtr<StyleValue> parse_grid_track_sizes(Vector<ComponentValue> const&);
+    RefPtr<StyleValue> parse_grid_track_size_list(Vector<ComponentValue> const&, bool allow_separate_line_name_blocks = false);
+    RefPtr<StyleValue> parse_grid_track_size_list_shorthand_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_track_placement_shorthand_value(Vector<ComponentValue> const&);
     RefPtr<StyleValue> parse_grid_template_areas_value(Vector<ComponentValue> const&);

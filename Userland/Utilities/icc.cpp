@@ -10,6 +10,7 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibGfx/DeltaE.h>
 #include <LibGfx/ICC/BinaryWriter.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
@@ -161,6 +162,45 @@ static ErrorOr<void> out_curves(Vector<Gfx::ICC::LutCurveType> const& curves)
     return {};
 }
 
+static ErrorOr<void> print_profile_measurement(Gfx::ICC::Profile const& profile)
+{
+    auto lab_from_rgb = [&profile](u8 r, u8 g, u8 b) {
+        u8 rgb[3] = { r, g, b };
+        return profile.to_lab(rgb);
+    };
+    float largest = -1, smallest = 1000;
+    Color largest_color1, largest_color2, smallest_color1, smallest_color2;
+    for (u8 r = 0; r < 254; ++r) {
+        out("\r{}/254", r + 1);
+        fflush(stdout);
+        for (u8 g = 0; g < 254; ++g) {
+            for (u8 b = 0; b < 254; ++b) {
+                auto lab = TRY(lab_from_rgb(r, g, b));
+                u8 delta_r[] = { 1, 0, 0 };
+                u8 delta_g[] = { 0, 1, 0 };
+                u8 delta_b[] = { 0, 0, 1 };
+                for (unsigned i = 0; i < sizeof(delta_r); ++i) {
+                    auto lab2 = TRY(lab_from_rgb(r + delta_r[i], g + delta_g[i], b + delta_b[i]));
+                    float delta = Gfx::DeltaE(lab, lab2);
+                    if (delta > largest) {
+                        largest = delta;
+                        largest_color1 = Color(r, g, b);
+                        largest_color2 = Color(r + delta_r[i], g + delta_g[i], b + delta_b[i]);
+                    }
+                    if (delta < smallest) {
+                        smallest = delta;
+                        smallest_color1 = Color(r, g, b);
+                        smallest_color2 = Color(r + delta_r[i], g + delta_g[i], b + delta_b[i]);
+                    }
+                }
+            }
+        }
+    }
+    outln("\rlargest difference between neighboring colors: {}, between {} and {}", largest, largest_color1, largest_color2);
+    outln("smallest difference between neighboring colors: {}, between {} and {}", smallest, smallest_color1, smallest_color2);
+    return {};
+}
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -176,6 +216,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView reencode_out_path;
     args_parser.add_option(reencode_out_path, "Reencode ICC profile to this path", "reencode-to", 0, "FILE");
+
+    bool measure = false;
+    args_parser.add_option(measure, "For RGB ICC profiles, print perceptually smallest and largest color step", "measure", 0);
 
     bool force_print = false;
     args_parser.add_option(force_print, "Print profile even when writing ICC files", "print", 0);
@@ -229,7 +272,15 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         TRY(output_stream->write_until_depleted(reencoded_bytes));
     }
 
-    bool do_print = (dump_out_path.is_empty() && reencode_out_path.is_empty()) || force_print;
+    if (measure) {
+        if (profile->data_color_space() != Gfx::ICC::ColorSpace::RGB) {
+            warnln("--measure only works for RGB ICC profiles");
+            return 1;
+        }
+        TRY(print_profile_measurement(*profile));
+    }
+
+    bool do_print = (dump_out_path.is_empty() && reencode_out_path.is_empty() && !measure) || force_print;
     if (!do_print)
         return 0;
 

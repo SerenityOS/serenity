@@ -334,19 +334,20 @@ JS::ThrowCompletionOr<void> Document::initialize(JS::Realm& realm)
 void Document::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_window.ptr());
-    visitor.visit(m_style_sheets.ptr());
-    visitor.visit(m_hovered_node.ptr());
-    visitor.visit(m_inspected_node.ptr());
-    visitor.visit(m_active_favicon.ptr());
-    visitor.visit(m_focused_element.ptr());
-    visitor.visit(m_active_element.ptr());
-    visitor.visit(m_implementation.ptr());
-    visitor.visit(m_current_script.ptr());
-    visitor.visit(m_associated_inert_template_document.ptr());
+    visitor.visit(m_window);
+    visitor.visit(m_layout_root);
+    visitor.visit(m_style_sheets);
+    visitor.visit(m_hovered_node);
+    visitor.visit(m_inspected_node);
+    visitor.visit(m_active_favicon);
+    visitor.visit(m_focused_element);
+    visitor.visit(m_active_element);
+    visitor.visit(m_implementation);
+    visitor.visit(m_current_script);
+    visitor.visit(m_associated_inert_template_document);
     visitor.visit(m_appropriate_template_contents_owner_document);
-    visitor.visit(m_pending_parsing_blocking_script.ptr());
-    visitor.visit(m_history.ptr());
+    visitor.visit(m_pending_parsing_blocking_script);
+    visitor.visit(m_history);
 
     visitor.visit(m_browsing_context);
 
@@ -363,17 +364,17 @@ void Document::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_parser);
 
     for (auto& script : m_scripts_to_execute_when_parsing_has_finished)
-        visitor.visit(script.ptr());
+        visitor.visit(script);
     for (auto& script : m_scripts_to_execute_as_soon_as_possible)
-        visitor.visit(script.ptr());
+        visitor.visit(script);
 
     for (auto& node_iterator : m_node_iterators)
         visitor.visit(node_iterator);
 
     for (auto& target : m_pending_scroll_event_targets)
-        visitor.visit(target.ptr());
+        visitor.visit(target);
     for (auto& target : m_pending_scrollend_event_targets)
-        visitor.visit(target.ptr());
+        visitor.visit(target);
 }
 
 // https://w3c.github.io/selection-api/#dom-document-getselection

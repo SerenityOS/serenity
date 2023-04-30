@@ -1341,7 +1341,7 @@ Optional<Completion> Object::enumerate_object_properties(Function<Optional<Compl
 
 void Object::visit_edges(Cell::Visitor& visitor)
 {
-    Cell::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_shape);
 
     for (auto& value : m_storage)

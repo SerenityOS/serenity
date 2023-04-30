@@ -165,14 +165,14 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
 
         auto update_slider = [this, thickness_or_radius_label, thickness_or_radius_slider] {
             auto update_values = [&](auto label, int value, int range_min, int range_max = 10) {
-                thickness_or_radius_label->set_text(label);
+                thickness_or_radius_label->set_text(String::from_utf8(label).release_value_but_fixme_should_propagate_errors());
                 thickness_or_radius_slider->set_range(range_min, range_max);
                 thickness_or_radius_slider->set_value(value);
             };
             if (m_fill_mode == FillMode::RoundedCorners)
-                update_values("Radius:", m_corner_radius, 0, 50);
+                update_values("Radius:"sv, m_corner_radius, 0, 50);
             else
-                update_values("Thickness:", m_thickness, 1);
+                update_values("Thickness:"sv, m_thickness, 1);
         };
 
         update_slider();
@@ -181,7 +181,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         auto mode_container = TRY(properties_widget->try_add<GUI::Widget>());
         mode_container->set_fixed_height(90);
         (void)TRY(mode_container->try_set_layout<GUI::HorizontalBoxLayout>());
-        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"));
+        auto mode_label = TRY(mode_container->try_add<GUI::Label>("Mode:"_short_string));
         mode_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         mode_label->set_fixed_size(30, 20);
 
@@ -225,7 +225,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
         (void)TRY(aspect_container->try_set_layout<GUI::VerticalBoxLayout>());
         aspect_container->set_fixed_width(75);
 
-        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>("Aspect Ratio:"));
+        auto aspect_label = TRY(aspect_container->try_add<GUI::Label>(TRY("Aspect Ratio:"_string)));
         aspect_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
         aspect_label->set_fixed_size(75, 20);
 
@@ -246,7 +246,7 @@ ErrorOr<GUI::Widget*> RectangleTool::get_properties_widget()
             }
         };
 
-        auto multiply_label = TRY(aspect_fields_container->try_add<GUI::Label>("x"));
+        auto multiply_label = TRY(aspect_fields_container->try_add<GUI::Label>("x"_short_string));
         multiply_label->set_text_alignment(Gfx::TextAlignment::Center);
         multiply_label->set_fixed_size(10, 20);
 

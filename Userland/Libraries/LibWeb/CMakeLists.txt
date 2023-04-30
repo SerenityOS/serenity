@@ -87,7 +87,8 @@ set(SOURCES
     CSS/StyleValues/GridTemplateAreaStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementStyleValue.cpp
     CSS/StyleValues/GridTrackPlacementShorthandStyleValue.cpp
-    CSS/StyleValues/GridTrackSizeStyleValue.cpp
+    CSS/StyleValues/GridTrackSizeListShorthandStyleValue.cpp
+    CSS/StyleValues/GridTrackSizeListStyleValue.cpp
     CSS/StyleValues/IdentifierStyleValue.cpp
     CSS/StyleValues/ImageStyleValue.cpp
     CSS/StyleValues/LengthStyleValue.cpp
@@ -488,22 +489,26 @@ set(SOURCES
     SVG/AttributeNames.cpp
     SVG/AttributeParser.cpp
     SVG/SVGAnimatedLength.cpp
+    SVG/SVGAnimatedNumber.cpp
     SVG/SVGClipPathElement.cpp
     SVG/SVGDefsElement.cpp
     SVG/SVGElement.cpp
     SVG/SVGGElement.cpp
     SVG/SVGGeometryElement.cpp
     SVG/SVGGraphicsElement.cpp
+    SVG/SVGGradientElement.cpp
     SVG/SVGPathElement.cpp
     SVG/SVGCircleElement.cpp
     SVG/SVGEllipseElement.cpp
     SVG/SVGForeignObjectElement.cpp
     SVG/SVGLength.cpp
     SVG/SVGLineElement.cpp
+    SVG/SVGLinearGradientElement.cpp
     SVG/SVGPolygonElement.cpp
     SVG/SVGPolylineElement.cpp
     SVG/SVGRectElement.cpp
     SVG/SVGSVGElement.cpp
+    SVG/SVGStopElement.cpp
     SVG/SVGTextContentElement.cpp
     SVG/TagNames.cpp
     SVG/ViewBox.cpp

@@ -30,6 +30,7 @@ public:
 
     void visit_edges(Cell::Visitor& visitor) override
     {
+        Base::visit_edges(visitor);
         visitor.visit(m_getter);
         visitor.visit(m_setter);
     }

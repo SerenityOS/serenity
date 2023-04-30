@@ -332,7 +332,7 @@ void ColorPicker::build_ui_custom(Widget& root_container)
     auto& html_label = html_container.add<GUI::Label>();
     html_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     html_label.set_preferred_width(48);
-    html_label.set_text("HTML:");
+    html_label.set_text("HTML:"_short_string);
 
     m_html_text = html_container.add<GUI::TextBox>();
     m_html_text->set_text(m_color_has_alpha_channel ? m_color.to_deprecated_string() : m_color.to_deprecated_string_without_alpha());
@@ -388,16 +388,16 @@ void ColorPicker::build_ui_custom(Widget& root_container)
         };
 
         if (component == Red) {
-            rgb_label.set_text("Red:");
+            rgb_label.set_text("Red:"_short_string);
             m_red_spinbox = spinbox;
         } else if (component == Green) {
-            rgb_label.set_text("Green:");
+            rgb_label.set_text("Green:"_short_string);
             m_green_spinbox = spinbox;
         } else if (component == Blue) {
-            rgb_label.set_text("Blue:");
+            rgb_label.set_text("Blue:"_short_string);
             m_blue_spinbox = spinbox;
         } else if (component == Alpha) {
-            rgb_label.set_text("Alpha:");
+            rgb_label.set_text("Alpha:"_short_string);
             m_alpha_spinbox = spinbox;
         }
     };

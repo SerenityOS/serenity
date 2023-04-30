@@ -58,4 +58,15 @@ private:
     Vector<CellChange> m_cell_changes;
 };
 
+class CellsUndoMetadataCommand : public GUI::Command {
+public:
+    CellsUndoMetadataCommand(Vector<CellChange>);
+
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    Vector<CellChange> m_cell_changes;
+};
+
 }

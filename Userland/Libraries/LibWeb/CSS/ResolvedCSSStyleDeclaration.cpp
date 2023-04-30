@@ -23,7 +23,8 @@
 #include <LibWeb/CSS/StyleValues/GridAreaShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementShorthandStyleValue.h>
 #include <LibWeb/CSS/StyleValues/GridTrackPlacementStyleValue.h>
-#include <LibWeb/CSS/StyleValues/GridTrackSizeStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListShorthandStyleValue.h>
+#include <LibWeb/CSS/StyleValues/GridTrackSizeListStyleValue.h>
 #include <LibWeb/CSS/StyleValues/IdentifierStyleValue.h>
 #include <LibWeb/CSS/StyleValues/InitialStyleValue.h>
 #include <LibWeb/CSS/StyleValues/LengthStyleValue.h>
@@ -406,6 +407,20 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().flex_wrap()));
     case CSS::PropertyID::Float:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().float_()));
+    case CSS::PropertyID::FontSize:
+        return LengthStyleValue::create(Length::make_px(layout_node.computed_values().font_size()));
+    case CSS::PropertyID::FontVariant: {
+        auto font_variant = layout_node.computed_values().font_variant();
+        switch (font_variant) {
+        case FontVariant::Normal:
+            return IdentifierStyleValue::create(ValueID::Normal);
+        case FontVariant::SmallCaps:
+            return IdentifierStyleValue::create(ValueID::SmallCaps);
+        }
+        VERIFY_NOT_REACHED();
+    }
+    case CSS::PropertyID::FontWeight:
+        return NumericStyleValue::create_integer(layout_node.computed_values().font_weight());
     case CSS::PropertyID::GridArea: {
         auto maybe_grid_row_start = property(CSS::PropertyID::GridRowStart);
         auto maybe_grid_column_start = property(CSS::PropertyID::GridColumnStart);
@@ -470,10 +485,30 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_end());
     case CSS::PropertyID::GridRowStart:
         return GridTrackPlacementStyleValue::create(layout_node.computed_values().grid_row_start());
+    case CSS::PropertyID::GridTemplate: {
+        auto maybe_grid_template_areas = property(CSS::PropertyID::GridTemplateAreas);
+        auto maybe_grid_template_rows = property(CSS::PropertyID::GridTemplateRows);
+        auto maybe_grid_template_columns = property(CSS::PropertyID::GridTemplateColumns);
+        RefPtr<GridTemplateAreaStyleValue const> grid_template_areas;
+        RefPtr<GridTrackSizeListStyleValue const> grid_template_rows, grid_template_columns;
+        if (maybe_grid_template_areas.has_value()) {
+            VERIFY(maybe_grid_template_areas.value().value->is_grid_template_area());
+            grid_template_areas = maybe_grid_template_areas.value().value->as_grid_template_area();
+        }
+        if (maybe_grid_template_rows.has_value()) {
+            VERIFY(maybe_grid_template_rows.value().value->is_grid_track_size_list());
+            grid_template_rows = maybe_grid_template_rows.value().value->as_grid_track_size_list();
+        }
+        if (maybe_grid_template_columns.has_value()) {
+            VERIFY(maybe_grid_template_columns.value().value->is_grid_track_size_list());
+            grid_template_columns = maybe_grid_template_columns.value().value->as_grid_track_size_list();
+        }
+        return GridTrackSizeListShorthandStyleValue::create(grid_template_areas.release_nonnull(), grid_template_rows.release_nonnull(), grid_template_columns.release_nonnull());
+    }
     case CSS::PropertyID::GridTemplateColumns:
-        return GridTrackSizeStyleValue::create(layout_node.computed_values().grid_template_columns());
+        return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_columns());
     case CSS::PropertyID::GridTemplateRows:
-        return GridTrackSizeStyleValue::create(layout_node.computed_values().grid_template_rows());
+        return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_rows());
     case CSS::PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());
     case CSS::PropertyID::ImageRendering:
@@ -482,6 +517,8 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().justify_content()));
     case CSS::PropertyID::Left:
         return style_value_for_length_percentage(layout_node.computed_values().inset().left());
+    case CSS::PropertyID::LineHeight:
+        return LengthStyleValue::create(Length::make_px(layout_node.line_height()));
     case CSS::PropertyID::ListStyleType:
         return IdentifierStyleValue::create(to_value_id(layout_node.computed_values().list_style_type()));
     case CSS::PropertyID::Margin: {

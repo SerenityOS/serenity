@@ -27,7 +27,7 @@ class Application::TooltipWindow final : public Window {
 public:
     void set_tooltip(DeprecatedString const& tooltip)
     {
-        m_label->set_text(Gfx::parse_ampersand_string(tooltip));
+        m_label->set_text(String::from_deprecated_string(Gfx::parse_ampersand_string(tooltip)).release_value_but_fixme_should_propagate_errors());
         int tooltip_width = m_label->effective_min_size().width().as_int() + 10;
         int line_count = m_label->text().count("\n"sv);
         int font_size = m_label->font().pixel_size_rounded_up();
@@ -49,9 +49,7 @@ private:
         m_label->set_background_role(Gfx::ColorRole::Tooltip);
         m_label->set_foreground_role(Gfx::ColorRole::TooltipText);
         m_label->set_fill_with_background_color(true);
-        m_label->set_frame_thickness(1);
-        m_label->set_frame_shape(Gfx::FrameShape::Container);
-        m_label->set_frame_shadow(Gfx::FrameShadow::Plain);
+        m_label->set_frame_style(Gfx::FrameStyle::Plain);
         m_label->set_autosize(true);
     }
 

@@ -65,7 +65,7 @@ ComboBox::ComboBox()
     set_preferred_size({ SpecialDimension::OpportunisticGrow, 22 });
 
     m_editor = add<ComboBoxEditor>();
-    m_editor->set_frame_thickness(0);
+    m_editor->set_frame_style(Gfx::FrameStyle::NoFrame);
     m_editor->on_return_pressed = [this] {
         if (on_return_pressed)
             on_return_pressed();
@@ -120,8 +120,7 @@ ComboBox::ComboBox()
     m_list_view->set_should_hide_unnecessary_scrollbars(true);
     m_list_view->set_alternating_row_colors(false);
     m_list_view->set_hover_highlighting(true);
-    m_list_view->set_frame_thickness(1);
-    m_list_view->set_frame_shadow(Gfx::FrameShadow::Plain);
+    m_list_view->set_frame_style(Gfx::FrameStyle::Plain);
     m_list_view->set_activates_on_selection(true);
     m_list_view->on_selection_change = [this] {
         VERIFY(model());

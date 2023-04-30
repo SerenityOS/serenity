@@ -380,12 +380,12 @@ private:
     {
         auto command = make<T>(*m_document, forward<Args>(args)...);
         command->perform_formatting(*this);
-        will_execute(*command);
         command->execute_from(*this);
+        after_execute(*command);
         m_document->add_to_undo_stack(move(command));
     }
 
-    virtual void will_execute(TextDocumentUndoCommand const&) { }
+    virtual void after_execute(TextDocumentUndoCommand const&) { }
     void on_search_results(GUI::TextRange current, Vector<GUI::TextRange> all_results);
 
     static constexpr auto search_results_span_collection_index = 1;

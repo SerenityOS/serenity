@@ -132,7 +132,7 @@ void OpacitySlider::paint_event(PaintEvent& event)
     painter.draw_text(inner_rect, percent_text, Gfx::TextAlignment::Center, Color::White);
 
     // Frame
-    Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Sunken, 2);
+    Gfx::StylePainter::paint_frame(painter, rect(), palette(), Gfx::FrameStyle::SunkenContainer);
 }
 
 int OpacitySlider::value_at(Gfx::IntPoint position) const

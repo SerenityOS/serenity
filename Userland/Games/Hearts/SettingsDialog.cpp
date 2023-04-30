@@ -27,7 +27,7 @@ SettingsDialog::SettingsDialog(GUI::Window* parent, DeprecatedString player_name
     auto& name_box = main_widget->add<GUI::Widget>();
     name_box.set_layout<GUI::HorizontalBoxLayout>(GUI::Margins {}, 4);
 
-    auto& name_label = name_box.add<GUI::Label>("Name:");
+    auto& name_label = name_box.add<GUI::Label>("Name:"_short_string);
     name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
 
     auto& textbox = name_box.add<GUI::TextBox>();

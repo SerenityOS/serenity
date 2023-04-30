@@ -72,7 +72,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     };
 
     auto* location = general_tab->find_descendant_of_type_named<GUI::LinkLabel>("location");
-    location->set_text(m_path);
+    location->set_text(TRY(String::from_deprecated_string(m_path)));
     location->on_click = [this] {
         Desktop::Launcher::open(URL::create_with_file_scheme(m_parent_path, m_name));
     };
@@ -98,18 +98,18 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     m_old_mode = st.st_mode;
 
     auto* type = general_tab->find_descendant_of_type_named<GUI::Label>("type");
-    type->set_text(get_description(m_mode));
+    type->set_text(TRY(String::from_deprecated_string(get_description(m_mode))));
 
     if (S_ISLNK(m_mode)) {
         auto link_destination_or_error = FileSystem::read_link(m_path);
         if (link_destination_or_error.is_error()) {
             perror("readlink");
         } else {
-            auto link_destination = link_destination_or_error.release_value().to_deprecated_string();
+            auto link_destination = link_destination_or_error.release_value();
             auto* link_location = general_tab->find_descendant_of_type_named<GUI::LinkLabel>("link_location");
             link_location->set_text(link_destination);
             link_location->on_click = [link_destination] {
-                auto link_directory = LexicalPath(link_destination);
+                auto link_directory = LexicalPath(link_destination.to_deprecated_string());
                 Desktop::Launcher::open(URL::create_with_file_scheme(link_directory.dirname(), link_directory.basename()));
             };
         }
@@ -119,19 +119,21 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
     }
 
     m_size_label = general_tab->find_descendant_of_type_named<GUI::Label>("size");
-    m_size_label->set_text(S_ISDIR(st.st_mode) ? "Calculating..." : human_readable_size_long(st.st_size, UseThousandsSeparator::Yes));
+    m_size_label->set_text(S_ISDIR(st.st_mode)
+            ? TRY("Calculating..."_string)
+            : TRY(String::from_deprecated_string(human_readable_size_long(st.st_size, UseThousandsSeparator::Yes))));
 
     auto* owner = general_tab->find_descendant_of_type_named<GUI::Label>("owner");
-    owner->set_text(DeprecatedString::formatted("{} ({})", owner_name, st.st_uid));
+    owner->set_text(String::formatted("{} ({})", owner_name, st.st_uid).release_value_but_fixme_should_propagate_errors());
 
     auto* group = general_tab->find_descendant_of_type_named<GUI::Label>("group");
-    group->set_text(DeprecatedString::formatted("{} ({})", group_name, st.st_gid));
+    group->set_text(String::formatted("{} ({})", group_name, st.st_gid).release_value_but_fixme_should_propagate_errors());
 
     auto* created_at = general_tab->find_descendant_of_type_named<GUI::Label>("created_at");
-    created_at->set_text(GUI::FileSystemModel::timestamp_string(st.st_ctime));
+    created_at->set_text(String::from_deprecated_string(GUI::FileSystemModel::timestamp_string(st.st_ctime)).release_value_but_fixme_should_propagate_errors());
 
     auto* last_modified = general_tab->find_descendant_of_type_named<GUI::Label>("last_modified");
-    last_modified->set_text(GUI::FileSystemModel::timestamp_string(st.st_mtime));
+    last_modified->set_text(String::from_deprecated_string(GUI::FileSystemModel::timestamp_string(st.st_mtime)).release_value_but_fixme_should_propagate_errors());
 
     auto* owner_read = general_tab->find_descendant_of_type_named<GUI::CheckBox>("owner_read");
     auto* owner_write = general_tab->find_descendant_of_type_named<GUI::CheckBox>("owner_write");
@@ -173,7 +175,7 @@ ErrorOr<void> PropertiesWindow::create_widgets(bool disable_rename)
         m_directory_statistics_calculator->on_update = [this, origin_event_loop = &Core::EventLoop::current()](off_t total_size_in_bytes, size_t file_count, size_t directory_count) {
             origin_event_loop->deferred_invoke([=, weak_this = make_weak_ptr<PropertiesWindow>()] {
                 if (auto strong_this = weak_this.strong_ref())
-                    strong_this->m_size_label->set_text(DeprecatedString::formatted("{}\n{:'d} files, {:'d} subdirectories", human_readable_size_long(total_size_in_bytes, UseThousandsSeparator::Yes), file_count, directory_count));
+                    strong_this->m_size_label->set_text(String::formatted("{}\n{} files, {} subdirectories", human_readable_size_long(total_size_in_bytes, UseThousandsSeparator::Yes), file_count, directory_count).release_value_but_fixme_should_propagate_errors());
             });
         };
         m_directory_statistics_calculator->start();

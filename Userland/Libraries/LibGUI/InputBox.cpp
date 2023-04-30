@@ -151,7 +151,7 @@ ErrorOr<void> InputBox::build()
         m_prompt_label->set_autosize(true);
         m_prompt_label->set_text_wrapping(Gfx::TextWrapping::DontWrap);
         m_prompt_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
-        m_prompt_label->set_text(move(m_prompt).to_deprecated_string());
+        m_prompt_label->set_text(move(m_prompt));
     }
 
     switch (m_input_type) {

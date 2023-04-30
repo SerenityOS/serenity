@@ -24,7 +24,7 @@ public:
     virtual StringView device_name() const override { return class_name(); }
     virtual ~RNG() override = default;
 
-    virtual void initialize() override;
+    virtual ErrorOr<void> initialize_virtio_resources() override;
 
 private:
     virtual StringView class_name() const override { return "VirtIORNG"sv; }

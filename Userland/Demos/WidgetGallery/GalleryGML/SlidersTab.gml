@@ -35,10 +35,8 @@
         @GUI::HorizontalSeparator {}
 
         @GUI::Frame {
-            shape: "Panel"
-            shadow: "Sunken"
+            style: "SunkenPanel"
             preferred_height: "fit"
-            thickness: 1
             layout: @GUI::VerticalBoxLayout {
                 margins: [1]
             }

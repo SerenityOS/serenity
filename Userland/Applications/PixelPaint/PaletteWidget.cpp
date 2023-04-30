@@ -94,9 +94,7 @@ private:
 
 PaletteWidget::PaletteWidget()
 {
-    set_frame_shape(Gfx::FrameShape::Panel);
-    set_frame_shadow(Gfx::FrameShadow::Raised);
-    set_frame_thickness(0);
+    set_frame_style(Gfx::FrameStyle::NoFrame);
     set_fill_with_background_color(true);
 
     set_fixed_height(35);

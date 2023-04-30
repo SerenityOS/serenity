@@ -214,24 +214,24 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         app_name = af->name();
 
     auto& description_label = *widget->find_descendant_of_type_named<GUI::Label>("description");
-    description_label.set_text(DeprecatedString::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal));
+    description_label.set_text(TRY(String::formatted("\"{}\" (PID {}) has crashed - {} (signal {})", app_name, pid, strsignal(termination_signal), termination_signal)));
 
     auto& executable_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("executable_link");
-    executable_link_label.set_text(LexicalPath::canonicalized_path(executable_path));
+    executable_link_label.set_text(TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(executable_path))));
     executable_link_label.on_click = [&] {
         LexicalPath path { executable_path };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     };
 
     auto& coredump_link_label = *widget->find_descendant_of_type_named<GUI::LinkLabel>("coredump_link");
-    coredump_link_label.set_text(LexicalPath::canonicalized_path(coredump_path));
+    coredump_link_label.set_text(TRY(String::from_deprecated_string(LexicalPath::canonicalized_path(coredump_path))));
     coredump_link_label.on_click = [&] {
         LexicalPath path { coredump_path };
         Desktop::Launcher::open(URL::create_with_file_scheme(path.dirname(), path.basename()));
     };
 
     auto& arguments_label = *widget->find_descendant_of_type_named<GUI::Label>("arguments_label");
-    arguments_label.set_text(DeprecatedString::join(' ', crashed_process_arguments));
+    arguments_label.set_text(TRY(String::join(' ', crashed_process_arguments)));
 
     auto& progressbar = *widget->find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     auto& tab_widget = *widget->find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
@@ -239,7 +239,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto backtrace_tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("Backtrace"_string)));
     TRY(backtrace_tab->try_set_layout<GUI::VerticalBoxLayout>(4));
 
-    auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>("A backtrace for each thread alive during the crash is listed below:"));
+    auto backtrace_label = TRY(backtrace_tab->try_add<GUI::Label>(TRY("A backtrace for each thread alive during the crash is listed below:"_string)));
     backtrace_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     backtrace_label->set_fixed_height(16);
 
@@ -249,7 +249,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     auto cpu_registers_tab = TRY(tab_widget.try_add_tab<GUI::Widget>(TRY("CPU Registers"_string)));
     cpu_registers_tab->set_layout<GUI::VerticalBoxLayout>(4);
 
-    auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>("The CPU register state for each thread alive during the crash is listed below:"));
+    auto cpu_registers_label = TRY(cpu_registers_tab->try_add<GUI::Label>(TRY("The CPU register state for each thread alive during the crash is listed below:"_string)));
     cpu_registers_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     cpu_registers_label->set_fixed_height(16);
 

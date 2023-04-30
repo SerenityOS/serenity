@@ -31,6 +31,7 @@
 #include <LibGUI/FileIconProvider.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/JsonArrayModel.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/LazyWidget.h>
@@ -539,10 +540,10 @@ ErrorOr<NonnullRefPtr<GUI::Window>> build_process_window(pid_t pid)
 
     VERIFY(process_index.is_valid());
     if (auto icon_data = process_index.sibling_at_column(ProcessModel::Column::Icon).data(); icon_data.is_icon()) {
-        main_widget->find_descendant_of_type_named<GUI::Label>("icon_label")->set_icon(icon_data.as_icon().bitmap_for_size(32));
+        main_widget->find_descendant_of_type_named<GUI::ImageWidget>("process_icon")->set_bitmap(icon_data.as_icon().bitmap_for_size(32));
     }
 
-    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(DeprecatedString::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_deprecated_string(), pid));
+    main_widget->find_descendant_of_type_named<GUI::Label>("process_name")->set_text(String::formatted("{} (PID {})", process_index.sibling_at_column(ProcessModel::Column::Name).data().to_deprecated_string(), pid).release_value_but_fixme_should_propagate_errors());
 
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessStateWidget>("process_state")->set_pid(pid);
     main_widget->find_descendant_of_type_named<SystemMonitor::ProcessFileDescriptorMapWidget>("open_files")->set_pid(pid);

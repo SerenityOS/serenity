@@ -22,7 +22,7 @@ public:
     Color color() const { return m_color; }
     virtual ErrorOr<String> to_string() const override;
     virtual bool has_color() const override { return true; }
-    virtual Color to_color(Layout::NodeWithStyle const&) const override { return m_color; }
+    virtual Color to_color(Optional<Layout::NodeWithStyle const&>) const override { return m_color; }
 
     bool properties_equal(ColorStyleValue const& other) const { return m_color == other.m_color; };
 

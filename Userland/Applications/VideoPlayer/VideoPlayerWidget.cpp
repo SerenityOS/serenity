@@ -263,7 +263,7 @@ void VideoPlayerWidget::set_time_label(Time timestamp)
         string_builder.append(" / --:--:--"sv);
     }
 
-    m_timestamp_label->set_text(string_builder.string_view());
+    m_timestamp_label->set_text(string_builder.to_string().release_value_but_fixme_should_propagate_errors());
 }
 
 void VideoPlayerWidget::drop_event(GUI::DropEvent& event)
@@ -321,7 +321,7 @@ void VideoPlayerWidget::toggle_fullscreen()
     auto* bottom_container = find_descendant_of_type_named<GUI::Widget>("bottom_container");
     bottom_container->set_visible(!parent_window->is_fullscreen());
     auto* video_frame = find_descendant_of_type_named<VideoFrameWidget>("video_frame");
-    video_frame->set_frame_thickness(parent_window->is_fullscreen() ? 0 : 2);
+    video_frame->set_frame_style(parent_window->is_fullscreen() ? Gfx::FrameStyle::NoFrame : Gfx::FrameStyle::SunkenContainer);
 }
 
 void VideoPlayerWidget::update_title()
