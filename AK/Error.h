@@ -96,10 +96,12 @@ public:
     {
         return m_code.has<int>();
     }
+    bool operator==(int) const;
 
     CustomError custom_error() const { return m_code.get<CustomError>(); }
     StringView custom_error_as_string() const;
     bool is_custom_error() const { return m_code.has<CustomError>(); }
+    bool operator==(CustomError) const;
 
 #ifndef KERNEL
     bool is_syscall() const
