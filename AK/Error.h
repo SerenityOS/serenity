@@ -83,16 +83,16 @@ public:
     bool operator==(Error const& other) const
     {
 #ifdef KERNEL
-        return m_code == other.m_code;
+        return m_payload == other.m_payload;
 #else
-        return m_code == other.m_code && m_string_literal == other.m_string_literal && m_syscall == other.m_syscall;
+        return m_payload == other.m_payload && m_string_literal == other.m_string_literal && m_syscall == other.m_syscall;
 #endif
     }
 
-    int code() const { return m_code; }
+    int code() const { return m_payload.get<int>(); }
     bool is_errno() const
     {
-        return m_code != 0;
+        return m_payload.has<int>();
     }
 #ifndef KERNEL
     bool is_syscall() const
@@ -107,7 +107,7 @@ public:
 
 protected:
     Error(int code)
-        : m_code(code)
+        : m_payload(code)
     {
     }
 
@@ -120,7 +120,7 @@ private:
 
     Error(StringView syscall_name, int rc)
         : m_string_literal(syscall_name)
-        , m_code(-rc)
+        , m_payload(-rc)
         , m_syscall(true)
     {
     }
@@ -133,7 +133,7 @@ private:
     StringView m_string_literal;
 #endif
 
-    int m_code { 0 };
+    Variant<Empty, int> m_payload { Empty {} };
 
 #ifndef KERNEL
     bool m_syscall { false };
