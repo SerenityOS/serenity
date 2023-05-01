@@ -154,6 +154,40 @@ TEST_CASE(to_pcs)
     EXPECT_APPROXIMATE_VECTOR3(xyz_from_sRGB(64, 128, 192), r_xyz * f64 + g_xyz * f128 + b_xyz * f192);
 }
 
+TEST_CASE(from_pcs)
+{
+    auto sRGB = MUST(Gfx::ICC::sRGB());
+
+    auto sRGB_from_xyz = [&sRGB](FloatVector3 const& XYZ) {
+        u8 rgb[3];
+        MUST(sRGB->from_pcs(XYZ, rgb));
+        return Color(rgb[0], rgb[1], rgb[2]);
+    };
+
+    auto vec3_from_xyz = [](Gfx::ICC::XYZ const& xyz) {
+        return FloatVector3 { xyz.X, xyz.Y, xyz.Z };
+    };
+
+    // At 0 and 255, the gamma curve is (exactly) 0 and 1, so these just test the matrix part.
+    EXPECT_EQ(sRGB_from_xyz(FloatVector3 { 0, 0, 0 }), Color(0, 0, 0));
+
+    auto r_xyz = vec3_from_xyz(sRGB->red_matrix_column());
+    EXPECT_EQ(sRGB_from_xyz(r_xyz), Color(255, 0, 0));
+
+    auto g_xyz = vec3_from_xyz(sRGB->green_matrix_column());
+    EXPECT_EQ(sRGB_from_xyz(g_xyz), Color(0, 255, 0));
+
+    auto b_xyz = vec3_from_xyz(sRGB->blue_matrix_column());
+    EXPECT_EQ(sRGB_from_xyz(b_xyz), Color(0, 0, 255));
+
+    EXPECT_EQ(sRGB_from_xyz(r_xyz + g_xyz), Color(255, 255, 0));
+    EXPECT_EQ(sRGB_from_xyz(r_xyz + b_xyz), Color(255, 0, 255));
+    EXPECT_EQ(sRGB_from_xyz(g_xyz + b_xyz), Color(0, 255, 255));
+    EXPECT_EQ(sRGB_from_xyz(r_xyz + g_xyz + b_xyz), Color(255, 255, 255));
+
+    // FIXME: Implement and test the inverse curve transform.
+}
+
 TEST_CASE(to_lab)
 {
     auto sRGB = MUST(Gfx::ICC::sRGB());

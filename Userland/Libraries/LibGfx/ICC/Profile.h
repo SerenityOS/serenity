@@ -267,6 +267,10 @@ public:
     // Call connection_space() to find out the space the result is in.
     ErrorOr<FloatVector3> to_pcs(ReadonlyBytes) const;
 
+    // Converts from the profile connection space to an 8-bits-per-channel color.
+    // The notes on `to_pcs()` apply to this too.
+    ErrorOr<void> from_pcs(FloatVector3 const&, Bytes) const;
+
     ErrorOr<CIELAB> to_lab(ReadonlyBytes) const;
 
     // Only call these if you know that this is an RGB matrix-based profile.
