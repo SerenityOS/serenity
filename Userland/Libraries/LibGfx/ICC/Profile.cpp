@@ -1551,6 +1551,7 @@ ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
             // greenTRC^-1, and blueTRC^-1 function is undefined. If a one-dimensional curve is constant, the curve cannot be
             // inverted."
 
+            // Convert from XYZ to linear rgb.
             // FIXME: Inverting matrix and curve on every call to this function is very inefficient.
             auto const& red_matrix_column = this->red_matrix_column();
             auto const& green_matrix_column = this->green_matrix_column();
@@ -1561,13 +1562,22 @@ ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
                 red_matrix_column.Y, green_matrix_column.Y, blue_matrix_column.Y,
                 red_matrix_column.Z, green_matrix_column.Z, blue_matrix_column.Z
             };
-
             if (!forward_matrix.is_invertible())
                 return Error::from_string_literal("ICC::Profile::from_pcs: matrix not invertible");
             auto matrix = forward_matrix.inverse();
-
             FloatVector3 linear_rgb = matrix * pcs;
 
+            auto evaluate_curve_inverse = [this](TagSignature curve_tag, float f) {
+                auto const& trc = *m_tag_table.get(curve_tag).value();
+                VERIFY(trc.type() == CurveTagData::Type || trc.type() == ParametricCurveTagData::Type);
+                if (trc.type() == CurveTagData::Type) {
+                    TODO();
+                    return 0.f;
+                }
+                return static_cast<ParametricCurveTagData const&>(trc).evaluate_inverse(f);
+            };
+
+            // Convert from linear rgb to device rgb.
             // See equations (F.8) - (F.16) above.
             // FIXME: The spec says to do this, but it loses information. Color.js returns unclamped
             //        values instead (...but how do those make it through the TRC?) and has a separate
@@ -1576,12 +1586,13 @@ ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
             //        (For LUT profiles, I think the gamut mapping is baked into the BToA* data in the profile (?).
             //        But for matrix profiles, it'd have to be done in code.)
             linear_rgb.clamp(0.f, 1.f);
+            float device_r = evaluate_curve_inverse(redTRCTag, linear_rgb[0]);
+            float device_g = evaluate_curve_inverse(greenTRCTag, linear_rgb[1]);
+            float device_b = evaluate_curve_inverse(blueTRCTag, linear_rgb[2]);
 
-            // FIXME: Implement curve inversion and apply inverse curve transform here.
-
-            color[0] = round(255 * linear_rgb[0]);
-            color[1] = round(255 * linear_rgb[1]);
-            color[2] = round(255 * linear_rgb[2]);
+            color[0] = round(255 * device_r);
+            color[1] = round(255 * device_g);
+            color[2] = round(255 * device_b);
             return {};
         }
 
