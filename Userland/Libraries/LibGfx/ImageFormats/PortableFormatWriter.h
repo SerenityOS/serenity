@@ -26,13 +26,13 @@ class PortableFormatWriter {
 public:
     using Options = PortableFormatWriterOptions;
 
-    static ErrorOr<ByteBuffer> encode(Bitmap const&, Options options = Options {});
+    static ErrorOr<void> encode(Stream&, Bitmap const&, Options options = Options {});
 
 private:
     PortableFormatWriter() = delete;
 
-    static ErrorOr<void> add_header(ByteBuffer&, Options const& options, u32 width, u32 height, u32 max_value);
-    static ErrorOr<void> add_pixels(ByteBuffer&, Options const& options, Bitmap const&);
+    static ErrorOr<void> add_header(Stream&, Options const& options, u32 width, u32 height, u32 max_value);
+    static ErrorOr<void> add_pixels(Stream&, Options const& options, Bitmap const&);
 };
 
 }
