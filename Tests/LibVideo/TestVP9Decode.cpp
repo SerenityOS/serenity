@@ -54,6 +54,11 @@ TEST_CASE(webm_in_vp9)
     decode_video("./vp9_in_webm.webm"sv, 25);
 }
 
+TEST_CASE(vp9_oob_blocks)
+{
+    decode_video("./vp9_oob_blocks.webm"sv, 240);
+}
+
 BENCHMARK_CASE(vp9_4k)
 {
     decode_video("./vp9_4k.webm"sv, 2);
