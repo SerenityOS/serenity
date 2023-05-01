@@ -246,6 +246,14 @@ ErrorOr<NonnullRefPtr<BitmapFont>> BitmapFont::try_load_from_mapped_file(RefPtr<
 
 ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
 {
+    auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));
+    TRY(write_to_file(move(stream)));
+
+    return {};
+}
+
+ErrorOr<void> BitmapFont::write_to_file(NonnullOwnPtr<Core::File> file)
+{
     FontFileHeader header;
     memset(&header, 0, sizeof(FontFileHeader));
     memcpy(header.magic, "!Fnt", 4);
@@ -262,12 +270,11 @@ ErrorOr<void> BitmapFont::write_to_file(DeprecatedString const& path)
     memcpy(header.name, m_name.characters(), min(m_name.length(), sizeof(header.name) - 1));
     memcpy(header.family, m_family.characters(), min(m_family.length(), sizeof(header.family) - 1));
 
-    auto stream = TRY(Core::File::open(path, Core::File::OpenMode::Write));
     size_t bytes_per_glyph = sizeof(u32) * m_glyph_height;
-    TRY(stream->write_until_depleted({ &header, sizeof(header) }));
-    TRY(stream->write_until_depleted({ m_range_mask, m_range_mask_size }));
-    TRY(stream->write_until_depleted({ m_rows, m_glyph_count * bytes_per_glyph }));
-    TRY(stream->write_until_depleted({ m_glyph_widths, m_glyph_count }));
+    TRY(file->write_until_depleted({ &header, sizeof(header) }));
+    TRY(file->write_until_depleted({ m_range_mask, m_range_mask_size }));
+    TRY(file->write_until_depleted({ m_rows, m_glyph_count * bytes_per_glyph }));
+    TRY(file->write_until_depleted({ m_glyph_widths, m_glyph_count }));
 
     return {};
 }
