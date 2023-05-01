@@ -32,6 +32,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     bool flag_numeric = false;
     bool flag_program = false;
     bool flag_wide = false;
+    bool flag_extend = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display network connections");
@@ -42,6 +43,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     args_parser.add_option(flag_numeric, "Display numerical addresses", "numeric", 'n');
     args_parser.add_option(flag_program, "Show the PID and name of the program to which each socket belongs", "program", 'p');
     args_parser.add_option(flag_wide, "Do not truncate IP addresses by printing out the whole symbolic host", "wide", 'W');
+    args_parser.add_option(flag_extend, "Display more information", "extend", 'e');
     args_parser.parse(arguments);
 
     TRY(Core::System::unveil("/sys/kernel/net", "r"));
@@ -87,6 +89,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     int local_address_column = -1;
     int peer_address_column = -1;
     int state_column = -1;
+    int user_column = -1;
     int program_column = -1;
 
     auto add_column = [&](auto title, auto alignment, auto width) {
@@ -100,6 +103,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     local_address_column = add_column("Local Address", Alignment::Left, 22);
     peer_address_column = add_column("Peer Address", Alignment::Left, 22);
     state_column = add_column("State", Alignment::Left, 11);
+    user_column = flag_extend ? add_column("User", Alignment::Left, 4) : -1;
     program_column = flag_program ? add_column("PID/Program", Alignment::Left, 11) : -1;
 
     auto print_column = [](auto& column, auto& string) {
@@ -130,6 +134,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
         auto program = programs.get(pid);
         return DeprecatedString::formatted("{}/{}", pid, program.value());
+    };
+
+    auto get_formatted_user = [&](i32 uid) -> ErrorOr<String> {
+        if (uid == -1)
+            return String::from_utf8_short_string("-"sv);
+
+        return String::number(uid);
     };
 
     if (!has_protocol_flag || flag_tcp || flag_udp) {
@@ -219,6 +230,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             auto state = if_object.get_deprecated_string("state"sv).value_or({});
+            auto origin_uid = if_object.get_i32("origin_uid"sv).value_or(-1);
             auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_u32("origin_pid"sv).value_or(0) : -1;
 
             if (!flag_all && ((state == "Listen" && !flag_list) || (state != "Listen" && flag_list)))
@@ -236,6 +248,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 columns[peer_address_column].buffer = get_formatted_address(peer_address, peer_port);
             if (state_column != -1)
                 columns[state_column].buffer = state;
+            if (flag_extend && user_column != -1)
+                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_deprecated_string();
             if (flag_program && program_column != -1)
                 columns[program_column].buffer = get_formatted_program(origin_pid);
 
@@ -303,6 +317,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             }
 
             auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_u32("origin_pid"sv).value_or(0) : -1;
+            auto origin_uid = if_object.get_i32("origin_uid"sv).value_or(-1);
 
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "udp";
@@ -316,6 +331,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 columns[peer_address_column].buffer = get_formatted_address(peer_address, peer_port);
             if (state_column != -1)
                 columns[state_column].buffer = "-";
+            if (flag_extend && user_column != -1)
+                columns[user_column].buffer = TRY(get_formatted_user(origin_uid)).to_deprecated_string();
             if (flag_program && program_column != -1)
                 columns[program_column].buffer = get_formatted_program(origin_pid);
 
