@@ -85,7 +85,7 @@ ErrorOr<LzmaDecompressorOptions> LzmaHeader::as_decompressor_options() const
     };
 }
 
-void LzmaDecompressor::initialize_to_default_probability(Span<Probability> span)
+void LzmaState::initialize_to_default_probability(Span<Probability> span)
 {
     for (auto& entry : span)
         entry = default_probability;
@@ -117,11 +117,8 @@ ErrorOr<NonnullOwnPtr<LzmaDecompressor>> LzmaDecompressor::create_from_raw_strea
     return decompressor;
 }
 
-LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOptions options, MaybeOwned<CircularBuffer> dictionary, FixedArray<Probability> literal_probabilities)
-    : m_stream(move(stream))
-    , m_options(move(options))
-    , m_dictionary(move(dictionary))
-    , m_literal_probabilities(move(literal_probabilities))
+LzmaState::LzmaState(FixedArray<Probability> literal_probabilities)
+    : m_literal_probabilities(move(literal_probabilities))
 {
     initialize_to_default_probability(m_literal_probabilities.span());
 
@@ -141,6 +138,14 @@ LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOp
     initialize_to_default_probability(m_is_rep0_long_probabilities);
 }
 
+LzmaDecompressor::LzmaDecompressor(MaybeOwned<Stream> stream, LzmaDecompressorOptions options, MaybeOwned<CircularBuffer> dictionary, FixedArray<Probability> literal_probabilities)
+    : LzmaState(move(literal_probabilities))
+    , m_stream(move(stream))
+    , m_options(move(options))
+    , m_dictionary(move(dictionary))
+{
+}
+
 bool LzmaDecompressor::is_range_decoder_in_clean_state() const
 {
     return m_range_decoder_code == 0;
@@ -151,7 +156,7 @@ bool LzmaDecompressor::has_reached_expected_data_size() const
     if (!m_options.uncompressed_size.has_value())
         return false;
 
-    return m_total_decoded_bytes >= m_options.uncompressed_size.value();
+    return m_total_processed_bytes >= m_options.uncompressed_size.value();
 }
 
 ErrorOr<void> LzmaDecompressor::initialize_range_decoder()
@@ -303,7 +308,7 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
     // "To select the table for decoding it uses the context that consists of
     //  (lc) high bits from previous literal and (lp) low bits from value that
     //  represents current position in outputStream."
-    u16 literal_state_bits_from_position = m_total_decoded_bytes & ((1 << m_options.literal_position_bits) - 1);
+    u16 literal_state_bits_from_position = m_total_processed_bytes & ((1 << m_options.literal_position_bits) - 1);
     u16 literal_state_bits_from_output = previous_byte >> (8 - m_options.literal_context_bits);
     u16 literal_state = literal_state_bits_from_position << m_options.literal_context_bits | literal_state_bits_from_output;
 
@@ -343,12 +348,12 @@ ErrorOr<void> LzmaDecompressor::decode_literal_to_output_buffer()
 
     size_t written_bytes = m_dictionary->write({ &actual_result, sizeof(actual_result) });
     VERIFY(written_bytes == sizeof(actual_result));
-    m_total_decoded_bytes += sizeof(actual_result);
+    m_total_processed_bytes += sizeof(actual_result);
 
     return {};
 }
 
-LzmaDecompressor::LzmaLengthDecoderState::LzmaLengthDecoderState()
+LzmaState::LzmaLengthCoderState::LzmaLengthCoderState()
 {
     for (auto& array : m_low_length_probabilities)
         initialize_to_default_probability(array);
@@ -359,11 +364,11 @@ LzmaDecompressor::LzmaLengthDecoderState::LzmaLengthDecoderState()
     initialize_to_default_probability(m_high_length_probabilities);
 }
 
-ErrorOr<u16> LzmaDecompressor::decode_normalized_match_length(LzmaLengthDecoderState& length_decoder_state)
+ErrorOr<u16> LzmaDecompressor::decode_normalized_match_length(LzmaLengthCoderState& length_decoder_state)
 {
     // "LZMA uses "posState" value as context to select the binary tree
     //  from LowCoder and MidCoder binary tree arrays:"
-    u16 position_state = m_total_decoded_bytes & ((1 << m_options.position_bits) - 1);
+    u16 position_state = m_total_processed_bytes & ((1 << m_options.position_bits) - 1);
 
     // "The following scheme is used for the match length encoding:
     //
@@ -455,7 +460,7 @@ ErrorOr<u32> LzmaDecompressor::decode_normalized_match_distance(u16 normalized_m
     return (distance_prefix << number_of_alignment_bits) | TRY(decode_symbol_using_reverse_bit_tree(number_of_alignment_bits, m_alignment_bit_probabilities));
 }
 
-u32 LzmaDecompressor::current_repetition_offset() const
+u32 LzmaState::current_repetition_offset() const
 {
     // LZMA never needs to read at offset 0 (i.e. the actual read head of the buffer).
     // Instead, the values are remapped so that the rep-value n starts reading n + 1 bytes back.
@@ -463,6 +468,40 @@ u32 LzmaDecompressor::current_repetition_offset() const
     // so this should never overflow.
     VERIFY(m_rep0 < NumericLimits<u32>::max());
     return m_rep0 + 1;
+}
+
+void LzmaState::update_state_after_literal()
+{
+    if (m_state < 4)
+        m_state = 0;
+    else if (m_state < 10)
+        m_state -= 3;
+    else
+        m_state -= 6;
+}
+
+void LzmaState::update_state_after_match()
+{
+    if (m_state < 7)
+        m_state = 7;
+    else
+        m_state = 10;
+};
+
+void LzmaState::update_state_after_rep()
+{
+    if (m_state < 7)
+        m_state = 8;
+    else
+        m_state = 11;
+}
+
+void LzmaState::update_state_after_short_rep()
+{
+    if (m_state < 7)
+        m_state = 9;
+    else
+        m_state = 11;
 }
 
 ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
@@ -481,48 +520,18 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 
         // "The decoder calculates "state2" variable value to select exact variable from
         //  "IsMatch" and "IsRep0Long" arrays."
-        u16 position_state = m_total_decoded_bytes & ((1 << m_options.position_bits) - 1);
+        u16 position_state = m_total_processed_bytes & ((1 << m_options.position_bits) - 1);
         u16 state2 = (m_state << maximum_number_of_position_bits) + position_state;
-
-        auto update_state_after_literal = [&] {
-            if (m_state < 4)
-                m_state = 0;
-            else if (m_state < 10)
-                m_state -= 3;
-            else
-                m_state -= 6;
-        };
-
-        auto update_state_after_match = [&] {
-            if (m_state < 7)
-                m_state = 7;
-            else
-                m_state = 10;
-        };
-
-        auto update_state_after_rep = [&] {
-            if (m_state < 7)
-                m_state = 8;
-            else
-                m_state = 11;
-        };
-
-        auto update_state_after_short_rep = [&] {
-            if (m_state < 7)
-                m_state = 9;
-            else
-                m_state = 11;
-        };
 
         auto copy_match_to_buffer = [&](u16 real_length) -> ErrorOr<void> {
             VERIFY(!m_leftover_match_length.has_value());
 
-            if (m_options.uncompressed_size.has_value() && m_options.uncompressed_size.value() < m_total_decoded_bytes + real_length)
+            if (m_options.uncompressed_size.has_value() && m_options.uncompressed_size.value() < m_total_processed_bytes + real_length)
                 return Error::from_string_literal("Tried to copy match beyond expected uncompressed file size");
 
             auto copied_length = TRY(m_dictionary->copy_from_seekback(current_repetition_offset(), real_length));
 
-            m_total_decoded_bytes += copied_length;
+            m_total_processed_bytes += copied_length;
             real_length -= copied_length;
 
             if (real_length > 0)
@@ -569,7 +578,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             m_rep1 = m_rep0;
 
             // "The zero-based length is decoded with "LenDecoder"."
-            u16 normalized_length = TRY(decode_normalized_match_length(m_length_decoder));
+            u16 normalized_length = TRY(decode_normalized_match_length(m_length_coder));
 
             // "The state is update with UpdateState_Match function."
             update_state_after_match();
@@ -667,7 +676,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 
         // "In other cases (Rep Match 0/1/2/3), it decodes the zero-based
         //  length of match with "RepLenDecoder" decoder."
-        u16 normalized_length = TRY(decode_normalized_match_length(m_rep_length_decoder));
+        u16 normalized_length = TRY(decode_normalized_match_length(m_rep_length_coder));
 
         // "Then it updates the state."
         update_state_after_rep();
@@ -678,7 +687,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
     }
 
     if (m_found_end_of_stream_marker || has_reached_expected_data_size()) {
-        if (m_options.uncompressed_size.has_value() && m_total_decoded_bytes < m_options.uncompressed_size.value())
+        if (m_options.uncompressed_size.has_value() && m_total_processed_bytes < m_options.uncompressed_size.value())
             return Error::from_string_literal("Found end-of-stream marker earlier than expected");
 
         if (!is_range_decoder_in_clean_state())
