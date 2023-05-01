@@ -118,8 +118,6 @@ private:
     bool has_definite_cross_size(Box const&) const;
     CSSPixels inner_main_size(Box const&) const;
     CSSPixels inner_cross_size(Box const&) const;
-    CSSPixels resolved_definite_main_size(FlexItem const&) const;
-    CSSPixels resolved_definite_cross_size(FlexItem const&) const;
     bool has_main_min_size(Box const&) const;
     bool has_cross_min_size(Box const&) const;
     CSSPixels specified_main_max_size(Box const&) const;

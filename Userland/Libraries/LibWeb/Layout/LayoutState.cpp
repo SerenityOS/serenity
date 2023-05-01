@@ -354,16 +354,6 @@ void LayoutState::UsedValues::set_temporary_content_height(CSSPixels height)
     m_content_height = height;
 }
 
-CSSPixels LayoutState::resolved_definite_width(Box const& box) const
-{
-    return get(box).content_width();
-}
-
-CSSPixels LayoutState::resolved_definite_height(Box const& box) const
-{
-    return get(box).content_height();
-}
-
 AvailableSize LayoutState::UsedValues::available_width_inside() const
 {
     if (width_constraint == SizeConstraint::MinContent)

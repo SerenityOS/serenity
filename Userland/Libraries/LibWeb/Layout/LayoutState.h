@@ -145,9 +145,6 @@ struct LayoutState {
         HashTable<JS::GCPtr<Box const>> m_floating_descendants;
     };
 
-    CSSPixels resolved_definite_width(Box const&) const;
-    CSSPixels resolved_definite_height(Box const&) const;
-
     void commit();
 
     // NOTE: get_mutable() will CoW the UsedValues if it's inherited from an ancestor state;

@@ -362,16 +362,6 @@ CSSPixels FlexFormattingContext::inner_cross_size(Box const& box) const
     return is_row_layout() ? box_state.content_height() : box_state.content_width();
 }
 
-CSSPixels FlexFormattingContext::resolved_definite_cross_size(FlexItem const& item) const
-{
-    return !is_row_layout() ? m_state.resolved_definite_width(item.box) : m_state.resolved_definite_height(item.box);
-}
-
-CSSPixels FlexFormattingContext::resolved_definite_main_size(FlexItem const& item) const
-{
-    return is_row_layout() ? m_state.resolved_definite_width(item.box) : m_state.resolved_definite_height(item.box);
-}
-
 bool FlexFormattingContext::has_main_min_size(Box const& box) const
 {
     auto const& value = is_row_layout() ? box.computed_values().min_width() : box.computed_values().min_height();
@@ -488,7 +478,7 @@ void FlexFormattingContext::determine_available_space_for_items(AvailableSpace c
 
     Optional<AvailableSize> available_width_for_items;
     if (m_flex_container_state.has_definite_width()) {
-        available_width_for_items = AvailableSize::make_definite(m_state.resolved_definite_width(flex_container()));
+        available_width_for_items = AvailableSize::make_definite(m_flex_container_state.content_width());
     } else {
         if (available_space.width.is_intrinsic_sizing_constraint()) {
             available_width_for_items = available_space.width;
@@ -510,7 +500,7 @@ void FlexFormattingContext::determine_available_space_for_items(AvailableSpace c
 
     Optional<AvailableSize> available_height_for_items;
     if (m_flex_container_state.has_definite_height()) {
-        available_height_for_items = AvailableSize::make_definite(m_state.resolved_definite_height(flex_container()));
+        available_height_for_items = AvailableSize::make_definite(m_flex_container_state.content_height());
     } else {
         if (available_space.height.is_intrinsic_sizing_constraint()) {
             available_height_for_items = available_space.height;
@@ -738,8 +728,8 @@ Optional<CSSPixels> FlexFormattingContext::transferred_size_suggestion(FlexItem 
         auto aspect_ratio = item.box->intrinsic_aspect_ratio().value();
         // FIXME: Clamp cross size to min/max cross size before this conversion.
         if (is_row_layout())
-            return resolved_definite_cross_size(item) * aspect_ratio;
-        return resolved_definite_cross_size(item) / aspect_ratio;
+            return inner_cross_size(item.box) * aspect_ratio;
+        return inner_cross_size(item.box) / aspect_ratio;
     }
 
     // It is otherwise undefined.
@@ -1100,10 +1090,10 @@ void FlexFormattingContext::determine_hypothetical_cross_size_of_item(FlexItem& 
 
         auto cross_size = [&]() {
             if (item.box->computed_values().box_sizing() == CSS::BoxSizing::BorderBox && !should_treat_cross_size_as_auto(item.box)) {
-                return max(CSSPixels(0.0f), resolved_definite_cross_size(item) - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after);
+                return max(CSSPixels(0.0f), inner_cross_size(item.box) - item.padding.cross_before - item.padding.cross_after - item.borders.cross_before - item.borders.cross_after);
             }
 
-            return resolved_definite_cross_size(item);
+            return inner_cross_size(item.box);
         }();
 
         item.hypothetical_cross_size = css_clamp(cross_size, clamp_min, clamp_max);
