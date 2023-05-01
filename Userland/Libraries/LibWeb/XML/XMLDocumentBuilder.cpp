@@ -64,7 +64,7 @@ void XMLDocumentBuilder::element_start(const XML::Name& name, HashMap<XML::Name,
         }
     }
 
-    auto node = DOM::create_element(m_document, name, {}).release_value_but_fixme_should_propagate_errors();
+    auto node = DOM::create_element(m_document, name, s_html_namespace).release_value_but_fixme_should_propagate_errors();
     // When an XML parser with XML scripting support enabled creates a script element,
     // it must have its parser document set and its "force async" flag must be unset.
     // FIXME: If the parser was created as part of the XML fragment parsing algorithm, then the element must be marked as "already started" also.
@@ -90,7 +90,7 @@ void XMLDocumentBuilder::element_end(const XML::Name& name)
 {
     if (m_has_error)
         return;
-    VERIFY(m_current_node->node_name() == name);
+    VERIFY(m_current_node->node_name().equals_ignoring_ascii_case(name));
     // When an XML parser with XML scripting support enabled creates a script element, [...]
     // When the element's end tag is subsequently parsed,
     if (m_scripting_support == XMLScriptingSupport::Enabled && HTML::TagNames::script == name) {
