@@ -135,7 +135,7 @@ static void generate_cfg_for_block(BasicBlock const& current_block, PassPipeline
                         generate_cfg_for_block(*block, executable);
                 }
             } else {
-                VERIFY(unwind_frames.last() = &frame);
+                VERIFY(unwind_frames.last() == &frame);
                 unwind_frames.take_last();
                 VERIFY(frame.finalizer_targets.is_empty());
             }
