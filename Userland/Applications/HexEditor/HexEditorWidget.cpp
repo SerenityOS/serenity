@@ -224,6 +224,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_layout_search_results_action = GUI::Action::create_checkable("&Search Results", [&](auto& action) {
         set_search_results_visible(action.is_checked());
+        Config::write_bool("HexEditor"sv, "Layout"sv, "ShowSearchResults"sv, action.is_checked());
     });
 
     m_copy_hex_action = GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/hex.png"sv).release_value_but_fixme_should_propagate_errors(), [&](const GUI::Action&) {
@@ -254,6 +255,7 @@ HexEditorWidget::HexEditorWidget()
 
     m_layout_value_inspector_action = GUI::Action::create_checkable("&Value Inspector", [&](auto& action) {
         set_value_inspector_visible(action.is_checked());
+        Config::write_bool("HexEditor"sv, "Layout"sv, "ShowValueInspector"sv, action.is_checked());
     });
 
     m_toolbar->add_action(*m_new_action);
@@ -467,6 +469,13 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     auto show_toolbar = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowToolbar"sv, true);
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
+
+    auto show_search_results = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowSearchResults"sv, false);
+    set_search_results_visible(show_search_results);
+
+    auto show_value_inspector = Config::read_bool("HexEditor"sv, "Layout"sv, "ShowValueInspector"sv, false);
+    set_value_inspector_visible(show_value_inspector);
+
     TRY(view_menu->try_add_action(*m_layout_toolbar_action));
     TRY(view_menu->try_add_action(*m_layout_search_results_action));
     TRY(view_menu->try_add_action(*m_layout_value_inspector_action));
@@ -495,6 +504,8 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     auto little_endian_mode = GUI::Action::create_checkable("&Little Endian", [&](auto& action) {
         m_value_inspector_little_endian = action.is_checked();
         update_inspector_values(m_editor->selection_start_offset());
+
+        Config::write_bool("HexEditor"sv, "Layout"sv, "UseLittleEndianInValueInspector"sv, m_value_inspector_little_endian);
     });
     m_value_inspector_mode_actions.add_action(little_endian_mode);
     TRY(inspector_mode_menu->try_add_action(little_endian_mode));
@@ -502,12 +513,17 @@ ErrorOr<void> HexEditorWidget::initialize_menubar(GUI::Window& window)
     auto big_endian_mode = GUI::Action::create_checkable("&Big Endian", [this](auto& action) {
         m_value_inspector_little_endian = !action.is_checked();
         update_inspector_values(m_editor->selection_start_offset());
+
+        Config::write_bool("HexEditor"sv, "Layout"sv, "UseLittleEndianInValueInspector"sv, m_value_inspector_little_endian);
     });
     m_value_inspector_mode_actions.add_action(big_endian_mode);
     TRY(inspector_mode_menu->try_add_action(big_endian_mode));
 
-    // Default to little endian mode
-    little_endian_mode->set_checked(true);
+    auto use_little_endian = Config::read_bool("HexEditor"sv, "Layout"sv, "UseLittleEndianInValueInspector"sv, true);
+    m_value_inspector_little_endian = use_little_endian;
+
+    little_endian_mode->set_checked(use_little_endian);
+    big_endian_mode->set_checked(!use_little_endian);
 
     auto help_menu = TRY(window.try_add_menu("&Help"_short_string));
     TRY(help_menu->try_add_action(GUI::CommonActions::make_command_palette_action(&window)));
