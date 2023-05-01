@@ -1357,7 +1357,7 @@ Crypto::Hash::MD5::DigestType Profile::compute_id(ReadonlyBytes bytes)
     return md5.digest();
 }
 
-static TagSignature tag_for_rendering_intent(RenderingIntent rendering_intent)
+static TagSignature forward_transform_tag_for_rendering_intent(RenderingIntent rendering_intent)
 {
     // ICCv4, Table 25 — Profile type/profile tag and defined rendering intents
     // This function assumes a profile class of InputDevice, DisplayDevice, OutputDevice, or ColorSpace.
@@ -1399,7 +1399,7 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 
         // "b) Use the BToA0Tag, BToA1Tag, BToA2Tag, AToB0Tag, AToB1Tag, or AToB2Tag designated for the
         //     rendering intent if present, when the tag in a) is not used."
-        if (has_tag(tag_for_rendering_intent(rendering_intent()))) {
+        if (has_tag(forward_transform_tag_for_rendering_intent(rendering_intent()))) {
             // FIXME
             return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
         }
