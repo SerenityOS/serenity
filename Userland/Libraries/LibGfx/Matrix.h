@@ -225,7 +225,7 @@ public:
 
     constexpr bool is_invertible() const
     {
-        return determinant() != 0.0;
+        return determinant() != static_cast<T>(0.0);
     }
 
 private:
