@@ -130,15 +130,16 @@ struct VariantConstructTag {
 
 template<typename T, typename Base>
 struct VariantConstructors {
+    // The pointless `typename Base` constraints are a workaround for https://gcc.gnu.org/bugzilla/show_bug.cgi?id=109683
     ALWAYS_INLINE VariantConstructors(T&& t)
-    requires(requires { T(move(t)); })
+    requires(requires { T(move(t)); typename Base; })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(move(t), VariantNoClearTag {});
     }
 
     ALWAYS_INLINE VariantConstructors(T const& t)
-    requires(requires { T(t); })
+    requires(requires { T(t); typename Base; })
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(t, VariantNoClearTag {});
