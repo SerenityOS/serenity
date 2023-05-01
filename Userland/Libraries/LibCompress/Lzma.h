@@ -41,10 +41,9 @@ struct [[gnu::packed]] LzmaHeader {
 
     static ErrorOr<LzmaModelProperties> decode_model_properties(u8 input_bits);
 
-private:
-    u8 m_encoded_model_properties;
-    u32 m_dictionary_size;
-    u64 m_uncompressed_size;
+    u8 encoded_model_properties;
+    u32 unchecked_dictionary_size;
+    u64 encoded_uncompressed_size;
 };
 static_assert(sizeof(LzmaHeader) == 13);
 
