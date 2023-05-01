@@ -253,10 +253,12 @@ void DOMMatrix::set_f(double value)
 JS::NonnullGCPtr<DOMMatrix> DOMMatrix::invert_self()
 {
     // 1. Invert the current matrix.
-    m_matrix = m_matrix.inverse();
+    auto inverted_matrix = m_matrix.inverse();
+    if (inverted_matrix.has_value())
+        m_matrix = inverted_matrix.value();
 
     // 2. If the current matrix is not invertible set all attributes to NaN and set is 2D to false.
-    if (!m_matrix.is_invertible()) {
+    if (!inverted_matrix.has_value()) {
         for (u8 i = 0; i < 4; i++) {
             for (u8 j = 0; j < 4; j++)
                 m_matrix.elements()[i][j] = NAN;

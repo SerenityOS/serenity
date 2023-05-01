@@ -536,7 +536,7 @@ void GLContext::gl_tex_gen_floatv(GLenum coord, GLenum pname, GLfloat const* par
         texture_coordinate_generation(m_active_texture_unit_index, capability).object_plane_coefficients = { params[0], params[1], params[2], params[3] };
         break;
     case GL_EYE_PLANE: {
-        auto const& inverse_model_view = model_view_matrix().inverse();
+        auto const& inverse_model_view = model_view_matrix().inverse().value();
         auto input_coefficients = FloatVector4 { params[0], params[1], params[2], params[3] };
 
         // Note: we are allowed to store transformed coefficients here, according to the documentation on

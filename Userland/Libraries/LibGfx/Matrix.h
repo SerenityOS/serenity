@@ -196,8 +196,10 @@ public:
         return result;
     }
 
-    [[nodiscard]] constexpr Matrix inverse() const
+    [[nodiscard]] constexpr Optional<Matrix> inverse() const
     {
+        if (determinant() == 0)
+            return {};
         return adjugate() / determinant();
     }
 
@@ -221,11 +223,6 @@ public:
                 result.m_elements[i][j] = m_elements[i][j];
         }
         return result;
-    }
-
-    constexpr bool is_invertible() const
-    {
-        return determinant() != 0.0;
     }
 
 private:

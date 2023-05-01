@@ -46,7 +46,7 @@ ALWAYS_INLINE constexpr FloatMatrix3x3 generate_rgb_to_xyz_matrix(FloatVector2 r
 {
     // http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
     const FloatMatrix3x3 matrix = primaries_matrix(red_xy, green_xy, blue_xy);
-    const FloatVector3 scale_vector = matrix.inverse() * primaries_to_xyz(white_xy);
+    const FloatVector3 scale_vector = matrix.inverse().value() * primaries_to_xyz(white_xy);
     return vectors_to_matrix(matrix_row(matrix, 0) * scale_vector, matrix_row(matrix, 1) * scale_vector, matrix_row(matrix, 2) * scale_vector);
 }
 
@@ -80,10 +80,10 @@ DecoderErrorOr<FloatMatrix3x3> get_conversion_matrix(ColorPrimaries input_primar
     FloatMatrix3x3 output_conversion_matrix;
     switch (output_primaries) {
     case ColorPrimaries::BT709:
-        output_conversion_matrix = bt_709_rgb_to_xyz.inverse();
+        output_conversion_matrix = bt_709_rgb_to_xyz.inverse().value();
         break;
     case ColorPrimaries::BT2020:
-        output_conversion_matrix = bt_2020_rgb_to_xyz.inverse();
+        output_conversion_matrix = bt_2020_rgb_to_xyz.inverse().value();
         break;
     default:
         return DecoderError::format(DecoderErrorCategory::NotImplemented, "Conversion of primaries {} is not implemented", color_primaries_to_string(output_primaries));

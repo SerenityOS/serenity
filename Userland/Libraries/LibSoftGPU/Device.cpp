@@ -969,7 +969,7 @@ void Device::draw_primitives(GPU::PrimitiveType primitive_type, FloatMatrix4x4 c
 
     // Set up normals transform by taking the upper left 3x3 elements from the model view matrix
     // See section 2.11.3 of the OpenGL 1.5 spec
-    auto const normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse();
+    auto const normal_transform = model_view_transform.submatrix_from_topleft<3>().transpose().inverse().value();
 
     // First, transform all vertices
     for (auto& vertex : vertices) {
