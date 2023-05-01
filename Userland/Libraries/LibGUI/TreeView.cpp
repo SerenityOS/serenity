@@ -414,7 +414,10 @@ void TreeView::scroll_into_view(ModelIndex const& a_index, bool, bool scroll_ver
 
 void TreeView::model_did_update(unsigned flags)
 {
-    m_view_metadata.clear();
+    if (flags == Model::UpdateFlag::InvalidateAllIndices) {
+        m_view_metadata.clear();
+    }
+
     AbstractTableView::model_did_update(flags);
 }
 
