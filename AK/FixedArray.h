@@ -113,6 +113,11 @@ public:
         return m_storage->elements[index];
     }
 
+    T& unchecked_at(size_t index)
+    {
+        return m_storage->elements[index];
+    }
+
     T const& at(size_t index) const
     {
         VERIFY(index < m_storage->size);
