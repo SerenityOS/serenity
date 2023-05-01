@@ -231,7 +231,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
             auto state = if_object.get_deprecated_string("state"sv).value_or({});
             auto origin_uid = if_object.get_i32("origin_uid"sv).value_or(-1);
-            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_u32("origin_pid"sv).value_or(0) : -1;
+            auto origin_pid = if_object.get_i32("origin_pid"sv).value_or(-1);
 
             if (!flag_all && ((state == "Listen" && !flag_list) || (state != "Listen" && flag_list)))
                 continue;
@@ -316,7 +316,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
                 }
             }
 
-            auto origin_pid = (if_object.has("origin_pid"sv)) ? if_object.get_u32("origin_pid"sv).value_or(0) : -1;
+            auto origin_pid = if_object.get_i32("origin_pid"sv).value_or(-1);
             auto origin_uid = if_object.get_i32("origin_uid"sv).value_or(-1);
 
             if (protocol_column != -1)
