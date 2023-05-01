@@ -83,6 +83,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (strip_color_profile)
         icc_data.clear();
 
+    auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
+    auto buffered_stream = TRY(Core::OutputBufferedFile::create(move(output_stream)));
+
     ByteBuffer bytes;
     if (out_path.ends_with(".bmp"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::BMPWriter::encode(*frame, { .icc_data = icc_data }));
@@ -90,7 +93,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         bytes = TRY(Gfx::PNGWriter::encode(*frame, { .icc_data = icc_data }));
     } else if (out_path.ends_with(".ppm"sv, CaseSensitivity::CaseInsensitive)) {
         auto const format = ppm_ascii ? Gfx::PortableFormatWriter::Options::Format::ASCII : Gfx::PortableFormatWriter::Options::Format::Raw;
-        bytes = TRY(Gfx::PortableFormatWriter::encode(*frame, { .format = format }));
+        TRY(Gfx::PortableFormatWriter::encode(*buffered_stream, *frame, { .format = format }));
+        return 0;
     } else if (out_path.ends_with(".qoi"sv, CaseSensitivity::CaseInsensitive)) {
         bytes = TRY(Gfx::QOIWriter::encode(*frame));
     } else {
@@ -98,8 +102,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         return 1;
     }
 
-    auto output_stream = TRY(Core::File::open(out_path, Core::File::OpenMode::Write));
-    TRY(output_stream->write_until_depleted(bytes));
+    TRY(buffered_stream->write_until_depleted(bytes));
 
     return 0;
 }
