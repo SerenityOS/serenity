@@ -28,4 +28,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     # Only ignore expansion-to-defined for g++, clang's implementation doesn't complain about function-like macros
     add_compile_options(-Wno-expansion-to-defined)
     add_compile_options(-Wno-literal-suffix)
+
+    # FIXME: This warning seems useful but has too many false positives with GCC 13.
+    add_compile_options(-Wno-dangling-reference)
 endif()

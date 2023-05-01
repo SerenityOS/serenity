@@ -97,14 +97,11 @@ TEST_CASE(assign_moved_self)
 {
     RefPtr<Object> object = adopt_ref(*new Object);
     EXPECT_EQ(object->ref_count(), 1u);
-#if defined(AK_COMPILER_CLANG)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wself-move"
-#endif
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wself-move"
     object = move(object);
-#if defined(AK_COMPILER_CLANG)
-#    pragma clang diagnostic pop
-#endif
+#pragma GCC diagnostic pop
     EXPECT_EQ(object->ref_count(), 1u);
 }
 
