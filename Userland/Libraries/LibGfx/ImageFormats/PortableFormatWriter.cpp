@@ -39,9 +39,9 @@ ErrorOr<void> PortableFormatWriter::add_pixels(Stream& output, Options const& op
             for (int j = 0; j < bitmap.width(); ++j) {
                 auto const color = bitmap.get_pixel(j, i);
 
-                row[j * 3 + 0] = color.red();
-                row[j * 3 + 1] = color.green();
-                row[j * 3 + 2] = color.blue();
+                row.unchecked_at(j * 3 + 0) = color.red();
+                row.unchecked_at(j * 3 + 1) = color.green();
+                row.unchecked_at(j * 3 + 2) = color.blue();
             }
 
             TRY(output.write_until_depleted(row.span()));
