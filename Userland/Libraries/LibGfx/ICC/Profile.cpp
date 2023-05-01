@@ -1401,7 +1401,7 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
         //     rendering intent if present, when the tag in a) is not used."
         if (has_tag(forward_transform_tag_for_rendering_intent(rendering_intent()))) {
             // FIXME
-            return Error::from_string_literal("ICC::Profile::to_pcs: AToB0Tag handling not yet implemented");
+            return Error::from_string_literal("ICC::Profile::to_pcs: AToB*Tag handling not yet implemented");
         }
 
         // "c) Use the BToA0Tag or AToB0Tag if present, when the tags in a) and b) are not used."
