@@ -504,6 +504,56 @@ void LzmaState::update_state_after_short_rep()
         m_state = 11;
 }
 
+ErrorOr<LzmaDecompressor::MatchType> LzmaDecompressor::decode_match_type()
+{
+    // "The decoder calculates "state2" variable value to select exact variable from
+    //  "IsMatch" and "IsRep0Long" arrays."
+    u16 position_state = m_total_processed_bytes & ((1 << m_options.position_bits) - 1);
+    u16 state2 = (m_state << maximum_number_of_position_bits) + position_state;
+
+    // "The decoder uses the following code flow scheme to select exact
+    //  type of LITERAL or MATCH:
+    //
+    //  IsMatch[state2] decode
+    //   0 - the Literal"
+    if (TRY(decode_bit_with_probability(m_is_match_probabilities[state2])) == 0)
+        return MatchType::Literal;
+
+    // " 1 - the Match
+    //     IsRep[state] decode
+    //       0 - Simple Match"
+    if (TRY(decode_bit_with_probability(m_is_rep_probabilities[m_state])) == 0)
+        return MatchType::SimpleMatch;
+
+    // "     1 - Rep Match
+    //         IsRepG0[state] decode
+    //           0 - the distance is rep0"
+    if (TRY(decode_bit_with_probability(m_is_rep_g0_probabilities[m_state])) == 0) {
+        // "       IsRep0Long[state2] decode
+        //           0 - Short Rep Match"
+        if (TRY(decode_bit_with_probability(m_is_rep0_long_probabilities[state2])) == 0)
+            return MatchType::ShortRepMatch;
+
+        // "         1 - Rep Match 0"
+        return MatchType::RepMatch0;
+    }
+
+    // "         1 -
+    //             IsRepG1[state] decode
+    //               0 - Rep Match 1"
+    if (TRY(decode_bit_with_probability(m_is_rep_g1_probabilities[m_state])) == 0)
+        return MatchType::RepMatch1;
+
+    // "             1 -
+    //                 IsRepG2[state] decode
+    //                   0 - Rep Match 2"
+    if (TRY(decode_bit_with_probability(m_is_rep_g2_probabilities[m_state])) == 0)
+        return MatchType::RepMatch2;
+
+    // "                 1 - Rep Match 3"
+    return MatchType::RepMatch3;
+}
+
 ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 {
     while (m_dictionary->used_space() < bytes.size() && m_dictionary->empty_space() != 0) {
@@ -517,11 +567,6 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
 
             // Otherwise, we give it one last try to find the end marker in the remaining data.
         }
-
-        // "The decoder calculates "state2" variable value to select exact variable from
-        //  "IsMatch" and "IsRep0Long" arrays."
-        u16 position_state = m_total_processed_bytes & ((1 << m_options.position_bits) - 1);
-        u16 state2 = (m_state << maximum_number_of_position_bits) + position_state;
 
         auto copy_match_to_buffer = [&](u16 real_length) -> ErrorOr<void> {
             VERIFY(!m_leftover_match_length.has_value());
@@ -546,16 +591,13 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             continue;
         }
 
-        // "The decoder uses the following code flow scheme to select exact
-        //  type of LITERAL or MATCH:
-        //
-        //  IsMatch[state2] decode
-        //   0 - the Literal"
-        if (TRY(decode_bit_with_probability(m_is_match_probabilities[state2])) == 0) {
-            // If we are already past the expected uncompressed size, we are already in "look for EOS only" mode.
-            if (has_reached_expected_data_size())
-                return Error::from_string_literal("Found literal after reaching expected uncompressed size");
+        auto const match_type = TRY(decode_match_type());
 
+        // If we are looking for EOS, but find another match type, the stream is also corrupted.
+        if (has_reached_expected_data_size() && match_type != MatchType::SimpleMatch)
+            return Error::from_string_literal("First match type after the expected uncompressed size is not a simple match");
+
+        if (match_type == MatchType::Literal) {
             // "At first the LZMA decoder must check that it doesn't exceed
             //  specified uncompressed size."
             // This is already checked for at the beginning of the loop.
@@ -568,10 +610,7 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             continue;
         }
 
-        // " 1 - the Match
-        //     IsRep[state] decode
-        //       0 - Simple Match"
-        if (TRY(decode_bit_with_probability(m_is_rep_probabilities[m_state])) == 0) {
+        if (match_type == MatchType::SimpleMatch) {
             // "The distance history table is updated with the following scheme:"
             m_rep3 = m_rep2;
             m_rep2 = m_rep1;
@@ -620,58 +659,41 @@ ErrorOr<Bytes> LzmaDecompressor::read_some(Bytes bytes)
             continue;
         }
 
-        // If we are looking for EOS, but find another match type, the stream is also corrupted.
-        if (has_reached_expected_data_size())
-            return Error::from_string_literal("First match type after the expected uncompressed size is not a simple match");
-
-        // "     1 - Rep Match
-        //         IsRepG0[state] decode
-        //           0 - the distance is rep0"
-        if (TRY(decode_bit_with_probability(m_is_rep_g0_probabilities[m_state])) == 0) {
+        if (match_type == MatchType::ShortRepMatch) {
             // "LZMA doesn't update the distance history."
 
-            // "       IsRep0Long[state2] decode
-            //           0 - Short Rep Match"
-            if (TRY(decode_bit_with_probability(m_is_rep0_long_probabilities[state2])) == 0) {
-                // "If the subtype is "Short Rep Match", the decoder updates the state, puts
-                //  the one byte from window to current position in window and goes to next
-                //  MATCH/LITERAL symbol."
-                update_state_after_short_rep();
+            // "If the subtype is "Short Rep Match", the decoder updates the state, puts
+            //  the one byte from window to current position in window and goes to next
+            //  MATCH/LITERAL symbol."
+            update_state_after_short_rep();
 
-                TRY(copy_match_to_buffer(1));
+            TRY(copy_match_to_buffer(1));
 
-                continue;
-            }
-            // "         1 - Rep Match 0"
-            // Intentional fallthrough, we just need to make sure to not run the detection for other match types and to not switch around the distance history.
-        } else {
-            // "     1 -
-            //         IsRepG1[state] decode
-            //           0 - Rep Match 1"
-            if (TRY(decode_bit_with_probability(m_is_rep_g1_probabilities[m_state])) == 0) {
-                u32 distance = m_rep1;
-                m_rep1 = m_rep0;
-                m_rep0 = distance;
-            }
+            continue;
+        }
 
-            // "         1 -
-            //             IsRepG2[state] decode
-            //               0 - Rep Match 2"
-            else if (TRY(decode_bit_with_probability(m_is_rep_g2_probabilities[m_state])) == 0) {
-                u32 distance = m_rep2;
-                m_rep2 = m_rep1;
-                m_rep1 = m_rep0;
-                m_rep0 = distance;
-            }
+        // Note: We don't need to do anything specific for "Rep Match 0", we just need to make sure to not
+        //       run the detection for other match types and to not switch around the distance history.
 
-            // "             1 - Rep Match 3"
-            else {
-                u32 distance = m_rep3;
-                m_rep3 = m_rep2;
-                m_rep2 = m_rep1;
-                m_rep1 = m_rep0;
-                m_rep0 = distance;
-            }
+        if (match_type == MatchType::RepMatch1) {
+            u32 distance = m_rep1;
+            m_rep1 = m_rep0;
+            m_rep0 = distance;
+        }
+
+        if (match_type == MatchType::RepMatch2) {
+            u32 distance = m_rep2;
+            m_rep2 = m_rep1;
+            m_rep1 = m_rep0;
+            m_rep0 = distance;
+        }
+
+        if (match_type == MatchType::RepMatch3) {
+            u32 distance = m_rep3;
+            m_rep3 = m_rep2;
+            m_rep2 = m_rep1;
+            m_rep1 = m_rep0;
+            m_rep0 = distance;
         }
 
         // "In other cases (Rep Match 0/1/2/3), it decodes the zero-based

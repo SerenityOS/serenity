@@ -118,6 +118,16 @@ protected:
     Array<Probability, number_of_states> m_is_rep_g1_probabilities;
     Array<Probability, number_of_states> m_is_rep_g2_probabilities;
     Array<Probability, (number_of_states << maximum_number_of_position_bits)> m_is_rep0_long_probabilities;
+
+    enum MatchType {
+        Literal,
+        SimpleMatch,
+        RepMatch0,
+        ShortRepMatch,
+        RepMatch1,
+        RepMatch2,
+        RepMatch3,
+    };
 };
 
 class LzmaDecompressor : public Stream
@@ -158,6 +168,8 @@ private:
     ErrorOr<void> normalize_range_decoder();
     ErrorOr<u8> decode_direct_bit();
     ErrorOr<u8> decode_bit_with_probability(Probability& probability);
+
+    ErrorOr<MatchType> decode_match_type();
 
     // Decodes a multi-bit symbol using a given probability tree (either in normal or in reverse order).
     // The specification states that "unsigned" is at least 16 bits in size, our implementation assumes this as the maximum symbol size.
