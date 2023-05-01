@@ -9,6 +9,7 @@
 #include <LibGfx/ICC/BinaryFormat.h>
 #include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ICC/Tags.h>
+#include <LibGfx/Matrix3x3.h>
 #include <math.h>
 #include <time.h>
 
@@ -1467,6 +1468,134 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
 
     case DeviceClass::NamedColor:
         return Error::from_string_literal("ICC::Profile::to_pcs: to_pcs with NamedColor profile does not make sense");
+    }
+    VERIFY_NOT_REACHED();
+}
+
+static TagSignature backward_transform_tag_for_rendering_intent(RenderingIntent rendering_intent)
+{
+    // ICCv4, Table 25 — Profile type/profile tag and defined rendering intents
+    // This function assumes a profile class of InputDevice, DisplayDevice, OutputDevice, or ColorSpace.
+    switch (rendering_intent) {
+    case RenderingIntent::Perceptual:
+        return BToA0Tag;
+    case RenderingIntent::MediaRelativeColorimetric:
+    case RenderingIntent::ICCAbsoluteColorimetric:
+        return BToA1Tag;
+    case RenderingIntent::Saturation:
+        return BToA2Tag;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+ErrorOr<void> Profile::from_pcs(FloatVector3 const& pcs, Bytes color) const
+{
+    // See `to_pcs()` for spec links.
+    // This function is very similar, but uses BToAn instead of AToBn for LUT profiles,
+    // and an inverse transform for matrix profiles.
+    if (color.size() != number_of_components_in_color_space(data_color_space()))
+        return Error::from_string_literal("ICC::Profile: output color doesn't match color space size");
+
+    auto has_tag = [&](auto tag) { return m_tag_table.contains(tag); };
+    auto has_all_tags = [&]<class T>(T tags) { return all_of(tags, has_tag); };
+
+    switch (device_class()) {
+    case DeviceClass::InputDevice:
+    case DeviceClass::DisplayDevice:
+    case DeviceClass::OutputDevice:
+    case DeviceClass::ColorSpace: {
+        // FIXME: Implement multiProcessElementsType one day.
+
+        if (has_tag(backward_transform_tag_for_rendering_intent(rendering_intent()))) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::from_pcs: BToA*Tag handling not yet implemented");
+        }
+
+        if (has_tag(BToA0Tag)) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::from_pcs: BToA0Tag handling not yet implemented");
+        }
+
+        if (data_color_space() == ColorSpace::Gray) {
+            // FIXME
+            return Error::from_string_literal("ICC::Profile::from_pcs: Gray handling not yet implemented");
+        }
+
+        // FIXME: Per ICC v4, A.1 General, this should also handle HLS, HSV, YCbCr.
+        if (data_color_space() == ColorSpace::RGB) {
+            if (!has_all_tags(Array { redMatrixColumnTag, greenMatrixColumnTag, blueMatrixColumnTag, redTRCTag, greenTRCTag, blueTRCTag }))
+                return Error::from_string_literal("ICC::Profile::from_pcs: RGB color space but neither LUT-based nor matrix-based tags present");
+            VERIFY(color.size() == 3); // True because of color.size() check further up.
+
+            // ICC v4, F.3 Three-component matrix-based profiles
+            // "The inverse model is given by the following equations:
+            //      [linear_r] = [redMatrixColumn_X greenMatrixColumn_X blueMatrixColumn_X]^-1   [ connection_X ]
+            //      [linear_g] = [redMatrixColumn_Y greenMatrixColumn_Y blueMatrixColumn_Y]    * [ connection_Y ]
+            //      [linear_b] = [redMatrixColumn_Z greenMatrixColumn_Z blueMatrixColumn_Z]      [ connection_Z ]
+            //
+            //      for linear_r < 0,     device_r = redTRC^-1[0]          (F.8)
+            //      for 0 ≤ linear_r ≤ 1, device_r = redTRC^-1[linear_r]   (F.9)
+            //      for linear_r > 1,     device_r = redTRC^-1[1]          (F.10)
+            //
+            //      for linear_g < 0,     device_g = greenTRC^-1[0]        (F.11)
+            //      for 0 ≤ linear_g ≤ 1, device_g = greenTRC^-1[linear_g] (F.12)
+            //      for linear_g > 1,     device_g = greenTRC^-1[1]        (F.13)
+            //
+            //      for linear_b < 0,     device_b = blueTRC^-1[0]         (F.14)
+            //      for 0 ≤ linear_b ≤ 1, device_b = blueTRC^-1[linear_b]  (F.15)
+            //      for linear_b > 1,     device_b = blueTRC^-1[1]         (F.16)
+            //
+            // where redTRC^-1, greenTRC^-1, and blueTRC^-1 indicate the inverse functions of the redTRC greenTRC and
+            // blueTRC functions respectively.
+            // If the redTRC, greenTRC, or blueTRC function is not invertible the behaviour of the corresponding redTRC^-1,
+            // greenTRC^-1, and blueTRC^-1 function is undefined. If a one-dimensional curve is constant, the curve cannot be
+            // inverted."
+
+            // FIXME: Inverting matrix and curve on every call to this function is very inefficient.
+            auto const& red_matrix_column = this->red_matrix_column();
+            auto const& green_matrix_column = this->green_matrix_column();
+            auto const& blue_matrix_column = this->blue_matrix_column();
+
+            FloatMatrix3x3 forward_matrix {
+                red_matrix_column.X, green_matrix_column.X, blue_matrix_column.X,
+                red_matrix_column.Y, green_matrix_column.Y, blue_matrix_column.Y,
+                red_matrix_column.Z, green_matrix_column.Z, blue_matrix_column.Z
+            };
+
+            if (!forward_matrix.is_invertible())
+                return Error::from_string_literal("ICC::Profile::from_pcs: matrix not invertible");
+            auto matrix = forward_matrix.inverse();
+
+            FloatVector3 linear_rgb = matrix * pcs;
+
+            // See equations (F.8) - (F.16) above.
+            // FIXME: The spec says to do this, but it loses information. Color.js returns unclamped
+            //        values instead (...but how do those make it through the TRC?) and has a separate
+            //        clipping step. Maybe that's better?
+            //        Also, maybe doing actual gamut mapping would look better?
+            //        (For LUT profiles, I think the gamut mapping is baked into the BToA* data in the profile (?).
+            //        But for matrix profiles, it'd have to be done in code.)
+            linear_rgb.clamp(0.f, 1.f);
+
+            // FIXME: Implement curve inversion and apply inverse curve transform here.
+
+            color[0] = round(255 * linear_rgb[0]);
+            color[1] = round(255 * linear_rgb[1]);
+            color[2] = round(255 * linear_rgb[2]);
+            return {};
+        }
+
+        return Error::from_string_literal("ICC::Profile::from_pcs: What happened?!");
+    }
+
+    case DeviceClass::DeviceLink:
+    case DeviceClass::Abstract:
+        // ICC v4, 8.10.3 DeviceLink or Abstract profile types
+        // FIXME
+        return Error::from_string_literal("ICC::Profile::from_pcs: conversion for DeviceLink and Abstract not implemented");
+
+    case DeviceClass::NamedColor:
+        return Error::from_string_literal("ICC::Profile::from_pcs: from_pcs with NamedColor profile does not make sense");
     }
     VERIFY_NOT_REACHED();
 }
