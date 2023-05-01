@@ -5,7 +5,7 @@ netstat
 ## Synopsis
 
 ```sh
-$ netstat [--all] [--list] [--tcp] [--udp] [--numeric] [--program] [--wide]
+$ netstat [--all] [--list] [--tcp] [--udp] [--numeric] [--program] [--wide] [--extend]
 ```
 
 ## Description
@@ -21,5 +21,6 @@ Display network connections
 * `-n`, `--numeric`: Display numerical addresses
 * `-p`, `--program`: Show the PID and name of the program to which each socket belongs
 * `-W`, `--wide`: Do not truncate IP addresses by printing out the whole symbolic host
+* `-e`, `--extend`: Display more information
 
 <!-- Auto-generated through ArgsParser -->
