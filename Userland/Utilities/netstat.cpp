@@ -171,8 +171,8 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
         for (auto& value : sorted_regions) {
             auto& if_object = value.as_object();
 
-            auto bytes_in = if_object.get_deprecated_string("bytes_in"sv).value_or({});
-            auto bytes_out = if_object.get_deprecated_string("bytes_out"sv).value_or({});
+            auto bytes_in = if_object.get_u32("bytes_in"sv).value_or({});
+            auto bytes_out = if_object.get_u32("bytes_out"sv).value_or({});
 
             auto peer_address = if_object.get_deprecated_string("peer_address"sv).value_or({});
             if (!flag_numeric) {
@@ -227,9 +227,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             if (protocol_column != -1)
                 columns[protocol_column].buffer = "tcp";
             if (bytes_in_column != -1)
-                columns[bytes_in_column].buffer = bytes_in;
+                columns[bytes_in_column].buffer = TRY(String::number(bytes_in)).to_deprecated_string();
             if (bytes_out_column != -1)
-                columns[bytes_out_column].buffer = bytes_out;
+                columns[bytes_out_column].buffer = TRY(String::number(bytes_out)).to_deprecated_string();
             if (local_address_column != -1)
                 columns[local_address_column].buffer = get_formatted_address(local_address, local_port);
             if (peer_address_column != -1)
