@@ -7,6 +7,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
+#include <LibGfx/ICC/Profile.h>
 #include <LibGfx/ImageFormats/BMPWriter.h>
 #include <LibGfx/ImageFormats/ImageDecoder.h>
 #include <LibGfx/ImageFormats/PNGWriter.h>
@@ -28,6 +29,9 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     StringView assign_color_profile_path;
     args_parser.add_option(assign_color_profile_path, "Load color profile from file and assign it to output image", "assign-color-profile", {}, "FILE");
+
+    StringView convert_color_profile_path;
+    args_parser.add_option(convert_color_profile_path, "Load color profile from file and convert output image from current profile to loaded profile", "convert-to-color-profile", {}, "FILE");
 
     bool strip_color_profile;
     args_parser.add_option(strip_color_profile, "Do not write color profile to output", "strip-color-profile", {});
@@ -55,6 +59,22 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     if (!assign_color_profile_path.is_empty()) {
         icc_file = TRY(Core::MappedFile::map(assign_color_profile_path));
         icc_data = icc_file->bytes();
+    }
+
+    if (!convert_color_profile_path.is_empty()) {
+        if (!icc_data.has_value()) {
+            warnln("No source color space embedded in image. Pass one with --assign-color-profile.");
+            return 1;
+        }
+
+        auto source_icc_file = icc_file;
+        auto source_icc_data = icc_data.value();
+        icc_file = TRY(Core::MappedFile::map(convert_color_profile_path));
+        icc_data = icc_file->bytes();
+
+        auto source_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(source_icc_data));
+        auto destination_profile = TRY(Gfx::ICC::Profile::try_load_from_externally_owned_memory(icc_file->bytes()));
+        TRY(destination_profile->convert_image(*frame, *source_profile));
     }
 
     if (strip_color_profile)

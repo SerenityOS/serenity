@@ -1664,6 +1664,23 @@ ErrorOr<CIELAB> Profile::to_lab(ReadonlyBytes color) const
     return CIELAB { L, a, b };
 }
 
+ErrorOr<void> Profile::convert_image(Gfx::Bitmap& bitmap, Profile const& source_profile) const
+{
+    // FIXME: Convert XYZ<->Lab conversion when needed.
+    //        Currently, to_pcs() and from_pcs() are only implemented for matrix profiles, which are always XYZ anyways.
+    if (connection_space() != source_profile.connection_space())
+        return Error::from_string_literal("ICC::Profile::convert_image: mismatching profile connection spaces not yet implemented");
+
+    for (auto& pixel : bitmap) {
+        u8 rgb[] = { Color::from_argb(pixel).red(), Color::from_argb(pixel).green(), Color::from_argb(pixel).blue() };
+        auto pcs = TRY(source_profile.to_pcs(rgb));
+        TRY(from_pcs(pcs, rgb));
+        pixel = Color(rgb[0], rgb[1], rgb[2], Color::from_argb(pixel).alpha()).value();
+    }
+
+    return {};
+}
+
 XYZ const& Profile::red_matrix_column() const { return xyz_data(redMatrixColumnTag); }
 XYZ const& Profile::green_matrix_column() const { return xyz_data(greenMatrixColumnTag); }
 XYZ const& Profile::blue_matrix_column() const { return xyz_data(blueMatrixColumnTag); }

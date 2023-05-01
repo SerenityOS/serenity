@@ -14,6 +14,7 @@
 #include <AK/Span.h>
 #include <AK/URL.h>
 #include <LibCrypto/Hash/MD5.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/CIELAB.h>
 #include <LibGfx/ICC/DistinctFourCC.h>
 #include <LibGfx/ICC/TagTypes.h>
@@ -272,6 +273,8 @@ public:
     ErrorOr<void> from_pcs(FloatVector3 const&, Bytes) const;
 
     ErrorOr<CIELAB> to_lab(ReadonlyBytes) const;
+
+    ErrorOr<void> convert_image(Bitmap&, Profile const& source_profile) const;
 
     // Only call these if you know that this is an RGB matrix-based profile.
     XYZ const& red_matrix_column() const;
