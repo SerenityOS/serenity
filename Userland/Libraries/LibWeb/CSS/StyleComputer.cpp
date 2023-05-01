@@ -1393,7 +1393,7 @@ CSSPixels StyleComputer::parent_or_root_element_line_height(DOM::Element const* 
     return computed_values->line_height(viewport_rect(), parent_font_metrics, root_font_metrics);
 }
 
-void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
+ErrorOr<void> StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const* element, Optional<CSS::Selector::PseudoElement> pseudo_element) const
 {
     auto parent_or_root_line_height = parent_or_root_element_line_height(element, pseudo_element);
 
@@ -1411,9 +1411,8 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
     //       because most percentages are relative to containing block metrics.
     auto& line_height_value_slot = style.m_property_values[to_underlying(CSS::PropertyID::LineHeight)];
     if (line_height_value_slot && line_height_value_slot->is_percentage()) {
-        line_height_value_slot = LengthStyleValue::create(
-            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction()))
-                                     .release_value_but_fixme_should_propagate_errors();
+        line_height_value_slot = TRY(LengthStyleValue::create(
+            Length::make_px(font_size * line_height_value_slot->as_percentage().percentage().as_fraction())));
     }
 
     auto line_height = style.line_height(viewport_rect(), font_metrics, root_font_metrics);
@@ -1421,14 +1420,15 @@ void StyleComputer::absolutize_values(StyleProperties& style, DOM::Element const
 
     // NOTE: line-height might be using lh which should be resolved against the parent line height (like we did here already)
     if (line_height_value_slot && line_height_value_slot->is_length())
-        line_height_value_slot = LengthStyleValue::create(Length::make_px(line_height)).release_value_but_fixme_should_propagate_errors();
+        line_height_value_slot = TRY(LengthStyleValue::create(Length::make_px(line_height)));
 
     for (size_t i = 0; i < style.m_property_values.size(); ++i) {
         auto& value_slot = style.m_property_values[i];
         if (!value_slot)
             continue;
-        value_slot = value_slot->absolutized(viewport_rect(), font_metrics, root_font_metrics);
+        value_slot = TRY(value_slot->absolutized(viewport_rect(), font_metrics, root_font_metrics));
     }
+    return {};
 }
 
 enum class BoxTypeTransformation {
@@ -1528,7 +1528,7 @@ NonnullRefPtr<StyleProperties> StyleComputer::create_document_style() const
     auto style = StyleProperties::create();
     compute_font(style, nullptr, {});
     compute_defaulted_values(style, nullptr, {});
-    absolutize_values(style, nullptr, {});
+    absolutize_values(style, nullptr, {}).release_value_but_fixme_should_propagate_errors();
     style->set_property(CSS::PropertyID::Width, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().width())).release_value_but_fixme_should_propagate_errors());
     style->set_property(CSS::PropertyID::Height, CSS::LengthStyleValue::create(CSS::Length::make_px(viewport_rect().height())).release_value_but_fixme_should_propagate_errors());
     style->set_property(CSS::PropertyID::Display, CSS::DisplayStyleValue::create(CSS::Display::from_short(CSS::Display::Short::Block)).release_value_but_fixme_should_propagate_errors());
@@ -1562,7 +1562,7 @@ ErrorOr<RefPtr<StyleProperties>> StyleComputer::compute_style_impl(DOM::Element&
     compute_font(style, &element, pseudo_element);
 
     // 3. Absolutize values, turning font/viewport relative lengths into absolute lengths
-    absolutize_values(style, &element, pseudo_element);
+    TRY(absolutize_values(style, &element, pseudo_element));
 
     // 4. Default the values, applying inheritance and 'initial' as needed
     compute_defaulted_values(style, &element, pseudo_element);
