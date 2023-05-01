@@ -206,6 +206,23 @@ ErrorOr<size_t> CircularBuffer::fill_from_stream(Stream& stream)
     return bytes.size();
 }
 
+ErrorOr<size_t> CircularBuffer::flush_to_stream(Stream& stream)
+{
+    auto next_span = next_read_span();
+    if (next_span.size() == 0)
+        return 0;
+
+    auto written_bytes = TRY(stream.write_some(next_span));
+
+    m_used_space -= written_bytes;
+    m_reading_head += written_bytes;
+
+    if (m_reading_head >= capacity())
+        m_reading_head -= capacity();
+
+    return written_bytes;
+}
+
 ErrorOr<size_t> CircularBuffer::copy_from_seekback(size_t distance, size_t length)
 {
     if (distance > m_seekback_limit)
