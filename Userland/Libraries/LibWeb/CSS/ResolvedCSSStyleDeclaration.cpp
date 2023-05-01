@@ -509,6 +509,8 @@ RefPtr<StyleValue const> ResolvedCSSStyleDeclaration::style_value_for_property(L
         return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_columns());
     case CSS::PropertyID::GridTemplateRows:
         return GridTrackSizeListStyleValue::create(layout_node.computed_values().grid_template_rows());
+    case CSS::PropertyID::GridTemplateAreas:
+        return GridTemplateAreaStyleValue::create(layout_node.computed_values().grid_template_areas());
     case CSS::PropertyID::Height:
         return style_value_for_size(layout_node.computed_values().height());
     case CSS::PropertyID::ImageRendering:
