@@ -213,6 +213,10 @@ void SoundPlayerWidgetAdvancedView::play_state_changed(Player::PlayState state)
     m_stop_action->set_enabled(state != PlayState::Stopped && state != PlayState::NoFileLoaded);
 
     m_playback_progress_slider->set_enabled(state != PlayState::NoFileLoaded);
+    if (state == PlayState::Stopped) {
+        m_playback_progress_slider->set_value(m_playback_progress_slider->min(), GUI::AllowCallback::No);
+        m_visualization->reset_buffer();
+    }
 }
 
 void SoundPlayerWidgetAdvancedView::loop_mode_changed(Player::LoopMode)

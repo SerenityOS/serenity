@@ -21,7 +21,8 @@ Player::Player(Audio::ConnectionToServer& audio_client_connection)
 
         auto played_seconds = samples_played / sample_rate;
         time_elapsed(played_seconds);
-        sound_buffer_played(m_playback_manager.current_buffer(), m_playback_manager.device_sample_rate(), samples_played);
+        if (play_state() == PlayState::Playing)
+            sound_buffer_played(m_playback_manager.current_buffer(), m_playback_manager.device_sample_rate(), samples_played);
     };
     m_playback_manager.on_finished_playing = [&]() {
         set_play_state(PlayState::Stopped);
