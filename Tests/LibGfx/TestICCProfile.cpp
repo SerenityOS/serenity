@@ -158,6 +158,10 @@ TEST_CASE(from_pcs)
 {
     auto sRGB = MUST(Gfx::ICC::sRGB());
 
+    auto sRGB_curve_pointer = MUST(Gfx::ICC::sRGB_curve());
+    VERIFY(sRGB_curve_pointer->type() == Gfx::ICC::ParametricCurveTagData::Type);
+    auto const& sRGB_curve = static_cast<Gfx::ICC::ParametricCurveTagData const&>(*sRGB_curve_pointer);
+
     auto sRGB_from_xyz = [&sRGB](FloatVector3 const& XYZ) {
         u8 rgb[3];
         MUST(sRGB->from_pcs(XYZ, rgb));
@@ -185,7 +189,16 @@ TEST_CASE(from_pcs)
     EXPECT_EQ(sRGB_from_xyz(g_xyz + b_xyz), Color(0, 255, 255));
     EXPECT_EQ(sRGB_from_xyz(r_xyz + g_xyz + b_xyz), Color(255, 255, 255));
 
-    // FIXME: Implement and test the inverse curve transform.
+    // Test the inverse curve transform.
+    float f64 = sRGB_curve.evaluate(64 / 255.f);
+    EXPECT_EQ(sRGB_from_xyz((r_xyz + g_xyz + b_xyz) * f64), Color(64, 64, 64));
+
+    float f128 = sRGB_curve.evaluate(128 / 255.f);
+    EXPECT_EQ(sRGB_from_xyz((r_xyz + g_xyz + b_xyz) * f128), Color(128, 128, 128));
+
+    // Test for curve and matrix combined.
+    float f192 = sRGB_curve.evaluate(192 / 255.f);
+    EXPECT_EQ(sRGB_from_xyz(r_xyz * f64 + g_xyz * f128 + b_xyz * f192), Color(64, 128, 192));
 }
 
 TEST_CASE(to_lab)

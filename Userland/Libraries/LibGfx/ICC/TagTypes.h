@@ -739,6 +739,45 @@ public:
         VERIFY_NOT_REACHED();
     }
 
+    // y must be in [0..1].
+    float evaluate_inverse(float y) const
+    {
+        VERIFY(0.f <= y && y <= 1.f);
+
+        // See "Recommendations" section in https://www.color.org/whitepapers/ICC_White_Paper35-Use_of_the_parametricCurveType.pdf
+        // Requirements for the curve to be non-decreasing:
+        // * γ > 0
+        // * a > 0 for types 1-4
+        // * c ≥ 0 for types 3 and 4
+        //
+        // Types 3 and 4 additionally require:
+        // To prevent negative discontinuities:
+        // * cd ≤ (ad + b) for type 3
+        // * cd + f ≤ (ad + b)^γ + e for type 4
+        // To prevent complex numbers:
+        // * ad + b ≥ 0
+        // FIXME: Check these requirements somewhere.
+
+        switch (function_type()) {
+        case FunctionType::Type0:
+            return powf(y, 1.f / (float)g());
+        case FunctionType::Type1:
+            return (powf(y, 1.f / (float)g()) - (float)b()) / (float)a();
+        case FunctionType::Type2:
+            // Only defined for Y >= c, so I suppose this requires c <= 0 in practice (?).
+            return (powf(y - (float)c(), 1.f / (float)g()) - (float)b()) / (float)a();
+        case FunctionType::Type3:
+            if (y >= (float)c() * (float)d())
+                return (powf(y, 1.f / (float)g()) - (float)b()) / (float)a();
+            return y / (float)c();
+        case FunctionType::Type4:
+            if (y >= (float)c() * (float)d())
+                return (powf(y - (float)e(), 1.f / (float)g()) - (float)b()) / (float)a();
+            return (y - (float)f()) / (float)c();
+        }
+        VERIFY_NOT_REACHED();
+    }
+
 private:
     FunctionType m_function_type;
 
