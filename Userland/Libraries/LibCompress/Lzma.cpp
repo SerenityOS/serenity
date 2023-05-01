@@ -13,10 +13,10 @@ u32 LzmaHeader::dictionary_size() const
     // "If the value of dictionary size in properties is smaller than (1 << 12),
     //  the LZMA decoder must set the dictionary size variable to (1 << 12)."
     constexpr u32 minimum_dictionary_size = (1 << 12);
-    if (m_dictionary_size < minimum_dictionary_size)
+    if (unchecked_dictionary_size < minimum_dictionary_size)
         return minimum_dictionary_size;
 
-    return m_dictionary_size;
+    return unchecked_dictionary_size;
 }
 
 Optional<u64> LzmaHeader::uncompressed_size() const
@@ -24,7 +24,7 @@ Optional<u64> LzmaHeader::uncompressed_size() const
     // We are making a copy of the packed field here because we would otherwise
     // pass an unaligned reference to the constructor of Optional, which is
     // undefined behavior.
-    auto uncompressed_size = m_uncompressed_size;
+    auto uncompressed_size = encoded_uncompressed_size;
 
     // "If "Uncompressed size" field contains ones in all 64 bits, it means that
     //  uncompressed size is unknown and there is the "end marker" in stream,
@@ -73,7 +73,7 @@ ErrorOr<LzmaModelProperties> LzmaHeader::decode_model_properties(u8 input_bits)
 
 ErrorOr<LzmaDecompressorOptions> LzmaHeader::as_decompressor_options() const
 {
-    auto model_properties = TRY(decode_model_properties(m_encoded_model_properties));
+    auto model_properties = TRY(decode_model_properties(encoded_model_properties));
 
     return Compress::LzmaDecompressorOptions {
         .literal_context_bits = model_properties.literal_context_bits,
