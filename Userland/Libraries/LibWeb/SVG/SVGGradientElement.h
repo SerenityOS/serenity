@@ -41,6 +41,8 @@ protected:
 
     JS::GCPtr<SVGGradientElement const> xlink_href() const;
 
+    Gfx::AffineTransform gradient_paint_transform(SVGPaintContext const&) const;
+
     template<VoidFunction<SVGStopElement> Callback>
     void for_each_color_stop(Callback const& callback) const
     {
@@ -54,6 +56,8 @@ protected:
                 href->for_each_color_stop(callback);
         }
     }
+
+    void add_color_stops(Gfx::SVGGradientPaintStyle&) const;
 
 private:
     Optional<GradientUnits> m_gradient_units = {};
