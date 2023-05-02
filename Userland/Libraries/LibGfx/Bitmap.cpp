@@ -7,13 +7,13 @@
 
 #include <AK/Bitmap.h>
 #include <AK/Checked.h>
-#include <AK/DeprecatedString.h>
 #include <AK/LexicalPath.h>
 #include <AK/Memory.h>
 #include <AK/MemoryStream.h>
 #include <AK/Optional.h>
 #include <AK/Queue.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <AK/Try.h>
 #include <LibCore/File.h>
 #include <LibCore/MappedFile.h>
@@ -65,6 +65,14 @@ static bool size_would_overflow(BitmapFormat format, IntSize size, int scale_fac
     size_t pitch = Bitmap::minimum_pitch(size.width() * scale_factor, format);
     return Checked<size_t>::multiplication_would_overflow(pitch, size.height() * scale_factor);
 }
+
+#ifdef AK_OS_SERENITY
+static ByteBuffer null_terminated_string(String const& str)
+{
+    StringView string_view = str.bytes_as_string_view();
+    return string_view.characters_with_null_termination();
+}
+#endif
 
 ErrorOr<NonnullRefPtr<Bitmap>> Bitmap::create(BitmapFormat format, IntSize size, int scale_factor)
 {
@@ -498,11 +506,13 @@ Bitmap::~Bitmap()
     delete[] m_palette;
 }
 
-void Bitmap::set_mmap_name([[maybe_unused]] DeprecatedString const& name)
+void Bitmap::set_mmap_name([[maybe_unused]] String const& name)
 {
     VERIFY(m_needs_munmap);
 #ifdef AK_OS_SERENITY
-    ::set_mmap_name(m_data, size_in_bytes(), name.characters());
+    const ByteBuffer name_bytes_null_terminated = null_terminated_string(name);
+    auto const* name_str = reinterpret_cast<char const*>(name_bytes_null_terminated.data());
+    ::set_mmap_name(m_data, size_in_bytes(), name_str);
 #endif
 }
 
@@ -571,7 +581,10 @@ ErrorOr<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, IntSiz
     int map_flags = MAP_ANONYMOUS | MAP_PRIVATE;
 #ifdef AK_OS_SERENITY
     map_flags |= MAP_PURGEABLE;
-    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, DeprecatedString::formatted("GraphicsBitmap [{}]", size).characters());
+    auto const name = TRY(String::formatted("GraphicsBitmap [{}]", size));
+    const ByteBuffer name_bytes_null_terminated = null_terminated_string(name);
+    auto const* name_str = reinterpret_cast<char const*>(name_bytes_null_terminated.data());
+    void* data = mmap_with_name(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, 0, 0, name_str);
 #else
     void* data = mmap(nullptr, data_size_in_bytes, PROT_READ | PROT_WRITE, map_flags, -1, 0);
 #endif

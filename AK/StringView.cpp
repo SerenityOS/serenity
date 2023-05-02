@@ -299,4 +299,12 @@ Vector<StringView> StringView::split_view_if(Function<bool(char)> const& predica
     return v;
 }
 
+ByteBuffer StringView::characters_with_null_termination() const
+{
+    ByteBuffer characters_null_term;
+    characters_null_term.append(m_characters, m_length);
+    characters_null_term.append('\0');
+    return characters_null_term;
+}
+
 }
