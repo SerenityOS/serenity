@@ -9,6 +9,7 @@
 
 #include <AK/URL.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibWeb/Fetch/Infrastructure/HTTP/Requests.h>
 #include <LibWeb/Forward.h>
 #include <LibWeb/HTML/Origin.h>
 #include <LibWeb/HTML/POSTResource.h>
@@ -33,18 +34,14 @@ public:
         Tag,
     };
 
-    enum class NoReferrer {
-        Tag,
-    };
-
     [[nodiscard]] JS::GCPtr<DOM::Document> document() const { return m_document; }
     void set_document(JS::GCPtr<DOM::Document> document) { m_document = document; }
 
     [[nodiscard]] Variant<PolicyContainer, Client> history_policy_container() const { return m_history_policy_container; }
     void set_history_policy_container(Variant<PolicyContainer, Client> history_policy_container) { m_history_policy_container = move(history_policy_container); }
 
-    [[nodiscard]] Variant<NoReferrer, Client, AK::URL> request_referrer() const { return m_request_referrer; }
-    void set_request_referrer(Variant<NoReferrer, Client, AK::URL> request_referrer) { m_request_referrer = move(request_referrer); }
+    [[nodiscard]] Fetch::Infrastructure::Request::ReferrerType request_referrer() const { return m_request_referrer; }
+    void set_request_referrer(Fetch::Infrastructure::Request::ReferrerType request_referrer) { m_request_referrer = move(request_referrer); }
 
     [[nodiscard]] ReferrerPolicy::ReferrerPolicy request_referrer_policy() const { return m_request_referrer_policy; }
     void set_request_referrer_policy(ReferrerPolicy::ReferrerPolicy request_referrer_policy) { m_request_referrer_policy = move(request_referrer_policy); }
@@ -82,7 +79,7 @@ private:
     Variant<PolicyContainer, Client> m_history_policy_container { Client::Tag };
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-request-referrer
-    Variant<NoReferrer, Client, AK::URL> m_request_referrer { Client::Tag };
+    Fetch::Infrastructure::Request::ReferrerType m_request_referrer { Fetch::Infrastructure::Request::Referrer::Client };
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#document-state-request-referrer-policy
     ReferrerPolicy::ReferrerPolicy m_request_referrer_policy { ReferrerPolicy::DEFAULT_REFERRER_POLICY };
