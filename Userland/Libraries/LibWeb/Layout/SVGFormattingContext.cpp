@@ -131,8 +131,6 @@ static ViewBoxTransform scale_and_align_viewbox_content(SVG::PreserveAspectRatio
 
 void SVGFormattingContext::run(Box const& box, LayoutMode layout_mode, AvailableSpace const& available_space)
 {
-    // FIXME: This a bunch of this thing is an ad-hoc hack.
-
     auto& svg_svg_element = verify_cast<SVG::SVGSVGElement>(*box.dom_node());
 
     auto svg_box_state = m_state.get(box);
