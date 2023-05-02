@@ -174,7 +174,7 @@ void BlockFormattingContext::compute_width(Box const& box, AvailableSpace const&
 
             // 10.3.3 cont'd.
             auto underflow_px = width_of_containing_block - total_px;
-            if (!isfinite(underflow_px.value()))
+            if (available_space.width.is_intrinsic_sizing_constraint())
                 underflow_px = 0;
 
             if (width.is_auto()) {
