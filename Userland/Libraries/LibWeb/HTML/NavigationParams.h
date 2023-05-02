@@ -62,6 +62,9 @@ struct NavigationParams {
     // FIXME: an algorithm expecting a response
     void* process_response_end_of_body { nullptr };
 
+    // null or a fetch controller
+    JS::GCPtr<Fetch::Infrastructure::FetchController> fetch_controller { nullptr };
+
     // FIXME: null or an algorithm accepting a Document, once it has been created
     void* commit_early_hints { nullptr };
 };
