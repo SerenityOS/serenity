@@ -25,6 +25,9 @@ namespace Web::SVG::AttributeNames {
     E(diffuseConstant)              \
     E(edgeMode)                     \
     E(filterUnits)                  \
+    E(fr)                           \
+    E(fx)                           \
+    E(fy)                           \
     E(glyphRef)                     \
     E(gradientTransform)            \
     E(gradientUnits)                \
