@@ -92,6 +92,7 @@
 #include <LibWeb/SVG/SVGPathElement.h>
 #include <LibWeb/SVG/SVGPolygonElement.h>
 #include <LibWeb/SVG/SVGPolylineElement.h>
+#include <LibWeb/SVG/SVGRadialGradientElement.h>
 #include <LibWeb/SVG/SVGRectElement.h>
 #include <LibWeb/SVG/SVGSVGElement.h>
 #include <LibWeb/SVG/SVGStopElement.h>
@@ -441,6 +442,8 @@ static WebIDL::ExceptionOr<JS::GCPtr<SVG::SVGElement>> create_svg_element(JS::Re
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGPolygonElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::polyline)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGPolylineElement>(realm, document, move(qualified_name)));
+    if (local_name == SVG::TagNames::radialGradient)
+        return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGRadialGradientElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::rect)
         return MUST_OR_THROW_OOM(realm.heap().allocate<SVG::SVGRectElement>(realm, document, move(qualified_name)));
     if (local_name == SVG::TagNames::g)
