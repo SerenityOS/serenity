@@ -1445,13 +1445,13 @@ ErrorOr<FloatVector3> Profile::to_pcs(ReadonlyBytes color) const
             float linear_g = evaluate_curve(greenTRCTag, color[1] / 255.f);
             float linear_b = evaluate_curve(blueTRCTag, color[2] / 255.f);
 
-            auto const& redMatrixColumn = red_matrix_column();
-            auto const& greenMatrixColumn = green_matrix_column();
-            auto const& blueMatrixColumn = blue_matrix_column();
+            auto const& red_matrix_column = this->red_matrix_column();
+            auto const& green_matrix_column = this->green_matrix_column();
+            auto const& blue_matrix_column = this->blue_matrix_column();
 
-            float X = redMatrixColumn.X * linear_r + greenMatrixColumn.X * linear_g + blueMatrixColumn.X * linear_b;
-            float Y = redMatrixColumn.Y * linear_r + greenMatrixColumn.Y * linear_g + blueMatrixColumn.Y * linear_b;
-            float Z = redMatrixColumn.Z * linear_r + greenMatrixColumn.Z * linear_g + blueMatrixColumn.Z * linear_b;
+            float X = red_matrix_column.X * linear_r + green_matrix_column.X * linear_g + blue_matrix_column.X * linear_b;
+            float Y = red_matrix_column.Y * linear_r + green_matrix_column.Y * linear_g + blue_matrix_column.Y * linear_b;
+            float Z = red_matrix_column.Z * linear_r + green_matrix_column.Z * linear_g + blue_matrix_column.Z * linear_b;
 
             return FloatVector3 { X, Y, Z };
         }
