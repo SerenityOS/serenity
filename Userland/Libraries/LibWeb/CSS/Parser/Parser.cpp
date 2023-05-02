@@ -4123,21 +4123,21 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         return background_image || background_position || background_size || background_repeat || background_attachment || background_clip || background_origin;
     };
 
-    auto complete_background_layer = [&]() {
-        background_images.append(background_image ? background_image.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
-        background_positions.append(background_position ? background_position.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
-        background_sizes.append(background_size ? background_size.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
-        background_repeats.append(background_repeat ? background_repeat.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
-        background_attachments.append(background_attachment ? background_attachment.release_nonnull() : property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
+    auto complete_background_layer = [&]() -> ErrorOr<void> {
+        TRY(background_images.try_append(background_image ? background_image.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage))));
+        TRY(background_positions.try_append(background_position ? background_position.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition))));
+        TRY(background_sizes.try_append(background_size ? background_size.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize))));
+        TRY(background_repeats.try_append(background_repeat ? background_repeat.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat))));
+        TRY(background_attachments.try_append(background_attachment ? background_attachment.release_nonnull() : TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment))));
 
         if (!background_origin && !background_clip) {
-            background_origin = property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin);
-            background_clip = property_initial_value(m_context.realm(), PropertyID::BackgroundClip);
+            background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
+            background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
         } else if (!background_clip) {
             background_clip = background_origin;
         }
-        background_origins.append(background_origin.release_nonnull());
-        background_clips.append(background_clip.release_nonnull());
+        TRY(background_origins.try_append(background_origin.release_nonnull()));
+        TRY(background_clips.try_append(background_clip.release_nonnull()));
 
         background_image = nullptr;
         background_position = nullptr;
@@ -4146,6 +4146,8 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
         background_attachment = nullptr;
         background_clip = nullptr;
         background_origin = nullptr;
+
+        return {};
     };
 
     auto tokens = TokenStream { component_values };
@@ -4156,7 +4158,7 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
             has_multiple_layers = true;
             if (!background_layer_is_valid(false))
                 return nullptr;
-            complete_background_layer();
+            TRY(complete_background_layer());
             continue;
         }
 
@@ -4241,10 +4243,10 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     // We only need to create StyleValueLists if there are multiple layers.
     // Otherwise, we can pass the single StyleValues directly.
     if (has_multiple_layers) {
-        complete_background_layer();
+        TRY(complete_background_layer());
 
         if (!background_color)
-            background_color = property_initial_value(m_context.realm(), PropertyID::BackgroundColor);
+            background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
         return BackgroundStyleValue::create(
             background_color.release_nonnull(),
             TRY(StyleValueList::create(move(background_images), StyleValueList::Separator::Comma)),
@@ -4257,21 +4259,21 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_background_value(Vector<ComponentValue
     }
 
     if (!background_color)
-        background_color = property_initial_value(m_context.realm(), PropertyID::BackgroundColor);
+        background_color = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundColor));
     if (!background_image)
-        background_image = property_initial_value(m_context.realm(), PropertyID::BackgroundImage);
+        background_image = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundImage));
     if (!background_position)
-        background_position = property_initial_value(m_context.realm(), PropertyID::BackgroundPosition);
+        background_position = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundPosition));
     if (!background_size)
-        background_size = property_initial_value(m_context.realm(), PropertyID::BackgroundSize);
+        background_size = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundSize));
     if (!background_repeat)
-        background_repeat = property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat);
+        background_repeat = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundRepeat));
     if (!background_attachment)
-        background_attachment = property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment);
+        background_attachment = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundAttachment));
 
     if (!background_origin && !background_clip) {
-        background_origin = property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin);
-        background_clip = property_initial_value(m_context.realm(), PropertyID::BackgroundClip);
+        background_origin = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundOrigin));
+        background_clip = TRY(property_initial_value(m_context.realm(), PropertyID::BackgroundClip));
     } else if (!background_clip) {
         background_clip = background_origin;
     }
@@ -4661,11 +4663,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_border_value(Vector<ComponentValue> co
     }
 
     if (!border_width)
-        border_width = property_initial_value(m_context.realm(), PropertyID::BorderWidth);
+        border_width = TRY(property_initial_value(m_context.realm(), PropertyID::BorderWidth));
     if (!border_style)
-        border_style = property_initial_value(m_context.realm(), PropertyID::BorderStyle);
+        border_style = TRY(property_initial_value(m_context.realm(), PropertyID::BorderStyle));
     if (!border_color)
-        border_color = property_initial_value(m_context.realm(), PropertyID::BorderColor);
+        border_color = TRY(property_initial_value(m_context.realm(), PropertyID::BorderColor));
 
     return BorderStyleValue::create(border_width.release_nonnull(), border_style.release_nonnull(), border_color.release_nonnull());
 }
@@ -5361,11 +5363,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_value(Vector<ComponentValue> cons
     }
 
     if (!flex_grow)
-        flex_grow = property_initial_value(m_context.realm(), PropertyID::FlexGrow);
+        flex_grow = TRY(property_initial_value(m_context.realm(), PropertyID::FlexGrow));
     if (!flex_shrink)
-        flex_shrink = property_initial_value(m_context.realm(), PropertyID::FlexShrink);
+        flex_shrink = TRY(property_initial_value(m_context.realm(), PropertyID::FlexShrink));
     if (!flex_basis)
-        flex_basis = property_initial_value(m_context.realm(), PropertyID::FlexBasis);
+        flex_basis = TRY(property_initial_value(m_context.realm(), PropertyID::FlexBasis));
 
     return FlexStyleValue::create(flex_grow.release_nonnull(), flex_shrink.release_nonnull(), flex_basis.release_nonnull());
 }
@@ -5397,9 +5399,9 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_flex_flow_value(Vector<ComponentValue>
     }
 
     if (!flex_direction)
-        flex_direction = property_initial_value(m_context.realm(), PropertyID::FlexDirection);
+        flex_direction = TRY(property_initial_value(m_context.realm(), PropertyID::FlexDirection));
     if (!flex_wrap)
-        flex_wrap = property_initial_value(m_context.realm(), PropertyID::FlexWrap);
+        flex_wrap = TRY(property_initial_value(m_context.realm(), PropertyID::FlexWrap));
 
     return FlexFlowStyleValue::create(flex_direction.release_nonnull(), flex_wrap.release_nonnull());
 }
@@ -5510,13 +5512,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_font_value(Vector<ComponentValue> cons
         return nullptr;
 
     if (!font_stretch)
-        font_stretch = property_initial_value(m_context.realm(), PropertyID::FontStretch);
+        font_stretch = TRY(property_initial_value(m_context.realm(), PropertyID::FontStretch));
     if (!font_style)
-        font_style = property_initial_value(m_context.realm(), PropertyID::FontStyle);
+        font_style = TRY(property_initial_value(m_context.realm(), PropertyID::FontStyle));
     if (!font_weight)
-        font_weight = property_initial_value(m_context.realm(), PropertyID::FontWeight);
+        font_weight = TRY(property_initial_value(m_context.realm(), PropertyID::FontWeight));
     if (!line_height)
-        line_height = property_initial_value(m_context.realm(), PropertyID::LineHeight);
+        line_height = TRY(property_initial_value(m_context.realm(), PropertyID::LineHeight));
 
     return FontStyleValue::create(font_stretch.release_nonnull(), font_style.release_nonnull(), font_weight.release_nonnull(), font_size.release_nonnull(), line_height.release_nonnull(), font_families.release_nonnull());
 }
@@ -5844,11 +5846,11 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_list_style_value(Vector<ComponentValue
     }
 
     if (!list_position)
-        list_position = property_initial_value(m_context.realm(), PropertyID::ListStylePosition);
+        list_position = TRY(property_initial_value(m_context.realm(), PropertyID::ListStylePosition));
     if (!list_image)
-        list_image = property_initial_value(m_context.realm(), PropertyID::ListStyleImage);
+        list_image = TRY(property_initial_value(m_context.realm(), PropertyID::ListStyleImage));
     if (!list_type)
-        list_type = property_initial_value(m_context.realm(), PropertyID::ListStyleType);
+        list_type = TRY(property_initial_value(m_context.realm(), PropertyID::ListStyleType));
 
     return ListStyleStyleValue::create(list_position.release_nonnull(), list_image.release_nonnull(), list_type.release_nonnull());
 }
@@ -5930,13 +5932,13 @@ ErrorOr<RefPtr<StyleValue>> Parser::parse_text_decoration_value(Vector<Component
     }
 
     if (!decoration_line)
-        decoration_line = property_initial_value(m_context.realm(), PropertyID::TextDecorationLine);
+        decoration_line = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationLine));
     if (!decoration_thickness)
-        decoration_thickness = property_initial_value(m_context.realm(), PropertyID::TextDecorationThickness);
+        decoration_thickness = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationThickness));
     if (!decoration_style)
-        decoration_style = property_initial_value(m_context.realm(), PropertyID::TextDecorationStyle);
+        decoration_style = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationStyle));
     if (!decoration_color)
-        decoration_color = property_initial_value(m_context.realm(), PropertyID::TextDecorationColor);
+        decoration_color = TRY(property_initial_value(m_context.realm(), PropertyID::TextDecorationColor));
 
     return TextDecorationStyleValue::create(decoration_line.release_nonnull(), decoration_thickness.release_nonnull(), decoration_style.release_nonnull(), decoration_color.release_nonnull());
 }
@@ -7756,12 +7758,12 @@ CSS::ElementInlineCSSStyleDeclaration* parse_css_style_attribute(CSS::Parser::Pa
     return parser.parse_as_style_attribute(element);
 }
 
-RefPtr<CSS::StyleValue> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
+ErrorOr<RefPtr<CSS::StyleValue>> parse_css_value(CSS::Parser::ParsingContext const& context, StringView string, CSS::PropertyID property_id)
 {
     if (string.is_empty())
-        return {};
-    auto parser = CSS::Parser::Parser::create(context, string).release_value_but_fixme_should_propagate_errors();
-    return parser.parse_as_css_value(property_id).release_value_but_fixme_should_propagate_errors();
+        return nullptr;
+    auto parser = TRY(CSS::Parser::Parser::create(context, string));
+    return parser.parse_as_css_value(property_id);
 }
 
 CSS::CSSRule* parse_css_rule(CSS::Parser::ParsingContext const& context, StringView css_text)

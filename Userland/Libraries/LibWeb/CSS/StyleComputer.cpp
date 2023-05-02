@@ -1000,7 +1000,7 @@ static NonnullRefPtr<StyleValue const> get_inherit_value(JS::Realm& initial_valu
     auto* parent_element = element_to_inherit_style_from(element, pseudo_element);
 
     if (!parent_element || !parent_element->computed_css_values())
-        return property_initial_value(initial_value_context_realm, property_id);
+        return property_initial_value(initial_value_context_realm, property_id).release_value_but_fixme_should_propagate_errors();
     return parent_element->computed_css_values()->property(property_id);
 };
 
@@ -1013,12 +1013,12 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
         if (is_inherited_property(property_id))
             style.m_property_values[to_underlying(property_id)] = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         else
-            style.m_property_values[to_underlying(property_id)] = property_initial_value(document().realm(), property_id);
+            style.m_property_values[to_underlying(property_id)] = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
     if (value_slot->is_initial()) {
-        value_slot = property_initial_value(document().realm(), property_id);
+        value_slot = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
         return;
     }
 
@@ -1035,7 +1035,7 @@ void StyleComputer::compute_defaulted_property_value(StyleProperties& style, DOM
             value_slot = get_inherit_value(document().realm(), property_id, element, pseudo_element);
         } else {
             // and if it is not, this is treated as initial.
-            value_slot = property_initial_value(document().realm(), property_id);
+            value_slot = property_initial_value(document().realm(), property_id).release_value_but_fixme_should_propagate_errors();
         }
     }
 }

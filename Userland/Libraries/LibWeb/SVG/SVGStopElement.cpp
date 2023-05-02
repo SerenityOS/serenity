@@ -33,7 +33,7 @@ void SVGStopElement::apply_presentational_hints(CSS::StyleProperties& style) con
     for_each_attribute([&](auto& name, auto& value) {
         if (name.equals_ignoring_ascii_case("stop-color"sv)) {
             CSS::Parser::ParsingContext parsing_context { document() };
-            if (auto stop_color = parse_css_value(parsing_context, value, CSS::PropertyID::StopColor)) {
+            if (auto stop_color = parse_css_value(parsing_context, value, CSS::PropertyID::StopColor).release_value_but_fixme_should_propagate_errors()) {
                 style.set_property(CSS::PropertyID::StopColor, stop_color.release_nonnull());
             }
         }

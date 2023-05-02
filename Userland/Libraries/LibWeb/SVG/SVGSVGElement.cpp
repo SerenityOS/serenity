@@ -48,7 +48,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 
     auto width_attribute = attribute(SVG::AttributeNames::width);
     auto parsing_context = CSS::Parser::ParsingContext { document() };
-    if (auto width_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width)) {
+    if (auto width_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width).release_value_but_fixme_should_propagate_errors()) {
         style.set_property(CSS::PropertyID::Width, width_value.release_nonnull());
     } else if (width_attribute == "") {
         // If the `width` attribute is an empty string, it defaults to 100%.
@@ -59,7 +59,7 @@ void SVGSVGElement::apply_presentational_hints(CSS::StyleProperties& style) cons
 
     // Height defaults to 100%
     auto height_attribute = attribute(SVG::AttributeNames::height);
-    if (auto height_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height)) {
+    if (auto height_value = parse_css_value(parsing_context, attribute(Web::HTML::AttributeNames::height), CSS::PropertyID::Height).release_value_but_fixme_should_propagate_errors()) {
         style.set_property(CSS::PropertyID::Height, height_value.release_nonnull());
     } else if (height_attribute == "") {
         // If the `height` attribute is an empty string, it defaults to 100%.

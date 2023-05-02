@@ -28,11 +28,11 @@ void SVGSVGBox::prepare_for_replaced_layout()
         Optional<CSSPixels> w;
         Optional<CSSPixels> h;
         auto parsing_context = CSS::Parser::ParsingContext { document() };
-        auto width = parse_css_value(parsing_context, dom_node().attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width);
+        auto width = parse_css_value(parsing_context, dom_node().attribute(Web::HTML::AttributeNames::width), CSS::PropertyID::Width).release_value_but_fixme_should_propagate_errors();
         if (!width.is_null() && width->has_length())
             w = width->to_length().to_px(*this);
 
-        auto height = parse_css_value(parsing_context, dom_node().attribute((HTML::AttributeNames::height)), CSS::PropertyID::Height);
+        auto height = parse_css_value(parsing_context, dom_node().attribute((HTML::AttributeNames::height)), CSS::PropertyID::Height).release_value_but_fixme_should_propagate_errors();
         if (!height.is_null() && height->has_length())
             h = height->to_length().to_px(*this);
         if (w.has_value() && h.has_value()) {
