@@ -57,3 +57,18 @@ FUSE2FS_PATH="$(find_executable fuse2fs)"
 RESIZE2FS_PATH="$(find_executable resize2fs)"
 E2FSCK_PATH="$(find_executable e2fsck)"
 MKE2FS_PATH="$(find_executable mke2fs)"
+
+get_number_of_processing_units() {
+  number_of_processing_units="nproc"
+  SYSTEM_NAME="$(uname -s)"
+
+  if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
+      number_of_processing_units="sysctl -n hw.ncpuonline"
+  elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
+      number_of_processing_units="sysctl -n hw.ncpu"
+  elif [ "$SYSTEM_NAME" = "Darwin" ]; then
+      number_of_processing_units="sysctl -n hw.ncpu"
+  fi
+
+  ($number_of_processing_units)
+}
