@@ -1,5 +1,62 @@
 
 <h3>Some simple SVG gradient test cases</h3>
+<b>SVG radialGradient <a href="https://www.w3.org/TR/SVG11/pservers.html#ExampleRadGrad01">W3C spec example</a>:</b><br>
+<svg width="8cm" height="4cm" viewBox="100 100 600 200" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <g>
+    <defs>
+      <radialGradient id="MyGradient" gradientUnits="userSpaceOnUse"
+                      cx="400" cy="200" r="300" fx="400" fy="200">
+        <stop offset="0%" stop-color="red" />
+        <stop offset="50%" stop-color="blue" />
+        <stop offset="100%" stop-color="red" />
+      </radialGradient>
+    </defs>
+    <rect fill="url(#MyGradient)" stroke="black" stroke-width="5" x="100" y="100" width="600" height="200"/>
+  </g>
+</svg>
+<br>
+<b>SVG MDN gradientTransform example (userSpaceOnUse radialGradient)</b><br>
+<svg width="400" height="190" viewBox="0 0 420 200" xmlns="http://www.w3.org/2000/svg">
+  <radialGradient id="gradient1" gradientUnits="userSpaceOnUse" cx="100" cy="100" r="100" fx="100" fy="100">
+    <stop offset="0%" stop-color="darkblue" />
+    <stop offset="50%" stop-color="skyblue" />
+    <stop offset="100%" stop-color="darkblue" />
+  </radialGradient>
+  <radialGradient id="gradient2" gradientUnits="userSpaceOnUse" cx="320" cy="100" r="100" fx="320" fy="100" gradientTransform="skewX(20) translate(-35, 0)">
+    <stop offset="0%" stop-color="darkblue" />
+    <stop offset="50%" stop-color="skyblue" />
+    <stop offset="100%" stop-color="darkblue" />
+  </radialGradient>
+  <rect x="0" y="0" width="200" height="200" fill="url(#gradient1)" />
+  <rect x="220" y="0" width="200" height="200" fill="url(#gradient2)"/>
+</svg>
+<br>
+<br>
+<b>Simple radialGradient gradientUnits=objectBoundingBox</b><br>
+<svg height="150" width="500">
+  <defs>
+    <radialGradient id="gradA" gradientTransform="rotate(30 0.5 0.5)" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:rgb(255,255,255,0);" />
+      <stop offset="100%" style="stop-color:rgb(0,0,255)" />
+    </radialGradient>
+  </defs>
+  <rect height="150" width="500" fill="url(#gradA)" />
+</svg>
+<br>
+<br>
+<b>radialGradient with non-centered focal point:</b><br>
+<svg width="200" height="200" viewBox="0 0 200 200">
+  <defs>
+    <radialGradient id="g1" cx="50%" cy="50%" r="50%" fx="25%" fy="25%">
+      <stop stop-color="black" offset="0%"/>
+      <stop stop-color="teal" offset="50%"/>
+      <stop stop-color="white" offset="100%"/>
+    </radialGradient>
+  </defs>
+  <circle fill="url(#g1)" cx="100" cy="100" r="100"/>
+</svg>
+<br>
+<br>
 <b>Linear gradient using percentages + inline CSS, gradientUnits=objectBoundingBox</b><br>
 <svg height="150" width="400">
   <defs>
