@@ -21,30 +21,25 @@ PREFIX="$DIR/Local/$ARCH-gdb"
 echo "Building GDB $GDB_VERSION for $TARGET"
 
 MD5SUM="md5sum"
-NPROC="nproc"
 
 SYSTEM_NAME="$(uname -s)"
 
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpuonline"
     export CC=egcc
     export CXX=eg++
     export with_gmp=/usr/local
     export LDFLAGS=-Wl,-z,notext
 elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpu"
     export with_gmp=/usr/local
     export with_mpfr=/usr/local
 elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpu"
 fi
 
-if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$($NPROC)
-fi
+NPROC=$(get_number_of_processing_units)
+[ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 buildstep() {
     NAME=$1

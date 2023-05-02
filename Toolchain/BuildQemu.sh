@@ -55,9 +55,8 @@ popd
 mkdir -p "$PREFIX"
 mkdir -p "$DIR/Build/qemu"
 
-if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$(nproc)
-fi
+NPROC=$(get_number_of_processing_units)
+[ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 EXTRA_ARGS=""
 if [[ $(uname) == "Darwin" ]]
