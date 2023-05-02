@@ -44,11 +44,15 @@ protected:
     template<VoidFunction<SVGStopElement> Callback>
     void for_each_color_stop(Callback const& callback) const
     {
+        bool color_stops_found = false;
         for_each_child_of_type<SVG::SVGStopElement>([&](auto& stop) {
+            color_stops_found = true;
             callback(stop);
         });
-        if (auto href = xlink_href())
-            href->for_each_color_stop(callback);
+        if (!color_stops_found) {
+            if (auto href = xlink_href())
+                href->for_each_color_stop(callback);
+        }
     }
 
 private:
