@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static Optional<pid_t> determine_pid_to_profile(StringView pid_argument, bool all_processes);
+
 ErrorOr<int> serenity_main(Main::Arguments arguments)
 {
     Core::ArgsParser args_parser;
@@ -86,9 +88,13 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
             return 1;
         }
 
-        // FIXME: Handle error case.
-        pid_t pid = all_processes ? -1 : pid_argument.to_int().release_value();
+        auto pid_opt = determine_pid_to_profile(pid_argument, all_processes);
+        if (!pid_opt.has_value()) {
+            warnln("-p <PID> requires an integer value.");
+            return 1;
+        }
 
+        pid_t pid = pid_opt.value();
         if (wait || enable) {
             TRY(Core::System::profiling_enable(pid, event_mask));
 
@@ -115,4 +121,14 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     TRY(Core::System::exec(command[0], command, Core::System::SearchInPath::Yes));
 
     return 0;
+}
+
+static Optional<pid_t> determine_pid_to_profile(StringView pid_argument, bool all_processes)
+{
+    if (all_processes) {
+        return { -1 };
+    }
+
+    // pid_argument is guaranteed to have a value
+    return pid_argument.to_int();
 }
