@@ -82,7 +82,7 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     if (!pid_argument.is_empty() || all_processes) {
         if (!(enable ^ disable ^ wait ^ free)) {
-            warnln("-p <PID> requires -e xor -d xor -w xor -f.");
+            warnln("-a and -p <PID> requires -e xor -d xor -w xor -f.");
             return 1;
         }
 
