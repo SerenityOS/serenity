@@ -66,7 +66,7 @@ Optional<float> AttributeParser::parse_length(StringView input)
     return {};
 }
 
-float NumberPercentage::resolve_relative_to(float length)
+float NumberPercentage::resolve_relative_to(float length) const
 {
     if (!m_is_percentage)
         return m_value;

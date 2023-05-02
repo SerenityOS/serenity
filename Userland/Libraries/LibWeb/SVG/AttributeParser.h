@@ -111,9 +111,9 @@ public:
         return NumberPercentage(value, false);
     }
 
-    float resolve_relative_to(float length);
+    float resolve_relative_to(float length) const;
 
-    float value() { return m_value; }
+    float value() const { return m_value; }
 
 private:
     float m_value;
