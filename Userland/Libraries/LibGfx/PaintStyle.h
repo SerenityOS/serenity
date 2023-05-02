@@ -247,15 +247,15 @@ private:
 
 class SVGGradientPaintStyle : public GradientPaintStyle {
 public:
-    void set_gradient_transform(Gfx::AffineTransform transform)
-    {
-        m_gradient_transform = transform;
-    }
+    void set_gradient_transform(Gfx::AffineTransform transform);
 
-    Optional<Gfx::AffineTransform> const& gradient_transform() const { return m_gradient_transform; }
+protected:
+    Optional<AffineTransform> const& scale_adjusted_inverse_gradient_transform() const { return m_inverse_transform; }
+    float gradient_transform_scale() const { return m_scale; }
 
 private:
-    Optional<Gfx::AffineTransform> m_gradient_transform {};
+    Optional<AffineTransform> m_inverse_transform {};
+    float m_scale = 1.0f;
 };
 
 class SVGLinearGradientPaintStyle final : public SVGGradientPaintStyle {
@@ -286,6 +286,50 @@ private:
 
     FloatPoint m_p0;
     FloatPoint m_p1;
+};
+
+class SVGRadialGradientPaintStyle final : public SVGGradientPaintStyle {
+public:
+    static ErrorOr<NonnullRefPtr<SVGRadialGradientPaintStyle>> create(FloatPoint start_center, float start_radius, FloatPoint end_center, float end_radius)
+    {
+        return adopt_nonnull_ref_or_enomem(new (nothrow) SVGRadialGradientPaintStyle(start_center, start_radius, end_center, end_radius));
+    }
+
+    void set_start_center(FloatPoint start_center)
+    {
+        m_start_center = start_center;
+    }
+
+    void set_start_radius(float start_radius)
+    {
+        m_start_radius = start_radius;
+    }
+
+    void set_end_center(FloatPoint end_center)
+    {
+        m_end_center = end_center;
+    }
+
+    void set_end_radius(float end_radius)
+    {
+        m_end_radius = end_radius;
+    }
+
+private:
+    virtual void paint(IntRect physical_bounding_box, PaintFunction paint) const override;
+
+    SVGRadialGradientPaintStyle(FloatPoint start_center, float start_radius, FloatPoint end_center, float end_radius)
+        : m_start_center(start_center)
+        , m_start_radius(start_radius)
+        , m_end_center(end_center)
+        , m_end_radius(end_radius)
+    {
+    }
+
+    FloatPoint m_start_center;
+    float m_start_radius { 0.0f };
+    FloatPoint m_end_center;
+    float m_end_radius { 0.0f };
 };
 
 }
