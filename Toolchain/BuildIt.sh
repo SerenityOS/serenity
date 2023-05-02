@@ -21,7 +21,6 @@ SYSROOT="$BUILD/Root"
 
 MAKE="make"
 MD5SUM="md5sum"
-NPROC="nproc"
 REALPATH="realpath"
 
 if command -v ginstall &>/dev/null; then
@@ -41,7 +40,6 @@ export CXXFLAGS="-g0 -O2 -mtune=native"
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpuonline"
     REALPATH="readlink -f"
     export CC=egcc
     export CXX=eg++
@@ -50,12 +48,10 @@ if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
 elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MAKE=gmake
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpu"
     export with_gmp=/usr/local
     export with_mpfr=/usr/local
 elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpu"
 fi
 
 # On at least OpenBSD, the path must exist to call realpath(3) on it
@@ -270,9 +266,8 @@ popd
 rm -rf "$PREFIX"
 mkdir -p "$PREFIX"
 
-if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$($NPROC)
-fi
+NPROC=$(get_number_of_processing_units)
+[ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 mkdir -p "$DIR/Build/$ARCH"
 

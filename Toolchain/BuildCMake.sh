@@ -14,18 +14,8 @@ PREFIX_DIR="$DIR/Local/cmake"
 BUILD_DIR="$DIR/Build/cmake"
 TARBALLS_DIR="$DIR/Tarballs"
 
-NPROC="nproc"
-SYSTEM_NAME="$(uname -s)"
-
-if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
-    NPROC="sysctl -n hw.ncpuonline"
-elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
-    NPROC="sysctl -n hw.ncpu"
-elif [ "$SYSTEM_NAME" = "Darwin" ]; then
-    NPROC="sysctl -n hw.ncpu"
-fi
-
-[ -z "$MAKEJOBS" ] && MAKEJOBS=$($NPROC)
+NPROC=$(get_number_of_processing_units)
+[ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 check_sha() {
     if [ $# -ne 2 ]; then
@@ -36,6 +26,7 @@ check_sha() {
     FILE="${1}"
     EXPECTED_HASH="${2}"
 
+    SYSTEM_NAME="$(uname -s)"
     if [ "$SYSTEM_NAME" = "Darwin" ]; then
         SEEN_HASH="$(shasum -a 256 "${FILE}" | cut -d " " -f 1)"
     else

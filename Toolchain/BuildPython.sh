@@ -41,9 +41,8 @@ pushd "${TARBALLS_DIR}"
     fi
 popd
 
-if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$(nproc)
-fi
+NPROC=$(get_number_of_processing_units)
+[ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 mkdir -p "${PREFIX_DIR}"
 mkdir -p "${BUILD_DIR}"

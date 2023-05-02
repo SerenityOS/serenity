@@ -19,7 +19,6 @@ ARCHS="$USERLAND_ARCHS aarch64"
 
 MD5SUM="md5sum"
 REALPATH="realpath"
-NPROC="nproc"
 INSTALL="install"
 SED="sed"
 
@@ -28,25 +27,20 @@ SYSTEM_NAME="$(uname -s)"
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MD5SUM="md5 -q"
     REALPATH="readlink -f"
-    NPROC="sysctl -n hw.ncpuonline"
     export CC=egcc
     export CXX=eg++
     export LDFLAGS=-Wl,-z,notext
 elif [ "$SYSTEM_NAME" = "FreeBSD" ]; then
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpu"
 elif [ "$SYSTEM_NAME" = "Darwin" ]; then
     MD5SUM="md5 -q"
-    NPROC="sysctl -n hw.ncpu"
     REALPATH="grealpath"  # GNU coreutils
     INSTALL="ginstall"    # GNU coreutils
     SED="gsed"            # GNU sed
 fi
 
-if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$($NPROC)
-fi
-
+NPROC=$(get_number_of_processing_units)
+[ -z "$MAKEJOBS" ] && MAKEJOBS=${NPROC}
 
 if [ ! -d "$BUILD" ]; then
     mkdir -p "$BUILD"
